@@ -113,6 +113,19 @@ func (r *RemappingProducer) Name() string {
 	return r.rule.Name
 }
 
+func (r *RemappingProducer) ToFQDN() string {
+	// TODO verify To is not allowed to be constructed with < 1 element
+	return strings.TrimPrefix(strings.TrimPrefix(r.rule.To[0].URL, "http://"), "https://")
+}
+
+func (r *RemappingProducer) ProxyStr() string {
+	if r.rule.To[0].ProxyURL != nil && r.rule.To[0].ProxyURL.Host != "" {
+		return r.rule.To[0].ProxyURL.Host
+	} else {
+		return "NONE" // TODO const?
+	}
+}
+
 var ErrRuleNotFound = errors.New("remap rule not found")
 var ErrIPNotAllowed = errors.New("IP not allowed")
 var ErrNoMoreRetries = errors.New("retry num exceeded")

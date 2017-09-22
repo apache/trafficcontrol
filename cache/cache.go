@@ -6,11 +6,14 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
+	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 	"unsafe"
 
-	cacheobj "github.com/apache/incubator-trafficcontrol/grove/cacheobj"
+	"github.com/apache/incubator-trafficcontrol/grove/cacheobj"
 	"github.com/apache/incubator-trafficcontrol/grove/thread"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
@@ -52,6 +55,8 @@ type CacheHandler struct {
 	getter          thread.Getter
 	ruleThrottlers  map[string]thread.Throttler // doesn't need threadsafe keys, because it's never added to or deleted after creation. TODO fix for hot rule reloading
 	scheme          string
+	port            string
+	hostname        string
 	strictRFC       bool
 	stats           Stats
 	conns           *web.ConnMap
@@ -93,6 +98,7 @@ func NewCacheHandler(
 	ruleLimit uint64,
 	stats Stats,
 	scheme string,
+	port string,
 	conns *web.ConnMap,
 	strictRFC bool,
 	connectionClose bool,
@@ -118,6 +124,11 @@ func NewCacheHandler(
 		return d.Dial(network, address)
 	}
 
+	hostname, err := os.Hostname()
+	if err != nil {
+		log.Errorf("getting  hostname: %v\n", err)
+	}
+
 	return &CacheHandler{
 		cache:           cache,
 		remapper:        remapper,
@@ -125,6 +136,8 @@ func NewCacheHandler(
 		ruleThrottlers:  makeRuleThrottlers(remapper, ruleLimit),
 		strictRFC:       strictRFC,
 		scheme:          scheme,
+		port:            port,
+		hostname:        hostname,
 		stats:           stats,
 		conns:           conns,
 		connectionClose: connectionClose,
@@ -154,6 +167,7 @@ func NewCacheHandlerFunc(
 	ruleLimit uint64,
 	stats Stats,
 	scheme string,
+	port string,
 	conns *web.ConnMap,
 	strictRFC bool,
 	connectionClose bool,
@@ -168,6 +182,7 @@ func NewCacheHandlerFunc(
 		ruleLimit,
 		stats,
 		scheme,
+		port,
 		conns,
 		strictRFC,
 		connectionClose,
@@ -186,6 +201,7 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 const CodeConnectFailure = http.StatusBadGateway
+const NSPerSec = 1000000000
 
 func isFailure(o *cacheobj.CacheObj, retryCodes map[int]struct{}) bool {
 	_, failureCode := retryCodes[o.Code]
@@ -237,15 +253,19 @@ func GetAndCache(
 		// TODO figure out why respReqTime isn't used by rules
 		log.Debugf("GetAndCache calling request %v %v %v %v %v\n", req.Method, req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), req.Header)
 		// TODO Verify overriding the passed reqTime is the right thing to do
+		proxyURLStr := ""
+		if proxyURL != nil {
+			proxyURLStr = proxyURL.Host
+		}
 		respCode, respHeader, respBody, reqTime, reqRespTime, err := request(transport, req, proxyURL)
 		if err != nil {
-			log.Errorf("Parent error for URI %v %v %v cacheKey %v rule %v parent %v error %v\n", req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), cacheKey, remapName, proxyURL.String(), err)
+			log.Errorf("Parent error for URI %v %v %v cacheKey %v rule %v parent %v error %v\n", req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), cacheKey, remapName, proxyURLStr, err)
 			code := CodeConnectFailure
 			body := []byte(http.StatusText(code))
-			return cacheobj.New(reqHeader, body, code, respHeader, reqTime, reqRespTime, reqRespTime)
+			return cacheobj.New(reqHeader, body, code, code, proxyURLStr, respHeader, reqTime, reqRespTime, reqRespTime)
 		}
 		if _, ok := retryCodes[respCode]; ok && !cacheFailure {
-			return cacheobj.New(reqHeader, respBody, respCode, respHeader, reqTime, reqRespTime, reqRespTime)
+			return cacheobj.New(reqHeader, respBody, respCode, respCode, proxyURLStr, respHeader, reqTime, reqRespTime, reqRespTime)
 		}
 
 		log.Debugf("GetAndCache request returned %v headers %+v\n", respCode, respHeader)
@@ -258,13 +278,13 @@ func GetAndCache(
 		obj := (*cacheobj.CacheObj)(nil)
 		// TODO This means if we can't cache the object, we return nil. Verify this is ok
 		if !CanCache(reqHeader, respCode, respHeader, strictRFC) {
-			return cacheobj.New(reqHeader, respBody, respCode, respHeader, reqTime, reqRespTime, reqRespTime)
+			return cacheobj.New(reqHeader, respBody, respCode, respCode, proxyURLStr, respHeader, reqTime, reqRespTime, reqRespTime)
 		}
 		log.Debugf("h.cache.AddSize %v\n", cacheKey)
 		log.Debugf("GetAndCache respCode %v\n", respCode)
 		if revalidateObj == nil || respCode < 300 || respCode > 399 {
 			log.Debugf("GetAndCache new %v\n", cacheKey)
-			obj = cacheobj.New(reqHeader, respBody, respCode, respHeader, reqTime, reqRespTime, respRespTime)
+			obj = cacheobj.New(reqHeader, respBody, respCode, respCode, proxyURLStr, respHeader, reqTime, reqRespTime, respRespTime)
 		} else {
 			log.Debugf("GetAndCache revalidating %v\n", cacheKey)
 			// must copy, because this cache object may be concurrently read by other goroutines
@@ -277,6 +297,8 @@ func GetAndCache(
 				RespHeaders:      newRespHeader,
 				RespCacheControl: revalidateObj.RespCacheControl,
 				Code:             revalidateObj.Code,
+				OriginCode:       respCode,
+				ProxyURL:         proxyURLStr,
 				ReqTime:          reqTime,
 				ReqRespTime:      reqRespTime,
 				RespRespTime:     respRespTime,
@@ -304,7 +326,16 @@ func CanReuse(reqHeader http.Header, reqCacheControl web.CacheControl, cacheObj 
 // TryServe attempts to serve the given request, as a caching reverse proxy.
 // Serving acts as a state machine.
 func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
-	log.EventRaw(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + "\n")
+	conn := (*web.InterceptConn)(nil)
+	if realConn, ok := h.conns.Pop(r.RemoteAddr); !ok {
+		log.Errorf("RemoteAddr '%v' not in Conns\n", r.RemoteAddr)
+	} else {
+		if conn, ok = realConn.(*web.InterceptConn); !ok {
+			log.Errorf("Could not get Conn info: Conn is not an InterceptConn: %T\n", realConn)
+		}
+	}
+
+	log.EventRaw("LOG0 " + time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + h.scheme + " " + r.RequestURI + "\n")
 
 	h.stats.IncConnections()
 	defer h.stats.DecConnections()
@@ -316,21 +347,55 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	reqHeader := http.Header{}
 	web.CopyHeader(r.Header, &reqHeader)
 
+	moneyTraceHdr := reqHeader.Get("X-Money-Trace")
+
 	// ok = 'rule found'
 	// remappedReq, remapName, cacheKey, allowed, ruleConnectionClose, ok, err := h.remapper.Remap(r, h.scheme, 0) // TODO handle failures
 
+	clientIp, _ := GetClientIPPort(r)
+
 	remappingProducer, err := h.remapper.RemappingProducer(r, h.scheme)
+	bytesWritten := uint64(0)
 	if err != nil {
+		code := 0
 		if err == ErrRuleNotFound {
 			log.Debugf("rule not found for %v\n", r.RequestURI)
-			h.serveRuleNotFound(w)
+			code = http.StatusNotFound
 		} else if err == ErrIPNotAllowed {
 			log.Debugf("IP %v not allowed\n", r.RemoteAddr)
-			h.serveNotAllowed(w)
+			code = http.StatusForbidden
 		} else {
 			log.Debugf("request error: %v\n", err)
-			h.serveReqErr(w)
+			code = http.StatusBadRequest
 		}
+		code, bytesWritten, err = serveErr(w, code)
+		bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, code, bytesWritten)
+
+		log.EventRaw(atsEventLogStr(
+			time.Now(),
+			clientIp,
+			h.hostname,
+			r.Host,
+			h.port,
+			remappingProducer.ToFQDN(),
+			h.scheme,
+			r.URL.String(),
+			r.Method,
+			r.Proto,
+			code,
+			time.Now().Sub(reqTime)/time.Millisecond,
+			bytesSent,
+			0,
+			0,
+			err == nil,
+			false,
+			GetCacheHitStr(ReuseCannot, 0, true),
+			remappingProducer.ProxyStr(),
+			"-", // TODO fix?
+			r.UserAgent(),
+			moneyTraceHdr,
+		))
+
 		return
 	}
 
@@ -339,7 +404,6 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 
 	connectionClose := h.connectionClose || remappingProducer.ConnectionClose()
 	cacheKey := remappingProducer.CacheKey()
-	reqFQDN := r.Host
 
 	retryGetFunc := func(remapping Remapping, retryFailures bool, obj *cacheobj.CacheObj) *cacheobj.CacheObj {
 		// return true for Revalidate, and issue revalidate requests separately.
@@ -368,11 +432,68 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		cacheObj, err := retryingGet(r, nil)
 		if err != nil {
 			log.Errorf("retrying get error (in uncached): %v\n", err)
-			h.serveReqErr(w)
+
+			code, bytesWritten, err := serveReqErr(w)
+			if err != nil {
+				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
+			}
+			bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, code, bytesWritten)
+			log.EventRaw(atsEventLogStr(
+				time.Now(),
+				clientIp,
+				h.hostname,
+				r.Host,
+				h.port,
+				remappingProducer.ToFQDN(),
+				h.scheme,
+				r.URL.String(),
+				r.Method,
+				r.Proto,
+				code,
+				time.Now().Sub(reqTime)/time.Millisecond,
+				bytesSent,
+				0,
+				0,
+				err == nil,
+				false,
+				GetCacheHitStr(ReuseCannot, 0, true),
+				remappingProducer.ProxyStr(),
+				"-", // TODO fix?
+				r.UserAgent(),
+				moneyTraceHdr,
+			))
 			return
 		}
 
-		h.respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, h.stats, h.conns, r.RemoteAddr, reqFQDN, connectionClose)
+		bytesWritten, err := h.respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
+		if err != nil {
+			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
+		}
+		bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, cacheObj.Code, bytesWritten)
+		log.EventRaw(atsEventLogStr(
+			time.Now(),
+			clientIp,
+			h.hostname,
+			r.Host,
+			h.port,
+			remappingProducer.ToFQDN(),
+			h.scheme,
+			r.URL.String(),
+			r.Method,
+			r.Proto,
+			cacheObj.Code,
+			time.Now().Sub(reqTime)/time.Millisecond,
+			bytesSent,
+			0,
+			0,
+			true,
+			err == nil,
+			GetCacheHitStr(ReuseCannot, cacheObj.OriginCode, false),
+			remappingProducer.ProxyStr(),
+			"-", // TODO fix?
+			r.UserAgent(),
+			moneyTraceHdr,
+		))
 		return
 	}
 
@@ -383,12 +504,66 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		cacheObj, err = retryingGet(r, nil)
 		if err != nil {
 			log.Errorf("retrying get error (in unexpected cacheobj): %v\n", err)
-			h.serveReqErr(w)
+
+			code, bytesWritten, err := serveReqErr(w)
+			bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, code, bytesWritten)
+			log.EventRaw(atsEventLogStr(
+				time.Now(),
+				clientIp,
+				h.hostname,
+				r.Host,
+				h.port,
+				remappingProducer.ToFQDN(),
+				h.scheme,
+				r.URL.String(),
+				r.Method,
+				r.Proto,
+				code,
+				time.Now().Sub(reqTime)/time.Millisecond,
+				bytesSent,
+				0,
+				0,
+				err == nil,
+				false,
+				GetCacheHitStr(ReuseCannot, 0, true),
+				remappingProducer.ProxyStr(),
+				"-", // TODO fix?
+				r.UserAgent(),
+				moneyTraceHdr,
+			))
 			return
 		}
 
 		// TODO check for ReuseMustRevalidate
-		h.respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, h.stats, h.conns, r.RemoteAddr, reqFQDN, connectionClose)
+		bytesWritten, err := h.respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
+		if err != nil {
+			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
+		}
+		bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, cacheObj.Code, bytesWritten)
+		log.EventRaw(atsEventLogStr(
+			time.Now(),
+			clientIp,
+			h.hostname,
+			r.Host,
+			h.port,
+			remappingProducer.ToFQDN(),
+			h.scheme,
+			r.URL.String(),
+			r.Method,
+			r.Proto,
+			cacheObj.Code,
+			time.Now().Sub(reqTime)/time.Millisecond,
+			bytesSent,
+			cacheObj.OriginCode,
+			cacheObj.Size,
+			err == nil,
+			true,
+			GetCacheHitStr(ReuseCannot, cacheObj.OriginCode, false),
+			remappingProducer.ProxyStr(),
+			"-", // TODO fix?
+			r.UserAgent(),
+			moneyTraceHdr,
+		))
 		return
 	}
 
@@ -404,7 +579,35 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		cacheObj, err = retryingGet(r, nil)
 		if err != nil {
 			log.Errorf("retrying get error (in reuse-cannot): %v\n", err)
-			h.serveReqErr(w)
+			code, bytesWritten, err := serveReqErr(w)
+			if err != nil {
+				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
+			}
+			bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, code, bytesWritten)
+			log.EventRaw(atsEventLogStr(
+				time.Now(),
+				clientIp,
+				h.hostname,
+				r.Host,
+				h.port,
+				remappingProducer.ToFQDN(),
+				h.scheme,
+				r.URL.String(),
+				r.Method,
+				r.Proto,
+				code,
+				time.Now().Sub(reqTime)/time.Millisecond,
+				bytesSent,
+				0,
+				0,
+				err == nil,
+				false,
+				GetCacheHitStr(ReuseCannot, 0, true),
+				remappingProducer.ProxyStr(),
+				"-", // TODO fix?
+				r.UserAgent(),
+				moneyTraceHdr,
+			))
 			return
 		}
 	case ReuseMustRevalidate:
@@ -415,9 +618,38 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		cacheObj, err = retryingGet(r, cacheObj)
 		if err != nil {
 			log.Errorf("retrying get error: %v\n", err)
-			h.serveReqErr(w)
+			code, bytesWritten, err := serveReqErr(w)
+			if err != nil {
+				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
+			}
+			bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, code, bytesWritten)
+			log.EventRaw(atsEventLogStr(
+				time.Now(),
+				clientIp,
+				h.hostname,
+				r.Host,
+				h.port,
+				remappingProducer.ToFQDN(),
+				h.scheme,
+				r.URL.String(),
+				r.Method,
+				r.Proto,
+				code,
+				time.Now().Sub(reqTime)/time.Millisecond,
+				bytesSent,
+				0,
+				0,
+				err == nil,
+				false,
+				GetCacheHitStr(ReuseCannot, code, true),
+				remappingProducer.ProxyStr(),
+				"-", // TODO fix?
+				r.UserAgent(),
+				moneyTraceHdr,
+			))
 			return
 		}
+
 	case ReuseMustRevalidateCanStale:
 		log.Debugf("cacheHandler.ServeHTTP: '%v' must revalidate (but allowed stale)\n", cacheKey)
 		// r := remapping.Request
@@ -431,28 +663,144 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	log.Debugf("cacheHandler.ServeHTTP: '%v' responding with %v\n", cacheKey, cacheObj.Code)
-	h.respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, h.stats, h.conns, r.RemoteAddr, reqFQDN, connectionClose)
+
+	bytesSent, err := h.respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
+	if err != nil {
+		log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
+	}
+
+	log.EventRaw(atsEventLogStr(
+		time.Now(),
+		clientIp,
+		h.hostname,
+		r.Host,
+		h.port,
+		remappingProducer.ToFQDN(),
+		h.scheme,
+		r.URL.String(),
+		r.Method,
+		r.Proto,
+		cacheObj.Code,
+		time.Now().Sub(reqTime)/time.Millisecond,
+		bytesSent,
+		cacheObj.OriginCode,
+		cacheObj.Size,
+		err == nil,
+		true,
+		GetCacheHitStr(canReuseStored, cacheObj.OriginCode, false),
+		remappingProducer.ProxyStr(),
+		`-`, // TODO fix?
+		r.UserAgent(),
+		moneyTraceHdr,
+	))
+}
+
+//GetClientIP returns the client IP address of the given request. It returns the first x-forwarded-for IP if any, else the RemoteAddr
+func GetClientIPPort(r *http.Request) (string, string) {
+	xForwardedFor := r.Header.Get("X-FORWARDED-FOR")
+	ips := strings.Split(xForwardedFor, ",")
+	ip, port, err := net.SplitHostPort(r.RemoteAddr)
+	if len(ips) < 1 || ips[0] == "" {
+		if err != nil {
+			return r.RemoteAddr, port // TODO log?
+		} else {
+			return ip, port
+		}
+	}
+	return strings.TrimSpace(ips[0]), port
+}
+
+const NSPerMS = 1000000
+
+func atsEventLogStr(
+	timestamp time.Time, // (prefix)
+	clientIP string, // chi
+	selfHostname string,
+	reqHost string, // phn
+	reqPort string, // php
+	originHost string, // shn
+	scheme string, // url
+	url string, // url
+	method string, // cqhm
+	protocol string, // cqhv
+	respCode int, // pssc
+	timeToServe time.Duration, // ttms
+	bytesSent uint64, // b
+	originStatus int, // sssc
+	originBytes uint64, // sscl
+	successfullyRespondedToClient bool, // cfsc
+	successfullyGotFromOrigin bool, // pfsc
+	cacheHit string, // crc
+	proxyUsed string, // phr
+	thisProxyName string, // pqsn
+	clientUserAgent string, // client user agent
+	xmt string, // ??
+) string {
+	unixNano := timestamp.UnixNano()
+	unixSec := unixNano / NSPerSec
+	unixFrac := 1 / (unixNano % NSPerSec)
+	unixFracStr := strconv.FormatInt(unixFrac, 10)
+	if len(unixFracStr) > 3 {
+		unixFracStr = unixFracStr[:3]
+	}
+	cfsc := "FIN"
+	if !successfullyRespondedToClient {
+		cfsc = "INTR"
+	}
+	pfsc := "FIN"
+	if !successfullyGotFromOrigin {
+		pfsc = "INTR"
+	}
+
+	// parentHost := ""
+	// if proxyUsed != "NONE" {
+	// 	parentHost = proxyUsed
+	// } else {
+	// 	parentHost = originHost
+	// }
+
+	// TODO escape quotes within useragent, moneytrace
+	clientUserAgent = `"` + clientUserAgent + `"`
+	if xmt == "" {
+		xmt = `"-"`
+	} else {
+		xmt = `"` + xmt + `"`
+	}
+
+
+	return strconv.FormatInt(unixSec, 10) + "." + unixFracStr + " chi=" + clientIP + " phn=" + selfHostname + " php=" + reqPort + " shn=" + originHost + " url=" + scheme + "://" + reqHost + url + " cqhn=" + method + " cqhv=" + protocol + " pssc=" + strconv.FormatInt(int64(respCode), 10) + " ttms=" + strconv.FormatInt(int64(timeToServe.Nanoseconds()/NSPerMS), 10) + " b=" + strconv.FormatInt(int64(bytesSent), 10) + " sssc=" + strconv.FormatInt(int64(originStatus), 10) + " sscl=" + strconv.FormatInt(int64(originBytes), 10) + " cfsc=" + cfsc + " pfsc=" + pfsc + " crc=" + cacheHit + " phr=" + proxyUsed + " psqn=" + thisProxyName + " uas=" + clientUserAgent + " xmt=" + xmt + "\n"
+}
+
+// GetCacheHitStr returns the event log string for whether the request was a cache hit. For a request not in the cache, pass `ReuseCannot` to indicate a cache miss.
+func GetCacheHitStr(reuse Reuse, originCode int, originConnectFailed bool) string {
+	if originConnectFailed {
+		return "ERR_CONNECT_FAIL"
+	}
+	if reuse == ReuseCan || ((reuse == ReuseMustRevalidate || reuse == ReuseMustRevalidateCanStale) && (originCode > 299 && originCode < 400)) {
+		return "TCP_HIT"
+	}
+	return "TCP_MISS"
 }
 
 // serveRuleNotFound writes the appropriate response to the client, via given writer, for when no remap rule was found for a request.
-func (h *CacheHandler) serveRuleNotFound(w http.ResponseWriter) {
-	code := http.StatusNotFound
-	w.WriteHeader(code)
-	w.Write([]byte(http.StatusText(code)))
+func serveRuleNotFound(w http.ResponseWriter) (int, uint64, error) {
+	return serveErr(w, http.StatusNotFound)
 }
 
 // serveNotAllowed writes the appropriate response to the client, via given writer, for when the client's IP is not allowed for the requested rule.
-func (h *CacheHandler) serveNotAllowed(w http.ResponseWriter) {
-	code := http.StatusForbidden
-	w.WriteHeader(code)
-	w.Write([]byte(http.StatusText(code)))
+func serveNotAllowed(w http.ResponseWriter) (int, uint64, error) {
+	return serveErr(w, http.StatusForbidden)
 }
 
-// serveReqErr writes the appropriate response to the client, via given writer, for a generic request error.
-func (h *CacheHandler) serveReqErr(w http.ResponseWriter) {
-	code := http.StatusBadRequest
+// serveReqErr writes the appropriate response to the client, via given writer, for a generic request error. Returns the code sent, the body bytes written, and any write error.
+func serveReqErr(w http.ResponseWriter) (int, uint64, error) {
+	return serveErr(w, http.StatusBadRequest)
+}
+
+func serveErr(w http.ResponseWriter, code int) (int, uint64, error) {
 	w.WriteHeader(code)
-	w.Write([]byte(http.StatusText(code)))
+	bytesWritten, err := w.Write([]byte(http.StatusText(code)))
+	return code, uint64(bytesWritten), err
 }
 
 // func (h *cacheHandler) ServeCacheMiss(w http.ResponseWriter, r *http.Request, reqTime time.Time, key string) {
@@ -525,31 +873,25 @@ func request(transport *http.Transport, r *http.Request, proxyURL *url.URL) (int
 }
 
 // respond writes the given code, header, and body to the ResponseWriter.
-func (h *CacheHandler) respond(w http.ResponseWriter, code int, header http.Header, body []byte, stats Stats, conns *web.ConnMap, remoteAddr string, reqFQDN string, connectionClose bool) {
+func (h *CacheHandler) respond(w http.ResponseWriter, code int, header http.Header, body []byte, connectionClose bool) (uint64, error) {
 	dH := w.Header()
 	web.CopyHeader(header, &dH)
 	if connectionClose {
 		dH.Add("Connection", "close")
 	}
 	w.WriteHeader(code)
-	w.Write(body)
+	bytesWritten, err := w.Write(body) // get the less-accurate body bytes written, in case we can't get the more accurate intercepted data
 
+	// bytesWritten = int(WriteStats(stats, w, conn, reqFQDN, remoteAddr, code, uint64(bytesWritten))) // TODO write err to stats?
+	return uint64(bytesWritten), err
+}
+
+// WriteStats writes to the remapRuleStats, and returns the bytes written to the connection
+func WriteStats(stats Stats, w http.ResponseWriter, conn *web.InterceptConn, reqFQDN string, remoteAddr string, code int, bytesWritten uint64) uint64 {
 	remapRuleStats, ok := stats.Remap().Stats(reqFQDN)
 	if !ok {
 		log.Errorf("Remap rule %v not in Stats\n", reqFQDN)
-		return
-	}
-
-	conn, ok := conns.Pop(remoteAddr)
-	if !ok {
-		log.Errorf("RemoteAddr %v not in Conns\n", remoteAddr)
-		return
-	}
-
-	interceptConn, ok := conn.(*web.InterceptConn)
-	if !ok {
-		log.Errorf("Could not get Conn info: Conn is not an InterceptConn: %T\n", conn)
-		return
+		return bytesWritten
 	}
 
 	if wFlusher, ok := w.(http.Flusher); !ok {
@@ -558,8 +900,12 @@ func (h *CacheHandler) respond(w http.ResponseWriter, code int, header http.Head
 		wFlusher.Flush()
 	}
 
-	bytesRead := interceptConn.BytesRead()
-	bytesWritten := interceptConn.BytesWritten()
+	bytesRead := 0 // TODO get somehow? Count body? Sum header?
+	if conn != nil {
+		bytesRead = conn.BytesRead()
+		bytesWritten = uint64(conn.BytesWritten()) // get the more accurate interceptConn bytes written, if we can
+		// Don't log - the Handler has already logged the failure to get the conn
+	}
 
 	// bytesRead, bytesWritten := getConnInfoAndDestroyWriter(w, stats, remapRuleName)
 	remapRuleStats.AddInBytes(uint64(bytesRead))
@@ -578,4 +924,5 @@ func (h *CacheHandler) respond(w http.ResponseWriter, code int, header http.Head
 	default:
 		log.Errorf("responded with invalid code %v\n", code)
 	}
+	return bytesWritten
 }
