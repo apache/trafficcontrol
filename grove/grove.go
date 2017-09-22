@@ -13,6 +13,7 @@ import (
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
+	"strconv"
 	"strings"
 	"time"
 
@@ -171,7 +172,7 @@ func main() {
 
 	stats := cache.NewStats(remapper.Rules())
 
-	buildHandler := func(scheme string, conns *web.ConnMap) (http.Handler, *cache.CacheHandlerPointer) {
+	buildHandler := func(scheme string, port string, conns *web.ConnMap) (http.Handler, *cache.CacheHandlerPointer) {
 		statHandler := cache.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats)
 		cacheHandler := cache.NewCacheHandler(
 			lruCache,
@@ -179,6 +180,7 @@ func main() {
 			uint64(cfg.ConcurrentRuleRequests),
 			stats,
 			scheme,
+			port,
 			conns,
 			cfg.RFCCompliant,
 			cfg.ConnectionClose,
@@ -206,8 +208,8 @@ func main() {
 		}
 	}
 
-	httpHandler, httpHandlerPointer := buildHandler("http", httpConns)
-	httpsHandler, httpsHandlerPointer := buildHandler("https", httpsConns)
+	httpHandler, httpHandlerPointer := buildHandler("http", strconv.Itoa(cfg.Port), httpConns)
+	httpsHandler, httpsHandlerPointer := buildHandler("https", strconv.Itoa(cfg.HTTPSPort), httpsConns)
 
 	idleTimeout := time.Duration(cfg.ServerIdleTimeoutMS) * time.Millisecond
 	readTimeout := time.Duration(cfg.ServerReadTimeoutMS) * time.Millisecond
@@ -275,6 +277,7 @@ func main() {
 			uint64(cfg.ConcurrentRuleRequests),
 			stats,
 			"http",
+			strconv.Itoa(cfg.Port),
 			httpConns,
 			cfg.RFCCompliant,
 			cfg.ConnectionClose,
@@ -291,6 +294,7 @@ func main() {
 			uint64(cfg.ConcurrentRuleRequests),
 			stats,
 			"https",
+			strconv.Itoa(cfg.HTTPSPort),
 			httpsConns,
 			cfg.RFCCompliant,
 			cfg.ConnectionClose,

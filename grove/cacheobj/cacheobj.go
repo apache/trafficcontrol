@@ -1,4 +1,4 @@
-package cache
+package cacheobj
 
 import (
 	"net/http"
@@ -13,6 +13,8 @@ type CacheObj struct {
 	RespHeaders      http.Header
 	RespCacheControl web.CacheControl
 	Code             int
+	OriginCode       int
+	ProxyURL         string
 	ReqTime          time.Time // this is our client's time when the object was requested
 	ReqRespTime      time.Time // this is our client's time when the object was received
 	RespRespTime     time.Time // this is the origin server's Date time when the object was sent
@@ -25,13 +27,15 @@ func (c CacheObj) ComputeSize() uint64 {
 	return uint64(len(c.Body))
 }
 
-func New(reqHeader http.Header, bytes []byte, code int, respHeader http.Header, reqTime time.Time, reqRespTime time.Time, respRespTime time.Time) *CacheObj {
+func New(reqHeader http.Header, bytes []byte, code int, originCode int, proxyURL string, respHeader http.Header, reqTime time.Time, reqRespTime time.Time, respRespTime time.Time) *CacheObj {
 	obj := &CacheObj{
 		Body:             bytes,
 		ReqHeaders:       reqHeader,
 		RespHeaders:      respHeader,
 		RespCacheControl: web.ParseCacheControl(respHeader),
 		Code:             code,
+		OriginCode:       originCode,
+		ProxyURL:         proxyURL,
 		ReqTime:          reqTime,
 		ReqRespTime:      reqRespTime,
 		RespRespTime:     respRespTime,
