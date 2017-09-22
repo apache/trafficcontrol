@@ -806,6 +806,7 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
+
 if __name__ == u'__main__':
     # Sample usages
     import sys
