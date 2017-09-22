@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -41,8 +42,9 @@ func getTestHwInfo() []tostructs.HwInfo {
 	hwinfo = append(hwinfo, testHwInfo)
 
 	testHwInfo2 := testHwInfo
-	testHwInfo2.Name = "hwinfo2"
-	testHwInfo2.DomainName = "domain.net"
+	testHwInfo2.Description = "hwinfo2"
+	testHwInfo2.Val = "val2"
+	testHwInfo2.ServerID = 2
 	hwinfo = append(hwinfo, testHwInfo2)
 
 	return hwinfo
@@ -58,18 +60,18 @@ func TestGetHwInfo(t *testing.T) {
 	defer db.Close()
 
 	testHwInfo := getTestHwInfo()
-	cols := ColsFromStructByTag("db", tostructs.HwInfo{})
+	cols := test.ColsFromStructByTag("db", tostructs.HwInfo{})
 	rows := sqlmock.NewRows(cols)
 
 	//TODO: drichardson - build helper to add these Rows from the struct values
 	//                    or by CSV if types get in the way
 	for _, ts := range testHwInfo {
 		rows = rows.AddRow(
-			ts.DNSSECEnabled,
-			ts.DomainName,
 			ts.ID,
+			ts.ServerID,
+			ts.Description,
+			ts.Val,
 			ts.LastUpdated,
-			ts.Name,
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
@@ -84,7 +86,6 @@ func TestGetHwInfo(t *testing.T) {
 	if len(servers) != 2 {
 		t.Errorf("getHwInfo expected: len(servers) == 1, actual: %v", len(servers))
 	}
-
 }
 
 type SortableHwInfo []tostructs.HwInfo
@@ -96,5 +97,5 @@ func (s SortableHwInfo) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
 func (s SortableHwInfo) Less(i, j int) bool {
-	return s[i].Name < s[j].Name
+	return s[i].Description < s[j].Description
 }
