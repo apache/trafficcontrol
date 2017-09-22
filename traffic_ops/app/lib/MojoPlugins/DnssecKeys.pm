@@ -86,12 +86,9 @@ sub register {
 			#add to keys hash
 			$keys->{$key} = { zsk => [@zsk], ksk => [@ksk] };
 
-			#delivery services
-			#first get profile_id
-			my $profile_id = $self->get_profile_id_by_cdn($key);
-
-			#then get deliveryservices
-			my %search = ( profile => $profile_id );
+			#find the cdn's delivery services to generate keys for
+			my $cdn = $self->db->resultset('Cdn')->find( { name => $key } );
+			my %search = ( cdn_id => $cdn->id );
 			my @ds_rs = $self->db->resultset('Deliveryservice')->search( \%search , { prefetch => [ { 'cdn' => undef }]});
 			foreach my $ds (@ds_rs) {
 				if (   $ds->type->name !~ m/^HTTP/
@@ -132,44 +129,6 @@ sub register {
 
 				#add to keys hash
 				$keys->{$xml_id} = { zsk => [@zsk], ksk => [@ksk] };
-			}
-
-			#add a param to the database to track changes
-			#check to see if param already exists
-			my $param_id = $self->db->resultset('Parameter')->search(
-				{   name        => $key . ".dnssec.inception",
-					config_file => "CRConfig.json"
-				}
-			)->get_column('id')->single();
-
-			#if exists, update
-			if ( defined($param_id) ) {
-				my $param_update = $self->db->resultset('Parameter')
-					->find( { id => $param_id } );
-				$param_update->value($inception);
-				$param_update->update();
-			}
-
-			#else insert param
-			else {
-				my $param_insert = $self->db->resultset('Parameter')->create(
-					{   name        => $key . ".dnssec.inception",
-						config_file => "CRConfig.json",
-						value       => $inception,
-					}
-				);
-				$param_insert->insert();
-				$param_id = $param_insert->id();
-
-				#insert into profile_param
-				my $pp_insert
-					= $self->db->resultset('ProfileParameter')->create(
-					{   profile   => $profile_id,
-						parameter => $param_id,
-					}
-					);
-				$pp_insert->insert();
-
 			}
 
 			my $json_data = encode_json($keys);
