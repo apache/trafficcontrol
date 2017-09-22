@@ -68,27 +68,29 @@ func main() {
 	}
 
 	log.Infof(`Using Config values:
-		Port:                %s
-		Db Server:           %s
-		Db User:             %s
-		Db Name:             %s
-		Db Ssl:              %t
-		Max Db Connections:  %d
-		TO URL:              %s
-		Insecure:            %t
-		Cert Path:           %s
-		Key Path:            %s
-		Proxy Timeout:       %v
-		Proxy KeepAlive:     %v
-		Read Timeout:        %v
-		Read Header Timeout: %v
-		Write Timeout:       %v
-		Idle Timeout:        %v
-		Error Log:           %s
-		Warn Log:            %s
-		Info Log:            %s
-		Debug Log:           %s
-		Event Log:           %s`, cfg.HTTPPort, cfg.DBServer, cfg.DBUser, cfg.DBDB, cfg.DBSSL, cfg.MaxDBConnections, cfg.TOURLStr, cfg.Insecure, cfg.CertPath, cfg.KeyPath, time.Duration(cfg.ProxyTimeout) * time.Second, time.Duration(cfg.ProxyKeepAlive) * time.Second, time.Duration(cfg.ReadTimeout) * time.Second, time.Duration(cfg.ReadHeaderTimeout) * time.Second, time.Duration(cfg.WriteTimeout) * time.Second, time.Duration(cfg.IdleTimeout) * time.Second, cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug, cfg.LogLocationEvent)
+		Port:                 %s
+		Db Server:            %s
+		Db User:              %s
+		Db Name:              %s
+		Db Ssl:               %t
+		Max Db Connections:   %d
+		TO URL:               %s
+		Insecure:             %t
+		Cert Path:            %s
+		Key Path:             %s
+		Proxy Timeout:        %v
+		Proxy KeepAlive:      %v
+		Proxy tls handshake:  %v
+		Proxy header timeout: %v
+		Read Timeout:         %v
+		Read Header Timeout:  %v
+		Write Timeout:        %v
+		Idle Timeout:         %v
+		Error Log:            %s
+		Warn Log:             %s
+		Info Log:             %s
+		Debug Log:            %s
+		Event Log:            %s`, cfg.HTTPPort, cfg.DBServer, cfg.DBUser, cfg.DBDB, cfg.DBSSL, cfg.MaxDBConnections, cfg.TOURLStr, cfg.Insecure, cfg.CertPath, cfg.KeyPath, time.Duration(cfg.ProxyTimeout) * time.Second, time.Duration(cfg.ProxyKeepAlive) * time.Second, time.Duration(cfg.ProxyTLSTimeout) * time.Second, time.Duration(cfg.ProxyReadHeaderTimeout) * time.Second, time.Duration(cfg.ReadTimeout) * time.Second, time.Duration(cfg.ReadHeaderTimeout) * time.Second, time.Duration(cfg.WriteTimeout) * time.Second, time.Duration(cfg.IdleTimeout) * time.Second, cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug, cfg.LogLocationEvent)
 
 	sslStr := "require"
 	if !cfg.DBSSL {
