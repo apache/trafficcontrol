@@ -335,8 +335,6 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	log.EventRaw("LOG0 " + time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + h.scheme + " " + r.RequestURI + "\n")
-
 	h.stats.IncConnections()
 	defer h.stats.DecConnections()
 
