@@ -87,7 +87,7 @@ func getCdns(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Cdn, error) 
 		"name":       "name",
 	}
 
-	query, queryValues := SelectStmt(v, selectCdnsQuery(), queryParamsToQueryCols)
+	query, queryValues := BuildQuery(v, selectCdnsQuery(), queryParamsToQueryCols)
 	rows, err = db.NamedQuery(query, queryValues)
 
 	if err != nil {
