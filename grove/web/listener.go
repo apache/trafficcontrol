@@ -3,6 +3,7 @@ package web
 import (
 	"crypto/tls"
 	"errors"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"net"
 	"net/http"
 	"time"
@@ -15,8 +16,24 @@ type InterceptListener struct {
 
 func getConnStateCallback(connMap *ConnMap) func(net.Conn, http.ConnState) {
 	return func(conn net.Conn, state http.ConnState) {
-		if state == http.StateClosed {
+		switch state {
+		case http.StateClosed:
+			fallthrough
+		case http.StateIdle:
+			if iconn, ok := conn.(*InterceptConn); !ok {
+				log.Errorf("ConnState callback: idle conn is not a InterceptConn: '%T'\n", conn)
+			} else {
+				// MUST be zeroed when the conn moves to Idle, because the Active callback happens _after_ some/all bytes have been read
+				iconn.bytesRead = 0
+				iconn.bytesWritten = 0
+			}
 			connMap.Pop(conn.RemoteAddr().String())
+		case http.StateActive:
+			if iconn, ok := conn.(*InterceptConn); !ok {
+				log.Errorf("ConnState callback: active conn is not a InterceptConn: '%T'\n", conn)
+			} else {
+				connMap.Push(iconn)
+			}
 		}
 	}
 }
@@ -46,6 +63,7 @@ func InterceptListenTLS(net string, laddr string, certs []tls.Certificate) (net.
 func (l *InterceptListener) Accept() (net.Conn, error) {
 	c, err := l.realListener.Accept()
 	if err != nil {
+		log.Errorf("Accept err: %v\n", err) // TODO stats?
 		return c, err
 	}
 	interceptConn := &InterceptConn{realConn: c}
