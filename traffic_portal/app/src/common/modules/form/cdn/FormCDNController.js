@@ -27,11 +27,7 @@ var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils,
     ];
 
     $scope.manageDNSSEC = function() {
-        alert('not hooked up yet: manageDNSSEC for CDN');
-    };
-
-    $scope.manageSSL = function() {
-        alert('not hooked up yet: manageSSL for cdn');
+        $location.path($location.path() + '/dnssec-keys');
     };
 
     $scope.queueServerUpdates = function(cdn) {

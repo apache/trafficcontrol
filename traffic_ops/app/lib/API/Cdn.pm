@@ -1086,7 +1086,7 @@ sub dnssec_keys {
 			return $self->success($keys);
 		}
 		else {
-			return $self->alert( { Error => " - Dnssec keys for $cdn_name do not exist!  Response was: " . $get_keys->content } );
+			return $self->success({}, " - Dnssec keys for $cdn_name could not be found. ");
 		}
 	}
 	return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
@@ -1372,7 +1372,7 @@ sub dnssec_keys_generate {
 		my $rc       = $response->{_rc};
 		if ( $rc eq "204" ) {
 			&log( $self, "Generated DNSSEC keys for CDN $key", "APICHANGE" );
-			$self->success("Successfully created $key_type keys for $key");
+			$self->success_message("Successfully created $key_type keys for $key");
 		}
 		else {
 			$self->alert( { Error => " - DNSSEC keys for $key could not be created.  Response was" . $response->content } );
