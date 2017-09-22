@@ -353,22 +353,9 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	clientIp, _ := GetClientIPPort(r)
 
 	remappingProducer, err := h.remapper.RemappingProducer(r, h.scheme)
-	bytesWritten := uint64(0)
-	if err != nil {
-		code := 0
-		if err == ErrRuleNotFound {
-			log.Debugf("rule not found for %v\n", r.RequestURI)
-			code = http.StatusNotFound
-		} else if err == ErrIPNotAllowed {
-			log.Debugf("IP %v not allowed\n", r.RemoteAddr)
-			code = http.StatusForbidden
-		} else {
-			log.Debugf("request error: %v\n", err)
-			code = http.StatusBadRequest
-		}
-		code, bytesWritten, err = serveErr(w, code)
-		bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, code, bytesWritten)
 
+	statAndLog := func(code int, bytesWritten uint64, successfullyRespondedToClient bool, successfullyGotFromOrigin bool, cacheHitStr string, originStatus int, originBytes uint64) {
+		bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, code, bytesWritten)
 		log.EventRaw(atsEventLogStr(
 			time.Now(),
 			clientIp,
@@ -383,17 +370,33 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 			code,
 			time.Now().Sub(reqTime)/time.Millisecond,
 			bytesSent,
-			0,
-			0,
-			err == nil,
-			false,
-			GetCacheHitStr(ReuseCannot, 0, true),
+			originStatus,
+			originBytes,
+			successfullyRespondedToClient,
+			successfullyGotFromOrigin,
+			cacheHitStr,
 			remappingProducer.ProxyStr(),
 			"-", // TODO fix?
 			r.UserAgent(),
 			moneyTraceHdr,
 		))
+	}
 
+	if err != nil {
+		code := 0
+		if err == ErrRuleNotFound {
+			log.Debugf("rule not found for %v\n", r.RequestURI)
+			code = http.StatusNotFound
+		} else if err == ErrIPNotAllowed {
+			log.Debugf("IP %v not allowed\n", r.RemoteAddr)
+			code = http.StatusForbidden
+		} else {
+			log.Debugf("request error: %v\n", err)
+			code = http.StatusBadRequest
+		}
+		bytesWritten := uint64(0)
+		code, bytesWritten, err = serveErr(w, code)
+		statAndLog(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, 0, true), 0, 0)
 		return
 	}
 
@@ -435,31 +438,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 			}
-			bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, code, bytesWritten)
-			log.EventRaw(atsEventLogStr(
-				time.Now(),
-				clientIp,
-				h.hostname,
-				r.Host,
-				h.port,
-				remappingProducer.ToFQDN(),
-				h.scheme,
-				r.URL.String(),
-				r.Method,
-				r.Proto,
-				code,
-				time.Now().Sub(reqTime)/time.Millisecond,
-				bytesSent,
-				0,
-				0,
-				err == nil,
-				false,
-				GetCacheHitStr(ReuseCannot, 0, true),
-				remappingProducer.ProxyStr(),
-				"-", // TODO fix?
-				r.UserAgent(),
-				moneyTraceHdr,
-			))
+			statAndLog(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, 0, true), 0, 0)
 			return
 		}
 
@@ -467,31 +446,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 		}
-		bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, cacheObj.Code, bytesWritten)
-		log.EventRaw(atsEventLogStr(
-			time.Now(),
-			clientIp,
-			h.hostname,
-			r.Host,
-			h.port,
-			remappingProducer.ToFQDN(),
-			h.scheme,
-			r.URL.String(),
-			r.Method,
-			r.Proto,
-			cacheObj.Code,
-			time.Now().Sub(reqTime)/time.Millisecond,
-			bytesSent,
-			0,
-			0,
-			true,
-			err == nil,
-			GetCacheHitStr(ReuseCannot, cacheObj.OriginCode, false),
-			remappingProducer.ProxyStr(),
-			"-", // TODO fix?
-			r.UserAgent(),
-			moneyTraceHdr,
-		))
+		statAndLog(cacheObj.Code, bytesWritten, true, err == nil, GetCacheHitStr(ReuseCannot, cacheObj.OriginCode, false), 0, 0)
 		return
 	}
 
@@ -502,33 +457,8 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		cacheObj, err = retryingGet(r, nil)
 		if err != nil {
 			log.Errorf("retrying get error (in unexpected cacheobj): %v\n", err)
-
 			code, bytesWritten, err := serveReqErr(w)
-			bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, code, bytesWritten)
-			log.EventRaw(atsEventLogStr(
-				time.Now(),
-				clientIp,
-				h.hostname,
-				r.Host,
-				h.port,
-				remappingProducer.ToFQDN(),
-				h.scheme,
-				r.URL.String(),
-				r.Method,
-				r.Proto,
-				code,
-				time.Now().Sub(reqTime)/time.Millisecond,
-				bytesSent,
-				0,
-				0,
-				err == nil,
-				false,
-				GetCacheHitStr(ReuseCannot, 0, true),
-				remappingProducer.ProxyStr(),
-				"-", // TODO fix?
-				r.UserAgent(),
-				moneyTraceHdr,
-			))
+			statAndLog(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, 0, false), 0, 0)
 			return
 		}
 
@@ -537,31 +467,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 		}
-		bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, cacheObj.Code, bytesWritten)
-		log.EventRaw(atsEventLogStr(
-			time.Now(),
-			clientIp,
-			h.hostname,
-			r.Host,
-			h.port,
-			remappingProducer.ToFQDN(),
-			h.scheme,
-			r.URL.String(),
-			r.Method,
-			r.Proto,
-			cacheObj.Code,
-			time.Now().Sub(reqTime)/time.Millisecond,
-			bytesSent,
-			cacheObj.OriginCode,
-			cacheObj.Size,
-			err == nil,
-			true,
-			GetCacheHitStr(ReuseCannot, cacheObj.OriginCode, false),
-			remappingProducer.ProxyStr(),
-			"-", // TODO fix?
-			r.UserAgent(),
-			moneyTraceHdr,
-		))
+		statAndLog(cacheObj.Code, bytesWritten, err == nil, true, GetCacheHitStr(ReuseCannot, cacheObj.OriginCode, false), cacheObj.OriginCode, cacheObj.Size)
 		return
 	}
 
@@ -581,31 +487,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 			}
-			bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, code, bytesWritten)
-			log.EventRaw(atsEventLogStr(
-				time.Now(),
-				clientIp,
-				h.hostname,
-				r.Host,
-				h.port,
-				remappingProducer.ToFQDN(),
-				h.scheme,
-				r.URL.String(),
-				r.Method,
-				r.Proto,
-				code,
-				time.Now().Sub(reqTime)/time.Millisecond,
-				bytesSent,
-				0,
-				0,
-				err == nil,
-				false,
-				GetCacheHitStr(ReuseCannot, 0, true),
-				remappingProducer.ProxyStr(),
-				"-", // TODO fix?
-				r.UserAgent(),
-				moneyTraceHdr,
-			))
+			statAndLog(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, 0, false), 0, 0)
 			return
 		}
 	case ReuseMustRevalidate:
@@ -620,31 +502,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 			}
-			bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, code, bytesWritten)
-			log.EventRaw(atsEventLogStr(
-				time.Now(),
-				clientIp,
-				h.hostname,
-				r.Host,
-				h.port,
-				remappingProducer.ToFQDN(),
-				h.scheme,
-				r.URL.String(),
-				r.Method,
-				r.Proto,
-				code,
-				time.Now().Sub(reqTime)/time.Millisecond,
-				bytesSent,
-				0,
-				0,
-				err == nil,
-				false,
-				GetCacheHitStr(ReuseCannot, code, true),
-				remappingProducer.ProxyStr(),
-				"-", // TODO fix?
-				r.UserAgent(),
-				moneyTraceHdr,
-			))
+			statAndLog(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, code, false), 0, 0)
 			return
 		}
 
@@ -666,31 +524,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 	}
-
-	log.EventRaw(atsEventLogStr(
-		time.Now(),
-		clientIp,
-		h.hostname,
-		r.Host,
-		h.port,
-		remappingProducer.ToFQDN(),
-		h.scheme,
-		r.URL.String(),
-		r.Method,
-		r.Proto,
-		cacheObj.Code,
-		time.Now().Sub(reqTime)/time.Millisecond,
-		bytesSent,
-		cacheObj.OriginCode,
-		cacheObj.Size,
-		err == nil,
-		true,
-		GetCacheHitStr(canReuseStored, cacheObj.OriginCode, false),
-		remappingProducer.ProxyStr(),
-		`-`, // TODO fix?
-		r.UserAgent(),
-		moneyTraceHdr,
-	))
+	statAndLog(cacheObj.Code, bytesSent, err == nil, true, GetCacheHitStr(canReuseStored, cacheObj.OriginCode, false), cacheObj.OriginCode, cacheObj.Size)
 }
 
 //GetClientIP returns the client IP address of the given request. It returns the first x-forwarded-for IP if any, else the RemoteAddr
@@ -732,7 +566,7 @@ func atsEventLogStr(
 	proxyUsed string, // phr
 	thisProxyName string, // pqsn
 	clientUserAgent string, // client user agent
-	xmt string, // ??
+	xmt string, // moneytrace header
 ) string {
 	unixNano := timestamp.UnixNano()
 	unixSec := unixNano / NSPerSec
@@ -750,13 +584,6 @@ func atsEventLogStr(
 		pfsc = "INTR"
 	}
 
-	// parentHost := ""
-	// if proxyUsed != "NONE" {
-	// 	parentHost = proxyUsed
-	// } else {
-	// 	parentHost = originHost
-	// }
-
 	// TODO escape quotes within useragent, moneytrace
 	clientUserAgent = `"` + clientUserAgent + `"`
 	if xmt == "" {
@@ -764,7 +591,6 @@ func atsEventLogStr(
 	} else {
 		xmt = `"` + xmt + `"`
 	}
-
 
 	return strconv.FormatInt(unixSec, 10) + "." + unixFracStr + " chi=" + clientIP + " phn=" + selfHostname + " php=" + reqPort + " shn=" + originHost + " url=" + scheme + "://" + reqHost + url + " cqhn=" + method + " cqhv=" + protocol + " pssc=" + strconv.FormatInt(int64(respCode), 10) + " ttms=" + strconv.FormatInt(int64(timeToServe.Nanoseconds()/NSPerMS), 10) + " b=" + strconv.FormatInt(int64(bytesSent), 10) + " sssc=" + strconv.FormatInt(int64(originStatus), 10) + " sscl=" + strconv.FormatInt(int64(originBytes), 10) + " cfsc=" + cfsc + " pfsc=" + pfsc + " crc=" + cacheHit + " phr=" + proxyUsed + " psqn=" + thisProxyName + " uas=" + clientUserAgent + " xmt=" + xmt + "\n"
 }
