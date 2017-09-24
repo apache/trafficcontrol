@@ -93,6 +93,18 @@ class TOSession(restapi.RestApiSession):
                  def get_deliveryservice_ssl_keys_by_xml_id(self, xml_id=None, query_params=None):
                      pass
 
+        E.g. End-point with request data:
+            given end-point URL: POST api/1.2/cdns
+                 @restapi.api_request(u'post', u'cdns', (u'1.1', u'1.2',))
+                 def create_cdn(self, data=None):
+                     pass
+
+        E.g. End-point with URL parameters and request data:
+            given end-point URL: PUT api/1.2/cdns/{cdn_id:d}
+                 @restapi.api_request(u'put', u'cdns', (u'1.1', u'1.2',))
+                 def update_cdn_by_id(self, cdn_id=None, data=None):
+                     pass
+                     
     Calling end-point methods:
 
         E.g. Using no URL parameters and no query parameters:

@@ -113,7 +113,7 @@ def api_request(method_name, api_path, supported_versions):
 class RestApiSession(object):
     def __init__(self, host_ip, api_version=None, api_base_path=u'api/',
                  host_port=443, ssl=True, headers=default_headers, verify_cert=True,
-                 create_session=True, max_retries=5):
+                 create_session=False, max_retries=5):
         """
         The class initializer.
         :param host_ip: The dns name or ip address of the RESTful API host to use to talk to the API
