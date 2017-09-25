@@ -154,7 +154,7 @@ func main() {
 
 	certs, err := loadCerts(remapper.Rules())
 	if err != nil {
-		log.Errorf("starting service: loading certificates: %V\n", err)
+		log.Errorf("starting service: loading certificates: %v\n", err)
 		os.Exit(1)
 	}
 	defaultCert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
