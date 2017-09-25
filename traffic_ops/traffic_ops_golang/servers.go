@@ -30,6 +30,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
 	"github.com/jmoiron/sqlx"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"database/sql"
 	"github.com/lib/pq"
 	"strings"
@@ -65,7 +67,7 @@ func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(api.ApplicationJson, api.ApplicationJson)
 		fmt.Fprintf(w, "%s", respBts)
 	}
 }
@@ -190,19 +192,9 @@ JOIN type t ON s.type = t.id`
 }
 
 func assignDeliveryServicesToServerHandler(db *sqlx.DB) AuthRegexHandlerFunc {
+
 	return func(w http.ResponseWriter, r *http.Request, params PathParams, username string, privLevel int) {
-		handleErr := func(err error, status int) {
-			log.Errorf("%v %v\n", r.RemoteAddr, err)
-			errBytes, jsonErr := json.Marshal(CreateErrorAlerts(err))
-			if jsonErr != nil {
-				log.Errorf("failed to marshal error: %s\n", jsonErr)
-				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintf(w, http.StatusText(http.StatusInternalServerError))
-				return
-			}
-			w.WriteHeader(status)
-			fmt.Fprintf(w, "%s", errBytes)
-		}
+		handleErr := api.GetHandleErrorFunc(w, r)
 
 		var dsList []int
 
@@ -236,15 +228,15 @@ func assignDeliveryServicesToServerHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 
 		resp := struct {
 			Response []int `json:"response"`
-			Alerts
-		}{assignedDSes, CreateAlerts(SuccessLevel, "successfully assigned dses to server")}
+			api.Alerts
+		}{assignedDSes, api.CreateAlerts(api.SuccessLevel, "successfully assigned dses to server")}
 		respBts, err := json.Marshal(resp)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set(api.ContentType, api.ApplicationJson)
 		fmt.Fprintf(w, "%s", respBts)
 	}
 }
@@ -259,19 +251,19 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 	//transaction rollback in this functions requires err to be set to the proper error or nil before returning
 	tx, err := db.Beginx()
 	defer func() {
-		if tx != nil {
-			if err != nil {
-				tx.Rollback()
-				return
-			}
-			tx.Commit()
+		if tx == nil {
+			return
 		}
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
 	}()
 
-	DBError := fmt.Errorf("database access error")
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v\n", err)
-		return nil, DBError
+		return nil, api.DBError
 	}
 
 	if replace {
@@ -279,12 +271,12 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 		deleteCurrent, err := tx.Prepare("DELETE FROM deliveryservice_server WHERE server = $1")
 		if err != nil {
 			log.Error.Printf("could not prepare deliveryservice_server delete statement: %s\n", err)
-			return nil, DBError
+			return nil, api.DBError
 		}
 		_, err = deleteCurrent.Exec(server)
 		if err != nil {
 			log.Error.Printf("could not delete old deliveryservice_server associations for server: %s\n", err)
-			return nil, DBError
+			return nil, api.DBError
 		}
 	}
 
@@ -298,7 +290,7 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 	//      2   |   100
 	//      3   |   100
 	// UNNEST is used to turn the array of ds values into, essentially, * FROM ( VALUES (1),(2),(3) )
-	// this allows for a single insert query instead of a loop over the dses as was done in the perl code.
+	// this allows for a single insert query instead of a loop over the dses.
 	// This pattern is used for the other bulk inserts as well.
 	bulkInsert, err := tx.Prepare(`INSERT INTO deliveryservice_server (deliveryservice, server)
 	WITH
@@ -307,19 +299,19 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 	SELECT * FROM q1,q2 ON CONFLICT DO NOTHING`)
 	if err != nil {
 		log.Error.Printf("could not prepare deliveryservice_server bulk insert: %s\n", err)
-		return nil, DBError
+		return nil, api.DBError
 	}
 	_, err = bulkInsert.Exec(dsPqArray, server)
 	if err != nil {
 		log.Error.Printf("could not execute deliveryservice_server bulk insert: %s\n", err)
-		return nil, DBError
+		return nil, api.DBError
 	}
 	//select dses assigned now.
 	var newDses []int
 	tx.Select(&newDses, "SELECT deliveryservice FROM deliveryservice_server where server = $1", server)
 
 	//need remap config location
-	row := tx.QueryRow("SELECT value FROM parameter WHERE name = 'location' AND config_file = 'remap.config'")
+	row := tx.QueryRow("SELECT value FROM parameter WHERE name = 'location' AND config_file = '" + ats.RemapFile + "'")
 	var atsConfigLocation string
 	row.Scan(&atsConfigLocation)
 	if strings.HasSuffix(atsConfigLocation, "/") {
@@ -330,12 +322,12 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 	selectDsFieldsQuery, err := tx.Prepare("SELECT xml_id, edge_header_rewrite, regex_remap, cacheurl FROM deliveryservice WHERE id = ANY($1::bigint[])")
 	if err != nil {
 		log.Error.Printf("could not prepare ds fields query: %s\n", err)
-		return nil, DBError
+		return nil, api.DBError
 	}
 	rows, err := selectDsFieldsQuery.Query(dsPqArray)
 	if err != nil {
 		log.Error.Printf("could not execute ds fields select query: %s\n", err)
-		return nil, DBError
+		return nil, api.DBError
 	}
 	defer rows.Close()
 
@@ -355,22 +347,23 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 
 		if err := rows.Scan(&XmlId, &EdgeHeaderRewrite, &RegexRemap, &CacheUrl); err != nil {
 			log.Error.Printf("could not scan ds fields row: %s\n", err)
-			return nil, DBError
+			return nil, api.DBError
 		}
 		if XmlId.Valid && len(XmlId.String) > 0 {
-			param := "hdr_rw_" + XmlId.String + ".config"
+			//param := "hdr_rw_" + XmlId.String + ".config"
+			param := ats.GetConfigFile(ats.HeaderRewritePrefix, XmlId.String)
 			if EdgeHeaderRewrite.Valid && len(EdgeHeaderRewrite.String) > 0 {
 				insert = append(insert, param)
 			} else {
 				delete = append(delete, param)
 			}
-			param = "regex_remap_" + XmlId.String + ".config"
+			param = ats.GetConfigFile(ats.RegexRemapPrefix, XmlId.String)
 			if RegexRemap.Valid && len(RegexRemap.String) > 0 {
 				insert = append(insert, param)
 			} else {
 				delete = append(delete, param)
 			}
-			param = "cacheurl_" + XmlId.String + ".config"
+			param = ats.GetConfigFile(ats.CacheUrlPrefix,XmlId.String)
 			if CacheUrl.Valid && len(CacheUrl.String) > 0 {
 				insert = append(insert, param)
 			} else {
@@ -389,31 +382,31 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 	 SELECT * FROM q1,q2,q3 ON CONFLICT DO NOTHING`)
 	if err != nil {
 		log.Error.Printf("could not prepare parameter bulk insert query: %s\n", err)
-		return nil, DBError
+		return nil, api.DBError
 	}
 	fileNamePqArray := pq.Array(insert)
 	if _, err = insertParams.Exec(fileNamePqArray, "location", atsConfigLocation); err != nil {
 		log.Error.Printf("could not execute parameter bulk insert: %s\n", err)
-		return nil, DBError
+		return nil, api.DBError
 	}
 
 	//select the ids associated with the parameters we created above (may be able to get them from insert above to optimize)
 	selectParameterIds, err := tx.Prepare("SELECT id FROM parameter WHERE name = 'location' AND config_file IN ($1)")
 	if err != nil {
 		log.Error.Printf("could not prepare parameter id select query: %s\n", err)
-		return nil, DBError
+		return nil, api.DBError
 	}
 	rows, err = selectParameterIds.Query(fileNamePqArray)
 	if err != nil {
 		log.Error.Printf("could not execute parameter id select query: %s\n", err)
-		return nil, DBError
+		return nil, api.DBError
 	}
 	parameterIds := []int64{}
 	for rows.Next() {
 		var Id int64
 		if err := rows.Scan(&Id); err != nil {
 			log.Error.Printf("could not scan parameter id: %s\n", err)
-			return nil, DBError
+			return nil, api.DBError
 		}
 		parameterIds = append(parameterIds, Id)
 	}
@@ -427,22 +420,22 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 	ON CONFLICT DO NOTHING`)
 	if err != nil {
 		log.Error.Printf("could not prepare profile_parameter bulk insert: %s\n", err)
-		return nil, DBError
+		return nil, api.DBError
 	}
 	if _, err = insertProfileParams.Exec(dsPqArray, pq.Array(parameterIds)); err != nil {
 		log.Error.Printf("could not execute profile_parameter bulk insert: %s\n", err)
-		return nil, DBError
+		return nil, api.DBError
 	}
 
 	//process delete list
 	deleteTx, err := tx.Prepare(`DELETE FROM parameter WHERE name = 'location' AND config_file = ANY($1)`)
 	if err != nil {
 		log.Error.Printf("could not prepare parameter delete query: %s\n", err)
-		return nil, DBError
+		return nil, api.DBError
 	}
 	if _, err = deleteTx.Exec(pq.Array(delete)); err != nil {
 		log.Error.Printf("could not execute parameter delete query: %s\n", err)
-		return nil, DBError
+		return nil, api.DBError
 	}
 
 	return newDses, nil
