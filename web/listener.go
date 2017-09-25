@@ -2,7 +2,6 @@ package web
 
 import (
 	"crypto/tls"
-	"errors"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"net"
 	"net/http"
@@ -49,15 +48,17 @@ func InterceptListen(network, laddr string) (net.Listener, *ConnMap, func(net.Co
 }
 
 // InterceptListenTLS is like InterceptListen but for serving HTTPS.
-func InterceptListenTLS(net string, laddr string, certs []tls.Certificate) (net.Listener, *ConnMap, func(net.Conn, http.ConnState), error) {
-	interceptListener, connMap, connState, err := InterceptListen(net, laddr)
-	if err != nil {
-		return nil, nil, nil, errors.New("creating InterceptListen: " + err.Error())
-	}
+func InterceptListenTLS(network string, laddr string, certs []tls.Certificate) (net.Listener, *ConnMap, func(net.Conn, http.ConnState), error) {
 	config := &tls.Config{NextProtos: []string{"h2"}}
 	config.Certificates = certs
-	tlsListener := tls.NewListener(interceptListener, config)
-	return tlsListener, connMap, connState, nil
+	config.BuildNameToCertificate()
+	l, err := net.Listen(network, laddr)
+	if err != nil {
+		return l, nil, nil, err
+	}
+	connMap := NewConnMap()
+	tlsListener := tls.NewListener(l, config)
+	return &InterceptListener{realListener: tlsListener, connMap: connMap}, connMap, getConnStateCallback(connMap), nil
 }
 
 func (l *InterceptListener) Accept() (net.Conn, error) {
