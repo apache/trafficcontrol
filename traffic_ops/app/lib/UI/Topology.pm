@@ -90,20 +90,19 @@ sub gen_crconfig_json {
         "^EDGE" => "EDGE",
         "^MID"  => "MID",
     };
-
+    my $found;
     for my $cachetype ( keys %{$types} ) {
-        my $found = 0;
-
+        
         for my $this_type ( keys %{$profile_cache} ) {
             if ( $this_type =~ m/$cachetype/ && scalar( @{ $profile_cache->{$this_type} } ) > 0 ) {
                 push @profile_caches, @{ $profile_cache->{$this_type} };
                 $found = 1;
             }
         }
+    }
 
-        if ( !$found ) {
-            my $e = Mojo::Exception->throw( "No " . $types->{$cachetype} . " profiles found for CDN: " . $cdn_name );
-        }
+    if ( !$found ) {
+        my $e = Mojo::Exception->throw( "No cache profiles found for CDN: " . $cdn_name );
     }
 
     my %condition = (
