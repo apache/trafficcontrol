@@ -356,13 +356,19 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 
 	statAndLog := func(code int, bytesWritten uint64, successfullyRespondedToClient bool, successfullyGotFromOrigin bool, cacheHitStr string, originStatus int, originBytes uint64) {
 		bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, code, bytesWritten)
+		toFQDN := ""
+		proxyStr := ""
+		if remappingProducer != nil {
+			toFQDN = remappingProducer.ToFQDN()
+			proxyStr = remappingProducer.ProxyStr()
+		}
 		log.EventRaw(atsEventLogStr(
 			time.Now(),
 			clientIp,
 			h.hostname,
 			r.Host,
 			h.port,
-			remappingProducer.ToFQDN(),
+			toFQDN,
 			h.scheme,
 			r.URL.String(),
 			r.Method,
@@ -375,7 +381,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 			successfullyRespondedToClient,
 			successfullyGotFromOrigin,
 			cacheHitStr,
-			remappingProducer.ProxyStr(),
+			proxyStr,
 			"-", // TODO fix?
 			r.UserAgent(),
 			moneyTraceHdr,
