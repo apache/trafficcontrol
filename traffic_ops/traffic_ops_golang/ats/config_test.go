@@ -1,4 +1,9 @@
-package main
+package ats
+
+import (
+	"testing"
+	"github.com/apache/incubator-trafficcontrol/traffic_stats/assert"
+)
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,32 +24,7 @@ package main
  * under the License.
  */
 
-type Alert struct {
-	Text  string `json:"text"`
-	Level string `json:"level"`
-}
-
-type Alerts struct {
-	Alerts []Alert `json:"alerts"`
-}
-
-const ErrorLevel = "error"
-const SuccessLevel = "success"
-const InfoLevel = "info"
-const WarnLevel = "warn"
-
-func CreateErrorAlerts(errs ...error) Alerts {
-	alerts := []Alert{}
-	for _, err := range errs {
-		alerts = append(alerts, Alert{err.Error(), ErrorLevel})
-	}
-	return Alerts{alerts}
-}
-
-func CreateAlerts(level string, messages ...string) Alerts {
-	alerts := []Alert{}
-	for _, message := range messages {
-		alerts = append(alerts, Alert{message, level})
-	}
-	return Alerts{alerts}
-}
+ func TestGetConfigFile(t *testing.T) {
+	 cfgFile := GetConfigFile(HeaderRewritePrefix,"my-xml-id")
+	 assert.Equal(t,cfgFile,"hdr_rw_my-xml-id.config")
+ }
