@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/url"
 	"os"
@@ -655,22 +657,20 @@ func getCertKeyFileName(cert to.CDNSSLKeys, dir string) string {
 
 func createCertificateFiles(cert to.CDNSSLKeys, dir string) error {
 	certFileName := getCertFileName(cert, dir)
-	certFile, err := os.OpenFile(certFileName, os.O_RDWR|os.O_CREATE, 0600)
+	crt, err := base64.StdEncoding.DecodeString(cert.Certificate.Crt)
 	if err != nil {
-		return errors.New("creating certificate file " + certFileName + ": " + err.Error())
+		return errors.New("base64decoding certificate file " + certFileName + ": " + err.Error())
 	}
-	defer certFile.Close()
-	if _, err := certFile.WriteString(cert.Certificate.Crt); err != nil {
+	if err := ioutil.WriteFile(certFileName, crt, 0644); err != nil {
 		return errors.New("writing certificate file " + certFileName + ": " + err.Error())
 	}
 
 	keyFileName := getCertKeyFileName(cert, dir)
-	keyFile, err := os.OpenFile(keyFileName, os.O_RDWR|os.O_CREATE, 0600)
+	key, err := base64.StdEncoding.DecodeString(cert.Certificate.Key)
 	if err != nil {
-		return errors.New("creating certificate key file " + keyFileName + ": " + err.Error())
+		return errors.New("base64decoding certificate key " + keyFileName + ": " + err.Error())
 	}
-	defer certFile.Close()
-	if _, err := keyFile.WriteString(cert.Certificate.Key); err != nil {
+	if err := ioutil.WriteFile(keyFileName, key, 0644); err != nil {
 		return errors.New("writing certificate key file " + keyFileName + ": " + err.Error())
 	}
 	return nil
