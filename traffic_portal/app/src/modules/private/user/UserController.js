@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var UserController = function($scope, $state, $location, $uibModal, formUtils, locationUtils, userService, authService, roleService, tenantService, userModel) {
+var UserController = function($scope, $state, $location, $uibModal, formUtils, locationUtils, tenantUtils, userService, authService, roleService, tenantService, userModel) {
 
     var updateUser = function(user, options) {
         userService.updateCurrentUser(user).
@@ -39,6 +39,7 @@ var UserController = function($scope, $state, $location, $uibModal, formUtils, l
         tenantService.getTenants()
             .then(function(result) {
                 $scope.tenants = result;
+                tenantUtils.addLevels($scope.tenants);
             });
     };
 
@@ -90,5 +91,5 @@ var UserController = function($scope, $state, $location, $uibModal, formUtils, l
 
 };
 
-UserController.$inject = ['$scope', '$state', '$location', '$uibModal', 'formUtils', 'locationUtils', 'userService', 'authService', 'roleService', 'tenantService', 'userModel'];
+UserController.$inject = ['$scope', '$state', '$location', '$uibModal', 'formUtils', 'locationUtils', 'tenantUtils', 'userService', 'authService', 'roleService', 'tenantService', 'userModel'];
 module.exports = UserController;

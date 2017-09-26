@@ -72,7 +72,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(userForm.tenantId), 'has-feedback': hasError(userForm.tenantId)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Tenant *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select name="tenantId" class="form-control" ng-model="user.tenantId" ng-options="tenant.id as tenant.name for tenant in tenants" required>
+                    <select name="tenantId" class="form-control" ng-model="user.tenantId" ng-options="tenant.id as tenantLabel(tenant) for tenant in tenants" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(userForm.tenantId, 'required')">Required</small>

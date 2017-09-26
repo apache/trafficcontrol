@@ -28,6 +28,10 @@ var UserEditController = function($scope) {
         return role.name + ' (' + role.privLevel + ')';
     };
 
+    $scope.tenantLabel = function(tenant) {
+        return '-'.repeat(tenant.level) + ' ' + tenant.name;
+    };
+
 };
 
 UserEditController.$inject = ['$scope'];
