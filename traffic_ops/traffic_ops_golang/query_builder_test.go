@@ -21,6 +21,7 @@ package main
 
 import (
 	"net/url"
+	"strings"
 	"testing"
 )
 
@@ -41,20 +42,8 @@ FROM table t
 		"param2": "t.col2",
 	}
 	query, queryValues := BuildQuery(v, selectStmt, queryParamsToSQLCols)
-	expectedSelectStmt := `SELECT
-t.col1,
-t.col2 
-
-FROM table t
-
-WHERE t.col1=:param1`
 
 	actualQuery := stripAllWhitespace(query)
-	expectedQuery := stripAllWhitespace(expectedSelectStmt)
-
-	if actualQuery != expectedQuery {
-		t.Errorf("expected: %v error, actual: %v", expectedQuery, actualQuery)
-	}
 
 	if queryValues == nil {
 		t.Errorf("expected: nil error, actual: %v", queryValues)
@@ -64,4 +53,14 @@ WHERE t.col1=:param1`
 	if expectedV1 != actualV1 {
 		t.Errorf("expected: %v error, actual: %v", expectedV1, actualV1)
 	}
+
+	if strings.Contains(actualQuery, expectedV1) {
+		t.Errorf("expected: %v error, actual: %v", actualQuery, expectedV1)
+	}
+
+	expectedV2 := v.Get("param2")
+	if strings.Contains(actualQuery, expectedV2) {
+		t.Errorf("expected: %v error, actual: %v", actualQuery, expectedV2)
+	}
+
 }
