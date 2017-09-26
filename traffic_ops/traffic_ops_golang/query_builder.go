@@ -52,6 +52,7 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]string, v url.V
 			m[key] = urlValue[0]
 			criteria = val + "=:" + key
 			queryValues[key] = urlValue[0]
+			// currently only supports a single query parameter at a time
 			break
 		}
 	}
