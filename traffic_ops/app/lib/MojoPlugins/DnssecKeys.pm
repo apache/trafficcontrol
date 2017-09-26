@@ -89,7 +89,7 @@ sub register {
 			#find the cdn's delivery services to generate keys for
 			my $cdn = $self->db->resultset('Cdn')->find( { name => $key } );
 			my %search = ( cdn_id => $cdn->id );
-			my @ds_rs = $self->db->resultset('Deliveryservice')->search( \%search , { prefetch => [ { 'cdn' => undef }]});
+			my @ds_rs = $self->db->resultset('Deliveryservice')->search( \%search , { prefetch => [ 'type' ] } );
 			foreach my $ds (@ds_rs) {
 				if (   $ds->type->name !~ m/^HTTP/
 					&& $ds->type->name !~ m/^DNS/ )
@@ -100,7 +100,7 @@ sub register {
 				my $ds_id  = $ds->id;
 
 				#create the ds domain name for dnssec keys
-				my $cdn_domain_name = $ds->cdn->domain_name;
+				my $cdn_domain_name = $cdn->domain_name;
 				my $ds_name = UI::DeliveryService::get_ds_domain_name($self, $ds_id, $xml_id, $cdn_domain_name);
 
 				$self->app->log->info("Creating keys for $xml_id.");
