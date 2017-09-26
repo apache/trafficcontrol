@@ -47,6 +47,8 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, "servers-wip.json$", wrapHeaders(wrapAuthWithData(serversHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
 		{1.2, http.MethodGet, "servers-wip$", wrapHeaders(wrapAuthWithData(serversHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
 		{1.2, http.MethodGet, "servers-wip.json$", wrapHeaders(wrapAuthWithData(serversHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
+		{1.2, http.MethodGet, "asns-wip$", wrapHeaders(wrapAuthWithData(ASNsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
+		{1.2, http.MethodGet, "asns-wip.json$", wrapHeaders(wrapAuthWithData(ASNsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
 		{1.2, http.MethodGet, "cdns-wip$", wrapHeaders(wrapAuthWithData(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},
 		{1.2, http.MethodGet, "cdns-wip.json$", wrapHeaders(wrapAuthWithData(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},
 		{1.2, http.MethodPost, "servers/{server}/deliveryservices$", wrapHeaders(wrapAuthWithData(assignDeliveryServicesToServerHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, PrivLevelOperations))},
@@ -73,11 +75,11 @@ func rootHandler(d ServerData) http.Handler {
 	// debug
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		DialContext:     (&net.Dialer{
-			Timeout: time.Duration(d.Config.ProxyTimeout) * time.Second,
+		DialContext: (&net.Dialer{
+			Timeout:   time.Duration(d.Config.ProxyTimeout) * time.Second,
 			KeepAlive: time.Duration(d.Config.ProxyKeepAlive) * time.Second,
 		}).DialContext,
-		TLSHandshakeTimeout: time.Duration(d.Config.ProxyTLSTimeout) * time.Second,
+		TLSHandshakeTimeout:   time.Duration(d.Config.ProxyTLSTimeout) * time.Second,
 		ResponseHeaderTimeout: time.Duration(d.Config.ProxyReadHeaderTimeout) * time.Second,
 		//Other knobs we can turn: ExpectContinueTimeout,IdleConnTimeout
 	}
@@ -85,7 +87,7 @@ func rootHandler(d ServerData) http.Handler {
 	rp.Transport = tr
 
 	rp.ErrorLog = log.Error //if we don't provide a logger to the reverse proxy it logs to stdout/err and is lost when ran by a script.
-	log.Debugf("our reverseProxy: %++v\n",rp)
+	log.Debugf("our reverseProxy: %++v\n", rp)
 	log.Debugf("our reverseProxy's transport: %++v\n", tr)
 	loggingProxyHandler := wrapAccessLog(d.TOSecret, rp)
 	return loggingProxyHandler
