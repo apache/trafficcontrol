@@ -49,7 +49,7 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]string, v url.V
 	m := make(map[string]interface{})
 	var criteria string
 
-	var criteriaArgs = []string{}
+	var criteriaArgs []string
 	queryValues := make(map[string]interface{})
 	for key, val := range queryParamsToSQLCols {
 		if urlValue, ok := v[key]; ok {
