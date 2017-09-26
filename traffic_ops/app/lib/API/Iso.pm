@@ -164,10 +164,10 @@ sub generate_iso {
 	close NF;
 
 	#generate and write management network config file if mgmt_IPAddress is defined
-	my $mgmt_network_string = "IPADDR=\"$mgmt_ip_address\"\nNETMASK=\"$mgmt_ip_netmask\"\nGATEWAY=\"$mgmt_ip_gateway\"\nHOSTNAME=\"$fqdn\"\nDHCP=\"$dhcp\"";
+	my $mgmt_network_string = "IPADDR=\"$mgmt_ip_address\"\nNETMASK=\"$mgmt_ip_netmask\"\nGATEWAY=\"$mgmt_ip_gateway\"\nDEVICE=$mgmt_interface";
 	$mgmt_ip_address =~ s/\/.*//g;
 	if (is_ipv6($mgmt_ip_address)) {
-		$mgmt_network_string = "IPV6ADDR=\"$mgmt_ip_address\"\nNETMASK=\"$mgmt_ip_netmask\"\nGATEWAY=\"$mgmt_ip_gateway\"\nHOSTNAME=\"$fqdn\"\nDHCP=\"$dhcp\"";
+		$mgmt_network_string = "IPV6ADDR=\"$mgmt_ip_address\"\nNETMASK=\"$mgmt_ip_netmask\"\nGATEWAY=\"$mgmt_ip_gateway\"\nDEVICE=$mgmt_interface";
 	}
 
 	open( NF, "> $cfg_dir/mgmt_network.cfg" ) or die "$cfg_dir/mgmt_network.cfg: $!";
