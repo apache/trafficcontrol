@@ -171,14 +171,17 @@ sub update {
 		return $self->not_found();
 	}
 
+	my $tenant_utils = Utils::Tenant->new($self);
+
 	#setting tenant_id to undef if tenant is not set.
 	my $tenant_id = exists( $params->{tenantId} ) ? $params->{tenantId} : undef;
-
-	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
 		#no access to resource tenant
 		return $self->forbidden("Forbidden: User is not available for your tenant.");
+	}
+	if ($tenant_utils->use_tenancy() and !defined($tenant_id) and defined($user->tenant_id)) {
+		return $self->alert("Invalid tenant. Cannot clear the user tenancy.");
 	}
 	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $tenant_id)) {
 		#no access to target tenancy
@@ -259,10 +262,15 @@ sub create {
 		return $self->forbidden();
 	}
 
-	#setting tenant_id to the user's tenant if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
+	#setting tenant_id to the user's tenant if tenant is not set.
 	my $tenant_utils = Utils::Tenant->new($self);
-	my $tenant_id = $params->{tenantId};
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
+	my $tenant_id = $params->{tenantId};
+	if (!defined($tenant_id) and $tenant_utils->use_tenancy()){
+		return $self->alert("Invalid tenant. Must set tenant for new user.");
+	}
+
 	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $tenant_id)) {
 		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
 	}
