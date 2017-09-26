@@ -34,6 +34,11 @@ import (
 const OldAccessLogPath = "/var/log/traffic_ops/access.log"
 const NewLogPath = "/var/log/traffic_ops/traffic_ops_golang.log"
 const DefaultMaxDBConnections = 50
+const DefaultProxyTimeout = 60
+const DefaultReadTimeout = 60
+const DefaultReadHeaderTimeout = 60
+const DefaultWriteTimeout = 60
+const DefaultIdleTimeout = 60
 
 func GetPerlConfigs(cdnConfPath string, dbConfPath string) (Config, error) {
 	configBytes, err := ioutil.ReadFile(cdnConfPath)
@@ -96,7 +101,7 @@ func getCDNConf(s string) (Config, error) {
 	}
 	cfg.TOURLStr = "https://127.0.0.1:" + oldPort
 	if cfg.TOURL, err = url.Parse(cfg.TOURLStr); err != nil {
-		return Config{}, fmt.Errorf("Invalid Traffic Ops URL '%v': err", cfg.TOURL, err)
+		return Config{}, fmt.Errorf("Invalid Traffic Ops URL '%v': %s", cfg.TOURL, err)
 	}
 
 	cfg.CertPath, err = getConfigCert(obj)
@@ -107,6 +112,41 @@ func getCDNConf(s string) (Config, error) {
 	cfg.KeyPath, err = getConfigKey(obj)
 	if err != nil {
 		return Config{}, err
+	}
+
+	if proxyTimeout, err := getProxyTimeout(obj); err != nil {
+		log.Warnf("failed to get proxy timeout from cdn.conf (%v), using default %v\n", err, DefaultProxyTimeout)
+		cfg.ProxyTimeout = DefaultProxyTimeout
+	} else {
+		cfg.ProxyTimeout = proxyTimeout
+	}
+
+	if readTimeout, err := getReadTimeout(obj); err != nil {
+		log.Warnf("failed to get read timeout from cdn.conf (%v), using default %v\n", err, DefaultReadTimeout)
+		cfg.ReadTimeout = DefaultReadTimeout
+	} else {
+		cfg.ReadTimeout = readTimeout
+	}
+
+	if readHeaderTimeout, err := getReadHeaderTimeout(obj); err != nil {
+		log.Warnf("failed to get readHeader timeout from cdn.conf (%v), using default %v\n", err, DefaultReadHeaderTimeout)
+		cfg.ReadHeaderTimeout = DefaultReadHeaderTimeout
+	} else {
+		cfg.ReadHeaderTimeout = readHeaderTimeout
+	}
+
+	if writeTimeout, err := getWriteTimeout(obj); err != nil {
+		log.Warnf("failed to get write timeout from cdn.conf (%v), using default %v\n", err, DefaultWriteTimeout)
+		cfg.WriteTimeout = DefaultWriteTimeout
+	} else {
+		cfg.WriteTimeout = writeTimeout
+	}
+
+	if idleTimeout, err := getIdleTimeout(obj); err != nil {
+		log.Warnf("failed to get idle timeout from cdn.conf (%v), using default %v\n", err, DefaultIdleTimeout)
+		cfg.IdleTimeout = DefaultIdleTimeout
+	} else {
+		cfg.IdleTimeout = idleTimeout
 	}
 
 	if dbMaxConns, err := getDBMaxConns(obj); err != nil {
@@ -134,6 +174,66 @@ func getPort(obj map[string]interface{}) (string, error) {
 		return "", fmt.Errorf("invalid port '%s'", portStr)
 	}
 	return strconv.Itoa(port), nil
+}
+
+func getProxyTimeout(obj map[string]interface{}) (int, error) {
+	proxyTimeoutNum, ok := obj["traffic_ops_golang_proxy_timeout"]
+	if !ok {
+		return 0, fmt.Errorf("missing traffic_ops_golang_proxy_timeout key")
+	}
+	proxyTimeout, ok := proxyTimeoutNum.(float64)
+	if !ok {
+		return 0, fmt.Errorf("traffic_ops_golang_proxy_timeout key '%v' type %T not a number", proxyTimeoutNum, proxyTimeoutNum)
+	}
+	return int(proxyTimeout), nil
+}
+
+func getReadTimeout(obj map[string]interface{}) (int, error) {
+	ReadTimeoutNum, ok := obj["traffic_ops_golang_read_timeout"]
+	if !ok {
+		return 0, fmt.Errorf("missing traffic_ops_golang_read_timeout key")
+	}
+	ReadTimeout, ok := ReadTimeoutNum.(float64)
+	if !ok {
+		return 0, fmt.Errorf("traffic_ops_golang_read_timeout key '%v' type %T not a number", ReadTimeoutNum, ReadTimeoutNum)
+	}
+	return int(ReadTimeout), nil
+}
+
+func getReadHeaderTimeout(obj map[string]interface{}) (int, error) {
+	ReadHeaderTimeoutNum, ok := obj["traffic_ops_golang_read_header_timeout"]
+	if !ok {
+		return 0, fmt.Errorf("missing traffic_ops_golang_read_header_timeout key")
+	}
+	ReadHeaderTimeout, ok := ReadHeaderTimeoutNum.(float64)
+	if !ok {
+		return 0, fmt.Errorf("traffic_ops_golang_read_header_timeout key '%v' type %T not a number", ReadHeaderTimeoutNum, ReadHeaderTimeoutNum)
+	}
+	return int(ReadHeaderTimeout), nil
+}
+
+func getWriteTimeout(obj map[string]interface{}) (int, error) {
+	WriteTimeoutNum, ok := obj["traffic_ops_golang_write_timeout"]
+	if !ok {
+		return 0, fmt.Errorf("missing traffic_ops_golang_write_timeout key")
+	}
+	WriteTimeout, ok := WriteTimeoutNum.(float64)
+	if !ok {
+		return 0, fmt.Errorf("traffic_ops_golang_write_timeout key '%v' type %T not a number", WriteTimeoutNum, WriteTimeoutNum)
+	}
+	return int(WriteTimeout), nil
+}
+
+func getIdleTimeout(obj map[string]interface{}) (int, error) {
+	IdleTimeoutNum, ok := obj["traffic_ops_golang_idle_timeout"]
+	if !ok {
+		return 0, fmt.Errorf("missing traffic_ops_golang_idle_timeout key")
+	}
+	IdleTimeout, ok := IdleTimeoutNum.(float64)
+	if !ok {
+		return 0, fmt.Errorf("traffic_ops_golang_idle_timeout key '%v' type %T not a number", IdleTimeoutNum, IdleTimeoutNum)
+	}
+	return int(IdleTimeout), nil
 }
 
 func getDBMaxConns(obj map[string]interface{}) (int, error) {

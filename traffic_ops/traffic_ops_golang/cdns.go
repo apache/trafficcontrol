@@ -40,7 +40,11 @@ func cdnsHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 			fmt.Fprintf(w, http.StatusText(status))
 		}
 
+		// Load the PathParams into the query parameters for pass through
 		q := r.URL.Query()
+		for k, v := range p {
+			q.Set(k, v)
+		}
 		resp, err := getCdnsResponse(q, db, privLevel)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
@@ -75,7 +79,16 @@ func getCdns(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Cdn, error) 
 	var rows *sqlx.Rows
 	var err error
 
-	rows, err = db.Queryx(selectCdnsQuery())
+	// Query Parameters to Database Query column mappings
+	// see the fields mapped in the SQL query
+	queryParamsToQueryCols := map[string]string{
+		"domainName": "domain_name",
+		"id":         "id",
+		"name":       "name",
+	}
+
+	query, queryValues := BuildQuery(v, selectCdnsQuery(), queryParamsToQueryCols)
+	rows, err = db.NamedQuery(query, queryValues)
 
 	if err != nil {
 		//TODO: drichardson - send back an alert if the Query Count is larger than 1
@@ -104,6 +117,6 @@ id,
 last_updated,
 name 
 
-FROM cdn c`
+FROM cdn`
 	return query
 }

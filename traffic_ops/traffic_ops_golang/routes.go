@@ -23,8 +23,10 @@ import (
 	"crypto/tls"
 	"database/sql"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httputil"
+	"time"
 )
 
 // Routes returns the routes, and a catchall route for when no route matches.
@@ -38,8 +40,11 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, "cdns/{cdn}/configs/monitoring.json$", wrapHeaders(wrapAuth(monitoringHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, MonitoringPrivLevel))},
 		{1.2, http.MethodGet, "servers-wip$", wrapHeaders(wrapAuthWithData(serversHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
 		{1.2, http.MethodGet, "servers-wip.json$", wrapHeaders(wrapAuthWithData(serversHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
-		{1.2, http.MethodGet, "cdns-wip$", wrapHeaders(wrapAuthWithData(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},
-		{1.2, http.MethodGet, "cdns-wip.json$", wrapHeaders(wrapAuthWithData(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},
+		{1.2, http.MethodGet, "servers-wip/{id}$", wrapHeaders(wrapAuthWithData(serversHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
+		{1.2, http.MethodGet, "servers-wip.json$", wrapHeaders(wrapAuthWithData(serversHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
+		{1.2, http.MethodGet, "cdns$", wrapHeaders(wrapAuthWithData(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},
+		{1.2, http.MethodGet, "cdns/{id}$", wrapHeaders(wrapAuthWithData(serversHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
+		{1.2, http.MethodGet, "cdns.json$", wrapHeaders(wrapAuthWithData(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},
 	}, rootHandler(d), nil
 }
 
@@ -63,6 +68,7 @@ func rootHandler(d ServerData) http.Handler {
 	// debug
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		DialContext:     (&net.Dialer{Timeout: time.Duration(d.Config.ProxyTimeout) * time.Second}).DialContext,
 	}
 	rp := httputil.NewSingleHostReverseProxy(d.TOURL)
 	rp.Transport = tr
