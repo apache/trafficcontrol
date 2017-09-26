@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormUserController = function(user, $scope, $location, formUtils, stringUtils, locationUtils, roleService, tenantService) {
+var FormUserController = function(user, $scope, $location, formUtils, stringUtils, locationUtils, tenantUtils, roleService, tenantService) {
 
     var getRoles = function() {
         roleService.getRoles({ orderby: 'priv_level DESC' })
@@ -30,6 +30,7 @@ var FormUserController = function(user, $scope, $location, formUtils, stringUtil
         tenantService.getTenants()
             .then(function(result) {
                 $scope.tenants = result;
+                tenantUtils.addLevels($scope.tenants);
             });
     };
 
@@ -37,6 +38,10 @@ var FormUserController = function(user, $scope, $location, formUtils, stringUtil
 
     $scope.label = function(role) {
         return role.name + ' (' + role.privLevel + ')';
+    };
+
+    $scope.tenantLabel = function(tenant) {
+        return '-'.repeat(tenant.level) + ' ' + tenant.name;
     };
 
     $scope.labelize = stringUtils.labelize;
@@ -59,5 +64,5 @@ var FormUserController = function(user, $scope, $location, formUtils, stringUtil
 
 };
 
-FormUserController.$inject = ['user', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'roleService', 'tenantService'];
+FormUserController.$inject = ['user', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'tenantUtils', 'roleService', 'tenantService'];
 module.exports = FormUserController;
