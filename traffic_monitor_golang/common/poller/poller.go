@@ -29,7 +29,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/fetcher"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
-	instr "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/instrumentation"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper" // TODO move to common
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
@@ -66,7 +65,6 @@ func NewHTTP(
 	interval time.Duration,
 	tick bool,
 	httpClient *http.Client,
-	counters fetcher.Counters,
 	fetchHandler handler.Handler,
 	noSleep bool,
 	userAgent string,
@@ -85,7 +83,6 @@ func NewHTTP(
 		FetcherTemplate: fetcher.HttpFetcher{
 			Handler:   fetchHandler,
 			Client:    httpClient,
-			Counters:  counters,
 			UserAgent: userAgent,
 		},
 	}
@@ -262,7 +259,6 @@ func sleepPoller(interval time.Duration, id string, url string, host string, fet
 		case <-tick.C:
 			realInterval := time.Now().Sub(lastTime)
 			if realInterval > interval+(time.Millisecond*100) {
-				instr.TimerFail.Inc()
 				log.Debugf("Intended Duration: %v Actual Duration: %v\n", interval, realInterval)
 			}
 			lastTime = time.Now()

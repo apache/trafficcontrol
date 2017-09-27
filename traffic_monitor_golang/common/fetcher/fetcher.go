@@ -27,7 +27,6 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
-	"github.com/davecheney/gmx"
 )
 
 type Fetcher interface {
@@ -39,19 +38,12 @@ type HttpFetcher struct {
 	UserAgent string
 	Headers   map[string]string
 	Handler   handler.Handler
-	Counters
 }
 
 type Result struct {
 	Source string
 	Data   []byte
 	Error  error
-}
-
-type Counters struct {
-	Success *gmx.Counter
-	Fail    *gmx.Counter
-	Pending *gmx.Gauge
 }
 
 func (f HttpFetcher) Fetch(id string, url string, host string, pollId uint64, pollFinishedChan chan<- uint64) {
@@ -61,16 +53,10 @@ func (f HttpFetcher) Fetch(id string, url string, host string, pollId uint64, po
 	req.Header.Set("User-Agent", f.UserAgent)
 	req.Header.Set("Connection", "keep-alive")
 	req.Host = host
-	if f.Pending != nil {
-		f.Pending.Inc()
-	}
 	startReq := time.Now()
 	response, err := f.Client.Do(req)
 	reqEnd := time.Now()
 	reqTime := reqEnd.Sub(startReq)
-	if f.Pending != nil {
-		f.Pending.Dec()
-	}
 	defer func() {
 		if response != nil && response.Body != nil {
 			ioutil.ReadAll(response.Body) // TODO determine if necessary
@@ -89,15 +75,9 @@ func (f HttpFetcher) Fetch(id string, url string, host string, pollId uint64, po
 	}
 
 	if err == nil && response != nil {
-		if f.Success != nil {
-			f.Success.Inc()
-		}
 		log.Debugf("poll %v %v fetch end\n", pollId, time.Now())
 		f.Handler.Handle(id, response.Body, reqTime, reqEnd, err, pollId, pollFinishedChan)
 	} else {
-		if f.Fail != nil {
-			f.Fail.Inc()
-		}
 		f.Handler.Handle(id, nil, reqTime, reqEnd, err, pollId, pollFinishedChan)
 	}
 }

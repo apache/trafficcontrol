@@ -29,10 +29,7 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"github.com/davecheney/gmx"
-
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/fetcher"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/cache"
@@ -49,12 +46,6 @@ import (
 //
 func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticAppData, trafficMonitorConfigFileName string) error {
 	toSession := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(nil))
-	counters := fetcher.Counters{
-		Success: gmx.NewCounter("fetchSuccess"),
-		Fail:    gmx.NewCounter("fetchFail"),
-		Pending: gmx.NewGauge("fetchPending"),
-	}
-
 	sharedClient := &http.Client{
 		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
 		Timeout:   cfg.HTTPTimeout,
@@ -68,12 +59,12 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticA
 	toData := todata.NewThreadsafe()
 
 	cacheHealthHandler := cache.NewHandler()
-	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, counters, cacheHealthHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent)
+	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, cacheHealthHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent)
 	cacheStatHandler := cache.NewPrecomputeHandler(toData)
-	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, counters, cacheStatHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent)
+	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, cacheStatHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent)
 	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
-	peerPoller := poller.NewHTTP(cfg.PeerPollingInterval, false, sharedClient, counters, peerHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent)
+	peerPoller := poller.NewHTTP(cfg.PeerPollingInterval, false, sharedClient, peerHandler, cfg.HTTPPollNoSleep, staticAppData.UserAgent)
 
 	go monitorConfigPoller.Poll()
 	go cacheHealthPoller.Poll()
