@@ -24,7 +24,7 @@ var TableCDNServersController = function(cdn, servers, $scope, $state, locationU
 	$scope.servers = servers;
 
 	$scope.editServer = function(id) {
-		locationUtils.navigateToPath('/configure/servers/' + id);
+		locationUtils.navigateToPath('/servers/' + id);
 	};
 
 	$scope.queueServerUpdates = function(cdn) {

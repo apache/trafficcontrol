@@ -25,7 +25,7 @@ var FormEditProfileController = function(profile, $scope, $controller, $uibModal
     var deleteProfile = function(profile) {
         profileService.deleteProfile(profile.id)
             .then(function() {
-                locationUtils.navigateToPath('/admin/profiles');
+                locationUtils.navigateToPath('/profiles');
             });
     };
 

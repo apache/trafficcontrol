@@ -25,7 +25,7 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 	var deleteDeliveryService = function(deliveryService) {
 		deliveryServiceService.deleteDeliveryService(deliveryService.id)
 			.then(function() {
-				locationUtils.navigateToPath('/configure/delivery-services');
+				locationUtils.navigateToPath('/delivery-services');
 			});
 	};
 

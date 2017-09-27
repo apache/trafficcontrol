@@ -22,11 +22,11 @@ var TableRegionsController = function(regions, $scope, $state, locationUtils) {
     $scope.regions = regions;
 
     $scope.editRegion = function(id) {
-        locationUtils.navigateToPath('/admin/regions/' + id);
+        locationUtils.navigateToPath('/regions/' + id);
     };
 
     $scope.createRegion = function() {
-        locationUtils.navigateToPath('/admin/regions/new');
+        locationUtils.navigateToPath('/regions/new');
     };
 
     $scope.refresh = function() {

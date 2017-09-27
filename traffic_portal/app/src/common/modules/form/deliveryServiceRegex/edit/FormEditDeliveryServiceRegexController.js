@@ -25,7 +25,7 @@ var FormEditDeliveryServiceRegexController = function(deliveryService, regex, $s
 	var deleteDeliveryServiceRegex = function(dsId, regexId) {
 		deliveryServiceRegexService.deleteDeliveryServiceRegex(dsId, regexId)
 			.then(function() {
-				locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/regexes');
+				locationUtils.navigateToPath('/delivery-services/' + dsId + '/regexes');
 			});
 	};
 

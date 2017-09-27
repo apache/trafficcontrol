@@ -32,7 +32,7 @@ var DivisionService = function(Restangular, locationUtils, messageModel) {
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Division created' } ], true);
-                    locationUtils.navigateToPath('/admin/divisions');
+                    locationUtils.navigateToPath('/divisions');
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);

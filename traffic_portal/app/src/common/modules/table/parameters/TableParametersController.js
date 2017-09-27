@@ -22,11 +22,11 @@ var TableParametersController = function(parameters, $scope, $state, locationUti
     $scope.parameters = parameters;
 
     $scope.editParameter = function(id) {
-        locationUtils.navigateToPath('/admin/parameters/' + id);
+        locationUtils.navigateToPath('/parameters/' + id);
     };
 
     $scope.createParameter = function() {
-        locationUtils.navigateToPath('/admin/parameters/new');
+        locationUtils.navigateToPath('/parameters/new');
     };
 
     $scope.refresh = function() {

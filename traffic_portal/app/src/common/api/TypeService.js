@@ -32,7 +32,7 @@ var TypeService = function(Restangular, locationUtils, messageModel) {
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Type created' } ], true);
-                    locationUtils.navigateToPath('/admin/types');
+                    locationUtils.navigateToPath('/types');
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);

@@ -53,7 +53,7 @@ var CDNService = function($http, $q, Restangular, locationUtils, messageModel, E
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'CDN created' } ], true);
-                    locationUtils.navigateToPath('/admin/cdns');
+                    locationUtils.navigateToPath('/cdns');
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
@@ -196,7 +196,7 @@ var CDNService = function($http, $q, Restangular, locationUtils, messageModel, E
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Snapshot performed' } ], true);
-                    locationUtils.navigateToPath('/admin/cdns/' + cdn.id);
+                    locationUtils.navigateToPath('/cdns/' + cdn.id);
 
                 },
                 function(fault) {

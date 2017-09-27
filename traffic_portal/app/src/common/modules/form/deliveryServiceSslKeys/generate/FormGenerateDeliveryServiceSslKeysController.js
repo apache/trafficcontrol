@@ -295,7 +295,7 @@ var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, ssl
 	modalInstance.result.then(function() {
 		deliveryServiceSslKeysService.generateSslKeys(deliveryService, sslKeys, sslRequest).then(
             function() {
-                locationUtils.navigateToPath('/configure/delivery-services/' + deliveryService.id + '/ssl-keys');
+                locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys');
             });
 	}, function () {
 		// do nothing

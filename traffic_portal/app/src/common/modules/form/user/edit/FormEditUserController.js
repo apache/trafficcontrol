@@ -33,7 +33,7 @@ var FormEditUserController = function(user, $scope, $controller, $uibModal, $anc
     var deleteUser = function(user) {
         userService.deleteUser(user.id)
             .then(function() {
-                locationUtils.navigateToPath('/admin/users');
+                locationUtils.navigateToPath('/users');
             });
     };
 

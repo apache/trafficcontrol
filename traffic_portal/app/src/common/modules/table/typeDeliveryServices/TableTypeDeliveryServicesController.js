@@ -38,7 +38,7 @@ var TableTypeDeliveryServicesController = function(type, deliveryServices, $scop
 	$scope.getRelativeTime = dateUtils.getRelativeTime;
 
 	$scope.editDeliveryServices = function(ds) {
-		locationUtils.navigateToPath('/configure/delivery-services/' + ds.id + '?type=' + ds.type);
+		locationUtils.navigateToPath('/delivery-services/' + ds.id + '?type=' + ds.type);
 	};
 
 	$scope.refresh = function() {

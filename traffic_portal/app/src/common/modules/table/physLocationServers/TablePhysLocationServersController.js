@@ -24,7 +24,7 @@ var TablePhysLocationServersController = function(physLocation, servers, $scope,
 	$scope.servers = servers;
 
 	$scope.editServer = function(id) {
-		locationUtils.navigateToPath('/configure/servers/' + id);
+		locationUtils.navigateToPath('/servers/' + id);
 	};
 
 	$scope.refresh = function() {

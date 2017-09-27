@@ -24,7 +24,7 @@ var TableDivisionRegionsController = function(division, divisionRegions, $scope,
 	$scope.divisionRegions = divisionRegions;
 
 	$scope.editRegion = function(id) {
-		locationUtils.navigateToPath('/admin/regions/' + id);
+		locationUtils.navigateToPath('/regions/' + id);
 	};
 
 	$scope.refresh = function() {
