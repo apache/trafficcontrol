@@ -35,7 +35,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/todata"
-	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/towrap"
 )
 
 // MakeDispatchMap returns the map of paths to http.HandlerFuncs for dispatching.

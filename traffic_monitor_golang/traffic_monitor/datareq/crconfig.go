@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
-	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/towrap"
 )
 
 func srvTRConfig(opsConfig threadsafe.OpsConfig, toSession towrap.ITrafficOpsSession) ([]byte, time.Time, error) {

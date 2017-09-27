@@ -29,7 +29,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/fetcher"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/handler"
-	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper" // TODO move to common
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/towrap" // TODO move to common
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 

@@ -32,7 +32,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/todata"
-	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/towrap"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
