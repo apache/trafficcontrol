@@ -22,7 +22,7 @@ package datareq
 import (
 	"fmt"
 
-	ds "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservice"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/ds"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
 )
