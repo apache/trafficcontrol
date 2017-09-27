@@ -22,6 +22,7 @@ package datareq
 import (
 	"net/url"
 
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 )
 
@@ -33,9 +34,9 @@ func srvTRState(params url.Values, localStates peer.CRStatesThreadsafe, combined
 }
 
 func srvTRStateDerived(combinedStates peer.CRStatesThreadsafe) ([]byte, error) {
-	return peer.CrstatesMarshall(combinedStates.Get())
+	return tc.CRStatesMarshall(combinedStates.Get())
 }
 
 func srvTRStateSelf(localStates peer.CRStatesThreadsafe) ([]byte, error) {
-	return peer.CrstatesMarshall(localStates.Get())
+	return tc.CRStatesMarshall(localStates.Get())
 }

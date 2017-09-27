@@ -28,7 +28,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/util"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 )
@@ -70,7 +70,7 @@ func srvStats(staticAppData config.StaticAppData, healthPollInterval time.Durati
 	return getStats(staticAppData, healthPollInterval, lastHealthDurations.Get(), fetchCount.Get(), healthIteration.Get(), errorCount.Get(), peerStates)
 }
 
-func getStats(staticAppData config.StaticAppData, pollingInterval time.Duration, lastHealthTimes map[enum.CacheName]time.Duration, fetchCount uint64, healthIteration uint64, errorCount uint64, peerStates peer.CRStatesPeersThreadsafe) ([]byte, error) {
+func getStats(staticAppData config.StaticAppData, pollingInterval time.Duration, lastHealthTimes map[tc.CacheName]time.Duration, fetchCount uint64, healthIteration uint64, errorCount uint64, peerStates peer.CRStatesPeersThreadsafe) ([]byte, error) {
 	longestPollCache, longestPollTime := getLongestPoll(lastHealthTimes)
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
@@ -108,8 +108,8 @@ func getStats(staticAppData config.StaticAppData, pollingInterval time.Duration,
 	return json.Marshal(JSONStats{Stats: s})
 }
 
-func getLongestPoll(lastHealthTimes map[enum.CacheName]time.Duration) (enum.CacheName, time.Duration) {
-	var longestCache enum.CacheName
+func getLongestPoll(lastHealthTimes map[tc.CacheName]time.Duration) (tc.CacheName, time.Duration) {
+	var longestCache tc.CacheName
 	var longestTime time.Duration
 	for cache, time := range lastHealthTimes {
 		if time > longestTime {
@@ -133,7 +133,7 @@ func (s Durations) Swap(i, j int) {
 }
 
 // getCacheTimePercentile returns the given percentile of cache result times. The `percentile` should be a decimal percent, for example, for the 95th percentile pass 0.95
-func getCacheTimePercentile(lastHealthTimes map[enum.CacheName]time.Duration, percentile float64) time.Duration {
+func getCacheTimePercentile(lastHealthTimes map[tc.CacheName]time.Duration, percentile float64) time.Duration {
 	times := make([]time.Duration, 0, len(lastHealthTimes))
 	for _, t := range lastHealthTimes {
 		times = append(times, t)
@@ -145,10 +145,10 @@ func getCacheTimePercentile(lastHealthTimes map[enum.CacheName]time.Duration, pe
 	return times[n]
 }
 
-func oldestPeerPollTime(peerTimes map[enum.TrafficMonitorName]time.Time, peerOnline map[enum.TrafficMonitorName]bool) (enum.TrafficMonitorName, time.Time) {
+func oldestPeerPollTime(peerTimes map[tc.TrafficMonitorName]time.Time, peerOnline map[tc.TrafficMonitorName]bool) (tc.TrafficMonitorName, time.Time) {
 	now := time.Now()
 	oldestTime := now
-	oldestPeer := enum.TrafficMonitorName("")
+	oldestPeer := tc.TrafficMonitorName("")
 	for p, t := range peerTimes {
 		if !peerOnline[p] {
 			continue

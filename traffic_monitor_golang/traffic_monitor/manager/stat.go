@@ -26,7 +26,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/cache"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
 	ds "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservice"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
@@ -41,12 +41,12 @@ func pruneHistory(history []cache.Result, limit uint64) []cache.Result {
 	return history
 }
 
-func getNewCaches(localStates peer.CRStatesThreadsafe, monitorConfigTS threadsafe.TrafficMonitorConfigMap) map[enum.CacheName]struct{} {
+func getNewCaches(localStates peer.CRStatesThreadsafe, monitorConfigTS threadsafe.TrafficMonitorConfigMap) map[tc.CacheName]struct{} {
 	monitorConfig := monitorConfigTS.Get()
-	caches := map[enum.CacheName]struct{}{}
+	caches := map[tc.CacheName]struct{}{}
 	for cacheName := range localStates.GetCaches() {
 		// ONLINE and OFFLINE caches are not polled.
-		if ts, ok := monitorConfig.TrafficServer[string(cacheName)]; !ok || ts.Status == string(enum.CacheStatusOnline) || ts.Status == string(enum.CacheStatusOffline) {
+		if ts, ok := monitorConfig.TrafficServer[string(cacheName)]; !ok || ts.Status == string(tc.CacheStatusOnline) || ts.Status == string(tc.CacheStatusOffline) {
 			continue
 		}
 		caches[cacheName] = struct{}{}
@@ -73,16 +73,16 @@ func StartStatHistoryManager(
 	statResultHistory := threadsafe.NewResultStatHistory()
 	statMaxKbpses := threadsafe.NewCacheKbpses()
 	lastStatDurations := threadsafe.NewDurationMap()
-	lastStatEndTimes := map[enum.CacheName]time.Time{}
+	lastStatEndTimes := map[tc.CacheName]time.Time{}
 	lastStats := threadsafe.NewLastStats()
 	dsStats := threadsafe.NewDSStats()
 	unpolledCaches := threadsafe.NewUnpolledCaches()
 	tickInterval := cfg.StatFlushInterval
 	localCacheStatus := threadsafe.NewCacheAvailableStatus()
 
-	precomputedData := map[enum.CacheName]cache.PrecomputedData{}
-	lastResults := map[enum.CacheName]cache.Result{}
-	overrideMap := map[enum.CacheName]bool{}
+	precomputedData := map[tc.CacheName]cache.PrecomputedData{}
+	lastResults := map[tc.CacheName]cache.Result{}
+	overrideMap := map[tc.CacheName]bool{}
 
 	process := func(results []cache.Result) {
 		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates, lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData, lastResults, localStates, events, localCacheStatus, overrideMap, combineState)
@@ -135,16 +135,16 @@ func processStatResults(
 	toData todata.TOData,
 	errorCount threadsafe.Uint,
 	dsStats threadsafe.DSStats,
-	lastStatEndTimes map[enum.CacheName]time.Time,
+	lastStatEndTimes map[tc.CacheName]time.Time,
 	lastStatDurationsThreadsafe threadsafe.DurationMap,
 	unpolledCaches threadsafe.UnpolledCaches,
 	mc to.TrafficMonitorConfigMap,
-	precomputedData map[enum.CacheName]cache.PrecomputedData,
-	lastResults map[enum.CacheName]cache.Result,
+	precomputedData map[tc.CacheName]cache.PrecomputedData,
+	lastResults map[tc.CacheName]cache.Result,
 	localStates peer.CRStatesThreadsafe,
 	events health.ThreadsafeEvents,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
-	overrideMap map[enum.CacheName]bool,
+	overrideMap map[tc.CacheName]bool,
 	combineState func(),
 ) {
 	if len(results) == 0 {

@@ -30,9 +30,8 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservicedata"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/srvhttp"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
@@ -67,7 +66,7 @@ func (handler Handler) Precompute() bool {
 
 // PrecomputedData represents data parsed and pre-computed from the Result.
 type PrecomputedData struct {
-	DeliveryServiceStats map[enum.DeliveryServiceName]dsdata.Stat
+	DeliveryServiceStats map[tc.DeliveryServiceName]dsdata.Stat
 	OutBytes             int64
 	MaxKbps              int64
 	Errors               []error
@@ -77,7 +76,7 @@ type PrecomputedData struct {
 
 // Result is the data result returned by a cache.
 type Result struct {
-	ID              enum.CacheName
+	ID              tc.CacheName
 	Error           error
 	Astats          Astats
 	Time            time.Time
@@ -119,104 +118,104 @@ type Stat struct {
 // Stats is designed for returning via the API. It contains result history for each cache, as well as common API data.
 type Stats struct {
 	srvhttp.CommonAPIData
-	Caches map[enum.CacheName]map[string][]ResultStatVal `json:"caches"`
+	Caches map[tc.CacheName]map[string][]ResultStatVal `json:"caches"`
 }
 
 // Filter filters whether stats and caches should be returned from a data set.
 type Filter interface {
 	UseStat(name string) bool
-	UseCache(name enum.CacheName) bool
+	UseCache(name tc.CacheName) bool
 	WithinStatHistoryMax(int) bool
 }
 
 const nsPerMs = 1000000
 
-type StatComputeFunc func(resultInfo ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{}
+type StatComputeFunc func(resultInfo ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{}
 
 // ComputedStats returns a map of cache stats which are computed by Traffic Monitor (rather than returned literally from ATS), mapped to the func to compute them.
 func ComputedStats() map[string]StatComputeFunc {
 	return map[string]StatComputeFunc{
-		"availableBandwidthInKbps": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"availableBandwidthInKbps": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.Vitals.MaxKbpsOut - info.Vitals.KbpsOut
 		},
 
-		"availableBandwidthInMbps": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"availableBandwidthInMbps": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return (info.Vitals.MaxKbpsOut - info.Vitals.KbpsOut) / 1000
 		},
-		"bandwidth": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"bandwidth": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.Vitals.KbpsOut
 		},
-		"error-string": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"error-string": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			if info.Error != nil {
 				return info.Error.Error()
 			}
 			return "false"
 		},
-		"isAvailable": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"isAvailable": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return combinedState.IsAvailable // if the cache is missing, default to false
 		},
-		"isHealthy": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
-			if enum.CacheStatusFromString(serverInfo.Status) == enum.CacheStatusAdminDown {
+		"isHealthy": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
+			if tc.CacheStatusFromString(serverInfo.Status) == tc.CacheStatusAdminDown {
 				return true
 			}
 			return combinedState.IsAvailable
 		},
-		"kbps": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"kbps": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.Vitals.KbpsOut
 		},
-		"loadavg": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"loadavg": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.Vitals.LoadAvg
 		},
-		"maxKbps": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"maxKbps": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.Vitals.MaxKbpsOut
 		},
-		"queryTime": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"queryTime": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.RequestTime.Nanoseconds() / nsPerMs
 		},
-		"stateUrl": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"stateUrl": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return serverProfile.Parameters.HealthPollingURL
 		},
-		"status": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"status": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return serverInfo.Status
 		},
-		"system.astatsLoad": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"system.astatsLoad": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.System.AstatsLoad
 		},
-		"system.configReloadRequests": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"system.configReloadRequests": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.System.ConfigLoadRequest
 		},
-		"system.configReloads": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"system.configReloads": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.System.ConfigReloads
 		},
-		"system.inf.name": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"system.inf.name": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.System.InfName
 		},
-		"system.inf.speed": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"system.inf.speed": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.System.InfSpeed
 		},
-		"system.lastReload": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"system.lastReload": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.System.LastReload
 		},
-		"system.lastReloadRequest": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"system.lastReloadRequest": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.System.LastReloadRequest
 		},
-		"system.notAvailable": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"system.notAvailable": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.System.NotAvailable
 		},
-		"system.proc.loadavg": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"system.proc.loadavg": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.System.ProcLoadavg
 		},
-		"system.proc.net.dev": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState peer.IsAvailable) interface{} {
+		"system.proc.net.dev": func(info ResultInfo, serverInfo to.TrafficServer, serverProfile to.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.System.ProcNetDev
 		},
 	}
 }
 
 // StatsMarshall encodes the stats in JSON, encoding up to historyCount of each stat. If statsToUse is empty, all stats are encoded; otherwise, only the given stats are encoded. If wildcard is true, stats which contain the text in each statsToUse are returned, instead of exact stat names. If cacheType is not CacheTypeInvalid, only stats for the given type are returned. If hosts is not empty, only the given hosts are returned.
-func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHistory, combinedStates peer.Crstates, monitorConfig to.TrafficMonitorConfigMap, statMaxKbpses Kbpses, filter Filter, params url.Values) ([]byte, error) {
+func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHistory, combinedStates tc.CRStates, monitorConfig to.TrafficMonitorConfigMap, statMaxKbpses Kbpses, filter Filter, params url.Values) ([]byte, error) {
 	stats := Stats{
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
-		Caches:        map[enum.CacheName]map[string][]ResultStatVal{},
+		Caches:        map[tc.CacheName]map[string][]ResultStatVal{},
 	}
 
 	computedStats := ComputedStats()
@@ -282,7 +281,7 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHisto
 func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, pollFinished chan<- uint64) {
 	log.Debugf("poll %v %v handle start\n", pollID, time.Now())
 	result := Result{
-		ID:           enum.CacheName(id),
+		ID:           tc.CacheName(id),
 		Time:         reqEnd,
 		RequestTime:  reqTime,
 		PollID:       pollID,
@@ -364,7 +363,7 @@ func outBytes(procNetDev, iface string, multipleSpaceRegex *regexp.Regexp) (int6
 // TODO precompute ResultStatVal
 func (handler Handler) precompute(result Result) Result {
 	todata := handler.ToData.Get()
-	stats := map[enum.DeliveryServiceName]dsdata.Stat{}
+	stats := map[tc.DeliveryServiceName]dsdata.Stat{}
 
 	var err error
 	if result.PrecomputedData.OutBytes, err = outBytes(result.Astats.System.ProcNetDev, result.Astats.System.InfName, handler.MultipleSpaceRegex); err != nil {
@@ -388,7 +387,7 @@ func (handler Handler) precompute(result Result) Result {
 }
 
 // processStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
-func processStat(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, value interface{}, timeReceived time.Time) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
+func processStat(server tc.CacheName, stats map[tc.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, value interface{}, timeReceived time.Time) (map[tc.DeliveryServiceName]dsdata.Stat, error) {
 	parts := strings.Split(stat, ".")
 	if len(parts) < 1 {
 		return stats, fmt.Errorf("stat has no initial part")
@@ -406,7 +405,7 @@ func processStat(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdat
 	}
 }
 
-func processStatPlugin(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}, timeReceived time.Time) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
+func processStatPlugin(server tc.CacheName, stats map[tc.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}, timeReceived time.Time) (map[tc.DeliveryServiceName]dsdata.Stat, error) {
 	if len(statParts) < 1 {
 		return stats, fmt.Errorf("stat has no plugin part")
 	}
@@ -418,7 +417,7 @@ func processStatPlugin(server enum.CacheName, stats map[enum.DeliveryServiceName
 	}
 }
 
-func processStatPluginRemapStats(server enum.CacheName, stats map[enum.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}, timeReceived time.Time) (map[enum.DeliveryServiceName]dsdata.Stat, error) {
+func processStatPluginRemapStats(server tc.CacheName, stats map[tc.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}, timeReceived time.Time) (map[tc.DeliveryServiceName]dsdata.Stat, error) {
 	if len(statParts) < 3 {
 		return stats, fmt.Errorf("stat has no remap_stats deliveryservice and name parts")
 	}
