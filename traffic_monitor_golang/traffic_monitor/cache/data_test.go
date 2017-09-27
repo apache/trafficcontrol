@@ -23,7 +23,7 @@ import (
 	"errors"
 	"fmt"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservicedata"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"math/rand"
 	"reflect"
 	"testing"
@@ -48,7 +48,7 @@ func randAvailableStatuses() AvailableStatuses {
 	a := AvailableStatuses{}
 	num := 100
 	for i := 0; i < num; i++ {
-		a[enum.CacheName(randStr())] = AvailableStatus{Available: randBool(), Status: randStr()}
+		a[tc.CacheName(randStr())] = AvailableStatus{Available: randBool(), Status: randStr()}
 	}
 	return a
 }
@@ -64,7 +64,7 @@ func TestAvailableStatusesCopy(t *testing.T) {
 		}
 
 		// verify a and b don't point to the same map
-		a[enum.CacheName(randStr())] = AvailableStatus{Available: randBool(), Status: randStr()}
+		a[tc.CacheName(randStr())] = AvailableStatus{Available: randBool(), Status: randStr()}
 		if reflect.DeepEqual(a, b) {
 			t.Errorf("expected a != b, actual a and b point to the same map", a)
 		}
@@ -135,10 +135,10 @@ func randStatCacheStats() dsdata.StatCacheStats {
 }
 
 func randStatCommon() dsdata.StatCommon {
-	cachesReporting := map[enum.CacheName]bool{}
+	cachesReporting := map[tc.CacheName]bool{}
 	num := 5
 	for i := 0; i < num; i++ {
-		cachesReporting[enum.CacheName(randStr())] = randBool()
+		cachesReporting[tc.CacheName(randStr())] = randBool()
 	}
 	return dsdata.StatCommon{
 		CachesConfiguredNum: dsdata.StatInt{Value: rand.Int63(), StatMeta: randStatMeta()},
@@ -153,14 +153,14 @@ func randStatCommon() dsdata.StatCommon {
 
 func randDsStat() dsdata.Stat {
 	num := 5
-	cacheGroups := map[enum.CacheGroupName]dsdata.StatCacheStats{}
-	types := map[enum.CacheType]dsdata.StatCacheStats{}
-	caches := map[enum.CacheName]dsdata.StatCacheStats{}
-	cachesTime := map[enum.CacheName]time.Time{}
+	cacheGroups := map[tc.CacheGroupName]dsdata.StatCacheStats{}
+	types := map[tc.CacheType]dsdata.StatCacheStats{}
+	caches := map[tc.CacheName]dsdata.StatCacheStats{}
+	cachesTime := map[tc.CacheName]time.Time{}
 	for i := 0; i < num; i++ {
-		cacheGroups[enum.CacheGroupName(randStr())] = randStatCacheStats()
-		types[enum.CacheType(randStr())] = randStatCacheStats()
-		cachesTime[enum.CacheName(randStr())] = time.Now()
+		cacheGroups[tc.CacheGroupName(randStr())] = randStatCacheStats()
+		types[tc.CacheType(randStr())] = randStatCacheStats()
+		cachesTime[tc.CacheName(randStr())] = time.Now()
 	}
 
 	return dsdata.Stat{
@@ -173,11 +173,11 @@ func randDsStat() dsdata.Stat {
 	}
 }
 
-func randDsStats() map[enum.DeliveryServiceName]dsdata.Stat {
+func randDsStats() map[tc.DeliveryServiceName]dsdata.Stat {
 	num := 5
-	a := map[enum.DeliveryServiceName]dsdata.Stat{}
+	a := map[tc.DeliveryServiceName]dsdata.Stat{}
 	for i := 0; i < num; i++ {
-		a[enum.DeliveryServiceName(randStr())] = randDsStat()
+		a[tc.DeliveryServiceName(randStr())] = randDsStat()
 	}
 	return a
 }
@@ -205,7 +205,7 @@ func randPrecomputedData() PrecomputedData {
 
 func randResult() Result {
 	return Result{
-		ID:              enum.CacheName(randStr()),
+		ID:              tc.CacheName(randStr()),
 		Error:           fmt.Errorf(randStr()),
 		Astats:          randAstats(),
 		Time:            time.Now(),
@@ -232,7 +232,7 @@ func randResultHistory() ResultHistory {
 	a := ResultHistory{}
 	num := 5
 	for i := 0; i < num; i++ {
-		a[enum.CacheName(randStr())] = randResultSlice()
+		a[tc.CacheName(randStr())] = randResultSlice()
 	}
 	return a
 }
@@ -248,7 +248,7 @@ func TestResultHistoryCopy(t *testing.T) {
 		}
 
 		// verify a and b don't point to the same map
-		a[enum.CacheName(randStr())] = randResultSlice()
+		a[tc.CacheName(randStr())] = randResultSlice()
 		if reflect.DeepEqual(a, b) {
 			t.Errorf("expected a != b, actual a and b point to the same map", a)
 		}

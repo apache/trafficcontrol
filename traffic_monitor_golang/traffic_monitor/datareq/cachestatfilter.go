@@ -26,7 +26,7 @@ import (
 	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/cache"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 // CacheStatFilter fulfills the cache.Filter interface, for filtering stats. See the `NewCacheStatFilter` documentation for details on which query parameters are used to filter.
@@ -34,17 +34,17 @@ type CacheStatFilter struct {
 	historyCount int
 	statsToUse   map[string]struct{}
 	wildcard     bool
-	cacheType    enum.CacheType
-	hosts        map[enum.CacheName]struct{}
-	cacheTypes   map[enum.CacheName]enum.CacheType
+	cacheType    tc.CacheType
+	hosts        map[tc.CacheName]struct{}
+	cacheTypes   map[tc.CacheName]tc.CacheType
 }
 
 // UseCache returns whether the given cache is in the filter.
-func (f *CacheStatFilter) UseCache(name enum.CacheName) bool {
+func (f *CacheStatFilter) UseCache(name tc.CacheName) bool {
 	if _, inHosts := f.hosts[name]; len(f.hosts) != 0 && !inHosts {
 		return false
 	}
-	if f.cacheType != enum.CacheTypeInvalid && f.cacheTypes[name] != f.cacheType {
+	if f.cacheType != tc.CacheTypeInvalid && f.cacheTypes[name] != f.cacheType {
 		return false
 	}
 	return true
@@ -84,7 +84,7 @@ func (f *CacheStatFilter) WithinStatHistoryMax(n int) bool {
 // If `stats` is empty, all stats are returned.
 // If `wildcard` is empty, `stats` is considered exact.
 // If `type` is empty, all cache types are returned.
-func NewCacheStatFilter(path string, params url.Values, cacheTypes map[enum.CacheName]enum.CacheType) (cache.Filter, error) {
+func NewCacheStatFilter(path string, params url.Values, cacheTypes map[tc.CacheName]tc.CacheType) (cache.Filter, error) {
 	validParams := map[string]struct{}{
 		"hc":       struct{}{},
 		"stats":    struct{}{},
@@ -123,37 +123,37 @@ func NewCacheStatFilter(path string, params url.Values, cacheTypes map[enum.Cach
 		wildcard, _ = strconv.ParseBool(paramWildcard[0]) // ignore errors, error => false
 	}
 
-	cacheType := enum.CacheTypeInvalid
+	cacheType := tc.CacheTypeInvalid
 	if paramType, exists := params["type"]; exists && len(paramType) > 0 {
-		cacheType = enum.CacheTypeFromString(paramType[0])
-		if cacheType == enum.CacheTypeInvalid {
+		cacheType = tc.CacheTypeFromString(paramType[0])
+		if cacheType == tc.CacheTypeInvalid {
 			return nil, fmt.Errorf("invalid query parameter type '%v' - valid types are: {edge, mid}", paramType[0])
 		}
 	}
 
-	hosts := map[enum.CacheName]struct{}{}
+	hosts := map[tc.CacheName]struct{}{}
 	if paramHosts, exists := params["hosts"]; exists && len(paramHosts) > 0 {
 		commaHosts := strings.Split(paramHosts[0], ",")
 		for _, host := range commaHosts {
-			hosts[enum.CacheName(host)] = struct{}{}
+			hosts[tc.CacheName(host)] = struct{}{}
 		}
 	}
 	if paramHosts, exists := params["cache"]; exists && len(paramHosts) > 0 {
 		commaHosts := strings.Split(paramHosts[0], ",")
 		for _, host := range commaHosts {
-			hosts[enum.CacheName(host)] = struct{}{}
+			hosts[tc.CacheName(host)] = struct{}{}
 		}
 	}
 
 	pathArgument := getPathArgument(path)
 	if pathArgument != "" {
-		hosts[enum.CacheName(pathArgument)] = struct{}{}
+		hosts[tc.CacheName(pathArgument)] = struct{}{}
 	}
 
 	// parameters without values are considered hosts, e.g. `?my-cache-0`
 	for maybeHost, val := range params {
 		if len(val) == 0 || (len(val) == 1 && val[0] == "") {
-			hosts[enum.CacheName(maybeHost)] = struct{}{}
+			hosts[tc.CacheName(maybeHost)] = struct{}{}
 		}
 	}
 

@@ -25,21 +25,21 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 // PeerStateFilter fulfills the cache.Filter interface, for filtering stats. See the `NewPeerStateFilter` documentation for details on which query parameters are used to filter.
 type PeerStateFilter struct {
 	historyCount int
-	cachesToUse  map[enum.CacheName]struct{}
-	peersToUse   map[enum.TrafficMonitorName]struct{}
+	cachesToUse  map[tc.CacheName]struct{}
+	peersToUse   map[tc.TrafficMonitorName]struct{}
 	wildcard     bool
-	cacheType    enum.CacheType
-	cacheTypes   map[enum.CacheName]enum.CacheType
+	cacheType    tc.CacheType
+	cacheTypes   map[tc.CacheName]tc.CacheType
 }
 
 // UsePeer returns whether the given Traffic Monitor peer is in this filter.
-func (f *PeerStateFilter) UsePeer(name enum.TrafficMonitorName) bool {
+func (f *PeerStateFilter) UsePeer(name tc.TrafficMonitorName) bool {
 	if _, inPeers := f.peersToUse[name]; len(f.peersToUse) != 0 && !inPeers {
 		return false
 	}
@@ -47,8 +47,8 @@ func (f *PeerStateFilter) UsePeer(name enum.TrafficMonitorName) bool {
 }
 
 // UseCache returns whether the given cache is in this filter.
-func (f *PeerStateFilter) UseCache(name enum.CacheName) bool {
-	if f.cacheType != enum.CacheTypeInvalid && f.cacheTypes[name] != f.cacheType {
+func (f *PeerStateFilter) UseCache(name tc.CacheName) bool {
+	if f.cacheType != tc.CacheTypeInvalid && f.cacheTypes[name] != f.cacheType {
 		return false
 	}
 
@@ -85,7 +85,7 @@ func (f *PeerStateFilter) WithinStatHistoryMax(n int) bool {
 // If `stats` is empty, all stats are returned.
 // If `wildcard` is empty, `stats` is considered exact.
 // If `type` is empty, all cache types are returned.
-func NewPeerStateFilter(path string, params url.Values, cacheTypes map[enum.CacheName]enum.CacheType) (*PeerStateFilter, error) {
+func NewPeerStateFilter(path string, params url.Values, cacheTypes map[tc.CacheName]tc.CacheType) (*PeerStateFilter, error) {
 	// TODO change legacy `stats` and `hosts` to `caches` and `monitors` (or `peers`).
 	validParams := map[string]struct{}{"hc": struct{}{}, "stats": struct{}{}, "wildcard": struct{}{}, "type": struct{}{}, "peers": struct{}{}}
 	if len(params) > len(validParams) {
@@ -105,12 +105,12 @@ func NewPeerStateFilter(path string, params url.Values, cacheTypes map[enum.Cach
 		}
 	}
 
-	cachesToUse := map[enum.CacheName]struct{}{}
+	cachesToUse := map[tc.CacheName]struct{}{}
 	// TODO rename 'stats' to 'caches'
 	if paramStats, exists := params["stats"]; exists && len(paramStats) > 0 {
 		commaStats := strings.Split(paramStats[0], ",")
 		for _, stat := range commaStats {
-			cachesToUse[enum.CacheName(stat)] = struct{}{}
+			cachesToUse[tc.CacheName(stat)] = struct{}{}
 		}
 	}
 
@@ -119,31 +119,31 @@ func NewPeerStateFilter(path string, params url.Values, cacheTypes map[enum.Cach
 		wildcard, _ = strconv.ParseBool(paramWildcard[0]) // ignore errors, error => false
 	}
 
-	cacheType := enum.CacheTypeInvalid
+	cacheType := tc.CacheTypeInvalid
 	if paramType, exists := params["type"]; exists && len(paramType) > 0 {
-		cacheType = enum.CacheTypeFromString(paramType[0])
-		if cacheType == enum.CacheTypeInvalid {
+		cacheType = tc.CacheTypeFromString(paramType[0])
+		if cacheType == tc.CacheTypeInvalid {
 			return nil, fmt.Errorf("invalid query parameter type '%v' - valid types are: {edge, mid}", paramType[0])
 		}
 	}
 
-	peersToUse := map[enum.TrafficMonitorName]struct{}{}
+	peersToUse := map[tc.TrafficMonitorName]struct{}{}
 	if paramNames, exists := params["peers"]; exists && len(paramNames) > 0 {
 		commaNames := strings.Split(paramNames[0], ",")
 		for _, name := range commaNames {
-			peersToUse[enum.TrafficMonitorName(name)] = struct{}{}
+			peersToUse[tc.TrafficMonitorName(name)] = struct{}{}
 		}
 	}
 
 	pathArgument := getPathArgument(path)
 	if pathArgument != "" {
-		peersToUse[enum.TrafficMonitorName(pathArgument)] = struct{}{}
+		peersToUse[tc.TrafficMonitorName(pathArgument)] = struct{}{}
 	}
 
 	// parameters without values are considered names, e.g. `?my-cache-0` or `?my-delivery-service`
 	for maybeName, val := range params {
 		if len(val) == 0 || (len(val) == 1 && val[0] == "") {
-			peersToUse[enum.TrafficMonitorName(maybeName)] = struct{}{}
+			peersToUse[tc.TrafficMonitorName(maybeName)] = struct{}{}
 		}
 	}
 

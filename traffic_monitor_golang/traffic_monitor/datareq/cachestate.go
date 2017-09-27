@@ -25,10 +25,10 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/cache"
 	ds "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservice"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservicedata"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
@@ -73,24 +73,24 @@ func srvAPICacheStates(
 }
 
 func createCacheStatuses(
-	cacheTypes map[enum.CacheName]enum.CacheType,
+	cacheTypes map[tc.CacheName]tc.CacheType,
 	statInfoHistory cache.ResultInfoHistory,
 	statResultHistory cache.ResultStatHistory,
-	healthHistory map[enum.CacheName][]cache.Result,
-	lastHealthDurations map[enum.CacheName]time.Duration,
-	cacheStates map[enum.CacheName]peer.IsAvailable,
+	healthHistory map[tc.CacheName][]cache.Result,
+	lastHealthDurations map[tc.CacheName]time.Duration,
+	cacheStates map[tc.CacheName]tc.IsAvailable,
 	lastStats dsdata.LastStats,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 	statMaxKbpses threadsafe.CacheKbpses,
 	servers map[string]to.TrafficServer,
-) map[enum.CacheName]CacheStatus {
+) map[tc.CacheName]CacheStatus {
 	conns := createCacheConnections(statResultHistory)
-	statii := map[enum.CacheName]CacheStatus{}
+	statii := map[tc.CacheName]CacheStatus{}
 	localCacheStatus := localCacheStatusThreadsafe.Get().Copy() // TODO test whether copy is necessary
 	maxKbpses := statMaxKbpses.Get()
 
 	for cacheNameStr, serverInfo := range servers {
-		cacheName := enum.CacheName(cacheNameStr)
+		cacheName := tc.CacheName(cacheNameStr)
 		status, statusPoller := cacheStatusAndPoller(cacheName, serverInfo, localCacheStatus)
 
 		cacheTypeStr := ""
@@ -176,13 +176,13 @@ func createCacheStatuses(
 	return statii
 }
 
-func cacheStatusAndPoller(server enum.CacheName, serverInfo to.TrafficServer, localCacheStatus cache.AvailableStatuses) (string, string) {
-	switch status := enum.CacheStatusFromString(serverInfo.Status); status {
-	case enum.CacheStatusAdminDown:
+func cacheStatusAndPoller(server tc.CacheName, serverInfo to.TrafficServer, localCacheStatus cache.AvailableStatuses) (string, string) {
+	switch status := tc.CacheStatusFromString(serverInfo.Status); status {
+	case tc.CacheStatusAdminDown:
 		fallthrough
-	case enum.CacheStatusOnline:
+	case tc.CacheStatusOnline:
 		fallthrough
-	case enum.CacheStatusOffline:
+	case tc.CacheStatusOffline:
 		return status.String(), ""
 	}
 
@@ -201,8 +201,8 @@ func cacheStatusAndPoller(server enum.CacheName, serverInfo to.TrafficServer, lo
 	return fmt.Sprintf("%s - unavailable", statusVal.Status), statusVal.Poller
 }
 
-func createCacheConnections(statResultHistory cache.ResultStatHistory) map[enum.CacheName]int64 {
-	conns := map[enum.CacheName]int64{}
+func createCacheConnections(statResultHistory cache.ResultStatHistory) map[tc.CacheName]int64 {
+	conns := map[tc.CacheName]int64{}
 	for server, history := range statResultHistory {
 		vals, ok := history["proxy.process.http.current_client_connections"]
 		if !ok || len(vals) < 1 {
@@ -220,7 +220,7 @@ func createCacheConnections(statResultHistory cache.ResultStatHistory) map[enum.
 
 // infoResultSpanMS returns the length of time between the most recent two results. That is, how long could the cache have been down before we would have noticed it? Note this returns the time between the most recent two results, irrespective if they errored.
 // Note this is unrelated to the Stat Span field.
-func infoResultSpanMS(cacheName enum.CacheName, history cache.ResultInfoHistory) (int64, error) {
+func infoResultSpanMS(cacheName tc.CacheName, history cache.ResultInfoHistory) (int64, error) {
 	results, ok := history[cacheName]
 	if !ok {
 		return 0, fmt.Errorf("cache %v has no history", cacheName)
@@ -240,7 +240,7 @@ func infoResultSpanMS(cacheName enum.CacheName, history cache.ResultInfoHistory)
 
 // resultSpanMS returns the length of time between the most recent two results. That is, how long could the cache have been down before we would have noticed it? Note this returns the time between the most recent two results, irrespective if they errored.
 // Note this is unrelated to the Stat Span field.
-func resultSpanMS(cacheName enum.CacheName, history map[enum.CacheName][]cache.Result) (int64, error) {
+func resultSpanMS(cacheName tc.CacheName, history map[tc.CacheName][]cache.Result) (int64, error) {
 	results, ok := history[cacheName]
 	if !ok {
 		return 0, fmt.Errorf("cache %v has no history", cacheName)
@@ -258,7 +258,7 @@ func resultSpanMS(cacheName enum.CacheName, history map[enum.CacheName][]cache.R
 	return int64(span / time.Millisecond), nil
 }
 
-func latestQueryTimeMS(cacheName enum.CacheName, lastDurations map[enum.CacheName]time.Duration) (int64, error) {
+func latestQueryTimeMS(cacheName tc.CacheName, lastDurations map[tc.CacheName]time.Duration) (int64, error) {
 	queryTime, ok := lastDurations[cacheName]
 	if !ok {
 		return 0, fmt.Errorf("cache %v not in last durations\n", cacheName)
@@ -267,7 +267,7 @@ func latestQueryTimeMS(cacheName enum.CacheName, lastDurations map[enum.CacheNam
 }
 
 // latestResultTimeMS returns the length of time in milliseconds that it took to request the most recent non-errored result.
-func latestResultTimeMS(cacheName enum.CacheName, history map[enum.CacheName][]cache.Result) (int64, error) {
+func latestResultTimeMS(cacheName tc.CacheName, history map[tc.CacheName][]cache.Result) (int64, error) {
 
 	results, ok := history[cacheName]
 	if !ok {
@@ -292,7 +292,7 @@ func latestResultTimeMS(cacheName enum.CacheName, history map[enum.CacheName][]c
 }
 
 // latestResultInfoTimeMS returns the length of time in milliseconds that it took to request the most recent non-errored result info.
-func latestResultInfoTimeMS(cacheName enum.CacheName, history cache.ResultInfoHistory) (int64, error) {
+func latestResultInfoTimeMS(cacheName tc.CacheName, history cache.ResultInfoHistory) (int64, error) {
 	results, ok := history[cacheName]
 	if !ok {
 		return 0, fmt.Errorf("cache %v has no history", cacheName)

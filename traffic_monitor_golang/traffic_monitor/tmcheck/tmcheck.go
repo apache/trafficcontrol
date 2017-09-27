@@ -31,8 +31,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/datareq"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservicedata"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
@@ -75,7 +73,7 @@ func GetCDN(uri string) (string, error) {
 }
 
 // GetCRStates gets the CRStates from the given Traffic Monitor.
-func GetCRStates(uri string) (*peer.Crstates, error) {
+func GetCRStates(uri string) (*tc.CRStates, error) {
 	resp, err := getClient().Get(uri)
 	if err != nil {
 		return nil, fmt.Errorf("reading reply from %v: %v\n", uri, err)
@@ -86,7 +84,7 @@ func GetCRStates(uri string) (*peer.Crstates, error) {
 		return nil, fmt.Errorf("reading reply from %v: %v\n", uri, err)
 	}
 
-	states := peer.Crstates{}
+	states := tc.CRStates{}
 	if err := json.Unmarshal(respBytes, &states); err != nil {
 		return nil, fmt.Errorf("unmarshalling: %v", err)
 	}
@@ -146,9 +144,9 @@ type AllValidatorFunc func(
 	interval time.Duration,
 	includeOffline bool,
 	grace time.Duration,
-	onErr func(enum.TrafficMonitorName, error),
-	onResumeSuccess func(enum.TrafficMonitorName),
-	onCheck func(enum.TrafficMonitorName, error),
+	onErr func(tc.TrafficMonitorName, error),
+	onResumeSuccess func(tc.TrafficMonitorName),
+	onCheck func(tc.TrafficMonitorName, error),
 )
 
 // CRStatesOfflineValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll.
@@ -215,13 +213,13 @@ func AllValidator(
 	interval time.Duration,
 	includeOffline bool,
 	grace time.Duration,
-	onErr func(enum.TrafficMonitorName, error),
-	onResumeSuccess func(enum.TrafficMonitorName),
-	onCheck func(enum.TrafficMonitorName, error),
-	validator func(toClient *to.Session, includeOffline bool) (map[enum.TrafficMonitorName]error, error),
+	onErr func(tc.TrafficMonitorName, error),
+	onResumeSuccess func(tc.TrafficMonitorName),
+	onCheck func(tc.TrafficMonitorName, error),
+	validator func(toClient *to.Session, includeOffline bool) (map[tc.TrafficMonitorName]error, error),
 ) {
-	invalid := map[enum.TrafficMonitorName]bool{}
-	invalidStart := map[enum.TrafficMonitorName]time.Time{}
+	invalid := map[tc.TrafficMonitorName]bool{}
+	invalidStart := map[tc.TrafficMonitorName]time.Time{}
 	metaFail := false
 	for {
 		tmErrs, err := validator(toClient, includeOffline)
@@ -265,8 +263,8 @@ func AllValidator(
 func FilterOfflines(servers []to.Server) []to.Server {
 	onlineServers := []to.Server{}
 	for _, server := range servers {
-		status := enum.CacheStatusFromString(server.Status)
-		if status != enum.CacheStatusOnline && status != enum.CacheStatusReported {
+		status := tc.CacheStatusFromString(server.Status)
+		if status != tc.CacheStatusOnline && status != tc.CacheStatusReported {
 			continue
 		}
 		onlineServers = append(onlineServers, server)
@@ -274,16 +272,16 @@ func FilterOfflines(servers []to.Server) []to.Server {
 	return onlineServers
 }
 
-func GetCDNs(servers []to.Server) map[enum.CDNName]struct{} {
-	cdns := map[enum.CDNName]struct{}{}
+func GetCDNs(servers []to.Server) map[tc.CDNName]struct{} {
+	cdns := map[tc.CDNName]struct{}{}
 	for _, server := range servers {
-		cdns[enum.CDNName(server.CDNName)] = struct{}{}
+		cdns[tc.CDNName(server.CDNName)] = struct{}{}
 	}
 	return cdns
 }
 
-func GetCRConfigs(cdns map[enum.CDNName]struct{}, toClient *to.Session) map[enum.CDNName]CRConfigOrError {
-	crConfigs := map[enum.CDNName]CRConfigOrError{}
+func GetCRConfigs(cdns map[tc.CDNName]struct{}, toClient *to.Session) map[tc.CDNName]CRConfigOrError {
+	crConfigs := map[tc.CDNName]CRConfigOrError{}
 	for cdn, _ := range cdns {
 		crConfigBytes, err := toClient.CRConfigRaw(string(cdn))
 		if err != nil {

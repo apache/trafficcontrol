@@ -26,7 +26,6 @@ import (
 
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservicedata"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
@@ -80,7 +79,7 @@ func ValidateDSStatsData(dsStats *dsdata.StatsOld, crconfig *tc.CRConfig) error 
 		if !hasCaches(dsName, crconfig) {
 			continue
 		}
-		if _, ok := dsStats.DeliveryService[enum.DeliveryServiceName(dsName)]; !ok {
+		if _, ok := dsStats.DeliveryService[tc.DeliveryServiceName(dsName)]; !ok {
 			return fmt.Errorf("Delivery Service %v in CRConfig but not DSStats", dsName)
 		}
 	}
@@ -100,21 +99,21 @@ func DSStatsValidator(
 	Validator(tmURI, toClient, interval, grace, onErr, onResumeSuccess, onCheck, ValidateDSStats)
 }
 
-// AllMonitorsDSStatsValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll. Note the error passed to `onErr` may be a general validation error not associated with any monitor, in which case the passed `enum.TrafficMonitorName` will be empty.
+// AllMonitorsDSStatsValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll. Note the error passed to `onErr` may be a general validation error not associated with any monitor, in which case the passed `tc.TrafficMonitorName` will be empty.
 func AllMonitorsDSStatsValidator(
 	toClient *to.Session,
 	interval time.Duration,
 	includeOffline bool,
 	grace time.Duration,
-	onErr func(enum.TrafficMonitorName, error),
-	onResumeSuccess func(enum.TrafficMonitorName),
-	onCheck func(enum.TrafficMonitorName, error),
+	onErr func(tc.TrafficMonitorName, error),
+	onResumeSuccess func(tc.TrafficMonitorName),
+	onCheck func(tc.TrafficMonitorName, error),
 ) {
 	AllValidator(toClient, interval, includeOffline, grace, onErr, onResumeSuccess, onCheck, ValidateAllMonitorsDSStats)
 }
 
 // ValidateAllMonitorDSStats validates, for all monitors in the given Traffic Ops, DSStats contains all Delivery Services in the CRConfig.
-func ValidateAllMonitorsDSStats(toClient *to.Session, includeOffline bool) (map[enum.TrafficMonitorName]error, error) {
+func ValidateAllMonitorsDSStats(toClient *to.Session, includeOffline bool) (map[tc.TrafficMonitorName]error, error) {
 	servers, err := GetMonitors(toClient, includeOffline)
 	if err != nil {
 		return nil, err
@@ -122,16 +121,16 @@ func ValidateAllMonitorsDSStats(toClient *to.Session, includeOffline bool) (map[
 
 	crConfigs := GetCRConfigs(GetCDNs(servers), toClient)
 
-	errs := map[enum.TrafficMonitorName]error{}
+	errs := map[tc.TrafficMonitorName]error{}
 	for _, server := range servers {
-		crConfig := crConfigs[enum.CDNName(server.CDNName)]
+		crConfig := crConfigs[tc.CDNName(server.CDNName)]
 		if err := crConfig.Err; err != nil {
-			errs[enum.TrafficMonitorName(server.HostName)] = fmt.Errorf("getting CRConfig: %v", err)
+			errs[tc.TrafficMonitorName(server.HostName)] = fmt.Errorf("getting CRConfig: %v", err)
 			continue
 		}
 
 		uri := fmt.Sprintf("http://%s.%s", server.HostName, server.DomainName)
-		errs[enum.TrafficMonitorName(server.HostName)] = ValidateDSStatsWithCRConfig(uri, crConfig.CRConfig, toClient)
+		errs[tc.TrafficMonitorName(server.HostName)] = ValidateDSStatsWithCRConfig(uri, crConfig.CRConfig, toClient)
 	}
 	return errs, nil
 }

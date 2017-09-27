@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 // CacheAvailableStatusReported is the status string returned by caches set to "reported" in Traffic Ops.
@@ -44,11 +44,11 @@ type AvailableStatus struct {
 }
 
 // CacheAvailableStatuses is the available status of each cache.
-type AvailableStatuses map[enum.CacheName]AvailableStatus
+type AvailableStatuses map[tc.CacheName]AvailableStatus
 
 // Copy copies this CacheAvailableStatuses. It does not modify, and thus is safe for multiple reader goroutines.
 func (a AvailableStatuses) Copy() AvailableStatuses {
-	b := AvailableStatuses(map[enum.CacheName]AvailableStatus{})
+	b := AvailableStatuses(map[tc.CacheName]AvailableStatus{})
 	for k, v := range a {
 		b[k] = v
 	}
@@ -56,7 +56,7 @@ func (a AvailableStatuses) Copy() AvailableStatuses {
 }
 
 // ResultHistory is a map of cache names, to an array of result history from each cache.
-type ResultHistory map[enum.CacheName][]Result
+type ResultHistory map[tc.CacheName][]Result
 
 func copyResult(a []Result) []Result {
 	b := make([]Result, len(a), len(a))
@@ -74,7 +74,7 @@ func (a ResultHistory) Copy() ResultHistory {
 }
 
 // ResultStatHistory is a map[cache][statName]val
-type ResultStatHistory map[enum.CacheName]ResultStatValHistory
+type ResultStatHistory map[tc.CacheName]ResultStatValHistory
 
 type ResultStatValHistory map[string][]ResultStatVal
 
@@ -182,11 +182,11 @@ func (a ResultStatHistory) Add(r Result, limit uint64) error {
 }
 
 // TODO determine if anything ever needs more than the latest, and if not, change ResultInfo to not be a slice.
-type ResultInfoHistory map[enum.CacheName][]ResultInfo
+type ResultInfoHistory map[tc.CacheName][]ResultInfo
 
 // ResultInfo contains all the non-stat result info. This includes the cache ID, any errors, the time of the poll, the request time duration, Astats System (Vitals), Poll ID, and Availability.
 type ResultInfo struct {
-	ID          enum.CacheName
+	ID          tc.CacheName
 	Error       error
 	Time        time.Time
 	RequestTime time.Duration
@@ -235,7 +235,7 @@ func (a ResultInfoHistory) Add(r Result, limit uint64) {
 }
 
 // Kbpses is the kbps values of each cache.
-type Kbpses map[enum.CacheName]int64
+type Kbpses map[tc.CacheName]int64
 
 func (a Kbpses) Copy() Kbpses {
 	b := Kbpses{}

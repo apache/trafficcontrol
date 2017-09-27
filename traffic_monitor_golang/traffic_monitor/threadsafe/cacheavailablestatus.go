@@ -21,7 +21,7 @@ package threadsafe
 
 import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/cache"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"sync"
 )
 
@@ -33,7 +33,7 @@ type CacheAvailableStatus struct {
 
 // NewCacheAvailableStatus creates and returns a new CacheAvailableStatus, initializing internal pointer values.
 func NewCacheAvailableStatus() CacheAvailableStatus {
-	c := cache.AvailableStatuses(map[enum.CacheName]cache.AvailableStatus{})
+	c := cache.AvailableStatuses(map[tc.CacheName]cache.AvailableStatus{})
 	return CacheAvailableStatus{m: &sync.RWMutex{}, caches: &c}
 }
 

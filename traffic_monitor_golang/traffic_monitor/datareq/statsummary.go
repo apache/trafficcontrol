@@ -28,14 +28,14 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/util"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/cache"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/srvhttp"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
 )
 
 type StatSummary struct {
-	Caches map[enum.CacheName]map[string]StatSummaryStat `json:"caches"`
+	Caches map[tc.CacheName]map[string]StatSummaryStat `json:"caches"`
 	srvhttp.CommonAPIData
 }
 
@@ -63,7 +63,7 @@ func srvStatSummary(params url.Values, errorCount threadsafe.Uint, path string, 
 func createStatSummary(statResultHistory cache.ResultStatHistory, filter cache.Filter, params url.Values) StatSummary {
 	statPrefix := "ats."
 	ss := StatSummary{
-		Caches:        map[enum.CacheName]map[string]StatSummaryStat{},
+		Caches:        map[tc.CacheName]map[string]StatSummaryStat{},
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
 	}
 	for cache, stats := range statResultHistory {
