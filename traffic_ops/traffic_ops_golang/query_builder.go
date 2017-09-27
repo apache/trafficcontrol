@@ -23,7 +23,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
 func BuildQuery(v url.Values, selectStmt string, queryParamsToSQLCols map[string]string) (string, map[string]interface{}) {

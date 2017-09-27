@@ -25,8 +25,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/davecheney/gmx"
 )
 

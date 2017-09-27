@@ -28,7 +28,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
 const OldAccessLogPath = "/var/log/traffic_ops/access.log"

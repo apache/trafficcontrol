@@ -26,8 +26,9 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+
 	"github.com/jmoiron/sqlx"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"

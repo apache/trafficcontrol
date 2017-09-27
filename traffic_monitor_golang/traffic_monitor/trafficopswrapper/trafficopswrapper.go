@@ -25,7 +25,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/crconfig"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )

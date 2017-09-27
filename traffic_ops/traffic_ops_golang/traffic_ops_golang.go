@@ -20,16 +20,16 @@ package main
  */
 
 import (
+	"crypto/tls"
 	"flag"
 	"fmt"
 	"net/http"
-
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
-	"github.com/jmoiron/sqlx"
-
-	"crypto/tls"
-	_ "github.com/lib/pq"
 	"time"
+
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 const Version = "0.1"
@@ -90,7 +90,7 @@ func main() {
 		Warn Log:             %s
 		Info Log:             %s
 		Debug Log:            %s
-		Event Log:            %s`, cfg.HTTPPort, cfg.DBServer, cfg.DBUser, cfg.DBDB, cfg.DBSSL, cfg.MaxDBConnections, cfg.TOURLStr, cfg.Insecure, cfg.CertPath, cfg.KeyPath, time.Duration(cfg.ProxyTimeout) * time.Second, time.Duration(cfg.ProxyKeepAlive) * time.Second, time.Duration(cfg.ProxyTLSTimeout) * time.Second, time.Duration(cfg.ProxyReadHeaderTimeout) * time.Second, time.Duration(cfg.ReadTimeout) * time.Second, time.Duration(cfg.ReadHeaderTimeout) * time.Second, time.Duration(cfg.WriteTimeout) * time.Second, time.Duration(cfg.IdleTimeout) * time.Second, cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug, cfg.LogLocationEvent)
+		Event Log:            %s`, cfg.HTTPPort, cfg.DBServer, cfg.DBUser, cfg.DBDB, cfg.DBSSL, cfg.MaxDBConnections, cfg.TOURLStr, cfg.Insecure, cfg.CertPath, cfg.KeyPath, time.Duration(cfg.ProxyTimeout)*time.Second, time.Duration(cfg.ProxyKeepAlive)*time.Second, time.Duration(cfg.ProxyTLSTimeout)*time.Second, time.Duration(cfg.ProxyReadHeaderTimeout)*time.Second, time.Duration(cfg.ReadTimeout)*time.Second, time.Duration(cfg.ReadHeaderTimeout)*time.Second, time.Duration(cfg.WriteTimeout)*time.Second, time.Duration(cfg.IdleTimeout)*time.Second, cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug, cfg.LogLocationEvent)
 
 	sslStr := "require"
 	if !cfg.DBSSL {

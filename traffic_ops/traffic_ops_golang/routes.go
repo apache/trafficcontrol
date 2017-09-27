@@ -28,7 +28,7 @@ import (
 	"net/http/httputil"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
 // Routes returns the routes, and a catchall route for when no route matches.
