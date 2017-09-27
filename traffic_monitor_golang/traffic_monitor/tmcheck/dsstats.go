@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/crconfig"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservicedata"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
@@ -47,7 +47,7 @@ func ValidateDSStatsWithCDN(tmURI string, tmCDN string, toClient *to.Session) er
 		return fmt.Errorf("getting CRConfig: %v", err)
 	}
 
-	crConfig := crconfig.CRConfig{}
+	crConfig := tc.CRConfig{}
 	if err := json.Unmarshal(crConfigBytes, &crConfig); err != nil {
 		return fmt.Errorf("unmarshalling CRConfig JSON: %v", err)
 	}
@@ -56,7 +56,7 @@ func ValidateDSStatsWithCDN(tmURI string, tmCDN string, toClient *to.Session) er
 }
 
 // ValidateOfflineStatesWithCRConfig validates per ValidateOfflineStates, but saves querying the CRconfig if it's already fetched.
-func ValidateDSStatsWithCRConfig(tmURI string, crConfig *crconfig.CRConfig, toClient *to.Session) error {
+func ValidateDSStatsWithCRConfig(tmURI string, crConfig *tc.CRConfig, toClient *to.Session) error {
 	dsStats, err := GetDSStats(tmURI + TrafficMonitorDSStatsPath)
 	if err != nil {
 		return fmt.Errorf("getting DSStats: %v", err)
@@ -65,8 +65,8 @@ func ValidateDSStatsWithCRConfig(tmURI string, crConfig *crconfig.CRConfig, toCl
 	return ValidateDSStatsData(dsStats, crConfig)
 }
 
-func hasCaches(dsName string, crconfig *crconfig.CRConfig) bool {
-	for _, server := range crconfig.ContentServers {
+func hasCaches(dsName string, crconfig *tc.CRConfig) bool {
+	for _, server := range tc.ContentServers {
 		if _, ok := server.DeliveryServices[dsName]; ok {
 			return true
 		}
@@ -75,8 +75,8 @@ func hasCaches(dsName string, crconfig *crconfig.CRConfig) bool {
 }
 
 // ValidateDSStatsData validates that all delivery services in the given CRConfig with caches assigned exist in the given DSStats.
-func ValidateDSStatsData(dsStats *dsdata.StatsOld, crconfig *crconfig.CRConfig) error {
-	for dsName, _ := range crconfig.DeliveryServices {
+func ValidateDSStatsData(dsStats *dsdata.StatsOld, crconfig *tc.CRConfig) error {
+	for dsName, _ := range tc.DeliveryServices {
 		if !hasCaches(dsName, crconfig) {
 			continue
 		}
