@@ -587,49 +587,6 @@ func serveErr(w http.ResponseWriter, code int) (int, uint64, error) {
 	return code, uint64(bytesWritten), err
 }
 
-// func (h *cacheHandler) ServeCacheMiss(w http.ResponseWriter, r *http.Request, reqTime time.Time, key string) {
-// 	fmt.Printf("DEBUG cacheHandler.ServeCacheMiss\n")
-// 	reqHeader := http.Header{}
-// 	copyHeader(r.Header, &reqHeader) // copy before ServeHTTP invalidates the request
-
-// 	noCache := false // TODO fix
-// 	h.ThrottleRequest(remapName, key, noCache, func() {
-// 		respCode, respHeader, respBody, respReqTime, respRespTime, err = request(remappedReq)
-// 	})
-// 	if err != nil {
-// 		fmt.Printf("DEBUG origin err for %v rule %v err %v\n", key, remapName, err)
-// 		h.serveOriginErr(w)
-// 		return
-// 	}
-
-// 	respHeader.Add("Requested-Host", remappedReq.Host)
-// 	go h.respond(w, respCode, respHeader, respBody)
-
-// 	h.TryCache(key, reqHeader, respBody, respCode, respHeader, respReqTime, respRespTime)
-// }
-
-// func (h *cacheHandler) ServeCacheHit(w http.ResponseWriter, r *http.Request, cacheObj cacheobj.CacheObj) {
-// 	fmt.Printf("DEBUG cacheHandler.ServeCacheHit\n")
-// 	h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body)
-// }
-
-// func (h *cacheHandler) ServeCacheRevalidate(w http.ResponseWriter, r *http.Request, cacheObj cacheobj.CacheObj) {
-// 	fmt.Printf("DEBUG cacheHandler.ServeCacheRevalidate\n")
-// 	// TODO implement
-// 	h.respond(w, cacheObj.code, cacheObj.respHeaders, cacheObj.body)
-// 	// h.parent.ServeHTTP(w, r)
-// }
-
-// // TryCache determines if it can validly cache the given response per RFC 7234. If so, it caches it in this handler's cache.
-// func (h *cacheHandler) TryCache(key string, reqHeader http.Header, bytes []byte, code int, respHeader http.Header, reqTime time.Time, respTime time.Time) {
-// 	canCache := CanCache(reqHeader, code, respHeader)
-// 	fmt.Printf("TryCache canCache '%v': %v\n", key, canCache)
-// 	if canCache {
-// 		obj := Newcacheobj.CacheObj(reqHeader, bytes, code, respHeader, reqTime, respTime)
-// 		h.cache.AddSize(key, obj, obj.size)
-// 	}
-// }
-
 // request makes the given request and returns its response code, headers, body, the request time, response time, and any error.
 func request(transport *http.Transport, r *http.Request, proxyURL *url.URL) (int, http.Header, []byte, time.Time, time.Time, error) {
 	log.Debugf("request requesting %v headers %v\n", r.RequestURI, r.Header)

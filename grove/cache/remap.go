@@ -177,12 +177,7 @@ func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
 	log.Debugf("GetNext newUri: %v, fqdn: %v\n", newUri, getFQDN(newUri))
 	log.Debugf("GetNext rule name: %v\n", p.rule.Name)
 
-	// if newReq.Header.Get("Host") == p.oldURI {
-	// 	log.Errorf("DEBUGQ setting Host header\n")
 	newReq.Header.Set("Host", getFQDN(newUri))
-	// } else {
-	// 	fmt.Printf("DEBUGL leaving Host header: %v\n", newReq.Header.Get("Host"))
-	// }
 
 	retryAllowed := *p.rule.RetryNum < p.failures
 	return Remapping{
@@ -196,61 +191,6 @@ func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
 		RetryCodes:      p.rule.RetryCodes,
 	}, retryAllowed, nil
 }
-
-// Remap returns the given request with its URI remapped, the name of the remap rule found, the cache key, whether the requestor's IP is allowed, whether the rule calls for sending a connection close header, whether a rule was found, and any error. The `failures` parameter indicates the number of failed parents which have occurred, so those parents won't be remapped.
-// func (hr simpleHttpRequestRemapper) Remap(r *http.Request, scheme string, failures int) Remapping {
-// 	// NewRequest(method, urlStr string, body io.Reader)
-// 	// TODO config whether to consider query string, method, headers
-
-// 	oldUri := scheme + "://" + r.Host + r.RequestURI
-// 	log.Debugf("Remap oldUri: '%v'\n", oldUri)
-// 	log.Debugf("request: '%+v'\n", r)
-// 	rule, ok := hr.remapper.Remap(oldUri)
-// 	if !ok {
-// 		log.Debugf("Remap oldUri: '%v' NOT FOUND\n", oldUri)
-// 		return Remapping{RuleNotFound: true}
-// 	}
-
-// 	ip, err := GetIP(r)
-// 	if err != nil {
-// 		return Remapping{Err: fmt.Errorf("parsing client IP: %v", err)}
-// 	}
-
-// 	if !rule.Allowed(ip) {
-// 		return Remapping{IPNotAllowed: true}
-// 	}
-
-// 	log.Debugf("Allowed %v\n", ip)
-
-// 	newUri := rule.URI(oldUri, failures)
-// 	cacheKey := rule.CacheKey(r.Method, oldUri)
-// 	log.Debugf("Remap newURI: '%v'\nDEBUG Remap cacheKey '%v'\n", newUri, cacheKey)
-
-// 	newReq, err := http.NewRequest(r.Method, newUri, nil) // TODO modify given req in-place?
-// 	if err != nil {
-// 		log.Errorf("Remap NewRequest: %v\n", err)
-// 		return Remapping{RuleNotFound: true} // TODO return err?
-// 	}
-// 	copyHeader(r.Header, &newReq.Header)
-
-// 	log.Errorf("DEBUGQ oldUri: %v, Host: %v\n", oldUri, newReq.Header.Get("Host"))
-// 	log.Errorf("DEBUGQ newUri: %v, fqdn: %v\n", newUri, getFQDN(newUri))
-
-// 	if newReq.Header.Get("Host") == oldUri {
-// 		log.Errorf("DEBUGQ setting Host header\n")
-// 		newReq.Header.Set("Host", getFQDN(newUri))
-// 	}
-// 	// newReq.Header.Add("If-Modified-Since", cacheObj.respTime.Format(time.RFC1123))
-// 	return Remapping{
-// 		Request:         newReq,
-// 		Name:            rule.Name,
-// 		CacheKey:        cacheKey,
-// 		ConnectionClose: rule.ConnectionClose,
-// 		Timeout:         *rule.Timeout,
-// 		RetryNum:        *rule.RetryNum,
-// 		RetryCodes:      rule.RetryCodes,
-// 	}
-// }
 
 func RemapperToHTTP(r Remapper) HTTPRequestRemapper {
 	return simpleHttpRequestRemapper{remapper: r}
@@ -459,7 +399,6 @@ func (r RemapRule) uriGetToConsistentHash(fromURI string, failures int) (string,
 		iter = iter.NextWrap()
 	}
 
-	// fmt.Printf("DEBUGL uriGetToConsistentHash fromURI %v returning iter.Val().Name %v iter.Val().ProxyURL %v iter.Index() %v\n", fromURI, iter.Val().Name, iter.Val().ProxyURL, iter.Index())
 	return iter.Val().Name, iter.Val().ProxyURL
 }
 
