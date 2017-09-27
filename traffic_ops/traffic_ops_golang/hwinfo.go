@@ -30,7 +30,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const HwInfoPrivLevel = 10
+const HWInfoPrivLevel = 10
 
 func hwInfoHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
@@ -41,7 +41,7 @@ func hwInfoHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 		}
 
 		q := r.URL.Query()
-		resp, err := getHwInfoResponse(q, db, privLevel)
+		resp, err := getHWInfoResponse(q, db, privLevel)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -58,35 +58,35 @@ func hwInfoHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	}
 }
 
-func getHwInfoResponse(q url.Values, db *sqlx.DB, privLevel int) (*tostructs.HwInfoResponse, error) {
-	hwInfo, err := getHwInfo(q, db, privLevel)
+func getHWInfoResponse(q url.Values, db *sqlx.DB, privLevel int) (*tostructs.HWInfoResponse, error) {
+	hwInfo, err := getHWInfo(q, db, privLevel)
 	if err != nil {
 		return nil, fmt.Errorf("getting hwInfo response: %v", err)
 	}
 
-	resp := tostructs.HwInfoResponse{
+	resp := tostructs.HWInfoResponse{
 		Response: hwInfo,
 	}
 	return &resp, nil
 }
 
-func getHwInfo(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.HwInfo, error) {
+func getHWInfo(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.HWInfo, error) {
 
 	var rows *sqlx.Rows
 	var err error
 
-	rows, err = db.Queryx(selectHwInfoQuery())
+	rows, err = db.Queryx(selectHWInfoQuery())
 
 	if err != nil {
 		//TODO: drichardson - send back an alert if the Query Count is larger than 1
 		//                    Test for bad Query Parameters
 		return nil, err
 	}
-	hwInfo := []tostructs.HwInfo{}
+	hwInfo := []tostructs.HWInfo{}
 
 	defer rows.Close()
 	for rows.Next() {
-		var s tostructs.HwInfo
+		var s tostructs.HWInfo
 		if err = rows.StructScan(&s); err != nil {
 			return nil, fmt.Errorf("getting hwInfo: %v", err)
 		}
@@ -95,7 +95,7 @@ func getHwInfo(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.HwInfo, er
 	return hwInfo, nil
 }
 
-func selectHwInfoQuery() string {
+func selectHWInfoQuery() string {
 
 	query := `SELECT
     id,
