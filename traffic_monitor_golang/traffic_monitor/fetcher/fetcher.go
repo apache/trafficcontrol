@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/handler"
 )
 
 type Fetcher interface {

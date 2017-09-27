@@ -27,8 +27,8 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/fetcher"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/fetcher"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/handler"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper" // TODO move to common
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
@@ -55,18 +55,15 @@ type HttpPollerConfig struct {
 	Urls        map[string]PollConfig
 	Interval    time.Duration
 	NoKeepAlive bool
-	// noSleep indicates to use the InsomniacPoller. Note this is only used with the initial Poll call, which decides which Poller mechanism to use. After that, this is ignored when the HttpPollerConfig is passed over the ConfigChannel.
-	noSleep bool
 }
 
 // NewHTTP creates and returns a new HttpPoller.
-// If tick is false, HttpPoller.TickChan() will return nil. If noSleep is true, the poller will busywait instead of sleeping, and use a single goroutine which dispatches polls instead of a goroutine per poll.
+// If tick is false, HttpPoller.TickChan() will return nil.
 func NewHTTP(
 	interval time.Duration,
 	tick bool,
 	httpClient *http.Client,
 	fetchHandler handler.Handler,
-	noSleep bool,
 	userAgent string,
 ) HttpPoller {
 	var tickChan chan uint64
@@ -78,7 +75,6 @@ func NewHTTP(
 		ConfigChannel: make(chan HttpPollerConfig),
 		Config: HttpPollerConfig{
 			Interval: interval,
-			noSleep:  noSleep,
 		},
 		FetcherTemplate: fetcher.HttpFetcher{
 			Handler:   fetchHandler,
@@ -189,16 +185,6 @@ type HTTPPollInfo struct {
 }
 
 func (p HttpPoller) Poll() {
-	if p.Config.noSleep {
-		log.Debugf("HttpPoller using InsomniacPoll\n")
-		p.InsomniacPoll()
-	} else {
-		log.Debugf("HttpPoller using SleepPoll\n")
-		p.SleepPoll()
-	}
-}
-
-func (p HttpPoller) SleepPoll() {
 	// iterationCount := uint64(0)
 	// iterationCount++ // on tick<:
 	// case p.TickChan <- iterationCount:
@@ -233,7 +219,7 @@ func (p HttpPoller) SleepPoll() {
 					}
 				}
 			}
-			go sleepPoller(info.Interval, info.ID, info.URL, info.Host, fetcher, kill)
+			go poller(info.Interval, info.ID, info.URL, info.Host, fetcher, kill)
 		}
 		p.Config = newConfig
 	}
@@ -249,7 +235,7 @@ func mustDie(die <-chan struct{}) bool {
 }
 
 // TODO iterationCount and/or p.TickChan?
-func sleepPoller(interval time.Duration, id string, url string, host string, fetcher fetcher.Fetcher, die <-chan struct{}) {
+func poller(interval time.Duration, id string, url string, host string, fetcher fetcher.Fetcher, die <-chan struct{}) {
 	pollSpread := time.Duration(rand.Float64()*float64(interval/time.Nanosecond)) * time.Nanosecond
 	time.Sleep(pollSpread)
 	tick := time.NewTicker(interval)
@@ -272,94 +258,6 @@ func sleepPoller(interval time.Duration, id string, url string, host string, fet
 			tick.Stop()
 			return
 		}
-	}
-}
-
-const InsomniacPollerEmptySleepDuration = time.Millisecond * time.Duration(100)
-
-// InsomniacPoll polls using a single thread, which never sleeps. This exists to work around a bug observed in OpenStack CentOS 6.5 kernel 2.6.32 wherin sleep gets progressively slower. This should be removed and Poll() changed to call SleepPoll() when the bug is tracked down and fixed for production.
-func (p HttpPoller) InsomniacPoll() {
-	// iterationCount := uint64(0)
-	// iterationCount++ // on tick<:
-	// case p.TickChan <- iterationCount:
-	killChan := make(chan struct{})
-	pollRunning := false // TODO find less awkward way to not kill the first loop
-	pollerId := rand.Int63()
-	for newCfg := range p.ConfigChannel {
-		// TODO add a more efficient function than diffConfigs for this func, since we only need to know whether anything changed
-		deletions, additions := diffConfigs(p.Config, newCfg)
-		if len(deletions) == 0 && len(additions) == 0 {
-			continue
-		}
-
-		if pollRunning {
-			killChan <- struct{}{}
-		}
-		pollRunning = true
-
-		polls := []HTTPPollInfo{}
-		for id, pollCfg := range newCfg.Urls {
-			polls = append(polls, HTTPPollInfo{
-				Interval: newCfg.Interval - InsomniacPollerEmptySleepDuration,
-				ID:       id,
-				URL:      pollCfg.URL,
-				Host:     pollCfg.Host,
-				Timeout:  pollCfg.Timeout,
-			})
-		}
-		go insomniacPoller(pollerId, polls, p.FetcherTemplate, killChan)
-		p.Config = newCfg
-	}
-}
-
-func insomniacPoller(pollerId int64, polls []HTTPPollInfo, fetcherTemplate fetcher.HttpFetcher, die <-chan struct{}) {
-	heap := Heap{PollerID: pollerId}
-	start := time.Now()
-	fetchers := map[string]fetcher.Fetcher{}
-	for _, p := range polls {
-		spread := time.Duration(rand.Float64()*float64(p.Interval/time.Nanosecond)) * time.Nanosecond
-		heap.Push(HeapPollInfo{Info: p, Next: start.Add(spread)})
-
-		fetcher := fetcherTemplate
-		if p.Timeout != 0 { // if the timeout isn't explicitly set, use the template value.
-			c := *fetcher.Client
-			fetcher.Client = &c // copy the client, so we don't change other fetchers.
-			fetcher.Client.Timeout = p.Timeout
-		}
-		fetchers[p.ID] = fetcher
-	}
-
-	timeMax := func(a time.Time, b time.Time) time.Time {
-		if a.After(b) {
-			return a
-		}
-		return b
-	}
-
-	poll := func(p HeapPollInfo) {
-		start := time.Now()
-		pollId := atomic.AddUint64(&debugPollNum, 1)
-		// TODO change pollFinishedChan to callback, for performance
-		pollFinishedChan := make(chan uint64)
-
-		go fetchers[p.Info.ID].Fetch(p.Info.ID, p.Info.URL, p.Info.Host, pollId, pollFinishedChan) // TODO persist fetcher, with its own die chan?
-		<-pollFinishedChan
-		now := time.Now()
-		p.Next = timeMax(start.Add(p.Info.Interval), now)
-		heap.Push(p)
-	}
-
-	for {
-		p, ok := heap.Pop()
-		if !ok {
-			ThreadSleep(InsomniacPollerEmptySleepDuration)
-			continue
-		}
-		if mustDie(die) {
-			return
-		}
-		ThreadSleep(p.Next.Sub(time.Now()))
-		go poll(p)
 	}
 }
 
