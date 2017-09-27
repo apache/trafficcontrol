@@ -24,7 +24,7 @@ var TableStatusServersController = function(status, servers, $scope, $state, loc
 	$scope.servers = servers;
 
 	$scope.editServer = function(id) {
-		locationUtils.navigateToPath('/configure/servers/' + id);
+		locationUtils.navigateToPath('/servers/' + id);
 	};
 
 	$scope.refresh = function() {

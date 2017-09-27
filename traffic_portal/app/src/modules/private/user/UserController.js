@@ -74,7 +74,7 @@ var UserController = function($scope, $state, $location, $uibModal, formUtils, l
     };
 
     $scope.viewDeliveryServices = function() {
-        $location.path('/admin/users/' + $scope.user.id + '/delivery-services');
+        $location.path('/users/' + $scope.user.id + '/delivery-services');
     };
 
     $scope.navigateToPath = locationUtils.navigateToPath;

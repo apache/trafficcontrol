@@ -101,7 +101,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
             }
         });
         modalInstance.result.then(function(cdn) {
-            $location.path('/admin/cdns/' + cdn.id + '/config/changes');
+            $location.path('/cdns/' + cdn.id + '/config/changes');
         }, function () {
             // do nothing
         });

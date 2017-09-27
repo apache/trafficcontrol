@@ -34,7 +34,7 @@ var FormNewDeliveryServiceJobController = function(deliveryService, job, $scope,
 			.then(
 				function() {
 					messageModel.setMessages([ { level: 'success', text: 'Delivery Service Invalidate Content Job Created' } ], true);
-					locationUtils.navigateToPath('/configure/delivery-services/' + deliveryService.id + '/jobs');
+					locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/jobs');
 				},
 				function(fault) {
 					messageModel.setMessages(fault.data.alerts, false);

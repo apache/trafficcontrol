@@ -23,7 +23,7 @@ var FormGenerateCdnDnssecKeysController = function(cdn, dnssecKeysRequest, $scop
 		cdnService.generateDNSSECKeys($scope.dnssecKeysRequest)
 			.then(function(result) {
 				messageModel.setMessages(result.data.alerts, true);
-				locationUtils.navigateToPath('/admin/cdns/' + cdn.id + '/dnssec-keys');
+				locationUtils.navigateToPath('/cdns/' + cdn.id + '/dnssec-keys');
 			});
 	};
 

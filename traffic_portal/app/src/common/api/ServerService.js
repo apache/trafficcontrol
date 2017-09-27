@@ -32,7 +32,7 @@ var ServerService = function($http, $q, Restangular, locationUtils, messageModel
             .then(
                 function(response) {
                     messageModel.setMessages([ { level: 'success', text: 'Server created' } ], true);
-                    locationUtils.navigateToPath('/configure/servers/' + response.id);
+                    locationUtils.navigateToPath('/servers/' + response.id);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);

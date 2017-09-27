@@ -32,7 +32,7 @@ var StatusService = function(Restangular, locationUtils, messageModel) {
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Status created' } ], true);
-                    locationUtils.navigateToPath('/admin/statuses');
+                    locationUtils.navigateToPath('/statuses');
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);

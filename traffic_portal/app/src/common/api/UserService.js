@@ -63,7 +63,7 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
             .then(
                 function(result) {
                     messageModel.setMessages(result.data.alerts, true);
-                    locationUtils.navigateToPath('/admin/users');
+                    locationUtils.navigateToPath('/users');
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);

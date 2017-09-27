@@ -24,7 +24,7 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, $state,
     var qstrings = deliveryServiceUtils.qstrings;
 
     var createDeliveryService = function(typeName) {
-        var path = '/configure/delivery-services/new?type=' + typeName;
+        var path = '/delivery-services/new?type=' + typeName;
         locationUtils.navigateToPath(path);
     };
 
@@ -33,7 +33,7 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, $state,
     $scope.getRelativeTime = dateUtils.getRelativeTime;
 
     $scope.editDeliveryService = function(ds) {
-        var path = '/configure/delivery-services/' + ds.id + '?type=' + ds.type;
+        var path = '/delivery-services/' + ds.id + '?type=' + ds.type;
         locationUtils.navigateToPath(path);
     };
 

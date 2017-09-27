@@ -24,7 +24,7 @@ var TableCacheGroupAsnsController = function(cacheGroup, asns, $scope, $state, l
 	$scope.asns = asns;
 
 	$scope.editASN = function(id) {
-		locationUtils.navigateToPath('/admin/asns/' + id);
+		locationUtils.navigateToPath('/asns/' + id);
 	};
 
 	$scope.refresh = function() {

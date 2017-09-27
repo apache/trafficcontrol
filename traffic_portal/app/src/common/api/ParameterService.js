@@ -32,7 +32,7 @@ var ParameterService = function(Restangular, locationUtils, messageModel) {
             .then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Parameter created' } ], true);
-                locationUtils.navigateToPath('/admin/parameters');
+                locationUtils.navigateToPath('/parameters');
             },
             function(fault) {
                 messageModel.setMessages(fault.data.alerts, false);
