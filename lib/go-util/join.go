@@ -23,8 +23,8 @@ import (
 	"fmt"
 )
 
-func JoinErrorsString(errs []error) string {
-	joined := JoinErrors(errs)
+func JoinErrsStr(errs []error) string {
+	joined := JoinErrs(errs)
 
 	if joined == nil {
 		return ""
@@ -33,11 +33,11 @@ func JoinErrorsString(errs []error) string {
 	return joined.Error()
 }
 
-func JoinErrors(errs []error) error {
-	return JoinErrorsSep(errs, "")
+func JoinErrs(errs []error) error {
+	return JoinErrsSep(errs, "")
 }
 
-func JoinErrorsSep(errs []error, separator string) error {
+func JoinErrsSep(errs []error, separator string) error {
 	if separator == "" {
 		separator = ", "
 	}

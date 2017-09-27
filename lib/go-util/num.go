@@ -19,7 +19,7 @@ package util
  * under the License.
  */
 
-const MillisecondsPerNanosecond = int64(1000000)
+const MSPerNS = int64(1000000)
 
 // ToNumeric returns a float for any numeric type, and false if the interface does not hold a numeric type.
 // This allows converting unknown numeric types (for example, from JSON) in a single line

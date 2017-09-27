@@ -26,9 +26,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/util"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-util"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 )
@@ -101,9 +101,9 @@ func getStats(staticAppData config.StaticAppData, pollingInterval time.Duration,
 
 	oldestPolledPeer, oldestPolledPeerTime := oldestPeerPollTime(peerStates.GetQueryTimes(), peerStates.GetPeersOnline())
 	s.OldestPolledPeer = string(oldestPolledPeer)
-	s.OldestPolledPeerMs = time.Now().Sub((oldestPolledPeerTime)).Nanoseconds() / util.MillisecondsPerNanosecond
+	s.OldestPolledPeerMs = time.Now().Sub((oldestPolledPeerTime)).Nanoseconds() / util.MSPerNS
 
-	s.QueryInterval95thPercentile = getCacheTimePercentile(lastHealthTimes, 0.95).Nanoseconds() / util.MillisecondsPerNanosecond
+	s.QueryInterval95thPercentile = getCacheTimePercentile(lastHealthTimes, 0.95).Nanoseconds() / util.MSPerNS
 
 	return json.Marshal(JSONStats{Stats: s})
 }
