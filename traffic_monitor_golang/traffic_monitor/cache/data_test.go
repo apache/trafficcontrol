@@ -22,8 +22,8 @@ package cache
 import (
 	"errors"
 	"fmt"
-	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservicedata"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/dsdata"
 	"math/rand"
 	"reflect"
 	"testing"

@@ -1,4 +1,4 @@
-package deliveryservicedata // TODO rename?
+package dsdata
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -113,14 +113,14 @@ type StatString struct {
 
 // StatCommon contains stat data common to most delivery service stats.
 type StatCommon struct {
-	CachesConfiguredNum StatInt                 `json:"caches_configured"`
+	CachesConfiguredNum StatInt               `json:"caches_configured"`
 	CachesReporting     map[tc.CacheName]bool `json:"caches_reporting"`
-	ErrorStr            StatString              `json:"error_string"`
-	StatusStr           StatString              `json:"status"`
-	IsHealthy           StatBool                `json:"is_healthy"`
-	IsAvailable         StatBool                `json:"is_available"`
-	CachesAvailableNum  StatInt                 `json:"caches_available"`
-	CachesDisabled      []string                `json:"disabled_locations"`
+	ErrorStr            StatString            `json:"error_string"`
+	StatusStr           StatString            `json:"status"`
+	IsHealthy           StatBool              `json:"is_healthy"`
+	IsAvailable         StatBool              `json:"is_available"`
+	CachesAvailableNum  StatInt               `json:"caches_available"`
+	CachesDisabled      []string              `json:"disabled_locations"`
 }
 
 // Copy returns a deep copy of this StatCommon object.
@@ -295,7 +295,7 @@ func (a Stat) Total() StatCacheStats {
 // Stats is the JSON-serialisable representation of delivery service Stats. It maps delivery service names to individual stat objects.
 type Stats struct {
 	DeliveryService map[tc.DeliveryServiceName]Stat `json:"deliveryService"`
-	Time            time.Time                         `json:"-"`
+	Time            time.Time                       `json:"-"`
 }
 
 // Copy performs a deep copy of this Stats object.
