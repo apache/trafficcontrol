@@ -25,7 +25,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/util"
+	"github.com/apache/incubator-trafficcontrol/lib/go-util"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/cache"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservicedata"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/health"
@@ -188,7 +188,7 @@ func addLastStats(lastData dsdata.LastStatsData, newStats dsdata.StatCacheStats,
 	lastData.Status3xx, errs[2] = addLastStat(lastData.Status3xx, newStats.Status3xx.Value, newStatsTime)
 	lastData.Status4xx, errs[3] = addLastStat(lastData.Status4xx, newStats.Status4xx.Value, newStatsTime)
 	lastData.Status5xx, errs[4] = addLastStat(lastData.Status5xx, newStats.Status5xx.Value, newStatsTime)
-	return lastData, util.JoinErrors(errs)
+	return lastData, util.JoinErrs(errs)
 }
 
 func addLastStatsToStatCacheStats(s dsdata.StatCacheStats, l dsdata.LastStatsData) dsdata.StatCacheStats {

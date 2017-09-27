@@ -20,7 +20,7 @@ package manager
  */
 
 import (
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/util"
+	"github.com/apache/incubator-trafficcontrol/lib/go-util"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 )
@@ -44,7 +44,7 @@ func StartPeerManager(
 
 func comparePeerState(events health.ThreadsafeEvents, result peer.Result, peerStates peer.CRStatesPeersThreadsafe) {
 	if result.Available != peerStates.GetPeerAvailability(result.ID) {
-		description := util.JoinErrorsString(result.Errors)
+		description := util.JoinErrsStr(result.Errors)
 
 		if description == "" && result.Available {
 			description = "Peer is reachable"
