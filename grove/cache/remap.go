@@ -171,7 +171,7 @@ func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
 	if err != nil {
 		return Remapping{}, false, fmt.Errorf("creating new request: %v\n", err)
 	}
-	web.CopyHeader(r.Header, &newReq.Header)
+	web.CopyHeaderTo(r.Header, &newReq.Header)
 
 	log.Debugf("GetNext oldUri: %v, Host: %v\n", p.oldURI, newReq.Header.Get("Host"))
 	log.Debugf("GetNext newUri: %v, fqdn: %v\n", newUri, getFQDN(newUri))

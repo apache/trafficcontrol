@@ -288,8 +288,7 @@ func GetAndCache(
 		} else {
 			log.Debugf("GetAndCache revalidating %v\n", cacheKey)
 			// must copy, because this cache object may be concurrently read by other goroutines
-			newRespHeader := http.Header{}
-			web.CopyHeader(revalidateObj.RespHeaders, &newRespHeader)
+			newRespHeader := web.CopyHeader(revalidateObj.RespHeaders)
 			newRespHeader.Set("Date", respHeader.Get("Date"))
 			obj = &cacheobj.CacheObj{
 				Body:             revalidateObj.Body,
@@ -336,13 +335,8 @@ func (h *CacheHandler) Serve(w http.ResponseWriter, r *http.Request) {
 	h.stats.IncConnections()
 	defer h.stats.DecConnections()
 
-	// inBytes := getBytes(r)
 	reqTime := time.Now()
-
-	// copy request header, because it's not guaranteed valid after actually issuing the request
-	reqHeader := http.Header{}
-	web.CopyHeader(r.Header, &reqHeader)
-
+	reqHeader := web.CopyHeader(r.Header) // copy request header, because it's not guaranteed valid after actually issuing the request
 	moneyTraceHdr := reqHeader.Get("X-Money-Trace")
 	clientIp, _ := GetClientIPPort(r)
 	remappingProducer, err := h.remapper.RemappingProducer(r, h.scheme)
@@ -665,7 +659,7 @@ func request(transport *http.Transport, r *http.Request, proxyURL *url.URL) (int
 // respond writes the given code, header, and body to the ResponseWriter.
 func (h *CacheHandler) respond(w http.ResponseWriter, code int, header http.Header, body []byte, connectionClose bool) (uint64, error) {
 	dH := w.Header()
-	web.CopyHeader(header, &dH)
+	web.CopyHeaderTo(header, &dH)
 	if connectionClose {
 		dH.Add("Connection", "close")
 	}
