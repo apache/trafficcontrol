@@ -30,7 +30,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/datareq"
-	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservicedata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/dsdata"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 

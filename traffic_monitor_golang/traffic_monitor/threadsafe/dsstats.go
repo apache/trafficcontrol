@@ -22,7 +22,7 @@ package threadsafe
 import (
 	"sync"
 
-	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservicedata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/dsdata"
 )
 
 // DSStats wraps a deliveryservice.Stats object to be safe for multiple reader goroutines and a single writer.
