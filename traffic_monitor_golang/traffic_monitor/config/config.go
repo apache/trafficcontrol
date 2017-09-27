@@ -62,7 +62,6 @@ type Config struct {
 	ServeReadTimeout             time.Duration `json:"-"`
 	ServeWriteTimeout            time.Duration `json:"-"`
 	HealthToStatRatio            uint64        `json:"health_to_stat_ratio"`
-	HTTPPollNoSleep              bool          `json:"http_poll_no_sleep"`
 	StaticFileDir                string        `json:"static_file_dir"`
 }
 
@@ -93,7 +92,6 @@ var DefaultConfig = Config{
 	ServeReadTimeout:             10 * time.Second,
 	ServeWriteTimeout:            10 * time.Second,
 	HealthToStatRatio:            4,
-	HTTPPollNoSleep:              false,
 	StaticFileDir:                StaticFileDir,
 }
 

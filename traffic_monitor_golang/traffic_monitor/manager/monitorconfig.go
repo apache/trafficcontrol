@@ -26,10 +26,10 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/poller"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper"
