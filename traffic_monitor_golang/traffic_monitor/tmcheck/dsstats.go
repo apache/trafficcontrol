@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservicedata"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
@@ -66,7 +66,7 @@ func ValidateDSStatsWithCRConfig(tmURI string, crConfig *tc.CRConfig, toClient *
 }
 
 func hasCaches(dsName string, crconfig *tc.CRConfig) bool {
-	for _, server := range tc.ContentServers {
+	for _, server := range crconfig.ContentServers {
 		if _, ok := server.DeliveryServices[dsName]; ok {
 			return true
 		}
@@ -76,7 +76,7 @@ func hasCaches(dsName string, crconfig *tc.CRConfig) bool {
 
 // ValidateDSStatsData validates that all delivery services in the given CRConfig with caches assigned exist in the given DSStats.
 func ValidateDSStatsData(dsStats *dsdata.StatsOld, crconfig *tc.CRConfig) error {
-	for dsName, _ := range tc.DeliveryServices {
+	for dsName, _ := range crconfig.DeliveryServices {
 		if !hasCaches(dsName, crconfig) {
 			continue
 		}

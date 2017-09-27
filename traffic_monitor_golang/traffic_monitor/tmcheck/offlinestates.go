@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/crconfig"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
@@ -46,7 +46,7 @@ func ValidateOfflineStatesWithCDN(tmURI string, tmCDN string, toClient *to.Sessi
 		return fmt.Errorf("getting CRConfig: %v", err)
 	}
 
-	crConfig := crconfig.CRConfig{}
+	crConfig := tc.CRConfig{}
 	if err := json.Unmarshal(crConfigBytes, &crConfig); err != nil {
 		return fmt.Errorf("unmarshalling CRConfig JSON: %v", err)
 	}
@@ -55,7 +55,7 @@ func ValidateOfflineStatesWithCDN(tmURI string, tmCDN string, toClient *to.Sessi
 }
 
 // ValidateOfflineStatesWithCRConfig validates per ValidateOfflineStates, but saves querying the CRconfig if it's already fetched.
-func ValidateOfflineStatesWithCRConfig(tmURI string, crConfig *crconfig.CRConfig, toClient *to.Session) error {
+func ValidateOfflineStatesWithCRConfig(tmURI string, crConfig *tc.CRConfig, toClient *to.Session) error {
 	crStates, err := GetCRStates(tmURI + TrafficMonitorCRStatesPath)
 	if err != nil {
 		return fmt.Errorf("getting CRStates: %v", err)
@@ -65,7 +65,7 @@ func ValidateOfflineStatesWithCRConfig(tmURI string, crConfig *crconfig.CRConfig
 }
 
 // ValidateCRStates validates that no OFFLINE or ADMIN_DOWN caches in the given CRConfig are marked Available in the given CRStates.
-func ValidateCRStates(crstates *peer.Crstates, crconfig *crconfig.CRConfig) error {
+func ValidateCRStates(crstates *peer.Crstates, crconfig *tc.CRConfig) error {
 	for cacheName, cacheInfo := range crconfig.ContentServers {
 		status := enum.CacheStatusFromString(string(*cacheInfo.Status))
 		if status != enum.CacheStatusAdminDown || status != enum.CacheStatusOffline {
