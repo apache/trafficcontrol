@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/crconfig"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
@@ -166,7 +166,7 @@ func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*to.Tr
 		return nil, fmt.Errorf("getting CRConfig: %v", err)
 	}
 
-	crConfig := crconfig.CRConfig{}
+	crConfig := tc.CRConfig{}
 	if err := json.Unmarshal(crcData, &crConfig); err != nil {
 		return nil, fmt.Errorf("unmarshalling CRConfig JSON: %v", err)
 	}
@@ -179,7 +179,7 @@ func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*to.Tr
 	return mc, nil
 }
 
-func CreateMonitorConfig(crConfig crconfig.CRConfig, mc *to.TrafficMonitorConfigMap) (*to.TrafficMonitorConfigMap, error) {
+func CreateMonitorConfig(crConfig tc.CRConfig, mc *to.TrafficMonitorConfigMap) (*to.TrafficMonitorConfigMap, error) {
 	// Dump the "live" monitoring.json servers, and populate with the "snapshotted" CRConfig
 	mc.TrafficServer = map[string]to.TrafficServer{}
 	for name, srv := range crConfig.ContentServers {

@@ -28,7 +28,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/crconfig"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/datareq"
 	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservicedata"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
@@ -192,7 +192,7 @@ func Validator(
 
 // CRConfigOrError contains a CRConfig or an error. Union types? Monads? What are those?
 type CRConfigOrError struct {
-	CRConfig *crconfig.CRConfig
+	CRConfig *tc.CRConfig
 	Err      error
 }
 
@@ -291,7 +291,7 @@ func GetCRConfigs(cdns map[enum.CDNName]struct{}, toClient *to.Session) map[enum
 			continue
 		}
 
-		crConfig := crconfig.CRConfig{}
+		crConfig := tc.CRConfig{}
 		if err := json.Unmarshal(crConfigBytes, &crConfig); err != nil {
 			crConfigs[cdn] = CRConfigOrError{Err: fmt.Errorf("unmarshalling CRConfig JSON: %v", err)}
 		}
