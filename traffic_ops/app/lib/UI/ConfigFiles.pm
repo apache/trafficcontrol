@@ -1122,7 +1122,7 @@ sub parent_dot_config {
 			my $max_simple_retries                 = $ds->{'param'}->{'parent.config'}->{'mso.max_simple_retries'} || 1;
 			my $max_unavailable_server_retries     = $ds->{'param'}->{'parent.config'}->{'mso.max_unavailable_server_retries'} || 1;
 
-			my $qsh            = $ds->{'param'}->{'parent.config'}->{'mso.qstring_handling'};
+			my $qsh            = $ds->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
 			my $parent_qstring = "ignore";                                                      # default is ignore, unless for alg consistent_hash
 			if ( !defined($qsh) && $mso_algorithm eq 'consistent_hash' && $ds->{qstring_ignore} == 0 ) {
 				$parent_qstring = 'consider';
