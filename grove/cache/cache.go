@@ -346,47 +346,9 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	web.CopyHeader(r.Header, &reqHeader)
 
 	moneyTraceHdr := reqHeader.Get("X-Money-Trace")
-
-	// ok = 'rule found'
-	// remappedReq, remapName, cacheKey, allowed, ruleConnectionClose, ok, err := h.remapper.Remap(r, h.scheme, 0) // TODO handle failures
-
 	clientIp, _ := GetClientIPPort(r)
-
 	remappingProducer, err := h.remapper.RemappingProducer(r, h.scheme)
-
-	statAndLog := func(code int, bytesWritten uint64, successfullyRespondedToClient bool, successfullyGotFromOrigin bool, cacheHitStr string, originStatus int, originBytes uint64) {
-		bytesSent := WriteStats(h.stats, w, conn, r.Host, r.RemoteAddr, code, bytesWritten)
-		toFQDN := ""
-		proxyStr := ""
-		if remappingProducer != nil {
-			toFQDN = remappingProducer.ToFQDN()
-			proxyStr = remappingProducer.ProxyStr()
-		}
-		log.EventRaw(atsEventLogStr(
-			time.Now(),
-			clientIp,
-			h.hostname,
-			r.Host,
-			h.port,
-			toFQDN,
-			h.scheme,
-			r.URL.String(),
-			r.Method,
-			r.Proto,
-			code,
-			time.Now().Sub(reqTime)/time.Millisecond,
-			bytesSent,
-			originStatus,
-			originBytes,
-			successfullyRespondedToClient,
-			successfullyGotFromOrigin,
-			cacheHitStr,
-			proxyStr,
-			"-", // TODO fix?
-			r.UserAgent(),
-			moneyTraceHdr,
-		))
-	}
+	statLog := NewStatLogger(w, conn, h, r, moneyTraceHdr, clientIp, reqTime, remappingProducer)
 
 	if err != nil {
 		code := 0
@@ -402,7 +364,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		}
 		bytesWritten := uint64(0)
 		code, bytesWritten, err = serveErr(w, code)
-		statAndLog(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, 0, true), 0, 0)
+		statLog.Log(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, 0, true), 0, 0)
 		return
 	}
 
@@ -444,7 +406,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 			}
-			statAndLog(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, 0, true), 0, 0)
+			statLog.Log(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, 0, true), 0, 0)
 			return
 		}
 
@@ -452,7 +414,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 		}
-		statAndLog(cacheObj.Code, bytesWritten, true, err == nil, GetCacheHitStr(ReuseCannot, cacheObj.OriginCode, false), 0, 0)
+		statLog.Log(cacheObj.Code, bytesWritten, true, err == nil, GetCacheHitStr(ReuseCannot, cacheObj.OriginCode, false), 0, 0)
 		return
 	}
 
@@ -464,7 +426,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Errorf("retrying get error (in unexpected cacheobj): %v\n", err)
 			code, bytesWritten, err := serveReqErr(w)
-			statAndLog(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, 0, false), 0, 0)
+			statLog.Log(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, 0, false), 0, 0)
 			return
 		}
 
@@ -473,7 +435,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 		}
-		statAndLog(cacheObj.Code, bytesWritten, err == nil, true, GetCacheHitStr(ReuseCannot, cacheObj.OriginCode, false), cacheObj.OriginCode, cacheObj.Size)
+		statLog.Log(cacheObj.Code, bytesWritten, err == nil, true, GetCacheHitStr(ReuseCannot, cacheObj.OriginCode, false), cacheObj.OriginCode, cacheObj.Size)
 		return
 	}
 
@@ -493,7 +455,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 			}
-			statAndLog(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, 0, false), 0, 0)
+			statLog.Log(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, 0, false), 0, 0)
 			return
 		}
 	case ReuseMustRevalidate:
@@ -508,7 +470,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 			}
-			statAndLog(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, code, false), 0, 0)
+			statLog.Log(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, code, false), 0, 0)
 			return
 		}
 
@@ -530,7 +492,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 	}
-	statAndLog(cacheObj.Code, bytesSent, err == nil, true, GetCacheHitStr(canReuseStored, cacheObj.OriginCode, false), cacheObj.OriginCode, cacheObj.Size)
+	statLog.Log(cacheObj.Code, bytesSent, err == nil, true, GetCacheHitStr(canReuseStored, cacheObj.OriginCode, false), cacheObj.OriginCode, cacheObj.Size)
 }
 
 //GetClientIP returns the client IP address of the given request. It returns the first x-forwarded-for IP if any, else the RemoteAddr
