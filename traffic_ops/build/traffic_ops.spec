@@ -76,10 +76,10 @@ Built: %(date) by %{getenv: USER}
     ) || { echo "Could not build go tocookie at $(pwd): $!"; exit 1; }
 
     # build log (dependencies within traffic_control will fail to `go get` unless prebuilt)
-    godir=src/github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log
+    godir=src/github.com/apache/incubator-trafficcontrol/lib/go-log
     ( mkdir -p "$godir" && \
       cd "$godir" && \
-      cp -r "$TC_DIR"/traffic_monitor_golang/common/log/* . && \
+      cp -r "$TC_DIR"/lib/go-log/* . && \
       echo "go getting log at $(pwd)" && \
       go get -v \
     ) || { echo "Could not build go log at $(pwd): $!"; exit 1; }

@@ -25,8 +25,8 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	_ "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/instrumentation"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/manager"
 	_ "github.com/davecheney/gmx"

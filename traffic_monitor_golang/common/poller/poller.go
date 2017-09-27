@@ -26,10 +26,10 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/fetcher"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
 	instr "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/instrumentation"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
 	towrap "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopswrapper" // TODO move to common
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )

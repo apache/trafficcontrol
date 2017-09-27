@@ -25,7 +25,7 @@ import (
 	"io/ioutil"
 	"net/url"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
 // Config - represents the traffic_ops_golang.config file

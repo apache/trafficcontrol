@@ -24,7 +24,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
 func TestGetCDNConf(t *testing.T) {
