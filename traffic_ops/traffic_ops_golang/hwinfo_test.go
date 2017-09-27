@@ -30,27 +30,27 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestHwInfo() []tostructs.HwInfo {
-	hwinfo := []tostructs.HwInfo{}
-	testHwInfo := tostructs.HwInfo{
+func getTestHWInfo() []tostructs.HWInfo {
+	hwinfo := []tostructs.HWInfo{}
+	testHWInfo := tostructs.HWInfo{
 		ID:          1,
 		ServerID:    1,
 		Description: "Description",
 		Val:         "Val",
 		LastUpdated: "LastUpdated",
 	}
-	hwinfo = append(hwinfo, testHwInfo)
+	hwinfo = append(hwinfo, testHWInfo)
 
-	testHwInfo2 := testHwInfo
-	testHwInfo2.Description = "hwinfo2"
-	testHwInfo2.Val = "val2"
-	testHwInfo2.ServerID = 2
-	hwinfo = append(hwinfo, testHwInfo2)
+	testHWInfo2 := testHWInfo
+	testHWInfo2.Description = "hwinfo2"
+	testHWInfo2.Val = "val2"
+	testHWInfo2.ServerID = 2
+	hwinfo = append(hwinfo, testHWInfo2)
 
 	return hwinfo
 }
 
-func TestGetHwInfo(t *testing.T) {
+func TestGetHWInfo(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	defer mockDB.Close()
 	db := sqlx.NewDb(mockDB, "sqlmock")
@@ -59,13 +59,13 @@ func TestGetHwInfo(t *testing.T) {
 	}
 	defer db.Close()
 
-	testHwInfo := getTestHwInfo()
-	cols := test.ColsFromStructByTag("db", tostructs.HwInfo{})
+	testHWInfo := getTestHWInfo()
+	cols := test.ColsFromStructByTag("db", tostructs.HWInfo{})
 	rows := sqlmock.NewRows(cols)
 
 	//TODO: drichardson - build helper to add these Rows from the struct values
 	//                    or by CSV if types get in the way
-	for _, ts := range testHwInfo {
+	for _, ts := range testHWInfo {
 		rows = rows.AddRow(
 			ts.ID,
 			ts.ServerID,
@@ -78,24 +78,24 @@ func TestGetHwInfo(t *testing.T) {
 	v := url.Values{}
 	v.Set("dsId", "1")
 
-	servers, err := getHwInfo(v, db, PrivLevelAdmin)
+	servers, err := getHWInfo(v, db, PrivLevelAdmin)
 	if err != nil {
-		t.Errorf("getHwInfo expected: nil error, actual: %v", err)
+		t.Errorf("getHWInfo expected: nil error, actual: %v", err)
 	}
 
 	if len(servers) != 2 {
-		t.Errorf("getHwInfo expected: len(servers) == 1, actual: %v", len(servers))
+		t.Errorf("getHWInfo expected: len(servers) == 1, actual: %v", len(servers))
 	}
 }
 
-type SortableHwInfo []tostructs.HwInfo
+type SortableHWInfo []tostructs.HWInfo
 
-func (s SortableHwInfo) Len() int {
+func (s SortableHWInfo) Len() int {
 	return len(s)
 }
-func (s SortableHwInfo) Swap(i, j int) {
+func (s SortableHWInfo) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
-func (s SortableHwInfo) Less(i, j int) bool {
+func (s SortableHWInfo) Less(i, j int) bool {
 	return s[i].Description < s[j].Description
 }
