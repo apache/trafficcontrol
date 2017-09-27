@@ -41,7 +41,7 @@ func NewCacheHandlerPointer(realHandler *CacheHandler) *CacheHandlerPointer {
 
 func (h *CacheHandlerPointer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	realHandler := (*CacheHandler)(atomic.LoadPointer(h.realHandler))
-	realHandler.TryServe(w, r)
+	realHandler.Serve(w, r)
 }
 
 func (h *CacheHandlerPointer) Set(newHandler *CacheHandler) {
@@ -197,7 +197,7 @@ func NewCacheHandlerFunc(
 }
 
 func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.TryServe(w, r)
+	h.Serve(w, r)
 }
 
 const CodeConnectFailure = http.StatusBadGateway
@@ -323,9 +323,7 @@ func CanReuse(reqHeader http.Header, reqCacheControl web.CacheControl, cacheObj 
 	return canReuse == ReuseCan || (canReuse == ReuseMustRevalidate && revalidateCanReuse)
 }
 
-// TryServe attempts to serve the given request, as a caching reverse proxy.
-// Serving acts as a state machine.
-func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
+func (h *CacheHandler) Serve(w http.ResponseWriter, r *http.Request) {
 	conn := (*web.InterceptConn)(nil)
 	if realConn, ok := h.conns.Pop(r.RemoteAddr); !ok {
 		log.Errorf("RemoteAddr '%v' not in Conns\n", r.RemoteAddr)
@@ -369,7 +367,7 @@ func (h *CacheHandler) TryServe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqCacheControl := web.ParseCacheControl(reqHeader)
-	log.Debugf("TryServe got Cache-Control %+v\n", reqCacheControl)
+	log.Debugf("Serve got Cache-Control %+v\n", reqCacheControl)
 
 	connectionClose := h.connectionClose || remappingProducer.ConnectionClose()
 	cacheKey := remappingProducer.CacheKey()
