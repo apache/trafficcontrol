@@ -26,10 +26,8 @@ import (
 	"runtime"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	_ "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/instrumentation"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/manager"
-	_ "github.com/davecheney/gmx"
 )
 
 // GitRevision is the git revision of the app. The app SHOULD always be built with this set via the `-X` flag.
