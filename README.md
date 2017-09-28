@@ -2,12 +2,6 @@
 
 HTTP caching proxy, implementing RFC 7234
 
-
-# Installing
-
-The project includes
-
-
 # Building
 
 1. Install and set up a Golang development environment.
@@ -32,7 +26,9 @@ go build
 
 # Configuration
 
-A config file must be passed with the `-cfg` flag on startup. The RPM uses a config file at `/etc/grove/grove.cfg`. The config file is JSON of the following format:
+A config file must be passed with the `-cfg` flag on startup. The RPM uses a config file at `/etc/grove/grove.cfg`.
+
+The config file is JSON of the following format:
 
 ```json
 { "rfc_compliant": false,
@@ -71,7 +67,11 @@ The config file has the following fields:
 
 # Remap Rules
 
-The Remap Rules file, specified in the [config file](#configuration), is JSON of the following form:
+The remap rules file is specified in the [config file](#configuration).
+
+Note there exists a tool for generating remap rules from [Traffic Control](https://github.com/apache/incubator-trafficcontrol), available [here](https://github.com/apache/incubator-trafficcontrol/grove/tree/master/grovetccfg).
+
+The remap rules file is JSON of the following form:
 
 ```json
 { "retry_num": null,
