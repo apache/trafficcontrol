@@ -23,6 +23,7 @@ use Crypt::OpenSSL::RSA;
 use Crypt::OpenSSL::Bignum;
 use Crypt::OpenSSL::Random;
 use Net::DNS::SEC::Private;
+use Net::DNS::RR::DS;
 use Data::Dumper;
 use JSON;
 my $TMP_LOCATION = "/var/tmp";
