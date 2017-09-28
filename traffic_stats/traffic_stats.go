@@ -480,7 +480,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 	runningConfig.HealthUrls = make(map[string]map[string]string)
 	for _, server := range servers {
 		if server.Type == "RASCAL" && server.Status != config.StatusToMon {
-			log.Debugf("Skipping %s%s.  Looking for status %s but got status %s", server.HostName, server.DomainName, config.StatusToMon, server.Status)
+			log.Debugf("Skipping %s.%s.  Looking for status %s but got status %s", server.HostName, server.DomainName, config.StatusToMon, server.Status)
 			continue
 		}
 
@@ -494,9 +494,9 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 			if runningConfig.HealthUrls[cdnName] == nil {
 				runningConfig.HealthUrls[cdnName] = make(map[string]string)
 			}
-			url := "http://" + server.IPAddress + ":" + strconv.Itoa(server.TCPPort) + cacheStatPath
+			url := "http://" + server.HostName + "." + server.DomainName + ":" + strconv.Itoa(server.TCPPort) + cacheStatPath
 			runningConfig.HealthUrls[cdnName]["CacheStats"] = url
-			url = "http://" + server.IPAddress + ":" + strconv.Itoa(server.TCPPort) + dsStatPath
+			url = "http://" + server.HostName + "." + server.DomainName + ":" + strconv.Itoa(server.TCPPort) + dsStatPath
 			runningConfig.HealthUrls[cdnName]["DsStats"] = url
 		}
 	}
