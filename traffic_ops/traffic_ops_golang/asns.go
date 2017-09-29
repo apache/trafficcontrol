@@ -32,17 +32,21 @@ import (
 
 const ASNSPrivLevel = 10
 
-func ASNsHandler(db *sqlx.DB) AuthRegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
+func ASNsHandler(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
 			w.WriteHeader(status)
 			fmt.Fprintf(w, http.StatusText(status))
 		}
 
+		ctx := r.Context()
+		privLevel := getPrivLevel(ctx)
+		pathParams := getPathParams(ctx)
+
 		// Load the PathParams into the query parameters for pass through
 		q := r.URL.Query()
-		for k, v := range p {
+		for k, v := range pathParams {
 			q.Set(k, v)
 		}
 		resp, err := getASNsResponse(q, db, privLevel)
@@ -74,8 +78,9 @@ func getASNsResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.ASNsResponse
 	return &resp, nil
 }
 
-func getASNs(v url.Values, db *sqlx.DB, privLevel int) ([]tc.ASN, error) {
 
+func getASNs(v url.Values, db *sqlx.DB, privLevel int) ([]tc.ASN, error) {
+	//TODO: privLevel unused.
 	var rows *sqlx.Rows
 	var err error
 

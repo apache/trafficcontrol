@@ -22,15 +22,24 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"github.com/jmoiron/sqlx"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
+	"time"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
+
+	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
+	"fmt"
 )
+
 
 // TestWrapHeaders checks that appropriate default headers are added to a request
 func TestWrapHeaders(t *testing.T) {
 	body := "We are here!!"
-	f := wrapHeaders(func(w http.ResponseWriter, r *http.Request, params PathParams) {
+	f := wrapHeaders(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(body))
 	})
 
@@ -39,10 +48,9 @@ func TestWrapHeaders(t *testing.T) {
 	if err != nil {
 		t.Error("Error creating new request")
 	}
-	var p PathParams
 
 	// Call to add the headers
-	f(w, r, p)
+	f(w, r)
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}
@@ -82,19 +90,17 @@ func TestGzip(t *testing.T) {
 		t.Error("Error closing gzipper", err)
 	}
 
-	f := wrapHeaders(func(w http.ResponseWriter, r *http.Request, params PathParams) {
+	f := wrapHeaders(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(body))
 	})
 
-	var p PathParams
 	w := httptest.NewRecorder()
 	r, err := http.NewRequest("", "/", nil)
 	if err != nil {
 		t.Error("Error creating new request")
 	}
 
-	// Call without gzip
-	f(w, r, p)
+	f(w, r)
 
 	// body should not be gzip'd
 	if bytes.Compare(w.Body.Bytes(), []byte(body)) != 0 {
@@ -104,11 +110,102 @@ func TestGzip(t *testing.T) {
 	// Call with gzip
 	w = httptest.NewRecorder()
 	r.Header.Add("Accept-Encoding", "gzip")
-	f(w, r, p)
+	f(w, r)
 	if bytes.Compare(w.Body.Bytes(), gz.Bytes()) != 0 {
 		t.Error("Expected body to be gzip'd!")
 	}
 }
 
-// TODO: TestWrapAuth
+func TestWrapAuth(t *testing.T){
+	mockDB, mock, err := sqlmock.New()
+	defer mockDB.Close()
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	userName := "user1"
+	secret := "secret"
+
+	rows := sqlmock.NewRows([]string{"priv_level"})
+	rows.AddRow(30)
+	mock.ExpectPrepare("SELECT").ExpectQuery().WithArgs(userName).WillReturnRows(rows)
+
+
+	sqlStatement, err := preparePrivLevelStmt(db)
+	if err != nil {
+		t.Fatalf("could not create priv statement: %v\n",err)
+	}
+
+	authBase := AuthBase{false, secret, sqlStatement,nil}
+
+	cookie := tocookie.New(userName, time.Now().Add(time.Minute), secret)
+
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		privLevel := getPrivLevel(ctx)
+		userName := getUserName(ctx)
+		response := struct {
+			PrivLevel int
+			UserName  string
+		}{privLevel, userName}
+
+		respBts, err := json.Marshal(response)
+		if err != nil {
+			t.Fatalf("unable to marshal: %v", err)
+			return
+		}
+
+		w.Header().Set(api.ContentType, api.ApplicationJson)
+		fmt.Fprintf(w, "%s", respBts)
+	}
+
+	authWrapper := authBase.GetWrapper(15)
+
+	f := authWrapper(handler)
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("", "/", nil)
+	if err != nil {
+		t.Error("Error creating new request")
+	}
+
+	r.Header.Add("Cookie",tocookie.Name+ "=" + cookie)
+
+	expected := struct {
+		PrivLevel int
+		UserName  string
+	}{30, userName}
+
+	expectedBody, err := json.Marshal(expected)
+	if err != nil {
+		t.Fatalf("unable to marshal: %v", err)
+	}
+
+	f(w, r)
+
+	if bytes.Compare(w.Body.Bytes(), expectedBody) != 0 {
+		t.Errorf("received: %s\n expected: %s\n", w.Body.Bytes(), expectedBody)
+	}
+
+	w = httptest.NewRecorder()
+	r, err = http.NewRequest("", "/", nil)
+	if err != nil {
+		t.Error("Error creating new request")
+	}
+
+	f(w, r)
+
+	expectedError := "Unauthorized"
+
+	if *debugLogging {
+		fmt.Printf("received: %s\n expected: %s\n", w.Body.Bytes(), expectedError)
+	}
+
+	if bytes.Compare(w.Body.Bytes(), []byte(expectedError)) != 0 {
+		t.Errorf("received: %s\n expected: %s\n", w.Body.Bytes(), expectedError)
+	}
+}
+
 // TODO: TestWrapAccessLog

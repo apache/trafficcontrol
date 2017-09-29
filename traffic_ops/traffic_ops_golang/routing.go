@@ -20,6 +20,7 @@ package main
  */
 
 import (
+	"context"
 	"net/http"
 	"regexp"
 	"sort"
@@ -28,17 +29,26 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 
+	"fmt"
 	"github.com/jmoiron/sqlx"
 )
 
 const RoutePrefix = "api" // TODO config?
 
+type Middleware func(handlerFunc http.HandlerFunc) http.HandlerFunc
+
 type Route struct {
 	// Order matters! Do not reorder this! Routes() uses positional construction for readability.
-	Version float64
-	Method  string
-	Path    string
-	Handler RegexHandlerFunc
+	Version           float64
+	Method            string
+	Path              string
+	Handler           http.HandlerFunc
+	RequiredPrivLevel int
+	Middleware        []Middleware
+}
+
+func getDefaultMiddleware() []Middleware {
+	return []Middleware{wrapHeaders}
 }
 
 type ServerData struct {
@@ -48,10 +58,18 @@ type ServerData struct {
 
 type PathParams map[string]string
 
-type RegexHandlerFunc func(w http.ResponseWriter, r *http.Request, params PathParams)
+const PathParamsKey = "pathParams"
+
+func getPathParams(ctx context.Context) PathParams {
+	val := ctx.Value(PathParamsKey)
+	if val != nil {
+		return val.(PathParams)
+	}
+	return map[string]string{}
+}
 
 type CompiledRoute struct {
-	Handler RegexHandlerFunc
+	Handler http.HandlerFunc
 	Regex   *regexp.Regexp
 	Params  []string
 }
@@ -71,11 +89,11 @@ func getSortedRouteVersions(rs []Route) []float64 {
 
 type PathHandler struct {
 	Path    string
-	Handler RegexHandlerFunc
+	Handler http.HandlerFunc
 }
 
-// CreateRouteMap returns a map of methods to a slice of paths and handlers. Uses Semantic Versioning: routes are added to every subsequent minor version, but not subsequent major versions. For example, a 1.2 route is added to 1.3 but not 2.1. Also truncates '2.0' to '2', creating succinct major versions.
-func CreateRouteMap(rs []Route) map[string][]PathHandler {
+// CreateRouteMap returns a map of methods to a slice of paths and handlers; wrapping the handlers in the appropriate middleware. Uses Semantic Versioning: routes are added to every subsequent minor version, but not subsequent major versions. For example, a 1.2 route is added to 1.3 but not 2.1. Also truncates '2.0' to '2', creating succinct major versions.
+func CreateRouteMap(rs []Route, authBase AuthBase) map[string][]PathHandler {
 	// TODO strong types for method, path
 	versions := getSortedRouteVersions(rs)
 	m := map[string][]PathHandler{}
@@ -88,7 +106,19 @@ func CreateRouteMap(rs []Route) map[string][]PathHandler {
 			}
 			vstr := strconv.FormatFloat(version, 'f', -1, 64)
 			path := RoutePrefix + "/" + vstr + "/" + r.Path
-			m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: r.Handler})
+
+			middleware := r.Middleware
+
+			if len(middleware) < 1 {
+				middleware = getDefaultMiddleware()
+			}
+			if r.RequiredPrivLevel > 0 { //a privLevel of zero is an unauthenticated endpoint.
+				authWrapper := authBase.GetWrapper(r.RequiredPrivLevel)
+				middleware = append([]Middleware{authWrapper}, middleware...)
+			}
+
+			m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: use(r.Handler, middleware)})
+
 			log.Infof("adding route %v %v\n", r.Method, path)
 		}
 	}
@@ -135,11 +165,15 @@ func Handler(routes map[string][]CompiledRoute, catchall http.Handler, w http.Re
 			continue
 		}
 
-		params := map[string]string{}
+		ctx := r.Context()
+
+		params := PathParams{}
 		for i, v := range compiledRoute.Params {
 			params[v] = match[i+1]
 		}
-		compiledRoute.Handler(w, r, params)
+
+		ctx = context.WithValue(ctx, PathParamsKey, params)
+		compiledRoute.Handler(w, r.WithContext(ctx))
 		return
 	}
 	catchall.ServeHTTP(w, r)
@@ -150,10 +184,24 @@ func RegisterRoutes(d ServerData) error {
 	if err != nil {
 		return err
 	}
-	routes := CreateRouteMap(routeSlice)
+
+	privLevelStmt, err := preparePrivLevelStmt(d.DB)
+	if err != nil {
+		return fmt.Errorf("Error preparing db priv level query: %s\n", err)
+	}
+
+	authBase := AuthBase{d.Insecure, d.Config.Secrets[0], privLevelStmt, nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
+	routes := CreateRouteMap(routeSlice, authBase)
 	compiledRoutes := CompileRoutes(routes)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		Handler(compiledRoutes, catchall, w, r)
 	})
 	return nil
+}
+
+func use(h http.HandlerFunc, middleware []Middleware) http.HandlerFunc {
+	for i := len(middleware) - 1; i >= 0; i-- { //apply them in reverse order so they are used in a natural order.
+		h = middleware[i](h)
+	}
+	return h
 }

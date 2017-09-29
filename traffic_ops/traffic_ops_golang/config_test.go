@@ -20,6 +20,7 @@ package main
  */
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -34,6 +35,8 @@ const (
 	logDebug   = "/var/log/traffic_ops/debug.log"
 	logEvent   = "/var/log/traffic_ops/event.log"
 )
+
+var debugLogging = flag.Bool("debug", false, "enable debug logging in test")
 
 var cfg = Config{
 	URL:             nil,
@@ -194,6 +197,10 @@ func TestLoadConfig(t *testing.T) {
 	cfg, err = LoadConfig(goodCfg, goodDbCfg)
 	if err != nil {
 		t.Error("Good config -- unexpected error ", err)
+	}
+
+	if *debugLogging {
+		fmt.Printf("Cfg: %+v\n", cfg)
 	}
 
 	if cfg.CertPath() != "/etc/pki/tls/certs/localhost.crt" {

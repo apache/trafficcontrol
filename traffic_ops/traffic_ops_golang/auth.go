@@ -20,15 +20,17 @@ package main
  */
 
 import (
+	"context"
 	"database/sql"
-
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-
 	"github.com/jmoiron/sqlx"
 )
 
 // PrivLevelInvalid - The Default Priv level
 const PrivLevelInvalid = -1
+
+// this level will turnoff authentication on an endpoint
+const Unauthenticated = 0
 
 // PrivLevelReadOnly - The user cannot do any API updates
 const PrivLevelReadOnly = 10
@@ -39,8 +41,12 @@ const PrivLevelOperations = 20
 // PrivLevelAdmin - The user has full privileges
 const PrivLevelAdmin = 30
 
+
+const PrivLevelKey = "privLevel"
+const UserNameKey = "userName"
+
 func preparePrivLevelStmt(db *sqlx.DB) (*sql.Stmt, error) {
-	return db.Prepare("select r.priv_level from tm_user as u join role as r on u.role = r.id where u.username = $1")
+	return db.Prepare("SELECT r.priv_level FROM tm_user AS u JOIN role AS r ON u.role = r.id WHERE u.username = $1")
 }
 
 // PrivLevel - returns the privilege level of the given user, or PrivLevelInvalid if the user doesn't exist.
@@ -57,4 +63,20 @@ func PrivLevel(privLevelStmt *sql.Stmt, user string) int {
 	default:
 		return privLevel
 	}
+}
+
+func getPrivLevel(ctx context.Context) int {
+	val := ctx.Value(PrivLevelKey)
+	if val != nil {
+		return val.(int)
+	}
+	return PrivLevelInvalid
+}
+
+func getUserName(ctx context.Context) string {
+	val := ctx.Value(UserNameKey)
+	if val != nil {
+		return val.(string)
+	}
+	return "-"
 }

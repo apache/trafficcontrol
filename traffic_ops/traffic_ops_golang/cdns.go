@@ -33,13 +33,16 @@ import (
 
 const CDNsPrivLevel = 10
 
-func cdnsHandler(db *sqlx.DB) AuthRegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
+func cdnsHandler(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
 			w.WriteHeader(status)
 			fmt.Fprintf(w, http.StatusText(status))
 		}
+
+		ctx := r.Context()
+		privLevel := getPrivLevel(ctx)
 
 		q := r.URL.Query()
 		resp, err := getCDNsResponse(q, db, privLevel)
@@ -72,7 +75,7 @@ func getCDNsResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.CDNsResponse
 }
 
 func getCDNs(v url.Values, db *sqlx.DB, privLevel int) ([]tc.CDN, error) {
-
+	//TODO: privLevel unused
 	var rows *sqlx.Rows
 	var err error
 

@@ -32,17 +32,21 @@ import (
 
 const RegionsPrivLevel = 10
 
-func regionsHandler(db *sqlx.DB) AuthRegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
+func regionsHandler(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
 			w.WriteHeader(status)
 			fmt.Fprintf(w, http.StatusText(status))
 		}
 
+		ctx := r.Context()
+		privLevel := getPrivLevel(ctx)
+		pathParams := getPathParams(ctx)
+
 		// Load the PathParams into the query parameters for pass through
 		q := r.URL.Query()
-		for k, v := range p {
+		for k, v := range pathParams {
 			q.Set(k, v)
 		}
 		resp, err := getRegionsResponse(q, db, privLevel)
@@ -75,7 +79,7 @@ func getRegionsResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.RegionsRe
 }
 
 func getRegions(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Region, error) {
-
+	//TODO: privLevel unused
 	var rows *sqlx.Rows
 	var err error
 
