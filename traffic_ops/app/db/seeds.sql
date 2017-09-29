@@ -110,6 +110,8 @@ insert into capability (name, description) values ('ds-security-keys-write', 'Cr
 insert into capability (name, description) values ('ds-stats-read', 'View delivery-service statistics') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('ds-steering-read', 'View delivery-service steering configuration') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('ds-steering-write', 'Create, edit or delete delivery-service steering configuration') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('ds-steering-target-read', 'View delivery-service steering targets') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('ds-steering-target-write', 'Create, edit or delete delivery-service steering targets') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('federation-routing-read', 'View federation routing') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('federation-routing-write', 'Create, edit or delete federation routing') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('iso-generate', 'Generate ISOs') ON CONFLICT (name) DO NOTHING;
@@ -414,7 +416,7 @@ values (4, 'CHECK_DSCP', 'DSCP', 'ad', '1.0.0', '-', 'ToDSCPCheck.pl', '1', '{ "
 insert into to_extension (id, name, servercheck_short_name, servercheck_column_name, version, info_url, script_file, isactive, additional_config_json, type)
 values (5, 'OPEN', '', 'ae', '1.0.0', '-', '', '0', '', (select id from type where name='CHECK_EXTENSION_OPEN_SLOT')) ON CONFLICT DO NOTHING;
 insert into to_extension (id, name, servercheck_short_name, servercheck_column_name, version, info_url, script_file, isactive, additional_config_json, type)
-values (6, 'OPEN', '', 'af', '1.0.0', '-', '', '0', '', (select id from type where name='CHECK_EXTENSION_OPEN_SLOT'));
+values (6, 'OPEN', '', 'af', '1.0.0', '-', '', '0', '', (select id from type where name='CHECK_EXTENSION_OPEN_SLOT')) ON CONFLICT DO NOTHING;
 --
 insert into to_extension (id, name, servercheck_short_name, servercheck_column_name, version, info_url, script_file, isactive, additional_config_json, type)
 values (7, 'IPV6_PING', '10G6', 'ag', '1.0.0', '-', 'ToPingCheck.pl', '1', '{ "select": "ip6_address", "cron": "0 * * * *" }',
