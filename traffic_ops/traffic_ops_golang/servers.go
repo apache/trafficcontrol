@@ -41,8 +41,8 @@ import (
 // ServersPrivLevel - privileges for the /servers endpoint
 const ServersPrivLevel = 10
 
-func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
+func serversHandler(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
@@ -50,8 +50,13 @@ func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 			fmt.Fprintf(w, http.StatusText(status))
 		}
 
+		// p PathParams, username string, privLevel int
+		ctx := r.Context()
+		privLevel := getPrivLevel(ctx)
+		pathParams := getPathParams(ctx)
+
 		q := r.URL.Query()
-		for k, v := range p {
+		for k, v := range pathParams {
 			q.Set(k, v)
 		}
 		resp, err := getServersResponse(q, db, privLevel)
@@ -192,10 +197,15 @@ JOIN type t ON s.type = t.id`
 	return selectStmt
 }
 
-func assignDeliveryServicesToServerHandler(db *sqlx.DB) AuthRegexHandlerFunc {
+func assignDeliveryServicesToServerHandler(db *sqlx.DB) http.HandlerFunc {
 
-	return func(w http.ResponseWriter, r *http.Request, params PathParams, username string, privLevel int) {
+
+	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorFunc(w, r)
+
+		// p PathParams, username string, privLevel int
+		ctx := r.Context()
+		pathParams := getPathParams(ctx)
 
 		var dsList []int
 
@@ -214,7 +224,7 @@ func assignDeliveryServicesToServerHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 			return
 		}
 
-		serverPathParameter := params["server"]
+		serverPathParameter := pathParams["server"]
 		server, err := strconv.Atoi(serverPathParameter)
 		if err != nil {
 			handleErr(err, http.StatusBadRequest)

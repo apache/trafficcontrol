@@ -107,15 +107,17 @@ type DeliveryService struct {
 }
 
 // TODO change to use the PathParams, instead of parsing the URL
-func monitoringHandler(db *sqlx.DB) RegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
+func monitoringHandler(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
 			w.WriteHeader(status)
 			fmt.Fprintf(w, http.StatusText(status))
 		}
+		ctx := r.Context()
+		pathParams := getPathParams(ctx)
 
-		cdnName := p["cdn"]
+		cdnName := pathParams["cdn"]
 
 		resp, err := getMonitoringJson(cdnName, db)
 		if err != nil {
