@@ -67,24 +67,24 @@ func TestGetHWInfo(t *testing.T) {
 	//                    or by CSV if types get in the way
 	for _, ts := range testHWInfo {
 		rows = rows.AddRow(
-			ts.ID,
-			ts.ServerID,
 			ts.Description,
-			ts.Val,
+			ts.ID,
 			ts.LastUpdated,
+			ts.ServerID,
+			ts.Val,
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	v := url.Values{}
-	v.Set("dsId", "1")
+	v.Set("ServerId", "1")
 
-	servers, err := getHWInfo(v, db, PrivLevelAdmin)
+	hwinfos, err := getHWInfo(v, db, PrivLevelAdmin)
 	if err != nil {
 		t.Errorf("getHWInfo expected: nil error, actual: %v", err)
 	}
 
-	if len(servers) != 2 {
-		t.Errorf("getHWInfo expected: len(servers) == 1, actual: %v", len(servers))
+	if len(hwinfos) != 2 {
+		t.Errorf("getHWInfo expected: len(hwinfos) == 1, actual: %v", len(hwinfos))
 	}
 }
 
