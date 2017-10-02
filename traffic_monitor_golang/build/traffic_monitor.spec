@@ -74,6 +74,15 @@ godir=src/github.com/apache/incubator-trafficcontrol/lib/go-tc
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
 
+# get util library
+godir=src/github.com/apache/incubator-trafficcontrol/lib/go-util
+( mkdir -p "$godir" && \
+  cd "$godir" && \
+  cp -r "$TC_DIR"/lib/go-util/* . && \
+  go get -v \
+) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
+
+
 #build traffic_monitor binary
 godir=src/github.com/apache/incubator-trafficcontrol/traffic_monitor_golang
 oldpwd=$(pwd)
