@@ -6,7 +6,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
 type StatLogger struct {
