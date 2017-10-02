@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	// "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/crconfig"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	grove "github.com/apache/incubator-trafficcontrol/grove/cache"
 )
@@ -102,13 +101,6 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 		fmt.Printf("Error getting Traffic Ops Deliveryservices: %v\n", err)
 		os.Exit(1)
 	}
-	// deliveryservices := makeDeliveryservicesXMLIDMap(deliveryservicesArr)
-
-	// deliveryserviceServers, err := toc.DeliveryServiceServer("0", "999999")
-	// if err != nil {
-	// 	fmt.Printf("Error getting Traffic Ops Deliveryservice Servers: %v\n", err)
-	// 	os.Exit(1)
-	// }
 
 	deliveryserviceRegexArr, err := toc.DeliveryServiceRegexes()
 	if err != nil {
@@ -130,18 +122,6 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 		os.Exit(1)
 	}
 
-
-	// crconfigBts, _, err := toc.GetCRConfig()
-	// if err != nil {
-	// 	fmt.Printf("Error getting Traffic Ops CRConfig: %v\n", err)
-	//	os.Exit(1)
-	// }
-	// crconfig := crconfig.CRConfig{}
-	// if err := json.Unmarshal(crconfigBts, crconfig); err != nil {
-	// 	fmt.Printf("Error parsing CRConfig JSON: %v\n", err)
-	//	os.Exit(1)
-	// }
-
 	parents, err := getParents(host, servers, cachegroups)
 	if err != nil {
 		fmt.Printf("Error getting '%v' parents: %v\n", err)
@@ -159,19 +139,8 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 		return ok
 	}
 
-	// serverDses, err := getServerDeliveryservices(*host, servers, deliveryserviceServers, deliveryservices)
-	// if err != nil {
-	// 	fmt.Printf("Error getting '%v' parents: %v\n", err)
-	// 	os.Exit(1)
-	// }
-
 	parents = filterParents(parents, sameCDN)
 	parents = filterParents(parents, serverAvailable)
-
-	// fmt.Println("Parents:")
-	// for _, parent := range parents {
-	// 	fmt.Println(parent.HostName)
-	// }
 
 	cdnSSLKeys, err := toc.CDNSSLKeys(hostServer.CDNName)
 	if err != nil {
@@ -230,11 +199,6 @@ func createRulesNewAPI(toc *to.Session, host string) (grove.RemapRules, error) {
 		}
 
 		for _, protocolStr := range protocolStrs {
-			// regexes, ok := dsRegexes[ds.XMLID]
-			// if !ok {
-			// 	return grove.RemapRules{}, fmt.Errorf("deliveryservice '%v' has no regexes", ds.XMLID)
-			// }
-
 			for _, dsRegex := range ds.Regexes {
 				rule := grove.RemapRule{}
 				pattern, patternLiteralRegex := trimLiteralRegex(dsRegex)
@@ -675,42 +639,3 @@ func createCertificateFiles(cert to.CDNSSLKeys, dir string) error {
 	}
 	return nil
 }
-
-// if ( $remap→{type} eq "HTTP_NO_CACHE" || $remap→{type} eq "HTTP_LIVE" || $remap→{type} eq "DNS_LIVE" ) {
-// $text .= "dest_domain=" . $org_uri→host . " port=" . $org_uri→port . " go_direct=true\n";
-
-/*
-
-http edge to
-
-
-
-http edge to:
-
-dns edge to:
-
-
-
-edge got:
-
-mid got:
-
-remap.config contains:
-
-parent.config contains
-*/
-
-// Name            string          `json:"name"`
-// From            string          `json:"from"`
-// ConnectionClose bool            `json:"connection-close"`
-// QueryString     QueryStringRule `json:"query-string"`
-// // ConcurrentRuleRequests is the number of concurrent requests permitted to a remap rule, that is, to an origin. If this is 0, the global config is used.
-// ConcurrentRuleRequests int  `json:"concurrent_rule_requests"`
-// RetryNum               *int `json:"retry_num"`
-// Timeout         *time.Duration
-// ParentSelection *ParentSelectionType
-// To              []RemapRuleTo
-// Allow           []*net.IPNet
-// Deny            []*net.IPNet
-// RetryCodes      map[int]struct{}
-// ConsistentHash  ATSConsistentHash
