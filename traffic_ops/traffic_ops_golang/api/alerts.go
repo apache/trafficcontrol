@@ -20,11 +20,11 @@ package api
  */
 
 import (
-	"net/http"
-	"fmt"
 	"encoding/json"
+	"fmt"
+	"net/http"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
 type Alert struct {
@@ -54,7 +54,7 @@ func CreateAlerts(level AlertLevel, messages ...string) Alerts {
 	return Alerts{alerts}
 }
 
-func GetHandleErrorFunc(w http.ResponseWriter,r *http.Request) func(err error, status int) {
+func GetHandleErrorFunc(w http.ResponseWriter, r *http.Request) func(err error, status int) {
 	return func(err error, status int) {
 		log.Errorf("%v %v\n", r.RemoteAddr, err)
 		errBytes, jsonErr := json.Marshal(CreateErrorAlerts(err))
