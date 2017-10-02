@@ -217,10 +217,9 @@ func createRulesNewAPI(toc *to.Session, host string) (grove.RemapRules, error) {
 							Weight:   &weight,
 							RetryNum: &retryNum,
 						},
-						ProxyURL:        proxyURL,
-						RetryCodes:      DefaultRetryCodes(),
-						Timeout:         &timeout,
-						ParentSelection: &parentSelection,
+						ProxyURL:   proxyURL,
+						RetryCodes: DefaultRetryCodes(),
+						Timeout:    &timeout,
 					}
 					rule.To = append(rule.To, ruleTo)
 					// TODO get from TO?
@@ -578,10 +577,9 @@ func createRulesOld(
 							Weight:   &weight,
 							RetryNum: &retryNum,
 						},
-						ProxyURL:        proxyURL,
-						RetryCodes:      DefaultRetryCodes(),
-						Timeout:         &timeout,
-						ParentSelection: &parentSelection,
+						ProxyURL:   proxyURL,
+						RetryCodes: DefaultRetryCodes(),
+						Timeout:    &timeout,
 					}
 					rule.To = append(rule.To, ruleTo)
 					// TODO get from TO?
