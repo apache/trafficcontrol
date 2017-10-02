@@ -59,6 +59,7 @@ func MakeDispatchMap(
 	errorCount threadsafe.Uint,
 	toData todata.TODataThreadsafe,
 	localCacheStatus threadsafe.CacheAvailableStatus,
+	localCacheStatusIpv6 threadsafe.CacheAvailableStatus,
 	lastStats threadsafe.LastStats,
 	unpolledCaches threadsafe.UnpolledCaches,
 	monitorConfig threadsafe.TrafficMonitorConfigMap,
@@ -115,6 +116,9 @@ func MakeDispatchMap(
 		}, ContentTypeJSON)),
 		"/api/cache-statuses": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvAPICacheStates(toData, statInfoHistory, statResultHistory, healthHistory, lastHealthDurations, localStates, lastStats, localCacheStatus, statMaxKbpses, monitorConfig)
+		}, ContentTypeJSON)),
+		"/api/cache-statuses-ipv6": wrap(WrapErr(errorCount, func() ([]byte, error) {
+			return srvAPICacheStates(toData, statInfoHistory, statResultHistory, healthHistory, lastHealthDurations, localStates, lastStats, localCacheStatusIpv6, statMaxKbpses, monitorConfig)
 		}, ContentTypeJSON)),
 		"/api/bandwidth-kbps": wrap(WrapBytes(func() []byte {
 			return srvAPIBandwidthKbps(toData, lastStats)

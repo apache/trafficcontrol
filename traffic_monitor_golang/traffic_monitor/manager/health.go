@@ -48,6 +48,7 @@ func StartHealthResultManager(
 	cfg config.Config,
 	events health.ThreadsafeEvents,
 	localCacheStatus threadsafe.CacheAvailableStatus,
+	localCacheStatusIpv6 threadsafe.CacheAvailableStatus,
 ) (threadsafe.DurationMap, threadsafe.ResultHistory) {
 	lastHealthDurations := threadsafe.NewDurationMap()
 	healthHistory := threadsafe.NewResultHistory()
@@ -63,6 +64,7 @@ func StartHealthResultManager(
 		errorCount,
 		events,
 		localCacheStatus,
+		localCacheStatusIpv6,
 		cfg,
 	)
 	return lastHealthDurations, healthHistory
@@ -80,6 +82,7 @@ func healthResultManagerListen(
 	errorCount threadsafe.Uint,
 	events health.ThreadsafeEvents,
 	localCacheStatus threadsafe.CacheAvailableStatus,
+	localCacheStatusIpv6 threadsafe.CacheAvailableStatus,
 	cfg config.Config,
 ) {
 	lastHealthEndTimes := map[enum.CacheName]time.Time{}
@@ -98,6 +101,7 @@ func healthResultManagerListen(
 			errorCount,
 			events,
 			localCacheStatus,
+			localCacheStatusIpv6,
 			lastHealthEndTimes,
 			healthHistory,
 			results,
@@ -144,6 +148,7 @@ func processHealthResult(
 	errorCount threadsafe.Uint,
 	events health.ThreadsafeEvents,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
+	localCacheStatusIpv6Threadsafe threadsafe.CacheAvailableStatus,
 	lastHealthEndTimes map[enum.CacheName]time.Time,
 	healthHistory threadsafe.ResultHistory,
 	results []cache.Result,
@@ -162,10 +167,13 @@ func processHealthResult(
 	toDataCopy := toData.Get() // create a copy, so the same data used for all processing of this cache health result
 	monitorConfigCopy := monitorConfig.Get()
 	healthHistoryCopy := healthHistory.Get().Copy()
+
 	for i, healthResult := range results {
 		fetchCount.Inc()
 		var prevResult cache.Result
+
 		healthResultHistory := healthHistoryCopy[healthResult.ID]
+
 		if len(healthResultHistory) != 0 {
 			prevResult = healthResultHistory[len(healthResultHistory)-1]
 		}
@@ -181,10 +189,10 @@ func processHealthResult(
 			maxHistory = 1
 		}
 
-		healthHistoryCopy[healthResult.ID] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[healthResult.ID]...), maxHistory)
+		healthResultHistory = pruneHistory(append([]cache.Result{healthResult}, healthResultHistory...), maxHistory)
 	}
 
-	health.CalcAvailability(results, "health", nil, monitorConfigCopy, toDataCopy, localCacheStatusThreadsafe, localStates, events)
+	health.CalcAvailability(results, "health", nil, monitorConfigCopy, toDataCopy, localCacheStatusThreadsafe, localCacheStatusIpv6Threadsafe, localStates, events, cfg)
 
 	healthHistory.Set(healthHistoryCopy)
 	// TODO determine if we should combineCrStates() here

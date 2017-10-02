@@ -23,6 +23,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"regexp"
 	"sync/atomic"
 	"time"
 
@@ -47,6 +48,7 @@ type HttpPoller struct {
 
 type PollConfig struct {
 	URL     string
+	URL6    string
 	Host    string
 	Timeout time.Duration
 	Handler handler.Handler
@@ -58,6 +60,7 @@ type HttpPollerConfig struct {
 	NoKeepAlive bool
 	// noSleep indicates to use the InsomniacPoller. Note this is only used with the initial Poll call, which decides which Poller mechanism to use. After that, this is ignored when the HttpPollerConfig is passed over the ConfigChannel.
 	noSleep bool
+	Ipv4    bool
 }
 
 // NewHTTP creates and returns a new HttpPoller.
@@ -70,23 +73,35 @@ func NewHTTP(
 	fetchHandler handler.Handler,
 	noSleep bool,
 	userAgent string,
+	iProtocol string,
 ) HttpPoller {
 	var tickChan chan uint64
 	if tick {
 		tickChan = make(chan uint64)
 	}
+
+	ipv4 := bool(true)
+
+	if iProtocol == "ipv6" {
+		ipv4 = false
+	} else if iProtocol != "ipv4" {
+		log.Errorf("HttpPoller invalid IProtocol %v, using ipv4 instead\n", iProtocol)
+	}
+
 	return HttpPoller{
 		TickChan:      tickChan,
 		ConfigChannel: make(chan HttpPollerConfig),
 		Config: HttpPollerConfig{
 			Interval: interval,
 			noSleep:  noSleep,
+			Ipv4:     ipv4,
 		},
 		FetcherTemplate: fetcher.HttpFetcher{
 			Handler:   fetchHandler,
 			Client:    httpClient,
 			Counters:  counters,
 			UserAgent: userAgent,
+			Ipv4:      ipv4,
 		},
 	}
 }
@@ -181,6 +196,7 @@ func (p MonitorConfigPoller) Poll() {
 
 var debugPollNum uint64
 
+// TODO this contains a copy of PollConfig with the addtition of Internal and NoKeepAlive and ID, should use PollConfig explicitly
 type HTTPPollInfo struct {
 	NoKeepAlive bool
 	Interval    time.Duration
@@ -371,17 +387,27 @@ func insomniacPoller(pollerId int64, polls []HTTPPollInfo, fetcherTemplate fetch
 func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPollInfo) {
 	deletions := []string{}
 	additions := []HTTPPollInfo{}
+	var URL string
+
+	url6Regex := regexp.MustCompile(`/\d+`)
 
 	if old.Interval != new.Interval || old.NoKeepAlive != new.NoKeepAlive {
 		for id, _ := range old.Urls {
 			deletions = append(deletions, id)
 		}
 		for id, pollCfg := range new.Urls {
+			if new.Ipv4 {
+				URL = pollCfg.URL
+			} else {
+				fixedIPv6Url := url6Regex.ReplaceAllString(pollCfg.URL6, "")
+				URL = fixedIPv6Url
+			}
+
 			additions = append(additions, HTTPPollInfo{
 				Interval:    new.Interval,
 				NoKeepAlive: new.NoKeepAlive,
 				ID:          id,
-				URL:         pollCfg.URL,
+				URL:         URL,
 				Host:        pollCfg.Host,
 				Timeout:     pollCfg.Timeout,
 			})
@@ -395,11 +421,19 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 			deletions = append(deletions, id)
 		} else if newPollCfg != oldPollCfg {
 			deletions = append(deletions, id)
+
+			if new.Ipv4 {
+				URL = newPollCfg.URL
+			} else {
+				fixedIPv6Url := url6Regex.ReplaceAllString(newPollCfg.URL6, "")
+				URL = fixedIPv6Url
+			}
+
 			additions = append(additions, HTTPPollInfo{
 				Interval:    new.Interval,
 				NoKeepAlive: new.NoKeepAlive,
 				ID:          id,
-				URL:         newPollCfg.URL,
+				URL:         URL,
 				Host:        newPollCfg.Host,
 				Timeout:     newPollCfg.Timeout,
 			})
@@ -409,11 +443,19 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 	for id, newPollCfg := range new.Urls {
 		_, oldIdExists := old.Urls[id]
 		if !oldIdExists {
+
+			if new.Ipv4 {
+				URL = newPollCfg.URL
+			} else {
+				fixedIPv6Url := url6Regex.ReplaceAllString(newPollCfg.URL6, "")
+				URL = fixedIPv6Url
+			}
+
 			additions = append(additions, HTTPPollInfo{
 				Interval:    new.Interval,
 				NoKeepAlive: new.NoKeepAlive,
 				ID:          id,
-				URL:         newPollCfg.URL,
+				URL:         URL,
 				Host:        newPollCfg.Host,
 				Timeout:     newPollCfg.Timeout,
 			})

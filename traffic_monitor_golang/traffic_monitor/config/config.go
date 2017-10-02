@@ -64,6 +64,8 @@ type Config struct {
 	HealthToStatRatio            uint64        `json:"health_to_stat_ratio"`
 	HTTPPollNoSleep              bool          `json:"http_poll_no_sleep"`
 	StaticFileDir                string        `json:"static_file_dir"`
+	CheckIpv6                    bool          `json:"check_ipv6"`
+	InforceIpv6                  bool          `json:"inforce_ipv6"`
 }
 
 func (c Config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
@@ -95,6 +97,8 @@ var DefaultConfig = Config{
 	HealthToStatRatio:            4,
 	HTTPPollNoSleep:              false,
 	StaticFileDir:                StaticFileDir,
+	CheckIpv6:                    false,
+	InforceIpv6:                  false,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/

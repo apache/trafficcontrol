@@ -50,7 +50,7 @@ type Result struct {
 }
 
 // Handle handles a response from a polled Traffic Monitor peer, parsing the data and forwarding it to the ResultChannel.
-func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, reqEnd time.Time, err error, pollID uint64, pollFinished chan<- uint64) {
+func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, reqEnd time.Time, err error, pollID uint64, pollFinished chan<- uint64, ipv4 bool) {
 	result := Result{
 		ID:           enum.TrafficMonitorName(id),
 		Available:    false,
