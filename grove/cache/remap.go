@@ -235,16 +235,27 @@ func NewLiteralPrefixRemapper(remap []RemapRule) Remapper {
 	return literalPrefixRemapper{remap: remap}
 }
 
+type RemapRulesStatsJSON struct {
+	Allow []string `json:"allow"`
+	Deny  []string `json:"deny"`
+}
+
+type RemapRulesStats struct {
+	Allow []*net.IPNet
+	Deny  []*net.IPNet
+}
+
 type RemapRulesBase struct {
 	RetryNum *int `json:"retry_num"`
 }
 
 type RemapRulesJSON struct {
 	RemapRulesBase
-	Rules           []RemapRuleJSON `json:"rules"`
-	RetryCodes      *[]int          `json:"retry_codes"`
-	TimeoutMS       *int            `json:"timeout_ms"`
-	ParentSelection *string         `json:"parent_selection"`
+	Rules           []RemapRuleJSON     `json:"rules"`
+	RetryCodes      *[]int              `json:"retry_codes"`
+	TimeoutMS       *int                `json:"timeout_ms"`
+	ParentSelection *string             `json:"parent_selection"`
+	Stats           RemapRulesStatsJSON `json:"stats"`
 }
 
 type RemapRules struct {
@@ -253,6 +264,7 @@ type RemapRules struct {
 	RetryCodes      map[int]struct{}
 	Timeout         *time.Duration
 	ParentSelection *ParentSelectionType
+	Stats           RemapRulesStats
 }
 
 type RemapRuleToBase struct {
@@ -452,6 +464,16 @@ func LoadRemapRules(path string) ([]RemapRule, error) {
 			return nil, fmt.Errorf("error parsing rules: parent selection invalid: '%v'", remapRulesJSON.ParentSelection)
 		}
 	}
+	if remapRulesJSON.Stats.Allow != nil {
+		if remapRules.Stats.Allow, err = makeIPNets(remapRulesJSON.Stats.Allow); err != nil {
+			return nil, fmt.Errorf("error parsing rules allows: %v", err)
+		}
+	}
+	if remapRulesJSON.Stats.Deny != nil {
+		if remapRules.Stats.Deny, err = makeIPNets(remapRulesJSON.Stats.Deny); err != nil {
+			return nil, fmt.Errorf("error parsing rules denys: %v", err)
+		}
+	}
 
 	rules := make([]RemapRule, len(remapRulesJSON.Rules))
 	for i, jsonRule := range remapRulesJSON.Rules {
@@ -634,6 +656,12 @@ func RemapRulesToJSON(r RemapRules) RemapRulesJSON {
 		s := ""
 		j.ParentSelection = &s
 		*j.ParentSelection = string(*r.ParentSelection)
+	}
+	for _, deny := range r.Stats.Deny {
+		j.Stats.Deny = append(j.Stats.Deny, deny.String())
+	}
+	for _, allow := range r.Stats.Allow {
+		j.Stats.Allow = append(j.Stats.Allow, allow.String())
 	}
 
 	for _, rule := range r.Rules {

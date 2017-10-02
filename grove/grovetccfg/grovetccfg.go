@@ -232,7 +232,6 @@ func createRulesNewAPI(toc *to.Session, host string) (grove.RemapRules, error) {
 					}
 					rule.ConnectionClose = DefaultRuleConnectionClose
 					rule.ParentSelection = &parentSelection
-					rule.Allow = allowedIPs
 				}
 				rules = append(rules, rule)
 			}
@@ -244,6 +243,7 @@ func createRulesNewAPI(toc *to.Session, host string) (grove.RemapRules, error) {
 		RetryCodes:      DefaultRetryCodes(),
 		Timeout:         &timeout,
 		ParentSelection: &parentSelection,
+		Stats:           grove.RemapRulesStats{Allow: allowedIPs},
 	}
 
 	return remapRules, nil
@@ -592,7 +592,6 @@ func createRulesOld(
 					}
 					rule.ConnectionClose = DefaultRuleConnectionClose
 					rule.ParentSelection = &parentSelection
-					rule.Allow = allowedIPs
 				}
 				rules = append(rules, rule)
 			}
@@ -604,6 +603,7 @@ func createRulesOld(
 		RetryCodes:      DefaultRetryCodes(),
 		Timeout:         &timeout,
 		ParentSelection: &parentSelection,
+		Stats:           grove.RemapRulesStats{Allow: allowedIPs},
 	}
 
 	return remapRules, nil
