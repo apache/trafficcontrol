@@ -7,10 +7,21 @@ NOTE: This client has only been tested against Python 2.7 and Python 3.6.  Other
 
 - Installation
 
+NOTE: Assuming in a already newly created and activated virtualenv
+
+From github.com via pip:
+
+# pip install git+https://github.com/apache/incubator-trafficcontrol.git#"egg=trafficops&subdirectory=traffic_control/clients/python/trafficops"
+
+or
+
+# pip install git+ssh://git@github.com/apache/incubator-trafficcontrol.git#"egg=trafficops&subdirectory=traffic_control/clients/python/trafficops"
+
+Local Installation from cloned 'incubator-trafficcontrol' repository:
+
 NOTE: 'incubator-trafficcontrol' => https://www.github.com/apache/incubator-trafficcontrol
 
-NOTE: Assuming in a already newly created virtualenv and cd'd to the root of a forked/cloned
-      'incubator-trafficcontrol' repository
+NOTE: Assuming cd'd to the root of a forked/cloned 'incubator-trafficcontrol' repository
 
     1. Activate your virtualenv environment (Python Virtual Environment)
         E.g.
