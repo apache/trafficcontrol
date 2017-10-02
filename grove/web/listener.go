@@ -2,7 +2,7 @@ package web
 
 import (
 	"crypto/tls"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"net"
 	"net/http"
 	"time"
