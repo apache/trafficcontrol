@@ -14,7 +14,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/grove/chash"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
 // CacheType is the type (or tier) of a CDN cache.
@@ -263,18 +263,16 @@ type RemapRuleToBase struct {
 
 type RemapRuleToJSON struct {
 	RemapRuleToBase
-	ProxyURL        *string `json:"proxy_url"`
-	ParentSelection *string `json:"parent_selection"`
-	TimeoutMS       *int    `json:"timeout_ms"`
-	RetryCodes      *[]int  `json:"retry_codes"`
+	ProxyURL   *string `json:"proxy_url"`
+	TimeoutMS  *int    `json:"timeout_ms"`
+	RetryCodes *[]int  `json:"retry_codes"`
 }
 
 type RemapRuleTo struct {
 	RemapRuleToBase
-	ProxyURL        *url.URL
-	ParentSelection *ParentSelectionType
-	Timeout         *time.Duration
-	RetryCodes      map[int]struct{}
+	ProxyURL   *url.URL
+	Timeout    *time.Duration
+	RetryCodes map[int]struct{}
 }
 
 type RemapRuleBase struct {
@@ -560,12 +558,6 @@ func makeTo(tosJSON []RemapRuleToJSON, rule RemapRule) ([]RemapRuleTo, error) {
 		} else {
 			to.Timeout = rule.Timeout
 		}
-		if toJSON.ParentSelection != nil {
-			ps := ParentSelectionTypeFromString(*toJSON.ParentSelection)
-			if to.ParentSelection = &ps; *to.ParentSelection == ParentSelectionTypeInvalid {
-				return nil, fmt.Errorf("error parsing to %v parent selection invalid: '%v'", to.URL, *toJSON.ParentSelection)
-			}
-		}
 		if toJSON.RetryCodes != nil {
 			to.RetryCodes = make(map[int]struct{}, len(*toJSON.RetryCodes))
 			for _, code := range *toJSON.RetryCodes {
@@ -687,11 +679,6 @@ func RemapRuleToToJSON(r RemapRuleTo) RemapRuleToJSON {
 		s := ""
 		j.ProxyURL = &s
 		*j.ProxyURL = r.ProxyURL.String()
-	}
-	if r.ParentSelection != nil {
-		ps := ""
-		j.ParentSelection = &ps
-		*j.ParentSelection = string(*r.ParentSelection)
 	}
 	if r.Timeout != nil {
 		t := int(0)
