@@ -23,7 +23,6 @@ $ENV{GOPATH} = "/opt/traffic_ops/go";
 use strict;
 use warnings;
 
-use Safe;
 use DBI;
 use POSIX;
 use File::Basename qw{dirname};
@@ -197,7 +196,7 @@ sub generateCdnConf {
     # First, read existing one -- already loaded with a bunch of stuff
     my $cdnConf;
     if ( -f $fileName ) {
-        $cdnConf = Safe->new->rdo($fileName) or errorOut("Error loading $fileName: $@");
+        $cdnConf = InstallUtils::readJson($fileName) or errorOut("Error loading $fileName: $@");
     }
     if ( lc $cdnConfiguration{genSecret} =~ /^y(?:es)?/ ) {
         my @secrets;
@@ -224,7 +223,7 @@ sub generateCdnConf {
 
     $cdnConf->{hypnotoad}{workers} = $cdnConfiguration{workers};
     #InstallUtils::logger("cdnConf: " . Dumper($cdnConf), "info" );
-    InstallUtils::writePerl( $fileName, $cdnConf );
+    InstallUtils::writeJson( $fileName, $cdnConf );
     InstallUtils::logger( "CDN configuration has been saved", "info" );
 }
 
