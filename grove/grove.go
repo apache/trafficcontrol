@@ -19,7 +19,7 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 
 	"github.com/apache/incubator-trafficcontrol/grove/cache"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
