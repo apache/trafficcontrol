@@ -28,102 +28,131 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
-// Config - represents the traffic_ops_golang.config file
+// Config reflects the structure of the cdn.conf file
 type Config struct {
-	HTTPPort               string   `json:"port"`
-	DBUser                 string   `json:"db_user"`
-	DBPass                 string   `json:"db_pass"`
-	DBServer               string   `json:"db_server"`
-	DBDB                   string   `json:"db_name"`
-	DBSSL                  bool     `json:"db_ssl"`
-	TOSecret               string   `json:"to_secret"`
-	TOURLStr               string   `json:"to_url"`
-	TOURL                  *url.URL `json:"-"`
-	Insecure               bool     `json:"insecure"`
-	CertPath               string   `json:"cert_path"`
-	KeyPath                string   `json:"key_path"`
-	ProxyTimeout           int      `json:"proxy_timeout"`
-	ProxyKeepAlive         int      `json:"proxy_keep_alive"`
-	ProxyTLSTimeout        int      `json:"proxy_tls_timeout"`
-	ProxyReadHeaderTimeout int      `json:"proxy_read_header_timeout"`
-	ReadTimeout            int      `json:"read_timeout"`
-	ReadHeaderTimeout      int      `json:"read_header_timeout"`
-	WriteTimeout           int      `json:"write_timeout"`
-	IdleTimeout            int      `json:"idle_timeout"`
-	MaxDBConnections       int      `json:"max_db_connections"`
-	LogLocationError       string   `json:"log_location_error"`
-	LogLocationWarning     string   `json:"log_location_warning"`
-	LogLocationInfo        string   `json:"log_location_info"`
-	LogLocationDebug       string   `json:"log_location_debug"`
-	LogLocationEvent       string   `json:"log_location_event"`
+	URL                    *url.URL `json:"-"`
+	ConfigHypnotoad        `json:"hypnotoad"`
+	ConfigTrafficOpsGolang `json:"traffic_ops_golang"`
+	DB                     ConfigDatabase `json:"db"`
+	Secrets                []string       `json:"secrets"`
+	// NOTE: don't care about any other fields for now..
+}
+
+// ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
+type ConfigHypnotoad struct {
+	Listen []string `json:"listen"`
+	// NOTE: don't care about any other fields for now..
+}
+
+// ConfigTrafficOpsGolang carries settings specific to traffic_ops_golang server
+type ConfigTrafficOpsGolang struct {
+	Port                   string `json:"port"`
+	ProxyTimeout           int    `json:"proxy_timeout"`
+	ProxyKeepAlive         int    `json:"proxy_keep_alive"`
+	ProxyTLSTimeout        int    `json:"proxy_tls_timeout"`
+	ProxyReadHeaderTimeout int    `json:"proxy_read_header_timeout"`
+	ReadTimeout            int    `json:"read_timeout"`
+	ReadHeaderTimeout      int    `json:"read_header_timeout"`
+	WriteTimeout           int    `json:"write_timeout"`
+	IdleTimeout            int    `json:"idle_timeout"`
+	LogLocationError       string `json:"log_location_error"`
+	LogLocationWarning     string `json:"log_location_warning"`
+	LogLocationInfo        string `json:"log_location_info"`
+	LogLocationDebug       string `json:"log_location_debug"`
+	LogLocationEvent       string `json:"log_location_event"`
+	Insecure               bool   `json:"insecure"`
+	MaxDBConnections       int    `json:"max_db_connections"`
+}
+
+// ConfigDatabase reflects the structure of the database.conf file
+type ConfigDatabase struct {
+	Description string `json:"description"`
+	DBName      string `json:"dbname"`
+	Hostname    string `json:"hostname"`
+	User        string `json:"user"`
+	Password    string `json:"password"`
+	Port        string `json:"port"`
+	Type        string `json:"type"`
+	SSL         bool   `json:"ssl"`
 }
 
 // ErrorLog - critical messages
-func (c Config) ErrorLog() log.LogLocation { return log.LogLocation(c.LogLocationError) }
+func (c Config) ErrorLog() log.LogLocation {
+	return log.LogLocation(c.LogLocationError)
+}
 
 // WarningLog - warning messages
-func (c Config) WarningLog() log.LogLocation { return log.LogLocation(c.LogLocationWarning) }
+func (c Config) WarningLog() log.LogLocation {
+	return log.LogLocation(c.LogLocationWarning)
+}
 
 // InfoLog - information messages
 func (c Config) InfoLog() log.LogLocation { return log.LogLocation(c.LogLocationInfo) }
 
 // DebugLog - troubleshooting messages
-func (c Config) DebugLog() log.LogLocation { return log.LogLocation(c.LogLocationDebug) }
+func (c Config) DebugLog() log.LogLocation {
+	return log.LogLocation(c.LogLocationDebug)
+}
 
 // EventLog - access.log high level transactions
-func (c Config) EventLog() log.LogLocation { return log.LogLocation(c.LogLocationEvent) }
+func (c Config) EventLog() log.LogLocation {
+	return log.LogLocation(c.LogLocationEvent)
+}
 
 // LoadConfig - reads the config file into the Config struct
-func LoadConfig(fileName string) (Config, error) {
-	if fileName == "" {
-		return Config{}, fmt.Errorf("no filename")
-	}
-
-	configBytes, err := ioutil.ReadFile(fileName)
+func LoadConfig(cdnConfPath string, dbConfPath string) (Config, error) {
+	// load json from cdn.conf
+	confBytes, err := ioutil.ReadFile(cdnConfPath)
 	if err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("reading CDN conf '%s': %v", cdnConfPath, err)
 	}
 
-	cfg := Config{}
-	if err := json.Unmarshal(configBytes, &cfg); err != nil {
-		return Config{}, err
+	var cfg Config
+	err = json.Unmarshal(confBytes, &cfg)
+	if err != nil {
+		return Config{}, fmt.Errorf("unmarshalling '%s': %v", cdnConfPath, err)
 	}
 
-	if cfg, err = ParseConfig(cfg); err != nil {
-		return Config{}, err
+	// load json from database.conf
+	dbConfBytes, err := ioutil.ReadFile(dbConfPath)
+	if err != nil {
+		return Config{}, fmt.Errorf("reading db conf '%s': %v", dbConfPath, err)
 	}
+	err = json.Unmarshal(dbConfBytes, &cfg.DB)
+	if err != nil {
+		return Config{}, fmt.Errorf("unmarshalling '%s': %v", dbConfPath, err)
+	}
+	cfg, err = ParseConfig(cfg)
+	return cfg, err
+}
 
-	return cfg, nil
+// CertPath extracts path to cert .cert file
+func (c Config) CertPath() string {
+	v, ok := c.URL.Query()["cert"]
+	if ok {
+		return v[0]
+	}
+	return ""
+}
+
+// KeyPath extracts path to cert .key file
+func (c Config) KeyPath() string {
+	v, ok := c.URL.Query()["key"]
+	if ok {
+		return v[0]
+	}
+	return ""
 }
 
 // ParseConfig validates required fields, and parses non-JSON types
 func ParseConfig(cfg Config) (Config, error) {
 	missings := ""
-	if cfg.HTTPPort == "" {
+	if cfg.Port == "" {
 		missings += "port, "
 	}
-	if cfg.DBUser == "" {
-		missings += "db_user, "
+	if len(cfg.Secrets) == 0 {
+		missings += "secrets, "
 	}
-	if cfg.DBPass == "" {
-		missings += "db_pass, "
-	}
-	if cfg.DBServer == "" {
-		missings += "db_server, "
-	}
-	if cfg.DBDB == "" {
-		missings += "db_name, "
-	}
-	if cfg.TOSecret == "" {
-		missings += "to_secret, "
-	}
-	if cfg.CertPath == "" {
-		missings += "cert_path, "
-	}
-	if cfg.KeyPath == "" {
-		missings += "key_path, "
-	}
-
 	if cfg.LogLocationError == "" {
 		cfg.LogLocationError = log.LogLocationNull
 	}
@@ -142,8 +171,9 @@ func ParseConfig(cfg Config) (Config, error) {
 
 	invalidTOURLStr := ""
 	var err error
-	if cfg.TOURL, err = url.Parse(cfg.TOURLStr); err != nil {
-		invalidTOURLStr = fmt.Sprintf("invalid Traffic Ops URL '%v': %v", cfg.TOURLStr, err)
+	listen := cfg.Listen[0]
+	if cfg.URL, err = url.Parse(listen); err != nil {
+		invalidTOURLStr = fmt.Sprintf("invalid Traffic Ops URL '%s': %v", listen, err)
 	}
 
 	if len(missings) > 0 {
