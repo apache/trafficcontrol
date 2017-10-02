@@ -84,6 +84,24 @@ Built: %(date) by %{getenv: USER}
       go get -v \
     ) || { echo "Could not build go log at $(pwd): $!"; exit 1; }
 
+    # build tc (dependencies within traffic_control will fail to `go get` unless prebuilt)
+    godir=src/github.com/apache/incubator-trafficcontrol/lib/go-tc
+    ( mkdir -p "$godir" && \
+      cd "$godir" && \
+      cp -r "$TC_DIR"/lib/go-tc/* . && \
+      echo "go getting tc at $(pwd)" && \
+      go get -v \
+    ) || { echo "Could not build go tc at $(pwd): $!"; exit 1; }
+
+    # build util (dependencies within traffic_control will fail to `go get` unless prebuilt)
+    godir=src/github.com/apache/incubator-trafficcontrol/lib/go-util
+    ( mkdir -p "$godir" && \
+      cd "$godir" && \
+      cp -r "$TC_DIR"/lib/go-util/* . && \
+      echo "go getting util at $(pwd)" && \
+      go get -v \
+    ) || { echo "Could not build go util at $(pwd): $!"; exit 1; }
+
     # build TO client (dependencies within traffic_control will fail to `go get` unless prebuilt)
     godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/client
     ( mkdir -p "$godir" && \
