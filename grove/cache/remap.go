@@ -303,6 +303,7 @@ type RemapRuleBase struct {
 	// ConcurrentRuleRequests is the number of concurrent requests permitted to a remap rule, that is, to an origin. If this is 0, the global config is used.
 	ConcurrentRuleRequests int  `json:"concurrent_rule_requests"`
 	RetryNum               *int `json:"retry_num"`
+	DSCP                   int  `json:"dscp"`
 }
 
 type RemapRuleJSON struct {
