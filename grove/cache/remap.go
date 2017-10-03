@@ -119,6 +119,10 @@ func (r *RemappingProducer) Name() string {
 	return r.rule.Name
 }
 
+func (r *RemappingProducer) DSCP() int {
+	return r.rule.DSCP
+}
+
 func (r *RemappingProducer) ToFQDN() string {
 	// TODO verify To is not allowed to be constructed with < 1 element
 	return strings.TrimPrefix(strings.TrimPrefix(r.rule.To[0].URL, "http://"), "https://")
