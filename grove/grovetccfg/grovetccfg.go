@@ -440,12 +440,7 @@ func getQueryStringRule(dsQstringIgnore int) (grove.QueryStringRule, error) {
 }
 
 func DefaultRetryCodes() map[int]struct{} {
-	return map[int]struct{}{
-		404: struct{}{},
-		500: struct{}{},
-		501: struct{}{},
-		503: struct{}{},
-	}
+	return map[int]struct{}{}
 }
 
 const DefaultRuleWeight = 1.0
