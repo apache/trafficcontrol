@@ -36,7 +36,7 @@ func main() {
 	toPass := flag.String("topass", "", "The Traffic Ops password")
 	pretty := flag.Bool("pretty", false, "Whether to pretty-print output")
 	host := flag.String("host", "", "The hostname of the server whose config to generate")
-	api := flag.String("api", "1.2", "API version. Determines whether to use /api/1.3/configs/ or older, less efficient 1.2 APIs")
+	// api := flag.String("api", "1.2", "API version. Determines whether to use /api/1.3/configs/ or older, less efficient 1.2 APIs")
 	toInsecure := flag.Bool("insecure", false, "Whether to allow invalid certificates with Traffic Ops")
 	certDir := flag.String("certdir", DefaultCertificateDir, "Directory to save certificates to")
 	flag.Parse()
@@ -49,11 +49,11 @@ func main() {
 	}
 
 	rules := grove.RemapRules{}
-	if *api == "1.3" {
-		rules, err = createRulesNewAPI(toc, *host)
-	} else {
-		rules, err = createRulesOldAPI(toc, *host, *certDir) // TODO remove once 1.3 / traffic_ops_golang is deployed to production.
-	}
+	// if *api == "1.3" {
+	// 	rules, err = createRulesNewAPI(toc, *host)
+	// } else {
+	rules, err = createRulesOldAPI(toc, *host, *certDir) // TODO remove once 1.3 / traffic_ops_golang is deployed to production.
+	// }
 	if err != nil {
 		fmt.Printf("Error creating rules: %v\n", err)
 		os.Exit(1)
@@ -152,102 +152,102 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 	return createRulesOld(host, deliveryservices, parents, deliveryserviceRegexes, cdns, serverParameters, dsCerts, certDir)
 }
 
-func createRulesNewAPI(toc *to.Session, host string) (grove.RemapRules, error) {
-	cacheCfg, err := toc.CacheConfig(host)
-	if err != nil {
-		fmt.Printf("Error getting Traffic Ops Cache Config: %v\n", err)
-		os.Exit(1)
-	}
+// func createRulesNewAPI(toc *to.Session, host string) (grove.RemapRules, error) {
+// 	cacheCfg, err := toc.CacheConfig(host)
+// 	if err != nil {
+// 		fmt.Printf("Error getting Traffic Ops Cache Config: %v\n", err)
+// 		os.Exit(1)
+// 	}
 
-	rules := []grove.RemapRule{}
+// 	rules := []grove.RemapRule{}
 
-	allowedIPs, err := makeAllowIP(cacheCfg.AllowIP)
-	if err != nil {
-		return grove.RemapRules{}, fmt.Errorf("creating allowed IPs: %v", err)
-	}
+// 	allowedIPs, err := makeAllowIP(cacheCfg.AllowIP)
+// 	if err != nil {
+// 		return grove.RemapRules{}, fmt.Errorf("creating allowed IPs: %v", err)
+// 	}
 
-	weight := DefaultRuleWeight
-	retryNum := DefaultRetryNum
-	timeout := DefaultTimeout
-	parentSelection := DefaultRuleParentSelection
+// 	weight := DefaultRuleWeight
+// 	retryNum := DefaultRetryNum
+// 	timeout := DefaultTimeout
+// 	parentSelection := DefaultRuleParentSelection
 
-	for _, ds := range cacheCfg.DeliveryServices {
-		protocol := ds.Protocol
-		queryStringRule, err := getQueryStringRule(ds.QueryStringIgnore)
-		if err != nil {
-			return grove.RemapRules{}, fmt.Errorf("getting deliveryservice %v Query String Rule: %v", ds.XMLID, err)
-		}
+// 	for _, ds := range cacheCfg.DeliveryServices {
+// 		protocol := ds.Protocol
+// 		queryStringRule, err := getQueryStringRule(ds.QueryStringIgnore)
+// 		if err != nil {
+// 			return grove.RemapRules{}, fmt.Errorf("getting deliveryservice %v Query String Rule: %v", ds.XMLID, err)
+// 		}
 
-		protocolStrs := []ProtocolStr{}
-		switch protocol {
-		case ProtocolHTTP:
-			protocolStrs = append(protocolStrs, ProtocolStr{From: "http", To: "http"})
-		case ProtocolHTTPS:
-			protocolStrs = append(protocolStrs, ProtocolStr{From: "https", To: "https"})
-		case ProtocolHTTPAndHTTPS:
-			protocolStrs = append(protocolStrs, ProtocolStr{From: "http", To: "http"})
-			protocolStrs = append(protocolStrs, ProtocolStr{From: "https", To: "https"})
-		case ProtocolHTTPToHTTPS:
-			protocolStrs = append(protocolStrs, ProtocolStr{From: "http", To: "https"})
-			protocolStrs = append(protocolStrs, ProtocolStr{From: "https", To: "https"})
-		}
+// 		protocolStrs := []ProtocolStr{}
+// 		switch protocol {
+// 		case ProtocolHTTP:
+// 			protocolStrs = append(protocolStrs, ProtocolStr{From: "http", To: "http"})
+// 		case ProtocolHTTPS:
+// 			protocolStrs = append(protocolStrs, ProtocolStr{From: "https", To: "https"})
+// 		case ProtocolHTTPAndHTTPS:
+// 			protocolStrs = append(protocolStrs, ProtocolStr{From: "http", To: "http"})
+// 			protocolStrs = append(protocolStrs, ProtocolStr{From: "https", To: "https"})
+// 		case ProtocolHTTPToHTTPS:
+// 			protocolStrs = append(protocolStrs, ProtocolStr{From: "http", To: "https"})
+// 			protocolStrs = append(protocolStrs, ProtocolStr{From: "https", To: "https"})
+// 		}
 
-		dsType := strings.ToLower(ds.Type)
-		if !strings.HasPrefix(dsType, "http") && !strings.HasPrefix(dsType, "dns") {
-			fmt.Printf("createRules skipping deliveryservice %v - unknown type %v", ds.XMLID, ds.Type)
-			continue
-		}
+// 		dsType := strings.ToLower(ds.Type)
+// 		if !strings.HasPrefix(dsType, "http") && !strings.HasPrefix(dsType, "dns") {
+// 			fmt.Printf("createRules skipping deliveryservice %v - unknown type %v", ds.XMLID, ds.Type)
+// 			continue
+// 		}
 
-		for _, protocolStr := range protocolStrs {
-			for _, dsRegex := range ds.Regexes {
-				rule := grove.RemapRule{}
-				pattern, patternLiteralRegex := trimLiteralRegex(dsRegex)
-				rule.Name = fmt.Sprintf("%s.%s.%s.%s", ds.XMLID, protocolStr.From, protocolStr.To, pattern)
-				rule.From = buildFrom(protocolStr.From, pattern, patternLiteralRegex, host, dsType, cacheCfg.Domain)
-				for _, parent := range cacheCfg.Parents {
-					to, proxyURLStr := buildToNew(parent, protocolStr.To, ds.OriginFQDN, dsType)
-					proxyURL, err := url.Parse(proxyURLStr)
-					if err != nil {
-						return grove.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v parent %v proxy_url: %v", ds.XMLID, parent.Host, proxyURLStr)
-					}
+// 		for _, protocolStr := range protocolStrs {
+// 			for _, dsRegex := range ds.Regexes {
+// 				rule := grove.RemapRule{}
+// 				pattern, patternLiteralRegex := trimLiteralRegex(dsRegex)
+// 				rule.Name = fmt.Sprintf("%s.%s.%s.%s", ds.XMLID, protocolStr.From, protocolStr.To, pattern)
+// 				rule.From = buildFrom(protocolStr.From, pattern, patternLiteralRegex, host, dsType, cacheCfg.Domain)
+// 				for _, parent := range cacheCfg.Parents {
+// 					to, proxyURLStr := buildToNew(parent, protocolStr.To, ds.OriginFQDN, dsType)
+// 					proxyURL, err := url.Parse(proxyURLStr)
+// 					if err != nil {
+// 						return grove.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v parent %v proxy_url: %v", ds.XMLID, parent.Host, proxyURLStr)
+// 					}
 
-					ruleTo := grove.RemapRuleTo{
-						RemapRuleToBase: grove.RemapRuleToBase{
-							URL:      to,
-							Weight:   &weight,
-							RetryNum: &retryNum,
-						},
-						ProxyURL:   proxyURL,
-						RetryCodes: DefaultRetryCodes(),
-						Timeout:    &timeout,
-					}
-					rule.To = append(rule.To, ruleTo)
-					// TODO get from TO?
-					rule.RetryNum = &retryNum
-					rule.Timeout = &timeout
-					rule.RetryCodes = DefaultRetryCodes()
-					rule.QueryString = queryStringRule
-					if err != nil {
-						return grove.RemapRules{}, err
-					}
-					rule.ConnectionClose = DefaultRuleConnectionClose
-					rule.ParentSelection = &parentSelection
-				}
-				rules = append(rules, rule)
-			}
-		}
-	}
+// 					ruleTo := grove.RemapRuleTo{
+// 						RemapRuleToBase: grove.RemapRuleToBase{
+// 							URL:      to,
+// 							Weight:   &weight,
+// 							RetryNum: &retryNum,
+// 						},
+// 						ProxyURL:   proxyURL,
+// 						RetryCodes: DefaultRetryCodes(),
+// 						Timeout:    &timeout,
+// 					}
+// 					rule.To = append(rule.To, ruleTo)
+// 					// TODO get from TO?
+// 					rule.RetryNum = &retryNum
+// 					rule.Timeout = &timeout
+// 					rule.RetryCodes = DefaultRetryCodes()
+// 					rule.QueryString = queryStringRule
+// 					if err != nil {
+// 						return grove.RemapRules{}, err
+// 					}
+// 					rule.ConnectionClose = DefaultRuleConnectionClose
+// 					rule.ParentSelection = &parentSelection
+// 				}
+// 				rules = append(rules, rule)
+// 			}
+// 		}
+// 	}
 
-	remapRules := grove.RemapRules{
-		Rules:           rules,
-		RetryCodes:      DefaultRetryCodes(),
-		Timeout:         &timeout,
-		ParentSelection: &parentSelection,
-		Stats:           grove.RemapRulesStats{Allow: allowedIPs},
-	}
+// 	remapRules := grove.RemapRules{
+// 		Rules:           rules,
+// 		RetryCodes:      DefaultRetryCodes(),
+// 		Timeout:         &timeout,
+// 		ParentSelection: &parentSelection,
+// 		Stats:           grove.RemapRulesStats{Allow: allowedIPs},
+// 	}
 
-	return remapRules, nil
-}
+// 	return remapRules, nil
+// }
 
 func makeServersHostnameMap(servers []to.Server) map[string]to.Server {
 	m := map[string]to.Server{}
@@ -411,16 +411,16 @@ func buildTo(parentServer to.Server, protocol string, originURI string, dsType s
 	return to, proxy
 }
 
-// buildToNew returns the to URL, and the Proxy URL (if any)
-func buildToNew(parent to.CacheConfigParent, protocol string, originURI string, dsType string) (string, string) {
-	// TODO add port?
-	to := originURI
-	proxy := ""
-	if !dsTypeSkipsMid(dsType) {
-		proxy = "http://" + parent.Host + "." + parent.Domain + ":" + strconv.FormatUint(uint64(parent.Port), 10)
-	}
-	return to, proxy
-}
+// // buildToNew returns the to URL, and the Proxy URL (if any)
+// func buildToNew(parent to.CacheConfigParent, protocol string, originURI string, dsType string) (string, string) {
+// 	// TODO add port?
+// 	to := originURI
+// 	proxy := ""
+// 	if !dsTypeSkipsMid(dsType) {
+// 		proxy = "http://" + parent.Host + "." + parent.Domain + ":" + strconv.FormatUint(uint64(parent.Port), 10)
+// 	}
+// 	return to, proxy
+// }
 
 const DeliveryServiceQueryStringCacheAndRemap = 0
 const DeliveryServiceQueryStringNoCacheRemap = 1
