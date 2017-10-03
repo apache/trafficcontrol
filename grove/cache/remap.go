@@ -53,14 +53,20 @@ type HTTPRequestRemapper interface {
 	// Remap(r *http.Request, scheme string, failures int) Remapping
 	Rules() []RemapRule
 	RemappingProducer(r *http.Request, scheme string) (*RemappingProducer, error)
+	StatRules() RemapRulesStats
 }
 
 type simpleHttpRequestRemapper struct {
 	remapper Remapper
+	stats    *RemapRulesStats
 }
 
 func (hr simpleHttpRequestRemapper) Rules() []RemapRule {
 	return hr.remapper.Rules()
+}
+
+func (hr simpleHttpRequestRemapper) StatRules() RemapRulesStats {
+	return *hr.stats
 }
 
 // getFQDN returns the FQDN. It tries to get the FQDN from a Remap Rule. Remap Rules should always begin with the scheme, e.g. `http://`. If the given rule does not begin with a valid scheme, behavior is undefined.
@@ -192,12 +198,12 @@ func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
 	}, retryAllowed, nil
 }
 
-func RemapperToHTTP(r Remapper) HTTPRequestRemapper {
-	return simpleHttpRequestRemapper{remapper: r}
+func RemapperToHTTP(r Remapper, statRules *RemapRulesStats) HTTPRequestRemapper {
+	return simpleHttpRequestRemapper{remapper: r, stats: statRules}
 }
 
-func NewHTTPRequestRemapper(remap []RemapRule) HTTPRequestRemapper {
-	return RemapperToHTTP(NewLiteralPrefixRemapper(remap))
+func NewHTTPRequestRemapper(remap []RemapRule, statRules *RemapRulesStats) HTTPRequestRemapper {
+	return RemapperToHTTP(NewLiteralPrefixRemapper(remap), statRules)
 }
 
 // Remapper provides a function which takes strings and maps them to other strings. This is designed for URL prefix remapping, for a reverse proxy.
@@ -426,20 +432,20 @@ func (r RemapRule) CacheKey(method string, fromURI string) string {
 	return key
 }
 
-func LoadRemapRules(path string) ([]RemapRule, error) {
+func LoadRemapRules(path string) ([]RemapRule, *RemapRulesStats, error) {
 	fmt.Printf("Loading Remap Rules\n")
 	defer func() {
 		fmt.Printf("Loaded Remap Rules\n")
 	}()
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer file.Close()
 
 	remapRulesJSON := RemapRulesJSON{}
 	if err := json.NewDecoder(file).Decode(&remapRulesJSON); err != nil {
-		return nil, fmt.Errorf("decoding JSON: %s", err)
+		return nil, nil, fmt.Errorf("decoding JSON: %s", err)
 	}
 
 	remapRules := RemapRules{RemapRulesBase: remapRulesJSON.RemapRulesBase}
@@ -447,7 +453,7 @@ func LoadRemapRules(path string) ([]RemapRule, error) {
 		remapRules.RetryCodes = make(map[int]struct{}, len(*remapRulesJSON.RetryCodes))
 		for _, code := range *remapRulesJSON.RetryCodes {
 			if _, ok := ValidHttpCodes[code]; !ok {
-				return nil, fmt.Errorf("error parsing rules: retry code invalid: %v", code)
+				return nil, nil, fmt.Errorf("error parsing rules: retry code invalid: %v", code)
 			}
 			remapRules.RetryCodes[code] = struct{}{}
 		}
@@ -455,23 +461,23 @@ func LoadRemapRules(path string) ([]RemapRule, error) {
 	if remapRulesJSON.TimeoutMS != nil {
 		t := time.Duration(*remapRulesJSON.TimeoutMS) * time.Millisecond
 		if remapRules.Timeout = &t; *remapRules.Timeout < 0 {
-			return nil, fmt.Errorf("error parsing rules: timeout must be positive: %v", remapRules.Timeout)
+			return nil, nil, fmt.Errorf("error parsing rules: timeout must be positive: %v", remapRules.Timeout)
 		}
 	}
 	if remapRulesJSON.ParentSelection != nil {
 		ps := ParentSelectionTypeFromString(*remapRulesJSON.ParentSelection)
 		if remapRules.ParentSelection = &ps; *remapRules.ParentSelection == ParentSelectionTypeInvalid {
-			return nil, fmt.Errorf("error parsing rules: parent selection invalid: '%v'", remapRulesJSON.ParentSelection)
+			return nil, nil, fmt.Errorf("error parsing rules: parent selection invalid: '%v'", remapRulesJSON.ParentSelection)
 		}
 	}
 	if remapRulesJSON.Stats.Allow != nil {
 		if remapRules.Stats.Allow, err = makeIPNets(remapRulesJSON.Stats.Allow); err != nil {
-			return nil, fmt.Errorf("error parsing rules allows: %v", err)
+			return nil, nil, fmt.Errorf("error parsing rules allows: %v", err)
 		}
 	}
 	if remapRulesJSON.Stats.Deny != nil {
 		if remapRules.Stats.Deny, err = makeIPNets(remapRulesJSON.Stats.Deny); err != nil {
-			return nil, fmt.Errorf("error parsing rules denys: %v", err)
+			return nil, nil, fmt.Errorf("error parsing rules denys: %v", err)
 		}
 	}
 
@@ -484,7 +490,7 @@ func LoadRemapRules(path string) ([]RemapRule, error) {
 			rule.RetryCodes = make(map[int]struct{}, len(*jsonRule.RetryCodes))
 			for _, code := range *jsonRule.RetryCodes {
 				if _, ok := ValidHttpCodes[code]; !ok {
-					return nil, fmt.Errorf("error parsing rule %v retry code invalid: %v", rule.Name, code)
+					return nil, nil, fmt.Errorf("error parsing rule %v retry code invalid: %v", rule.Name, code)
 				}
 				rule.RetryCodes[code] = struct{}{}
 			}
@@ -495,7 +501,7 @@ func LoadRemapRules(path string) ([]RemapRule, error) {
 		if jsonRule.TimeoutMS != nil {
 			t := time.Duration(*jsonRule.TimeoutMS) * time.Millisecond
 			if rule.Timeout = &t; *rule.Timeout < 0 {
-				return nil, fmt.Errorf("error parsing rule %v timeout must be positive: %v", rule.Name, rule.Timeout)
+				return nil, nil, fmt.Errorf("error parsing rule %v timeout must be positive: %v", rule.Name, rule.Timeout)
 			}
 		} else {
 			rule.Timeout = remapRules.Timeout
@@ -506,29 +512,29 @@ func LoadRemapRules(path string) ([]RemapRule, error) {
 		}
 
 		if rule.Allow, err = makeIPNets(jsonRule.Allow); err != nil {
-			return nil, fmt.Errorf("error parsing rule %v allows: %v", rule.Name, err)
+			return nil, nil, fmt.Errorf("error parsing rule %v allows: %v", rule.Name, err)
 		}
 		if rule.Deny, err = makeIPNets(jsonRule.Deny); err != nil {
-			return nil, fmt.Errorf("error parsing rule %v denys: %v", rule.Name, err)
+			return nil, nil, fmt.Errorf("error parsing rule %v denys: %v", rule.Name, err)
 		}
 		if rule.To, err = makeTo(jsonRule.To, rule); err != nil {
-			return nil, fmt.Errorf("error parsing rule %v to: %v", rule.Name, err)
+			return nil, nil, fmt.Errorf("error parsing rule %v to: %v", rule.Name, err)
 		}
 		if jsonRule.ParentSelection != nil {
 			ps := ParentSelectionTypeFromString(*jsonRule.ParentSelection)
 			if rule.ParentSelection = &ps; *rule.ParentSelection == ParentSelectionTypeInvalid {
-				return nil, fmt.Errorf("error parsing rule %v parent selection invalid: '%v'", rule.Name, jsonRule.ParentSelection)
+				return nil, nil, fmt.Errorf("error parsing rule %v parent selection invalid: '%v'", rule.Name, jsonRule.ParentSelection)
 			}
 		} else {
 			rule.ParentSelection = remapRules.ParentSelection
 		}
 
 		if rule.ParentSelection == nil {
-			return nil, fmt.Errorf("error parsing rule %v - no parent_selection - must be set at rules or rule level", rule.Name)
+			return nil, nil, fmt.Errorf("error parsing rule %v - no parent_selection - must be set at rules or rule level", rule.Name)
 		}
 
 		if len(rule.To) == 0 {
-			return nil, fmt.Errorf("error parsing rule %v - no to - must have at least one parent", rule.Name)
+			return nil, nil, fmt.Errorf("error parsing rule %v - no to - must have at least one parent", rule.Name)
 		}
 
 		if *rule.ParentSelection == ParentSelectionTypeConsistentHash {
@@ -538,7 +544,7 @@ func LoadRemapRules(path string) ([]RemapRule, error) {
 		rules[i] = rule
 	}
 
-	return rules, nil
+	return rules, &remapRules.Stats, nil
 }
 
 const DefaultReplicas = 1024
@@ -631,11 +637,11 @@ func makeIPNet(cidr string) (*net.IPNet, error) {
 }
 
 func LoadRemapper(path string) (HTTPRequestRemapper, error) {
-	rules, err := LoadRemapRules(path)
+	rules, statRules, err := LoadRemapRules(path)
 	if err != nil {
 		return nil, err
 	}
-	return NewHTTPRequestRemapper(rules), nil
+	return NewHTTPRequestRemapper(rules, statRules), nil
 }
 
 func RemapRulesToJSON(r RemapRules) RemapRulesJSON {

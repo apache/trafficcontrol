@@ -159,7 +159,7 @@ func main() {
 	}
 	defaultCert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
 	if err != nil {
-		log.Errorf("starting service: loading default certificate: %V\n", err)
+		log.Errorf("starting service: loading default certificate: %v\n", err)
 		os.Exit(1)
 	}
 	certs = append(certs, defaultCert)
@@ -173,7 +173,7 @@ func main() {
 	stats := cache.NewStats(remapper.Rules())
 
 	buildHandler := func(scheme string, port string, conns *web.ConnMap) (http.Handler, *cache.CacheHandlerPointer) {
-		statHandler := cache.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats)
+		statHandler := cache.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
 		cacheHandler := cache.NewCacheHandler(
 			lruCache,
 			remapper,
@@ -306,7 +306,7 @@ func main() {
 		httpsHandlerPointer.Set(httpsCacheHandler)
 
 		if cfg.Port != oldCfg.Port {
-			statHandler := cache.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats)
+			statHandler := cache.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
 			handler := http.NewServeMux()
 			handler.Handle("/_astats", statHandler)
 			handler.Handle("/", httpHandlerPointer)
@@ -317,7 +317,7 @@ func main() {
 		}
 
 		if (httpsServer == nil || cfg.HTTPSPort != oldCfg.HTTPSPort) && cfg.CertFile != "" && cfg.KeyFile != "" {
-			statHandler := cache.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats)
+			statHandler := cache.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
 			handler := http.NewServeMux()
 			handler.Handle("/_astats", statHandler)
 			handler.Handle("/", httpsHandlerPointer)
