@@ -582,6 +582,7 @@ func createRulesOld(
 					rule.Timeout = &timeout
 					rule.RetryCodes = DefaultRetryCodes()
 					rule.QueryString = queryStringRule
+					rule.DSCP = ds.DSCP
 					if err != nil {
 						return grove.RemapRules{}, err
 					}
