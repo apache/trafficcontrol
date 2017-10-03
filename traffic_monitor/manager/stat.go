@@ -84,7 +84,7 @@ func StartStatHistoryManager(
 	overrideMap := map[tc.CacheName]bool{}
 
 	process := func(results []cache.Result) {
-		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates, lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData, lastResults, localStates, events, localCacheStatus, overrideMap, combineState)
+		processStatResults(results, statInfoHistory, statResultHistory, statMaxKbpses, combinedStates, lastStats, toData.Get(), errorCount, dsStats, lastStatEndTimes, lastStatDurations, unpolledCaches, monitorConfig.Get(), precomputedData, lastResults, localStates, events, localCacheStatus, overrideMap, combineState, cfg.CachePollingProtocol)
 	}
 
 	go func() {
@@ -145,6 +145,7 @@ func processStatResults(
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 	overrideMap map[tc.CacheName]bool,
 	combineState func(),
+	pollingProtocol config.PollingProtocol,
 ) {
 	if len(results) == 0 {
 		return
@@ -208,7 +209,7 @@ func processStatResults(
 		lastStats.Set(newLastStats)
 	}
 
-	health.CalcAvailability(results, "stat", statResultHistory, mc, toData, localCacheStatusThreadsafe, localStates, events)
+	health.CalcAvailability(results, "stat", statResultHistory, mc, toData, localCacheStatusThreadsafe, localStates, events, pollingProtocol)
 	combineState()
 
 	endTime := time.Now()

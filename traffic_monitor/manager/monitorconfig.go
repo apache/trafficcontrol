@@ -22,6 +22,7 @@ package manager
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -219,6 +220,8 @@ func monitorConfigListen(
 			log.Errorln("Updating Traffic Ops Data: " + err.Error())
 		}
 
+		url6Regex := regexp.MustCompile(`/\d+`)
+
 		healthURLs := map[string]poller.PollConfig{}
 		statURLs := map[string]poller.PollConfig{}
 		peerURLs := map[string]poller.PollConfig{}
@@ -267,18 +270,28 @@ func monitorConfigListen(
 				"application=plugin.remap", "application=system",
 				"application=", "application=system",
 			)
-			url = r.Replace(url)
+			url4 := r.Replace(url)
 
+			r = strings.NewReplacer(
+				"${hostname}", "["+srv.IP6+"]",
+				"${interface_name}", srv.InterfaceName,
+				"application=plugin.remap", "application=system",
+				"application=", "application=system",
+			)
+			url6 := url6Regex.ReplaceAllString(r.Replace(url), "")
 			connTimeout := trafficOpsHealthConnectionTimeoutToDuration(monitorConfig.Profile[srv.Profile].Parameters.HealthConnectionTimeout)
+
 			if connTimeout == 0 {
 				connTimeout = DefaultHealthConnectionTimeout
 				log.Warnln("profile " + srv.Profile + " health.connection.timeout Parameter is missing or zero, using default " + DefaultHealthConnectionTimeout.String())
 			}
+			healthURLs[srv.HostName] = poller.PollConfig{URL: url4, URLV6: url6, Host: srv.FQDN, Timeout: connTimeout, Format: format}
 
-			healthURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN, Timeout: connTimeout, Format: format}
 			r = strings.NewReplacer("application=system", "application=")
-			statURL := r.Replace(url)
-			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Host: srv.FQDN, Timeout: connTimeout, Format: format}
+
+			statURL4 := r.Replace(url4)
+			statURL6 := url6Regex.ReplaceAllString(r.Replace(url6), "")
+			statURLs[srv.HostName] = poller.PollConfig{URL: statURL4, URLV6: statURL6, Host: srv.FQDN, Timeout: connTimeout, Format: format}
 		}
 
 		peerSet := map[tc.TrafficMonitorName]struct{}{}
@@ -290,14 +303,15 @@ func monitorConfigListen(
 				continue
 			}
 			// TODO: the URL should be config driven. -jse
-			url := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
-			peerURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN} // TODO determine timeout.
+			url4 := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
+			url6 := url6Regex.ReplaceAllString(fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP6, srv.Port), "")
+			peerURLs[srv.HostName] = poller.PollConfig{URL: url4, URLV6: url6, Host: srv.FQDN} // TODO determine timeout.
 			peerSet[tc.TrafficMonitorName(srv.HostName)] = struct{}{}
 		}
 
-		statURLSubscriber <- poller.HttpPollerConfig{Urls: statURLs, Interval: intervals.Stat, NoKeepAlive: intervals.StatNoKeepAlive}
-		healthURLSubscriber <- poller.HttpPollerConfig{Urls: healthURLs, Interval: intervals.Health, NoKeepAlive: intervals.HealthNoKeepAlive}
-		peerURLSubscriber <- poller.HttpPollerConfig{Urls: peerURLs, Interval: intervals.Peer, NoKeepAlive: intervals.PeerNoKeepAlive}
+		statURLSubscriber <- poller.HttpPollerConfig{Urls: statURLs, PollingProtocol: cfg.CachePollingProtocol, Interval: intervals.Stat, NoKeepAlive: intervals.StatNoKeepAlive}
+		healthURLSubscriber <- poller.HttpPollerConfig{Urls: healthURLs, PollingProtocol: cfg.CachePollingProtocol, Interval: intervals.Health, NoKeepAlive: intervals.HealthNoKeepAlive}
+		peerURLSubscriber <- poller.HttpPollerConfig{Urls: peerURLs, PollingProtocol: cfg.PeerPollingProtocol, Interval: intervals.Peer, NoKeepAlive: intervals.PeerNoKeepAlive}
 		toIntervalSubscriber <- intervals.TO
 		peerStates.SetTimeout((intervals.Peer + cfg.HTTPTimeout) * 2)
 		peerStates.SetPeers(peerSet)

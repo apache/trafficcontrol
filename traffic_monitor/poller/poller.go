@@ -29,6 +29,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/fetcher"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/handler"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/towrap" // TODO move to common
@@ -47,6 +48,7 @@ type HttpPoller struct {
 
 type PollConfig struct {
 	URL     string
+	URLV6   string
 	Host    string
 	Timeout time.Duration
 	Handler handler.Handler
@@ -54,9 +56,10 @@ type PollConfig struct {
 }
 
 type HttpPollerConfig struct {
-	Urls        map[string]PollConfig
-	Interval    time.Duration
-	NoKeepAlive bool
+	Urls            map[string]PollConfig
+	Interval        time.Duration
+	NoKeepAlive     bool
+	PollingProtocol config.PollingProtocol
 }
 
 // NewHTTP creates and returns a new HttpPoller.
@@ -67,6 +70,7 @@ func NewHTTP(
 	httpClient *http.Client,
 	fetchHandler handler.Handler,
 	userAgent string,
+	pollingProtocol config.PollingProtocol,
 ) HttpPoller {
 	var tickChan chan uint64
 	if tick {
@@ -76,7 +80,8 @@ func NewHTTP(
 		TickChan:      tickChan,
 		ConfigChannel: make(chan HttpPollerConfig),
 		Config: HttpPollerConfig{
-			Interval: interval,
+			Interval:        interval,
+			PollingProtocol: pollingProtocol,
 		},
 		FetcherTemplate: fetcher.HttpFetcher{
 			Handler:   fetchHandler,
@@ -181,6 +186,7 @@ type HTTPPollInfo struct {
 	NoKeepAlive bool
 	Interval    time.Duration
 	ID          string
+	PollingProtocol config.PollingProtocol
 	PollConfig
 }
 
@@ -219,7 +225,7 @@ func (p HttpPoller) Poll() {
 					}
 				}
 			}
-			go poller(info.Interval, info.ID, info.URL, info.Host, info.Format, fetcher, kill)
+			go poller(info.Interval, info.ID, info.PollingProtocol, info.URL, info.URLV6, info.Host, info.Format, fetcher, kill)
 		}
 		p.Config = newConfig
 	}
@@ -235,11 +241,19 @@ func mustDie(die <-chan struct{}) bool {
 }
 
 // TODO iterationCount and/or p.TickChan?
-func poller(interval time.Duration, id string, url string, host string, format string, fetcher fetcher.Fetcher, die <-chan struct{}) {
+func poller(interval time.Duration, id string, pollingProtocol config.PollingProtocol, url string, urlV6 string, host string, format string, fetcher fetcher.Fetcher, die <-chan struct{}) {
 	pollSpread := time.Duration(rand.Float64()*float64(interval/time.Nanosecond)) * time.Nanosecond
 	time.Sleep(pollSpread)
 	tick := time.NewTicker(interval)
 	lastTime := time.Now()
+	swapProtocols := false
+	if pollingProtocol == config.Both {
+		swapProtocols = true
+	}
+	usingIPV4 := true
+	if pollingProtocol == config.IPV6Only {
+		usingIPV4 = false
+	}
 	for {
 		select {
 		case <-tick.C:
@@ -252,7 +266,14 @@ func poller(interval time.Duration, id string, url string, host string, format s
 			pollId := atomic.AddUint64(&debugPollNum, 1)
 			pollFinishedChan := make(chan uint64)
 			log.Debugf("poll %v %v start\n", pollId, time.Now())
-			go fetcher.Fetch(id, url, host, format, pollId, pollFinishedChan) // TODO persist fetcher, with its own die chan?
+			if usingIPV4 {
+				go fetcher.Fetch(id, url, host, format, pollId, usingIPV4, pollFinishedChan) // TODO persist fetcher, with its own die chan?
+			} else {
+				go fetcher.Fetch(id, urlV6, host, format, pollId, usingIPV4, pollFinishedChan) // TODO persist fetcher, with its own die chan?
+			}
+			if swapProtocols {
+				usingIPV4 = !usingIPV4
+			}
 			<-pollFinishedChan
 		case <-die:
 			tick.Stop()
@@ -265,7 +286,6 @@ func poller(interval time.Duration, id string, url string, host string, format s
 func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPollInfo) {
 	deletions := []string{}
 	additions := []HTTPPollInfo{}
-
 	if old.Interval != new.Interval || old.NoKeepAlive != new.NoKeepAlive {
 		for id, _ := range old.Urls {
 			deletions = append(deletions, id)
@@ -275,6 +295,7 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 				Interval:    new.Interval,
 				NoKeepAlive: new.NoKeepAlive,
 				ID:          id,
+				PollingProtocol: new.PollingProtocol,
 				PollConfig:  pollCfg,
 			})
 		}
@@ -291,6 +312,7 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 				Interval:    new.Interval,
 				NoKeepAlive: new.NoKeepAlive,
 				ID:          id,
+				PollingProtocol: new.PollingProtocol,
 				PollConfig:  newPollCfg,
 			})
 		}
@@ -303,6 +325,7 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 				Interval:    new.Interval,
 				NoKeepAlive: new.NoKeepAlive,
 				ID:          id,
+				PollingProtocol: new.PollingProtocol,
 				PollConfig:  newPollCfg,
 			})
 		}

@@ -23,9 +23,9 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/config"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/threadsafe"
@@ -184,7 +184,7 @@ func processHealthResult(
 		healthHistoryCopy[healthResult.ID] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[healthResult.ID]...), maxHistory)
 	}
 
-	health.CalcAvailability(results, "health", nil, monitorConfigCopy, toDataCopy, localCacheStatusThreadsafe, localStates, events)
+	health.CalcAvailability(results, "health", nil, monitorConfigCopy, toDataCopy, localCacheStatusThreadsafe, localStates, events, cfg.CachePollingProtocol)
 
 	healthHistory.Set(healthHistoryCopy)
 	// TODO determine if we should combineCrStates() here

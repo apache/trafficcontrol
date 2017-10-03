@@ -32,11 +32,18 @@ import (
 // TODO put somewhere more generic
 const AvailableStatusReported = "REPORTED"
 
+type AvailableTuple struct {
+	IPV4 bool
+	IPV6 bool
+}
+
 // CacheAvailableStatus is the available status of the given cache. It includes a boolean available/unavailable flag, and a descriptive string.
 type AvailableStatus struct {
-	Available bool
-	Status    string
-	Why       string
+	Available          AvailableTuple
+	ProcessedAvailable bool
+	LastCheckedIPV4    bool
+	Status             string
+	Why                string
 	// UnavailableStat is the stat whose threshold made the cache unavailable. If this is the empty string, the cache is unavailable for a non-threshold reason. This exists so a poller (health, stat) won't mark an unavailable cache as available if the stat whose threshold was reached isn't available on that poller.
 	UnavailableStat string
 	// Poller is the name of the poller which set this available status
@@ -193,6 +200,7 @@ type ResultInfo struct {
 	Vitals      Vitals
 	System      AstatsSystem
 	PollID      uint64
+	UsingIPV4   bool
 	Available   bool
 }
 
@@ -204,6 +212,7 @@ func ToInfo(r Result) ResultInfo {
 		RequestTime: r.RequestTime,
 		Vitals:      r.Vitals,
 		PollID:      r.PollID,
+		UsingIPV4:   r.UsingIPV4,
 		Available:   r.Available,
 		System:      r.Astats.System,
 	}

@@ -59,12 +59,12 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticA
 	toData := todata.NewThreadsafe()
 
 	cacheHealthHandler := cache.NewHandler()
-	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, cacheHealthHandler, staticAppData.UserAgent)
+	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, cacheHealthHandler, staticAppData.UserAgent, cfg.CachePollingProtocol)
 	cacheStatHandler := cache.NewPrecomputeHandler(toData)
-	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, cacheStatHandler, staticAppData.UserAgent)
+	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, cacheStatHandler, staticAppData.UserAgent, cfg.CachePollingProtocol)
 	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
-	peerPoller := poller.NewHTTP(cfg.PeerPollingInterval, false, sharedClient, peerHandler, staticAppData.UserAgent)
+	peerPoller := poller.NewHTTP(cfg.PeerPollingInterval, false, sharedClient, peerHandler, staticAppData.UserAgent, cfg.PeerPollingProtocol)
 
 	go monitorConfigPoller.Poll()
 	go cacheHealthPoller.Poll()

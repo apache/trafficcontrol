@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"strings"
 )
 
 // LogLocation is a location to log to. This may be stdout, stderr, null (/dev/null), or a valid file path.
@@ -41,29 +42,67 @@ const (
 	StaticFileDir = "/opt/traffic_monitor/static/"
 )
 
+type PollingProtocol string
+
+const (
+	IPV4Only               = PollingProtocol("IPV4Only")
+	IPV6Only               = PollingProtocol("IPV6Only")
+	Both                   = PollingProtocol("Both")
+	InvalidPollingProtocol = PollingProtocol("InvalidPollingProtocol")
+)
+
+func (t PollingProtocol) String() string {
+	switch t {
+	case IPV4Only:
+		return "IPV4Only"
+	case IPV6Only:
+		return "IPV6Only"
+	case Both:
+		return "Both"
+	default:
+		return "InvalidPollingProtocol"
+	}
+}
+
+func PollingProtocolFromString(s string) PollingProtocol {
+	s = strings.ToLower(s)
+	switch s {
+	case "ipv4only":
+		return IPV4Only
+	case "ipv6only":
+		return IPV6Only
+	case "both":
+		return Both
+	default:
+		return InvalidPollingProtocol
+	}
+}
+
 // Config is the configuration for the application. It includes myriad data, such as polling intervals and log locations.
 type Config struct {
-	CacheHealthPollingInterval   time.Duration `json:"-"`
-	CacheStatPollingInterval     time.Duration `json:"-"`
-	MonitorConfigPollingInterval time.Duration `json:"-"`
-	HTTPTimeout                  time.Duration `json:"-"`
-	PeerPollingInterval          time.Duration `json:"-"`
-	PeerOptimistic               bool          `json:"peer_optimistic"`
-	MaxEvents                    uint64        `json:"max_events"`
-	MaxStatHistory               uint64        `json:"max_stat_history"`
-	MaxHealthHistory             uint64        `json:"max_health_history"`
-	HealthFlushInterval          time.Duration `json:"-"`
-	StatFlushInterval            time.Duration `json:"-"`
-	LogLocationError             string        `json:"log_location_error"`
-	LogLocationWarning           string        `json:"log_location_warning"`
-	LogLocationInfo              string        `json:"log_location_info"`
-	LogLocationDebug             string        `json:"log_location_debug"`
-	LogLocationEvent             string        `json:"log_location_event"`
-	ServeReadTimeout             time.Duration `json:"-"`
-	ServeWriteTimeout            time.Duration `json:"-"`
-	HealthToStatRatio            uint64        `json:"health_to_stat_ratio"`
-	StaticFileDir                string        `json:"static_file_dir"`
-	CRConfigHistoryCount         uint64        `json:"crconfig_history_count"`
+	CacheHealthPollingInterval   time.Duration   `json:"-"`
+	CacheStatPollingInterval     time.Duration   `json:"-"`
+	MonitorConfigPollingInterval time.Duration   `json:"-"`
+	HTTPTimeout                  time.Duration   `json:"-"`
+	PeerPollingInterval          time.Duration   `json:"-"`
+	PeerOptimistic               bool            `json:"peer_optimistic"`
+	MaxEvents                    uint64          `json:"max_events"`
+	MaxStatHistory               uint64          `json:"max_stat_history"`
+	MaxHealthHistory             uint64          `json:"max_health_history"`
+	HealthFlushInterval          time.Duration   `json:"-"`
+	StatFlushInterval            time.Duration   `json:"-"`
+	LogLocationError             string          `json:"log_location_error"`
+	LogLocationWarning           string          `json:"log_location_warning"`
+	LogLocationInfo              string          `json:"log_location_info"`
+	LogLocationDebug             string          `json:"log_location_debug"`
+	LogLocationEvent             string          `json:"log_location_event"`
+	ServeReadTimeout             time.Duration   `json:"-"`
+	ServeWriteTimeout            time.Duration   `json:"-"`
+	HealthToStatRatio            uint64          `json:"health_to_stat_ratio"`
+	StaticFileDir                string          `json:"static_file_dir"`
+	CRConfigHistoryCount         uint64          `json:"crconfig_history_count"`
+	CachePollingProtocol         PollingProtocol `json:"cache_polling_protocol"`
+	PeerPollingProtocol          PollingProtocol `json:"peer_polling_protocol"`
 }
 
 func (c Config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
@@ -95,6 +134,8 @@ var DefaultConfig = Config{
 	HealthToStatRatio:            4,
 	StaticFileDir:                StaticFileDir,
 	CRConfigHistoryCount:         20000,
+	CachePollingProtocol:         IPV4Only,
+	PeerPollingProtocol:          IPV4Only,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/

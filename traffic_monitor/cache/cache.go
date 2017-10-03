@@ -77,6 +77,7 @@ type Result struct {
 	RequestTime     time.Duration
 	Vitals          Vitals
 	PollID          uint64
+	UsingIPV4       bool
 	PollFinished    chan<- uint64
 	PrecomputedData PrecomputedData
 	Available       bool
@@ -272,13 +273,14 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHisto
 }
 
 // Handle handles results fetched from a cache, parsing the raw Reader data and passing it along to a chan for further processing.
-func (handler Handler) Handle(id string, r io.Reader, format string, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, pollFinished chan<- uint64) {
+func (handler Handler) Handle(id string, r io.Reader, format string, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, usingIPV4 bool, pollFinished chan<- uint64) {
 	log.Debugf("poll %v %v (format '%v') handle start\n", pollID, time.Now(), format)
 	result := Result{
 		ID:           tc.CacheName(id),
 		Time:         reqEnd,
 		RequestTime:  reqTime,
 		PollID:       pollID,
+		UsingIPV4:    usingIPV4,
 		PollFinished: pollFinished,
 	}
 
