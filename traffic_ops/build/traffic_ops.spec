@@ -162,7 +162,6 @@ Built: %(date) by %{getenv: USER}
 
     src=src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
     %__cp -p  "$src"/traffic_ops_golang        "${RPM_BUILD_ROOT}"/opt/traffic_ops/app/bin/traffic_ops_golang
-    %__cp -p "$src"/traffic_ops_golang.config  "${RPM_BUILD_ROOT}"/opt/traffic_ops/app/conf/traffic_ops_golang.config
 %pre
     /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupadd -r %{TRAFFIC_OPS_GROUP}
     /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/useradd -r -d %{PACKAGEDIR} -s /sbin/nologin %{TRAFFIC_OPS_USER} -g %{TRAFFIC_OPS_GROUP}
