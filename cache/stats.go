@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -19,15 +20,16 @@ import (
 type statHandler struct {
 	interfaceName string
 	stats         Stats
+	statRules     RemapRulesStats
 }
 
 // NewStatHandler returns an HTTP handler
-func NewStatHandler(interfaceName string, remapRules []RemapRule, stats Stats) http.Handler {
-	return statHandler{interfaceName: interfaceName, stats: stats}
+func NewStatHandler(interfaceName string, remapRules []RemapRule, stats Stats, statRules RemapRulesStats) http.Handler {
+	return statHandler{interfaceName: interfaceName, stats: stats, statRules: statRules}
 }
 
-func NewStatHandlerFunc(interfaceName string, remapRules []RemapRule, stats Stats) http.HandlerFunc {
-	handler := NewStatHandler(interfaceName, remapRules, stats)
+func NewStatHandlerFunc(interfaceName string, remapRules []RemapRule, stats Stats, statRules RemapRulesStats) http.HandlerFunc {
+	handler := NewStatHandler(interfaceName, remapRules, stats, statRules)
 	f := func(w http.ResponseWriter, r *http.Request) {
 		handler.ServeHTTP(w, r)
 	}
@@ -314,7 +316,45 @@ func (h statHandler) LoadRemapStats() map[string]interface{} {
 	return jsonStats
 }
 
+func (h statHandler) Allowed(ip net.IP) bool {
+	// TODO remove duplication
+	for _, network := range h.statRules.Deny {
+		if network.Contains(ip) {
+			log.Debugf("deny contains ip\n")
+			return false
+		}
+	}
+	if len(h.statRules.Allow) == 0 {
+		log.Debugf("Allowed len 0\n")
+		return true
+	}
+	for _, network := range h.statRules.Allow {
+		if network.Contains(ip) {
+			log.Debugf("allow contains ip\n")
+			return true
+		}
+	}
+	return false
+}
+
 func (h statHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// TODO access log? Stats byte count?
+	ip, err := GetIP(r)
+	if err != nil {
+		code := http.StatusInternalServerError
+		w.WriteHeader(code)
+		w.Write([]byte(http.StatusText(code)))
+		log.Errorln("statHandler ServeHTTP failed to get IP: " + ip.String())
+		return
+	}
+	if !h.Allowed(ip) {
+		code := http.StatusForbidden
+		w.WriteHeader(code)
+		w.Write([]byte(http.StatusText(code)))
+		log.Debugln("statHandler.ServeHTTP IP " + ip.String() + " FORBIDDEN") // TODO event?
+		return
+	}
+
 	// TODO gzip
 	system := h.LoadSystemStats() // TODO goroutine on a timer?
 	ats := map[string]interface{}{"server": "6.2.1"}
