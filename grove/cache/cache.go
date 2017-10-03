@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -18,6 +19,9 @@ import (
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+
+	"golang.org/x/net/ipv4"
+	"golang.org/x/net/ipv6"
 )
 
 // TODO add logging
@@ -199,7 +203,39 @@ func NewCacheHandlerFunc(
 	}
 }
 
+func setDSCP(conn *web.InterceptConn, dscp int) error {
+	if dscp == 0 {
+		return nil
+	}
+	if conn == nil {
+		return errors.New("Conn is nil")
+	}
+	realConn := conn.Real()
+	if realConn == nil {
+		return errors.New("real Conn is nil")
+	}
+	ipv4Err := ipv4.NewConn(realConn).SetTOS(dscp)
+	ipv6Err := ipv6.NewConn(realConn).SetTrafficClass(dscp)
+	if ipv4Err != nil || ipv6Err != nil {
+		errStr := ""
+		if ipv4Err != nil {
+			errStr = "setting IPv4 TOS: " + ipv4Err.Error()
+		}
+		if ipv6Err != nil {
+			if ipv4Err != nil {
+				errStr += "; "
+			}
+			errStr += "setting IPv6 TrafficClass: " + ipv6Err.Error()
+		}
+		return errors.New(errStr)
+	}
+	return nil
+}
+
 func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.stats.IncConnections()
+	defer h.stats.DecConnections()
+
 	conn := (*web.InterceptConn)(nil)
 	if realConn, ok := h.conns.Pop(r.RemoteAddr); !ok {
 		log.Errorf("RemoteAddr '%v' not in Conns\n", r.RemoteAddr)
@@ -209,14 +245,15 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	h.stats.IncConnections()
-	defer h.stats.DecConnections()
+	remappingProducer, err := h.remapper.RemappingProducer(r, h.scheme)
+	if err := setDSCP(conn, remappingProducer.DSCP()); err != nil {
+		log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": could not set DSCP: " + err.Error())
+	}
 
 	reqTime := time.Now()
 	reqHeader := web.CopyHeader(r.Header) // copy request header, because it's not guaranteed valid after actually issuing the request
 	moneyTraceHdr := reqHeader.Get("X-Money-Trace")
 	clientIp, _ := GetClientIPPort(r)
-	remappingProducer, err := h.remapper.RemappingProducer(r, h.scheme)
 	statLog := NewStatLogger(w, conn, h, r, moneyTraceHdr, clientIp, reqTime, remappingProducer)
 
 	if err != nil {

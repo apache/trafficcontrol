@@ -122,3 +122,7 @@ func (c *InterceptConn) SetReadDeadline(t time.Time) error {
 func (c *InterceptConn) SetWriteDeadline(t time.Time) error {
 	return c.realConn.SetWriteDeadline(t)
 }
+
+func (c *InterceptConn) Real() net.Conn {
+	return c.realConn
+}
