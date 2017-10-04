@@ -28,6 +28,7 @@ const DBError = ErrorConstant("database access error")
 const ApplicationJson = "application/json"
 const Gzip = "gzip"
 const ContentType = "Content-Type"
+const ContentEncoding = "Content-Encoding"
 
 
 type AlertLevel int

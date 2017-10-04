@@ -186,7 +186,7 @@ func gzipIfAccepts(r *http.Request, w http.ResponseWriter, b []byte) ([]byte, er
 	if len(b) == 0 || !acceptsGzip(r) {
 		return b, nil
 	}
-	w.Header().Set(api.ContentType, api.Gzip)
+	w.Header().Set(api.ContentEncoding, api.Gzip)
 
 	buf := bytes.Buffer{}
 	zw := gzip.NewWriter(&buf)
