@@ -78,7 +78,7 @@ func routeData(d ServerData) (RouteData, error) {
 func rootHandler(d ServerData) http.Handler {
 	// debug
 	tr := &http.Transport{
-		MaxIdleConnsPerHost: d.Config.MaxIdleConnections,
+		MaxIdleConnsPerHost: d.Config.ProxyMaxIdleConnections,
 		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
 		DialContext: (&net.Dialer{
 			Timeout:   time.Duration(d.Config.ProxyTimeout) * time.Second,
