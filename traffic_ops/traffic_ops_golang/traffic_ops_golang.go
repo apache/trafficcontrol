@@ -121,6 +121,7 @@ func main() {
 		WriteTimeout:      time.Duration(cfg.WriteTimeout) * time.Second,
 		IdleTimeout:       time.Duration(cfg.IdleTimeout) * time.Second,
 	}
+	server.SetKeepAlivesEnabled(true)
 
 	log.Debugf("our server struct: %++v \n", server)
 	if err := server.ListenAndServeTLS(cfg.CertPath, cfg.KeyPath); err != nil {

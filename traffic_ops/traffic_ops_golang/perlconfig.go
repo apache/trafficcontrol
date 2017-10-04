@@ -34,6 +34,7 @@ import (
 const OldAccessLogPath = "/var/log/traffic_ops/access.log"
 const NewLogPath = "/var/log/traffic_ops/traffic_ops_golang.log"
 const DefaultMaxDBConnections = 50
+const DefaultProxyMaxIdleConnections = 20
 const DefaultProxyTimeout = 60
 const DefaultProxyTLSTimeout = 60
 const DefaultProxyReadHeaderTimeout = 60
@@ -143,6 +144,13 @@ func getCDNConf(s string) (Config, error) {
 		cfg.ProxyReadHeaderTimeout = DefaultProxyReadHeaderTimeout
 	} else {
 		cfg.ProxyReadHeaderTimeout = proxyReadHeaderTimeout
+	}
+
+	if proxyMaxIdleConnections, err := getIntFromConfigurationKey("traffic_ops_golang_proxy_max_idle_connections", obj); err != nil {
+		log.Warnf("failed to get proxy maxIdleConnections from cdn.conf (%s), using default %d\n", err, DefaultProxyMaxIdleConnections)
+		cfg.ProxyMaxIdleConnections = DefaultProxyMaxIdleConnections
+	} else {
+		cfg.ProxyMaxIdleConnections = proxyMaxIdleConnections
 	}
 
 	if readTimeout, err := getIntFromConfigurationKey("traffic_ops_golang_read_timeout", obj); err != nil {

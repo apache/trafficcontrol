@@ -74,10 +74,12 @@ func routeData(d ServerData) (RouteData, error) {
 	return rd, nil
 }
 
+
 // getRootHandler returns the / handler for the service, which reverse-proxies the old Perl Traffic Ops
 func rootHandler(d ServerData) http.Handler {
 	// debug
 	tr := &http.Transport{
+		MaxIdleConnsPerHost: d.Config.MaxIdleConnections,
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		DialContext: (&net.Dialer{
 			Timeout:   time.Duration(d.Config.ProxyTimeout) * time.Second,
