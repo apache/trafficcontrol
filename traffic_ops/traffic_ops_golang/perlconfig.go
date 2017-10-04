@@ -20,6 +20,7 @@ package main
  */
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -29,6 +30,7 @@ import (
 	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/basho/riak-go-client"
 )
 
 const OldAccessLogPath = "/var/log/traffic_ops/access.log"
@@ -43,7 +45,7 @@ const DefaultReadHeaderTimeout = 60
 const DefaultWriteTimeout = 60
 const DefaultIdleTimeout = 60
 
-func GetPerlConfigs(cdnConfPath string, dbConfPath string) (Config, error) {
+func GetPerlConfigs(cdnConfPath string, dbConfPath string, riakConfPath string) (Config, error) {
 	configBytes, err := ioutil.ReadFile(cdnConfPath)
 	if err != nil {
 		return Config{}, fmt.Errorf("reading CDN conf '%v': %v", cdnConfPath, err)
@@ -52,10 +54,14 @@ func GetPerlConfigs(cdnConfPath string, dbConfPath string) (Config, error) {
 	if err != nil {
 		return Config{}, fmt.Errorf("reading db conf '%v': %v", dbConfPath, err)
 	}
-	return getPerlConfigsFromStrs(string(configBytes), string(dbConfBytes))
+	riakConfBytes, err := ioutil.ReadFile(riakConfPath)
+	if err != nil {
+		return Config{}, fmt.Errorf("reading riak conf '%v': %v", riakConfPath, err)
+	}
+	return getPerlConfigsFromStrs(string(configBytes), string(dbConfBytes), string(riakConfBytes))
 }
 
-func getPerlConfigsFromStrs(cdnConfBytes string, dbConfBytes string) (Config, error) {
+func getPerlConfigsFromStrs(cdnConfBytes string, dbConfBytes string, riakConfBytes string) (Config, error) {
 	cfg, err := getCDNConf(cdnConfBytes)
 	if err != nil {
 		return Config{}, fmt.Errorf("parsing CDN conf '%v': %v", cdnConfBytes, err)
@@ -79,6 +85,12 @@ func getPerlConfigsFromStrs(cdnConfBytes string, dbConfBytes string) (Config, er
 	cfg.LogLocationWarning = NewLogPath
 	cfg.LogLocationEvent = OldAccessLogPath
 	cfg.LogLocationDebug = log.LogLocationNull
+
+	riakconf, err := getRiakAuthOptions(riakConfBytes)
+	if err != nil {
+		return Config{}, fmt.Errorf("parsing riak conf '%v': %v", riakConfBytes, err)
+	}
+	cfg.RiakAuthOptions = riakconf
 
 	return cfg, nil
 }
@@ -369,4 +381,11 @@ func getDbConf(s string) (DatabaseConf, error) {
 	dbc := DatabaseConf{}
 	err := json.Unmarshal([]byte(s), &dbc)
 	return dbc, err
+}
+
+func getRiakAuthOptions(s string) (*riak.AuthOptions, error) {
+	rconf := &riak.AuthOptions{}
+	rconf.TlsConfig = &tls.Config{}
+	err := json.Unmarshal([]byte(s), &rconf)
+	return rconf, err
 }

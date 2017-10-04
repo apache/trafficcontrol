@@ -26,6 +26,7 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/basho/riak-go-client"
 )
 
 // Config - represents the traffic_ops_golang.config file
@@ -56,6 +57,7 @@ type Config struct {
 	LogLocationInfo        string   `json:"log_location_info"`
 	LogLocationDebug       string   `json:"log_location_debug"`
 	LogLocationEvent       string   `json:"log_location_event"`
+	RiakAuthOptions        *riak.AuthOptions
 }
 
 // ErrorLog - critical messages

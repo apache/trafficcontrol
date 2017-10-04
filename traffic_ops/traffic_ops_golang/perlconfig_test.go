@@ -20,11 +20,13 @@ package main
  */
 
 import (
+	"crypto/tls"
 	"net/url"
 	"reflect"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/basho/riak-go-client"
 )
 
 func TestGetCDNConf(t *testing.T) {
@@ -144,6 +146,15 @@ func TestGetPerlConfigsFromStrs(t *testing.T) {
    "dbname" : "to"
 }
 `
+	riakConfInput := `
+	   {
+	       "user": "riakuser",
+	       "password": "password",
+	       "tlsConfig": {
+	           "insecureSkipVerify": true
+	       }
+	   }
+	   	`
 
 	expected := Config{
 		HTTPPort:               "443",
@@ -170,13 +181,14 @@ func TestGetPerlConfigsFromStrs(t *testing.T) {
 		LogLocationInfo:        NewLogPath,
 		LogLocationEvent:       OldAccessLogPath,
 		LogLocationDebug:       log.LogLocationNull,
+		RiakAuthOptions:        &riak.AuthOptions{User: "riakuser", Password: "password", TlsConfig: &tls.Config{InsecureSkipVerify: true}},
 	}
 	err := error(nil)
 	if expected.TOURL, err = url.Parse(expected.TOURLStr); err != nil {
 		t.Errorf("expected URL parse '%+v' err nil actual %+v", expected.TOURLStr, err)
 	}
 
-	cfg, err := getPerlConfigsFromStrs(cdnConfInput, dbConfInput)
+	cfg, err := getPerlConfigsFromStrs(cdnConfInput, dbConfInput, riakConfInput)
 	if err != nil {
 		t.Errorf("expected nil err actual %v", err)
 	}
