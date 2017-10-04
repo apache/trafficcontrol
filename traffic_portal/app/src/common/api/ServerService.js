@@ -136,6 +136,22 @@ var ServerService = function($http, $q, Restangular, locationUtils, messageModel
         return request.promise;
     };
 
+    this.getCacheStats = function() {
+        var request = $q.defer();
+
+        $http.get(ENV.api['root'] + "caches/stats")
+            .then(
+                function(result) {
+                    request.resolve(result.data.response);
+                },
+                function() {
+                    request.reject();
+                }
+            );
+
+        return request.promise;
+    };
+
     this.updateStatus = function(id, payload) {
         var request = $q.defer();
 

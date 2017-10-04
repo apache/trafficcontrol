@@ -17,24 +17,25 @@
  * under the License.
  */
 
-var ServerUtils = function($window, userModel) {
+module.exports = angular.module('trafficPortal.private.cacheStats', [])
+	.controller('CacheStatsController', require('./CacheStatsController'))
+	.config(function($stateProvider, $urlRouterProvider) {
+		$stateProvider
+			.state('trafficPortal.private.cacheStats', {
+				url: 'cache-stats',
+				views: {
+					privateContent: {
+						templateUrl: 'modules/private/cacheStats/cacheStats.tpl.html',
+						controller: 'CacheStatsController',
+						resolve: {
+							cacheStats: function(serverService) {
+								return serverService.getCacheStats();
+							}
+						}
 
-	this.isOffline = function(status) {
-		return (status == 'OFFLINE' || status == 'ADMIN_DOWN');
-	};
-
-	this.offlineReason = function(server) {
-		return (server.offlineReason) ? server.offlineReason : 'None';
-	};
-
-	this.ssh = function(ip, $event) {
-		if (ip && ip.length > 0) {
-			$window.location.href = 'ssh://' + userModel.user.username + '@' + ip;
-		}
-		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-	};
-
-};
-
-ServerUtils.$inject = ['$window', 'userModel'];
-module.exports = ServerUtils;
+					}
+				}
+			})
+		;
+		$urlRouterProvider.otherwise('/');
+	});

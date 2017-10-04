@@ -57,6 +57,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/cacheGroups/parameters').name,
         require('./modules/private/cacheGroups/servers').name,
         require('./modules/private/cacheGroups/staticDnsEntries').name,
+        require('./modules/private/cacheStats').name,
         require('./modules/private/cdns').name,
         require('./modules/private/cdns/config').name,
         require('./modules/private/cdns/deliveryServices').name,
