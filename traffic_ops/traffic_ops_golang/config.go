@@ -30,32 +30,33 @@ import (
 
 // Config - represents the traffic_ops_golang.config file
 type Config struct {
-	HTTPPort               string   `json:"port"`
-	DBUser                 string   `json:"db_user"`
-	DBPass                 string   `json:"db_pass"`
-	DBServer               string   `json:"db_server"`
-	DBDB                   string   `json:"db_name"`
-	DBSSL                  bool     `json:"db_ssl"`
-	TOSecret               string   `json:"to_secret"`
-	TOURLStr               string   `json:"to_url"`
-	TOURL                  *url.URL `json:"-"`
-	Insecure               bool     `json:"insecure"`
-	CertPath               string   `json:"cert_path"`
-	KeyPath                string   `json:"key_path"`
-	ProxyTimeout           int      `json:"proxy_timeout"`
-	ProxyKeepAlive         int      `json:"proxy_keep_alive"`
-	ProxyTLSTimeout        int      `json:"proxy_tls_timeout"`
-	ProxyReadHeaderTimeout int      `json:"proxy_read_header_timeout"`
-	ReadTimeout            int      `json:"read_timeout"`
-	ReadHeaderTimeout      int      `json:"read_header_timeout"`
-	WriteTimeout           int      `json:"write_timeout"`
-	IdleTimeout            int      `json:"idle_timeout"`
-	MaxDBConnections       int      `json:"max_db_connections"`
-	LogLocationError       string   `json:"log_location_error"`
-	LogLocationWarning     string   `json:"log_location_warning"`
-	LogLocationInfo        string   `json:"log_location_info"`
-	LogLocationDebug       string   `json:"log_location_debug"`
-	LogLocationEvent       string   `json:"log_location_event"`
+	HTTPPort                string   `json:"port"`
+	DBUser                  string   `json:"db_user"`
+	DBPass                  string   `json:"db_pass"`
+	DBServer                string   `json:"db_server"`
+	DBDB                    string   `json:"db_name"`
+	DBSSL                   bool     `json:"db_ssl"`
+	TOSecret                string   `json:"to_secret"`
+	TOURLStr                string   `json:"to_url"`
+	TOURL                   *url.URL `json:"-"`
+	Insecure                bool     `json:"insecure"`
+	CertPath                string   `json:"cert_path"`
+	KeyPath                 string   `json:"key_path"`
+	ProxyTimeout            int      `json:"proxy_timeout"`
+	ProxyKeepAlive          int      `json:"proxy_keep_alive"`
+	ProxyTLSTimeout         int      `json:"proxy_tls_timeout"`
+	ProxyReadHeaderTimeout  int      `json:"proxy_read_header_timeout"`
+	ProxyMaxIdleConnections int      `json:"proxy_max_idle_connections"`
+	ReadTimeout             int      `json:"read_timeout"`
+	ReadHeaderTimeout       int      `json:"read_header_timeout"`
+	WriteTimeout            int      `json:"write_timeout"`
+	IdleTimeout             int      `json:"idle_timeout"`
+	MaxDBConnections        int      `json:"max_db_connections"`
+	LogLocationError        string   `json:"log_location_error"`
+	LogLocationWarning      string   `json:"log_location_warning"`
+	LogLocationInfo         string   `json:"log_location_info"`
+	LogLocationDebug        string   `json:"log_location_debug"`
+	LogLocationEvent        string   `json:"log_location_event"`
 }
 
 // ErrorLog - critical messages
