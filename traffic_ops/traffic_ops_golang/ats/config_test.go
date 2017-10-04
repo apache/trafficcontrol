@@ -1,10 +1,5 @@
 package ats
 
-import (
-	"testing"
-	"github.com/apache/incubator-trafficcontrol/traffic_stats/assert"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -24,7 +19,12 @@ import (
  * under the License.
  */
 
- func TestGetConfigFile(t *testing.T) {
-	 cfgFile := GetConfigFile(HeaderRewritePrefix,"my-xml-id")
-	 assert.Equal(t,cfgFile,"hdr_rw_my-xml-id.config")
- }
+import "testing"
+
+func TestGetConfigFile(t *testing.T) {
+	expected := "hdr_rw_my-xml-id.config"
+	cfgFile := GetConfigFile(HeaderRewritePrefix, "my-xml-id")
+	if cfgFile != expected {
+		t.Errorf("Expected %s.   Got %s", expected, cfgFile)
+	}
+}

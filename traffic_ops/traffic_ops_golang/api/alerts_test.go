@@ -20,11 +20,11 @@ package api
  */
 
 import (
-	"testing"
-	"net/http/httptest"
-	"net/http"
 	"fmt"
-	"github.com/apache/incubator-trafficcontrol/traffic_stats/assert"
+	"net/http"
+	"net/http/httptest"
+	"reflect"
+	"testing"
 )
 
 func TestGetHandleErrorFunc(t *testing.T) {
@@ -35,9 +35,8 @@ func TestGetHandleErrorFunc(t *testing.T) {
 	}
 	body := `{"alerts":[{"text":"this is an error","level":"error"}]}`
 
-
-	errHandler := GetHandleErrorFunc(w,r)
-	errHandler(fmt.Errorf("this is an error"),http.StatusBadRequest)
+	errHandler := GetHandleErrorFunc(w, r)
+	errHandler(fmt.Errorf("this is an error"), http.StatusBadRequest)
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}
@@ -45,8 +44,8 @@ func TestGetHandleErrorFunc(t *testing.T) {
 	w = httptest.NewRecorder()
 	body = `{"alerts":[]}`
 
-	errHandler = GetHandleErrorFunc(w,r)
-	errHandler(nil,http.StatusBadRequest)
+	errHandler = GetHandleErrorFunc(w, r)
+	errHandler(nil, http.StatusBadRequest)
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}
@@ -55,9 +54,13 @@ func TestGetHandleErrorFunc(t *testing.T) {
 func TestCreateAlerts(t *testing.T) {
 	expected := Alerts{[]Alert{}}
 	alerts := CreateAlerts(WarnLevel)
-	assert.Equal(t,alerts,expected)
+	if !reflect.DeepEqual(expected, alerts) {
+		t.Errorf("Expected %v Got %v", expected, alerts)
+	}
 
-	expected = Alerts{[]Alert{Alert{"message 1",WarnLevel.String()},Alert{"message 2",WarnLevel.String()},Alert{"message 3",WarnLevel.String()}}}
-	alerts = CreateAlerts(WarnLevel,"message 1","message 2","message 3")
-	assert.Equal(t,alerts,expected)
+	expected = Alerts{[]Alert{Alert{"message 1", WarnLevel.String()}, Alert{"message 2", WarnLevel.String()}, Alert{"message 3", WarnLevel.String()}}}
+	alerts = CreateAlerts(WarnLevel, "message 1", "message 2", "message 3")
+	if !reflect.DeepEqual(expected, alerts) {
+		t.Errorf("Expected %v Got %v", expected, alerts)
+	}
 }

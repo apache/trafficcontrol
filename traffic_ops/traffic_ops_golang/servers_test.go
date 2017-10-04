@@ -21,6 +21,7 @@ package main
 
 import (
 	"net/url"
+	"reflect"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -28,7 +29,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_stats/assert"
 	"github.com/lib/pq"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -248,6 +248,10 @@ func TestAssignDsesToServer(t *testing.T) {
 	mock.ExpectCommit()
 
 	result, err := assignDeliveryServicesToServer(100, newDses, true, db)
-	assert.Equal(t, result, newDses)
-	assert.Equal(t, err, nil)
+	if err != nil {
+		t.Errorf("error assigning deliveryservice: %v", err)
+	}
+	if !reflect.DeepEqual(result, newDses) {
+		t.Errorf("delivery services assigned: Expected %v.   Got  %v", newDses, result)
+	}
 }
