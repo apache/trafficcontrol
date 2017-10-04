@@ -29,7 +29,6 @@ const ApplicationJson = "application/json"
 const Gzip = "gzip"
 const ContentType = "Content-Type"
 
-
 type AlertLevel int
 
 const (
@@ -39,7 +38,7 @@ const (
 	ErrorLevel
 )
 
-var alertLevels = [4]string{"success","info","warn","error"}
+var alertLevels = [4]string{"success", "info", "warn", "error"}
 
 func (a AlertLevel) String() string {
 	return alertLevels[a]

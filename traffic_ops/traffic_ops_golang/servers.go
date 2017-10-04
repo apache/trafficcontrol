@@ -31,9 +31,9 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
+	"database/sql"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/ats"
-	"database/sql"
 	"github.com/lib/pq"
 	"strings"
 )
@@ -364,7 +364,7 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 			} else {
 				delete = append(delete, param)
 			}
-			param = ats.GetConfigFile(ats.CacheUrlPrefix,XmlId.String)
+			param = ats.GetConfigFile(ats.CacheUrlPrefix, XmlId.String)
 			if CacheUrl.Valid && len(CacheUrl.String) > 0 {
 				insert = append(insert, param)
 			} else {
