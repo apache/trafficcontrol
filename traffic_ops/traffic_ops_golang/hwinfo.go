@@ -75,11 +75,22 @@ func getHWInfo(v url.Values, db *sqlx.DB, privLevel int) ([]tc.HWInfo, error) {
 	var rows *sqlx.Rows
 	var err error
 
-	rows, err = db.Queryx(selectHWInfoQuery())
+	// Query Parameters to Database Query column mappings
+	// see the fields mapped in the SQL query
+	queryParamsToSQLCols := map[string]string{
+		"id":             "h.id",
+		"serverHostName": "s.serverHostName",
+		"serverId":       "s.serverid",
+		"description":    "h.description",
+		"val":            "h.val",
+		"lastUpdated":    "h.last_updated",
+	}
+
+	query, queryValues := BuildQuery(v, selectHWInfoQuery(), queryParamsToSQLCols)
+
+	rows, err = db.NamedQuery(query, queryValues)
 
 	if err != nil {
-		//TODO: drichardson - send back an alert if the Query Count is larger than 1
-		//                    Test for bad Query Parameters
 		return nil, err
 	}
 	hwInfo := []tc.HWInfo{}
@@ -98,12 +109,15 @@ func getHWInfo(v url.Values, db *sqlx.DB, privLevel int) ([]tc.HWInfo, error) {
 func selectHWInfoQuery() string {
 
 	query := `SELECT
-    id,
-    serverid,
-    description,
-    val,
-    last_updated
+	s.host_name as serverhostname,
+    h.id,
+    h.serverid,
+    h.description,
+    h.val,
+    h.last_updated
 
-FROM hwInfo c`
+FROM hwInfo h
+
+JOIN server s ON s.id = h.serverid`
 	return query
 }
