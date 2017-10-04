@@ -33,11 +33,12 @@ import (
 func getTestHWInfo() []tc.HWInfo {
 	hwinfo := []tc.HWInfo{}
 	testHWInfo := tc.HWInfo{
-		ID:          1,
-		ServerID:    1,
-		Description: "Description",
-		Val:         "Val",
-		LastUpdated: "LastUpdated",
+		ID:             1,
+		ServerID:       1,
+		ServerHostName: "testserver1",
+		Description:    "Description",
+		Val:            "Val",
+		LastUpdated:    "LastUpdated",
 	}
 	hwinfo = append(hwinfo, testHWInfo)
 
@@ -45,6 +46,7 @@ func getTestHWInfo() []tc.HWInfo {
 	testHWInfo2.Description = "hwinfo2"
 	testHWInfo2.Val = "val2"
 	testHWInfo2.ServerID = 2
+	testHWInfo2.ServerHostName = "testserver2"
 	hwinfo = append(hwinfo, testHWInfo2)
 
 	return hwinfo
@@ -70,6 +72,7 @@ func TestGetHWInfo(t *testing.T) {
 			ts.Description,
 			ts.ID,
 			ts.LastUpdated,
+			ts.ServerHostName,
 			ts.ServerID,
 			ts.Val,
 		)
