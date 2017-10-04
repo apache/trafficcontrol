@@ -32,11 +32,11 @@ under the License.
         <div class="col-md-8 col-sm-6 col-xs-12">
             <div class="col-md-4 col-sm-12 col-xs-12 tile_stats_count">
                 <div class="col-md-6 col-sm-6 col-xs-6">
-                    <span class="count_top">Healthy Caches</span>
+                    <span class="count_top"><a ng-click="navigateToPath('/cache-stats')">Healthy Caches</a></span>
                     <div class="count green">{{cacheGroupHealth.totalOnline | number:0}}</div>
                 </div>
                 <div class="col-md-6 col-sm-6 col-xs-6">
-                    <span class="count_top">Unhealthy Caches</span>
+                    <span class="count_top"><a ng-click="navigateToPath('/cache-stats')">Unhealthy Caches</a></span>
                     <div class="count red">{{cacheGroupHealth.totalOffline | number:0}}</div>
                 </div>
             </div>

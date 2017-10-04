@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverCount, $scope, $interval, $filter, cacheGroupService, cdnService, serverService, propertiesModel) {
+var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverCount, $scope, $interval, $filter, locationUtils, cacheGroupService, cdnService, serverService, propertiesModel) {
 
 	var cacheGroupHealthInterval,
 		currentStatsInterval,
@@ -101,6 +101,8 @@ var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverC
 		return $filter('number')(serverCount.ADMIN_DOWN, 0);
 	};
 
+	$scope.navigateToPath = locationUtils.navigateToPath;
+
 	$scope.$on("$destroy", function() {
 		killIntervals();
 	});
@@ -114,5 +116,5 @@ var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverC
 
 };
 
-DashboardController.$inject = ['cacheGroupHealth', 'cdns', 'currentStats', 'serverCount', '$scope', '$interval', '$filter', 'cacheGroupService', 'cdnService', 'serverService', 'propertiesModel'];
+DashboardController.$inject = ['cacheGroupHealth', 'cdns', 'currentStats', 'serverCount', '$scope', '$interval', '$filter', 'locationUtils', 'cacheGroupService', 'cdnService', 'serverService', 'propertiesModel'];
 module.exports = DashboardController;
