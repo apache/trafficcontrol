@@ -490,42 +490,23 @@ sub login_to_ldap {
 # load_conf determines location and type of conf file and returns loaded content as hash ref
 sub load_conf {
     my $self = shift;
-    my $conf;
+    my $conf_file;
 
     # If MOJO_CONFIG is provided, use it.
     if ( defined $ENV{MOJO_CONFIG} ) {
         $self->log->info( "MOJO_CONFIG overridden: " . $ENV{MOJO_CONFIG} . "\n" );
-
-        # load and return as perl code
-        $conf = $self->load_conf_perl( $ENV{MOJO_CONFIG} );
+        $conf_file = $ENV{MOJO_CONFIG};
     }
     else {
-
         # Look for cdn.conf -- if there, load as JSON
-        my $conf_file = find_conf_path('cdn.conf');
-        if ( -r $conf_file ) {
-            $self->log->info("Loading JSON config from $conf_file\n");
-            $conf = $self->load_conf_json($conf_file);
-        }
+        $conf_file = find_conf_path('cdn.conf');
     }
 
-    return $conf;
-}
-
-sub load_conf_json {
-    my $self = shift;
-    my $conf_file = shift;
+    $self->log->info("Loading JSON config from $conf_file\n");
     my $c         = read_file($conf_file);
-    my $conf_info = JSON::decode_json($c) or die "Can't decode json in $conf_file $!\n";
-    return $conf_info;
-}
+    my $conf = JSON::decode_json($c) or die "Can't decode json in $conf_file $!\n";
 
-sub load_conf_perl {
-        my $self = shift;
-	my $conf_file = shift;
-	my $c         = read_file($conf_file);
-	my $conf_info = eval $c;
-	return $conf_info;
+    return $conf;
 }
 
 # Validates the conf/cdn.conf for certain criteria to
