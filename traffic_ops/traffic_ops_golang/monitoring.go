@@ -115,7 +115,11 @@ func monitoringHandler(db *sqlx.DB) http.HandlerFunc {
 			fmt.Fprintf(w, http.StatusText(status))
 		}
 		ctx := r.Context()
-		pathParams := getPathParams(ctx)
+		pathParams, err := getPathParams(ctx)
+		if err != nil {
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
 
 		cdnName := pathParams["cdn"]
 

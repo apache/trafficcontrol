@@ -26,6 +26,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"errors"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 
@@ -60,12 +61,17 @@ type PathParams map[string]string
 
 const PathParamsKey = "pathParams"
 
-func getPathParams(ctx context.Context) PathParams {
+func getPathParams(ctx context.Context) (PathParams, error) {
 	val := ctx.Value(PathParamsKey)
 	if val != nil {
-		return val.(PathParams)
+		switch v := val.(type) {
+		case PathParams:
+			return v, nil
+		default:
+			return nil, fmt.Errorf("PathParams found with bad type: %T\n",v)
+		}
 	}
-	return map[string]string{}
+	return nil, errors.New("no PathParams found in Context")
 }
 
 type CompiledRoute struct {

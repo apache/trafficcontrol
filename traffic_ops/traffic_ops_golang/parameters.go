@@ -42,7 +42,11 @@ func parametersHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		ctx := r.Context()
-		privLevel := getPrivLevel(ctx)
+		privLevel, err := getPrivLevel(ctx)
+		if err != nil {
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
 
 		q := r.URL.Query()
 		resp, err := getParametersResponse(q, db, privLevel)
