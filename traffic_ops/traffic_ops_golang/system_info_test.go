@@ -26,13 +26,13 @@ import (
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 )
 
-var sysInfoParameters = []tostructs.Parameter{
-	tostructs.Parameter{
+var sysInfoParameters = []tc.Parameter{
+	tc.Parameter{
 		ConfigFile:  "global",
 		ID:          1,
 		LastUpdated: "lastUpdated",
@@ -41,7 +41,7 @@ var sysInfoParameters = []tostructs.Parameter{
 		Value:       "val1",
 	},
 
-	tostructs.Parameter{
+	tc.Parameter{
 		ConfigFile:  "global",
 		ID:          2,
 		LastUpdated: "lastUpdated",
@@ -60,7 +60,7 @@ func TestGetSystemInfo(t *testing.T) {
 	}
 	defer db.Close()
 
-	cols := test.ColsFromStructByTag("db", tostructs.Parameter{})
+	cols := test.ColsFromStructByTag("db", tc.Parameter{})
 	rows := sqlmock.NewRows(cols)
 
 	//TODO: drichardson - build helper to add these Rows from the struct values

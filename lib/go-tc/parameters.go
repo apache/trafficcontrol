@@ -19,15 +19,17 @@ package tc
  * under the License.
  */
 
-// ParamResponse ...
-type ParamResponse struct {
+// ParametersResponse ...
+type ParametersResponse struct {
 	Response []Parameter `json:"response"`
 }
 
 // Parameter ...
 type Parameter struct {
-	Name        string `json:"name"`
-	ConfigFile  string `json:"configFile"`
-	Value       string `json:"Value"`
-	LastUpdated string `json:"lastUpdated"`
+	ConfigFile  string `json:"configFile" db:"config_file"`
+	ID          int    `json:"id" db:"id"`
+	LastUpdated string `json:"lastUpdated" db:"last_updated"`
+	Name        string `json:"name" db:"name"`
+	Secure      bool   `json:"secure" db:"secure"`
+	Value       string `json:"value" db:"value"`
 }

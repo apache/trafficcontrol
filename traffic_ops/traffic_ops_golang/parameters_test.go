@@ -23,16 +23,16 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestParameters() []tostructs.Parameter {
-	parameters := []tostructs.Parameter{}
-	testParameter := tostructs.Parameter{
+func getTestParameters() []tc.Parameter {
+	parameters := []tc.Parameter{}
+	testParameter := tc.Parameter{
 		ConfigFile:  "global",
 		ID:          1,
 		LastUpdated: "lastUpdated",
@@ -61,7 +61,7 @@ func TestGetParameters(t *testing.T) {
 	defer db.Close()
 
 	testParameters := getTestParameters()
-	cols := test.ColsFromStructByTag("db", tostructs.Parameter{})
+	cols := test.ColsFromStructByTag("db", tc.Parameter{})
 	rows := sqlmock.NewRows(cols)
 
 	//TODO: drichardson - build helper to add these Rows from the struct values
@@ -91,7 +91,7 @@ func TestGetParameters(t *testing.T) {
 
 }
 
-type SortableParameters []tostructs.Parameter
+type SortableParameters []tc.Parameter
 
 func (s SortableParameters) Len() int {
 	return len(s)

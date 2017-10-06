@@ -1,4 +1,4 @@
-package tostructs
+package tc
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,15 +19,8 @@ package tostructs
  * under the License.
  */
 
-type ParametersResponse struct {
-	Response []Parameter `json:"response"`
-}
-
-type Parameter struct {
-	ConfigFile  string `json:"configFile" db:"config_file"`
-	ID          int    `json:"id" db:"id"`
-	LastUpdated string `json:"lastUpdated" db:"last_updated"`
-	Name        string `json:"name" db:"name"`
-	Secure      bool   `json:"secure" db:"secure"`
-	Value       string `json:"value" db:"value"`
+type SystemInfoResponse struct {
+	Response struct {
+		Parameters map[string]string `json:"parameters"`
+	} `json:"response"`
 }

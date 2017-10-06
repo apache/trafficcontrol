@@ -26,7 +26,7 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -59,19 +59,19 @@ func parametersHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	}
 }
 
-func getParametersResponse(q url.Values, db *sqlx.DB, privLevel int) (*tostructs.ParametersResponse, error) {
+func getParametersResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.ParametersResponse, error) {
 	parameters, err := getParameters(q, db, privLevel)
 	if err != nil {
 		return nil, fmt.Errorf("getting parameters response: %v", err)
 	}
 
-	resp := tostructs.ParametersResponse{
+	resp := tc.ParametersResponse{
 		Response: parameters,
 	}
 	return &resp, nil
 }
 
-func getParameters(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Parameter, error) {
+func getParameters(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Parameter, error) {
 
 	var rows *sqlx.Rows
 	var err error
@@ -94,12 +94,12 @@ func getParameters(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Parame
 	if err != nil {
 		return nil, fmt.Errorf("querying: %v", err)
 	}
-	parameters := []tostructs.Parameter{}
+	parameters := []tc.Parameter{}
 
 	defer rows.Close()
 
 	for rows.Next() {
-		var s tostructs.Parameter
+		var s tc.Parameter
 		if err = rows.StructScan(&s); err != nil {
 			return nil, fmt.Errorf("getting parameters: %v", err)
 		}
