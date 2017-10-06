@@ -23,18 +23,17 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/jmoiron/sqlx"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"github.com/jmoiron/sqlx"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
 	"time"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 
-	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"fmt"
+	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
-
 
 // TestWrapHeaders checks that appropriate default headers are added to a request
 func TestWrapHeaders(t *testing.T) {
@@ -116,7 +115,7 @@ func TestGzip(t *testing.T) {
 	}
 }
 
-func TestWrapAuth(t *testing.T){
+func TestWrapAuth(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	defer mockDB.Close()
 	db := sqlx.NewDb(mockDB, "sqlmock")
@@ -132,13 +131,12 @@ func TestWrapAuth(t *testing.T){
 	rows.AddRow(30)
 	mock.ExpectPrepare("SELECT").ExpectQuery().WithArgs(userName).WillReturnRows(rows)
 
-
 	sqlStatement, err := preparePrivLevelStmt(db)
 	if err != nil {
-		t.Fatalf("could not create priv statement: %v\n",err)
+		t.Fatalf("could not create priv statement: %v\n", err)
 	}
 
-	authBase := AuthBase{false, secret, sqlStatement,nil}
+	authBase := AuthBase{false, secret, sqlStatement, nil}
 
 	cookie := tocookie.New(userName, time.Now().Add(time.Minute), secret)
 
@@ -171,7 +169,7 @@ func TestWrapAuth(t *testing.T){
 		t.Error("Error creating new request")
 	}
 
-	r.Header.Add("Cookie",tocookie.Name+ "=" + cookie)
+	r.Header.Add("Cookie", tocookie.Name+"="+cookie)
 
 	expected := struct {
 		PrivLevel int

@@ -70,7 +70,7 @@ func TestGetDivisions(t *testing.T) {
 	v := url.Values{}
 	v.Set("dsId", "1")
 
-	servers, err := getDivisions(v, db, PrivLevelAdmin)
+	servers, err := getDivisions(v, db)
 	if err != nil {
 		t.Errorf("getDivisions expected: nil error, actual: %v", err)
 	}

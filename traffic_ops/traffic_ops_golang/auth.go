@@ -41,7 +41,6 @@ const PrivLevelOperations = 20
 // PrivLevelAdmin - The user has full privileges
 const PrivLevelAdmin = 30
 
-
 const PrivLevelKey = "privLevel"
 const UserNameKey = "userName"
 

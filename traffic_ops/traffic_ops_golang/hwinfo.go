@@ -28,6 +28,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
 )
 
 const HWInfoPrivLevel = 10
@@ -40,11 +41,8 @@ func hwInfoHandler(db *sqlx.DB) http.HandlerFunc {
 			fmt.Fprintf(w, http.StatusText(status))
 		}
 
-		ctx := r.Context()
-		privLevel := getPrivLevel(ctx)
-
 		q := r.URL.Query()
-		resp, err := getHWInfoResponse(q, db, privLevel)
+		resp, err := getHWInfoResponse(q, db)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -61,8 +59,8 @@ func hwInfoHandler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func getHWInfoResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.HWInfoResponse, error) {
-	hwInfo, err := getHWInfo(q, db, privLevel)
+func getHWInfoResponse(q url.Values, db *sqlx.DB) (*tc.HWInfoResponse, error) {
+	hwInfo, err := getHWInfo(q, db)
 	if err != nil {
 		return nil, fmt.Errorf("getting hwInfo response: %v", err)
 	}
@@ -73,8 +71,8 @@ func getHWInfoResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.HWInfoResp
 	return &resp, nil
 }
 
-func getHWInfo(v url.Values, db *sqlx.DB, privLevel int) ([]tc.HWInfo, error) {
-	//TODO: privLevel unused
+
+func getHWInfo(v url.Values, db *sqlx.DB) ([]tc.HWInfo, error) {
 	var rows *sqlx.Rows
 	var err error
 
