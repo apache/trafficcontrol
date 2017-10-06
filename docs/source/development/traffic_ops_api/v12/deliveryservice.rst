@@ -1,17 +1,17 @@
-.. 
-.. 
+..
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
 
 .. _to-api-v12-ds:
@@ -1479,7 +1479,7 @@ SSL Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": {
         "certificate": {
           "crt": "crt",
@@ -1556,7 +1556,7 @@ SSL Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": {
         "certificate": {
           "crt": "crt",
@@ -1609,12 +1609,12 @@ SSL Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": "Successfully deleted ssl keys for <xml_id>"
     }
 
 |
-  
+
 **POST /api/1.2/deliveryservices/sslkeys/generate**
 
   Generates SSL crt, csr, and private key for a delivery service
@@ -1625,25 +1625,29 @@ SSL Keys
 
   **Request Properties**
 
-  +--------------+---------+-------------------------------------------------+
-  |  Parameter   |   Type  |                   Description                   |
-  +==============+=========+=================================================+
-  | ``key``      | string  | xml_id of the delivery service                  |
-  +--------------+---------+-------------------------------------------------+
-  | ``version``  | string  | version of the keys being generated             |
-  +--------------+---------+-------------------------------------------------+
-  | ``hostname`` | string  | the *pristine hostname* of the delivery service |
-  +--------------+---------+-------------------------------------------------+
-  | ``country``  | string  |                                                 |
-  +--------------+---------+-------------------------------------------------+
-  | ``state``    | string  |                                                 |
-  +--------------+---------+-------------------------------------------------+
-  | ``city``     | string  |                                                 |
-  +--------------+---------+-------------------------------------------------+
-  | ``org``      | string  |                                                 |
-  +--------------+---------+-------------------------------------------------+
-  | ``unit``     | boolean |                                                 |
-  +--------------+---------+-------------------------------------------------+
+  +---------------------+---------+-----------------------------------------------------------------+
+  |      Parameter      |   Type  |                           Description                           |
+  +=====================+=========+=================================================================+
+  | ``key``             | string  | xml_id of the delivery service                                  |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``version``         | string  | version of the keys being generated                             |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``hostname``        | string  | the *pristine hostname* of the delivery service                 |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``country``         | string  | Country                                                         |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``state``           | string  | State                                                           |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``city``            | string  | City                                                            |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``org``             | string  | Organization                                                    |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``unit``            | boolean | Business Unit                                                   |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``deliveryservice`` | string  | The deliveryservice xml-id for which you want to generate certs |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``cdn``             | string  | The name of the CDN for which the deliveryservice belongs       |
+  +---------------------+---------+-----------------------------------------------------------------+
 
   **Request Example** ::
 
@@ -1660,7 +1664,9 @@ SSL Keys
       "country": "US",
       "organization": "Kabletown",
       "city": "Denver",
-      "state": "Colorado"
+      "state": "Colorado",
+      "deliveryservice" : "ds-01",
+      "cdn": "cdn1"
     }
 
 |
@@ -1677,12 +1683,12 @@ SSL Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": "Successfully created ssl keys for ds-01"
     }
 
 |
-  
+
 **POST /api/1.2/deliveryservices/sslkeys/add**
 
   Allows user to add SSL crt, csr, and private key for a delivery service.
@@ -1693,19 +1699,25 @@ SSL Keys
 
   **Request Properties**
 
-  +-------------+--------+-------------------------------------+
-  |  Parameter  |  Type  |             Description             |
-  +=============+========+=====================================+
-  | ``key``     | string | xml_id of the delivery service      |
-  +-------------+--------+-------------------------------------+
-  | ``version`` | string | version of the keys being generated |
-  +-------------+--------+-------------------------------------+
-  | ``csr``     | string |                                     |
-  +-------------+--------+-------------------------------------+
-  | ``crt``     | string |                                     |
-  +-------------+--------+-------------------------------------+
-  | ``key``     | string |                                     |
-  +-------------+--------+-------------------------------------+
+  +---------------------+--------+-----------------------------------------------------------------+
+  |      Parameter      |  Type  |                           Description                           |
+  +=====================+========+=================================================================+
+  | ``key``             | string | xml_id of the delivery service                                  |
+  +---------------------+--------+-----------------------------------------------------------------+
+  | ``version``         | string | version of the keys being generated                             |
+  +---------------------+--------+-----------------------------------------------------------------+
+  | ``csr``             | string |                                                                 |
+  +---------------------+--------+-----------------------------------------------------------------+
+  | ``crt``             | string |                                                                 |
+  +---------------------+--------+-----------------------------------------------------------------+
+  | ``key``             | string |                                                                 |
+  +---------------------+--------+-----------------------------------------------------------------+
+  | ``deliveryservice`` | string | The deliveryservice xml-id for which you want to generate certs |
+  +---------------------+--------+-----------------------------------------------------------------+
+  | ``cdn``             | string | The name of the CDN for which the deliveryservice belongs       |
+  +---------------------+--------+-----------------------------------------------------------------+
+  | ``hostname``        | string | the *pristine hostname* of the delivery service                 |
+  +---------------------+--------+-----------------------------------------------------------------+
 
   **Request Example** ::
 
@@ -1733,7 +1745,7 @@ SSL Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": "Successfully added ssl keys for ds-01"
     }
 
@@ -1770,7 +1782,7 @@ URL Sig Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": {
         key9":"ZvVQNYpPVQWQV8tjQnUl6osm4y7xK4zD",
         "key6":"JhGdpw5X9o8TqHfgezCm0bqb9SQPASWL",
@@ -1792,7 +1804,7 @@ URL Sig Keys
     }
 
 |
-  
+
 **POST /api/1.2/deliveryservices/xmlId/:xmlid/urlkeys/generate**
 
   Generates Url sig keys for a delivery service
@@ -1823,12 +1835,12 @@ URL Sig Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": "Successfully generated and stored keys"
     }
 
 |
-  
+
 **POST /api/1.2/deliveryservices/xmlId/:xmlid/urlkeys/copyFromXmlId/:copyFromXmlId**
 
   Allows user to copy url sig keys from a specified delivery service to a delivery service.
@@ -1861,7 +1873,7 @@ URL Sig Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": "Successfully copied and stored keys"
     }
 
@@ -2782,7 +2794,7 @@ URL Sig Keys
 
   Authentication Required: Yes
 
-  Role(s) Required:  users with the delivery service assigned or ops and above 
+  Role(s) Required:  users with the delivery service assigned or ops and above
 
   **Request Route Parameters**
 
