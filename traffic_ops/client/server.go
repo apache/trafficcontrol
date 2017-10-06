@@ -24,53 +24,6 @@ import (
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
-// ServerDetailResponse is the JSON object returned for a single server
-type ServerDetailResponse struct {
-	Response Server `json:"response"`
-}
-
-// ServerResponse ...
-type ServerResponse struct {
-	Response []Server `json:"response"`
-}
-
-// Server ...
-type Server struct {
-	DomainName    string `json:"domainName"`
-	HostName      string `json:"hostName"`
-	ID            int    `json:"id"`
-	IloIPAddress  string `json:"iloIpAddress"`
-	IloIPGateway  string `json:"iloIpGateway"`
-	IloIPNetmask  string `json:"iloIpNetmask"`
-	IloPassword   string `json:"iloPassword"`
-	IloUsername   string `json:"iloUsername"`
-	InterfaceMtu  int    `json:"interfaceMtu"`
-	InterfaceName string `json:"interfaceName"`
-	IP6Address    string `json:"ip6Address"`
-	IP6Gateway    string `json:"ip6Gateway"`
-	IPAddress     string `json:"ipAddress"`
-	IPGateway     string `json:"ipGateway"`
-	IPNetmask     string `json:"ipNetmask"`
-
-	LastUpdated    string `json:"lastUpdated"`
-	Cachegroup     string `json:"cachegroup"`
-	MgmtIPAddress  string `json:"mgmtIpAddress"`
-	MgmtIPGateway  string `json:"mgmtIpGateway"`
-	MgmtIPNetmask  string `json:"mgmtIpNetmask"`
-	PhysLocation   string `json:"physLocation"`
-	Profile        string `json:"profile"`
-	ProfileDesc    string `json:"profileDesc"`
-	CDNName        string `json:"cdnName"`
-	Rack           string `json:"rack"`
-	RouterHostName string `json:"routerHostName"`
-	RouterPortName string `json:"routerPortName"`
-	Status         string `json:"status"`
-	TCPPort        int    `json:"tcpPort"`
-	Type           string `json:"type"`
-	XMPPID         string `json:"xmppId"`
-	XMPPPasswd     string `json:"xmppPasswd"`
-}
-
 // Servers gets an array of servers
 func (to *Session) Servers() ([]tc.Server, error) {
 	url := "/api/1.2/servers.json"
@@ -89,7 +42,7 @@ func (to *Session) Servers() ([]tc.Server, error) {
 }
 
 // Server gets a server by hostname
-func (to *Session) Server(name string) (*Server, error) {
+func (to *Session) Server(name string) (*tc.Server, error) {
 	url := fmt.Sprintf("/api/1.2/servers/hostname/%s/details", name)
 	resp, err := to.request("GET", url, nil)
 	if err != nil {
@@ -97,7 +50,7 @@ func (to *Session) Server(name string) (*Server, error) {
 	}
 	defer resp.Body.Close()
 
-	data := ServerDetailResponse{}
+	data := tc.ServersDetailResponse{}
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
@@ -106,7 +59,7 @@ func (to *Session) Server(name string) (*Server, error) {
 }
 
 // ServersByType gets an array of serves of a specified type.
-func (to *Session) ServersByType(qparams url.Values) ([]Server, error) {
+func (to *Session) ServersByType(qparams url.Values) ([]tc.Server, error) {
 	url := fmt.Sprintf("/api/1.2/servers.json?%s", qparams.Encode())
 	resp, err := to.request("GET", url, nil)
 	if err != nil {
@@ -114,7 +67,7 @@ func (to *Session) ServersByType(qparams url.Values) ([]Server, error) {
 	}
 	defer resp.Body.Close()
 
-	var data ServerResponse
+	var data tc.ServersResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
