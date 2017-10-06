@@ -81,7 +81,7 @@ func TestGetHWInfo(t *testing.T) {
 	v := url.Values{}
 	v.Set("ServerId", "1")
 
-	hwinfos, err := getHWInfo(v, db, PrivLevelAdmin)
+	hwinfos, err := getHWInfo(v, db)
 	if err != nil {
 		t.Errorf("getHWInfo expected: nil error, actual: %v", err)
 	}

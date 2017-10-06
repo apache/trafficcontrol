@@ -6,29 +6,23 @@ import (
 
 	"fmt"
 
+	"bytes"
 	"context"
 	"net/http/httptest"
-	"bytes"
 )
 
 func TestCreateRouteMap(t *testing.T) {
 	authBase := AuthBase{false, "secret", nil, func(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(),"authWasCalled","true")
-			handlerFunc(w,r.WithContext(ctx))
+			ctx := context.WithValue(r.Context(), "authWasCalled", "true")
+			handlerFunc(w, r.WithContext(ctx))
 		}
 	}}
-
-
-	//expected := make(map[string][]PathHandler)
-	//expected["path1"] = []PathHandler{PathHandler{}}
-	//expected["path2"] = []PathHandler{PathHandler{}}
 
 	PathOneHandler := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
 		authWasCalled := getAuthWasCalled(ctx)
-
 
 		fmt.Fprintf(w, "%s %s", "path1", authWasCalled)
 	}
@@ -53,23 +47,22 @@ func TestCreateRouteMap(t *testing.T) {
 		t.Error("Error creating new request")
 	}
 
-	route1Handler(w,r)
+	route1Handler(w, r)
 
 	if bytes.Compare(w.Body.Bytes(), []byte("path1 true")) != 0 {
-		t.Errorf("Got: %s \nExpected to receive path1 true\n",w.Body.Bytes())
+		t.Errorf("Got: %s \nExpected to receive path1 true\n", w.Body.Bytes())
 	}
 
 	route2Handler := routeMap["GET"][1].Handler
 
 	w = httptest.NewRecorder()
 
-	route2Handler(w,r)
+	route2Handler(w, r)
 
 	if bytes.Compare(w.Body.Bytes(), []byte("path2 false")) != 0 {
 		t.Errorf("Got: %s \nExpected to receive path2 false\n", w.Body.Bytes())
 	}
 }
-
 
 func getAuthWasCalled(ctx context.Context) string {
 	val := ctx.Value("authWasCalled")

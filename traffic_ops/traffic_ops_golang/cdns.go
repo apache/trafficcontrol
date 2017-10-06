@@ -41,11 +41,10 @@ func cdnsHandler(db *sqlx.DB) http.HandlerFunc {
 			fmt.Fprintf(w, http.StatusText(status))
 		}
 
-		ctx := r.Context()
-		privLevel := getPrivLevel(ctx)
-
 		q := r.URL.Query()
-		resp, err := getCDNsResponse(q, db, privLevel)
+
+		resp, err := getCdnsResponse(q, db)
+
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -62,8 +61,9 @@ func cdnsHandler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func getCDNsResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.CDNsResponse, error) {
-	cdns, err := getCDNs(q, db, privLevel)
+
+func getCDNsResponse(q url.Values, db *sqlx.DB) (*tc.CDNsResponse, error) {
+	cdns, err := getCdns(q, db)
 	if err != nil {
 		return nil, fmt.Errorf("getting cdns response: %v", err)
 	}
@@ -74,8 +74,7 @@ func getCDNsResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.CDNsResponse
 	return &resp, nil
 }
 
-func getCDNs(v url.Values, db *sqlx.DB, privLevel int) ([]tc.CDN, error) {
-	//TODO: privLevel unused
+func getCDNs(v url.Values, db *sqlx.DB) ([]tc.CDN, error) {
 	var rows *sqlx.Rows
 	var err error
 

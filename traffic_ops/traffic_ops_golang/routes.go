@@ -55,13 +55,9 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 	return routes, rootHandler(d), nil
 }
 
-const MaxIdleConnections = 20
-
 // RootHandler returns the / handler for the service, which reverse-proxies the old Perl Traffic Ops
 func rootHandler(d ServerData) http.Handler {
-	// debug
 	tr := &http.Transport{
-		MaxIdleConnsPerHost: MaxIdleConnections,
 		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
 		DialContext: (&net.Dialer{
 			Timeout:   time.Duration(d.Config.ProxyTimeout) * time.Second,

@@ -28,6 +28,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
 )
 
 const RegionsPrivLevel = 10
@@ -41,7 +42,6 @@ func regionsHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		ctx := r.Context()
-		privLevel := getPrivLevel(ctx)
 		pathParams := getPathParams(ctx)
 
 		// Load the PathParams into the query parameters for pass through
@@ -49,7 +49,7 @@ func regionsHandler(db *sqlx.DB) http.HandlerFunc {
 		for k, v := range pathParams {
 			q.Set(k, v)
 		}
-		resp, err := getRegionsResponse(q, db, privLevel)
+		resp, err := getRegionsResponse(q, db)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -66,8 +66,8 @@ func regionsHandler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func getRegionsResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.RegionsResponse, error) {
-	regions, err := getRegions(q, db, privLevel)
+func getRegionsResponse(q url.Values, db *sqlx.DB) (*tc.RegionsResponse, error) {
+	regions, err := getRegions(q, db)
 	if err != nil {
 		return nil, fmt.Errorf("getting regions response: %v", err)
 	}
@@ -78,8 +78,7 @@ func getRegionsResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.RegionsRe
 	return &resp, nil
 }
 
-func getRegions(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Region, error) {
-	//TODO: privLevel unused
+func getRegions(v url.Values, db *sqlx.DB) ([]tc.Region, error) {
 	var rows *sqlx.Rows
 	var err error
 

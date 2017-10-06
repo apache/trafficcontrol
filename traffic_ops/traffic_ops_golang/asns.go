@@ -28,6 +28,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
 )
 
 const ASNSPrivLevel = 10
@@ -41,7 +42,6 @@ func ASNsHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		ctx := r.Context()
-		privLevel := getPrivLevel(ctx)
 		pathParams := getPathParams(ctx)
 
 		// Load the PathParams into the query parameters for pass through
@@ -49,7 +49,7 @@ func ASNsHandler(db *sqlx.DB) http.HandlerFunc {
 		for k, v := range pathParams {
 			q.Set(k, v)
 		}
-		resp, err := getASNsResponse(q, db, privLevel)
+		resp, err := getASNsResponse(q, db)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -66,8 +66,8 @@ func ASNsHandler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func getASNsResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.ASNsResponse, error) {
-	asns, err := getASNs(q, db, privLevel)
+func getASNsResponse(q url.Values, db *sqlx.DB) (*tc.ASNsResponse, error) {
+	asns, err := getASNs(q, db)
 	if err != nil {
 		return nil, fmt.Errorf("getting asns response: %v", err)
 	}
@@ -78,9 +78,7 @@ func getASNsResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.ASNsResponse
 	return &resp, nil
 }
 
-
-func getASNs(v url.Values, db *sqlx.DB, privLevel int) ([]tc.ASN, error) {
-	//TODO: privLevel unused.
+func getASNs(v url.Values, db *sqlx.DB) ([]tc.ASN, error) {
 	var rows *sqlx.Rows
 	var err error
 

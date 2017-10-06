@@ -44,7 +44,7 @@ type Route struct {
 	Path              string
 	Handler           http.HandlerFunc
 	RequiredPrivLevel int
-	Middleware        []Middleware
+	Middlewares        []Middleware
 }
 
 func getDefaultMiddleware() []Middleware {
@@ -107,17 +107,17 @@ func CreateRouteMap(rs []Route, authBase AuthBase) map[string][]PathHandler {
 			vstr := strconv.FormatFloat(version, 'f', -1, 64)
 			path := RoutePrefix + "/" + vstr + "/" + r.Path
 
-			middleware := r.Middleware
+			middlewares := r.Middlewares
 
-			if len(middleware) < 1 {
-				middleware = getDefaultMiddleware()
+			if len(middlewares) < 1 {
+				middlewares = getDefaultMiddleware()
 			}
 			if r.RequiredPrivLevel > 0 { //a privLevel of zero is an unauthenticated endpoint.
 				authWrapper := authBase.GetWrapper(r.RequiredPrivLevel)
-				middleware = append([]Middleware{authWrapper}, middleware...)
+				middlewares = append([]Middleware{authWrapper}, middlewares...)
 			}
 
-			m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: use(r.Handler, middleware)})
+			m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: use(r.Handler, middlewares)})
 
 			log.Infof("adding route %v %v\n", r.Method, path)
 		}
@@ -199,9 +199,9 @@ func RegisterRoutes(d ServerData) error {
 	return nil
 }
 
-func use(h http.HandlerFunc, middleware []Middleware) http.HandlerFunc {
-	for i := len(middleware) - 1; i >= 0; i-- { //apply them in reverse order so they are used in a natural order.
-		h = middleware[i](h)
+func use(h http.HandlerFunc, middlewares []Middleware) http.HandlerFunc {
+	for i := len(middlewares) - 1; i >= 0; i-- { //apply them in reverse order so they are used in a natural order.
+		h = middlewares[i](h)
 	}
 	return h
 }

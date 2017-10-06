@@ -72,7 +72,7 @@ func TestGetASNs(t *testing.T) {
 	v := url.Values{}
 	v.Set("dsId", "1")
 
-	servers, err := getASNs(v, db, PrivLevelAdmin)
+	servers, err := getASNs(v, db)
 	if err != nil {
 		t.Errorf("getASNs expected: nil error, actual: %v", err)
 	}

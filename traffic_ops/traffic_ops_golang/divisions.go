@@ -28,6 +28,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
 )
 
 const DivisionsPrivLevel = 10
@@ -40,11 +41,8 @@ func divisionsHandler(db *sqlx.DB) http.HandlerFunc {
 			fmt.Fprintf(w, http.StatusText(status))
 		}
 
-		ctx := r.Context()
-		privLevel := getPrivLevel(ctx)
-
 		q := r.URL.Query()
-		resp, err := getDivisionsResponse(q, db, privLevel)
+		resp, err := getDivisionsResponse(q, db)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -61,8 +59,8 @@ func divisionsHandler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func getDivisionsResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.DivisionsResponse, error) {
-	divisions, err := getDivisions(q, db, privLevel)
+func getDivisionsResponse(q url.Values, db *sqlx.DB) (*tc.DivisionsResponse, error) {
+	divisions, err := getDivisions(q, db)
 	if err != nil {
 		return nil, fmt.Errorf("getting divisions response: %v", err)
 	}
@@ -73,8 +71,7 @@ func getDivisionsResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.Divisio
 	return &resp, nil
 }
 
-func getDivisions(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Division, error) {
-
+func getDivisions(v url.Values, db *sqlx.DB) ([]tc.Division, error) {
 	var rows *sqlx.Rows
 	var err error
 

@@ -72,7 +72,7 @@ func TestGetRegions(t *testing.T) {
 	v := url.Values{}
 	v.Set("dsId", "1")
 
-	servers, err := getRegions(v, db, PrivLevelAdmin)
+	servers, err := getRegions(v, db)
 	if err != nil {
 		t.Errorf("getRegions expected: nil error, actual: %v", err)
 	}
