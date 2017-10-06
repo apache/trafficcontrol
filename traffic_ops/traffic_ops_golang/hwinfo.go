@@ -26,7 +26,7 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -58,19 +58,19 @@ func hwInfoHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	}
 }
 
-func getHWInfoResponse(q url.Values, db *sqlx.DB, privLevel int) (*tostructs.HWInfoResponse, error) {
+func getHWInfoResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.HWInfoResponse, error) {
 	hwInfo, err := getHWInfo(q, db, privLevel)
 	if err != nil {
 		return nil, fmt.Errorf("getting hwInfo response: %v", err)
 	}
 
-	resp := tostructs.HWInfoResponse{
+	resp := tc.HWInfoResponse{
 		Response: hwInfo,
 	}
 	return &resp, nil
 }
 
-func getHWInfo(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.HWInfo, error) {
+func getHWInfo(v url.Values, db *sqlx.DB, privLevel int) ([]tc.HWInfo, error) {
 
 	var rows *sqlx.Rows
 	var err error
@@ -82,11 +82,11 @@ func getHWInfo(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.HWInfo, er
 		//                    Test for bad Query Parameters
 		return nil, err
 	}
-	hwInfo := []tostructs.HWInfo{}
+	hwInfo := []tc.HWInfo{}
 
 	defer rows.Close()
 	for rows.Next() {
-		var s tostructs.HWInfo
+		var s tc.HWInfo
 		if err = rows.StructScan(&s); err != nil {
 			return nil, fmt.Errorf("getting hwInfo: %v", err)
 		}

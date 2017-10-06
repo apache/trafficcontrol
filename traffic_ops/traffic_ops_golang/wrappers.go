@@ -32,8 +32,8 @@ import (
 	"unicode"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
 const ServerName = "traffic_ops_golang" + "/" + Version
@@ -174,7 +174,7 @@ func wrapBytes(f func() []byte, contentType string) RegexHandlerFunc {
 			return
 		}
 
-		w.Header().Set(api.ContentType, contentType)
+		w.Header().Set(tc.ContentType, contentType)
 		log.Write(w, bytes, r.URL.EscapedPath())
 	}
 }
@@ -186,7 +186,7 @@ func gzipIfAccepts(r *http.Request, w http.ResponseWriter, b []byte) ([]byte, er
 	if len(b) == 0 || !acceptsGzip(r) {
 		return b, nil
 	}
-	w.Header().Set(api.ContentEncoding, api.Gzip)
+	w.Header().Set(tc.ContentEncoding, tc.Gzip)
 
 	buf := bytes.Buffer{}
 	zw := gzip.NewWriter(&buf)
@@ -208,7 +208,7 @@ func acceptsGzip(r *http.Request) bool {
 		encodingHeader = stripAllWhitespace(encodingHeader)
 		encodings := strings.Split(encodingHeader, ",")
 		for _, encoding := range encodings {
-			if strings.ToLower(encoding) == api.Gzip { // encoding is case-insensitive, per the RFC
+			if strings.ToLower(encoding) == tc.Gzip { // encoding is case-insensitive, per the RFC
 				return true
 			}
 		}

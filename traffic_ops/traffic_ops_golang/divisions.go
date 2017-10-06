@@ -26,7 +26,7 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -58,19 +58,19 @@ func divisionsHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	}
 }
 
-func getDivisionsResponse(q url.Values, db *sqlx.DB, privLevel int) (*tostructs.DivisionsResponse, error) {
+func getDivisionsResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.DivisionsResponse, error) {
 	divisions, err := getDivisions(q, db, privLevel)
 	if err != nil {
 		return nil, fmt.Errorf("getting divisions response: %v", err)
 	}
 
-	resp := tostructs.DivisionsResponse{
+	resp := tc.DivisionsResponse{
 		Response: divisions,
 	}
 	return &resp, nil
 }
 
-func getDivisions(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Division, error) {
+func getDivisions(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Division, error) {
 
 	var rows *sqlx.Rows
 	var err error
@@ -89,11 +89,11 @@ func getDivisions(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Divisio
 	if err != nil {
 		return nil, err
 	}
-	regions := []tostructs.Division{}
+	regions := []tc.Division{}
 
 	defer rows.Close()
 	for rows.Next() {
-		var s tostructs.Division
+		var s tc.Division
 		if err = rows.StructScan(&s); err != nil {
 			return nil, fmt.Errorf("getting regions: %v", err)
 		}

@@ -27,7 +27,7 @@ import (
 type CRConfig struct {
 	Config               Config                       `json:"config,omitempty"`
 	ConfigTime           time.Time                    `json:"-"`
-	ContentServers       map[string]Server            `json:"contentServers,omitempty"`
+	ContentServers       map[string]TrafficOpsServer  `json:"contentServers,omitempty"`
 	ContentServersTime   map[string]time.Time         `json:"-"`
 	ContentRouters       map[string]Router            `json:"contentRouters,omitempty"`
 	ContentRoutersTime   map[string]time.Time         `json:"-"`
@@ -39,16 +39,6 @@ type CRConfig struct {
 	MonitorsTime         map[string]time.Time         `json:"-"`
 	Stats                Stats                        `json:"stats,omitempty"`
 	StatsTime            time.Time                    `json:"-"`
-}
-
-type MatchSet struct {
-	Protocol  string      `json:"protocol"`
-	MatchList []MatchType `json:"matchlist"`
-}
-
-type MatchType struct {
-	MatchType string `json:"match-type"`
-	Regex     string `json:"regex"`
 }
 
 type Config struct {
@@ -145,35 +135,33 @@ type Router struct {
 
 type Status string
 
-type Server struct {
-	CacheGroup           *string             `json:"cacheGroup,omitempty"`
-	CacheGroupTime       time.Time           `json:"-"`
-	DeliveryServices     map[string][]string `json:"deliveryServices,omitempty"`
-	DeliveryServicesTime time.Time           `json:"-"`
-	Fqdn                 *string             `json:"fqdn,omitempty"`
-	FqdnTime             time.Time           `json:"-"`
-	HashCount            *int                `json:"hashCount,omitempty"`
-	HashCountTime        time.Time           `json:"-"`
-	HashId               *string             `json:"hashId,omitempty"`
-	HashIdTime           time.Time           `json:"-"`
-	HttpsPort            *int                `json:"httpsPort,omitempty"`
-	HttpsPortTime        time.Time           `json:"-"`
-	InterfaceName        *string             `json:"interfaceName,omitempty"`
-	InterfaceNameTime    time.Time           `json:"-"`
-	Ip                   *string             `json:"ip,omitempty"`
-	IpTime               time.Time           `json:"-"`
-	Ip6                  *string             `json:"ip6,omitempty"`
-	Ip6Time              time.Time           `json:"-"`
-	LocationId           *string             `json:"locationId,omitempty"`
-	LocationIdTime       time.Time           `json:"-"`
-	Port                 *int                `json:"port,omitempty"`
-	PortTime             time.Time           `json:"-"`
-	Profile              *string             `json:"profile,omitempty"`
-	ProfileTime          time.Time           `json:"-"`
-	Status               *Status             `json:"status,omitempty"`
-	StatusTime           time.Time           `json:"-"`
-	ServerType           *string             `json:"type,omitempty"`
-	ServerTypeTime       time.Time           `json:"-"`
+type TrafficOpsServer struct {
+	CacheGroup        *string   `json:"cacheGroup,omitempty"`
+	CacheGroupTime    time.Time `json:"-"`
+	Fqdn              *string   `json:"fqdn,omitempty"`
+	FqdnTime          time.Time `json:"-"`
+	HashCount         *int      `json:"hashCount,omitempty"`
+	HashCountTime     time.Time `json:"-"`
+	HashId            *string   `json:"hashId,omitempty"`
+	HashIdTime        time.Time `json:"-"`
+	HttpsPort         *int      `json:"httpsPort,omitempty"`
+	HttpsPortTime     time.Time `json:"-"`
+	InterfaceName     *string   `json:"interfaceName,omitempty"`
+	InterfaceNameTime time.Time `json:"-"`
+	Ip                *string   `json:"ip,omitempty"`
+	IpTime            time.Time `json:"-"`
+	Ip6               *string   `json:"ip6,omitempty"`
+	Ip6Time           time.Time `json:"-"`
+	LocationId        *string   `json:"locationId,omitempty"`
+	LocationIdTime    time.Time `json:"-"`
+	Port              *int      `json:"port,omitempty"`
+	PortTime          time.Time `json:"-"`
+	Profile           *string   `json:"profile,omitempty"`
+	ProfileTime       time.Time `json:"-"`
+	Status            *Status   `json:"status,omitempty"`
+	StatusTime        time.Time `json:"-"`
+	ServerType        *string   `json:"type,omitempty"`
+	ServerTypeTime    time.Time `json:"-"`
 }
 
 type DeliveryService struct {
@@ -204,6 +192,40 @@ type DeliveryService struct {
 	TTLs                    *TTL                     `json:"ttls,omitempty"`
 	TTLsTime                time.Time                `json:"-"`
 }
+
+// MissLocation ...
+type MissLocation struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitudef"`
+}
+
+// MatchSet ...
+type MatchSet struct {
+	Protocol  string      `json:"protocol"`
+	MatchList []MatchList `json:"matchList"`
+}
+
+// MatchList ...
+type MatchList struct {
+	Regex     string `json:"regex"`
+	MatchType string `json:"matchType"`
+}
+
+// BypassDestination ...
+type BypassDestination struct {
+	FQDN string `json:"fqdn"`
+	Type string `json:"type"`
+	Port int    `json:"Port"`
+}
+
+// TTLS ...
+type TTLS struct {
+	Arecord    int `json:"A"`
+	SoaRecord  int `json:"SOA"`
+	NsRecord   int `json:"NS"`
+	AaaaRecord int `json:"AAAA"`
+}
+
 type Dispersion struct {
 	Limit    int     `json:"limit,omitempty"`
 	Shuffled *string `json:"shuffled,omitempty"`
@@ -252,4 +274,90 @@ type Stats struct {
 	TMUserTime          time.Time `json:"-"`
 	TMVersion           *string   `json:"tm_version,omitempty"`
 	TMVersionTime       time.Time `json:"-"`
+}
+
+// TrafficRouter ...
+type TrafficRouter struct {
+	Port     int    `json:"port"`
+	IP6      string `json:"ip6"`
+	IP       string `json:"ip"`
+	FQDN     string `json:"fqdn"`
+	Profile  string `json:"profile"`
+	Location string `json:"location"`
+	Status   string `json:"status"`
+	APIPort  int    `json:"apiPort"`
+}
+
+// TrafficRouterConfig is the json unmarshalled without any changes
+// note all structs are local to this file _except_ the TrafficRouterConfig struct.
+type TrafficRouterConfig struct {
+	TrafficServers   []TrafficServer        `json:"trafficServers,omitempty"`
+	TrafficMonitors  []TrafficMonitor       `json:"trafficMonitors,omitempty"`
+	TrafficRouters   []TrafficRouter        `json:"trafficRouters,omitempty"`
+	CacheGroups      []TMCacheGroup         `json:"cacheGroups,omitempty"`
+	DeliveryServices []TRDeliveryService    `json:"deliveryServices,omitempty"`
+	Stats            map[string]interface{} `json:"stats,omitempty"`
+	Config           map[string]interface{} `json:"config,omitempty"`
+}
+
+// TrafficRouterConfigMap ...
+type TrafficRouterConfigMap struct {
+	TrafficServer   map[string]TrafficServer
+	TrafficMonitor  map[string]TrafficMonitor
+	TrafficRouter   map[string]TrafficRouter
+	CacheGroup      map[string]TMCacheGroup
+	DeliveryService map[string]TRDeliveryService
+	Config          map[string]interface{}
+	Stat            map[string]interface{}
+}
+
+// TRDeliveryService ...
+// TODO JvD: move to deliveryservice.go ??
+type TRDeliveryService struct {
+	XMLID             string            `json:"xmlId"`
+	Domains           []string          `json:"domains"`
+	RoutingName       string            `json:"routingName"`
+	MissLocation      MissLocation      `json:"missCoordinates"`
+	CoverageZoneOnly  bool              `json:"coverageZoneOnly"`
+	MatchSets         []MatchSet        `json:"matchSets"`
+	TTL               int               `json:"ttl"`
+	TTLs              TTLS              `json:"ttls"`
+	BypassDestination BypassDestination `json:"bypassDestination"`
+	StatcDNSEntries   []StaticDNS       `json:"statitDnsEntries"`
+	Soa               SOA               `json:"soa"`
+}
+
+// StaticDNS ...
+type StaticDNS struct {
+	Value string `json:"value"`
+	TTL   int    `json:"ttl"`
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+}
+
+// Coordinates ...
+type Coordinates struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
+// TrafficServer ...
+type TrafficServer struct {
+	Profile          string              `json:"profile"`
+	IP               string              `json:"ip"`
+	Status           string              `json:"status"`
+	CacheGroup       string              `json:"cacheGroup"`
+	IP6              string              `json:"ip6"`
+	Port             int                 `json:"port"`
+	HostName         string              `json:"hostName"`
+	FQDN             string              `json:"fqdn"`
+	InterfaceName    string              `json:"interfaceName"`
+	Type             string              `json:"type"`
+	HashID           string              `json:"hashId"`
+	DeliveryServices []tsdeliveryService `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
+}
+
+type tsdeliveryService struct {
+	Xmlid  string   `json:"xmlId"`
+	Remaps []string `json:"remaps"`
 }

@@ -1,4 +1,4 @@
-package tostructs
+package tc
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,12 +19,18 @@ package tostructs
  * under the License.
  */
 
-type DivisionsResponse struct {
-	Response []Division `json:"response"`
+// CacheGroupResponse ...
+type CacheGroupsResponse struct {
+	Response []CacheGroup `json:"response"`
 }
 
-type Division struct {
-	ID          int    `json:"id" db:"id"`
-	LastUpdated string `json:"lastUpdated" db:"last_updated"`
-	Name        string `json:"name" db:"name"`
+// CacheGroup contains information about a given Cachegroup in Traffic Ops.
+type CacheGroup struct {
+	Name        string  `json:"name"`
+	ShortName   string  `json:"shortName"`
+	Latitude    float64 `json:"latitude"`
+	Longitude   float64 `json:"longitude"`
+	ParentName  string  `json:"parentCachegroupName,omitempty"`
+	Type        string  `json:"typeName,omitempty"`
+	LastUpdated string  `json:"lastUpdated,omitempty"`
 }

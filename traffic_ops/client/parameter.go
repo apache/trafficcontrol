@@ -18,6 +18,8 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 // ParamResponse ...
@@ -34,7 +36,7 @@ type Parameter struct {
 }
 
 // Parameters gets an array of parameter structs for the profile given
-func (to *Session) Parameters(profileName string) ([]Parameter, error) {
+func (to *Session) Parameters(profileName string) ([]tc.Parameter, error) {
 	url := fmt.Sprintf("/api/1.2/parameters/profile/%s.json", profileName)
 	resp, err := to.request("GET", url, nil)
 	if err != nil {
@@ -42,7 +44,7 @@ func (to *Session) Parameters(profileName string) ([]Parameter, error) {
 	}
 	defer resp.Body.Close()
 
-	var data ParamResponse
+	var data tc.ParamResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}

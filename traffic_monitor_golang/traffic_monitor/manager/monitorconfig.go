@@ -33,7 +33,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/todata"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/towrap"
-	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 type PollIntervals struct {
@@ -47,7 +46,7 @@ type PollIntervals struct {
 }
 
 // getPollIntervals reads the Traffic Ops Client monitorConfig structure, and parses and returns the health, peer, stat, and TrafficOps poll intervals
-func getIntervals(monitorConfig to.TrafficMonitorConfigMap, cfg config.Config, logMissingParams bool) (PollIntervals, error) {
+func getIntervals(monitorConfig tc.TrafficMonitorConfigMap, cfg config.Config, logMissingParams bool) (PollIntervals, error) {
 	intervals := PollIntervals{}
 	peerPollIntervalI, peerPollIntervalExists := monitorConfig.Config["peers.polling.interval"]
 	if !peerPollIntervalExists {
