@@ -22,19 +22,6 @@ import (
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
-// ParametersResponse ...
-type ParametersResponse struct {
-	Response []Parameter `json:"response"`
-}
-
-// Parameter ...
-type Parameter struct {
-	Name        string `json:"name"`
-	ConfigFile  string `json:"configFile"`
-	Value       string `json:"Value"`
-	LastUpdated string `json:"lastUpdated"`
-}
-
 // Parameters gets an array of parameter structs for the profile given
 func (to *Session) Parameters(profileName string) ([]tc.Parameter, error) {
 	url := fmt.Sprintf("/api/1.2/parameters/profile/%s.json", profileName)
