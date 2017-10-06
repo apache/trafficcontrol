@@ -52,8 +52,16 @@ func serversHandler(db *sqlx.DB) http.HandlerFunc {
 
 		// p PathParams, username string, privLevel int
 		ctx := r.Context()
-		privLevel := getPrivLevel(ctx)
-		pathParams := getPathParams(ctx)
+		privLevel, err := getPrivLevel(ctx)
+		if err != nil {
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
+		pathParams, err := getPathParams(ctx)
+		if err != nil {
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
 
 		q := r.URL.Query()
 		for k, v := range pathParams {
@@ -205,11 +213,15 @@ func assignDeliveryServicesToServerHandler(db *sqlx.DB) http.HandlerFunc {
 
 		// p PathParams, username string, privLevel int
 		ctx := r.Context()
-		pathParams := getPathParams(ctx)
+		pathParams, err := getPathParams(ctx)
+		if err != nil {
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
 
 		var dsList []int
 
-		err := json.NewDecoder(r.Body).Decode(&dsList)
+		err = json.NewDecoder(r.Body).Decode(&dsList)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return

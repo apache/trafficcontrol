@@ -142,8 +142,17 @@ func TestWrapAuth(t *testing.T) {
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		privLevel := getPrivLevel(ctx)
-		userName := getUserName(ctx)
+		privLevel, err := getPrivLevel(ctx)
+		if err != nil {
+			t.Fatalf("unable to get privLevel: %v", err)
+			return
+		}
+		userName, err := getUserName(ctx)
+		if err != nil {
+			t.Fatalf("unable to get userName: %v", err)
+			return
+		}
+
 		response := struct {
 			PrivLevel int
 			UserName  string

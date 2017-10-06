@@ -42,7 +42,11 @@ func regionsHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		ctx := r.Context()
-		pathParams := getPathParams(ctx)
+		pathParams, err := getPathParams(ctx)
+		if err != nil {
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
 
 		// Load the PathParams into the query parameters for pass through
 		q := r.URL.Query()

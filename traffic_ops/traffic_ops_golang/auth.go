@@ -24,6 +24,8 @@ import (
 	"database/sql"
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/jmoiron/sqlx"
+	"errors"
+	"fmt"
 )
 
 // PrivLevelInvalid - The Default Priv level
@@ -64,18 +66,28 @@ func PrivLevel(privLevelStmt *sql.Stmt, user string) int {
 	}
 }
 
-func getPrivLevel(ctx context.Context) int {
+func getPrivLevel(ctx context.Context) (int, error) {
 	val := ctx.Value(PrivLevelKey)
 	if val != nil {
-		return val.(int)
+		switch v := val.(type) {
+		case int:
+			return v, nil
+		default:
+			return PrivLevelInvalid, fmt.Errorf("privLevel found with bad type: %T\n",v)
+		}
 	}
-	return PrivLevelInvalid
+	return PrivLevelInvalid, errors.New("no privLevel found in Context")
 }
 
-func getUserName(ctx context.Context) string {
+func getUserName(ctx context.Context) (string, error) {
 	val := ctx.Value(UserNameKey)
 	if val != nil {
-		return val.(string)
+		switch v := val.(type) {
+		case string:
+			return v, nil
+		default:
+			return "-", fmt.Errorf("userName found with bad type: %T\n",v)
+		}
 	}
-	return "-"
+	return "-", errors.New("No userName found in Context")
 }
