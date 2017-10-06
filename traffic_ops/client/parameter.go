@@ -22,8 +22,8 @@ import (
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
-// ParamResponse ...
-type ParamResponse struct {
+// ParametersResponse ...
+type ParametersResponse struct {
 	Response []Parameter `json:"response"`
 }
 
@@ -44,7 +44,7 @@ func (to *Session) Parameters(profileName string) ([]tc.Parameter, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.ParamResponse
+	var data tc.ParametersResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}

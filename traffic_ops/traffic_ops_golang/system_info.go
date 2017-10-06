@@ -26,7 +26,7 @@ import (
 	"net/url"
 
 	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -58,13 +58,13 @@ func systemInfoHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 		fmt.Fprintf(w, "%s", respBts)
 	}
 }
-func getSystemInfoResponse(q url.Values, db *sqlx.DB, privLevel int) (*tostructs.SystemInfoResponse, error) {
+func getSystemInfoResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.SystemInfoResponse, error) {
 	info, err := getSystemInfo(q, db, privLevel)
 	if err != nil {
 		return nil, fmt.Errorf("getting SystemInfo: %v", err)
 	}
 
-	resp := tostructs.SystemInfoResponse{}
+	resp := tc.SystemInfoResponse{}
 	resp.Response.Parameters = info
 	return &resp, nil
 }
