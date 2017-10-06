@@ -26,7 +26,7 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/apache/incubator-trafficcontrol.dew/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/incubator-trafficcontrol.wip/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
