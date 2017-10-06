@@ -1,3 +1,5 @@
+package tc
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,28 +14,20 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+// DeliveryServiceRegexResponse ...
+type DeliveryServiceRegexResponse struct {
+	Response []DeliveryServiceRegexes `json:"response"`
+}
 
-package client
+// DeliveryServiceRegexes ...
+type DeliveryServiceRegexes struct {
+	Regexes []DeliveryServiceRegex `json:"regexes"`
+	DSName  string                 `json:"dsName"`
+}
 
-import (
-	"encoding/json"
-
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
-)
-
-// Profiles gets an array of Profiles
-func (to *Session) Profiles() ([]tc.Profile, error) {
-	url := "/api/1.2/profiles.json"
-	resp, err := to.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.ProfilesResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
-	}
-
-	return data.Response, nil
+// DeliveryServiceRegex ...
+type DeliveryServiceRegex struct {
+	Type      string `json:"type"`
+	SetNumber int    `json:"setNumber"`
+	Pattern   string `json:"pattern"`
 }
