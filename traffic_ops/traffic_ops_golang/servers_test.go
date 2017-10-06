@@ -25,7 +25,7 @@ import (
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -33,13 +33,13 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestServers() []tostructs.Server {
-	servers := []tostructs.Server{}
-	testServer := tostructs.Server{
+func getTestServers() []tc.Server {
+	servers := []tc.Server{}
+	testServer := tc.Server{
 		Cachegroup:     "Cachegroup",
 		CachegroupID:   1,
-		CdnID:          1,
-		CdnName:        "cdnName",
+		CDNID:          1,
+		CDNName:        "cdnName",
 		DomainName:     "domainName",
 		GUID:           "guid",
 		HostName:       "server1",
@@ -74,8 +74,8 @@ func getTestServers() []tostructs.Server {
 		Status:         "status",
 		StatusID:       1,
 		TCPPort:        80,
-		ServerType:     "EDGE",
-		ServerTypeID:   1,
+		Type:           "EDGE",
+		TypeID:         1,
 		UpdPending:     true,
 		XMPPID:         "xmppId",
 		XMPPPasswd:     "xmppPasswd",
@@ -105,7 +105,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 	defer db.Close()
 
 	testServers := getTestServers()
-	cols := test.ColsFromStructByTag("db", tostructs.Server{})
+	cols := test.ColsFromStructByTag("db", tc.Server{})
 	rows := sqlmock.NewRows(cols)
 
 	//TODO: drichardson - build helper to add these Rows from the struct values
@@ -114,8 +114,8 @@ func TestGetServersByCachegroup(t *testing.T) {
 		rows = rows.AddRow(
 			ts.Cachegroup,
 			ts.CachegroupID,
-			ts.CdnID,
-			ts.CdnName,
+			ts.CDNID,
+			ts.CDNName,
 			ts.DomainName,
 			ts.GUID,
 			ts.HostName,
@@ -150,8 +150,8 @@ func TestGetServersByCachegroup(t *testing.T) {
 			ts.Status,
 			ts.StatusID,
 			ts.TCPPort,
-			ts.ServerType,
-			ts.ServerTypeID,
+			ts.Type,
+			ts.TypeID,
 			ts.UpdPending,
 			ts.XMPPID,
 			ts.XMPPPasswd,
@@ -173,7 +173,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 
 }
 
-type SortableServers []tostructs.Server
+type SortableServers []tc.Server
 
 func (s SortableServers) Len() int {
 	return len(s)

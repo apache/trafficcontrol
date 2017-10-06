@@ -23,33 +23,33 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestCdns() []tostructs.Cdn {
-	cdns := []tostructs.Cdn{}
-	testCdn := tostructs.Cdn{
+func getTestCDNs() []tc.CDN {
+	cdns := []tc.CDN{}
+	testCDN := tc.CDN{
 		DNSSECEnabled: false,
 		DomainName:    "domainName",
 		ID:            1,
 		Name:          "cdn1",
 		LastUpdated:   "lastUpdated",
 	}
-	cdns = append(cdns, testCdn)
+	cdns = append(cdns, testCDN)
 
-	testCdn2 := testCdn
-	testCdn2.Name = "cdn2"
-	testCdn2.DomainName = "domain.net"
-	cdns = append(cdns, testCdn2)
+	testCDN2 := testCDN
+	testCDN2.Name = "cdn2"
+	testCDN2.DomainName = "domain.net"
+	cdns = append(cdns, testCDN2)
 
 	return cdns
 }
 
-func TestGetCdns(t *testing.T) {
+func TestGetCDNs(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	defer mockDB.Close()
 	db := sqlx.NewDb(mockDB, "sqlmock")
@@ -58,13 +58,13 @@ func TestGetCdns(t *testing.T) {
 	}
 	defer db.Close()
 
-	testCdns := getTestCdns()
-	cols := test.ColsFromStructByTag("db", tostructs.Cdn{})
+	testCDNs := getTestCDNs()
+	cols := test.ColsFromStructByTag("db", tc.CDN{})
 	rows := sqlmock.NewRows(cols)
 
 	//TODO: drichardson - build helper to add these Rows from the struct values
 	//                    or by CSV if types get in the way
-	for _, ts := range testCdns {
+	for _, ts := range testCDNs {
 		rows = rows.AddRow(
 			ts.DNSSECEnabled,
 			ts.DomainName,
@@ -77,25 +77,25 @@ func TestGetCdns(t *testing.T) {
 	v := url.Values{}
 	v.Set("dsId", "1")
 
-	servers, err := getCdns(v, db, PrivLevelAdmin)
+	servers, err := getCDNs(v, db, PrivLevelAdmin)
 	if err != nil {
-		t.Errorf("getCdns expected: nil error, actual: %v", err)
+		t.Errorf("getCDNs expected: nil error, actual: %v", err)
 	}
 
 	if len(servers) != 2 {
-		t.Errorf("getCdns expected: len(servers) == 1, actual: %v", len(servers))
+		t.Errorf("getCDNs expected: len(servers) == 1, actual: %v", len(servers))
 	}
 
 }
 
-type SortableCdns []tostructs.Cdn
+type SortableCDNs []tc.CDN
 
-func (s SortableCdns) Len() int {
+func (s SortableCDNs) Len() int {
 	return len(s)
 }
-func (s SortableCdns) Swap(i, j int) {
+func (s SortableCDNs) Swap(i, j int) {
 	s[i], s[j] = s[j], s[i]
 }
-func (s SortableCdns) Less(i, j int) bool {
+func (s SortableCDNs) Less(i, j int) bool {
 	return s[i].Name < s[j].Name
 }

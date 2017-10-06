@@ -23,16 +23,16 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestDivisions() []tostructs.Division {
-	regions := []tostructs.Division{}
-	testCase := tostructs.Division{
+func getTestDivisions() []tc.Division {
+	regions := []tc.Division{}
+	testCase := tc.Division{
 		ID:          1,
 		Name:        "division1",
 		LastUpdated: "lastUpdated",
@@ -56,7 +56,7 @@ func TestGetDivisions(t *testing.T) {
 	defer db.Close()
 
 	testCase := getTestDivisions()
-	cols := test.ColsFromStructByTag("db", tostructs.Division{})
+	cols := test.ColsFromStructByTag("db", tc.Division{})
 	rows := sqlmock.NewRows(cols)
 
 	for _, ts := range testCase {
@@ -81,7 +81,7 @@ func TestGetDivisions(t *testing.T) {
 
 }
 
-type SortableDivisions []tostructs.Division
+type SortableDivisions []tc.Division
 
 func (s SortableDivisions) Len() int {
 	return len(s)

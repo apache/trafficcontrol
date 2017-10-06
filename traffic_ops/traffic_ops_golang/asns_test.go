@@ -23,16 +23,16 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestASNs() []tostructs.ASN {
-	ASNs := []tostructs.ASN{}
-	testCase := tostructs.ASN{
+func getTestASNs() []tc.ASN {
+	ASNs := []tc.ASN{}
+	testCase := tc.ASN{
 		ASN:         1,
 		Cachegroup:  1,
 		ID:          1,
@@ -57,7 +57,7 @@ func TestGetASNs(t *testing.T) {
 	defer db.Close()
 
 	testCase := getTestASNs()
-	cols := test.ColsFromStructByTag("db", tostructs.ASN{})
+	cols := test.ColsFromStructByTag("db", tc.ASN{})
 	rows := sqlmock.NewRows(cols)
 
 	for _, ts := range testCase {
@@ -83,7 +83,7 @@ func TestGetASNs(t *testing.T) {
 
 }
 
-type SortableASNs []tostructs.ASN
+type SortableASNs []tc.ASN
 
 func (s SortableASNs) Len() int {
 	return len(s)
