@@ -1,5 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 BUILDDIR="$HOME/rpmbuild"
+
+VERSION=`cat ./VERSION`.`git rev-list --all --count`
 
 # prep build environment
 rm -rf $BUILDDIR
@@ -10,10 +12,10 @@ echo "$BUILDDIR" > ~/.rpmmacros
 go build -v
 
 # tar
-tar -cvzf $BUILDDIR/SOURCES/grove-0.1.tgz grove conf/grove.cfg build/grove.init
+tar -cvzf $BUILDDIR/SOURCES/grove-${VERSION}.tgz grove conf/grove.cfg build/grove.init
 
 # build RPM
-rpmbuild -ba build/grove.spec
+rpmbuild --define "version ${VERSION}" -ba build/grove.spec
 
 # copy build RPM to .
-cp $BUILDDIR/RPMS/x86_64/grove-0.1-1.x86_64.rpm .
+cp $BUILDDIR/RPMS/x86_64/grove-${VERSION}-1.x86_64.rpm .
