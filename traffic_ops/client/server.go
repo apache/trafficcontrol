@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 // ServerDetailResponse is the JSON object returned for a single server
@@ -70,7 +72,7 @@ type Server struct {
 }
 
 // Servers gets an array of servers
-func (to *Session) Servers() ([]Server, error) {
+func (to *Session) Servers() ([]tc.Server, error) {
 	url := "/api/1.2/servers.json"
 	resp, err := to.request("GET", url, nil)
 	if err != nil {
@@ -78,7 +80,7 @@ func (to *Session) Servers() ([]Server, error) {
 	}
 	defer resp.Body.Close()
 
-	var data ServerResponse
+	var data tc.ServersResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}

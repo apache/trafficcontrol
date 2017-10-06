@@ -27,6 +27,8 @@ import (
 	"sync"
 	"time"
 
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -69,27 +71,10 @@ func (e *HTTPError) Error() string {
 	return fmt.Sprintf("%s[%d] - Error requesting Traffic Ops %s", e.HTTPStatus, e.HTTPStatusCode, e.URL)
 }
 
-// Result {"response":[{"level":"success","text":"Successfully logged in."}],"version":"1.1"}
-type Result struct {
-	Alerts []Alert
-}
-
-// Alert ...
-type Alert struct {
-	Level string `json:"level"`
-	Text  string `json:"text"`
-}
-
 // CacheEntry ...
 type CacheEntry struct {
 	Entered int64
 	Bytes   []byte
-}
-
-// Credentials contains Traffic Ops login credentials
-type Credentials struct {
-	Username string `json:"u"`
-	Password string `json:"p"`
 }
 
 // TODO JvD
@@ -97,7 +82,7 @@ const tmPollingInterval = 60
 
 // loginCreds gathers login credentials for Traffic Ops.
 func loginCreds(toUser string, toPasswd string) ([]byte, error) {
-	credentials := Credentials{
+	credentials := tc.UserCredentials{
 		Username: toUser,
 		Password: toPasswd,
 	}
@@ -149,13 +134,13 @@ func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool,
 	}
 	defer resp.Body.Close()
 
-	var result Result
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	var alerts tc.Alerts
+	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
 		return nil, err
 	}
 
 	success := false
-	for _, alert := range result.Alerts {
+	for _, alert := range alerts.Alerts {
 		if alert.Level == "success" && alert.Text == "Successfully logged in." {
 			success = true
 			break
@@ -163,7 +148,7 @@ func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool,
 	}
 
 	if !success {
-		err := fmt.Errorf("Login failed, result string: %+v", result)
+		err := fmt.Errorf("Login failed, alerts string: %+v", alerts)
 		return nil, err
 	}
 

@@ -18,11 +18,13 @@ package client
 import (
 	"encoding/json"
 	"strconv"
+
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 // DeliveryServices gets an array of DeliveryServices
-func (to *Session) DeliveryServices() ([]DeliveryService, error) {
-	var data GetDeliveryServiceResponse
+func (to *Session) DeliveryServices() ([]tc.DeliveryService, error) {
+	var data tc.GetDeliveryServiceResponse
 	err := get(to, deliveryServicesEp(), &data)
 	if err != nil {
 		return nil, err

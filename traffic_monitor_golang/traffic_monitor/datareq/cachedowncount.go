@@ -25,7 +25,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
-	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 func srvAPICacheDownCount(localStates peer.CRStatesThreadsafe, monitorConfig threadsafe.TrafficMonitorConfigMap) []byte {
@@ -33,7 +32,7 @@ func srvAPICacheDownCount(localStates peer.CRStatesThreadsafe, monitorConfig thr
 }
 
 // cacheOfflineCount returns the total reported caches marked down, excluding status offline and admin_down.
-func cacheDownCount(caches map[tc.CacheName]tc.IsAvailable, toServers map[string]to.TrafficServer) int {
+func cacheDownCount(caches map[tc.CacheName]tc.IsAvailable, toServers map[string]tc.TrafficServer) int {
 	count := 0
 	for cache, available := range caches {
 		if !available.IsAvailable && tc.CacheStatusFromString(toServers[string(cache)].Status) == tc.CacheStatusReported {
