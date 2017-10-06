@@ -200,29 +200,3 @@ type DeliveryServiceServer struct {
 	Server          int    `json:"server"`
 	DeliveryService int    `json:"deliveryService"`
 }
-
-// DeliveryServiceSSLKeysResponse ...
-type DeliveryServiceSSLKeysResponse struct {
-	Response DeliveryServiceSSLKeys `json:"response"`
-}
-
-// DeliveryServiceSSLKeys ...
-type DeliveryServiceSSLKeys struct {
-	CDN             string                            `json:"cdn"`
-	DeliveryService string                            `json:"DeliveryService"`
-	BusinessUnit    string                            `json:"businessUnit"`
-	City            string                            `json:"city"`
-	Organization    string                            `json:"organization"`
-	Hostname        string                            `json:"hostname"`
-	Country         string                            `json:"country"`
-	State           string                            `json:"state"`
-	Version         string                            `json:"version"`
-	Certificate     DeliveryServiceSSLKeysCertificate `json:"certificate"`
-}
-
-// DeliveryServiceSSLKeysCertificate ...
-type DeliveryServiceSSLKeysCertificate struct {
-	Crt string `json:"crt"`
-	Key string `json:"key"`
-	CSR string `json:"csr"`
-}

@@ -18,24 +18,13 @@ package client
 import (
 	"encoding/json"
 	"errors"
+
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
-
-// TypeResponse ...
-type TypeResponse struct {
-	Response []Type `json:"response"`
-}
-
-// Type contains information about a given Type in Traffic Ops.
-type Type struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
-	UseInTable  string `json:"useInTable,omitempt"`
-}
 
 // Types gets an array of Types.
 // optional parameter: userInTable
-func (to *Session) Types(useInTable ...string) ([]Type, error) {
+func (to *Session) Types(useInTable ...string) ([]tc.Type, error) {
 
 	if len(useInTable) > 1 {
 		return nil, errors.New("Please pass in a single value for the 'useInTable' parameter")
@@ -48,12 +37,12 @@ func (to *Session) Types(useInTable ...string) ([]Type, error) {
 	}
 	defer resp.Body.Close()
 
-	var data TypeResponse
+	var data tc.TypeResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
 
-	var types []Type
+	var types []tc.Type
 	for _, d := range data.Response {
 		if useInTable != nil {
 			if d.UseInTable == useInTable[0] {
