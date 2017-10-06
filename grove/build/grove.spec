@@ -1,6 +1,6 @@
 Summary: Grove HTTP Caching Proxy
 Name: grove
-Version: 0.1
+Version: %{version}
 Release: 1
 License: Apache License, Version 2.0
 Group: Base System/System Tools
