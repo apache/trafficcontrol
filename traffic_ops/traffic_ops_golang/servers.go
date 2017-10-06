@@ -68,7 +68,7 @@ func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 			return
 		}
 
-		w.Header().Set(api.ApplicationJson, api.ApplicationJson)
+		w.Header().Set(api.ContentType, api.ApplicationJson)
 		fmt.Fprintf(w, "%s", respBts)
 	}
 }
