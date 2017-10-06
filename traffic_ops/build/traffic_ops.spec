@@ -66,61 +66,27 @@ Built: %(date) by %{getenv: USER}
     # Create build area with proper gopath structure
     mkdir -p src pkg bin || { echo "Could not create directories in $(pwd): $!"; exit 1; }
 
-    # build tocookie (dependencies within traffic_control will fail to `go get` unless prebuilt)
-    godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie
-    ( mkdir -p "$godir" && \
-      cd "$godir" && \
-      cp -r "$TC_DIR"/traffic_ops/tocookie/* . && \
-      echo "go getting tocookie at $(pwd)" && \
-      go get -v \
-    ) || { echo "Could not build go tocookie at $(pwd): $!"; exit 1; }
-
-    # build log (dependencies within traffic_control will fail to `go get` unless prebuilt)
-    godir=src/github.com/apache/incubator-trafficcontrol/lib/go-log
-    ( mkdir -p "$godir" && \
-      cd "$godir" && \
-      cp -r "$TC_DIR"/lib/go-log/* . && \
-      echo "go getting log at $(pwd)" && \
-      go get -v \
-    ) || { echo "Could not build go log at $(pwd): $!"; exit 1; }
-
-    # build tc (dependencies within traffic_control will fail to `go get` unless prebuilt)
-    godir=src/github.com/apache/incubator-trafficcontrol/lib/go-tc
-    ( mkdir -p "$godir" && \
-      cd "$godir" && \
-      cp -r "$TC_DIR"/lib/go-tc/* . && \
-      echo "go getting tc at $(pwd)" && \
-      go get -v \
-    ) || { echo "Could not build go tc at $(pwd): $!"; exit 1; }
-
-    # build util (dependencies within traffic_control will fail to `go get` unless prebuilt)
-    godir=src/github.com/apache/incubator-trafficcontrol/lib/go-util
-    ( mkdir -p "$godir" && \
-      cd "$godir" && \
-      cp -r "$TC_DIR"/lib/go-util/* . && \
-      echo "go getting util at $(pwd)" && \
-      go get -v \
-    ) || { echo "Could not build go util at $(pwd): $!"; exit 1; }
-
-    # build TO client (dependencies within traffic_control will fail to `go get` unless prebuilt)
-    godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/client
-    ( mkdir -p "$godir" && \
-      cd "$godir" && \
-      cp -r "$TC_DIR"/traffic_ops/client/* . && \
-      echo "go getting log at $(pwd)" && \
-      go get -v \
-    ) || { echo "Could not build go Traffic Ops client at $(pwd): $!"; exit 1; }
-
-    # build TO structs (dependencies within traffic_control will fail to `go get` unless prebuilt)
-    godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs
-    ( mkdir -p "$godir" && \
-      cd "$godir" && \
-      cp -r "$TC_DIR"/traffic_ops/tostructs/* . && \
-      echo "go getting log at $(pwd)" && \
-      go get -v \
-    ) || { echo "Could not build go Traffic Ops tostructs at $(pwd): $!"; exit 1; }
 
 
+    # build all internal go dependencies (expects package being built as argument)
+    build_dependencies () {
+       IFS=$'\n'
+       array=($(go list -f '{{ join .Deps "\n" }}' | grep incubator | grep -v $1))
+       prefix=github.com/apache/incubator-trafficcontrol
+       for (( i=0; i<${#array[@]}; i++ )); do
+           curPkg=${array[i]};
+           curPkgShort=${curPkg#$prefix};
+           echo "building $curPkg";
+           godir=$GOPATH/src/$curPkg;
+           ( mkdir -p "$godir" && \
+             cd "$godir" && \
+             cp -r "$TC_DIR$curPkgShort"/* . && \
+             go get -v &&\
+             echo "go building $curPkgShort at $(pwd)" && \
+             go build \
+           ) || { echo "Could not build go $curPkgShort at $(pwd): $!"; exit 1; };
+       done
+    }
 
     # build traffic_ops_golang binary
     godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
@@ -128,8 +94,10 @@ Built: %(date) by %{getenv: USER}
     ( mkdir -p "$godir" && \
       cd "$godir" && \
       cp -r "$TC_DIR"/traffic_ops/traffic_ops_golang/* . && \
-      echo "go getting at $(pwd)" && \
-      go get -d -v && \
+      build_dependencies traffic_ops_golang  && \
+      #with proper vendoring (as we have currently) go get is unneeded. leaving for comparison to traffic_monitor_golang
+      #echo "go getting at $(pwd)" && \
+      #go get -d -v && \
       echo "go building at $(pwd)" && \
       go build -ldflags "-B 0x`git rev-parse HEAD`" \
     ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
