@@ -22,8 +22,9 @@ package main
 import (
 	"net/url"
 	"testing"
+	"time"
 
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -37,7 +38,7 @@ func getTestCDNs() []tc.CDN {
 		DomainName:    "domainName",
 		ID:            1,
 		Name:          "cdn1",
-		LastUpdated:   "lastUpdated",
+		LastUpdated:   tc.Time{Time: time.Now()},
 	}
 	cdns = append(cdns, testCDN)
 

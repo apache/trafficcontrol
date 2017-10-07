@@ -27,7 +27,7 @@ type CDN struct {
 	DNSSECEnabled bool   `json:"dnssecEnabled" db:"dnssec_enabled"`
 	DomainName    string `json:"domainName" db:"domain_name"`
 	ID            int    `json:"id" db:"id"`
-	LastUpdated   string `json:"lastUpdated" db:"last_updated"`
+	LastUpdated   Time   `json:"lastUpdated" db:"last_updated"`
 	Name          string `json:"name" db:"name"`
 }
 

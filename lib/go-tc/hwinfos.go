@@ -26,7 +26,7 @@ type HWInfoResponse struct {
 type HWInfo struct {
 	Description    string `json:"description" db:"description"`
 	ID             int    `json:"-" db:"id"`
-	LastUpdated    string `json:"lastUpdated" db:"last_updated"`
+	LastUpdated    Time   `json:"lastUpdated" db:"last_updated"`
 	ServerHostName string `json:"serverHostName" db:"serverhostname"`
 	ServerID       int    `json:"serverId" db:"serverid"`
 	Val            string `json:"val" db:"val"`
