@@ -22,8 +22,9 @@ package main
 import (
 	"net/url"
 	"testing"
+	"time"
 
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -35,7 +36,7 @@ func getTestParameters() []tc.Parameter {
 	testParameter := tc.Parameter{
 		ConfigFile:  "global",
 		ID:          1,
-		LastUpdated: "lastUpdated",
+		LastUpdated: tc.Time{Time: time.Now()},
 		Name:        "paramname1",
 		Secure:      false,
 		Value:       "val1",

@@ -26,10 +26,10 @@ type ParametersResponse struct {
 
 // Parameter ...
 type Parameter struct {
-	ConfigFile  string `json:"configFile" db:"config_file"`
-	ID          int    `json:"id" db:"id"`
-	LastUpdated string `json:"lastUpdated" db:"last_updated"`
-	Name        string `json:"name" db:"name"`
-	Secure      bool   `json:"secure" db:"secure"`
-	Value       string `json:"value" db:"value"`
+	ConfigFile  string   `json:"configFile" db:"config_file"`
+	ID          int      `json:"id" db:"id"`
+	LastUpdated Time `json:"lastUpdated" db:"last_updated"`
+	Name        string   `json:"name" db:"name"`
+	Secure      bool     `json:"secure" db:"secure"`
+	Value       string   `json:"value" db:"value"`
 }

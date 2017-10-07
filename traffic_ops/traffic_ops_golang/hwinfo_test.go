@@ -20,10 +20,13 @@ package main
  */
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/url"
 	"testing"
+	"time"
 
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -38,7 +41,7 @@ func getTestHWInfo() []tc.HWInfo {
 		ServerHostName: "testserver1",
 		Description:    "Description",
 		Val:            "Val",
-		LastUpdated:    "LastUpdated",
+		LastUpdated:    tc.Time{Time: time.Now()},
 	}
 	hwinfo = append(hwinfo, testHWInfo)
 
@@ -89,6 +92,12 @@ func TestGetHWInfo(t *testing.T) {
 	if len(hwinfos) != 2 {
 		t.Errorf("getHWInfo expected: len(hwinfos) == 1, actual: %v", len(hwinfos))
 	}
+}
+
+func TestJSON(t *testing.T) {
+	testHWInfo := getTestHWInfo()
+	txt, err := json.Marshal(testHWInfo)
+	fmt.Printf("%v, %s\n", err, txt)
 }
 
 type SortableHWInfo []tc.HWInfo

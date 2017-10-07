@@ -23,6 +23,7 @@ import (
 	"net/url"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -57,7 +58,7 @@ func getTestServers() []tc.Server {
 		IPAddress:      "ipAddress",
 		IPGateway:      "ipGateway",
 		IPNetmask:      "ipNetmask",
-		LastUpdated:    "lastUpdated",
+		LastUpdated:    tc.Time{Time: time.Now()},
 		MgmtIPAddress:  "mgmtIpAddress",
 		MgmtIPGateway:  "mgmtIpGateway",
 		MgmtIPNetmask:  "mgmtIpNetmask",
