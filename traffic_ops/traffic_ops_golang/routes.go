@@ -60,7 +60,8 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, "parameters-wip.json$", wrapHeaders(wrapAuthWithData(parametersHandler(d.DB), d.Insecure, d.Secrets[0], rd.PrivLevelStmt, ParametersPrivLevel))},
 		{1.2, http.MethodGet, "system/info-wip$", wrapHeaders(wrapAuthWithData(systemInfoHandler(d.DB), d.Insecure, d.Secrets[0], rd.PrivLevelStmt, SystemInfoPrivLevel))},
 		{1.2, http.MethodGet, "system/info-wip.json$", wrapHeaders(wrapAuthWithData(systemInfoHandler(d.DB), d.Insecure, d.Secrets[0], rd.PrivLevelStmt, SystemInfoPrivLevel))},
-		{1.2, http.MethodGet, "exp/{id}/data.json$", wrapHeaders(wrapAuth(testExtHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, TestExtPrivLevel))},
+		{1.2, http.MethodGet, "servers/{id}/cfg.json$", wrapHeaders(wrapAuth(cfgDiffsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CfgDiffsPrivLevel))},
+		//{1.2, http.MethodPost, "servers/{id}/cfg$", wrapHeaders(wrapAuth(postCfgDiffsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CfgDiffsWritePrivLevel))},
 	}, rootHandler(d), nil
 }
 
