@@ -31,9 +31,6 @@ import (
 // PrivLevelInvalid - The Default Priv level
 const PrivLevelInvalid = -1
 
-// this level will turnoff authentication on an endpoint
-const Unauthenticated = 0
-
 // PrivLevelReadOnly - The user cannot do any API updates
 const PrivLevelReadOnly = 10
 
