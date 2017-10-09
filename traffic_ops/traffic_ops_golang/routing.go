@@ -45,7 +45,8 @@ type Route struct {
 	Path              string
 	Handler           http.HandlerFunc
 	RequiredPrivLevel int
-	Middlewares        []Middleware
+	Authenticated     bool
+	Middlewares       []Middleware
 }
 
 func getDefaultMiddleware() []Middleware {
@@ -118,7 +119,7 @@ func CreateRouteMap(rs []Route, authBase AuthBase) map[string][]PathHandler {
 			if len(middlewares) < 1 {
 				middlewares = getDefaultMiddleware()
 			}
-			if r.RequiredPrivLevel > 0 { //a privLevel of zero is an unauthenticated endpoint.
+			if r.Authenticated { //a privLevel of zero is an unauthenticated endpoint.
 				authWrapper := authBase.GetWrapper(r.RequiredPrivLevel)
 				middlewares = append([]Middleware{authWrapper}, middlewares...)
 			}

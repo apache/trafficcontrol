@@ -35,7 +35,7 @@ func TestCreateRouteMap(t *testing.T) {
 		fmt.Fprintf(w, "%s %s", "path2", authWasCalled)
 	}
 
-	routes := []Route{{Version: 1.2, Method: http.MethodGet, Path: `path1`, Handler: PathOneHandler, RequiredPrivLevel: ServersPrivLevel}, {Version: 1.2, Method: http.MethodGet, Path: `path2`, Handler: PathTwoHandler, RequiredPrivLevel: 0}}
+	routes := []Route{{1.2, http.MethodGet, `path1`, PathOneHandler, ServersPrivLevel, true, nil}, {1.2, http.MethodGet, `path2`, PathTwoHandler, 0, false,nil}}
 
 	routeMap := CreateRouteMap(routes, authBase)
 

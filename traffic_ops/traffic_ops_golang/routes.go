@@ -29,29 +29,33 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
+
+var Authenticated = true
+var NoAuth = false
 // Routes returns the routes, and a catchall route for when no route matches.
 func Routes(d ServerData) ([]Route, http.Handler, error) {
-	routes := []Route{}
-	//ASNs
-	routes = append(routes, Route{Version: 1.2, Method: http.MethodGet, Path: `asns-wip(\.json)?$`, Handler: ASNsHandler(d.DB), RequiredPrivLevel: ServersPrivLevel})
-	//CDNs
-	routes = append(routes, Route{Version: 1.2, Method: http.MethodGet, Path: `cdns-wip(\.json)?$`, Handler: cdnsHandler(d.DB), RequiredPrivLevel: CdnsPrivLevel})
-	routes = append(routes, Route{Version: 1.2, Method: http.MethodGet, Path: `cdns/{cdn}/configs/monitoring(\.json)?$`, Handler: monitoringHandler(d.DB), RequiredPrivLevel: MonitoringPrivLevel})
-	//Divisions
-	routes = append(routes, Route{Version: 1.2, Method: http.MethodGet, Path: `divisions-wip(\.json)?$`, Handler: divisionsHandler(d.DB), RequiredPrivLevel: DivisionsPrivLevel})
-	//HwInfo
-	routes = append(routes, Route{Version: 1.2, Method: http.MethodGet, Path: `hwinfo-wip(\.json)?$`, Handler: hwInfoHandler(d.DB), RequiredPrivLevel: HWInfoPrivLevel})
-	//Parameters
-	routes = append(routes, Route{Version: 1.2, Method: http.MethodGet, Path: `parameters-wip(\.json)?$`, Handler: parametersHandler(d.DB), RequiredPrivLevel: ParametersPrivLevel})
-	//Regions
-	routes = append(routes, Route{Version: 1.2, Method: http.MethodGet, Path: `regions-wip(\.json)?$`, Handler: regionsHandler(d.DB), RequiredPrivLevel: ServersPrivLevel})
-	routes = append(routes, Route{Version: 1.2, Method: http.MethodGet, Path: "regions-wip/{id}$", Handler: regionsHandler(d.DB), RequiredPrivLevel: ServersPrivLevel})
-	//Servers
-	routes = append(routes, Route{Version: 1.2, Method: http.MethodGet, Path: `servers-wip(\.json)?$`, Handler: serversHandler(d.DB), RequiredPrivLevel: ServersPrivLevel})
-	routes = append(routes, Route{Version: 1.2, Method: http.MethodGet, Path: "servers-wip/{id}$", Handler: serversHandler(d.DB), RequiredPrivLevel: ServersPrivLevel})
-	routes = append(routes, Route{Version: 1.2, Method: http.MethodPost, Path: "servers/{server}/deliveryservices$", Handler: assignDeliveryServicesToServerHandler(d.DB), RequiredPrivLevel: PrivLevelOperations})
-	//System
-	routes = append(routes, Route{Version: 1.2, Method: http.MethodGet, Path: `system/info-wip(\.json)?$`, Handler: systemInfoHandler(d.DB), RequiredPrivLevel: SystemInfoPrivLevel})
+	routes := []Route{
+		//ASNs
+		{1.2,http.MethodGet, `asns-wip(\.json)?$`, ASNsHandler(d.DB),ServersPrivLevel, Authenticated,nil},
+		//CDNs
+		{ 1.2, http.MethodGet, `cdns-wip(\.json)?$`, cdnsHandler(d.DB), CdnsPrivLevel, Authenticated, nil},
+		{ 1.2, http.MethodGet, `cdns/{cdn}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), MonitoringPrivLevel, Authenticated, nil},
+		//Divisions
+		{ 1.2, http.MethodGet, `divisions-wip(\.json)?$`, divisionsHandler(d.DB), DivisionsPrivLevel, Authenticated, nil},
+		//HwInfo
+		{ 1.2, http.MethodGet, `hwinfo-wip(\.json)?$`, hwInfoHandler(d.DB), HWInfoPrivLevel, Authenticated, nil},
+		//Parameters
+		{ 1.2, http.MethodGet, `parameters-wip(\.json)?$`, parametersHandler(d.DB), ParametersPrivLevel, Authenticated, nil},
+		//Regions
+		{ 1.2, http.MethodGet, `regions-wip(\.json)?$`, regionsHandler(d.DB), ServersPrivLevel, Authenticated, nil},
+		{ 1.2, http.MethodGet, "regions-wip/{id}$", regionsHandler(d.DB), ServersPrivLevel, Authenticated, nil},
+		//Servers
+		{ 1.2, http.MethodGet, `servers-wip(\.json)?$`, serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
+		{ 1.2, http.MethodGet, "servers-wip/{id}$", serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
+		{ 1.2, http.MethodPost, "servers/{server}/deliveryservices$", assignDeliveryServicesToServerHandler(d.DB), PrivLevelOperations, Authenticated, nil},
+		//System
+		{ 1.2, http.MethodGet, `system/info-wip(\.json)?$`, systemInfoHandler(d.DB), SystemInfoPrivLevel, Authenticated, nil},
+	}
 	return routes, rootHandler(d), nil
 }
 
