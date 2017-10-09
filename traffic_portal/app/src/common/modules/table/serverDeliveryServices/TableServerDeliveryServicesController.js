@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableServerDeliveryServicesController = function(server, serverDeliveryServices, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, deliveryServiceService) {
+var TableServerDeliveryServicesController = function(server, serverDeliveryServices, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, deliveryServiceService, serverService) {
 
 	var protocols = deliveryServiceUtils.protocols;
 
@@ -36,6 +36,10 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 
 	$scope.serverDeliveryServices = serverDeliveryServices;
 
+	$scope.isEdge = function(server) {
+		return (server.type.indexOf('EDGE') != -1)
+	};
+
 	$scope.protocol = function(ds) {
 		return protocols[ds.protocol];
 	};
@@ -47,8 +51,37 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 	$scope.getRelativeTime = dateUtils.getRelativeTime;
 
 	$scope.cloneDsAssignments = function() {
-		alert('not hooked up yet: cloneDsAssignments');
+		var params = {
+			title: 'Clone Delivery Service Assignments',
+			message: "Please select an edge cache to assign these " + serverDeliveryServices.length + " delivery services to.<br><br>Warning - Any delivery services currently assigned to the selected edge cache will be lost and replaced with these delivery service assignments...",
+			labelFunction: function(item) { return item['hostName'] + '.' + item['domainName'] }
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function(serverService) {
+					return serverService.getServers({ type: 'EDGE' });
+				}
+			}
+		});
+		modalInstance.result.then(function(selectedServer) {
+			var dsIds = _.pluck(serverDeliveryServices, 'id');
+			serverService.assignDeliveryServices(selectedServer, dsIds, true)
+				.then(
+					function() {
+						locationUtils.navigateToPath('/servers/' + selectedServer.id + '/delivery-services');
+					}
+				);
+		}, function () {
+			// do nothing
+		});
 	};
+
 
 	$scope.addDeliveryService = function() {
 		alert('not hooked up yet: addDeliveryService to server');
@@ -93,5 +126,5 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 
 };
 
-TableServerDeliveryServicesController.$inject = ['server', 'serverDeliveryServices', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'deliveryServiceService'];
+TableServerDeliveryServicesController.$inject = ['server', 'serverDeliveryServices', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'deliveryServiceService', 'serverService'];
 module.exports = TableServerDeliveryServicesController;
