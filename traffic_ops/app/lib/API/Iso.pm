@@ -156,8 +156,10 @@ sub generate_iso {
 	# MTU='1500'
 	# BOND_DEVICE='em0'
 	# BONDOPTS='mode=802.3ad,lacp_rate=fast,xmit_hash_policy=layer3+4'
-	my $network_string =
-		"IPADDR=\"$ipaddr\"\nNETMASK=\"$netmask\"\nGATEWAY=\"$gateway\"\nBOND_DEVICE=\"$interface_name\"\nMTU=\"$interface_mtu\"\nNAMESERVER=\"$nameservers\"\nHOSTNAME=\"$fqdn\"\nNETWORKING_IPV6=\"yes\"\nIPV6ADDR=\"$ip6_address\"\nIPV6_DEFAULTGW=\"$ip6_gateway\"\nBONDING_OPTS=\"miimon=100 mode=4 lacp_rate=fast xmit_hash_policy=layer3+4\"\nDHCP=\"$dhcp\"";
+	my $network_string = "IPADDR=\"$ipaddr\"\nNETMASK=\"$netmask\"\nGATEWAY=\"$gateway\"\nDEVICE=\"$interface_name\"\nMTU=\"$interface_mtu\"\nNAMESERVER=\"$nameservers\"\nHOSTNAME=\"$fqdn\"\nNETWORKING_IPV6=\"yes\"\nIPV6ADDR=\"$ip6_address\"\nIPV6_DEFAULTGW=\"$ip6_gateway\"\nDHCP=\"$dhcp\"";
+	if ($interface_name eq 'bond0'){
+		$network_string = "IPADDR=\"$ipaddr\"\nNETMASK=\"$netmask\"\nGATEWAY=\"$gateway\"\nBOND_DEVICE=\"$interface_name\"\nMTU=\"$interface_mtu\"\nNAMESERVER=\"$nameservers\"\nHOSTNAME=\"$fqdn\"\nNETWORKING_IPV6=\"yes\"\nIPV6ADDR=\"$ip6_address\"\nIPV6_DEFAULTGW=\"$ip6_gateway\"\nBONDING_OPTS=\"miimon=100 mode=4 lacp_rate=fast xmit_hash_policy=layer3+4\"\nDHCP=\"$dhcp\"";
+	}
 	# Write out the networking config:
 	open( NF, "> $cfg_dir/network.cfg" ) or die "$cfg_dir/network.cfg: $!";
 	print NF $network_string;
