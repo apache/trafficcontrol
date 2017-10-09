@@ -38,7 +38,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		//ASNs
 		{1.2,http.MethodGet, `asns-wip(\.json)?$`, ASNsHandler(d.DB),ServersPrivLevel, Authenticated,nil},
 		//CDNs
-		{ 1.2, http.MethodGet, `cdns-wip(\.json)?$`, cdnsHandler(d.DB), CdnsPrivLevel, Authenticated, nil},
+		{ 1.2, http.MethodGet, `cdns-wip(\.json)?$`, cdnsHandler(d.DB), CDNsPrivLevel, Authenticated, nil},
 		{ 1.2, http.MethodGet, `cdns/{cdn}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), MonitoringPrivLevel, Authenticated, nil},
 		//Divisions
 		{ 1.2, http.MethodGet, `divisions-wip(\.json)?$`, divisionsHandler(d.DB), DivisionsPrivLevel, Authenticated, nil},
