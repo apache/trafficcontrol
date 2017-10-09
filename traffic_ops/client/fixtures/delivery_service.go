@@ -44,7 +44,7 @@ func DeliveryServices() *client.GetDeliveryServiceResponse {
 				IPV6RoutingEnabled:   true,
 				RangeRequestHandling: 0,
 				TRResponseHeaders:    "Access-Control-Allow-Origin: *",
-				MultiSiteOrigin:      false,
+				MultiSiteOrigin:      1,
 				DisplayName:          "Testing",
 				InitialDispersion:    1,
 			},
