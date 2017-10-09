@@ -44,7 +44,7 @@ type DeleteDeliveryServiceResponse struct {
 }
 
 // DeliveryService ...
-type DeliveryService2 struct {
+type DeliveryService struct {
 	ID                   int                    `json:"id"`
 	XMLID                string                 `json:"xmlId"`
 	Active               bool                   `json:"active"`
