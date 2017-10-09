@@ -26,7 +26,6 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/apache/incubator-trafficcontrol.wip/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
@@ -69,7 +68,7 @@ func serversHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 			return
 		}
 
-		w.Header().Set(api.ContentType, api.ApplicationJson)
+		w.Header().Set(tc.ContentType, tc.ApplicationJson)
 		fmt.Fprintf(w, "%s", respBts)
 	}
 }
