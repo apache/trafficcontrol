@@ -76,15 +76,19 @@ Built: %(date) by %{getenv: USER}
        for (( i=0; i<${#array[@]}; i++ )); do
            curPkg=${array[i]};
            curPkgShort=${curPkg#$prefix};
-           echo "building $curPkg";
+           echo "checking $curPkg";
            godir=$GOPATH/src/$curPkg;
-           ( mkdir -p "$godir" && \
-             cd "$godir" && \
-             cp -r "$TC_DIR$curPkgShort"/* . && \
-             go get -v &&\
-             echo "go building $curPkgShort at $(pwd)" && \
-             go build \
-           ) || { echo "Could not build go $curPkgShort at $(pwd): $!"; exit 1; };
+           if [ ! -d "$godir" ]; then
+             ( echo "building $curPkg" && \
+               mkdir -p "$godir" && \
+               cd "$godir" && \
+               cp -r "$TC_DIR$curPkgShort"/* . && \
+               build_dependencies "$curPkgShort" && \
+               go get -v &&\
+               echo "go building $curPkgShort at $(pwd)" && \
+               go build \
+             ) || { echo "Could not build go $curPkgShort at $(pwd): $!"; exit 1; };
+           fi
        done
     }
 
