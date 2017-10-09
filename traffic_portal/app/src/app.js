@@ -164,9 +164,6 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/monitor/dashboard').name,
         require('./modules/private/monitor/dashboard/view').name,
 
-        // map
-        require('./modules/private/monitor/map').name,
-
         // common modules
         require('./common/modules/dialog/confirm').name,
         require('./common/modules/dialog/delete').name,
