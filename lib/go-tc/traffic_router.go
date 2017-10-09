@@ -164,7 +164,8 @@ type TrafficOpsServer struct {
 	ServerTypeTime    time.Time `json:"-"`
 }
 
-type DeliveryService struct {
+//TODO: drichardson - reconcile this with the DeliveryService struct in deliveryservices.go
+type DeliveryServiceRouter struct {
 	CoverageZoneOnly        *string                  `json:"coverageZoneOnly,omitempty"`
 	CoverageZoneOnlyTime    time.Time                `json:"-"`
 	Dispersion              *Dispersion              `json:"dispersion,omitempty"`
