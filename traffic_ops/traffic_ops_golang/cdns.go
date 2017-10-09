@@ -43,7 +43,7 @@ func cdnsHandler(db *sqlx.DB) http.HandlerFunc {
 
 		q := r.URL.Query()
 
-		resp, err := getCdnsResponse(q, db)
+		resp, err := getCDNsResponse(q, db)
 
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
@@ -63,7 +63,7 @@ func cdnsHandler(db *sqlx.DB) http.HandlerFunc {
 
 
 func getCDNsResponse(q url.Values, db *sqlx.DB) (*tc.CDNsResponse, error) {
-	cdns, err := getCdns(q, db)
+	cdns, err := getCDNs(q, db)
 	if err != nil {
 		return nil, fmt.Errorf("getting cdns response: %v", err)
 	}

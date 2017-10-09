@@ -28,7 +28,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
 )
 
 const HWInfoPrivLevel = 10

@@ -24,7 +24,6 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/jmoiron/sqlx"
 	"net/http"
 	"net/http/httptest"
@@ -33,6 +32,7 @@ import (
 
 	"fmt"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 // TestWrapHeaders checks that appropriate default headers are added to a request
@@ -164,7 +164,7 @@ func TestWrapAuth(t *testing.T) {
 			return
 		}
 
-		w.Header().Set(api.ContentType, api.ApplicationJson)
+		w.Header().Set(tc.ContentType, tc.ApplicationJson)
 		fmt.Fprintf(w, "%s", respBts)
 	}
 

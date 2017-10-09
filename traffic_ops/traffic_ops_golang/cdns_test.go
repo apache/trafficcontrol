@@ -77,7 +77,7 @@ func TestGetCDNs(t *testing.T) {
 	v := url.Values{}
 	v.Set("dsId", "1")
 
-	servers, err := getCdns(v, db)
+	servers, err := getCDNs(v, db)
 	if err != nil {
 		t.Errorf("getCDNs expected: nil error, actual: %v", err)
 	}
