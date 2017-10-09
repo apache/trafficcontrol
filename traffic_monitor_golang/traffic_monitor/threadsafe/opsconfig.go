@@ -22,7 +22,7 @@ package threadsafe
 import (
 	"sync"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/handler"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/handler"
 )
 
 // OpsConfig provides safe access for multiple reader goroutines and a single writer to a stored OpsConfig object.

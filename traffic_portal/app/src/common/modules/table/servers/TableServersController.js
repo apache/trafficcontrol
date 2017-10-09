@@ -40,11 +40,11 @@ var TableServersController = function(servers, $scope, $state, $uibModal, locati
     };
 
     $scope.editServer = function(id) {
-        locationUtils.navigateToPath('/configure/servers/' + id);
+        locationUtils.navigateToPath('/servers/' + id);
     };
 
     $scope.createServer = function() {
-        locationUtils.navigateToPath('/configure/servers/new');
+        locationUtils.navigateToPath('/servers/new');
     };
 
     $scope.confirmQueueServerUpdates = function() {

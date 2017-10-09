@@ -22,7 +22,7 @@ var TableJobsController = function(jobs, $scope, $state, locationUtils) {
 	$scope.jobs = jobs;
 
 	$scope.createJob = function() {
-		locationUtils.navigateToPath('/admin/jobs/new');
+		locationUtils.navigateToPath('/jobs/new');
 	};
 
 	$scope.refresh = function() {

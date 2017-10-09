@@ -25,17 +25,17 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/srvhttp"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
-	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/todata"
 )
 
 // APIPeerStates contains the data to be returned for an API call to get the peer states of a Traffic Monitor. This contains common API data returned by most endpoints, and a map of peers, to caches' states.
 type APIPeerStates struct {
 	srvhttp.CommonAPIData
-	Peers map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState `json:"peers"`
+	Peers map[tc.TrafficMonitorName]map[tc.CacheName][]CacheState `json:"peers"`
 }
 
 // CacheState represents the available state of a cache.
@@ -53,10 +53,10 @@ func srvPeerStates(params url.Values, errorCount threadsafe.Uint, path string, t
 	return WrapErrCode(errorCount, path, bytes, err)
 }
 
-func createAPIPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, peersOnline map[enum.TrafficMonitorName]bool, filter *PeerStateFilter, params url.Values) APIPeerStates {
+func createAPIPeerStates(peerStates map[tc.TrafficMonitorName]tc.CRStates, peersOnline map[tc.TrafficMonitorName]bool, filter *PeerStateFilter, params url.Values) APIPeerStates {
 	apiPeerStates := APIPeerStates{
 		CommonAPIData: srvhttp.GetCommonAPIData(params, time.Now()),
-		Peers:         map[enum.TrafficMonitorName]map[enum.CacheName][]CacheState{},
+		Peers:         map[tc.TrafficMonitorName]map[tc.CacheName][]CacheState{},
 	}
 
 	for peer, state := range peerStates {
@@ -67,7 +67,7 @@ func createAPIPeerStates(peerStates map[enum.TrafficMonitorName]peer.Crstates, p
 			continue
 		}
 		if _, ok := apiPeerStates.Peers[peer]; !ok {
-			apiPeerStates.Peers[peer] = map[enum.CacheName][]CacheState{}
+			apiPeerStates.Peers[peer] = map[tc.CacheName][]CacheState{}
 		}
 		peerState := apiPeerStates.Peers[peer]
 		for cache, available := range state.Caches {

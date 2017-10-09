@@ -42,29 +42,13 @@ $fa-font-path: "../assets/fonts";
 @import "../modules/public/login/login";
 
 // private
-
-// user
+@import "../modules/private/cdns/config/config";
+@import "../modules/private/regions/regions";
+@import "../modules/private/tenants/tenants";
 @import "../modules/private/user/user";
-
-// admin
-@import "../modules/private/admin/admin";
-@import "../modules/private/admin/cdns/config/config";
-@import "../modules/private/admin/regions/regions";
-@import "../modules/private/admin/tenants/tenants";
-@import "../modules/private/admin/users/users";
-
-// configure
-@import "../modules/private/configure/configure";
-@import "../modules/private/configure/cacheGroups/cacheGroups";
-@import "../modules/private/configure/deliveryServices/deliveryServices";
-@import "../modules/private/configure/servers/servers";
 
 // custom
 @import "../modules/private/custom/custom";
-
-// monitor
-@import "../modules/private/monitor/monitor";
-@import "../modules/private/monitor/dashboard/dashboard";
 
 [ng-click] {
   cursor: pointer;
@@ -158,4 +142,27 @@ td {
     margin-left: 230px;
   }
 }
+
+fieldset {
+  border: 1px solid #ddd !important;
+  margin: 10px;
+  xmin-width: 0;
+  padding: 10px;
+  position: relative;
+  border-radius:4px;
+  background-color:#f5f5f5;
+  padding-left:10px!important;
+  legend {
+    color: #777777;
+    font-size:14px;
+    font-weight:bold;
+    margin-bottom: 0px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px 5px 5px 10px;
+    background-color: #ffffff;
+  }
+}
+
+
 

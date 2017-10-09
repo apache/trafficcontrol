@@ -13,13 +13,13 @@
 .. limitations under the License.
 .. 
 
-******************************
-Traffic Monitor Administration
-******************************
+***************************************
+Traffic Monitor Administration (Legacy)
+***************************************
 
 .. _rl-tm-java:
 
-* These instructions are for the Java Traffic Monitor, for the Golang beta, see :ref:`rl-tm-golang`.
+* These instructions are for the legacy Java Traffic Monitor, for the new Golang version, see :ref:`here <rl-tm-golang>`.
 
 Installing Traffic Monitor
 ==========================

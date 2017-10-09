@@ -480,7 +480,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 	runningConfig.HealthUrls = make(map[string]map[string]string)
 	for _, server := range servers {
 		if server.Type == "RASCAL" && server.Status != config.StatusToMon {
-			log.Debugf("Skipping %s%s.  Looking for status %s but got status %s", server.HostName, server.DomainName, config.StatusToMon, server.Status)
+			log.Debugf("Skipping %s.%s.  Looking for status %s but got status %s", server.HostName, server.DomainName, config.StatusToMon, server.Status)
 			continue
 		}
 
@@ -494,9 +494,9 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 			if runningConfig.HealthUrls[cdnName] == nil {
 				runningConfig.HealthUrls[cdnName] = make(map[string]string)
 			}
-			url := "http://" + server.IPAddress + ":" + strconv.Itoa(server.TCPPort) + cacheStatPath
+			url := "http://" + server.HostName + "." + server.DomainName + ":" + strconv.Itoa(server.TCPPort) + cacheStatPath
 			runningConfig.HealthUrls[cdnName]["CacheStats"] = url
-			url = "http://" + server.IPAddress + ":" + strconv.Itoa(server.TCPPort) + dsStatPath
+			url = "http://" + server.HostName + "." + server.DomainName + ":" + strconv.Itoa(server.TCPPort) + dsStatPath
 			runningConfig.HealthUrls[cdnName]["DsStats"] = url
 		}
 	}
@@ -576,6 +576,13 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config St
 	})
 	for dsName, dsData := range jData.DeliveryService {
 		for dsMetric, dsMetricData := range dsData {
+			//Get the stat time and make sure it's greater than the time 24 hours ago. If not, skip it so influxdb doesn't throw retention policy errors.
+			validTime := time.Now().AddDate(0, 0, -1).UnixNano() / 1000000
+			timeStamp := int64(dsMetricData[0].Time)
+			if timeStamp < validTime {
+				log.Info(fmt.Sprintf("Skipping %v %v: %v is greater than 24 hours old.", dsName, dsMetric, timeStamp))
+				continue
+			}
 			var cachegroup, statName string
 			tags := map[string]string{
 				"deliveryservice": dsName,
@@ -662,6 +669,13 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 		cache := cacheMap[cacheName]
 
 		for statName, statData := range cacheData {
+			//Get the stat time and make sure it's greater than the time 24 hours ago.  If not, skip it so influxdb doesn't throw retention policy errors.
+			validTime := time.Now().AddDate(0, 0, -1).UnixNano() / 1000000
+			timeStamp := int64(statData[0].Time)
+			if timeStamp < validTime {
+				log.Info(fmt.Sprintf("Skipping %v %v: %v is greater than 24 hours old.", cacheName, statName, timeStamp))
+				continue
+			}
 			dataKey := statName
 			dataKey = strings.Replace(dataKey, ".bandwidth", ".kbps", 1)
 			dataKey = strings.Replace(dataKey, "-", "_", -1)

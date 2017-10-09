@@ -32,7 +32,7 @@ var PhysLocationService = function(Restangular, locationUtils, messageModel) {
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Physical location created' } ], true);
-                    locationUtils.navigateToPath('/admin/phys-locations');
+                    locationUtils.navigateToPath('/phys-locations');
 
                 },
                 function(fault) {

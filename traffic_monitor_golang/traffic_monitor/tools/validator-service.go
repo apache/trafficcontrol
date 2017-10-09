@@ -24,7 +24,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/tmcheck"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	"io"
@@ -83,15 +83,15 @@ func NewLog() Log {
 }
 
 type Logs struct {
-	logs map[enum.TrafficMonitorName]Log
+	logs map[tc.TrafficMonitorName]Log
 	m    *sync.RWMutex
 }
 
 func NewLogs() Logs {
-	return Logs{logs: map[enum.TrafficMonitorName]Log{}, m: &sync.RWMutex{}}
+	return Logs{logs: map[tc.TrafficMonitorName]Log{}, m: &sync.RWMutex{}}
 }
 
-func (l Logs) Get(name enum.TrafficMonitorName) Log {
+func (l Logs) Get(name tc.TrafficMonitorName) Log {
 	l.m.Lock()
 	defer l.m.Unlock()
 	if _, ok := l.logs[name]; !ok {
@@ -113,19 +113,19 @@ func (l Logs) GetMonitors() []string {
 func startValidator(validator tmcheck.AllValidatorFunc, toClient *to.Session, interval time.Duration, includeOffline bool, grace time.Duration) Logs {
 	logs := NewLogs()
 
-	onErr := func(name enum.TrafficMonitorName, err error) {
+	onErr := func(name tc.TrafficMonitorName, err error) {
 		log := logs.Get(name)
 		log.Add(fmt.Sprintf("%v ERROR %v\n", time.Now(), err))
 		log.SetErrored(true)
 	}
 
-	onResumeSuccess := func(name enum.TrafficMonitorName) {
+	onResumeSuccess := func(name tc.TrafficMonitorName) {
 		log := logs.Get(name)
 		log.Add(fmt.Sprintf("%v INFO State Valid\n", time.Now()))
 		log.SetErrored(false)
 	}
 
-	onCheck := func(name enum.TrafficMonitorName, err error) {
+	onCheck := func(name tc.TrafficMonitorName, err error) {
 		log := logs.Get(name)
 		log.SetErrored(err != nil)
 	}
@@ -173,7 +173,7 @@ func printLogs(logs Logs, w io.Writer) {
 	for _, monitor := range monitors {
 		fmt.Fprintf(w, `</tr>`)
 
-		log := logs.Get(enum.TrafficMonitorName(monitor))
+		log := logs.Get(tc.TrafficMonitorName(monitor))
 
 		fmt.Fprintf(w, `<td><span>%s</span></td>`, monitor)
 		errored, lastCheck := log.GetErrored()

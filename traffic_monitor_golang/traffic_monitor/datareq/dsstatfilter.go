@@ -25,8 +25,8 @@ import (
 	"strconv"
 	"strings"
 
-	dsdata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/deliveryservicedata"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/dsdata"
 )
 
 // DSStatFilter fulfills the cache.Filter interface, for filtering stats. See the `NewDSStatFilter` documentation for details on which query parameters are used to filter.
@@ -34,17 +34,17 @@ type DSStatFilter struct {
 	historyCount     int
 	statsToUse       map[string]struct{}
 	wildcard         bool
-	dsType           enum.DSType
-	deliveryServices map[enum.DeliveryServiceName]struct{}
-	dsTypes          map[enum.DeliveryServiceName]enum.DSType
+	dsType           tc.DSType
+	deliveryServices map[tc.DeliveryServiceName]struct{}
+	dsTypes          map[tc.DeliveryServiceName]tc.DSType
 }
 
 // UseDeliveryService returns whether the given delivery service is in this filter.
-func (f *DSStatFilter) UseDeliveryService(name enum.DeliveryServiceName) bool {
+func (f *DSStatFilter) UseDeliveryService(name tc.DeliveryServiceName) bool {
 	if _, inDSes := f.deliveryServices[name]; len(f.deliveryServices) != 0 && !inDSes {
 		return false
 	}
-	if f.dsType != enum.DSTypeInvalid && f.dsTypes[name] != f.dsType {
+	if f.dsType != tc.DSTypeInvalid && f.dsTypes[name] != f.dsType {
 		return false
 	}
 	return true
@@ -84,7 +84,7 @@ func (f *DSStatFilter) WithinStatHistoryMax(n int) bool {
 // If `stats` is empty, all stats are returned.
 // If `wildcard` is empty, `stats` is considered exact.
 // If `type` is empty, all types are returned.
-func NewDSStatFilter(path string, params url.Values, dsTypes map[enum.DeliveryServiceName]enum.DSType) (dsdata.Filter, error) {
+func NewDSStatFilter(path string, params url.Values, dsTypes map[tc.DeliveryServiceName]tc.DSType) (dsdata.Filter, error) {
 	validParams := map[string]struct{}{"hc": struct{}{}, "stats": struct{}{}, "wildcard": struct{}{}, "type": struct{}{}, "deliveryservices": struct{}{}}
 	if len(params) > len(validParams) {
 		return nil, fmt.Errorf("invalid query parameters")
@@ -116,32 +116,32 @@ func NewDSStatFilter(path string, params url.Values, dsTypes map[enum.DeliverySe
 		wildcard, _ = strconv.ParseBool(paramWildcard[0]) // ignore errors, error => false
 	}
 
-	dsType := enum.DSTypeInvalid
+	dsType := tc.DSTypeInvalid
 	if paramType, exists := params["type"]; exists && len(paramType) > 0 {
-		dsType = enum.DSTypeFromString(paramType[0])
-		if dsType == enum.DSTypeInvalid {
+		dsType = tc.DSTypeFromString(paramType[0])
+		if dsType == tc.DSTypeInvalid {
 			return nil, fmt.Errorf("invalid query parameter type '%v' - valid types are: {http, dns}", paramType[0])
 		}
 	}
 
-	deliveryServices := map[enum.DeliveryServiceName]struct{}{}
+	deliveryServices := map[tc.DeliveryServiceName]struct{}{}
 	// TODO rename 'hosts' to 'names' for consistency
 	if paramNames, exists := params["deliveryservices"]; exists && len(paramNames) > 0 {
 		commaNames := strings.Split(paramNames[0], ",")
 		for _, name := range commaNames {
-			deliveryServices[enum.DeliveryServiceName(name)] = struct{}{}
+			deliveryServices[tc.DeliveryServiceName(name)] = struct{}{}
 		}
 	}
 
 	pathArgument := getPathArgument(path)
 	if pathArgument != "" {
-		deliveryServices[enum.DeliveryServiceName(pathArgument)] = struct{}{}
+		deliveryServices[tc.DeliveryServiceName(pathArgument)] = struct{}{}
 	}
 
 	// parameters without values are considered names, e.g. `?my-cache-0` or `?my-delivery-service`
 	for maybeName, val := range params {
 		if len(val) == 0 || (len(val) == 1 && val[0] == "") {
-			deliveryServices[enum.DeliveryServiceName(maybeName)] = struct{}{}
+			deliveryServices[tc.DeliveryServiceName(maybeName)] = struct{}{}
 		}
 	}
 

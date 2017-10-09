@@ -25,7 +25,6 @@ use File::Path qw(make_path);
 use Data::Dumper;
 use Common::ReturnCodes qw(SUCCESS ERROR);
 use Mojolicious::Plugin::Config;
-use Data::Validate::IP qw(is_ipv4 is_ipv6);
 use API::Iso;
 
 my $filebasedir = "/var/www/files";

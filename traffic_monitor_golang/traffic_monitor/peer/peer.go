@@ -24,7 +24,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 // Handler handles peer Traffic Monitor data, taking a raw reader, parsing the data, and passing a result object to the ResultChannel. This fulfills the common `Handler` interface.
@@ -40,10 +40,10 @@ func NewHandler() Handler {
 
 // Result contains the data parsed from polling a peer Traffic Monitor.
 type Result struct {
-	ID           enum.TrafficMonitorName
+	ID           tc.TrafficMonitorName
 	Available    bool
 	Errors       []error
-	PeerStates   Crstates
+	PeerStates   tc.CRStates
 	PollID       uint64
 	PollFinished chan<- uint64
 	Time         time.Time
@@ -52,7 +52,7 @@ type Result struct {
 // Handle handles a response from a polled Traffic Monitor peer, parsing the data and forwarding it to the ResultChannel.
 func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, reqEnd time.Time, err error, pollID uint64, pollFinished chan<- uint64) {
 	result := Result{
-		ID:           enum.TrafficMonitorName(id),
+		ID:           tc.TrafficMonitorName(id),
 		Available:    false,
 		Errors:       []error{},
 		PollID:       pollID,

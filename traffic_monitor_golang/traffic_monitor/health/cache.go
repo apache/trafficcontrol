@@ -25,13 +25,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/util"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-util"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/cache"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
-	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/todata"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
@@ -108,8 +108,8 @@ func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, 
 		return false, "ERROR - server profile missing in Traffic Ops monitor config", ""
 	}
 
-	status := enum.CacheStatusFromString(serverInfo.Status)
-	if status == enum.CacheStatusInvalid {
+	status := tc.CacheStatusFromString(serverInfo.Status)
+	if status == tc.CacheStatusInvalid {
 		log.Errorf("Cache %v got invalid status from Traffic Ops '%v' - treating as Reported\n", result.ID, serverInfo.Status)
 	}
 
@@ -119,15 +119,15 @@ func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, 
 	}
 
 	switch {
-	case status == enum.CacheStatusInvalid:
+	case status == tc.CacheStatusInvalid:
 		log.Errorf("Cache %v got invalid status from Traffic Ops '%v' - treating as OFFLINE\n", result.ID, serverInfo.Status)
 		return false, eventDesc(status, availability+"; invalid status"), ""
-	case status == enum.CacheStatusAdminDown:
+	case status == tc.CacheStatusAdminDown:
 		return false, eventDesc(status, availability), ""
-	case status == enum.CacheStatusOffline:
+	case status == tc.CacheStatusOffline:
 		log.Errorf("Cache %v set to offline, but still polled\n", result.ID)
 		return false, eventDesc(status, availability), ""
-	case status == enum.CacheStatusOnline:
+	case status == tc.CacheStatusOnline:
 		return true, eventDesc(status, availability), ""
 	case result.Error != nil:
 		return false, eventDesc(status, fmt.Sprintf("%v", result.Error)), ""
@@ -140,7 +140,7 @@ func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, 
 	for stat, threshold := range serverProfile.Parameters.Thresholds {
 		resultStat := interface{}(nil)
 		if computedStatF, ok := computedStats[stat]; ok {
-			dummyCombinedstate := peer.IsAvailable{} // the only stats which use combinedState are things like isAvailable, which don't make sense to ever be thresholds.
+			dummyCombinedstate := tc.IsAvailable{} // the only stats which use combinedState are things like isAvailable, which don't make sense to ever be thresholds.
 			resultStat = computedStatF(result, serverInfo, serverProfile, dummyCombinedstate)
 		} else {
 			if resultStats == nil {
@@ -171,7 +171,7 @@ func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, 
 }
 
 // CalcAvailability calculates the availability of the cache, from the given result. Availability is stored in `localCacheStatus` and `localStates`, and if the status changed an event is added to `events`. statResultHistory may be nil, for pollers which don't poll stats.
-// TODO add enum for poller names?
+// TODO add tc for poller names?
 func CalcAvailability(results []cache.Result, pollerName string, statResultHistory cache.ResultStatHistory, mc to.TrafficMonitorConfigMap, toData todata.TOData, localCacheStatusThreadsafe threadsafe.CacheAvailableStatus, localStates peer.CRStatesThreadsafe, events ThreadsafeEvents) {
 	localCacheStatuses := localCacheStatusThreadsafe.Get().Copy()
 	for _, result := range results {
@@ -201,7 +201,7 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 			events.Add(Event{Time: Time(time.Now()), Description: whyAvailable + " (" + pollerName + ")", Name: string(result.ID), Hostname: string(result.ID), Type: toData.ServerTypes[result.ID].String(), Available: isAvailable})
 		}
 
-		localStates.SetCache(result.ID, peer.IsAvailable{IsAvailable: isAvailable})
+		localStates.SetCache(result.ID, tc.IsAvailable{IsAvailable: isAvailable})
 	}
 	calculateDeliveryServiceState(toData.DeliveryServiceServers, localStates, toData)
 	localCacheStatusThreadsafe.Set(localCacheStatuses)
@@ -248,13 +248,13 @@ func inThreshold(threshold to.HealthThreshold, val float64) bool {
 	}
 }
 
-func eventDesc(status enum.CacheStatus, message string) string {
+func eventDesc(status tc.CacheStatus, message string) string {
 	return fmt.Sprintf("%s - %s", status, message)
 }
 
 //calculateDeliveryServiceState calculates the state of delivery services from the new cache state data `cacheState` and the CRConfig data `deliveryServiceServers` and puts the calculated state in the outparam `deliveryServiceStates`
-func calculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServiceName][]enum.CacheName, states peer.CRStatesThreadsafe, toData todata.TOData) {
-	cacheStates := states.GetCaches() // map[enum.CacheName]IsAvailable
+func calculateDeliveryServiceState(deliveryServiceServers map[tc.DeliveryServiceName][]tc.CacheName, states peer.CRStatesThreadsafe, toData todata.TOData) {
+	cacheStates := states.GetCaches() // map[tc.CacheName]IsAvailable
 
 	deliveryServices := states.GetDeliveryServices()
 	for deliveryServiceName, deliveryServiceState := range deliveryServices {
@@ -267,8 +267,8 @@ func calculateDeliveryServiceState(deliveryServiceServers map[enum.DeliveryServi
 	}
 }
 
-func getDisabledLocations(deliveryService enum.DeliveryServiceName, deliveryServiceServers []enum.CacheName, cacheStates map[enum.CacheName]peer.IsAvailable, serverCacheGroups map[enum.CacheName]enum.CacheGroupName) []enum.CacheGroupName {
-	disabledLocations := []enum.CacheGroupName{} // it's important this isn't nil, so it serialises to the JSON `[]` instead of `null`
+func getDisabledLocations(deliveryService tc.DeliveryServiceName, deliveryServiceServers []tc.CacheName, cacheStates map[tc.CacheName]tc.IsAvailable, serverCacheGroups map[tc.CacheName]tc.CacheGroupName) []tc.CacheGroupName {
+	disabledLocations := []tc.CacheGroupName{} // it's important this isn't nil, so it serialises to the JSON `[]` instead of `null`
 	dsCacheStates := getDeliveryServiceCacheAvailability(cacheStates, deliveryServiceServers)
 	dsCachegroupsAvailable := getDeliveryServiceCachegroupAvailability(dsCacheStates, serverCacheGroups)
 	for cg, avail := range dsCachegroupsAvailable {
@@ -280,16 +280,16 @@ func getDisabledLocations(deliveryService enum.DeliveryServiceName, deliveryServ
 	return disabledLocations
 }
 
-func getDeliveryServiceCacheAvailability(cacheStates map[enum.CacheName]peer.IsAvailable, deliveryServiceServers []enum.CacheName) map[enum.CacheName]peer.IsAvailable {
-	dsCacheStates := map[enum.CacheName]peer.IsAvailable{}
+func getDeliveryServiceCacheAvailability(cacheStates map[tc.CacheName]tc.IsAvailable, deliveryServiceServers []tc.CacheName) map[tc.CacheName]tc.IsAvailable {
+	dsCacheStates := map[tc.CacheName]tc.IsAvailable{}
 	for _, server := range deliveryServiceServers {
 		dsCacheStates[server] = cacheStates[server]
 	}
 	return dsCacheStates
 }
 
-func getDeliveryServiceCachegroupAvailability(dsCacheStates map[enum.CacheName]peer.IsAvailable, serverCachegroups map[enum.CacheName]enum.CacheGroupName) map[enum.CacheGroupName]bool {
-	cgAvail := map[enum.CacheGroupName]bool{}
+func getDeliveryServiceCachegroupAvailability(dsCacheStates map[tc.CacheName]tc.IsAvailable, serverCachegroups map[tc.CacheName]tc.CacheGroupName) map[tc.CacheGroupName]bool {
+	cgAvail := map[tc.CacheGroupName]bool{}
 	for cache, available := range dsCacheStates {
 		cg, ok := serverCachegroups[cache]
 		if !ok {

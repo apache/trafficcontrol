@@ -33,6 +33,19 @@ func TestDeliveryServicesEp(t *testing.T) {
 	}
 }
 
+func TestDeliveryServicesServerEp(t *testing.T) {
+	testHelper.Context(t, "Given the need to test that DeliveryServicesByServer uses the correct URL")
+
+	id := "42"
+	ep := deliveryServicesByServerEp(id)
+	expected := "/api/1.2/servers/" + id + "/deliveryservices.json"
+	if ep != expected {
+		testHelper.Error(t, "Should get back %s for \"deliveryServicesEp\", got: %s", expected, ep)
+	} else {
+		testHelper.Success(t, "Should be able to get the correct delivery services endpoint")
+	}
+}
+
 func TestDeliveryServiceEp(t *testing.T) {
 	testHelper.Context(t, "Given the need to test that DeliveryService uses the correct URL")
 
@@ -102,6 +115,18 @@ func TestDeliveryServiceServerEp(t *testing.T) {
 		testHelper.Error(t, "Should get back %s for \"deliveryServiceServerEp\", got: %s", expected, ep)
 	} else {
 		testHelper.Success(t, "Should be able to get the correct delivery service server endpoint")
+	}
+}
+
+func TestDeliveryServiceRegexesEp(t *testing.T) {
+	testHelper.Context(t, "Given the need to test that DeliveryServiceRegexes uses the correct URL")
+
+	ep := deliveryServiceRegexesEp()
+	expected := "/api/1.2/deliveryservices_regexes.json"
+	if ep != expected {
+		testHelper.Error(t, "Should get back %s for \"deliveryServiceRegexesEp\", got: %s", expected, ep)
+	} else {
+		testHelper.Success(t, "Should be able to get the correct delivery service regexes endpoint")
 	}
 }
 

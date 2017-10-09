@@ -32,7 +32,7 @@ var ProfileService = function(Restangular, $http, locationUtils, messageModel, E
             .then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Profile created' } ], true);
-                locationUtils.navigateToPath('/admin/profiles');
+                locationUtils.navigateToPath('/profiles');
             },
             function(fault) {
                 messageModel.setMessages(fault.data.alerts, false);
@@ -77,7 +77,7 @@ var ProfileService = function(Restangular, $http, locationUtils, messageModel, E
             .then(
                 function(result) {
                     messageModel.setMessages(result.data.alerts, true);
-                    locationUtils.navigateToPath('/admin/profiles/' + result.data.response.id);
+                    locationUtils.navigateToPath('/profiles/' + result.data.response.id);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);

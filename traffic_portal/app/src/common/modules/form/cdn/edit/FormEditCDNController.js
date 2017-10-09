@@ -25,7 +25,7 @@ var FormEditCDNController = function(cdn, $scope, $controller, $uibModal, $ancho
     var deleteCDN = function(cdn) {
         cdnService.deleteCDN(cdn.id)
             .then(function() {
-                locationUtils.navigateToPath('/admin/cdns');
+                locationUtils.navigateToPath('/cdns');
             });
     };
 

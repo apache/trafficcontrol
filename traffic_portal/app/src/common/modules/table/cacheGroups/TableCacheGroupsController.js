@@ -22,11 +22,11 @@ var TableCacheGroupsController = function(cacheGroups, $scope, $state, locationU
     $scope.cacheGroups = cacheGroups;
 
     $scope.editCacheGroup = function(id) {
-        locationUtils.navigateToPath('/configure/cache-groups/' + id);
+        locationUtils.navigateToPath('/cache-groups/' + id);
     };
 
     $scope.createCacheGroup = function() {
-        locationUtils.navigateToPath('/configure/cache-groups/new');
+        locationUtils.navigateToPath('/cache-groups/new');
     };
 
     $scope.refresh = function() {

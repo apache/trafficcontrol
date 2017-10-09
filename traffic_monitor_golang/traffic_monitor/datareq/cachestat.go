@@ -26,7 +26,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/cache"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
-	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/todata"
 )
 
 func srvCacheStats(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, statResultHistory threadsafe.ResultStatHistory, statInfoHistory threadsafe.ResultInfoHistory, monitorConfig threadsafe.TrafficMonitorConfigMap, combinedStates peer.CRStatesThreadsafe, statMaxKbpses threadsafe.CacheKbpses) ([]byte, int) {

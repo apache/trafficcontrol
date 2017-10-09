@@ -23,7 +23,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
@@ -56,30 +56,30 @@ func QueryIntervalValidator(
 	Validator(tmURI, toClient, interval, grace, onErr, onResumeSuccess, onCheck, ValidateQueryInterval)
 }
 
-// AllMonitorsQueryIntervalValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll. Note the error passed to `onErr` may be a general validation error not associated with any monitor, in which case the passed `enum.TrafficMonitorName` will be empty.
+// AllMonitorsQueryIntervalValidator is designed to be run as a goroutine, and does not return. It continously validates every `interval`, and calls `onErr` on failure, `onResumeSuccess` when a failure ceases, and `onCheck` on every poll. Note the error passed to `onErr` may be a general validation error not associated with any monitor, in which case the passed `tc.TrafficMonitorName` will be empty.
 func AllMonitorsQueryIntervalValidator(
 	toClient *to.Session,
 	interval time.Duration,
 	includeOffline bool,
 	grace time.Duration,
-	onErr func(enum.TrafficMonitorName, error),
-	onResumeSuccess func(enum.TrafficMonitorName),
-	onCheck func(enum.TrafficMonitorName, error),
+	onErr func(tc.TrafficMonitorName, error),
+	onResumeSuccess func(tc.TrafficMonitorName),
+	onCheck func(tc.TrafficMonitorName, error),
 ) {
 	AllValidator(toClient, interval, includeOffline, grace, onErr, onResumeSuccess, onCheck, ValidateAllMonitorsQueryInterval)
 }
 
 // ValidateAllMonitorsQueryInterval validates, for all monitors in the given Traffic Ops, an acceptable query interval 95th percentile.
-func ValidateAllMonitorsQueryInterval(toClient *to.Session, includeOffline bool) (map[enum.TrafficMonitorName]error, error) {
+func ValidateAllMonitorsQueryInterval(toClient *to.Session, includeOffline bool) (map[tc.TrafficMonitorName]error, error) {
 	servers, err := GetMonitors(toClient, includeOffline)
 	if err != nil {
 		return nil, err
 	}
 
-	errs := map[enum.TrafficMonitorName]error{}
+	errs := map[tc.TrafficMonitorName]error{}
 	for _, server := range servers {
 		uri := fmt.Sprintf("http://%s.%s", server.HostName, server.DomainName)
-		errs[enum.TrafficMonitorName(server.HostName)] = ValidateQueryInterval(uri, toClient)
+		errs[tc.TrafficMonitorName(server.HostName)] = ValidateQueryInterval(uri, toClient)
 	}
 	return errs, nil
 }

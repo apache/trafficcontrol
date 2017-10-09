@@ -7,7 +7,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -818,6 +818,24 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
+    @restapi.api_request(u'get', u'cdns/{cdn_name}/snapshot', (u'1.2',))
+    def get_current_snapshot_crconfig(self, cdn_name=None):
+        """
+        Retrieve the currently implemented CR Snapshot
+        :param cdn_name: The CDN name
+        :type cdn_name: Text
+        :rtype: Tuple[Dict[Text, Any], requests.Response]
+        :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+        """
+    @restapi.api_request(u'get', u'cdns/{cdn_name}/snapshot/new', (u'1.2',))
+    def get_pending_snapshot_crconfig(self, cdn_name=None):
+        """
+        Retrieve the pending CR Snapshot
+        :param cdn_name: The CDN name
+        :type cdn_name: Text
+        :rtype: Tuple[Dict[Text, Any], requests.Response]
+        :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+        """
 
 if __name__ == u'__main__':
     # Sample usages

@@ -91,8 +91,12 @@ ok $t->get_ok("/api/1.2/tenants")->status_is(200)->json_is( "/response/0/name", 
 my $tenants_data = {};
 my $no_tenant_fixture_ds = 100;
 my $root_tenant_fixture_ds = 2100;
+
 prepare_tenant("root", undef, $tenants_data);
+#Temporary remove of tenancy testing to allow objects creation
+set_use_tenancy(0);
 prepare_tenant("none", undef, $tenants_data);
+set_use_tenancy(1);
 prepare_tenant("A", $root_tenant_id, $tenants_data);
 prepare_tenant("A1", $tenants_data->{"A"}->{'id'}, $tenants_data);
 prepare_tenant("A1a", $tenants_data->{"A1"}->{'id'}, $tenants_data);
@@ -694,6 +698,10 @@ sub test_user_resource_write_allow_access {
     login_to_tenant_admin($login_tenant, $tenants_data);
 
     #adding a user
+    if ($resource_tenant eq "none"){
+        #disable the "user must have tenant" enforcement
+        set_use_tenancy(0);
+    }
     my $new_username="test_user";
     ok $t->post_ok('/api/1.2/users' => {Accept => 'application/json'} => json => {
                 "username" => $new_username,
@@ -709,6 +717,10 @@ sub test_user_resource_write_allow_access {
             ->json_is( "/response/tenantId" =>  $tenants_data->{$resource_tenant}->{'id'})
         , 'Success add user: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
+    if ($resource_tenant eq "none"){
+        #renable the "user must have tenant" enforcement
+        set_use_tenancy(1);
+    }
 
     my $new_user_record = $schema->resultset('TmUser')->find( { username => $new_username } );
     $t->success(defined($new_user_record));
@@ -742,6 +754,10 @@ sub test_user_resource_write_allow_access {
         , 'Success change user tenant to login: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
     #change the tenant to his tenant
+    if ($resource_tenant eq "none"){
+        #disable the "user must have tenant" enforcement
+        set_use_tenancy(0);
+    }
     $response2edit->{"tenantId"} = $tenants_data->{$resource_tenant}->{'id'};
     ok $t->put_ok('/api/1.2/users/'.$new_userid => {Accept => 'application/json'} => json => $response2edit)
             ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -749,6 +765,10 @@ sub test_user_resource_write_allow_access {
             ->json_is( "/response/email" =>  $response2edit->{"email"} )
             ->json_is( "/response/tenantId" =>  $response2edit->{"tenantId"})
         , 'Success change user tenant to orig: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+    if ($resource_tenant eq "none"){
+        #re-enable the "user must have tenant" enforcement
+        set_use_tenancy(1);
+    }
 
     logout_from_tenant();
 
@@ -775,9 +795,8 @@ sub test_user_resource_write_block_access {
                 "tenantId" => $tenants_data->{$resource_tenant}->{'id'},
             })
             ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-            ->json_is( "/alerts/0/text" => "Invalid tenant. This tenant is not available to you for assignment." )
+            ->json_is( "/alerts/0/text" => $resource_tenant eq "none" ? "Invalid tenant. Must set tenant for new user.": "Invalid tenant. This tenant is not available to you for assignment." )
         , 'Cannot add user: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
-
 
     my $new_user_record = $schema->resultset('TmUser')->find( { username => $new_username } );
     $t->success(!defined($new_user_record));
@@ -826,6 +845,10 @@ sub test_user_resource_write_block_access {
     #adding a user
     logout_from_tenant();
     login_to_tenant_admin("root", $tenants_data);
+    if ($login_tenant eq "none"){
+        #disable the "user must have tenant" enforcement
+        set_use_tenancy(0);
+    }
     my $new_username2="test_user";
     ok $t->post_ok('/api/1.2/users' => {Accept => 'application/json'} => json => {
                 "username" => $new_username2,
@@ -840,6 +863,11 @@ sub test_user_resource_write_block_access {
             ->json_is( "/response/username" =>  $new_username2 )
             ->json_is( "/response/tenantId" =>  $tenants_data->{$login_tenant}->{'id'})
         , 'Success add user: login tenant:'.$login_tenant.'?';
+
+    if ($login_tenant eq "none"){
+        #re-enable the "user must have tenant" enforcement
+        set_use_tenancy(1);
+    }
 
     #get its data
     my $new_user_record2 = $schema->resultset('TmUser')->find( { username => $new_username2 } );
@@ -953,6 +981,10 @@ sub test_ds_resource_write_allow_access {
 
     #adding a ds
     my $new_ds_xml_id="test_ds";
+    if ($resource_tenant eq "none"){
+        #disable the "DS must have tenant" enforcement
+        set_use_tenancy(0);
+    }
     ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
                 "xmlId" => $new_ds_xml_id,
                 "displayName" => $new_ds_xml_id,
@@ -982,6 +1014,11 @@ sub test_ds_resource_write_allow_access {
             ->json_is( "/response/0/tenantId" => $tenants_data->{$resource_tenant}->{'id'})
         , 'Success add ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
+    if ($resource_tenant eq "none"){
+        #undo - disable the "DS must have tenant" enforcement
+        set_use_tenancy(1);
+    }
+
 
     my $new_ds_record = $schema->resultset('Deliveryservice')->find( { xml_id => $new_ds_xml_id } );
     $t->success(defined($new_ds_record));
@@ -1005,23 +1042,28 @@ sub test_ds_resource_write_allow_access {
             ->json_is( "/response/0/tenantId" =>  $response2edit->{"tenantId"})
         , 'Success change ds orgServerFqdn: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
-    #change the tenant to my tenant
-    $response2edit->{"tenantId"} = $tenants_data->{$login_tenant}->{'id'};
-    ok $t->put_ok('/api/1.2/deliveryservices/'.$new_ds_id => {Accept => 'application/json'} => json => $response2edit)
-            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-            ->json_is( "/response/0/xmlId" =>  $response2edit->{"xmlId"})
-            ->json_is( "/response/0/orgServerFqdn" =>  $response2edit->{"orgServerFqdn"} )
-            ->json_is( "/response/0/tenantId" =>  $response2edit->{"tenantId"})
-        , 'Success change ds tenant to login: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+    if ($resource_tenant ne "none" and $login_tenant ne "none") {
+        #change the tenant to my tenant
+        $response2edit->{"tenantId"} = $tenants_data->{$login_tenant}->{'id'};
+        ok$t->put_ok('/api/1.2/deliveryservices/'.$new_ds_id => { Accept => 'application/json' } => json =>
+                $response2edit)
+                ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+                ->json_is( "/response/0/xmlId" => $response2edit->{"xmlId"})
+                ->json_is( "/response/0/orgServerFqdn" => $response2edit->{"orgServerFqdn"} )
+                ->json_is( "/response/0/tenantId" => $response2edit->{"tenantId"})
+            ,
+            'Success change ds tenant to login: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
-    #change the tenant back to his tenant
-    $response2edit->{"tenantId"} = $tenants_data->{$resource_tenant}->{'id'};
-    ok $t->put_ok('/api/1.2/deliveryservices/'.$new_ds_id => {Accept => 'application/json'} => json => $response2edit)
-            ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-            ->json_is( "/response/0/xmlId" =>  $response2edit->{"xmlId"})
-            ->json_is( "/response/0/orgServerFqdn" =>  $response2edit->{"orgServerFqdn"} )
-            ->json_is( "/response/0/tenantId" =>  $response2edit->{"tenantId"})
-        , 'Success change ds tenant to orig: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+        #change the tenant back to his tenant - if possible
+        $response2edit->{"tenantId"} = $tenants_data->{$resource_tenant}->{'id'};
+        ok$t->put_ok('/api/1.2/deliveryservices/'.$new_ds_id => { Accept => 'application/json' } => json =>
+                $response2edit)
+                ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+                ->json_is( "/response/0/xmlId" => $response2edit->{"xmlId"})
+                ->json_is( "/response/0/orgServerFqdn" => $response2edit->{"orgServerFqdn"} )
+                ->json_is( "/response/0/tenantId" => $response2edit->{"tenantId"})
+            , 'Success change ds tenant to orig: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
+    }
 
     #delete the ds for test and cleanup
     ok $t->delete_ok('/api/1.2/deliveryservices/'.$new_ds_id => {Accept => 'application/json'} => json => $response2edit)
@@ -1041,6 +1083,7 @@ sub test_ds_resource_write_block_access {
 
     #adding a ds
     my $new_ds_xml_id="test_ds";
+
     ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
                 "xmlId" => $new_ds_xml_id,
                 "displayName" => $new_ds_xml_id,
@@ -1065,7 +1108,7 @@ sub test_ds_resource_write_block_access {
                 "qstringIgnore" => 0,
             })
             ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-            ->json_is( "/alerts/0/text" => "Invalid tenant. This tenant is not available to you for delivery-service assignment.")
+            ->json_is( "/alerts/0/text" => $resource_tenant eq "none" ? "Invalid tenant. Must set tenant for delivery-service.": "Invalid tenant. This tenant is not available to you for delivery-service assignment.")
         , 'Cannot add ds: login tenant:'.$login_tenant.' resource tenant: '.$resource_tenant.'?';
 
 
@@ -1121,6 +1164,10 @@ sub test_ds_resource_write_block_access {
     logout_from_tenant();
     login_to_tenant_admin("root", $tenants_data);
     my $new_ds_xml_id2="test_ds2";
+    if ($login_tenant eq "none"){
+        #disable the "DS must have tenant" enforcement
+        set_use_tenancy(0);
+    }
     ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
                 "xmlId" => $new_ds_xml_id2,
                 "displayName" => $new_ds_xml_id,
@@ -1148,6 +1195,11 @@ sub test_ds_resource_write_block_access {
             ->json_is( "/response/0/xmlId" =>  $new_ds_xml_id2 )
             ->json_is( "/response/0/tenantId" =>  $tenants_data->{$login_tenant}->{'id'})
         , 'Success add ds: login tenant:'.$login_tenant.'?';
+
+    if ($login_tenant eq "none"){
+        #undo - disable the "DS must have tenant" enforcement
+        set_use_tenancy(1);
+    }
 
     #get its data
     my $new_ds_record2 = $schema->resultset('Deliveryservice')->find( { xml_id => $new_ds_xml_id2 } );
@@ -1663,5 +1715,26 @@ sub test_ds_resource_steering_write_block_access {
     logout_from_tenant();
 }
 
+sub get_param_id {
+    my $name = shift;
+    my $q      = "select id from parameter where name = \'$name\'";
+    my $get_svr = $dbh->prepare($q);
+    $get_svr->execute();
+    my $p = $get_svr->fetchall_arrayref( {} );
+    $get_svr->finish();
+    my $id = $p->[0]->{id};
+    return $id;
+}
 
-
+sub set_use_tenancy {
+    my $value = shift;
+    my $useTenancyParamId = &get_param_id('use_tenancy');
+    ok $t->put_ok('/api/1.2/parameters/' . $useTenancyParamId => {Accept => 'application/json'} => json => {
+                'value'      => $value,
+            })->status_is(200)
+            ->or( sub { diag $t->tx->res->content->asset->{content}; } )
+            ->json_is( "/response/name" => "use_tenancy" )
+            ->json_is( "/response/configFile" => "global" )
+            ->json_is( "/response/value" => $value )
+        , 'Was the use_tenancy paramter set?';
+}

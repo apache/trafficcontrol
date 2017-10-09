@@ -32,7 +32,7 @@ var DeliveryServiceRegexService = function(Restangular, locationUtils, messageMo
 			.then(
 				function() {
 					messageModel.setMessages([ { level: 'success', text: 'Regex created' } ], true);
-					locationUtils.navigateToPath('/configure/delivery-services/' + dsId + '/regexes');
+					locationUtils.navigateToPath('/delivery-services/' + dsId + '/regexes');
 				},
 				function(fault) {
 					messageModel.setMessages(fault.data.alerts, false);

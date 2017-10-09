@@ -25,7 +25,7 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
-	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/todata"
 )
 
 func srvDSStats(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, dsStats threadsafe.DSStatsReader) ([]byte, int) {

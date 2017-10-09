@@ -25,7 +25,7 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 	$scope.hasPropertyError = formUtils.hasPropertyError;
 
 	$scope.generateKeys = function() {
-		locationUtils.navigateToPath('/configure/delivery-services/' + deliveryService.id + '/ssl-keys/generate');
+		locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys/generate');
 	}
 
 	$scope.save = function() {

@@ -32,7 +32,7 @@ var FormEditCacheGroupController = function(cacheGroup, $scope, $controller, $ui
     var deleteCacheGroup = function(cacheGroup) {
         cacheGroupService.deleteCacheGroup(cacheGroup.id)
             .then(function() {
-                locationUtils.navigateToPath('/configure/cache-groups');
+                locationUtils.navigateToPath('/cache-groups');
             });
     };
 

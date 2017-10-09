@@ -25,10 +25,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/srvhttp"
-	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/todata"
 )
 
 func TestHandlerPrecompute(t *testing.T) {
@@ -47,7 +47,7 @@ func (f DummyFilterNever) UseStat(name string) bool {
 	return false
 }
 
-func (f DummyFilterNever) UseCache(name enum.CacheName) bool {
+func (f DummyFilterNever) UseCache(name tc.CacheName) bool {
 	return false
 }
 

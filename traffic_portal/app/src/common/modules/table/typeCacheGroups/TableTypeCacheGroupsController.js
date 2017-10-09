@@ -24,7 +24,7 @@ var TableTypeCacheGroupsController = function(type, cacheGroups, $scope, $state,
 	$scope.cacheGroups = cacheGroups;
 
 	$scope.editCacheGroup = function(id) {
-		locationUtils.navigateToPath('/configure/cache-groups/' + id);
+		locationUtils.navigateToPath('/cache-groups/' + id);
 	};
 
 	$scope.refresh = function() {

@@ -21,7 +21,7 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a ng-click="navigateToPath('/admin/users')">Users</a></li>
+            <li><a ng-click="navigateToPath('/users')">Users</a></li>
             <li class="active">Register User</li>
         </ol>
         <div class="clearfix"></div>
@@ -41,7 +41,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(registerForm.role), 'has-feedback': hasError(registerForm.role)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Role (privilege level) *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="role" name="role" class="form-control" ng-model="registration.role" ng-options="role.id as label(role) for role in roles" required>
+                    <select id="role" name="role" class="form-control" ng-model="registration.role" ng-options="role.id as roleLabel(role) for role in roles" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(registerForm.role, 'required')">Required</small>
@@ -50,7 +50,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(registerForm.tenantId), 'has-feedback': hasError(registerForm.tenantId)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Tenant *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select name="tenantId" class="form-control" ng-model="registration.tenantId" ng-options="tenant.id as tenant.name for tenant in tenants" required>
+                    <select name="tenantId" class="form-control" ng-model="registration.tenantId" ng-options="tenant.id as tenantLabel(tenant) for tenant in tenants" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(registerForm.tenantId, 'required')">Required</small>

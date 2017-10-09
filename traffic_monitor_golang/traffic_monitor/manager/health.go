@@ -22,14 +22,14 @@ package manager
 import (
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/cache"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/config"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
-	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/todata"
 )
 
 // StartHealthResultManager starts the goroutine which listens for health results.
@@ -82,7 +82,7 @@ func healthResultManagerListen(
 	localCacheStatus threadsafe.CacheAvailableStatus,
 	cfg config.Config,
 ) {
-	lastHealthEndTimes := map[enum.CacheName]time.Time{}
+	lastHealthEndTimes := map[tc.CacheName]time.Time{}
 	// This reads at least 1 value from the cacheHealthChan. Then, we loop, and try to read from the channel some more. If there's nothing to read, we hit `default` and process. If there is stuff to read, we read it, then inner-loop trying to read more. If we're continuously reading and the channel is never empty, and we hit the tick time, process anyway even though the channel isn't empty, to prevent never processing (starvation).
 	var ticker *time.Ticker
 
@@ -144,7 +144,7 @@ func processHealthResult(
 	errorCount threadsafe.Uint,
 	events health.ThreadsafeEvents,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
-	lastHealthEndTimes map[enum.CacheName]time.Time,
+	lastHealthEndTimes map[tc.CacheName]time.Time,
 	healthHistory threadsafe.ResultHistory,
 	results []cache.Result,
 	cfg config.Config,

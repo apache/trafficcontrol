@@ -25,11 +25,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/enum"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
-	todata "github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/trafficopsdata"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/todata"
 )
 
 // StartStateCombiner starts the State Combiner goroutine, and returns the threadsafe CombinedStates, and a func to signal to combine states.
@@ -55,7 +55,7 @@ func StartStateCombiner(events health.ThreadsafeEvents, peerStates peer.CRStates
 	}
 
 	go func() {
-		overrideMap := map[enum.CacheName]bool{}
+		overrideMap := map[tc.CacheName]bool{}
 		for range combineStateChan {
 			drain(combineStateChan)
 			combineCrStates(events, true, peerStates, localStates.Get(), combinedStates, overrideMap, toData.Get())
@@ -65,7 +65,7 @@ func StartStateCombiner(events health.ThreadsafeEvents, peerStates peer.CRStates
 	return combinedStates, combineState
 }
 
-func combineCacheState(cacheName enum.CacheName, localCacheState peer.IsAvailable, events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates peer.Crstates, combinedStates peer.CRStatesThreadsafe, overrideMap map[enum.CacheName]bool, toData todata.TOData) {
+func combineCacheState(cacheName tc.CacheName, localCacheState tc.IsAvailable, events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates tc.CRStates, combinedStates peer.CRStatesThreadsafe, overrideMap map[tc.CacheName]bool, toData todata.TOData) {
 	overrideCondition := ""
 	available := false
 	override := overrideMap[cacheName]
@@ -114,28 +114,28 @@ func combineCacheState(cacheName enum.CacheName, localCacheState peer.IsAvailabl
 		events.Add(health.Event{Time: health.Time(time.Now()), Description: fmt.Sprintf("Health protocol override condition %s", overrideCondition), Name: cacheName.String(), Hostname: cacheName.String(), Type: toData.ServerTypes[cacheName].String(), Available: available})
 	}
 
-	combinedStates.AddCache(cacheName, peer.IsAvailable{IsAvailable: available})
+	combinedStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: available})
 }
 
 func combineDSState(
-	deliveryServiceName enum.DeliveryServiceName,
-	localDeliveryService peer.Deliveryservice,
+	deliveryServiceName tc.DeliveryServiceName,
+	localDeliveryService tc.CRStatesDeliveryService,
 	events health.ThreadsafeEvents,
 	peerOptimistic bool,
 	peerStates peer.CRStatesPeersThreadsafe,
-	localStates peer.Crstates,
+	localStates tc.CRStates,
 	combinedStates peer.CRStatesThreadsafe,
-	overrideMap map[enum.CacheName]bool,
+	overrideMap map[tc.CacheName]bool,
 	toData todata.TOData,
 ) {
-	deliveryService := peer.Deliveryservice{IsAvailable: false, DisabledLocations: []enum.CacheGroupName{}} // important to initialize DisabledLocations, so JSON is `[]` not `null`
+	deliveryService := tc.CRStatesDeliveryService{IsAvailable: false, DisabledLocations: []tc.CacheGroupName{}} // important to initialize DisabledLocations, so JSON is `[]` not `null`
 	if localDeliveryService.IsAvailable {
 		deliveryService.IsAvailable = true
 	}
 	deliveryService.DisabledLocations = localDeliveryService.DisabledLocations
 
 	for peerName, iPeerStates := range peerStates.GetCrstates() {
-		peerDeliveryService, ok := iPeerStates.Deliveryservice[deliveryServiceName]
+		peerDeliveryService, ok := iPeerStates.DeliveryService[deliveryServiceName]
 		if !ok {
 			log.Infof("local delivery service %s not found in peer %s\n", deliveryServiceName, peerName)
 			continue
@@ -149,7 +149,7 @@ func combineDSState(
 }
 
 // pruneCombinedCaches deletes caches in combined states which have been removed from localStates.
-func pruneCombinedCaches(combinedStates peer.CRStatesThreadsafe, localStates peer.Crstates) {
+func pruneCombinedCaches(combinedStates peer.CRStatesThreadsafe, localStates tc.CRStates) {
 	combinedCaches := combinedStates.GetCaches()
 	for cacheName, _ := range combinedCaches {
 		if _, ok := localStates.Caches[cacheName]; !ok {
@@ -158,12 +158,12 @@ func pruneCombinedCaches(combinedStates peer.CRStatesThreadsafe, localStates pee
 	}
 }
 
-func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates peer.Crstates, combinedStates peer.CRStatesThreadsafe, overrideMap map[enum.CacheName]bool, toData todata.TOData) {
+func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerStates peer.CRStatesPeersThreadsafe, localStates tc.CRStates, combinedStates peer.CRStatesThreadsafe, overrideMap map[tc.CacheName]bool, toData todata.TOData) {
 	for cacheName, localCacheState := range localStates.Caches { // localStates gets pruned when servers are disabled, it's the source of truth
 		combineCacheState(cacheName, localCacheState, events, peerOptimistic, peerStates, localStates, combinedStates, overrideMap, toData)
 	}
 
-	for deliveryServiceName, localDeliveryService := range localStates.Deliveryservice {
+	for deliveryServiceName, localDeliveryService := range localStates.DeliveryService {
 		combineDSState(deliveryServiceName, localDeliveryService, events, peerOptimistic, peerStates, localStates, combinedStates, overrideMap, toData)
 	}
 
@@ -171,7 +171,7 @@ func combineCrStates(events health.ThreadsafeEvents, peerOptimistic bool, peerSt
 }
 
 // CacheNameSlice is a slice of cache names, which fulfills the `sort.Interface` interface.
-type CacheGroupNameSlice []enum.CacheGroupName
+type CacheGroupNameSlice []tc.CacheGroupName
 
 func (p CacheGroupNameSlice) Len() int           { return len(p) }
 func (p CacheGroupNameSlice) Less(i, j int) bool { return p[i] < p[j] }
@@ -179,10 +179,10 @@ func (p CacheGroupNameSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 // intersection returns strings in both a and b.
 // Note this modifies a and b. Specifically, it sorts them. If that isn't acceptable, pass copies of your real data.
-func intersection(a []enum.CacheGroupName, b []enum.CacheGroupName) []enum.CacheGroupName {
+func intersection(a []tc.CacheGroupName, b []tc.CacheGroupName) []tc.CacheGroupName {
 	sort.Sort(CacheGroupNameSlice(a))
 	sort.Sort(CacheGroupNameSlice(b))
-	c := []enum.CacheGroupName{} // important to initialize, so JSON is `[]` not `null`
+	c := []tc.CacheGroupName{} // important to initialize, so JSON is `[]` not `null`
 	for _, s := range a {
 		i := sort.Search(len(b), func(i int) bool { return b[i] >= s })
 		if i < len(b) && b[i] == s {

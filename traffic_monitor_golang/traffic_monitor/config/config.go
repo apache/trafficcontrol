@@ -24,7 +24,7 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
 // LogLocation is a location to log to. This may be stdout, stderr, null (/dev/null), or a valid file path.
@@ -62,7 +62,6 @@ type Config struct {
 	ServeReadTimeout             time.Duration `json:"-"`
 	ServeWriteTimeout            time.Duration `json:"-"`
 	HealthToStatRatio            uint64        `json:"health_to_stat_ratio"`
-	HTTPPollNoSleep              bool          `json:"http_poll_no_sleep"`
 	StaticFileDir                string        `json:"static_file_dir"`
 }
 
@@ -93,7 +92,6 @@ var DefaultConfig = Config{
 	ServeReadTimeout:             10 * time.Second,
 	ServeWriteTimeout:            10 * time.Second,
 	HealthToStatRatio:            4,
-	HTTPPollNoSleep:              false,
 	StaticFileDir:                StaticFileDir,
 }
 

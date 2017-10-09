@@ -25,7 +25,7 @@ var FormEditASNController = function(asn, $scope, $controller, $uibModal, $ancho
     var deleteASN = function(asn) {
         asnService.deleteASN(asn.id)
             .then(function() {
-                locationUtils.navigateToPath('/admin/asns');
+                locationUtils.navigateToPath('/asns');
             });
     };
 

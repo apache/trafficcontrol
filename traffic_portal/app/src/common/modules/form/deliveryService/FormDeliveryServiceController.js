@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceController = function(deliveryService, type, types, $scope, $location, formUtils, locationUtils, cdnService, profileService, tenantService) {
+var FormDeliveryServiceController = function(deliveryService, type, types, $scope, $location, formUtils, locationUtils, tenantUtils, cdnService, profileService, tenantService) {
 
     var getCDNs = function() {
         cdnService.getCDNs()
@@ -39,6 +39,7 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
         tenantService.getTenants()
             .then(function(result) {
                 $scope.tenants = result;
+                tenantUtils.addLevels($scope.tenants);
             });
     };
 
@@ -148,6 +149,10 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
         { value: 4, label: "4 - Latch on Failover" }
     ];
 
+    $scope.tenantLabel = function(tenant) {
+        return '-'.repeat(tenant.level) + ' ' + tenant.name;
+    };
+
     $scope.viewTargets = function() {
         $location.path($location.path() + '/targets');
     };
@@ -191,5 +196,5 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$location', 'formUtils', 'locationUtils', 'cdnService', 'profileService', 'tenantService'];
+FormDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$location', 'formUtils', 'locationUtils', 'tenantUtils', 'cdnService', 'profileService', 'tenantService'];
 module.exports = FormDeliveryServiceController;

@@ -202,6 +202,7 @@ func (to *Session) request(method, path string, body []byte) (*http.Response, er
 			HTTPStatusCode: resp.StatusCode,
 			URL:            url,
 		}
+		resp.Body.Close()
 		return nil, &e
 	}
 

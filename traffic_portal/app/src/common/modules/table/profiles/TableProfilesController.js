@@ -22,11 +22,11 @@ var TableProfilesController = function(profiles, $scope, $state, $location, $uib
     $scope.profiles = profiles;
 
     $scope.editProfile = function(id) {
-        locationUtils.navigateToPath('/admin/profiles/' + id);
+        locationUtils.navigateToPath('/profiles/' + id);
     };
 
     $scope.createProfile = function() {
-        locationUtils.navigateToPath('/admin/profiles/new');
+        locationUtils.navigateToPath('/profiles/new');
     };
 
     $scope.importProfile = function() {

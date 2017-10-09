@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -58,7 +59,7 @@ func TestGetCdns(t *testing.T) {
 	defer db.Close()
 
 	testCdns := getTestCdns()
-	cols := ColsFromStructByTag("db", tostructs.Cdn{})
+	cols := test.ColsFromStructByTag("db", tostructs.Cdn{})
 	rows := sqlmock.NewRows(cols)
 
 	//TODO: drichardson - build helper to add these Rows from the struct values
