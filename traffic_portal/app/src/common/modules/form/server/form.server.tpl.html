@@ -39,7 +39,7 @@ under the License.
                     <li class="divider"></li>
                     <li><a ng-click="confirmStatusUpdate()">Update Status</a></li>
                     <li class="divider"></li>
-                    <li><a ng-click="viewDeliveryServices()">View Delivery Services</a></li>
+                    <li><a ng-show="isEdge(server)" ng-click="viewDeliveryServices()">View Delivery Services</a></li>
                     <li><a ng-click="viewConfigFiles()">View Config Files</a></li>
                 </ul>
             </div>

@@ -19,6 +19,10 @@
 
 var ServerUtils = function($window, userModel) {
 
+	this.isEdge = function(server) {
+		return (server.type.indexOf('EDGE') != -1);
+	};
+
 	this.isOffline = function(status) {
 		return (status == 'OFFLINE' || status == 'ADMIN_DOWN');
 	};

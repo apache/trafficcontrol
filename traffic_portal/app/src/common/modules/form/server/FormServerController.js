@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormServerController = function(server, $scope, $location, $state, $uibModal, formUtils, locationUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, statusService, typeService, messageModel) {
+var FormServerController = function(server, $scope, $location, $state, $uibModal, formUtils, locationUtils, serverUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, statusService, typeService, messageModel) {
 
     var getPhysLocations = function() {
         physLocationService.getPhysLocations()
@@ -94,6 +94,8 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         { value: true, label: 'true' }
     ];
 
+    $scope.isEdge = serverUtils.isEdge;
+
     $scope.queueServerUpdates = function(server) {
         serverService.queueServerUpdates(server.id)
             .then(
@@ -160,5 +162,5 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
 
 };
 
-FormServerController.$inject = ['server', '$scope', '$location', '$state', '$uibModal', 'formUtils', 'locationUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'statusService', 'typeService', 'messageModel'];
+FormServerController.$inject = ['server', '$scope', '$location', '$state', '$uibModal', 'formUtils', 'locationUtils', 'serverUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'statusService', 'typeService', 'messageModel'];
 module.exports = FormServerController;

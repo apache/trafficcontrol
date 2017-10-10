@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableServerDeliveryServicesController = function(server, serverDeliveryServices, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, deliveryServiceService, serverService) {
+var TableServerDeliveryServicesController = function(server, serverDeliveryServices, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, serverUtils, deliveryServiceService, serverService) {
 
 	var protocols = deliveryServiceUtils.protocols;
 
@@ -36,9 +36,7 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 
 	$scope.serverDeliveryServices = serverDeliveryServices;
 
-	$scope.isEdge = function(server) {
-		return (server.type.indexOf('EDGE') != -1)
-	};
+	$scope.isEdge = serverUtils.isEdge;
 
 	$scope.protocol = function(ds) {
 		return protocols[ds.protocol];
@@ -71,7 +69,7 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 		});
 		modalInstance.result.then(function(selectedServer) {
 			var dsIds = _.pluck(serverDeliveryServices, 'id');
-			serverService.assignDeliveryServices(selectedServer, dsIds, true)
+			serverService.assignDeliveryServices(selectedServer, dsIds, true, true)
 				.then(
 					function() {
 						locationUtils.navigateToPath('/servers/' + selectedServer.id + '/delivery-services');
@@ -83,8 +81,33 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 	};
 
 
-	$scope.addDeliveryService = function() {
-		alert('not hooked up yet: addDeliveryService to server');
+	$scope.selectDeliveryServices = function() {
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/table/serverDeliveryServices/table.assignDeliveryServices.tpl.html',
+			controller: 'TableAssignDeliveryServicesController',
+			size: 'lg',
+			resolve: {
+				server: function() {
+					return server;
+				},
+				deliveryServices: function(deliveryServiceService) {
+					return deliveryServiceService.getDeliveryServices({ cdn: server.cdnId });
+				},
+				assignedDeliveryServices: function() {
+					return serverDeliveryServices;
+				}
+			}
+		});
+		modalInstance.result.then(function(selectedDsIds) {
+			serverService.assignDeliveryServices(server, selectedDsIds, true, false)
+				.then(
+					function() {
+						$scope.refresh();
+					}
+				);
+		}, function () {
+			// do nothing
+		});
 	};
 
 	$scope.confirmRemoveDS = function(ds) {
@@ -126,5 +149,5 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 
 };
 
-TableServerDeliveryServicesController.$inject = ['server', 'serverDeliveryServices', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'deliveryServiceService', 'serverService'];
+TableServerDeliveryServicesController.$inject = ['server', 'serverDeliveryServices', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'serverUtils', 'deliveryServiceService', 'serverService'];
 module.exports = TableServerDeliveryServicesController;
