@@ -18,4 +18,5 @@
  */
 
 module.exports = angular.module('trafficPortal.table.serverDeliveryServices', [])
-	.controller('TableServerDeliveryServicesController', require('./TableServerDeliveryServicesController'));
+	.controller('TableServerDeliveryServicesController', require('./TableServerDeliveryServicesController'))
+	.controller('TableAssignDeliveryServicesController', require('./TableAssignDeliveryServicesController'));

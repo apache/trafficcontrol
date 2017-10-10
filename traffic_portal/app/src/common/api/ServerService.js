@@ -96,11 +96,11 @@ var ServerService = function($http, $q, Restangular, locationUtils, messageModel
         return Restangular.one('deliveryservices', dsId).getList('servers/eligible');
     };
 
-    this.assignDeliveryServices = function(server, dsIds, replace) {
+    this.assignDeliveryServices = function(server, dsIds, replace, delay) {
         return Restangular.service('servers/' + server.id + '/deliveryservices?replace=' + replace).post( dsIds )
             .then(
                 function() {
-                    messageModel.setMessages([ { level: 'success', text: dsIds.length + ' delivery services assigned to ' + server.hostName + '.' + server.domainName } ], true);
+                    messageModel.setMessages([ { level: 'success', text: dsIds.length + ' delivery services assigned to ' + server.hostName + '.' + server.domainName } ], delay);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
