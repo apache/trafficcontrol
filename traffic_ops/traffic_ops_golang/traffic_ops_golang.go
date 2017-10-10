@@ -33,34 +33,24 @@ import (
 )
 
 const Version = "0.1"
-
-const DefaultConfigPath = "/opt/traffic_ops/traffic_ops_golang.config"
-
+const DefaultRIAKConfigPath = "/opt/traffic_ops/app/conf/production/riak.conf"
+const DefaultConfigPath = "/opt/traffic_ops/app/conf/cdn.conf"
+const DefaultDBConfigPath = "/opt/traffic_ops/app/conf/production/database.conf"
 const OldConfig = true
-const OldConfigCDNConfPath = "/opt/traffic_ops/app/conf/cdn.conf"
-const OldConfigDBConfPath = "/opt/traffic_ops/app/conf/production/database.conf"
-const OldConfigRIAKConfPath = "/opt/traffic_ops/app/conf/production/riak.conf"
+
+
 
 func main() {
-	configFileName := flag.String("cfg", "", "The config file path")
-	oldConfig := flag.Bool("oldcfg", true, "Whether to look for old Perl Traffic Ops config files")
+	configFileName := flag.String("cfg", DefaultConfigPath, "The config file path")
+	dbConfigFileName := flag.String("dbcfg", DefaultDBConfigPath, "The db config file path")
+	riakConfigFileName := flag.String("riakcfg", DefaultRIAKConfigPath, "the riak config file path")
 	flag.Parse()
-	if *configFileName == "" {
-		*configFileName = DefaultConfigPath
-	}
 
-	cfg := Config{}
-	err := error(nil)
-	if !*oldConfig {
-		if cfg, err = LoadConfig(*configFileName); err != nil {
-			fmt.Println("Error loading config '" + *configFileName + "': " + err.Error())
-			return
-		}
-	} else {
-		if cfg, err = GetPerlConfigs(OldConfigCDNConfPath, OldConfigDBConfPath, OldConfigRIAKConfPath); err != nil {
-			fmt.Println("Error loading old configs '" + OldConfigCDNConfPath + "' and '" + OldConfigDBConfPath + "': " + err.Error())
-			return
-		}
+	var cfg Config
+	var err error
+	if cfg, err = LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName); err != nil {
+		fmt.Println("Error loading config: " + err.Error())
+		return
 	}
 
 	if err := log.InitCfg(cfg); err != nil {
@@ -91,14 +81,14 @@ func main() {
 		Warn Log:             %s
 		Info Log:             %s
 		Debug Log:            %s
-		Event Log:            %s`, cfg.HTTPPort, cfg.DBServer, cfg.DBUser, cfg.DBDB, cfg.DBSSL, cfg.MaxDBConnections, cfg.TOURLStr, cfg.Insecure, cfg.CertPath, cfg.KeyPath, time.Duration(cfg.ProxyTimeout)*time.Second, time.Duration(cfg.ProxyKeepAlive)*time.Second, time.Duration(cfg.ProxyTLSTimeout)*time.Second, time.Duration(cfg.ProxyReadHeaderTimeout)*time.Second, time.Duration(cfg.ReadTimeout)*time.Second, time.Duration(cfg.ReadHeaderTimeout)*time.Second, time.Duration(cfg.WriteTimeout)*time.Second, time.Duration(cfg.IdleTimeout)*time.Second, cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug, cfg.LogLocationEvent)
+		Event Log:            %s`, cfg.Port, cfg.DB.Hostname, cfg.DB.User, cfg.DB.DBName, cfg.DB.SSL, cfg.MaxDBConnections, cfg.Listen[0], cfg.Insecure, cfg.CertPath(), cfg.KeyPath(), time.Duration(cfg.ProxyTimeout)*time.Second, time.Duration(cfg.ProxyKeepAlive)*time.Second, time.Duration(cfg.ProxyTLSTimeout)*time.Second, time.Duration(cfg.ProxyReadHeaderTimeout)*time.Second, time.Duration(cfg.ReadTimeout)*time.Second, time.Duration(cfg.ReadHeaderTimeout)*time.Second, time.Duration(cfg.WriteTimeout)*time.Second, time.Duration(cfg.IdleTimeout)*time.Second, cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug, cfg.LogLocationEvent)
 
 	sslStr := "require"
-	if !cfg.DBSSL {
+	if !cfg.DB.SSL {
 		sslStr = "disable"
 	}
 
-	db, err := sqlx.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s", cfg.DBUser, cfg.DBPass, cfg.DBServer, cfg.DBDB, sslStr))
+	db, err := sqlx.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s", cfg.DB.User, cfg.DB.Password, cfg.DB.Hostname, cfg.DB.DBName, sslStr))
 	if err != nil {
 		log.Errorf("opening database: %v\n", err)
 		return
@@ -112,19 +102,19 @@ func main() {
 		return
 	}
 
-	log.Infof("Listening on " + cfg.HTTPPort)
+	log.Infof("Listening on " + cfg.Port)
 
 	server := &http.Server{
-		Addr:              ":" + cfg.HTTPPort,
+		Addr:              ":" + cfg.Port,
 		TLSConfig:         &tls.Config{InsecureSkipVerify: cfg.Insecure},
 		ReadTimeout:       time.Duration(cfg.ReadTimeout) * time.Second,
 		ReadHeaderTimeout: time.Duration(cfg.ReadHeaderTimeout) * time.Second,
 		WriteTimeout:      time.Duration(cfg.WriteTimeout) * time.Second,
 		IdleTimeout:       time.Duration(cfg.IdleTimeout) * time.Second,
 	}
-
+	
 	log.Debugf("our server struct: %++v \n", server)
-	if err := server.ListenAndServeTLS(cfg.CertPath, cfg.KeyPath); err != nil {
+	if err := server.ListenAndServeTLS(cfg.CertPath(), cfg.KeyPath()); err != nil {
 		log.Errorf("stopping server: %v\n", err)
 		return
 	}

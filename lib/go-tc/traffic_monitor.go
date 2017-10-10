@@ -1,19 +1,4 @@
-/*
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-*/
-
-package client
+package tc
 
 import (
 	"encoding/json"
@@ -21,6 +6,25 @@ import (
 	"strconv"
 	"strings"
 )
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 
 // TMConfigResponse ...
 type TMConfigResponse struct {
@@ -57,6 +61,13 @@ type TrafficMonitor struct {
 	Profile  string `json:"profile"`
 	Location string `json:"location"`
 	Status   string `json:"status"`
+}
+
+// TMCacheGroup ...
+// !!! Note the lowercase!!! this is local to this file, there's a CacheGroup definition in cachegroup.go!
+type TMCacheGroup struct {
+	Name        string      `json:"name"`
+	Coordinates Coordinates `json:"coordinates"`
 }
 
 // TMDeliveryService ...
@@ -110,7 +121,6 @@ func strToThreshold(s string) (HealthThreshold, error) {
 	}
 	return HealthThreshold{Val: val, Comparator: DefaultHealthThresholdComparator}, nil
 }
-
 func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 	raw := map[string]interface{}{}
 	if err := json.Unmarshal(bytes, &raw); err != nil {
@@ -157,37 +167,7 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 	return nil
 }
 
-// TrafficMonitorConfigMap ...
-func (to *Session) TrafficMonitorConfigMap(cdn string) (*TrafficMonitorConfigMap, error) {
-	tmConfig, err := to.TrafficMonitorConfig(cdn)
-	if err != nil {
-		return nil, err
-	}
-	tmConfigMap, err := trafficMonitorTransformToMap(tmConfig)
-	if err != nil {
-		return nil, err
-	}
-	return tmConfigMap, nil
-}
-
-// TrafficMonitorConfig ...
-func (to *Session) TrafficMonitorConfig(cdn string) (*TrafficMonitorConfig, error) {
-	url := fmt.Sprintf("/api/1.2/cdns/%s/configs/monitoring.json", cdn)
-	resp, err := to.request("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var data TMConfigResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
-	}
-
-	return &data.Response, nil
-}
-
-func trafficMonitorTransformToMap(tmConfig *TrafficMonitorConfig) (*TrafficMonitorConfigMap, error) {
+func TrafficMonitorTransformToMap(tmConfig *TrafficMonitorConfig) (*TrafficMonitorConfigMap, error) {
 	var tm TrafficMonitorConfigMap
 
 	tm.TrafficServer = make(map[string]TrafficServer)

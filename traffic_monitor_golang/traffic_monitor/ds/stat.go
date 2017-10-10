@@ -31,7 +31,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/health"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/todata"
-	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 // TODO remove 'ds' and 'stat' from names
@@ -231,7 +230,7 @@ func addLastDSStatTotals(lastStat dsdata.LastDSStat, cachesReporting map[tc.Cach
 }
 
 // addDSPerSecStats calculates and adds the per-second delivery service stats to both the Stats and LastStats structures, and returns the augmented structures.
-func addDSPerSecStats(dsName tc.DeliveryServiceName, stat dsdata.Stat, lastStats dsdata.LastStats, dsStats dsdata.Stats, serverCachegroups map[tc.CacheName]tc.CacheGroupName, serverTypes map[tc.CacheName]tc.CacheType, mc to.TrafficMonitorConfigMap, events health.ThreadsafeEvents, precomputed map[tc.CacheName]cache.PrecomputedData, states peer.CRStatesThreadsafe) (dsdata.Stats, dsdata.LastStats) {
+func addDSPerSecStats(dsName tc.DeliveryServiceName, stat dsdata.Stat, lastStats dsdata.LastStats, dsStats dsdata.Stats, serverCachegroups map[tc.CacheName]tc.CacheGroupName, serverTypes map[tc.CacheName]tc.CacheType, mc tc.TrafficMonitorConfigMap, events health.ThreadsafeEvents, precomputed map[tc.CacheName]cache.PrecomputedData, states peer.CRStatesThreadsafe) (dsdata.Stats, dsdata.LastStats) {
 	err := error(nil)
 	lastStat, lastStatExists := lastStats.DeliveryServices[dsName]
 	if !lastStatExists {
@@ -327,7 +326,7 @@ func addCachePerSecStats(cacheName tc.CacheName, precomputed cache.PrecomputedDa
 // we set the (new - old) / lastChangedTime as the KBPS, and update the recorded LastChangedTime and LastChangedValue
 //
 // TODO handle ATS byte rolling (when the `out_bytes` overflows back to 0)
-func addPerSecStats(precomputed map[tc.CacheName]cache.PrecomputedData, dsStats dsdata.Stats, lastStats dsdata.LastStats, serverCachegroups map[tc.CacheName]tc.CacheGroupName, serverTypes map[tc.CacheName]tc.CacheType, mc to.TrafficMonitorConfigMap, events health.ThreadsafeEvents, states peer.CRStatesThreadsafe) (dsdata.Stats, dsdata.LastStats) {
+func addPerSecStats(precomputed map[tc.CacheName]cache.PrecomputedData, dsStats dsdata.Stats, lastStats dsdata.LastStats, serverCachegroups map[tc.CacheName]tc.CacheGroupName, serverTypes map[tc.CacheName]tc.CacheType, mc tc.TrafficMonitorConfigMap, events health.ThreadsafeEvents, states peer.CRStatesThreadsafe) (dsdata.Stats, dsdata.LastStats) {
 	for dsName, stat := range dsStats.DeliveryService {
 		dsStats, lastStats = addDSPerSecStats(dsName, stat, lastStats, dsStats, serverCachegroups, serverTypes, mc, events, precomputed, states)
 	}
@@ -339,7 +338,7 @@ func addPerSecStats(precomputed map[tc.CacheName]cache.PrecomputedData, dsStats 
 }
 
 // CreateStats aggregates and creates statistics from given precomputed stat history. It returns the created stats, information about these stats necessary for the next calculation, and any error.
-func CreateStats(precomputed map[tc.CacheName]cache.PrecomputedData, toData todata.TOData, crStates tc.CRStates, lastStats dsdata.LastStats, now time.Time, mc to.TrafficMonitorConfigMap, events health.ThreadsafeEvents, states peer.CRStatesThreadsafe) (dsdata.Stats, dsdata.LastStats, error) {
+func CreateStats(precomputed map[tc.CacheName]cache.PrecomputedData, toData todata.TOData, crStates tc.CRStates, lastStats dsdata.LastStats, now time.Time, mc tc.TrafficMonitorConfigMap, events health.ThreadsafeEvents, states peer.CRStatesThreadsafe) (dsdata.Stats, dsdata.LastStats, error) {
 	start := time.Now()
 	dsStats := dsdata.NewStats()
 	for deliveryService := range toData.DeliveryServiceServers {
@@ -396,7 +395,7 @@ func CreateStats(precomputed map[tc.CacheName]cache.PrecomputedData, toData toda
 	return perSecStats, lastStats, nil
 }
 
-func getDSErr(dsName tc.DeliveryServiceName, dsStats dsdata.StatCacheStats, monitorConfig to.TrafficMonitorConfigMap) error {
+func getDSErr(dsName tc.DeliveryServiceName, dsStats dsdata.StatCacheStats, monitorConfig tc.TrafficMonitorConfigMap) error {
 	if tpsThreshold := monitorConfig.DeliveryService[dsName.String()].TotalTPSThreshold; tpsThreshold > 0 && dsStats.TpsTotal.Value > float64(tpsThreshold) {
 		return fmt.Errorf("total.tps_total too high (%.2f > %v)", dsStats.TpsTotal.Value, tpsThreshold)
 	}

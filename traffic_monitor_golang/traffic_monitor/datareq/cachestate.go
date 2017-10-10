@@ -32,7 +32,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/todata"
-	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 // CacheStatus contains summary stat data about the given cache.
@@ -82,7 +81,7 @@ func createCacheStatuses(
 	lastStats dsdata.LastStats,
 	localCacheStatusThreadsafe threadsafe.CacheAvailableStatus,
 	statMaxKbpses threadsafe.CacheKbpses,
-	servers map[string]to.TrafficServer,
+	servers map[string]tc.TrafficServer,
 ) map[tc.CacheName]CacheStatus {
 	conns := createCacheConnections(statResultHistory)
 	statii := map[tc.CacheName]CacheStatus{}
@@ -176,7 +175,7 @@ func createCacheStatuses(
 	return statii
 }
 
-func cacheStatusAndPoller(server tc.CacheName, serverInfo to.TrafficServer, localCacheStatus cache.AvailableStatuses) (string, string) {
+func cacheStatusAndPoller(server tc.CacheName, serverInfo tc.TrafficServer, localCacheStatus cache.AvailableStatuses) (string, string) {
 	switch status := tc.CacheStatusFromString(serverInfo.Status); status {
 	case tc.CacheStatusAdminDown:
 		fallthrough

@@ -1,3 +1,5 @@
+package tc
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,8 +14,6 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-
-package client
 
 // GetDeliveryServiceResponse ...
 type GetDeliveryServiceResponse struct {
@@ -199,48 +199,4 @@ type DeliveryServiceServer struct {
 	LastUpdated     string `json:"lastUpdated"`
 	Server          int    `json:"server"`
 	DeliveryService int    `json:"deliveryService"`
-}
-
-// DeliveryServiceRegexResponse ...
-type DeliveryServiceRegexResponse struct {
-	Response []DeliveryServiceRegexes `json:"response"`
-}
-
-// DeliveryServiceRegexes ...
-type DeliveryServiceRegexes struct {
-	Regexes []DeliveryServiceRegex `json:"regexes"`
-	DSName  string                 `json:"dsName"`
-}
-
-// DeliveryServiceRegex ...
-type DeliveryServiceRegex struct {
-	Type      string `json:"type"`
-	SetNumber int    `json:"setNumber"`
-	Pattern   string `json:"pattern"`
-}
-
-// DeliveryServiceSSLKeysResponse ...
-type DeliveryServiceSSLKeysResponse struct {
-	Response DeliveryServiceSSLKeys `json:"response"`
-}
-
-// DeliveryServiceSSLKeys ...
-type DeliveryServiceSSLKeys struct {
-	CDN             string                            `json:"cdn"`
-	DeliveryService string                            `json:"DeliveryService"`
-	BusinessUnit    string                            `json:"businessUnit"`
-	City            string                            `json:"city"`
-	Organization    string                            `json:"organization"`
-	Hostname        string                            `json:"hostname"`
-	Country         string                            `json:"country"`
-	State           string                            `json:"state"`
-	Version         string                            `json:"version"`
-	Certificate     DeliveryServiceSSLKeysCertificate `json:"certificate"`
-}
-
-// DeliveryServiceSSLKeysCertificate ...
-type DeliveryServiceSSLKeysCertificate struct {
-	Crt string `json:"crt"`
-	Key string `json:"key"`
-	CSR string `json:"csr"`
 }

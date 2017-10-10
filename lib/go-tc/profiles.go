@@ -1,4 +1,4 @@
-package api
+package tc
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,29 +19,15 @@ package api
  * under the License.
  */
 
-type ErrorConstant string
+// ProfileResponse ...
+type ProfilesResponse struct {
+	Response []Profile `json:"response"`
+}
 
-func (e ErrorConstant) Error() string { return string(e) }
-
-const DBError = ErrorConstant("database access error")
-
-const ApplicationJson = "application/json"
-const Gzip = "gzip"
-const ContentType = "Content-Type"
-const ContentEncoding = "Content-Encoding"
-
-
-type AlertLevel int
-
-const (
-	SuccessLevel AlertLevel = iota
-	InfoLevel
-	WarnLevel
-	ErrorLevel
-)
-
-var alertLevels = [4]string{"success","info","warn","error"}
-
-func (a AlertLevel) String() string {
-	return alertLevels[a]
+// Profile ...
+type Profile struct {
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	LastUpdated string `json:"lastUpdated"`
 }

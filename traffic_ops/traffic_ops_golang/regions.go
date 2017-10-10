@@ -26,26 +26,33 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
 )
 
 const RegionsPrivLevel = 10
 
-func regionsHandler(db *sqlx.DB) AuthRegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
+func regionsHandler(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
 			w.WriteHeader(status)
 			fmt.Fprintf(w, http.StatusText(status))
 		}
 
+		ctx := r.Context()
+		pathParams, err := getPathParams(ctx)
+		if err != nil {
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
+
 		// Load the PathParams into the query parameters for pass through
 		q := r.URL.Query()
-		for k, v := range p {
+		for k, v := range pathParams {
 			q.Set(k, v)
 		}
-		resp, err := getRegionsResponse(q, db, privLevel)
+		resp, err := getRegionsResponse(q, db)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -62,20 +69,19 @@ func regionsHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	}
 }
 
-func getRegionsResponse(q url.Values, db *sqlx.DB, privLevel int) (*tostructs.RegionsResponse, error) {
-	regions, err := getRegions(q, db, privLevel)
+func getRegionsResponse(q url.Values, db *sqlx.DB) (*tc.RegionsResponse, error) {
+	regions, err := getRegions(q, db)
 	if err != nil {
 		return nil, fmt.Errorf("getting regions response: %v", err)
 	}
 
-	resp := tostructs.RegionsResponse{
+	resp := tc.RegionsResponse{
 		Response: regions,
 	}
 	return &resp, nil
 }
 
-func getRegions(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Region, error) {
-
+func getRegions(v url.Values, db *sqlx.DB) ([]tc.Region, error) {
 	var rows *sqlx.Rows
 	var err error
 
@@ -94,11 +100,11 @@ func getRegions(v url.Values, db *sqlx.DB, privLevel int) ([]tostructs.Region, e
 	if err != nil {
 		return nil, err
 	}
-	regions := []tostructs.Region{}
+	regions := []tc.Region{}
 
 	defer rows.Close()
 	for rows.Next() {
-		var s tostructs.Region
+		var s tc.Region
 		if err = rows.StructScan(&s); err != nil {
 			return nil, fmt.Errorf("getting regions: %v", err)
 		}

@@ -20,11 +20,12 @@ package main
  */
 
 import (
+	"context"
 	"database/sql"
-
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-
 	"github.com/jmoiron/sqlx"
+	"errors"
+	"fmt"
 )
 
 // PrivLevelInvalid - The Default Priv level
@@ -39,8 +40,11 @@ const PrivLevelOperations = 20
 // PrivLevelAdmin - The user has full privileges
 const PrivLevelAdmin = 30
 
+const PrivLevelKey = "privLevel"
+const UserNameKey = "userName"
+
 func preparePrivLevelStmt(db *sqlx.DB) (*sql.Stmt, error) {
-	return db.Prepare("select r.priv_level from tm_user as u join role as r on u.role = r.id where u.username = $1")
+	return db.Prepare("SELECT r.priv_level FROM tm_user AS u JOIN role AS r ON u.role = r.id WHERE u.username = $1")
 }
 
 // PrivLevel - returns the privilege level of the given user, or PrivLevelInvalid if the user doesn't exist.
@@ -57,4 +61,30 @@ func PrivLevel(privLevelStmt *sql.Stmt, user string) int {
 	default:
 		return privLevel
 	}
+}
+
+func getPrivLevel(ctx context.Context) (int, error) {
+	val := ctx.Value(PrivLevelKey)
+	if val != nil {
+		switch v := val.(type) {
+		case int:
+			return v, nil
+		default:
+			return PrivLevelInvalid, fmt.Errorf("privLevel found with bad type: %T\n",v)
+		}
+	}
+	return PrivLevelInvalid, errors.New("no privLevel found in Context")
+}
+
+func getUserName(ctx context.Context) (string, error) {
+	val := ctx.Value(UserNameKey)
+	if val != nil {
+		switch v := val.(type) {
+		case string:
+			return v, nil
+		default:
+			return "-", fmt.Errorf("userName found with bad type: %T\n",v)
+		}
+	}
+	return "-", errors.New("No userName found in Context")
 }

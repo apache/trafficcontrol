@@ -19,7 +19,7 @@ Traffic Monitor Administration
 
 .. _rl-tm-golang:
 
-* These instructions are for the beta Golang Traffic Monitor, for the old Java version, see :ref:`rl-tm-java`.
+* These instructions are for the Golang Traffic Monitor, for the legacy Java version, see :ref:`here <rl-tm-java>`.
 
 Installing Traffic Monitor
 ==========================

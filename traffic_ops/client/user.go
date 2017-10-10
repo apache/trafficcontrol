@@ -15,31 +15,14 @@
 
 package client
 
-import "encoding/json"
+import (
+	"encoding/json"
 
-// UserResponse ...
-type UserResponse struct {
-	Response []User `json:"response"`
-}
-
-// User contains information about a given user in Traffic Ops.
-type User struct {
-	Username     string `json:"username,omitempty"`
-	PublicSSHKey string `json:"publicSshKey,omitempty"`
-	Role         int    `json:"role,omitempty"`
-	RoleName     string `json:"rolename,omitempty"`
-	ID           int    `json:"id,omitempty"`
-	UID          int    `json:"uid,omitempty"`
-	GID          int    `json:"gid,omitempty"`
-	Company      string `json:"company,omitempty"`
-	Email        string `json:"email,omitempty"`
-	FullName     string `json:"fullName,omitempty"`
-	NewUser      bool   `json:"newUser,omitempty"`
-	LastUpdated  string `json:"lastUpdated,omitempty"`
-}
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+)
 
 // Users gets an array of Users.
-func (to *Session) Users() ([]User, error) {
+func (to *Session) Users() ([]tc.User, error) {
 	url := "/api/1.2/users.json"
 	resp, err := to.request("GET", url, nil)
 	if err != nil {
@@ -47,7 +30,7 @@ func (to *Session) Users() ([]User, error) {
 	}
 	defer resp.Body.Close()
 
-	var data UserResponse
+	var data tc.UsersResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}

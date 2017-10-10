@@ -32,11 +32,10 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/threadsafe"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/todata"
-	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 // GetVitals Gets the vitals to decide health on in the right format
-func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *to.TrafficMonitorConfigMap) {
+func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.TrafficMonitorConfigMap) {
 	if newResult.Error != nil {
 		log.Errorf("cache_health.GetVitals() called with an errored Result!")
 		return
@@ -96,7 +95,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *to.Traffic
 // EvalCache returns whether the given cache should be marked available, a string describing why, and which stat exceeded a threshold. The `stats` may be nil, for pollers which don't poll stats.
 // The availability of EvalCache MAY NOT be used to directly set the cache's local availability, because the threshold stats may not be part of the poller which produced the result. Rather, if the cache was previously unavailable from a threshold, it must be verified that threshold stat is in the results before setting the cache to available.
 // TODO change to return a `cache.AvailableStatus`
-func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, mc *to.TrafficMonitorConfigMap) (bool, string, string) {
+func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, mc *tc.TrafficMonitorConfigMap) (bool, string, string) {
 	serverInfo, ok := mc.TrafficServer[string(result.ID)]
 	if !ok {
 		log.Errorf("Cache %v missing from from Traffic Ops Monitor Config - treating as OFFLINE\n", result.ID)
@@ -172,7 +171,7 @@ func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, 
 
 // CalcAvailability calculates the availability of the cache, from the given result. Availability is stored in `localCacheStatus` and `localStates`, and if the status changed an event is added to `events`. statResultHistory may be nil, for pollers which don't poll stats.
 // TODO add tc for poller names?
-func CalcAvailability(results []cache.Result, pollerName string, statResultHistory cache.ResultStatHistory, mc to.TrafficMonitorConfigMap, toData todata.TOData, localCacheStatusThreadsafe threadsafe.CacheAvailableStatus, localStates peer.CRStatesThreadsafe, events ThreadsafeEvents) {
+func CalcAvailability(results []cache.Result, pollerName string, statResultHistory cache.ResultStatHistory, mc tc.TrafficMonitorConfigMap, toData todata.TOData, localCacheStatusThreadsafe threadsafe.CacheAvailableStatus, localStates peer.CRStatesThreadsafe, events ThreadsafeEvents) {
 	localCacheStatuses := localCacheStatusThreadsafe.Get().Copy()
 	for _, result := range results {
 		statResults := cache.ResultStatValHistory(nil)
@@ -213,7 +212,7 @@ func setErr(newResult *cache.Result, err error) {
 }
 
 // ExceedsThresholdMsg returns a human-readable message for why the given value exceeds the threshold. It does NOT check whether the value actually exceeds the threshold; call `InThreshold` to check first.
-func exceedsThresholdMsg(stat string, threshold to.HealthThreshold, val float64) string {
+func exceedsThresholdMsg(stat string, threshold tc.HealthThreshold, val float64) string {
 	switch threshold.Comparator {
 	case "=":
 		return fmt.Sprintf("%s not equal (%.2f != %.2f)", stat, val, threshold.Val)
@@ -230,7 +229,7 @@ func exceedsThresholdMsg(stat string, threshold to.HealthThreshold, val float64)
 	}
 }
 
-func inThreshold(threshold to.HealthThreshold, val float64) bool {
+func inThreshold(threshold tc.HealthThreshold, val float64) bool {
 	switch threshold.Comparator {
 	case "=":
 		return val == threshold.Val

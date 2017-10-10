@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
 	"github.com/lestrrat/go-jwx/jwk"
 	"io/ioutil"
 	"net/http"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 const RiakPort = 8087
@@ -26,8 +26,8 @@ func getStringValue(resp *riak.FetchValueResponse) (string, error) {
 	return string(obj.Value), nil
 }
 
-func assignDeliveryServiceUriKeysKeysHandler(db *sqlx.DB, cfg Config) AuthRegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
+func assignDeliveryServiceUriKeysKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
 			w.WriteHeader(status)
@@ -35,7 +35,14 @@ func assignDeliveryServiceUriKeysKeysHandler(db *sqlx.DB, cfg Config) AuthRegexH
 		}
 		defer r.Body.Close()
 
-		xmlId := p["xml-id"]
+		ctx := r.Context()
+		pathParams, err := getPathParams(ctx)
+		if err != nil {
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
+
+		xmlId := pathParams["xml-id"]
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
@@ -134,15 +141,22 @@ func fetchObject(key string, bucket string, db *sqlx.DB, cfg Config) (*riak.Fetc
 }
 
 // endpoint handler for fetching uri signing keys from riak
-func urisignkeysHandler(db *sqlx.DB, cfg Config) RegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
+func urisignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
 			w.WriteHeader(status)
 			fmt.Fprintf(w, http.StatusText(status))
 		}
 
-		xmlId := p["xml-id"]
+		ctx := r.Context()
+		pathParams, err := getPathParams(ctx)
+		if err != nil {
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
+
+		xmlId := pathParams["xml-id"]
 
 		fvc, err := fetchObject(xmlId, cdn_uri_keys_bucket, db, cfg)
 		if err != nil {
@@ -176,7 +190,7 @@ func getRiakCluster(db *sqlx.DB, cfg Config, maxNodes int) (*riak.Cluster, error
 	}
 
 	for rows.Next() {
-		var s tostructs.Server
+		var s tc.Server
 		var n *riak.Node
 		if err := rows.Scan(&s.HostName, &s.DomainName); err != nil {
 			return nil, err

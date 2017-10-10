@@ -65,13 +65,13 @@ func TestTrafficRouterConfig(t *testing.T) {
 		}
 	}
 
-	if len(apiTRConfig.DeliveryServices) != len(clientTRConfig.DeliveryServices) {
-		t.Errorf("Length of Traffic Router config deliveryserivces do not match! Expected %v, got %v\n", len(apiTRConfig.DeliveryServices), len(clientTRConfig.DeliveryServices))
+	if len(apiTRConfig.DeliveryServicesRouter) != len(clientTRConfig.DeliveryServicesRouter) {
+		t.Errorf("Length of Traffic Router config deliveryserivces do not match! Expected %v, got %v\n", len(apiTRConfig.DeliveryServicesRouter), len(clientTRConfig.DeliveryServicesRouter))
 	}
 
-	for _, apiDs := range apiTRConfig.DeliveryServices {
+	for _, apiDs := range apiTRConfig.DeliveryServicesRouter {
 		match := false
-		for _, clientDs := range clientTRConfig.DeliveryServices {
+		for _, clientDs := range clientTRConfig.DeliveryServicesRouter {
 			if apiDs.XMLID == clientDs.XMLID {
 				match = true
 				if apiDs.BypassDestination != clientDs.BypassDestination {
@@ -170,12 +170,12 @@ func TestTrafficRouterConfig(t *testing.T) {
 				if apiTS.CacheGroup != clientTS.CacheGroup {
 					t.Errorf("Cachegroup -- Expected %v, got %v\n", apiTS.CacheGroup, clientTS.CacheGroup)
 				}
-				if len(apiTS.DeliveryServices) != len(clientTS.DeliveryServices) {
-					t.Errorf("len DeliveryServices -- Expected %v, got %v\n", len(apiTS.DeliveryServices), len(clientTS.DeliveryServices))
+				if len(apiTS.DeliveryServicesRouter) != len(clientTS.DeliveryServicesRouter) {
+					t.Errorf("len DeliveryServicesRouter -- Expected %v, got %v\n", len(apiTS.DeliveryServicesRouter), len(clientTS.DeliveryServicesRouter))
 				}
-				for _, apiDS := range apiTS.DeliveryServices {
+				for _, apiDS := range apiTS.DeliveryServicesRouter {
 					dsMatch := false
-					for _, clientDS := range clientTS.DeliveryServices {
+					for _, clientDS := range clientTS.DeliveryServicesRouter {
 						if apiDS.Xmlid == clientDS.Xmlid && len(apiDS.Remaps) == len(clientDS.Remaps) {
 							dsMatch = true
 						}

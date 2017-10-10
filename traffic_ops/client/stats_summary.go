@@ -16,33 +16,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
-// StatsSummaryResponse ...
-type StatsSummaryResponse struct {
-	Response []StatsSummary `json:"response"`
-}
-
-// StatsSummary ...
-type StatsSummary struct {
-	CDNName         string `json:"cdnName"`
-	DeliveryService string `json:"deliveryServiceName"`
-	StatName        string `json:"statName"`
-	StatValue       string `json:"statValue"`
-	SummaryTime     string `json:"summaryTime"`
-	StatDate        string `json:"statDate"`
-}
-
-// LastUpdated ...
-type LastUpdated struct {
-	Version  string `json:"version"`
-	Response struct {
-		SummaryTime string `json:"summaryTime"`
-	} `json:"response"`
-}
-
 // SummaryStats ...
-func (to *Session) SummaryStats(cdn string, deliveryService string, statName string) ([]StatsSummary, error) {
+func (to *Session) SummaryStats(cdn string, deliveryService string, statName string) ([]tc.StatsSummary, error) {
 	var queryParams []string
 	if len(cdn) > 0 {
 		queryParams = append(queryParams, fmt.Sprintf("cdnName=%s", cdn))
@@ -72,7 +51,7 @@ func (to *Session) SummaryStats(cdn string, deliveryService string, statName str
 	}
 	defer resp.Body.Close()
 
-	var data StatsSummaryResponse
+	var data tc.StatsSummaryResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
@@ -93,7 +72,7 @@ func (to *Session) SummaryStatsLastUpdated(statName string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	var data LastUpdated
+	var data tc.LastUpdated
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return "", err
 	}
@@ -106,7 +85,7 @@ func (to *Session) SummaryStatsLastUpdated(statName string) (string, error) {
 }
 
 // AddSummaryStats ...
-func (to *Session) AddSummaryStats(statsSummary StatsSummary) error {
+func (to *Session) AddSummaryStats(statsSummary tc.StatsSummary) error {
 	reqBody, err := json.Marshal(statsSummary)
 	if err != nil {
 		return err
