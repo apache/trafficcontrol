@@ -249,10 +249,18 @@ func assignDeliveryServicesToServerHandler(db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
+		type AssignedDsResponse struct {
+			ServerId int `json:"serverId"`
+			DSIds []int `json:"dsIds"`
+			Replace bool `json:"replace"`
+		}
+
+		assignResp := AssignedDsResponse{server,assignedDSes,replace}
+
 		resp := struct {
-			Response []int `json:"response"`
+			Response AssignedDsResponse `json:"response"`
 			tc.Alerts
-		}{assignedDSes, tc.CreateAlerts(tc.SuccessLevel, "successfully assigned dses to server")}
+		}{assignResp, tc.CreateAlerts(tc.SuccessLevel, "successfully assigned dses to server")}
 		respBts, err := json.Marshal(resp)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
@@ -329,9 +337,6 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 		log.Error.Printf("could not execute deliveryservice_server bulk insert: %s\n", err)
 		return nil, tc.DBError
 	}
-	//select dses assigned now.
-	var newDses []int
-	tx.Select(&newDses, "SELECT deliveryservice FROM deliveryservice_server where server = $1", server)
 
 	//need remap config location
 	row := tx.QueryRow("SELECT value FROM parameter WHERE name = 'location' AND config_file = '" + ats.RemapFile + "'")
@@ -461,5 +466,5 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 		return nil, tc.DBError
 	}
 
-	return newDses, nil
+	return dses, nil
 }

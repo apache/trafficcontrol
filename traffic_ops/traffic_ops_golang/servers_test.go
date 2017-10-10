@@ -201,13 +201,6 @@ func TestAssignDsesToServer(t *testing.T) {
 	mock.ExpectPrepare("DELETE").ExpectExec().WithArgs(100).WillReturnResult(sqlmock.NewResult(1, 3))
 	mock.ExpectPrepare("INSERT").ExpectExec().WithArgs(pqNewDses, 100).WillReturnResult(sqlmock.NewResult(1, 3))
 
-	//dses query:
-	dsesRows := sqlmock.NewRows([]string{"deliveryservice"})
-	for _, i := range newDses {
-		dsesRows.AddRow(i)
-	}
-	mock.ExpectQuery("SELECT").WillReturnRows(dsesRows)
-
 	//fetch remap config location
 	remapConfigLocation := "a/path/to/a/remap.config"
 	remapConfigRow := sqlmock.NewRows([]string{"value"})
