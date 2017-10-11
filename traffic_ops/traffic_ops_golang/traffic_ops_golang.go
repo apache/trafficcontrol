@@ -33,19 +33,22 @@ import (
 )
 
 const Version = "0.1"
-
+const DefaultRIAKConfigPath = "/opt/traffic_ops/app/conf/production/riak.conf"
 const DefaultConfigPath = "/opt/traffic_ops/app/conf/cdn.conf"
 const DefaultDBConfigPath = "/opt/traffic_ops/app/conf/production/database.conf"
 const OldConfig = true
 
+
+
 func main() {
 	configFileName := flag.String("cfg", DefaultConfigPath, "The config file path")
 	dbConfigFileName := flag.String("dbcfg", DefaultDBConfigPath, "The db config file path")
+	riakConfigFileName := flag.String("riakcfg", DefaultRIAKConfigPath, "the riak config file path")
 	flag.Parse()
 
 	var cfg Config
 	var err error
-	if cfg, err = LoadConfig(*configFileName, *dbConfigFileName); err != nil {
+	if cfg, err = LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName); err != nil {
 		fmt.Println("Error loading config: " + err.Error())
 		return
 	}

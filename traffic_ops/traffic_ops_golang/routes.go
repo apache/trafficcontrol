@@ -34,13 +34,18 @@ var Authenticated = true
 var NoAuth = false
 // Routes returns the routes, and a catchall route for when no route matches.
 func Routes(d ServerData) ([]Route, http.Handler, error) {
+
 	routes := []Route{
 		//ASNs
 		{1.2,http.MethodGet, `asns-wip(\.json)?$`, ASNsHandler(d.DB),ServersPrivLevel, Authenticated,nil},
 		//CDNs
 		{ 1.2, http.MethodGet, `cdns-wip(\.json)?$`, cdnsHandler(d.DB), CDNsPrivLevel, Authenticated, nil},
 		{ 1.2, http.MethodGet, `cdns/{cdn}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), MonitoringPrivLevel, Authenticated, nil},
-		//Divisions
+		// Delivery services
+		{1.3, http.MethodGet, "deliveryservices/{xml-id}/urisignkeys$", urisignkeysHandler(d.DB, d.Config), HWInfoPrivLevel, Authenticated, nil},
+		{1.3, http.MethodPost, "deliveryservices/{xml-id}/urisignkeys$", assignDeliveryServiceUriKeysKeysHandler(d.DB, d.Config), HWInfoPrivLevel, Authenticated, nil},
+
+		// Divisions
 		{ 1.2, http.MethodGet, `divisions-wip(\.json)?$`, divisionsHandler(d.DB), DivisionsPrivLevel, Authenticated, nil},
 		//HwInfo
 		{ 1.2, http.MethodGet, `hwinfo-wip(\.json)?$`, hwInfoHandler(d.DB), HWInfoPrivLevel, Authenticated, nil},
