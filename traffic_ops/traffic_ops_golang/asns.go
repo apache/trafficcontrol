@@ -30,7 +30,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const ASNSPrivLevel = 10
+const ASNsPrivLevel = 10
 
 func ASNsHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
