@@ -88,9 +88,9 @@ func getRegions(v url.Values, db *sqlx.DB) ([]tc.Region, error) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]string{
-		"division": "division",
-		"id":       "id",
-		"name":     "name",
+		"division": "d.name",
+		"id":       "r.id",
+		"name":     "r.name",
 	}
 
 	query, queryValues := BuildQuery(v, selectRegionsQuery(), queryParamsToQueryCols)
@@ -116,11 +116,13 @@ func getRegions(v url.Values, db *sqlx.DB) ([]tc.Region, error) {
 func selectRegionsQuery() string {
 
 	query := `SELECT
-division,
-id,
-last_updated,
-name 
+r.division,
+d.name as divisionname,
+r.id,
+r.last_updated,
+r.name
 
-FROM region`
+FROM region r
+JOIN division d ON r.division = d.id`
 	return query
 }

@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -34,10 +34,10 @@ import (
 func getTestRegions() []tc.Region {
 	regions := []tc.Region{}
 	testCase := tc.Region{
-		Division:    1,
-		ID:          1,
-		Name:        "region1",
-		LastUpdated: tc.Time{Time: time.Now()},
+		DivisionName: "west",
+		ID:           1,
+		Name:         "region1",
+		LastUpdated:  tc.Time{Time: time.Now()},
 	}
 	regions = append(regions, testCase)
 
@@ -63,6 +63,7 @@ func TestGetRegions(t *testing.T) {
 
 	for _, ts := range testCase {
 		rows = rows.AddRow(
+			ts.DivisionName,
 			ts.Division,
 			ts.ID,
 			ts.LastUpdated,
