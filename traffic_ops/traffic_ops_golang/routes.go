@@ -39,7 +39,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, `asns-wip(\.json)?$`, ASNsHandler(d.DB), ASNsPrivLevel, Authenticated, nil},
 		//CDNs
 		{1.2, http.MethodGet, `cdns-wip(\.json)?$`, cdnsHandler(d.DB), CDNsPrivLevel, Authenticated, nil},
-		{1.2, http.MethodGet, `cdns/{cdn}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), MonitoringPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `cdns/{name}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), MonitoringPrivLevel, Authenticated, nil},
 		//Divisions
 		{1.2, http.MethodGet, `divisions-wip(\.json)?$`, divisionsHandler(d.DB), DivisionsPrivLevel, Authenticated, nil},
 		//HwInfo
@@ -52,7 +52,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		//Servers
 		{1.2, http.MethodGet, `servers-wip(\.json)?$`, serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
 		{1.2, http.MethodGet, "servers-wip/{id}$", serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
-		{1.2, http.MethodPost, "servers/{server}/deliveryservices$", assignDeliveryServicesToServerHandler(d.DB), PrivLevelOperations, Authenticated, nil},
+		{1.2, http.MethodPost, "servers/{id}/deliveryservices$", assignDeliveryServicesToServerHandler(d.DB), PrivLevelOperations, Authenticated, nil},
 
 		//Statuses
 		{1.2, http.MethodGet, `statuses-wip(\.json)?$`, statusesHandler(d.DB), StatusesPrivLevel, Authenticated, nil},
