@@ -80,8 +80,9 @@ func getStatuses(v url.Values, db *sqlx.DB) ([]tc.Status, error) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]string{
-		"id":   "id",
-		"name": "name",
+		"id":          "id",
+		"name":        "name",
+		"description": "description",
 	}
 
 	query, queryValues := BuildQuery(v, selectStatusesQuery(), queryParamsToSQLCols)
@@ -112,6 +113,6 @@ id,
 last_updated,
 name 
 
-FROM cdn c`
+FROM status c`
 	return query
 }
