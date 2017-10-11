@@ -65,6 +65,8 @@ type ConfigTrafficOpsGolang struct {
 	LogLocationEvent       string `json:"log_location_event"`
 	Insecure               bool   `json:"insecure"`
 	MaxDBConnections       int    `json:"max_db_connections"`
+	MojoliciousBacklogSize int    `json:"mojolicious_backlog_size"`
+	MojoliciousWorkers     int    `json:"mojolicious_workers"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file
@@ -167,6 +169,11 @@ func getRiakAuthOptions(s string) (*riak.AuthOptions, error) {
 	return rconf, err
 }
 
+const (
+	MojoliciousBacklogSizeDefault = 100
+	MojoliciousWorkersDefault     = 12
+)
+
 // ParseConfig validates required fields, and parses non-JSON types
 func ParseConfig(cfg Config) (Config, error) {
 	missings := ""
@@ -190,6 +197,12 @@ func ParseConfig(cfg Config) (Config, error) {
 	}
 	if cfg.LogLocationEvent == "" {
 		cfg.LogLocationEvent = log.LogLocationNull
+	}
+	if cfg.MojoliciousBacklogSize <= 0 {
+		cfg.MojoliciousBacklogSize = MojoliciousBacklogSizeDefault
+	}
+	if cfg.MojoliciousWorkers <= 0 {
+		cfg.MojoliciousWorkers = MojoliciousWorkersDefault
 	}
 
 	invalidTOURLStr := ""

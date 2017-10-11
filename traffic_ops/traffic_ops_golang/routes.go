@@ -27,6 +27,8 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"strconv"
+	"strings"
 )
 
 var Authenticated = true
@@ -86,5 +88,43 @@ func rootHandler(d ServerData) http.Handler {
 	log.Debugf("our reverseProxy: %++v\n", rp)
 	log.Debugf("our reverseProxy's transport: %++v\n", tr)
 	loggingProxyHandler := wrapAccessLog(d.Secrets[0], rp)
-	return loggingProxyHandler
+
+	proxyRequestsChannel := make(chan BackendRequest, d.MojoliciousBacklogSize)
+
+	for i := 0; i < d.MojoliciousWorkers; i++ {
+		go WorkerHandler(proxyRequestsChannel, loggingProxyHandler, i+1)
+	}
+
+	return ManagerHandler{strings.Split(d.URL.String(), "?")[0], proxyRequestsChannel}
+}
+
+type BackendRequest struct {
+	Writer  http.ResponseWriter
+	Request *http.Request
+	Done    chan bool
+}
+
+func WorkerHandler(backendRequests chan BackendRequest, h http.Handler, workerId int) {
+	for backendRequest := range backendRequests {
+		log.Debug.Println("worker " + strconv.Itoa(workerId) + " received request")
+		h.ServeHTTP(backendRequest.Writer, backendRequest.Request)
+		log.Debug.Println("worker " + strconv.Itoa(workerId) + " handled request")
+		backendRequest.Done <- true
+	}
+}
+
+type ManagerHandler struct {
+	Backend  string
+	Requests chan BackendRequest
+}
+
+func (m ManagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	log.Debug.Println("manager received request for backend: " + m.Backend + " backlog contains: " + strconv.Itoa(len(m.Requests)) + " of capacity:" + strconv.Itoa(cap(m.Requests)))
+	if len(m.Requests) >= cap(m.Requests) {
+		log.Warning.Println(m.Backend + " backlog is at capacity this means handling of requests is slowed")
+	}
+	done := make(chan bool)
+	m.Requests <- BackendRequest{w, r, done}
+	<-done
+	log.Debug.Println("manager received request handled signal")
 }
