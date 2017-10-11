@@ -113,55 +113,55 @@ type TTL struct {
 }
 
 type Router struct {
-	APIPort       *string `json:"apiPort,omitempty"`
-	APIPortTime   time.Time
-	FQDN          *string `json:"fqdn,omitempty"`
-	FQDNTime      time.Time
-	HTTPSPort     *int `json:"httpsPort,omitempty"`
-	HTTPSPortTime time.Time
-	IP            *string `json:"ip,omitempty"`
-	IPTime        time.Time
-	IP6           *string `json:"ip6,omitempty"`
-	IP6Time       time.Time
-	Location      *string `json:"location,omitempty"`
-	LocationTime  time.Time
-	Port          *int `json:"port,omitempty"`
-	PortTime      time.Time
-	Profile       *string `json:"profile,omitempty"`
-	ProfileTime   time.Time
-	Status        *Status `json:"status,omitempty"`
-	StatusTime    time.Time
+	APIPort          *string `json:"apiPort,omitempty"`
+	APIPortTime      time.Time
+	FQDN             *string `json:"fqdn,omitempty"`
+	FQDNTime         time.Time
+	HTTPSPort        *int `json:"httpsPort,omitempty"`
+	HTTPSPortTime    time.Time
+	IP               *string `json:"ip,omitempty"`
+	IPTime           time.Time
+	IP6              *string `json:"ip6,omitempty"`
+	IP6Time          time.Time
+	Location         *string `json:"location,omitempty"`
+	LocationTime     time.Time
+	Port             *int `json:"port,omitempty"`
+	PortTime         time.Time
+	Profile          *string `json:"profile,omitempty"`
+	ProfileTime      time.Time
+	ServerStatus     *Status `json:"status,omitempty"`
+	ServerStatusTime time.Time
 }
 
-type Status string
+type ServerStatus string
 
 type TrafficOpsServer struct {
-	CacheGroup        *string   `json:"cacheGroup,omitempty"`
-	CacheGroupTime    time.Time `json:"-"`
-	Fqdn              *string   `json:"fqdn,omitempty"`
-	FqdnTime          time.Time `json:"-"`
-	HashCount         *int      `json:"hashCount,omitempty"`
-	HashCountTime     time.Time `json:"-"`
-	HashId            *string   `json:"hashId,omitempty"`
-	HashIdTime        time.Time `json:"-"`
-	HttpsPort         *int      `json:"httpsPort,omitempty"`
-	HttpsPortTime     time.Time `json:"-"`
-	InterfaceName     *string   `json:"interfaceName,omitempty"`
-	InterfaceNameTime time.Time `json:"-"`
-	Ip                *string   `json:"ip,omitempty"`
-	IpTime            time.Time `json:"-"`
-	Ip6               *string   `json:"ip6,omitempty"`
-	Ip6Time           time.Time `json:"-"`
-	LocationId        *string   `json:"locationId,omitempty"`
-	LocationIdTime    time.Time `json:"-"`
-	Port              *int      `json:"port,omitempty"`
-	PortTime          time.Time `json:"-"`
-	Profile           *string   `json:"profile,omitempty"`
-	ProfileTime       time.Time `json:"-"`
-	Status            *Status   `json:"status,omitempty"`
-	StatusTime        time.Time `json:"-"`
-	ServerType        *string   `json:"type,omitempty"`
-	ServerTypeTime    time.Time `json:"-"`
+	CacheGroup        *string       `json:"cacheGroup,omitempty"`
+	CacheGroupTime    time.Time     `json:"-"`
+	Fqdn              *string       `json:"fqdn,omitempty"`
+	FqdnTime          time.Time     `json:"-"`
+	HashCount         *int          `json:"hashCount,omitempty"`
+	HashCountTime     time.Time     `json:"-"`
+	HashId            *string       `json:"hashId,omitempty"`
+	HashIdTime        time.Time     `json:"-"`
+	HttpsPort         *int          `json:"httpsPort,omitempty"`
+	HttpsPortTime     time.Time     `json:"-"`
+	InterfaceName     *string       `json:"interfaceName,omitempty"`
+	InterfaceNameTime time.Time     `json:"-"`
+	Ip                *string       `json:"ip,omitempty"`
+	IpTime            time.Time     `json:"-"`
+	Ip6               *string       `json:"ip6,omitempty"`
+	Ip6Time           time.Time     `json:"-"`
+	LocationId        *string       `json:"locationId,omitempty"`
+	LocationIdTime    time.Time     `json:"-"`
+	Port              *int          `json:"port,omitempty"`
+	PortTime          time.Time     `json:"-"`
+	Profile           *string       `json:"profile,omitempty"`
+	ProfileTime       time.Time     `json:"-"`
+	ServerStatus      *ServerStatus `json:"status,omitempty"`
+	ServerStatusTime  time.Time     `json:"-"`
+	ServerType        *string       `json:"type,omitempty"`
+	ServerTypeTime    time.Time     `json:"-"`
 }
 
 //TODO: drichardson - reconcile this with the DeliveryService struct in deliveryservices.go
@@ -244,22 +244,22 @@ type DeliveryServiceProtocol struct {
 }
 
 type Monitor struct {
-	FQDN          *string   `json:"fqdn,omitempty"`
-	FQDNTime      time.Time `json:"-"`
-	HTTPSPort     *int      `json:"httpsPort,omitempty"`
-	HTTPSPortTime time.Time `json:"-"`
-	IP            *string   `json:"ip,omitempty"`
-	IPTime        time.Time `json:"-"`
-	IP6           *string   `json:"ip6,omitempty"`
-	IP6Time       time.Time `json:"-"`
-	Location      *string   `json:"location,omitempty"`
-	LocationTime  time.Time `json:"-"`
-	Port          *int      `json:"port,omitempty"`
-	PortTime      time.Time `json:"-"`
-	Profile       *string   `json:"profile,omitempty"`
-	ProfileTime   time.Time `json:"-"`
-	Status        *Status   `json:"status,omitempty"`
-	StatusTime    time.Time `json:"-"`
+	FQDN             *string       `json:"fqdn,omitempty"`
+	FQDNTime         time.Time     `json:"-"`
+	HTTPSPort        *int          `json:"httpsPort,omitempty"`
+	HTTPSPortTime    time.Time     `json:"-"`
+	IP               *string       `json:"ip,omitempty"`
+	IPTime           time.Time     `json:"-"`
+	IP6              *string       `json:"ip6,omitempty"`
+	IP6Time          time.Time     `json:"-"`
+	Location         *string       `json:"location,omitempty"`
+	LocationTime     time.Time     `json:"-"`
+	Port             *int          `json:"port,omitempty"`
+	PortTime         time.Time     `json:"-"`
+	Profile          *string       `json:"profile,omitempty"`
+	ProfileTime      time.Time     `json:"-"`
+	ServerStatus     *ServerStatus `json:"status,omitempty"`
+	ServerStatusTime time.Time     `json:"-"`
 }
 
 type Stats struct {
@@ -279,14 +279,14 @@ type Stats struct {
 
 // TrafficRouter ...
 type TrafficRouter struct {
-	Port     int    `json:"port"`
-	IP6      string `json:"ip6"`
-	IP       string `json:"ip"`
-	FQDN     string `json:"fqdn"`
-	Profile  string `json:"profile"`
-	Location string `json:"location"`
-	Status   string `json:"status"`
-	APIPort  int    `json:"apiPort"`
+	Port         int    `json:"port"`
+	IP6          string `json:"ip6"`
+	IP           string `json:"ip"`
+	FQDN         string `json:"fqdn"`
+	Profile      string `json:"profile"`
+	Location     string `json:"location"`
+	ServerStatus string `json:"status"`
+	APIPort      int    `json:"apiPort"`
 }
 
 // TrafficRouterConfig is the json unmarshalled without any changes
@@ -346,7 +346,7 @@ type Coordinates struct {
 type TrafficServer struct {
 	Profile          string              `json:"profile"`
 	IP               string              `json:"ip"`
-	Status           string              `json:"status"`
+	ServerStatus     string              `json:"status"`
 	CacheGroup       string              `json:"cacheGroup"`
 	IP6              string              `json:"ip6"`
 	Port             int                 `json:"port"`

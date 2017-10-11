@@ -176,7 +176,7 @@ func createCacheStatuses(
 }
 
 func cacheStatusAndPoller(server tc.CacheName, serverInfo tc.TrafficServer, localCacheStatus cache.AvailableStatuses) (string, string) {
-	switch status := tc.CacheStatusFromString(serverInfo.Status); status {
+	switch status := tc.CacheStatusFromString(serverInfo.ServerStatus); status {
 	case tc.CacheStatusAdminDown:
 		fallthrough
 	case tc.CacheStatusOnline:

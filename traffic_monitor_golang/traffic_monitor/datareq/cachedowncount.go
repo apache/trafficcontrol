@@ -35,7 +35,7 @@ func srvAPICacheDownCount(localStates peer.CRStatesThreadsafe, monitorConfig thr
 func cacheDownCount(caches map[tc.CacheName]tc.IsAvailable, toServers map[string]tc.TrafficServer) int {
 	count := 0
 	for cache, available := range caches {
-		if !available.IsAvailable && tc.CacheStatusFromString(toServers[string(cache)].Status) == tc.CacheStatusReported {
+		if !available.IsAvailable && tc.CacheStatusFromString(toServers[string(cache)].ServerStatus) == tc.CacheStatusReported {
 			count++
 		}
 	}

@@ -227,11 +227,11 @@ func monitorConfigListen(
 		}
 
 		for _, srv := range monitorConfig.TrafficServer {
-			caches[srv.HostName] = srv.Status
+			caches[srv.HostName] = srv.ServerStatus
 
 			cacheName := tc.CacheName(srv.HostName)
 
-			srvStatus := tc.CacheStatusFromString(srv.Status)
+			srvStatus := tc.CacheStatusFromString(srv.ServerStatus)
 			if srvStatus == tc.CacheStatusOnline {
 				localStates.AddCache(cacheName, tc.IsAvailable{IsAvailable: true})
 				continue
@@ -269,7 +269,7 @@ func monitorConfigListen(
 			if srv.HostName == staticAppData.Hostname {
 				continue
 			}
-			if tc.CacheStatusFromString(srv.Status) != tc.CacheStatusOnline {
+			if tc.CacheStatusFromString(srv.ServerStatus) != tc.CacheStatusOnline {
 				continue
 			}
 			// TODO: the URL should be config driven. -jse
