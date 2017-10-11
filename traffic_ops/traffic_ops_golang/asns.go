@@ -26,7 +26,7 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -88,9 +88,9 @@ func getASNs(v url.Values, db *sqlx.DB) ([]tc.ASN, error) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]string{
-		"asn":        "asn",
-		"id":         "id",
-		"cachegroup": "cachegroup",
+		"asn":        "a.asn",
+		"id":         "a.id",
+		"cachegroup": "cg.name",
 	}
 
 	query, queryValues := BuildQuery(v, selectASNsQuery(), queryParamsToQueryCols)
@@ -116,11 +116,13 @@ func getASNs(v url.Values, db *sqlx.DB) ([]tc.ASN, error) {
 func selectASNsQuery() string {
 
 	query := `SELECT
-asn,
-cachegroup,
-id,
-last_updated
+a.asn,
+cg.name as cachegroup,
+a.cachegroup as cachegroup_id,
+a.id,
+a.last_updated
 
-FROM asn`
+FROM asn a
+JOIN cachegroup cg ON cg.id = a.cachegroup`
 	return query
 }
