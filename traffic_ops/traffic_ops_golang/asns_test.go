@@ -22,8 +22,9 @@ package main
 import (
 	"net/url"
 	"testing"
+	"time"
 
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -34,9 +35,9 @@ func getTestASNs() []tc.ASN {
 	ASNs := []tc.ASN{}
 	testCase := tc.ASN{
 		ASN:         1,
-		Cachegroup:  1,
+		Cachegroup:  "Yukon",
 		ID:          1,
-		LastUpdated: "lastUpdated",
+		LastUpdated: tc.Time{Time: time.Now()},
 	}
 	ASNs = append(ASNs, testCase)
 
@@ -64,6 +65,7 @@ func TestGetASNs(t *testing.T) {
 		rows = rows.AddRow(
 			ts.ASN,
 			ts.Cachegroup,
+			ts.CachegroupID,
 			ts.ID,
 			ts.LastUpdated,
 		)

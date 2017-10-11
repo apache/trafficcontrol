@@ -19,15 +19,29 @@ package tc
  * under the License.
  */
 
-type HWInfoResponse struct {
-	Response []HWInfo `json:"response"`
+import (
+	"testing"
+	"time"
+)
+
+var jsonTests = []struct {
+	time Time
+	json string
+}{
+	{Time{Time: time.Date(9999, 4, 12, 23, 20, 50, 520*1e6, time.UTC)}, `"9999-04-12 23:20:50+00"`},
+	{Time{Time: time.Date(1996, 12, 19, 16, 39, 57, 0, time.UTC)}, `"1996-12-19 16:39:57+00"`},
 }
 
-type HWInfo struct {
-	Description    string `json:"description" db:"description"`
-	ID             int    `json:"-" db:"id"`
-	LastUpdated    Time   `json:"lastUpdated" db:"last_updated"`
-	ServerHostName string `json:"serverHostName" db:"serverhostname"`
-	ServerID       int    `json:"serverId" db:"serverid"`
-	Val            string `json:"val" db:"val"`
+// TestJSON tests that we get format tc uses for lastUpdated fields
+func TestJSON(t *testing.T) {
+	for _, tm := range jsonTests {
+		got, err := tm.time.MarshalJSON()
+		if err != nil {
+			t.Errorf("MarshalJSON error: %+v", err)
+		}
+
+		if string(got) != tm.json {
+			t.Errorf("expected %s, got %s", tm.json, got)
+		}
+	}
 }

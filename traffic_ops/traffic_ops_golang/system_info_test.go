@@ -20,9 +20,9 @@ package main
  */
 
 import (
-	"fmt"
 	"net/url"
 	"testing"
+	"time"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 
@@ -35,7 +35,7 @@ var sysInfoParameters = []tc.Parameter{
 	tc.Parameter{
 		ConfigFile:  "global",
 		ID:          1,
-		LastUpdated: "lastUpdated",
+		LastUpdated: tc.Time{Time: time.Now()},
 		Name:        "paramname1",
 		Secure:      false,
 		Value:       "val1",
@@ -44,7 +44,7 @@ var sysInfoParameters = []tc.Parameter{
 	tc.Parameter{
 		ConfigFile:  "global",
 		ID:          2,
-		LastUpdated: "lastUpdated",
+		LastUpdated: tc.Time{Time: time.Now()},
 		Name:        "paramname2",
 		Secure:      false,
 		Value:       "val2",
@@ -86,6 +86,5 @@ func TestGetSystemInfo(t *testing.T) {
 
 	if len(sysinfo) != 2 {
 		t.Errorf("getSystemInfo expected: len(sysinfo) == 2, actual: %v", len(sysinfo))
-		fmt.Printf("Got %+v\n", sysinfo)
 	}
 }
