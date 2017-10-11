@@ -22,6 +22,7 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/sha512"
 	"database/sql"
 	"encoding/base64"
@@ -32,91 +33,100 @@ import (
 	"unicode"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
 const ServerName = "traffic_ops_golang" + "/" + Version
 
-type AuthRegexHandlerFunc func(w http.ResponseWriter, r *http.Request, params PathParams, user string, privLevel int)
+type AuthBase struct {
+	noAuth        bool
+	secret        string
+	privLevelStmt *sql.Stmt
+	override      Middleware
+}
 
-func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
+func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
+	if a.override != nil {
+		return a.override
+	}
+	return func(handlerFunc http.HandlerFunc) http.HandlerFunc {
+		if a.noAuth {
+			return func(w http.ResponseWriter, r *http.Request) {
+				ctx := r.Context()
+				ctx = context.WithValue(ctx, UserNameKey, "-")
+				ctx = context.WithValue(ctx, PrivLevelKey, PrivLevelInvalid)
+				handlerFunc(w, r.WithContext(ctx))
+			}
+		}
+		return func(w http.ResponseWriter, r *http.Request) {
+			// TODO remove, and make username available to wrapLogTime
+			start := time.Now()
+			iw := &Interceptor{w: w}
+			w = iw
+			username := "-"
+			defer func() {
+				log.EventfRaw(`%s - %s [%s] "%v %v HTTP/1.1" %v %v %v "%v"`, r.RemoteAddr, username, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, iw.code, iw.byteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent())
+			}()
+
+			handleUnauthorized := func(reason string) {
+				status := http.StatusUnauthorized
+				w.WriteHeader(status)
+				fmt.Fprintf(w, http.StatusText(status))
+				log.Infof("%v %v %v %v returned unauthorized: %v\n", r.RemoteAddr, r.Method, r.URL.Path, username, reason)
+			}
+
+			cookie, err := r.Cookie(tocookie.Name)
+			if err != nil {
+				handleUnauthorized("error getting cookie: " + err.Error())
+				return
+			}
+
+			if cookie == nil {
+				handleUnauthorized("no auth cookie")
+				return
+			}
+
+			oldCookie, err := tocookie.Parse(a.secret, cookie.Value)
+			if err != nil {
+				handleUnauthorized("cookie error: " + err.Error())
+				return
+			}
+
+			username = oldCookie.AuthData
+			privLevel := PrivLevel(a.privLevelStmt, username)
+			if privLevel < privLevelRequired {
+				handleUnauthorized("insufficient privileges")
+				return
+			}
+
+			newCookieVal := tocookie.Refresh(oldCookie, a.secret)
+			http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
+
+			ctx := r.Context()
+			ctx = context.WithValue(ctx, UserNameKey, username)
+			ctx = context.WithValue(ctx, PrivLevelKey, privLevel)
+
+			handlerFunc(w, r.WithContext(ctx))
+		}
+	}
+}
+
+func wrapHeaders(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie")
 		w.Header().Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("X-Server-Name", ServerName)
 		iw := &BodyInterceptor{w: w}
-		h(iw, r, p)
+		h(iw, r)
 
 		sha := sha512.Sum512(iw.Body())
 		w.Header().Set("Whole-Content-SHA512", base64.StdEncoding.EncodeToString(sha[:]))
 
 		gzipResponse(w, r, iw.Body())
 
-	}
-}
-
-func handlerToAuthHandler(h RegexHandlerFunc) AuthRegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams, user string, privLevel int) { h(w, r, p) }
-}
-
-func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
-	return wrapAuthWithData(handlerToAuthHandler(h), noAuth, secret, privLevelStmt, privLevelRequired)
-}
-
-func wrapAuthWithData(h AuthRegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
-	if noAuth {
-		return func(w http.ResponseWriter, r *http.Request, p PathParams) {
-			h(w, r, p, "", PrivLevelInvalid)
-		}
-	}
-	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
-		// TODO remove, and make username available to wrapLogTime
-		start := time.Now()
-		iw := &Interceptor{w: w}
-		w = iw
-		username := "-"
-		defer func() {
-			log.EventfRaw(`%s - %s [%s] "%v %v HTTP/1.1" %v %v %v "%v"`, r.RemoteAddr, username, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, iw.code, iw.byteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent())
-		}()
-
-		handleUnauthorized := func(reason string) {
-			status := http.StatusUnauthorized
-			w.WriteHeader(status)
-			fmt.Fprintf(w, http.StatusText(status))
-			log.Infof("%v %v %v %v returned unauthorized: %v\n", r.RemoteAddr, r.Method, r.URL.Path, username, reason)
-		}
-
-		cookie, err := r.Cookie(tocookie.Name)
-		if err != nil {
-			handleUnauthorized("error getting cookie: " + err.Error())
-			return
-		}
-
-		if cookie == nil {
-			handleUnauthorized("no auth cookie")
-			return
-		}
-
-		oldCookie, err := tocookie.Parse(secret, cookie.Value)
-		if err != nil {
-			handleUnauthorized("cookie error: " + err.Error())
-			return
-		}
-
-		username = oldCookie.AuthData
-		privLevel := PrivLevel(privLevelStmt, username)
-		if privLevel < privLevelRequired {
-			handleUnauthorized("insufficient privileges")
-			return
-		}
-
-		newCookieVal := tocookie.Refresh(oldCookie, secret)
-		http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
-
-		h(w, r, p, username, privLevel)
 	}
 }
 
@@ -160,8 +170,8 @@ func gzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
 
 // wrapBytes takes a function which cannot error and returns only bytes, and wraps it as a http.HandlerFunc. The errContext is logged if the write fails, and should be enough information to trace the problem (function name, endpoint, request parameters, etc).
 //TODO: drichardson - refactor these to a generic area
-func wrapBytes(f func() []byte, contentType string) RegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
+func wrapBytes(f func() []byte, contentType string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		bytes := f()
 		bytes, err := gzipIfAccepts(r, w, bytes)
 		if err != nil {
@@ -174,7 +184,7 @@ func wrapBytes(f func() []byte, contentType string) RegexHandlerFunc {
 			return
 		}
 
-		w.Header().Set(api.ContentType, contentType)
+		w.Header().Set(tc.ContentType, contentType)
 		log.Write(w, bytes, r.URL.EscapedPath())
 	}
 }
@@ -186,7 +196,7 @@ func gzipIfAccepts(r *http.Request, w http.ResponseWriter, b []byte) ([]byte, er
 	if len(b) == 0 || !acceptsGzip(r) {
 		return b, nil
 	}
-	w.Header().Set(api.ContentEncoding, api.Gzip)
+	w.Header().Set(tc.ContentEncoding, tc.Gzip)
 
 	buf := bytes.Buffer{}
 	zw := gzip.NewWriter(&buf)
@@ -208,7 +218,7 @@ func acceptsGzip(r *http.Request) bool {
 		encodingHeader = stripAllWhitespace(encodingHeader)
 		encodings := strings.Split(encodingHeader, ",")
 		for _, encoding := range encodings {
-			if strings.ToLower(encoding) == api.Gzip { // encoding is case-insensitive, per the RFC
+			if strings.ToLower(encoding) == tc.Gzip { // encoding is case-insensitive, per the RFC
 				return true
 			}
 		}

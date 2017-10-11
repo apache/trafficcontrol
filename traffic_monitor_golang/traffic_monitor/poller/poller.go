@@ -27,10 +27,10 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/fetcher"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/handler"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/traffic_monitor/towrap" // TODO move to common
-	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 type Poller interface {
@@ -86,7 +86,7 @@ func NewHTTP(
 
 type MonitorCfg struct {
 	CDN string
-	Cfg to.TrafficMonitorConfigMap
+	Cfg tc.TrafficMonitorConfigMap
 }
 
 type MonitorConfigPoller struct {

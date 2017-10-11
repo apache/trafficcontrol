@@ -1,4 +1,4 @@
-package tostructs
+package tc
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,14 +19,8 @@ package tostructs
  * under the License.
  */
 
-type HWInfoResponse struct {
-	Response []HWInfo `json:"response"`
-}
-
-type HWInfo struct {
-	Description string `json:"description" db:"description"`
-	ID          int    `json:"id" db:"id"`
-	LastUpdated string `json:"lastUpdated" db:"last_updated"`
-	ServerID    int    `json:"server_id" db:"serverid"`
-	Val         string `json:"val" db:"val"`
+type SystemInfoResponse struct {
+	Response struct {
+		Parameters map[string]string `json:"parameters"`
+	} `json:"response"`
 }

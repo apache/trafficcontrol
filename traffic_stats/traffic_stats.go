@@ -35,7 +35,8 @@ import (
 	"syscall"
 	"time"
 
-	traffic_ops "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	log "github.com/cihub/seelog"
 	influx "github.com/influxdata/influxdb/client/v2"
 )
@@ -85,8 +86,8 @@ type StartupConfig struct {
 // RunningConfig is used to store runtime configuration for Traffic Stats.  This includes information
 // about caches, cachegroups, and health urls
 type RunningConfig struct {
-	HealthUrls      map[string]map[string]string  // the 1st map key is CDN_name, the second is DsStats or CacheStats
-	CacheMap        map[string]traffic_ops.Server // map hostName to cache
+	HealthUrls      map[string]map[string]string // the 1st map key is CDN_name, the second is DsStats or CacheStats
+	CacheMap        map[string]tc.Server         // map hostName to cache
 	LastSummaryTime time.Time
 }
 
@@ -311,7 +312,7 @@ func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime tim
 					value = value / kilobitsToGigabits
 					statTime, _ := time.Parse(time.RFC3339, t)
 					log.Infof("max gbps for cdn %v = %v", cdn, value)
-					var statsSummary traffic_ops.StatsSummary
+					var statsSummary tc.StatsSummary
 					statsSummary.CDNName = cdn
 					statsSummary.DeliveryService = "all"
 					statsSummary.StatName = "daily_maxgbps"
@@ -371,7 +372,7 @@ func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime
 			bytesServedTB := bytesServed / bytesToTerabytes
 			log.Infof("TBytes served for cdn %v = %v", cdn, bytesServedTB)
 			//write to Traffic Ops
-			var statsSummary traffic_ops.StatsSummary
+			var statsSummary tc.StatsSummary
 			statsSummary.CDNName = cdn
 			statsSummary.DeliveryService = "all"
 			statsSummary.StatName = "daily_bytesserved"
@@ -414,8 +415,8 @@ func queryDB(con influx.Client, cmd string, database string) (res []influx.Resul
 	return
 }
 
-func writeSummaryStats(config StartupConfig, statsSummary traffic_ops.StatsSummary) {
-	to, err := traffic_ops.LoginWithAgent(config.ToURL, config.ToUser, config.ToPasswd, true, UserAgent, false, TrafficOpsRequestTimeout)
+func writeSummaryStats(config StartupConfig, statsSummary tc.StatsSummary) {
+	to, err := client.LoginWithAgent(config.ToURL, config.ToUser, config.ToPasswd, true, UserAgent, false, TrafficOpsRequestTimeout)
 	if err != nil {
 		newErr := fmt.Errorf("Could not store summary stats! Error logging in to %v: %v", config.ToURL, err)
 		log.Error(newErr)
@@ -429,7 +430,7 @@ func writeSummaryStats(config StartupConfig, statsSummary traffic_ops.StatsSumma
 
 func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 	var runningConfig RunningConfig
-	to, err := traffic_ops.LoginWithAgent(config.ToURL, config.ToUser, config.ToPasswd, true, UserAgent, false, TrafficOpsRequestTimeout)
+	to, err := client.LoginWithAgent(config.ToURL, config.ToUser, config.ToPasswd, true, UserAgent, false, TrafficOpsRequestTimeout)
 	if err != nil {
 		msg := fmt.Sprintf("Error logging in to %v: %v", config.ToURL, err)
 		if init {
@@ -449,7 +450,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		return
 	}
 
-	runningConfig.CacheMap = make(map[string]traffic_ops.Server)
+	runningConfig.CacheMap = make(map[string]tc.Server)
 	for _, server := range servers {
 		runningConfig.CacheMap[server.HostName] = server
 	}
@@ -516,7 +517,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 	configChan <- runningConfig
 }
 
-func calcMetrics(cdnName string, url string, cacheMap map[string]traffic_ops.Server, config StartupConfig, runningConfig RunningConfig) {
+func calcMetrics(cdnName string, url string, cacheMap map[string]tc.Server, config StartupConfig, runningConfig RunningConfig) {
 	sampleTime := int64(time.Now().Unix())
 	// get the data from trafficMonitor
 	trafMonData, err := getURL(url)
@@ -638,7 +639,7 @@ func calcDsValues(rascalData []byte, cdnName string, sampleTime int64, config St
 	return nil
 }
 
-func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheMap map[string]traffic_ops.Server, config StartupConfig) error {
+func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheMap map[string]tc.Server, config StartupConfig) error {
 
 	type CacheStatsJSON struct {
 		Pp     string `json:"pp"`

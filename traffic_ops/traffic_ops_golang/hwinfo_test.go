@@ -23,21 +23,22 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestHWInfo() []tostructs.HWInfo {
-	hwinfo := []tostructs.HWInfo{}
-	testHWInfo := tostructs.HWInfo{
-		ID:          1,
-		ServerID:    1,
-		Description: "Description",
-		Val:         "Val",
-		LastUpdated: "LastUpdated",
+func getTestHWInfo() []tc.HWInfo {
+	hwinfo := []tc.HWInfo{}
+	testHWInfo := tc.HWInfo{
+		ID:             1,
+		ServerID:       1,
+		ServerHostName: "testserver1",
+		Description:    "Description",
+		Val:            "Val",
+		LastUpdated:    "LastUpdated",
 	}
 	hwinfo = append(hwinfo, testHWInfo)
 
@@ -45,6 +46,7 @@ func getTestHWInfo() []tostructs.HWInfo {
 	testHWInfo2.Description = "hwinfo2"
 	testHWInfo2.Val = "val2"
 	testHWInfo2.ServerID = 2
+	testHWInfo2.ServerHostName = "testserver2"
 	hwinfo = append(hwinfo, testHWInfo2)
 
 	return hwinfo
@@ -60,7 +62,7 @@ func TestGetHWInfo(t *testing.T) {
 	defer db.Close()
 
 	testHWInfo := getTestHWInfo()
-	cols := test.ColsFromStructByTag("db", tostructs.HWInfo{})
+	cols := test.ColsFromStructByTag("db", tc.HWInfo{})
 	rows := sqlmock.NewRows(cols)
 
 	//TODO: drichardson - build helper to add these Rows from the struct values
@@ -70,6 +72,7 @@ func TestGetHWInfo(t *testing.T) {
 			ts.Description,
 			ts.ID,
 			ts.LastUpdated,
+			ts.ServerHostName,
 			ts.ServerID,
 			ts.Val,
 		)
@@ -78,7 +81,7 @@ func TestGetHWInfo(t *testing.T) {
 	v := url.Values{}
 	v.Set("ServerId", "1")
 
-	hwinfos, err := getHWInfo(v, db, PrivLevelAdmin)
+	hwinfos, err := getHWInfo(v, db)
 	if err != nil {
 		t.Errorf("getHWInfo expected: nil error, actual: %v", err)
 	}
@@ -88,7 +91,7 @@ func TestGetHWInfo(t *testing.T) {
 	}
 }
 
-type SortableHWInfo []tostructs.HWInfo
+type SortableHWInfo []tc.HWInfo
 
 func (s SortableHWInfo) Len() int {
 	return len(s)

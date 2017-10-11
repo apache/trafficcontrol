@@ -21,8 +21,6 @@ package main
 
 import (
 	"crypto/tls"
-	"database/sql"
-	"fmt"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -31,56 +29,45 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
+
+var Authenticated = true
+var NoAuth = false
 // Routes returns the routes, and a catchall route for when no route matches.
 func Routes(d ServerData) ([]Route, http.Handler, error) {
-	rd, err := routeData(d)
-	if err != nil {
-		return nil, nil, err
+
+	routes := []Route{
+		//ASNs
+		{1.2,http.MethodGet, `asns-wip(\.json)?$`, ASNsHandler(d.DB),ServersPrivLevel, Authenticated,nil},
+		//CDNs
+		{ 1.2, http.MethodGet, `cdns-wip(\.json)?$`, cdnsHandler(d.DB), CDNsPrivLevel, Authenticated, nil},
+		{ 1.2, http.MethodGet, `cdns/{cdn}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), MonitoringPrivLevel, Authenticated, nil},
+		// Delivery services
+		{1.3, http.MethodGet, "deliveryservices/{xml-id}/urisignkeys$", urisignkeysHandler(d.DB, d.Config), HWInfoPrivLevel, Authenticated, nil},
+		{1.3, http.MethodPost, "deliveryservices/{xml-id}/urisignkeys$", assignDeliveryServiceUriKeysKeysHandler(d.DB, d.Config), HWInfoPrivLevel, Authenticated, nil},
+
+		// Divisions
+		{ 1.2, http.MethodGet, `divisions-wip(\.json)?$`, divisionsHandler(d.DB), DivisionsPrivLevel, Authenticated, nil},
+		//HwInfo
+		{ 1.2, http.MethodGet, `hwinfo-wip(\.json)?$`, hwInfoHandler(d.DB), HWInfoPrivLevel, Authenticated, nil},
+		//Parameters
+		{ 1.2, http.MethodGet, `parameters-wip(\.json)?$`, parametersHandler(d.DB), ParametersPrivLevel, Authenticated, nil},
+		//Regions
+		{ 1.2, http.MethodGet, `regions-wip(\.json)?$`, regionsHandler(d.DB), ServersPrivLevel, Authenticated, nil},
+		{ 1.2, http.MethodGet, "regions-wip/{id}$", regionsHandler(d.DB), ServersPrivLevel, Authenticated, nil},
+		//Servers
+		{ 1.2, http.MethodGet, `servers-wip(\.json)?$`, serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
+		{ 1.2, http.MethodGet, "servers-wip/{id}$", serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
+		{ 1.2, http.MethodPost, "servers/{server}/deliveryservices$", assignDeliveryServicesToServerHandler(d.DB), PrivLevelOperations, Authenticated, nil},
+		//System
+		{ 1.2, http.MethodGet, `system/info-wip(\.json)?$`, systemInfoHandler(d.DB), SystemInfoPrivLevel, Authenticated, nil},
 	}
-	return []Route{
-		{1.2, http.MethodGet, "cdns/{cdn}/configs/monitoring$", wrapHeaders(wrapAuth(monitoringHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, MonitoringPrivLevel))},
-		{1.2, http.MethodGet, "cdns/{cdn}/configs/monitoring.json$", wrapHeaders(wrapAuth(monitoringHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, MonitoringPrivLevel))},
-		{1.2, http.MethodGet, "regions-wip/{id}$", wrapHeaders(wrapAuthWithData(regionsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
-		{1.2, http.MethodGet, "regions-wip.json$", wrapHeaders(wrapAuthWithData(regionsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
-		{1.2, http.MethodGet, "regions-wip$", wrapHeaders(wrapAuthWithData(regionsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
-		{1.2, http.MethodGet, "regions-wip.json$", wrapHeaders(wrapAuthWithData(serversHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
-		{1.2, http.MethodGet, "servers-wip.json$", wrapHeaders(wrapAuthWithData(serversHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
-		{1.2, http.MethodGet, "servers-wip$", wrapHeaders(wrapAuthWithData(serversHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
-		{1.2, http.MethodGet, "servers-wip.json$", wrapHeaders(wrapAuthWithData(serversHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
-		{1.2, http.MethodGet, "asns-wip$", wrapHeaders(wrapAuthWithData(ASNsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
-		{1.2, http.MethodGet, "asns-wip.json$", wrapHeaders(wrapAuthWithData(ASNsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, ServersPrivLevel))},
-		{1.2, http.MethodGet, "cdns-wip$", wrapHeaders(wrapAuthWithData(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},
-		{1.2, http.MethodGet, "cdns-wip.json$", wrapHeaders(wrapAuthWithData(cdnsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},
-		{1.2, http.MethodPost, "servers/{server}/deliveryservices$", wrapHeaders(wrapAuthWithData(assignDeliveryServicesToServerHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, PrivLevelOperations))},
-		{1.2, http.MethodGet, "divisions-wip$", wrapHeaders(wrapAuthWithData(divisionsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, CdnsPrivLevel))},
-		{1.2, http.MethodGet, "divisions-wip.json$", wrapHeaders(wrapAuthWithData(divisionsHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, DivisionsPrivLevel))},
-		{1.2, http.MethodGet, "hwinfo-wip$", wrapHeaders(wrapAuthWithData(hwInfoHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, HWInfoPrivLevel))},
-		{1.2, http.MethodGet, "hwinfo-wip.json$", wrapHeaders(wrapAuthWithData(hwInfoHandler(d.DB), d.Insecure, d.TOSecret, rd.PrivLevelStmt, HWInfoPrivLevel))},
-		{1.3, http.MethodGet, "deliveryservices/{xml-id}/urisignkeys$", wrapHeaders(wrapAuth(urisignkeysHandler(d.DB, d.Config), d.Insecure, d.TOSecret, rd.PrivLevelStmt, HWInfoPrivLevel))},
-		{1.3, http.MethodPost, "deliveryservices/{xml-id}/urisignkeys$", wrapHeaders(wrapAuthWithData(assignDeliveryServiceUriKeysKeysHandler(d.DB, d.Config), d.Insecure, d.TOSecret, rd.PrivLevelStmt, HWInfoPrivLevel))},
-	}, rootHandler(d), nil
+	return routes, rootHandler(d), nil
 }
 
-type RouteData struct {
-	PrivLevelStmt *sql.Stmt
-}
-
-func routeData(d ServerData) (RouteData, error) {
-	rd := RouteData{}
-	err := error(nil)
-
-	if rd.PrivLevelStmt, err = preparePrivLevelStmt(d.DB); err != nil {
-		return rd, fmt.Errorf("Error preparing db priv level query: ", err)
-	}
-
-	return rd, nil
-}
-
-// getRootHandler returns the / handler for the service, which reverse-proxies the old Perl Traffic Ops
+// RootHandler returns the / handler for the service, which reverse-proxies the old Perl Traffic Ops
 func rootHandler(d ServerData) http.Handler {
-	// debug
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
 		DialContext: (&net.Dialer{
 			Timeout:   time.Duration(d.Config.ProxyTimeout) * time.Second,
 			KeepAlive: time.Duration(d.Config.ProxyKeepAlive) * time.Second,
@@ -89,12 +76,12 @@ func rootHandler(d ServerData) http.Handler {
 		ResponseHeaderTimeout: time.Duration(d.Config.ProxyReadHeaderTimeout) * time.Second,
 		//Other knobs we can turn: ExpectContinueTimeout,IdleConnTimeout
 	}
-	rp := httputil.NewSingleHostReverseProxy(d.TOURL)
+	rp := httputil.NewSingleHostReverseProxy(d.URL)
 	rp.Transport = tr
 
 	rp.ErrorLog = log.Error //if we don't provide a logger to the reverse proxy it logs to stdout/err and is lost when ran by a script.
 	log.Debugf("our reverseProxy: %++v\n", rp)
 	log.Debugf("our reverseProxy's transport: %++v\n", tr)
-	loggingProxyHandler := wrapAccessLog(d.TOSecret, rp)
+	loggingProxyHandler := wrapAccessLog(d.Secrets[0], rp)
 	return loggingProxyHandler
 }

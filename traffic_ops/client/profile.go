@@ -15,23 +15,14 @@
 
 package client
 
-import "encoding/json"
+import (
+	"encoding/json"
 
-// ProfileResponse ...
-type ProfileResponse struct {
-	Response []Profile `json:"response"`
-}
-
-// Profile ...
-type Profile struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	LastUpdated string `json:"lastUpdated"`
-}
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+)
 
 // Profiles gets an array of Profiles
-func (to *Session) Profiles() ([]Profile, error) {
+func (to *Session) Profiles() ([]tc.Profile, error) {
 	url := "/api/1.2/profiles.json"
 	resp, err := to.request("GET", url, nil)
 	if err != nil {
@@ -39,7 +30,7 @@ func (to *Session) Profiles() ([]Profile, error) {
 	}
 	defer resp.Body.Close()
 
-	var data ProfileResponse
+	var data tc.ProfilesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}

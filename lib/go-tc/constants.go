@@ -1,4 +1,4 @@
-package tostructs
+package tc
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,14 +19,28 @@ package tostructs
  * under the License.
  */
 
-type CdnsResponse struct {
-	Response []Cdn `json:"response"`
-}
+type ErrorConstant string
 
-type Cdn struct {
-	DNSSECEnabled bool   `json:"dnssecEnabled" db:"dnssec_enabled"`
-	DomainName    string `json:"domainName" db:"domain_name"`
-	ID            int    `json:"id" db:"id"`
-	LastUpdated   string `json:"lastUpdated" db:"last_updated"`
-	Name          string `json:"name" db:"name"`
+func (e ErrorConstant) Error() string { return string(e) }
+
+const DBError = ErrorConstant("database access error")
+
+const ApplicationJson = "application/json"
+const Gzip = "gzip"
+const ContentType = "Content-Type"
+const ContentEncoding = "Content-Encoding"
+
+type AlertLevel int
+
+const (
+	SuccessLevel AlertLevel = iota
+	InfoLevel
+	WarnLevel
+	ErrorLevel
+)
+
+var alertLevels = [4]string{"success", "info", "warn", "error"}
+
+func (a AlertLevel) String() string {
+	return alertLevels[a]
 }

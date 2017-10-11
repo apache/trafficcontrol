@@ -1,4 +1,4 @@
-package tostructs
+package tc
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,12 +19,11 @@ package tostructs
  * under the License.
  */
 
-type RegionsResponse struct {
-	Response []Region `json:"response"`
+type DivisionsResponse struct {
+	Response []Division `json:"response"`
 }
 
-type Region struct {
-	Division    int    `json:"division" db:"division"`
+type Division struct {
 	ID          int    `json:"id" db:"id"`
 	LastUpdated string `json:"lastUpdated" db:"last_updated"`
 	Name        string `json:"name" db:"name"`
