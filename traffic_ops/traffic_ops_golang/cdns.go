@@ -61,7 +61,6 @@ func cdnsHandler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-
 func getCDNsResponse(q url.Values, db *sqlx.DB) (*tc.CDNsResponse, error) {
 	cdns, err := getCDNs(q, db)
 	if err != nil {

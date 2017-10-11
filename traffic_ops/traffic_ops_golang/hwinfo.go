@@ -70,7 +70,6 @@ func getHWInfoResponse(q url.Values, db *sqlx.DB) (*tc.HWInfoResponse, error) {
 	return &resp, nil
 }
 
-
 func getHWInfo(v url.Values, db *sqlx.DB) ([]tc.HWInfo, error) {
 	var rows *sqlx.Rows
 	var err error

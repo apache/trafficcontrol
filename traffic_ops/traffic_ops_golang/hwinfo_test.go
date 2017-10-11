@@ -97,7 +97,12 @@ func TestGetHWInfo(t *testing.T) {
 func TestJSON(t *testing.T) {
 	testHWInfo := getTestHWInfo()
 	txt, err := json.Marshal(testHWInfo)
-	fmt.Printf("%v, %s\n", err, txt)
+	if *debugLogging {
+		fmt.Printf("%v, %s\n", err, txt)
+	}
+	if err != nil {
+		t.Errorf("Json.Marshal failed: %s\n", err)
+	}
 }
 
 type SortableHWInfo []tc.HWInfo
