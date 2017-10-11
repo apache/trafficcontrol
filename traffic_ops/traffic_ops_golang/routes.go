@@ -89,13 +89,20 @@ func rootHandler(d ServerData) http.Handler {
 	log.Debugf("our reverseProxy's transport: %++v\n", tr)
 	loggingProxyHandler := wrapAccessLog(d.Secrets[0], rp)
 
-	proxyRequestsChannel := make(chan BackendRequest, d.MojoliciousBacklogSize)
+	managerHandler := CreatePooledHandler(strings.Split(d.URL.String(),"?")[0],d.Backends["mojolicious"],loggingProxyHandler)
+	return managerHandler
+}
 
-	for i := 0; i < d.MojoliciousWorkers; i++ {
-		go WorkerHandler(proxyRequestsChannel, loggingProxyHandler, i+1)
+//CreatePooledHandler takes an identifier (in the case of a proxy the host being contacted), a configuration and the handler, creates a buffered channel of the size specified in the conf, and spins up the number of workers defined in the conf
+// to handle requests using the handler passed
+func CreatePooledHandler(identifier string, conf *PoolConf, handler http.Handler) ManagerHandler {
+	RequestsChannel := make(chan BackendRequest, conf.BacklogSize)
+
+	for i := 0; i < conf.Workers; i++ {
+		go WorkerHandler(RequestsChannel, handler, i+1)
 	}
 
-	return ManagerHandler{strings.Split(d.URL.String(), "?")[0], proxyRequestsChannel}
+	return ManagerHandler{identifier, RequestsChannel}
 }
 
 type BackendRequest struct {
