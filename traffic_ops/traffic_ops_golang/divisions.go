@@ -76,12 +76,12 @@ func getDivisions(v url.Values, db *sqlx.DB) ([]tc.Division, error) {
 
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]string{
+	queryParamsToSQLCols := map[string]string{
 		"id":   "id",
 		"name": "name",
 	}
 
-	query, queryValues := BuildQuery(v, selectDivisionsQuery(), queryParamsToQueryCols)
+	query, queryValues := BuildQuery(v, selectDivisionsQuery(), queryParamsToSQLCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
 
