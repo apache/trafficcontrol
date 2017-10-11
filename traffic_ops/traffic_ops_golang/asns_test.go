@@ -35,7 +35,7 @@ func getTestASNs() []tc.ASN {
 	ASNs := []tc.ASN{}
 	testCase := tc.ASN{
 		ASN:         1,
-		Cachegroup:  1,
+		Cachegroup:  "Yukon",
 		ID:          1,
 		LastUpdated: tc.Time{Time: time.Now()},
 	}
@@ -65,6 +65,7 @@ func TestGetASNs(t *testing.T) {
 		rows = rows.AddRow(
 			ts.ASN,
 			ts.Cachegroup,
+			ts.CachegroupID,
 			ts.ID,
 			ts.LastUpdated,
 		)

@@ -20,7 +20,6 @@ package main
  */
 
 import (
-	"fmt"
 	"net/url"
 	"testing"
 	"time"
@@ -87,6 +86,5 @@ func TestGetSystemInfo(t *testing.T) {
 
 	if len(sysinfo) != 2 {
 		t.Errorf("getSystemInfo expected: len(sysinfo) == 2, actual: %v", len(sysinfo))
-		fmt.Printf("Got %+v\n", sysinfo)
 	}
 }
