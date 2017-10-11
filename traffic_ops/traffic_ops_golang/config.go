@@ -65,8 +65,12 @@ type ConfigTrafficOpsGolang struct {
 	LogLocationEvent       string `json:"log_location_event"`
 	Insecure               bool   `json:"insecure"`
 	MaxDBConnections       int    `json:"max_db_connections"`
-	MojoliciousBacklogSize int    `json:"mojolicious_backlog_size"`
-	MojoliciousWorkers     int    `json:"mojolicious_workers"`
+	Backends               map[string]*PoolConf `json:"backends"`
+}
+
+type PoolConf struct {
+	BacklogSize int `json:"backlog_size"`
+	Workers int `json:"workers"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file
@@ -198,11 +202,17 @@ func ParseConfig(cfg Config) (Config, error) {
 	if cfg.LogLocationEvent == "" {
 		cfg.LogLocationEvent = log.LogLocationNull
 	}
-	if cfg.MojoliciousBacklogSize <= 0 {
-		cfg.MojoliciousBacklogSize = MojoliciousBacklogSizeDefault
+	if cfg.Backends == nil {
+		cfg.Backends = make(map[string]*PoolConf)
 	}
-	if cfg.MojoliciousWorkers <= 0 {
-		cfg.MojoliciousWorkers = MojoliciousWorkersDefault
+	if cfg.Backends["mojolicious"] == nil {
+		cfg.Backends["mojolicious"] = &PoolConf{MojoliciousBacklogSizeDefault, MojoliciousWorkersDefault}
+	}
+	if cfg.Backends["mojolicious"].BacklogSize <= 0 {
+		cfg.Backends["mojolicious"].BacklogSize = MojoliciousBacklogSizeDefault
+	}
+	if cfg.Backends["mojolicious"].Workers <= 0 {
+		cfg.Backends["mojolicious"].Workers = MojoliciousWorkersDefault
 	}
 
 	invalidTOURLStr := ""
