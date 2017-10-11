@@ -194,8 +194,8 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 		} else {
 			log.Warnf("Creating monitor config: CRConfig server %s missing IP field\n", name)
 		}
-		if srv.Status != nil {
-			s.Status = string(*srv.Status)
+		if srv.ServerStatus != nil {
+			s.ServerStatus = string(*srv.ServerStatus)
 		} else {
 			log.Warnf("Creating monitor config: CRConfig server %s missing Status field\n", name)
 		}
@@ -274,10 +274,10 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 		} else {
 			log.Warnf("Creating monitor config: CRConfig monitor %s missing Location field\n", name)
 		}
-		if mon.Status != nil {
-			m.Status = string(*mon.Status)
+		if mon.ServerStatus != nil {
+			m.ServerStatus = string(*mon.ServerStatus)
 		} else {
-			log.Warnf("Creating monitor config: CRConfig monitor %s missing Status field\n", name)
+			log.Warnf("Creating monitor config: CRConfig monitor %s missing ServerStatus field\n", name)
 		}
 		mc.TrafficMonitor[name] = m
 	}
@@ -294,7 +294,7 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 			mc.DeliveryService[name] = tc.TMDeliveryService{
 				XMLID:              name,
 				TotalTPSThreshold:  0,
-				Status:             "REPORTED",
+				ServerStatus:       "REPORTED",
 				TotalKbpsThreshold: 0,
 			}
 		}

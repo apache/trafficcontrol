@@ -45,7 +45,7 @@ func getNewCaches(localStates peer.CRStatesThreadsafe, monitorConfigTS threadsaf
 	caches := map[tc.CacheName]struct{}{}
 	for cacheName := range localStates.GetCaches() {
 		// ONLINE and OFFLINE caches are not polled.
-		if ts, ok := monitorConfig.TrafficServer[string(cacheName)]; !ok || ts.Status == string(tc.CacheStatusOnline) || ts.Status == string(tc.CacheStatusOffline) {
+		if ts, ok := monitorConfig.TrafficServer[string(cacheName)]; !ok || ts.ServerStatus == string(tc.CacheStatusOnline) || ts.ServerStatus == string(tc.CacheStatusOffline) {
 			continue
 		}
 		caches[cacheName] = struct{}{}

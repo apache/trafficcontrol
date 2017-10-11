@@ -154,7 +154,7 @@ func ComputedStats() map[string]StatComputeFunc {
 			return combinedState.IsAvailable // if the cache is missing, default to false
 		},
 		"isHealthy": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
-			if tc.CacheStatusFromString(serverInfo.Status) == tc.CacheStatusAdminDown {
+			if tc.CacheStatusFromString(serverInfo.ServerStatus) == tc.CacheStatusAdminDown {
 				return true
 			}
 			return combinedState.IsAvailable
@@ -175,7 +175,7 @@ func ComputedStats() map[string]StatComputeFunc {
 			return serverProfile.Parameters.HealthPollingURL
 		},
 		"status": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
-			return serverInfo.Status
+			return serverInfo.ServerStatus
 		},
 		"system.astatsLoad": func(info ResultInfo, serverInfo tc.TrafficServer, serverProfile tc.TMProfile, combinedState tc.IsAvailable) interface{} {
 			return info.System.AstatsLoad

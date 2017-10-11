@@ -53,14 +53,14 @@ type TrafficMonitorConfigMap struct {
 
 // TrafficMonitor ...
 type TrafficMonitor struct {
-	Port     int    `json:"port"`
-	IP6      string `json:"ip6"`
-	IP       string `json:"ip"`
-	HostName string `json:"hostName"`
-	FQDN     string `json:"fqdn"`
-	Profile  string `json:"profile"`
-	Location string `json:"location"`
-	Status   string `json:"status"`
+	Port         int    `json:"port"`
+	IP6          string `json:"ip6"`
+	IP           string `json:"ip"`
+	HostName     string `json:"hostName"`
+	FQDN         string `json:"fqdn"`
+	Profile      string `json:"profile"`
+	Location     string `json:"location"`
+	ServerStatus string `json:"status"`
 }
 
 // TMCacheGroup ...
@@ -74,7 +74,7 @@ type TMCacheGroup struct {
 type TMDeliveryService struct {
 	XMLID              string `json:"xmlId"`
 	TotalTPSThreshold  int64  `json:"TotalTpsThreshold"`
-	Status             string `json:"status"`
+	ServerStatus       string `json:"status"`
 	TotalKbpsThreshold int64  `json:"TotalKbpsThreshold"`
 }
 

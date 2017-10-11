@@ -107,9 +107,9 @@ func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, 
 		return false, "ERROR - server profile missing in Traffic Ops monitor config", ""
 	}
 
-	status := tc.CacheStatusFromString(serverInfo.Status)
+	status := tc.CacheStatusFromString(serverInfo.ServerStatus)
 	if status == tc.CacheStatusInvalid {
-		log.Errorf("Cache %v got invalid status from Traffic Ops '%v' - treating as Reported\n", result.ID, serverInfo.Status)
+		log.Errorf("Cache %v got invalid status from Traffic Ops '%v' - treating as Reported\n", result.ID, serverInfo.ServerStatus)
 	}
 
 	availability := "available"
@@ -119,7 +119,7 @@ func EvalCache(result cache.ResultInfo, resultStats cache.ResultStatValHistory, 
 
 	switch {
 	case status == tc.CacheStatusInvalid:
-		log.Errorf("Cache %v got invalid status from Traffic Ops '%v' - treating as OFFLINE\n", result.ID, serverInfo.Status)
+		log.Errorf("Cache %v got invalid status from Traffic Ops '%v' - treating as OFFLINE\n", result.ID, serverInfo.ServerStatus)
 		return false, eventDesc(status, availability+"; invalid status"), ""
 	case status == tc.CacheStatusAdminDown:
 		return false, eventDesc(status, availability), ""
@@ -189,7 +189,7 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 		}
 		localCacheStatuses[result.ID] = cache.AvailableStatus{
 			Available:       isAvailable,
-			Status:          mc.TrafficServer[string(result.ID)].Status,
+			Status:          mc.TrafficServer[string(result.ID)].ServerStatus,
 			Why:             whyAvailable,
 			UnavailableStat: unavailableStat,
 			Poller:          pollerName,
