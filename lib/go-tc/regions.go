@@ -24,8 +24,9 @@ type RegionsResponse struct {
 }
 
 type Region struct {
-	Division    int      `json:"division" db:"division"`
-	ID          int      `json:"id" db:"id"`
-	LastUpdated Time `json:"lastUpdated" db:"last_updated"`
-	Name        string   `json:"name" db:"name"`
+	DivisionName string `json:"divisionName" db:"divisionname"`
+	Division     int    `json:"division" db:"division"`
+	ID           int    `json:"id" db:"id"`
+	LastUpdated  Time   `json:"lastUpdated" db:"last_updated"`
+	Name         string `json:"name" db:"name"`
 }
