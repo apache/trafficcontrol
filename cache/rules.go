@@ -136,14 +136,21 @@ func CanReuseStored(reqHeaders http.Header, respHeaders http.Header, reqCacheCon
 		log.Debugf("CanReuseStored MustRevalidate - has pragma no-cache\n")
 		return ReuseMustRevalidate
 	}
+
 	if _, ok := reqCacheControl["no-cache"]; ok && strictRFC {
 		log.Debugf("CanReuseStored false - request has cache-control no-cache\n")
 		return ReuseCannot
 	}
+
 	if _, ok := respCacheControl["no-cache"]; ok {
 		log.Debugf("CanReuseStored false - response has cache-control no-cache\n")
 		return ReuseCannot
 	}
+
+	if strictRFC && !inMinFresh(respHeaders, reqCacheControl, respCacheControl, respReqTime, respRespTime) {
+		return ReuseMustRevalidate
+	}
+
 	log.Debugf("CanReuseStored true (respCacheControl %+v)\n", respCacheControl)
 	return ReuseCan
 }
@@ -180,7 +187,11 @@ func canStoreResponse(
 		return false
 	}
 	if _, ok := respCacheControl["no-store"]; ok {
-		log.Debugf("CanStoreResponse false: response has no-store\n")
+		log.Debugf("CanStoreResponse false: response has no-store\n") // RFC7234§5.2.2.3
+		return false
+	}
+	if _, ok := respCacheControl["no-cache"]; ok {
+		log.Debugf("CanStoreResponse false: response has no-cache\n") // RFC7234§5.2.2.2
 		return false
 	}
 	if _, ok := respCacheControl["private"]; ok {
@@ -244,6 +255,7 @@ func fresh(
 ) bool {
 	freshnessLifetime := getFreshnessLifetime(respHeaders, respCacheControl)
 	currentAge := getCurrentAge(respHeaders, respReqTime, respRespTime)
+	log.Debugf("Fresh: freshnesslifetime %v currentAge %v\n", freshnessLifetime, currentAge)
 	fresh := freshnessLifetime > currentAge
 	return fresh
 }
@@ -397,10 +409,24 @@ func residentTime(respRespTime time.Time) time.Duration {
 }
 
 func getCurrentAge(respHeaders http.Header, respReqTime time.Time, respRespTime time.Time) time.Duration {
-	return correctedInitialAge(respHeaders, respReqTime, respRespTime) + residentTime(respRespTime)
+	correctedInitial := correctedInitialAge(respHeaders, respReqTime, respRespTime)
+	resident := residentTime(respRespTime)
+	log.Debugf("getCurrentAge: correctedInitialAge %v residentTime %v\n", correctedInitial, resident)
+	return correctedInitial + resident
 }
 
-// TODO add min-fresh check
+// inMinFresh returns whether the given response is within the `min-fresh` request directive. If no `min-fresh` directive exists in the request, `true` is returned.
+func inMinFresh(respHeaders http.Header, reqCacheControl web.CacheControl, respCacheControl web.CacheControl, respReqTime time.Time, respRespTime time.Time) bool {
+	minFresh, ok := getHTTPDeltaSecondsCacheControl(reqCacheControl, "min-fresh")
+	if !ok {
+		return true // no min-fresh => within min-fresh
+	}
+	freshnessLifetime := getFreshnessLifetime(respHeaders, respCacheControl)
+	currentAge := getCurrentAge(respHeaders, respReqTime, respRespTime)
+	inMinFresh := minFresh < (freshnessLifetime - currentAge)
+	log.Debugf("inMinFresh minFresh %v freshnessLifetime %v currentAge %v => %v < (%v - %v) = %v\n", minFresh, freshnessLifetime, currentAge, minFresh, freshnessLifetime, currentAge, inMinFresh)
+	return inMinFresh
+}
 
 // TODO add warning generation funcs
 
@@ -409,14 +435,16 @@ func allowedStale(respHeaders http.Header, reqCacheControl web.CacheControl, res
 	// TODO return ReuseMustRevalidate where permitted
 	_, reqHasMaxAge := reqCacheControl["max-age"]
 	_, reqHasMaxStale := reqCacheControl["max-stale"]
+	_, respHasMustReval := respCacheControl["must-revalidate"]
+	_, respHasProxyReval := respCacheControl["proxy-revalidate"]
 	log.Debugf("AllowedStale: reqHasMaxAge %v reqHasMaxStale %v strictRFC %v\n", reqHasMaxAge, reqHasMaxStale, strictRFC)
+	if respHasMustReval || respHasProxyReval {
+		log.Debugf("AllowedStale: returning mustreval - must-revalidate\n")
+		return ReuseMustRevalidate
+	}
 	if strictRFC && reqHasMaxAge && !reqHasMaxStale {
 		log.Debugf("AllowedStale: returning can - strictRFC & reqHasMaxAge & !reqHasMaxStale\n")
 		return ReuseMustRevalidateCanStale
-	}
-	if _, ok := respCacheControl["must-revalidate"]; ok {
-		log.Debugf("AllowedStale: returning mustreval - must-revalidate\n")
-		return ReuseMustRevalidate
 	}
 	if _, ok := respCacheControl["no-cache"]; ok {
 		log.Debugf("AllowedStale: returning reusecannot - no-cache\n")
