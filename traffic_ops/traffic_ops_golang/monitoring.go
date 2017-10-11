@@ -121,7 +121,7 @@ func monitoringHandler(db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
-		cdnName := pathParams["cdn"]
+		cdnName := pathParams["name"]
 
 		resp, err := getMonitoringJson(cdnName, db)
 		if err != nil {

@@ -235,7 +235,7 @@ func assignDeliveryServicesToServerHandler(db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
-		serverPathParameter := pathParams["server"]
+		serverPathParameter := pathParams["id"]
 		server, err := strconv.Atoi(serverPathParameter)
 		if err != nil {
 			handleErr(err, http.StatusBadRequest)
