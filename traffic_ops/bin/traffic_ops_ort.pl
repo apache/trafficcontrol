@@ -239,6 +239,16 @@ else {
 }
 
 
+#Test Code
+print "Testing cfg Api\n";
+my $meme_test = &lwp_get("/api/1.2/servers/1/cfg.json");
+print "$meme_test\n";
+my $cfg_test = &lwp_post('/api/1.2/servers/1/cfg', '{"serverId": 1, "fileName": "test1.cfg", "dbLines": ["dbLine1", "dbLine1", "dbline2"], "localLines": ["localLine1", "localLine2", "localLine3"]}');
+print "$cfg_test\n";
+print "End Testing cfg Api\n";
+
+#end test code
+
 
 #### First time
 &process_config_files();
@@ -1422,6 +1432,73 @@ sub lwp_get {
 		}
 
 		$response = $lwp_conn->get($request, %headers);
+		$response_content = $response->content;
+
+		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_message_integrity($response, $ERROR) ) {
+			( $log_level >> $ERROR ) && print "ERROR result for $request is: ..." . $response->content . "...\n";
+			if ( $uri =~ m/configfiles\/ats/ && $response->code == 404) {
+					return $response->code;
+			}
+			if ( $rev_proxy_in_use == 1 ) {
+				( $log_level >> $ERROR ) && print "ERROR There appears to be an issue with the Traffic Ops Reverse Proxy.  Reverting to primary Traffic Ops host.\n";
+				$traffic_ops_host = $to_url;
+				$rev_proxy_in_use = 0;
+			}
+			sleep 2**( $retries - $retry_counter );
+			$retry_counter--;
+		}
+		# https://github.com/Comcast/traffic_control/issues/1168
+		elsif ( $uri =~ m/url\_sig\_(.*)\.config$/ && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
+			( $log_level >> $FATAL ) && print "FATAL result for $uri is: ..." . $response->content . "...\n";
+			exit 1;
+		}
+		else {
+			( $log_level >> $DEBUG ) && print "DEBUG result for $uri is: ..." . $response->content . "...\n";
+			last;
+		}
+
+	}
+
+	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_message_integrity($response, $FATAL) ) if ( $retry_counter == 0 );
+
+	&eval_json($response) if ( $uri =~ m/\.json$/ );
+
+	return $response_content;
+
+}
+
+sub lwp_post {
+	my $uri           = shift;
+	my $body 		  = shift;
+	my $retry_counter = $retries;
+
+	( $log_level >> $DEBUG ) && print "DEBUG Total connections in LWP cache: " . $lwp_conn->conn_cache->get_connections("https") . "\n";
+	my %headers = ( 'Cookie' => $cookie );
+
+	my $response;
+	my $response_content;
+
+	while( $retry_counter > 0 ) {
+
+		( $log_level >> $INFO ) && print "INFO Traffic Ops host: " . $traffic_ops_host . "\n";
+		( $log_level >> $DEBUG ) && print "DEBUG lwp_get called with $uri\n";
+		my $request = $traffic_ops_host . $uri;
+		if ( $uri =~ m/^http/ ) {
+			$request = $uri;
+			( $log_level >> $DEBUG ) && print "DEBUG Complete URL found. Downloading from external source $request.\n";
+		}
+		if ( ($uri =~ m/sslkeys/ || $uri =~ m/url\_sig/) && $rev_proxy_in_use == 1 ) {
+			$request = $to_url . $uri;
+			( $log_level >> $INFO ) && print "INFO Secure data request - bypassing reverse proxy and using $to_url.\n";
+		}
+		
+	    # TODO: is there a way to generalize this for most verbs?
+		my $httpRequest = HTTP::Request->new( 'POST', $request );
+		$httpRequest->header( 'Cookie' => $cookie );
+		$httpRequest->header( 'Content-Type' => 'application/json' );
+		$httpRequest->content( $body );
+
+		$response = $lwp_conn->request($httpRequest);
 		$response_content = $response->content;
 
 		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_message_integrity($response, $ERROR) ) {

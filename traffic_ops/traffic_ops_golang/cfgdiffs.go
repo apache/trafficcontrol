@@ -18,7 +18,7 @@ const CfgDiffsWritePrivLevel = PrivLevelOperations;
 
 type CfgFileDiffs struct {
 	ServerID int64 `json:"serverId"`
-	FileName string `json:"FileName"`
+	FileName string `json:"fileName"`
 	DBLines []string `json:"dbLines"`
 	LocalLines []string `json:"localLines"`
 }
@@ -172,7 +172,7 @@ func getCfgDiffsJson(serverID int64, db * sqlx.DB) ([]CfgFileDiffs, error) {
 func postCfgDiffs(db *sqlx.DB, serverID int64, diffs CfgFileDiffs) (error) {
 	query := `INSERT INTO 
 config_diffs(server_id, config_name, db_lines, local_lines, last_checked)
-VALUES($1, $2, json_array_elements_text($3), json_array_elements_text($4), $5)`
+VALUES($1, $2, (SELECT ARRAY(SELECT * FROM json_array_elements_text($3))), (SELECT ARRAY(SELECT * FROM json_array_elements_text($4))), $5)`
 		
 	dbLinesJson, err := json.Marshal(diffs.DBLines)
 	if err != nil {
@@ -183,6 +183,7 @@ VALUES($1, $2, json_array_elements_text($3), json_array_elements_text($4), $5)`
 		return err
 	}
 
+	//NOTE: if the serverID doesn't match a server, this error will appear like a 500-type error
 	rows, err := db.Query(query, 
 		serverID, 
 		diffs.FileName, 
