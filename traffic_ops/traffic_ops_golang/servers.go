@@ -110,7 +110,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Server, error) {
 		"cdn":          "s.cdn_id",
 		"id":           "s.id",
 		"physLocation": "s.phys_location",
-		"profileId":    "s.profileId",
+		"profileId":    "s.profile",
 		"status":       "st.name",
 		"type":         "t.name",
 	}
@@ -206,7 +206,6 @@ JOIN type t ON s.type = t.id`
 }
 
 func assignDeliveryServicesToServerHandler(db *sqlx.DB) http.HandlerFunc {
-
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorFunc(w, r)
