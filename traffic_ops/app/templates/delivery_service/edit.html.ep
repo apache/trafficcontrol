@@ -209,6 +209,7 @@ function setup_form(speed) {
             $('#range_request_handlingi_row').show(speed);
             $('#dns_bypass_ip_row').hide(speed);
             $('#dns_bypass_ip6_row').hide(speed);
+            $('#deep_caching_type').show(speed);
             $('#regional_geo_blocking_row').show(speed);
             $('#dns_bypass_cname_row').hide(speed);
             $('#dns_bypass_ttl_row').show(speed);
@@ -249,6 +250,7 @@ function setup_form(speed) {
             $('#range_request_handlingi_row').show(speed);
             $('#dns_bypass_ip_row').show(speed);
             $('#dns_bypass_ip6_row').show(speed);
+            $('#deep_caching_type').hide(speed);
 			$('#regional_geo_blocking_row').hide(speed);
 	    	$('#dns_bypass_cname_row').show(speed);
             $('#dns_bypass_ttl_row').show(speed);
@@ -286,6 +288,7 @@ function setup_form(speed) {
             $('#range_request_handlingi_row').hide(speed);
             $('#dns_bypass_ip_row').hide(speed);
             $('#dns_bypass_ip6_row').hide(speed);
+            $('#deep_caching_type').hide(speed);
 			$('#regional_geo_blocking_row').show(speed);
 	    	$('#dns_bypass_cname_row').hide(speed);
             $('#dns_bypass_ttl_row').hide(speed);
@@ -324,6 +327,7 @@ function setup_form(speed) {
             $('#range_request_handlingi_row').hide(speed);
             $('#dns_bypass_ip_row').hide(speed);
             $('#dns_bypass_ip6_row').hide(speed);
+            $('#deep_caching_type').hide(speed);
 			$('#regional_geo_blocking_row').show(speed);
 	    	$('#dns_bypass_cname_row').hide(speed);
             $('#dns_bypass_ttl_row').hide(speed);
