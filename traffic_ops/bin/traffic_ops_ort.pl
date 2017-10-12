@@ -202,7 +202,7 @@ if ( $script_mode == $BADASS || $script_mode == $INTERACTIVE || $script_mode == 
 
 my $header_comment = &get_header_comment($traffic_ops_host);
 
-my $ats_uid          = getpwnam("ats");
+my $ats_uid;
 
 if ( !defined $traffic_ops_host ) {
 	print "FATAL Could not resolve Traffic Ops host!\n";
@@ -1063,6 +1063,7 @@ sub sleep_timer {
 sub process_config_files {
 
 	( $log_level >> $INFO ) && print "\nINFO: ======== Start processing config files ========\n";
+	$ats_uid          = getpwnam("ats");
 	foreach my $file ( keys %{$cfg_file_tracker} ) {
 		( $log_level >> $DEBUG ) && print "DEBUG Starting processing of config file: $file\n";
 		my $return = undef;
