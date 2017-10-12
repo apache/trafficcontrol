@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverCount, $scope, $interval, $filter, locationUtils, cacheGroupService, cdnService, serverService, propertiesModel) {
+var DashboardController = function(cdns, serverCount, $scope, $interval, $filter, locationUtils, cacheGroupService, cdnService, serverService, propertiesModel) {
 
 	var cacheGroupHealthInterval,
 		currentStatsInterval,
@@ -28,19 +28,35 @@ var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverC
 
 	var getCacheGroupHealth = function() {
 		cacheGroupService.getCacheGroupHealth()
-			.then(function(result) {
-				$scope.cacheGroupHealth = result;
-			});
+			.then(
+				function(result) {
+					$scope.cacheGroupHealth = result; // this is required by a dashboard widget
+					$scope.totalOnline = $filter('number')(result.totalOnline, 0);
+					$scope.totalOffline = $filter('number')(result.totalOffline, 0);
+				},
+				function() {
+					$scope.totalOnline = 'Error';
+					$scope.totalOffline = 'Error';
+				}
+			);
 	};
 
 	var getCurrentStats = function() {
 		cdnService.getCurrentStats()
-			.then(function(result) {
-				$scope.totalStats = _.find(result.currentStats, function(item) {
-					// total stats are buried in a hash where cdn = total
-					return item.cdn == 'total';
-				});
-			});
+			.then(
+				function(result) {
+					var totalStats = _.find(result.currentStats, function(item) {
+						// total stats are buried in a hash where cdn = total
+						return item.cdn == 'total';
+					});
+					$scope.totalBandwidth = $filter('number')(totalStats.bandwidth, 2) + ' Gbps';
+					$scope.totalConnections = $filter('number')(totalStats.connections, 0);
+				},
+				function() {
+					$scope.totalBandwidth = 'Error';
+					$scope.totalConnections = 'Error';
+				}
+			);
 	};
 
 	var getServerCount = function() {
@@ -72,14 +88,15 @@ var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverC
 		}
 	};
 
-	$scope.cacheGroupHealth = cacheGroupHealth;
-
 	$scope.cdns = cdns;
 
-	$scope.totalStats = _.find(currentStats.currentStats, function(item) {
-		// total stats are buried in a hash where cdn = total
-		return item.cdn == 'total';
-	});
+	$scope.totalBandwidth = 'Loading...';
+
+	$scope.totalConnections = 'Loading...';
+
+	$scope.totalOnline = 'Loading...';
+
+	$scope.totalOffline = 'Loading...';
 
 	$scope.online = function() {
 		if (!serverCount.ONLINE) return 0;
@@ -108,6 +125,8 @@ var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverC
 	});
 
 	var init = function () {
+		getCurrentStats();
+		getCacheGroupHealth();
 		if (autoRefresh) {
 			createIntervals();
 		}
@@ -116,5 +135,5 @@ var DashboardController = function(cacheGroupHealth, cdns, currentStats, serverC
 
 };
 
-DashboardController.$inject = ['cacheGroupHealth', 'cdns', 'currentStats', 'serverCount', '$scope', '$interval', '$filter', 'locationUtils', 'cacheGroupService', 'cdnService', 'serverService', 'propertiesModel'];
+DashboardController.$inject = ['cdns', 'serverCount', '$scope', '$interval', '$filter', 'locationUtils', 'cacheGroupService', 'cdnService', 'serverService', 'propertiesModel'];
 module.exports = DashboardController;
