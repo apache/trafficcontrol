@@ -35,23 +35,21 @@ under the License.
             <thead>
             <tr class="headings">
                 <th>Update?</th>
-                <th>hostName</th>
-                <th>domainName</th>
-                <th>ipAddress</th>
-                <th>ip6Address</th>
-                <th>status</th>
-                <th>type</th>
-                <th>profile</th>
-                <th>cdn</th>
-                <th>cachegroup</th>
+                <th>Host Name</th>
+                <th>Domain Name</th>
+                <th>IP</th>
+                <th>IPv6</th>
+                <th>Status</th>
+                <th>Type</th>
+                <th>Profile</th>
+                <th>CDN</th>
+                <th>Cache Group</th>
+                <th>ILO</th>
             </tr>
             </thead>
             <tbody>
             <tr ng-click="editServer(server.id)" ng-repeat="server in ::servers" ng-class="::{'active': server.updPending}">
-                <td class="update-column">
-                    <i class="fa fa-flag" ng-if="server.updPending"></i>
-                    <i class="fa fa-ban" ng-if="!server.updPending"></i>
-                </td>
+                <td ng-class="{'red': server.updPending}"><strong>{{::server.updPending}}</strong></td>
                 <td>{{::server.hostName}}</td>
                 <td>{{::server.domainName}}</td>
                 <td><a ng-click="ssh(server.ipAddress, $event)">{{::server.ipAddress}}</a></td>
@@ -64,6 +62,7 @@ under the License.
                 <td>{{::server.profile}}</td>
                 <td>{{::server.cdnName}}</td>
                 <td>{{::server.cachegroup}}</td>
+                <td><a ng-click="ssh(server.iloIpAddress, $event)">{{::server.iloIpAddress}}</a></td>
             </tr>
             </tbody>
         </table>
