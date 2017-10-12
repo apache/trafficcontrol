@@ -26,6 +26,9 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"crypto/tls"
+	"github.com/basho/riak-go-client"
+	"reflect"
 )
 
 const (
@@ -148,6 +151,16 @@ const (
 	"type": "Pg"
 }
 `
+
+	goodRiakConfig = `
+	   {
+	       "user": "riakuser",
+	       "password": "password",
+	       "tlsConfig": {
+	           "insecureSkipVerify": true
+	       }
+	   }
+	   	`
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -165,38 +178,47 @@ func TestLoadConfig(t *testing.T) {
 	goodDbCfg, err := tempFileWith([]byte(goodDbConfig))
 	defer os.Remove(goodDbCfg) // clean up
 
+	goodRiakCfg, err := tempFileWith([]byte(goodRiakConfig))
+	defer os.Remove(goodRiakCfg) // clean up
+
 	// test bad paths
-	_, err = LoadConfig(badPath, badPath)
+	_, err = LoadConfig(badPath, badPath, badPath)
 	exp = fmt.Sprintf("reading CDN conf '%s'", badPath)
 	if !strings.HasPrefix(err.Error(), exp) {
 		t.Error("expected", exp, "got", err)
 	}
 
 	// bad json in cdn.conf
-	_, err = LoadConfig(badCfg, badCfg)
+	_, err = LoadConfig(badCfg, badCfg, badPath)
 	exp = fmt.Sprintf("unmarshalling '%s'", badCfg)
 	if !strings.HasPrefix(err.Error(), exp) {
 		t.Error("expected", exp, "got", err)
 	}
 
 	// good cdn.conf, bad db conf
-	_, err = LoadConfig(goodCfg, badPath)
+	_, err = LoadConfig(goodCfg, badPath, badPath)
 	exp = fmt.Sprintf("reading db conf '%s'", badPath)
 	if !strings.HasPrefix(err.Error(), exp) {
 		t.Error("expected", exp, "got", err)
 	}
 
 	// good cdn.conf,  bad json in database.conf
-	_, err = LoadConfig(goodCfg, badCfg)
+	_, err = LoadConfig(goodCfg, badCfg, badPath)
 	exp = fmt.Sprintf("unmarshalling '%s'", badCfg)
 	if !strings.HasPrefix(err.Error(), exp) {
 		t.Error("expected", exp, "got", err)
 	}
 
 	// good cdn.conf,  good database.conf
-	cfg, err = LoadConfig(goodCfg, goodDbCfg)
+	cfg, err = LoadConfig(goodCfg, goodDbCfg, goodRiakCfg)
 	if err != nil {
 		t.Error("Good config -- unexpected error ", err)
+	}
+
+	expectedRiak := riak.AuthOptions{User: "riakuser", Password: "password", TlsConfig: &tls.Config{InsecureSkipVerify: true}}
+
+	if cfg.RiakAuthOptions.User != expectedRiak.User || cfg.RiakAuthOptions.Password != expectedRiak.Password || !reflect.DeepEqual(cfg.RiakAuthOptions.TlsConfig, expectedRiak.TlsConfig){
+		t.Error(fmt.Printf("Error parsing riak conf expected: %++v but got: %++v\n",expectedRiak,cfg.RiakAuthOptions))
 	}
 
 	if *debugLogging {

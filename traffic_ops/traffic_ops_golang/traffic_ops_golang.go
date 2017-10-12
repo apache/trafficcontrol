@@ -40,6 +40,7 @@ const OldConfig = true
 func main() {
 	configFileName := flag.String("cfg", "", "The config file path")
 	dbConfigFileName := flag.String("dbcfg", "", "The db config file path")
+	riakConfigFileName := flag.String("riakcfg", "", "The riak config file path")
 	flag.Parse()
 
 	if len(os.Args) < 2 {
@@ -49,7 +50,7 @@ func main() {
 
 	var cfg Config
 	var err error
-	if cfg, err = LoadConfig(*configFileName, *dbConfigFileName); err != nil {
+	if cfg, err = LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName); err != nil {
 		fmt.Println("Error loading config: " + err.Error())
 		return
 	}

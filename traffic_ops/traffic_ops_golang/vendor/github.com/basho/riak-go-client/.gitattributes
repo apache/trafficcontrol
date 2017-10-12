@@ -1,0 +1,14 @@
+* text=auto
+
+Makefile    text eol=lf
+.travis.yml text eol=lf
+.sh         text eol=lf
+.pl         text eol=lf
+
+*.jpg  binary
+*.png  binary
+*.gif  binary
+*.ico  binary
+*.bmp  binary
+*.mdf  binary
+*.ldf  binary

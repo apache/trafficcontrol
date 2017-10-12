@@ -1,0 +1,26 @@
+sudo: required
+dist: trusty
+language: go
+go:
+  - 1.6.x
+  - 1.7.x
+  - master
+env:
+  global:
+    - RIAK_HOST=localhost
+    - RIAK_PORT=8087
+  matrix:
+    - RIAK_DOWNLOAD_URL=http://s3.amazonaws.com/downloads.basho.com/riak/2.0/2.0.7/ubuntu/trusty/riak_2.0.7-1_amd64.deb
+    - RIAK_DOWNLOAD_URL=http://s3.amazonaws.com/downloads.basho.com/riak/2.2/2.2.0/ubuntu/trusty/riak_2.2.0-1_amd64.deb
+before_script:
+  - jdk_switcher use oraclejdk8
+  - sudo ./tools/travis-ci/riak-install -d "$RIAK_DOWNLOAD_URL"
+  - sudo ./tools/setup-riak -s
+script:
+  - sudo riak-admin security disable
+  - make test
+  - sudo riak-admin security enable
+  - make security-test
+notifications:
+  slack:
+    secure: czHGTocw0ERiYsnE+CsW6FRs0PM1YU7fleorn5QGxi4gAjbvk+PVEr4YgiJutzJWs+AMCRn8MdIHRTLUcCVewmXDKeLUBRf4Nj8pSgEsOqEHK+ftE35Gy5jNBqGCMr90YF5rSaNCkBFnlW+cy45Z2fvVoy/YkKjlQ2u7A0B1fvZVCHCRT7R3rKkaTApMEp/2gKxKL+7tcITTd0Jh1YdMurhEIo/CXspv57fcerCiRI4vdVj9iup/ZcbvdW4wx5557alvvj4uYntLbsj94cY6ox5t/EEehy8HOBn7pDUAwAbfadQ574EhZMHK0EZMnS3KHMHKf7/xP5inMfplNbIqqMMQ4yHH1vj49l2WdmVOJPWPJs5y9XNV5q9LDkJnp+ZgVLSYBLgzSnzCjJny/p5HH5lUAuaEzOPrif6rOD7zO0swWZDim5kQv5MKC5HK/7BJeLbT7hFHFTZ6gmzB4DFBSiSCfIYRdCrxylJnwiRT5yATKZfVQDBbFs9bwgeDNW3wXLtpZy+0Lx/q1fWi2Z0ZyuvQzOYSt0fLUXMoJILWmXSpWVSFpW4f6tl8kmEStPPPs5DnNOLlc8haZiaIfX9vpeYWBMMZBTl0Gs/ddCbzROTvvInJjkR1liJXmpKtzDYSCafy5ZUYPxSyg8s/mQVAhm+7FMZ/KC6f9gxonaw8oM0=
