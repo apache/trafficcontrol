@@ -29,14 +29,8 @@ module.exports = angular.module('trafficPortal.private.dashboard', [])
                         templateUrl: 'modules/private/dashboard/dashboard.tpl.html',
                         controller: 'DashboardController',
                         resolve: {
-                            cacheGroupHealth: function(cacheGroupService) {
-                                return cacheGroupService.getCacheGroupHealth();
-                            },
                             cdns: function(cdnService) {
                                 return cdnService.getCDNs();
-                            },
-                            currentStats: function(cdnService) {
-                                return cdnService.getCurrentStats();
                             },
                             serverCount: function(serverService) {
                                 return serverService.getEdgeStatusCount();
