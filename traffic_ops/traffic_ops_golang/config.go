@@ -25,7 +25,9 @@ import (
 	"io/ioutil"
 	"net/url"
 
+	"crypto/tls"
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/basho/riak-go-client"
 )
 
 // Config reflects the structure of the cdn.conf file
@@ -36,6 +38,7 @@ type Config struct {
 	DB                     ConfigDatabase `json:"db"`
 	Secrets                []string       `json:"secrets"`
 	// NOTE: don't care about any other fields for now..
+	RiakAuthOptions *riak.AuthOptions
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
@@ -100,7 +103,7 @@ func (c Config) EventLog() log.LogLocation {
 }
 
 // LoadConfig - reads the config file into the Config struct
-func LoadConfig(cdnConfPath string, dbConfPath string) (Config, error) {
+func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string) (Config, error) {
 	// load json from cdn.conf
 	confBytes, err := ioutil.ReadFile(cdnConfPath)
 	if err != nil {
@@ -123,6 +126,17 @@ func LoadConfig(cdnConfPath string, dbConfPath string) (Config, error) {
 		return Config{}, fmt.Errorf("unmarshalling '%s': %v", dbConfPath, err)
 	}
 	cfg, err = ParseConfig(cfg)
+
+	riakConfBytes, err := ioutil.ReadFile(riakConfPath)
+	if err != nil {
+		return cfg, fmt.Errorf("reading riak conf '%v': %v", riakConfPath, err)
+	}
+	riakconf, err := getRiakAuthOptions(string(riakConfBytes))
+	if err != nil {
+		return cfg, fmt.Errorf("parsing riak conf '%v': %v", riakConfBytes, err)
+	}
+	cfg.RiakAuthOptions = riakconf
+
 	return cfg, err
 }
 
@@ -142,6 +156,13 @@ func (c Config) KeyPath() string {
 		return v[0]
 	}
 	return ""
+}
+
+func getRiakAuthOptions(s string) (*riak.AuthOptions, error) {
+	rconf := &riak.AuthOptions{}
+	rconf.TlsConfig = &tls.Config{}
+	err := json.Unmarshal([]byte(s), &rconf)
+	return rconf, err
 }
 
 // ParseConfig validates required fields, and parses non-JSON types
