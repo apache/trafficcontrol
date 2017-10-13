@@ -168,6 +168,16 @@ under the License.
                     </div>
                 </div>
 
+                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.deepCachingType), 'has-feedback': hasError(deliveryServiceForm.deepCachingType)}">
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12">Deep Caching *</label>
+                    <div class="col-md-10 col-sm-10 col-xs-12">
+                        <select id="deepCachingType" name="deepCachingType" class="form-control" ng-model="deliveryService.deepCachingType" ng-options="dct.value as dct.label for dct in deepCachingTypes" required>
+                            <option value="">Select...</option>
+                        </select>
+                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.deepCachingType, 'required')">Required</small>
+                    </div>
+                </div>
+
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.dscp), 'has-feedback': hasError(deliveryServiceForm.dscp)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">DSCP Tag *</label>
                     <div class="col-md-10 col-sm-10 col-xs-12">

@@ -83,6 +83,7 @@
         },
         "HTTP": {
           "routingName": "cdn",
+          "deepCachingType": "NEVER",
           "dscp": 0,
           "ipv6RoutingEnabled": false,
           "rangeRequestHandling": 0,
