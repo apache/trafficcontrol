@@ -129,10 +129,12 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string) (Con
 
 	riakConfBytes, err := ioutil.ReadFile(riakConfPath)
 	if err != nil {
+		cfg.RiakAuthOptions = nil
 		return cfg, fmt.Errorf("reading riak conf '%v': %v", riakConfPath, err)
 	}
 	riakconf, err := getRiakAuthOptions(string(riakConfBytes))
 	if err != nil {
+		cfg.RiakAuthOptions = nil
 		return cfg, fmt.Errorf("parsing riak conf '%v': %v", riakConfBytes, err)
 	}
 	cfg.RiakAuthOptions = riakconf
