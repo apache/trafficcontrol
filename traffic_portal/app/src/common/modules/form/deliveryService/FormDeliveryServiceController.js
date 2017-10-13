@@ -128,6 +128,11 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
         { value: 56, label: '56  - CS7' }
     ];
 
+    $scope.deepCachingTypes = [
+        { value: 0, label: '0 - Never' },
+        { value: 1, label: '1 - Always' }
+    ]
+
     $scope.dispersions = [
         { value: 1, label: '1 - OFF' },
         { value: 2, label: '2' },
