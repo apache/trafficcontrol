@@ -17,7 +17,15 @@
  * under the License.
  */
 
-var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils, locationUtils, cdnService) {
+var FormCDNController = function(cdn, $scope, $location, $uibModal, formUtils, stringUtils, locationUtils, cdnService) {
+
+    var queueServerUpdates = function(cdn) {
+        cdnService.queueServerUpdates(cdn.id);
+    };
+
+    var clearServerUpdates = function(cdn) {
+        cdnService.clearServerUpdates(cdn.id);
+    };
 
     $scope.cdn = cdn;
 
@@ -28,14 +36,6 @@ var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils,
 
     $scope.manageDNSSEC = function() {
         $location.path($location.path() + '/dnssec-keys');
-    };
-
-    $scope.queueServerUpdates = function(cdn) {
-        cdnService.queueServerUpdates(cdn.id);
-    };
-
-    $scope.clearServerUpdates = function(cdn) {
-        cdnService.clearServerUpdates(cdn.id);
     };
 
     $scope.viewConfig = function() {
@@ -54,6 +54,51 @@ var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils,
         $location.path($location.path() + '/delivery-services');
     };
 
+    $scope.queueServerUpdates = function(cdn) {
+        var params = {
+            title: 'Queue Server Updates: ' + cdn.name,
+            message: 'Are you sure you want to queue server updates for all ' + cdn.name + ' servers?'
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+            controller: 'DialogConfirmController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            queueServerUpdates(cdn);
+        }, function () {
+            // do nothing
+        });
+    };
+
+    $scope.clearServerUpdates = function(cdn) {
+        var params = {
+            title: 'Clear Server Updates: ' + cdn.name,
+            message: 'Are you sure you want to clear server updates for all ' + cdn.name + ' servers?'
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+            controller: 'DialogConfirmController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            clearServerUpdates(cdn);
+        }, function () {
+            // do nothing
+        });
+    };
+
+
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.hasError = formUtils.hasError;
@@ -62,5 +107,5 @@ var FormCDNController = function(cdn, $scope, $location, formUtils, stringUtils,
 
 };
 
-FormCDNController.$inject = ['cdn', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils', 'cdnService'];
+FormCDNController.$inject = ['cdn', '$scope', '$location', '$uibModal', 'formUtils', 'stringUtils', 'locationUtils', 'cdnService'];
 module.exports = FormCDNController;
