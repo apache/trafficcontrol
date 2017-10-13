@@ -45,7 +45,7 @@ func main() {
 	flag.Parse()
 
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: ./traffic_ops_golang -cfg=<path>/cdn.conf -dbcfg=<path>/database.conf")
+		flag.Usage()
 		os.Exit(1)
 	}
 
