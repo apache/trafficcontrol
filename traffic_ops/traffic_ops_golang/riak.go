@@ -35,11 +35,8 @@ func getStringValueFromRiakObject(resp *riak.FetchValueResponse) (string, error)
 
 func assignDeliveryServiceUriKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := func(err error, status int) {
-			log.Errorf("%v %v\n", r.RemoteAddr, err)
-			w.WriteHeader(status)
-			fmt.Fprintf(w, http.StatusText(status))
-		}
+		handleErr := tc.GetHandleErrorFunc(w, r)
+
 		defer r.Body.Close()
 
 		ctx := r.Context()
@@ -158,11 +155,7 @@ func fetchObject(key string, bucket string, db *sqlx.DB, cfg Config) (*riak.Fetc
 // endpoint handler for fetching uri signing keys from riak
 func getUrisignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := func(err error, status int) {
-			log.Errorf("%v %v\n", r.RemoteAddr, err)
-			w.WriteHeader(status)
-			fmt.Fprintf(w, http.StatusText(status))
-		}
+		handleErr := tc.GetHandleErrorFunc(w, r)
 
 		ctx := r.Context()
 		pathParams, err := getPathParams(ctx)
