@@ -24,6 +24,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -42,6 +43,11 @@ func main() {
 	configFileName := flag.String("cfg", DefaultConfigPath, "The config file path")
 	dbConfigFileName := flag.String("dbcfg", DefaultDBConfigPath, "The db config file path")
 	flag.Parse()
+
+	if len(os.Args) < 2 {
+		fmt.Println("Usage: ./traffic_ops_golang -cfg=<path>/cdn.conf -dbcfg=<path>/database.conf")
+		os.Exit(1)
+	}
 
 	var cfg Config
 	var err error
@@ -109,7 +115,7 @@ func main() {
 		WriteTimeout:      time.Duration(cfg.WriteTimeout) * time.Second,
 		IdleTimeout:       time.Duration(cfg.IdleTimeout) * time.Second,
 	}
-	
+
 	log.Debugf("our server struct: %++v \n", server)
 	if err := server.ListenAndServeTLS(cfg.CertPath(), cfg.KeyPath()); err != nil {
 		log.Errorf("stopping server: %v\n", err)
