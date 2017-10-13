@@ -28,7 +28,9 @@ module.exports = angular.module('trafficPortal.private.profiles.new', [])
                         controller: 'FormNewProfileController',
                         resolve: {
                             profile: function() {
-                                return {};
+                                return {
+                                    routingDisabled: false
+                                };
                             }
                         }
                     }
