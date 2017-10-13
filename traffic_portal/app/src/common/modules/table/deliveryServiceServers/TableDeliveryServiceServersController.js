@@ -38,14 +38,14 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 
 	$scope.selectServers = function() {
 		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/table/deliveryServiceServers/table.dsServersUnassigned.tpl.html',
-			controller: 'TableDSServersUnassignedController',
+			templateUrl: 'common/modules/table/deliveryServiceServers/table.assignDSServers.tpl.html',
+			controller: 'TableAssignDSServersController',
 			size: 'lg',
 			resolve: {
 				deliveryService: function() {
 					return deliveryService;
 				},
-				eligibleServers: function(serverService) {
+				servers: function(serverService) {
 					return serverService.getEligibleDeliveryServiceServers(deliveryService.id);
 				},
 				assignedServers: function() {
