@@ -35,13 +35,11 @@ import (
 
 const Version = "0.1"
 
-const DefaultConfigPath = "/opt/traffic_ops/app/conf/cdn.conf"
-const DefaultDBConfigPath = "/opt/traffic_ops/app/conf/production/database.conf"
 const OldConfig = true
 
 func main() {
-	configFileName := flag.String("cfg", DefaultConfigPath, "The config file path")
-	dbConfigFileName := flag.String("dbcfg", DefaultDBConfigPath, "The db config file path")
+	configFileName := flag.String("cfg", "", "The config file path")
+	dbConfigFileName := flag.String("dbcfg", "", "The db config file path")
 	flag.Parse()
 
 	if len(os.Args) < 2 {
