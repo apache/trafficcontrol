@@ -58,7 +58,7 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.new', []
                                     qstringIgnore: 0,
                                     rangeRequestHandling: 0,
                                     regionalGeoBlocking: false,
-                                    signed: false,
+                                    signingAlgorithm: null,
                                     routingName: 'cdn'
                                 };
                             },
