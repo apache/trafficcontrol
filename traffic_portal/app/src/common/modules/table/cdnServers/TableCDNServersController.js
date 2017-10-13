@@ -17,7 +17,25 @@
  * under the License.
  */
 
-var TableCDNServersController = function(cdn, servers, $scope, $state, locationUtils, serverUtils, cdnService) {
+var TableCDNServersController = function(cdn, servers, $scope, $state, $uibModal, locationUtils, serverUtils, cdnService) {
+
+	var queueServerUpdates = function(cdn) {
+		cdnService.queueServerUpdates(cdn.id)
+			.then(
+				function() {
+					$scope.refresh();
+				}
+			);
+	};
+
+	var clearServerUpdates = function(cdn) {
+		cdnService.clearServerUpdates(cdn.id)
+			.then(
+				function() {
+					$scope.refresh();
+				}
+			);
+	};
 
 	$scope.cdn = cdn;
 
@@ -28,21 +46,47 @@ var TableCDNServersController = function(cdn, servers, $scope, $state, locationU
 	};
 
 	$scope.queueServerUpdates = function(cdn) {
-		cdnService.queueServerUpdates(cdn.id)
-			.then(
-				function() {
-					$scope.refresh();
+		var params = {
+			title: 'Queue Server Updates: ' + cdn.name,
+			message: 'Are you sure you want to queue server updates for all ' + cdn.name + ' servers?'
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
 				}
-			);
+			}
+		});
+		modalInstance.result.then(function() {
+			queueServerUpdates(cdn);
+		}, function () {
+			// do nothing
+		});
 	};
 
 	$scope.clearServerUpdates = function(cdn) {
-		cdnService.clearServerUpdates(cdn.id)
-			.then(
-				function() {
-					$scope.refresh();
+		var params = {
+			title: 'Clear Server Updates: ' + cdn.name,
+			message: 'Are you sure you want to clear server updates for all ' + cdn.name + ' servers?'
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
 				}
-			);
+			}
+		});
+		modalInstance.result.then(function() {
+			clearServerUpdates(cdn);
+		}, function () {
+			// do nothing
+		});
 	};
 
 	$scope.refresh = function() {
@@ -67,5 +111,5 @@ var TableCDNServersController = function(cdn, servers, $scope, $state, locationU
 
 };
 
-TableCDNServersController.$inject = ['cdn', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils', 'cdnService'];
+TableCDNServersController.$inject = ['cdn', 'servers', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'cdnService'];
 module.exports = TableCDNServersController;
