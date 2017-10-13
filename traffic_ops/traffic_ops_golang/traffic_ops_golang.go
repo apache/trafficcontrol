@@ -51,10 +51,13 @@ func main() {
 
 	var cfg Config
 	var err error
+	var errorToLog error
 	if cfg, err = LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName); err != nil {
 		if !strings.Contains(err.Error(), "riak conf") {
 			fmt.Println("Error loading config: " + err.Error())
 			return
+		} else {
+			errorToLog = err
 		}
 	}
 
@@ -62,6 +65,7 @@ func main() {
 		fmt.Printf("Error initializing loggers: %v\n", err)
 		return
 	}
+	log.Warnln(errorToLog)
 
 	log.Infof(`Using Config values:
 		Port:                 %s
