@@ -74,6 +74,12 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
         { value: true, label: 'true' }
     ];
 
+    $scope.signingAlgos = [
+        { value: null, label: 'None' },
+        { value: 'url_sig', label: 'URL Signature Keys' },
+        { value: 'uri_signing', label: 'URI Signing Keys' }
+    ];
+
     $scope.protocols = [
         { value: 0, label: '0 - HTTP' },
         { value: 1, label: '1 - HTTPS' },

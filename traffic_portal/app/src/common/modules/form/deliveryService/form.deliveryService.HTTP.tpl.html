@@ -25,13 +25,13 @@ under the License.
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
             <div class="btn-group" role="group" uib-dropdown is-open="keys.isopen">
-                <button ng-show="(deliveryService.protocol>0)||(deliveryService.signed==true)" type="button" class="btn btn-primary dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                <button ng-show="(deliveryService.protocol>0)||(deliveryService.signingAlgorithm)" type="button" class="btn btn-primary dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     <i class="fa fa-key"></i>&nbsp;
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                     <li role="menuitem"><a ng-show="deliveryService.protocol>0" ng-click="manageSslKeys()">Manage SSL Keys</a></li>
-                    <li role="menuitem"><a ng-show="deliveryService.signed==true" ng-click="manageUrlSigKeys()">Manage URL Sig Keys</a></li>
+                    <li role="menuitem"><a ng-show="deliveryService.signingAlgorithm=='url_sig'" ng-click="manageUrlSigKeys()">Manage URL Sig Keys</a></li>
                 </ul>
             </div>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
@@ -141,11 +141,11 @@ under the License.
                 </div>
             </div>
 
-            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.signed), 'has-feedback': hasError(deliveryServiceForm.signed)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Signed URLs *</label>
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.signingAlgorithm), 'has-feedback': hasError(deliveryServiceForm.signingAlgorithm)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Signing Algorithm *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="signed" name="signed" class="form-control" ng-model="deliveryService.signed" ng-options="x.value as x.label for x in falseTrue" required></select>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.signed, 'required')">Required</small>
+                    <select id="signingAlgorithm" name="signingAlgorithm" class="form-control" ng-model="deliveryService.signingAlgorithm" ng-options="sa.value as sa.label for sa in signingAlgos" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.signingAlgorithm, 'required')">Required</small>
                 </div>
             </div>
 
