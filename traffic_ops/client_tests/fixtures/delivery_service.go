@@ -26,6 +26,7 @@ func DeliveryServices() *client.GetDeliveryServiceResponse {
 				XMLID:                "ds-test",
 				Active:               true,
 				DSCP:                 40,
+				DeepCachingType:      0,
 				RoutingName:          "edge",
 				Signed:               false,
 				QStringIgnore:        1,
