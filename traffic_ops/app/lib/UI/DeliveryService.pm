@@ -211,7 +211,8 @@ sub read {
 				"display_name"                => $row->display_name,
 				"dscp"                        => $row->dscp,
 				"routing_name"                => $row->routing_name,
-				"signed"                      => \$row->signed,
+				"signed"                      => ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ),
+				"signing_algorithm"           => $row->signing_algorithm,
 				"qstring_ignore"              => $row->qstring_ignore,
 				"geo_limit"                   => $row->geo_limit,
 				"geo_limit_countries"         => $row->geo_limit_countries,
@@ -725,13 +726,13 @@ sub cacheurl {
 }
 
 sub url_sig {
-	my $self       = shift;
-	my $ds_id      = shift;
-	my $ds_profile = shift;
-	my $ds_name    = shift;
-	my $signed    = shift;
+	my $self              = shift;
+	my $ds_id             = shift;
+	my $ds_profile        = shift;
+	my $ds_name           = shift;
+	my $signing_algorithm = shift;
 
-	if ( defined($signed) && $signed == 1 ) {
+	if ( $signing_algorithm eq "url_sig" ) {
 		my $fname = "url_sig_" . $ds_name . ".config";
 		my $ats_cfg_loc =
 			$self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => 'remap.config' ] } )->get_column('value')->single();
@@ -791,20 +792,14 @@ sub update {
 		my $referer = $self->req->headers->header('referer');
 		return $self->redirect_to($referer);
 	}
-#	foreach my $f ($self->param) {
-#		print $f . " => " . $self->param($f) . "\n";
-#	}
 
 	if ( $self->check_deliveryservice_input( $self->param('ds.cdn_id'), $id ) ) {
-
-		#print "global_max_mbps = " . $self->param('ds.global_max_mbps') . "\n";
 		# if error check passes
 		my %hash = (
 			xml_id                      => $self->paramAsScalar('ds.xml_id'),
 			display_name                => $self->paramAsScalar('ds.display_name'),
 			dscp                        => $self->paramAsScalar('ds.dscp'),
 			routing_name                => sanitize_routing_name( $self->paramAsScalar('ds.routing_name') ),
-			signed                      => $self->paramAsScalar('ds.signed'),
 			qstring_ignore              => $self->paramAsScalar('ds.qstring_ignore'),
 			geo_limit                   => $self->paramAsScalar('ds.geo_limit'),
 			geo_limit_countries         => sanitize_geo_limit_countries( $self->paramAsScalar('ds.geo_limit_countries') ),
@@ -841,6 +836,14 @@ sub update {
 			initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 			logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
 		);
+
+		if ( defined($self->paramAsScalar('ds.signing_algorithm')) ) {
+			$hash{signing_algorithm} = $self->paramAsScalar('ds.signing_algorithm');
+		} elsif ($self->paramAsScalar('ds.signed')) {
+			$hash{signing_algorithm} = "url_sig";
+		} else {
+			$hash{signing_algorithm} = undef;
+		}
 
 		my $typename = $self->typename();
 		if ( $typename =~ /^DNS/ ) {
@@ -956,7 +959,7 @@ sub update {
 
 		$self->regex_remap( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 		$self->cacheurl( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
-		$self->url_sig( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.signed') );
+		$self->url_sig( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $hash{signing_algorithm} );
 
 		$self->flash( message => "Delivery service updated!" );
 		return $self->redirect_to( '/ds/' . $id );
@@ -1033,13 +1036,11 @@ sub create {
 	if ( $self->check_deliveryservice_input($cdn_id) ) {
 		my $tenant_utils = Utils::Tenant->new($self);
 		my $tenant_id = $tenant_utils->current_user_tenant();
-		my $insert = $self->db->resultset('Deliveryservice')->create(
-			{
+		my $new_ds = {
 				xml_id                      => $self->paramAsScalar('ds.xml_id'),
 				display_name                => $self->paramAsScalar('ds.display_name'),
 				dscp                        => $self->paramAsScalar( 'ds.dscp', 0 ),
 				routing_name                => sanitize_routing_name( $self->paramAsScalar('ds.routing_name') ),
-				signed                      => $self->paramAsScalar('ds.signed'),
 				qstring_ignore              => $self->paramAsScalar('ds.qstring_ignore'),
 				geo_limit                   => $self->paramAsScalar('ds.geo_limit'),
 				geo_limit_countries         => sanitize_geo_limit_countries( $self->paramAsScalar('ds.geo_limit_countries') ),
@@ -1080,8 +1081,17 @@ sub create {
 				initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 				logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
 				tenant_id => $tenant_id,
-			}
-		);
+		};
+
+		if ( defined($self->paramAsScalar('ds.signing_algorithm')) ) {
+			$new_ds->{signing_algorithm} = $self->paramAsScalar('ds.signing_algorithm');
+		} elsif ($self->paramAsScalar('ds.signed')) {
+			$new_ds->{signing_algorithm} = "url_sig";
+		} else {
+			$new_ds->{signing_algorithm} = undef;
+		}
+
+		my $insert = $self->db->resultset('Deliveryservice')->create($new_ds);
 		$insert->insert();
 		$new_id = $insert->id;
 		&log( $self, "Create deliveryservice with xml_id:" . $self->param('ds.xml_id'), "UICHANGE" );

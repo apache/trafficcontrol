@@ -31,15 +31,15 @@ use UI::DeliveryService;
 use Validate::Tiny ':all';
 
 sub index {
-	my $self         = shift;
-	my $orderby      = $self->param('orderby') || "xml_id";
-	my $cdn_id       = $self->param('cdn');
-	my $profile_id   = $self->param('profile');
-	my $type_id      = $self->param('type');
-	my $logs_enabled = $self->param('logsEnabled');
-	my $tenant_id	 = $self->param('tenant');
-	my $signed       = $self->param('signed');
-	my $current_user = $self->current_user()->{username};
+	my $self              = shift;
+	my $orderby           = $self->param('orderby') || "xml_id";
+	my $cdn_id            = $self->param('cdn');
+	my $profile_id        = $self->param('profile');
+	my $type_id           = $self->param('type');
+	my $logs_enabled      = $self->param('logsEnabled');
+	my $tenant_id	      = $self->param('tenant');
+	my $signing_algorithm = $self->param('signing_algorithm');
+	my $current_user      = $self->current_user()->{username};
 	my @data;
 
 	my %criteria;
@@ -58,8 +58,8 @@ sub index {
 	if ( defined $tenant_id ) {
 		$criteria{'me.tenant_id'} = $tenant_id;
 	}
-	if ( defined $signed ) {
-		$criteria{'me.signed'} = $signed ? 1 : 0;    # converts bool to 0|1
+	if ( defined $signing_algorithm ) {
+		$criteria{'me.signing_algorithm'} = $signing_algorithm;
 	}
 
 	my $tenant_utils = Utils::Tenant->new($self);
@@ -146,7 +146,8 @@ sub index {
 				"regionalGeoBlocking"  => \$row->regional_geo_blocking,
 				"remapText"            => $row->remap_text,
 				"routingName"          => $row->routing_name,
-				"signed"               => \$row->signed,
+				"signed"               => ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ),
+				"signing_algorithm"    => $row->signing_algorithm,
 				"sslKeyVersion"        => $row->ssl_key_version,
 				"tenantId"		       => $row->tenant_id,
 				"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
@@ -266,7 +267,8 @@ sub show {
 				"regionalGeoBlocking"  => \$row->regional_geo_blocking,
 				"routingName"          => $row->routing_name,
 				"remapText"            => $row->remap_text,
-				"signed"               => \$row->signed,
+				"signed"               => ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ),
+				"signing_algorithm"    => $row->signing_algorithm,
 				"sslKeyVersion"        => $row->ssl_key_version,
 				"tenantId"             => $row->tenant_id,
 				"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
@@ -365,7 +367,6 @@ sub update {
 		regional_geo_blocking  => $params->{regionalGeoBlocking},
 		remap_text             => $params->{remapText},
 		routing_name           => UI::DeliveryService::sanitize_routing_name( $params->{routingName}, $ds ),
-		signed                 => $params->{signed},
 		ssl_key_version        => $params->{sslKeyVersion},
 		tenant_id              => $tenant_id,
 		tr_request_headers     => $params->{trRequestHeaders},
@@ -373,6 +374,14 @@ sub update {
 		type                   => $params->{typeId},
 		xml_id                 => $params->{xmlId},
 	};
+
+	if ( exists($params->{signing_algorithm}) ) {
+		$values->{signing_algorithm} = $params->{signing_algorithm};
+	} elsif ($params->{signed}) {
+		$values->{signing_algorithm} = "url_sig";
+	} else {
+		$values->{signing_algorithm} = undef;
+	}
 
 	my $rs = $ds->update($values);
 	if ($rs) {
@@ -453,7 +462,8 @@ sub update {
 				"regionalGeoBlocking"      => $rs->regional_geo_blocking,
 				"remapText"                => $rs->remap_text,
 				"routingName"              => $rs->routing_name,
-				"signed"                   => $rs->signed,
+				"signed"                   => ( $rs->signing_algorithm eq "url_sig" ),
+				"signing_algorithm"        => $rs->signing_algorithm,
 				"sslKeyVersion"            => $rs->ssl_key_version,
 				"tenantId"                 => $rs->tenant_id,
 				"trRequestHeaders"         => $rs->tr_request_headers,
@@ -583,7 +593,8 @@ sub safe_update {
 				"regionalGeoBlocking"      => $rs->regional_geo_blocking,
 				"remapText"                => $rs->remap_text,
 				"routingName"              => $rs->routing_name,
-				"signed"                   => $rs->signed,
+				"signed"                   => ( $rs->signing_algorithm eq "url_sig" ),
+				"signing_algorithm"        => $rs->signing_algorithm,
 				"sslKeyVersion"            => $rs->ssl_key_version,
 				"trRequestHeaders"         => $rs->tr_request_headers,
 				"trResponseHeaders"        => $rs->tr_response_headers,
@@ -682,7 +693,6 @@ sub create {
 		regional_geo_blocking  => $params->{regionalGeoBlocking},
 		remap_text             => $params->{remapText},
 		routing_name           => UI::DeliveryService::sanitize_routing_name( $params->{routingName} ),
-		signed                 => $params->{signed},
 		ssl_key_version        => $params->{sslKeyVersion},
 		tenant_id              => $tenant_id,
 		tr_request_headers     => $params->{trRequestHeaders},
@@ -690,6 +700,14 @@ sub create {
 		type                   => $params->{typeId},
 		xml_id                 => $params->{xmlId},
 	};
+
+	if ( exists($params->{signing_algorithm}) ) {
+		$values->{signing_algorithm} = $params->{signing_algorithm};
+	} elsif ($params->{signed}) {
+		$values->{signing_algorithm} = "url_sig";
+	} else {
+		$values->{signing_algorithm} = undef;
+	}
 
 	my $insert = $self->db->resultset('Deliveryservice')->create($values)->insert();
 	if ($insert) {
@@ -783,7 +801,8 @@ sub create {
 				"regionalGeoBlocking"      => $insert->regional_geo_blocking,
 				"remapText"                => $insert->remap_text,
 				"routingName"              => $insert->routing_name,
-				"signed"                   => $insert->signed,
+				"signed"                   => ( $insert->signing_algorithm eq "url_sig" ),
+				"signing_algorithm"        => $insert->signing_algorithm,
 				"sslKeyVersion"            => $insert->ssl_key_version,
 				"tenantId"                 => $insert->tenant_id,
 				"trRequestHeaders"         => $insert->tr_request_headers,
@@ -972,7 +991,8 @@ sub get_deliveryservices_by_serverId {
 					"regionalGeoBlocking"  => \$row->regional_geo_blocking,
 					"remapText"            => $row->remap_text,
 					"routingName"          => $row->routing_name,
-					"signed"               => \$row->signed,
+					"signed"               => ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ),
+					"signing_algorithm"    => $row->signing_algorithm,
 					"sslKeyVersion"        => $row->ssl_key_version,
 					"tenantId"             => $row->tenant_id,
 					"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
@@ -1069,7 +1089,8 @@ sub get_deliveryservices_by_userId {
 					"regionalGeoBlocking"  => \$row->regional_geo_blocking,
 					"remapText"            => $row->remap_text,
 					"routingName"          => $row->routing_name,
-					"signed"               => \$row->signed,
+					"signed"               => ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ),
+					"signing_algorithm"    => $row->signing_algorithm,
 					"sslKeyVersion"        => $row->ssl_key_version,
 					"tenantId"             => $row->tenant_id,
 					"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
@@ -1334,7 +1355,7 @@ sub is_deliveryservice_valid {
 
 	my $rules = {
 		fields => [
-			qw/active cacheurl ccrDnsTtl cdnId checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText routingName signed sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
+			qw/active cacheurl ccrDnsTtl cdnId checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText routingName signed signing_algorithm sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
 		],
 
 		# Validation checks to perform
@@ -1359,7 +1380,6 @@ sub is_deliveryservice_valid {
 			rangeRequestHandling => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
 			regionalGeoBlocking  => [ is_required("is required") ],
 			routingName          => [ \&is_valid_routing_name, is_long_at_most( 48, 'too long' ) ],
-			signed               => [ is_required("is required") ],
 		]
 	};
 

@@ -489,7 +489,7 @@ sub delivery_service_data_by_profile {
 		deliveryservice.xml_id,
 		deliveryservice.dscp,
 		deliveryservice.routing_name,
-		deliveryservice.signed,
+		deliveryservice.signing_algorithm,
 		deliveryservice.qstring_ignore,
 		deliveryservice.org_server_fqdn,
 		deliveryservice.origin_shield,
@@ -534,7 +534,7 @@ sub delivery_service_data_by_profile {
 	my $deliveryservice_xml_id;
 	my $deliveryservice_dscp;
 	my $deliveryservice_routing_name;
-	my $deliveryservice_signed;
+	my $deliveryservice_signing_algorithm;
 	my $deliveryservice_qstring_ignore;
 	my $deliveryservice_org_server_fqdn;
 	my $deliveryservice_origin_shield;
@@ -559,7 +559,7 @@ sub delivery_service_data_by_profile {
 		\$deliveryservice_xml_id,
 		\$deliveryservice_dscp,
 		\$deliveryservice_routing_name,
-		\$deliveryservice_signed,
+		\$deliveryservice_signing_algorithm,
 		\$deliveryservice_qstring_ignore,
 		\$deliveryservice_org_server_fqdn,
 		\$deliveryservice_origin_shield,
@@ -587,7 +587,8 @@ sub delivery_service_data_by_profile {
 					"xml_id" => $deliveryservice_xml_id,
 					"dscp" => $deliveryservice_dscp,
 					"routing_name" => $deliveryservice_routing_name,
-					"signed" => $deliveryservice_signed,
+					"signed" => ( $deliveryservice_signing_algorithm eq "url_sig" ),
+					"signing_algorithm" => $deliveryservice_signing_algorithm,
 					"qstring_ignore" => $deliveryservice_qstring_ignore,
 					"org_server_fqdn" => $deliveryservice_org_server_fqdn,
 					"origin_shield" => $deliveryservice_origin_shield,
@@ -630,6 +631,7 @@ sub profile_ds_data {
 		my $re_type                     = $row->{'re_type'};
 		my $ds_type                     = $row->{'ds_type'};
 		my $signed                      = $row->{'signed'};
+		my $signing_algorithm           = $row->{'signing_algorithm'};
 		my $qstring_ignore              = $row->{'qstring_ignore'};
 		my $ds_xml_id                   = $row->{'xml_id'};
 		my $ds_domain                   = $row->{'domain_name'};
@@ -700,6 +702,7 @@ sub profile_ds_data {
 		$dsinfo->{dslist}->[$j]->{"type"}                        = $ds_type;
 		$dsinfo->{dslist}->[$j]->{"domain"}                      = $ds_domain;
 		$dsinfo->{dslist}->[$j]->{"signed"}                      = $signed;
+		$dsinfo->{dslist}->[$j]->{"signing_algorithm"}           = $signing_algorithm;
 		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
 		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
 		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
@@ -751,7 +754,8 @@ sub cdn_ds_data {
 		my $dscp                        = $row->dscp;
 		my $re_type                     = $row->re_type;
 		my $ds_type                     = $row->ds_type;
-		my $signed                      = $row->signed;
+		my $signed                      = ( $row->signing_algorithm eq "url_sig" );
+		my $signing_algorithm           = $row->signing_algorithm;
 		my $qstring_ignore              = $row->qstring_ignore;
 		my $ds_xml_id                   = $row->xml_id;
 		my $ds_domain                   = $row->domain_name;
@@ -822,6 +826,7 @@ sub cdn_ds_data {
 		$dsinfo->{dslist}->[$j]->{"type"}                        = $ds_type;
 		$dsinfo->{dslist}->[$j]->{"domain"}                      = $ds_domain;
 		$dsinfo->{dslist}->[$j]->{"signed"}                      = $signed;
+		$dsinfo->{dslist}->[$j]->{"signing_algorithm"}           = $signing_algorithm;
 		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
 		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
 		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
@@ -883,7 +888,8 @@ sub ds_data {
 		my $dscp                        = $dsinfo->dscp;
 		my $re_type                     = $dsinfo->re_type;
 		my $ds_type                     = $dsinfo->ds_type;
-		my $signed                      = $dsinfo->signed;
+		my $signed                      = ( $dsinfo->signing_algorithm eq "url_sig" );
+		my $signing_algorithm           = $dsinfo->signing_algorithm;
 		my $qstring_ignore              = $dsinfo->qstring_ignore;
 		my $ds_xml_id                   = $dsinfo->xml_id;
 		my $ds_domain                   = $dsinfo->domain_name;
@@ -953,6 +959,7 @@ sub ds_data {
 		$response_obj->{dslist}->[$j]->{"type"}                        = $ds_type;
 		$response_obj->{dslist}->[$j]->{"domain"}                      = $ds_domain;
 		$response_obj->{dslist}->[$j]->{"signed"}                      = $signed;
+		$response_obj->{dslist}->[$j]->{"signing_algorithm"}           = $signing_algorithm;
 		$response_obj->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
 		$response_obj->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
 		$response_obj->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
@@ -1118,7 +1125,8 @@ sub remap_ds_data {
 			my $dscp                        = $dsinfo->dscp;
 			my $re_type                     = $dsinfo->re_type;
 			my $ds_type                     = $dsinfo->ds_type;
-			my $signed                      = $dsinfo->signed;
+			my $signed                      = ( $dsinfo->signing_algorithm eq "url_sig" );
+			my $signing_algorithm           = $dsinfo->signing_algorithm;
 			my $qstring_ignore              = $dsinfo->qstring_ignore;
 			my $ds_xml_id                   = $dsinfo->xml_id;
 			my $ds_domain                   = $dsinfo->domain_name;
@@ -1183,6 +1191,7 @@ sub remap_ds_data {
 			$response_obj->{dslist}->[$j]->{"org"}                         = $org_fqdn;
 			$response_obj->{dslist}->[$j]->{"type"}                        = $ds_type;
 			$response_obj->{dslist}->[$j]->{"signed"}                      = $signed;
+			$response_obj->{dslist}->[$j]->{"signing_algorithm"}           = $signing_algorithm;
 			$response_obj->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
 			$response_obj->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
 			$response_obj->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
@@ -2496,8 +2505,11 @@ sub build_remap_line {
 	if ( defined( $remap->{edge_header_rewrite} ) ) {
 		$text .= " \@plugin=header_rewrite.so \@pparam=" . $remap->{hdr_rw_file};
 	}
-	if ( $remap->{signed} == 1 ) {
+	if ( $remap->{signing_algorithm} eq "url_sig" ) {
 		$text .= " \@plugin=url_sig.so \@pparam=url_sig_" . $remap->{ds_xml_id} . ".config";
+	}
+	elsif ( $remap->{signing_algorithm} eq "uri_signing" ) {
+		$text .= " \@plugin=uri_signing.so \@pparam=uri_signing_" . $remap->{ds_xml_id} . ".config";
 	}
 	if ( $remap->{qstring_ignore} == 2 ) {
 		my $dqs_file = "drop_qstring.config";
