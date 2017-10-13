@@ -42,8 +42,8 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, `cdns-wip(\.json)?$`, cdnsHandler(d.DB), CDNsPrivLevel, Authenticated, nil},
 		{1.2, http.MethodGet, `cdns/{name}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), MonitoringPrivLevel, Authenticated, nil},
 		// Delivery services
-		{1.3, http.MethodGet, "deliveryservices/{xml-id}/urisignkeys$", urisignkeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
-		{1.3, http.MethodPost, "deliveryservices/{xml-id}/urisignkeys$", assignDeliveryServiceUriKeysKeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodGet, "deliveryservices/{xml-id}/urisignkeys$", getUrisignkeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodPost, "deliveryservices/{xml-id}/urisignkeys$", assignDeliveryServiceUriKeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
 		//Divisions
 		{1.2, http.MethodGet, `divisions-wip(\.json)?$`, divisionsHandler(d.DB), DivisionsPrivLevel, Authenticated, nil},
 		//HwInfo

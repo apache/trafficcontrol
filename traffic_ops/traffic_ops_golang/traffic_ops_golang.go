@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -51,8 +52,10 @@ func main() {
 	var cfg Config
 	var err error
 	if cfg, err = LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName); err != nil {
-		fmt.Println("Error loading config: " + err.Error())
-		return
+		if !strings.Contains(err.Error(), "riak conf") {
+			fmt.Println("Error loading config: " + err.Error())
+			return
+		}
 	}
 
 	if err := log.InitCfg(cfg); err != nil {

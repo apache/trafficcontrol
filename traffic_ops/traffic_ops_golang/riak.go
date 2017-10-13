@@ -11,17 +11,18 @@ import (
 	"github.com/lestrrat/go-jwx/jwk"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 const RiakPort = 8087
-const cdn_uri_keys_bucket = "cdn_uri_sig_keys" // riak namespace for cdn uri signing keys.
+const CdnUriKeysBucket = "cdn_uri_sig_keys" // riak namespace for cdn uri signing keys.
 
 type URISignerKeyset struct {
-	RenewalKid string             `json:"renewal_kid"`
-	Keys       []jwk.SymmetricKey `json:"keys"`
+	RenewalKid *string               `json:"renewal_kid"`
+	Keys       []jwk.EssentialHeader `json:"keys"`
 }
 
-func getStringValue(resp *riak.FetchValueResponse) (string, error) {
+func getStringValueFromRiakObject(resp *riak.FetchValueResponse) (string, error) {
 	var obj *riak.Object
 
 	if len(resp.Values) == 1 {
@@ -32,7 +33,7 @@ func getStringValue(resp *riak.FetchValueResponse) (string, error) {
 	return string(obj.Value), nil
 }
 
-func assignDeliveryServiceUriKeysKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
+func assignDeliveryServiceUriKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
@@ -77,7 +78,7 @@ func assignDeliveryServiceUriKeysKeysHandler(db *sqlx.DB, cfg Config) http.Handl
 			Value:           []byte(data),
 		}
 
-		err = saveObject(obj, cdn_uri_keys_bucket, db, cfg)
+		err = saveObject(obj, CdnUriKeysBucket, db, cfg)
 		if err != nil {
 			log.Errorf("%v\n", err)
 			handleErr(err, http.StatusInternalServerError)
@@ -155,7 +156,7 @@ func fetchObject(key string, bucket string, db *sqlx.DB, cfg Config) (*riak.Fetc
 }
 
 // endpoint handler for fetching uri signing keys from riak
-func urisignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
+func getUrisignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
@@ -172,13 +173,13 @@ func urisignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 
 		xmlId := pathParams["xml-id"]
 
-		fvc, err := fetchObject(xmlId, cdn_uri_keys_bucket, db, cfg)
+		fvc, err := fetchObject(xmlId, CdnUriKeysBucket, db, cfg)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
 		}
 
-		resp, err := getStringValue(fvc.Response)
+		resp, err := getStringValueFromRiakObject(fvc.Response)
 		if err != nil {
 			handleErr(err, http.StatusNotFound)
 			return
@@ -196,6 +197,10 @@ func getRiakCluster(db *sqlx.DB, cfg Config, maxNodes int) (*riak.Cluster, error
 		INNER JOIN status st on s.status = st.id 
 		WHERE t.name = 'RIAK' AND st.name = 'ONLINE'
 		`
+
+	if cfg.RiakAuthOptions == nil {
+		return nil, errors.New("ERROR: no riak auth information from riak.conf, cannot authenticate to any riak servers.")
+	}
 
 	var nodes []*riak.Node
 	rows, err := db.Query(riakServerQuery)
@@ -231,15 +236,18 @@ func getRiakCluster(db *sqlx.DB, cfg Config, maxNodes int) (*riak.Cluster, error
 }
 
 func validateURIKeyset(msg map[string]URISignerKeyset) error {
+	var renewalKidFound int = 0
+	var renewalKidMatched = false
+
 	for key, value := range msg {
-		var found bool = false
 		issuer := key
 		renewalKid := value.RenewalKid
 		if issuer == "" {
 			return errors.New("JSON Keyset has no issuer")
 		}
-		if renewalKid == "" {
-			return errors.New("JSON Keyset has no renewal kid specified")
+
+		if renewalKid != nil {
+			renewalKidFound++
 		}
 
 		for _, skey := range value.Keys {
@@ -249,19 +257,28 @@ func validateURIKeyset(msg map[string]URISignerKeyset) error {
 			if skey.KeyID == "" {
 				return errors.New("A Key has no key id, kid, specified.\n")
 			}
-			if skey.KeyID == renewalKid {
-				found = true
+			if renewalKid != nil && strings.Compare(*renewalKid, skey.KeyID) == 0 {
+				renewalKidMatched = true
 			}
-			if skey.KeyType == "" {
-				return errors.New("A Key has no key type, kty, set.\n")
-			}
-			if skey.Key == nil {
-				return errors.New("A Key has no key, k, set.\n")
-			}
-		}
-		if !found {
-			return errors.New("No key was found with a kid that matches the renewal kid\n")
 		}
 	}
+
+	// should only have one renewal_kid
+	switch renewalKidFound {
+	case 0:
+		return errors.New("No renewal_kid was found in any keyset\n")
+		break
+	case 1: // okay, this is what we want
+		break
+	default:
+		return errors.New("More than one renewal_kid was found in the keysets\n")
+		break
+	}
+
+	// the renewal_kid should match the kid of one key
+	if !renewalKidMatched {
+		return errors.New("No key was found with a kid that matches the renewal kid\n")
+	}
+
 	return nil
 }
