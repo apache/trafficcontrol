@@ -221,7 +221,7 @@ func cacheControlAllows(
 	if _, ok := respCacheControl["max-age"]; ok {
 		return true
 	}
-	if _, ok := respCacheControl["s-max-age"]; ok {
+	if _, ok := respCacheControl["s-maxage"]; ok {
 		return true
 	}
 	if extensionAllows() {
@@ -234,16 +234,16 @@ func cacheControlAllows(
 	return false
 }
 
-// extensionAllows returns whether a cache-control extension allows the response to be cached, per RFC7234§3 and RFC7234§5.2.3. Note this currently fulfills the literal wording of the section, but cache-control extensions may override any requirements, in which case the logic of can_cache? outside this function would have to be changed.
+// extensionAllows returns whether a cache-control extension allows the response to be cached, per RFC7234§3 and RFC7234§5.2.3.
 func extensionAllows() bool {
-	return true
+	// This MUST return false unless a specific Cache Control cache-extension token exists for an extension which allows. Which is to say, returning true here without a cache-extension token is in strict violation of RFC7234.
+	// In practice, all returning true does is override whether a response code is default-cacheable. If we wanted to do that, it would be better to make codeDefaultCacheable take a strictRFC parameter.
+	return false
 }
 
 func codeDefaultCacheable(code int) bool {
-	if _, ok := defaultCacheableResponseCodes[code]; ok {
-		return true
-	}
-	return false
+	_, ok := defaultCacheableResponseCodes[code]
+	return ok
 }
 
 // Fresh checks the constraints in RFC7234§4 via RFC7234§4.2
