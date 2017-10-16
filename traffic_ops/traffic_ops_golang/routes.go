@@ -38,32 +38,32 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 
 	routes := []Route{
 		//ASNs
-		{1.2, http.MethodGet, `asns-wip(\.json)?$`, ASNsHandler(d.DB), ASNsPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `asns(\.json)?$`, ASNsHandler(d.DB), ASNsPrivLevel, Authenticated, nil},
 		//CDNs
-		{1.2, http.MethodGet, `cdns-wip(\.json)?$`, cdnsHandler(d.DB), CDNsPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `cdns(\.json)?$`, cdnsHandler(d.DB), CDNsPrivLevel, Authenticated, nil},
 		{1.2, http.MethodGet, `cdns/{name}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), MonitoringPrivLevel, Authenticated, nil},
 		// Delivery services
 		{1.3, http.MethodGet, "deliveryservices/{xml-id}/urisignkeys$", getUrisignkeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
 		{1.3, http.MethodPost, "deliveryservices/{xml-id}/urisignkeys$", assignDeliveryServiceUriKeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
 		//Divisions
-		{1.2, http.MethodGet, `divisions-wip(\.json)?$`, divisionsHandler(d.DB), DivisionsPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `divisions(\.json)?$`, divisionsHandler(d.DB), DivisionsPrivLevel, Authenticated, nil},
 		//HwInfo
 		{1.2, http.MethodGet, `hwinfo-wip(\.json)?$`, hwInfoHandler(d.DB), HWInfoPrivLevel, Authenticated, nil},
 		//Parameters
-		{1.2, http.MethodGet, `parameters-wip(\.json)?$`, parametersHandler(d.DB), ParametersPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `parameters(\.json)?$`, parametersHandler(d.DB), ParametersPrivLevel, Authenticated, nil},
 		//Regions
-		{1.2, http.MethodGet, `regions-wip(\.json)?$`, regionsHandler(d.DB), RegionsPrivLevel, Authenticated, nil},
-		{1.2, http.MethodGet, "regions-wip/{id}$", regionsHandler(d.DB), RegionsPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `regions(\.json)?$`, regionsHandler(d.DB), RegionsPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, "regions/{id}$", regionsHandler(d.DB), RegionsPrivLevel, Authenticated, nil},
 		//Servers
-		{1.2, http.MethodGet, `servers-wip(\.json)?$`, serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
-		{1.2, http.MethodGet, "servers-wip/{id}$", serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `servers(\.json)?$`, serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, "servers/{id}$", serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
 		{1.2, http.MethodPost, "servers/{id}/deliveryservices$", assignDeliveryServicesToServerHandler(d.DB), PrivLevelOperations, Authenticated, nil},
 
 		//Statuses
-		{1.2, http.MethodGet, `statuses-wip(\.json)?$`, statusesHandler(d.DB), StatusesPrivLevel, Authenticated, nil},
-		{1.2, http.MethodGet, "statuses-wip/{id}$", statusesHandler(d.DB), StatusesPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `statuses(\.json)?$`, statusesHandler(d.DB), StatusesPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, "statuses/{id}$", statusesHandler(d.DB), StatusesPrivLevel, Authenticated, nil},
 		//System
-		{1.2, http.MethodGet, `system/info-wip(\.json)?$`, systemInfoHandler(d.DB), SystemInfoPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `system/info(\.json)?$`, systemInfoHandler(d.DB), SystemInfoPrivLevel, Authenticated, nil},
 	}
 	return routes, rootHandler(d), nil
 }
