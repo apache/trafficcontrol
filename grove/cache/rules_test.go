@@ -619,5 +619,94 @@ func TestRules(t *testing.T) {
 		}
 	}
 
+	// test client min-fresh is ignored without strict RFC - tests RFC7234§5.2.1.3 violation to protect origins
+	{
+		now := time.Now()
+		tenMinutesAgo := now.Add(time.Minute * -10)
+		reqHdr := http.Header{
+			"Cache-Control": {"min-fresh=900"},
+		}
+		respHdr := http.Header{
+			"Date":          {tenMinutesAgo.Format(time.RFC1123)},
+			"Cache-Control": {"max-age=1200"},
+		}
+		reqCC := web.CacheControl{
+			"min-fresh": "900",
+		}
+		respCC := web.CacheControl{
+			"max-age": "1200",
+		}
+		respReqHdrs := http.Header{}
+		respReqTime := tenMinutesAgo
+		respRespTime := tenMinutesAgo
+		strictRFC := false
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseCan {
+			t.Errorf("CanReuseStored request with strictRFC min-fresh 1200 with 600 remaining: expected ReuseCan, actual %v", reuse)
+		}
+	}
+
+	// test default-cacheable response is cached. Tests RFC7234§5.2.1.3 and RFC7231§6.1 compliance
+	{
+		defaultCacheableCodes := []int{200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501} // RFC7231§6.1
+		for _, code := range defaultCacheableCodes {
+			reqHdr := http.Header{}
+			respCode := code
+			respHdr := http.Header{}
+			strictRFC := true
+
+			if !CanCache(reqHdr, respCode, respHdr, strictRFC) {
+				t.Errorf("CanCache returned false for request with no cache control and default-cacheable response code %v", code)
+			}
+		}
+	}
+
+	// test non-default-cacheable response with no Cache-Control is not cached. Tests RFC7234§5.2.1.3 compliance
+	{
+		nonDefaultCacheableCodes := []int{
+			201, 202, 205, 207, 208, 226,
+			302, 303, 304, 305, 306, 307, 308,
+			400, 401, 402, 403, 406, 407, 408, 409, 411, 412, 413, 4015, 416, 417, 418, 421, 422, 423, 424, 428, 429, 431, 451,
+			500, 502, 503, 504, 505, 506, 507, 508, 510, 511,
+		}
+		for _, code := range nonDefaultCacheableCodes {
+			reqHdr := http.Header{}
+			respCode := code
+			respHdr := http.Header{}
+			strictRFC := true
+
+			if CanCache(reqHdr, respCode, respHdr, strictRFC) {
+				t.Errorf("CanCache returned true for request with no cache control and non-default-cacheable response code %v", code)
+			}
+		}
+	}
+
+	// test non-default-cacheable response with Cache-Control is cached. Tests RFC7234§3 compliance
+	{
+		nonDefaultCacheableCodes := []int{
+			201, 202, 205, 207, 208, 226,
+			302, 303, 304, 305, 306, 307, 308,
+			400, 401, 402, 403, 406, 407, 408, 409, 411, 412, 413, 4015, 416, 417, 418, 421, 422, 423, 424, 428, 429, 431, 451,
+			500, 502, 503, 504, 505, 506, 507, 508, 510, 511,
+		}
+		cacheableRespHdrs := []map[string][]string{
+			{"Expires": {time.Now().Format(time.RFC1123)}},
+			{"Cache-Control": {"max-age=42"}},
+			{"Cache-Control": {"s-maxage=42"}},
+		}
+
+		for _, code := range nonDefaultCacheableCodes {
+			for _, hdr := range cacheableRespHdrs {
+				reqHdr := http.Header{}
+				respCode := code
+				respHdr := hdr
+				strictRFC := true
+
+				if !CanCache(reqHdr, respCode, respHdr, strictRFC) {
+					t.Errorf("CanCache returned false for request with non-default-cacheable response code %v and cacheable header %v", respCode, respHdr)
+				}
+			}
+		}
+	}
+
 	log.Init(log.NopCloser(os.Stdout), log.NopCloser(os.Stdout), log.NopCloser(os.Stdout), log.NopCloser(os.Stdout), log.NopCloser(os.Stdout))
 }
