@@ -21,12 +21,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
-	"errors"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 
@@ -69,7 +69,7 @@ func getPathParams(ctx context.Context) (PathParams, error) {
 		case PathParams:
 			return v, nil
 		default:
-			return nil, fmt.Errorf("PathParams found with bad type: %T\n",v)
+			return nil, fmt.Errorf("PathParams found with bad type: %T\n", v)
 		}
 	}
 	return nil, errors.New("no PathParams found in Context")

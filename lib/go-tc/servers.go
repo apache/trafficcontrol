@@ -78,3 +78,13 @@ type Server struct {
 	XMPPID           string              `json:"xmppId" db:"xmpp_id"`
 	XMPPPasswd       string              `json:"xmppPasswd" db:"xmpp_passwd"`
 }
+
+type ServerUpdateStatus struct {
+	HostName           string `json:"host_name"`
+	UpdatePending      bool   `json:"upd_pending"`
+	RevalPending       bool   `json:"reval_pending"`
+	HostId             int    `json:"host_id"`
+	Status             string `json:"status"`
+	ParentPending      bool   `json:"parent_pending"`
+	ParentRevalPending bool   `json:"parent_reval_pending"`
+}

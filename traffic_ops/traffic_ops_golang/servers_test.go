@@ -21,7 +21,6 @@ package main
 
 import (
 	"net/url"
-	"reflect"
 	"testing"
 	"time"
 
@@ -30,7 +29,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/lib/pq"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
@@ -184,68 +182,4 @@ func (s SortableServers) Swap(i, j int) {
 }
 func (s SortableServers) Less(i, j int) bool {
 	return s[i].HostName < s[j].HostName
-}
-
-func TestAssignDsesToServer(t *testing.T) {
-	mockDB, mock, err := sqlmock.New()
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-	defer db.Close()
-
-	newDses := []int{4, 5, 6}
-	pqNewDses := pq.Array(newDses)
-
-	mock.ExpectBegin()
-	mock.ExpectPrepare("DELETE").ExpectExec().WithArgs(100).WillReturnResult(sqlmock.NewResult(1, 3))
-	mock.ExpectPrepare("INSERT").ExpectExec().WithArgs(pqNewDses, 100).WillReturnResult(sqlmock.NewResult(1, 3))
-
-	//fetch remap config location
-	remapConfigLocation := "a/path/to/a/remap.config"
-	remapConfigRow := sqlmock.NewRows([]string{"value"})
-	remapConfigRow.AddRow(remapConfigLocation + "/")          // verifies we strip off the trailing slash
-	mock.ExpectQuery("SELECT").WillReturnRows(remapConfigRow) //remap.config
-
-	//select xmlids and edge_header_rewrite, regex_remap, and cache_url  for each ds
-	dsFieldRows := sqlmock.NewRows([]string{"xml_id", "edge_header_rewrite", "regex_remap", "cacheurl"})
-	dsFieldRows.AddRow("ds1", nil, "regexRemapPlaceholder", "cacheurlPlaceholder")
-	dsFieldRows.AddRow("ds2", "edgeHeaderRewritePlaceholder2", "regexRemapPlaceholder", "cacheurlPlaceholder")
-	dsFieldRows.AddRow("ds3", "", nil, "cacheurlPlaceholder")
-	mock.ExpectPrepare("SELECT").ExpectQuery().WithArgs(pqNewDses).WillReturnRows(dsFieldRows)
-
-	//prepare the insert and delete parameter slices as they should be constructed in the function
-	headerRewritePrefix := "hdr_rw_"
-	regexRemapPrefix := "regex_remap_"
-	cacheurlPrefix := "cacheurl_"
-	configPostfix := ".config"
-	insert := []string{regexRemapPrefix + "ds1" + configPostfix, cacheurlPrefix + "ds1" + configPostfix, headerRewritePrefix + "ds2" + configPostfix, regexRemapPrefix + "ds2" + configPostfix, cacheurlPrefix + "ds2" + configPostfix, cacheurlPrefix + "ds3" + configPostfix}
-	delete := []string{headerRewritePrefix + "ds1" + configPostfix, headerRewritePrefix + "ds3" + configPostfix, regexRemapPrefix + "ds3" + configPostfix}
-	fileNamesPq := pq.Array(insert)
-	//insert the parameters
-	mock.ExpectPrepare("INSERT").ExpectExec().WithArgs(fileNamesPq, "location", remapConfigLocation).WillReturnResult(sqlmock.NewResult(1, 6))
-
-	//select out the parameterIds we just inserted
-	parameterIdRows := sqlmock.NewRows([]string{"id"})
-	parameterIds := []int64{1, 2, 3, 4, 5, 6}
-	for _, i := range parameterIds {
-		parameterIdRows.AddRow(i)
-	}
-	mock.ExpectPrepare("SELECT").ExpectQuery().WithArgs(fileNamesPq).WillReturnRows(parameterIdRows)
-
-	//insert those ids as profile_parameters
-	mock.ExpectPrepare("INSERT").ExpectExec().WithArgs(pqNewDses, pq.Array(parameterIds)).WillReturnResult(sqlmock.NewResult(6, 6))
-
-	//delete the parameters in the delete list
-	mock.ExpectPrepare("DELETE").ExpectExec().WithArgs(pq.Array(delete)).WillReturnResult(sqlmock.NewResult(1, 3))
-	mock.ExpectCommit()
-
-	result, err := assignDeliveryServicesToServer(100, newDses, true, db)
-	if err != nil {
-		t.Errorf("error assigning deliveryservice: %v", err)
-	}
-	if !reflect.DeepEqual(result, newDses) {
-		t.Errorf("delivery services assigned: Expected %v.   Got  %v", newDses, result)
-	}
 }

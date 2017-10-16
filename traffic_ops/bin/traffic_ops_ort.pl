@@ -705,7 +705,7 @@ sub update_trops {
 	}
 	if ($update_result) {
 		#need to know if reval_pending is supported
-		my $uri     = "/update/$hostname_short";
+		my $uri     = "/api/1.2/servers/$hostname_short/update_status";
 		my $upd_ref = &lwp_get($uri);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
@@ -746,7 +746,7 @@ sub update_trops {
 sub send_update_to_trops {
 	my $status = shift;
 	my $reval_status = shift;
-	my $uri    = "/update/$hostname_short";
+	my $uri    = "/api/1.2/servers/$hostname_short/update_status";
 	( $log_level >> $DEBUG ) && print "DEBUG Setting update flag in Traffic Ops to $status.\n";
 
 	my %headers = ( 'Cookie' => $cookie );
@@ -774,7 +774,7 @@ sub check_revalidate_state {
 	if ( $script_mode == $REVALIDATE || $sleep_override == 1 ) {
 		## The herd is about to get /update/<hostname>
 
-		my $uri     = "/update/$hostname_short";
+		my $uri     = "/api/1.2/servers/$hostname_short/update_status";
 		my $upd_ref = &lwp_get($uri);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
@@ -860,7 +860,7 @@ sub check_syncds_state {
 	if ( $script_mode == $SYNCDS || $script_mode == $BADASS || $script_mode == $REPORT ) {
 		## The herd is about to get /update/<hostname>
 		## need to check if revalidation is being used first.
-		my $uri     = "/update/$hostname_short";
+		my $uri     = "/api/1.2/servers/$hostname_short/update_status";
 		my $upd_ref = &lwp_get($uri);
 		my $upd_json = decode_json($upd_ref);
 		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;

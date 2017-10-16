@@ -53,6 +53,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, `servers-wip(\.json)?$`, serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
 		{1.2, http.MethodGet, "servers-wip/{id}$", serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
 		{1.2, http.MethodPost, "servers/{id}/deliveryservices$", assignDeliveryServicesToServerHandler(d.DB), PrivLevelOperations, Authenticated, nil},
+		{1.2, http.MethodGet, "servers/{host_name}/update_status$", getServerUpdateStatusHandler(d.DB), PrivLevelReadOnly, Authenticated, nil},
 
 		//Statuses
 		{1.2, http.MethodGet, `statuses-wip(\.json)?$`, statusesHandler(d.DB), StatusesPrivLevel, Authenticated, nil},

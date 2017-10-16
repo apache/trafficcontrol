@@ -31,8 +31,8 @@ import (
 	"time"
 
 	"fmt"
-	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 // TestWrapHeaders checks that appropriate default headers are added to a request
