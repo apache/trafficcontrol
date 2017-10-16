@@ -225,11 +225,11 @@ func TestLoadConfig(t *testing.T) {
 		fmt.Printf("Cfg: %+v\n", cfg)
 	}
 
-	if cfg.CertPath() != "/etc/pki/tls/certs/localhost.crt" {
+	if cfg.CertPath != "/etc/pki/tls/certs/localhost.crt" {
 		t.Error("Expected KeyPath() == /etc/pki/tls/private/localhost.key")
 	}
 
-	if cfg.KeyPath() != "/etc/pki/tls/private/localhost.key" {
+	if cfg.KeyPath != "/etc/pki/tls/private/localhost.key" {
 		t.Error("Expected KeyPath() == /etc/pki/tls/private/localhost.key")
 	}
 }

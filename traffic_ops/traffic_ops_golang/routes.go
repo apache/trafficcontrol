@@ -25,10 +25,9 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"time"
-
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"strconv"
-	"strings"
+	"log"
+	tclog "github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"io"
 )
 
 var Authenticated = true
@@ -84,54 +83,32 @@ func rootHandler(d ServerData) http.Handler {
 	rp := httputil.NewSingleHostReverseProxy(d.URL)
 	rp.Transport = tr
 
-	rp.ErrorLog = log.Error //if we don't provide a logger to the reverse proxy it logs to stdout/err and is lost when ran by a script.
-	log.Debugf("our reverseProxy: %++v\n", rp)
-	log.Debugf("our reverseProxy's transport: %++v\n", tr)
+	var logger interface{}
+	logger, err := tclog.GetLogWriter(d.Config.ErrorLog())
+	if err != nil {
+		tclog.Errorln("could not create error log writer for proxy: ", err)
+	}
+	rp.ErrorLog = log.New(logger.(io.Writer), "proxy error: ", log.Ldate|log.Ltime|log.Lmicroseconds|log.LUTC) //if we don't provide a logger to the reverse proxy it logs to stdout/err and is lost when ran by a script.
+	tclog.Debugf("our reverseProxy: %++v\n", rp)
+	tclog.Debugf("our reverseProxy's transport: %++v\n", tr)
 	loggingProxyHandler := wrapAccessLog(d.Secrets[0], rp)
 
-	managerHandler := CreatePooledHandler(strings.Split(d.URL.String(),"?")[0],d.Backends["mojolicious"],loggingProxyHandler)
+	managerHandler := CreateThrottledHandler(loggingProxyHandler, d.BackendMaxConnections["mojolicious"])
 	return managerHandler
 }
 
-//CreatePooledHandler takes an identifier (in the case of a proxy the host being contacted), a configuration and the handler, creates a buffered channel of the size specified in the conf, and spins up the number of workers defined in the conf
-// to handle requests using the handler passed
-func CreatePooledHandler(identifier string, conf *PoolConf, handler http.Handler) ManagerHandler {
-	RequestsChannel := make(chan BackendRequest, conf.BacklogSize)
-
-	for i := 0; i < conf.Workers; i++ {
-		go WorkerHandler(RequestsChannel, handler, i+1)
-	}
-
-	return ManagerHandler{identifier, RequestsChannel}
+//CreateThrottledHandler takes a handler, and a max and uses a channel to insure the handler is used concurrently by only max number of routines
+func CreateThrottledHandler(handler http.Handler, maxConcurrentCalls int) ThrottledHandler {
+	return ThrottledHandler{handler, make(chan struct{}, maxConcurrentCalls)}
 }
 
-type BackendRequest struct {
-	Writer  http.ResponseWriter
-	Request *http.Request
-	Done    chan bool
+type ThrottledHandler struct {
+	Handler http.Handler
+	ReqChan chan struct{}
 }
 
-func WorkerHandler(backendRequests chan BackendRequest, h http.Handler, workerId int) {
-	for backendRequest := range backendRequests {
-		log.Debug.Println("worker " + strconv.Itoa(workerId) + " received request")
-		h.ServeHTTP(backendRequest.Writer, backendRequest.Request)
-		log.Debug.Println("worker " + strconv.Itoa(workerId) + " handled request")
-		backendRequest.Done <- true
-	}
-}
-
-type ManagerHandler struct {
-	Backend  string
-	Requests chan BackendRequest
-}
-
-func (m ManagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.Debug.Println("manager received request for backend: " + m.Backend + " backlog contains: " + strconv.Itoa(len(m.Requests)) + " of capacity:" + strconv.Itoa(cap(m.Requests)))
-	if len(m.Requests) >= cap(m.Requests) {
-		log.Warning.Println(m.Backend + " backlog is at capacity this means handling of requests is slowed")
-	}
-	done := make(chan bool)
-	m.Requests <- BackendRequest{w, r, done}
-	<-done
-	log.Debug.Println("manager received request handled signal")
+func (m ThrottledHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	m.ReqChan <- struct{}{}
+	defer func() { <-m.ReqChan }()
+	m.Handler.ServeHTTP(w, r)
 }

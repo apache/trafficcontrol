@@ -33,6 +33,8 @@ import (
 // Config reflects the structure of the cdn.conf file
 type Config struct {
 	URL                    *url.URL `json:"-"`
+	CertPath               string   `json:"-"`
+	KeyPath                string   `json:"-"`
 	ConfigHypnotoad        `json:"hypnotoad"`
 	ConfigTrafficOpsGolang `json:"traffic_ops_golang"`
 	DB                     ConfigDatabase `json:"db"`
@@ -49,28 +51,23 @@ type ConfigHypnotoad struct {
 
 // ConfigTrafficOpsGolang carries settings specific to traffic_ops_golang server
 type ConfigTrafficOpsGolang struct {
-	Port                   string `json:"port"`
-	ProxyTimeout           int    `json:"proxy_timeout"`
-	ProxyKeepAlive         int    `json:"proxy_keep_alive"`
-	ProxyTLSTimeout        int    `json:"proxy_tls_timeout"`
-	ProxyReadHeaderTimeout int    `json:"proxy_read_header_timeout"`
-	ReadTimeout            int    `json:"read_timeout"`
-	ReadHeaderTimeout      int    `json:"read_header_timeout"`
-	WriteTimeout           int    `json:"write_timeout"`
-	IdleTimeout            int    `json:"idle_timeout"`
-	LogLocationError       string `json:"log_location_error"`
-	LogLocationWarning     string `json:"log_location_warning"`
-	LogLocationInfo        string `json:"log_location_info"`
-	LogLocationDebug       string `json:"log_location_debug"`
-	LogLocationEvent       string `json:"log_location_event"`
-	Insecure               bool   `json:"insecure"`
-	MaxDBConnections       int    `json:"max_db_connections"`
-	Backends               map[string]*PoolConf `json:"backends"`
-}
-
-type PoolConf struct {
-	BacklogSize int `json:"backlog_size"`
-	Workers int `json:"workers"`
+	Port                   string         `json:"port"`
+	ProxyTimeout           int            `json:"proxy_timeout"`
+	ProxyKeepAlive         int            `json:"proxy_keep_alive"`
+	ProxyTLSTimeout        int            `json:"proxy_tls_timeout"`
+	ProxyReadHeaderTimeout int            `json:"proxy_read_header_timeout"`
+	ReadTimeout            int            `json:"read_timeout"`
+	ReadHeaderTimeout      int            `json:"read_header_timeout"`
+	WriteTimeout           int            `json:"write_timeout"`
+	IdleTimeout            int            `json:"idle_timeout"`
+	LogLocationError       string         `json:"log_location_error"`
+	LogLocationWarning     string         `json:"log_location_warning"`
+	LogLocationInfo        string         `json:"log_location_info"`
+	LogLocationDebug       string         `json:"log_location_debug"`
+	LogLocationEvent       string         `json:"log_location_event"`
+	Insecure               bool           `json:"insecure"`
+	MaxDBConnections       int            `json:"max_db_connections"`
+	BackendMaxConnections  map[string]int `json:"backend_max_connections"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file
@@ -149,7 +146,7 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string) (Con
 }
 
 // CertPath extracts path to cert .cert file
-func (c Config) CertPath() string {
+func (c Config) GetCertPath() string {
 	v, ok := c.URL.Query()["cert"]
 	if ok {
 		return v[0]
@@ -158,7 +155,7 @@ func (c Config) CertPath() string {
 }
 
 // KeyPath extracts path to cert .key file
-func (c Config) KeyPath() string {
+func (c Config) GetKeyPath() string {
 	v, ok := c.URL.Query()["key"]
 	if ok {
 		return v[0]
@@ -174,8 +171,7 @@ func getRiakAuthOptions(s string) (*riak.AuthOptions, error) {
 }
 
 const (
-	MojoliciousBacklogSizeDefault = 100
-	MojoliciousWorkersDefault     = 12
+	MojoliciousConcurrentConnectionsDefault = 12
 )
 
 // ParseConfig validates required fields, and parses non-JSON types
@@ -202,17 +198,11 @@ func ParseConfig(cfg Config) (Config, error) {
 	if cfg.LogLocationEvent == "" {
 		cfg.LogLocationEvent = log.LogLocationNull
 	}
-	if cfg.Backends == nil {
-		cfg.Backends = make(map[string]*PoolConf)
+	if cfg.BackendMaxConnections == nil {
+		cfg.BackendMaxConnections = make(map[string]int)
 	}
-	if cfg.Backends["mojolicious"] == nil {
-		cfg.Backends["mojolicious"] = &PoolConf{MojoliciousBacklogSizeDefault, MojoliciousWorkersDefault}
-	}
-	if cfg.Backends["mojolicious"].BacklogSize <= 0 {
-		cfg.Backends["mojolicious"].BacklogSize = MojoliciousBacklogSizeDefault
-	}
-	if cfg.Backends["mojolicious"].Workers <= 0 {
-		cfg.Backends["mojolicious"].Workers = MojoliciousWorkersDefault
+	if cfg.BackendMaxConnections["mojolicious"] == 0 {
+		cfg.BackendMaxConnections["mojolicious"] = MojoliciousConcurrentConnectionsDefault
 	}
 
 	invalidTOURLStr := ""
@@ -221,6 +211,11 @@ func ParseConfig(cfg Config) (Config, error) {
 	if cfg.URL, err = url.Parse(listen); err != nil {
 		invalidTOURLStr = fmt.Sprintf("invalid Traffic Ops URL '%s': %v", listen, err)
 	}
+	cfg.KeyPath = cfg.GetKeyPath()
+	cfg.CertPath = cfg.GetCertPath()
+
+	newUrl := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
+	cfg.URL = &newUrl
 
 	if len(missings) > 0 {
 		missings = "missing fields: " + missings[:len(missings)-2] // strip final `, `
