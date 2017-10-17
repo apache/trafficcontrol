@@ -74,13 +74,12 @@ build_dependencies () {
 }
 
 #build traffic_monitor binary
-godir=src/github.com/apache/incubator-trafficcontrol/traffic_monitor_golang
+godir=src/github.com/apache/incubator-trafficcontrol/traffic_monitor
 oldpwd=$(pwd)
 ( mkdir -p "$godir" && \
   cd "$godir" && \
-  cp -r "$TC_DIR"/traffic_monitor_golang/* . && \
-  cd traffic_monitor && \
-  build_dependencies traffic_monitor_golang  && \
+  cp -r "$TC_DIR"/traffic_monitor/* . && \
+  build_dependencies traffic_monitor  && \
   #with proper vendoring go get would be  unneeded.
   go get -d -v && \
   go build -ldflags "-X main.GitRevision=`git rev-parse HEAD` -X main.BuildTimestamp=`date +'%Y-%M-%dT%H:%M:%s'` -X main.Version=%{traffic_control_version}" \
@@ -97,12 +96,12 @@ mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/var/log
 mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 
-src=src/github.com/apache/incubator-trafficcontrol/traffic_monitor_golang
-cp -p "$src"/traffic_monitor/traffic_monitor     "${RPM_BUILD_ROOT}"/opt/traffic_monitor/bin/traffic_monitor
-cp  "$src"/traffic_monitor/static/index.html     "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static/index.html
-cp  "$src"/traffic_monitor/static/sorttable.js     "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static/sorttable.js
-cp "$src"/conf/traffic_ops.cfg        "${RPM_BUILD_ROOT}"/opt/traffic_monitor/conf/traffic_ops.cfg
-cp "$src"/conf/traffic_monitor.cfg        "${RPM_BUILD_ROOT}"/opt/traffic_monitor/conf/traffic_monitor.cfg
+src=src/github.com/apache/incubator-trafficcontrol/traffic_monitor
+cp -p "$src"/traffic_monitor               "${RPM_BUILD_ROOT}"/opt/traffic_monitor/bin/traffic_monitor
+cp  "$src"/static/index.html               "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static/index.html
+cp  "$src"/static/sorttable.js             "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static/sorttable.js
+cp "$src"/conf/traffic_ops.cfg             "${RPM_BUILD_ROOT}"/opt/traffic_monitor/conf/traffic_ops.cfg
+cp "$src"/conf/traffic_monitor.cfg         "${RPM_BUILD_ROOT}"/opt/traffic_monitor/conf/traffic_monitor.cfg
 cp "$src"/build/traffic_monitor.init       "${RPM_BUILD_ROOT}"/etc/init.d/traffic_monitor
 cp "$src"/build/traffic_monitor.logrotate  "${RPM_BUILD_ROOT}"/etc/logrotate.d/traffic_monitor
 
