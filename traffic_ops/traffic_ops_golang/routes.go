@@ -21,13 +21,13 @@ package main
 
 import (
 	"crypto/tls"
+	tclog "github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"io"
+	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"time"
-	"log"
-	tclog "github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"io"
 )
 
 var Authenticated = true
@@ -43,8 +43,8 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, `cdns(\.json)?$`, cdnsHandler(d.DB), CDNsPrivLevel, Authenticated, nil},
 		{1.2, http.MethodGet, `cdns/{name}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), MonitoringPrivLevel, Authenticated, nil},
 		// Delivery services
-		{1.3, http.MethodGet, "deliveryservices/{xml-id}/urisignkeys$", getUrisignkeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
-		{1.3, http.MethodPost, "deliveryservices/{xml-id}/urisignkeys$", assignDeliveryServiceUriKeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
+		{1.2, http.MethodGet, "deliveryservices/{xml-id}/urisignkeys$", getUrisignkeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
+		{1.2, http.MethodPost, "deliveryservices/{xml-id}/urisignkeys$", assignDeliveryServiceUriKeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
 		//Divisions
 		{1.2, http.MethodGet, `divisions(\.json)?$`, divisionsHandler(d.DB), DivisionsPrivLevel, Authenticated, nil},
 		//HwInfo
