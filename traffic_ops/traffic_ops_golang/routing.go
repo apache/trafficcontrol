@@ -148,7 +148,7 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 				param := route[open+1 : close]
 
 				params = append(params, param)
-				route = route[:open] + `(.+)` + route[close+1:]
+				route = route[:open] + `([^/]+)` + route[close+1:]
 			}
 			regex := regexp.MustCompile(route)
 			compiledRoutes[method] = append(compiledRoutes[method], CompiledRoute{Handler: handler, Regex: regex, Params: params})
