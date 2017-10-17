@@ -3166,7 +3166,7 @@ URL Sig Keys
 URI Signing Keys
 ++++++++++++
 
-**GET /api/1.3/deliveryservices/:xml_id/urisignkeys
+**GET /api/1.2/deliveryservices/:xml_id/urisignkeys
 
   Retrieves one or more URISigning objects for a delivery service.
 
