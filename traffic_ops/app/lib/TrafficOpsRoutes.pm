@@ -50,6 +50,10 @@ sub define {
 	$version = "1.2";
 	$self->api_routes( $r, $version, $namespace );
 
+	# 1.3 Routes
+	$version = "1.3";
+	$self->api_routes( $r, $version, $namespace );
+
 	# Traffic Stats Extension
 	$self->traffic_stats_routes( $r, $version );
 
