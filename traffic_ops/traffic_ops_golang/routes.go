@@ -21,13 +21,14 @@ package main
 
 import (
 	"crypto/tls"
+	"io"
+	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"time"
-	"log"
+
 	tclog "github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"io"
 )
 
 var Authenticated = true
