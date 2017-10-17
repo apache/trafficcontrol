@@ -20,15 +20,15 @@ package main
  */
 
 import (
+	"crypto/tls"
 	"flag"
 	"fmt"
+	"github.com/basho/riak-go-client"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
-	"crypto/tls"
-	"github.com/basho/riak-go-client"
-	"reflect"
 )
 
 const (
@@ -217,8 +217,8 @@ func TestLoadConfig(t *testing.T) {
 
 	expectedRiak := riak.AuthOptions{User: "riakuser", Password: "password", TlsConfig: &tls.Config{InsecureSkipVerify: true}}
 
-	if cfg.RiakAuthOptions.User != expectedRiak.User || cfg.RiakAuthOptions.Password != expectedRiak.Password || !reflect.DeepEqual(cfg.RiakAuthOptions.TlsConfig, expectedRiak.TlsConfig){
-		t.Error(fmt.Printf("Error parsing riak conf expected: %++v but got: %++v\n",expectedRiak,cfg.RiakAuthOptions))
+	if cfg.RiakAuthOptions.User != expectedRiak.User || cfg.RiakAuthOptions.Password != expectedRiak.Password || !reflect.DeepEqual(cfg.RiakAuthOptions.TlsConfig, expectedRiak.TlsConfig) {
+		t.Error(fmt.Printf("Error parsing riak conf expected: %++v but got: %++v\n", expectedRiak, cfg.RiakAuthOptions))
 	}
 
 	if *debugLogging {

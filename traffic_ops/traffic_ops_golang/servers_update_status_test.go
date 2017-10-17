@@ -24,7 +24,6 @@ import (
 	"testing"
 
 	"github.com/jmoiron/sqlx"
-
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -38,11 +37,7 @@ func TestGetServerUpdateStatus(t *testing.T) {
 	}
 	defer db.Close()
 
-	row := sqlmock.NewRows([]string{"value"})
-	row.AddRow("true")
-	mock.ExpectQuery("SELECT").WillReturnRows(row)
-
-	serverStatusRow := sqlmock.NewRows([]string{"id", "host_name", "type", "reval_pending", "upd_pending", "status", "parent_upd_pending", "parent_reval_pending"})
+	serverStatusRow := sqlmock.NewRows([]string{"id", "host_name", "type", "combined_reval_pending", "upd_pending", "status", "parent_upd_pending", "parent_reval_pending"})
 	serverStatusRow.AddRow(1, "host_name_1", "EDGE", true, true, "ONLINE", true, false)
 
 	mock.ExpectPrepare("WITH").ExpectQuery().WithArgs("host_name_1").WillReturnRows(serverStatusRow)

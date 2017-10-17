@@ -92,4 +92,3 @@ func TestAssignDsesToServer(t *testing.T) {
 		t.Errorf("delivery services assigned: Expected %v.   Got  %v", newDses, result)
 	}
 }
-
