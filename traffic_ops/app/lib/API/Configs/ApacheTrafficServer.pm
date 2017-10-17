@@ -2269,9 +2269,15 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 					my %seen;
 					@null_parent_info = grep { !$seen{$_}++ } @null_parent_info;
 				}
-
-				my $parents = 'parent="' . join( '', @parent_info ) . '' . join( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
-
+				#If the ats version supports it and the algorithm is consistent hash, put secondary and non-primary parents into secondary parent group.
+				#This will ensure that secondary and tertiary parents will be unused unless all hosts in the primary group are unavailable.
+				my $parents= '';
+				if ( $ats_major_version >= 6 && $mso_algorithm eq "consistent_hash" && ( scalar @secondary_parent_info > 0 || scalar @null_parent_info > 0 ) ) {
+					$parents = 'parent="' . join( '', @parent_info ) . '" secondary_parent="' . join( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
+				}
+				else {
+					$parents = 'parent="' . join( '', @parent_info ) . '' . join( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
+				}
 				$text .= "$parents round_robin=$mso_algorithm qstring=$parent_qstring go_direct=false parent_is_proxy=false";
 
 				if ( $ats_major_version >= 6 && $parent_retry ne "" ) {
@@ -2317,13 +2323,22 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 		}
 		my %seen;
 		@parent_info = grep { !$seen{$_}++ } @parent_info;
-		my $parents = 'parent="' . join( '', sort @parent_info ) . '"';
-		my $secparents = '';
 		if ( scalar @secondary_parent_info > 0 ) {
 			my %seen;
 			@secondary_parent_info = grep { !$seen{$_}++ } @secondary_parent_info;
-			$secparents = 'secondary_parent="' . join( '', sort @secondary_parent_info ) . '"';
 		}
+		#If the ats version supports it, put secondary parents into secondary parent group.
+		#This will ensure that secondary parents will be unused unless all hosts in the primary group are unavailable.
+		my $parents = '';
+		my $secparents = '';
+		if ( $ats_major_version >= 6 && @secondary_parent_info > 0 ) {
+			$parents = 'parent="' . join( '', sort @parent_info ) . '"';
+			$secparents = ' secondary_parent="' . join( '', sort @secondary_parent_info ) . '"';
+		}
+		else {
+			$parents = 'parent="' . join( '', sort @parent_info ) . join( '', sort @secondary_parent_info ) . '"';
+		}	
+
 		my $round_robin = 'round_robin=consistent_hash';
 		my $go_direct   = 'go_direct=false';
 
@@ -2369,25 +2384,13 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 		my $default_dest_text;
 		my $parent_select_alg = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'algorithm', undef );
 		if ( defined($parent_select_alg) && $parent_select_alg eq 'consistent_hash' ) {
-			my @parent_info;
-			foreach my $parent ( @{ $parent_info->{"all_parents"} } ) {
-				push @parent_info, $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
-			}
-			my %seen;
-			@parent_info = grep { !$seen{$_}++ } @parent_info;
-			$default_dest_text .= "dest_domain=.";
-			$default_dest_text .= " parent=\"" . join( '', sort @parent_info ) . "\"";
+			$default_dest_text .= "dest_domain=. ";
+			$default_dest_text .= $parents . $secparents;
 			$default_dest_text .= " round_robin=consistent_hash go_direct=false";
 		}
 		else {    # default to old situation.
-			$default_dest_text .= "dest_domain=.";
-			my @parent_info;
-			foreach my $parent ( @{ $parent_info->{"all_parents"} } ) {
-				push @parent_info, $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . ";";
-			}
-			my %seen;
-			@parent_info = grep { !$seen{$_}++ } @parent_info;
-			$default_dest_text .= " parent=\"" . join( '', sort @parent_info ) . "\"";
+			$default_dest_text .= "dest_domain=. ";
+			$default_dest_text .= $parents;
 			$default_dest_text .= " round_robin=urlhash go_direct=false";
 		}
 
