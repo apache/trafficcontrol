@@ -63,9 +63,13 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, `regions(\.json)?$`, regionsHandler(d.DB), RegionsPrivLevel, Authenticated, nil},
 		{1.2, http.MethodGet, "regions/{id}$", regionsHandler(d.DB), RegionsPrivLevel, Authenticated, nil},
 		//Servers
-		{1.2, http.MethodGet, `servers(\.json)?$`, serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
 		// explicitly passed to legacy system until fully implemented.  Auth handled by legacy system.
+		{1.2, http.MethodGet, "servers/checks$", handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
+		{1.2, http.MethodGet, "servers/details$", handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
 		{1.2, http.MethodGet, "servers/status$", handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
+		{1.2, http.MethodGet, "servers/totals$", handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
+
+		{1.2, http.MethodGet, `servers(\.json)?$`, serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
 		{1.2, http.MethodGet, "servers/{id}$", serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
 		{1.2, http.MethodPost, "servers/{id}/deliveryservices$", assignDeliveryServicesToServerHandler(d.DB), PrivLevelOperations, Authenticated, nil},
 		{1.2, http.MethodGet, "servers/{host_name}/update_status$", getServerUpdateStatusHandler(d.DB), PrivLevelReadOnly, Authenticated, nil},
