@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -41,7 +42,24 @@ func statusesHandler(db *sqlx.DB) http.HandlerFunc {
 			fmt.Fprintf(w, http.StatusText(status))
 		}
 
+		pathParams, err := getPathParams(r.Context())
+		if err != nil {
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
+
 		q := r.URL.Query()
+
+		for k, v := range pathParams {
+			if k == `id` {
+				if _, err := strconv.Atoi(v); err != nil {
+					log.Errorf("Expected {id} to be an integer: %s", v)
+					handleErr(err, http.StatusBadRequest)
+					return
+				}
+			}
+			q.Set(k, v)
+		}
 
 		resp, err := getStatusesResponse(q, db)
 

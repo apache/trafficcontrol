@@ -23,8 +23,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
