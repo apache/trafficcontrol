@@ -40,21 +40,27 @@ func TestCreateRouteMap(t *testing.T) {
 
 	PathOneHandler := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-
 		authWasCalled := getAuthWasCalled(ctx)
-
 		fmt.Fprintf(w, "%s %s", "path1", authWasCalled)
 	}
 
 	PathTwoHandler := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-
 		authWasCalled := getAuthWasCalled(ctx)
-
 		fmt.Fprintf(w, "%s %s", "path2", authWasCalled)
 	}
 
-	routes := []Route{{1.2, http.MethodGet, `path1`, PathOneHandler, ServersPrivLevel, true, nil}, {1.2, http.MethodGet, `path2`, PathTwoHandler, 0, false, nil}}
+	PathThreeHandler := func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		authWasCalled := getAuthWasCalled(ctx)
+		fmt.Fprintf(w, "%s %s", "path3", authWasCalled)
+	}
+
+	routes := []Route{
+		{1.2, http.MethodGet, `path1`, PathOneHandler, ServersPrivLevel, true, nil},
+		{1.2, http.MethodGet, `path2`, PathTwoHandler, 0, false, nil},
+		{1.2, http.MethodGet, `path3`, PathThreeHandler, 0, false, []Middleware{}},
+	}
 
 	routeMap := CreateRouteMap(routes, authBase)
 
@@ -80,6 +86,20 @@ func TestCreateRouteMap(t *testing.T) {
 
 	if bytes.Compare(w.Body.Bytes(), []byte("path2 false")) != 0 {
 		t.Errorf("Got: %s \nExpected to receive path2 false\n", w.Body.Bytes())
+	}
+
+	if v, ok := w.HeaderMap["Access-Control-Allow-Credentials"]; !ok || len(v) != 1 || v[0] != "true" {
+		t.Errorf(`Expected Access-Control-Allow-Credentials: [ "true" ]`)
+	}
+
+	route3Handler := routeMap["GET"][2].Handler
+	w = httptest.NewRecorder()
+	route3Handler(w, r)
+	if bytes.Compare(w.Body.Bytes(), []byte("path3 false")) != 0 {
+		t.Errorf("Got: %s \nExpected to receive path3 false\n", w.Body.Bytes())
+	}
+	if v, ok := w.HeaderMap["Access-Control-Allow-Credentials"]; ok {
+		t.Errorf("Unexpected Access-Control-Allow-Credentials: %s", v)
 	}
 }
 
