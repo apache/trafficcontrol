@@ -260,12 +260,10 @@ func validateURIKeyset(msg map[string]URISignerKeyset) error {
 	switch renewalKidFound {
 	case 0:
 		return errors.New("No renewal_kid was found in any keyset\n")
-		break
 	case 1: // okay, this is what we want
 		break
 	default:
 		return errors.New("More than one renewal_kid was found in the keysets\n")
-		break
 	}
 
 	// the renewal_kid should match the kid of one key
