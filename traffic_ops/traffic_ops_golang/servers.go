@@ -58,7 +58,15 @@ func serversHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		q := r.URL.Query()
+		// TODO: move this checking to a common area so all endpoints can use it
 		for k, v := range pathParams {
+			if k == `id` {
+				if _, err := strconv.Atoi(v); err != nil {
+					log.Errorf("Expected {id} to be an integer: %s", v)
+					handleErr(err, http.StatusBadRequest)
+					return
+				}
+			}
 			q.Set(k, v)
 		}
 		resp, err := getServersResponse(q, db, privLevel)
