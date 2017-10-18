@@ -93,6 +93,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/deliveryServices/targets/new').name,
         require('./modules/private/deliveryServices/users').name,
         require('./modules/private/deliveryServices/urlSigKeys').name,
+        require('./modules/private/deliveryServices/uriSigningKeys').name,
         require('./modules/private/deliveryServices/sslKeys').name,
         require('./modules/private/deliveryServices/sslKeys/view').name,
         require('./modules/private/deliveryServices/sslKeys/generate').name,
