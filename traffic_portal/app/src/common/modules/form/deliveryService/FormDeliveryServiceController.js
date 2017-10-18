@@ -183,6 +183,10 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
         $location.path($location.path() + '/url-sig-keys');
     };
     
+    $scope.manageUriSigningKeys = function() {
+        $location.path($location.path() + '/uri-signing-keys');
+    };
+    
     $scope.viewStaticDnsEntries = function() {
         $location.path($location.path() + '/static-dns-entries');
     };
