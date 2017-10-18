@@ -34,8 +34,15 @@ import (
 var Authenticated = true
 var NoAuth = false
 
+func handlerToFunc(handler http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handler.ServeHTTP(w, r)
+	}
+}
+
 // Routes returns the routes, and a catchall route for when no route matches.
 func Routes(d ServerData) ([]Route, http.Handler, error) {
+	proxyHandler := rootHandler(d)
 
 	routes := []Route{
 		//ASNs
@@ -57,6 +64,8 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, "regions/{id}$", regionsHandler(d.DB), RegionsPrivLevel, Authenticated, nil},
 		//Servers
 		{1.2, http.MethodGet, `servers(\.json)?$`, serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
+		// explicitly passed to legacy system until fully implemented.  Auth handled by legacy system.
+		{1.2, http.MethodGet, "servers/status$", handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
 		{1.2, http.MethodGet, "servers/{id}$", serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
 		{1.2, http.MethodPost, "servers/{id}/deliveryservices$", assignDeliveryServicesToServerHandler(d.DB), PrivLevelOperations, Authenticated, nil},
 		{1.2, http.MethodGet, "servers/{host_name}/update_status$", getServerUpdateStatusHandler(d.DB), PrivLevelReadOnly, Authenticated, nil},
@@ -67,7 +76,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		//System
 		{1.2, http.MethodGet, `system/info(\.json)?$`, systemInfoHandler(d.DB), SystemInfoPrivLevel, Authenticated, nil},
 	}
-	return routes, rootHandler(d), nil
+	return routes, proxyHandler, nil
 }
 
 // RootHandler returns the / handler for the service, which reverse-proxies the old Perl Traffic Ops

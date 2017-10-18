@@ -31,6 +31,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 
 	"fmt"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -116,7 +117,7 @@ func CreateRouteMap(rs []Route, authBase AuthBase) map[string][]PathHandler {
 
 			middlewares := r.Middlewares
 
-			if len(middlewares) < 1 {
+			if middlewares == nil {
 				middlewares = getDefaultMiddleware()
 			}
 			if r.Authenticated { //a privLevel of zero is an unauthenticated endpoint.
