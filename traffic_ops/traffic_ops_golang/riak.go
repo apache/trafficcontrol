@@ -174,8 +174,15 @@ func getUrisignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 
 		resp, err := getStringValueFromRiakObject(fvc.Response)
 		if err != nil {
-			handleErr(err, http.StatusNotFound)
-			return
+			var empty URISignerKeyset
+			respBytes, err := json.Marshal(empty)
+			if err != nil {
+				log.Errorf("failed to marshal an empty response: %s\n", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				fmt.Fprintf(w, http.StatusText(http.StatusInternalServerError))
+				return
+			}
+			resp = string(respBytes)
 		}
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, "%s", resp)
