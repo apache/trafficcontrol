@@ -157,7 +157,7 @@ Delivery Service
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``signing_algorithm``    | string | - null: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                        |
+  | ``signingAlgorithm``     | string | - null: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                        |
   |                          |        | - "url_sig": URL Sign token based auth is enabled for this deliveryservice.                                                          |
   |                          |        | - "uri_signing": URI Signing token based auth is enabled for this deliveryservice.                                                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -236,7 +236,7 @@ Delivery Service
             "regionalGeoBlocking": false,
             "remapText": null,
             "signed": false,
-            "signing_algorithm": null,
+            "signingAlgorithm": null,
             "sslKeyVersion": "0",
             "trRequestHeaders": null,
             "trResponseHeaders": "Access-Control-Allow-Origin: *",
@@ -389,7 +389,7 @@ Delivery Service
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``signing_algorithm``    | string | - null: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                        |
+  | ``signingAlgorithm``     | string | - null: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                        |
   |                          |        | - "url_sig": URL Sign token based auth is enabled for this deliveryservice.                                                          |
   |                          |        | - "uri_signing": URI Signing token based auth is enabled for this deliveryservice.                                                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -468,7 +468,7 @@ Delivery Service
             "regionalGeoBlocking": false,
             "remapText": null,
             "signed": false,
-            "signing_algorithm": null,
+            "signingAlgorithm": null,
             "sslKeyVersion": "0",
             "trRequestHeaders": null,
             "trResponseHeaders": "Access-Control-Allow-Origin: *",
