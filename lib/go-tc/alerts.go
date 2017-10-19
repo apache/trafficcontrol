@@ -64,6 +64,7 @@ func GetHandleErrorFunc(w http.ResponseWriter, r *http.Request) func(err error, 
 			fmt.Fprintf(w, http.StatusText(http.StatusInternalServerError))
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(status)
 		fmt.Fprintf(w, "%s", errBytes)
 	}
