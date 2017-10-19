@@ -38,7 +38,7 @@ sub index {
 	my $type_id           = $self->param('type');
 	my $logs_enabled      = $self->param('logsEnabled');
 	my $tenant_id	      = $self->param('tenant');
-	my $signing_algorithm = $self->param('signing_algorithm');
+	my $signing_algorithm = $self->param('signingAlgorithm');
 	my $current_user      = $self->current_user()->{username};
 	my @data;
 
@@ -147,7 +147,7 @@ sub index {
 				"remapText"            => $row->remap_text,
 				"routingName"          => $row->routing_name,
 				"signed"               => ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ),
-				"signing_algorithm"    => $row->signing_algorithm,
+				"signingAlgorithm"     => $row->signing_algorithm,
 				"sslKeyVersion"        => $row->ssl_key_version,
 				"tenantId"		       => $row->tenant_id,
 				"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
@@ -268,7 +268,7 @@ sub show {
 				"routingName"          => $row->routing_name,
 				"remapText"            => $row->remap_text,
 				"signed"               => ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ),
-				"signing_algorithm"    => $row->signing_algorithm,
+				"signingAlgorithm"     => $row->signing_algorithm,
 				"sslKeyVersion"        => $row->ssl_key_version,
 				"tenantId"             => $row->tenant_id,
 				"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
@@ -375,11 +375,16 @@ sub update {
 		xml_id                 => $params->{xmlId},
 	};
 
-	if ( exists($params->{signing_algorithm}) ) {
-		$values->{signing_algorithm} = $params->{signing_algorithm};
+	# Did they send us the 'signingAlgorithm' param?
+	if ( exists($params->{signingAlgorithm}) ) {
+		# If so, just use that
+		$values->{signing_algorithm} = $params->{signingAlgorithm};
+	# Else if they sent 'signed' param and it's true
 	} elsif ($params->{signed}) {
+		# Then we want url_sig
 		$values->{signing_algorithm} = "url_sig";
 	} else {
+		# Otherwise we are disabled
 		$values->{signing_algorithm} = undef;
 	}
 
@@ -463,7 +468,7 @@ sub update {
 				"remapText"                => $rs->remap_text,
 				"routingName"              => $rs->routing_name,
 				"signed"                   => ( $rs->signing_algorithm eq "url_sig" ),
-				"signing_algorithm"        => $rs->signing_algorithm,
+				"signingAlgorithm"         => $rs->signing_algorithm,
 				"sslKeyVersion"            => $rs->ssl_key_version,
 				"tenantId"                 => $rs->tenant_id,
 				"trRequestHeaders"         => $rs->tr_request_headers,
@@ -594,7 +599,7 @@ sub safe_update {
 				"remapText"                => $rs->remap_text,
 				"routingName"              => $rs->routing_name,
 				"signed"                   => ( $rs->signing_algorithm eq "url_sig" ),
-				"signing_algorithm"        => $rs->signing_algorithm,
+				"signingAlgorithm"         => $rs->signing_algorithm,
 				"sslKeyVersion"            => $rs->ssl_key_version,
 				"trRequestHeaders"         => $rs->tr_request_headers,
 				"trResponseHeaders"        => $rs->tr_response_headers,
@@ -701,11 +706,17 @@ sub create {
 		xml_id                 => $params->{xmlId},
 	};
 
-	if ( exists($params->{signing_algorithm}) ) {
-		$values->{signing_algorithm} = $params->{signing_algorithm};
+
+	# Did they send us the 'signingAlgorithm' param?
+	if ( exists($params->{signingAlgorithm}) ) {
+		# If so, just use that
+		$values->{signing_algorithm} = $params->{signingAlgorithm};
+	# Else if they sent 'signed' param and it's true
 	} elsif ($params->{signed}) {
+	# Then we want url_sig
 		$values->{signing_algorithm} = "url_sig";
 	} else {
+		# Otherwise we are disabled
 		$values->{signing_algorithm} = undef;
 	}
 
@@ -802,7 +813,7 @@ sub create {
 				"remapText"                => $insert->remap_text,
 				"routingName"              => $insert->routing_name,
 				"signed"                   => ( $insert->signing_algorithm eq "url_sig" ),
-				"signing_algorithm"        => $insert->signing_algorithm,
+				"signingAlgorithm"         => $insert->signing_algorithm,
 				"sslKeyVersion"            => $insert->ssl_key_version,
 				"tenantId"                 => $insert->tenant_id,
 				"trRequestHeaders"         => $insert->tr_request_headers,
@@ -992,7 +1003,7 @@ sub get_deliveryservices_by_serverId {
 					"remapText"            => $row->remap_text,
 					"routingName"          => $row->routing_name,
 					"signed"               => ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ),
-					"signing_algorithm"    => $row->signing_algorithm,
+					"signingAlgorithm"     => $row->signing_algorithm,
 					"sslKeyVersion"        => $row->ssl_key_version,
 					"tenantId"             => $row->tenant_id,
 					"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
@@ -1090,7 +1101,7 @@ sub get_deliveryservices_by_userId {
 					"remapText"            => $row->remap_text,
 					"routingName"          => $row->routing_name,
 					"signed"               => ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ),
-					"signing_algorithm"    => $row->signing_algorithm,
+					"signingAlgorithm"     => $row->signing_algorithm,
 					"sslKeyVersion"        => $row->ssl_key_version,
 					"tenantId"             => $row->tenant_id,
 					"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
@@ -1355,7 +1366,7 @@ sub is_deliveryservice_valid {
 
 	my $rules = {
 		fields => [
-			qw/active cacheurl ccrDnsTtl cdnId checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText routingName signed signing_algorithm sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
+			qw/active cacheurl ccrDnsTtl cdnId checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText routingName signed signingAlgorithm sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
 		],
 
 		# Validation checks to perform
