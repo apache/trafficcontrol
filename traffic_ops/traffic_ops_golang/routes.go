@@ -53,6 +53,8 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		// Delivery services
 		{1.3, http.MethodGet, `deliveryservices/{xml-id}/urisignkeys$`, getUrisignkeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
 		{1.3, http.MethodPost, `deliveryservices/{xml-id}/urisignkeys$`, assignDeliveryServiceUriKeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodPut, `deliveryservices/{xml-id}/urisignkeys$`, updateDeliveryServiceUriKeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodDelete, `deliveryservices/{xml-id}/urisignkeys$`, removeDeliveryServiceUriKeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
 		//Divisions
 		{1.2, http.MethodGet, `divisions/?(\.json)?$`, divisionsHandler(d.DB), DivisionsPrivLevel, Authenticated, nil},
 		//HwInfo
