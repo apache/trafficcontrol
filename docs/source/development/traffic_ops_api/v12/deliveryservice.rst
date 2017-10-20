@@ -3198,3 +3198,199 @@ URL Sig Keys
 
 |
 
+URI Signing Keys
+++++++++++++
+
+**DELETE /api/1.2/deliveryservices/:xml_id/urisignkeys
+
+  Deletes URISigning objects for a delivery service.
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin
+
+  **Request Route Parameters**
+
+  +-----------+----------+----------------------------------------+
+  |    Name   | Required |              Description               |
+  +===========+==========+========================================+
+  | ``xml_id`` | yes      | xml_id of the desired delivery service |
+  +-----------+----------+----------------------------------------+
+
+**GET /api/1.2/deliveryservices/:xml_id/urisignkeys
+
+  Retrieves one or more URISigning objects for a delivery service.
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin
+
+  **Request Route Parameters**
+
+  +-----------+----------+----------------------------------------+
+  |    Name   | Required |              Description               |
+  +===========+==========+========================================+
+  | ``xml_id`` | yes      | xml_id of the desired delivery service |
+  +-----------+----------+----------------------------------------+
+
+  **Response Properties**
+
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  |    Parameter        |  Type  |                                                               Description                                                               |
+  +=====================+========+=========================================================================================================================================+
+  | ``Issuer``          | string | a string describing the issuer of the URI signing object. Multiple URISigning objects may be returned in a response, see example        |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``renewal_kid``     | string | a string naming the jwt key used for renewals.                                                                                          |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``keys``            | string | json array of jwt symmetric keys                                                             .                                          |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``alg``             | string | this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, RFC 7518.         |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``kid``             | string | this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in RFC 7516.                    |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``kty``             | string | this parameter repeats for each jwt key in the array and specifies the key type as defined in RFC 7516.                                 |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``k``               | string | this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see RFC 7516.                       |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+
+  **Response Example** ::
+
+  {
+    "Kabletown URI Authority": {
+      "renewal_kid": "Second Key",
+      "keys": [
+        {
+          "alg": "HS256",
+          "kid": "First Key",
+          "kty": "oct",
+          "k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
+        },
+        {
+          "alg": "HS256",
+          "kid": "Second Key",
+          "kty": "oct",
+          "k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
+        }
+      ]
+    }
+  }
+
+
+**POST /api/1.2/deliveryservices/:xml_id/urisignkeys
+
+  Assigns URISigning objects to a delivery service.
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin
+
+  **Request Route Parameters**
+
+  +-----------+----------+----------------------------------------+
+  |    Name   | Required |              Description               |
+  +===========+==========+========================================+
+  | ``xml_id`` | yes      | xml_id of the desired delivery service |
+  +-----------+----------+----------------------------------------+
+
+  **Request Properties**
+
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  |    Parameter        |  Type  |                                                               Description                                                               |
+  +=====================+========+=========================================================================================================================================+
+  | ``Issuer``          | string | a string describing the issuer of the URI signing object. Multiple URISigning objects may be returned in a response, see example        |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``renewal_kid``     | string | a string naming the jwt key used for renewals.                                                                                          |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``keys``            | string | json array of jwt symmetric keys                                                             .                                          |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``alg``             | string | this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, RFC 7518.         |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``kid``             | string | this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in RFC 7516.                    |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``kty``             | string | this parameter repeats for each jwt key in the array and specifies the key type as defined in RFC 7516.                                 |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``k``               | string | this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see RFC 7516.                       |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+
+  **Request Example** ::
+
+  {
+    "Kabletown URI Authority": {
+      "renewal_kid": "Second Key",
+      "keys": [
+        {
+          "alg": "HS256",
+          "kid": "First Key",
+          "kty": "oct",
+          "k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
+        },
+        {
+          "alg": "HS256",
+          "kid": "Second Key",
+          "kty": "oct",
+          "k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
+        }
+      ]
+    }
+  }
+
+**PUT /api/1.2/deliveryservices/:xml_id/urisignkeys
+
+  updates URISigning objects on a delivery service.
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin
+
+  **Request Route Parameters**
+
+  +-----------+----------+----------------------------------------+
+  |    Name   | Required |              Description               |
+  +===========+==========+========================================+
+  | ``xml_id`` | yes      | xml_id of the desired delivery service |
+  +-----------+----------+----------------------------------------+
+
+  **Request Properties**
+
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  |    Parameter        |  Type  |                                                               Description                                                               |
+  +=====================+========+=========================================================================================================================================+
+  | ``Issuer``          | string | a string describing the issuer of the URI signing object. Multiple URISigning objects may be returned in a response, see example        |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``renewal_kid``     | string | a string naming the jwt key used for renewals.                                                                                          |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``keys``            | string | json array of jwt symmetric keys                                                             .                                          |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``alg``             | string | this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, RFC 7518.         |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``kid``             | string | this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in RFC 7516.                    |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``kty``             | string | this parameter repeats for each jwt key in the array and specifies the key type as defined in RFC 7516.                                 |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``k``               | string | this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see RFC 7516.                       |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+
+  **Request Example** ::
+
+  {
+    "Kabletown URI Authority": {
+      "renewal_kid": "Second Key",
+      "keys": [
+        {
+          "alg": "HS256",
+          "kid": "First Key",
+          "kty": "oct",
+          "k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
+        },
+        {
+          "alg": "HS256",
+          "kid": "Second Key",
+          "kty": "oct",
+          "k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
+        }
+      ]
+    }
+  }
+
+|
+
