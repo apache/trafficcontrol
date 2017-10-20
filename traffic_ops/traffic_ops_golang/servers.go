@@ -108,7 +108,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Server, error) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]string{
-		"cachegroup":   "cg.name",
+		"cachegroup":   "s.cachegroup",
 		"cdn":          "s.cdn_id",
 		"id":           "s.id",
 		"physLocation": "s.phys_location",
