@@ -1,6 +1,8 @@
 #!/bin/bash
 BUILDDIR="$HOME/rpmbuild"
 
+VERSION=`cat ./../VERSION`.`git rev-list --all --count`
+
 # prep build environment
 rm -rf $BUILDDIR
 mkdir -p $BUILDDIR/{BUILD,RPMS,SOURCES}
@@ -18,10 +20,10 @@ echo "$BUILDDIR" > ~/.rpmmacros
 go build -v
 
 # tar
-tar -cvzf $BUILDDIR/SOURCES/grovetccfg-0.1.tgz grovetccfg
+tar -cvzf $BUILDDIR/SOURCES/grovetccfg-${VERSION}.tgz grovetccfg
 
 # build RPM
-rpmbuild -ba build/grovetccfg.spec
+rpmbuild --define "version ${VERSION}" -ba build/grovetccfg.spec
 
 # copy build RPM to .
-cp $BUILDDIR/RPMS/x86_64/grovetccfg-0.1-1.x86_64.rpm .
+cp $BUILDDIR/RPMS/x86_64/grovetccfg-${VERSION}-1.x86_64.rpm .
