@@ -246,8 +246,11 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	remappingProducer, err := h.remapper.RemappingProducer(r, h.scheme)
-	if err := setDSCP(conn, remappingProducer.DSCP()); err != nil {
-		log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": could not set DSCP: " + err.Error())
+
+	if err == nil { // if we failed to get a remapping, there's no DSCP to set.
+		if err := setDSCP(conn, remappingProducer.DSCP()); err != nil {
+			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": could not set DSCP: " + err.Error())
+		}
 	}
 
 	reqTime := time.Now()
