@@ -14,7 +14,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
+
 	grove "github.com/apache/incubator-trafficcontrol/grove/cache"
 )
 
@@ -50,7 +52,7 @@ func main() {
 
 	rules := grove.RemapRules{}
 	// if *api == "1.3" {
-	// 	rules, err = createRulesNewAPI(toc, *host)
+	// 	rules, err = createRulesNewAPI(toc, *host, *certDir)
 	// } else {
 	rules, err = createRulesOldAPI(toc, *host, *certDir) // TODO remove once 1.3 / traffic_ops_golang is deployed to production.
 	// }
@@ -128,11 +130,11 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 		os.Exit(1)
 	}
 
-	sameCDN := func(s to.Server) bool {
+	sameCDN := func(s tc.Server) bool {
 		return s.CDNName == hostServer.CDNName
 	}
 
-	serverAvailable := func(s to.Server) bool {
+	serverAvailable := func(s tc.Server) bool {
 		status := strings.ToLower(s.Status)
 		statuses := AvailableStatuses()
 		_, ok := statuses[status]
@@ -152,7 +154,7 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 	return createRulesOld(host, deliveryservices, parents, deliveryserviceRegexes, cdns, serverParameters, dsCerts, certDir)
 }
 
-// func createRulesNewAPI(toc *to.Session, host string) (grove.RemapRules, error) {
+// func createRulesNewAPI(toc *to.Session, host string, certDir string) (grove.RemapRules, error) {
 // 	cacheCfg, err := toc.CacheConfig(host)
 // 	if err != nil {
 // 		fmt.Printf("Error getting Traffic Ops Cache Config: %v\n", err)
@@ -165,6 +167,13 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 // 	if err != nil {
 // 		return grove.RemapRules{}, fmt.Errorf("creating allowed IPs: %v", err)
 // 	}
+
+// 	cdnSSLKeys, err := toc.CDNSSLKeys(cacheCfg.CDN)
+// 	if err != nil {
+// 		fmt.Printf("Error getting %v SSL keys: %v\n", cacheCfg.CDN, err)
+// 		os.Exit(1)
+// 	}
+// 	dsCerts := makeDSCertMap(cdnSSLKeys)
 
 // 	weight := DefaultRuleWeight
 // 	retryNum := DefaultRetryNum
@@ -192,6 +201,16 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 // 			protocolStrs = append(protocolStrs, ProtocolStr{From: "https", To: "https"})
 // 		}
 
+// 		cert, hasCert := dsCerts[ds.XMLID]
+// 		// DEBUG
+// 		// if protocol != ProtocolHTTP {
+// 		// 	if !hasCert {
+// 		// 		fmt.Fprint(os.Stderr, "HTTPS delivery service: "+ds.XMLID+" has no certificate!\n")
+// 		// 	} else if err := createCertificateFiles(cert, certDir); err != nil {
+// 		// 		fmt.Fprint(os.Stderr, "HTTPS delivery service "+ds.XMLID+" failed to create certificate: "+err.Error()+"\n")
+// 		// 	}
+// 		// }
+
 // 		dsType := strings.ToLower(ds.Type)
 // 		if !strings.HasPrefix(dsType, "http") && !strings.HasPrefix(dsType, "dns") {
 // 			fmt.Printf("createRules skipping deliveryservice %v - unknown type %v", ds.XMLID, ds.Type)
@@ -204,6 +223,13 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 // 				pattern, patternLiteralRegex := trimLiteralRegex(dsRegex)
 // 				rule.Name = fmt.Sprintf("%s.%s.%s.%s", ds.XMLID, protocolStr.From, protocolStr.To, pattern)
 // 				rule.From = buildFrom(protocolStr.From, pattern, patternLiteralRegex, host, dsType, cacheCfg.Domain)
+
+// 				if protocolStr.From == "https" && hasCert {
+// 					rule.CertificateFile = getCertFileName(cert, certDir)
+// 					rule.CertificateKeyFile = getCertKeyFileName(cert, certDir)
+// 					// fmt.Fprintf(os.Stderr, "HTTPS delivery service: "+ds.XMLID+" certificate %+v\n", cert)
+// 				}
+
 // 				for _, parent := range cacheCfg.Parents {
 // 					to, proxyURLStr := buildToNew(parent, protocolStr.To, ds.OriginFQDN, dsType)
 // 					proxyURL, err := url.Parse(proxyURLStr)
@@ -227,6 +253,7 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 // 					rule.Timeout = &timeout
 // 					rule.RetryCodes = DefaultRetryCodes()
 // 					rule.QueryString = queryStringRule
+// 					rule.DSCP = ds.DSCP
 // 					if err != nil {
 // 						return grove.RemapRules{}, err
 // 					}
@@ -249,70 +276,70 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 // 	return remapRules, nil
 // }
 
-func makeServersHostnameMap(servers []to.Server) map[string]to.Server {
-	m := map[string]to.Server{}
+func makeServersHostnameMap(servers []tc.Server) map[string]tc.Server {
+	m := map[string]tc.Server{}
 	for _, server := range servers {
 		m[server.HostName] = server
 	}
 	return m
 }
 
-func makeCachegroupsNameMap(cgs []to.CacheGroup) map[string]to.CacheGroup {
-	m := map[string]to.CacheGroup{}
+func makeCachegroupsNameMap(cgs []tc.CacheGroup) map[string]tc.CacheGroup {
+	m := map[string]tc.CacheGroup{}
 	for _, cg := range cgs {
 		m[cg.Name] = cg
 	}
 	return m
 }
 
-func makeDeliveryservicesXMLIDMap(dses []to.DeliveryService) map[string]to.DeliveryService {
-	m := map[string]to.DeliveryService{}
+func makeDeliveryservicesXMLIDMap(dses []tc.DeliveryService) map[string]tc.DeliveryService {
+	m := map[string]tc.DeliveryService{}
 	for _, ds := range dses {
 		m[ds.XMLID] = ds
 	}
 	return m
 }
 
-func makeDeliveryservicesIDMap(dses []to.DeliveryService) map[int]to.DeliveryService {
-	m := map[int]to.DeliveryService{}
+func makeDeliveryservicesIDMap(dses []tc.DeliveryService) map[int]tc.DeliveryService {
+	m := map[int]tc.DeliveryService{}
 	for _, ds := range dses {
 		m[ds.ID] = ds
 	}
 	return m
 }
 
-func makeDeliveryserviceRegexMap(dsrs []to.DeliveryServiceRegexes) map[string][]to.DeliveryServiceRegex {
-	m := map[string][]to.DeliveryServiceRegex{}
+func makeDeliveryserviceRegexMap(dsrs []tc.DeliveryServiceRegexes) map[string][]tc.DeliveryServiceRegex {
+	m := map[string][]tc.DeliveryServiceRegex{}
 	for _, dsr := range dsrs {
 		m[dsr.DSName] = dsr.Regexes
 	}
 	return m
 }
 
-func makeCDNMap(cdns []to.CDN) map[string]to.CDN {
-	m := map[string]to.CDN{}
+func makeCDNMap(cdns []tc.CDN) map[string]tc.CDN {
+	m := map[string]tc.CDN{}
 	for _, cdn := range cdns {
 		m[cdn.Name] = cdn
 	}
 	return m
 }
 
-func makeDSCertMap(sslKeys []to.CDNSSLKeys) map[string]to.CDNSSLKeys {
-	m := map[string]to.CDNSSLKeys{}
+func makeDSCertMap(sslKeys []tc.CDNSSLKeys) map[string]tc.CDNSSLKeys {
+	m := map[string]tc.CDNSSLKeys{}
 	for _, sslkey := range sslKeys {
 		m[sslkey.DeliveryService] = sslkey
 	}
 	return m
 }
 
-func getServerDeliveryservices(hostname string, servers map[string]to.Server, dssrvs []to.DeliveryServiceServer, dses []to.DeliveryService) ([]to.DeliveryService, error) {
+func getServerDeliveryservices(hostname string, servers map[string]tc.Server, dssrvs []tc.DeliveryServiceServer, dses []tc.DeliveryService) ([]tc.DeliveryService, error) {
 	server, ok := servers[hostname]
 	if !ok {
 		return nil, fmt.Errorf("server %v not found in Traffic Ops Servers", hostname)
 	}
 	serverID := server.ID
 	dsByID := makeDeliveryservicesIDMap(dses)
-	serverDses := []to.DeliveryService{}
+	serverDses := []tc.DeliveryService{}
 	for _, dssrv := range dssrvs {
 		if dssrv.Server != serverID {
 			continue
@@ -326,7 +353,7 @@ func getServerDeliveryservices(hostname string, servers map[string]to.Server, ds
 	return serverDses, nil
 }
 
-func getParents(hostname string, servers map[string]to.Server, cachegroups map[string]to.CacheGroup) ([]to.Server, error) {
+func getParents(hostname string, servers map[string]tc.Server, cachegroups map[string]tc.CacheGroup) ([]tc.Server, error) {
 	server, ok := servers[hostname]
 	if !ok {
 		return nil, fmt.Errorf("hostname not found in Servers")
@@ -337,7 +364,7 @@ func getParents(hostname string, servers map[string]to.Server, cachegroups map[s
 		return nil, fmt.Errorf("server cachegroup '%v' not found in Cachegroups", server.Cachegroup)
 	}
 
-	parents := []to.Server{}
+	parents := []tc.Server{}
 	for _, server := range servers {
 		if server.Cachegroup == cachegroup.ParentName {
 			parents = append(parents, server)
@@ -346,8 +373,8 @@ func getParents(hostname string, servers map[string]to.Server, cachegroups map[s
 	return parents, nil
 }
 
-func filterParents(parents []to.Server, include func(to.Server) bool) []to.Server {
-	newParents := []to.Server{}
+func filterParents(parents []tc.Server, include func(tc.Server) bool) []tc.Server {
+	newParents := []tc.Server{}
 	for _, parent := range parents {
 		if include(parent) {
 			newParents = append(newParents, parent)
@@ -401,7 +428,7 @@ func dsTypeSkipsMid(ttype string) bool {
 }
 
 // buildTo returns the to URL, and the Proxy URL (if any)
-func buildTo(parentServer to.Server, protocol string, originURI string, dsType string) (string, string) {
+func buildTo(parentServer tc.Server, protocol string, originURI string, dsType string) (string, string) {
 	// TODO add port?
 	to := originURI
 	proxy := ""
@@ -412,7 +439,7 @@ func buildTo(parentServer to.Server, protocol string, originURI string, dsType s
 }
 
 // // buildToNew returns the to URL, and the Proxy URL (if any)
-// func buildToNew(parent to.CacheConfigParent, protocol string, originURI string, dsType string) (string, string) {
+// func buildToNew(parent tc.CacheConfigParent, protocol string, originURI string, dsType string) (string, string) {
 // 	// TODO add port?
 // 	to := originURI
 // 	proxy := ""
@@ -449,7 +476,7 @@ const DefaultTimeout = time.Millisecond * 5000
 const DefaultRuleConnectionClose = false
 const DefaultRuleParentSelection = grove.ParentSelectionTypeConsistentHash
 
-func getAllowIP(params []to.Parameter) ([]*net.IPNet, error) {
+func getAllowIP(params []tc.Parameter) ([]*net.IPNet, error) {
 	ips := []string{}
 	for _, param := range params {
 		if (param.Name == "allow_ip" || param.Name == "allow_ip6") && param.ConfigFile == "astats.config" {
@@ -481,12 +508,12 @@ func makeAllowIP(ips []string) ([]*net.IPNet, error) {
 
 func createRulesOld(
 	hostname string,
-	dses []to.DeliveryService,
-	parents []to.Server,
-	dsRegexes map[string][]to.DeliveryServiceRegex,
-	cdns map[string]to.CDN,
-	hostParams []to.Parameter,
-	dsCerts map[string]to.CDNSSLKeys,
+	dses []tc.DeliveryService,
+	parents []tc.Server,
+	dsRegexes map[string][]tc.DeliveryServiceRegex,
+	cdns map[string]tc.CDN,
+	hostParams []tc.Parameter,
+	dsCerts map[string]tc.CDNSSLKeys,
 	certDir string,
 ) (grove.RemapRules, error) {
 	rules := []grove.RemapRule{}
@@ -605,15 +632,15 @@ func createRulesOld(
 	return remapRules, nil
 }
 
-func getCertFileName(cert to.CDNSSLKeys, dir string) string {
+func getCertFileName(cert tc.CDNSSLKeys, dir string) string {
 	return dir + string(os.PathSeparator) + strings.Replace(cert.Hostname, "*.", "", -1) + ".crt"
 }
 
-func getCertKeyFileName(cert to.CDNSSLKeys, dir string) string {
+func getCertKeyFileName(cert tc.CDNSSLKeys, dir string) string {
 	return dir + string(os.PathSeparator) + strings.Replace(cert.Hostname, "*.", "", -1) + ".key"
 }
 
-func createCertificateFiles(cert to.CDNSSLKeys, dir string) error {
+func createCertificateFiles(cert tc.CDNSSLKeys, dir string) error {
 	certFileName := getCertFileName(cert, dir)
 	crt, err := base64.StdEncoding.DecodeString(cert.Certificate.Crt)
 	if err != nil {
