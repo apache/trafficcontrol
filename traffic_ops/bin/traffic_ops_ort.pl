@@ -243,7 +243,7 @@ else {
 print "Testing cfg Api\n";
 my $meme_test = &lwp_get("/api/1.2/servers/1/cfg.json");
 print "$meme_test\n";
-my $cfg_test = &lwp_post('/api/1.2/servers/1/cfg', '{"serverId": 1, "fileName": "test1.cfg", "dbLines": ["dbLine1", "dbLine1", "dbline2"], "localLines": ["localLine1", "localLine2", "localLine3"]}');
+my $cfg_test = &lwp_put('/api/1.2/servers/1/test_config2.cfg', '{"serverId": 1, "fileName": "test1.cfg", "dbLines": ["dbLine1", "dbLine1", "dbline2"], "localLines": ["localLine1", "localLine2", "localLine3"]}');
 print "$cfg_test\n";
 print "End Testing cfg Api\n";
 
@@ -1467,7 +1467,7 @@ sub lwp_get {
 
 }
 
-sub lwp_post {
+sub lwp_put {
 	my $uri           = shift;
 	my $body 		  = shift;
 	my $retry_counter = $retries;
@@ -1493,7 +1493,7 @@ sub lwp_post {
 		}
 		
 	    # TODO: is there a way to generalize this for most verbs?
-		my $httpRequest = HTTP::Request->new( 'POST', $request );
+		my $httpRequest = HTTP::Request->new( 'PUT', $request );
 		$httpRequest->header( 'Cookie' => $cookie );
 		$httpRequest->header( 'Content-Type' => 'application/json' );
 		$httpRequest->content( $body );
