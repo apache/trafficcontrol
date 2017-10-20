@@ -62,13 +62,13 @@ func cdnsHandler(db *sqlx.DB) http.HandlerFunc {
 }
 
 func getCDNsResponse(q url.Values, db *sqlx.DB) (*tc.CDNsResponse, error) {
-	cdns, err := getCDNs(q, db)
+	CDNs, err := getCDNs(q, db)
 	if err != nil {
-		return nil, fmt.Errorf("getting cdns response: %v", err)
+		return nil, fmt.Errorf("getting CDNs response: %v", err)
 	}
 
 	resp := tc.CDNsResponse{
-		Response: cdns,
+		Response: CDNs,
 	}
 	return &resp, nil
 }
@@ -77,24 +77,33 @@ func getCDNs(v url.Values, db *sqlx.DB) ([]tc.CDN, error) {
 	var rows *sqlx.Rows
 	var err error
 
-	rows, err = db.Queryx(selectCDNsQuery())
+	// Query Parameters to Database Query column mappings
+	// see the fields mapped in the SQL query
+	queryParamsToQueryCols := map[string]string{
+		"domainName":    "domain_name",
+		"dnssecEnabled": "dnssec_enabled",
+		"id":            "id",
+		"name":          "name",
+	}
+
+	query, queryValues := BuildQuery(v, selectCDNsQuery(), queryParamsToQueryCols)
+
+	rows, err = db.NamedQuery(query, queryValues)
 
 	if err != nil {
-		//TODO: drichardson - send back an alert if the Query Count is larger than 1
-		//                    Test for bad Query Parameters
 		return nil, err
 	}
-	cdns := []tc.CDN{}
+	CDNs := []tc.CDN{}
 
 	defer rows.Close()
 	for rows.Next() {
 		var s tc.CDN
 		if err = rows.StructScan(&s); err != nil {
-			return nil, fmt.Errorf("getting cdns: %v", err)
+			return nil, fmt.Errorf("getting CDNs: %v", err)
 		}
-		cdns = append(cdns, s)
+		CDNs = append(CDNs, s)
 	}
-	return cdns, nil
+	return CDNs, nil
 }
 
 func selectCDNsQuery() string {
