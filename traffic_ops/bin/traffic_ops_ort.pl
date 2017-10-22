@@ -240,13 +240,12 @@ else {
 
 
 #Test Code
-print "Testing cfg Api\n";
-my $meme_test = &lwp_get("/api/1.2/servers/1/cfg.json");
-print "$meme_test\n";
-my $cfg_test = &lwp_put('/api/1.2/servers/1/test_config2.cfg', '{"serverId": 1, "fileName": "test1.cfg", "dbLines": ["dbLine1", "dbLine1", "dbline2"], "localLines": ["localLine1", "localLine2", "localLine3"]}');
-print "$cfg_test\n";
-print "End Testing cfg Api\n";
-
+# print "Testing cfg Api\n";
+# my $meme_test = &lwp_get("/api/1.2/servers/1/cfg.json");
+# print "$meme_test\n";
+# my $cfg_test = &lwp_put('/api/1.2/servers/1/test_config2.cfg', '{"serverId": 1, "fileName": "test1.cfg", "dbLines": ["dbLine1", "dbLine1", "dbline2"], "localLines": ["localLine1", "localLine2", "localLine3"]}');
+# print "$cfg_test\n";
+# print "End Testing cfg Api\n";
 #end test code
 
 
@@ -409,6 +408,15 @@ sub process_cfg_file {
 		( $log_level >> $TRACE ) && print "TRACE Setting change not needed for $cfg_file.\n";
 		$return_code = $CFG_FILE_UNCHANGED;
 	}
+
+	# submit the line_-missing to the traffic ops Config Diff API
+	my $db_lines_missing_json = encode_json(\@db_lines_missing);
+	my $disk_lines_missing_json = encode_json(\@disk_lines_missing);
+	my $json_text = "{ \"dbLinesMissing\": $db_lines_missing_json, \"diskLinesMissing\": $disk_lines_missing_json }";
+	# TODO: how do we know which server number we are?
+	$result = &lwp_put("/api/1.2/servers/1/$cfg_file", $json_text);
+	print "$result\n";
+	# TODO: validate result
 
 	if ( $cfg_file eq "50-ats.rules" ) {
 		&adv_processing_udev( \@db_file_lines );
