@@ -19,8 +19,8 @@ const CfgDiffsWritePrivLevel = PrivLevelOperations;
 type CfgFileDiffs struct {
 	ServerID int64 `json:"serverId"`
 	FileName string `json:"fileName"`
-	DBLines []string `json:"dbLines"`
-	LocalLines []string `json:"localLines"`
+	DBLinesMissing []string `json:"dbLinesMissing"`
+	DiskLinesMissing []string `json:"diskLinesMissing"`
 }
 
 func getCfgDiffsHandler(db *sqlx.DB) RegexHandlerFunc {
@@ -120,8 +120,8 @@ WHERE me.server_id = $1 AND me.config_name = $2)`
 func getCfgDiffs(db *sqlx.DB, serverID int64) ([]CfgFileDiffs, error) {
 	query := `SELECT
 me.config_name as config_name,
-array_to_json(me.db_lines) as db_lines,
-array_to_json(me.local_lines) as local_lines,
+array_to_json(me.db_lines_missing) as db_lines_missing,
+array_to_json(me.disk_lines_missing) as disk_lines_missing,
 me.last_checked as timestamp
 FROM config_diffs me
 WHERE me.server_id = $1`
@@ -137,29 +137,29 @@ WHERE me.server_id = $1`
 	// TODO: what if there are zero rows?
 	for rows.Next()	{
 		var config_name sql.NullString
-		var db_lines sql.NullString
-		var local_lines sql.NullString
+		var db_lines_missing sql.NullString
+		var disk_lines_missing sql.NullString
 		var timestamp sql.NullString
 		
-		var db_lines_arr []string
-		var local_lines_arr []string
+		var db_lines_missing_arr []string
+		var disk_lines_missing_arr []string
 
-		if err := rows.Scan(&config_name, &db_lines, &local_lines, &timestamp); err != nil {
+		if err := rows.Scan(&config_name, &db_lines_missing, &disk_lines_missing, &timestamp); err != nil {
 			return nil, err
 		}
 
-		err := json.Unmarshal([]byte(db_lines.String), &db_lines_arr)
+		err := json.Unmarshal([]byte(db_lines_missing.String), &db_lines_missing_arr)
 		if err != nil {
 			return nil, err
 		}
 
-		json.Unmarshal([]byte(local_lines.String), &local_lines_arr)
+		json.Unmarshal([]byte(disk_lines_missing.String), &disk_lines_missing_arr)
 
 		configs = append(configs, CfgFileDiffs{
 			ServerID:    serverID,
 			FileName:    config_name.String,
-			DBLines:     db_lines_arr,
-			LocalLines:  local_lines_arr,
+			DBLinesMissing:     db_lines_missing_arr,
+			DiskLinesMissing:  disk_lines_missing_arr,
 		})
 	}
 	return configs, nil
@@ -176,14 +176,14 @@ func getCfgDiffsJson(serverID int64, db * sqlx.DB) ([]CfgFileDiffs, error) {
 
 func insertCfgDiffs(db *sqlx.DB, serverID int64, configName string, diffs CfgFileDiffs) ( error) {
 	query := `INSERT INTO 
-config_diffs(server_id, config_name, db_lines, local_lines, last_checked)
+config_diffs(server_id, config_name, db_lines_missing, disk_lines_missing, last_checked)
 VALUES($1, $2, (SELECT ARRAY(SELECT * FROM json_array_elements_text($3))), (SELECT ARRAY(SELECT * FROM json_array_elements_text($4))), $5)`
 		
-	dbLinesJson, err := json.Marshal(diffs.DBLines)
+	dbLinesMissingJson, err := json.Marshal(diffs.DBLinesMissing)
 	if err != nil {
 		return err
 	}
-	localLinesJson, err := json.Marshal(diffs.LocalLines)
+	diskLinesMissingJson, err := json.Marshal(diffs.DiskLinesMissing)
 	if err != nil {
 		return err
 	}
@@ -192,8 +192,8 @@ VALUES($1, $2, (SELECT ARRAY(SELECT * FROM json_array_elements_text($3))), (SELE
 	rows, err := db.Query(query, 
 		serverID, 
 		configName, 
-		dbLinesJson,
-		localLinesJson,
+		dbLinesMissingJson,
+		diskLinesMissingJson,
 		time.Now().UTC())
 
 	if err != nil {
@@ -205,21 +205,21 @@ VALUES($1, $2, (SELECT ARRAY(SELECT * FROM json_array_elements_text($3))), (SELE
 }
 
 func updateCfgDiffs(db *sqlx.DB, serverID int64, configName string, diffs CfgFileDiffs) (bool, error) {
-	query := `UPDATE config_diffs SET db_lines=(SELECT ARRAY(SELECT * FROM json_array_elements_text($1))), 
-local_lines=(SELECT ARRAY(SELECT * FROM json_array_elements_text($2))), last_checked=$3 WHERE server_id=$4 AND config_name=$5`
+	query := `UPDATE config_diffs SET db_lines_missing=(SELECT ARRAY(SELECT * FROM json_array_elements_text($1))), 
+disk_lines_missing=(SELECT ARRAY(SELECT * FROM json_array_elements_text($2))), last_checked=$3 WHERE server_id=$4 AND config_name=$5`
 		
-	dbLinesJson, err := json.Marshal(diffs.DBLines)
+	dbLinesMissingJson, err := json.Marshal(diffs.DBLinesMissing)
 	if err != nil {
 		return false, err
 	}
-	localLinesJson, err := json.Marshal(diffs.LocalLines)
+	diskLinesMissingJson, err := json.Marshal(diffs.DiskLinesMissing)
 	if err != nil {
 		return false, err
 	}
 
 	rows, err := db.Exec(query,
-		dbLinesJson,
-		localLinesJson,
+		dbLinesMissingJson,
+		diskLinesMissingJson,
 		time.Now().UTC(),
 		serverID,
 		configName)
