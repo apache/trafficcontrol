@@ -49,12 +49,13 @@ sub define {
 	# 1.2 Routes
 	$version = "1.2";
 	$self->api_routes( $r, $version, $namespace );
+	# Traffic Stats Extension for 1.2
+	$self->traffic_stats_routes( $r, $version );
 
 	# 1.3 Routes
 	$version = "1.3";
 	$self->api_routes( $r, $version, $namespace );
-
-	# Traffic Stats Extension
+	# Traffic Stats Extension 1.3
 	$self->traffic_stats_routes( $r, $version );
 
 	$self->catch_all( $r, $namespace );
