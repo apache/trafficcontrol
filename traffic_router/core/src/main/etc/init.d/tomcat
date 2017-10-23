@@ -42,6 +42,7 @@ SHUTDOWN_FORCE=true
 export NAME TOMCAT_HOME CATALINA_PID TOMCAT_LOCK
 
 start() {
+    [[ -d /var/run/tomcat ]] || mkdir /var/run/tomcat
     export CATALINA_OPTS
     runuser -s /bin/bash root -c "$TOMCAT_HOME/bin/startup.sh"
 	RETVAL=$?
