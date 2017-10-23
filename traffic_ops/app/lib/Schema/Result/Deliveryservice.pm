@@ -46,10 +46,10 @@ __PACKAGE__->table("deliveryservice");
   data_type: 'bigint'
   is_nullable: 0
 
-=head2 signed
+=head2 signing_algorithm
 
-  data_type: 'boolean'
-  default_value: false
+  data_type: 'deliveryservice_signature_type'
+  default_value: null
   is_nullable: 1
 
 =head2 qstring_ignore
@@ -316,8 +316,12 @@ __PACKAGE__->add_columns(
   { data_type => "boolean", default_value => \"false", is_nullable => 0 },
   "dscp",
   { data_type => "bigint", is_nullable => 0 },
-  "signed",
-  { data_type => "boolean", default_value => \"false", is_nullable => 1 },
+  "signing_algorithm",
+  {
+    data_type     => "deliveryservice_signature_type",
+    default_value => \"null",
+    is_nullable   => 1,
+  },
   "qstring_ignore",
   { data_type => "smallint", is_nullable => 1 },
   "geo_limit",

@@ -1074,6 +1074,7 @@ sub process_config_files {
 				|| $file eq "cache.config"
 				|| $file eq "hosting.config"
 				|| $file =~ m/url\_sig\_(.*)\.config$/
+				|| $file =~ m/uri\_signing\_(.*)\.config$/
 				|| $file =~ m/hdr\_rw\_(.*)\.config$/
 				|| $file eq "regex_revalidate.config"
 				|| $file eq "astats.config"
@@ -1416,7 +1417,7 @@ sub lwp_get {
 			$request = $uri;
 			( $log_level >> $DEBUG ) && print "DEBUG Complete URL found. Downloading from external source $request.\n";
 		}
-		if ( ($uri =~ m/sslkeys/ || $uri =~ m/url\_sig/) && $rev_proxy_in_use == 1 ) {
+		if ( ($uri =~ m/sslkeys/ || $uri =~ m/url\_sig/ || $uri =~ m/uri\_signing/) && $rev_proxy_in_use == 1 ) {
 			$request = $to_url . $uri;
 			( $log_level >> $INFO ) && print "INFO Secure data request - bypassing reverse proxy and using $to_url.\n";
 		}
@@ -1438,7 +1439,7 @@ sub lwp_get {
 			$retry_counter--;
 		}
 		# https://github.com/Comcast/traffic_control/issues/1168
-		elsif ( $uri =~ m/url\_sig\_(.*)\.config$/ && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
+		elsif ( ( $uri =~ m/url\_sig\_(.*)\.config$/ || $uri =~ m/uri\_signing\_(.*)\.config$/ ) && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
 			( $log_level >> $FATAL ) && print "FATAL result for $uri is: ..." . $response->content . "...\n";
 			exit 1;
 		}
@@ -1520,6 +1521,10 @@ sub process_reload_restarts {
 	( $log_level >> $DEBUG ) && print "DEBUG Applying config for: $cfg_file.\n";
 
 	if ( $cfg_file =~ m/url\_sig\_(.*)\.config/ ) {
+		( $log_level >> $DEBUG ) && print "DEBUG New keys were installed in: $cfg_file, touch remap.config, and traffic_line -x needed.\n";
+		$traffic_line_needed++;
+	}
+	elsif ( $cfg_file =~ m/uri\_signing\_(.*)\.config/ ) {
 		( $log_level >> $DEBUG ) && print "DEBUG New keys were installed in: $cfg_file, touch remap.config, and traffic_line -x needed.\n";
 		$traffic_line_needed++;
 	}
