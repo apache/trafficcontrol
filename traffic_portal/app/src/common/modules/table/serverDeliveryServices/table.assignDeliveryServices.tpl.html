@@ -28,6 +28,7 @@ under the License.
             <th style="padding-left: 10px;"><input id="selectAllCB" type="checkbox" ng-click="selectAll($event)" ng-checked="allSelected()"></th>
             <th>XML ID</th>
             <th>Display Name</th>
+            <th>Type</th>
         </tr>
         </thead>
         <tbody>
@@ -35,6 +36,7 @@ under the License.
             <td><input type="checkbox" ng-click="updateDeliveryServices($event, ds.id)" ng-checked="ds.selected"></td>
             <td>{{::ds.xmlId}}</td>
             <td>{{::ds.displayName}}</td>
+            <td>{{::ds.type}}</td>
         </tr>
         </tbody>
     </table>
