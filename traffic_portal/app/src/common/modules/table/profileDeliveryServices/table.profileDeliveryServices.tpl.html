@@ -44,7 +44,7 @@ under the License.
                 <th>CDN</th>
                 <th>IPv6 Enabled</th>
                 <th>DSCP</th>
-                <th>Signed</th>
+                <th>Signing Algorithm</th>
                 <th>Qstring Handling</th>
                 <th>Last Updated</th>
             </tr>
@@ -61,7 +61,7 @@ under the License.
                 <td>{{::ds.cdnName}}</td>
                 <td>{{::ds.ipv6RoutingEnabled}}</td>
                 <td>{{::ds.dscp}}</td>
-                <td>{{::ds.signed}}</td>
+                <td>{{::ds.signingAlgorithm}}</td>
                 <td>{{::qstring(ds)}}</td>
                 <td>{{::getRelativeTime(ds.lastUpdated)}}</td>
             </tr>
