@@ -553,8 +553,8 @@ public class ConfigHandler {
 
 	private void parseDeepCoverageZoneNetworkConfig(final JsonNode config) throws JsonUtilsException {
 		getDeepNetworkUpdater().setDataBaseURL(
-				JsonUtils.getString(config, "deepcoveragezone.polling.url"),
-				JsonUtils.optLong(config, "deepcoveragezone.polling.interval")
+			JsonUtils.optString(config, "deepcoveragezone.polling.url", null),
+			JsonUtils.optLong(config, "deepcoveragezone.polling.interval")
 		);
 	}
 
