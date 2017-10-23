@@ -226,7 +226,7 @@
             $('#dscp_row').hide(speed);
             $('#routing_name_row').show(speed);
             $('#qstring_ignore_row').hide(speed);
-            $('#geo_limit_row').hide(speed);
+            $('#geo_limit_row').show(speed);
             $('#http_bypass_fqdn_row').hide(speed);
             $('#ipv6_routing_enabled_row').show(speed);
             $('#range_request_handlingi_row').hide(speed);
@@ -240,8 +240,8 @@
             $('#org_server_fqdn_row').hide(speed);
             $('#global_max_mbps_row').hide(speed);
             $('#global_max_tps_row').hide(speed);
-            $('#miss_lat_row').hide(speed);
-            $('#miss_long_row').hide(speed);
+            $('#miss_lat_row').show(speed);
+            $('#miss_long_row').show(speed);
             $('#edge_header_rewrite_row').hide(speed);
             $('#mid_header_rewrite_row').hide(speed);
             $('#regex_remap_row').hide(speed);
@@ -258,7 +258,7 @@
             $('#remap_text_row').hide(speed);
             $('#regional_geo_blocking_row').hide(speed);
             $('#regexp_add').hide(speed);
-            $('#geo_limit_countries_row').hide(speed);
+            $('#geo_limit_countries_row').show(speed);
             check_geolimit_redirect_url_row_showhide(0, speed);
 		}
 		//
