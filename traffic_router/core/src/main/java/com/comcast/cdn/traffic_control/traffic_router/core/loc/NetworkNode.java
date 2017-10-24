@@ -131,7 +131,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
                             // ones we already know about.
                             final Cache cache = cacheRegister.getCacheMap().get(cacheHostname);
                             if (cache == null) {
-                                LOGGER.error("DDC: deep cache entry " + cacheHostname + " not found in crconfig server list!");
+                                LOGGER.warn("DDC: deep cache entry " + cacheHostname + " not found in crconfig server list (it might not belong to this CDN)");
                             } else {
                                 LOGGER.info("DDC: Adding " + cacheHostname + " to " + deepLoc.getId() + ".");
                                 deepLoc.addCache(cache);
@@ -142,42 +142,8 @@ public class NetworkNode implements Comparable<NetworkNode> {
                     }
                 }
 
-                try {
-                    for (final JsonNode network6 : JsonUtils.getJsonNode(locData, "network6")) {
-                        final String ip = network6.asText();
-
-                        try {
-                            final NetworkNode nn = new NetworkNode(ip, loc, geolocation);
-                            if (useDeep && deepLoc != null) { // for deepLoc, we add the location here; normally it gets added by setLocation.
-                                nn.setCacheLocation(deepLoc);
-                            }
-                            root.add6(nn);
-                        } catch (NetworkNodeException ex) {
-                            LOGGER.error(ex, ex);
-                            return null;
-                        }
-                    }
-                } catch (JsonUtilsException ex) {
-                    LOGGER.warn("An exception was caught while accessing the network6 key of " + loc + " in the incoming coverage zone file: " + ex.getMessage());
-                }
-
-                try {
-                    for (final JsonNode network : JsonUtils.getJsonNode(locData, "network")) {
-                        final String ip = network.asText();
-
-                        try {
-                            final NetworkNode nn = new NetworkNode(ip, loc, geolocation);
-                            if (useDeep && deepLoc != null) {
-                                nn.setCacheLocation(deepLoc);
-                            }
-                            root.add(nn);
-                        } catch (NetworkNodeException ex) {
-                            LOGGER.error(ex, ex);
-                            return null;
-                        }
-                    }
-                } catch (JsonUtilsException ex) {
-                    LOGGER.warn("An exception was caught while accessing the network key of " + loc + " in the incoming coverage zone file: " + ex.getMessage());
+                if (!addNetworkNodesToRoot(root, locData, loc, deepLoc, geolocation, useDeep)) {
+                    return null;
                 }
             }
 
@@ -197,6 +163,35 @@ public class NetworkNode implements Comparable<NetworkNode> {
         }
 
         return null;
+    }
+
+    private static boolean addNetworkNodesToRoot(final SuperNode root, final JsonNode locData, final String loc,
+                                                 final CacheLocation deepLoc, final Geolocation geolocation, final boolean useDeep) {
+        for (final String key : new String[]{"network6", "network"}) {
+            try {
+                for (final JsonNode network : JsonUtils.getJsonNode(locData, key)) {
+                    final String ip = network.asText();
+
+                    try {
+                        final NetworkNode nn = new NetworkNode(ip, loc, geolocation);
+                        if (useDeep && deepLoc != null) { // for deepLoc, we add the location here; normally it gets added by setLocation.
+                            nn.setCacheLocation(deepLoc);
+                        }
+                        if ("network6".equals(key)) {
+                            root.add6(nn);
+                        } else {
+                            root.add(nn);
+                        }
+                    } catch (NetworkNodeException ex) {
+                        LOGGER.error(ex, ex);
+                        return false;
+                    }
+                }
+            } catch (JsonUtilsException ex) {
+                LOGGER.warn("An exception was caught while accessing the " + key + " key of " + loc + " in the incoming coverage zone file: " + ex.getMessage());
+            }
+        }
+        return true;
     }
 
     public NetworkNode(final String str) throws NetworkNodeException {
