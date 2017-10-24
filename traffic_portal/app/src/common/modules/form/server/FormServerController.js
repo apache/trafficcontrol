@@ -94,6 +94,8 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         { value: true, label: 'true' }
     ];
 
+    $scope.isCache = serverUtils.isCache;
+
     $scope.isEdge = serverUtils.isEdge;
 
     $scope.queueServerUpdates = function(server) {
@@ -134,7 +136,6 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
             // do nothing
         });
     };
-
 
     $scope.viewConfigFiles = function() {
         $location.path($location.path() + '/config-files');

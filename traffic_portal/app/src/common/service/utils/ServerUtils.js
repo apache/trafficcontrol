@@ -19,8 +19,12 @@
 
 var ServerUtils = function($window, userModel) {
 
+	this.isCache = function(server) {
+		return server.type && (server.type.indexOf('EDGE') != -1 || server.type == 'MID');
+	};
+
 	this.isEdge = function(server) {
-		return (server.type.indexOf('EDGE') != -1);
+		return server.type && (server.type.indexOf('EDGE') != -1);
 	};
 
 	this.isOffline = function(status) {
