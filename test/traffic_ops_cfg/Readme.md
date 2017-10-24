@@ -19,7 +19,7 @@
 
 # Traffic Ops Config File / Snapshot Compare
 
-This test allows you to compare all generated config files and CDN snapshots (CRConfig.json) from 2 instances of Traffic Ops. For example, you could compare config files / snapshots of a MySQL vs Postgres Traffic Ops. You could even compare across releases (1.7.0 vs 1.8.0).
+This test allows you to compare all generated config files (from a sample of caches across all profiles) and CDN snapshots (CRConfig.json) from 2 instances of Traffic Ops. For example, you could compare config files / snapshots between 2 versions of Traffic Ops.
 
 *Prerequisites*
 
@@ -28,9 +28,9 @@ This test allows you to compare all generated config files and CDN snapshots (CR
 
 *Running the Test*
 
-1. `./cfg_test.pl getref test.config` your ref files go into `/tmp/files/ref`
-2. `./cfg_test.pl getnew test.config` your new files go into `/tmp/files/new`
+1. `./cfg_test.pl getref test.config` - files from Traffic Ops #1 go into `/tmp/files/ref`
+2. `./cfg_test.pl getnew test.config` - files from Traffic Ops #2 go into `/tmp/files/new`
 3. `./cfg_test.pl compare test.config` - all `not ok` lines should be explained.
 
-It will compare all files for all profiles, _including_ the CRConfig.json. 
+It will compare all config files for all profiles, _including_ the CRConfig.json.
 
