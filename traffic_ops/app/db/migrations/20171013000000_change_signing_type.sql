@@ -15,6 +15,8 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
+DROP DOMAIN IF EXISTS deliveryservice_signature_type RESTRICT;
+
 CREATE DOMAIN deliveryservice_signature_type AS TEXT
 CHECK(
    VALUE IN ('url_sig', 'uri_signing')
