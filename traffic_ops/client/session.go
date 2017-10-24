@@ -64,11 +64,12 @@ type HTTPError struct {
 	HTTPStatusCode int
 	HTTPStatus     string
 	URL            string
+	Body           string
 }
 
 // Error implements the error interface for our customer error type.
 func (e *HTTPError) Error() string {
-	return fmt.Sprintf("%s[%d] - Error requesting Traffic Ops %s", e.HTTPStatus, e.HTTPStatusCode, e.URL)
+	return fmt.Sprintf("%s[%d] - Error requesting Traffic Ops %s %s", e.HTTPStatus, e.HTTPStatusCode, e.URL, e.Body)
 }
 
 // CacheEntry ...
@@ -182,10 +183,16 @@ func (to *Session) request(method, path string, body []byte) (*http.Response, er
 	}
 
 	if resp.StatusCode != http.StatusOK {
+		body, readErr := ioutil.ReadAll(resp.Body)
+		if readErr != nil {
+			return nil, readErr
+		}
+
 		e := HTTPError{
 			HTTPStatus:     resp.Status,
 			HTTPStatusCode: resp.StatusCode,
 			URL:            url,
+			Body:           string(body),
 		}
 		resp.Body.Close()
 		return nil, &e
