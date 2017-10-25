@@ -414,7 +414,7 @@ sub process_cfg_file {
 	my $disk_lines_missing_json = encode_json(\@disk_lines_missing);
 	my $json_text = "{ \"dbLinesMissing\": $db_lines_missing_json, \"diskLinesMissing\": $disk_lines_missing_json }";
 	# TODO: how do we know which server number we are?
-	$result = &lwp_put("/api/1.2/servers/1/$cfg_file", $json_text);
+	$result = &lwp_put("/api/1.2/servers/$hostname_short/$cfg_file", $json_text);
 	print "$result\n";
 	# TODO: validate result
 
