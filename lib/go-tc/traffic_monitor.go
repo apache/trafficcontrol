@@ -66,8 +66,14 @@ type TrafficMonitor struct {
 // TMCacheGroup ...
 // !!! Note the lowercase!!! this is local to this file, there's a CacheGroup definition in cachegroup.go!
 type TMCacheGroup struct {
-	Name        string      `json:"name"`
-	Coordinates Coordinates `json:"coordinates"`
+	Name        string                `json:"name"`
+	Coordinates MonitoringCoordinates `json:"coordinates"`
+}
+
+// Coordinates ...
+type MonitoringCoordinates struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
 }
 
 // TMDeliveryService ...

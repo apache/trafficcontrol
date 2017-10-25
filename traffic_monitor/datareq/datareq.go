@@ -125,6 +125,9 @@ func MakeDispatchMap(
 		"/api/monitor-config": wrap(WrapErr(errorCount, func() ([]byte, error) {
 			return srvMonitorConfig(monitorConfig)
 		}, ContentTypeJSON)),
+		"/api/crconfig-history": wrap(WrapErr(errorCount, func() ([]byte, error) {
+			return srvAPICRConfigHist(toSession)
+		}, ContentTypeJSON)),
 	}
 	return addTrailingSlashEndpoints(dispatchMap)
 }
