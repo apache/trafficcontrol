@@ -5,7 +5,6 @@ import (
         "net/http"
 	"database/sql"
 	"encoding/json"
-	"strconv"
 	"time"
 	
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -20,19 +19,20 @@ type CfgFileDiffs struct {
 	FileName string `json:"fileName"`
 	DBLinesMissing []string `json:"dbLinesMissing"`
 	DiskLinesMissing []string `json:"diskLinesMissing"`
+	ReportTimestamp string `json:"timestamp"`
 }
 
 func getCfgDiffsHandler(db *sqlx.DB) RegexHandlerFunc {
     return func(w http.ResponseWriter, r *http.Request, p PathParams) {
-                handleErr := func(err error, status int) {
-                        log.Errorf("%v %v\n", r.RemoteAddr, err)
-                        w.WriteHeader(status)
-                        fmt.Fprintf(w, http.StatusText(status))
-                }
+		handleErr := func(err error, status int) {
+				log.Errorf("%v %v\n", r.RemoteAddr, err)
+				w.WriteHeader(status)
+				fmt.Fprintf(w, http.StatusText(status))
+		}
 
-		shortHostName:= p["short-host-name"]
+		hostName:= p["host-name"]
 
-		resp, err := getCfgDiffsJson(shortHostName, db)
+		resp, err := getCfgDiffsJson(hostName, db)
 		if err != nil {
 				handleErr(err, http.StatusInternalServerError)
 				return
@@ -51,40 +51,41 @@ func getCfgDiffsHandler(db *sqlx.DB) RegexHandlerFunc {
 
 func putCfgDiffsHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
-			handleErr := func(err error, status int) {
-					log.Errorf("%v %v\n", r.RemoteAddr, err)
-					w.WriteHeader(status)
-					fmt.Fprintf(w, http.StatusText(status))
-			}
+		handleErr := func(err error, status int) {
+				log.Errorf("%v %v\n", r.RemoteAddr, err)
+				w.WriteHeader(status)
+				fmt.Fprintf(w, http.StatusText(status))
+		}
 
-		shortHostName := p["short-host-name"]
+		hostName := p["host-name"]
 		configName := p["cfg"]
 
 		decoder := json.NewDecoder(r.Body)
 		var diffs CfgFileDiffs
-		err = decoder.Decode(&diffs)
+		err := decoder.Decode(&diffs)
 		if err != nil {
 			handleErr(err, http.StatusBadRequest)
 			return
 		}
+
 		defer r.Body.Close()
 	
-				err = putCfgDiffs(db, shortHostName, configName, diffs)
-				if err != nil {
-						handleErr(err, http.StatusInternalServerError)
-						return
+		err = putCfgDiffs(db, hostName, configName, diffs)
+		if err != nil {
+				handleErr(err, http.StatusInternalServerError)
+				return
 		}
 	}
 }
 
-func cfgDiffsExist(db *sqlx.DB, shortHostName string, configName string) (bool, error) {
+func cfgDiffsExist(db *sqlx.DB, hostName string, configName string) (bool, error) {
 	query := `SELECT 
 EXISTS(
 SELECT 1
 FROM config_diffs me 
-WHERE me.short_host_name = $1 AND me.config_name = $2)`
+WHERE me.server_id = (SELECT server.id FROM server WHERE host_name=$1) AND me.config_name = $2)`
 
-	rows, err := db.Query(query, shortHostName, configName)
+	rows, err := db.Query(query, hostName, configName)
 	if err != nil {
 		return false, err
 	}
@@ -108,16 +109,16 @@ WHERE me.short_host_name = $1 AND me.config_name = $2)`
 	}
 }
 
-func getCfgDiffs(db *sqlx.DB, shortHostName string) ([]CfgFileDiffs, error) {
+func getCfgDiffs(db *sqlx.DB, hostName string) ([]CfgFileDiffs, error) {
 	query := `SELECT
 me.config_name as config_name,
 array_to_json(me.db_lines_missing) as db_lines_missing,
 array_to_json(me.disk_lines_missing) as disk_lines_missing,
 me.last_checked as timestamp
 FROM config_diffs me
-WHERE me.short_host_name=$1`
+WHERE me.server_id=(SELECT server.id FROM server WHERE host_name=$1)`
 	
-	rows, err := db.Query(query, shortHostName)
+	rows, err := db.Query(query, hostName)
 	if err != nil {
 		return nil, err
 	}
@@ -155,8 +156,8 @@ WHERE me.short_host_name=$1`
 	return configs, nil
 }
 
-func getCfgDiffsJson(shortHostName string, db * sqlx.DB) ([]CfgFileDiffs, error) {
-	cfgDiffs, err := getCfgDiffs(db, shortHostName)
+func getCfgDiffsJson(hostName string, db * sqlx.DB) ([]CfgFileDiffs, error) {
+	cfgDiffs, err := getCfgDiffs(db, hostName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting my data: %v", err)
 	}
@@ -164,10 +165,10 @@ func getCfgDiffsJson(shortHostName string, db * sqlx.DB) ([]CfgFileDiffs, error)
 	return cfgDiffs, nil
 }
 
-func insertCfgDiffs(db *sqlx.DB, shortHostName string, configName string, diffs CfgFileDiffs) ( error) {
+func insertCfgDiffs(db *sqlx.DB, hostName string, configName string, diffs CfgFileDiffs) ( error) {
 	query := `INSERT INTO 
-config_diffs(short_host_name, config_name, db_lines_missing, disk_lines_missing, last_checked)
-VALUES($1, $2, (SELECT ARRAY(SELECT * FROM json_array_elements_text($3))), (SELECT ARRAY(SELECT * FROM json_array_elements_text($4))), $5)`
+config_diffs(server_id, config_name, db_lines_missing, disk_lines_missing, last_checked)
+VALUES((SELECT server.id FROM server WHERE host_name=$1), $2, (SELECT ARRAY(SELECT * FROM json_array_elements_text($3))), (SELECT ARRAY(SELECT * FROM json_array_elements_text($4))), $5)`
 		
 	dbLinesMissingJson, err := json.Marshal(diffs.DBLinesMissing)
 	if err != nil {
@@ -180,7 +181,7 @@ VALUES($1, $2, (SELECT ARRAY(SELECT * FROM json_array_elements_text($3))), (SELE
 
 	//NOTE: if the serverID doesn't match a server, this error will appear like a 500-type error
 	rows, err := db.Query(query,
-		shortHostName,
+		hostName,
 		configName, 
 		dbLinesMissingJson,
 		diskLinesMissingJson,
@@ -194,9 +195,9 @@ VALUES($1, $2, (SELECT ARRAY(SELECT * FROM json_array_elements_text($3))), (SELE
 	return nil
 }
 
-func updateCfgDiffs(db *sqlx.DB, shortHostName string, configName string, diffs CfgFileDiffs) (bool, error) {
+func updateCfgDiffs(db *sqlx.DB, hostName string, configName string, diffs CfgFileDiffs) (bool, error) {
 	query := `UPDATE config_diffs SET db_lines_missing=(SELECT ARRAY(SELECT * FROM json_array_elements_text($1))), 
-disk_lines_missing=(SELECT ARRAY(SELECT * FROM json_array_elements_text($2))), last_checked=$3 WHERE short_host_name=$4 AND config_name=$5`
+disk_lines_missing=(SELECT ARRAY(SELECT * FROM json_array_elements_text($2))), last_checked=$3 WHERE server_id=(SELECT server.id FROM server WHERE host_name=$4) AND config_name=$5`
 		
 	dbLinesMissingJson, err := json.Marshal(diffs.DBLinesMissing)
 	if err != nil {
@@ -211,7 +212,7 @@ disk_lines_missing=(SELECT ARRAY(SELECT * FROM json_array_elements_text($2))), l
 		dbLinesMissingJson,
 		diskLinesMissingJson,
 		time.Now().UTC(),
-		shortHostName,
+		hostName,
 		configName)
 
 	if err != nil {
@@ -231,15 +232,15 @@ disk_lines_missing=(SELECT ARRAY(SELECT * FROM json_array_elements_text($2))), l
 
 }
 
-func putCfgDiffs(db *sqlx.DB, shortHostName string, configName string, diffs CfgFileDiffs) (error) {
+func putCfgDiffs(db *sqlx.DB, hostName string, configName string, diffs CfgFileDiffs) (error) {
 	
 	// Try updating the information first
-	updated, err := updateCfgDiffs(db, shortHostName, configName, diffs)
+	updated, err := updateCfgDiffs(db, hostName, configName, diffs)
 	if err != nil {
 		return err
 	}
 	if updated {
 		return nil
 	}
-	return insertCfgDiffs(db, shortHostName, configName, diffs)
+	return insertCfgDiffs(db, hostName, configName, diffs)
 }
