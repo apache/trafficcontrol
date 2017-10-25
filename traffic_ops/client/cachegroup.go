@@ -23,18 +23,25 @@ import (
 
 // CacheGroups gets the CacheGroups in an array of CacheGroup structs
 // (note CacheGroup used to be called location)
+// Deprecated: use GetCacheGroups.
 func (to *Session) CacheGroups() ([]tc.CacheGroup, error) {
+	cgs, _, err := to.GetCacheGroups()
+	return cgs, err
+}
+
+func (to *Session) GetCacheGroups() ([]tc.CacheGroup, ReqInf, error) {
 	url := "/api/1.2/cachegroups.json"
-	resp, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
 	var data tc.CacheGroupsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return data.Response, nil
+	return data.Response, reqInf, nil
 }

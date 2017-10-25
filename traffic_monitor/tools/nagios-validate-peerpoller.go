@@ -42,7 +42,7 @@ func main() {
 		return
 	}
 
-	toClient, err := to.LoginWithAgent(*toURI, *toUser, *toPass, true, UserAgent, false, tmcheck.RequestTimeout)
+	toClient, _, err := to.LoginWithAgent(*toURI, *toUser, *toPass, true, UserAgent, false, tmcheck.RequestTimeout)
 	if err != nil {
 		fmt.Printf("Error logging in to Traffic Ops: %v\n", err)
 		return

@@ -22,18 +22,25 @@ import (
 )
 
 // Profiles gets an array of Profiles
+// Deprecated: use GetProfiles
 func (to *Session) Profiles() ([]tc.Profile, error) {
+	ps, _, err := to.GetProfiles()
+	return ps, err
+}
+
+func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
 	url := "/api/1.2/profiles.json"
-	resp, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
 	var data tc.ProfilesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return data.Response, nil
+	return data.Response, reqInf, nil
 }

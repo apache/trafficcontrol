@@ -22,25 +22,25 @@ import (
 )
 
 // Tenants gets an array of Tenants
-func (to *Session) Tenants() ([]tc.Tenant, error) {
+func (to *Session) Tenants() ([]tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
-	err := get(to, tenantsEp(), &data)
+	reqInf, err := get(to, tenantsEp(), &data)
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return data.Response, nil
+	return data.Response, reqInf, nil
 }
 
 // Tenant gets the Tenant for the ID it's passed
-func (to *Session) Tenant(id string) (*tc.Tenant, error) {
+func (to *Session) Tenant(id string) (*tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
-	err := get(to, tenantEp(id), &data)
+	reqInf, err := get(to, tenantEp(id), &data)
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return &data.Response[0], nil
+	return &data.Response[0], reqInf, nil
 }
 
 // CreateTenant creates the Tenant it's passed

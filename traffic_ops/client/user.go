@@ -22,18 +22,25 @@ import (
 )
 
 // Users gets an array of Users.
+// Deprecated: use GetUsers
 func (to *Session) Users() ([]tc.User, error) {
+	us, _, err := to.GetUsers()
+	return us, err
+}
+
+func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
 	url := "/api/1.2/users.json"
-	resp, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
 	var data tc.UsersResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return data.Response, nil
+	return data.Response, reqInf, nil
 }
