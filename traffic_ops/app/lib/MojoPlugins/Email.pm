@@ -77,16 +77,16 @@ sub register {
 			my $email_to = shift || confess("Please supply an email address.");
 			my $token    = shift || confess("Please supply a GUID token");
 
-			my $portal_base_url   = $self->config->{'portal'}{'base_url'};
-			my $portal_email_from = $self->config->{'portal'}{'email_from'};
+			my $portal_pass_reset_url	= $self->config->{'portal'}{'base_url'} . $self->config->{'portal'}{'pass_reset_path'};
+			my $portal_email_from		= $self->config->{'portal'}{'email_from'};
 
 			$self->app->log->info( "MOJO_CONFIG: " . $ENV{MOJO_CONFIG} );
-			$self->app->log->info( "portal_base_url: " . $portal_base_url );
+			$self->app->log->info( "portal_pass_reset_url: " . $portal_pass_reset_url );
 
 			my $tm_user = {
-				email           => $email_to,
-				portal_base_url => $portal_base_url,
-				token           => $token,
+				email			=> $email_to,
+				portal_pass_reset_url	=> $portal_pass_reset_url,
+				token			=> $token,
 			};
 
 			my $instance_name =
@@ -128,21 +128,23 @@ sub register {
 			my $email_to = shift || confess("Please supply an email address.");
 			my $token    = shift || confess("Please supply a GUID token");
 
-			my $portal_base_url   = $self->config->{'portal'}{'base_url'};
-			my $portal_email_from = $self->config->{'portal'}{'email_from'};
+			my $portal_user_register_url	= $self->config->{'portal'}{'base_url'} . $self->config->{'portal'}{'user_register_path'};
+			my $portal_email_from		= $self->config->{'portal'}{'email_from'};
 
 			$self->app->log->info( "MOJO_CONFIG: " . $ENV{MOJO_CONFIG} );
-			$self->app->log->info( "portal_base_url: " . $portal_base_url );
+			$self->app->log->info( "portal_user_register_url: " . $portal_user_register_url );
 
 			my $tm_user = {
-				email           => $email_to,
-				portal_base_url => $portal_base_url,
-				token           => $token,
+				email				=> $email_to,
+				portal_user_register_url	=> $portal_user_register_url,
+				token				=> $token,
 			};
 
 			my $instance_name =
 				$self->db->resultset('Parameter')->search( { -and => [ name => 'tm.instance_name', config_file => 'global' ] } )->get_column('value')
 				->single();
+
+			$self->stash( instance_name => $instance_name );
 			$self->stash( tm_user => $tm_user, fbox_layout => 1, mode => 'add' );
 			if ( defined($email_to) ) {
 				if ( defined($portal_email_from) ) {

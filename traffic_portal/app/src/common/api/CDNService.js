@@ -53,7 +53,7 @@ var CDNService = function($http, $q, Restangular, locationUtils, messageModel, E
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'CDN created' } ], true);
-                    locationUtils.navigateToPath('/admin/cdns');
+                    locationUtils.navigateToPath('/cdns');
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
@@ -196,7 +196,7 @@ var CDNService = function($http, $q, Restangular, locationUtils, messageModel, E
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'Snapshot performed' } ], true);
-                    locationUtils.navigateToPath('/admin/cdns/' + cdn.id);
+                    locationUtils.navigateToPath('/cdns/' + cdn.id);
 
                 },
                 function(fault) {
@@ -207,8 +207,38 @@ var CDNService = function($http, $q, Restangular, locationUtils, messageModel, E
         return request.promise;
     };
 
+    this.getDNSSECKeys = function(cdnName) {
+        var request = $q.defer();
 
+        $http.get(ENV.api['root'] + "cdns/name/" + cdnName + "/dnsseckeys")
+            .then(
+                function(result) {
+                    request.resolve(result.data.response);
+                },
+                function(fault) {
+                    request.reject();
+                }
+            );
 
+        return request.promise;
+    };
+
+    this.generateDNSSECKeys = function(dnssecKeysRequest) {
+        var request = $q.defer();
+
+        $http.post(ENV.api['root'] + "cdns/dnsseckeys/generate", dnssecKeysRequest)
+            .then(
+                function(result) {
+                    request.resolve(result);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                    request.reject();
+                }
+            );
+
+        return request.promise;
+    };
 
 };
 

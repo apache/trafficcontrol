@@ -17,6 +17,7 @@ package API::DeliveryServiceServer;
 #
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
+use UI::DeliveryService;
 use UI::Utils;
 use Utils::Tenant;
 use Mojo::Base 'Mojolicious::Controller';
@@ -120,6 +121,11 @@ sub assign_servers_to_ds {
 	}
 
 	$self->db->resultset("DeliveryserviceServer")->populate(\@values);
+
+	# create location parameters for header_rewrite*, regex_remap* and cacheurl* config files if necessary
+	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
+	&UI::DeliveryService::regex_remap( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->regex_remap );
+	&UI::DeliveryService::cacheurl( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->cacheurl );
 
 	&log( $self, $count . " servers were assigned to " . $ds->xml_id, "APICHANGE" );
 

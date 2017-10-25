@@ -17,14 +17,28 @@
  * under the License.
  */
 
-var TableTenantDeliveryServicesController = function(tenant, tenantDeliveryServices, $scope, $state, locationUtils) {
+var TableTenantDeliveryServicesController = function(tenant, tenantDeliveryServices, $scope, $state, dateUtils, deliveryServiceUtils, locationUtils) {
+
+	var protocols = deliveryServiceUtils.protocols;
+
+	var qstrings = deliveryServiceUtils.qstrings;
 
 	$scope.tenant = tenant;
 
 	$scope.tenantDeliveryServices = tenantDeliveryServices;
 
+	$scope.protocol = function(ds) {
+		return protocols[ds.protocol];
+	};
+
+	$scope.qstring = function(ds) {
+		return qstrings[ds.qstringIgnore];
+	};
+
+	$scope.getRelativeTime = dateUtils.getRelativeTime;
+
 	$scope.editDeliveryService = function(ds) {
-		locationUtils.navigateToPath('/configure/delivery-services/' + ds.id + '?type=' + ds.type);
+		locationUtils.navigateToPath('/delivery-services/' + ds.id + '?type=' + ds.type);
 	};
 
 	$scope.refresh = function() {
@@ -43,5 +57,5 @@ var TableTenantDeliveryServicesController = function(tenant, tenantDeliveryServi
 
 };
 
-TableTenantDeliveryServicesController.$inject = ['tenant', 'tenantDeliveryServices', '$scope', '$state', 'locationUtils'];
+TableTenantDeliveryServicesController.$inject = ['tenant', 'tenantDeliveryServices', '$scope', '$state', 'dateUtils', 'deliveryServiceUtils', 'locationUtils'];
 module.exports = TableTenantDeliveryServicesController;

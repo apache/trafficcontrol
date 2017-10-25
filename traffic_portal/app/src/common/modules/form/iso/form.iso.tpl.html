@@ -147,10 +147,42 @@ under the License.
                     <span ng-show="hasError(isoForm.interfaceName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(isoForm.disk), 'has-feedback': hasError(isoForm.disk)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Disk for OS Install</label>
+            <div class="form-group" ng-show="!isDHCP(iso)" ng-class="{'has-error': hasError(isoForm.mgmtIpAddress), 'has-feedback': hasError(isoForm.mgmtIpAddress)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Management IP Address</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="disk" name="disk" type="text" class="form-control" placeholder='Typical values are "sda"' ng-model="iso.disk" ng-maxlength="8" autofocus>
+                    <input id="mgmtIpAddress" name="mgmtIpAddress" type="text" class="form-control" ng-model="iso.mgmtIpAddress" ng-maxlength="50" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtIpAddress, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(isoForm.mgmtIpAddress)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-show="!isDHCP(iso)" ng-class="{'has-error': hasError(isoForm.mgmtIpNetmask), 'has-feedback': hasError(isoForm.mgmtIpNetmask)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Management IP Netmask</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="mgmtIpNetmask" name="mgmtIpNetmask" type="text" class="form-control" ng-model="iso.mgmtIpNetmask" ng-maxlength="50" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtIpNetmask, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(isoForm.mgmtIpNetmask)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-show="!isDHCP(iso)" ng-class="{'has-error': hasError(isoForm.mgmtIpGateway), 'has-feedback': hasError(isoForm.mgmtIpGateway)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Management IP Gateway</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="mgmtIpGateway" name="mgmtIpGateway" type="text" class="form-control" ng-model="iso.mgmtIpGateway" ng-maxlength="50" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtIpGateway, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(isoForm.mgmtIpGateway)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-show="!isDHCP(iso)" ng-class="{'has-error': hasError(isoForm.mgmtInterface), 'has-feedback': hasError(isoForm.mgmtInterface)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Management Interface</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="mgmtInterface" name="mgmtInterface" type="text" class="form-control" placeholder="Typical values are em3, eth3, etc. The name of the management interface. Required if Management IP Address is entered." ng-model="iso.mgmtInterface" ng-maxlength="50" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(isoForm.mgmtInterface, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(isoForm.mgmtInterface)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(isoForm.disk), 'has-feedback': hasError(isoForm.disk)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Disk for OS Install *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="disk" name="disk" type="text" class="form-control" placeholder='Typical values are "sda"' ng-model="iso.disk" ng-maxlength="8" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(isoForm.disk, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(isoForm.disk)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>

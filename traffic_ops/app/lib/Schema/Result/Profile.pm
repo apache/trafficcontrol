@@ -59,6 +59,12 @@ __PACKAGE__->table("profile");
   is_foreign_key: 1
   is_nullable: 1
 
+=head2 routing_disabled
+
+  data_type: 'boolean'
+  default_value: false
+  is_nullable: 0
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -106,6 +112,8 @@ __PACKAGE__->add_columns(
   },
   "cdn",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
+  "routing_disabled",
+  { data_type => "boolean", default_value => \"false", is_nullable => 0 },
 );
 
 =head1 PRIMARY KEY
@@ -122,7 +130,7 @@ __PACKAGE__->set_primary_key("id");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_101371_name_unique>
+=head2 C<idx_140397_name_unique>
 
 =over 4
 
@@ -132,7 +140,7 @@ __PACKAGE__->set_primary_key("id");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_101371_name_unique", ["name"]);
+__PACKAGE__->add_unique_constraint("idx_140397_name_unique", ["name"]);
 
 =head1 RELATIONS
 
@@ -202,8 +210,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-01-02 16:07:07
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:1LR3Lov3kmopJD1mJF08EQ
+# Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-09-05 09:54:32
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:BzUCSsUKInomx0bcvL5eAw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration

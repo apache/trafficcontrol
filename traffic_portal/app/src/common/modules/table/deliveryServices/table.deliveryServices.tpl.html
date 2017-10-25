@@ -25,6 +25,15 @@ under the License.
         <div class="pull-right" role="group" ng-if="!settings.isNew">
             <button class="btn btn-primary" title="Create Delivery Service" ng-click="selectDSType()"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-click="compareDSs()">Compare Delivery Services</a></li>
+                </ul>
+            </div>
         </div>
         <div class="clearfix"></div>
     </div>
@@ -33,32 +42,34 @@ under the License.
         <table id="deliveryServicesTable" class="table responsive-utilities jambo_table">
             <thead>
                 <tr class="headings">
-                    <th>tenant</th>
-                    <th>xmlId</th>
-                    <th>orgServerFqdn</th>
-                    <th>active</th>
-                    <th>type</th>
-                    <th>protocol</th>
-                    <th>cdn</th>
-                    <th>ipv6RoutingEnabled</th>
-                    <th>dscp</th>
-                    <th>signed</th>
-                    <th>qstringIgnore</th>
+                    <th>XML ID</th>
+                    <th>Tenant</th>
+                    <th>Origin Server FQDN</th>
+                    <th>Active</th>
+                    <th>Type</th>
+                    <th>Protocol</th>
+                    <th>CDN</th>
+                    <th>IPv6 Enabled</th>
+                    <th>DSCP</th>
+                    <th>Signing Algorithm</th>
+                    <th>Qstring Handling</th>
+                    <th>Last Updated</th>
                 </tr>
             </thead>
             <tbody>
-                <tr ng-click="editDeliveryService(deliveryService)" ng-repeat="deliveryService in ::deliveryServices">
-                    <td>{{::deliveryService.tenant}}</td>
-                    <td>{{::deliveryService.xmlId}}</td>
-                    <td>{{::deliveryService.orgServerFqdn}}</td>
-                    <td>{{::deliveryService.active}}</td>
-                    <td>{{::deliveryService.type}}</td>
-                    <td>{{::protocol(deliveryService)}}</td>
-                    <td>{{::deliveryService.cdnName}}</td>
-                    <td>{{::deliveryService.ipv6RoutingEnabled}}</td>
-                    <td>{{::deliveryService.dscp}}</td>
-                    <td>{{::deliveryService.signed}}</td>
-                    <td>{{::qstring(deliveryService)}}</td>
+                <tr ng-click="editDeliveryService(ds)" ng-repeat="ds in ::deliveryServices">
+                    <td>{{::ds.xmlId}}</td>
+                    <td>{{::ds.tenant}}</td>
+                    <td>{{::ds.orgServerFqdn}}</td>
+                    <td>{{::ds.active}}</td>
+                    <td>{{::ds.type}}</td>
+                    <td>{{::protocol(ds)}}</td>
+                    <td>{{::ds.cdnName}}</td>
+                    <td>{{::ds.ipv6RoutingEnabled}}</td>
+                    <td>{{::ds.dscp}}</td>
+                    <td>{{::ds.signingAlgorithm}}</td>
+                    <td>{{::qstring(ds)}}</td>
+                    <td>{{::getRelativeTime(ds.lastUpdated)}}</td>
                 </tr>
             </tbody>
         </table>

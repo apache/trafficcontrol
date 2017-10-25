@@ -22,11 +22,15 @@ var TableUsersController = function(users, $scope, $state, locationUtils) {
     $scope.users = users;
 
     $scope.editUser = function(id) {
-        locationUtils.navigateToPath('/admin/users/' + id);
+        locationUtils.navigateToPath('/users/' + id);
     };
 
-    $scope.createUser = function() {
-        locationUtils.navigateToPath('/admin/users/new');
+    $scope.create = function() {
+        locationUtils.navigateToPath('/users/new');
+    };
+
+    $scope.register = function() {
+        locationUtils.navigateToPath('/users/register');
     };
 
     $scope.refresh = function() {

@@ -15,11 +15,16 @@
 
 package client
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strconv"
+
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+)
 
 // DeliveryServices gets an array of DeliveryServices
-func (to *Session) DeliveryServices() ([]DeliveryService, error) {
-	var data GetDeliveryServiceResponse
+func (to *Session) DeliveryServices() ([]tc.DeliveryService, error) {
+	var data tc.GetDeliveryServiceResponse
 	err := get(to, deliveryServicesEp(), &data)
 	if err != nil {
 		return nil, err
@@ -28,9 +33,20 @@ func (to *Session) DeliveryServices() ([]DeliveryService, error) {
 	return data.Response, nil
 }
 
+// DeliveryServices gets an array of DeliveryServices
+func (to *Session) DeliveryServicesByServer(id int) ([]tc.DeliveryService, error) {
+	var data tc.GetDeliveryServiceResponse
+	err := get(to, deliveryServicesByServerEp(strconv.Itoa(id)), &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return data.Response, nil
+}
+
 // DeliveryService gets the DeliveryService for the ID it's passed
-func (to *Session) DeliveryService(id string) (*DeliveryService, error) {
-	var data GetDeliveryServiceResponse
+func (to *Session) DeliveryService(id string) (*tc.DeliveryService, error) {
+	var data tc.GetDeliveryServiceResponse
 	err := get(to, deliveryServiceEp(id), &data)
 	if err != nil {
 		return nil, err
@@ -40,8 +56,8 @@ func (to *Session) DeliveryService(id string) (*DeliveryService, error) {
 }
 
 // CreateDeliveryService creates the DeliveryService it's passed
-func (to *Session) CreateDeliveryService(ds *DeliveryService) (*CreateDeliveryServiceResponse, error) {
-	var data CreateDeliveryServiceResponse
+func (to *Session) CreateDeliveryService(ds *tc.DeliveryService) (*tc.CreateDeliveryServiceResponse, error) {
+	var data tc.CreateDeliveryServiceResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {
 		return nil, err
@@ -56,8 +72,8 @@ func (to *Session) CreateDeliveryService(ds *DeliveryService) (*CreateDeliverySe
 
 // UpdateDeliveryService updates the DeliveryService matching the ID it's passed with
 // the DeliveryService it is passed
-func (to *Session) UpdateDeliveryService(id string, ds *DeliveryService) (*UpdateDeliveryServiceResponse, error) {
-	var data UpdateDeliveryServiceResponse
+func (to *Session) UpdateDeliveryService(id string, ds *tc.DeliveryService) (*tc.UpdateDeliveryServiceResponse, error) {
+	var data tc.UpdateDeliveryServiceResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {
 		return nil, err
@@ -71,8 +87,8 @@ func (to *Session) UpdateDeliveryService(id string, ds *DeliveryService) (*Updat
 }
 
 // DeleteDeliveryService deletes the DeliveryService matching the ID it's passed
-func (to *Session) DeleteDeliveryService(id string) (*DeleteDeliveryServiceResponse, error) {
-	var data DeleteDeliveryServiceResponse
+func (to *Session) DeleteDeliveryService(id string) (*tc.DeleteDeliveryServiceResponse, error) {
+	var data tc.DeleteDeliveryServiceResponse
 	err := del(to, deliveryServiceEp(id), &data)
 	if err != nil {
 		return nil, err
@@ -82,8 +98,8 @@ func (to *Session) DeleteDeliveryService(id string) (*DeleteDeliveryServiceRespo
 }
 
 // DeliveryServiceState gets the DeliveryServiceState for the ID it's passed
-func (to *Session) DeliveryServiceState(id string) (*DeliveryServiceState, error) {
-	var data DeliveryServiceStateResponse
+func (to *Session) DeliveryServiceState(id string) (*tc.DeliveryServiceState, error) {
+	var data tc.DeliveryServiceStateResponse
 	err := get(to, deliveryServiceStateEp(id), &data)
 	if err != nil {
 		return nil, err
@@ -93,8 +109,8 @@ func (to *Session) DeliveryServiceState(id string) (*DeliveryServiceState, error
 }
 
 // DeliveryServiceHealth gets the DeliveryServiceHealth for the ID it's passed
-func (to *Session) DeliveryServiceHealth(id string) (*DeliveryServiceHealth, error) {
-	var data DeliveryServiceHealthResponse
+func (to *Session) DeliveryServiceHealth(id string) (*tc.DeliveryServiceHealth, error) {
+	var data tc.DeliveryServiceHealthResponse
 	err := get(to, deliveryServiceHealthEp(id), &data)
 	if err != nil {
 		return nil, err
@@ -104,8 +120,8 @@ func (to *Session) DeliveryServiceHealth(id string) (*DeliveryServiceHealth, err
 }
 
 // DeliveryServiceCapacity gets the DeliveryServiceCapacity for the ID it's passed
-func (to *Session) DeliveryServiceCapacity(id string) (*DeliveryServiceCapacity, error) {
-	var data DeliveryServiceCapacityResponse
+func (to *Session) DeliveryServiceCapacity(id string) (*tc.DeliveryServiceCapacity, error) {
+	var data tc.DeliveryServiceCapacityResponse
 	err := get(to, deliveryServiceCapacityEp(id), &data)
 	if err != nil {
 		return nil, err
@@ -115,8 +131,8 @@ func (to *Session) DeliveryServiceCapacity(id string) (*DeliveryServiceCapacity,
 }
 
 // DeliveryServiceRouting gets the DeliveryServiceRouting for the ID it's passed
-func (to *Session) DeliveryServiceRouting(id string) (*DeliveryServiceRouting, error) {
-	var data DeliveryServiceRoutingResponse
+func (to *Session) DeliveryServiceRouting(id string) (*tc.DeliveryServiceRouting, error) {
+	var data tc.DeliveryServiceRoutingResponse
 	err := get(to, deliveryServiceRoutingEp(id), &data)
 	if err != nil {
 		return nil, err
@@ -126,8 +142,8 @@ func (to *Session) DeliveryServiceRouting(id string) (*DeliveryServiceRouting, e
 }
 
 // DeliveryServiceServer gets the DeliveryServiceServer
-func (to *Session) DeliveryServiceServer(page, limit string) ([]DeliveryServiceServer, error) {
-	var data DeliveryServiceServerResponse
+func (to *Session) DeliveryServiceServer(page, limit string) ([]tc.DeliveryServiceServer, error) {
+	var data tc.DeliveryServiceServerResponse
 	err := get(to, deliveryServiceServerEp(page, limit), &data)
 	if err != nil {
 		return nil, err
@@ -136,9 +152,20 @@ func (to *Session) DeliveryServiceServer(page, limit string) ([]DeliveryServiceS
 	return data.Response, nil
 }
 
+// DeliveryServiceServer gets the DeliveryServiceServer
+func (to *Session) DeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, error) {
+	var data tc.DeliveryServiceRegexResponse
+	err := get(to, deliveryServiceRegexesEp(), &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return data.Response, nil
+}
+
 // DeliveryServiceSSLKeysByID gets the DeliveryServiceSSLKeys by ID
-func (to *Session) DeliveryServiceSSLKeysByID(id string) (*DeliveryServiceSSLKeys, error) {
-	var data DeliveryServiceSSLKeysResponse
+func (to *Session) DeliveryServiceSSLKeysByID(id string) (*tc.DeliveryServiceSSLKeys, error) {
+	var data tc.DeliveryServiceSSLKeysResponse
 	err := get(to, deliveryServiceSSLKeysByIDEp(id), &data)
 	if err != nil {
 		return nil, err
@@ -148,8 +175,8 @@ func (to *Session) DeliveryServiceSSLKeysByID(id string) (*DeliveryServiceSSLKey
 }
 
 // DeliveryServiceSSLKeysByHostname gets the DeliveryServiceSSLKeys by Hostname
-func (to *Session) DeliveryServiceSSLKeysByHostname(hostname string) (*DeliveryServiceSSLKeys, error) {
-	var data DeliveryServiceSSLKeysResponse
+func (to *Session) DeliveryServiceSSLKeysByHostname(hostname string) (*tc.DeliveryServiceSSLKeys, error) {
+	var data tc.DeliveryServiceSSLKeysResponse
 	err := get(to, deliveryServiceSSLKeysByHostnameEp(hostname), &data)
 	if err != nil {
 		return nil, err

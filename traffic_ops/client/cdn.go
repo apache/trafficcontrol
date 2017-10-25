@@ -18,22 +18,11 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
-// CDNResponse ...
-type CDNResponse struct {
-	Response []CDN `json:"response"`
-}
-
-// CDN ...
-type CDN struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	LastUpdated string `json:"lastUpdated"`
-}
-
-// CDNs gets an array of CDNs
-func (to *Session) CDNs() ([]CDN, error) {
+func (to *Session) CDNs() ([]tc.CDN, error) {
 	url := "/api/1.2/cdns.json"
 	resp, err := to.request("GET", url, nil)
 	if err != nil {
@@ -41,7 +30,7 @@ func (to *Session) CDNs() ([]CDN, error) {
 	}
 	defer resp.Body.Close()
 
-	var data CDNResponse
+	var data tc.CDNsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}
@@ -49,7 +38,7 @@ func (to *Session) CDNs() ([]CDN, error) {
 }
 
 // CDNName gets an array of CDNs
-func (to *Session) CDNName(name string) ([]CDN, error) {
+func (to *Session) CDNName(name string) ([]tc.CDN, error) {
 	url := fmt.Sprintf("/api/1.2/cdns/name/%s.json", name)
 	resp, err := to.request("GET", url, nil)
 	if err != nil {
@@ -57,7 +46,23 @@ func (to *Session) CDNName(name string) ([]CDN, error) {
 	}
 	defer resp.Body.Close()
 
-	var data CDNResponse
+	var data tc.CDNsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return data.Response, nil
+}
+
+func (to *Session) CDNSSLKeys(name string) ([]tc.CDNSSLKeys, error) {
+	url := fmt.Sprintf("/api/1.2/cdns/name/%s/sslkeys.json", name)
+	resp, err := to.request("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.CDNSSLKeysResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, err
 	}

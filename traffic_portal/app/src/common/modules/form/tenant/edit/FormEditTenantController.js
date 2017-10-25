@@ -25,7 +25,7 @@ var FormEditTenantController = function(tenant, $scope, $controller, $uibModal, 
     var deleteTenant = function(tenant) {
         tenantService.deleteTenant(tenant.id)
             .then(function() {
-                locationUtils.navigateToPath('/admin/tenants');
+                locationUtils.navigateToPath('/tenants');
             });
     };
 

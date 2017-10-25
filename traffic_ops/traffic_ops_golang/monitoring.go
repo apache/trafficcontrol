@@ -27,9 +27,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
 const MonitoringPrivLevel = PrivLevelReadOnly
@@ -105,16 +106,22 @@ type DeliveryService struct {
 	TotalKBPSThreshold float64 `json:"totalKbpsThreshold"`
 }
 
-// TODO change to use the ParamMap, instead of parsing the URL
-func monitoringHandler(db *sql.DB) RegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p ParamMap) {
+// TODO change to use the PathParams, instead of parsing the URL
+func monitoringHandler(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
 			w.WriteHeader(status)
 			fmt.Fprintf(w, http.StatusText(status))
 		}
+		ctx := r.Context()
+		pathParams, err := getPathParams(ctx)
+		if err != nil {
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
 
-		cdnName := p["cdn"]
+		cdnName := pathParams["name"]
 
 		resp, err := getMonitoringJson(cdnName, db)
 		if err != nil {
@@ -133,7 +140,7 @@ func monitoringHandler(db *sql.DB) RegexHandlerFunc {
 	}
 }
 
-func getMonitoringServers(db *sql.DB, cdn string) ([]Monitor, []Cache, []Router, error) {
+func getMonitoringServers(db *sqlx.DB, cdn string) ([]Monitor, []Cache, []Router, error) {
 	query := `SELECT
 me.host_name as hostName,
 CONCAT(me.host_name, '.', me.domain_name) as fqdn,
@@ -220,7 +227,7 @@ WHERE cdn.name = $1`
 	return monitors, caches, routers, nil
 }
 
-func getCachegroups(db *sql.DB, cdn string) ([]Cachegroup, error) {
+func getCachegroups(db *sqlx.DB, cdn string) ([]Cachegroup, error) {
 	query := `
 SELECT name, latitude, longitude
 FROM cachegroup
@@ -254,7 +261,7 @@ WHERE id IN
 	return cachegroups, nil
 }
 
-func getProfiles(db *sql.DB, caches []Cache, routers []Router) ([]Profile, error) {
+func getProfiles(db *sqlx.DB, caches []Cache, routers []Router) ([]Profile, error) {
 	cacheProfileTypes := map[string]string{}
 	profiles := map[string]Profile{}
 	profileNames := []string{}
@@ -320,7 +327,7 @@ WHERE pr.config_file = $2;
 	return profilesArr, nil
 }
 
-func getDeliveryServices(db *sql.DB, routers []Router) ([]DeliveryService, error) {
+func getDeliveryServices(db *sqlx.DB, routers []Router) ([]DeliveryService, error) {
 	profileNames := []string{}
 	for _, router := range routers {
 		profileNames = append(profileNames, router.Profile)
@@ -358,7 +365,7 @@ AND ds.active = true
 	return dses, nil
 }
 
-func getConfig(db *sql.DB) (map[string]interface{}, error) {
+func getConfig(db *sqlx.DB) (map[string]interface{}, error) {
 	// TODO remove 'like' in query? Slow?
 	query := fmt.Sprintf(`
 SELECT pr.name, pr.value
@@ -391,7 +398,7 @@ WHERE pr.config_file = '%s'
 	return cfg, nil
 }
 
-func getMonitoringJson(cdnName string, db *sql.DB) (*MonitoringResponse, error) {
+func getMonitoringJson(cdnName string, db *sqlx.DB) (*MonitoringResponse, error) {
 	monitors, caches, routers, err := getMonitoringServers(db, cdnName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting servers: %v", err)

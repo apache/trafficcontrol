@@ -20,7 +20,7 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a ng-click="navigateToPath('/configure/servers')">Servers</a></li>
+            <li><a ng-click="navigateToPath('/servers')">Servers</a></li>
             <li class="active">{{serverName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
@@ -39,8 +39,8 @@ under the License.
                     <li class="divider"></li>
                     <li><a ng-click="confirmStatusUpdate()">Update Status</a></li>
                     <li class="divider"></li>
-                    <li><a ng-click="viewDeliveryServices()">View Delivery Services</a></li>
-                    <li><a ng-click="viewConfig()">View Config Files</a></li>
+                    <li><a ng-show="isEdge(server)" ng-click="viewDeliveryServices()">View Delivery Services</a></li>
+                    <li><a ng-click="viewConfigFiles()">View Config Files</a></li>
                 </ul>
             </div>
         </div>

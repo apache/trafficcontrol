@@ -20,21 +20,34 @@ package main
  */
 
 import (
+	"context"
 	"database/sql"
-
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"errors"
+	"fmt"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/jmoiron/sqlx"
 )
 
+// PrivLevelInvalid - The Default Priv level
 const PrivLevelInvalid = -1
+
+// PrivLevelReadOnly - The user cannot do any API updates
 const PrivLevelReadOnly = 10
+
+// PrivLevelOperations - The user has minimal privileges
 const PrivLevelOperations = 20
+
+// PrivLevelAdmin - The user has full privileges
 const PrivLevelAdmin = 30
 
-func preparePrivLevelStmt(db *sql.DB) (*sql.Stmt, error) {
-	return db.Prepare("select r.priv_level from tm_user as u join role as r on u.role = r.id where u.username = $1")
+const PrivLevelKey = "privLevel"
+const UserNameKey = "userName"
+
+func preparePrivLevelStmt(db *sqlx.DB) (*sql.Stmt, error) {
+	return db.Prepare("SELECT r.priv_level FROM tm_user AS u JOIN role AS r ON u.role = r.id WHERE u.username = $1")
 }
 
-// privLevel returns the privilege level of the given user, or PrivLevelInvalid if the user doesn't exist.
+// PrivLevel - returns the privilege level of the given user, or PrivLevelInvalid if the user doesn't exist.
 func PrivLevel(privLevelStmt *sql.Stmt, user string) int {
 	var privLevel int
 	err := privLevelStmt.QueryRow(user).Scan(&privLevel)
@@ -48,4 +61,30 @@ func PrivLevel(privLevelStmt *sql.Stmt, user string) int {
 	default:
 		return privLevel
 	}
+}
+
+func getPrivLevel(ctx context.Context) (int, error) {
+	val := ctx.Value(PrivLevelKey)
+	if val != nil {
+		switch v := val.(type) {
+		case int:
+			return v, nil
+		default:
+			return PrivLevelInvalid, fmt.Errorf("privLevel found with bad type: %T\n", v)
+		}
+	}
+	return PrivLevelInvalid, errors.New("no privLevel found in Context")
+}
+
+func getUserName(ctx context.Context) (string, error) {
+	val := ctx.Value(UserNameKey)
+	if val != nil {
+		switch v := val.(type) {
+		case string:
+			return v, nil
+		default:
+			return "-", fmt.Errorf("userName found with bad type: %T\n", v)
+		}
+	}
+	return "-", errors.New("No userName found in Context")
 }

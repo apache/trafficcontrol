@@ -197,7 +197,8 @@ sub ds_data {
 		my $dscp                        = $row->dscp;
 		my $re_type                     = $row->re_type;
 		my $ds_type                     = $row->ds_type;
-		my $signed                      = $row->signed;
+		my $signed                      = ( $row->signing_algorithm eq "url_sig" );
+		my $signing_algorithm           = $row->signing_algorithm;
 		my $qstring_ignore              = $row->qstring_ignore;
 		my $ds_xml_id                   = $row->xml_id;
 		my $ds_domain                   = $row->domain_name;
@@ -219,7 +220,7 @@ sub ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname = $ds_type =~ /^DNS/ ? "edge" : "ccr";
+				my $hname = $ds_type =~ /^DNS/ ? $row->routing_name : "ccr";
 				my $portstr = "";
 				if ( $hname eq "ccr" && $server->tcp_port > 0 && $server->tcp_port != 80 ) {
 					$portstr = ":" . $server->tcp_port;
@@ -267,6 +268,7 @@ sub ds_data {
 		$dsinfo->{dslist}->[$j]->{"type"}                        = $ds_type;
 		$dsinfo->{dslist}->[$j]->{"domain"}                      = $ds_domain;
 		$dsinfo->{dslist}->[$j]->{"signed"}                      = $signed;
+		$dsinfo->{dslist}->[$j]->{"signing_algorithm"}           = $signing_algorithm;
 		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
 		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
 		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
@@ -1028,8 +1030,11 @@ sub build_remap_line {
 	if ( defined( $remap->{edge_header_rewrite} ) ) {
 		$text .= " \@plugin=header_rewrite.so \@pparam=" . $remap->{hdr_rw_file};
 	}
-	if ( $remap->{signed} == 1 ) {
+	if ( $remap->{signing_algorithm} eq "url_sig" ) {
 		$text .= " \@plugin=url_sig.so \@pparam=url_sig_" . $remap->{ds_xml_id} . ".config";
+	}
+	elsif ( $remap->{signing_algorithm} eq "uri_signing" ) {
+		$text .= " \@plugin=uri_signing.so \@pparam=uri_signing_" . $remap->{ds_xml_id} . ".config";
 	}
 	if ( $remap->{qstring_ignore} == 2 ) {
 		my $dqs_file = "drop_qstring.config";
@@ -1122,7 +1127,7 @@ sub parent_dot_config {
 			my $max_simple_retries                 = $ds->{'param'}->{'parent.config'}->{'mso.max_simple_retries'} || 1;
 			my $max_unavailable_server_retries     = $ds->{'param'}->{'parent.config'}->{'mso.max_unavailable_server_retries'} || 1;
 
-			my $qsh            = $ds->{'param'}->{'parent.config'}->{'mso.qstring_handling'};
+			my $qsh            = $ds->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
 			my $parent_qstring = "ignore";                                                      # default is ignore, unless for alg consistent_hash
 			if ( !defined($qsh) && $mso_algorithm eq 'consistent_hash' && $ds->{qstring_ignore} == 0 ) {
 				$parent_qstring = 'consider';

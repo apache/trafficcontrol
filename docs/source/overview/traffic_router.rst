@@ -61,7 +61,7 @@ Traffic routing options are often configured at the Delivery Service level.
 
 |
 
-Traffic Router is inserted into the HTTP retrieval process by making it DNS authoritative for the domain of the CDN delivery service. In the example of the reverse proxy, the client was given the ``http://www-origin-cache.cdn.com/foo/bar/fun.html`` url. In a Traffic Control CDN, URLs start with either ``tr.`` or ``edge.``, for HTTP or DNS content routing respectively.  These names are configurable via properties files within the Traffic Router installation.
+Traffic Router is inserted into the HTTP retrieval process by making it DNS authoritative for the domain of the CDN delivery service. In the example of the reverse proxy, the client was given the ``http://www-origin-cache.cdn.com/foo/bar/fun.html`` url. In a Traffic Control CDN, URLs start with a routing name, which is configurable per-Delivery Service, e.g. ``http://foo.mydeliveryservice.cdn.com/fun/example.html`` with the chosen routing name ``foo``.
 
 |
 
@@ -72,7 +72,7 @@ Traffic Router is inserted into the HTTP retrieval process by making it DNS auth
 
 |arrow| DNS Content Routing
 ---------------------------
-  For a DNS delivery service the client receives a URL with a hostname beginning with ``edge.`` (e.g. http://edge.dsname.cdn.com/foo/bar/fun.html). When the LDNS server is resolving this ``edge.dsname.cdn.com`` hostname to an IP address, it ends at Traffic Router because it is the authoritative DNS server for ``cdn.com`` and the domains below it, and subsequently responds with a list of IP addresses from the eligible caches based on the location of the LDNS server. When responding, Traffic Router does not know the actual client IP address or the path that the client is going to request. The decision on what cache IP address (or list of cache IP addresses) to return is solely based on the location of the LDNS server and the health of the caches. The client then connects to port 80 on the cache, and sends the ``Host: edge.dsname.cdn.com`` header. The configuration of the cache includes the remap rule ``http://edge.dsname.cdn.com http://origin.dsname.com`` to map that edge name to an origin hostname.
+  For a DNS delivery service the client might receive a URL such as ``http://foo.dsname.cdn.com/fun/example.html``. When the LDNS server is resolving this ``foo.dsname.cdn.com`` hostname to an IP address, it ends at Traffic Router because it is the authoritative DNS server for ``cdn.com`` and the domains below it, and subsequently responds with a list of IP addresses from the eligible caches based on the location of the LDNS server. When responding, Traffic Router does not know the actual client IP address or the path that the client is going to request. The decision on what cache IP address (or list of cache IP addresses) to return is solely based on the location of the LDNS server and the health of the caches. The client then connects to port 80 on the cache, and sends the ``Host: foo.dsname.cdn.com`` header. The configuration of the cache includes the remap rule ``http://foo.dsname.cdn.com http://origin.dsname.com`` to map the routed name to an origin hostname.
 
 |
 
@@ -80,16 +80,16 @@ Traffic Router is inserted into the HTTP retrieval process by making it DNS auth
 
 |arrow| HTTP Content Routing
 ----------------------------
-  For an HTTP delivery service the client receives a URL with a hostname beginning with ``tr.`` (e.g. http://tr.dsname.cdn.com/foo/bar/fun.html), the LDNS server resolves this ``tr.dsname.cdn.com`` to an IP address, but in this case Traffic Router returns its own IP address. The client opens a connection to port 80 on the Traffic Router's IP address, and sends: :: 
+  For an HTTP delivery service the client might receive a URL such as ``http://bar.dsname.cdn.com/fun/example.html``. The LDNS server resolves this ``bar.dsname.cdn.com`` to an IP address, but in this case Traffic Router returns its own IP address. The client opens a connection to port 80 on the Traffic Router's IP address, and sends: ::
 
-    GET /foo/bar/fun.html HTTP/1.1
-    Host: tr.dsname.cdn.com
+    GET /fun/example.html HTTP/1.1
+    Host: bar.dsname.cdn.com
 
   Traffic Router uses an HTTP 302 to redirect the client to the best cache. For example: ::
 
     HTTP/1.1 302 Moved Temporarily
     Server: Apache-Coyote/1.1
-    Location: http://atsec-nyc-02.dsname.cdn.com/foo/bar/fun.html
+    Location: http://atsec-nyc-02.dsname.cdn.com/fun/example.html
     Content-Length: 0
     Date: Tue, 13 Jan 2015 20:01:41 GMT
 

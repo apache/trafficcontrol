@@ -55,36 +55,42 @@ Built: %(date) by %{getenv: USER}
     # update version referenced in the source
     perl -pi.bak -e 's/__VERSION__/%{version}-%{release}/' app/lib/UI/Utils.pm
 
+    export PATH=$PATH:/usr/local/go/bin
     export GOPATH=$(pwd)
+
+    echo "PATH: $PATH"
+    echo "GOPATH: $GOPATH"
+    go version
+    go env
+    
     # Create build area with proper gopath structure
     mkdir -p src pkg bin || { echo "Could not create directories in $(pwd): $!"; exit 1; }
 
-    # build tocookie (dependencies within traffic_control will fail to `go get` unless prebuilt)
-    godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie
-    ( mkdir -p "$godir" && \
-      cd "$godir" && \
-      cp -r "$TC_DIR"/traffic_ops/tocookie/* . && \
-      echo "go getting tocookie at $(pwd)" && \
-      go get -v \
-    ) || { echo "Could not build go tocookie at $(pwd): $!"; exit 1; }
 
-    # build log (dependencies within traffic_control will fail to `go get` unless prebuilt)
-    godir=src/github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log
-    ( mkdir -p "$godir" && \
-      cd "$godir" && \
-      cp -r "$TC_DIR"/traffic_monitor_golang/common/log/* . && \
-      echo "go getting log at $(pwd)" && \
-      go get -v \
-    ) || { echo "Could not build go log at $(pwd): $!"; exit 1; }
 
-    # build TO client (dependencies within traffic_control will fail to `go get` unless prebuilt)
-    godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/client
-    ( mkdir -p "$godir" && \
-      cd "$godir" && \
-      cp -r "$TC_DIR"/traffic_ops/client/* . && \
-      echo "go getting log at $(pwd)" && \
-      go get -v \
-    ) || { echo "Could not build go Traffic Ops client at $(pwd): $!"; exit 1; }
+    # build all internal go dependencies (expects package being built as argument)
+    build_dependencies () {
+       IFS=$'\n'
+       array=($(go list -f '{{ join .Deps "\n" }}' | grep incubator | grep -v $1))
+       prefix=github.com/apache/incubator-trafficcontrol
+       for (( i=0; i<${#array[@]}; i++ )); do
+           curPkg=${array[i]};
+           curPkgShort=${curPkg#$prefix};
+           echo "checking $curPkg";
+           godir=$GOPATH/src/$curPkg;
+           if [ ! -d "$godir" ]; then
+             ( echo "building $curPkg" && \
+               mkdir -p "$godir" && \
+               cd "$godir" && \
+               cp -r "$TC_DIR$curPkgShort"/* . && \
+               build_dependencies "$curPkgShort" && \
+               go get -v &&\
+               echo "go building $curPkgShort at $(pwd)" && \
+               go build \
+             ) || { echo "Could not build go $curPkgShort at $(pwd): $!"; exit 1; };
+           fi
+       done
+    }
 
     # build traffic_ops_golang binary
     godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
@@ -92,8 +98,10 @@ Built: %(date) by %{getenv: USER}
     ( mkdir -p "$godir" && \
       cd "$godir" && \
       cp -r "$TC_DIR"/traffic_ops/traffic_ops_golang/* . && \
-      echo "go getting at $(pwd)" && \
-      go get -d -v && \
+      build_dependencies traffic_ops_golang  && \
+      #with proper vendoring (as we have currently) go get is unneeded. leaving for comparison to traffic_monitor_golang
+      #echo "go getting at $(pwd)" && \
+      #go get -d -v && \
       echo "go building at $(pwd)" && \
       go build -ldflags "-B 0x`git rev-parse HEAD`" \
     ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
@@ -126,7 +134,6 @@ Built: %(date) by %{getenv: USER}
 
     src=src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
     %__cp -p  "$src"/traffic_ops_golang        "${RPM_BUILD_ROOT}"/opt/traffic_ops/app/bin/traffic_ops_golang
-    %__cp -p "$src"/traffic_ops_golang.config  "${RPM_BUILD_ROOT}"/opt/traffic_ops/app/conf/traffic_ops_golang.config
 %pre
     /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupadd -r %{TRAFFIC_OPS_GROUP}
     /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/useradd -r -d %{PACKAGEDIR} -s /sbin/nologin %{TRAFFIC_OPS_USER} -g %{TRAFFIC_OPS_GROUP}
@@ -140,7 +147,7 @@ Built: %(date) by %{getenv: USER}
 
     # upgrade
     if [ "$1" == "2" ]; then
-	service traffic_ops stop
+	systemctl stop traffic_ops
     fi
 
 %post
@@ -180,11 +187,11 @@ Built: %(date) by %{getenv: USER}
     # upgrade
     if [ "$1" == "2" ]; then
         echo -e "\n\nTo complete the update, perform the following steps:\n"
-        echo -e "1. Run 'PERL5LIB=/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5 ./db/admin.pl --env production upgrade'\n"
+        echo -e "1. If any *.rpmnew files are in /opt/traffic_ops/...,  reconcile with any local changes\n"
+        echo -e "2. Run 'PERL5LIB=/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5 ./db/admin.pl --env production upgrade'\n"
         echo -e "   from the /opt/traffic_ops/app directory.\n"
-        echo -e "2. Run '/opt/traffic_ops/install/bin/postinstall' from the root home directory.\n\n"
-        echo -e "To start Traffic Ops:  service traffic_ops start\n";
-        echo -e "To stop Traffic Ops:   service traffic_ops stop\n\n";
+        echo -e "To start Traffic Ops:  systemctl start traffic_ops\n";
+        echo -e "To stop Traffic Ops:   systemctl stop traffic_ops\n\n";
     fi
     /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{PACKAGEDIR}
     /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{TRAFFIC_OPS_LOG_DIR}
@@ -194,7 +201,7 @@ Built: %(date) by %{getenv: USER}
 
 if [ "$1" = "0" ]; then
     # stop service before starting the uninstall
-    service traffic_ops stop
+    systemctl stop traffic_ops
 fi
 
 %postun

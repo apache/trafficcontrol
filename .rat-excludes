@@ -55,3 +55,4 @@ influxdb(?:                          MIT. Properly documented in LICENSE ){0}
 errors(?:                            BSD 2-clause. Properly documented in LICENTS ){0}
 net(?:                               Go BSD. Properly documented in LICENSE ){0}
 go-sqlmock.v1(?:                     BSD 3-clause. Properly documented in LICENSE ){0}
+sqlx(?:                              MIT. Properly docuemented in LICENSE ){0}

@@ -31,6 +31,7 @@ public class DeliveryServiceTest {
     public void itHandlesLackOfRequestHeaderNamesInJSON() throws Exception {
         JSONObject jsonConfiguration = new JSONObject();
         jsonConfiguration.put("coverageZoneOnly", false);
+        jsonConfiguration.put("routingName", "edge");
         DeliveryService deliveryService = new DeliveryService("a-delivery-service", jsonConfiguration);
         assertThat(deliveryService.getRequestHeaders().size(), equalTo(0));
     }
@@ -39,6 +40,7 @@ public class DeliveryServiceTest {
     public void itConfiguresRequestHeadersFromJSON() throws Exception {
         JSONObject jsonConfiguration = new JSONObject();
         jsonConfiguration.put("coverageZoneOnly", false);
+        jsonConfiguration.put("routingName", "edge");
 
         Set<String> requestHeaderNames = new HashSet<String>();
         requestHeaderNames.add("Cache-Control");

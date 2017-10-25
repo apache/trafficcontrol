@@ -32,7 +32,7 @@ var FormNewRegionController = function(region, $scope, $controller, locationUtil
     $scope.save = function(region) {
         regionService.createRegion(region).
             then(function() {
-                locationUtils.navigateToPath('/admin/regions');
+                locationUtils.navigateToPath('/regions');
             });
     };
 

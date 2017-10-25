@@ -52,7 +52,7 @@ sub edit {
 	$self->stash_profile_type_selector($data->type);
 
 	&stash_role($self);
-	$self->stash( profile => $data, id => $data->id, fbox_layout => 1 );
+	$self->stash( profile => $data, id => $data->id, routing_disabled => $data->routing_disabled, fbox_layout => 1 );
 	return $self->render('profile/edit');
 }
 
@@ -97,6 +97,7 @@ sub readprofile {
 				"type"         => $row->type,
 				"cdn"          => defined($row->cdn) ? $row->cdn->name : undef,
 				"description"  => $row->description,
+				"routing_disabled" => $row->routing_disabled,
 				"last_updated" => $row->last_updated,
 			}
 		);
@@ -143,6 +144,7 @@ sub check_profile_input {
 	my $mode        = shift;
 	my $name        = $self->param('profile.name');
 	my $description = $self->param('profile.description');
+	my $routing_disabled = $self->param('profile.routing_disabled');
 
 	#Check required fields
 	$self->field('profile.name')->is_required;
@@ -215,6 +217,7 @@ sub update {
 	my $description = $self->param('profile.description');
 	my $cdn         = $self->param('profile.cdn');
 	my $type        = $self->param('profile.type');
+	my $routing_disabled = $self->param('profile.routing_disabled');
 
 	if ( $self->check_profile_input("edit") ) {
 
@@ -223,6 +226,7 @@ sub update {
 		$update->description($description);
 		$update->cdn($cdn);
 		$update->type($type);
+		$update->routing_disabled($routing_disabled);
 		$update->update();
 
 		# if the update has failed, we don't even get here, we go to the exception page.
@@ -252,6 +256,7 @@ sub create {
 	my $p_desc = $self->param('profile.description');
 	my $p_cdn         = $self->param('profile.cdn');
 	my $p_type        = $self->param('profile.type');
+	my $routing_disabled = $self->param('profile.routing_disabled');
 
 	print ">>> cdn: $p_cdn t: $p_type \n";
 	if ( !&is_admin($self) ) {
@@ -265,6 +270,7 @@ sub create {
 				description => $p_desc,
 				cdn         => $p_cdn,
 				type        => $p_type,
+				routing_disabled => $routing_disabled,
 			}
 		);
 		$insert->insert();

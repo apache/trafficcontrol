@@ -789,8 +789,9 @@ sub totals {
 }
 
 sub status_count {
-	my $self = shift;
-	my $response = {};
+	my $self		= shift;
+	my $type		= $self->param('type');
+	my $response		= {};
 
 	my $server_count = $self->db->resultset('Server')->search()->count();
 	if ($server_count == 0) {
@@ -800,10 +801,14 @@ sub status_count {
 			$response->{ $status->name } = 0;
 		}
 	} else {
+		my %criteria;
+		if ( defined $type ) {
+			%criteria = ( 'type.name' => { '~' => $type } );
+		}
 		my $rs = $self->db->resultset('Server')->search(
-			undef,
+			\%criteria,
 			{
-				join     => [qw/ status /],
+				join     => [qw/ status type /],
 				select   => [ 'status.name', { count => 'me.id' } ],
 				as       => [qw/ status_name server_count /],
 				group_by => [qw/ status.id /]

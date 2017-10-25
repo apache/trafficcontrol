@@ -1,0 +1,6 @@
+[submodule "riak_pb"]
+	path = riak_pb
+	url = git://github.com/basho/riak_pb.git
+[submodule "tools"]
+	path = tools
+	url = git://github.com/basho/riak-client-tools.git

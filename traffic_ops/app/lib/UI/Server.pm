@@ -1035,7 +1035,7 @@ sub postupdatequeue {
 			$message = $host;
 		}
 		$update->update( { upd_pending => $setqueue } );
-		&log( $self, "Flip Update bit ($wording) for " . $message, "OPER" );
+		&log( $self, "Flip Update bit ($wording) for " . $message, "UICHANGE" );
 	}
 	elsif ( defined($cdn) && defined($cachegroup) ) {
 		my @profiles;
@@ -1071,7 +1071,7 @@ sub postupdatequeue {
 		if ( $update->count() > 0 ) {
 			$update->update( { upd_pending => $setqueue } );
 			$self->app->log->debug("Flip Update bit ($wording) for servers in CDN: $cdn, Cachegroup: $cachegroup");
-			&log( $self, "Flip Update bit ($wording) for servers in CDN:" . $cdn . " cachegroup:" . $cachegroup, "OPER" );
+			&log( $self, "Flip Update bit ($wording) for servers in CDN:" . $cdn . " cachegroup:" . $cachegroup, "UICHANGE" );
 		}
 		else {
 			$self->app->log->debug("No Queue Updates for servers in CDN: $cdn, Cachegroup: $cachegroup");

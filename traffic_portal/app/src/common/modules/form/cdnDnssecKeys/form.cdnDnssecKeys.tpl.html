@@ -1,0 +1,84 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/cdns')">CDNs</a></li>
+            <li><a ng-click="navigateToPath('/cdns/' + cdn.id)">{{cdn.name}}</a></li>
+            <li class="active">DNSSEC Keys</li>
+        </ol>
+        <div class="pull-right">
+            <button class="btn btn-primary" title="Generate DNSSEC Keys" ng-click="confirmGenerate()">{{generateLabel()}}</button>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <form name="dnssecKeysForm" class="form-horizontal form-label-left" novalidate>
+            <fieldset>
+                <legend>DNSSEC Key Information</legend>
+                <div class="form-group">
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12">CDN</label>
+                    <div class="col-md-10 col-sm-10 col-xs-12">
+                        <input name="cdnName" type="text" class="form-control" ng-model="cdn.name" readonly autofocus>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12">Active</label>
+                    <div class="col-md-10 col-sm-10 col-xs-12">
+                        <input name="dnssecEnabled" type="text" class="form-control" ng-model="cdn.dnssecEnabled" readonly autofocus>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12">TTL</label>
+                    <div class="col-md-10 col-sm-10 col-xs-12">
+                        <input name="ttl" type="text" class="form-control" ng-model="ksk_new.ttl" readonly autofocus>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12">KSK Expiration (UTC)</label>
+                    <div class="col-md-10 col-sm-10 col-xs-12">
+                        <input name="expirationDate" type="text" class="form-control" value="{{dateFormat(ksk_new.expirationDate * 1000, 'UTC: yyyy-mm-dd HH:MM:ss')}}" readonly autofocus>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>DS Record Information</legend>
+                <div class="form-group">
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12">Algorithm</label>
+                    <div class="col-md-10 col-sm-10 col-xs-12">
+                        <input name="algorithm" type="text" class="form-control" ng-model="ksk_new.dsRecord.algorithm" readonly autofocus>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12">Digest Type</label>
+                    <div class="col-md-10 col-sm-10 col-xs-12">
+                        <input name="digestType" type="text" class="form-control" ng-model="ksk_new.dsRecord.digestType" readonly autofocus>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12">Digest</label>
+                    <div class="col-md-10 col-sm-10 col-xs-12">
+                        <input name="digest" type="text" class="form-control" ng-model="ksk_new.dsRecord.digest" readonly autofocus>
+                    </div>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</div>

@@ -15,60 +15,37 @@
 # limitations under the License.
 #
 
-#----------------------------------------
 function importFunctions() {
-	echo "Verifying the build configuration environment."
 	local script=$(readlink -f "$0")
 	local scriptdir=$(dirname "$script")
 	export TM_DIR=$(dirname "$scriptdir")
 	export TC_DIR=$(dirname "$TM_DIR")
 	functions_sh="$TC_DIR/build/functions.sh"
 	if [[ ! -r $functions_sh ]]; then
-		echo "Error: Can't find $functions_sh"
+		echo "error: can't find $functions_sh"
 		exit 1
 	fi
 	. "$functions_sh"
 }
 
 #----------------------------------------
-function buildRpmTrafficMonitor () {
-	echo "Building the rpm."
-
-	cd "$TM_DIR" || { echo "Could not cd to $TM_DIR: $?"; exit 1; }
-	export TRAFFIC_CONTROL_VERSION="$TC_VERSION"
-	export GIT_REV_COUNT=$(getRevCount)
-	mvn clean package || { echo "RPM BUILD FAILED: $?"; exit 1; }
-
-	local rpm=$(find -name \*.rpm)
-	if [[ -z $rpm ]]; then
-		echo "Could not find rpm file $RPM in $(pwd)"
-		exit 1;
-	fi
-	echo
-	echo "========================================================================================"
-	echo "RPM BUILD SUCCEEDED, See $DIST/$RPM for the newly built rpm."
-	echo "========================================================================================"
-	echo
-	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
-
-	cp "$rpm" "$DIST/." || { echo "Could not copy $RPM to $DIST: $?"; exit 1; }
-}
-
-# ---------------------------------------
 function initBuildArea() {
 	echo "Initializing the build area."
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
 
-	tm_dest=$(createSourceDir traffic_monitor)
+	# tar/gzip the source
+	local tm_dest=$(createSourceDir traffic_monitor)
+	cd "$TM_DIR" || \
+		 { echo "Could not cd to $TM_DIR: $?"; exit 1; }
+	rsync -av ./ "$tm_dest"/ || \
+		 { echo "Could not copy to $tm_dest: $?"; exit 1; }
+	cp "$TM_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
+		 { echo "Could not copy spec files: $?"; exit 1; }
 
-	export TRAFFIC_CONTROL_VERSION="$TC_VERSION"
-	local mvn_cmd="mvn versions:set -DnewVersion=$TRAFFIC_CONTROL_VERSION"
-	echo $mvn_cmd
-	(cd "$TM_DIR"; $mvn_cmd)
-	cp -r "$TM_DIR"/{build,etc,src} "$tm_dest"/. || { echo "Could not copy to $tm_dest: $?"; exit 1; }
-	cp  "$TM_DIR"/pom.xml "$tm_dest" || { echo "Could not copy to $tm_dest: $?"; exit 1; }
+	cp -r "$TM_DIR"/ "$tm_dest" || { echo "Could not copy $TM_DIR to $tm_dest: $?"; exit 1; }
 
-	tar -czf "$tm_dest.tgz" -C "$RPMBUILD"/SOURCES $(basename "$tm_dest") || { echo "Could not create tar archive $tm_dest.tgz: $?"; exit 1; }
+	tar -czvf "$tm_dest".tgz -C "$RPMBUILD"/SOURCES $(basename $tm_dest) || { echo "Could not create tar archive $tm_dest.tgz: $?"; exit 1; }
+	cp "$TM_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || { echo "Could not copy spec files: $?"; exit 1; }
 
 	echo "The build area has been initialized."
 }
@@ -76,6 +53,6 @@ function initBuildArea() {
 # ---------------------------------------
 
 importFunctions
-checkEnvironment
+checkEnvironment go
 initBuildArea
-buildRpmTrafficMonitor
+buildRpm traffic_monitor

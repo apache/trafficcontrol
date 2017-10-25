@@ -20,8 +20,8 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a ng-click="navigateToPath('/admin/users')">Users</a></li>
-            <li><a ng-click="navigateToPath('/admin/users/' + user.id)">{{::user.username}}</a></li>
+            <li><a ng-click="navigateToPath('/users')">Users</a></li>
+            <li><a ng-click="navigateToPath('/users/' + user.id)">{{::user.username}}</a></li>
             <li class="active">Delivery Services</li>
         </ol>
         <div class="pull-right">
@@ -35,20 +35,36 @@ under the License.
         <table id="deliveryServicesTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>tenant</th>
-                <th>xmlId</th>
-                <th>orgServerFqdn</th>
-                <th>cdn</th>
+                <th>XML ID</th>
+                <th>Tenant</th>
+                <th>Origin Server FQDN</th>
+                <th>Active</th>
+                <th>Type</th>
+                <th>Protocol</th>
+                <th>CDN</th>
+                <th>IPv6 Enabled</th>
+                <th>DSCP</th>
+                <th>Signing Algorithm</th>
+                <th>Qstring Handling</th>
+                <th>Last Updated</th>
                 <th ng-if="useTenancy == '0'"></th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="deliveryService in ::userDeliveryServices">
-                <td>{{::deliveryService.tenant}}</td>
-                <td>{{::deliveryService.xmlId}}</td>
-                <td>{{::deliveryService.orgServerFqdn}}</td>
-                <td>{{::deliveryService.cdnName}}</td>
-                <td ng-if="useTenancy == '0'"><button type="button" class="btn btn-link" title="Unlink Delivery Service from User" ng-click="removeDS(deliveryService.id)"><i class="fa fa-chain-broken"></i></button></td>
+            <tr ng-repeat="ds in ::userDeliveryServices">
+                <td>{{::ds.xmlId}}</td>
+                <td>{{::ds.tenant}}</td>
+                <td>{{::ds.orgServerFqdn}}</td>
+                <td>{{::ds.active}}</td>
+                <td>{{::ds.type}}</td>
+                <td>{{::protocol(ds)}}</td>
+                <td>{{::ds.cdnName}}</td>
+                <td>{{::ds.ipv6RoutingEnabled}}</td>
+                <td>{{::ds.dscp}}</td>
+                <td>{{::ds.signingAlgorithm}}</td>
+                <td>{{::qstring(ds)}}</td>
+                <td>{{::getRelativeTime(ds.lastUpdated)}}</td>
+                <td ng-if="useTenancy == '0'"><button type="button" class="btn btn-link" title="Unlink Delivery Service from User" ng-click="removeDS(ds.id)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
         </table>

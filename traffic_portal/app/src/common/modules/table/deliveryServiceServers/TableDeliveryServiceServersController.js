@@ -19,12 +19,8 @@
 
 var TableDeliveryServiceServersController = function(deliveryService, servers, $scope, $state, $uibModal, locationUtils, serverUtils, deliveryServiceService) {
 
-	$scope.deliveryService = deliveryService;
-
-	$scope.servers = servers;
-
-	$scope.removeServer = function(dsId, serverId) {
-		deliveryServiceService.deleteDeliveryServiceServer(dsId, serverId)
+	var removeServer = function(serverId) {
+		deliveryServiceService.deleteDeliveryServiceServer($scope.deliveryService.id, serverId)
 			.then(
 				function() {
 					$scope.refresh();
@@ -32,20 +28,24 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 			);
 	};
 
+	$scope.deliveryService = deliveryService;
+
+	$scope.servers = servers;
+
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
 	};
 
 	$scope.selectServers = function() {
 		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/table/deliveryServiceServers/table.dsServersUnassigned.tpl.html',
-			controller: 'TableDSServersUnassignedController',
+			templateUrl: 'common/modules/table/deliveryServiceServers/table.assignDSServers.tpl.html',
+			controller: 'TableAssignDSServersController',
 			size: 'lg',
 			resolve: {
 				deliveryService: function() {
 					return deliveryService;
 				},
-				eligibleServers: function(serverService) {
+				servers: function(serverService) {
 					return serverService.getEligibleDeliveryServiceServers(deliveryService.id);
 				},
 				assignedServers: function() {
@@ -60,6 +60,28 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 						$scope.refresh();
 					}
 				);
+		}, function () {
+			// do nothing
+		});
+	};
+
+	$scope.confirmRemoveServer = function(server) {
+		var params = {
+			title: 'Remove Server from Delivery Service?',
+			message: 'Are you sure you want to remove ' + server.hostName + ' from this delivery service?'
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			removeServer(server.id);
 		}, function () {
 			// do nothing
 		});

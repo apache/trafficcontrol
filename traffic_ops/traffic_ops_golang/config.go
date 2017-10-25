@@ -25,86 +25,164 @@ import (
 	"io/ioutil"
 	"net/url"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor_golang/common/log"
+	"crypto/tls"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/basho/riak-go-client"
 )
 
+// Config reflects the structure of the cdn.conf file
 type Config struct {
-	HTTPPort           string   `json:"port"`
-	DBUser             string   `json:"db_user"`
-	DBPass             string   `json:"db_pass"`
-	DBServer           string   `json:"db_server"`
-	DBDB               string   `json:"db_name"`
-	DBSSL              bool     `json:"db_ssl"`
-	TOSecret           string   `json:"to_secret"`
-	TOURLStr           string   `json:"to_url"`
-	TOURL              *url.URL `json:"-"`
-	Insecure           bool     `json:"insecure"`
-	CertPath           string   `json:"cert_path"`
-	KeyPath            string   `json:"key_path"`
-	MaxDBConnections   int      `json:"max_db_connections"`
-	LogLocationError   string   `json:"log_location_error"`
-	LogLocationWarning string   `json:"log_location_warning"`
-	LogLocationInfo    string   `json:"log_location_info"`
-	LogLocationDebug   string   `json:"log_location_debug"`
-	LogLocationEvent   string   `json:"log_location_event"`
+	URL                    *url.URL `json:"-"`
+	CertPath               string   `json:"-"`
+	KeyPath                string   `json:"-"`
+	ConfigHypnotoad        `json:"hypnotoad"`
+	ConfigTrafficOpsGolang `json:"traffic_ops_golang"`
+	DB                     ConfigDatabase `json:"db"`
+	Secrets                []string       `json:"secrets"`
+	// NOTE: don't care about any other fields for now..
+	RiakAuthOptions *riak.AuthOptions
 }
 
-func (c Config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
-func (c Config) WarningLog() log.LogLocation { return log.LogLocation(c.LogLocationWarning) }
-func (c Config) InfoLog() log.LogLocation    { return log.LogLocation(c.LogLocationInfo) }
-func (c Config) DebugLog() log.LogLocation   { return log.LogLocation(c.LogLocationDebug) }
-func (c Config) EventLog() log.LogLocation   { return log.LogLocation(c.LogLocationEvent) }
+// ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
+type ConfigHypnotoad struct {
+	Listen []string `json:"listen"`
+	// NOTE: don't care about any other fields for now..
+}
 
-func LoadConfig(fileName string) (Config, error) {
-	if fileName == "" {
-		return Config{}, fmt.Errorf("no filename")
-	}
+// ConfigTrafficOpsGolang carries settings specific to traffic_ops_golang server
+type ConfigTrafficOpsGolang struct {
+	Port                   string         `json:"port"`
+	ProxyTimeout           int            `json:"proxy_timeout"`
+	ProxyKeepAlive         int            `json:"proxy_keep_alive"`
+	ProxyTLSTimeout        int            `json:"proxy_tls_timeout"`
+	ProxyReadHeaderTimeout int            `json:"proxy_read_header_timeout"`
+	ReadTimeout            int            `json:"read_timeout"`
+	ReadHeaderTimeout      int            `json:"read_header_timeout"`
+	WriteTimeout           int            `json:"write_timeout"`
+	IdleTimeout            int            `json:"idle_timeout"`
+	LogLocationError       string         `json:"log_location_error"`
+	LogLocationWarning     string         `json:"log_location_warning"`
+	LogLocationInfo        string         `json:"log_location_info"`
+	LogLocationDebug       string         `json:"log_location_debug"`
+	LogLocationEvent       string         `json:"log_location_event"`
+	Insecure               bool           `json:"insecure"`
+	MaxDBConnections       int            `json:"max_db_connections"`
+	BackendMaxConnections  map[string]int `json:"backend_max_connections"`
+}
 
-	configBytes, err := ioutil.ReadFile(fileName)
+// ConfigDatabase reflects the structure of the database.conf file
+type ConfigDatabase struct {
+	Description string `json:"description"`
+	DBName      string `json:"dbname"`
+	Hostname    string `json:"hostname"`
+	User        string `json:"user"`
+	Password    string `json:"password"`
+	Port        string `json:"port"`
+	Type        string `json:"type"`
+	SSL         bool   `json:"ssl"`
+}
+
+// ErrorLog - critical messages
+func (c Config) ErrorLog() log.LogLocation {
+	return log.LogLocation(c.LogLocationError)
+}
+
+// WarningLog - warning messages
+func (c Config) WarningLog() log.LogLocation {
+	return log.LogLocation(c.LogLocationWarning)
+}
+
+// InfoLog - information messages
+func (c Config) InfoLog() log.LogLocation { return log.LogLocation(c.LogLocationInfo) }
+
+// DebugLog - troubleshooting messages
+func (c Config) DebugLog() log.LogLocation {
+	return log.LogLocation(c.LogLocationDebug)
+}
+
+// EventLog - access.log high level transactions
+func (c Config) EventLog() log.LogLocation {
+	return log.LogLocation(c.LogLocationEvent)
+}
+
+// LoadConfig - reads the config file into the Config struct
+func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string) (Config, error) {
+	// load json from cdn.conf
+	confBytes, err := ioutil.ReadFile(cdnConfPath)
 	if err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("reading CDN conf '%s': %v", cdnConfPath, err)
 	}
 
-	cfg := Config{}
-	if err := json.Unmarshal(configBytes, &cfg); err != nil {
-		return Config{}, err
+	var cfg Config
+	err = json.Unmarshal(confBytes, &cfg)
+	if err != nil {
+		return Config{}, fmt.Errorf("unmarshalling '%s': %v", cdnConfPath, err)
 	}
 
-	if cfg, err = ParseConfig(cfg); err != nil {
-		return Config{}, err
+	// load json from database.conf
+	dbConfBytes, err := ioutil.ReadFile(dbConfPath)
+	if err != nil {
+		return Config{}, fmt.Errorf("reading db conf '%s': %v", dbConfPath, err)
 	}
+	err = json.Unmarshal(dbConfBytes, &cfg.DB)
+	if err != nil {
+		return Config{}, fmt.Errorf("unmarshalling '%s': %v", dbConfPath, err)
+	}
+	cfg, err = ParseConfig(cfg)
 
-	return cfg, nil
+	riakConfBytes, err := ioutil.ReadFile(riakConfPath)
+	if err != nil {
+		cfg.RiakAuthOptions = nil
+		return cfg, fmt.Errorf("reading riak conf '%v': %v", riakConfPath, err)
+	}
+	riakconf, err := getRiakAuthOptions(string(riakConfBytes))
+	if err != nil {
+		cfg.RiakAuthOptions = nil
+		return cfg, fmt.Errorf("parsing riak conf '%v': %v", riakConfBytes, err)
+	}
+	cfg.RiakAuthOptions = riakconf
+
+	return cfg, err
 }
+
+// CertPath extracts path to cert .cert file
+func (c Config) GetCertPath() string {
+	v, ok := c.URL.Query()["cert"]
+	if ok {
+		return v[0]
+	}
+	return ""
+}
+
+// KeyPath extracts path to cert .key file
+func (c Config) GetKeyPath() string {
+	v, ok := c.URL.Query()["key"]
+	if ok {
+		return v[0]
+	}
+	return ""
+}
+
+func getRiakAuthOptions(s string) (*riak.AuthOptions, error) {
+	rconf := &riak.AuthOptions{}
+	rconf.TlsConfig = &tls.Config{}
+	err := json.Unmarshal([]byte(s), &rconf)
+	return rconf, err
+}
+
+const (
+	MojoliciousConcurrentConnectionsDefault = 12
+)
 
 // ParseConfig validates required fields, and parses non-JSON types
 func ParseConfig(cfg Config) (Config, error) {
 	missings := ""
-	if cfg.HTTPPort == "" {
+	if cfg.Port == "" {
 		missings += "port, "
 	}
-	if cfg.DBUser == "" {
-		missings += "db_user, "
+	if len(cfg.Secrets) == 0 {
+		missings += "secrets, "
 	}
-	if cfg.DBPass == "" {
-		missings += "db_pass, "
-	}
-	if cfg.DBServer == "" {
-		missings += "db_server, "
-	}
-	if cfg.DBDB == "" {
-		missings += "db_name, "
-	}
-	if cfg.TOSecret == "" {
-		missings += "to_secret, "
-	}
-	if cfg.CertPath == "" {
-		missings += "cert_path, "
-	}
-	if cfg.KeyPath == "" {
-		missings += "key_path, "
-	}
-
 	if cfg.LogLocationError == "" {
 		cfg.LogLocationError = log.LogLocationNull
 	}
@@ -120,12 +198,24 @@ func ParseConfig(cfg Config) (Config, error) {
 	if cfg.LogLocationEvent == "" {
 		cfg.LogLocationEvent = log.LogLocationNull
 	}
+	if cfg.BackendMaxConnections == nil {
+		cfg.BackendMaxConnections = make(map[string]int)
+	}
+	if cfg.BackendMaxConnections["mojolicious"] == 0 {
+		cfg.BackendMaxConnections["mojolicious"] = MojoliciousConcurrentConnectionsDefault
+	}
 
 	invalidTOURLStr := ""
 	var err error
-	if cfg.TOURL, err = url.Parse(cfg.TOURLStr); err != nil {
-		invalidTOURLStr = fmt.Sprintf("invalid Traffic Ops URL '%v': %v", cfg.TOURLStr, err)
+	listen := cfg.Listen[0]
+	if cfg.URL, err = url.Parse(listen); err != nil {
+		invalidTOURLStr = fmt.Sprintf("invalid Traffic Ops URL '%s': %v", listen, err)
 	}
+	cfg.KeyPath = cfg.GetKeyPath()
+	cfg.CertPath = cfg.GetCertPath()
+
+	newUrl := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
+	cfg.URL = &newUrl
 
 	if len(missings) > 0 {
 		missings = "missing fields: " + missings[:len(missings)-2] // strip final `, `

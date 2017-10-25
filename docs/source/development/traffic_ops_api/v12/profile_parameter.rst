@@ -455,3 +455,119 @@ Profile parameters
 
 |
 
+**POST /api/1.2/profileparameter**
+
+  Create one or more profile / parameter assignments.
+
+  Authentication Required: Yes
+
+  Role(s) Required: Admin or Operations
+
+  **Request Parameters**
+
+  +---------------------------------+----------+-------------------------------------------------------------------+
+  | Name                            | Required | Description                                                       |
+  +=================================+==========+===================================================================+
+  | ``profileId``                   | yes      | The ID of the profile.                                            |
+  +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``paramIds``                    | yes      | An array of parameter IDs.                                        |
+  +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``replace``                     | no       | Replace existing profile/param assignments? (true|false)          |
+  +---------------------------------+----------+-------------------------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+        "profileId": 22,
+        "paramIds": [ 2, 3, 4, 5, 6 ],
+        "replace": true
+    }
+
+  **Response Properties**
+
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | Parameter                          | Type   | Description                                                       |
+  +====================================+========+===================================================================+
+  | ``profileId``                      | int    | The ID of the profile.                                            |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``paramIds``                       | array  | An array of parameter IDs.                                        |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``replace``                        |  bool  | Existing profile/param assignments replaced? (true|false).        |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+        "alerts": [
+                  {
+                          "level": "success",
+                          "text": "14 parameters where assigned to the foo profile."
+                  }
+          ],
+        "response": {
+            "profileId" : 22,
+            "paramIds" : [ 2, 3, 4, 5, 6 ],
+            "replace" : true
+        }
+    }
+
+|
+
+**POST /api/1.2/parameterprofile**
+
+  Create one or more parameter / profile assignments.
+
+  Authentication Required: Yes
+
+  Role(s) Required: Admin or Operations
+
+  **Request Parameters**
+
+  +---------------------------------+----------+-------------------------------------------------------------------+
+  | Name                            | Required | Description                                                       |
+  +=================================+==========+===================================================================+
+  | ``paramId``                     | yes      | The ID of the parameter.                                          |
+  +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``profileIds``                  | yes      | An array of profile IDs.                                          |
+  +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``replace``                     | no       | Replace existing param/profile assignments? (true|false)          |
+  +---------------------------------+----------+-------------------------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+        "paramId": 22,
+        "profileIds": [ 2, 3, 4, 5, 6 ],
+        "replace": true
+    }
+
+  **Response Properties**
+
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | Parameter                          | Type   | Description                                                       |
+  +====================================+========+===================================================================+
+  | ``paramId``                        | int    | The ID of the parameter.                                          |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``profileIds``                     | array  | An array of profile IDs.                                          |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``replace``                        |  bool  | Existing param/profile assignments replaced? (true|false).        |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+        "alerts": [
+                  {
+                          "level": "success",
+                          "text": "14 profiles where assigned to the bar parameter."
+                  }
+          ],
+        "response": {
+            "paramId" : 22,
+            "profileIds" : [ 2, 3, 4, 5, 6 ],
+            "replace" : true
+        }
+    }
+
+|
+

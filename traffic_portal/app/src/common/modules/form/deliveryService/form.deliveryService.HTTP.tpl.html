@@ -20,18 +20,19 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a ng-click="navigateToPath('/configure/delivery-services')">Delivery Services</a></li>
+            <li><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
             <li class="active">{{deliveryServiceName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
             <div class="btn-group" role="group" uib-dropdown is-open="keys.isopen">
-                <button ng-show="(deliveryService.protocol==1)||(deliveryService.signed==true)" type="button" class="btn btn-primary dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                <button ng-show="(deliveryService.protocol>0)||(deliveryService.signingAlgorithm)" type="button" class="btn btn-primary dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     <i class="fa fa-key"></i>&nbsp;
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-show="deliveryService.protocol==1" ng-click="manageSslKeys()">Manage SSL Keys</a></li>
-                    <li role="menuitem"><a ng-show="deliveryService.signed==true" ng-click="manageUrlSigKeys()">Manage URL Sig Keys</a></li>
+                    <li role="menuitem"><a ng-show="deliveryService.protocol>0" ng-click="manageSslKeys()">Manage SSL Keys</a></li>
+                    <li role="menuitem"><a ng-show="deliveryService.signingAlgorithm=='url_sig'" ng-click="manageUrlSigKeys()">Manage URL Sig Keys</a></li>
+                    <li role="menuitem"><a ng-show="deliveryService.signingAlgorithm=='uri_signing'" ng-click="manageUriSigningKeys()">Manage URI Signing Keys</a></li>
                 </ul>
             </div>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
@@ -66,7 +67,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.tenantId), 'has-feedback': hasError(deliveryServiceForm.tenantId)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Tenant *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="tenantId" name="tenantId" class="form-control" ng-model="deliveryService.tenantId" ng-options="tenant.id as tenant.name for tenant in tenants" required>
+                    <select id="tenantId" name="tenantId" class="form-control" ng-model="deliveryService.tenantId" ng-options="tenant.id as tenantLabel(tenant) for tenant in tenants" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.tenantId, 'required')">Required</small>
@@ -112,6 +113,17 @@ under the License.
                 </div>
             </div>
 
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.routingName), 'has-feedback': hasError(deliveryServiceForm.routingName)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Routing Name</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <small class="input-warning" ng-show="!settings.isNew && deliveryServiceForm.routingName.$dirty">Warning: Changing the routing name may require SSL certificates to be updated.</small>
+                    <input id="routingName" name="routingName" type="text" class="form-control" placeholder="The routing name to use for the delivery FQDN, i.e. <routing name>.<XML ID>.<CDN domain>" ng-model="deliveryService.routingName" ng-maxlength="48" ng-pattern="/^([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.routingName, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.routingName, 'pattern')">Invalid. Must be a valid hostname without periods</small>
+                    <span ng-show="hasError(deliveryServiceForm.routingName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.protocol), 'has-feedback': hasError(deliveryServiceForm.protocol)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Protocol *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
@@ -130,11 +142,11 @@ under the License.
                 </div>
             </div>
 
-            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.signed), 'has-feedback': hasError(deliveryServiceForm.signed)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Signed URLs *</label>
+            <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.signingAlgorithm), 'has-feedback': hasError(deliveryServiceForm.signingAlgorithm)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Signing Algorithm *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="signed" name="signed" class="form-control" ng-model="deliveryService.signed" ng-options="x.value as x.label for x in falseTrue" required></select>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.signed, 'required')">Required</small>
+                    <select id="signingAlgorithm" name="signingAlgorithm" class="form-control" ng-model="deliveryService.signingAlgorithm" ng-options="sa.value as sa.label for sa in signingAlgos"></select>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.signingAlgorithm, 'required')">Required</small>
                 </div>
             </div>
 

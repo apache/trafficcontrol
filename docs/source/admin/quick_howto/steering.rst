@@ -107,5 +107,5 @@ Configure Delivery Service Steering
     ]
    }
 
-7) Any requests to Traffic Router for the steering delivery service should now be routed to target delivery services based on configured weight or order.  Example: ``curl -Lvs http://tr.steering-ds.cdn.kabletown.net/foo``
+7) Any requests to Traffic Router for the steering delivery service should now be routed to target delivery services based on configured weight or order.  Example: ``curl -Lvs http://foo.steering-ds.cdn.kabletown.net/bar``
 
