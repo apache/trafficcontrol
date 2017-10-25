@@ -27,31 +27,44 @@ import (
  */
 
 // TrafficMonitorConfigMap ...
+// Deprecated: use GetTrafficMonitorConfigMap
 func (to *Session) TrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, error) {
-	tmConfig, err := to.TrafficMonitorConfig(cdn)
+	m, _, err := to.GetTrafficMonitorConfigMap(cdn)
+	return m, err
+}
+
+func (to *Session) GetTrafficMonitorConfigMap(cdn string) (*tc.TrafficMonitorConfigMap, ReqInf, error) {
+	tmConfig, reqInf, err := to.GetTrafficMonitorConfig(cdn)
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	tmConfigMap, err := tc.TrafficMonitorTransformToMap(tmConfig)
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
-	return tmConfigMap, nil
+	return tmConfigMap, reqInf, nil
 }
 
 // TrafficMonitorConfig ...
+// Deprecated: use GetTrafficMonitorConfig
 func (to *Session) TrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig, error) {
+	c, _, err := to.GetTrafficMonitorConfig(cdn)
+	return c, err
+}
+
+func (to *Session) GetTrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig, ReqInf, error) {
 	url := fmt.Sprintf("/api/1.2/cdns/%s/configs/monitoring.json", cdn)
-	resp, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
 	var data tc.TMConfigResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return &data.Response, nil
+	return &data.Response, reqInf, nil
 }
