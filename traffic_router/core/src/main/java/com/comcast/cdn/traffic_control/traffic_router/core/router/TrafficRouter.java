@@ -249,33 +249,24 @@ public class TrafficRouter {
 		// DDC - Dynamic Deep Caching
 		// cacheLocation has a list of caches that we can hash this request to.
 		// Make this list different for content that should be cached deep.
-		//boolean useDeepCZ = false;
-		// first get the cachegroup, because the popularity is by cachegroup...
-		// this is expensive, but i see no other option.
-		final CacheLocation cacheGroup = getCoverageZoneCacheLocation(request.getClientIP(), ds, false);
-		CacheLocation cacheLocation = null;
+		CacheLocation cacheLocation;
 		ResultType result = ResultType.CZ;
-		if (cacheGroup != null) {
-			// change true to a function that returns yes if the request.getPath is popular
-			//boolean isPop = isPopular(request.getPath(), ds.getId(), cacheGroup.getId());
-			if (ds.getDeepCache() == DeliveryService.DC_ALWAYS) {
-				// Deep caching is enabled and wanted for the requested URL. See if there are deep caches available
-				cacheLocation = getCoverageZoneCacheLocation(request.getClientIP(), ds, true);
-				if (cacheLocation != null && cacheLocation.getCaches().size() != 0) {
-					// Found deep caches for this client, and there are caches available there.
-					// Use the cacheLocation, and set result to DEEP_CZ
-					result = ResultType.DEEP_CZ;
-				} else {
-					// No deep caches for this client, would have used them if there were any...
-					// set the cacheLocation to the cacheGroup found earlier.
-					result = ResultType.DEEP_CZ_MISS;
-					cacheLocation = cacheGroup;
-				}
-			} else {
-				// Deep caching not enabled or not for this URL. Back to cachegroup.
-				cacheLocation = cacheGroup;
-			}
 
+		if (ds.getDeepCache() == DeliveryService.DC_ALWAYS) {
+			// Deep caching is enabled. See if there are deep caches available
+			cacheLocation = getDeepCoverageZoneCacheLocation(request.getClientIP(), ds);
+			if (cacheLocation != null && cacheLocation.getCaches().size() != 0) {
+				// Found deep caches for this client, and there are caches available there.
+				// Use the deep cacheLocation, and set result to DEEP_CZ
+				result = ResultType.DEEP_CZ;
+			} else {
+				// No deep caches for this client, would have used them if there were any...
+				result = ResultType.DEEP_CZ_MISS;
+				cacheLocation = getCoverageZoneCacheLocation(request.getClientIP(), ds);
+			}
+		} else {
+			// Deep caching not enabled for this Delivery Service; use the regular CZ
+			cacheLocation = getCoverageZoneCacheLocation(request.getClientIP(), ds);
 		}
 
 		List<Cache>caches = selectCachesByCZ(ds, cacheLocation, track, result);
@@ -467,7 +458,7 @@ public class TrafficRouter {
 	}
 
 	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track) {
-		return selectCachesByCZ(ds, cacheLocation, track, ResultType.CZ); // RestultType.CZ was the original default before DDC
+		return selectCachesByCZ(ds, cacheLocation, track, ResultType.CZ); // ResultType.CZ was the original default before DDC
 	}
 
 	private List<Cache> selectCachesByCZ(final DeliveryService ds, final CacheLocation cacheLocation, final Track track, final ResultType result) {
@@ -685,6 +676,10 @@ public class TrafficRouter {
 		// We had a hit in the CZF but the name does not match a known cache location.
 		// Check whether the CZF entry has a geolocation and use it if so.
 		return getClosestCacheLocation(cacheRegister.filterAvailableLocations(deliveryServiceId), networkNode.getGeolocation(), cacheRegister.getDeliveryService(deliveryServiceId));
+	}
+
+	public CacheLocation getDeepCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService) {
+		return getCoverageZoneCacheLocation(ip, deliveryService, true);
 	}
 
 	protected CacheLocation getCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService, final boolean useDeep) {
