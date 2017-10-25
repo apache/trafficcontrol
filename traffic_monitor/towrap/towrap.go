@@ -21,7 +21,9 @@ package towrap
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
@@ -43,13 +45,16 @@ type ITrafficOpsSession interface {
 	Parameters(profileName string) ([]tc.Parameter, error)
 	DeliveryServices() ([]tc.DeliveryService, error)
 	CacheGroups() ([]tc.CacheGroup, error)
+	CRConfigHistory() []CRConfigStat
 }
 
 var ErrNilSession = fmt.Errorf("nil session")
 
+// TODO rename CRConfigCacheObj
 type ByteTime struct {
 	bytes []byte
 	time  time.Time
+	stats *tc.CRConfigStats
 }
 
 type ByteMapCache struct {
@@ -61,20 +66,80 @@ func NewByteMapCache() ByteMapCache {
 	return ByteMapCache{m: &sync.RWMutex{}, cache: &map[string]ByteTime{}}
 }
 
-func (c ByteMapCache) Set(key string, newBytes []byte) {
+func (c ByteMapCache) Set(key string, newBytes []byte, stats *tc.CRConfigStats) {
 	c.m.Lock()
 	defer c.m.Unlock()
-	(*c.cache)[key] = ByteTime{bytes: newBytes, time: time.Now()}
+	(*c.cache)[key] = ByteTime{bytes: newBytes, stats: stats, time: time.Now()}
 }
 
-func (c ByteMapCache) Get(key string) ([]byte, time.Time) {
+func (c ByteMapCache) Get(key string) ([]byte, time.Time, *tc.CRConfigStats) {
 	c.m.RLock()
 	defer c.m.RUnlock()
 	if byteTime, ok := (*c.cache)[key]; !ok {
-		return nil, time.Time{}
+		return nil, time.Time{}, nil
 	} else {
-		return byteTime.bytes, byteTime.time
+		return byteTime.bytes, byteTime.time, byteTime.stats
 	}
+}
+
+// CRConfigHistoryThreadsafe stores history in a circular buffer.
+type CRConfigHistoryThreadsafe struct {
+	hist  *[]CRConfigStat
+	m     *sync.RWMutex
+	limit *uint64
+	len   *uint64
+	pos   *uint64
+}
+
+func NewCRConfigHistoryThreadsafe(limit uint64) CRConfigHistoryThreadsafe {
+	hist := make([]CRConfigStat, limit, limit)
+	len := uint64(0)
+	pos := uint64(0)
+	return CRConfigHistoryThreadsafe{hist: &hist, m: &sync.RWMutex{}, limit: &limit, len: &len, pos: &pos}
+}
+
+// Add adds the given stat to the history. Does not add new additions with the same remote address and CRConfig Date as the previous.
+func (h CRConfigHistoryThreadsafe) Add(i *CRConfigStat) {
+	h.m.Lock()
+	defer h.m.Unlock()
+
+	if *h.len != 0 {
+		last := (*h.hist)[(*h.pos-1)%*h.limit]
+		if i.ReqAddr == last.ReqAddr && *i.Stats.DateUnixSeconds == *last.Stats.DateUnixSeconds && *i.Stats.CDNName == *last.Stats.CDNName {
+			return
+		}
+	}
+
+	(*h.hist)[*h.pos] = *i
+	*h.pos = (*h.pos + 1) % *h.limit
+	if *h.len < *h.limit {
+		*h.len++
+	}
+}
+
+func (h CRConfigHistoryThreadsafe) Get() []CRConfigStat {
+	h.m.RLock()
+	defer h.m.RUnlock()
+	if *h.len < *h.limit {
+		return CopyCRConfigStat((*h.hist)[:*h.len])
+	}
+	new := make([]CRConfigStat, *h.limit)
+	copy(new, (*h.hist)[*h.pos:])
+	copy(new[*h.len-*h.pos:], (*h.hist)[:*h.pos])
+	return new
+}
+
+func CopyCRConfigStat(old []CRConfigStat) []CRConfigStat {
+	new := make([]CRConfigStat, len(old))
+	copy(new, old)
+	return new
+}
+
+type CRConfigStat struct {
+	ReqTime time.Time        `json:"request_time"`
+	ReqAddr string           `json:"request_address"`
+	Stats   tc.CRConfigStats `json:"stats"`
+	Err     error            `json:"error"`
 }
 
 // TrafficOpsSessionThreadsafe provides access to the Traffic Ops client safe for multiple goroutines. This fulfills the ITrafficOpsSession interface.
@@ -82,11 +147,12 @@ type TrafficOpsSessionThreadsafe struct {
 	session      **client.Session // pointer-to-pointer, because we're given a pointer from the Traffic Ops package, and we don't want to copy it.
 	m            *sync.Mutex
 	lastCRConfig ByteMapCache
+	crConfigHist CRConfigHistoryThreadsafe
 }
 
 // NewTrafficOpsSessionThreadsafe returns a new threadsafe TrafficOpsSessionThreadsafe wrapping the given `Session`.
-func NewTrafficOpsSessionThreadsafe(s *client.Session) TrafficOpsSessionThreadsafe {
-	return TrafficOpsSessionThreadsafe{session: &s, m: &sync.Mutex{}, lastCRConfig: NewByteMapCache()}
+func NewTrafficOpsSessionThreadsafe(s *client.Session, crConfigHistoryLimit uint64) TrafficOpsSessionThreadsafe {
+	return TrafficOpsSessionThreadsafe{session: &s, m: &sync.Mutex{}, lastCRConfig: NewByteMapCache(), crConfigHist: NewCRConfigHistoryThreadsafe(crConfigHistoryLimit)}
 }
 
 // Set sets the internal Traffic Ops session. This is safe for multiple goroutines, being aware they will race.
@@ -122,22 +188,68 @@ func (s TrafficOpsSessionThreadsafe) User() (string, error) {
 	return ss.UserName, nil
 }
 
+func (s TrafficOpsSessionThreadsafe) CRConfigHistory() []CRConfigStat {
+	return s.crConfigHist.Get()
+}
+
+func (s *TrafficOpsSessionThreadsafe) CRConfigValid(crc *tc.CRConfig, cdn string) error {
+	// Note this intentionally takes intended CDN, rather than trusting crc.Stats
+	lastCrc, lastCrcTime, lastCrcStats := s.lastCRConfig.Get(cdn)
+	if lastCrc == nil {
+		return nil
+	}
+	if lastCrcStats.DateUnixSeconds == nil {
+		log.Warnln("TrafficOpsSessionThreadsafe.CRConfigValid returning no error, but last CRConfig Date was missing!")
+		return nil
+	}
+	if *lastCrcStats.CDNName != *crc.Stats.CDNName {
+		return errors.New("CRConfig.Stats.CDN " + *crc.Stats.CDNName + " different than last received CRConfig.Stats.CDNName " + *lastCrcStats.CDNName + " received at " + lastCrcTime.Format(time.RFC3339Nano))
+	}
+	if crc.Stats.DateUnixSeconds == nil {
+		return errors.New("CRConfig.Stats.Date missing")
+	}
+	if *lastCrcStats.DateUnixSeconds > *crc.Stats.DateUnixSeconds {
+		return errors.New("CRConfig.Stats.Date " + strconv.FormatInt(*crc.Stats.DateUnixSeconds, 10) + " older than last received CRConfig.Stats.Date " + strconv.FormatInt(*lastCrcStats.DateUnixSeconds, 10) + " received at " + lastCrcTime.Format(time.RFC3339Nano))
+	}
+	return nil
+}
+
 // CRConfigRaw returns the CRConfig from the Traffic Ops. This is safe for multiple goroutines.
 func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 	ss := s.get()
 	if ss == nil {
 		return nil, ErrNilSession
 	}
-	b, _, err := ss.GetCRConfig(cdn)
-	if err == nil {
-		s.lastCRConfig.Set(cdn, b)
+	b, reqInf, err := ss.GetCRConfig(cdn)
+
+	hist := &CRConfigStat{time.Now(), reqInf.RemoteAddr.String(), tc.CRConfigStats{}, err}
+	defer s.crConfigHist.Add(hist)
+
+	if err != nil {
+		return b, err
 	}
-	return b, err
+
+	crc := &tc.CRConfig{}
+	if err = json.Unmarshal(b, crc); err != nil {
+		err = errors.New("invalid JSON: " + err.Error())
+		hist.Err = err
+		return b, err
+	}
+	hist.Stats = crc.Stats
+
+	if err = s.CRConfigValid(crc, cdn); err != nil {
+		err = errors.New("invalid CRConfig: " + err.Error())
+		hist.Err = err
+		return b, err
+	}
+
+	s.lastCRConfig.Set(cdn, b, &crc.Stats)
+	return b, nil
 }
 
 // LastCRConfig returns the last CRConfig requested from CRConfigRaw, and the time it was returned. This is designed to be used in conjunction with a poller which regularly calls CRConfigRaw. If no last CRConfig exists, because CRConfigRaw has never been called successfully, this calls CRConfigRaw once to try to get the CRConfig from Traffic Ops.
 func (s TrafficOpsSessionThreadsafe) LastCRConfig(cdn string) ([]byte, time.Time, error) {
-	crConfig, crConfigTime := s.lastCRConfig.Get(cdn)
+	crConfig, crConfigTime, _ := s.lastCRConfig.Get(cdn)
 	if crConfig == nil {
 		b, err := s.CRConfigRaw(cdn)
 		return b, time.Now(), err
@@ -168,7 +280,7 @@ func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.Tr
 
 	crConfig := tc.CRConfig{}
 	if err := json.Unmarshal(crcData, &crConfig); err != nil {
-		return nil, fmt.Errorf("unmarshalling CRConfig JSON: %v", err)
+		return nil, fmt.Errorf("unmarshalling CRConfig JSON : %v", err)
 	}
 
 	mc, err = CreateMonitorConfig(crConfig, mc)
