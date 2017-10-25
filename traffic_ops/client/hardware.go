@@ -23,21 +23,28 @@ import (
 )
 
 // Hardware gets an array of Hardware
+// Deprecated: use GetHardware
 func (to *Session) Hardware(limit int) ([]tc.Hardware, error) {
+	h, _, err := to.GetHardware(limit)
+	return h, err
+}
+
+func (to *Session) GetHardware(limit int) ([]tc.Hardware, ReqInf, error) {
 	url := "/api/1.2/hwinfo.json"
 	if limit > 0 {
 		url += fmt.Sprintf("?limit=%v", limit)
 	}
-	resp, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
 	var data tc.HardwareResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return data.Response, nil
+	return data.Response, reqInf, nil
 }

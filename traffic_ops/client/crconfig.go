@@ -24,7 +24,7 @@ func (to *Session) CRConfigRaw(cdn string) ([]byte, error) {
 }
 
 // GetCRConfig returns the raw JSON bytes of the CRConfig from Traffic Ops, and whether the bytes were from the client's internal cache.
-func (to *Session) GetCRConfig(cdn string) ([]byte, CacheHitStatus, error) {
+func (to *Session) GetCRConfig(cdn string) ([]byte, ReqInf, error) {
 	url := fmt.Sprintf("/CRConfig-Snapshots/%s/CRConfig.json", cdn)
 	return to.getBytesWithTTL(url, tmPollingInterval)
 }
