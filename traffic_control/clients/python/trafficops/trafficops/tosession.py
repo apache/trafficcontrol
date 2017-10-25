@@ -837,6 +837,31 @@ class TOSession(restapi.RestApiSession):
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
 
+    @restapi.api_request(u'get', u'logs', (u'1.2',))
+    def get_change_logs(self):
+        """
+        Retrieve all change logs from traffic ops
+        :rtype: Tuple[Dict[Text, Any], requests.Response]
+        :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+        """
+
+    @restapi.api_request(u'get', u'logs/{days:d}/days', (u'1.2',))
+    def get_change_logs_for_days(self, days=None):
+        """
+        Retrieve all change logs from Traffic Ops
+        :param days: The number of days to retrieve change logs
+        :rtype: Tuple[Dict[Text, Any], requests.Response]
+        :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+        """
+
+    @restapi.api_request(u'get', u'logs/newcount', (u'1.2',))
+    def get_change_logs_newcount(self):
+        """
+        Get amount of new logs from traffic ops
+        :rtype: Tuple[Dict[Text, Any], requests.Response]
+        :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+        """
+
 if __name__ == u'__main__':
     # Sample usages
     import sys
