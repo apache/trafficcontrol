@@ -560,6 +560,33 @@ my %definition_for = (
 			value       => 90,
 		},
 	},
+	'unassigned_parameter_1' => {
+		new   => 'Parameter',
+		using => {
+			id          => 65,
+			name        => 'unassigned_parameter_1',
+			config_file => 'whaterver.config',
+			value       => 852,
+		},
+	},
+	'package_trafficserver' => {
+		new   => 'Parameter',
+		using => {
+			id          => 66,
+			name        => 'trafficserver',
+			config_file => 'package',
+			value       => '5.3.2-765.f4354b9.el7.centos.x86_64',
+		},
+	},
+	'use_tenancy' => {
+		new   => 'Parameter',
+		using => {
+			id          => 67,
+			name        => 'use_tenancy',
+			config_file => 'global',
+			value       => '1',
+		},
+	},
 );
 
 sub get_definition {

@@ -84,20 +84,18 @@ sub get_config_metadata {
 			$data_obj->{'info'}->{'toRevProxyUrl'}	= $tm_rev_proxy_url;
 		}
 
-		#$data_obj->{'profile'}->{'name'}   = $server->profile->name;
-		#$data_obj->{'profile'}->{'id'}     = $server->profile->id;
-		#$data_obj->{'other'}->{'CDN_name'} = $cdn_name;
-
 		%condition = (
 			'profile_parameters.profile' => $server->profile->id,
-			-or                          => [ 'name' => 'location' ]
+			-or                          => [ 'name' => 'location' , 'name' => 'URL' ]
 		);
 		my $rs_param = $self->db->resultset('Parameter')->search( \%condition, { join => 'profile_parameters' } );
 		while ( my $param = $rs_param->next ) {
 			if ( $param->name eq 'location' ) {
 				$config_file_obj->{ $param->config_file }->{'fnameOnDisk'} = $param->config_file;
 				$config_file_obj->{ $param->config_file }->{'location'} = $param->value;
-
+			}
+			if ( $param->name eq 'URL' ) {
+				$config_file_obj->{ $param->config_file }->{'url'} = $param->value;
 			}
 		}
 	}
@@ -105,8 +103,11 @@ sub get_config_metadata {
 
 
 	foreach my $config_file ( keys %{ $config_file_obj } ) {
-		my $scope = $self->get_scope($config_file);
+		my $scope = $self->get_scope($config_file, $server_obj);
 		my $scope_id;
+		if (defined ( $config_file_obj->{$config_file}->{'url'} ) ) {
+			$scope = 'cdns';
+		}
 		if ( $scope eq 'cdns' ) {
 			$scope_id = $server->cdn->name;
 		}
@@ -116,11 +117,17 @@ sub get_config_metadata {
 		else {
 			$scope_id = $server_obj->host_name;
 		}
-		$config_file_obj->{$config_file}->{'apiUri'} = "/api/1.2/" . $scope . "/" . $scope_id . "/configfiles/ats/" . $config_file;
+		if (defined ( $config_file_obj->{$config_file}->{'url'} ) ) {
+			#delete the url element so we don't see it in the metadata:
+			delete $config_file_obj->{$config_file}->{'apiUri'};
+		}
+		else {
+			$config_file_obj->{$config_file}->{'apiUri'} = "/api/1.2/" . $scope . "/" . $scope_id . "/configfiles/ats/" . $config_file;
+		}
 		$config_file_obj->{$config_file}->{'scope'} = $scope;
 	}
 
-	foreach my $config_file ( keys %{ $config_file_obj } ) {
+	foreach my $config_file ( sort keys %{ $config_file_obj } ) {
 		push ( @config_files, $config_file_obj->{$config_file} );
 	}
 
@@ -135,16 +142,10 @@ sub get_server_config {
 	my $self     = shift;
 	my $filename = $self->param("filename");
 	my $id       = $self->param('id');
-	my $scope    = $self->get_scope($filename);
 
 	##check user access
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
-	}
-
-	##check the scope - is this the correct route?
-	if ( $scope ne 'servers' ) {
-		return $self->alert( "Error - incorrect file scope for route used.  Please use the " . $scope . " route." );
 	}
 
 	##verify that a valid server ID has been used
@@ -153,12 +154,21 @@ sub get_server_config {
 		return $self->not_found();
 	}
 
+	my $scope    = $self->get_scope($filename, $server_obj);
+
+	##check the scope - is this the correct route?
+	if ( $scope ne 'servers' ) {
+		return $self->alert( "Error - incorrect file scope for route used.  Please use the " . $scope . " route." );
+	}
+
 	#generate the config file using the appropriate function
 	my $file_contents;
 	if ( $filename =~ /to_ext_.*\.config/ ) { $file_contents = $self->to_ext_dot_config( $server_obj, $filename ); }
+	elsif ( $filename eq "cache.config" ) { $file_contents = $self->server_cache_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "ip_allow.config" ) { $file_contents = $self->ip_allow_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "parent.config" ) { $file_contents = $self->parent_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "hosting.config" ) { $file_contents = $self->hosting_dot_config( $server_obj, $filename ); }
+	elsif ( $filename eq "remap.config" ) { $file_contents = $self->remap_dot_config( $server_obj, $filename ); }
 	elsif ( $filename eq "packages" ) {
 		$file_contents = $self->get_package_versions( $server_obj, $filename );
 		$file_contents = encode_json($file_contents);
@@ -187,9 +197,10 @@ sub get_server_config {
 #entry point for cdn scope api route.
 sub get_cdn_config {
 	my $self     = shift;
-	my $filename = $self->param("filename");
+	my $filename = $self->param('filename');
 	my $id       = $self->param('id');
 	my $scope    = $self->get_scope($filename);
+	my $ext_url  = $self->param('url');
 
 	##check user access
 	if ( !&is_oper($self) ) {
@@ -216,7 +227,7 @@ sub get_cdn_config {
 	elsif ( $filename eq "regex_revalidate.config" ) { $file_contents = $self->regex_revalidate_dot_config( $cdn_obj, $filename ); }
 	elsif ( $filename =~ /set_dscp_.*\.config/ ) { $file_contents = $self->set_dscp_dot_config( $cdn_obj, $filename ); }
 	elsif ( $filename eq "ssl_multicert.config" ) { $file_contents = $self->ssl_multicert_dot_config( $cdn_obj, $filename ); }
-	else                                          { return $self->not_found(); }
+	else { return $self->not_found(); }
 
 	if ( !defined($file_contents) ) {
 		return $self->not_found();
@@ -253,12 +264,11 @@ sub get_profile_config {
 	if ( $filename eq "50-ats.rules" ) { $file_contents = $self->ats_dot_rules( $profile_obj, $filename ); }
 	elsif ( $filename eq "12M_facts" ) { $file_contents = $self->facts( $profile_obj, $filename ); }
 	elsif ( $filename eq "astats.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
-	elsif ( $filename eq "cache.config" ) { $file_contents = $self->cache_dot_config( $profile_obj, $filename ); }
+	elsif ( $filename eq "cache.config" ) { $file_contents = $self->profile_cache_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "drop_qstring.config" ) { $file_contents = $self->drop_qstring_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "logs_xml.config" ) { $file_contents = $self->logs_xml_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "plugin.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "records.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
-	elsif ( $filename eq "remap.config" ) { $file_contents = $self->remap_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "storage.config" ) { $file_contents = $self->storage_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "sysctl.conf" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename =~ /url_sig_.*\.config/ ) { $file_contents = $self->url_sig_dot_config( $profile_obj, $filename ); }
@@ -291,38 +301,43 @@ my $separator ||= {
 sub get_scope {
 	my $self  = shift;
 	my $fname = shift;
+	my $server_obj = shift;
 	my $scope;
 
-	if ( $fname eq "ip_allow.config" )            { $scope = 'servers' }
-	elsif ( $fname eq "parent.config" )           { $scope = 'servers' }
-	elsif ( $fname =~ /to_ext_.*\.config/ )       { $scope = 'servers' }
-	elsif ( $fname eq "hosting.config" )          { $scope = 'servers' }
-	elsif ( $fname eq "packages" )                { $scope = 'servers' }
-	elsif ( $fname eq "chkconfig" )               { $scope = 'servers' }
-	elsif ( $fname eq "12M_facts" )               { $scope = 'profiles' }
-	elsif ( $fname eq "50-ats.rules" )            { $scope = 'profiles' }
-	elsif ( $fname eq "astats.config" )           { $scope = 'profiles' }
-	elsif ( $fname eq "cache.config" )            { $scope = 'profiles' }
-	elsif ( $fname eq "drop_qstring.config" )     { $scope = 'profiles' }
-	elsif ( $fname eq "logs_xml.config" )         { $scope = 'profiles' }
-	elsif ( $fname eq "plugin.config" )           { $scope = 'profiles' }
-	elsif ( $fname eq "records.config" )          { $scope = 'profiles' }
-	elsif ( $fname eq "remap.config" )            { $scope = 'profiles' }
-	elsif ( $fname eq "storage.config" )          { $scope = 'profiles' }
-	elsif ( $fname eq "sysctl.conf" )             { $scope = 'profiles' }
-	elsif ( $fname =~ /url_sig_.*\.config/ )      { $scope = 'profiles' }
-	elsif ( $fname eq "volume.config" )           { $scope = 'profiles' }
-	elsif ( $fname eq "bg_fetch.config" )         { $scope = 'cdns' }
-	elsif ( $fname =~ /cacheurl.*\.config/ )      { $scope = 'cdns' }
-	elsif ( $fname =~ /hdr_rw_.*\.config/ )       { $scope = 'cdns' }
-	elsif ( $fname =~ /regex_remap_.*\.config/ )  { $scope = 'cdns' }
-	elsif ( $fname eq "regex_revalidate.config" ) { $scope = 'cdns' }
-	elsif ( $fname =~ /set_dscp_.*\.config/ )     { $scope = 'cdns' }
-	elsif ( $fname eq "ssl_multicert.config" )    { $scope = 'cdns' }
+	my $type;
+	if ( defined $server_obj ) { $type = $server_obj->type->name; }
+	else { $type = ""; }
+
+	if ( $fname eq "ip_allow.config" )                         { $scope = 'servers' }
+	elsif ( $fname eq "parent.config" )                        { $scope = 'servers' }
+	elsif ( $fname =~ /to_ext_.*\.config/ )                    { $scope = 'servers' }
+	elsif ( $fname eq "hosting.config" )                       { $scope = 'servers' }
+	elsif ( $fname eq "packages" )                             { $scope = 'servers' }
+	elsif ( $fname eq "chkconfig" )                            { $scope = 'servers' }
+	elsif ( $fname eq "remap.config" )                         { $scope = 'servers' }
+	elsif ( $fname eq "12M_facts" )                            { $scope = 'profiles' }
+	elsif ( $fname eq "50-ats.rules" )                         { $scope = 'profiles' }
+	elsif ( $fname eq "astats.config" )                        { $scope = 'profiles' }
+	elsif ( $fname eq "cache.config" && $type =~ m/^MID/ )     { $scope = 'servers' }
+	elsif ( $fname eq "cache.config" )                         { $scope = 'profiles' }
+	elsif ( $fname eq "drop_qstring.config" )                  { $scope = 'profiles' }
+	elsif ( $fname eq "logs_xml.config" )                      { $scope = 'profiles' }
+	elsif ( $fname eq "plugin.config" )                        { $scope = 'profiles' }
+	elsif ( $fname eq "records.config" )                       { $scope = 'profiles' }
+	elsif ( $fname eq "storage.config" )                       { $scope = 'profiles' }
+	elsif ( $fname eq "sysctl.conf" )                          { $scope = 'profiles' }
+	elsif ( $fname =~ /url_sig_.*\.config/ )                   { $scope = 'profiles' }
+	elsif ( $fname eq "volume.config" )                        { $scope = 'profiles' }
+	elsif ( $fname eq "bg_fetch.config" )                      { $scope = 'cdns' }
+	elsif ( $fname =~ /cacheurl.*\.config/ )                   { $scope = 'cdns' }
+	elsif ( $fname =~ /hdr_rw_.*\.config/ )                    { $scope = 'cdns' }
+	elsif ( $fname =~ /regex_remap_.*\.config/ )               { $scope = 'cdns' }
+	elsif ( $fname eq "regex_revalidate.config" )              { $scope = 'cdns' }
+	elsif ( $fname =~ /set_dscp_.*\.config/ )                  { $scope = 'cdns' }
+	elsif ( $fname eq "ssl_multicert.config" )                 { $scope = 'cdns' }
 	else {
 		$scope = $self->db->resultset('Parameter')->search( { -and => [ name => 'scope', config_file => $fname ] } )->get_column('value')->first();
 		if ( !defined($scope) ) {
-			$self->app->log->error("Filename not found.  Setting Server scope.");
 			$scope = 'servers';
 		}
 	}
@@ -469,19 +484,20 @@ sub delivery_service_data_by_profile {
 	my @data;
 
 	my $dbh = $self->db->storage->dbh;
-	my $qry = 'select 
-		deliveryservice.id, 
-		deliveryservice.xml_id, 
-		deliveryservice.dscp, 
-		deliveryservice.signed, 
-		deliveryservice.qstring_ignore, 
-		deliveryservice.org_server_fqdn, 
+	my $qry = 'select
+		deliveryservice.id,
+		deliveryservice.xml_id,
+		deliveryservice.dscp,
+		deliveryservice.routing_name,
+		deliveryservice.signing_algorithm,
+		deliveryservice.qstring_ignore,
+		deliveryservice.org_server_fqdn,
 		deliveryservice.origin_shield,
 		regex.pattern AS pattern,
     	retype.name AS re_type,
     	dstype.name AS ds_type,
     	cdn.domain_name AS domain_name,
-		deliveryservice.profile, 
+		deliveryservice.profile,
 		deliveryservice.protocol,
 		deliveryservice.ssl_key_version,
 		deliveryservice.range_request_handling,
@@ -491,33 +507,34 @@ sub delivery_service_data_by_profile {
 		deliveryservice.cacheurl,
 		deliveryservice.remap_text,
 		deliveryservice.multi_site_origin,
-		deliveryservice.multi_site_origin_algorithm 
-		from deliveryservice 
+		deliveryservice.multi_site_origin_algorithm
+		from deliveryservice
 		JOIN deliveryservice_regex ON deliveryservice_regex.deliveryservice = deliveryservice.id
         JOIN regex ON deliveryservice_regex.regex = regex.id
         JOIN type as retype ON regex.type = retype.id
         JOIN type as dstype ON deliveryservice.type = dstype.id
         JOIN cdn ON cdn.id = deliveryservice.cdn_id
-		where deliveryservice.id = ANY ( 
-			select DISTINCT 
-			deliveryservice 
-			from deliveryservice_server 
+		where deliveryservice.id = ANY (
+			select DISTINCT
+			deliveryservice
+			from deliveryservice_server
 			where server = ANY (
-				select 
-				id 
-				from server 
-				where profile = '.$profile_id.'
+				select
+				id
+				from server
+				where profile = $1
 			)
 		);
 	';
 
 	my $stmt = $dbh->prepare($qry);
-	$stmt->execute();
+	$stmt->execute($profile_id);
 
 	my $deliveryservice_id;
 	my $deliveryservice_xml_id;
 	my $deliveryservice_dscp;
-	my $deliveryservice_signed;
+	my $deliveryservice_routing_name;
+	my $deliveryservice_signing_algorithm;
 	my $deliveryservice_qstring_ignore;
 	my $deliveryservice_org_server_fqdn;
 	my $deliveryservice_origin_shield;
@@ -536,12 +553,13 @@ sub delivery_service_data_by_profile {
 	my $deliveryservice_remap_text;
 	my $deliveryservice_multi_site_origin;
 	my $deliveryservice_multi_site_origin_algorithm;
-	
+
 	$stmt->bind_columns(
 		\$deliveryservice_id,
 		\$deliveryservice_xml_id,
 		\$deliveryservice_dscp,
-		\$deliveryservice_signed,
+		\$deliveryservice_routing_name,
+		\$deliveryservice_signing_algorithm,
 		\$deliveryservice_qstring_ignore,
 		\$deliveryservice_org_server_fqdn,
 		\$deliveryservice_origin_shield,
@@ -568,7 +586,9 @@ sub delivery_service_data_by_profile {
 					"id" => $deliveryservice_id,
 					"xml_id" => $deliveryservice_xml_id,
 					"dscp" => $deliveryservice_dscp,
-					"signed" => $deliveryservice_signed,
+					"routing_name" => $deliveryservice_routing_name,
+					"signed" => ( $deliveryservice_signing_algorithm eq "url_sig" ),
+					"signing_algorithm" => $deliveryservice_signing_algorithm,
 					"qstring_ignore" => $deliveryservice_qstring_ignore,
 					"org_server_fqdn" => $deliveryservice_org_server_fqdn,
 					"origin_shield" => $deliveryservice_origin_shield,
@@ -611,6 +631,7 @@ sub profile_ds_data {
 		my $re_type                     = $row->{'re_type'};
 		my $ds_type                     = $row->{'ds_type'};
 		my $signed                      = $row->{'signed'};
+		my $signing_algorithm           = $row->{'signing_algorithm'};
 		my $qstring_ignore              = $row->{'qstring_ignore'};
 		my $ds_xml_id                   = $row->{'xml_id'};
 		my $ds_domain                   = $row->{'domain_name'};
@@ -635,7 +656,7 @@ sub profile_ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname    = $ds_type =~ /^DNS/ ? "edge" : "ccr";
+				my $hname    = $ds_type =~ /^DNS/ ? $row->{'routing_name'} : "ccr";
 				my $portstr  = ":" . "__SERVER_TCP_PORT__";
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
 				if ( $protocol == HTTP ) {
@@ -681,6 +702,7 @@ sub profile_ds_data {
 		$dsinfo->{dslist}->[$j]->{"type"}                        = $ds_type;
 		$dsinfo->{dslist}->[$j]->{"domain"}                      = $ds_domain;
 		$dsinfo->{dslist}->[$j]->{"signed"}                      = $signed;
+		$dsinfo->{dslist}->[$j]->{"signing_algorithm"}           = $signing_algorithm;
 		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
 		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
 		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
@@ -732,7 +754,8 @@ sub cdn_ds_data {
 		my $dscp                        = $row->dscp;
 		my $re_type                     = $row->re_type;
 		my $ds_type                     = $row->ds_type;
-		my $signed                      = $row->signed;
+		my $signed                      = ( $row->signing_algorithm eq "url_sig" );
+		my $signing_algorithm           = $row->signing_algorithm;
 		my $qstring_ignore              = $row->qstring_ignore;
 		my $ds_xml_id                   = $row->xml_id;
 		my $ds_domain                   = $row->domain_name;
@@ -757,7 +780,7 @@ sub cdn_ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname    = $ds_type =~ /^DNS/ ? "edge" : "ccr";
+				my $hname    = $ds_type =~ /^DNS/ ? $row->routing_name : "ccr";
 				my $portstr  = ":" . "SERVER_TCP_PORT";
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
 				if ( $protocol == HTTP ) {
@@ -803,6 +826,7 @@ sub cdn_ds_data {
 		$dsinfo->{dslist}->[$j]->{"type"}                        = $ds_type;
 		$dsinfo->{dslist}->[$j]->{"domain"}                      = $ds_domain;
 		$dsinfo->{dslist}->[$j]->{"signed"}                      = $signed;
+		$dsinfo->{dslist}->[$j]->{"signing_algorithm"}           = $signing_algorithm;
 		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
 		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
 		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
@@ -864,7 +888,8 @@ sub ds_data {
 		my $dscp                        = $dsinfo->dscp;
 		my $re_type                     = $dsinfo->re_type;
 		my $ds_type                     = $dsinfo->ds_type;
-		my $signed                      = $dsinfo->signed;
+		my $signed                      = ( $dsinfo->signing_algorithm eq "url_sig" );
+		my $signing_algorithm           = $dsinfo->signing_algorithm;
 		my $qstring_ignore              = $dsinfo->qstring_ignore;
 		my $ds_xml_id                   = $dsinfo->xml_id;
 		my $ds_domain                   = $dsinfo->domain_name;
@@ -879,14 +904,14 @@ sub ds_data {
 		my $multi_site_origin           = $dsinfo->multi_site_origin;
 		my $multi_site_origin_algorithm = 0;
 
-		if ( $re_type eq 'HOST_REGEXP' ) {
+		if ( $re_type eq 'HOST_REGEXP' && defined($org_fqdn) ) {
 			my $host_re = $dsinfo->pattern;
 			my $map_to  = $org_fqdn . "/";
 			if ( $host_re =~ /\.\*$/ ) {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname = $ds_type =~ /^DNS/ ? "edge" : "ccr";
+				my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "ccr";
 				my $portstr = "";
 				if ( $hname eq "ccr" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
 					$portstr = ":" . $server_obj->tcp_port;
@@ -934,6 +959,7 @@ sub ds_data {
 		$response_obj->{dslist}->[$j]->{"type"}                        = $ds_type;
 		$response_obj->{dslist}->[$j]->{"domain"}                      = $ds_domain;
 		$response_obj->{dslist}->[$j]->{"signed"}                      = $signed;
+		$response_obj->{dslist}->[$j]->{"signing_algorithm"}           = $signing_algorithm;
 		$response_obj->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
 		$response_obj->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
 		$response_obj->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
@@ -971,6 +997,227 @@ sub ds_data {
 	return $response_obj;
 }
 
+sub parent_ds_data {
+	my $self = shift;
+	my $server_obj = shift;
+	my $response_obj;
+
+	$response_obj->{host_name}   = $server_obj->host_name;
+	$response_obj->{domain_name} = $server_obj->domain_name;
+
+
+	if ( $server_obj->type->name =~ m/^MID/ ) {
+		# the mids will do all deliveryservices in this CDN
+		my $rs_dsinfo = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [ $server_obj->cdn->name ] } );
+
+		my $j = 0;
+		while ( my $dsinfo = $rs_dsinfo->next ) {
+			my $org_fqdn                  	= $dsinfo->org_server_fqdn;
+			my $qstring_ignore              = $dsinfo->qstring_ignore;
+			my $ds_xml_id                   = $dsinfo->xml_id;
+			my $origin_shield               = $dsinfo->origin_shield;
+			my $multi_site_origin           = $dsinfo->multi_site_origin;
+
+			$response_obj->{dslist}->[$j]->{"org"}                         = $org_fqdn;
+			$response_obj->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
+			$response_obj->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
+			$response_obj->{dslist}->[$j]->{"origin_shield"}               = $origin_shield;
+			$response_obj->{dslist}->[$j]->{"multi_site_origin"}           = $multi_site_origin;
+
+
+			if ( defined( $dsinfo->profile ) ) {
+				my $dsparamrs = $self->db->resultset('ProfileParameter')->search( { profile => $dsinfo->profile }, { prefetch => [ 'profile', 'parameter' ] } );
+				while ( my $prow = $dsparamrs->next ) {
+					$response_obj->{dslist}->[$j]->{'param'}->{ $prow->parameter->config_file }->{ $prow->parameter->name } = $prow->parameter->value;
+				}
+			}
+
+			$j++;
+		}
+		return $response_obj;
+	}
+	else {
+		my $rs_dsinfo = $self->db->resultset('DeliveryServiceInfoForServerList')->search( {}, { bind => [ $server_obj->id ] } );
+
+		my $j = 0;
+		while ( my $dsinfo = $rs_dsinfo->next ) {
+			my $org_fqdn                  	= $dsinfo->org_server_fqdn;
+			my $ds_type                     = $dsinfo->ds_type;
+			my $qstring_ignore              = $dsinfo->qstring_ignore;
+			my $ds_xml_id                   = $dsinfo->xml_id;
+			my $origin_shield               = $dsinfo->origin_shield;
+			my $multi_site_origin           = $dsinfo->multi_site_origin;
+
+			$response_obj->{dslist}->[$j]->{"org"}                         = $org_fqdn;
+			$response_obj->{dslist}->[$j]->{"type"}                        = $ds_type;
+			$response_obj->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
+
+			if ( defined( $dsinfo->profile ) ) {
+				my $dsqstring = $self->db->resultset('ProfileParameter')
+				                ->search( { -and => [ 'parameter.config_file' => 'parent.config', 'parameter.name' => 'psel.qstring_handling', profile => $dsinfo->profile ] },
+				                { prefetch => [ 'parameter' ] } )->get_column('parameter.value')->single();
+				if ( defined $dsqstring ) {
+					$response_obj->{dslist}->[$j]->{'param'}->{'parent.config'}->{'psel.qstring_handling'} = $dsqstring;
+				}
+			}
+			$j++;
+		}
+		return $response_obj;
+	}
+}
+
+sub remap_ds_data {
+	my $self = shift;
+	my $server_obj = shift;
+	my $response_obj;
+
+	$response_obj->{host_name}   = $server_obj->host_name;
+	$response_obj->{domain_name} = $server_obj->domain_name;
+
+	if ( $server_obj->type->name =~ m/^MID/ ) {
+		# the mids will do all deliveryservices in this CDN
+		my $rs_dsinfo = $self->db->resultset('DeliveryServiceInfoForDomainList')->search( {}, { bind => [ $server_obj->cdn->name ] } );
+
+		my $j = 0;
+		while ( my $dsinfo = $rs_dsinfo->next ) {
+			my $org_fqdn                  	= $dsinfo->org_server_fqdn;
+			my $ds_type                     = $dsinfo->ds_type;
+			my $qstring_ignore              = $dsinfo->qstring_ignore;
+			my $ds_xml_id                   = $dsinfo->xml_id;
+			my $mid_header_rewrite          = $dsinfo->mid_header_rewrite;
+			my $range_request_handling      = $dsinfo->range_request_handling;
+			my $cacheurl                    = $dsinfo->cacheurl;
+
+
+
+			$response_obj->{dslist}->[$j]->{"org"}                         = $org_fqdn;
+			$response_obj->{dslist}->[$j]->{"type"}                        = $ds_type;
+			$response_obj->{dslist}->[$j]->{"mid_header_rewrite"}          = $mid_header_rewrite;
+			$response_obj->{dslist}->[$j]->{"cacheurl"}                    = $cacheurl;
+			$response_obj->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
+			$response_obj->{dslist}->[$j]->{"range_request_handling"}      = $range_request_handling;
+
+			if ( defined($mid_header_rewrite) ) {
+				my $fname = "hdr_rw_mid_" . $ds_xml_id . ".config";
+				$response_obj->{dslist}->[$j]->{"mid_hdr_rw_file"} = $fname;
+			}
+			if ( defined($cacheurl) ) {
+				my $fname = "cacheurl_" . $ds_xml_id . ".config";
+				$response_obj->{dslist}->[$j]->{"cacheurl_file"} = $fname;
+			}
+			if ( defined( $dsinfo->profile ) ) {
+				my $dsparamrs = $self->db->resultset('ProfileParameter')->search( { profile => $dsinfo->profile }, { prefetch => [ 'profile', 'parameter' ] } );
+				while ( my $prow = $dsparamrs->next ) {
+					$response_obj->{dslist}->[$j]->{'param'}->{ $prow->parameter->config_file }->{ $prow->parameter->name } = $prow->parameter->value;
+				}
+			}
+
+			$j++;
+		}
+		return $response_obj;
+	}
+	else {
+		my $rs_dsinfo = $self->db->resultset('DeliveryServiceInfoForServerList')->search( {}, { bind => [ $server_obj->id ] } );
+
+		my $j = 0;
+		while ( my $dsinfo = $rs_dsinfo->next ) {
+			my $org_fqdn                  	= $dsinfo->org_server_fqdn;
+			my $dscp                        = $dsinfo->dscp;
+			my $re_type                     = $dsinfo->re_type;
+			my $ds_type                     = $dsinfo->ds_type;
+			my $signed                      = ( $dsinfo->signing_algorithm eq "url_sig" );
+			my $signing_algorithm           = $dsinfo->signing_algorithm;
+			my $qstring_ignore              = $dsinfo->qstring_ignore;
+			my $ds_xml_id                   = $dsinfo->xml_id;
+			my $ds_domain                   = $dsinfo->domain_name;
+			my $edge_header_rewrite         = $dsinfo->edge_header_rewrite;
+			my $regex_remap                 = $dsinfo->regex_remap;
+			my $protocol                    = $dsinfo->protocol;
+			my $range_request_handling      = $dsinfo->range_request_handling;
+			my $cacheurl                    = $dsinfo->cacheurl;
+			my $remap_text                  = $dsinfo->remap_text;
+
+			if ( $re_type eq 'HOST_REGEXP' && defined($org_fqdn) ) {
+				my $host_re = $dsinfo->pattern;
+				my $map_to  = $org_fqdn . "/";
+				if ( $host_re =~ /\.\*$/ ) {
+					my $re = $host_re;
+					$re =~ s/\\//g;
+					$re =~ s/\.\*//g;
+					my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "ccr";
+					my $portstr = "";
+					if ( $hname eq "ccr" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
+						$portstr = ":" . $server_obj->tcp_port;
+					}
+					my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
+					if ( $protocol == HTTP ) {
+						$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+					}
+					elsif ( $protocol == HTTPS || $protocol == HTTP_TO_HTTPS ) {
+						$map_from = "https://" . $hname . $re . $ds_domain . "/";
+						$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+					}
+					elsif ( $protocol == HTTP_AND_HTTPS ) {
+
+						#add the first one with http
+						$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+
+						#add the second one for https
+						my $map_from2 = "https://" . $hname . $re . $ds_domain . "/";
+						$response_obj->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
+					}
+				}
+				else {
+					my $map_from = "http://" . $host_re . "/";
+					if ( $protocol == HTTP ) {
+						$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+					}
+					elsif ( $protocol == HTTPS || $protocol == HTTP_TO_HTTPS ) {
+						$map_from = "https://" . $host_re . "/";
+						$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+					}
+					elsif ( $protocol == HTTP_AND_HTTPS ) {
+
+						#add the first with http
+						$response_obj->{dslist}->[$j]->{"remap_line"}->{$map_from} = $map_to;
+
+						#add the second with https
+						my $map_from2 = "https://" . $host_re . "/";
+						$response_obj->{dslist}->[$j]->{"remap_line2"}->{$map_from2} = $map_to;
+					}
+				}
+			}
+			$response_obj->{dslist}->[$j]->{"dscp"}                        = $dscp;
+			$response_obj->{dslist}->[$j]->{"org"}                         = $org_fqdn;
+			$response_obj->{dslist}->[$j]->{"type"}                        = $ds_type;
+			$response_obj->{dslist}->[$j]->{"signed"}                      = $signed;
+			$response_obj->{dslist}->[$j]->{"signing_algorithm"}           = $signing_algorithm;
+			$response_obj->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
+			$response_obj->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
+			$response_obj->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
+			$response_obj->{dslist}->[$j]->{"regex_remap"}                 = $regex_remap;
+			$response_obj->{dslist}->[$j]->{"range_request_handling"}      = $range_request_handling;
+			$response_obj->{dslist}->[$j]->{"cacheurl"}                    = $cacheurl;
+			$response_obj->{dslist}->[$j]->{"remap_text"}                  = $remap_text;
+
+			if ( defined($edge_header_rewrite) ) {
+				my $fname = "hdr_rw_" . $ds_xml_id . ".config";
+				$response_obj->{dslist}->[$j]->{"hdr_rw_file"} = $fname;
+			}
+			if ( defined($cacheurl) ) {
+				my $fname = "cacheurl_" . $ds_xml_id . ".config";
+				$response_obj->{dslist}->[$j]->{"cacheurl_file"} = $fname;
+			}
+
+			$j++;
+		}
+
+		return $response_obj;
+
+	}
+}
+
+
 #generates the 12m_facts file
 sub facts {
 	my $self       = shift;
@@ -982,6 +1229,7 @@ sub facts {
 	return $text;
 }
 
+
 #generates a generic config file based on a server and parameters which match the supplied filename.
 sub take_and_bake_server {
 	my $self       = shift;
@@ -989,11 +1237,22 @@ sub take_and_bake_server {
 	my $filename   = shift;
 
 	my $data = $self->param_data( $server_obj, $filename );
-	my $text = $self->header_comment( $server_obj->host_name );
+	my $header = $self->header_comment( $server_obj->host_name );
+	my $text;
 	foreach my $parameter ( sort keys %{$data} ) {
-		$text .= $data->{$parameter} . "\n";
+		if ( $parameter eq "header" && $data->{$parameter} eq "none" ) {
+			$header = "";
+		}
+		elsif ( $parameter eq "header" ) {
+			$header = $data->{$parameter} . "\n";
+		}
+		else {
+			$text .= $data->{$parameter} . "\n";
+		}
 	}
-	return $text;
+	$text =~ s/\s*__RETURN__\s*/\n/g;
+	my $response = $header . $text;
+	return $response;
 }
 
 #generates a generic config file based on a profile and parameters which match the supplied filename.
@@ -1003,11 +1262,22 @@ sub take_and_bake_profile {
 	my $filename    = shift;
 
 	my $data = $self->profile_param_data( $profile_obj->id, $filename );
-	my $text = $self->header_comment( $profile_obj->name );
+	my $header = $self->header_comment( $profile_obj->name );
+	my $text;
 	foreach my $parameter ( sort keys %{$data} ) {
-		$text .= $data->{$parameter} . "\n";
+		if ( $parameter eq "header" && $data->{$parameter} eq "none" ) {
+			$header = "";
+		}
+		elsif ( $parameter eq "header" ) {
+			$header = $data->{$parameter} . "\n";
+		}
+		else {
+			$text .= $data->{$parameter} . "\n";
+		}
 	}
-	return $text;
+	$text =~ s/\s*__RETURN__\s*/\n/g;
+	my $response = $header . $text;
+	return $response;
 }
 
 #generates a generic config file based on a profile and parameters which match the supplied filename.
@@ -1101,7 +1371,7 @@ sub logs_xml_dot_config {
 	my $filename    = shift;
 
 	my $data = $self->profile_param_data( $profile_obj->id, "logs_xml.config" );
-	
+
 	# This is an XML file, so we need to massage the header a bit for XML commenting.
 	my $text = "<!-- " . $self->header_comment( $profile_obj->name );
 	$text =~ s/# //;
@@ -1295,7 +1565,7 @@ sub cacheurl_dot_config {
 	my $filename = shift;
 
 	my $text = $self->header_comment( $cdn_obj->name );
-	
+
 	if ( $filename eq "cacheurl_qstring.config" ) {    # This is the per remap drop qstring w cacheurl use case, the file is the same for all remaps
 		$text .= "http://([^?]+)(?:\\?|\$)  http://\$1\n";
 		$text .= "https://([^?]+)(?:\\?|\$)  https://\$1\n";
@@ -1450,6 +1720,9 @@ sub ssl_multicert_dot_config {
 	my $protocol_search = '> 0';
 	my @ds_list = $self->db->resultset('Deliveryservice')->search( { -and => [ cdn_id => $cdn_obj->id, 'me.protocol' => \$protocol_search ] } )->all();
 	foreach my $ds (@ds_list) {
+		if ( $ds->type->name =~ /STEERING/ ) {
+				next;    # Steering delivery service SSLs should not be on the edges.
+		}
 		my $ds_id        = $ds->id;
 		my $xml_id       = $ds->xml_id;
 		my $rs_ds        = $self->db->resultset('Deliveryservice')->search( { 'me.id' => $ds_id }, { prefetch => ['type'] } );
@@ -1503,11 +1776,39 @@ sub url_sig_dot_config {
 	}
 }
 
-sub cache_dot_config {
+sub server_cache_dot_config {
+	my $self       = shift;
+	my $server_obj = shift;
+	my $filename   = shift;
+
+
+	my $text = $self->header_comment( $server_obj->host_name );
+	my $data = $self->ds_data($server_obj);
+
+	foreach my $ds ( @{ $data->{dslist} } ) {
+		if ( $ds->{type} eq "HTTP_NO_CACHE" ) {
+			my $org_fqdn = $ds->{org};
+			$org_fqdn =~ s/https?:\/\///;
+			$text .= "dest_domain=" . $org_fqdn . " scheme=http action=never-cache\n";
+		}
+	}
+
+	#remove duplicate lines, since we're looking up by profile
+	my @lines = split(/\n/,$text);
+
+	my %seen;
+	@lines = grep { !$seen{$_}++ } @lines;
+
+	$text = join("\n",@lines);
+
+	return $text;
+}
+
+sub profile_cache_dot_config {
 	my $self       = shift;
 	my $profile_obj = shift;
 	my $filename   = shift;
-	
+
 
 	my $text = $self->header_comment( $profile_obj->name );
 	my $data = $self->profile_ds_data($profile_obj);
@@ -1522,7 +1823,7 @@ sub cache_dot_config {
 
 	#remove duplicate lines, since we're looking up by profile
 	my @lines = split(/\n/,$text);
-	
+
 	my %seen;
 	@lines = grep { !$seen{$_}++ } @lines;
 
@@ -1875,12 +2176,10 @@ sub format_parent_info {
 	return $text;
 }
 
-sub parent_dot_config {
+sub parent_dot_config { #fix qstring - should be ignore for quika
 	my $self       = shift;
 	my $server_obj = shift;
-
 	my $data;
-
 	my $server_type = $server_obj->type->name;
 
 	my $ats_ver =
@@ -1888,26 +2187,28 @@ sub parent_dot_config {
 		->search( { 'parameter.name' => 'trafficserver', 'parameter.config_file' => 'package', 'profile.id' => $server_obj->profile->id },
 		{ prefetch => [ 'profile', 'parameter' ] } )->get_column('parameter.value')->single();
 	my $ats_major_version = substr( $ats_ver, 0, 1 );
-
 	my $parent_info;
-	my $text = $self->header_comment( $server_obj->host_name );
-	if ( !defined($data) ) {
-		$data = $self->ds_data($server_obj);
-	}
+	my $header = $self->header_comment( $server_obj->host_name );
+	my @text_array;
+
 
 	if ( $server_type =~ m/^MID/ ) {
 		my @unique_origins;
+		if ( !defined($data) ) {
+			$data = $self->parent_ds_data($server_obj);
+		}
 		foreach my $ds ( @{ $data->{dslist} } ) {
+			my $text;
 			my $xml_id                             = $ds->{ds_xml_id};
 			my $origin_shield                      = $ds->{origin_shield};
 			my $multi_site_origin                  = $ds->{multi_site_origin} || 0;
-			my $mso_algorithm                      = $ds->{'param'}->{'parent.config'}->{'mso.algorithm'} || 0;
-			my $parent_retry                       = $ds->{'param'}->{'parent.config'}->{'mso.parent_retry'};
-			my $unavailable_server_retry_responses = $ds->{'param'}->{'parent.config'}->{'mso.unavailable_server_retry_responses'};
+			my $mso_algorithm                      = $ds->{'param'}->{'parent.config'}->{'mso.algorithm'} || 'consistent_hash';
+			my $parent_retry                       = $ds->{'param'}->{'parent.config'}->{'mso.parent_retry'} || 'both';
+			my $unavailable_server_retry_responses = $ds->{'param'}->{'parent.config'}->{'mso.unavailable_server_retry_responses'} || '';
 			my $max_simple_retries                 = $ds->{'param'}->{'parent.config'}->{'mso.max_simple_retries'} || 1;
 			my $max_unavailable_server_retries     = $ds->{'param'}->{'parent.config'}->{'mso.max_unavailable_server_retries'} || 1;
 
-			my $qsh            = $ds->{'param'}->{'parent.config'}->{'mso.qstring_handling'};
+			my $qsh            = $ds->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
 			my $parent_qstring = "ignore";                                                      # default is ignore, unless for alg consistent_hash
 			if ( !defined($qsh) && $mso_algorithm eq 'consistent_hash' && $ds->{qstring_ignore} == 0 ) {
 				$parent_qstring = 'consider';
@@ -1968,30 +2269,84 @@ sub parent_dot_config {
 					my %seen;
 					@null_parent_info = grep { !$seen{$_}++ } @null_parent_info;
 				}
-
-				my $parents = 'parent="' . join( '', @parent_info ) . '' . join( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
-
+				#If the ats version supports it and the algorithm is consistent hash, put secondary and non-primary parents into secondary parent group.
+				#This will ensure that secondary and tertiary parents will be unused unless all hosts in the primary group are unavailable.
+				my $parents= '';
+				if ( $ats_major_version >= 6 && $mso_algorithm eq "consistent_hash" && ( scalar @secondary_parent_info > 0 || scalar @null_parent_info > 0 ) ) {
+					$parents = 'parent="' . join( '', @parent_info ) . '" secondary_parent="' . join( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
+				}
+				else {
+					$parents = 'parent="' . join( '', @parent_info ) . '' . join( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
+				}
 				$text .= "$parents round_robin=$mso_algorithm qstring=$parent_qstring go_direct=false parent_is_proxy=false";
 
 				if ( $ats_major_version >= 6 && $parent_retry ne "" ) {
-					$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";
+					if ( $unavailable_server_retry_responses ne "" && $unavailable_server_retry_responses =~ /^"(?:\d{3},)+\d{3}"\s*$/) {
+						$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";	
+					} else {
+						$text .= " parent_retry=$parent_retry";
+					}
 					$text .= " max_simple_retries=$max_simple_retries max_unavailable_server_retries=$max_unavailable_server_retries";
 				}
 				$text .= "\n";
+				push @text_array, $text;
 			}
 		}
 
 		#$text .= "dest_domain=. go_direct=true\n"; # this is implicit.
 		#$self->app->log->debug( "MID PARENT.CONFIG:\n" . $text . "\n" );
+		my $text = $header;
+		foreach my $line (sort @text_array ){
+			$text .= $line;
+		}
 
 		return $text;
 	}
 	else {    #"True" Parent - we are genning a EDGE config that points to a parent proxy.
-
 		$parent_info = $self->parent_data($server_obj);
 		my %done = ();
+		my $qsh = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'psel.qstring_handling');
+		my @parent_info;
+		my @secondary_parent_info;
+		foreach my $parent ( @{ $parent_info->{all_parents} } ) {
+			my $ptxt = format_parent_info($parent);
+			if ( $parent->{primary_parent} ) {
+				push @parent_info, $ptxt;
+			}
+			elsif ( $parent->{secondary_parent} ) {
+				push @secondary_parent_info, $ptxt;
+			}
+		}
+		if ( scalar @parent_info == 0  ) {
+			@parent_info = @secondary_parent_info;
+			@secondary_parent_info = ();
+		}
+		my %seen;
+		@parent_info = grep { !$seen{$_}++ } @parent_info;
+		if ( scalar @secondary_parent_info > 0 ) {
+			my %seen;
+			@secondary_parent_info = grep { !$seen{$_}++ } @secondary_parent_info;
+		}
+		#If the ats version supports it, put secondary parents into secondary parent group.
+		#This will ensure that secondary parents will be unused unless all hosts in the primary group are unavailable.
+		my $parents = '';
+		my $secparents = '';
+		if ( $ats_major_version >= 6 && @secondary_parent_info > 0 ) {
+			$parents = 'parent="' . join( '', sort @parent_info ) . '"';
+			$secparents = ' secondary_parent="' . join( '', sort @secondary_parent_info ) . '"';
+		}
+		else {
+			$parents = 'parent="' . join( '', sort @parent_info ) . join( '', sort @secondary_parent_info ) . '"';
+		}	
 
-		foreach my $ds ( @{ $data->{dslist} } ) {
+		my $round_robin = 'round_robin=consistent_hash';
+		my $go_direct   = 'go_direct=false';
+
+		if ( !defined($data) ) {
+			$data = $self->parent_ds_data($server_obj);
+		}
+		foreach my $ds ( sort @{ $data->{dslist} } ) {
+			my $text;
 			my $org = $ds->{org};
 			next if !defined $org || $org eq "";
 			next if $done{$org};
@@ -2000,38 +2355,21 @@ sub parent_dot_config {
 				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
 			}
 			else {
-				my $qsh = $ds->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
-				my $parent_qstring = defined($qsh) ? $qsh : "ignore";
-				if ( $ds->{qstring_ignore} == 0 && !defined($qsh) ) {
+				# check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
+				# then edges will use the qstring handling value specified in the parameter for all profiles.
+
+				# If there is no defined parameter in the profile, then check the delivery service profile.
+				# If psel.qstring_handling exists in the DS profile, then we use that value for the specified DS only.
+				# This is used only if not overridden by a server profile qstring handling parameter.
+				my $ds_qsh = $qsh;
+				if (!defined($qsh)) {
+					$ds_qsh = $ds->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
+				}
+				my $parent_qstring = defined($ds_qsh) ? $ds_qsh : "ignore";
+
+				if ( $ds->{qstring_ignore} == 0 && !defined($ds_qsh) ) {
 					$parent_qstring = "consider";
 				}
-
-				my @parent_info;
-				my @secondary_parent_info;
-				foreach my $parent ( @{ $parent_info->{all_parents} } ) {
-					my $ptxt = format_parent_info($parent);
-					if ( $parent->{primary_parent} ) {
-						push @parent_info, $ptxt;
-					}
-					elsif ( $parent->{secondary_parent} ) {
-						push @secondary_parent_info, $ptxt;
-					}
-				}
-				if ( scalar @parent_info == 0  ) {
-					@parent_info = @secondary_parent_info;
-					@secondary_parent_info = ();
-				}
-				my %seen;
-				@parent_info = grep { !$seen{$_}++ } @parent_info;
-				my $parents = 'parent="' . join( '', @parent_info ) . '"';
-				my $secparents = '';
-				if ( scalar @secondary_parent_info > 0 ) {
-					my %seen;
-					@secondary_parent_info = grep { !$seen{$_}++ } @secondary_parent_info;
-					$secparents = 'secondary_parent="' . join( '', @secondary_parent_info ) . '"';
-				}
-				my $round_robin = 'round_robin=consistent_hash';
-				my $go_direct   = 'go_direct=false';
 				$text
 					.= "dest_domain="
 					. $org_uri->host
@@ -2039,56 +2377,53 @@ sub parent_dot_config {
 					. $org_uri->port
 					. " $parents $secparents $round_robin $go_direct qstring=$parent_qstring\n";
 			}
+			push @text_array, $text;
 			$done{$org} = 1;
 		}
 
+		my $default_dest_text;
 		my $parent_select_alg = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'algorithm', undef );
 		if ( defined($parent_select_alg) && $parent_select_alg eq 'consistent_hash' ) {
-			my @parent_info;
-			foreach my $parent ( @{ $parent_info->{"all_parents"} } ) {
-				push @parent_info, $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
-			}
-			my %seen;
-			@parent_info = grep { !$seen{$_}++ } @parent_info;
-			$text .= "dest_domain=.";
-			$text .= " parent=\"" . join( '', @parent_info ) . "\"";
-			$text .= " round_robin=consistent_hash go_direct=false";
+			$default_dest_text .= "dest_domain=. ";
+			$default_dest_text .= $parents . $secparents;
+			$default_dest_text .= " round_robin=consistent_hash go_direct=false";
 		}
 		else {    # default to old situation.
-			$text .= "dest_domain=.";
-			my @parent_info;
-			foreach my $parent ( @{ $parent_info->{"all_parents"} } ) {
-				push @parent_info, $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . ";";
-			}
-			my %seen;
-			@parent_info = grep { !$seen{$_}++ } @parent_info;
-			$text .= " parent=\"" . join( '', @parent_info ) . "\"";
-			$text .= " round_robin=urlhash go_direct=false";
+			$default_dest_text .= "dest_domain=. ";
+			$default_dest_text .= $parents;
+			$default_dest_text .= " round_robin=urlhash go_direct=false";
 		}
 
 		my $qstring = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'qstring', undef );
 		if ( defined($qstring) ) {
-			$text .= " qstring=" . $qstring;
+			$default_dest_text .= " qstring=" . $qstring;
 		}
 
-		$text .= "\n";
+		$default_dest_text .= "\n";
 
+		my $text = $header;
+		foreach my $line (sort @text_array ){
+			$text .= $line;
+		}
+
+		$text .= $default_dest_text;
 		return $text;
 	}
 }
 
 sub remap_dot_config {
 	my $self       = shift;
-	my $profile_obj = shift;
+	my $server_obj = shift;
 	my $data;
+	my @text_array;
 
-	my $pdata = $self->profile_param_data( $profile_obj->id, 'package' );
-	my $text = $self->header_comment( $profile_obj->name );
+
+	my $pdata = $self->param_data( $server_obj, 'package' );
+	my $header = $self->header_comment( $server_obj->host_name );
 	if ( !defined($data) ) {
-		$data = $self->profile_ds_data($profile_obj);
+		$data = $self->remap_ds_data($server_obj);
 	}
-
-	if ( $profile_obj->name =~ m/^MID/ ) {
+	if ( $server_obj->type->name =~ m/^MID/ ) {
 		my %mid_remap;
 		foreach my $ds ( @{ $data->{dslist} } ) {
 			if ( $ds->{type} =~ /LIVE/ && $ds->{type} !~ /NATNL/ ) {
@@ -2112,45 +2447,57 @@ sub remap_dot_config {
 			}
 		}
 		foreach my $key ( keys %mid_remap ) {
-			$text .= "map " . $key . " " . $key . $mid_remap{$key} . "\n";
+			my $remap_text .= "map " . $key . " " . $key . $mid_remap{$key} . "\n";
+			push @text_array, $remap_text;
 		}
-
+		my $text = $header;
+		foreach my $line (sort @text_array ){
+			$text .= $line;
+		}
 		return $text;
 	}
 
 	# mids don't get here.
 	foreach my $ds ( @{ $data->{dslist} } ) {
-		foreach my $map_from ( keys %{ $ds->{remap_line} } ) {
-			my $map_to = $ds->{remap_line}->{$map_from};
-			$text = $self->build_remap_line( $profile_obj, $pdata, $text, $data, $ds, $map_from, $map_to );
+		my $remap_text;
+		if ( $ds->{type} eq 'ANY_MAP' ) {
+			$remap_text .= $ds->{remap_text} . "\n";
 		}
-		foreach my $map_from ( keys %{ $ds->{remap_line2} } ) {
-			my $map_to = $ds->{remap_line2}->{$map_from};
-			$text = $self->build_remap_line( $profile_obj, $pdata, $text, $data, $ds, $map_from, $map_to );
+		else {
+			foreach my $map_from ( keys %{ $ds->{remap_line} } ) {
+				my $map_to = $ds->{remap_line}->{$map_from};
+				$remap_text = $self->build_remap_line( $server_obj, $pdata, $remap_text, $ds, $map_from, $map_to );
+			}
+			foreach my $map_from ( keys %{ $ds->{remap_line2} } ) {
+				my $map_to = $ds->{remap_line2}->{$map_from};
+				$remap_text = $self->build_remap_line( $server_obj, $pdata, $remap_text, $ds, $map_from, $map_to );
+			}
 		}
+
+		push @text_array, $remap_text;
+	}
+	my $text = $header;
+	foreach my $line (sort @text_array ){
+		$text .= $line;
 	}
 	return $text;
 }
 
 sub build_remap_line {
 	my $self        = shift;
-	my $profile_obj = shift;
+	my $server_obj 	= shift;
 	my $pdata       = shift;
 	my $text        = shift;
-	my $data        = shift;
 	my $remap       = shift;
 	my $map_from    = shift;
 	my $map_to      = shift;
 
-	if ( $remap->{type} eq 'ANY_MAP' ) {
-		$text .= $remap->{remap_text} . "\n";
-		return $text;
-	}
 
-	my $host_name = $data->{host_name};
+
 	my $dscp      = $remap->{dscp};
+	my $hostname  = $server_obj->host_name;
 
-	$map_from =~ s/ccr/__HOSTNAME__/;
+	$map_from =~ s/ccr/$hostname/;
 
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
 		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=dscp_remap.so \@pparam=" . $dscp;
@@ -2161,15 +2508,18 @@ sub build_remap_line {
 	if ( defined( $remap->{edge_header_rewrite} ) ) {
 		$text .= " \@plugin=header_rewrite.so \@pparam=" . $remap->{hdr_rw_file};
 	}
-	if ( $remap->{signed} == 1 ) {
+	if ( $remap->{signing_algorithm} eq "url_sig" ) {
 		$text .= " \@plugin=url_sig.so \@pparam=url_sig_" . $remap->{ds_xml_id} . ".config";
+	}
+	elsif ( $remap->{signing_algorithm} eq "uri_signing" ) {
+		$text .= " \@plugin=uri_signing.so \@pparam=uri_signing_" . $remap->{ds_xml_id} . ".config";
 	}
 	if ( $remap->{qstring_ignore} == 2 ) {
 		my $dqs_file = "drop_qstring.config";
 		$text .= " \@plugin=regex_remap.so \@pparam=" . $dqs_file;
 	}
 	elsif ( $remap->{qstring_ignore} == 1 ) {
-		my $global_exists = $self->profile_param_value( $profile_obj->id, 'cacheurl.config', 'location', undef );
+		my $global_exists = $self->profile_param_value( $server_obj->profile->id, 'cacheurl.config', 'location', undef );
 		if ($global_exists) {
 			$self->app->log->debug(
 				"qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter if you want to change"
@@ -2181,6 +2531,13 @@ sub build_remap_line {
 	}
 	if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
 		$text .= " \@plugin=cacheurl.so \@pparam=" . $remap->{cacheurl_file};
+	}
+
+	if ( defined( $remap->{'param'}->{'cachekey.config'} ) ) {
+		$text .= " \@plugin=cachekey.so";
+		foreach my $ck_entry ( keys %{ $remap->{'param'}->{'cachekey.config'} } ) {
+			$text .= " \@pparam=--" . $ck_entry . "=" . $remap->{'param'}->{'cachekey.config'}->{$ck_entry};
+		}
 	}
 
 	# Note: should use full path here?

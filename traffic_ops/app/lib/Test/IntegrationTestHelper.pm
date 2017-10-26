@@ -25,6 +25,7 @@ use Test::More;
 use Test::Mojo;
 use Moose;
 
+use Utils::Tenant;
 use Fixtures::Integration::Asn;
 use Fixtures::Integration::CachegroupParameter;
 use Fixtures::Integration::Cachegroup;
@@ -39,7 +40,6 @@ use Fixtures::Integration::FederationFederationResolver;
 use Fixtures::Integration::Federation;
 use Fixtures::Integration::FederationResolver;
 use Fixtures::Integration::FederationTmuser;
-use Fixtures::Integration::GooseDbVersion;
 use Fixtures::Integration::Hwinfo;
 use Fixtures::Integration::JobAgent;
 use Fixtures::Integration::Job;
@@ -103,7 +103,15 @@ sub teardown {
 	my $self       = shift;
 	my $schema     = shift;
 	my $table_name = shift;
-	$schema->resultset($table_name)->delete_all;
+
+	if ($table_name eq 'Tenant') {
+		my $tenant_utils = Utils::Tenant->new(undef, 10**9, $schema);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		$tenant_utils->cascade_delete_tenants_tree($tenants_data);
+	}
+	else {
+		$schema->resultset($table_name)->delete_all;
+	}
 }
 
 ## For PSQL sequence to work correctly we cannot hard code
@@ -157,42 +165,26 @@ sub load_core_data {
 	diag "Done!";
 }
 
-# Tearing down the Cachegroup table requires deleting them in a specific order, because
-# of the 'parent_cachegroup_id' and nested references.
-sub delete_cachegroups {
-	my $self   = shift;
-
-	my $dbh    = Schema->database_handle;
-	my $cg = $dbh->prepare("TRUNCATE TABLE cachegroup CASCADE;");
-	$cg->execute();
-	$cg->finish();
-	$dbh->disconnect;
-}
-
 sub unload_core_data {
 	my $self   = shift;
 	my $schema = shift;
-	$self->teardown( $schema, 'Job' );
-	$self->teardown( $schema, 'Log' );
-	$self->teardown( $schema, 'TmUser' );
-	$self->teardown( $schema, 'Role' );
-	$self->teardown( $schema, 'Regex' );
-	$self->teardown( $schema, 'DeliveryserviceServer' );
-	$self->teardown( $schema, 'Deliveryservice' );
-	$self->teardown( $schema, 'Server' );
-	$self->teardown( $schema, 'Asn' );
-	$self->delete_cachegroups($schema);    # cachegroups is special because it refs itself
-	$self->teardown( $schema, 'Profile' );
-	$self->teardown( $schema, 'Parameter' );
-	$self->teardown( $schema, 'ProfileParameter' );
-	$self->teardown( $schema, 'ToExtension' );
-	$self->teardown( $schema, 'Type' );
-	$self->teardown( $schema, 'Status' );
-	$self->teardown( $schema, 'PhysLocation' );
-	$self->teardown( $schema, 'Region' );
-	$self->teardown( $schema, 'Division' );
-	$self->teardown( $schema, 'Snapshot' );
-	$self->teardown( $schema, 'Cdn' );
+
+	my $dbh    = Schema->database_handle;
+
+	# Suppress NOTICE messages for cascades
+	my $nonotice = $dbh->prepare("SET client_min_messages TO WARNING;");
+	$nonotice->execute();
+	$nonotice->finish();
+	for my $source (values $schema->source_registrations) {
+		if ( ! $source->isa('DBIx::Class::ResultSource::Table') ) {
+			# Skip if it doesn't represent an actual table
+			next;
+		}
+		my $table_name = $source->name;
+		my $truncate = $dbh->prepare("TRUNCATE TABLE $table_name CASCADE;");
+		$truncate->execute();
+		$truncate->finish();
+	}
 }
 
 1;

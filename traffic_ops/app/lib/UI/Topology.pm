@@ -90,20 +90,19 @@ sub gen_crconfig_json {
         "^EDGE" => "EDGE",
         "^MID"  => "MID",
     };
-
+    my $found;
     for my $cachetype ( keys %{$types} ) {
-        my $found = 0;
-
+        
         for my $this_type ( keys %{$profile_cache} ) {
             if ( $this_type =~ m/$cachetype/ && scalar( @{ $profile_cache->{$this_type} } ) > 0 ) {
                 push @profile_caches, @{ $profile_cache->{$this_type} };
                 $found = 1;
             }
         }
+    }
 
-        if ( !$found ) {
-            my $e = Mojo::Exception->throw( "No " . $types->{$cachetype} . " profiles found for CDN: " . $cdn_name );
-        }
+    if ( !$found ) {
+        my $e = Mojo::Exception->throw( "No cache profiles found for CDN: " . $cdn_name );
     }
 
     my %condition = (
@@ -190,7 +189,7 @@ sub gen_crconfig_json {
             'me.cdn_id' => $cdn_id
         }, {
             prefetch => [ 'type',      'status',      'cachegroup', 'profile' ],
-            columns  => [ 'host_name', 'domain_name', 'tcp_port', 'https_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id' ]
+            columns  => [ 'host_name', 'domain_name', 'tcp_port', 'https_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id', 'profile.routing_disabled' ]
         }
     );
 
@@ -267,6 +266,7 @@ sub gen_crconfig_json {
             $data_obj->{'contentServers'}->{ $row->host_name }->{'type'}          = $row->type->name;
             $data_obj->{'contentServers'}->{ $row->host_name }->{'hashId'}        = $row->xmpp_id;
             $data_obj->{'contentServers'}->{ $row->host_name }->{'hashCount'}     = int( $weight * $weight_multiplier );
+            $data_obj->{'contentServers'}->{ $row->host_name }->{'routingDisabled'} = $row->profile->routing_disabled;
         }
     }
     my $regexps;
@@ -286,6 +286,8 @@ sub gen_crconfig_json {
         else {
             $protocol = 'HTTP';
         }
+
+        $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'routingName'} = $row->routing_name;
 
         my @server_subrows = $row->deliveryservice_servers->all;
         my @regex_subrows  = $row->deliveryservice_regexes->all;
@@ -350,6 +352,7 @@ sub gen_crconfig_json {
             foreach my $server ( keys %server_subrow_dedup ) {
 
                 next if ( !defined( $cache_tracker{$server} ) );
+                next if ( $data_obj->{'contentServers'}->{ $cache_tracker{$server} }->{'routingDisabled'} == 1);
 
                 foreach my $host ( @{ $ds_to_remap{ $row->xml_id } } ) {
                     my $remap;
@@ -357,7 +360,7 @@ sub gen_crconfig_json {
                         my $host_copy = $host;
                         $host_copy =~ s/$host_regex1//g;
                         if ( $protocol eq 'DNS' ) {
-                            $remap = 'edge' . $host_copy . $ccr_domain_name;
+                            $remap = $row->routing_name . $host_copy . $ccr_domain_name;
                         }
                         else {
                             $remap = $cache_tracker{$server} . $host_copy . $ccr_domain_name;
@@ -721,6 +724,9 @@ sub stringify_ds {
     }
     if ( defined( $ds->{'ip6RoutingEnabled'} ) ) {
         $string .= "|ip6RoutingEnabled: " . $ds->{'ip6RoutingEnabled'};
+    }
+    if ( defined( $ds->{'routingName'} ) ) {
+        $string .= "|routingName: " . $ds->{'routingName'};
     }
     if ( defined( $ds->{'maxDnsIpsForLocation'} ) ) {
         $string .= "|maxDnsIpsForLocation:" . $ds->{'maxDnsIpsForLocation'};

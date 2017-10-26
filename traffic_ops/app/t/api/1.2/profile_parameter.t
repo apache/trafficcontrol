@@ -46,7 +46,7 @@ Test::TestHelper->load_all_fixtures( Fixtures::Profile->new($schema_values) );
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
-ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'application/json'} => json => 
+ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'application/json'} => json =>
         [
             {
                 "name"          => "param1",
@@ -71,7 +71,7 @@ ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'applicati
 	->json_is( "/response/parameters/1/secure" => "0" )
 		, 'Does the profile_parameters create details return?';
 
-ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'application/json'} => json => 
+ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'application/json'} => json =>
         [
             {
                 "name"          => "param1",
@@ -134,7 +134,7 @@ ok $t->post_ok('/api/1.2/profiles/'. $prof_id . '/parameters' => {Accept => 'app
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		, 'Does the profile_parameters create details return?';
 
-ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'application/json'} => json => 
+ok $t->post_ok('/api/1.2/profiles/name/CCR1/parameters' => {Accept => 'application/json'} => json =>
         [
             {
                 "configFile"    => "configFile1",
@@ -198,6 +198,7 @@ ok $t->post_ok('/api/1.2/profileparameters' => {Accept => 'application/json'} =>
 	"profileId" => 300, "parameterId" => 2 })->status_is(400);
 
 my $param_id1 = &get_parameter_id("param1");
+my $param_id2 = &get_parameter_id("param2");
 ok $t->delete_ok('/api/1.2/profileparameters/300/' . $param_id1 => {Accept => 'application/json'})->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/alerts/0/level", "success" )
@@ -214,6 +215,25 @@ my $count_response = sub {
 # this is a dns delivery service with 2 edges and 1 mid and since dns ds's DO employ mids, 3 servers return
 $t->get_ok('/api/1.2/profileparameters?id=300')->status_is(200)->$count_response(5)
     ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+#assign parameters to a profile
+ok $t->post_ok('/api/1.2/profileparameter' => {Accept => 'application/json'} => json => {
+			"profileId" => 100,
+			"paramIds" => [ $param_id1, $param_id2 ],
+			"replace" => 1
+		})
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	, 'Were the parameters assigned to the profile?';
+
+#assign profiles to a parameter
+ok $t->post_ok('/api/1.2/parameterprofile' => {Accept => 'application/json'} => json => {
+			"paramId" => $param_id1,
+			"profileIds" => [ 100, 200 ],
+			"replace" => 1
+		})
+		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+	, 'Were the profiles assigned to the parameter?';
+
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

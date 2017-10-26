@@ -33,7 +33,14 @@ my %definition_for = (
             parameter => 5,
         },
     },
-    rascal_properties2 => {
+    rascal_properties3 => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 100,
+            parameter => 6,
+        },
+    },
+    rascal_properties4 => {
         new   => 'ProfileParameter',
         using => {
             profile   => 200,
@@ -808,6 +815,13 @@ my %definition_for = (
         using => {
             profile   => 200,
             parameter => 61,
+        },
+    },
+    'edge1_package_trafficserver' => {
+        new   => 'ProfileParameter',
+        using => {
+            profile   => 100,
+            parameter => 66,
         },
     },
 );

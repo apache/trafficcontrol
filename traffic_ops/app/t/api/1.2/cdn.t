@@ -44,6 +44,16 @@ $t->get_ok("/api/1.2/cdns")->status_is(200)->json_is( "/response/0/id", 100 )
 $t->get_ok("/api/1.2/cdns/100")->status_is(200)->json_is( "/response/0/id", 100 )
     ->json_is( "/response/0/name", "cdn1" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+ok $t->put_ok('/api/1.2/cdns/100/snapshot')
+        ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    , 'Is the cdn snapshotted?';
+
+$t->get_ok("/api/1.2/cdns/cdn1/snapshot")->status_is(200)
+    ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+$t->get_ok("/api/1.2/cdns/cdn1/snapshot/new")->status_is(200)
+    ->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->post_ok('/api/1.2/cdns/100/queue_update' => {Accept => 'application/json'} => json => {
             "action" => "queue" })
         ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )

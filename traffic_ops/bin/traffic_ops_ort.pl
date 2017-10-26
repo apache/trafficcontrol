@@ -24,7 +24,7 @@ use MIME::Base64;
 use LWP::UserAgent;
 use Crypt::SSLeay;
 use Getopt::Long;
-
+use Digest::SHA qw(sha512_base64);
 
 $| = 1;
 my $date           = `/bin/date`;
@@ -76,6 +76,8 @@ if ( defined( $ARGV[2] ) ) {
 	else {
 		$traffic_ops_host = $ARGV[2];
 		$traffic_ops_host =~ s/\/*$//g;
+                # Stash to_url for later use...
+                $to_url = $traffic_ops_host;
 	}
 }
 else {
@@ -164,7 +166,7 @@ my $YUM_OPTS = "";
 my $TS_HOME      = "/opt/trafficserver";
 my $TRAFFIC_LINE = $TS_HOME . "/bin/traffic_line";
 
-my $out          = `/usr/bin/yum $YUM_OPTS clean metadata 2>&1`;
+my $out          = `/usr/bin/yum $YUM_OPTS clean expire-cache 2>&1`;
 my $return       = &check_output($out);
 my @config_files = ();
 
@@ -302,7 +304,7 @@ sub revalidate_while_sleeping {
 
 sub os_version {
   my $release = "UNKNOWN";
-  if (`uname -r` =~ m/.+(el\d)\.x86_64/)  {
+  if (`uname -r` =~ m/.+(el\d)(?:\.\w+)*\.x86_64/)  {
     $release = uc $1;
   }
   exists $supported_el_release{$release} ? return $release
@@ -367,6 +369,7 @@ sub process_cfg_file {
 		$result =~ s/__CACHE_IPV4__/$server_ipv4/g;
 		$result =~ s/__HOSTNAME__/$hostname_short/g;
 		$result =~ s/__FULL_HOSTNAME__/$hostname_full/g;
+		$result =~ s/\s*__RETURN__\s*/\n/g;
 	}
 
 	my @db_file_lines = @{ &scrape_unencode_text($result) };
@@ -703,7 +706,7 @@ sub update_trops {
 	}
 	if ($update_result) {
 		#need to know if reval_pending is supported
-		my $uri     = "/update/$hostname_short";
+		my $uri     = "/api/1.3/servers/$hostname_short/update_status";
 		my $upd_ref = &lwp_get($uri);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
@@ -772,7 +775,7 @@ sub check_revalidate_state {
 	if ( $script_mode == $REVALIDATE || $sleep_override == 1 ) {
 		## The herd is about to get /update/<hostname>
 
-		my $uri     = "/update/$hostname_short";
+		my $uri     = "/api/1.3/servers/$hostname_short/update_status";
 		my $upd_ref = &lwp_get($uri);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
@@ -858,7 +861,7 @@ sub check_syncds_state {
 	if ( $script_mode == $SYNCDS || $script_mode == $BADASS || $script_mode == $REPORT ) {
 		## The herd is about to get /update/<hostname>
 		## need to check if revalidation is being used first.
-		my $uri     = "/update/$hostname_short";
+		my $uri     = "/api/1.3/servers/$hostname_short/update_status";
 		my $upd_ref = &lwp_get($uri);
 		my $upd_json = decode_json($upd_ref);
 		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;
@@ -868,7 +871,6 @@ sub check_syncds_state {
 		else {
 			$reval_in_use = 0;
 		}
-		( $dispersion > 0 ) && &sleep_timer($random_duration);
 
 		$upd_ref = &lwp_get($uri);
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
@@ -890,6 +892,7 @@ sub check_syncds_state {
 		}
 
 		if ( $upd_pending == 1 ) {
+			( $dispersion > 0 ) && &sleep_timer($random_duration);
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that an update is waiting to be applied.\n";
 			$syncds_update = $UPDATE_TROPS_NEEDED;
 
@@ -937,7 +940,8 @@ sub check_syncds_state {
 			}
 		}
 		elsif ( $script_mode == $SYNCDS && $upd_pending != 1 ) {
-			( $log_level >> $ERROR ) && print "ERROR In syncds mode, but no syncds update needs to be applied. I'm outta here.\n";
+			( $log_level >> $ERROR ) && print "ERROR In syncds mode, but no syncds update needs to be applied. Running revalidation before exiting.\n";
+			&revalidate_while_sleeping();
 			exit 0;
 		}
 		else {
@@ -1071,6 +1075,7 @@ sub process_config_files {
 				|| $file eq "cache.config"
 				|| $file eq "hosting.config"
 				|| $file =~ m/url\_sig\_(.*)\.config$/
+				|| $file =~ m/uri\_signing\_(.*)\.config$/
 				|| $file =~ m/hdr\_rw\_(.*)\.config$/
 				|| $file eq "regex_revalidate.config"
 				|| $file eq "astats.config"
@@ -1103,6 +1108,11 @@ sub process_config_files {
 		elsif ( $script_mode == $SYNCDS && defined( $cfg_file_tracker->{$file}->{'location'} ) && $cfg_file_tracker->{$file}->{'location'} =~ m/cron/ ) {
 			( $log_level >> $DEBUG ) && print "DEBUG In syncds mode, I'm about to process config file: $file\n";
 			$cfg_file_tracker->{$file}->{'service'} = "system";
+			$return = &process_cfg_file($file);
+		}
+		elsif ( $script_mode == $SYNCDS && defined( $cfg_file_tracker->{$file}->{'url'} ) && defined ( $cfg_file_tracker->{$file}->{'location'} ) ) {
+			( $log_level >> $DEBUG ) && print "DEBUG In syncds mode, I'm about to process config file: $file\n";
+			$cfg_file_tracker->{$file}->{'service'} = "trafficserver";
 			$return = &process_cfg_file($file);
 		}
 		elsif ( $script_mode != $SYNCDS ) {
@@ -1261,12 +1271,19 @@ sub check_plugins {
 			foreach my $i ( 1..$#parts ) {
 				( my $plugin_name, my $plugin_config_file ) = split( /\@pparam\=/, $parts[$i] );
 				if (defined( $plugin_config_file ) ) {
-					($plugin_config_file) = split( /\s+/, $plugin_config_file);
-					( my @parts ) = split( /\//, $plugin_config_file );
-					$plugin_config_file = $parts[$#parts];
-					$plugin_config_file =~ s/\s+//g;
-					if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'}) ) {
-						$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1;
+					# Subblock for lasting out of.
+					{
+						($plugin_config_file) = split( /\s+/, $plugin_config_file);
+
+						# Skip parameters that start with '-', since those are probabably parameters, not config files.
+						last if $plugin_config_file =~ m/^-/; # Exit subblock.
+
+						( my @parts ) = split( /\//, $plugin_config_file );
+						$plugin_config_file = $parts[$#parts];
+						$plugin_config_file =~ s/\s+//g;
+						if ( !exists($cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} ) && $plugin_config_file !~ /.lua$/ ) {
+							$cfg_file_tracker->{$plugin_config_file}->{'remap_plugin_config_file'} = 1;
+						}
 					}
 				}
 				else {
@@ -1395,12 +1412,21 @@ sub lwp_get {
 	while( $retry_counter > 0 ) {
 
 		( $log_level >> $INFO ) && print "INFO Traffic Ops host: " . $traffic_ops_host . "\n";
+		( $log_level >> $DEBUG ) && print "DEBUG lwp_get called with $uri\n";
 		my $request = $traffic_ops_host . $uri;
+		if ( $uri =~ m/^http/ ) {
+			$request = $uri;
+			( $log_level >> $DEBUG ) && print "DEBUG Complete URL found. Downloading from external source $request.\n";
+		}
+		if ( ($uri =~ m/sslkeys/ || $uri =~ m/url\_sig/ || $uri =~ m/uri\_signing/) && $rev_proxy_in_use == 1 ) {
+			$request = $to_url . $uri;
+			( $log_level >> $INFO ) && print "INFO Secure data request - bypassing reverse proxy and using $to_url.\n";
+		}
 
 		$response = $lwp_conn->get($request, %headers);
 		$response_content = $response->content;
 
-		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_content_length($response, $ERROR) ) {
+		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_message_integrity($response, $ERROR) ) {
 			( $log_level >> $ERROR ) && print "ERROR result for $request is: ..." . $response->content . "...\n";
 			if ( $uri =~ m/configfiles\/ats/ && $response->code == 404) {
 					return $response->code;
@@ -1414,7 +1440,7 @@ sub lwp_get {
 			$retry_counter--;
 		}
 		# https://github.com/Comcast/traffic_control/issues/1168
-		elsif ( $uri =~ m/url\_sig\_(.*)\.config$/ && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
+		elsif ( ( $uri =~ m/url\_sig\_(.*)\.config$/ || $uri =~ m/uri\_signing\_(.*)\.config$/ ) && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
 			( $log_level >> $FATAL ) && print "FATAL result for $uri is: ..." . $response->content . "...\n";
 			exit 1;
 		}
@@ -1425,7 +1451,7 @@ sub lwp_get {
 
 	}
 
-	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_content_length($response, $FATAL) ) if ( $retry_counter == 0 );
+	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_message_integrity($response, $FATAL) ) if ( $retry_counter == 0 );
 
 	&eval_json($response) if ( $uri =~ m/\.json$/ );
 
@@ -1496,6 +1522,10 @@ sub process_reload_restarts {
 	( $log_level >> $DEBUG ) && print "DEBUG Applying config for: $cfg_file.\n";
 
 	if ( $cfg_file =~ m/url\_sig\_(.*)\.config/ ) {
+		( $log_level >> $DEBUG ) && print "DEBUG New keys were installed in: $cfg_file, touch remap.config, and traffic_line -x needed.\n";
+		$traffic_line_needed++;
+	}
+	elsif ( $cfg_file =~ m/uri\_signing\_(.*)\.config/ ) {
 		( $log_level >> $DEBUG ) && print "DEBUG New keys were installed in: $cfg_file, touch remap.config, and traffic_line -x needed.\n";
 		$traffic_line_needed++;
 	}
@@ -1604,27 +1634,38 @@ sub check_lwp_response_code {
 	}
 }
 
-sub check_lwp_response_content_length {
+sub check_lwp_response_message_integrity {
 	my $lwp_response  = shift;
 	my $panic_level   = shift;
 	my $log_level_str = &log_level_to_string($panic_level);
 	my $url           = $lwp_response->request->uri;
 
-	if ( !defined($lwp_response->header('Content-Length')) ) {
-		( $log_level >> $panic_level ) && print $log_level_str . " $url did not return a Content-Length header!\n";
-		exit;
-		return 1;
+	my $mic_header = 'Whole-Content-SHA512';
+
+	if ( defined($lwp_response->header($mic_header)) ) {
+		if ( $lwp_response->header($mic_header) ne sha512_base64($lwp_response->content()) . '==') {
+			( $log_level >> $panic_level ) && print $log_level_str . " $url returned a $mic_header of " . $lwp_response->header($mic_header) . ", however actual body SHA512 is " . sha512_base64($lwp_response->content()) . '==' . "!\n";
+			exit 1 if ($log_level_str eq 'FATAL');
+			return 1;
+		} else {
+			( $log_level >> $DEBUG ) && print "DEBUG $url returned a $mic_header of " . $lwp_response->header($mic_header) . ", and actual body SHA512 is " . sha512_base64($lwp_response->content()) . '==' . "\n";
+			return 0;
+		}
 	}
-	elsif ( $lwp_response->header('Content-Length') != length($lwp_response->content()) ) {
-		( $log_level >> $panic_level ) && print $log_level_str . " $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n";
-		exit 1 if ($log_level_str eq 'FATAL');
-		return 1;
+	elsif ( defined($lwp_response->header('Content-Length')) ) {
+		if ( $lwp_response->header('Content-Length') != length($lwp_response->content()) ) {
+			( $log_level >> $panic_level ) && print $log_level_str . " $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", however actual content length is " . length($lwp_response->content()) . "!\n";
+			exit 1 if ($log_level_str eq 'FATAL');
+			return 1;
+		} else {
+			( $log_level >> $DEBUG ) && print "DEBUG $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", and actual content length is " . length($lwp_response->content()). "\n";
+			return 0;
+		}
 	}
 	else {
-		( $log_level >> $DEBUG ) && print "DEBUG $url returned a Content-Length of " . $lwp_response->header('Content-Length') . ", and actual content length is " . length($lwp_response->content()). "\n";
-		return 0;
+		( $log_level >> $panic_level ) && print $log_level_str . " $url did not return a $mic_header or Content-Length header! Cannot Message Integrity Check!\n";
+		return 1;
 	}
-
 }
 
 sub check_script_mode {
@@ -1722,16 +1763,16 @@ sub get_cfg_file_list {
 	my $ort_ref = decode_json($result);
 	
 	if ($api_in_use == 1) {
-		$to_url = $ort_ref->{'info'}->{'toUrl'};
-		$to_url =~ s/\/*$//g;
-		$traffic_ops_host = $to_url;
-		( $log_level >> $INFO ) && printf("INFO Found Traffic Ops URL from Traffic Ops: $to_url\n");
 		$to_rev_proxy_url = $ort_ref->{'info'}->{'toRevProxyUrl'};
 		if ( $to_rev_proxy_url ) {
 			$to_rev_proxy_url =~ s/\/*$//g;
+                        # Note: If traffic_ops_url is changing, would be suggested to get a new cookie.
+                        #       Secrets might not be the same on all Traffic Ops instance.
 			$traffic_ops_host = $to_rev_proxy_url;
 			$rev_proxy_in_use = 1;
 			( $log_level >> $INFO ) && printf("INFO Found Traffic Ops Reverse Proxy URL from Traffic Ops: $to_rev_proxy_url\n");
+		} else {
+			$traffic_ops_host = $to_url;
 		}
 		$profile_name = $ort_ref->{'info'}->{'profileName'};
 		( $log_level >> $INFO ) && printf("INFO Found profile from Traffic Ops: $profile_name\n");
@@ -1779,10 +1820,16 @@ sub get_cfg_file_list {
 				( $log_level >> $INFO )
 					&& printf( "INFO Found config file (on disk: %-41s): %-41s with location: %-50s\n", $fname_on_disk, $cfg_file->{'fnameOnDisk'}, $cfg_file->{'location'} );
 				$cfg_files->{$fname_on_disk}->{'location'} = $cfg_file->{'location'};
-				if ($api_in_use == 1) {
+				if ( defined($cfg_file->{'apiUri'} ) ) {
 					$cfg_files->{$fname_on_disk}->{'apiUri'} = $cfg_file->{'apiUri'};
+					( $log_level >> $DEBUG ) && print "DEBUG apiUri found: $cfg_files->{$fname_on_disk}->{'apiUri'}.\n";
+				}
+				elsif ( defined($cfg_file->{'url'} ) ) {
+					$cfg_files->{$fname_on_disk}->{'url'} = $cfg_file->{'url'};
+					( $log_level >> $DEBUG ) && print "DEBUG URL found: $cfg_files->{$fname_on_disk}->{'url'}.\n";
 				}
 				$cfg_files->{$fname_on_disk}->{'fname-in-TO'} = $cfg_file->{'fnameOnDisk'};
+
 			}
 		}
 		else {
@@ -2489,6 +2536,10 @@ sub set_uri {
 	if ( $api_in_use == 1 && defined($cfg_file_tracker->{$filename}->{'apiUri'}) ) {
 		$URI = $cfg_file_tracker->{$filename}->{'apiUri'};
 	}
+	elsif ( $api_in_use == 1 && defined($cfg_file_tracker->{$filename}->{'url'}) ) {
+		$URI = $cfg_file_tracker->{$filename}->{'url'};
+		( $log_level >> $DEBUG ) && print "DEBUG Setting external download URL.\n";
+	}
 	else {
 		$URI = "\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
 	}
@@ -2853,14 +2904,12 @@ sub adv_processing_ssl {
 			( $log_level >> $DEBUG ) && print "DEBUG Processing SSL key: " . $keypair->{'key_name'} . "\n";
 			my $remap = $keypair->{'key_name'};
 			$remap =~ s/\.key$//;
-			if ($remap !~ /^edge/) {
-				#remove routing name (ccr/tr) and add * for wildcard certs
-				$remap =~ /^(.*?)(\..*)/;
-				$remap = "*$2";
-			}
+			$remap =~ /^(.*?)(\..*)/;
+			# HTTP delivery services use wildcard certs
+			my $wildcard = "*$2";
 			my $found = 0;
 			foreach my $record (@$certs){
-				if ($record->{'hostname'} eq $remap){
+				if ($record->{'hostname'} eq $remap || $record->{'hostname'} eq $wildcard) {
 					$found = 1;
 					my $ssl_key         = decode_base64($record->{'certificate'}->{'key'});
 					my $ssl_cert        = decode_base64($record->{'certificate'}->{'crt'});
@@ -2894,7 +2943,7 @@ sub setup_lwp {
 	my $browser = LWP::UserAgent->new( keep_alive => 100, ssl_opts => { verify_hostname => 0, SSL_verify_mode => 0x00 } );
 
 	my $lwp_cc = $browser->conn_cache(LWP::ConnCache->new());
-	$browser->timeout(15);
+	$browser->timeout(30);
 
 	return $browser;
 }
@@ -2923,3 +2972,4 @@ sub log_level_to_string {
 		}
 	}
 }
+

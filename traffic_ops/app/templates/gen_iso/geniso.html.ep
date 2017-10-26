@@ -21,7 +21,7 @@ alert( "<%= flash 'alertmsg' %>" );
 <script>
 $(function () {
 	$(document).ready(function () {
-		
+
 %= include 'jmenu'
 
 	});
@@ -51,17 +51,21 @@ $(function () {
 								$(document).ready(function(){
 									$("#serverselect").change(function() {
 										var selected_server_id = $("#serverselect").val();
-										$.get("/server_by_id/" + selected_server_id,
+										$.get("/api/1.2/servers/" + selected_server_id,
 											function(newvalues){
-												$("#hostname").val(newvalues.host_name + "." + newvalues.domain_name);
-												$("#ipaddr").val(newvalues.ip_address);
-												$("#netmask").val(newvalues.ip_netmask);
-												$("#gateway").val(newvalues.ip_gateway);
-												$("#ip6_address").val(newvalues.ip6_address);
-												$("#ip6_gateway").val(newvalues.ip6_gateway);
-												$("#dev").val(newvalues.interface_name);
-												$("#mtu").val(newvalues.interface_mtu);
+												$("#hostname").val(newvalues.response[0].hostName + "." + newvalues.response[0].domainName);
+												$("#ipaddr").val(newvalues.response[0].ipAddress);
+												$("#netmask").val(newvalues.response[0].ipNetmask);
+												$("#gateway").val(newvalues.response[0].ipGateway);
+												$("#ip6_address").val(newvalues.response[0].ip6Address);
+												$("#ip6_gateway").val(newvalues.response[0].ip6Gateway);
+												$("#dev").val(newvalues.response[0].interfaceName);
+												$("#mtu").val(newvalues.response[0].interfaceMtu);
 												$("#dhcp").val("no");
+												$("#mgmt_ip_address").val(newvalues.response[0].mgmtIpAddress);
+												$("#mgmt_ip_netmask").val(newvalues.response[0].mgmtIpNetmask);
+												$("#mgmt_ip_gateway").val(newvalues.response[0].mgmtIpGateway);
+												$("#mgmt_interface").val(newvalues.response[0].mgmtInterface);
 											}
 										);
 									});
@@ -145,6 +149,26 @@ $(function () {
 									<td>Network Device:</td>
 									<td> <input type="text" size=45 id="dev" name="dev"/ value=""></td>
 									<td>Optional.  Typical values are bond0, eth4, etc.  Note: if you enter bond0, a LACP bonding config will be written</td>
+								</tr>
+								<tr>
+									<td>Management IP Address:</td>
+									<td> <input type="text" size=45 id="mgmt_ip_address" name="mgmt_ip_address" value=""></td>
+									<td>Optional</td>
+								</tr>
+								<tr>
+									<td>Management Netmask:</td>
+									<td><input type="text" size=45 id="mgmt_ip_netmask" name="mgmt_ip_netmask"/ value=""></td>
+									<td>Required only if Management IP Address is IPv4</td>
+								</tr>
+								<tr>
+									<td>Management Gateway:</td>
+									<td><input type="text" size=45 id="mgmt_ip_gateway" name="mgmt_ip_gateway"/ value=""></td>
+									<td>Required if Management IP Address is entered.</td>
+								</tr>
+								<tr>
+									<td>Management Network Device:</td>
+									<td> <input type="text" size=45 id="mgmt_interface" name="mgmt_interface"/ value=""></td>
+									<td>Required if Management IP Address is entered.  The name of the management interface.</td>
 								</tr>
 								<tr>
 									<td>MTU:</td>

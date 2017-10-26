@@ -62,6 +62,7 @@ ok $t->post_ok(
 		'ds.dns_bypass_cname'            => '',
 		'ds.dns_bypass_ttl'              => '30',
 		'ds.dscp'                        => '40',
+		'ds.routing_name'                => 'foo',
 		'ds.geo_limit'                   => '0',
 		'ds.geo_limit_countries'         => '',
 		'ds.geo_provider'                => '1',
@@ -113,6 +114,7 @@ ok $t->post_ok(
 		'ds.dns_bypass_cname'            => '',
 		'ds.dns_bypass_ttl'              => '30',
 		'ds.dscp'                        => '42',
+		'ds.routing_name'                => '',
 		'ds.geo_limit'                   => '0',
 		'ds.geo_limit_countries'         => '',
 		'ds.global_max_mbps'             => '',
@@ -163,6 +165,7 @@ ok $t->post_ok(
 		'ds.dns_bypass_cname'            => 'bypass.knutsel.com',
 		'ds.dns_bypass_ttl'              => '30',
 		'ds.dscp'                        => '40',
+		'ds.routing_name'                => 'foo',
 		'ds.geo_limit'                   => '1',
 		'ds.geo_limit_countries'         => '',
 		'ds.global_max_mbps'             => '30G',
@@ -242,6 +245,7 @@ ok $t->post_ok(
 		'ds.dns_bypass_cname'            => 'updateby.knutsel.com',
 		'ds.dns_bypass_ttl'              => '31',
 		'ds.dscp'                        => '41',
+		'ds.routing_name'                => 'bar',
 		'ds.geo_limit'                   => '2',
 		'ds.geo_limit_countries'         => '',
 		'ds.geo_provider'                => '1',
@@ -289,6 +293,7 @@ ok $t->post_ok(
 ok $t->get_ok('/datadeliveryservice')->status_is(200)
   ->or( sub { diag $t->tx->res->content->asset->{content}; } )
   ->json_is( '/1/dscp' => '41' )
+  ->json_is( '/1/routing_name' => 'bar' )
   ->json_is( '/1/active' => '0' )
   ->json_is( '/1/profile_description' => 'mid description' )
   ->json_is( '/1/org_server_fqdn'     => 'http://update.knutsel.com' )

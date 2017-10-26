@@ -33,7 +33,6 @@ RUN	yum -y install \
 RUN	yum -y install \
 		expat-devel \
 		gcc \
-		golang \
 		libcurl-devel \
 		make \
 		openssl-devel \
@@ -41,10 +40,10 @@ RUN	yum -y install \
 		tar && \
 	yum -y clean all
 
-CMD set -x; cp -a /trafficcontrol /tmp/. && \
-	cd /tmp/trafficcontrol && rm -rf dist && mkdir -p dist && \
-	./build/build.sh traffic_ops 2>&1 | tee ./dist/build-traffic_ops.log && \
-	mkdir -p /trafficcontrol/dist && \
-	cp dist/*traffic_ops* /trafficcontrol/dist
+ADD traffic_ops/install/bin/install_go.sh /
+RUN /install_go.sh
+
+ADD infrastructure/docker/build/clean_build.sh /
+CMD /clean_build.sh traffic_ops
 
 # vi:syntax=Dockerfile

@@ -271,6 +271,11 @@ sub queue_updates {
 		return $self->forbidden("Forbidden. You must have the operations role to perform this operation.");
 	}
 
+	my $cdn = $self->db->resultset('Cdn')->find( { id => $cdn_id } );
+	if ( !defined($cdn) ) {
+		return $self->not_found();
+	}
+
 	my $cdn_servers = $self->db->resultset('Server')->search( { cdn_id => $cdn_id } );
 
 	if ( $cdn_servers->count() < 1 ) {
@@ -291,10 +296,14 @@ sub queue_updates {
 
 	$cdn_servers->update( { upd_pending => $setqueue } );
 
+	my $msg = "Server updates " . $params->{action} . "d for " . $cdn->name;
+	&log( $self, $msg, "APICHANGE" );
+
 	my $response;
 	$response->{cdnId} = $cdn_id;
 	$response->{action} = $params->{action};
-	return $self->success($response);
+
+	return $self->success($response, $msg);
 }
 
 
@@ -1077,7 +1086,7 @@ sub dnssec_keys {
 			return $self->success($keys);
 		}
 		else {
-			return $self->alert( { Error => " - Dnssec keys for $cdn_name do not exist!  Response was: " . $get_keys->content } );
+			return $self->success({}, " - Dnssec keys for $cdn_name could not be found. ");
 		}
 	}
 	return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
@@ -1089,7 +1098,6 @@ sub dnssec_keys_refresh {
 
 	# fork and daemonize so we can avoid blocking
 	my $rc = $self->fork_and_daemonize();
-
 	if ( $rc < 0 ) {
 		my $error = "Unable to fork_and_daemonize to check DNSSEC keys for refresh in the background";
 		$self->app->log->fatal($error);
@@ -1109,6 +1117,7 @@ sub refresh_keys {
 	my $self       = shift;
 	my $is_updated = 0;
 	my $error_message;
+	$self->app->log->debug("Starting refresh of DNSSEC keys");
 	my $rs_data = $self->db->resultset("Cdn")->search( {}, { order_by => "name" } );
 
 	while ( my $row = $rs_data->next ) {
@@ -1195,7 +1204,7 @@ sub refresh_keys {
 			}
 
 			#get DeliveryServices for CDN
-			my %search = ( profile => $profile_id );
+			my %search = ( cdn_id => $row->id );
 			my @ds_rs = $self->db->resultset('Deliveryservice')->search( \%search );
 			foreach my $ds (@ds_rs) {
 				if (   $ds->type->name !~ m/^HTTP/
@@ -1214,18 +1223,7 @@ sub refresh_keys {
 					my $ds_id = $ds->id;
 
 					#create the ds domain name for dnssec keys
-					my $domain_name = $cdn_domain_name;
-					my $deliveryservice_regexes = UI::DeliveryService::get_regexp_set( $self, $ds_id );
-					my $rs_ds = $self->db->resultset('Deliveryservice')
-						->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
-					my $data = $rs_ds->single;
-					my @example_urls =
-						UI::DeliveryService::get_example_urls( $self, $ds_id, $deliveryservice_regexes, $data, $domain_name, $data->protocol );
-
-					#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
-					my $ds_name = $example_urls[0] . ".";
-					my $length = length($ds_name) - CORE::index( $ds_name, "." );
-					$ds_name = substr( $ds_name, CORE::index( $ds_name, "." ) + 1, $length );
+					my $ds_name = UI::DeliveryService::get_ds_domain_name($self, $ds_id, $xml_id, $cdn_domain_name);
 
 					my $inception    = time();
 					my $z_expiration = $inception + ( 86400 * $default_z_exp_days );
@@ -1240,16 +1238,13 @@ sub refresh_keys {
 					#update is_updated param
 					$is_updated = 1;
 				}
-
 				#if keys do exist, check expiration
 				else {
 					my $ksk = $ds_keys->{ksk};
 					foreach my $krecord (@$ksk) {
 						my $kstatus = $krecord->{status};
-						if ( $kstatus eq 'new' ) {    #ignore anything other than the 'new' record
-							                          #check if expired
+						if ( $kstatus eq 'new' ) {
 							if ( $krecord->{expirationDate} < $key_expiration ) {
-
 								#if expired create new keys
 								$self->app->log->info("The KSK keys for $xml_id are expired!");
 								my $effective_date = $krecord->{expirationDate} - ( $dnskey_ttl * $dnskey_effective_multiplier );
@@ -1282,7 +1277,6 @@ sub refresh_keys {
 			}
 
 			if ( $is_updated == 1 ) {
-
 				# #convert hash to json and store in Riak
 				my $json_data = encode_json($keys);
 				$response_container = $self->riak_put( "dnssec", $cdn_name, $json_data );
@@ -1296,6 +1290,7 @@ sub refresh_keys {
 			}
 		}
 	}
+	$self->app->log->debug("Done refreshing DNSSEC keys");
 }
 
 sub regen_expired_keys {
@@ -1377,7 +1372,7 @@ sub dnssec_keys_generate {
 		my $rc       = $response->{_rc};
 		if ( $rc eq "204" ) {
 			&log( $self, "Generated DNSSEC keys for CDN $key", "APICHANGE" );
-			$self->success("Successfully created $key_type keys for $key");
+			$self->success_message("Successfully created $key_type keys for $key");
 		}
 		else {
 			$self->alert( { Error => " - DNSSEC keys for $key could not be created.  Response was" . $response->content } );
@@ -1454,7 +1449,12 @@ sub catch_all {
 	my $mimetype = $self->req->headers->content_type;
 
 	if ( defined( $self->current_user() ) ) {
-		return $self->not_found();
+		if ( &UI::Utils::is_ldap( $self ) ) {
+			my $config = $self->app->config;
+			return $self->forbidden( $config->{'to'}{'no_account_found_msg'} );
+		} else {
+			return $self->not_found();
+		}
 	}
 	else {
 		return $self->unauthorized();

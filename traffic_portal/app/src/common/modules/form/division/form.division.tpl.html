@@ -1,0 +1,49 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/divisions')">Divisions</a></li>
+            <li class="active">{{divisionName}}</li>
+        </ol>
+        <div class="pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-primary" title="View Regions" ng-click="viewRegions()">View Regions</button>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <form name="divisionForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group" ng-class="{'has-error': hasError(divisionForm[prop.name]), 'has-feedback': hasError(divisionForm[prop.name])}" ng-repeat="prop in props">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">{{labelize(prop.name)}} <span ng-show="prop.required">*</span></label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input id="{{prop.name}}" name="{{prop.name}}" type="{{prop.type}}" class="form-control" ng-model="division[prop.name]" ng-readonly="prop.readonly" ng-required="prop.required" ng-maxlength="prop.maxLength" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(divisionForm[prop.name], 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(divisionForm[prop.name], 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(divisionForm[prop.name])" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(division)">Delete</button>
+                <button type="button" class="btn btn-success" ng-disabled="divisionForm.$pristine || divisionForm.$invalid" ng-click="save(division)">{{settings.saveLabel}}</button>
+            </div>
+        </form>
+    </div>
+</div>

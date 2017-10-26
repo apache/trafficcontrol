@@ -249,6 +249,48 @@ ok $t->post_ok('/api/1.2/parameters/validate' => {Accept => 'application/json'} 
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		, 'Does the paramters validate return?';
 
+
+#checking if a parameter vaule can be changed to "0"
+ok $t->post_ok('/api/1.2/parameters' => {Accept => 'application/json'} => json => [
+			{
+				'name'  => 'default1',
+				'configFile' => 'configFile3',
+				'value'      => '1',
+				'secure'     => '0'
+			}]
+	)->status_is(200)
+	, 'Adding the parameter with default 1';
+
+$para_id = &get_param_id('default1');
+ok $t->get_ok('/api/1.2/parameters/'. $para_id)->status_is(200)
+		->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/0/name" => "default1" )
+		->json_is( "/response/0/value" => "1" )
+		->json_is( "/response/0/configFile" => "configFile3" )
+	, 'Does the paramter get return?';
+
+ok $t->put_ok('/api/1.2/parameters/' . $para_id => {Accept => 'application/json'} => json => {
+			'value'      => '0',
+		})->status_is(200)
+		->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/name" => "default1" )
+		->json_is( "/response/configFile" => "configFile3" )
+		->json_is( "/response/value" => "0" )
+	, 'Was the paramters modification return?';
+
+ok $t->get_ok('/api/1.2/parameters/'. $para_id)->status_is(200)
+		->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/response/0/name" => "default1" )
+		->json_is( "/response/0/value" => "0" )
+		->json_is( "/response/0/configFile" => "configFile3" )
+	, 'Was the parameter really changed?';
+
+ok $t->delete_ok('/api/1.2/parameters/' . $para_id )->status_is(200)
+	, 'Does the paramter deleted?';
+
+
+
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok( '/login', => form => { u =>Test::TestHelper::FEDERATION_USER , p => Test::TestHelper::FEDERATION_USER_PASSWORD } )->status_is(302)

@@ -24,9 +24,10 @@ Installation
 
 **Installing Traffic Stats:**
 
-	- Download the Traffic Stats RPM from the traffic control `downloads <https://trafficcontrol.apache.org/downloads/index.html>`_ page.
-	- Copy the Traffic Stats RPM to your server
-	- sudo rpm -ivh <traffic_stats rpm>
+	- See the `downloads <https://trafficcontrol.apache.org/downloads/index.html>`_ page for Traffic Control to get the lastest release.
+	- Follow our build `intructions <https://github.com/apache/incubator-trafficcontrol/tree/master/build>`_ to generate an RPM.
+	- Copy the RPM to your server
+	- perform the following command: ``sudo rpm -ivh <traffic_stats rpm>``
 
 **Installing InfluxDB:**
 
@@ -128,30 +129,30 @@ InfluxDb Tools
 Under the Traffic Stats source directory there is a directory called influxdb_tools.  These tools are meant to be used as one-off scripts to help a user quickly get new databases and continuous queries setup in influxdb.
 They are specific for traffic stats and are not meant to be generic to influxdb.  Below is an brief description of each script along with how to use it.
 
-**create_ts_databases**
+**create/create_ts_databases.go**
 	This script creates all `databases <https://docs.influxdata.com/influxdb/latest/concepts/key_concepts/#database>`_, `retention policies <https://docs.influxdata.com/influxdb/latest/concepts/key_concepts/#retention-policy>`_, and `continuous queries <https://docs.influxdata.com/influxdb/v0.11/query_language/continuous_queries/>`_ required by traffic stats.
 
 	**How to use create_ts_databases:**
 
 	Pre-Requisites:
 
-		1. Go 1.4 or later
+		1. Go 1.7 or later
 		2. configured $GOPATH (e.g. export GOPATH=~/go)
 
 	Using create_ts_databases.go
 
-		1. go get github.com/influxdata/influxdb
+		1. go to the traffic_stats/influxdb_tools/create directory
 
-		2. go build create_ts_databases.go
+		2. build it by running ``go build create_ts_databases.go`` or simply ``go build``
 
 		3. Run it:
-			- ./create_ts_databases -help
+			- ``./create_ts_databases -help`` or ``./create -help``
 			- optional flags:
 				- url -  The influxdb url and port
 				- replication -  The number of nodes in the cluster
 				- user - The user to use
 				- password - The password to use
-			- example: ./create_ts_databases -url=localhost:8086 -replication=3 -user=joe -password=mysecret
+			- example: ``./create_ts_databases -url=localhost:8086 -replication=3 -user=joe -password=mysecret`` or ``./create -url=localhost:8086 -replication=3 -user=joe -password=mysecret``
 
 **sync_ts_databases**
 	This script is used to sync one influxdb environment to another.  Only data from continuous queries is synced as it is downsampled data and much smaller in size than syncing raw data.  Possible use cases are syncing from Production to Development or Syncing a new cluster once brought online.
@@ -160,28 +161,28 @@ They are specific for traffic stats and are not meant to be generic to influxdb.
 
 	Pre-Requisites:
 
-		1. Go 1.4 or later
+		1. Go 1.7 or later
 		2. configured $GOPATH (e.g. export GOPATH=~/go)
 
 	Using sync_ts_databases.go:
 
-		1. go get github.com/influxdata/influxdb
+		1. go to the traffic_stats/influxdb_tools/create directory
 
-		2. go build sync_ts_databases.go
+		2. build it by running ``go build sync_ts_databases.go`` or simply ``go build``
 
 		3. Run it
-			- ./sync_ts_databases -help
+			- ``./sync_ts_databases -help`` or ``./sync -help``
 			- required flags:
-				- sourceUrl - The URL of the source database
-				- targetUrl - The URL of the target database
+				- source-url - The URL of the source database
+				- target-url - The URL of the target database
 
 			-optional flags:
 				- database - The database to sync (default = sync all databases)
 				- days - Days in the past to sync (default = sync all data)
-				- sourceUser - The user of the source database
-				- sourcePass - The password for the source database
-				- targetUser - The user of the target database
-				- targetPass - The password for the target database
+				- source-user - The user of the source database
+				- source-pass - The password for the source database
+				- target-user - The user of the target database
+				- target-pass - The password for the target database
 
-			- example: ./sync_ts_databases -sourceUrl=http://influxdb-production-01.kabletown.net:8086 -targetUrl=http://influxdb-dev-01.kabletown.net:8086 -database=cache_stats -days=7 -sourceUser=joe sourcePass=mysecret
+			- example: `./sync -source-url=http://idb-01.foo.net:8086 -target-url=http://idb-01.foo.net:8086 -database=cache_stats -days=7 -source-user=admin source-pass=mysecret`
 

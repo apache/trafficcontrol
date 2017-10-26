@@ -37,7 +37,7 @@
 
 <body>
   <p>A new account has been created for you on the <%= $instance_name %> Portal. In the <%= $instance_name %> Portal, you'll find a dashboard that provides access to all of your delivery services.</p>
-  <a class="button_link" href="<%= $tm_user->{portal_base_url} %>/#/user/register?token=<%= $tm_user->{token} %>">Click to Finish Your Registration</a>
+  <a class="button_link" href="<%= $tm_user->{portal_user_register_url} %>?token=<%= $tm_user->{token} %>">Click to Finish Your Registration</a>
   <p>Thank you,</p>
   <p>The <%= $instance_name %> Team</p>
 </body>

@@ -30,7 +30,8 @@ RUN	yum -y install \
 	yum -y clean all
 
 # traffic_portal specific
-RUN	yum -y install \
+RUN	rpm -ivh https://kojipkgs.fedoraproject.org//packages/http-parser/2.7.1/3.el7/x86_64/http-parser-2.7.1-3.el7.x86_64.rpm && \
+	yum -y install \
 		gcc \
 		libffi-devel \
 		make \
@@ -47,11 +48,8 @@ RUN	echo '{ "allow_root": true }' > /root/.bowerrc
 
 ###
 
-CMD set -x; cp -a /trafficcontrol /tmp/. && \
-	cd /tmp/trafficcontrol && rm -rf dist && mkdir -p dist && \
-	./build/build.sh traffic_portal 2>&1 | tee ./dist/build-traffic_portal.log && \
-	mkdir -p /trafficcontrol/dist && \
-	cp dist/*traffic_portal* /trafficcontrol/dist
+ADD infrastructure/docker/build/clean_build.sh /
+CMD /clean_build.sh traffic_portal
 
 
 # vi:syntax=Dockerfile

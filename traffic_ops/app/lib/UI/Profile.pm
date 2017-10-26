@@ -48,11 +48,11 @@ sub edit {
 	my $cursor = $self->db->resultset('Profile')->search( { id => $id } );
 	my $data   = $cursor->single;
 
-	$self->stash_cdn_selector($data->cdn->id);
+	$self->stash_cdn_selector(defined($data->cdn) ? $data->cdn->id : undef);
 	$self->stash_profile_type_selector($data->type);
 
 	&stash_role($self);
-	$self->stash( profile => $data, id => $data->id, fbox_layout => 1 );
+	$self->stash( profile => $data, id => $data->id, routing_disabled => $data->routing_disabled, fbox_layout => 1 );
 	return $self->render('profile/edit');
 }
 
@@ -97,6 +97,7 @@ sub readprofile {
 				"type"         => $row->type,
 				"cdn"          => defined($row->cdn) ? $row->cdn->name : undef,
 				"description"  => $row->description,
+				"routing_disabled" => $row->routing_disabled,
 				"last_updated" => $row->last_updated,
 			}
 		);
@@ -143,10 +144,12 @@ sub check_profile_input {
 	my $mode        = shift;
 	my $name        = $self->param('profile.name');
 	my $description = $self->param('profile.description');
+	my $routing_disabled = $self->param('profile.routing_disabled');
 
 	#Check required fields
 	$self->field('profile.name')->is_required;
 	$self->field('profile.description')->is_required;
+	$self->field('profile.type')->is_required;
 
 	$self->field('profile.name')->is_like( qr/^\S+$/, "Profile name cannot contain space(s)." );
 
@@ -192,6 +195,16 @@ sub check_profile_input {
 				}
 			}
 		}
+
+		#make sure the CDN matches servers already assigned to the profile
+		my $profile = $self->db->resultset('Profile')->search( { 'me.id' => $id}, { prefetch => ['servers'] } )->first();
+		my $cdn = $self->param('profile.cdn');
+		my $ex_server = $profile->servers->first;
+		if ( defined $ex_server ) {
+			if ( $cdn != $ex_server->cdn_id ) {
+				$self->field('profile.cdn')->is_equal( "", "The assigned CDN does not match the CDN assigned to servers with this profile!" );
+			}
+		}
 	}
 	return $self->valid;
 }
@@ -204,6 +217,7 @@ sub update {
 	my $description = $self->param('profile.description');
 	my $cdn         = $self->param('profile.cdn');
 	my $type        = $self->param('profile.type');
+	my $routing_disabled = $self->param('profile.routing_disabled');
 
 	if ( $self->check_profile_input("edit") ) {
 
@@ -212,6 +226,7 @@ sub update {
 		$update->description($description);
 		$update->cdn($cdn);
 		$update->type($type);
+		$update->routing_disabled($routing_disabled);
 		$update->update();
 
 		# if the update has failed, we don't even get here, we go to the exception page.
@@ -222,7 +237,13 @@ sub update {
 	}
 	else {
 		&stash_role($self);
+
+		my $cursor = $self->db->resultset('Profile')->search( { id => $id } );
+		my $data   = $cursor->single;
+
+		$self->stash_cdn_selector(defined($data->cdn) ? $data->cdn->id : undef);
 		$self->stash( profile => {}, fbox_layout => 1 );
+		$self->stash_profile_type_selector($data->type);
 		$self->render('profile/edit');
 	}
 
@@ -235,6 +256,7 @@ sub create {
 	my $p_desc = $self->param('profile.description');
 	my $p_cdn         = $self->param('profile.cdn');
 	my $p_type        = $self->param('profile.type');
+	my $routing_disabled = $self->param('profile.routing_disabled');
 
 	print ">>> cdn: $p_cdn t: $p_type \n";
 	if ( !&is_admin($self) ) {
@@ -248,6 +270,7 @@ sub create {
 				description => $p_desc,
 				cdn         => $p_cdn,
 				type        => $p_type,
+				routing_disabled => $routing_disabled,
 			}
 		);
 		$insert->insert();
@@ -292,8 +315,10 @@ sub doImport {
 	my $data             = JSON->new->utf8->decode( $in_data->asset->{content} );
 	my $p_name           = $data->{profile}->{name};
 	my $p_desc           = $data->{profile}->{description};
+	my $p_type           = $data->{profile}->{type};
 	my $existing_profile = $self->db->resultset('Profile')->search( { name => $p_name } )->get_column('name')->single();
 	my $existing_desc    = $self->db->resultset('Profile')->search( { description => $p_desc } )->get_column('description')->single();
+	my @valid_types      = @{$self->db->source('ProfileTypeValue')->column_info('value')->{extra}->{list}};
 	my @msgs;
 
 	if ($existing_profile) {
@@ -302,6 +327,12 @@ sub doImport {
 	if ($existing_desc) {
 		push( @msgs, "A profile with the exact same description already exists!" );
 	}
+
+	if (! grep(/^$p_type$/, @valid_types )) {
+		my $vtypes = join(', ', @valid_types);
+		push( @msgs, "Profile contains type \"$p_type\" which is not a valid profile type. Valid types are: $vtypes" );
+	}
+
 	my $msgs_size = @msgs;
 	if ( $msgs_size > 0 ) {
 		&stash_role($self);
@@ -313,6 +344,7 @@ sub doImport {
 			{
 				name        => $p_name,
 				description => $p_desc,
+				type        => $p_type,
 			}
 		);
 		$insert->insert();
@@ -397,6 +429,7 @@ sub export {
 		if ( !defined( $jdata->{profile} ) ) {
 			$jdata->{profile}->{name}        = $row->profile->name;
 			$jdata->{profile}->{description} = $row->profile->description;
+			$jdata->{profile}->{type}        = $row->profile->type;
 			$pname                           = $row->profile->name;
 		}
 		$jdata->{parameters}->[$i] = {

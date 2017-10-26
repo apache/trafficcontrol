@@ -75,12 +75,39 @@ sub add {
 	}
 }
 
+sub update_sslkey {
+	my $self = shift;
+	my $xml_id = shift;
+	my $hostname = shift;
+	my $response_container = $self->riak_get( 'ssl', "$xml_id-latest");
+	my $response = $response_container->{'response'};
+
+	if ( $response->is_success() ) {
+		my $record = decode_json( $response->content );
+		$record->{deliveryservice} = $xml_id;
+		$record->{hostname} = $hostname;
+		my $key = $xml_id;
+		my $version = $record->{version};
+
+		$response_container = $self->riak_put( 'ssl', "$key-$version", encode_json($record) );
+		$response = $response_container->{'response'};
+		if ( !$response->is_success() ) {
+			$self->app->log->warn("SSL keys for '$key-$version' could not be updated.  Response was " . $response_container->{_content});
+		}
+		$response_container = $self->riak_put( 'ssl', "$key-latest", encode_json($record) );
+		$response = $response_container->{'response'};
+		if ( !$response->is_success() ) {
+			$self->app->log->warn("SSL keys for '$key-latest' could not be updated.  Response was " . $response_container->{_content});
+		}
+	}
+}
+
 sub get_hostname {
 	my $self = shift;
 	my $ds_id = shift;
 	my $data = shift;
 
-	my $domain_name     = UI::DeliveryService::get_cdn_domain( $self, $ds_id );
+	my $domain_name = $data->cdn->domain_name;
 	my $ds_regexes      = UI::DeliveryService::get_regexp_set( $self, $ds_id );
 	my @example_urls    = UI::DeliveryService::get_example_urls( $self, $ds_id, $ds_regexes, $data, $domain_name, $data->protocol );
 

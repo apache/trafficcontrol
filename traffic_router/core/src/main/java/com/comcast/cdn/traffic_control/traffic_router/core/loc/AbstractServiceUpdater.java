@@ -280,6 +280,7 @@ public abstract class AbstractServiceUpdater {
 	protected boolean copyDatabaseIfDifferent(final File existingDB, final File newDB) throws IOException {
 		if (filesEqual(existingDB, newDB)) {
 			LOGGER.info("[" + getClass().getSimpleName() + "] database unchanged.");
+			existingDB.setLastModified(newDB.lastModified());
 			return false;
 		}
 

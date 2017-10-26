@@ -6,6 +6,7 @@
 .idea/
 cpanfile.snapshot
 rpm/build.number
+rpmbuild/
 docs/build/*
 local
 traffic_ops_extensions/log/*
@@ -30,3 +31,4 @@ misc/traffic-control-cdn/downloads/*.rpm
 traffic_router/*/*.log
 traffic_router/*.log
 .dbInfo
+/dist

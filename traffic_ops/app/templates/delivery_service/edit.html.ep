@@ -178,7 +178,7 @@
 		$('#select_re').html("<select id=\"regexp_selector\"> " +
 				"<option>Add a regex...</option> " +
 				"<option>Add Host Regexp</option> " +
-			% if ($ds->type->name eq "DNS") {
+			% if ($ds->type->name =~ /^DNS/ ) {
 				"<option disabled>Add Path Regexp</option> " +
 				"<option disabled>Add Header Regexp</option> " +
 			% } else {
@@ -198,10 +198,10 @@ function setup_form(speed) {
 		if (type_selected.match(/^HTTP/)) {
 			$("#regexp_selector :nth-child(3)").removeAttr('disabled');
 			$("#regexp_selector :nth-child(4)").removeAttr('disabled');
-			$('#ccr_dns_ttl').val(3600);
+			$('#ccr_dns_ttl').show(speed);
 			$('#protocoli_row').show(speed);
 			$('#dscp_row').show(speed);
-            $('#signed_row').show(speed);
+			$('#routing_name_row').show(speed);
             $('#qstring_ignore_row').show(speed);
             $('#geo_limit_row').show(speed);
             $('#http_bypass_fqdn_row').show(speed);
@@ -213,7 +213,6 @@ function setup_form(speed) {
             $('#dns_bypass_cname_row').hide(speed);
             $('#dns_bypass_ttl_row').show(speed);
             $('#max_dns_answers_row').hide(speed);
-            $('#ccr_dns_ttl_row').hide(speed);
             $('#org_server_fqdn_row').show(speed);
             $('#global_max_mbps_row').show(speed);
             $('#global_max_tps_row').show(speed);
@@ -239,10 +238,10 @@ function setup_form(speed) {
 		else if (type_selected.match(/^DNS/)) {
 			$("#regexp_selector :nth-child(3)").attr('disabled','disabled');
 			$("#regexp_selector :nth-child(4)").attr('disabled','disabled');
-			$('#ccr_dns_ttl').val(30);
+			$('#ccr_dns_ttl').show(speed);
 			$('#protocoli_row').show(speed);
             $('#dscp_row').show(speed);
-            $('#signed_row').show(speed);
+            $('#routing_name_row').show(speed);
             $('#qstring_ignore_row').show(speed);
             $('#geo_limit_row').show(speed);
             $('#http_bypass_fqdn_row').hide(speed);
@@ -254,7 +253,6 @@ function setup_form(speed) {
 	    	$('#dns_bypass_cname_row').show(speed);
             $('#dns_bypass_ttl_row').show(speed);
             $('#max_dns_answers_row').show(speed);
-            $('#ccr_dns_ttl_row').hide(speed);
             $('#org_server_fqdn_row').show(speed);
             $('#global_max_mbps_row').show(speed);
             $('#global_max_tps_row').show(speed);
@@ -280,7 +278,7 @@ function setup_form(speed) {
 		else if (type_selected.match(/^ANY_MAP$/)) {
             $('#protocoli_row').hide(speed);
             $('#dscp_row').hide(speed);
-            $('#signed_row').hide(speed);
+            $('#routing_name_row').hide(speed);
             $('#qstring_ignore_row').hide(speed);
             $('#geo_limit_row').hide(speed);
             $('#http_bypass_fqdn_row').hide(speed);
@@ -292,7 +290,7 @@ function setup_form(speed) {
 	    	$('#dns_bypass_cname_row').hide(speed);
             $('#dns_bypass_ttl_row').hide(speed);
             $('#max_dns_answers_row').hide(speed);
-            $('#ccr_dns_ttl_row').hide(speed);
+            $('#ccr_dns_ttl_row').show(speed);
             $('#org_server_fqdn_row').hide(speed);
             $('#global_max_mbps_row').hide(speed);
             $('#global_max_tps_row').hide(speed);
@@ -318,9 +316,9 @@ function setup_form(speed) {
 		else if (type_selected.match(/STEERING$/)) {
             $('#protocoli_row').show(speed);
             $('#dscp_row').hide(speed);
-            $('#signed_row').hide(speed);
+            $('#routing_name_row').show(speed);
             $('#qstring_ignore_row').hide(speed);
-            $('#geo_limit_row').hide(speed);
+            $('#geo_limit_row').show(speed);
             $('#http_bypass_fqdn_row').hide(speed);
             $('#ipv6_routing_enabled_row').show(speed);
             $('#range_request_handlingi_row').hide(speed);
@@ -330,12 +328,12 @@ function setup_form(speed) {
 	    	$('#dns_bypass_cname_row').hide(speed);
             $('#dns_bypass_ttl_row').hide(speed);
             $('#max_dns_answers_row').hide(speed);
-            $('#ccr_dns_ttl_row').hide(speed);
+            $('#ccr_dns_ttl_row').show(speed);
             $('#org_server_fqdn_row').hide(speed);
             $('#global_max_mbps_row').hide(speed);
             $('#global_max_tps_row').hide(speed);
-            $('#miss_lat_row').hide(speed);
-            $('#miss_long_row').hide(speed);
+            $('#miss_lat_row').show(speed);
+            $('#miss_long_row').show(speed);
             $('#edge_header_rewrite_row').hide(speed);
             $('#mid_header_rewrite_row').hide(speed);
             $('#regex_remap_row').hide(speed);
@@ -355,7 +353,7 @@ function setup_form(speed) {
             $('#static_dns_button').hide(speed);
             $('#server_assignment_button').hide(speed);
             $('#steering_button').show(speed);
-            $('#geo_limit_countries_row').hide(speed);
+            $('#geo_limit_countries_row').show(speed);
 		}
 		//
 	}
