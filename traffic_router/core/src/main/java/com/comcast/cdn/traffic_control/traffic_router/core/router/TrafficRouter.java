@@ -256,7 +256,7 @@ public class TrafficRouter {
 			// Deep caching is enabled. See if there are deep caches available
 			cacheLocation = getDeepCoverageZoneCacheLocation(request.getClientIP(), ds);
 			if (cacheLocation != null && cacheLocation.getCaches().size() != 0) {
-				// Found deep caches for this client, and there are caches available there.
+				// Found deep caches for this client, and there are caches that might be available there.
 				// Use the deep cacheLocation, and set result to DEEP_CZ
 				result = ResultType.DEEP_CZ;
 			} else {
@@ -671,6 +671,11 @@ public class TrafficRouter {
 			// lazy loading in case a CacheLocation has not yet been associated with this NetworkNode
 			networkNode.setCacheLocation(cacheLocation);
 			return cacheLocation;
+		}
+
+		if (useDeep) {
+			// no available deep caches in the deep CZF (fall back to regular CZF)
+			return null;
 		}
 
 		// We had a hit in the CZF but the name does not match a known cache location.
