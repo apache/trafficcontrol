@@ -15,8 +15,8 @@ package tc
    limitations under the License.
 */
 
-// GetTenantResponse ...
-type GetTenantResponse struct {
+// GetTenantsResponse ...
+type GetTenantsResponse struct {
 	Response []Tenant `json:"response"`
 }
 

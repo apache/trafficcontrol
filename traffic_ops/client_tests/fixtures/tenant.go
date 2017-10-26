@@ -13,19 +13,21 @@
    limitations under the License.
 */
 
-package client
+package fixtures
 
-import (
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
-)
+import tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
-// Tenants gets an array of Tenants
-func (to *Session) Tenants() ([]tc.Tenant, error) {
-	var data tc.GetTenantsResponse
-	err := get(to, tenantsEp(), &data)
-	if err != nil {
-		return nil, err
+// Tenants returns a default DeliveryServiceResponse to be used for testing.
+func Tenants() *tc.GetTenantsResponse {
+	return &tc.GetTenantsResponse{
+		Response: []tc.Tenant{
+			tc.Tenant{
+				ID:         1,
+				Active:     true,
+				Name:       "test-tenant",
+				ParentName: "test-tenant-parent",
+				ParentID:   2,
+			},
+		},
 	}
-
-	return data.Response, nil
 }
