@@ -16,16 +16,17 @@
 package client
 
 import (
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"testing"
 )
 
-// Tenants gets an array of Tenants
-func (to *Session) Tenants() ([]tc.Tenant, error) {
-	var data tc.GetTenantsResponse
-	err := get(to, tenantsEp(), &data)
-	if err != nil {
-		return nil, err
-	}
+func TestDeliveryTenantsEp(t *testing.T) {
+	test_helper.Context(t, "Given the need to test that DeliveryServices uses the correct URL")
 
-	return data.Response, nil
+	ep := tenantsEp()
+	expected := "/api/1.2/tenants"
+	if ep != expected {
+		test_helper.Error(t, "Should get back %s for \"tenantsEp\", got: %s", expected, ep)
+	} else {
+		test_helper.Success(t, "Should be able to get the correct tenants endpoint")
+	}
 }
