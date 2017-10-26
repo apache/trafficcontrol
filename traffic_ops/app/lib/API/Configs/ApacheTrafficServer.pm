@@ -272,6 +272,7 @@ sub get_profile_config {
 	elsif ( $filename eq "storage.config" ) { $file_contents = $self->storage_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "sysctl.conf" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename =~ /url_sig_.*\.config/ ) { $file_contents = $self->url_sig_dot_config( $profile_obj, $filename ); }
+	elsif ( $filename =~ /uri_signing_.*\.config/ ) { $file_contents = $self->uri_signing_dot_config( $filename ); }
 	elsif ( $filename eq "volume.config" ) { $file_contents = $self->volume_dot_config( $profile_obj, $filename ); }
 	else {
 		my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->first;
@@ -327,6 +328,7 @@ sub get_scope {
 	elsif ( $fname eq "storage.config" )                       { $scope = 'profiles' }
 	elsif ( $fname eq "sysctl.conf" )                          { $scope = 'profiles' }
 	elsif ( $fname =~ /url_sig_.*\.config/ )                   { $scope = 'profiles' }
+	elsif ( $fname =~ /uri_signing_.*\.config/ )               { $scope = 'profiles' }
 	elsif ( $fname eq "volume.config" )                        { $scope = 'profiles' }
 	elsif ( $fname eq "bg_fetch.config" )                      { $scope = 'cdns' }
 	elsif ( $fname =~ /cacheurl.*\.config/ )                   { $scope = 'cdns' }
@@ -1770,6 +1772,25 @@ sub url_sig_dot_config {
 		}
 
 		return $text;
+	}
+	else {
+		return;
+	}
+}
+
+sub uri_signing_dot_config {
+	my $self        = shift;
+	my $filename    = shift;
+
+	my $bucket = "cdn_uri_sig_keys";
+
+	my ($key) = $filename =~ /uri_signing_(.*)\.config/;
+
+	my $response_container = $self->riak_get( $bucket, $key );
+	my $response = $response_container->{response};
+
+	if ( $response->is_success() ) {
+		return $response->content;
 	}
 	else {
 		return;
