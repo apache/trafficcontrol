@@ -15,7 +15,6 @@
 
 package client
 
-const apiBase = "/api/1.2"
 const dsPath = "/deliveryservices"
 
 func deliveryServicesEp() string {

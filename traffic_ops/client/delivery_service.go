@@ -184,33 +184,3 @@ func (to *Session) DeliveryServiceSSLKeysByHostname(hostname string) (*tc.Delive
 
 	return &data.Response, nil
 }
-
-func get(to *Session, endpoint string, respStruct interface{}) error {
-	return makeReq(to, "GET", endpoint, nil, respStruct)
-}
-
-func post(to *Session, endpoint string, body []byte, respStruct interface{}) error {
-	return makeReq(to, "POST", endpoint, body, respStruct)
-}
-
-func put(to *Session, endpoint string, body []byte, respStruct interface{}) error {
-	return makeReq(to, "PUT", endpoint, body, respStruct)
-}
-
-func del(to *Session, endpoint string, respStruct interface{}) error {
-	return makeReq(to, "DELETE", endpoint, nil, respStruct)
-}
-
-func makeReq(to *Session, method, endpoint string, body []byte, respStruct interface{}) error {
-	resp, err := to.request(method, endpoint, body)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if err := json.NewDecoder(resp.Body).Decode(respStruct); err != nil {
-		return err
-	}
-
-	return nil
-}
