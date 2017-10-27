@@ -23,14 +23,16 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
+	"github.com/jmoiron/sqlx"
+
 	"fmt"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -117,11 +119,12 @@ func TestGzip(t *testing.T) {
 
 func TestWrapAuth(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
 	userName := "user1"
