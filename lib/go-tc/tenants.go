@@ -35,6 +35,11 @@ type Tenant struct {
 	ParentName string `json:"parentName,omitempty"`
 }
 
+// DeleteTenantResponse ...
+type DeleteTenantResponse struct {
+	Alerts []TenantAlert `json:"alerts"`
+}
+
 // TenantAlert ...
 type TenantAlert struct {
 	Level string `json:"level"`
