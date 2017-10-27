@@ -22,6 +22,10 @@ type CfgFileDiffs struct {
 	ReportTimestamp string `json:"timestamp"`
 }
 
+type CfgFileDiffsResponse struct {
+	Response []CfgFileDiffs `json:"response"`
+}
+
 func getCfgDiffsHandler(db *sqlx.DB) RegexHandlerFunc {
     return func(w http.ResponseWriter, r *http.Request, p PathParams) {
 		handleErr := func(err error, status int) {
@@ -156,13 +160,17 @@ WHERE me.server_id=(SELECT server.id FROM server WHERE host_name=$1)`
 	return configs, nil
 }
 
-func getCfgDiffsJson(hostName string, db * sqlx.DB) ([]CfgFileDiffs, error) {
+func getCfgDiffsJson(hostName string, db * sqlx.DB) (*CfgFileDiffsResponse, error) {
 	cfgDiffs, err := getCfgDiffs(db, hostName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting my data: %v", err)
 	}
+
+	response := CfgFileDiffsResponse{
+		Response: cfgDiffs,
+	}
 	
-	return cfgDiffs, nil
+	return &response, nil
 }
 
 func insertCfgDiffs(db *sqlx.DB, hostName string, configName string, diffs CfgFileDiffs) ( error) {
