@@ -34,7 +34,7 @@ import (
 )
 
 const RiakPort = 8087
-const CdnURIKeysBucket = "cdn_uri_sig_keys" // riak namespace for cdn uri signing keys.
+const CDNURIKeysBucket = "cdn_uri_sig_keys" // riak namespace for cdn uri signing keys.
 
 type URISignerKeyset struct {
 	RenewalKid *string               `json:"renewal_kid"`
@@ -178,7 +178,7 @@ func getURIsignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 			}
 		}()
 
-		ro, err := fetchObjectValues(xmlId, CdnURIKeysBucket, cluster)
+		ro, err := fetchObjectValues(xmlId, CDNURIKeysBucket, cluster)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -253,7 +253,7 @@ func assignDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			}
 		}()
 
-		ro, err := fetchObjectValues(xmlId, CdnURIKeysBucket, cluster)
+		ro, err := fetchObjectValues(xmlId, CDNURIKeysBucket, cluster)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -274,7 +274,7 @@ func assignDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			Value:           []byte(data),
 		}
 
-		err = saveObject(obj, CdnURIKeysBucket, cluster)
+		err = saveObject(obj, CDNURIKeysBucket, cluster)
 		if err != nil {
 			log.Errorf("%v\n", err)
 			handleErr(err, http.StatusInternalServerError)
@@ -316,7 +316,7 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			}
 		}()
 
-		ro, err := fetchObjectValues(xmlId, CdnURIKeysBucket, cluster)
+		ro, err := fetchObjectValues(xmlId, CDNURIKeysBucket, cluster)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -327,7 +327,7 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 
 		if ro == nil || ro[0].Value == nil {
 			alert = tc.CreateAlerts(tc.InfoLevel, "not deleted, no object found to delete.")
-		} else if err := deleteObject(xmlId, CdnURIKeysBucket, cluster); err != nil {
+		} else if err := deleteObject(xmlId, CDNURIKeysBucket, cluster); err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
 		} else { // object successfully deleted
@@ -406,7 +406,7 @@ func updateDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			Value:           []byte(data),
 		}
 
-		err = saveObject(obj, CdnURIKeysBucket, cluster)
+		err = saveObject(obj, CDNURIKeysBucket, cluster)
 		if err != nil {
 			log.Errorf("%v\n", err)
 			handleErr(err, http.StatusInternalServerError)
