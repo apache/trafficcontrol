@@ -48,7 +48,15 @@ func TestGetServerUpdateStatus(t *testing.T) {
 		t.Errorf("getServerUpdateStatus: %v", err)
 	}
 
-	expected := []tc.ServerUpdateStatus{{"host_name_1", true, true, 1, "ONLINE", true, false}}
+	expected := []tc.ServerUpdateStatus{{
+		HostName:           "host_name_1",
+		UpdatePending:      true,
+		RevalPending:       true,
+		HostId:             1,
+		Status:             "ONLINE",
+		ParentPending:      true,
+		ParentRevalPending: false,
+	}}
 
 	reflect.DeepEqual(expected, result)
 }
