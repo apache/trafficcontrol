@@ -44,6 +44,9 @@ func TestGetServerUpdateStatus(t *testing.T) {
 	mock.ExpectPrepare("WITH").ExpectQuery().WithArgs("host_name_1").WillReturnRows(serverStatusRow)
 
 	result, err := getServerUpdateStatus("host_name_1", db)
+	if err != nil {
+		t.Errorf("getServerUpdateStatus: %v", err)
+	}
 
 	expected := []tc.ServerUpdateStatus{{"host_name_1", true, true, 1, "ONLINE", true, false}}
 

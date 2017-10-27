@@ -26,6 +26,7 @@ import (
 	"net/url"
 
 	"crypto/tls"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/basho/riak-go-client"
 )
@@ -129,6 +130,9 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string) (Con
 		return Config{}, fmt.Errorf("unmarshalling '%s': %v", dbConfPath, err)
 	}
 	cfg, err = ParseConfig(cfg)
+	if err != nil {
+		return Config{}, fmt.Errorf("parsing config '%s': %v", dbConfPath, err)
+	}
 
 	riakConfBytes, err := ioutil.ReadFile(riakConfPath)
 	if err != nil {

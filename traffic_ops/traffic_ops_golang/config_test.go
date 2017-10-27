@@ -23,12 +23,13 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"github.com/basho/riak-go-client"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/basho/riak-go-client"
 )
 
 const (
@@ -170,15 +171,27 @@ func TestLoadConfig(t *testing.T) {
 	// set up config paths
 	badPath := "/invalid-path/no-file-exists-here"
 	badCfg, err := tempFileWith([]byte("no way this is valid json..."))
+	if err != nil {
+		t.Errorf("cannot create temp file: %v", err)
+	}
 	defer os.Remove(badCfg) // clean up
 
 	goodCfg, err := tempFileWith([]byte(goodConfig))
+	if err != nil {
+		t.Errorf("cannot create temp file: %v", err)
+	}
 	defer os.Remove(goodCfg) // clean up
 
 	goodDbCfg, err := tempFileWith([]byte(goodDbConfig))
+	if err != nil {
+		t.Errorf("cannot create temp file: %v", err)
+	}
 	defer os.Remove(goodDbCfg) // clean up
 
 	goodRiakCfg, err := tempFileWith([]byte(goodRiakConfig))
+	if err != nil {
+		t.Errorf("cannot create temp file: %v", err)
+	}
 	defer os.Remove(goodRiakCfg) // clean up
 
 	// test bad paths
