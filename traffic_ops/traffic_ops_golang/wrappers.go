@@ -168,27 +168,6 @@ func gzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
 	w.Write(bytes)
 }
 
-// wrapBytes takes a function which cannot error and returns only bytes, and wraps it as a http.HandlerFunc. The errContext is logged if the write fails, and should be enough information to trace the problem (function name, endpoint, request parameters, etc).
-//TODO: drichardson - refactor these to a generic area
-func wrapBytes(f func() []byte, contentType string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		bytes := f()
-		bytes, err := gzipIfAccepts(r, w, bytes)
-		if err != nil {
-			log.Errorf("gzipping request '%v': %v\n", r.URL.EscapedPath(), err)
-			code := http.StatusInternalServerError
-			w.WriteHeader(code)
-			if _, err := w.Write([]byte(http.StatusText(code))); err != nil {
-				log.Warnf("received error writing data request %v: %v\n", r.URL.EscapedPath(), err)
-			}
-			return
-		}
-
-		w.Header().Set(tc.ContentType, contentType)
-		log.Write(w, bytes, r.URL.EscapedPath())
-	}
-}
-
 // gzipIfAccepts gzips the given bytes, writes a `Content-Encoding: gzip` header to the given writer, and returns the gzipped bytes, if the Request supports GZip (has an Accept-Encoding header). Else, returns the bytes unmodified. Note the given bytes are NOT written to the given writer. It is assumed the bytes may need to pass thru other middleware before being written.
 //TODO: drichardson - refactor these to a generic area
 func gzipIfAccepts(r *http.Request, w http.ResponseWriter, b []byte) ([]byte, error) {
