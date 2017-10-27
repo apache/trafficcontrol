@@ -19,3 +19,7 @@ const tenantPath = "/tenants"
 func tenantsEp() string {
 	return apiBase + tenantPath
 }
+
+func tenantEp(id string) string {
+	return apiBase + tenantPath + "/" + id
+}

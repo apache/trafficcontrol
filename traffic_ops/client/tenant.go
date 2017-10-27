@@ -29,3 +29,14 @@ func (to *Session) Tenants() ([]tc.Tenant, error) {
 
 	return data.Response, nil
 }
+
+// Tenant gets the Tenant for the ID it's passed
+func (to *Session) Tenant(id string) (*tc.Tenant, error) {
+	var data tc.GetTenantsResponse
+	err := get(to, tenantEp(id), &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data.Response[0], nil
+}
