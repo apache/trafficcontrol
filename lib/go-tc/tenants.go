@@ -20,11 +20,23 @@ type GetTenantsResponse struct {
 	Response []Tenant `json:"response"`
 }
 
+// CreateTenantResponse ...
+type CreateTenantResponse struct {
+	Response Tenant        `json:"response"`
+	Alerts   []TenantAlert `json:"alerts"`
+}
+
 // Tenant ...
 type Tenant struct {
-	ID         int    `json:"id"`
-	Name       string `json:"name"`
-	Active     bool   `json:"active"`
+	ID         int    `json:"id,omitempty"`
+	Name       string `json:"name,omitempty"`
+	Active     bool   `json:"active,omitempty"`
 	ParentID   int    `json:"parentId"`
-	ParentName string `json:"parentName"`
+	ParentName string `json:"parentName,omitempty"`
+}
+
+// TenantAlert ...
+type TenantAlert struct {
+	Level string `json:"level"`
+	Text  string `json:"text"`
 }

@@ -16,6 +16,8 @@
 package client
 
 import (
+	"encoding/json"
+
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
@@ -39,4 +41,19 @@ func (to *Session) Tenant(id string) (*tc.Tenant, error) {
 	}
 
 	return &data.Response[0], nil
+}
+
+// CreateTenant creates the Tenant it's passed
+func (to *Session) CreateTenant(t *tc.Tenant) (*tc.CreateTenantResponse, error) {
+	var data tc.CreateTenantResponse
+	jsonReq, err := json.Marshal(t)
+	if err != nil {
+		return nil, err
+	}
+	err = post(to, tenantsEp(), jsonReq, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data, nil
 }
