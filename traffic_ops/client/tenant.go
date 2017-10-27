@@ -44,13 +44,29 @@ func (to *Session) Tenant(id string) (*tc.Tenant, error) {
 }
 
 // CreateTenant creates the Tenant it's passed
-func (to *Session) CreateTenant(t *tc.Tenant) (*tc.CreateTenantResponse, error) {
-	var data tc.CreateTenantResponse
+func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
+	var data tc.TenantResponse
 	jsonReq, err := json.Marshal(t)
 	if err != nil {
 		return nil, err
 	}
 	err = post(to, tenantsEp(), jsonReq, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data, nil
+}
+
+// UpdateTenant updates the Tenant matching the ID it's passed with
+// the Tenant it is passed
+func (to *Session) UpdateTenant(id string, t *tc.Tenant) (*tc.TenantResponse, error) {
+	var data tc.TenantResponse
+	jsonReq, err := json.Marshal(t)
+	if err != nil {
+		return nil, err
+	}
+	err = put(to, tenantEp(id), jsonReq, &data)
 	if err != nil {
 		return nil, err
 	}
