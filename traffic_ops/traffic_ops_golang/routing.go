@@ -70,7 +70,7 @@ func getPathParams(ctx context.Context) (PathParams, error) {
 		case PathParams:
 			return v, nil
 		default:
-			return nil, fmt.Errorf("PathParams found with bad type: %T\n", v)
+			return nil, fmt.Errorf("PathParams found with bad type: %T", v)
 		}
 	}
 	return nil, errors.New("no PathParams found in Context")
@@ -88,7 +88,7 @@ func getSortedRouteVersions(rs []Route) []float64 {
 		m[r.Version] = struct{}{}
 	}
 	versions := []float64{}
-	for v, _ := range m {
+	for v := range m {
 		versions = append(versions, v)
 	}
 	sort.Float64s(versions)
@@ -195,7 +195,7 @@ func RegisterRoutes(d ServerData) error {
 
 	privLevelStmt, err := preparePrivLevelStmt(d.DB)
 	if err != nil {
-		return fmt.Errorf("Error preparing db priv level query: %s\n", err)
+		return fmt.Errorf("Error preparing db priv level query: %s", err)
 	}
 
 	authBase := AuthBase{d.Insecure, d.Config.Secrets[0], privLevelStmt, nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.

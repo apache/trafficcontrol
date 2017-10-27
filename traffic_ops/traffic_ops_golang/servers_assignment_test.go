@@ -70,16 +70,16 @@ func TestAssignDsesToServer(t *testing.T) {
 	//insert the parameters
 	mock.ExpectPrepare("INSERT").ExpectExec().WithArgs(fileNamesPq, "location", remapConfigLocation).WillReturnResult(sqlmock.NewResult(1, 6))
 
-	//select out the parameterIds we just inserted
-	parameterIdRows := sqlmock.NewRows([]string{"id"})
-	parameterIds := []int64{1, 2, 3, 4, 5, 6}
-	for _, i := range parameterIds {
-		parameterIdRows.AddRow(i)
+	//select out the parameterIDs we just inserted
+	parameterIDRows := sqlmock.NewRows([]string{"id"})
+	parameterIDs := []int64{1, 2, 3, 4, 5, 6}
+	for _, i := range parameterIDs {
+		parameterIDRows.AddRow(i)
 	}
-	mock.ExpectPrepare("SELECT").ExpectQuery().WithArgs(fileNamesPq).WillReturnRows(parameterIdRows)
+	mock.ExpectPrepare("SELECT").ExpectQuery().WithArgs(fileNamesPq).WillReturnRows(parameterIDRows)
 
 	//insert those ids as profile_parameters
-	mock.ExpectPrepare("INSERT").ExpectExec().WithArgs(pqNewDses, pq.Array(parameterIds)).WillReturnResult(sqlmock.NewResult(6, 6))
+	mock.ExpectPrepare("INSERT").ExpectExec().WithArgs(pqNewDses, pq.Array(parameterIDs)).WillReturnResult(sqlmock.NewResult(6, 6))
 
 	//delete the parameters in the delete list
 	mock.ExpectPrepare("DELETE").ExpectExec().WithArgs(pq.Array(delete)).WillReturnResult(sqlmock.NewResult(1, 3))

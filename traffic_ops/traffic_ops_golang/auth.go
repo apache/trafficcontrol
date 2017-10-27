@@ -24,6 +24,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/jmoiron/sqlx"
 )
@@ -70,7 +71,7 @@ func getPrivLevel(ctx context.Context) (int, error) {
 		case int:
 			return v, nil
 		default:
-			return PrivLevelInvalid, fmt.Errorf("privLevel found with bad type: %T\n", v)
+			return PrivLevelInvalid, fmt.Errorf("privLevel found with bad type: %T", v)
 		}
 	}
 	return PrivLevelInvalid, errors.New("no privLevel found in Context")
@@ -83,7 +84,7 @@ func getUserName(ctx context.Context) (string, error) {
 		case string:
 			return v, nil
 		default:
-			return "-", fmt.Errorf("userName found with bad type: %T\n", v)
+			return "-", fmt.Errorf("userName found with bad type: %T", v)
 		}
 	}
 	return "-", errors.New("No userName found in Context")

@@ -67,7 +67,7 @@ const (
   }
 }
 `
-	badJsonKeySet = `
+	badJSONKeySet = `
 
   "Kabletown URI Authority 1": {
 		"renewal_kid": "Second Key",
@@ -145,7 +145,7 @@ func TestValidateURIKeyset(t *testing.T) {
 	}
 
 	// unmarshal a bad URISignerKeySet
-	if err := json.Unmarshal([]byte(badJsonKeySet), &keyset); err == nil {
+	if err := json.Unmarshal([]byte(badJSONKeySet), &keyset); err == nil {
 		t.Errorf("json.UnMarshal(): expected an error")
 	}
 
