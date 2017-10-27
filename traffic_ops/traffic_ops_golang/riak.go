@@ -33,9 +33,13 @@ import (
 	"strings"
 )
 
+// RiakPort is the port RIAK is listening on.
 const RiakPort = 8087
-const CDNURIKeysBucket = "cdn_uri_sig_keys" // riak namespace for cdn uri signing keys.
 
+// CDNURIKeysBucket is the namespace or bucket used for CDN URI signing keys.
+const CDNURIKeysBucket = "cdn_uri_sig_keys"
+
+// URISignerKeyset is the container for the CDN URI signing keys
 type URISignerKeyset struct {
 	RenewalKid *string               `json:"renewal_kid"`
 	Keys       []jwk.EssentialHeader `json:"keys"`
@@ -108,7 +112,7 @@ func getRiakCluster(db *sqlx.DB, cfg Config) (*riak.Cluster, error) {
 		`
 
 	if cfg.RiakAuthOptions == nil {
-		return nil, errors.New("ERROR: no riak auth information from riak.conf, cannot authenticate to any riak servers.")
+		return nil, errors.New("ERROR: no riak auth information from riak.conf, cannot authenticate to any riak servers")
 	}
 
 	var nodes []*riak.Node
@@ -137,7 +141,7 @@ func getRiakCluster(db *sqlx.DB, cfg Config) (*riak.Cluster, error) {
 	}
 
 	if len(nodes) == 0 {
-		return nil, errors.New("ERROR: no available riak servers.")
+		return nil, errors.New("ERROR: no available riak servers")
 	}
 
 	opts := &riak.ClusterOptions{
@@ -160,7 +164,7 @@ func getURIsignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 			return
 		}
 
-		xmlId := pathParams["xmlId"]
+		xmlID := pathParams["xmlID"]
 
 		// create and start a cluster
 		cluster, err := getRiakCluster(db, cfg)
@@ -178,7 +182,7 @@ func getURIsignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 			}
 		}()
 
-		ro, err := fetchObjectValues(xmlId, CDNURIKeysBucket, cluster)
+		ro, err := fetchObjectValues(xmlID, CDNURIKeysBucket, cluster)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -217,7 +221,7 @@ func assignDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			return
 		}
 
-		xmlId := pathParams["xmlId"]
+		xmlID := pathParams["xmlID"]
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
@@ -253,7 +257,7 @@ func assignDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			}
 		}()
 
-		ro, err := fetchObjectValues(xmlId, CDNURIKeysBucket, cluster)
+		ro, err := fetchObjectValues(xmlID, CDNURIKeysBucket, cluster)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -261,7 +265,7 @@ func assignDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 
 		// object exists.
 		if ro != nil && ro[0].Value != nil {
-			handleErr(fmt.Errorf("a keyset already exists for this delivery service."), http.StatusBadRequest)
+			handleErr(fmt.Errorf("a keyset already exists for this delivery service"), http.StatusBadRequest)
 			return
 		}
 
@@ -270,7 +274,7 @@ func assignDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			ContentType:     "text/json",
 			Charset:         "utf-8",
 			ContentEncoding: "utf-8",
-			Key:             xmlId,
+			Key:             xmlID,
 			Value:           []byte(data),
 		}
 
@@ -298,7 +302,7 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			return
 		}
 
-		xmlId := pathParams["xmlId"]
+		xmlID := pathParams["xmlID"]
 
 		// create and start a cluster
 		cluster, err := getRiakCluster(db, cfg)
@@ -316,7 +320,7 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			}
 		}()
 
-		ro, err := fetchObjectValues(xmlId, CDNURIKeysBucket, cluster)
+		ro, err := fetchObjectValues(xmlID, CDNURIKeysBucket, cluster)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -327,7 +331,7 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 
 		if ro == nil || ro[0].Value == nil {
 			alert = tc.CreateAlerts(tc.InfoLevel, "not deleted, no object found to delete.")
-		} else if err := deleteObject(xmlId, CDNURIKeysBucket, cluster); err != nil {
+		} else if err := deleteObject(xmlID, CDNURIKeysBucket, cluster); err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
 		} else { // object successfully deleted
@@ -361,7 +365,7 @@ func updateDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			return
 		}
 
-		xmlId := pathParams["xmlId"]
+		xmlID := pathParams["xmlID"]
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
@@ -402,7 +406,7 @@ func updateDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			ContentType:     "text/json",
 			Charset:         "utf-8",
 			ContentEncoding: "utf-8",
-			Key:             xmlId,
+			Key:             xmlID,
 			Value:           []byte(data),
 		}
 
@@ -420,7 +424,7 @@ func updateDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 
 // validates URISigingKeyset json.
 func validateURIKeyset(msg map[string]URISignerKeyset) error {
-	var renewalKidFound int = 0
+	var renewalKidFound int
 	var renewalKidMatched = false
 
 	for key, value := range msg {
@@ -436,10 +440,10 @@ func validateURIKeyset(msg map[string]URISignerKeyset) error {
 
 		for _, skey := range value.Keys {
 			if skey.Algorithm == "" {
-				return errors.New("A Key has no algorithm, alg, specified.\n")
+				return errors.New("A Key has no algorithm, alg, specified")
 			}
 			if skey.KeyID == "" {
-				return errors.New("A Key has no key id, kid, specified.\n")
+				return errors.New("A Key has no key id, kid, specified")
 			}
 			if renewalKid != nil && strings.Compare(*renewalKid, skey.KeyID) == 0 {
 				renewalKidMatched = true
@@ -450,16 +454,16 @@ func validateURIKeyset(msg map[string]URISignerKeyset) error {
 	// should only have one renewal_kid
 	switch renewalKidFound {
 	case 0:
-		return errors.New("No renewal_kid was found in any keyset\n")
+		return errors.New("No renewal_kid was found in any keyset")
 	case 1: // okay, this is what we want
 		break
 	default:
-		return errors.New("More than one renewal_kid was found in the keysets\n")
+		return errors.New("More than one renewal_kid was found in the keysets")
 	}
 
 	// the renewal_kid should match the kid of one key
 	if !renewalKidMatched {
-		return errors.New("No key was found with a kid that matches the renewal kid\n")
+		return errors.New("No key was found with a kid that matches the renewal kid")
 	}
 
 	return nil
