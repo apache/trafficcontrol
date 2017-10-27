@@ -131,7 +131,7 @@ const (
 `
 )
 
-func TestValidateUriKeyset(t *testing.T) {
+func TestValidateURIKeyset(t *testing.T) {
 	var keyset map[string]URISignerKeyset
 
 	// unmarshal a good URISignerKeyset

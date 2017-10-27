@@ -34,7 +34,7 @@ import (
 )
 
 const RiakPort = 8087
-const CdnUriKeysBucket = "cdn_uri_sig_keys" // riak namespace for cdn uri signing keys.
+const CdnURIKeysBucket = "cdn_uri_sig_keys" // riak namespace for cdn uri signing keys.
 
 type URISignerKeyset struct {
 	RenewalKid *string               `json:"renewal_kid"`
@@ -149,7 +149,7 @@ func getRiakCluster(db *sqlx.DB, cfg Config) (*riak.Cluster, error) {
 }
 
 // endpoint handler for fetching uri signing keys from riak
-func getUrisignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
+func getURIsignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorFunc(w, r)
 
@@ -160,7 +160,7 @@ func getUrisignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 			return
 		}
 
-		xmlId := pathParams["xml-id"]
+		xmlId := pathParams["xmlId"]
 
 		// create and start a cluster
 		cluster, err := getRiakCluster(db, cfg)
@@ -178,7 +178,7 @@ func getUrisignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 			}
 		}()
 
-		ro, err := fetchObjectValues(xmlId, CdnUriKeysBucket, cluster)
+		ro, err := fetchObjectValues(xmlId, CdnURIKeysBucket, cluster)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -204,7 +204,7 @@ func getUrisignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 }
 
 // Http POST handler used to store urisigning keys to a delivery service.
-func assignDeliveryServiceUriKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
+func assignDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorFunc(w, r)
 
@@ -217,7 +217,7 @@ func assignDeliveryServiceUriKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			return
 		}
 
-		xmlId := pathParams["xml-id"]
+		xmlId := pathParams["xmlId"]
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
@@ -253,7 +253,7 @@ func assignDeliveryServiceUriKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			}
 		}()
 
-		ro, err := fetchObjectValues(xmlId, CdnUriKeysBucket, cluster)
+		ro, err := fetchObjectValues(xmlId, CdnURIKeysBucket, cluster)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -274,7 +274,7 @@ func assignDeliveryServiceUriKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			Value:           []byte(data),
 		}
 
-		err = saveObject(obj, CdnUriKeysBucket, cluster)
+		err = saveObject(obj, CdnURIKeysBucket, cluster)
 		if err != nil {
 			log.Errorf("%v\n", err)
 			handleErr(err, http.StatusInternalServerError)
@@ -287,7 +287,7 @@ func assignDeliveryServiceUriKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 }
 
 // Http DELETE handler used to remove urisigning keys assigned to a delivery service.
-func removeDeliveryServiceUriKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
+func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorFunc(w, r)
 
@@ -298,7 +298,7 @@ func removeDeliveryServiceUriKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			return
 		}
 
-		xmlId := pathParams["xml-id"]
+		xmlId := pathParams["xmlId"]
 
 		// create and start a cluster
 		cluster, err := getRiakCluster(db, cfg)
@@ -316,7 +316,7 @@ func removeDeliveryServiceUriKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			}
 		}()
 
-		ro, err := fetchObjectValues(xmlId, CdnUriKeysBucket, cluster)
+		ro, err := fetchObjectValues(xmlId, CdnURIKeysBucket, cluster)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -327,7 +327,7 @@ func removeDeliveryServiceUriKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 
 		if ro == nil || ro[0].Value == nil {
 			alert = tc.CreateAlerts(tc.InfoLevel, "not deleted, no object found to delete.")
-		} else if err := deleteObject(xmlId, CdnUriKeysBucket, cluster); err != nil {
+		} else if err := deleteObject(xmlId, CdnURIKeysBucket, cluster); err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
 		} else { // object successfully deleted
@@ -348,7 +348,7 @@ func removeDeliveryServiceUriKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 }
 
 // Http POST handler used to store urisigning keys to a delivery service.
-func updateDeliveryServiceUriKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
+func updateDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorFunc(w, r)
 
@@ -361,7 +361,7 @@ func updateDeliveryServiceUriKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			return
 		}
 
-		xmlId := pathParams["xml-id"]
+		xmlId := pathParams["xmlId"]
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
@@ -406,7 +406,7 @@ func updateDeliveryServiceUriKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			Value:           []byte(data),
 		}
 
-		err = saveObject(obj, CdnUriKeysBucket, cluster)
+		err = saveObject(obj, CdnURIKeysBucket, cluster)
 		if err != nil {
 			log.Errorf("%v\n", err)
 			handleErr(err, http.StatusInternalServerError)
