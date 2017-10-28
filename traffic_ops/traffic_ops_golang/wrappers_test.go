@@ -104,7 +104,7 @@ func TestGzip(t *testing.T) {
 	f(w, r)
 
 	// body should not be gzip'd
-	if bytes.Compare(w.Body.Bytes(), []byte(body)) != 0 {
+	if !bytes.Equal(w.Body.Bytes(), []byte(body)) {
 		t.Error("Expected body to be NOT gzip'd!")
 	}
 
@@ -112,7 +112,7 @@ func TestGzip(t *testing.T) {
 	w = httptest.NewRecorder()
 	r.Header.Add("Accept-Encoding", "gzip")
 	f(w, r)
-	if bytes.Compare(w.Body.Bytes(), gz.Bytes()) != 0 {
+	if !bytes.Equal(w.Body.Bytes(), gz.Bytes()) {
 		t.Error("Expected body to be gzip'd!")
 	}
 }
@@ -195,7 +195,7 @@ func TestWrapAuth(t *testing.T) {
 
 	f(w, r)
 
-	if bytes.Compare(w.Body.Bytes(), expectedBody) != 0 {
+	if !bytes.Equal(w.Body.Bytes(), expectedBody) {
 		t.Errorf("received: %s\n expected: %s\n", w.Body.Bytes(), expectedBody)
 	}
 
@@ -213,7 +213,7 @@ func TestWrapAuth(t *testing.T) {
 		fmt.Printf("received: %s\n expected: %s\n", w.Body.Bytes(), expectedError)
 	}
 
-	if bytes.Compare(w.Body.Bytes(), []byte(expectedError)) != 0 {
+	if !bytes.Equal(w.Body.Bytes(), []byte(expectedError)) {
 		t.Errorf("received: %s\n expected: %s\n", w.Body.Bytes(), expectedError)
 	}
 }
