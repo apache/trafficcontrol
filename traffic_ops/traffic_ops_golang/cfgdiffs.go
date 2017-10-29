@@ -149,7 +149,10 @@ WHERE me.server_id=(SELECT server.id FROM server WHERE host_name=$1)`
 			return nil, err
 		}
 
-		json.Unmarshal([]byte(disk_lines_missing.String), &disk_lines_missing_arr)
+		err := json.Unmarshal([]byte(disk_lines_missing.String), &disk_lines_missing_arr)
+		if err != nil {
+			return nil, err
+		}
 
 		configs = append(configs, CfgFileDiffs{
 			FileName:    config_name.String,
