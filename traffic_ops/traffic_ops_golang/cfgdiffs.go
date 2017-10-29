@@ -69,7 +69,7 @@ func putCfgDiffsHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 		}
 
 		hostName := p["host-name"]
-		configName := p["cfg"]
+		configName := p["cfg-file-name"]
 
 		decoder := json.NewDecoder(r.Body)
 		var diffs CfgFileDiffs
