@@ -144,7 +144,7 @@ WHERE me.server_id=(SELECT server.id FROM server WHERE host_name=$1)`
 			return nil, err
 		}
 
-		err := json.Unmarshal([]byte(db_lines_missing.String), &db_lines_missing_arr)
+		err = json.Unmarshal([]byte(db_lines_missing.String), &db_lines_missing_arr)
 		if err != nil {
 			return nil, err
 		}
