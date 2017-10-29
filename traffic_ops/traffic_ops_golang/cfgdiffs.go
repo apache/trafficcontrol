@@ -1,11 +1,12 @@
 package main;
 
 import (
-        "fmt"
-        "net/http"
+	"fmt"
+    "net/http"
 	"database/sql"
 	"encoding/json"
 	"time"
+	"errors"
 	
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 
@@ -38,14 +39,20 @@ func getCfgDiffsHandler(db *sqlx.DB) RegexHandlerFunc {
 
 		resp, err := getCfgDiffsJson(hostName, db)
 		if err != nil {
-				handleErr(err, http.StatusInternalServerError)
-				return
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
+
+		// if the response has a length of zero, no results were found for that server
+		if len(resp.Response) == 0 {
+			w.WriteHeader(http.StatusNotFound)
+			return
 		}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-				handleErr(err, http.StatusInternalServerError)
-				return
+			handleErr(err, http.StatusInternalServerError)
+			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -74,15 +81,61 @@ func putCfgDiffsHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 
 		defer r.Body.Close()
 	
-		err = putCfgDiffs(db, hostName, configName, diffs)
+		result, err := putCfgDiffs(db, hostName, configName, diffs)
 		if err != nil {
-				handleErr(err, http.StatusInternalServerError)
-				return
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
+		
+		// Not found (invalid hostname)
+		if result == 0 { // This keeps happening
+			w.WriteHeader(404)
+			return
+		}
+		// Created (newly added)
+		if result == 1 {
+			w.WriteHeader(201)
+			return
+		}
+		// Updated (already existed)
+		if result == 2 {
+			w.WriteHeader(202)
+			return
 		}
 	}
 }
 
-func cfgDiffsExist(db *sqlx.DB, hostName string, configName string) (bool, error) {
+func serverExists(db *sqlx.DB, hostName string) (bool, error) {
+	query := `SELECT EXISTS(SELECT 1 FROM server me WHERE me.host_name=$1)`
+	rows, err := db.Query(query, hostName)
+	if err != nil {
+		return false, err
+	}
+
+	defer rows.Close()
+	
+	for rows.Next() {
+		var exists sql.NullString
+		
+		err = rows.Scan(&exists)
+		if err != nil {
+			return false, err
+		}
+
+		log.Infof(exists.String)
+
+		if exists.String == "true" {
+			return true, nil
+		} else {
+			return false, nil
+		}
+		break
+	} //else {
+		return false, errors.New("Failed to load row!") // What does this mean?
+	//}
+}
+
+/*func cfgDiffsExist(db *sqlx.DB, hostName string, configName string) (bool, error) {
 	query := `SELECT 
 EXISTS(
 SELECT 1
@@ -103,7 +156,7 @@ WHERE me.server_id = (SELECT server.id FROM server WHERE host_name=$1) AND me.co
 			return false, err
 		}
 
-		if exists.String == "t" {
+		if exists.String == "true" {
 			return true, nil
 		} else {
 			return false, nil
@@ -111,7 +164,7 @@ WHERE me.server_id = (SELECT server.id FROM server WHERE host_name=$1) AND me.co
 	} else {
 		return false, nil;// this is an issue...
 	}
-}
+}*/
 
 func getCfgDiffs(db *sqlx.DB, hostName string) ([]CfgFileDiffs, error) {
 	query := `SELECT
@@ -232,7 +285,7 @@ disk_lines_missing=(SELECT ARRAY(SELECT * FROM json_array_elements_text($2))), l
 	
 	count, err := rows.RowsAffected()
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 
 	if count > 0 {
@@ -243,15 +296,23 @@ disk_lines_missing=(SELECT ARRAY(SELECT * FROM json_array_elements_text($2))), l
 
 }
 
-func putCfgDiffs(db *sqlx.DB, hostName string, configName string, diffs CfgFileDiffs) (error) {
+func putCfgDiffs(db *sqlx.DB, hostName string, configName string, diffs CfgFileDiffs) (int, error) {
 	
+	sExists, err := serverExists(db, hostName)
+	if err != nil {
+		return -1, err
+	}
+	if sExists == false {
+		return 0, nil
+	}
+
 	// Try updating the information first
 	updated, err := updateCfgDiffs(db, hostName, configName, diffs)
 	if err != nil {
-		return err
+		return -1, err
 	}
 	if updated {
-		return nil
+		return 2, nil
 	}
-	return insertCfgDiffs(db, hostName, configName, diffs)
+	return 1, insertCfgDiffs(db, hostName, configName, diffs)
 }
