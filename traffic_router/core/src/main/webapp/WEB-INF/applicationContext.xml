@@ -191,7 +191,7 @@
 	</bean>
 
 	<bean id="languidState" class="com.comcast.cdn.traffic_control.traffic_router.core.util.LanguidState" init-method="init"
-		depends-on="geolocationDatabaseUpdater, networkUpdater, regionalGeoUpdater, MonitorWatcher, trafficRouterManager, ConfigHandler">
+		depends-on="geolocationDatabaseUpdater, networkUpdater, deepNetworkUpdater, regionalGeoUpdater, MonitorWatcher, trafficRouterManager, ConfigHandler">
 		<!-- todo: add bean refs that can be validated inside the method called -->
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 	</bean>

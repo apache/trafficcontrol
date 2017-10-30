@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.List;
 import java.util.ArrayList;
-
+import java.util.concurrent.CountDownLatch;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
@@ -47,6 +47,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
     private static NetworkNode deepInstance;
 
     private static CacheRegister cacheRegister;
+    private static final CountDownLatch cacheRegisterLatch = new CountDownLatch(1);
 
     private CidrAddress cidrAddress;
     private String loc;
@@ -84,6 +85,17 @@ public class NetworkNode implements Comparable<NetworkNode> {
 
     public static void setCacheRegister(final CacheRegister cr) {
         cacheRegister = cr;
+        cacheRegisterLatch.countDown();
+    }
+
+    public static CacheRegister getCacheRegisterBlocking() {
+        try {
+            cacheRegisterLatch.await();
+        } catch (InterruptedException e) {
+            LOGGER.warn(e);
+        } finally {
+            return cacheRegister;
+        }
     }
 
     public static NetworkNode generateTree(final File f, final boolean verifyOnly, final boolean useDeep) throws IOException  {
@@ -129,7 +141,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
                             }
                             // Get the cache from the cacheregister here - don't create a new cache due to the deep file, only reuse the
                             // ones we already know about.
-                            final Cache cache = cacheRegister.getCacheMap().get(cacheHostname);
+                            final Cache cache = getCacheRegisterBlocking().getCacheMap().get(cacheHostname);
                             if (cache == null) {
                                 LOGGER.warn("DDC: deep cache entry " + cacheHostname + " not found in crconfig server list (it might not belong to this CDN)");
                             } else {
