@@ -21,8 +21,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/cookiejar"
+	"net/http/httptrace"
 	"strings"
 	"sync"
 	"time"
@@ -74,8 +76,9 @@ func (e *HTTPError) Error() string {
 
 // CacheEntry ...
 type CacheEntry struct {
-	Entered int64
-	Bytes   []byte
+	Entered    int64
+	Bytes      []byte
+	RemoteAddr net.Addr
 }
 
 // TODO JvD
@@ -98,17 +101,19 @@ func loginCreds(toUser string, toPasswd string) ([]byte, error) {
 
 // Deprecated: Login is deprecated, use LoginWithAgent instead. The `Login` function with its present signature will be removed in the next version and replaced with `Login(toURL string, toUser string, toPasswd string, insecure bool, userAgent string)`. The `LoginWithAgent` function will be removed the version after that.
 func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Session, error) {
-	return LoginWithAgent(toURL, toUser, toPasswd, insecure, "traffic-ops-client", false, DefaultTimeout) // TODO add UserAgent version
+	s, _, err := LoginWithAgent(toURL, toUser, toPasswd, insecure, "traffic-ops-client", false, DefaultTimeout)
+	return s, err
 }
 
 // Login to traffic_ops, the response should set the cookie for this session
 // automatically. Start with
 //     to := traffic_ops.Login("user", "passwd", true)
 // subsequent calls like to.GetData("datadeliveryservice") will be authenticated.
-func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool, userAgent string, useCache bool, requestTimeout time.Duration) (*Session, error) {
+// Returns the logged in client, the remote address of Traffic Ops which was translated and used to log in, and any error. If the error is not nil, the remote address may or may not be nil, depending whether the error occurred before the login request.
+func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool, userAgent string, useCache bool, requestTimeout time.Duration) (*Session, net.Addr, error) {
 	credentials, err := loginCreds(toUser, toPasswd)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	options := cookiejar.Options{
@@ -117,7 +122,7 @@ func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool,
 
 	jar, err := cookiejar.New(&options)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	to := NewSession(toUser, toPasswd, toURL, userAgent, &http.Client{
@@ -129,15 +134,15 @@ func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool,
 	}, useCache)
 
 	path := "/api/1.2/user/login"
-	resp, err := to.request("POST", path, credentials)
+	resp, remoteAddr, err := to.request("POST", path, credentials)
 	if err != nil {
-		return nil, err
+		return nil, remoteAddr, err
 	}
 	defer resp.Body.Close()
 
 	var alerts tc.Alerts
 	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-		return nil, err
+		return nil, remoteAddr, err
 	}
 
 	success := false
@@ -150,42 +155,50 @@ func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool,
 
 	if !success {
 		err := fmt.Errorf("Login failed, alerts string: %+v", alerts)
-		return nil, err
+		return nil, remoteAddr, err
 	}
 
-	return to, nil
+	return to, remoteAddr, nil
 }
 
-// request performs the actual HTTP request to Traffic Ops
-func (to *Session) request(method, path string, body []byte) (*http.Response, error) {
+// request performs the actual HTTP request to Traffic Ops. Returns the response, the RemoteAddr the Traffic Ops URL resolved to, or any error. If the error is not nil, the RemoteAddr may or may not be nil, depending whether the error occurred before the request was executed.
+func (to *Session) request(method, path string, body []byte) (*http.Response, net.Addr, error) {
 	url := fmt.Sprintf("%s%s", to.URL, path)
 
 	var req *http.Request
 	var err error
+	remoteAddr := net.Addr(nil)
 
 	if body != nil {
 		req, err = http.NewRequest(method, url, bytes.NewBuffer(body))
 		if err != nil {
-			return nil, err
+			return nil, remoteAddr, err
 		}
 		req.Header.Set("Content-Type", "application/json")
 	} else {
 		req, err = http.NewRequest(method, url, nil)
 		if err != nil {
-			return nil, err
+			return nil, remoteAddr, err
 		}
 	}
+
+	trace := &httptrace.ClientTrace{
+		GotConn: func(connInfo httptrace.GotConnInfo) {
+			remoteAddr = connInfo.Conn.RemoteAddr()
+		},
+	}
+	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 
 	req.Header.Set("User-Agent", to.UserAgentStr)
 	resp, err := to.Client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, remoteAddr, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		body, readErr := ioutil.ReadAll(resp.Body)
 		if readErr != nil {
-			return nil, readErr
+			return nil, remoteAddr, readErr
 		}
 
 		e := HTTPError{
@@ -195,10 +208,15 @@ func (to *Session) request(method, path string, body []byte) (*http.Response, er
 			Body:           string(body),
 		}
 		resp.Body.Close()
-		return nil, &e
+		return nil, remoteAddr, &e
 	}
 
-	return resp, nil
+	return resp, remoteAddr, nil
+}
+
+type ReqInf struct {
+	CacheHitStatus CacheHitStatus
+	RemoteAddr     net.Addr
 }
 
 type CacheHitStatus string
@@ -246,18 +264,19 @@ func (to *Session) getCache(path string) (CacheEntry, bool) {
 
 //if cacheEntry, ok := to.Cache[path]; ok {
 
-// getBytesWithTTL - get the path, and cache in the session
-// return from cache is found and the ttl isn't expired, otherwise get it and
-// store it in cache
-func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, CacheHitStatus, error) {
+// getBytesWithTTL gets the path, and caches in the session. Returns bytes from the cache, if found and the TTL isn't expired. Otherwise, gets it and store it in cache
+func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, ReqInf, error) {
 	var body []byte
 	var err error
 	var cacheHitStatus CacheHitStatus
+	var remoteAddr net.Addr
+
 	getFresh := false
 	if cacheEntry, ok := to.getCache(path); ok {
 		if cacheEntry.Entered > time.Now().Unix()-ttl {
 			cacheHitStatus = CacheHitStatusHit
 			body = cacheEntry.Bytes
+			remoteAddr = cacheEntry.RemoteAddr
 		} else {
 			cacheHitStatus = CacheHitStatusExpired
 			getFresh = true
@@ -268,34 +287,35 @@ func (to *Session) getBytesWithTTL(path string, ttl int64) ([]byte, CacheHitStat
 	}
 
 	if getFresh {
-		body, err = to.getBytes(path)
+		body, remoteAddr, err = to.getBytes(path)
 		if err != nil {
-			return nil, CacheHitStatusInvalid, err
+			return nil, ReqInf{CacheHitStatus: CacheHitStatusInvalid, RemoteAddr: remoteAddr}, err
 		}
 
 		newEntry := CacheEntry{
-			Entered: time.Now().Unix(),
-			Bytes:   body,
+			Entered:    time.Now().Unix(),
+			Bytes:      body,
+			RemoteAddr: remoteAddr,
 		}
 		to.setCache(path, newEntry)
 	}
 
-	return body, cacheHitStatus, nil
+	return body, ReqInf{CacheHitStatus: cacheHitStatus, RemoteAddr: remoteAddr}, nil
 }
 
 // GetBytes - get []bytes array for a certain path on the to session.
-// returns the raw body
-func (to *Session) getBytes(path string) ([]byte, error) {
-	resp, err := to.request("GET", path, nil)
+// returns the raw body, the remote address the Traffic Ops URL resolved to, or any error. If the error is not nil, the RemoteAddr may or may not be nil, depending whether the error occurred before the request was executed.
+func (to *Session) getBytes(path string) ([]byte, net.Addr, error) {
+	resp, remoteAddr, err := to.request("GET", path, nil)
 	if err != nil {
-		return nil, err
+		return nil, remoteAddr, err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, remoteAddr, err
 	}
 
-	return body, nil
+	return body, remoteAddr, nil
 }

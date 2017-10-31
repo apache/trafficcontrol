@@ -24,22 +24,28 @@ import (
 
 // Types gets an array of Types.
 // optional parameter: userInTable
+// Deprecated: use GetTypes
 func (to *Session) Types(useInTable ...string) ([]tc.Type, error) {
+	t, _, err := to.GetTypes(useInTable...)
+	return t, err
+}
 
+func (to *Session) GetTypes(useInTable ...string) ([]tc.Type, ReqInf, error) {
 	if len(useInTable) > 1 {
-		return nil, errors.New("Please pass in a single value for the 'useInTable' parameter")
+		return nil, ReqInf{}, errors.New("Please pass in a single value for the 'useInTable' parameter")
 	}
 
 	url := "/api/1.2/types.json"
-	resp, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
 	var data tc.TypeResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
 	var types []tc.Type
@@ -53,5 +59,5 @@ func (to *Session) Types(useInTable ...string) ([]tc.Type, error) {
 		}
 	}
 
-	return types, nil
+	return types, reqInf, nil
 }

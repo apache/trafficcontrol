@@ -23,36 +23,54 @@ import (
 )
 
 // DeliveryServices gets an array of DeliveryServices
+// Deprecated: use GetDeliveryServices
 func (to *Session) DeliveryServices() ([]tc.DeliveryService, error) {
-	var data tc.GetDeliveryServiceResponse
-	err := get(to, deliveryServicesEp(), &data)
-	if err != nil {
-		return nil, err
-	}
-
-	return data.Response, nil
+	dses, _, err := to.GetDeliveryServices()
+	return dses, err
 }
 
-// DeliveryServices gets an array of DeliveryServices
-func (to *Session) DeliveryServicesByServer(id int) ([]tc.DeliveryService, error) {
+func (to *Session) GetDeliveryServices() ([]tc.DeliveryService, ReqInf, error) {
 	var data tc.GetDeliveryServiceResponse
-	err := get(to, deliveryServicesByServerEp(strconv.Itoa(id)), &data)
+	reqInf, err := get(to, deliveryServicesEp(), &data)
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return data.Response, nil
+	return data.Response, reqInf, nil
+}
+
+// DeliveryServicesByServer gets an array of all DeliveryServices with the given server ID assigend.
+// Deprecated: use GetDeliveryServicesByServer
+func (to *Session) DeliveryServicesByServer(id int) ([]tc.DeliveryService, error) {
+	dses, _, err := to.GetDeliveryServicesByServer(id)
+	return dses, err
+}
+
+func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryService, ReqInf, error) {
+	var data tc.GetDeliveryServiceResponse
+	reqInf, err := get(to, deliveryServicesByServerEp(strconv.Itoa(id)), &data)
+	if err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
 }
 
 // DeliveryService gets the DeliveryService for the ID it's passed
+// Deprecated: use GetDeliveryService
 func (to *Session) DeliveryService(id string) (*tc.DeliveryService, error) {
+	ds, _, err := to.GetDeliveryService(id)
+	return ds, err
+}
+
+func (to *Session) GetDeliveryService(id string) (*tc.DeliveryService, ReqInf, error) {
 	var data tc.GetDeliveryServiceResponse
-	err := get(to, deliveryServiceEp(id), &data)
+	reqInf, err := get(to, deliveryServiceEp(id), &data)
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return &data.Response[0], nil
+	return &data.Response[0], reqInf, nil
 }
 
 // CreateDeliveryService creates the DeliveryService it's passed
@@ -98,119 +116,170 @@ func (to *Session) DeleteDeliveryService(id string) (*tc.DeleteDeliveryServiceRe
 }
 
 // DeliveryServiceState gets the DeliveryServiceState for the ID it's passed
+// Deprecated: use GetDeliveryServiceState
 func (to *Session) DeliveryServiceState(id string) (*tc.DeliveryServiceState, error) {
+	dss, _, err := to.GetDeliveryServiceState(id)
+	return dss, err
+}
+
+func (to *Session) GetDeliveryServiceState(id string) (*tc.DeliveryServiceState, ReqInf, error) {
 	var data tc.DeliveryServiceStateResponse
-	err := get(to, deliveryServiceStateEp(id), &data)
+	reqInf, err := get(to, deliveryServiceStateEp(id), &data)
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return &data.Response, nil
+	return &data.Response, reqInf, nil
 }
 
 // DeliveryServiceHealth gets the DeliveryServiceHealth for the ID it's passed
+// Deprecated: use GetDeliveryServiceHealth
 func (to *Session) DeliveryServiceHealth(id string) (*tc.DeliveryServiceHealth, error) {
+	dsh, _, err := to.GetDeliveryServiceHealth(id)
+	return dsh, err
+}
+
+func (to *Session) GetDeliveryServiceHealth(id string) (*tc.DeliveryServiceHealth, ReqInf, error) {
 	var data tc.DeliveryServiceHealthResponse
-	err := get(to, deliveryServiceHealthEp(id), &data)
+	reqInf, err := get(to, deliveryServiceHealthEp(id), &data)
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return &data.Response, nil
+	return &data.Response, reqInf, nil
 }
 
 // DeliveryServiceCapacity gets the DeliveryServiceCapacity for the ID it's passed
+// Deprecated: use GetDeliveryServiceCapacity
 func (to *Session) DeliveryServiceCapacity(id string) (*tc.DeliveryServiceCapacity, error) {
+	dsc, _, err := to.GetDeliveryServiceCapacity(id)
+	return dsc, err
+}
+
+func (to *Session) GetDeliveryServiceCapacity(id string) (*tc.DeliveryServiceCapacity, ReqInf, error) {
 	var data tc.DeliveryServiceCapacityResponse
-	err := get(to, deliveryServiceCapacityEp(id), &data)
+	reqInf, err := get(to, deliveryServiceCapacityEp(id), &data)
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return &data.Response, nil
+	return &data.Response, reqInf, nil
 }
 
 // DeliveryServiceRouting gets the DeliveryServiceRouting for the ID it's passed
+// Deprecated: use GetDeliveryServiceRouting
 func (to *Session) DeliveryServiceRouting(id string) (*tc.DeliveryServiceRouting, error) {
+	dsr, _, err := to.GetDeliveryServiceRouting(id)
+	return dsr, err
+}
+
+func (to *Session) GetDeliveryServiceRouting(id string) (*tc.DeliveryServiceRouting, ReqInf, error) {
 	var data tc.DeliveryServiceRoutingResponse
-	err := get(to, deliveryServiceRoutingEp(id), &data)
+	reqInf, err := get(to, deliveryServiceRoutingEp(id), &data)
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return &data.Response, nil
+	return &data.Response, reqInf, nil
 }
 
 // DeliveryServiceServer gets the DeliveryServiceServer
+// Deprecated: use GetDeliveryServiceServer
 func (to *Session) DeliveryServiceServer(page, limit string) ([]tc.DeliveryServiceServer, error) {
-	var data tc.DeliveryServiceServerResponse
-	err := get(to, deliveryServiceServerEp(page, limit), &data)
-	if err != nil {
-		return nil, err
-	}
-
-	return data.Response, nil
+	dss, _, err := to.GetDeliveryServiceServer(page, limit)
+	return dss, err
 }
 
-// DeliveryServiceServer gets the DeliveryServiceServer
-func (to *Session) DeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, error) {
-	var data tc.DeliveryServiceRegexResponse
-	err := get(to, deliveryServiceRegexesEp(), &data)
+func (to *Session) GetDeliveryServiceServer(page, limit string) ([]tc.DeliveryServiceServer, ReqInf, error) {
+	var data tc.DeliveryServiceServerResponse
+	reqInf, err := get(to, deliveryServiceServerEp(page, limit), &data)
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return data.Response, nil
+	return data.Response, reqInf, nil
+}
+
+// DeliveryServiceRegexes gets the DeliveryService regexes
+// Deprecated: use GetDeliveryServiceRegexes
+func (to *Session) DeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, error) {
+	dsrs, _, err := to.GetDeliveryServiceRegexes()
+	return dsrs, err
+}
+func (to *Session) GetDeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, ReqInf, error) {
+	var data tc.DeliveryServiceRegexResponse
+	reqInf, err := get(to, deliveryServiceRegexesEp(), &data)
+	if err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
 }
 
 // DeliveryServiceSSLKeysByID gets the DeliveryServiceSSLKeys by ID
+// Deprecated: use GetDeliveryServiceSSLKeysByID
 func (to *Session) DeliveryServiceSSLKeysByID(id string) (*tc.DeliveryServiceSSLKeys, error) {
+	dsks, _, err := to.GetDeliveryServiceSSLKeysByID(id)
+	return dsks, err
+}
+
+func (to *Session) GetDeliveryServiceSSLKeysByID(id string) (*tc.DeliveryServiceSSLKeys, ReqInf, error) {
 	var data tc.DeliveryServiceSSLKeysResponse
-	err := get(to, deliveryServiceSSLKeysByIDEp(id), &data)
+	reqInf, err := get(to, deliveryServiceSSLKeysByIDEp(id), &data)
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return &data.Response, nil
+	return &data.Response, reqInf, nil
 }
 
 // DeliveryServiceSSLKeysByHostname gets the DeliveryServiceSSLKeys by Hostname
+// Deprecated: use GetDeliveryServiceSSLKeysByHostname
 func (to *Session) DeliveryServiceSSLKeysByHostname(hostname string) (*tc.DeliveryServiceSSLKeys, error) {
-	var data tc.DeliveryServiceSSLKeysResponse
-	err := get(to, deliveryServiceSSLKeysByHostnameEp(hostname), &data)
-	if err != nil {
-		return nil, err
-	}
-
-	return &data.Response, nil
+	dsks, _, err := to.GetDeliveryServiceSSLKeysByHostname(hostname)
+	return dsks, err
 }
 
-func get(to *Session, endpoint string, respStruct interface{}) error {
+func (to *Session) GetDeliveryServiceSSLKeysByHostname(hostname string) (*tc.DeliveryServiceSSLKeys, ReqInf, error) {
+	var data tc.DeliveryServiceSSLKeysResponse
+	reqInf, err := get(to, deliveryServiceSSLKeysByHostnameEp(hostname), &data)
+	if err != nil {
+		return nil, reqInf, err
+	}
+
+	return &data.Response, reqInf, nil
+}
+
+func get(to *Session, endpoint string, respStruct interface{}) (ReqInf, error) {
 	return makeReq(to, "GET", endpoint, nil, respStruct)
 }
 
 func post(to *Session, endpoint string, body []byte, respStruct interface{}) error {
-	return makeReq(to, "POST", endpoint, body, respStruct)
+	_, err := makeReq(to, "POST", endpoint, body, respStruct)
+	return err
 }
 
 func put(to *Session, endpoint string, body []byte, respStruct interface{}) error {
-	return makeReq(to, "PUT", endpoint, body, respStruct)
+	_, err := makeReq(to, "PUT", endpoint, body, respStruct)
+	return err
 }
 
 func del(to *Session, endpoint string, respStruct interface{}) error {
-	return makeReq(to, "DELETE", endpoint, nil, respStruct)
+	_, err := makeReq(to, "DELETE", endpoint, nil, respStruct)
+	return err
 }
 
-func makeReq(to *Session, method, endpoint string, body []byte, respStruct interface{}) error {
-	resp, err := to.request(method, endpoint, body)
+func makeReq(to *Session, method, endpoint string, body []byte, respStruct interface{}) (ReqInf, error) {
+	resp, remoteAddr, err := to.request(method, endpoint, body) // TODO change to getBytesWithTTL
+	reqInf := ReqInf{RemoteAddr: remoteAddr, CacheHitStatus: CacheHitStatusMiss}
 	if err != nil {
-		return err
+		return reqInf, err
 	}
 	defer resp.Body.Close()
 
 	if err := json.NewDecoder(resp.Body).Decode(respStruct); err != nil {
-		return err
+		return reqInf, err
 	}
 
-	return nil
+	return reqInf, nil
 }

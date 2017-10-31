@@ -23,18 +23,25 @@ import (
 )
 
 // Parameters gets an array of parameter structs for the profile given
+// Deprecated: use GetParameters
 func (to *Session) Parameters(profileName string) ([]tc.Parameter, error) {
+	ps, _, err := to.GetParameters(profileName)
+	return ps, err
+}
+
+func (to *Session) GetParameters(profileName string) ([]tc.Parameter, ReqInf, error) {
 	url := fmt.Sprintf("/api/1.2/parameters/profile/%s.json", profileName)
-	resp, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
 	var data tc.ParametersResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return data.Response, nil
+	return data.Response, reqInf, nil
 }

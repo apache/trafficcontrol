@@ -22,50 +22,71 @@ import (
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
+// Deprecated: use GetCDNs.
 func (to *Session) CDNs() ([]tc.CDN, error) {
+	cdns, _, err := to.GetCDNs()
+	return cdns, err
+}
+
+func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
 	url := "/api/1.2/cdns.json"
-	resp, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", url, nil) // TODO change to getBytesWithTTL, which caches
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
 	var data tc.CDNsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
-	return data.Response, nil
+	return data.Response, reqInf, nil
 }
 
 // CDNName gets an array of CDNs
+// Deprecated: use GetCDNName
 func (to *Session) CDNName(name string) ([]tc.CDN, error) {
+	n, _, err := to.GetCDNName(name)
+	return n, err
+}
+
+func (to *Session) GetCDNName(name string) ([]tc.CDN, ReqInf, error) {
 	url := fmt.Sprintf("/api/1.2/cdns/name/%s.json", name)
-	resp, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
 	var data tc.CDNsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return data.Response, nil
+	return data.Response, reqInf, nil
 }
 
+// Deprecated: use GetCDNSSLKeys
 func (to *Session) CDNSSLKeys(name string) ([]tc.CDNSSLKeys, error) {
+	ks, _, err := to.GetCDNSSLKeys(name)
+	return ks, err
+}
+
+func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
 	url := fmt.Sprintf("/api/1.2/cdns/name/%s/sslkeys.json", name)
-	resp, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
 	var data tc.CDNSSLKeysResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return data.Response, nil
+	return data.Response, reqInf, nil
 }
