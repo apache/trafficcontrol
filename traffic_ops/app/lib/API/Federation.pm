@@ -29,7 +29,7 @@ use Data::Validate::IP qw(is_ipv4 is_ipv6);
 use constant SUCCESS => 0;
 use constant ERROR   => 1;
 
-sub index {
+sub get_all_federation_resolver_mappings {
 	my $self     = shift;
 	my $cdn_name = $self->param('cdnName');
 	my $data     = [];
@@ -174,10 +174,14 @@ sub update_delivery_service {
 	push( @{ $ds->{'mappings'} }, $m );
 }
 
-sub external_index {
+sub get_current_user_federation_resolver_mappings {
 	my $self             = shift;
 	my $data             = [];
 	my $current_username = $self->current_user()->{username};
+
+	if ( !&is_federation($self) ) {
+		return $self->forbidden();
+	}
 
 	my $rs_data;
 	my ( $rc, $response, @federation_ids ) = $self->find_federation_tmuser($current_username);
@@ -246,22 +250,20 @@ sub find_tmuser {
 	my $current_username = shift;
 
 	my $tm_user =
-		$self->db->resultset('TmUser')->search( { username => $current_username, 'role.name' => 'federation' }, { prefetch => 'role' } )->single();
+		$self->db->resultset('TmUser')->search( { username => $current_username } )->single();
 
 	my $response;
-	if ( defined $tm_user ) {
-		return ( SUCCESS, $response, $tm_user );
-	}
-	else {
-		$response = "You must be an Federation user to perform this operation!";
-		return ( ERROR, $response, $tm_user );
-	}
+	return ( SUCCESS, $response, $tm_user );
 }
 
-sub add {
+sub add_federation_resolver_mappings_for_current_user {
 	my $self = shift;
-
 	my $current_username = $self->current_user()->{username};
+
+	if ( !&is_federation($self) ) {
+		return $self->forbidden();
+	}
+
 	my ( $rc, $response, $user ) = $self->find_tmuser($current_username);
 	if ( $rc == ERROR ) {
 		return $self->alert($response);
@@ -425,9 +427,13 @@ sub add_federation_resolver {
 	return ( SUCCESS, $response, @resolver_ips );
 }
 
-sub delete {
+sub delete_federation_resolver_mappings_for_current_user {
 	my $self             = shift;
 	my $current_username = $self->current_user()->{username};
+
+	if ( !&is_federation($self) ) {
+		return $self->forbidden();
+	}
 
 	my ( $rc, $response, $user ) = $self->find_tmuser($current_username);
 	if ( $rc == ERROR ) {
@@ -477,11 +483,15 @@ sub delete_federation_resolver {
 	}
 }
 
-sub update {
+sub update_federation_resolver_mappings_for_current_user {
 	my $self             = shift;
 	my $current_username = $self->current_user()->{username};
 
-	$self->delete();
-	$self->add();
+	if ( !&is_federation($self) ) {
+		return $self->forbidden();
+	}
+
+	$self->delete_federation_resolver_mappings_for_current_user();
+	$self->add_federation_resolver_mappings_for_current_user();
 }
 1;
