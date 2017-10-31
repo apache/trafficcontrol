@@ -1210,6 +1210,12 @@ sub remap_ds_data {
 				my $fname = "cacheurl_" . $ds_xml_id . ".config";
 				$response_obj->{dslist}->[$j]->{"cacheurl_file"} = $fname;
 			}
+			if ( defined( $dsinfo->profile ) ) {
+				my $dsparamrs = $self->db->resultset('ProfileParameter')->search( { profile => $dsinfo->profile }, { prefetch => [ 'profile', 'parameter' ] } );
+				while ( my $prow = $dsparamrs->next ) {
+					$response_obj->{dslist}->[$j]->{'param'}->{ $prow->parameter->config_file }->{ $prow->parameter->name } = $prow->parameter->value;
+				}
+			}
 
 			$j++;
 		}
