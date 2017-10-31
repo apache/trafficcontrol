@@ -20,11 +20,12 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.concurrent.CountDownLatch;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
@@ -35,9 +36,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 
 public class NetworkNode implements Comparable<NetworkNode> {
     private static final Logger LOGGER = Logger.getLogger(NetworkNode.class);
@@ -46,14 +45,12 @@ public class NetworkNode implements Comparable<NetworkNode> {
     private static NetworkNode instance;
     private static NetworkNode deepInstance;
 
-    private static CacheRegister cacheRegister;
-    private static final CountDownLatch cacheRegisterLatch = new CountDownLatch(1);
-
     private CidrAddress cidrAddress;
     private String loc;
     private CacheLocation cacheLocation = null;
     private Geolocation geolocation = null;
     protected Map<NetworkNode,NetworkNode> children;
+    private Set<String> deepCacheNames;
 
     public static NetworkNode getInstance() {
         if (instance != null) {
@@ -81,21 +78,6 @@ public class NetworkNode implements Comparable<NetworkNode> {
         }
 
         return deepInstance;
-    }
-
-    public static void setCacheRegister(final CacheRegister cr) {
-        cacheRegister = cr;
-        cacheRegisterLatch.countDown();
-    }
-
-    public static CacheRegister getCacheRegisterBlocking() {
-        try {
-            cacheRegisterLatch.await();
-        } catch (InterruptedException e) {
-            LOGGER.warn(e);
-        } finally {
-            return cacheRegister;
-        }
     }
 
     public static NetworkNode generateTree(final File f, final boolean verifyOnly, final boolean useDeep) throws IOException  {
@@ -130,31 +112,8 @@ public class NetworkNode implements Comparable<NetworkNode> {
                     final double longitude = coordinates.get("longitude").asDouble();
                     geolocation = new Geolocation(latitude, longitude);
                 }
-                CacheLocation deepLoc = null;
-                if (useDeep) {
-                    try {
-                        final JsonNode caches = JsonUtils.getJsonNode(locData, "caches");
-                        for (final JsonNode cacheJson : caches) {
-                            final String cacheHostname = cacheJson.asText();
-                            if (deepLoc == null) {
-                                deepLoc = new CacheLocation( "deep." + loc, new Geolocation(0.0, 0.0));  // TODO JvD
-                            }
-                            // Get the cache from the cacheregister here - don't create a new cache due to the deep file, only reuse the
-                            // ones we already know about.
-                            final Cache cache = getCacheRegisterBlocking().getCacheMap().get(cacheHostname);
-                            if (cache == null) {
-                                LOGGER.warn("DDC: deep cache entry " + cacheHostname + " not found in crconfig server list (it might not belong to this CDN)");
-                            } else {
-                                LOGGER.info("DDC: Adding " + cacheHostname + " to " + deepLoc.getId() + ".");
-                                deepLoc.addCache(cache);
-                            }
-                        }
-                    } catch (JsonUtilsException ex) {
-                        LOGGER.warn("An exception was caught while accessing the caches key of " + loc + " in the incoming coverage zone file: " + ex.getMessage());
-                    }
-                }
 
-                if (!addNetworkNodesToRoot(root, locData, loc, deepLoc, geolocation, useDeep)) {
+                if (!addNetworkNodesToRoot(root, loc, locData, geolocation, useDeep)) {
                     return null;
                 }
             }
@@ -177,8 +136,11 @@ public class NetworkNode implements Comparable<NetworkNode> {
         return null;
     }
 
-    private static boolean addNetworkNodesToRoot(final SuperNode root, final JsonNode locData, final String loc,
-                                                 final CacheLocation deepLoc, final Geolocation geolocation, final boolean useDeep) {
+    private static boolean addNetworkNodesToRoot(final SuperNode root, final String loc, final JsonNode locData,
+                                                 final Geolocation geolocation, final boolean useDeep) {
+        CacheLocation deepLoc = new CacheLocation( "deep." + loc, geolocation != null ? geolocation : new Geolocation(0.0, 0.0));  // TODO JvD
+        final Set<String> cacheNames = parseDeepCacheNames(locData);
+
         for (final String key : new String[]{"network6", "network"}) {
             try {
                 for (final JsonNode network : JsonUtils.getJsonNode(locData, key)) {
@@ -186,7 +148,12 @@ public class NetworkNode implements Comparable<NetworkNode> {
 
                     try {
                         final NetworkNode nn = new NetworkNode(ip, loc, geolocation);
-                        if (useDeep && deepLoc != null) { // for deepLoc, we add the location here; normally it gets added by setLocation.
+                        if (useDeep) {
+                            // For a deep NetworkNode, we set the CacheLocation here without any Caches.
+                            // The deep Caches will be lazily loaded in getCoverageZoneCacheLocation() where we have
+                            // access to the latest CacheRegister, similar to how normal NetworkNodes are lazily loaded
+                            // with a CacheLocation.
+                            nn.setDeepCacheNames(cacheNames);
                             nn.setCacheLocation(deepLoc);
                         }
                         if ("network6".equals(key)) {
@@ -204,6 +171,25 @@ public class NetworkNode implements Comparable<NetworkNode> {
             }
         }
         return true;
+    }
+
+    private static Set<String> parseDeepCacheNames(JsonNode locationData) {
+        final Set<String> cacheNames = new HashSet<String>();
+        final JsonNode cacheArray;
+
+        try {
+            cacheArray = JsonUtils.getJsonNode(locationData, "caches");
+        } catch (JsonUtilsException ex) {
+            return cacheNames;
+        }
+
+        for (final JsonNode cache : cacheArray) {
+            final String cacheName = cache.asText();
+            if (!cacheName.isEmpty()) {
+                cacheNames.add(cacheName);
+            }
+        }
+        return cacheNames;
     }
 
     public NetworkNode(final String str) throws NetworkNodeException {
@@ -302,6 +288,14 @@ public class NetworkNode implements Comparable<NetworkNode> {
         this.cacheLocation = cacheLocation;
     }
 
+    public Set<String> getDeepCacheNames() {
+        return deepCacheNames;
+    }
+
+    public void setDeepCacheNames(final Set<String> deepCacheNames) {
+        this.deepCacheNames = deepCacheNames;
+    }
+
     public int size() {
         if (children == null) {
             return 1;
@@ -317,22 +311,30 @@ public class NetworkNode implements Comparable<NetworkNode> {
     }
 
     public void clearCacheLocations() {
+        clearCacheLocations(false);
+    }
+
+    public void clearCacheLocations(boolean clearCachesOnly) {
         synchronized(this) {
-            cacheLocation = null;
+            if (clearCachesOnly && cacheLocation != null) {
+                cacheLocation.clearCaches();
+            } else {
+                cacheLocation = null;
+            }
 
             if (this instanceof SuperNode) {
                 final SuperNode superNode = (SuperNode) this;
 
                 if (superNode.children6 != null) {
                     for (final NetworkNode child : superNode.children6.keySet()) {
-                        child.clearCacheLocations();
+                        child.clearCacheLocations(clearCachesOnly);
                     }
                 }
             }
 
             if (children != null) {
                 for (final NetworkNode child : children.keySet()) {
-                    child.clearCacheLocations();
+                    child.clearCacheLocations(clearCachesOnly);
                 }
             }
         }
