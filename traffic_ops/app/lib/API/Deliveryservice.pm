@@ -379,13 +379,16 @@ sub update {
 	if ( exists($params->{signingAlgorithm}) ) {
 		# If so, just use that
 		$values->{signing_algorithm} = $params->{signingAlgorithm};
-	# Else if they sent 'signed' param and it's true
-	} elsif ($params->{signed}) {
-		# Then we want url_sig
-		$values->{signing_algorithm} = "url_sig";
-	} else {
-		# Otherwise we are disabled
-		$values->{signing_algorithm} = undef;
+	# Else if they sent 'signed' param
+	} elsif (exists($params->{signed})) {
+		# and it's true
+		if ($params->{signed}) {
+			# Then we want url_sig
+			$values->{signing_algorithm} = "url_sig";
+		} else {
+			# Otherwise we are disabled
+			$values->{signing_algorithm} = undef;
+		}
 	}
 
 	my $rs = $ds->update($values);
