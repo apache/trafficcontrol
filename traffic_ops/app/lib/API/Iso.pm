@@ -189,10 +189,6 @@ sub generate_iso {
 	print DSK "boot_drives=\"$ondisk\"";
 	close DSK;
 
-	my $config_file = $ENV{'MOJO_CONFIG'};
-	my $fh;
-	open( $fh, "<", $config_file ) or die "$config_file: $!";
-
 	my $iso_dir       = "iso";
 	my $config        = $self->app->config;
 	my $iso_root_path = $config->{'geniso'}{'iso_root_path'};
