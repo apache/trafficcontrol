@@ -60,6 +60,10 @@ public class CacheLocation {
 			caches.put(cache.getId(), cache);
 	}
 
+	public void clearCaches() {
+		caches.clear();
+	}
+
 	@Override
 	public boolean equals(final Object obj) {
 		if (this == obj) {

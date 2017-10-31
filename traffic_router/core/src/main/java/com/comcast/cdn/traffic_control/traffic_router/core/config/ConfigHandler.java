@@ -205,7 +205,6 @@ public class ConfigHandler {
 				parseCacheConfig(JsonUtils.getJsonNode(jo, "contentServers"), cacheRegister);
 				parseMonitorConfig(JsonUtils.getJsonNode(jo, "monitors"));
 
-				NetworkNode.setCacheRegister(cacheRegister);
 				federationsWatcher.configure(config);
 				steeringWatcher.configure(config);
 				steeringWatcher.setCacheRegister(cacheRegister);
@@ -223,6 +222,7 @@ public class ConfigHandler {
 				 * then clear cache locations, the lazy loading should work as designed. See issue TC-401 for details.
 				 */
 				NetworkNode.getInstance().clearCacheLocations();
+				NetworkNode.getDeepInstance().clearCacheLocations(true);
 				setLastSnapshotTimestamp(sts);
 			} catch (ParseException e) {
 				isProcessing.set(false);
