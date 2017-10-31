@@ -595,12 +595,14 @@ sub api_routes {
 	$r->delete("/api/$version/divisions/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Division#delete', namespace => $namespace );
 	$r->delete("/api/$version/divisions/name/:name")->over( authenticated => 1, not_ldap => 1 )->to( 'Division#delete_by_name', namespace => $namespace );
 
-	# -- FEDERATIONS
-	$r->get("/internal/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#index', namespace => $namespace );
-	$r->get("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#external_index', namespace => $namespace );
-	$r->post("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#add', namespace => $namespace );
-	$r->put("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#update', namespace => $namespace );
-	$r->delete("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#delete', namespace => $namespace );
+	# -- FEDERATIONS MAPPINGS
+	$r->get("/internal/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#get_all_federation_resolver_mappings', namespace => $namespace );
+
+	# -- FEDERATIONS MAPPINGS (CURRENT USER)
+	$r->get("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#get_current_user_federation_resolver_mappings', namespace => $namespace );
+	$r->post("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#add_federation_resolver_mappings_for_current_user', namespace => $namespace );
+	$r->put("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#update_federation_resolver_mappings_for_current_user', namespace => $namespace );
+	$r->delete("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#delete_federation_resolver_mappings_for_current_user', namespace => $namespace );
 
 	# -- HARDWARE INFO
 	# Supports: ?orderby=key
