@@ -413,9 +413,7 @@ sub process_cfg_file {
 	my $db_lines_missing_json = encode_json(\@db_lines_missing);
 	my $disk_lines_missing_json = encode_json(\@disk_lines_missing);
 	my $json_text = "{ \"dbLinesMissing\": $db_lines_missing_json, \"diskLinesMissing\": $disk_lines_missing_json }";
-	# TODO: how do we know which server number we are?
 	$result = &lwp_put("/api/1.2/servers/$hostname_short/$cfg_file", $json_text);
-	print "$result\n";
 	# TODO: validate result
 
 	if ( $cfg_file eq "50-ats.rules" ) {
