@@ -246,6 +246,7 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 		return nil, tc.DBError
 	}
 	rows, err = selectParameterIds.Query(fileNamePqArray)
+	defer rows.Close()
 	if err != nil {
 		log.Error.Printf("could not execute parameter id select query: %s\n", err)
 		return nil, tc.DBError
