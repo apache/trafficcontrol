@@ -138,7 +138,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
 
     private static boolean addNetworkNodesToRoot(final SuperNode root, final String loc, final JsonNode locData,
                                                  final Geolocation geolocation, final boolean useDeep) {
-        CacheLocation deepLoc = new CacheLocation( "deep." + loc, geolocation != null ? geolocation : new Geolocation(0.0, 0.0));  // TODO JvD
+        final CacheLocation deepLoc = new CacheLocation( "deep." + loc, geolocation != null ? geolocation : new Geolocation(0.0, 0.0));  // TODO JvD
         final Set<String> cacheNames = parseDeepCacheNames(locData);
 
         for (final String key : new String[]{"network6", "network"}) {
@@ -173,7 +173,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
         return true;
     }
 
-    private static Set<String> parseDeepCacheNames(JsonNode locationData) {
+    private static Set<String> parseDeepCacheNames(final JsonNode locationData) {
         final Set<String> cacheNames = new HashSet<String>();
         final JsonNode cacheArray;
 
@@ -314,7 +314,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
         clearCacheLocations(false);
     }
 
-    public void clearCacheLocations(boolean clearCachesOnly) {
+    public void clearCacheLocations(final boolean clearCachesOnly) {
         synchronized(this) {
             if (clearCachesOnly && cacheLocation != null) {
                 cacheLocation.clearCaches();

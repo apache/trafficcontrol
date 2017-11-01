@@ -642,6 +642,7 @@ public class TrafficRouter {
 		return getCoverageZoneCacheLocation(ip, deliveryServiceId, false); // default is not deep
 	}
 
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public CacheLocation getCoverageZoneCacheLocation(final String ip, final String deliveryServiceId, final boolean useDeep) {
 		NetworkNode networkNode;
 		if (useDeep) {
@@ -688,7 +689,7 @@ public class TrafficRouter {
 		return getClosestCacheLocation(cacheRegister.filterAvailableLocations(deliveryServiceId), networkNode.getGeolocation(), cacheRegister.getDeliveryService(deliveryServiceId));
 	}
 
-	private void loadDeepCaches(NetworkNode networkNode, CacheLocation cacheLocation) {
+	private void loadDeepCaches(final NetworkNode networkNode, final CacheLocation cacheLocation) {
 		if (networkNode.getDeepCacheNames() != null) {
 			for (final String deepCacheName : networkNode.getDeepCacheNames()) {
 				final Cache deepCache = cacheRegister.getCacheMap().get(deepCacheName);
