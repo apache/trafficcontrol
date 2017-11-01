@@ -120,15 +120,14 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Server, error) {
 	query, queryValues := BuildQuery(v, selectServersQuery(), queryParamsToSQLCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
-
+	defer rows.Close()
 	if err != nil {
 		return nil, fmt.Errorf("querying: %v", err)
 	}
+
 	servers := []tc.Server{}
 
 	const HiddenField = "********"
-
-	defer rows.Close()
 
 	for rows.Next() {
 		var s tc.Server

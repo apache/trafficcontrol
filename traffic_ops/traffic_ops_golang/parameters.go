@@ -97,14 +97,12 @@ func getParameters(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Parameter, er
 
 	log.Debugln("Query is ", query)
 	rows, err = db.NamedQuery(query, queryValues)
-
+	defer rows.Close()
 	if err != nil {
 		return nil, fmt.Errorf("querying: %v", err)
 	}
+
 	parameters := []tc.Parameter{}
-
-	defer rows.Close()
-
 	for rows.Next() {
 		var s tc.Parameter
 		if err = rows.StructScan(&s); err != nil {
