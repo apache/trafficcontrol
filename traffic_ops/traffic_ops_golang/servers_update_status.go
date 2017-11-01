@@ -76,6 +76,7 @@ func getServerUpdateStatus(hostName string, db *sqlx.DB) ([]tc.ServerUpdateStatu
 
 	updateStatuses := []tc.ServerUpdateStatus{}
 	var rows *sql.Rows
+	defer rows.Close()
 	if hostName == "all" {
 		selectAll, err := db.Prepare(baseSelectStatement + groupBy)
 		if err != nil {
