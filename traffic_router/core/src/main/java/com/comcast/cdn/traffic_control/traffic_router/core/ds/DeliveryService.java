@@ -95,7 +95,6 @@ public class DeliveryService {
 	private final boolean redirectToHttps;
 	private final int deepCache;
 
-	// enums are hard in Java.
 	public static final int DC_NEVER   = 0;
 	public static final int DC_ALWAYS  = 1;
 
