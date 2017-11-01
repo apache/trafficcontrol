@@ -174,11 +174,11 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 		return nil, tc.DBError
 	}
 	rows, err := selectDsFieldsQuery.Query(dsPqArray)
+	defer rows.Close()
 	if err != nil {
 		log.Error.Printf("could not execute ds fields select query: %s\n", err)
 		return nil, tc.DBError
 	}
-	defer rows.Close()
 
 	//create new parameters here as necessary:
 	//loop over ds results and build file parameters we need to insert / select
@@ -251,6 +251,7 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 		log.Error.Printf("could not execute parameter id select query: %s\n", err)
 		return nil, tc.DBError
 	}
+
 	parameterIds := []int64{}
 	for rows.Next() {
 		var Id int64

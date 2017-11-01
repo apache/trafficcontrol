@@ -117,10 +117,10 @@ func getRiakCluster(db *sqlx.DB, cfg Config) (*riak.Cluster, error) {
 
 	var nodes []*riak.Node
 	rows, err := db.Query(riakServerQuery)
+	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
 	for rows.Next() {
 		var s tc.Server

@@ -89,13 +89,12 @@ func getCDNs(v url.Values, db *sqlx.DB) ([]tc.CDN, error) {
 	query, queryValues := BuildQuery(v, selectCDNsQuery(), queryParamsToQueryCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
-
+	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
-	CDNs := []tc.CDN{}
 
-	defer rows.Close()
+	CDNs := []tc.CDN{}
 	for rows.Next() {
 		var s tc.CDN
 		if err = rows.StructScan(&s); err != nil {
