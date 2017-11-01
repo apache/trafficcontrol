@@ -2285,6 +2285,21 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 						push @null_parent_info, format_parent_info($parent);
 					}
 				}
+				
+				# If we don't find any parents in the primary parent, then use the secondary parents list as primary and clear the secondary list.
+				# Once we do that, null parent will be used in the secondary_parent category due to the join of the two arrays.
+				# This prevents blank parent entries.
+				if ( scalar @parent_info == 0  ) {
+					# If no parents are found in the secondary parent either, then set the null parent list (parents in neither secondary or primary)
+					# as the secondary parent list and clear the null parent list.
+					if ( scalar @secondary_parent_info == 0  ) {
+						@secondary_parent_info = @null_parent_info;
+						@null_parent_info = ();
+					}
+					@parent_info = @secondary_parent_info;
+					@secondary_parent_info = ();
+				}
+
 				my %seen;
 				@parent_info = grep { !$seen{$_}++ } @parent_info;
 
