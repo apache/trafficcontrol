@@ -246,9 +246,6 @@ public class TrafficRouter {
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")
 	protected List<Cache> selectCaches(final HTTPRequest request, final DeliveryService ds, final Track track) throws GeolocationException {
-		// DDC - Dynamic Deep Caching
-		// cacheLocation has a list of caches that we can hash this request to.
-		// Make this list different for content that should be cached deep.
 		CacheLocation cacheLocation;
 		ResultType result = ResultType.CZ;
 
@@ -257,10 +254,9 @@ public class TrafficRouter {
 			cacheLocation = getDeepCoverageZoneCacheLocation(request.getClientIP(), ds);
 			if (cacheLocation != null && cacheLocation.getCaches().size() != 0) {
 				// Found deep caches for this client, and there are caches that might be available there.
-				// Use the deep cacheLocation, and set result to DEEP_CZ
 				result = ResultType.DEEP_CZ;
 			} else {
-				// No deep caches for this client, would have used them if there were any...
+				// No deep caches for this client, would have used them if there were any. Fallback to regular CZ
 				result = ResultType.DEEP_CZ_MISS;
 				cacheLocation = getCoverageZoneCacheLocation(request.getClientIP(), ds);
 			}
@@ -644,12 +640,7 @@ public class TrafficRouter {
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public CacheLocation getCoverageZoneCacheLocation(final String ip, final String deliveryServiceId, final boolean useDeep) {
-		NetworkNode networkNode;
-		if (useDeep) {
-			networkNode = getDeepNetworkNode(ip);
-		} else {
-			networkNode = getNetworkNode(ip);
-		}
+		NetworkNode networkNode = useDeep ? getDeepNetworkNode(ip) : getNetworkNode(ip);
 
 		if (networkNode == null) {
 			return null;
@@ -667,6 +658,11 @@ public class TrafficRouter {
 			return cacheLocation;
 		}
 
+		if (useDeep) {
+			// there were no available deep caches in the deep CZF
+			return null;
+		}
+
 		if (networkNode.getLoc() == null) {
 			return null;
 		}
@@ -677,11 +673,6 @@ public class TrafficRouter {
 			// lazy loading in case a CacheLocation has not yet been associated with this NetworkNode
 			networkNode.setCacheLocation(cacheLocation);
 			return cacheLocation;
-		}
-
-		if (useDeep) {
-			// no available deep caches in the deep CZF (fall back to regular CZF)
-			return null;
 		}
 
 		// We had a hit in the CZF but the name does not match a known cache location.

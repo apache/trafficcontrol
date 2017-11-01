@@ -220,6 +220,10 @@ public class ConfigHandler {
 				 * never have traffic routed to it, as the old List<Cache> does not contain the Cache that was moved to ONLINE.
 				 * NetworkNode is a singleton and is managed asynchronously. As long as we swap out the CacheRegister first,
 				 * then clear cache locations, the lazy loading should work as designed. See issue TC-401 for details.
+				 *
+				 * Update for DDC (Dynamic Deep Caching): NetworkNode now has a 2nd singleton (deepInstance) that is managed
+				 * similarly to the non-deep instance. However, instead of clearing a NetworkNode's CacheLocation, only the
+				 * Caches are cleared from the CacheLocation then lazily loaded at request time.
 				 */
 				NetworkNode.getInstance().clearCacheLocations();
 				NetworkNode.getDeepInstance().clearCacheLocations(true);
