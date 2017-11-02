@@ -35,7 +35,7 @@ public class NetworkUpdater extends AbstractServiceUpdater {
 			return false;
 		}
 
-		return NetworkNode.generateTree(existingDB, false) != null;
+		return generateTree(existingDB, false) != null;
 	}
 
 	@Override
@@ -44,7 +44,11 @@ public class NetworkUpdater extends AbstractServiceUpdater {
 			return false;
 		}
 
-		return NetworkNode.generateTree(dbFile, true) != null;
+		return generateTree(dbFile, true) != null;
+	}
+
+	public NetworkNode generateTree(final File dbFile, final boolean verifyOnly) throws IOException, JSONException {
+		return NetworkNode.generateTree(dbFile, verifyOnly);
 	}
 
 }
