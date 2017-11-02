@@ -17,19 +17,17 @@
  * under the License.
  */
 
-var DeliveryServiceUriSigningKeysService = function(Restangular, messageModel) {
+var DeliveryServiceUriSigningKeysService = function(Restangular) {
+
 	this.getKeys = function(id) {
-		var keys = Restangular.withConfig(function(cfg) {
-			cfg.setBaseUrl('/api/1.3');
-		}).one("deliveryservices", id).one("urisignkeys").get();
-		return keys;
+		return Restangular.one("deliveryservices", id).one("urisignkeys").get();
 	};
+
 	this.setKeys = function(id, newKeys) {
-		return Restangular.withConfig(function(cfg) {
-			cfg.setBaseUrl('/api/1.3');
-		}).one("deliveryservices", id).post("urisignkeys", newKeys);
+		return Restangular.one("deliveryservices", id).post("urisignkeys", newKeys);
 	}
+
 };
 
-DeliveryServiceUriSigningKeysService.$inject = ['Restangular', 'messageModel'];
+DeliveryServiceUriSigningKeysService.$inject = ['Restangular'];
 module.exports = DeliveryServiceUriSigningKeysService;
