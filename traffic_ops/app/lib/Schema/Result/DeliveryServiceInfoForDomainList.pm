@@ -51,7 +51,7 @@ SELECT
     regex.pattern,
     retype.name AS re_type,
     dstype.name AS ds_type,
-    cdn.name AS domain_name,
+    cdn.domain_name AS domain_name,
     deliveryservice_regex.set_number,
     deliveryservice.edge_header_rewrite,
     deliveryservice.mid_header_rewrite,
