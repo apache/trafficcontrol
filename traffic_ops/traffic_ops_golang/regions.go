@@ -96,10 +96,10 @@ func getRegions(v url.Values, db *sqlx.DB) ([]tc.Region, error) {
 	query, queryValues := BuildQuery(v, selectRegionsQuery(), queryParamsToQueryCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	regions := []tc.Region{}
 	for rows.Next() {

@@ -106,10 +106,10 @@ func getStatuses(v url.Values, db *sqlx.DB) ([]tc.Status, error) {
 	query, queryValues := BuildQuery(v, selectStatusesQuery(), queryParamsToSQLCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	statuses := []tc.Status{}
 	for rows.Next() {

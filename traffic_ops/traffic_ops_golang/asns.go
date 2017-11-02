@@ -96,10 +96,10 @@ func getASNs(v url.Values, db *sqlx.DB) ([]tc.ASN, error) {
 	query, queryValues := BuildQuery(v, selectASNsQuery(), queryParamsToQueryCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	ASNs := []tc.ASN{}
 	for rows.Next() {

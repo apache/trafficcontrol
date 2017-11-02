@@ -173,12 +173,12 @@ func TestValidateURIKeyset(t *testing.T) {
 func TestGetRiakCluster(t *testing.T) {
 	var cfg Config
 	mockDB, mock, err := sqlmock.New()
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
-
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
 	rows1 := sqlmock.NewRows([]string{"s.host_name", "s.domain_name"})

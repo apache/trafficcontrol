@@ -99,7 +99,8 @@ func getServerUpdateStatus(hostName string, db *sqlx.DB) ([]tc.ServerUpdateStatu
 			return nil, tc.DBError
 		}
 	}
-        defer rows.Close()
+	defer rows.Close()
+
 	for rows.Next() {
 		var serverUpdateStatus tc.ServerUpdateStatus
 		var serverType string

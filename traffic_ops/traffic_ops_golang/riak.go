@@ -23,14 +23,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strings"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
 	"github.com/lestrrat/go-jwx/jwk"
-	"io/ioutil"
-	"net/http"
-	"strings"
 )
 
 // RiakPort is the port RIAK is listening on.
@@ -117,10 +118,10 @@ func getRiakCluster(db *sqlx.DB, cfg Config) (*riak.Cluster, error) {
 
 	var nodes []*riak.Node
 	rows, err := db.Query(riakServerQuery)
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var s tc.Server
