@@ -17,7 +17,7 @@
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
 ALTER TABLE snapshot
-DROP CONSTRAINT snapshot_cdn_fkey,
+DROP CONSTRAINT IF EXISTS snapshot_cdn_fkey,
 ADD CONSTRAINT snapshot_cdn_fkey
   FOREIGN KEY (cdn)
   REFERENCES cdn (name)
@@ -27,7 +27,7 @@ ADD CONSTRAINT snapshot_cdn_fkey
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
 ALTER TABLE snapshot
-DROP CONSTRAINT snapshot_cdn_fkey,
+DROP CONSTRAINT IF EXISTS snapshot_cdn_fkey,
 ADD CONSTRAINT snapshot_cdn_fkey
   FOREIGN KEY (cdn)
   REFERENCES cdn (name)
