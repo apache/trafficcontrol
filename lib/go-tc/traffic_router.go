@@ -129,7 +129,7 @@ type Router struct {
 	PortTime         time.Time
 	Profile          *string `json:"profile,omitempty"`
 	ProfileTime      time.Time
-	ServerStatus     *Status `json:"status,omitempty"`
+	ServerStatus     *ServerStatus `json:"status,omitempty"`
 	ServerStatusTime time.Time
 }
 
