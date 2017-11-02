@@ -162,10 +162,10 @@ JOIN cdn cdn ON cdn.id = me.cdn_id
 WHERE cdn.name = $1`
 
 	rows, err := db.Query(query, cdn)
-	defer rows.Close()
 	if err != nil {
 		return nil, nil, nil, err
 	}
+	defer rows.Close()
 
 	monitors := []Monitor{}
 	caches := []Cache{}
@@ -236,10 +236,10 @@ WHERE id IN
     (SELECT id FROM cdn WHERE name = $1));`
 
 	rows, err := db.Query(query, cdn)
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	cachegroups := []Cachegroup{}
 	for rows.Next() {
@@ -290,10 +290,10 @@ JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
 WHERE pr.config_file = $2;
 `
 	rows, err := db.Query(query, pq.Array(profileNames), CacheMonitorConfigFile)
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var profileName sql.NullString
@@ -340,10 +340,10 @@ WHERE profile.name = ANY($1)
 AND ds.active = true
 `
 	rows, err := db.Query(query, pq.Array(profileNames))
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	dses := []DeliveryService{}
 
@@ -375,10 +375,10 @@ WHERE pr.config_file = '%s'
 `, MonitorProfilePrefix, MonitorConfigFile)
 
 	rows, err := db.Query(query)
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	cfg := map[string]interface{}{}
 

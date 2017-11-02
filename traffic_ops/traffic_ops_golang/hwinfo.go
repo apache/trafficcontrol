@@ -88,10 +88,10 @@ func getHWInfo(v url.Values, db *sqlx.DB) ([]tc.HWInfo, error) {
 	query, queryValues := BuildQuery(v, selectHWInfoQuery(), queryParamsToSQLCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	hwInfo := []tc.HWInfo{}
 	for rows.Next() {

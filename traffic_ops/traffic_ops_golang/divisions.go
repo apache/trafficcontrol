@@ -84,10 +84,10 @@ func getDivisions(v url.Values, db *sqlx.DB) ([]tc.Division, error) {
 	query, queryValues := BuildQuery(v, selectDivisionsQuery(), queryParamsToSQLCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	regions := []tc.Division{}
 	for rows.Next() {
