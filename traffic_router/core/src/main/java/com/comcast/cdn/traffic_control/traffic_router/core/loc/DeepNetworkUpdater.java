@@ -18,7 +18,8 @@ package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 import java.io.File;
 import java.io.IOException;
 
-public class DeepNetworkUpdater extends AbstractServiceUpdater {
+
+public class DeepNetworkUpdater extends NetworkUpdater {
 
 	public DeepNetworkUpdater() {
 		sourceCompressed = false;
@@ -27,23 +28,8 @@ public class DeepNetworkUpdater extends AbstractServiceUpdater {
 	}
 
 	@Override
-	public boolean loadDatabase() throws IOException {
-		final File existingDB = databasesDirectory.resolve(databaseName).toFile();
-
-		if (!existingDB.exists() || !existingDB.canRead()) {
-			return false;
-		}
-
-		return NetworkNode.generateTree(existingDB, false, true) != null;
-	}
-
-	@Override
-	public boolean verifyDatabase(final File dbFile) throws IOException {
-		if (!dbFile.exists() || !dbFile.canRead()) {
-			return false;
-		}
-
-		return NetworkNode.generateTree(dbFile, true, true) != null;
+	public NetworkNode generateTree(final File dbFile, final boolean verifyOnly) throws IOException {
+		return NetworkNode.generateTree(dbFile, verifyOnly, true);
 	}
 
 }
