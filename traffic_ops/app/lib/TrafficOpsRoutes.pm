@@ -604,6 +604,31 @@ sub api_routes {
 	$r->put("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#update_federation_resolver_mappings_for_current_user', namespace => $namespace );
 	$r->delete("/api/$version/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#delete_federation_resolver_mappings_for_current_user', namespace => $namespace );
 
+	# -- FEDERATIONS (BY CDN)
+	$r->get("/api/$version/cdns/:name/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#get_cdn_federations', namespace => $namespace );
+	$r->get("/api/$version/cdns/:name/federations/:fedId")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#get_cdn_federation', namespace => $namespace );
+	$r->post("/api/$version/cdns/:name/federations")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#create_cdn_federation', namespace => $namespace );
+	$r->put("/api/$version/cdns/:name/federations/:fedId")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#update_cdn_federation', namespace => $namespace );
+	$r->delete("/api/$version/cdns/:name/federations/:fedId")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#delete_cdn_federation', namespace => $namespace );
+
+	# -- FEDERATION_USER
+	$r->get( "/api/$version/federations/:fedId/users" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationUser#index', namespace => $namespace );
+	$r->post( "/api/$version/federations/:fedId/users" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationUser#assign_users_to_federation', namespace => $namespace );
+	$r->delete( "/api/$version/federations/:fedId/users/:userId" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationUser#delete', namespace => $namespace );
+
+	# -- FEDERATION_DELIVERYSERVICE
+	$r->get( "/api/$version/federations/:fedId/deliveryservices" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationDeliveryService#index', namespace => $namespace );
+	$r->post( "/api/$version/federations/:fedId/deliveryservices" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationDeliveryService#assign_dss_to_federation', namespace => $namespace );
+	$r->delete( "/api/$version/federations/:fedId/deliveryservices/:dsId" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationDeliveryService#delete', namespace => $namespace );
+
+	# -- FEDERATION_FEDERATION RESOLVER
+	$r->get( "/api/$version/federations/:fedId/federation_resolvers" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationFederationResolver#index', namespace => $namespace );
+	$r->post( "/api/$version/federations/:fedId/federation_resolvers" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationFederationResolver#assign_fed_resolver_to_federation', namespace => $namespace );
+
+	# -- FEDERATION RESOLVERS
+	$r->post( "/api/$version/federation_resolvers" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationResolver#create', namespace => $namespace );
+	$r->delete( "/api/$version/federation_resolvers/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationResolver#delete', namespace => $namespace );
+
 	# -- HARDWARE INFO
 	# Supports: ?orderby=key
 	$r->get("/api/$version/hwinfo/dtdata")->over( authenticated => 1, not_ldap => 1 )->to( 'HwInfo#data', namespace => $namespace );
