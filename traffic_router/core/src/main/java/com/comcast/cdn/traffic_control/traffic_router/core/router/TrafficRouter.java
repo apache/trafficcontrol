@@ -640,7 +640,7 @@ public class TrafficRouter {
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public CacheLocation getCoverageZoneCacheLocation(final String ip, final String deliveryServiceId, final boolean useDeep) {
-		NetworkNode networkNode = useDeep ? getDeepNetworkNode(ip) : getNetworkNode(ip);
+		final NetworkNode networkNode = useDeep ? getDeepNetworkNode(ip) : getNetworkNode(ip);
 
 		if (networkNode == null) {
 			return null;
