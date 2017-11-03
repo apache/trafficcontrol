@@ -42,36 +42,45 @@ import org.junit.experimental.categories.Category;
 public class NetworkNodeTest {
 	private static final Logger LOGGER = Logger.getLogger(NetworkNodeTest.class);
 	private Map<String, List<String>> netMap = new HashMap<String, List<String>>();
+	private Map<String, List<String>> deepNetMap = new HashMap<String, List<String>>();
 	private NetworkNode root;
+	private NetworkNode deepRoot;
 
 	@Before
 	public void setUp() throws Exception {
-		final File file = new File(getClass().getClassLoader().getResource("czmap.json").toURI());
-		root = NetworkNode.generateTree(file, false);
+		root = setUp("czmap.json", false);
+		deepRoot = setUp("dczmap.json", true);
+	}
+
+	private NetworkNode setUp(final String filename, final boolean useDeep) throws Exception {
+		final Map<String, List<String>> testNetMap = useDeep ? deepNetMap : netMap;
+		final File file = new File(getClass().getClassLoader().getResource(filename).toURI());
+		final NetworkNode nn = NetworkNode.generateTree(file, false, useDeep);
 		final ObjectMapper mapper = new ObjectMapper();
 		final JsonNode jsonNode = mapper.readTree(file);
 		final JsonNode coverageZones = jsonNode.get("coverageZones");
 
 		final Iterator<String> networkIter = coverageZones.fieldNames();
 		while (networkIter.hasNext()) {
-			final String loc = networkIter.next();
+		    final String loc = networkIter.next();
 			final JsonNode locData = coverageZones.get(loc);
-			for (final JsonNode networkType : locData) {
-				final String network = networkType.get(0).asText().split("/")[0];
+			for (String networkType : new String[]{"network", "network6"}) {
+				final JsonNode networks = locData.get(networkType);
+				final String network = networks.get(0).asText().split("/")[0];
 				InetAddress ip = InetAddresses.forString(network);
 				ip = InetAddresses.increment(ip);
 
-				if (!netMap.containsKey(loc)) {
-					netMap.put(loc, new ArrayList<String>());
+				if (!testNetMap.containsKey(loc)) {
+					testNetMap.put(loc, new ArrayList<String>());
 				}
 
-				final List<String> addressList = netMap.get(loc);
+				final List<String> addressList = testNetMap.get(loc);
 				addressList.add(InetAddresses.toAddrString(ip));
 
-				netMap.put(loc, addressList);
-
+				testNetMap.put(loc, addressList);
 			}
 		}
+		return nn;
 	}
 
 	@Test
@@ -93,15 +102,24 @@ public class NetworkNodeTest {
 
 	@Test
 	public void testNetworkNodePerformance() {
+		testNetworkNodePerformance(root, netMap);
+	}
+
+	@Test
+	public void testDeepNetworkNodePerformance() {
+		testNetworkNodePerformance(deepRoot, deepNetMap);
+	}
+
+	private void testNetworkNodePerformance(NetworkNode testRoot, Map<String, List<String>> testNetMap) {
 		final int iterations = 100000;
 		final long startTime = System.currentTimeMillis();
 		final long nnTPS = Long.parseLong(System.getProperty("nnTPS", "12000"));
 
 		for (int i = 0; i < iterations; i++) {
-			for (final String location : netMap.keySet()) {
+			for (final String location : testNetMap.keySet()) {
 				try {
-					for (final String address : netMap.get(location)) {
-						final NetworkNode nn = root.getNetwork(address);
+					for (final String address : testNetMap.get(location)) {
+						final NetworkNode nn = testRoot.getNetwork(address);
 					}
 				} catch (final NetworkNodeException e) {
 					e.printStackTrace();
