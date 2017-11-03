@@ -618,6 +618,10 @@ API 1.2 Reference
   traffic_ops_api/v12/deliveryservice_stats
   traffic_ops_api/v12/division
   traffic_ops_api/v12/federation
+  traffic_ops_api/v12/federation_deliveryservice
+  traffic_ops_api/v12/federation_federationresolver
+  traffic_ops_api/v12/federation_resolver
+  traffic_ops_api/v12/federation_user
   traffic_ops_api/v12/hwinfo
   traffic_ops_api/v12/iso
   traffic_ops_api/v12/job

@@ -74,6 +74,7 @@ Test::TestHelper->load_all_fixtures($ft);
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+# TO UI tests
 ok $t->get_ok('/federation')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Does Federation page exist?';
 
 ok $t->post_ok(

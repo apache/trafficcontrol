@@ -38,6 +38,10 @@ var FormCDNController = function(cdn, $scope, $location, $uibModal, formUtils, s
         $location.path($location.path() + '/dnssec-keys');
     };
 
+    $scope.manageFederations = function() {
+        $location.path($location.path() + '/federations');
+    };
+
     $scope.viewConfig = function() {
         $location.path($location.path() + '/config/changes');
     };
