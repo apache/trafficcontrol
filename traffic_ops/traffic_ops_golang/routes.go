@@ -81,6 +81,11 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, `statuses/{id}$`, statusesHandler(d.DB), StatusesPrivLevel, Authenticated, nil},
 		//System
 		{1.2, http.MethodGet, `system/info/?(\.json)?$`, systemInfoHandler(d.DB), SystemInfoPrivLevel, Authenticated, nil},
+
+		//Phys_Locations
+		{1.2, http.MethodGet, `phys_locations/?(\.json)?$`, physLocationsHandler(d.DB), PhysLocationsPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `phys_locations/{id}$`, physLocationsHandler(d.DB), PhysLocationsPrivLevel, Authenticated, nil},
+
 	}
 	return routes, proxyHandler, nil
 }
