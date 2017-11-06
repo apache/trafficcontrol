@@ -34,19 +34,19 @@ import (
 func getTestPhysLocations() []tc.PhysLocation {
 	physLocations := []tc.PhysLocation{}
 	testCase := tc.PhysLocation{
+	    Address:      "1118 S. Grant St.",
+	    City:         "Denver",
+	    Email:        "d.t@gmail.com",
 		ID:           1,
+		LastUpdated:    tc.Time{Time: time.Now()},
 		Name:         "physLocation1",
+		Phone:        "303-210-0000",
+		POC:          "Dennis Thompson",
+		RegionId:     1,
+		RegionName:   "Central",
 		ShortName:    "pl1",
-		Address:      "1118 S. Grant St.",
-		City:         "Denver",
 		State:        "CO",
 		Zip:          "80210",
-		RegionId:     1,
-        POC:          "Dennis Thompson",
-        Phone:        "303-210-0000",
-        Email:        "d.t@gmail.com",
-        RegionName:   "Central",
-		LastUpdated:    tc.Time{Time: time.Now()},
 	}
 	physLocations = append(physLocations, testCase)
 
@@ -73,20 +73,20 @@ func TestGetPhysLocations(t *testing.T) {
 
 	for _, ts := range testCase {
 		rows = rows.AddRow(
+		    ts.Address,
+		    ts.City,
+		    ts.Comments,
+		    ts.Email,
 			ts.ID,
+			ts.LastUpdated,
 			ts.Name,
+			ts.Phone,
+			ts.POC,
+			ts.RegionId,
+			ts.RegionName,
 			ts.ShortName,
-			ts.Address,
-			ts.City,
 			ts.State,
 			ts.Zip,
-			ts.RegionId,
-			ts.POC,
-			ts.Phone,
-			ts.Email,
-			ts.Comments,
-			ts.RegionName,
-			ts.LastUpdated,
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
