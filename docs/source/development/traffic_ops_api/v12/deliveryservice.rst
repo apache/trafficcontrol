@@ -176,7 +176,7 @@ Delivery Service
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``signingAlgorithm``     | string | - null: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                      |
+  | ``signingAlgorithm``     | string | - null: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                        |
   |                          |        | - "url_sig": URL Sign token based auth is enabled for this deliveryservice.                                                          |
   |                          |        | - "uri_signing": URI Signing token based auth is enabled for this deliveryservice.                                                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -3199,9 +3199,9 @@ URL Sig Keys
 |
 
 URI Signing Keys
-++++++++++++
+++++++++++++++++
 
-**DELETE /api/1.2/deliveryservices/:xml_id/urisignkeys
+**DELETE /api/1.2/deliveryservices/:xml_id/urisignkeys**
 
   Deletes URISigning objects for a delivery service.
 
@@ -3214,10 +3214,10 @@ URI Signing Keys
   +-----------+----------+----------------------------------------+
   |    Name   | Required |              Description               |
   +===========+==========+========================================+
-  | ``xml_id`` | yes      | xml_id of the desired delivery service |
+  | xml_id    | yes      | xml_id of the desired delivery service |
   +-----------+----------+----------------------------------------+
 
-**GET /api/1.2/deliveryservices/:xml_id/urisignkeys
+**GET /api/1.2/deliveryservices/:xml_id/urisignkeys**
 
   Retrieves one or more URISigning objects for a delivery service.
 
@@ -3230,7 +3230,7 @@ URI Signing Keys
   +-----------+----------+----------------------------------------+
   |    Name   | Required |              Description               |
   +===========+==========+========================================+
-  | ``xml_id`` | yes      | xml_id of the desired delivery service |
+  | xml_id    | yes      | xml_id of the desired delivery service |
   +-----------+----------+----------------------------------------+
 
   **Response Properties**
@@ -3255,28 +3255,28 @@ URI Signing Keys
 
   **Response Example** ::
 
-  {
-    "Kabletown URI Authority": {
-      "renewal_kid": "Second Key",
-      "keys": [
-        {
-          "alg": "HS256",
-          "kid": "First Key",
-          "kty": "oct",
-          "k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
-        },
-        {
-          "alg": "HS256",
-          "kid": "Second Key",
-          "kty": "oct",
-          "k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
-        }
-      ]
+    {
+      "Kabletown URI Authority": {
+        "renewal_kid": "Second Key",
+        "keys": [
+          {
+            "alg": "HS256",
+            "kid": "First Key",
+            "kty": "oct",
+            "k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
+          },
+          {
+            "alg": "HS256",
+            "kid": "Second Key",
+            "kty": "oct",
+            "k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
+          }
+        ]
+      }
     }
-  }
 
 
-**POST /api/1.2/deliveryservices/:xml_id/urisignkeys
+**POST /api/1.2/deliveryservices/:xml_id/urisignkeys**
 
   Assigns URISigning objects to a delivery service.
 
@@ -3289,7 +3289,7 @@ URI Signing Keys
   +-----------+----------+----------------------------------------+
   |    Name   | Required |              Description               |
   +===========+==========+========================================+
-  | ``xml_id`` | yes      | xml_id of the desired delivery service |
+  |   xml_id  | yes      | xml_id of the desired delivery service |
   +-----------+----------+----------------------------------------+
 
   **Request Properties**
@@ -3314,27 +3314,27 @@ URI Signing Keys
 
   **Request Example** ::
 
-  {
-    "Kabletown URI Authority": {
-      "renewal_kid": "Second Key",
-      "keys": [
-        {
-          "alg": "HS256",
-          "kid": "First Key",
-          "kty": "oct",
-          "k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
-        },
-        {
-          "alg": "HS256",
-          "kid": "Second Key",
-          "kty": "oct",
-          "k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
-        }
-      ]
+    {
+      "Kabletown URI Authority": {
+        "renewal_kid": "Second Key",
+        "keys": [
+          {
+            "alg": "HS256",
+            "kid": "First Key",
+            "kty": "oct",
+            "k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
+          },
+          {
+            "alg": "HS256",
+            "kid": "Second Key",
+            "kty": "oct",
+            "k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
+          }
+        ]
+      }
     }
-  }
 
-**PUT /api/1.2/deliveryservices/:xml_id/urisignkeys
+**PUT /api/1.2/deliveryservices/:xml_id/urisignkeys**
 
   updates URISigning objects on a delivery service.
 
@@ -3347,7 +3347,7 @@ URI Signing Keys
   +-----------+----------+----------------------------------------+
   |    Name   | Required |              Description               |
   +===========+==========+========================================+
-  | ``xml_id`` | yes      | xml_id of the desired delivery service |
+  |  xml_id   | yes      | xml_id of the desired delivery service |
   +-----------+----------+----------------------------------------+
 
   **Request Properties**
@@ -3372,25 +3372,25 @@ URI Signing Keys
 
   **Request Example** ::
 
-  {
-    "Kabletown URI Authority": {
-      "renewal_kid": "Second Key",
-      "keys": [
-        {
-          "alg": "HS256",
-          "kid": "First Key",
-          "kty": "oct",
-          "k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
-        },
-        {
-          "alg": "HS256",
-          "kid": "Second Key",
-          "kty": "oct",
-          "k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
-        }
-      ]
+    {
+      "Kabletown URI Authority": {
+        "renewal_kid": "Second Key",
+        "keys": [
+          {
+            "alg": "HS256",
+            "kid": "First Key",
+            "kty": "oct",
+            "k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
+          },
+          {
+            "alg": "HS256",
+            "kid": "Second Key",
+            "kty": "oct",
+            "k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
+          }
+        ]
+      }
     }
-  }
 
 |
 
