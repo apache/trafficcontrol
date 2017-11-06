@@ -24,19 +24,18 @@ type PhysLocationsResponse struct {
 }
 
 type PhysLocation struct {
-	ID           int    `json:"id" db:"id"`
-	Name         string `json:"name" db:"name"`
-	ShortName    string `json:"short_name" db:"short_name"`
 	Address      string `json:"address" db:"address"`
 	City         string `json:"city" db:"city"`
+	Comments     string `json:"comments" db:"comments"`
+	Email        string `json:"email" db:"email"`
+	ID           int    `json:"id" db:"id"`
+	LastUpdated  Time   `json:"lastUpdated" db:"last_updated"`
+	Name         string `json:"name" db:"name"`
+	Phone        string `json:"phone" db:"phone"`
+	POC          string `json:"poc" db:"poc"`
+	RegionId     int    `json:"regionId" db:"regionid"`
+	RegionName   string `json:"regionName" db:"regionname"`
+	ShortName    string `json:"shortName" db:"short_name"`
 	State        string `json:"state" db:"state"`
 	Zip          string `json:"zip" db:"zip"`
-	RegionId     int    `json:"regionId" db:"regionid"`
-	POC          string `json:"poc" db:"poc"`
-	Phone        string `json:"phone" db:"phone"`
-	Email        string `json:"email" db:"email"`
-	Comments     string `json:"comments" db:"comments"`
-	RegionName   string `json:"regionName" db:"regionname"`
-	LastUpdated  Time   `json:"lastUpdated" db:"last_updated"`
-
 }

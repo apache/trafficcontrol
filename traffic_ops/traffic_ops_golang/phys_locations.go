@@ -113,21 +113,22 @@ func getPhysLocations(v url.Values, db *sqlx.DB) ([]tc.PhysLocation, error) {
 func selectPhysLocationsQuery() string {
 
 query := `SELECT
-pl.id,
-pl.name,
-pl.short_name,
 pl.address,
 pl.city,
-pl.state,
-pl.zip,
-pl.region as regionid,
-COALESCE(pl.poc, '') as poc,
-COALESCE(pl.phone, '') as phone,
-COALESCE(pl.email, '') as email,
 COALESCE(pl.comments, '') as comments,
+COALESCE(pl.email, '') as email,
+pl.id,
+pl.last_updated,
+pl.name,
+COALESCE(pl.phone, '') as phone,
+COALESCE(pl.poc, '') as poc,
+pl.region as regionid,
 r.name as regionname,
-pl.last_updated
+pl.short_name,
+pl.state,
+pl.zip
 FROM phys_location pl
 JOIN region r ON pl.region = r.id` 
 return query
 }
+
