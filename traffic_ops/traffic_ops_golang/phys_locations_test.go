@@ -22,6 +22,7 @@ package main
 import (
 	"net/url"
 	"testing"
+    "time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
@@ -45,7 +46,7 @@ func getTestPhysLocations() []tc.PhysLocation {
         Phone:        "303-210-0000",
         Email:        "d.t@gmail.com",
         RegionName:   "Central",
-		LastUpdated:  "2015-12-10 15:43:45-07",
+		LastUpdated:    tc.Time{Time: time.Now()},
 	}
 	physLocations = append(physLocations, testCase)
 
