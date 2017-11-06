@@ -31,7 +31,7 @@ module.exports = {
     },
     // set api 'base_url' to the traffic ops api (all api calls made from the traffic portal will be proxied to the api base_url)
     api: {
-        base_url: 'http://localhost:3000/api/'
+        base_url: 'https://localhost:60443/api/'
     },
     // default static files location (this is where the traffic portal html, css and javascript was installed. rpm installs these files at /opt/traffic_portal/public
     files: {
