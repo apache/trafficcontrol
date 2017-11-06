@@ -180,6 +180,7 @@ WHERE me.server_id=(SELECT server.id FROM server WHERE host_name=$1)`
 			FileName:    config_name.String,
 			DBLinesMissing:     db_lines_missing_arr,
 			DiskLinesMissing:  disk_lines_missing_arr,
+			ReportTimestamp: timestamp.String,
 		})
 	}
 	return configs, nil
