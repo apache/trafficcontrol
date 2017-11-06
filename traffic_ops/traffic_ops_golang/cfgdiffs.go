@@ -135,37 +135,6 @@ func serverExists(db *sqlx.DB, hostName string) (bool, error) {
 	//}
 }
 
-/*func cfgDiffsExist(db *sqlx.DB, hostName string, configName string) (bool, error) {
-	query := `SELECT 
-EXISTS(
-SELECT 1
-FROM config_diffs me 
-WHERE me.server_id = (SELECT server.id FROM server WHERE host_name=$1) AND me.config_name = $2)`
-
-	rows, err := db.Query(query, hostName, configName)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		var exists sql.NullString
-		
-		err = rows.Scan(&exists)
-		if err != nil {
-			return false, err
-		}
-
-		if exists.String == "true" {
-			return true, nil
-		} else {
-			return false, nil
-		}
-	} else {
-		return false, nil;// this is an issue...
-	}
-}*/
-
 func getCfgDiffs(db *sqlx.DB, hostName string) ([]CfgFileDiffs, error) {
 	query := `SELECT
 me.config_name as config_name,
