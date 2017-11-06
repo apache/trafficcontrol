@@ -44,7 +44,13 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.new', []
                         },
                         controller: 'FormNewDeliveryServiceController',
                         resolve: {
-                            deliveryService: function() {
+                            geoMissLat: function(parameterService) {
+                                return parameterService.getParameters({ name: 'default_geo_miss_latitude', configFile: 'global' });
+                            },
+                            geoMissLong: function(parameterService) {
+                                return parameterService.getParameters({ name: 'default_geo_miss_longitude', configFile: 'global' });
+                            },
+                            deliveryService: function(geoMissLat, geoMissLong) {
                                 return {
                                     active: false,
                                     dscp: 0,
@@ -53,6 +59,8 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.new', []
                                     initialDispersion: 1,
                                     ipv6RoutingEnabled: false,
                                     logsEnabled: false,
+                                    missLat: (geoMissLat[0]) ? geoMissLat[0].value : '',
+                                    missLong: (geoMissLong[0]) ? geoMissLong[0].value : '',
                                     multiSiteOrigin: false,
                                     protocol: 0,
                                     qstringIgnore: 0,

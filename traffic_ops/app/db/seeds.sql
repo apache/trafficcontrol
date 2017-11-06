@@ -48,6 +48,14 @@ BEGIN
                 insert into parameter (name, config_file, value) values ('use_tenancy', 'global', '0');
                 insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'use_tenancy' and config_file = 'global' and value = '0') ) ON CONFLICT (profile, parameter) DO NOTHING;
         END IF;
+        IF NOT EXISTS (SELECT id FROM PARAMETER WHERE name = 'default_geo_miss_latitude' AND config_file = 'global') THEN
+                insert into parameter (name, config_file, value) values ('default_geo_miss_latitude', 'global', '41.881944');
+                insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'default_geo_miss_latitude' and config_file = 'global' and value = '41.881944') ) ON CONFLICT (profile, parameter) DO NOTHING;
+        END IF;
+        IF NOT EXISTS (SELECT id FROM PARAMETER WHERE name = 'default_geo_miss_longitude' AND config_file = 'global') THEN
+                insert into parameter (name, config_file, value) values ('default_geo_miss_longitude', 'global', '-87.627778');
+                insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'default_geo_miss_longitude' and config_file = 'global' and value = '-87.627778') ) ON CONFLICT (profile, parameter) DO NOTHING;
+        END IF;
 END
 $do$;
 
