@@ -59,7 +59,7 @@ Architecture
 ============
 At the highest level, Traffic Monitor polls caches, aggregates their data and availability, and serves it at HTTP JSON endpoints.
 
-In the code, the data flows thru microthread (goroutine) pipelines. All stages of the pipeline are independent running microthreads\ :sup:`1`\ . The pipelines are:
+In the code, the data flows thru microthread (goroutine) pipelines. All stages of the pipeline are independent running microthreads [#f1]_ . The pipelines are:
 
 * **stat poll** - polls caches for all statistics data. This should be a slower poll, which gets a lot of data.
 * **health poll** - polls caches for a tiny amount of data, typically system information. This poll is designed to be a heartbeat, determining quickly whether the cache is reachable. Since it's a small amount of data, it should poll more frequently.
@@ -124,7 +124,7 @@ All microthreads in the pipeline are started by ``manager/manager.go:Start()``.
                         |   --------------     --------------  |                                              -----------------------
                         ...                                    ...
 
-:sup:`1`\ Technically, some stages which are one-to-one simply call the next stage as a function. For example, the Fetcher calls the Handler as a function in the same microthread. But this isn't architecturally significant.
+.. [#f1] Technically, some stages which are one-to-one simply call the next stage as a function. For example, the Fetcher calls the Handler as a function in the same microthread. But this isn't architecturally significant.
 
 
 Stat Pipeline
