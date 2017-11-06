@@ -89,6 +89,7 @@ func getPhysLocations(v url.Values, db *sqlx.DB) ([]tc.PhysLocation, error) {
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]string{
 		"id":       "pl.id",
+		"region":   "r.name",
 	}
 
 	query, queryValues := BuildQuery(v, selectPhysLocationsQuery(), queryParamsToQueryCols)
