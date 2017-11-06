@@ -617,7 +617,7 @@ Delivery services have a Query String Handling option that, when set to ignore, 
 Multi Site Origin
 +++++++++++++++++
 
-.. Note:: The configuration of this feature changed significantly between ATS version 5 and >= 6. Some configuration in Traffic Control is different as well. This documentation assumes ATS 6 or higher. See :ref:`rl-multi-site-origin-qht-ats5` for the ATS version 5.x configuration details.
+.. Note:: The configuration of this feature changed significantly between ATS version 5 and >= 6. Some configuration in Traffic Control is different as well. This documentation assumes ATS 6 or higher. See :ref:`rl-multi-site-origin-qht` for more details.
 
 Normally, the mid servers are not aware of any redundancy at the origin layer. With Multi Site Origin enabled this changes - Traffic Server (and Traffic Ops) are now made aware of the fact there are multiple origins, and can be configured to do more advanced failover and loadbalancing actions. A prerequisite for MSO to work is that the multiple origin sites serve identical content with identical paths, and both are configured to serve the same origin hostname as is configured in the deliveryservice `Origin Server Base URL` field. See the `Apache Traffic Server docs <https://docs.trafficserver.apache.org/en/latest/admin-guide/files/parent.config.en.html>`_ for more information on that cache's implementation.
 
