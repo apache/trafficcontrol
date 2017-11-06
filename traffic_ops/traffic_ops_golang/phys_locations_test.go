@@ -44,7 +44,6 @@ func getTestPhysLocations() []tc.PhysLocation {
         POC:          "Dennis Thompson",
         Phone:        "303-210-0000",
         Email:        "d.t@gmail.com",
-        Comments:     "",
         RegionName:   "Central",
 		LastUpdated:  "2015-12-10 15:43:45-07",
 	}
