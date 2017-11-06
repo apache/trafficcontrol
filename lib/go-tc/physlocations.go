@@ -36,7 +36,7 @@ type PhysLocation struct {
 	Phone        string `json:"phone" db:"phone"`
 	Email        string `json:"email" db:"email"`
 	Comments     string `json:"comments" db:"comments"`
-        RegionName   string `json:"regionName" db:"regionname"`
-	LastUpdated  string `json:"lastUpdated" db:"last_updated"`
+	RegionName   string `json:"regionName" db:"regionname"`
+	LastUpdated  Time   `json:"lastUpdated" db:"last_updated"`
 
 }
