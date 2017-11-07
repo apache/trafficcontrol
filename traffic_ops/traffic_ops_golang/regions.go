@@ -88,7 +88,7 @@ func getRegions(v url.Values, db *sqlx.DB) ([]tc.Region, error) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]string{
-		"division": "d.name",
+		"division": "d.id",
 		"id":       "r.id",
 		"name":     "r.name",
 	}

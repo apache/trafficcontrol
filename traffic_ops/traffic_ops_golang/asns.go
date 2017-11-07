@@ -90,7 +90,7 @@ func getASNs(v url.Values, db *sqlx.DB) ([]tc.ASN, error) {
 	queryParamsToQueryCols := map[string]string{
 		"asn":        "a.asn",
 		"id":         "a.id",
-		"cachegroup": "cg.name",
+		"cachegroup": "cg.id",
 	}
 
 	query, queryValues := BuildQuery(v, selectASNsQuery(), queryParamsToQueryCols)
