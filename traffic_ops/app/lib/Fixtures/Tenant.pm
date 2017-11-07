@@ -24,6 +24,7 @@ my %definition_for = (
 		using => {
 			id          => 10**9, #a large number not to confuse the id sequence
 			name        => 'root',
+			email       => undef,
 			active      => 1,
 			parent_id   => undef,
 		},
