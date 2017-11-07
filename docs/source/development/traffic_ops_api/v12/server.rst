@@ -378,6 +378,10 @@ Server
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``deepCachingType``      |  int   | When to do Deep Caching for this Delivery Service:                                                                                   |
+  |                          |        | - 0: NEVER (default)                                                                                                                 |
+  |                          |        | - 1: ALWAYS                                                                                                                          |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``displayName``          | string | The display name of the delivery service.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``dnsBypassIp``          | string | The IPv4 IP to use for bypass on a DNS deliveryservice  - bypass starts when serving more than the                                   |
@@ -516,6 +520,7 @@ Server
             "cdnId": "2",
             "cdnName": "over-the-top",
             "checkPath": "",
+            "deepCachingType": 0,
             "displayName": "My Cool Delivery Service",
             "dnsBypassCname": "",
             "dnsBypassIp": "",

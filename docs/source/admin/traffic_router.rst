@@ -102,6 +102,10 @@ Configuration files
 |                            +-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
 |                            | cache.czmap.database.refresh.period       | The interval in milliseconds which Traffic Router will poll for a new coverage zone file            | 10800000                                          |
 |                            +-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
+|                            | cache.dczmap.database                     | Full path to the local copy of the deep coverage zone file                                          | /opt/traffic_router/db/dczmap.json                |
+|                            +-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
+|                            | cache.dczmap.database.refresh.period      | The interval in milliseconds which Traffic Router will poll for a new deep coverage zone file       | 10800000                                          |
+|                            +-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
 |                            | cache.health.json                         | Full path to the local copy of the health state                                                     | /opt/traffic_router/db/health.json                |
 |                            +-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
 |                            | cache.health.json.refresh.period          | The interval in milliseconds which Traffic Router will poll for a new health state file             | 1000                                              |
@@ -209,6 +213,10 @@ Fields Always Present
 |ERROR        |An internal error occurred within Traffic Router, more details may be found in the rerr field                                                                           |
 +-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |CZ           |The result was derived from Coverage Zone data based on the address in the chi field                                                                                    |
++-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|DEEP_CZ      |The result was derived from Deep Coverage Zone data based on the address in the chi field                                                                               |
++-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|DEEP_CZ_MISS |Traffic Router was unable to find a "deep" cache for the requested resource but fell back to the regular Coverage Zone to derive a result based on the chi address      |
 +-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |GEO          |The result was derived from geolocation service based on the address in the chi field                                                                                   |
 +-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
