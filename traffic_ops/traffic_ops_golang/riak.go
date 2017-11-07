@@ -27,6 +27,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lestrrat/go-jwx/jwk"
 	"strings"
+	"time"
 )
 
 // RiakPort is the port RIAK is listening on.
@@ -35,6 +36,34 @@ const RiakPort = 8087
 // CDNURIKeysBucket is the namespace or bucket used for CDN URI signing keys.
 const CDNURIKeysBucket = "cdn_uri_sig_keys"
 
+// SSLKeysBucket
+const SSLKeysBucket = "ssl"
+
+// 5 second timeout
+const timeOut = time.Second * 5
+
+type StorageCluster interface {
+	Start() error
+	Stop() error
+	Execute(riak.Command) error
+}
+
+type RiakStorageCluster struct {
+	Cluster *riak.Cluster
+}
+
+func (ri RiakStorageCluster) Stop() error {
+	return ri.Cluster.Stop()
+}
+
+func (ri RiakStorageCluster) Start() error {
+	return ri.Cluster.Start()
+}
+
+func (ri RiakStorageCluster) Execute(command riak.Command) error {
+	return ri.Cluster.Execute(command)
+}
+
 // URISignerKeyset is the container for the CDN URI signing keys
 type URISignerKeyset struct {
 	RenewalKid *string               `json:"renewal_kid"`
@@ -42,11 +71,16 @@ type URISignerKeyset struct {
 }
 
 // deletes an object from riak storage
-func deleteObject(key string, bucket string, cluster *riak.Cluster) error {
+func deleteObject(key string, bucket string, cluster StorageCluster) error {
+	if cluster == nil {
+		return errors.New("ERROR: No valid cluster on which to execute a command")
+	}
+
 	// build store command and execute.
 	cmd, err := riak.NewDeleteValueCommandBuilder().
 		WithBucket(bucket).
 		WithKey(key).
+		WithTimeout(timeOut).
 		Build()
 	if err != nil {
 		return err
@@ -59,11 +93,15 @@ func deleteObject(key string, bucket string, cluster *riak.Cluster) error {
 }
 
 // fetch an object from riak storage
-func fetchObjectValues(key string, bucket string, cluster *riak.Cluster) ([]*riak.Object, error) {
+func fetchObjectValues(key string, bucket string, cluster StorageCluster) ([]*riak.Object, error) {
+	if cluster == nil {
+		return nil, errors.New("ERROR: No valid cluster on which to execute a command")
+	}
 	// build the fetch command
 	cmd, err := riak.NewFetchValueCommandBuilder().
 		WithBucket(bucket).
 		WithKey(key).
+		WithTimeout(timeOut).
 		Build()
 	if err != nil {
 		return nil, err
@@ -82,11 +120,18 @@ func fetchObjectValues(key string, bucket string, cluster *riak.Cluster) ([]*ria
 }
 
 // saves an object to riak storage
-func saveObject(obj *riak.Object, bucket string, cluster *riak.Cluster) error {
+func saveObject(obj *riak.Object, bucket string, cluster StorageCluster) error {
+	if cluster == nil {
+		return errors.New("ERROR: No valid cluster on which to execute a command")
+	}
+	if obj == nil {
+		return errors.New("ERROR: cannot save a nil object")
+	}
 	// build store command and execute.
 	cmd, err := riak.NewStoreValueCommandBuilder().
 		WithBucket(bucket).
 		WithContent(obj).
+		WithTimeout(timeOut).
 		Build()
 	if err != nil {
 		return err
@@ -99,7 +144,7 @@ func saveObject(obj *riak.Object, bucket string, cluster *riak.Cluster) error {
 }
 
 // returns a riak cluster of online riak nodes.
-func getRiakCluster(db *sqlx.DB, cfg Config) (*riak.Cluster, error) {
+func getRiakCluster(db *sqlx.DB, cfg Config) (StorageCluster, error) {
 	riakServerQuery := `
 		SELECT s.host_name, s.domain_name FROM server s 
 		INNER JOIN type t on s.type = t.id 
@@ -144,9 +189,10 @@ func getRiakCluster(db *sqlx.DB, cfg Config) (*riak.Cluster, error) {
 	opts := &riak.ClusterOptions{
 		Nodes: nodes,
 	}
+
 	cluster, err := riak.NewCluster(opts)
 
-	return cluster, err
+	return RiakStorageCluster{Cluster: cluster}, err
 }
 
 // validates URISigingKeyset json.
