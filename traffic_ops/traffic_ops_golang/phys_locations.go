@@ -124,7 +124,7 @@ pl.name,
 COALESCE(pl.phone, '') as phone,
 COALESCE(pl.poc, '') as poc,
 pl.region as regionid,
-r.name as regionname,
+r.name as region,
 pl.short_name,
 pl.state,
 pl.zip
