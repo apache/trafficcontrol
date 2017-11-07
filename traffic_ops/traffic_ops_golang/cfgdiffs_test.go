@@ -137,8 +137,8 @@ func TestServerExistsTrue(t *testing.T) {
 
 	hostName := "myedge"
 
-	rows := sqlmock.NewRows([]string{"host_name", })
-	rows = rows.AddRow("true")
+	// Test Expecting True Response
+	rows := sqlmock.NewRows([]string{"host_name", }).AddRow("true")
 	
 	mock.ExpectQuery("SELECT EXISTS").WithArgs(hostName).WillReturnRows(rows)
 
@@ -154,26 +154,14 @@ func TestServerExistsTrue(t *testing.T) {
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expections: %s", err)
 	}
-}
 
-func TestServerExistsFalse(t *testing.T) {
-	mockDB, mock, err := sqlmock.New()
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
 
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-	defer db.Close()
-
-	hostName := "myedge"
-
-	rows := sqlmock.NewRows([]string{"host_name", })
-	rows = rows.AddRow("false")
+	// Test Expecting False Response
+	rows = sqlmock.NewRows([]string{"host_name", }).AddRow("false")
 	
 	mock.ExpectQuery("SELECT EXISTS").WithArgs(hostName).WillReturnRows(rows)
 
-	result, err := serverExists(db, hostName)
+	result, err = serverExists(db, hostName)
 	if err != nil {
 		t.Errorf("serverExists expected: nil error, actual: %v", err)
 	}
