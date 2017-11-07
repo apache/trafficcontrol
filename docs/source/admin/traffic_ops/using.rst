@@ -306,7 +306,7 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Content Routing Type                             | The type of content routing this delivery service will use. See :ref:`rl-ds-types`.                                                                                                                                 |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Deep Caching                                     | (for HTTP routed delivery services only) When to do deep caching for this delivery service (see :ref:`Deep Caching <insert-ref-here>` for more details:                                                             |
+| Deep Caching                                     | (for HTTP routed delivery services only) When to do deep caching for this delivery service (see :ref:`Deep Caching <insert-ref-here>` for more details):                                                            |
 |                                                  | - NEVER                                                                                                                                                                                                             |
 |                                                  | - ALWAYS                                                                                                                                                                                                            |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -714,7 +714,11 @@ Traffic Router Profile
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | coveragezone.polling.interval           | CRConfig.json          | How often to refresh the coverage zone map in ms                                                                                                                                                          |
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| coveragezone.polling.url                | CRConfig.json          | The location (URL) to retrieve the coverage zone map file in XML format from.                                                                                                                             |
+| coveragezone.polling.url                | CRConfig.json          | The location (URL) to retrieve the coverage zone map file in JSON format from.                                                                                                                            |
++-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| deepcoveragezone.polling.interval       | CRConfig.json          | How often to refresh the deep coverage zone map in ms                                                                                                                                                     |
++-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| deepcoveragezone.polling.url            | CRConfig.json          | The location (URL) to retrieve the deep coverage zone map file in JSON format from.                                                                                                                       |
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | tld.soa.expire                          | CRConfig.json          | The value for the expire field the Traffic Router DNS Server will respond with on Start of Authority (SOA) records.                                                                                       |
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -852,7 +856,7 @@ The Coverage Zone File (CZF) should contain a cachegroup name to network prefix 
       "cache-group-01": {
         "coordinates": {
           "latitude":  1.1,
-          "longitude": 2.2,
+          "longitude": 2.2
         },
         "network6": [
           "1234:5678::/64",
@@ -866,7 +870,7 @@ The Coverage Zone File (CZF) should contain a cachegroup name to network prefix 
       "cache-group-02": {
         "coordinates": {
           "latitude":  3.3,
-          "longitude": 4.4,
+          "longitude": 4.4
         },
         "network6": [
           "1234:567a::/64",
@@ -890,14 +894,14 @@ The script that generates the CZF file is not part of Traffic Control, since it 
 
 The Deep Coverage Zone File
 +++++++++++++++++++++++++++
-The Deep Coverage Zone File (DCZF) format is similar the CZF format but contains a ``caches`` list under each ``coverageZone``: ::
+The Deep Coverage Zone File (DCZF) format is similar to the CZF format but adds a ``caches`` list under each ``coverageZone``: ::
 
   {
     "coverageZones": {
       "location-01": {
         "coordinates": {
           "latitude":  5.5,
-          "longitude": 6.6,
+          "longitude": 6.6
         },
         "network6": [
           "1234:5678::/64",
@@ -915,7 +919,7 @@ The Deep Coverage Zone File (DCZF) format is similar the CZF format but contains
       "location-02": {
         "coordinates": {
           "latitude":  7.7,
-          "longitude": 8.8,
+          "longitude": 8.8
         },
         "network6": [
           "1234:567a::/64",
@@ -933,7 +937,7 @@ The Deep Coverage Zone File (DCZF) format is similar the CZF format but contains
     }
   }
 
-Each entry in the ``caches`` list is the hostname of an edge cache registered in Traffic Ops which will be used for "deep" caching in that Deep Coverage Zone. Unlike a regular CZF, coverage zones in the DCZF do not map to a Cache Group in Traffic Ops, so currently the deep coverage zone name can be chosen arbitrarily.
+Each entry in the ``caches`` list is the hostname of an edge cache registered in Traffic Ops which will be used for "deep" caching in that Deep Coverage Zone. Unlike a regular CZF, coverage zones in the DCZF do not map to a Cache Group in Traffic Ops, so currently the deep coverage zone name only needs to be unique.
 
 If the Traffic Router gets a DCZF "hit" for a requested Delivery Service that has Deep Caching enabled, the client will be routed to an available "deep" cache from that zone's ``caches`` list.
 
