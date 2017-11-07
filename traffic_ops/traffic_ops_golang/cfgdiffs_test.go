@@ -217,7 +217,74 @@ func TestInsertCfgDiffs(t *testing.T) {
 	}
 }
 
-func TestUpdateCfgDiiffs(T *testing.T) {
+func TestUpdateCfgDiiffs(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	defer mockDB.Close()
+	db := sqlx.NewDb(mockDB, "sqlmock")
+
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	hostName := "myedge"
+	timestamp := time.Now().UTC().String()
+
+	cfgFileDiffs := CfgFileDiffs{
+		FileName: "TestFile.cfg",
+		DBLinesMissing: []string{ "db_line_missing1", "db_line_missing2", },
+		DiskLinesMissing: []string{ "disk_line_missing1", "disk_line_missing2", },
+		ReportTimestamp: timestamp,
+	}
+
+	// Since "updateCfgDiffs" Marshals the json, we must store the unmarshalled json here.
+	//		This will need to be updated if the above text gets changed
+	dbLinesMissingJson := []uint8{91, 34, 100, 98, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 49, 34, 44, 34, 100, 98, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 50, 34, 93,}
+	diskLinesMissingJson := []uint8{91, 34, 100, 105, 115, 107, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 49, 34, 44, 34, 100, 105, 115, 107, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 50, 34, 93,}
+
+	// Test Update Successful
+	mock.ExpectExec("UPDATE").WithArgs(
+		dbLinesMissingJson, 
+		diskLinesMissingJson, 
+		cfgFileDiffs.ReportTimestamp,
+		hostName, 
+		cfgFileDiffs.FileName).WillReturnResult(sqlmock.NewResult(0, 1))
+
+	result, err := updateCfgDiffs(db, hostName, cfgFileDiffs)
+	if err != nil {
+		t.Errorf("updateCfgDiffs expected: nil error, actual: %v", err)
+	}
+
+	if result != true {
+		t.Errorf("updateCfgDiffs expected: result == true, actual: %v", result)
+	}
+	
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expections: %s", err)
+	}
+
+	// Test Update Unsuccessful
+	mock.ExpectExec("UPDATE").WithArgs(
+		dbLinesMissingJson, 
+		diskLinesMissingJson, 
+		cfgFileDiffs.ReportTimestamp,
+		hostName, 
+		cfgFileDiffs.FileName).WillReturnResult(sqlmock.NewResult(0, 0))
+
+	result, err = updateCfgDiffs(db, hostName, cfgFileDiffs)
+	if err != nil {
+		t.Errorf("updateCfgDiffs expected: nil error, actual: %v", err)
+	}
+
+	if result != false {
+		t.Errorf("updateCfgDiffs expected: result == false, actual: %v", result)
+	}
+	
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expections: %s", err)
+	}
+}
+
 
 }
 
