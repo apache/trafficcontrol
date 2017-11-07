@@ -125,7 +125,7 @@ func TestGetCfgDiffsJson(t *testing.T) {
 	}
 }
 
-func TestServerExistsTrue(t *testing.T) {
+func TestServerExists(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	defer mockDB.Close()
 	db := sqlx.NewDb(mockDB, "sqlmock")
