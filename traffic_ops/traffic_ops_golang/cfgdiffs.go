@@ -215,7 +215,7 @@ VALUES((SELECT server.id FROM server WHERE host_name=$1), $2, (SELECT ARRAY(SELE
 	}
 
 	//NOTE: if the serverID doesn't match a server, this error will appear like a 500-type error
-	rows, err := db.Query(query,
+	_, err = db.Exec(query,
 		hostName,
 		diffs.FileName, 
 		dbLinesMissingJson,
@@ -225,7 +225,6 @@ VALUES((SELECT server.id FROM server WHERE host_name=$1), $2, (SELECT ARRAY(SELE
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
 	
 	return nil
 }
