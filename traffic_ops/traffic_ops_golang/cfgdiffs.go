@@ -5,7 +5,6 @@ import (
     "net/http"
 	"database/sql"
 	"encoding/json"
-	"time"
 	"errors"
 	
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -219,7 +218,7 @@ VALUES((SELECT server.id FROM server WHERE host_name=$1), $2, (SELECT ARRAY(SELE
 		configName, 
 		dbLinesMissingJson,
 		diskLinesMissingJson,
-		time.Now().UTC())
+		diffs.ReportTimestamp)
 
 	if err != nil {
 		return err
@@ -245,7 +244,7 @@ disk_lines_missing=(SELECT ARRAY(SELECT * FROM json_array_elements_text($2))), l
 	rows, err := db.Exec(query,
 		dbLinesMissingJson,
 		diskLinesMissingJson,
-		time.Now().UTC(),
+		diffs.ReportTimestamp,
 		hostName,
 		configName)
 
