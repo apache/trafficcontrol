@@ -17,9 +17,11 @@
  * under the License.
  */
 
-var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $state, $timeout, $uibModal, locationUtils, cdnService) {
+var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $state, $timeout, $uibModal, locationUtils, cdnService, propertiesModel) {
 
 	$scope.cdn = cdn;
+
+	var diffSettings = propertiesModel.properties.snapshot.diff;
 
 	var oldConfig = currentSnapshot.config || null,
 		newConfig = newSnapshot.config || null;
@@ -54,6 +56,10 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 		if (oldJSON) {
 			var diff = JsDiff.diffJson(oldJSON, newJSON);
 			diff.forEach(function(part){
+				// if the part is unchanged and you're not supposed to show unchanged, skip it
+				if (!part.added && !part.removed && diffSettings.showUnchanged == false) {
+					return;
+				}
 				if (part.added) {
 					added++;
 				} else if (part.removed) {
@@ -208,5 +214,5 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 
 };
 
-ConfigController.$inject = ['cdn', 'currentSnapshot', 'newSnapshot', '$scope', '$state', '$timeout', '$uibModal', 'locationUtils', 'cdnService'];
+ConfigController.$inject = ['cdn', 'currentSnapshot', 'newSnapshot', '$scope', '$state', '$timeout', '$uibModal', 'locationUtils', 'cdnService', 'propertiesModel'];
 module.exports = ConfigController;
