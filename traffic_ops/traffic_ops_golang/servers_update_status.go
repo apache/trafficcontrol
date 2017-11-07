@@ -76,24 +76,15 @@ func getServerUpdateStatus(hostName string, db *sqlx.DB) ([]tc.ServerUpdateStatu
 
 	updateStatuses := []tc.ServerUpdateStatus{}
 	var rows *sql.Rows
+	var err error
 	if hostName == "all" {
-		selectAll, err := db.Prepare(baseSelectStatement + groupBy)
-		if err != nil {
-			log.Error.Printf("could not prepare select server update status query: %s\n", err)
-			return nil, tc.DBError
-		}
-		rows, err = selectAll.Query()
+		rows, err = db.Query(baseSelectStatement + groupBy)
 		if err != nil {
 			log.Error.Printf("could not execute select server update status query: %s\n", err)
 			return nil, tc.DBError
 		}
 	} else {
-		selectStatement, err := db.Prepare(baseSelectStatement + ` WHERE s.host_name = $1` + groupBy)
-		if err != nil {
-			log.Error.Printf("could not prepare select server update status by hostname query: %s\n", err)
-			return nil, tc.DBError
-		}
-		rows, err = selectStatement.Query(hostName)
+		rows, err = db.Query(baseSelectStatement + ` WHERE s.host_name = $1` + groupBy, hostName)
 		if err != nil {
 			log.Error.Printf("could not execute select server update status by hostname query: %s\n", err)
 			return nil, tc.DBError
