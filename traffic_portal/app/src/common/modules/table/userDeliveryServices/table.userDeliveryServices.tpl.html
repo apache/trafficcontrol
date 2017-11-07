@@ -63,7 +63,7 @@ under the License.
                 <td>{{::ds.dscp}}</td>
                 <td>{{::ds.signingAlgorithm}}</td>
                 <td>{{::qstring(ds)}}</td>
-                <td>{{::getRelativeTime(ds.lastUpdated)}}</td>
+                <td data-order="{{::ds.lastUpdated}}">{{::getRelativeTime(ds.lastUpdated)}}</td>
                 <td ng-if="useTenancy == '0'"><button type="button" class="btn btn-link" title="Unlink Delivery Service from User" ng-click="removeDS(ds.id)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
