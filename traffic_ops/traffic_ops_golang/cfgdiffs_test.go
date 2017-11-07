@@ -29,7 +29,7 @@ package main
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func TestGetConfigDiffs(t *testing.T) {
+func TestGetCfgDiffs(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	defer mockDB.Close()
 	db := sqlx.NewDb(mockDB, "sqlmock")
@@ -69,6 +69,55 @@ func TestGetConfigDiffs(t *testing.T) {
 	sqlCfgFileDiffs := cfgFileDiffs[0]
 	if !reflect.DeepEqual(sqlCfgFileDiffs, cfgFileDiffs1) {
 		t.Errorf("getCfgDiffs expected: cfgFileDiffs == %+v, actual: %+v", cfgFileDiffs1, sqlCfgFileDiffs)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expections: %s", err)
+	}
+}
+
+func TestGetCfgDiffsJson(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	defer mockDB.Close()
+	db := sqlx.NewDb(mockDB, "sqlmock")
+
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	hostName := "myedge"
+
+	timestamp := time.Now().UTC().String()
+	cfgFileDiffsResponse := CfgFileDiffsResponse{
+		Response: []CfgFileDiffs {{
+			FileName: "TestFile.cfg",
+			DBLinesMissing: []string{ "db_line_missing1", "db_line_missing2", },
+			DiskLinesMissing: []string{ "disk_line_missing1", "disk_line_missing2", },
+			ReportTimestamp: timestamp,
+		},},
+	}
+
+	rows := sqlmock.NewRows([]string{"config_name", "db_lines_missing", "disk_lines_missing", "last_checked", })
+
+	dbLinesMissingJson, err := json.Marshal(cfgFileDiffsResponse.Response[0].DBLinesMissing)
+	diskLinesMissingJson, err := json.Marshal(cfgFileDiffsResponse.Response[0].DiskLinesMissing)
+	rows = rows.AddRow(cfgFileDiffsResponse.Response[0].FileName, dbLinesMissingJson, diskLinesMissingJson, cfgFileDiffsResponse.Response[0].ReportTimestamp)
+	
+	
+	mock.ExpectQuery("SELECT").WithArgs(hostName).WillReturnRows(rows)
+
+	cfgFileDiffsResponseT, err := getCfgDiffsJson(hostName, db)
+	if err != nil {
+		t.Errorf("getCfgDiffs expected: nil error, actual: %v", err)
+	}
+
+	if len(cfgFileDiffsResponseT.Response) != 1 {
+		t.Errorf("getCfgDiffsJson expected: len(cfgFileDiffsResponseT.Response) == 1, actual: %v", len(cfgFileDiffsResponseT.Response))
+	}
+	
+	if !reflect.DeepEqual(*cfgFileDiffsResponseT, cfgFileDiffsResponse) {
+		t.Errorf("getCfgDiffsJson expected: cfgFileDiffsResponseT == %+v, actual: %+v", cfgFileDiffsResponseT, cfgFileDiffsResponse)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
