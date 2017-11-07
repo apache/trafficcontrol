@@ -124,3 +124,65 @@ func TestGetCfgDiffsJson(t *testing.T) {
 		t.Errorf("there were unfulfilled expections: %s", err)
 	}
 }
+
+func TestServerExistsTrue(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	defer mockDB.Close()
+	db := sqlx.NewDb(mockDB, "sqlmock")
+
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	hostName := "myedge"
+
+	rows := sqlmock.NewRows([]string{"host_name", })
+	rows = rows.AddRow("true")
+	
+	mock.ExpectQuery("SELECT EXISTS").WithArgs(hostName).WillReturnRows(rows)
+
+	result, err := serverExists(db, hostName)
+	if err != nil {
+		t.Errorf("serverExists expected: nil error, actual: %v", err)
+	}
+
+	if result != true {
+		t.Errorf("serverExists expected: result == true, actual: %v", result)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expections: %s", err)
+	}
+}
+
+func TestServerExistsFalse(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	defer mockDB.Close()
+	db := sqlx.NewDb(mockDB, "sqlmock")
+
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	hostName := "myedge"
+
+	rows := sqlmock.NewRows([]string{"host_name", })
+	rows = rows.AddRow("false")
+	
+	mock.ExpectQuery("SELECT EXISTS").WithArgs(hostName).WillReturnRows(rows)
+
+	result, err := serverExists(db, hostName)
+	if err != nil {
+		t.Errorf("serverExists expected: nil error, actual: %v", err)
+	}
+
+	if result != false {
+		t.Errorf("serverExists expected: result == false, actual: %v", result)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expections: %s", err)
+	}
+}
