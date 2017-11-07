@@ -61,7 +61,7 @@ under the License.
                 <td>{{::ds.dscp}}</td>
                 <td>{{::ds.signingAlgorithm}}</td>
                 <td>{{::qstring(ds)}}</td>
-                <td>{{::getRelativeTime(ds.lastUpdated)}}</td>
+                <td data-order="{{::ds.lastUpdated}}">{{::getRelativeTime(ds.lastUpdated)}}</td>
             </tr>
             </tbody>
         </table>
