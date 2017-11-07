@@ -174,3 +174,51 @@ func TestServerExistsTrue(t *testing.T) {
 		t.Errorf("there were unfulfilled expections: %s", err)
 	}
 }
+
+func TestInsertCfgDiffs(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	defer mockDB.Close()
+	db := sqlx.NewDb(mockDB, "sqlmock")
+
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	hostName := "myedge"
+	timestamp := time.Now().UTC().String()
+
+	cfgFileDiffs := CfgFileDiffs{
+		FileName: "TestFile.cfg",
+		DBLinesMissing: []string{ "db_line_missing1", "db_line_missing2", },
+		DiskLinesMissing: []string{ "disk_line_missing1", "disk_line_missing2", },
+		ReportTimestamp: timestamp,
+	}
+
+	// Since "insertCfgDiffs" Marshals the json, we must store the unmarshalled json here.
+	//		This will need to be updated if the above text gets changed
+	dbLinesMissingJson := []uint8{91, 34, 100, 98, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 49, 34, 44, 34, 100, 98, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 50, 34, 93,}
+	diskLinesMissingJson := []uint8{91, 34, 100, 105, 115, 107, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 49, 34, 44, 34, 100, 105, 115, 107, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 50, 34, 93,}
+
+	mock.ExpectExec("INSERT INTO").WithArgs(
+		hostName, 
+		cfgFileDiffs.FileName, 
+		dbLinesMissingJson, 
+		diskLinesMissingJson, 
+		cfgFileDiffs.ReportTimestamp).WillReturnResult(sqlmock.NewResult(1, 1))
+
+	err = insertCfgDiffs(db, hostName, cfgFileDiffs)
+	if err != nil {
+		t.Errorf("insertCfgDiffs expected: nil error, actual: %v", err)
+	}
+	
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expections: %s", err)
+	}
+}
+
+func TestUpdateCfgDiiffs(T *testing.T) {
+
+}
+
+}
