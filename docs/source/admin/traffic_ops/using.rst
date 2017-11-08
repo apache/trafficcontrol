@@ -307,8 +307,9 @@ The fields in the Delivery Service view are:
 | Content Routing Type                             | The type of content routing this delivery service will use. See :ref:`rl-ds-types`.                                                                                                                                 |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Deep Caching                                     | (for HTTP routed delivery services only) When to do deep caching for this delivery service (see :ref:`Deep Caching <rl-deep-cache>` for more details):                                                              |
-|                                                  | - NEVER                                                                                                                                                                                                             |
-|                                                  | - ALWAYS                                                                                                                                                                                                            |
+|                                                  |                                                                                                                                                                                                                     |
+|                                                  | - 0 - NEVER                                                                                                                                                                                                         |
+|                                                  | - 1 - ALWAYS                                                                                                                                                                                                        |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Delivery Service DNS TTL                         | The Time To Live on the DNS record for the Traffic Router A and AAAA records (``<routing-name>.<deliveryservice>.<cdn-domain>``).                                                                                   |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -888,7 +889,7 @@ The CZF is an input to the Traffic Control CDN, and as such does not get generat
 
 The script that generates the CZF file is not part of Traffic Control, since it is different for each situation.
 
-.. note:: The "coordinates" section is optional and may be used by Traffic Router for localization in the case of a CZF "hit" where the zone name does not map to a Cache Group name in Traffic Ops (i.e. Traffic Router will route to the closest Cache Group(s) geographically).
+.. note:: The ``"coordinates"`` section is optional and may be used by Traffic Router for localization in the case of a CZF "hit" where the zone name does not map to a Cache Group name in Traffic Ops (i.e. Traffic Router will route to the closest Cache Group(s) geographically).
 
 .. _rl-deep-czf:
 
@@ -941,7 +942,7 @@ Each entry in the ``caches`` list is the hostname of an edge cache registered in
 
 If the Traffic Router gets a DCZF "hit" for a requested Delivery Service that has Deep Caching enabled, the client will be routed to an available "deep" cache from that zone's ``caches`` list.
 
-.. note:: The "coordinates" section is optional.
+.. note:: The ``"coordinates"`` section is optional.
 
 
 .. _rl-working-with-profiles:
