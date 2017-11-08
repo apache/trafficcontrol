@@ -2484,6 +2484,12 @@ sub remap_dot_config {
 			if ( defined( $ds->{cacheurl} ) && $ds->{cacheurl} ne "" ) {
 				$mid_remap{ $ds->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $ds->{cacheurl_file};
 			}
+			if ( defined( $ds->{'param'}->{'cachekey.config'} ) ) {
+				$mid_remap{ $ds->{org} } .= " \@plugin=cachekey.so";
+				foreach my $ck_entry ( keys %{ $ds->{'param'}->{'cachekey.config'} } ) {
+					$mid_remap{ $ds->{org} } .= " \@pparam=--" . $ck_entry . "=" . $ds->{'param'}->{'cachekey.config'}->{$ck_entry};
+				}
+			}
 			if ( $ds->{range_request_handling} == RRH_CACHE_RANGE_REQUEST ) {
 				$mid_remap{ $ds->{org} } .= " \@plugin=cache_range_requests.so";
 			}
