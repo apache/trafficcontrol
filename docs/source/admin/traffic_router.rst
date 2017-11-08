@@ -144,6 +144,54 @@ Traffic Router currently follows the zone signing key pre-publishing operational
 
 .. _section 4.1.1.1 of RFC 6781: https://tools.ietf.org/html/rfc6781#section-4.1.1.1
 
+
+.. _rl-deep-cache:
+
+Deep Caching - Deep Coverage Zone Topology
+==========================================
+
+Overview
+--------
+
+Deep Caching is a feature that enables clients to be routed to the closest
+possible "deep" edge caches on a per Delivery Service basis. The term "deep" is
+used in the networking sense, meaning that the edge caches are located deep in
+the network where the number of network hops to a client is as minimal as
+possible. This deep caching topology is desirable because storing content closer
+to the client gives better bandwidth savings, and sometimes the cost of
+bandwidth usage in the network outweighs the cost of adding storage. While it
+may not be feasible to cache an entire copy of the CDN's contents in every deep
+location (for the best possible bandwidth savings), storing just a relatively
+small amount of the CDN's most requested content can lead to very high bandwidth
+savings.
+
+Getting started
+---------------
+
+What you need:
+
+#. Edge caches deployed in "deep" locations and registered in Traffic Ops
+#. A Deep Coverage Zone File (DCZF) mapping these deep cache hostnames to specific network prefixes (see :ref:`rl-deep-czf` for details)
+#. Deep caching parameters in the Traffic Router Profile (see :ref:`rl-ccr-profile` for details):
+
+   * ``deepcoveragezone.polling.interval``
+   * ``deepcoveragezone.polling.url``
+
+#. Deep Caching enabled on one or more HTTP Delivery Services (i.e. ``deepCachingType`` = ALWAYS)
+
+How it works
+------------
+
+Deep Coverage Zone routing is very similar to that of regular Coverage Zone
+routing, except that the DCZF is preferred over the regular  CZF for Delivery
+Services with DC (Deep Caching) enabled. If the client requests a DC-enabled
+Delivery Service and their IP address gets a "hit" in the DCZF, Traffic Router
+will attempt to route that client to one of the available deep caches in the
+client's corresponding zone. If there are no deep caches available for a
+client's request, Traffic Router will "fall back" to the regular CZF and
+continue regular CZF routing from there.
+
+
 Troubleshooting and log files
 =============================
 Traffic Router log files are in ``/opt/traffic_router/var/log``, and Tomcat log files are in ``/opt/tomcat/logs``. Application related logging is in ``/opt/traffic_router/var/log/traffic_router.log``, while access logs are written to ``/opt/traffic_router/var/log/access.log``.
