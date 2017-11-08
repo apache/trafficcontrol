@@ -41,7 +41,7 @@ func TestGetServerUpdateStatus(t *testing.T) {
 	serverStatusRow := sqlmock.NewRows([]string{"id", "host_name", "type", "combined_reval_pending", "upd_pending", "status", "parent_upd_pending", "parent_reval_pending"})
 	serverStatusRow.AddRow(1, "host_name_1", "EDGE", true, true, "ONLINE", true, false)
 
-	mock.ExpectPrepare("WITH").ExpectQuery().WithArgs("host_name_1").WillReturnRows(serverStatusRow)
+	mock.ExpectQuery("SELECT").WillReturnRows(serverStatusRow)
 
 	result, err := getServerUpdateStatus("host_name_1", db)
 	if err != nil {
