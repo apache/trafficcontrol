@@ -24,8 +24,15 @@ var LoginController = function($scope, $log, $uibModal, authService, userService
         password: ''
     };
 
-    $scope.login = function(credentials) {
-        authService.login(credentials.username, credentials.password);
+    $scope.login = function($event, credentials) {
+        var $btn = $($event.target);
+        $btn.prop('disabled', true); // disable the login button to prevent multiple clicks
+        authService.login(credentials.username, credentials.password)
+            .then(
+                function() {
+                    $btn.prop('disabled', false); // re-enable it
+                }
+            );
     };
 
     $scope.resetPassword = function() {
