@@ -62,7 +62,7 @@ func init() {
 	testDs.CDNID = cdn.ID
 	testDs.CacheURL = "cacheURL"
 	testDs.CheckPath = "CheckPath"
-	testDs.DeepCachingType = 0
+	testDs.DeepCachingType = "NEVER"
 	testDs.DNSBypassCname = "DNSBypassCNAME"
 	testDs.DNSBypassIP = "10.10.10.10"
 	testDs.DNSBypassIP6 = "FF01:0:0:0:0:0:0:FB"
