@@ -62,7 +62,7 @@ sub run_ut {
 	ok $t->get_ok("/api/1.2/deliveryservices")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
 			->json_is( "/response/0/xmlId", "steering-ds1" )
 			->json_is( "/response/0/routingName", "foo" )
-			->json_is( "/response/0/deepCachingType", 0)
+			->json_is( "/response/0/deepCachingType", "NEVER")
 			->json_is( "/response/0/logsEnabled", 0 )
 			->json_is( "/response/0/ipv6RoutingEnabled", 1 )
 			->json_is( "/response/1/xmlId", "steering-ds2" );
@@ -144,7 +144,7 @@ sub run_ut {
         	"active" => "false",
         	"dscp" => 0,
         	"routingName" => "foo",
-			"deepCachingType" => 0,
+        	"deepCachingType" => "NEVER",
         	"ipv6RoutingEnabled" => "true",
         	"logsEnabled" => "true",
         	"initialDispersion" => 1,
@@ -161,7 +161,7 @@ sub run_ut {
 	    ->json_is( "/response/0/orgServerFqdn" => "http://10.75.168.91")
 	    ->json_is( "/response/0/cdnId" => 100)
 	    ->json_is( "/response/0/routingName" => "foo")
-	    ->json_is( "/response/0/deepCachingType" => 0)
+	    ->json_is( "/response/0/deepCachingType" => "NEVER")
 	    ->json_is( "/response/0/tenantId" => $tenant_id)
 	    ->json_is( "/response/0/profileId" => 300)
 	    ->json_is( "/response/0/protocol" => "1")
@@ -180,7 +180,7 @@ sub run_ut {
 	    ->json_is( "/response/0/orgServerFqdn" => "http://10.75.168.91")
 	    ->json_is( "/response/0/cdnId" => 100)
 	    ->json_is( "/response/0/routingName" => "foo")
-	    ->json_is( "/response/0/deepCachingType" => 0)
+	    ->json_is( "/response/0/deepCachingType" => "NEVER")
 	    ->json_is( "/response/0/tenantId" => $tenant_id)
 	    ->json_is( "/response/0/tenant" => $tenant_name)
 	    ->json_is( "/response/0/profileId" => 300)
@@ -208,7 +208,7 @@ sub run_ut {
 	        "active" => "false",
 	        "dscp" => 0,
 	        "routingName" => "foo",
-	        "deepCachingType" => 0,
+	        "deepCachingType" => "NEVER",
 	        "ipv6RoutingEnabled" => "true",
 	        "logsEnabled" => "true",
 	        "initialDispersion" => 1,
@@ -251,7 +251,7 @@ sub run_ut {
 					"active"               => "false",
 					"dscp"                 => 0,
 					"routingName"          => "foo",
-					"deepCachingType"      => 0,
+					"deepCachingType"      => "NEVER",
 					"ipv6RoutingEnabled"   => "true",
 					"logsEnabled"          => "true",
 					"initialDispersion"    => 1,
@@ -285,7 +285,7 @@ sub run_ut {
 					"active"               => "false",
 					"dscp"                 => 0,
 					"routingName"          => "foo",
-					"deepCachingType"      => 0,
+					"deepCachingType"      => "NEVER",
 					"ipv6RoutingEnabled"   => "true",
 					"logsEnabled"          => "true",
 					"initialDispersion"    => 1,
@@ -319,7 +319,7 @@ sub run_ut {
        	        "active" => "false",
        	        "dscp" => 0,
        	        "routingName" => "foo",
-       	        "deepCachingType" => 0,
+       	        "deepCachingType" => "NEVER",
        	        "ipv6RoutingEnabled" => "true",
        	        "logsEnabled" => "true",
        	        "initialDispersion" => 1,
@@ -353,7 +353,7 @@ sub run_ut {
        	        "active" => "false",
        	        "dscp" => 0,
        	        "routingName" => "foo",
-       	        "deepCachingType" => 0,
+       	        "deepCachingType" => "NEVER",
        	        "ipv6RoutingEnabled" => "true",
        	        "logsEnabled" => "true",
        	        "initialDispersion" => 1,
@@ -388,7 +388,7 @@ sub run_ut {
        	        "active" => "false",
        	        "dscp" => 0,
        	        "routingName" => "foo",
-       	        "deepCachingType" => 0,
+       	        "deepCachingType" => "NEVER",
        	        "ipv6RoutingEnabled" => "true",
        	        "logsEnabled" => "true",
        	        "initialDispersion" => 1,
@@ -423,7 +423,7 @@ sub run_ut {
 	        "active" => "false",
 	        "dscp" => 0,
 	        "routingName" => "foo",
-	        "deepCachingType" => 0,
+	        "deepCachingType" => "NEVER",
 	        "ipv6RoutingEnabled" => "true",
 	        "logsEnabled" => "true",
 	        "initialDispersion" => 1,
@@ -474,7 +474,7 @@ sub run_ut {
         "active" => "false",
         "dscp" => 0,
         "routingName" => "foo",
-        "deepCachingType" => 0,
+        "deepCachingType" => "NEVER",
         "ipv6RoutingEnabled" => "true",
         "logsEnabled" => "true",
         "initialDispersion" => 1,
@@ -521,7 +521,7 @@ sub run_ut {
         "active" => "false",
         "dscp" => 0,
         "routingName" => "foo",
-        "deepCachingType" => 0,
+        "deepCachingType" => "NEVER",
         "ipv6RoutingEnabled" => "true",
         "logsEnabled" => "true",
         "initialDispersion" => 1,

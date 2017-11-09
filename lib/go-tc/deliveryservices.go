@@ -56,7 +56,7 @@ type DeliveryService struct {
 	Active               bool                   `json:"active"`
 	DSCP                 int                    `json:"dscp"`
 	RoutingName          string                 `json:"routingName"`
-	DeepCachingType      int                    `json:"deepCachingType"`
+	DeepCachingType      string                 `json:"deepCachingType"`
 	Signed               bool                   `json:"signed"`
 	QStringIgnore        int                    `json:"qstringIgnore"`
 	GeoLimit             int                    `json:"geoLimit"`

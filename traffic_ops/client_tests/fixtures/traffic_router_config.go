@@ -114,7 +114,7 @@ func TrafficRouterConfig() *client.TRConfigResponse {
 						"ga.atlanta.kabletown.net",
 					},
 					RoutingName:     "edge",
-					DeepCachingType: 0,
+					DeepCachingType: "NEVER",
 					MissLocation: client.MissLocation{
 						Latitude:  75,
 						Longitude: 65,

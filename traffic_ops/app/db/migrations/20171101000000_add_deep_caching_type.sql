@@ -15,9 +15,13 @@
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
 
-alter table deliveryservice add column deep_caching_type smallint default 0;
+CREATE TYPE deep_caching_type AS ENUM ('NEVER', 'ALWAYS');
+
+ALTER TABLE deliveryservice ADD COLUMN deep_caching_type deep_caching_type DEFAULT 'NEVER';
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
 
- alter table deliveryservice drop column deep_caching_type;
+ALTER TABLE deliveryservice DROP COLUMN IF EXISTS deep_caching_type;
+
+DROP TYPE IF EXISTS deep_caching_type;

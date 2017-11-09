@@ -82,7 +82,7 @@ $t->get_ok('/api/1.2/deliveryservices/100/servers/eligible')->status_is(200)->$c
 ok $t->get_ok("/api/1.2/deliveryservices")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
 		->json_is( "/response/0/xmlId", "steering-ds1" )
 		->json_is( "/response/0/routingName", "foo" )
-		->json_is( "/response/0/deepCachingType", 0 )
+		->json_is( "/response/0/deepCachingType", "NEVER" )
 		->json_is( "/response/0/logsEnabled", 0 )
 		->json_is( "/response/0/ipv6RoutingEnabled", 1 )
 		->json_is( "/response/1/xmlId", "steering-ds2" );
@@ -230,7 +230,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
         ->json_is( "/response/0/tenantId" => $tenant_id)
         ->json_is( "/response/0/cdnName" => "cdn1")
 		->json_is( "/response/0/routingName" => "foo")
-		->json_is( "/response/0/deepCachingType" => 0)
+		->json_is( "/response/0/deepCachingType" => "NEVER")
 		->json_is( "/response/0/displayName" => "ds_displayname_1")
 		->json_is( "/response/0/xmlId" => "ds_1")
 		->json_is( "/response/0/multiSiteOrigin" => 0)
@@ -269,7 +269,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 		->json_is( "/response/0/displayName" => "ds_displayname_11")
 		->json_is( "/response/0/xmlId" => "ds_1")
 		->json_is( "/response/0/routingName" => "bar")
-		->json_is( "/response/0/deepCachingType" => 0)
+		->json_is( "/response/0/deepCachingType" => "NEVER")
 		->json_is( "/response/0/multiSiteOrigin" => 0)
 		->json_is( "/response/0/orgServerFqdn" => "http://10.75.168.91")
 		->json_is( "/response/0/protocol" => 2)
@@ -282,7 +282,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 				"displayName" => "ds_displayname_11",
 				"dscp" => 1,
 				"routingName" => "baz",
-				"deepCachingType" => 0,
+				"deepCachingType" => "NEVER",
 				"geoLimit" => 1,
 				"geoProvider" => 1,
 				"ipv6RoutingEnabled" => 1,
@@ -312,7 +312,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 				"displayName" => "ds_displayname_11",
 				"dscp" => 1,
 				"routingName" => "foo",
-				"deepCachingType" => 0,
+				"deepCachingType" => "NEVER",
 				"geoLimit" => 1,
 				"geoProvider" => 1,
 				"initialDispersion" => 2,
