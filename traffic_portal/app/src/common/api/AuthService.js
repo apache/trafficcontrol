@@ -62,7 +62,7 @@ var AuthService = function($rootScope, $http, $state, $location, $q, $state, htt
         httpService.post(ENV.api['root'] + 'user/logout').
             then(
                 function(result) {
-                    $rootScope.$broadcast('authService::logout');
+                    $rootScope.$broadcast('trafficPortal::exit');
                     if ($state.current.name == 'trafficPortal.public.login') {
                         messageModel.setMessages(result.alerts, false);
                     } else {
