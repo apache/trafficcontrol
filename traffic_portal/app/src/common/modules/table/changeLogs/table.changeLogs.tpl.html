@@ -41,7 +41,7 @@ under the License.
             </thead>
             <tbody>
             <tr ng-repeat="changeLog in ::changeLogs">
-                <td>{{::getRelativeTime(changeLog.lastUpdated)}}</td>
+                <td data-order="{{::changeLog.lastUpdated}}">{{::getRelativeTime(changeLog.lastUpdated)}}</td>
                 <td>{{::changeLog.lastUpdated}}</td>
                 <td>{{::changeLog.user}}</td>
                 <td>{{::changeLog.level}}</td>

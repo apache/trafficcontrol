@@ -62,21 +62,26 @@ sub aadata {
 sub read {
 	my $self = shift;
 
-	my $rs_extensions = $self->db->resultset('ToExtension')->search();
+	my %condition = ( 'type.name' => [ { -like => 'MID%' }, { -like => 'EDGE%' } ] );
+
+	my $rs_extensions = $self->db->resultset('ToExtension')->search(undef, { prefetch => [ 'type' ] });
 	my %mapping       = ();
 	while ( my $ext = $rs_extensions->next ) {
 		next unless ( $ext->type->name eq "CHECK_EXTENSION_BOOL" || $ext->type->name eq "CHECK_EXTENSION_NUM" );
 		$mapping{ $ext->servercheck_column_name } = $ext->servercheck_short_name;
 	}
-	my $rs = $self->db->resultset('Server')->search( undef, { prefetch => [ 'servercheck', 'status', 'profile', 'cachegroup' ] } );
+	my $rs = $self->db->resultset('Server')->search( \%condition, { prefetch => [ 'servercheck', 'status', 'profile', 'cachegroup', 'type' ], order_by => 'me.host_name ASC' } );
 	my @data;
 	while ( my $server = $rs->next ) {
 		my $v;
-		$v->{hostName}   = $server->host_name;
-		$v->{profile}    = $server->profile->name;
-		$v->{adminState} = $server->status->name;
-		$v->{cacheGroup} = $server->cachegroup->name;
-		$v->{type}       = $server->type->name;
+		$v->{id}		= $server->id;
+		$v->{hostName}		= $server->host_name;
+		$v->{profile}		= $server->profile->name;
+		$v->{adminState}	= $server->status->name;
+		$v->{cacheGroup}	= $server->cachegroup->name;
+		$v->{type}		= $server->type->name;
+		$v->{updPending}	= \$server->upd_pending;
+		$v->{revalPending}	= \$server->reval_pending;
 		foreach my $col (qw/aa ab ac ad ae af ag ah ai aj ak al am an ao ap aq ar at au av aw ax ay az ba bb bc bd be bf/) {
 			if ( defined( $mapping{$col} ) && defined( $server->servercheck ) ) {
 				$v->{checks}->{ $mapping{$col} } = $server->servercheck->$col();
