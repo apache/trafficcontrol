@@ -18,7 +18,6 @@
  */
 
 module.exports = angular.module('trafficPortal.private.asns', [])
-    .controller('AsnsController', require('./AsnsController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficPortal.private.asns', {
@@ -26,8 +25,7 @@ module.exports = angular.module('trafficPortal.private.asns', [])
                 abstract: true,
                 views: {
                     privateContent: {
-                        templateUrl: 'modules/private/asns/asns.tpl.html',
-                        controller: 'AsnsController'
+                        templateUrl: 'modules/private/asns/asns.tpl.html'
                     }
                 }
             })
