@@ -249,7 +249,7 @@ public class TrafficRouter {
 		CacheLocation cacheLocation;
 		ResultType result = ResultType.CZ;
 
-		if (ds.getDeepCache() == DeliveryService.DC_ALWAYS) {
+		if (ds.getDeepCache() == DeliveryService.DeepCachingType.ALWAYS) {
 			// Deep caching is enabled. See if there are deep caches available
 			cacheLocation = getDeepCoverageZoneCacheLocation(request.getClientIP(), ds);
 			if (cacheLocation != null && cacheLocation.getCaches().size() != 0) {
