@@ -32,9 +32,8 @@ The following are requirements to ensure an accurate set up:
 **Configuring Traffic Portal**
 
 	- cd /etc/traffic_portal/conf
-	- sudo cp config-template.js config.js
 	- sudo vi config.js (read the inline comments)
-	- [OPTIONAL] sudo vi /opt/traffic_portal/public/traffic_portal_properties.json (to customize traffic portal content)
+	- sudo vi /opt/traffic_portal/public/traffic_portal_properties.json (to customize traffic portal properties)
 	- [OPTIONAL] sudo vi /opt/traffic_portal/public/resources/assets/css/custom.css (to customize traffic portal skin)
 
 **Starting Traffic Portal**
