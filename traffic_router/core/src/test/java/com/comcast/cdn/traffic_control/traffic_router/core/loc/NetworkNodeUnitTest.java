@@ -93,7 +93,7 @@ public class NetworkNodeUnitTest {
         String czmapString = "{" +
                 "\"revision\": \"Mon Dec 21 15:04:01 2015\"," +
                 "\"customerName\": \"Kabletown\"," +
-                "\"coverageZones\": {" +
+                "\"deepCoverageZones\": {" +
                 "\"us-co-denver\": {" +
                 "\"network\": [\"192.168.55.0/24\",\"192.168.6.0/24\",\"192.168.0.0/16\"]," +
                 "\"network6\": [\"1234:5678::/64\",\"1234:5679::/64\"]," +
@@ -102,8 +102,8 @@ public class NetworkNodeUnitTest {
                 "}" +
                 "}";
 
-        JSONTokener jsonTokener = new JSONTokener(czmapString);
-        final JSONObject json = new JSONObject(jsonTokener);
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree(czmapString);
         NetworkNode networkNode = NetworkNode.generateTree(json, false, true);
         NetworkNode foundNetworkNode = networkNode.getNetwork("192.168.55.100");
 

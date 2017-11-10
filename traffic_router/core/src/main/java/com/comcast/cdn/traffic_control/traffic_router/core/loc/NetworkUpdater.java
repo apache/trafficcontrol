@@ -47,7 +47,7 @@ public class NetworkUpdater extends AbstractServiceUpdater {
 		return generateTree(dbFile, true) != null;
 	}
 
-	public NetworkNode generateTree(final File dbFile, final boolean verifyOnly) throws IOException, JSONException {
+	public NetworkNode generateTree(final File dbFile, final boolean verifyOnly) throws IOException {
 		return NetworkNode.generateTree(dbFile, verifyOnly);
 	}
 

@@ -96,7 +96,8 @@ public class NetworkNode implements Comparable<NetworkNode> {
     @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
     public static NetworkNode generateTree(final JsonNode json, final boolean verifyOnly, final boolean useDeep) {
         try {
-            final JsonNode coverageZones = JsonUtils.getJsonNode(json, "coverageZones");
+            final String czKey = useDeep ? "deepCoverageZones" : "coverageZones";
+            final JsonNode coverageZones = JsonUtils.getJsonNode(json, czKey);
 
             final SuperNode root = new SuperNode();
 
