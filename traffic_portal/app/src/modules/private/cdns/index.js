@@ -18,7 +18,6 @@
  */
 
 module.exports = angular.module('trafficPortal.private.cdns', [])
-    .controller('CdnsController', require('./CdnsController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficPortal.private.cdns', {
@@ -26,8 +25,7 @@ module.exports = angular.module('trafficPortal.private.cdns', [])
                 abstract: true,
                 views: {
                     privateContent: {
-                        templateUrl: 'modules/private/cdns/cdns.tpl.html',
-                        controller: 'CdnsController'
+                        templateUrl: 'modules/private/cdns/cdns.tpl.html'
                     }
                 }
             })
