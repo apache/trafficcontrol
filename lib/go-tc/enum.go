@@ -29,6 +29,8 @@ package tc
  */
 
 import (
+	"errors"
+	"strconv"
 	"strings"
 )
 
@@ -181,4 +183,50 @@ func CacheStatusFromString(s string) CacheStatus {
 	default:
 		return CacheStatusInvalid
 	}
+}
+
+// DeepCachingType represents a Delivery Service's deep caching type. The string values of this type should match the Traffic Ops values.
+type DeepCachingType string
+
+const (
+	DeepCachingTypeAlways  = DeepCachingType("ALWAYS")
+	DeepCachingTypeNever   = DeepCachingType("NEVER")
+	DeepCachingTypeInvalid = DeepCachingType("")
+)
+
+// String returns a string representation of this deep caching type
+func (t DeepCachingType) String() string {
+	switch t {
+	case DeepCachingTypeAlways:
+		return string(t)
+	case DeepCachingTypeNever:
+		return string(t)
+	default:
+		return "INVALID"
+	}
+}
+
+// DeepCachingTypeFromString returns a DeepCachingType from its string representation, or DeepCachingTypeInvalid if the string is not a valid type.
+func DeepCachingTypeFromString(s string) DeepCachingType {
+	switch strings.ToLower(s) {
+	case "always":
+		return DeepCachingTypeAlways
+	case "never":
+		return DeepCachingTypeNever
+	default:
+		return DeepCachingTypeInvalid
+	}
+}
+
+// UnmarshalJSON unmarshals a JSON representation of a DeepCachingType (i.e. a string) or returns an error if the DeepCachingType is invalid
+func (t *DeepCachingType) UnmarshalJSON(data []byte) error {
+	s, err := strconv.Unquote(string(data))
+	if err != nil {
+		return errors.New(string(data) + " JSON not quoted")
+	}
+	*t = DeepCachingTypeFromString(s)
+	if *t == DeepCachingTypeInvalid {
+		return errors.New(string(data) + " is not a DeepCachingType")
+	}
+	return nil
 }

@@ -58,7 +58,8 @@ public class NetworkNodeTest {
 		final NetworkNode nn = NetworkNode.generateTree(file, false, useDeep);
 		final ObjectMapper mapper = new ObjectMapper();
 		final JsonNode jsonNode = mapper.readTree(file);
-		final JsonNode coverageZones = jsonNode.get("coverageZones");
+		final String czKey = useDeep ? "deepCoverageZones" : "coverageZones";
+		final JsonNode coverageZones = jsonNode.get(czKey);
 
 		final Iterator<String> networkIter = coverageZones.fieldNames();
 		while (networkIter.hasNext()) {

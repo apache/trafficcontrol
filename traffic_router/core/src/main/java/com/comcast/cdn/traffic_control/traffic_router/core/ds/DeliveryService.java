@@ -150,7 +150,7 @@ public class DeliveryService {
 		acceptHttp = JsonUtils.optBoolean(protocol, "acceptHttp", true);
 		acceptHttps = JsonUtils.optBoolean(protocol, "acceptHttps");
 		redirectToHttps = JsonUtils.optBoolean(protocol, "redirectToHttps");
-		final String dctString = JsonUtils.optString(dsJo, "deepCachingType", "NEVER");
+		final String dctString = JsonUtils.optString(dsJo, "deepCachingType", "NEVER").toUpperCase();
 		DeepCachingType dct = DeepCachingType.NEVER;
 		try {
 			dct = DeepCachingType.valueOf(dctString);

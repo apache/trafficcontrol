@@ -895,10 +895,10 @@ The script that generates the CZF file is not part of Traffic Control, since it 
 
 The Deep Coverage Zone File
 +++++++++++++++++++++++++++
-The Deep Coverage Zone File (DCZF) format is similar to the CZF format but adds a ``caches`` list under each ``coverageZone``: ::
+The Deep Coverage Zone File (DCZF) format is similar to the CZF format but adds a ``caches`` list under each ``deepCoverageZone``: ::
 
   {
-    "coverageZones": {
+    "deepCoverageZones": {
       "location-01": {
         "coordinates": {
           "latitude":  5.5,
