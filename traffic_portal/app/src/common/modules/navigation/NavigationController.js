@@ -23,6 +23,8 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
 
     $scope.customMenu = propertiesModel.properties.customMenu;
 
+    $scope.showCacheChecks = propertiesModel.properties.cacheChecks.show;
+
     $scope.userLoaded = userModel.loaded;
 
     $scope.user = userModel.user;

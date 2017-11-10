@@ -37,6 +37,23 @@
         "showUnchanged": true
       }
     },
+    "cacheChecks": {
+      "_comments": "These are configurable properties for the cache checks view. The data for the cache checks view is derived from TO extensions.",
+      "show": true,
+      "descriptions": {
+        "10G": "Ping the IPv4 address of the EDGE or MID servers",
+        "10G6": "Ping the IPv6 address of the EDGE or MID servers",
+        "CDU": "Cache Disk Utilization %",
+        "CHR": "Cache Hit Ratio %",
+        "DSCP": "Checks the DSCP value of packets from the edge server to the Traffic Ops server",
+        "FQDN": "DNS check that matches what the DNS servers responds with compared to what Traffic Ops has",
+        "ILO": "Ping the iLO interface for EDGE or MID servers",
+        "MTU": "Ping the EDGE or MID using the configured MTU from Traffic Ops",
+        "ORT": "Number of configuration differences as determined by ORT found between Traffic Ops and the cache",
+        "RVL": "Content invalidation request(s) are pending for the EDGE or MID",
+        "UPD": "Configuration file updates have been applied or are pending for the EDGE or MID"
+      }
+    },
     "customMenu": {
       "_comments": "These are custom items you want to add to the menu. 'items' is an array of hashes where each hash has 'name' (the menu item name), 'embed' (true|false to determine if content is embedded in TP or not), and 'url' (the url of the content)",
       "name": "Other",

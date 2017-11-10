@@ -169,9 +169,16 @@ div.selected-count {
   float: left;
 }
 
-td.clocks {
-  text-align: center;
+table {
+  td .fa-check {
+    color: green;
+  }
+  td .fa-times {
+    color: red;
+  }
+
 }
+
 
 
 
