@@ -378,10 +378,10 @@ Server
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``deepCachingType``      |  int   | When to do Deep Caching for this Delivery Service:                                                                                   |
+  | ``deepCachingType``      | string | When to do Deep Caching for this Delivery Service:                                                                                   |
   |                          |        |                                                                                                                                      |
-  |                          |        | - 0: NEVER (default)                                                                                                                 |
-  |                          |        | - 1: ALWAYS                                                                                                                          |
+  |                          |        | - NEVER (default)                                                                                                                    |
+  |                          |        | - ALWAYS                                                                                                                             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``displayName``          | string | The display name of the delivery service.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -521,7 +521,7 @@ Server
             "cdnId": "2",
             "cdnName": "over-the-top",
             "checkPath": "",
-            "deepCachingType": 0,
+            "deepCachingType": "NEVER",
             "displayName": "My Cool Delivery Service",
             "dnsBypassCname": "",
             "dnsBypassIp": "",
