@@ -155,7 +155,7 @@ public class DeliveryService {
 		try {
 			dct = DeepCachingType.valueOf(dctString);
 		} catch (IllegalArgumentException e) {
-			LOGGER.error("DeliveryService '" + id + "' has an unrecognized deepCachingType: '" + dct + "'. Defaulting to 'NEVER' instead");
+			LOGGER.error("DeliveryService '" + id + "' has an unrecognized deepCachingType: '" + dctString + "'. Defaulting to 'NEVER' instead");
 		} finally {
 			this.deepCache = dct;
 		}

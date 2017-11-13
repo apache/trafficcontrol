@@ -47,6 +47,8 @@ public class DeliveryServiceHTTPRoutingMissesTest {
         when(unusedByTest.get("routingName")).thenReturn(mapper.readTree("\"edge\""));
         when(unusedByTest.has("coverageZoneOnly")).thenReturn(true);
         when(unusedByTest.get("coverageZoneOnly")).thenReturn(mapper.readTree("true"));
+        when(unusedByTest.has("deepCachingType")).thenReturn(true);
+        when(unusedByTest.get("deepCachingType")).thenReturn(mapper.readTree("\"NEVER\""));
         deliveryService = new DeliveryService("ignoredbytest", unusedByTest);
         httpRequest = mock(HTTPRequest.class);
         track = StatTracker.getTrack();
