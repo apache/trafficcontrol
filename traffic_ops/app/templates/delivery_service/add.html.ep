@@ -235,7 +235,7 @@
             $('#range_request_handlingi_row').hide(speed);
             $('#dns_bypass_ip_row').hide(speed);
             $('#dns_bypass_ip6_row').hide(speed);
-            $('#deep_caching_type').show(speed);
+            $('#deep_caching_type').hide(speed);
 			$('#regional_geo_blocking_row').show(speed);
 	    	$('#dns_bypass_cname_row').hide(speed);
             $('#dns_bypass_ttl_row').hide(speed);
