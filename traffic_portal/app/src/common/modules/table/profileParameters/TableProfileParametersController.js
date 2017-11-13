@@ -27,7 +27,16 @@ var TableProfileParametersController = function(profile, profileParameters, $sco
 		profileParameterService.unlinkProfileParameter(profile.id, paramId)
 			.then(
 				function() {
-					$scope.refresh();
+					$scope.refresh(); // refresh the profile parameters table
+				}
+			);
+	};
+
+	var linkProfileParameters = function(paramIds) {
+		profileParameterService.linkProfileParameters(profile.id, paramIds)
+			.then(
+				function() {
+					$scope.refresh(); // refresh the profile parameters table
 				}
 			);
 	};
@@ -104,12 +113,53 @@ var TableProfileParametersController = function(profile, profileParameters, $sco
 			}
 		});
 		modalInstance.result.then(function(selectedParamIds) {
-			profileParameterService.linkProfileParameters(profile.id, selectedParamIds)
-				.then(
-					function() {
-						$scope.refresh(); // refresh the table
-					}
-				);
+			if (profile.type == 'DS_PROFILE') { // if this is a ds profile, then it is used by delivery service(s) so we'll fetch the ds count...
+				deliveryServiceService.getDeliveryServices({ profile: profile.id }).
+					then(function(result) {
+						var params = {
+							title: 'Modify ' + profile.name + ' parameters',
+							message: 'The ' + profile.name + ' profile is used by ' + result.length + ' delivery service(s). Are you sure you want to modify the parameters?'
+						};
+						var modalInstance = $uibModal.open({
+							templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+							controller: 'DialogConfirmController',
+							size: 'md',
+							resolve: {
+								params: function () {
+									return params;
+								}
+							}
+						});
+						modalInstance.result.then(function() {
+							linkProfileParameters(selectedParamIds);
+						}, function () {
+							// do nothing
+						});
+					});
+			} else { // otherwise the profile is used by servers so we'll fetch the server count...
+				serverService.getServers({ profileId: profile.id }).
+					then(function(result) {
+						var params = {
+							title: 'Modify ' + profile.name + ' parameters',
+							message: 'The ' + profile.name + ' profile is used by ' + result.length + ' server(s). Are you sure you want to modify the parameters?'
+						};
+						var modalInstance = $uibModal.open({
+							templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+							controller: 'DialogConfirmController',
+							size: 'md',
+							resolve: {
+								params: function () {
+									return params;
+								}
+							}
+						});
+						modalInstance.result.then(function() {
+							linkProfileParameters(selectedParamIds);
+						}, function () {
+							// do nothing
+						});
+					});
+			}
 		}, function () {
 			// do nothing
 		});

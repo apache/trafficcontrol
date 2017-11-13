@@ -358,7 +358,7 @@ var trafficPortal = angular.module('trafficPortal', [
         })
     ;
 
-trafficPortal.factory('authInterceptor', function ($q, $window, $location, $timeout, messageModel, userModel) {
+trafficPortal.factory('authInterceptor', function ($rootScope, $q, $window, $location, $timeout, messageModel, userModel) {
     return {
         responseError: function (rejection) {
             var url = $location.url(),
@@ -369,6 +369,7 @@ trafficPortal.factory('authInterceptor', function ($q, $window, $location, $time
 
             // 401, 403, 404 and 5xx errors handled globally; all others handled in fault handler
             if (rejection.status === 401) {
+                $rootScope.$broadcast('trafficPortal::exit');
                 userModel.resetUser();
                 if (url == '/' || $location.search().redirect) {
                     messageModel.setMessages(alerts, false);

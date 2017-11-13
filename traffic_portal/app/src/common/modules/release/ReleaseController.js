@@ -17,9 +17,11 @@
  * under the License.
  */
 
-var ReleaseController = function(params, $scope, $uibModalInstance) {
+var ReleaseController = function(releaseParams, $scope, $uibModalInstance, propertiesModel) {
 
-    $scope.params = params;
+    $scope.releaseParams = releaseParams;
+
+    $scope.api = propertiesModel.properties.api.baseUrl;
 
     $scope.dismiss = function () {
         $uibModalInstance.dismiss('cancel');
@@ -27,5 +29,5 @@ var ReleaseController = function(params, $scope, $uibModalInstance) {
 
 };
 
-ReleaseController.$inject = ['params', '$scope', '$uibModalInstance'];
+ReleaseController.$inject = ['releaseParams', '$scope', '$uibModalInstance', 'propertiesModel'];
 module.exports = ReleaseController;

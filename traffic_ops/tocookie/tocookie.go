@@ -85,7 +85,7 @@ func Parse(secret, cookie string) (*Cookie, error) {
 }
 
 func NewRawMsg(msg, key []byte) string {
-	base64Msg := base64.RawURLEncoding.WithPadding('-').EncodeToString(msg)
+	base64Msg := base64.RawURLEncoding.EncodeToString(msg)
 	mac := hmac.New(sha1.New, []byte(key))
 	mac.Write([]byte(base64Msg))
 	encMac := mac.Sum(nil)
