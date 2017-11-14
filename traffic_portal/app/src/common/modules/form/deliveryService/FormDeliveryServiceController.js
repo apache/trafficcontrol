@@ -70,8 +70,8 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
     });
 
     $scope.falseTrue = [
-        { value: false, label: 'false' },
-        { value: true, label: 'true' }
+        { value: true, label: 'true' },
+        { value: false, label: 'false' }
     ];
 
     $scope.signingAlgos = [

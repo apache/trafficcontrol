@@ -30,8 +30,8 @@ var FormCDNController = function(cdn, $scope, $location, $uibModal, formUtils, s
     $scope.cdn = cdn;
 
     $scope.falseTrue = [
-        { value: false, label: 'false' },
-        { value: true, label: 'true' }
+        { value: true, label: 'true' },
+        { value: false, label: 'false' }
     ];
 
     $scope.manageDNSSEC = function() {

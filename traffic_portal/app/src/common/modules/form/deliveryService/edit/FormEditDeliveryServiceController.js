@@ -29,7 +29,7 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 			});
 	};
 
-	$scope.deliveryServiceName = angular.copy(deliveryService.displayName);
+	$scope.deliveryServiceName = angular.copy(deliveryService.xmlId);
 
 	$scope.settings = {
 		isNew: false,

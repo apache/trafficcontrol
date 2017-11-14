@@ -32,8 +32,7 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.targets.
 							},
 							target: function(deliveryService) {
 								return {
-									deliveryServiceId: deliveryService.id,
-									targetId: 0
+									deliveryServiceId: deliveryService.id
 								};
 							}
 						}

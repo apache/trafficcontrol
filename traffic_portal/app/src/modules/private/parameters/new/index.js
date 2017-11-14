@@ -28,9 +28,7 @@ module.exports = angular.module('trafficPortal.private.parameters.new', [])
                         controller: 'FormNewParameterController',
                         resolve: {
                             parameter: function() {
-                                return {
-                                    secure: false
-                                };
+                                return {};
                             }
                         }
                     }
