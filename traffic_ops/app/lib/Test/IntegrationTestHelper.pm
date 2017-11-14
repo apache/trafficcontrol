@@ -175,7 +175,7 @@ sub unload_core_data {
 	my $nonotice = $dbh->prepare("SET client_min_messages TO WARNING;");
 	$nonotice->execute();
 	$nonotice->finish();
-	for my $source (values $schema->source_registrations) {
+	for my $source (values %{$schema->source_registrations}) {
 		if ( ! $source->isa('DBIx::Class::ResultSource::Table') ) {
 			# Skip if it doesn't represent an actual table
 			next;
