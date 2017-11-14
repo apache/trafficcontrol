@@ -28,10 +28,7 @@ module.exports = angular.module('trafficPortal.private.cdns.new', [])
                         controller: 'FormNewCDNController',
                         resolve: {
                             cdn: function() {
-                                return {
-                                    dnssecEnabled: false
-                                };
-
+                                return {};
                             }
                         }
                     }

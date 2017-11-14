@@ -44,7 +44,9 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(tenantForm.active), 'has-feedback': hasError(tenantForm.active)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Active *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="active" name="active" class="form-control" ng-model="tenant.active" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <select id="active" name="active" class="form-control" ng-model="tenant.active" ng-options="x.value as x.label for x in falseTrue" required>
+                        <option value="">Select...</option>
+                    </select>
                     <small class="input-error" ng-show="hasPropertyError(tenantForm.active, 'required')">Required</small>
                 </div>
             </div>

@@ -36,8 +36,6 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.new', []
                                 template = 'common/modules/form/deliveryService/form.deliveryService.HTTP.tpl.html'
                             } else if (type.indexOf('STEERING') != -1) {
                                 template = 'common/modules/form/deliveryService/form.deliveryService.Steering.tpl.html'
-                            } else {
-
                             }
 
                             return template;
@@ -50,25 +48,42 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.new', []
                             geoMissLong: function(parameterService) {
                                 return parameterService.getParameters({ name: 'default_geo_miss_longitude', configFile: 'global' });
                             },
-                            deliveryService: function(geoMissLat, geoMissLong) {
-                                return {
-                                    active: false,
-                                    dscp: 0,
-                                    geoLimit: 0,
-                                    geoProvider: 0,
-                                    initialDispersion: 1,
-                                    ipv6RoutingEnabled: false,
-                                    logsEnabled: false,
+                            deliveryService: function(geoMissLat, geoMissLong, $stateParams) {
+                                var type = $stateParams.type;
+
+                                var anyMapDefaults = {
+                                    dscp: 0 // any map ds's don't use dscp but it's required so we'll just send it to make the api/db happy
+                                };
+
+                                var dnsDefaults = {
                                     missLat: (geoMissLat[0]) ? geoMissLat[0].value : '',
                                     missLong: (geoMissLong[0]) ? geoMissLong[0].value : '',
-                                    multiSiteOrigin: false,
-                                    protocol: 0,
-                                    qstringIgnore: 0,
-                                    rangeRequestHandling: 0,
-                                    regionalGeoBlocking: false,
-                                    signingAlgorithm: null,
-                                    routingName: 'cdn'
+                                    regionalGeoBlocking: false, // dns ds's don't use regionalGeoBlocking but it's required so we'll just send it to make the api/db happy
+                                    signingAlgorithm: null
                                 };
+
+                                var httpDefaults = {
+                                    missLat: (geoMissLat[0]) ? geoMissLat[0].value : '',
+                                    missLong: (geoMissLong[0]) ? geoMissLong[0].value : '',
+                                    signingAlgorithm: null
+                                };
+
+                                var steeringDefaults = {
+                                    dscp: 0, // steering ds's don't use dscp but it's required so we'll just send 0 to make the api/db happy
+                                    regionalGeoBlocking: false // steering ds's don't use regionalGeoBlocking but it's required so we'll just send 0 to make the api/db happy
+                                };
+
+                                if (type.indexOf('ANY_MAP') != -1) {
+                                    return anyMapDefaults;
+                                } else if (type.indexOf('DNS') != -1) {
+                                    return dnsDefaults;
+                                } else if (type.indexOf('HTTP') != -1) {
+                                    return httpDefaults;
+                                } else if (type.indexOf('STEERING') != -1) {
+                                    return steeringDefaults;
+                                } else {
+                                    return {};
+                                }
                             },
                             type: function($stateParams) {
                                 return $stateParams.type;

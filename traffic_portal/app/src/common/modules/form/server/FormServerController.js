@@ -90,8 +90,8 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     $scope.server = server;
 
     $scope.falseTrue = [
-        { value: false, label: 'false' },
-        { value: true, label: 'true' }
+        { value: true, label: 'true' },
+        { value: false, label: 'false' }
     ];
 
     $scope.isCache = serverUtils.isCache;
