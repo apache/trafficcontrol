@@ -26,6 +26,12 @@ type CfgFileDiffsResponse struct {
 	Response []CfgFileDiffs `json:"response"`
 }
 
+type ServerExistsMethod func(db *sqlx.DB, hostname string) (bool, error)
+type UpdateCfgDiffsMethod func(db *sqlx.DB, hostname string, diffs CfgFileDiffs) (bool, error)
+type InsertCfgDiffsMethod func(db *sqlx.DB, hostname string, diffs CfgFileDiffs) error
+type GetCfgDiffsMethod func(db *sqlx.DB, hostName string) ([]CfgFileDiffs, error)
+
+
 func getCfgDiffsHandler(db *sqlx.DB) RegexHandlerFunc {
     return func(w http.ResponseWriter, r *http.Request, p PathParams) {
 		handleErr := func(err error, status int) {
@@ -36,7 +42,7 @@ func getCfgDiffsHandler(db *sqlx.DB) RegexHandlerFunc {
 
 		hostName:= p["host-name"]
 
-		resp, err := getCfgDiffsJson(hostName, db)
+		resp, err := getCfgDiffsJson(hostName, db, getCfgDiffs)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -82,7 +88,7 @@ func putCfgDiffsHandler(db *sqlx.DB) AuthRegexHandlerFunc {
 
 		diffs.FileName = configName
 	
-		result, err := putCfgDiffs(db, hostName, diffs)
+		result, err := putCfgDiffs(db, hostName, diffs, serverExists, updateCfgDiffs, insertCfgDiffs)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -187,8 +193,8 @@ WHERE me.server_id=(SELECT server.id FROM server WHERE host_name=$1)`
 	return configs, nil
 }
 
-func getCfgDiffsJson(hostName string, db * sqlx.DB) (*CfgFileDiffsResponse, error) {
-	cfgDiffs, err := getCfgDiffs(db, hostName)
+func getCfgDiffsJson(hostName string, db * sqlx.DB, getCfgDiffsMethod GetCfgDiffsMethod) (*CfgFileDiffsResponse, error) {
+	cfgDiffs, err := getCfgDiffsMethod(db, hostName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting my data: %v", err)
 	}
@@ -266,9 +272,9 @@ disk_lines_missing=(SELECT ARRAY(SELECT * FROM json_array_elements_text($2))), l
 
 }
 
-func putCfgDiffs(db *sqlx.DB, hostName string, diffs CfgFileDiffs) (int, error) {
+func putCfgDiffs(db *sqlx.DB, hostName string, diffs CfgFileDiffs, serverExistsMethod ServerExistsMethod, updateCfgDiffsMethod UpdateCfgDiffsMethod, insertCfgDiffsMethod InsertCfgDiffsMethod) (int, error) {
 	
-	sExists, err := serverExists(db, hostName)
+	sExists, err := serverExistsMethod(db, hostName)
 	if err != nil {
 		return -1, err
 	}
@@ -277,12 +283,12 @@ func putCfgDiffs(db *sqlx.DB, hostName string, diffs CfgFileDiffs) (int, error) 
 	}
 
 	// Try updating the information first
-	updated, err := updateCfgDiffs(db, hostName, diffs)
+	updated, err := updateCfgDiffsMethod(db, hostName, diffs)
 	if err != nil {
 		return -1, err
 	}
 	if updated {
 		return 2, nil
 	}
-	return 1, insertCfgDiffs(db, hostName, diffs)
+	return 1, insertCfgDiffsMethod(db, hostName, diffs)
 }
