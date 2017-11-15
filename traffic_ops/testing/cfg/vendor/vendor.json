@@ -1,0 +1,61 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "Z0NCKSPNbW54VUlNoyYGC9bSyMY=",
+			"path": "github.com/emicklei/forest",
+			"revision": "c1a5597374df859b7a8fbd23a90419d0178b3b46",
+			"revisionTime": "2017-07-12T04:26:51Z"
+		},
+		{
+			"checksumSHA1": "Jrjxy16tD9mUgr/jbhXwbHVeSa0=",
+			"path": "github.com/kelseyhightower/envconfig",
+			"revision": "462fda1f11d8cad3660e52737b8beefd27acfb3f",
+			"revisionTime": "2017-09-18T16:15:10Z"
+		},
+		{
+			"checksumSHA1": "+rzgIJjNYs8Nk+6+KADO1LlJnIg=",
+			"path": "github.com/wsxiaoys/terminal/color",
+			"revision": "0940f3fc43a0ed42d04916b1c04578462c650b09",
+			"revisionTime": "2016-05-13T16:08:01Z"
+		},
+		{
+			"checksumSHA1": "5Yb2z6UO+Arm/TEd+OEtdnwOt1A=",
+			"path": "golang.org/x/crypto/ssh/terminal",
+			"revision": "9f005a07e0d31d45e6656d241bb5c0f2efd4bc94",
+			"revisionTime": "2017-09-21T17:41:56Z"
+		},
+		{
+			"checksumSHA1": "2t6c6F2y4b/PEV04TOHpQxh/xLc=",
+			"path": "golang.org/x/net/html",
+			"revision": "9dfe39835686865bff950a07b394c12a98ddc811",
+			"revisionTime": "2017-11-15T06:26:45Z"
+		},
+		{
+			"checksumSHA1": "uMRr2bnIJS+9Xm0FqMBYUTzaSGs=",
+			"path": "golang.org/x/net/html/atom",
+			"revision": "9dfe39835686865bff950a07b394c12a98ddc811",
+			"revisionTime": "2017-11-15T06:26:45Z"
+		},
+		{
+			"checksumSHA1": "wpWClDus8W+4nf59NoxJY5Omz6M=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "bf42f188b9bc6f2cf5b8ee5a912ef1aedd0eba4c",
+			"revisionTime": "2017-11-10T14:41:19Z"
+		},
+		{
+			"checksumSHA1": "ck5uxoEeMDUL/QqPvGvBmcbsJzg=",
+			"path": "golang.org/x/sys/windows",
+			"revision": "bf42f188b9bc6f2cf5b8ee5a912ef1aedd0eba4c",
+			"revisionTime": "2017-11-10T14:41:19Z"
+		},
+		{
+			"checksumSHA1": "gY2M/3SCxqgrPz+P/N6JQ+m/wnA=",
+			"path": "gopkg.in/xmlpath.v2",
+			"revision": "860cbeca3ebcc600db0b213c0e83ad6ce91f5739",
+			"revisionTime": "2015-08-20T20:48:37Z"
+		}
+	],
+	"rootPath": "github.com/dangogh/incubator-trafficcontrol/test/traffic_ops_cfg"
+}
