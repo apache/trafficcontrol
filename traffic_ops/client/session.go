@@ -19,12 +19,14 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptrace"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -105,17 +107,47 @@ func Login(toURL string, toUser string, toPasswd string, insecure bool) (*Sessio
 	return s, err
 }
 
+// login tries to log in to Traffic Ops, and set the auth cookie in the Session. Returns the IP address of the remote Traffic Ops.
+func (to *Session) login() (net.Addr, error) {
+	credentials, err := loginCreds(to.UserName, to.Password)
+	if err != nil {
+		return nil, errors.New("creating login credentials: " + err.Error())
+	}
+
+	path := "/api/1.2/user/login"
+	resp, remoteAddr, err := to.rawRequest("POST", path, credentials)
+	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
+	if err != nil {
+		return remoteAddr, errors.New("requesting: " + err.Error())
+	}
+	defer resp.Body.Close()
+
+	var alerts tc.Alerts
+	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
+		return remoteAddr, errors.New("decoding response JSON: " + err.Error())
+	}
+
+	success := false
+	for _, alert := range alerts.Alerts {
+		if alert.Level == "success" && alert.Text == "Successfully logged in." {
+			success = true
+			break
+		}
+	}
+
+	if !success {
+		return remoteAddr, fmt.Errorf("Login failed, alerts string: %+v", alerts)
+	}
+
+	return remoteAddr, nil
+}
+
 // Login to traffic_ops, the response should set the cookie for this session
 // automatically. Start with
 //     to := traffic_ops.Login("user", "passwd", true)
 // subsequent calls like to.GetData("datadeliveryservice") will be authenticated.
 // Returns the logged in client, the remote address of Traffic Ops which was translated and used to log in, and any error. If the error is not nil, the remote address may or may not be nil, depending whether the error occurred before the login request.
 func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool, userAgent string, useCache bool, requestTimeout time.Duration) (*Session, net.Addr, error) {
-	credentials, err := loginCreds(toUser, toPasswd)
-	if err != nil {
-		return nil, nil, err
-	}
-
 	options := cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	}
@@ -133,37 +165,53 @@ func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool,
 		Jar: jar,
 	}, useCache)
 
-	path := "/api/1.2/user/login"
-	resp, remoteAddr, err := to.request("POST", path, credentials)
+	remoteAddr, err := to.login()
 	if err != nil {
-		return nil, remoteAddr, err
+		return nil, remoteAddr, errors.New("logging in: " + err.Error())
 	}
-	defer resp.Body.Close()
-
-	var alerts tc.Alerts
-	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-		return nil, remoteAddr, err
-	}
-
-	success := false
-	for _, alert := range alerts.Alerts {
-		if alert.Level == "success" && alert.Text == "Successfully logged in." {
-			success = true
-			break
-		}
-	}
-
-	if !success {
-		err := fmt.Errorf("Login failed, alerts string: %+v", alerts)
-		return nil, remoteAddr, err
-	}
-
 	return to, remoteAddr, nil
 }
 
-// request performs the actual HTTP request to Traffic Ops. Returns the response, the RemoteAddr the Traffic Ops URL resolved to, or any error. If the error is not nil, the RemoteAddr may or may not be nil, depending whether the error occurred before the request was executed.
+// ErrUnlessOk returns nil and an error if the given Response's status code is anything but 200 OK. This includes reading the Response.Body and Closing it. Otherwise, the given response and error are returned unchanged.
+func (to *Session) ErrUnlessOK(resp *http.Response, remoteAddr net.Addr, err error, path string) (*http.Response, net.Addr, error) {
+	if err != nil {
+		return resp, remoteAddr, err
+	}
+	if resp.StatusCode == http.StatusOK {
+		return resp, remoteAddr, err
+	}
+
+	defer resp.Body.Close()
+	body, readErr := ioutil.ReadAll(resp.Body)
+	if readErr != nil {
+		return nil, remoteAddr, readErr
+	}
+	return nil, remoteAddr, errors.New(resp.Status + "[" + strconv.Itoa(resp.StatusCode) + "] - Error requesting Traffic Ops " + to.getURL(path) + " " + string(body))
+}
+
+func (to *Session) getURL(path string) string { return to.URL + path }
+
+// request performs the HTTP request to Traffic Ops, trying to refresh the cookie if an Unauthorized or Forbidden code is received. It only tries once. If the login fails, the original Unauthorized/Forbidden response is returned. If the login succeeds and the subsequent re-request fails, the re-request's response is returned even if it's another Unauthorized/Forbidden.
 func (to *Session) request(method, path string, body []byte) (*http.Response, net.Addr, error) {
-	url := fmt.Sprintf("%s%s", to.URL, path)
+	r, remoteAddr, err := to.rawRequest(method, path, body)
+	if err != nil {
+		return r, remoteAddr, err
+	}
+	if r.StatusCode != http.StatusUnauthorized && r.StatusCode != http.StatusForbidden {
+		return to.ErrUnlessOK(r, remoteAddr, err, path)
+	}
+	if _, lerr := to.login(); lerr != nil {
+		return to.ErrUnlessOK(r, remoteAddr, err, path) // if re-logging-in fails, return the original request's response
+	}
+
+	// return second request, even if it's another Unauthorized or Forbidden.
+	r, remoteAddr, err = to.rawRequest(method, path, body)
+	return to.ErrUnlessOK(r, remoteAddr, err, path)
+}
+
+// rawRequest performs the actual HTTP request to Traffic Ops, simply, without trying to refresh the cookie if an Unauthorized code is returned.
+func (to *Session) rawRequest(method, path string, body []byte) (*http.Response, net.Addr, error) {
+	url := to.getURL(path)
 
 	var req *http.Request
 	var err error
@@ -190,25 +238,10 @@ func (to *Session) request(method, path string, body []byte) (*http.Response, ne
 	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 
 	req.Header.Set("User-Agent", to.UserAgentStr)
+
 	resp, err := to.Client.Do(req)
 	if err != nil {
 		return nil, remoteAddr, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		body, readErr := ioutil.ReadAll(resp.Body)
-		if readErr != nil {
-			return nil, remoteAddr, readErr
-		}
-
-		e := HTTPError{
-			HTTPStatus:     resp.Status,
-			HTTPStatusCode: resp.StatusCode,
-			URL:            url,
-			Body:           string(body),
-		}
-		resp.Body.Close()
-		return nil, remoteAddr, &e
 	}
 
 	return resp, remoteAddr, nil
