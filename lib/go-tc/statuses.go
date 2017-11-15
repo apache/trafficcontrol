@@ -24,8 +24,8 @@ type StatusesResponse struct {
 }
 
 type Status struct {
-	Description string `json:"description" db:"description"`
-	ID          int    `json:"id" db:"id"`
-	LastUpdated Time   `json:"lastUpdated" db:"last_updated"`
-	Name        string `json:"name" db:"name"`
+	Description *string `json:"description" db:"description"`
+	ID          int     `json:"id" db:"id"`
+	LastUpdated Time    `json:"lastUpdated" db:"last_updated"`
+	Name        string  `json:"name" db:"name"`
 }

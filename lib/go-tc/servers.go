@@ -21,6 +21,7 @@ import "time"
  * under the License.
  */
 
+// ServerResponse is the JSON object returned for a list of servers
 type ServersResponse struct {
 	Response []Server `json:"response"`
 }
@@ -30,6 +31,8 @@ type ServersDetailResponse struct {
 	Response Server `json:"response"`
 }
 
+// Server reflects an entry in the server table.  Any column that could contain a NULL value should
+// be a *string, e.g. to allow json encoding to process it correctly.
 type Server struct {
 	Cachegroup       string              `json:"cachegroup" db:"cachegroup"`
 	CachegroupID     int                 `json:"cachegroupId" db:"cachegroup_id"`
