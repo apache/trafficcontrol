@@ -22,7 +22,7 @@ package main
 import (
 	"net/url"
 	"testing"
-    "time"
+	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
@@ -33,20 +33,23 @@ import (
 
 func getTestPhysLocations() []tc.PhysLocation {
 	physLocations := []tc.PhysLocation{}
+	email := "d.t@gmail.com"
+	phone := "303-555-0000"
+	poc := "Dennis Thompson"
 	testCase := tc.PhysLocation{
-	    Address:      "1118 S. Grant St.",
-	    City:         "Denver",
-	    Email:        "d.t@gmail.com",
-		ID:           1,
-		LastUpdated:    tc.Time{Time: time.Now()},
-		Name:         "physLocation1",
-		Phone:        "303-210-0000",
-		POC:          "Dennis Thompson",
-		RegionId:     1,
-		Region:       "Central",
-		ShortName:    "pl1",
-		State:        "CO",
-		Zip:          "80210",
+		Address:     "1118 S. Grant St.",
+		City:        "Denver",
+		Email:       &email,
+		ID:          1,
+		LastUpdated: tc.Time{Time: time.Now()},
+		Name:        "physLocation1",
+		Phone:       &phone,
+		POC:         &poc,
+		RegionId:    1,
+		Region:      "Central",
+		ShortName:   "pl1",
+		State:       "CO",
+		Zip:         "80210",
 	}
 	physLocations = append(physLocations, testCase)
 
@@ -73,10 +76,10 @@ func TestGetPhysLocations(t *testing.T) {
 
 	for _, ts := range testCase {
 		rows = rows.AddRow(
-		    ts.Address,
-		    ts.City,
-		    ts.Comments,
-		    ts.Email,
+			ts.Address,
+			ts.City,
+			ts.Comments,
+			ts.Email,
 			ts.ID,
 			ts.LastUpdated,
 			ts.Name,
