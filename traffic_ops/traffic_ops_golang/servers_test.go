@@ -26,6 +26,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -161,7 +162,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 	v := url.Values{}
 	v.Set("cachegroup", "cachegroup2")
 
-	servers, err := getServers(v, db, PrivLevelAdmin)
+	servers, err := getServers(v, db, auth.PrivLevelAdmin)
 	log.Debugln("%v-->", servers)
 	if err != nil {
 		t.Errorf("getServers expected: nil error, actual: %v", err)

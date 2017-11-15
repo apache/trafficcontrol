@@ -21,6 +21,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"net/http"
 	"regexp"
@@ -205,6 +206,10 @@ func RegisterRoutes(d ServerData) error {
 		Handler(compiledRoutes, catchall, w, r)
 	})
 	return nil
+}
+
+func preparePrivLevelStmt(db *sqlx.DB) (*sql.Stmt, error) {
+	return db.Prepare("SELECT r.priv_level FROM tm_user AS u JOIN role AS r ON u.role = r.id WHERE u.username = $1")
 }
 
 func use(h http.HandlerFunc, middlewares []Middleware) http.HandlerFunc {
