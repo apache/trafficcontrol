@@ -34,7 +34,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 )
 
 const ServerName = "traffic_ops_golang" + "/" + Version

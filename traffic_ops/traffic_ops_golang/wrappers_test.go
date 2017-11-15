@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 	"github.com/jmoiron/sqlx"
 
 	"fmt"
