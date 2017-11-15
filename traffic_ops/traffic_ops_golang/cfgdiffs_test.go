@@ -21,6 +21,7 @@ package main
  
  import (
 	"testing"
+	"fmt"
 	"time"
 	"reflect"
 	"encoding/json"
@@ -77,15 +78,8 @@ func TestGetCfgDiffs(t *testing.T) {
 }
 
 func TestGetCfgDiffsJson(t *testing.T) {
-	mockDB, mock, err := sqlmock.New()
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
 
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-	defer db.Close()
-
+	var db *sqlx.DB = nil
 	hostName := "myedge"
 
 	timestamp := time.Now().UTC().String()
@@ -98,16 +92,12 @@ func TestGetCfgDiffsJson(t *testing.T) {
 		},},
 	}
 
-	rows := sqlmock.NewRows([]string{"config_name", "db_lines_missing", "disk_lines_missing", "last_checked", })
+	// Test successful request
+	cfgFileDiffsResponseT, err := getCfgDiffsJson(hostName, db, 
+		func(db *sqlx.DB, hostName string) ([]CfgFileDiffs, error) {
+			return cfgFileDiffsResponse.Response, nil;
+		})
 
-	dbLinesMissingJson, err := json.Marshal(cfgFileDiffsResponse.Response[0].DBLinesMissing)
-	diskLinesMissingJson, err := json.Marshal(cfgFileDiffsResponse.Response[0].DiskLinesMissing)
-	rows = rows.AddRow(cfgFileDiffsResponse.Response[0].FileName, dbLinesMissingJson, diskLinesMissingJson, cfgFileDiffsResponse.Response[0].ReportTimestamp)
-	
-	
-	mock.ExpectQuery("SELECT").WithArgs(hostName).WillReturnRows(rows)
-
-	cfgFileDiffsResponseT, err := getCfgDiffsJson(hostName, db)
 	if err != nil {
 		t.Errorf("getCfgDiffs expected: nil error, actual: %v", err)
 	}
@@ -120,8 +110,18 @@ func TestGetCfgDiffsJson(t *testing.T) {
 		t.Errorf("getCfgDiffsJson expected: cfgFileDiffsResponseT == %+v, actual: %+v", cfgFileDiffsResponseT, cfgFileDiffsResponse)
 	}
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expections: %s", err)
+	// Test error case
+	cfgFileDiffsResponseT, err = getCfgDiffsJson(hostName, db,
+		func(db *sqlx.DB, hostName string) ([]CfgFileDiffs, error) {
+			return nil, fmt.Errorf("Intentional Error for testing")
+		})
+
+	if err == nil {
+		t.Errorf("getCfgDiffsJson expected: non-nil error, actual: nil")
+	}
+
+	if cfgFileDiffsResponseT != nil {
+		t.Errorf("getCfgFileDiffsJson expected: nil response, actual: %v", cfgFileDiffsResponseT)
 	}
 }
 
@@ -286,6 +286,109 @@ func TestUpdateCfgDiiffs(t *testing.T) {
 }
 
 
+func serverExistsError(db *sqlx.DB, hostName string) (bool, error) {
+	return false, fmt.Errorf("Intentional Error")
 }
+func serverExistsFalse(db *sqlx.DB, hostName string) (bool, error) {
+	return false, nil
+}
+func serverExistsTrue(db *sqlx.DB, hostName string) (bool, error) {
+	return true, nil
+}
+func updateCfgDiffsError(db *sqlx.DB, hostname string, diffs CfgFileDiffs) (bool, error) {
+	return false, fmt.Errorf("Intentional Error")
+}
+func updateCfgDiffsTrue(db *sqlx.DB, hostname string, diffs CfgFileDiffs) (bool, error) {
+	return true, nil
+}
+func updateCfgDiffsFalse(db *sqlx.DB, hostname string, diffs CfgFileDiffs) (bool, error) {
+	return false, nil
+}
+func insertCfgDiffsError(db *sqlx.DB, hostname string, diffs CfgFileDiffs) error {
+	return fmt.Errorf("Intentional Error")
+}
+func insertCfgDiffsSuccess(db *sqlx.DB, hostname string, diffs CfgFileDiffs) error {
+	return nil
+}
+
+func TestPutCfgDiffs(t *testing.T) {
+	var db *sqlx.DB = nil
+	hostName := "myedge"
+	timestamp := time.Now().UTC().String()
+
+	cfgFileDiffs := CfgFileDiffs{
+		FileName: "TestFile.cfg",
+		DBLinesMissing: []string{ "db_line_missing1", "db_line_missing2", },
+		DiskLinesMissing: []string{ "disk_line_missing1", "disk_line_missing2", },
+		ReportTimestamp: timestamp,
+	}
+	
+	// Test when server request has error
+	code, err := putCfgDiffs(db, hostName, cfgFileDiffs, serverExistsError, updateCfgDiffsError, insertCfgDiffsError)
+	
+	if code != -1 {
+		t.Errorf("putCfgDiffs expected: -1 code, actual: %v", code)
+	}
+	if err == nil {
+		t.Errorf("putCfgDiffs expected: non-nil error, actual: nil")
+	}
+
+	// Test when the server doesn't exist
+	code, err = putCfgDiffs(db, hostName, cfgFileDiffs, serverExistsFalse, updateCfgDiffsError, insertCfgDiffsError)
+	
+	if code != 0 {
+		t.Errorf("putCfgDiffs expected: 0 code, actual: %v", code)
+	}
+	if err != nil {
+		t.Errorf("putCfgDiffs expected: nil error, actual: %v", err)
+	}
+
+	// Test when the server exists and the update query fails
+	code, err = putCfgDiffs(db, hostName, cfgFileDiffs, serverExistsTrue, updateCfgDiffsError, insertCfgDiffsError)
+	
+	if code != -1 {
+		t.Errorf("putCfgDiffs expected: -1 code, actual: %v", code)
+	}
+	if err == nil {
+		t.Errorf("putCfgDiffs expected: non-nil error, actual: nil")
+	}
+
+	// Test when the server exists and the update is successful
+	code, err = putCfgDiffs(db, hostName, cfgFileDiffs, serverExistsTrue, updateCfgDiffsTrue, insertCfgDiffsError)
+	
+	if code != 2 {
+		t.Errorf("putCfgDiffs expected: 2 code, actual: %v", code)
+	}
+	if err != nil {
+		t.Errorf("putCfgDiffs expected: non-nil error, actual: %v", err)
+	}
+
+	// Test when the server exists and the update was unsuccessful and the insert had an error
+	code, err = putCfgDiffs(db, hostName, cfgFileDiffs, serverExistsTrue, updateCfgDiffsFalse, insertCfgDiffsError)
+	
+	if code != 1 {
+		t.Errorf("putCfgDiffs expected: 1 code, actual: %v", code)
+	}
+	if err == nil {
+		t.Errorf("putCfgDiffs expected: non-nil error, actual: nil")
+	}
+
+	// Test when the server exists and the update was unsuccessful and the insert was successful
+	code, err = putCfgDiffs(db, hostName, cfgFileDiffs, serverExistsTrue, updateCfgDiffsFalse, insertCfgDiffsSuccess)
+	
+	if code != 1 {
+		t.Errorf("putCfgDiffs expected: 1 code, actual: %v", code)
+	}
+	if err != nil {
+		t.Errorf("putCfgDiffs expected: nil error, actual: %v", err)
+	}
+
+}
+
+func TestGetCfgDiffsHandler(t *testing.T) {
+
+}
+
+func TestPutCfgDiffsHandler(t *testing.T) {
 
 }
