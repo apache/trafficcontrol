@@ -27,6 +27,7 @@ import (
 
 	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -42,7 +43,7 @@ func systemInfoHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		ctx := r.Context()
-		privLevel, err := getPrivLevel(ctx)
+		privLevel, err := auth.GetPrivLevel(ctx)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return

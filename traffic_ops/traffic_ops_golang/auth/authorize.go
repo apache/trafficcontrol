@@ -1,4 +1,4 @@
-package main
+package auth
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -26,7 +26,6 @@ import (
 	"fmt"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/jmoiron/sqlx"
 )
 
 // PrivLevelInvalid - The Default Priv level
@@ -44,10 +43,6 @@ const PrivLevelAdmin = 30
 const PrivLevelKey = "privLevel"
 const UserNameKey = "userName"
 
-func preparePrivLevelStmt(db *sqlx.DB) (*sql.Stmt, error) {
-	return db.Prepare("SELECT r.priv_level FROM tm_user AS u JOIN role AS r ON u.role = r.id WHERE u.username = $1")
-}
-
 // PrivLevel - returns the privilege level of the given user, or PrivLevelInvalid if the user doesn't exist.
 func PrivLevel(privLevelStmt *sql.Stmt, user string) int {
 	var privLevel int
@@ -64,7 +59,7 @@ func PrivLevel(privLevelStmt *sql.Stmt, user string) int {
 	}
 }
 
-func getPrivLevel(ctx context.Context) (int, error) {
+func GetPrivLevel(ctx context.Context) (int, error) {
 	val := ctx.Value(PrivLevelKey)
 	if val != nil {
 		switch v := val.(type) {
@@ -77,7 +72,7 @@ func getPrivLevel(ctx context.Context) (int, error) {
 	return PrivLevelInvalid, errors.New("no privLevel found in Context")
 }
 
-func getUserName(ctx context.Context) (string, error) {
+func GetUserName(ctx context.Context) (string, error) {
 	val := ctx.Value(UserNameKey)
 	if val != nil {
 		switch v := val.(type) {
