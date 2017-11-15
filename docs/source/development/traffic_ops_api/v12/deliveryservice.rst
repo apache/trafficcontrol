@@ -2045,7 +2045,7 @@ URL Sig Keys
 
   Authentication Required: Yes
 
-  Role(s) Required:  admin or oper
+  Role(s) Required:  Admin or Operations
 
   **Request Properties**
 
@@ -2053,8 +2053,6 @@ URL Sig Keys
   | Parameter              | Required | Description                                                                                             |
   +========================+==========+=========================================================================================================+
   | active                 | yes      | true if active, false if inactive.                                                                      |
-  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | tenantId               | No       | Owning tenant ID                                                                                        |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | cacheurl               | no       | Cache URL rule to apply to this delivery service.                                                       |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -2106,9 +2104,10 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | infoUrl                | no       | Use this to add a URL that points to more information about that deliveryservice.                       |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | initialDispersion      | yes      | Initial dispersion                                                                                      |
+  | initialDispersion      | yes|no   | Initial dispersion. Required for HTTP* delivery services.                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | ipv6RoutingEnabled     | yes      | false: send IPv4 address of Traffic Router to client on HTTP type del.                                  |
+  | ipv6RoutingEnabled     | yes|no   | false: send IPv4 address of Traffic Router to client on HTTP type del.                                  |
+  |                        |          | Required for DNS*, HTTP* and STEERING* delivery services.                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | logsEnabled            | yes      | - false: No                                                                                             |
   |                        |          | - true: Yes                                                                                             |
@@ -2124,33 +2123,33 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | midHeaderRewrite       | no       | The MID header rewrite actions to perform.                                                              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | missLat                | no       | The latitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.    |
-  |                        |          |                                                                                                         |
-  |                        |          | - e.g. 39.7391500 or null                                                                               |
+  | missLat                | yes|no   | The latitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.    |
+  |                        |          | e.g. 39.7391500 or null. Required for DNS* and HTTP* delivery services.                                 |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | missLong               | no       | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.   |
-  |                        |          |                                                                                                         |
-  |                        |          | - e.g. -104.9847000 or null                                                                             |
+  | missLong               | yes|no   | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.   |
+  |                        |          | e.g. -104.9847000 or null. Required for DNS* and HTTP* delivery services.                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | multiSiteOrigin        | yes      | 1 if enabled, 0 if disabled.                                                                            |
+  | multiSiteOrigin        | yes|no   | true if enabled, false if disabled. Required for DNS* and HTTP* delivery services.                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | orgServerFqdn          | yes|no   | The origin server base URL (FQDN when used in this instance, includes the                               |
   |                        |          | protocol (http:// or https://) for use in retrieving content from the origin server. This field is      |
-  |                        |          | NOT required if type is ANY_MAP, STEERING OR CLIENT_STEERING.                                           |
+  |                        |          | required if type is DNS* or HTTP*.                                                                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | originShield           | no       | Origin shield                                                                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | profileId              | no       | DS profile ID                                                                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | protocol               | yes      | - 0: serve with http:// at EDGE                                                                         |
+  | protocol               | yes|no   | - 0: serve with http:// at EDGE                                                                         |
   |                        |          | - 1: serve with https:// at EDGE                                                                        |
   |                        |          | - 2: serve with both http:// and https:// at EDGE                                                       |
+  |                        |          | Required for DNS*, HTTP* or *STEERING* delivery services.                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | qstringIgnore          | yes      | - 0: no special query string handling; it is for use in the cache-key and pass up to origin.            |
+  | qstringIgnore          | yes|no   | - 0: no special query string handling; it is for use in the cache-key and pass up to origin.            |
   |                        |          | - 1: ignore query string in cache-key, but pass it up to parent and or origin.                          |
   |                        |          | - 2: drop query string at edge, and do not use it in the cache-key.                                     |
+  |                        |          | Required for DNS* and HTTP* delivery services.                                                          |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | rangeRequestHandling   | yes      | How to treat range requests:                                                                            |
+  | rangeRequestHandling   | yes|no   | How to treat range requests (required for DNS* and HTTP* delivery services):                            |
   |                        |          |                                                                                                         |
   |                        |          | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will   |
   |                        |          |   be a HIT)                                                                                             |
@@ -2159,11 +2158,11 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | regexRemap             | no       | Regex Remap rule to apply to this delivery service at the Edge tier.                                    |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | regionalGeoBlocking    | no       | Is the Regional Geo Blocking feature enabled for this delivery service.                                 |
+  | regionalGeoBlocking    | yes      | Is the Regional Geo Blocking feature enabled.                                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | remapText              | no       | Additional raw remap line text.                                                                         |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | routingName            | no       | The routing name of this deliveryservice, e.g. <routingName>.<xmlId>.cdn.com.                           |
+  | routingName            | yes      | The routing name of this deliveryservice, e.g. <routingName>.<xmlId>.cdn.com.                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | signed                 | no       | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.          |
   |                        |          | - true: token based auth is enabled for this deliveryservice.                                           |
@@ -2173,6 +2172,8 @@ URL Sig Keys
   |                        |          | - "uri_signing": URI Signing token based auth is enabled for this deliveryservice.                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | sslKeyVersion          | no       | SSL key version                                                                                         |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | tenantId               | No       | Owning tenant ID                                                                                        |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | trRequestHeaders       | no       | Traffic router log request headers                                                                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -2461,8 +2462,6 @@ URL Sig Keys
   +========================+==========+=========================================================================================================+
   | active                 | yes      | true if active, false if inactive.                                                                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | tenantId               | no       | Owning tenant ID                                                                                        |
-  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | cacheurl               | no       | Cache URL rule to apply to this delivery service.                                                       |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | ccrDnsTtl              | no       | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr.host.             |
@@ -2513,9 +2512,10 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | infoUrl                | no       | Use this to add a URL that points to more information about that deliveryservice.                       |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | initialDispersion      | yes      | Initial dispersion                                                                                      |
+  | initialDispersion      | yes|no   | Initial dispersion. Required for HTTP* delivery services.                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | ipv6RoutingEnabled     | yes      | false: send IPv4 address of Traffic Router to client on HTTP type del.                                  |
+  | ipv6RoutingEnabled     | yes|no   | false: send IPv4 address of Traffic Router to client on HTTP type del.                                  |
+  |                        |          | Required for DNS*, HTTP* and STEERING* delivery services.                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | logsEnabled            | yes      | - false: No                                                                                             |
   |                        |          | - true: Yes                                                                                             |
@@ -2531,32 +2531,33 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | midHeaderRewrite       | no       | The MID header rewrite actions to perform.                                                              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | missLat                | no       | The latitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.    |
-  |                        |          |                                                                                                         |
-  |                        |          | - e.g. 39.7391500 or null                                                                               |
+  | missLat                | yes|no   | The latitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.    |
+  |                        |          | e.g. 39.7391500 or null. Required for DNS* and HTTP* delivery services.                                 |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | missLong               | no       | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.   |
-  |                        |          |                                                                                                         |
-  |                        |          | - e.g. -104.9847000 or null                                                                             |
+  | missLong               | yes|no   | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.   |
+  |                        |          | e.g. -104.9847000 or null. Required for DNS* and HTTP* delivery services.                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | multiSiteOrigin        | yes      | 1 if enabled, 0 if disabled.                                                                            |
+  | multiSiteOrigin        | yes|no   | true if enabled, false if disabled. Required for DNS* and HTTP* delivery services.                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | orgServerFqdn          | yes      | The origin server base URL (FQDN when used in this instance, includes the                               |
-  |                        |          | protocol (http:// or https://) for use in retrieving content from the origin server.                    |
+  | orgServerFqdn          | yes|no   | The origin server base URL (FQDN when used in this instance, includes the                               |
+  |                        |          | protocol (http:// or https://) for use in retrieving content from the origin server. This field is      |
+  |                        |          | required if type is DNS* or HTTP*.                                                                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | originShield           | no       | Origin shield                                                                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | profileId              | no       | DS profile ID                                                                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | protocol               | yes      | - 0: serve with http:// at EDGE                                                                         |
+  | protocol               | yes|no   | - 0: serve with http:// at EDGE                                                                         |
   |                        |          | - 1: serve with https:// at EDGE                                                                        |
   |                        |          | - 2: serve with both http:// and https:// at EDGE                                                       |
+  |                        |          | Required for DNS*, HTTP* or *STEERING* delivery services.                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | qstringIgnore          | yes      | - 0: no special query string handling; it is for use in the cache-key and pass up to origin.            |
+  | qstringIgnore          | yes|no   | - 0: no special query string handling; it is for use in the cache-key and pass up to origin.            |
   |                        |          | - 1: ignore query string in cache-key, but pass it up to parent and or origin.                          |
   |                        |          | - 2: drop query string at edge, and do not use it in the cache-key.                                     |
+  |                        |          | Required for DNS* and HTTP* delivery services.                                                          |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | rangeRequestHandling   | yes      | How to treat range requests:                                                                            |
+  | rangeRequestHandling   | yes|no   | How to treat range requests (required for DNS* and HTTP* delivery services):                            |
   |                        |          |                                                                                                         |
   |                        |          | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will   |
   |                        |          |   be a HIT)                                                                                             |
@@ -2565,11 +2566,11 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | regexRemap             | no       | Regex Remap rule to apply to this delivery service at the Edge tier.                                    |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | regionalGeoBlocking    | no       | Is the Regional Geo Blocking feature enabled for this delivery service.                                 |
+  | regionalGeoBlocking    | yes      | Is the Regional Geo Blocking feature enabled.                                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | remapText              | no       | Additional raw remap line text.                                                                         |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | routingName            | no       | The routing name of this deliveryservice, e.g. <routingName>.<xmlId>.cdn.com.                           |
+  | routingName            | yes      | The routing name of this deliveryservice, e.g. <routingName>.<xmlId>.cdn.com.                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | signed                 | no       | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.          |
   |                        |          | - true: token based auth is enabled for this deliveryservice.                                           |
@@ -2579,6 +2580,8 @@ URL Sig Keys
   |                        |          | - "uri_signing": URI Signing token based auth is enabled for this deliveryservice.                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | sslKeyVersion          | no       | SSL key version                                                                                         |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | tenantId               | No       | Owning tenant ID                                                                                        |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | trRequestHeaders       | no       | Traffic router log request headers                                                                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
