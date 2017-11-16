@@ -78,18 +78,11 @@ func DerivePassword(password string) (string, error) {
 	saltBase64 := base64.StdEncoding.EncodeToString(salt)
 	keyBase64 := base64.StdEncoding.EncodeToString(key)
 
-	// The SCRYPT prefix is added because the Mojolicious Perl library adds this as a prefix to every password in the database.  So it's added for compatibility.
-	return DefaultParams.Algorithm +
-		KEY_DELIM +
-		nStr +
-		KEY_DELIM +
-		rStr +
-		KEY_DELIM +
-		pStr +
-		KEY_DELIM +
-		saltBase64 +
-		KEY_DELIM +
-		keyBase64, nil
+	// The SCRYPT prefix is added because the Mojolicious Perl library adds this as a
+	// prefix to every password in the database.  So it's added for compatibility.
+	scryptPass := []string{DefaultParams.Algorithm, nStr, rStr, pStr, saltBase64, keyBase64}
+
+	return strings.Join(scryptPass, KEY_DELIM), nil
 }
 
 // VerifyPassword parses the original Derived Key (DK) from the SCRYPT password
