@@ -69,7 +69,7 @@ func (l *StatLogger) Log(code int, bytesWritten uint64, successfullyRespondedToC
 		l.Method,
 		l.Proto,
 		code,
-		time.Now().Sub(l.ReqTime)/time.Millisecond,
+		time.Now().Sub(l.ReqTime),
 		bytesSent,
 		originStatus,
 		originBytes,
