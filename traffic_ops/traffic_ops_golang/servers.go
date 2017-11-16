@@ -129,7 +129,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Server, error) {
 
 	servers := []tc.Server{}
 
-	var HiddenField = "********"
+	const HiddenField = "********"
 
 	for rows.Next() {
 		var s tc.Server
@@ -137,7 +137,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Server, error) {
 			return nil, fmt.Errorf("getting servers: %v", err)
 		}
 		if privLevel < auth.PrivLevelAdmin {
-			s.ILOPassword = &HiddenField
+			s.ILOPassword = HiddenField
 			s.XMPPPasswd = HiddenField
 		}
 		servers = append(servers, s)
@@ -149,42 +149,44 @@ func selectServersQuery() string {
 
 	const JumboFrameBPS = 9000
 
+	// COALESCE is needed to default values that are nil in the database
+	// because Go does not allow that to marshal into the struct
 	selectStmt := `SELECT
 cg.name as cachegroup,
 s.cachegroup as cachegroup_id,
 s.cdn_id,
 cdn.name as cdn_name,
 s.domain_name,
-s.guid as guid,
+COALESCE(s.guid, '') as guid,
 s.host_name,
-s.https_port as https_port,
+COALESCE(s.https_port, 0) as https_port,
 s.id,
-s.ilo_ip_address as ilo_ip_address,
-s.ilo_ip_gateway as ilo_ip_gateway,
-s.ilo_ip_netmask as ilo_ip_netmask,
-s.ilo_password as ilo_password,
-s.ilo_username as ilo_username,
+COALESCE(s.ilo_ip_address, '') as ilo_ip_address,
+COALESCE(s.ilo_ip_gateway, '') as ilo_ip_gateway,
+COALESCE(s.ilo_ip_netmask, '') as ilo_ip_netmask,
+COALESCE(s.ilo_password, '') as ilo_password,
+COALESCE(s.ilo_username, '') as ilo_username,
 COALESCE(s.interface_mtu, ` + strconv.Itoa(JumboFrameBPS) + `) as interface_mtu,
-s.interface_name as interface_name,
-s.ip6_address as ip6_address,
-s.ip6_gateway as ip6_gateway,
+COALESCE(s.interface_name, '') as interface_name,
+COALESCE(s.ip6_address, '') as ip6_address,
+COALESCE(s.ip6_gateway, '') as ip6_gateway,
 s.ip_address,
 s.ip_gateway,
 s.ip_netmask,
 s.last_updated,
-s.mgmt_ip_address as mgmt_ip_address,
-s.mgmt_ip_gateway as mgmt_ip_gateway,
-s.mgmt_ip_netmask as mgmt_ip_netmask,
-s.offline_reason as offline_reason,
+COALESCE(s.mgmt_ip_address, '') as mgmt_ip_address,
+COALESCE(s.mgmt_ip_gateway, '') as mgmt_ip_gateway,
+COALESCE(s.mgmt_ip_netmask, '') as mgmt_ip_netmask,
+COALESCE(s.offline_reason, '') as offline_reason,
 pl.name as phys_location,
 s.phys_location as phys_location_id,
 p.name as profile,
 p.description as profile_desc,
 s.profile as profile_id,
-s.rack as rack,
+COALESCE(s.rack, '') as rack,
 s.reval_pending,
-s.router_host_name as router_host_name,
-s.router_port_name as router_port_name,
+COALESCE(s.router_host_name, '') as router_host_name,
+COALESCE(s.router_port_name, '') as router_port_name,
 st.name as status,
 s.status as status_id,
 COALESCE(s.tcp_port, 0) as tcp_port,
