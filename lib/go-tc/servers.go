@@ -39,36 +39,36 @@ type Server struct {
 	DomainName       string              `json:"domainName" db:"domain_name"`
 	FQDN             *string             `json:"fqdn,omitempty"`
 	FqdnTime         time.Time           `json:"-"`
-	GUID             *string             `json:"guid" db:"guid"`
+	GUID             string              `json:"guid" db:"guid"`
 	HostName         string              `json:"hostName" db:"host_name"`
-	HTTPSPort        *int                `json:"httpsPort" db:"https_port"`
+	HTTPSPort        int                 `json:"httpsPort" db:"https_port"`
 	ID               int                 `json:"id" db:"id"`
-	ILOIPAddress     *string             `json:"iloIpAddress" db:"ilo_ip_address"`
-	ILOIPGateway     *string             `json:"iloIpGateway" db:"ilo_ip_gateway"`
-	ILOIPNetmask     *string             `json:"iloIpNetmask" db:"ilo_ip_netmask"`
-	ILOPassword      *string             `json:"iloPassword" db:"ilo_password"`
-	ILOUsername      *string             `json:"iloUsername" db:"ilo_username"`
+	ILOIPAddress     string              `json:"iloIpAddress" db:"ilo_ip_address"`
+	ILOIPGateway     string              `json:"iloIpGateway" db:"ilo_ip_gateway"`
+	ILOIPNetmask     string              `json:"iloIpNetmask" db:"ilo_ip_netmask"`
+	ILOPassword      string              `json:"iloPassword" db:"ilo_password"`
+	ILOUsername      string              `json:"iloUsername" db:"ilo_username"`
 	InterfaceMtu     int                 `json:"interfaceMtu" db:"interface_mtu"`
 	InterfaceName    string              `json:"interfaceName" db:"interface_name"`
-	IP6Address       *string             `json:"ip6Address" db:"ip6_address"`
-	IP6Gateway       *string             `json:"ip6Gateway" db:"ip6_gateway"`
+	IP6Address       string              `json:"ip6Address" db:"ip6_address"`
+	IP6Gateway       string              `json:"ip6Gateway" db:"ip6_gateway"`
 	IPAddress        string              `json:"ipAddress" db:"ip_address"`
 	IPGateway        string              `json:"ipGateway" db:"ip_gateway"`
 	IPNetmask        string              `json:"ipNetmask" db:"ip_netmask"`
-	LastUpdated      Time                `json:"lastUpdated" db:"last_updated"`
-	MgmtIPAddress    *string             `json:"mgmtIpAddress" db:"mgmt_ip_address"`
-	MgmtIPGateway    *string             `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
-	MgmtIPNetmask    *string             `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
-	OfflineReason    *string             `json:"offlineReason" db:"offline_reason"`
+	LastUpdated      Time            `json:"lastUpdated" db:"last_updated"`
+	MgmtIPAddress    string              `json:"mgmtIpAddress" db:"mgmt_ip_address"`
+	MgmtIPGateway    string              `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
+	MgmtIPNetmask    string              `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
+	OfflineReason    string              `json:"offlineReason" db:"offline_reason"`
 	PhysLocation     string              `json:"physLocation" db:"phys_location"`
 	PhysLocationID   int                 `json:"physLocationId" db:"phys_location_id"`
 	Profile          string              `json:"profile" db:"profile"`
 	ProfileDesc      string              `json:"profileDesc" db:"profile_desc"`
 	ProfileID        int                 `json:"profileId" db:"profile_id"`
-	Rack             *string             `json:"rack" db:"rack"`
+	Rack             string              `json:"rack" db:"rack"`
 	RevalPending     bool                `json:"revalPending" db:"reval_pending"`
-	RouterHostName   *string             `json:"routerHostName" db:"router_host_name"`
-	RouterPortName   *string             `json:"routerPortName" db:"router_port_name"`
+	RouterHostName   string              `json:"routerHostName" db:"router_host_name"`
+	RouterPortName   string              `json:"routerPortName" db:"router_port_name"`
 	Status           string              `json:"status" db:"status"`
 	StatusID         int                 `json:"statusId" db:"status_id"`
 	TCPPort          int                 `json:"tcpPort" db:"tcp_port"`
