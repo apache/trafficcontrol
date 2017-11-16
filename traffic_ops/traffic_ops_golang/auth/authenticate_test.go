@@ -23,7 +23,7 @@ import (
 	"testing"
 )
 
-func TestScryptHash(t *testing.T) {
+func TestDerivePassword(t *testing.T) {
 
 	pass := "password"
 	derivedPassword, err := DerivePassword(pass)
