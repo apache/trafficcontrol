@@ -382,40 +382,6 @@ func startServer(handler http.Handler, listener net.Listener, connState func(net
 	return server
 }
 
-// handle makes the given request and writes it to the given writer. It's assumed the request coming from a client has had its host rewritten to some other service. DO NOT call this with an unmodified request from a client; that would cause an infinite loop of pain.
-func handle(w http.ResponseWriter, r *http.Request) {
-	rr := r
-
-	// Create a client and query the target
-	var transport http.Transport
-	resp, err := transport.RoundTrip(rr)
-	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
-	}
-
-	dH := w.Header()
-	copyHeader(resp.Header, &dH)
-	dH.Add("Requested-Host", rr.Host)
-	w.WriteHeader(resp.StatusCode)
-	w.Write(body)
-}
-
-func copyHeader(source http.Header, dest *http.Header) {
-	for n, v := range source {
-		for _, vv := range v {
-			dest.Add(n, vv)
-		}
-	}
-}
-
 func loadCerts(rules []cache.RemapRule) ([]tls.Certificate, error) {
 	certs := []tls.Certificate{}
 	for _, rule := range rules {
