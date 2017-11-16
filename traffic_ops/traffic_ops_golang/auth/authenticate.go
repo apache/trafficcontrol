@@ -1,0 +1,179 @@
+package auth
+
+import (
+	"crypto/rand"
+	"crypto/subtle"
+	"encoding/base64"
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"golang.org/x/crypto/scrypt"
+
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+)
+
+// SCRYPTComponents the input parameters to the Scrypt encryption key format
+type SCRYPTComponents struct {
+	Algorithm string // The SCRYPT algorithm prefix
+	N         int    // CPU/memory cost parameter (logN)
+	R         int    // block size parameter (octets)
+	P         int    // parallelisation parameter (positive int)
+	Salt      []byte // salt value
+	SaltLen   int    // bytes to use as salt (octets)
+	DK        []byte // derived key value
+	DKLen     int    // length of the derived key (octets)
+}
+
+var DefaultParams = SCRYPTComponents{N: 16384, R: 8, P: 1, SaltLen: 16, DKLen: 64}
+
+// EncryptPassword uses the golang.org/x/crypto package to
+// return an encrypted password that is compatible with the
+// Perl CPAN library Crypt::ScryptKDF for backward compatibility
+// to authenticate through the Perl API the same way.
+// See: http://cpansearch.perl.org/src/MIK/Crypt-ScryptKDF-0.010/lib/Crypt/ScryptKDF.pm
+func DerivePassword(password string) (string, error) {
+	var salt []byte
+	var err error
+	salt, err = generateSalt(64)
+	if err != nil {
+		log.Errorf(err.Error())
+	}
+	n := 16384
+	r := 8
+	p := 1
+	key, err := scrypt.Key([]byte(password), salt, DefaultParams.N, DefaultParams.R, DefaultParams.P, DefaultParams.DKLen)
+	if err != nil {
+		return "", err
+	}
+	nStr := strconv.Itoa(n)
+	if err != nil {
+		return "", err
+	}
+	rStr := strconv.Itoa(r)
+	pStr := strconv.Itoa(p)
+	saltBase64 := base64.StdEncoding.EncodeToString(salt)
+	keyBase64 := base64.StdEncoding.EncodeToString(key)
+	return "SCRYPT:" + nStr + ":" + rStr + ":" + pStr + ":" + saltBase64 + ":" + keyBase64, nil
+}
+
+// VerifyPassword reconstructs the original scrypt key for your password,
+// then decomposes the passed encrypted key, reconstructs then compares
+// the derivedKey that was built to the key that was passed
+func VerifyPassword(password string, scryptPassword string) error {
+
+	scomp, err := parseScrypt(scryptPassword)
+	if err != nil {
+		return err
+	}
+
+	keylenBytes := len(scryptPassword) - DefaultParams.DKLen
+	if keylenBytes < 1 {
+		return errors.New("Invalid targetKey length")
+	}
+	// scrypt the cleartext password with the same parameters and salt
+	tmpDK, err := scrypt.Key([]byte(password),
+		[]byte(scomp.Salt),
+		scomp.N, // Must be a power of 2 greater than 1
+		scomp.R,
+		scomp.P, // r*p must be < 2^30
+		DefaultParams.DKLen)
+	if err != nil {
+		return err
+	}
+	// Compare the Derived Key from the SCRYPT password
+	if subtle.ConstantTimeCompare(scomp.DK, tmpDK) == 1 {
+		return nil
+	}
+
+	return err
+}
+
+func parseScrypt(scryptPassword string) (SCRYPTComponents, error) {
+	sh := strings.Split(scryptPassword, ":")
+
+	var err error
+	var scomp SCRYPTComponents
+	if scryptPassword == "" {
+		return scomp, errors.New("scrypt password is required")
+	}
+
+	// Algorithm
+	scomp.Algorithm = sh[0]
+	if scomp.Algorithm == "" {
+		return scomp, errors.New("Algorithm was not defined")
+	}
+
+	// N
+	n := sh[1]
+	if n == "" {
+		return scomp, errors.New("N was not defined")
+	}
+	var nInt int
+	nInt, err = strconv.Atoi(n)
+	if err != nil {
+		return scomp, errors.New(fmt.Sprintf("%v i=%d, type: %T\n", err, nInt, nInt))
+	}
+	scomp.N = nInt
+
+	// R
+	r := sh[2]
+	if r == "" {
+		return scomp, errors.New("r was not defined")
+	}
+
+	scomp.R, err = strconv.Atoi(r)
+	if err != nil {
+		return scomp, errors.New(fmt.Sprintf("i=%d, type: %T\n", scomp.R, scomp.R))
+	}
+
+	// P
+	p := sh[3]
+	if p == "" {
+		return scomp, errors.New("p was not defined")
+	}
+	scomp.P, err = strconv.Atoi(p)
+	if err != nil {
+		return scomp, errors.New(fmt.Sprintf("i=%d, type: %T\n", scomp.P, scomp.P))
+	}
+
+	// Salt
+	saltBase64 := sh[4]
+
+	scomp.Salt, err = base64.StdEncoding.DecodeString(saltBase64)
+	if err != nil {
+		return scomp, errors.New("salt cannot be decoded")
+	}
+	scomp.SaltLen = len(scomp.Salt)
+	if len(scomp.Salt) < 0 {
+		return scomp, errors.New("salt length is less than zero")
+	}
+
+	// Salt
+	dkBase64 := sh[5]
+	scomp.DK, err = base64.StdEncoding.DecodeString(dkBase64)
+	if err != nil {
+		return scomp, errors.New("key cannot be decoded")
+	}
+	return scomp, err
+}
+
+// generateSalt returns securely generated random bytes.
+// It will return an error if the system's secure random
+// number generator fails to function correctly, in which
+// case the caller should not continue.
+func generateSalt(n int) ([]byte, error) {
+	b := make([]byte, n)
+	_, err := rand.Read(b)
+	// Note that err == nil only if we read len(b) bytes.
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
+
+// TODO: drichardson -- implement counter function to allow for parity with the Perl equivalent function
+// Which verifies that the given plaintext password matches the hashed password from the database.
+// func VerifyPass(password string) string { }
