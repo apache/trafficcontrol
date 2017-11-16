@@ -1,5 +1,24 @@
 package auth
 
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 import (
 	"crypto/rand"
 	"crypto/subtle"
@@ -26,9 +45,11 @@ type SCRYPTComponents struct {
 	DKLen     int    // length of the derived key (octets)
 }
 
+const KEY_DELIM = ":"
+
 var DefaultParams = SCRYPTComponents{N: 16384, R: 8, P: 1, SaltLen: 16, DKLen: 64}
 
-// EncryptPassword uses the golang.org/x/crypto package to
+// DerivePassword uses the golang.org/x/crypto package to
 // return an encrypted password that is compatible with the
 // Perl CPAN library Crypt::ScryptKDF for backward compatibility
 // to authenticate through the Perl API the same way.
@@ -55,12 +76,12 @@ func DerivePassword(password string) (string, error) {
 	pStr := strconv.Itoa(p)
 	saltBase64 := base64.StdEncoding.EncodeToString(salt)
 	keyBase64 := base64.StdEncoding.EncodeToString(key)
-	return "SCRYPT:" + nStr + ":" + rStr + ":" + pStr + ":" + saltBase64 + ":" + keyBase64, nil
+	//
+	return "SCRYPT" + KEY_DELIM + nStr + KEY_DELIM + rStr + KEY_DELIM + pStr + KEY_DELIM + saltBase64 + KEY_DELIM + keyBase64, nil
 }
 
-// VerifyPassword reconstructs the original scrypt key for your password,
-// then decomposes the passed encrypted key, reconstructs then compares
-// the derivedKey that was built to the key that was passed
+// VerifyPassword parses the original Derived Key (DK) from the SCRYPT password
+// so that it can compare that they get built the same.
 func VerifyPassword(password string, scryptPassword string) error {
 
 	scomp, err := parseScrypt(scryptPassword)
