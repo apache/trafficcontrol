@@ -29,8 +29,6 @@ import (
 	"strings"
 
 	"golang.org/x/crypto/scrypt"
-
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
 // SCRYPTComponents the input parameters to the Scrypt encryption key format
@@ -47,7 +45,13 @@ type SCRYPTComponents struct {
 
 const KEY_DELIM = ":"
 
-var DefaultParams = SCRYPTComponents{N: 16384, R: 8, P: 1, SaltLen: 16, DKLen: 64}
+var DefaultParams = SCRYPTComponents{
+	Algorithm: "SCRYPT",
+	N:         16384,
+	R:         8,
+	P:         1,
+	SaltLen:   16,
+	DKLen:     64}
 
 // DerivePassword uses the golang.org/x/crypto package to
 // return an encrypted password that is compatible with the
@@ -59,29 +63,37 @@ func DerivePassword(password string) (string, error) {
 	var err error
 	salt, err = generateSalt(64)
 	if err != nil {
-		log.Errorf(err.Error())
+		return "", err
 	}
-	n := 16384
-	r := 8
-	p := 1
 	key, err := scrypt.Key([]byte(password), salt, DefaultParams.N, DefaultParams.R, DefaultParams.P, DefaultParams.DKLen)
 	if err != nil {
 		return "", err
 	}
-	nStr := strconv.Itoa(n)
+	nStr := strconv.Itoa(DefaultParams.N)
 	if err != nil {
 		return "", err
 	}
-	rStr := strconv.Itoa(r)
-	pStr := strconv.Itoa(p)
+	rStr := strconv.Itoa(DefaultParams.R)
+	pStr := strconv.Itoa(DefaultParams.P)
 	saltBase64 := base64.StdEncoding.EncodeToString(salt)
 	keyBase64 := base64.StdEncoding.EncodeToString(key)
-	//
-	return "SCRYPT" + KEY_DELIM + nStr + KEY_DELIM + rStr + KEY_DELIM + pStr + KEY_DELIM + saltBase64 + KEY_DELIM + keyBase64, nil
+
+	// The SCRYPT perfix is added because the Mojolicious Perl library adds this as a prefix to every password in the database.  So it's added for compatibility.
+	return DefaultParams.Algorithm +
+		KEY_DELIM +
+		nStr +
+		KEY_DELIM +
+		rStr +
+		KEY_DELIM +
+		pStr +
+		KEY_DELIM +
+		saltBase64 +
+		KEY_DELIM +
+		keyBase64, nil
 }
 
 // VerifyPassword parses the original Derived Key (DK) from the SCRYPT password
-// so that it can compare that they get built the same.
+// so that it can compare that with the password/scriptPassword param
 func VerifyPassword(password string, scryptPassword string) error {
 
 	scomp, err := parseScrypt(scryptPassword)
@@ -194,7 +206,3 @@ func generateSalt(n int) ([]byte, error) {
 
 	return b, nil
 }
-
-// TODO: drichardson -- implement counter function to allow for parity with the Perl equivalent function
-// Which verifies that the given plaintext password matches the hashed password from the database.
-// func VerifyPass(password string) string { }
