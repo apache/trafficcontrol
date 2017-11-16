@@ -20,7 +20,7 @@
 // this is the config that is consumed by /server.js on application startup
 module.exports = {
     timeout: '120s',
-    useSSL: false, // set to true if you plan to use https (self-signed or trusted certs).
+    useSSL: true, // set to true if you plan to use https (self-signed or trusted certs).
     port: 8080, // set to http port. i.e. 80
     sslPort: 8443, // set to https port. i.e. 443
     // if useSSL is true, generate ssl certs and provide the proper locations.
@@ -31,7 +31,7 @@ module.exports = {
     },
     // set api 'base_url' to the traffic ops api (all api calls made from the traffic portal will be proxied to the api base_url)
     api: {
-        base_url: 'http://localhost:3000/api/'
+        base_url: 'https://localhost:8444/api/'
     },
     // default static files location (this is where the traffic portal html, css and javascript was installed. rpm installs these files at /opt/traffic_portal/public
     files: {
