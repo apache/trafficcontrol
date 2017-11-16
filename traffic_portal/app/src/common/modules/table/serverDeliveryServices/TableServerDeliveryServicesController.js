@@ -63,7 +63,7 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 					return params;
 				},
 				collection: function(serverService) {
-					return serverService.getServers({ type: 'EDGE' });
+					return serverService.getServers({ type: 'EDGE', orderby: 'hostName' });
 				}
 			}
 		});
