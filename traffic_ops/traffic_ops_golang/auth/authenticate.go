@@ -36,7 +36,7 @@ type SCRYPTComponents struct {
 	Algorithm string // The SCRYPT algorithm prefix
 	N         int    // CPU/memory cost parameter (logN)
 	R         int    // block size parameter (octets)
-	P         int    // parallelisation parameter (positive int)
+	P         int    // parallelization parameter (positive int)
 	Salt      []byte // salt value
 	SaltLen   int    // bytes to use as salt (octets)
 	DK        []byte // derived key value
