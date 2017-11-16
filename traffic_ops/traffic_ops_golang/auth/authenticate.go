@@ -78,7 +78,7 @@ func DerivePassword(password string) (string, error) {
 	saltBase64 := base64.StdEncoding.EncodeToString(salt)
 	keyBase64 := base64.StdEncoding.EncodeToString(key)
 
-	// The SCRYPT perfix is added because the Mojolicious Perl library adds this as a prefix to every password in the database.  So it's added for compatibility.
+	// The SCRYPT prefix is added because the Mojolicious Perl library adds this as a prefix to every password in the database.  So it's added for compatibility.
 	return DefaultParams.Algorithm +
 		KEY_DELIM +
 		nStr +
