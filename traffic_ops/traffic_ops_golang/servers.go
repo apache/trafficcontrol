@@ -112,6 +112,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Server, error) {
 		"cachegroup":   "s.cachegroup",
 		"cdn":          "s.cdn_id",
 		"id":           "s.id",
+		"hostName":     "s.host_name",
 		"physLocation": "s.phys_location",
 		"profileId":    "s.profile",
 		"status":       "st.name",
