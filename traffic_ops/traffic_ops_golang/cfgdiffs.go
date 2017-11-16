@@ -8,12 +8,13 @@ import (
 	"errors"
 	
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
         "github.com/jmoiron/sqlx"
 )
 
-const CfgDiffsPrivLevel = PrivLevelReadOnly;
-const CfgDiffsWritePrivLevel = PrivLevelOperations;
+const CfgDiffsPrivLevel = auth.PrivLevelReadOnly;
+const CfgDiffsWritePrivLevel = auth.PrivLevelOperations;
 
 type CfgFileDiffs struct {
 	FileName string `json:"fileName"`
@@ -32,15 +33,21 @@ type InsertCfgDiffsMethod func(db *sqlx.DB, hostname string, diffs CfgFileDiffs)
 type GetCfgDiffsMethod func(db *sqlx.DB, hostName string) ([]CfgFileDiffs, error)
 
 
-func getCfgDiffsHandler(db *sqlx.DB) RegexHandlerFunc {
-    return func(w http.ResponseWriter, r *http.Request, p PathParams) {
+func getCfgDiffsHandler(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := func(err error, status int) {
 				log.Errorf("%v %v\n", r.RemoteAddr, err)
 				w.WriteHeader(status)
 				fmt.Fprintf(w, http.StatusText(status))
 		}
+		ctx := r.Context()
+		pathParams, err := getPathParams(ctx)
+		if err != nil {
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
 
-		hostName:= p["host-name"]
+		hostName := pathParams["host-name"]
 
 		resp, err := getCfgDiffsJson(hostName, db, getCfgDiffs)
 		if err != nil {
@@ -65,20 +72,26 @@ func getCfgDiffsHandler(db *sqlx.DB) RegexHandlerFunc {
 	}
 }
 
-func putCfgDiffsHandler(db *sqlx.DB) AuthRegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams, username string, privLevel int) {
+func putCfgDiffsHandler(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := func(err error, status int) {
 				log.Errorf("%v %v\n", r.RemoteAddr, err)
 				w.WriteHeader(status)
 				fmt.Fprintf(w, http.StatusText(status))
 		}
+		ctx := r.Context()
+		pathParams, err := getPathParams(ctx)
+		if err != nil {
+			handleErr(err, http.StatusInternalServerError)
+			return
+		}
 
-		hostName := p["host-name"]
-		configName := p["cfg-file-name"]
+		hostName := pathParams["host-name"]
+		configName := pathParams["cfg-file-name"]
 
 		decoder := json.NewDecoder(r.Body)
 		var diffs CfgFileDiffs
-		err := decoder.Decode(&diffs)
+		err = decoder.Decode(&diffs)
 		if err != nil {
 			handleErr(err, http.StatusBadRequest)
 			return
