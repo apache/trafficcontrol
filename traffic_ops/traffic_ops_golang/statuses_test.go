@@ -34,7 +34,7 @@ import (
 func getTestStatuses() []tc.Status {
 	cdns := []tc.Status{}
 	testStatus := tc.Status{
-		Description: nil,
+		Description: "description",
 		ID:          1,
 		Name:        "cdn1",
 		LastUpdated: tc.Time{Time: time.Now()},
@@ -43,8 +43,7 @@ func getTestStatuses() []tc.Status {
 
 	testStatus2 := testStatus
 	testStatus2.Name = "cdn2"
-	d := "description2"
-	testStatus2.Description = &d
+	testStatus2.Description = "description2"
 	cdns = append(cdns, testStatus2)
 
 	return cdns
