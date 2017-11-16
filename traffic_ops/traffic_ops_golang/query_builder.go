@@ -38,10 +38,12 @@ func BuildQuery(v url.Values, selectStmt string, queryParamsToSQLCols map[string
 	}
 
 	if orderby, ok := v["orderby"]; ok {
-		if col, ok := queryParamsToSQLCols[orderby]; ok {
+		log.Debugln("orderby: ", orderby[0])
+		if col, ok := queryParamsToSQLCols[orderby[0]]; ok {
+			log.Debugln("orderby column ", col)
 			sqlQuery += "\nORDER BY " + col
 		} else {
-			log.Debugln("Incorrect name for orderby: ", orderby)
+			log.Debugln("Incorrect name for orderby: ", orderby[0])
 		}
 	}
 	log.Debugln("\n--\n" + sqlQuery)
