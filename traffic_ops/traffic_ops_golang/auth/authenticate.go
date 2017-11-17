@@ -45,6 +45,10 @@ type SCRYPTComponents struct {
 
 const KEY_DELIM = ":"
 
+// The SCRYPT functionality defined in this package is derived based upon the following
+// references:
+// https://godoc.org/golang.org/x/crypto/scrypt
+// https://www.tarsnap.com/scrypt/scrypt.pdf
 var DefaultParams = SCRYPTComponents{
 	Algorithm: "SCRYPT",
 	N:         16384,
@@ -53,7 +57,7 @@ var DefaultParams = SCRYPTComponents{
 	SaltLen:   16,
 	DKLen:     64}
 
-// DerivePassword uses the golang.org/x/crypto package to
+// DerivePassword uses the https://godoc.org/golang.org/x/crypto/scrypt package to
 // return an encrypted password that is compatible with the
 // Perl CPAN library Crypt::ScryptKDF for backward compatibility
 // to authenticate through the Perl API the same way.
@@ -61,9 +65,9 @@ var DefaultParams = SCRYPTComponents{
 func DerivePassword(password string) (string, error) {
 	var salt []byte
 	var err error
-	salt, err = generateSalt(64)
+	salt, err = generateSalt(DefaultParams.DKLen)
 	if err != nil {
-		return "", err
+		return "", errors.New("generating salt: " + err.Error())
 	}
 	key, err := scrypt.Key([]byte(password), salt, DefaultParams.N, DefaultParams.R, DefaultParams.P, DefaultParams.DKLen)
 	if err != nil {
@@ -71,7 +75,7 @@ func DerivePassword(password string) (string, error) {
 	}
 	nStr := strconv.Itoa(DefaultParams.N)
 	if err != nil {
-		return "", err
+		return "", errors.New("converting N: " + err.Error())
 	}
 	rStr := strconv.Itoa(DefaultParams.R)
 	pStr := strconv.Itoa(DefaultParams.P)
@@ -87,16 +91,16 @@ func DerivePassword(password string) (string, error) {
 
 // VerifyPassword parses the original Derived Key (DK) from the SCRYPT password
 // so that it can compare that with the password/scriptPassword param
-func VerifyPassword(password string, scryptPassword string) error {
+func VerifyPassword(password string, scryptPassword string) (bool, error) {
 
 	scomp, err := parseScrypt(scryptPassword)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	keylenBytes := len(scryptPassword) - DefaultParams.DKLen
 	if keylenBytes < 1 {
-		return errors.New("Invalid targetKey length")
+		return false, errors.New("Invalid targetKey length")
 	}
 	// scrypt the cleartext password with the same parameters and salt
 	tmpDK, err := scrypt.Key([]byte(password),
@@ -106,17 +110,19 @@ func VerifyPassword(password string, scryptPassword string) error {
 		scomp.P, // r*p must be < 2^30
 		DefaultParams.DKLen)
 	if err != nil {
-		return err
-	}
-	// Compare the Derived Key from the SCRYPT password
-	if subtle.ConstantTimeCompare(scomp.DK, tmpDK) == 1 {
-		return nil
+		return false, err
 	}
 
-	return err
+	// Compare the Derived Key from the SCRYPT password
+	if subtle.ConstantTimeCompare(scomp.DK, tmpDK) == 1 {
+		return true, nil
+	}
+
+	return false, err
 }
 
 func parseScrypt(scryptPassword string) (SCRYPTComponents, error) {
+
 	sh := strings.Split(scryptPassword, ":")
 
 	var err error
@@ -130,6 +136,9 @@ func parseScrypt(scryptPassword string) (SCRYPTComponents, error) {
 	if scomp.Algorithm == "" {
 		return scomp, errors.New("Algorithm was not defined")
 	}
+	if scomp.Algorithm != DefaultParams.Algorithm {
+		return scomp, fmt.Errorf("Algorithm defined is not %s", DefaultParams.Algorithm)
+	}
 
 	// N
 	n := sh[1]
@@ -139,7 +148,7 @@ func parseScrypt(scryptPassword string) (SCRYPTComponents, error) {
 	var nInt int
 	nInt, err = strconv.Atoi(n)
 	if err != nil {
-		return scomp, errors.New(fmt.Sprintf("%v i=%d, type: %T\n", err, nInt, nInt))
+		return scomp, fmt.Errorf("%v i=%d, type: %T", err, nInt, nInt)
 	}
 	scomp.N = nInt
 
@@ -172,8 +181,8 @@ func parseScrypt(scryptPassword string) (SCRYPTComponents, error) {
 		return scomp, errors.New("salt cannot be decoded")
 	}
 	scomp.SaltLen = len(scomp.Salt)
-	if len(scomp.Salt) < 0 {
-		return scomp, errors.New("salt length is less than zero")
+	if len(scomp.Salt) == 0 {
+		return scomp, errors.New("salt length cannot be zero")
 	}
 
 	// Salt
