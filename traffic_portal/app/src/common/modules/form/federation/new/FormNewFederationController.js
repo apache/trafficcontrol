@@ -20,11 +20,9 @@
 var FormNewFederationController = function(cdn, federation, users, deliveryServices, $scope, $controller, federationService) {
 
 	// extends the FormFederationController to inherit common methods
-	angular.extend(this, $controller('FormFederationController', { cdn: cdn, federation: federation, $scope: $scope }));
+	angular.extend(this, $controller('FormFederationController', { cdn: cdn, federation: federation, deliveryServices: deliveryServices, $scope: $scope }));
 
 	$scope.users = users;
-
-	$scope.deliveryServices = deliveryServices;
 
 	$scope.cname = 'New';
 

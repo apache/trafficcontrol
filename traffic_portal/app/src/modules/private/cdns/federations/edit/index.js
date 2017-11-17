@@ -33,8 +33,14 @@ module.exports = angular.module('trafficPortal.private.cdns.federations.edit', [
 							federation: function(cdn, $stateParams, federationService) {
 								return federationService.getCDNFederation(cdn.name, $stateParams.fedId);
 							},
-							resolvers: function($stateParams, federationService) {
-								return federationService.getFederationFederationResolvers($stateParams.fedId);
+							resolvers: function(federation, federationService) {
+								return federationService.getFederationFederationResolvers(federation.id);
+							},
+							deliveryServices: function(cdn, deliveryServiceService) {
+								return deliveryServiceService.getDeliveryServices({ cdn: cdn.id });
+							},
+							federationDeliveryServices: function(federation, federationService) {
+								return federationService.getFederationDeliveryServices(federation.id);
 							}
 						}
 					}
