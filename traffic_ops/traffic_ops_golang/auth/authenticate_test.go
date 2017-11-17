@@ -20,7 +20,6 @@ package auth
  */
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -30,7 +29,6 @@ func TestDerivePassword(t *testing.T) {
 	pass := "password"
 	derivedPassword, err := DerivePassword(pass)
 	isPasswordValid, err = VerifyPassword(pass, derivedPassword)
-	fmt.Printf("isPasswordValid ---> %v\n", isPasswordValid)
 	if err != nil {
 		t.Errorf(" expected: not nil error: %v", err)
 	}
@@ -43,9 +41,7 @@ func TestDeriveBadPassword(t *testing.T) {
 	var isPasswordValid bool
 	pass := "password"
 	derivedPassword, err := DerivePassword(pass)
-	fmt.Printf("derivedPassword ---> %v\n", derivedPassword)
 	isPasswordValid, err = VerifyPassword("badpassword", derivedPassword)
-	fmt.Printf("isPasswordValid ---> %v\n", isPasswordValid)
 	if err != nil {
 		t.Errorf(" expected: not nil error: %v", err)
 	}
