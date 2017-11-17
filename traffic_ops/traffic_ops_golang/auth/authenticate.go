@@ -123,13 +123,14 @@ func VerifyPassword(password string, scryptPassword string) (bool, error) {
 
 func parseScrypt(scryptPassword string) (SCRYPTComponents, error) {
 
-	sh := strings.Split(scryptPassword, ":")
-
 	var err error
 	var scomp SCRYPTComponents
+
 	if scryptPassword == "" {
 		return scomp, errors.New("scrypt password is required")
 	}
+
+	sh := strings.Split(scryptPassword, ":")
 
 	// Algorithm
 	scomp.Algorithm = sh[0]
