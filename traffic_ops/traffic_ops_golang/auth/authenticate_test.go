@@ -23,29 +23,30 @@ import (
 	"testing"
 )
 
-func TestDerivePassword(t *testing.T) {
+func TestDeriveGoodPassword(t *testing.T) {
 
-	var isPasswordValid bool
 	pass := "password"
 	derivedPassword, err := DerivePassword(pass)
-	isPasswordValid, err = VerifyPassword(pass, derivedPassword)
+	err = VerifyPassword(pass, derivedPassword)
 	if err != nil {
-		t.Errorf(" expected: not nil error: %v", err)
-	}
-	if !isPasswordValid {
-		t.Errorf("password should valid")
+		t.Errorf("password should be valid")
 	}
 }
+
 func TestDeriveBadPassword(t *testing.T) {
 
-	var isPasswordValid bool
 	pass := "password"
 	derivedPassword, err := DerivePassword(pass)
-	isPasswordValid, err = VerifyPassword("badpassword", derivedPassword)
-	if err != nil {
-		t.Errorf(" expected: not nil error: %v", err)
-	}
-	if isPasswordValid {
+	err = VerifyPassword("badpassword", derivedPassword)
+	if err == nil {
 		t.Errorf("password should be invalid")
+	}
+}
+
+func TestScryptPasswordIsRequired(t *testing.T) {
+
+	err := VerifyPassword("password", "")
+	if err == nil {
+		t.Errorf("scrypt password should be required")
 	}
 }
