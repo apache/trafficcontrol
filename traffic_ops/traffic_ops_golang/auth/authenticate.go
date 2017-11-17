@@ -91,16 +91,16 @@ func DerivePassword(password string) (string, error) {
 
 // VerifyPassword parses the original Derived Key (DK) from the SCRYPT password
 // so that it can compare that with the password/scriptPassword param
-func VerifyPassword(password string, scryptPassword string) (bool, error) {
+func VerifyPassword(password string, scryptPassword string) error {
 
 	scomp, err := parseScrypt(scryptPassword)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	keylenBytes := len(scryptPassword) - DefaultParams.DKLen
 	if keylenBytes < 1 {
-		return false, errors.New("Invalid targetKey length")
+		return errors.New("Invalid scryptPassword length")
 	}
 	// scrypt the cleartext password with the same parameters and salt
 	tmpDK, err := scrypt.Key([]byte(password),
@@ -110,15 +110,15 @@ func VerifyPassword(password string, scryptPassword string) (bool, error) {
 		scomp.P, // r*p must be < 2^30
 		DefaultParams.DKLen)
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	// Compare the Derived Key from the SCRYPT password
-	if subtle.ConstantTimeCompare(scomp.DK, tmpDK) == 1 {
-		return true, nil
+	if subtle.ConstantTimeCompare(scomp.DK, tmpDK) != 1 {
+		return errors.New("invalid password")
 	}
 
-	return false, err
+	return err
 }
 
 func parseScrypt(scryptPassword string) (SCRYPTComponents, error) {
