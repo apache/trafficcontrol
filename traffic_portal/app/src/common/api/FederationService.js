@@ -29,30 +29,6 @@ var FederationService = function(Restangular, $http, $q, ENV, locationUtils, mes
 		return Restangular.one('cdns', cdnName).one('federations', fedId).get();
 	};
 
-	this.updateFederation = function(fed) {
-		return fed.put()
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Federation updated' } ], false);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-				}
-			);
-	};
-
-	this.deleteFederation = function(cdnId, fedId) {
-		return Restangular.one('cdns', cdnId).one('federations', fedId).remove()
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Federation deleted' } ], true);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, true);
-				}
-			);
-	};
-
 	this.createFederation = function(cdn, fed) {
 		return $http.post(ENV.api['root'] + 'cdns/' + cdn.name + '/federations', fed)
 			.then(
@@ -77,6 +53,35 @@ var FederationService = function(Restangular, $http, $q, ENV, locationUtils, mes
 				},
 				function(fault) {
 					messageModel.setMessages(fault.data.alerts, false);
+				}
+			);
+	};
+
+	this.updateFederation = function(fed) {
+		return fed.put()
+			.then(
+				function() {
+					service.assignFederationDeliveryServices(fed.id, [ fed.dsId ], true)
+						.then(
+								function() {
+									messageModel.setMessages([ { level: 'success', text: 'Federation updated' } ], false);
+								}
+							);
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
+				}
+			);
+	};
+
+	this.deleteFederation = function(cdnId, fedId) {
+		return Restangular.one('cdns', cdnId).one('federations', fedId).remove()
+			.then(
+				function() {
+					messageModel.setMessages([ { level: 'success', text: 'Federation deleted' } ], true);
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, true);
 				}
 			);
 	};

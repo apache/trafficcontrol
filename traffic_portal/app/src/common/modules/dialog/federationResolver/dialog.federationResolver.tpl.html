@@ -24,7 +24,7 @@ under the License.
 <div class="modal-body">
     <form name="resolverForm" class="form-horizontal form-label-left" novalidate>
         <div class="form-group" ng-class="{'has-error': hasError(resolverForm.ipAddress), 'has-feedback': hasError(resolverForm.ipAddress)}">
-            <label class="control-label col-md-3 col-sm-3 col-xs-12">IP *</label>
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">IP / CIDR *</label>
             <div class="col-md-9 col-sm-9 col-xs-12">
                 <input name="ipAddress" type="text" class="form-control" placeholder="eg. 192.168.2.29 or 192.168.2.29/16 or 2001:db8::/32" ng-model="resolver.ipAddress" ng-required="true" autofocus>
                 <small class="input-error" ng-show="hasPropertyError(resolverForm.ipAddress, 'required')">Required</small>

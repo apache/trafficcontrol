@@ -17,10 +17,10 @@
  * under the License.
  */
 
-var FormEditFederationController = function(cdn, federation, resolvers, $scope, $state, $controller, $uibModal, $anchorScroll, locationUtils, federationService, federationResolverService, messageModel) {
+var FormEditFederationController = function(cdn, federation, resolvers, deliveryServices, federationDeliveryServices, $scope, $state, $controller, $uibModal, $anchorScroll, locationUtils, federationService, federationResolverService, messageModel) {
 
 	// extends the FormFederationController to inherit common methods
-	angular.extend(this, $controller('FormFederationController', { cdn: cdn, federation: federation, $scope: $scope }));
+	angular.extend(this, $controller('FormFederationController', { cdn: cdn, federation: federation, deliveryServices: deliveryServices, $scope: $scope }));
 
 	var deleteFederation = function(fed) {
 		federationService.deleteFederation(cdn.id, fed.id)
@@ -54,6 +54,9 @@ var FormEditFederationController = function(cdn, federation, resolvers, $scope, 
 				$state.reload(); // reloads all the resolves for the view
 			});
 	};
+
+	// lots of hacking going on here due to poor data model. i.e. there is a federation_deliveryservice table but a federation can have only one DS. grrr.
+	$scope.federation['dsId'] = (federationDeliveryServices[0]) ? federationDeliveryServices[0].id : null;
 
 	$scope.resolvers = resolvers;
 
@@ -142,5 +145,5 @@ var FormEditFederationController = function(cdn, federation, resolvers, $scope, 
 
 };
 
-FormEditFederationController.$inject = ['cdn', 'federation', 'resolvers', '$scope', '$state', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'federationService', 'federationResolverService', 'messageModel'];
+FormEditFederationController.$inject = ['cdn', 'federation', 'resolvers', 'deliveryServices', 'federationDeliveryServices', '$scope', '$state', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'federationService', 'federationResolverService', 'messageModel'];
 module.exports = FormEditFederationController;

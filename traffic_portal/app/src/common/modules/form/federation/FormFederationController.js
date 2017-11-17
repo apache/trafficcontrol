@@ -17,11 +17,13 @@
  * under the License.
  */
 
-var FormFederationController = function(cdn, federation, $scope, $location, formUtils, locationUtils) {
+var FormFederationController = function(cdn, federation, deliveryServices, $scope, $location, formUtils, locationUtils) {
 
 	$scope.cdn = cdn;
 
 	$scope.federation = federation;
+
+	$scope.deliveryServices = deliveryServices;
 
 	$scope.viewDeliveryServices = function() {
 		$location.path($location.path() + '/delivery-services');
@@ -39,5 +41,5 @@ var FormFederationController = function(cdn, federation, $scope, $location, form
 
 };
 
-FormFederationController.$inject = ['cdn', 'federation', '$scope', '$location', 'formUtils', 'locationUtils'];
+FormFederationController.$inject = ['cdn', 'federation', 'deliveryServices', '$scope', '$location', 'formUtils', 'locationUtils'];
 module.exports = FormFederationController;
