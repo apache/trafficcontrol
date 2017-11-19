@@ -60,3 +60,4 @@ backoff(?:                           MIT. Properly docuemented in LICENSE ){0}
 riak-go-client(?:                    Apache 2.0. Properly docuemented in LICENSE ){0}
 protobuf(?:                          Go BSD. Properly documented in LICENSE ){0}
 go-jwx(?:                            `MIT. Properly docuemented in LICENSE ){0}
+crypto(?:                            Go BSD. Properly documented in LICENSE ){0}
