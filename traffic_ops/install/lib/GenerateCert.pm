@@ -72,7 +72,7 @@ sub writeCdn_conf {
 
     # write whole config to temp file in pwd (keeps in same filesystem)
     my $tmpfile = File::Temp->new( DIR => '.' );
-    writeJson("$tmpfile", $cdnh);
+    writeJson( $tmpfile, $cdnh );
     close $tmpfile;
 
     # make backup of current file
@@ -87,7 +87,7 @@ sub writeCdn_conf {
     # rename temp file to cdn.conf and set ownership/permissions same as backup
     my @stats = stat($backup_name);
     my ( $uid, $gid, $perm ) = @stats[ 4, 5, 2 ];
-    move( "$tmpfile", $cdn_conf ) or die("move(): $!");
+    move( $tmpfile, $cdn_conf ) or die("move(): $!");
 
     chown $uid, $gid, $cdn_conf;
     chmod $perm, $cdn_conf;
