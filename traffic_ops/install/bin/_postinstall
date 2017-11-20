@@ -220,6 +220,11 @@ sub generateCdnConf {
     if (exists $cdnConfiguration{base_url}) {
         $cdnConf->{to}{base_url} = $cdnConfiguration{base_url};
     }
+    if (exists $cdnConfiguration{port}) {
+        $cdnConf->{"traffic_ops_golang"}->{port} = $cdnConfiguration{port};
+    }
+    $cdnConf->{"traffic_ops_golang"}->{"log_location_error"} = "/var/log/traffic_ops/error.log";
+    $cdnConf->{"traffic_ops_golang"}->{"log_location_event"} = "/var/log/traffic_ops/access.log";
 
     $cdnConf->{hypnotoad}{workers} = $cdnConfiguration{workers};
     #InstallUtils::logger("cdnConf: " . Dumper($cdnConf), "info" );
@@ -451,6 +456,10 @@ sub getDefaults {
             {
                 "Number of secrets to keep?" => "1",
                 "config_var"                 => "keepSecrets"
+            },
+            {
+                "Port to serve on?"          => "443",
+                "config_var"                 => "port"
             },
             {
                 "Number of workers?" => "12",
