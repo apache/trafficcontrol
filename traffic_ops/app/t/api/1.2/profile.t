@@ -40,6 +40,13 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
 ok $t->post_ok('/api/1.2/profiles' => {Accept => 'application/json'} => json => {
+	"name" => "CCR_CREATE", "description" => "CCR_CREATE description", "cdn" => "cdn1", "type" => 'TR_PROFILE' })->status_is(400)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/alerts/0/level" => "error" )
+		->json_is( "/alerts/0/text" => "cdn must be a positive integer" )
+		, 'Does the profile create fail?';
+
+ok $t->post_ok('/api/1.2/profiles' => {Accept => 'application/json'} => json => {
 	"name" => "CCR_CREATE", "description" => "CCR_CREATE description", "cdn" => 100, "type" => 'TR_PROFILE' })->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "CCR_CREATE" )

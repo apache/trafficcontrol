@@ -21,6 +21,7 @@ use UI::Utils;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
+use Validate::Tiny ':all';
 
 # Index
 sub index {
@@ -106,12 +107,10 @@ sub update {
 		return $self->alert("parameters must be in JSON format.");
 	}
 
-	if ( !defined( $params->{asn} ) ) {
-		return $self->alert("ASN is required.");
-	}
+	my ( $is_valid, $result ) = $self->is_asn_valid($params);
 
-	if ( !defined( $params->{cachegroupId} ) ) {
-		return $self->alert("Cachegroup is required.");
+	if ( !$is_valid ) {
+		return $self->alert($result);
 	}
 
 	my $values = {
@@ -144,12 +143,10 @@ sub create {
 		return $self->forbidden();
 	}
 
-	if ( !defined($params->{asn}) ) {
-		return $self->alert("ASN is required.");
-	}
+	my ( $is_valid, $result ) = $self->is_asn_valid($params);
 
-	if ( !defined($params->{cachegroupId}) ) {
-		return $self->alert("Cachegroup Id is required.");
+	if ( !$is_valid ) {
+		return $self->alert($result);
 	}
 
 	my $values = {
@@ -197,4 +194,32 @@ sub delete {
 		return $self->alert( "ASN delete failed." );
 	}
 }
+
+sub is_asn_valid {
+	my $self   	= shift;
+	my $params 	= shift;
+
+	my $rules = {
+		fields => [
+			qw/asn cachegroupId/
+		],
+
+		# Validation checks to perform
+		checks => [
+			asn				=> [ is_required("is required"), is_like( qr/^\d+$/, "must be a positive integer" ) ],
+			cachegroupId	=> [ is_required("is required"), is_like( qr/^\d+$/, "must be a positive integer" ) ],
+		]
+	};
+
+	# Validate the input against the rules
+	my $result = validate( $params, $rules );
+
+	if ( $result->{success} ) {
+		return ( 1, $result->{data} );
+	}
+	else {
+		return ( 0, $result->{error} );
+	}
+}
+
 1;

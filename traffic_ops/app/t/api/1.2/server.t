@@ -157,7 +157,7 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
 		})
 		->status_is(400)
 		->json_is( "/alerts/0/level", "error" )
-		->json_is( "/alerts/0/text", "httpsPort invalid. Must be an integer." )
+		->json_is( "/alerts/0/text", "httpsPort must be an integer." )
 	, "Does the server creation fail because httpsPort is a string?";
 
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
@@ -179,7 +179,7 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
 		})
 		->status_is(400)
 		->json_is( "/alerts/0/level", "error" )
-		->json_is( "/alerts/0/text", "tcpPort invalid. Must be an integer." )
+		->json_is( "/alerts/0/text", "tcpPort must be an integer." )
 	, "Does the server creation fail because tcpPort is a string?";
 
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
@@ -374,28 +374,28 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
 		->json_is( "/response/0/domainName" => "northbound.com")
 		->json_is( "/response/0/hostName" => "tc2_ats2")
 		->json_is( "/response/0/httpsPort" =>443)
-		->json_is( "/response/0/iloIpAddress" => undef)
-		->json_is( "/response/0/iloIpNetmask" => undef)
-		->json_is( "/response/0/iloIpGateway" => undef)
-		->json_is( "/response/0/iloUsername" => undef)
-		->json_is( "/response/0/iloPassword" => undef)
+		->json_is( "/response/0/iloIpAddress" => "")
+		->json_is( "/response/0/iloIpNetmask" => "")
+		->json_is( "/response/0/iloIpGateway" => "")
+		->json_is( "/response/0/iloUsername" => "")
+		->json_is( "/response/0/iloPassword" => "")
 		->json_is( "/response/0/interfaceMtu" => "1500")
 		->json_is( "/response/0/interfaceName" => "eth0")
-		->json_is( "/response/0/ip6Address" => undef)
-		->json_is( "/response/0/ip6Gateway" => undef)
+		->json_is( "/response/0/ip6Address" => "")
+		->json_is( "/response/0/ip6Gateway" => "")
 		->json_is( "/response/0/ipNetmask" => "255.255.255.0")
 		->json_is( "/response/0/ipAddress" => "10.73.27.187")
 		->json_is( "/response/0/ipGateway" => "10.73.27.1")
-		->json_is( "/response/0/mgmtIpAddress" => undef)
-		->json_is( "/response/0/mgmtIpNetmask" => undef)
-		->json_is( "/response/0/mgmtIpGateway" => undef)
-		->json_is( "/response/0/offlineReason" => undef)
+		->json_is( "/response/0/mgmtIpAddress" => "")
+		->json_is( "/response/0/mgmtIpNetmask" => "")
+		->json_is( "/response/0/mgmtIpGateway" => "")
+		->json_is( "/response/0/offlineReason" => "")
 		->json_is( "/response/0/physLocation" => "HotAtlanta")
 		->json_is( "/response/0/type" => "MID")
 		->json_is( "/response/0/profile" => "MID1")
-		->json_is( "/response/0/rack" => undef)
-		->json_is( "/response/0/routerHostName" => undef)
-		->json_is( "/response/0/routerPortName" => undef)
+		->json_is( "/response/0/rack" => "")
+		->json_is( "/response/0/routerHostName" => "")
+		->json_is( "/response/0/routerPortName" => "")
 	, 'Is the server created?';
 
 ok $t->get_ok('/api/1.2/servers/details')->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
@@ -489,21 +489,21 @@ ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} =
 			"updPending" => \0,
 		})
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/0/iloIpAddress" => undef)
-    ->json_is( "/response/0/iloIpNetmask" => undef)
-    ->json_is( "/response/0/iloIpGateway" => undef)
-    ->json_is( "/response/0/iloUsername" => undef)
-    ->json_is( "/response/0/iloPassword" => undef)
-    ->json_is( "/response/0/ip6Address" => undef)
-    ->json_is( "/response/0/ip6Gateway" => undef)
-    ->json_is( "/response/0/mgmtIpAddress" => undef)
-    ->json_is( "/response/0/mgmtIpNetmask" => undef)
-    ->json_is( "/response/0/mgmtIpGateway" => undef)
-    ->json_is( "/response/0/offlineReason" => undef)
-    ->json_is( "/response/0/rack" => undef)
-    ->json_is( "/response/0/routerHostName" => undef)
-    ->json_is( "/response/0/routerPortName" => undef)
-            , 'Are empty strings turned into null values?';
+    ->json_is( "/response/0/iloIpAddress" => "")
+    ->json_is( "/response/0/iloIpNetmask" => "")
+    ->json_is( "/response/0/iloIpGateway" => "")
+    ->json_is( "/response/0/iloUsername" => "")
+    ->json_is( "/response/0/iloPassword" => "")
+    ->json_is( "/response/0/ip6Address" => "")
+    ->json_is( "/response/0/ip6Gateway" => "")
+    ->json_is( "/response/0/mgmtIpAddress" => "")
+    ->json_is( "/response/0/mgmtIpNetmask" => "")
+    ->json_is( "/response/0/mgmtIpGateway" => "")
+    ->json_is( "/response/0/offlineReason" => "")
+    ->json_is( "/response/0/rack" => "")
+    ->json_is( "/response/0/routerHostName" => "")
+    ->json_is( "/response/0/routerPortName" => "")
+            , 'Are empty strings allowed on a handful of fields?';
 
 ok $t->put_ok('/api/1.2/servers/' . $svr_id => {Accept => 'application/json'} => json => {
         "ipAddress" => "10.10.10.220",

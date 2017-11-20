@@ -200,36 +200,36 @@ sub update {
 	}
 
 	my $values = {
-		cachegroup			=> $params->{cachegroupId}, # required int
-		cdn_id				=> $params->{cdnId}, # required int
-		domain_name			=> $params->{domainName}, # required string
-		host_name			=> $params->{hostName}, # required string
-		https_port			=> ($params->{httpsPort}) ? $params->{httpsPort} : undef, # non zero int or null
-		ilo_ip_address		=> ($params->{iloIpAddress}) ? $params->{iloIpAddress} : undef, # non empty string or null
-		ilo_ip_netmask		=> ($params->{iloIpNetmask}) ? $params->{iloIpNetmask} : undef, # non empty string or null
-		ilo_ip_gateway		=> ($params->{iloIpGateway}) ? $params->{iloIpGateway} : undef, # non empty string or null
-		ilo_username		=> ($params->{iloUsername}) ? $params->{iloUsername} : undef, # non empty string or null
-		ilo_password		=> ($params->{iloPassword}) ? $params->{iloPassword} : undef, # non empty string or null
-		interface_mtu		=> $params->{interfaceMtu}, # required int
-		interface_name		=> $params->{interfaceName}, # required string
-		ip6_address			=> ($params->{ip6Address}) ? $params->{ip6Address} : undef, # non empty string or null
-		ip6_gateway			=> ($params->{ip6Gateway}) ? $params->{ip6Gateway} : undef, # non empty string or null
-		ip_address			=> $params->{ipAddress}, # required string
-		ip_netmask			=> $params->{ipNetmask}, # required string
-		ip_gateway			=> $params->{ipGateway}, # required string
-		mgmt_ip_address		=> ($params->{mgmtIpAddress}) ? $params->{mgmtIpAddress} : undef, # non empty string or null
-		mgmt_ip_netmask		=> ($params->{mgmtIpNetmask}) ? $params->{mgmtIpNetmask} : undef, # non empty string or null
-		mgmt_ip_gateway		=> ($params->{mgmtIpGateway}) ? $params->{mgmtIpGateway} : undef, # non empty string or null
-		offline_reason		=> ($params->{offlineReason}) ? $params->{offlineReason} : undef, # non empty string or null
-		phys_location		=> $params->{physLocationId}, # required int
-		profile				=> $params->{profileId}, # required int
-		rack				=> ($params->{rack}) ? $params->{rack} : undef, # non empty string or null
-		router_host_name	=> ($params->{routerHostName}) ? $params->{routerHostName} : undef, # non empty string or null
-		router_port_name	=> ($params->{routerPortName}) ? $params->{routerPortName} : undef, # non empty string or null
-		status				=> $params->{statusId}, # required int
-		tcp_port			=> ($params->{tcpPort}) ? $params->{tcpPort} : undef, # non zero int or null
-		type				=> $params->{typeId}, # required int
-		upd_pending			=> $params->{updPending} # required bool
+		cachegroup			=> $params->{cachegroupId},
+		cdn_id				=> $params->{cdnId},
+		domain_name			=> $params->{domainName},
+		host_name			=> $params->{hostName},
+		https_port			=> $params->{httpsPort},
+		ilo_ip_address		=> $params->{iloIpAddress},
+		ilo_ip_netmask		=> $params->{iloIpNetmask},
+		ilo_ip_gateway		=> $params->{iloIpGateway},
+		ilo_username		=> $params->{iloUsername},
+		ilo_password		=> $params->{iloPassword},
+		interface_mtu		=> $params->{interfaceMtu},
+		interface_name		=> $params->{interfaceName},
+		ip6_address			=> $params->{ip6Address},
+		ip6_gateway			=> $params->{ip6Gateway},
+		ip_address			=> $params->{ipAddress},
+		ip_netmask			=> $params->{ipNetmask},
+		ip_gateway			=> $params->{ipGateway},
+		mgmt_ip_address		=> $params->{mgmtIpAddress},
+		mgmt_ip_netmask		=> $params->{mgmtIpNetmask},
+		mgmt_ip_gateway		=> $params->{mgmtIpGateway},
+		offline_reason		=> $params->{offlineReason},
+		phys_location		=> $params->{physLocationId},
+		profile				=> $params->{profileId},
+		rack				=> $params->{rack},
+		router_host_name	=> $params->{routerHostName},
+		router_port_name	=> $params->{routerPortName},
+		status				=> $params->{statusId},
+		tcp_port			=> $params->{tcpPort},
+		type				=> $params->{typeId},
+		upd_pending			=> $params->{updPending},
 	};
 
 	my $rs = $server->update($values);
@@ -304,36 +304,36 @@ sub create {
 	}
 
 	my $values = {
-		cachegroup			=> $params->{cachegroupId}, # required int
-		cdn_id				=> $params->{cdnId}, # required int
-		domain_name			=> $params->{domainName}, # required string
-		host_name			=> $params->{hostName}, # required string
-		https_port			=> ($params->{httpsPort}) ? $params->{httpsPort} : undef, # non zero int or null
-		ilo_ip_address		=> ($params->{iloIpAddress}) ? $params->{iloIpAddress} : undef, # non empty string or null
-		ilo_ip_netmask		=> ($params->{iloIpNetmask}) ? $params->{iloIpNetmask} : undef, # non empty string or null
-		ilo_ip_gateway		=> ($params->{iloIpGateway}) ? $params->{iloIpGateway} : undef, # non empty string or null
-		ilo_username		=> ($params->{iloUsername}) ? $params->{iloUsername} : undef, # non empty string or null
-		ilo_password		=> ($params->{iloPassword}) ? $params->{iloPassword} : undef, # non empty string or null
-		interface_mtu		=> $params->{interfaceMtu}, # required int
-		interface_name		=> $params->{interfaceName}, # required string
-		ip6_address			=> ($params->{ip6Address}) ? $params->{ip6Address} : undef, # non empty string or null
-		ip6_gateway			=> ($params->{ip6Gateway}) ? $params->{ip6Gateway} : undef, # non empty string or null
-		ip_address			=> $params->{ipAddress}, # required string
-		ip_netmask			=> $params->{ipNetmask}, # required string
-		ip_gateway			=> $params->{ipGateway}, # required string
-		mgmt_ip_address		=> ($params->{mgmtIpAddress}) ? $params->{mgmtIpAddress} : undef, # non empty string or null
-		mgmt_ip_netmask		=> ($params->{mgmtIpNetmask}) ? $params->{mgmtIpNetmask} : undef, # non empty string or null
-		mgmt_ip_gateway		=> ($params->{mgmtIpGateway}) ? $params->{mgmtIpGateway} : undef, # non empty string or null
-		offline_reason		=> ($params->{offlineReason}) ? $params->{offlineReason} : undef, # non empty string or null
-		phys_location		=> $params->{physLocationId}, # required int
-		profile				=> $params->{profileId}, # required int
-		rack				=> ($params->{rack}) ? $params->{rack} : undef, # non empty string or null
-		router_host_name	=> ($params->{routerHostName}) ? $params->{routerHostName} : undef, # non empty string or null
-		router_port_name	=> ($params->{routerPortName}) ? $params->{routerPortName} : undef, # non empty string or null
-		status				=> $params->{statusId}, # required int
-		tcp_port			=> ($params->{tcpPort}) ? $params->{tcpPort} : undef, # non zero int or null
-		type				=> $params->{typeId}, # required int
-		upd_pending			=> $params->{updPending} # required bool
+		cachegroup			=> $params->{cachegroupId},
+		cdn_id				=> $params->{cdnId},
+		domain_name			=> $params->{domainName},
+		host_name			=> $params->{hostName},
+		https_port			=> $params->{httpsPort},
+		ilo_ip_address		=> $params->{iloIpAddress},
+		ilo_ip_netmask		=> $params->{iloIpNetmask},
+		ilo_ip_gateway		=> $params->{iloIpGateway},
+		ilo_username		=> $params->{iloUsername},
+		ilo_password		=> $params->{iloPassword},
+		interface_mtu		=> $params->{interfaceMtu},
+		interface_name		=> $params->{interfaceName},
+		ip6_address			=> $params->{ip6Address},
+		ip6_gateway			=> $params->{ip6Gateway},
+		ip_address			=> $params->{ipAddress},
+		ip_netmask			=> $params->{ipNetmask},
+		ip_gateway			=> $params->{ipGateway},
+		mgmt_ip_address		=> $params->{mgmtIpAddress},
+		mgmt_ip_netmask		=> $params->{mgmtIpNetmask},
+		mgmt_ip_gateway		=> $params->{mgmtIpGateway},
+		offline_reason		=> $params->{offlineReason},
+		phys_location		=> $params->{physLocationId},
+		profile				=> $params->{profileId},
+		rack				=> $params->{rack},
+		router_host_name	=> $params->{routerHostName},
+		router_port_name	=> $params->{routerPortName},
+		status				=> $params->{statusId},
+		tcp_port			=> $params->{tcpPort},
+		type				=> $params->{typeId},
+		upd_pending			=> $params->{updPending},
 	};
 
 	my $insert = $self->db->resultset('Server')->create($values);
@@ -1275,12 +1275,12 @@ sub is_valid_server_type {
 sub is_valid_port {
 	my ( $value, $params ) = @_;
 
-	if ( !defined $value or $value eq '' ) {
+	if ( !defined $value ) {
 		return undef;
 	}
 
 	if ( !( $value =~ /^\d+$/ ) ) {
-		return "invalid. Must be an integer.";
+		return "must be an integer.";
 	}
 
 	return undef;

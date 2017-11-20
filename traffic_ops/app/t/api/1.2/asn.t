@@ -56,6 +56,40 @@ $t->get_ok("/api/1.2/asns/200")->status_is(200)->json_is( "/response/0/id", 200 
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok('/api/1.2/asns' => {Accept => 'application/json'} => json => {
+            "cachegroupId" => 100
+        })
+        ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        ->json_is( "/alerts/0/level" => "error" )
+        ->json_is( "/alerts/0/text" => "asn is required" )
+    , 'Does ASN create fail because asn is required?';
+
+ok $t->post_ok('/api/1.2/asns' => {Accept => 'application/json'} => json => {
+            "asn" => "eightfivetwo",
+            "cachegroupId" => 100
+        })
+        ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        ->json_is( "/alerts/0/level" => "error" )
+        ->json_is( "/alerts/0/text" => "asn must be a positive integer" )
+    , 'Does ASN create fail because asn is a string instead of an integer?';
+
+ok $t->post_ok('/api/1.2/asns' => {Accept => 'application/json'} => json => {
+            "asn" => 852
+        })
+        ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        ->json_is( "/alerts/0/level" => "error" )
+        ->json_is( "/alerts/0/text" => "cachegroupId is required" )
+    , 'Does ASN create fail because cache group ID is required?';
+
+ok $t->post_ok('/api/1.2/asns' => {Accept => 'application/json'} => json => {
+            "asn" => 852,
+            "cachegroupId" => "hundred"
+        })
+        ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        ->json_is( "/alerts/0/level" => "error" )
+        ->json_is( "/alerts/0/text" => "cachegroupId must be a positive integer" )
+    , 'Does ASN create fail because cachegroupId is a string instead of an integer?';
+
+ok $t->post_ok('/api/1.2/asns' => {Accept => 'application/json'} => json => {
             "asn" => 852,
             "cachegroupId" => 100
         })
@@ -65,9 +99,18 @@ ok $t->post_ok('/api/1.2/asns' => {Accept => 'application/json'} => json => {
         ->json_is( "/response/cachegroup" => "mid-northeast-group" )
         ->json_is( "/alerts/0/level" => "success" )
         ->json_is( "/alerts/0/text" => "ASN create was successful." )
-    , 'Does the asn details return?';
+    , 'Is the ASN successfully created?';
 
 my $asn_id = &get_asn_id(852);
+
+ok $t->put_ok('/api/1.2/asns/' . $asn_id  => {Accept => 'application/json'} => json => {
+            "asn" => "eightfivethree",
+            "cachegroupId" => 100
+        })
+        ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        ->json_is( "/alerts/0/level" => "error" )
+        ->json_is( "/alerts/0/text" => "asn must be a positive integer" )
+    , 'Does the asn update fail due to bad asn?';
 
 ok $t->put_ok('/api/1.2/asns/' . $asn_id  => {Accept => 'application/json'} => json => {
             "asn" => 853,

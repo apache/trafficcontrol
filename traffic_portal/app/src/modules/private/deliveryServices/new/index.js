@@ -56,15 +56,15 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.new', []
                                 };
 
                                 var dnsDefaults = {
-                                    missLat: (geoMissLat[0]) ? geoMissLat[0].value : '',
-                                    missLong: (geoMissLong[0]) ? geoMissLong[0].value : '',
+                                    missLat: (geoMissLat[0]) ? parseFloat(geoMissLat[0].value) : null,
+                                    missLong: (geoMissLong[0]) ? parseFloat(geoMissLong[0].value) : null,
                                     regionalGeoBlocking: false, // dns ds's don't use regionalGeoBlocking but it's required so we'll just send it to make the api/db happy
                                     signingAlgorithm: null
                                 };
 
                                 var httpDefaults = {
-                                    missLat: (geoMissLat[0]) ? geoMissLat[0].value : '',
-                                    missLong: (geoMissLong[0]) ? geoMissLong[0].value : '',
+                                    missLat: (geoMissLat[0]) ? parseFloat(geoMissLat[0].value) : null,
+                                    missLong: (geoMissLong[0]) ? parseFloat(geoMissLong[0].value) : null,
                                     signingAlgorithm: null
                                 };
 

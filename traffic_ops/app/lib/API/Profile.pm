@@ -22,6 +22,7 @@ use UI::Parameter;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
+use Validate::Tiny ':all';
 
 sub index {
 	my $self = shift;
@@ -204,19 +205,14 @@ sub create {
 		return $self->alert( { Error => " - You must be an admin or oper to perform this operation!" } );
 	}
 
+	my ( $is_valid, $result ) = $self->is_profile_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+
 	my $name = $params->{name};
-	if ( !defined($name) || $name eq "" || $name =~ /\s/ ) {
-		return $self->alert("profile 'name' is required and cannot contain spaces.");
-	}
-
 	my $description = $params->{description};
-	if ( !defined($description) || $description eq "" ) {
-		return $self->alert("profile 'description' is required.");
-	}
-
-	if ( !defined( $params->{type} ) ) {
-		return $self->alert("Profile type is required.");
-	}
 
 	my $existing_profile = $self->db->resultset('Profile')->search( { name => $name } )->get_column('name')->single();
 	if ( $existing_profile && $name eq $existing_profile ) {
@@ -346,14 +342,13 @@ sub update {
 		return $self->not_found();
 	}
 
-	if ( !defined($params) ) {
-		return $self->alert("parameters must be in JSON format.");
+	my ( $is_valid, $result ) = $self->is_profile_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
 	}
 
 	my $name = $params->{name};
-	if ( !defined($name) || $name eq "" || $name =~ /\s/ ) {
-		return $self->alert("profile 'name' is required and cannot contain spaces.");
-	}
 	if ( $profile->name ne $name ) {
 		my $existing = $self->db->resultset('Profile')->find( { name => $name } );
 		if ($existing) {
@@ -362,16 +357,12 @@ sub update {
 	}
 
 	my $description = $params->{description};
-	if ( !defined($description) || $description eq "" ) {
-		return $self->alert("profile 'description' is required.");
-	}
 	if ( $profile->description ne $description ) {
 		my $existing = $self->db->resultset('Profile')->find( { description => $description } );
 		if ($existing) {
 			return $self->alert("a profile with the exact same description already exists.");
 		}
 	}
-
 
 	my $routing_disabled = defined($params->{routingDisabled}) ? $params->{routingDisabled} : 0;
 	# Boolean values don't always show properly, so we're going to evaluate these then convert them to standard integers.
@@ -383,10 +374,6 @@ sub update {
 		$routing_disabled = 0;
 	}
 
-	if ( !defined( $params->{type} ) ) {
-		return $self->alert("Profile type is required.");
-	}
-
 	my $cdn = $params->{cdn};
 
 	my $ex_server = $profile->servers->first;
@@ -395,7 +382,6 @@ sub update {
 			return $self->alert("the assigned CDN does not match the CDN assigned to servers with this profile.");
 		}
 	}
-
 
 	my $type = $params->{type};
 	my $values = {
@@ -480,5 +466,35 @@ sub availableprofile {
 
 	$self->success( \@data );
 }
+
+sub is_profile_valid {
+	my $self   	= shift;
+	my $params 	= shift;
+
+	my $rules = {
+		fields => [
+			qw/name description cdn type routingDisabled/
+		],
+
+		# Validation checks to perform
+		checks => [
+			name			=> [ is_required("is required"), is_like( qr/^\S*$/, "must not contain spaces" ) ],
+			description		=> [ is_required("is required") ],
+			cdn				=> [ is_required("is required"), is_like( qr/^\d+$/, "must be a positive integer") ],
+			type			=> [ is_required("is required") ],
+		]
+	};
+
+	# Validate the input against the rules
+	my $result = validate( $params, $rules );
+
+	if ( $result->{success} ) {
+		return ( 1, $result->{data} );
+	}
+	else {
+		return ( 0, $result->{error} );
+	}
+}
+
 
 1;
