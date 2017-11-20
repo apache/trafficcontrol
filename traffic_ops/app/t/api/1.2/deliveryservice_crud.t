@@ -66,6 +66,66 @@ sub run_ut {
 			->json_is( "/response/0/ipv6RoutingEnabled", 1 )
 			->json_is( "/response/1/xmlId", "steering-ds2" );
 
+	# Delivery service create failure due to bad protocol
+	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
+				"xmlId" => "ds_1",
+				"displayName" => "ds_displayname_1",
+				"protocol" => "one",
+				"orgServerFqdn" => "http://10.75.168.91",
+				"tenantId" => $tenant_id,
+				"profileId" => 300,
+				"typeId" => 36,
+				"multiSiteOrigin" => 0,
+				"missLat" => 45,
+				"missLong" => 45,
+				"regionalGeoBlocking" => 1,
+				"active" => 0,
+				"dscp" => 0,
+				"routingName" => "foo",
+				"ipv6RoutingEnabled" => 1,
+				"logsEnabled" => 1,
+				"initialDispersion" => 0,
+				"cdnId" => 100,
+				"signed" => 0,
+				"rangeRequestHandling" => 0,
+				"geoLimit" => 0,
+				"geoProvider" => 0,
+				"qstringIgnore" => 0,
+			})
+			->status_is(400)
+			->json_is( "/alerts/0/text/",
+			"protocol invalid. Must be a whole number or null." )->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+	# Delivery service create failure due to bad missLat
+	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
+				"xmlId" => "ds_1",
+				"displayName" => "ds_displayname_1",
+				"protocol" => 1,
+				"orgServerFqdn" => "http://10.75.168.91",
+				"tenantId" => $tenant_id,
+				"profileId" => 300,
+				"typeId" => 36,
+				"multiSiteOrigin" => 0,
+				"missLat" => "string",
+				"missLong" => 45,
+				"regionalGeoBlocking" => 1,
+				"active" => 0,
+				"dscp" => 0,
+				"routingName" => "foo",
+				"ipv6RoutingEnabled" => 1,
+				"logsEnabled" => 1,
+				"initialDispersion" => 0,
+				"cdnId" => 100,
+				"signed" => 0,
+				"rangeRequestHandling" => 0,
+				"geoLimit" => 0,
+				"geoProvider" => 0,
+				"qstringIgnore" => 0,
+			})
+			->status_is(400)
+			->json_is( "/alerts/0/text/",
+			"missLat invalid. Must be a number or null." )->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 	# It creates new delivery services
 	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
         	"xmlId" => "ds_1",

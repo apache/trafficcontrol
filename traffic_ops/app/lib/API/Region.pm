@@ -22,6 +22,7 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
 use MojoPlugins::Response;
+use Validate::Tiny ':all';
 
 my $finfo = __FILE__ . ":";
 
@@ -104,16 +105,10 @@ sub update {
 		return $self->not_found();
 	}
 
-	if ( !defined($params) ) {
-		return $self->alert("Parameters must be in JSON format.");
-	}
+	my ( $is_valid, $result ) = $self->is_region_valid($params);
 
-	if ( !defined( $params->{name} ) ) {
-		return $self->alert("Region name is required.");
-	}
-
-	if ( !defined( $params->{division} ) ) {
-		return $self->alert("Division Id is required.");
+	if ( !$is_valid ) {
+		return $self->alert($result);
 	}
 
 	my $values = {
@@ -146,19 +141,15 @@ sub create {
 		return $self->forbidden();
 	}
 
-	my $name = $params->{name};
-	if ( !defined($name) ) {
-		return $self->alert("Region name is required.");
+	my ( $is_valid, $result ) = $self->is_region_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
 	}
 
-	my $division_id = $params->{division};
-	if ( !defined($division_id) ) {
-		return $self->alert("Division Id is required.");
-	}
-
-	my $existing = $self->db->resultset('Region')->search( { name => $name } )->get_column('name')->single();
+	my $existing = $self->db->resultset('Region')->search( { name => $params->{name} } )->get_column('name')->single();
 	if ($existing) {
-		return $self->alert("A region with name \"$name\" already exists.");
+		return $self->alert("A region with name " . $params->{name} . " already exists.");
 	}
 
 	my $values = {
@@ -268,6 +259,34 @@ sub delete_by_name {
 		return $self->alert( "Region delete failed." );
 	}
 }
+
+sub is_region_valid {
+	my $self   	= shift;
+	my $params 	= shift;
+
+	my $rules = {
+		fields => [
+			qw/name division/
+		],
+
+		# Validation checks to perform
+		checks => [
+			name		=> [ is_required("is required") ],
+			division	=> [ is_required("is required"), is_like( qr/^\d+$/, "must be a positive integer" ) ],
+		]
+	};
+
+	# Validate the input against the rules
+	my $result = validate( $params, $rules );
+
+	if ( $result->{success} ) {
+		return ( 1, $result->{data} );
+	}
+	else {
+		return ( 0, $result->{error} );
+	}
+}
+
 
 
 1;

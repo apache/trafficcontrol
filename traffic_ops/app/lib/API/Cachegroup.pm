@@ -454,11 +454,13 @@ sub is_cachegroup_valid {
 
 		# Validation checks to perform
 		checks => [
-			name => [ is_required("is required"), \&is_alphanumeric ],
-			shortName => [ is_required("is required"), \&is_alphanumeric ],
-			typeId => [ is_required("is required") ],
-			latitude => [ \&is_valid_lat ],
-			longitude => [ \&is_valid_long ]
+			name						=> [ is_required("is required"), \&is_alphanumeric ],
+			shortName					=> [ is_required("is required"), \&is_alphanumeric ],
+			latitude					=> [ \&is_valid_lat ],
+			longitude					=> [ \&is_valid_long ],
+			parentCachegroupId			=> [ \&is_int_or_undef ],
+			secondaryParentCachegroupId => [ \&is_int_or_undef ],
+			typeId						=> [ is_required("is required"), \&is_int_or_undef ],
 		]
 	};
 
@@ -487,10 +489,24 @@ sub is_alphanumeric {
 	return undef;
 }
 
+sub is_int_or_undef {
+	my ( $value, $params ) = @_;
+
+	if ( !defined $value ) {
+		return undef;
+	}
+
+	if ( !( $value =~ /^\d+$/ ) ) {
+		return "invalid. Must be a positive integer or null.";
+	}
+
+	return undef;
+}
+
 sub is_valid_lat {
 	my ( $value, $params ) = @_;
 
-	if ( !defined $value or $value eq '' ) {
+	if ( !defined $value ) {
 		return undef;
 	}
 
@@ -508,7 +524,7 @@ sub is_valid_lat {
 sub is_valid_long {
 	my ( $value, $params ) = @_;
 
-	if ( !defined $value or $value eq '' ) {
+	if ( !defined $value ) {
 		return undef;
 	}
 

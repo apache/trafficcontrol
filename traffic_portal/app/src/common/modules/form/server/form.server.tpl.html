@@ -165,10 +165,9 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.interfaceMtu), 'has-feedback': hasError(serverForm.interfaceMtu)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Network MTU *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="interfaceMtu" name="interfaceMtu" type="text" class="form-control" placeholder="1500 or 9000" ng-model="server.interfaceMtu" ng-required="true" ng-maxlength="11" ng-pattern="/(^1500$|^9000$)/" autofocus>
+                    <input name="interfaceMtu" type="number" class="form-control" placeholder="eg. 1500 or 9000" ng-model="server.interfaceMtu" ng-pattern="/^\d+$/" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.interfaceMtu, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm.interfaceMtu, 'maxlength')">Too Long</small>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm.interfaceMtu, 'pattern')">1500 or 9000</small>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.interfaceMtu, 'pattern')">Whole Number</small>
                     <span ng-show="hasError(serverForm.interfaceMtu)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
@@ -200,18 +199,16 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.tcpPort), 'has-feedback': hasError(serverForm.tcpPort)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">TCP Port</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="tcpPort" name="tcpPort" type="text" class="form-control" ng-model="server.tcpPort" ng-maxlength="10" ng-pattern="/^\d+$/" autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm.tcpPort, 'maxlength')">Too Long</small>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm.tcpPort, 'pattern')">Number</small>
+                    <input name="tcpPort" type="number" class="form-control" ng-model="server.tcpPort" ng-pattern="/^\d+$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.tcpPort, 'pattern')">Whole Number</small>
                     <span ng-show="hasError(serverForm.tcpPort)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.httpsPort), 'has-feedback': hasError(serverForm.httpsPort)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">HTTPS Port</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="httpsPort" name="httpsPort" type="text" class="form-control" ng-model="server.httpsPort" ng-maxlength="10" ng-pattern="/^\d+$/" autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm.httpsPort, 'maxlength')">Too Long</small>
-                    <small class="input-error" ng-show="hasPropertyError(serverForm.httpsPort, 'pattern')">Number</small>
+                    <input name="httpsPort" type="number" class="form-control" ng-model="server.httpsPort" ng-pattern="/^\d+$/" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(serverForm.httpsPort, 'pattern')">Whole Number</small>
                     <span ng-show="hasError(serverForm.httpsPort)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
