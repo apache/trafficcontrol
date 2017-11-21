@@ -1073,6 +1073,7 @@ sub process_config_files {
 				|| $file eq "parent.config"
 				|| $file eq "cache.config"
 				|| $file eq "hosting.config"
+				|| $file eq "ip_allow.config"
 				|| $file =~ m/url\_sig\_(.*)\.config$/
 				|| $file =~ m/uri\_signing\_(.*)\.config$/
 				|| $file =~ m/hdr\_rw\_(.*)\.config$/
