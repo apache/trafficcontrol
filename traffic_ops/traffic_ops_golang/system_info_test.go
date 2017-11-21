@@ -27,6 +27,7 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 )
@@ -53,11 +54,12 @@ var sysInfoParameters = []tc.Parameter{
 
 func TestGetSystemInfo(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
 	cols := test.ColsFromStructByTag("db", tc.Parameter{})
@@ -79,7 +81,7 @@ func TestGetSystemInfo(t *testing.T) {
 	mock.ExpectQuery("SELECT.*WHERE p.config_file='?").WillReturnRows(rows)
 	v := url.Values{}
 
-	sysinfo, err := getSystemInfo(v, db, PrivLevelReadOnly)
+	sysinfo, err := getSystemInfo(v, db, auth.PrivLevelReadOnly)
 	if err != nil {
 		t.Errorf("getSystemInfo expected: nil error, actual: %v", err)
 	}

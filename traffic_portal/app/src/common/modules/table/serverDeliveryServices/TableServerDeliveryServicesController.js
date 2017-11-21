@@ -63,7 +63,7 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 					return params;
 				},
 				collection: function(serverService) {
-					return serverService.getServers({ type: 'EDGE' });
+					return serverService.getServers({ type: 'EDGE', orderby: 'hostName' });
 				}
 			}
 		});
@@ -143,6 +143,9 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 		$('#deliveryServicesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"columnDefs": [
+				{ 'orderable': false, 'targets': 12 }
+			],
 			"aaSorting": []
 		});
 	});

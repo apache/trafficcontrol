@@ -65,6 +65,12 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/cdns/dnssecKeys/generate').name,
         require('./modules/private/cdns/dnssecKeys/view').name,
         require('./modules/private/cdns/edit').name,
+        require('./modules/private/cdns/federations').name,
+        require('./modules/private/cdns/federations/deliveryServices').name,
+        require('./modules/private/cdns/federations/edit').name,
+        require('./modules/private/cdns/federations/list').name,
+        require('./modules/private/cdns/federations/new').name,
+        require('./modules/private/cdns/federations/users').name,
         require('./modules/private/cdns/list').name,
         require('./modules/private/cdns/new').name,
         require('./modules/private/cdns/profiles').name,
@@ -175,6 +181,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/dialog/confirm').name,
         require('./common/modules/dialog/confirm/enter').name,
         require('./common/modules/dialog/delete').name,
+        require('./common/modules/dialog/federationResolver').name,
         require('./common/modules/dialog/input').name,
         require('./common/modules/dialog/reset').name,
         require('./common/modules/dialog/select').name,
@@ -213,6 +220,9 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/form/division').name,
         require('./common/modules/form/division/edit').name,
         require('./common/modules/form/division/new').name,
+        require('./common/modules/form/federation').name,
+        require('./common/modules/form/federation/edit').name,
+        require('./common/modules/form/federation/new').name,
         require('./common/modules/form/iso').name,
         require('./common/modules/form/job').name,
         require('./common/modules/form/job/new').name,
@@ -255,6 +265,9 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/asns').name,
         require('./common/modules/table/cdns').name,
         require('./common/modules/table/cdnDeliveryServices').name,
+        require('./common/modules/table/cdnFederations').name,
+        require('./common/modules/table/cdnFederationDeliveryServices').name,
+        require('./common/modules/table/cdnFederationUsers').name,
         require('./common/modules/table/cdnProfiles').name,
         require('./common/modules/table/cdnServers').name,
         require('./common/modules/table/deliveryServices').name,
@@ -358,7 +371,7 @@ var trafficPortal = angular.module('trafficPortal', [
         })
     ;
 
-trafficPortal.factory('authInterceptor', function ($q, $window, $location, $timeout, messageModel, userModel) {
+trafficPortal.factory('authInterceptor', function ($rootScope, $q, $window, $location, $timeout, messageModel, userModel) {
     return {
         responseError: function (rejection) {
             var url = $location.url(),
@@ -369,6 +382,7 @@ trafficPortal.factory('authInterceptor', function ($q, $window, $location, $time
 
             // 401, 403, 404 and 5xx errors handled globally; all others handled in fault handler
             if (rejection.status === 401) {
+                $rootScope.$broadcast('trafficPortal::exit');
                 userModel.resetUser();
                 if (url == '/' || $location.search().redirect) {
                     messageModel.setMessages(alerts, false);

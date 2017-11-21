@@ -28,8 +28,8 @@ var FormCdnDnssecKeysController = function(cdn, dnssecKeys, $scope, $location, $
 	$scope.ksk_new = null;
 
 	$scope.falseTrue = [
-		{ value: false, label: 'false' },
-		{ value: true, label: 'true' }
+		{ value: true, label: 'true' },
+		{ value: false, label: 'false' }
 	];
 
 	$scope.generateLabel = function() {

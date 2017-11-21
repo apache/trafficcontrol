@@ -837,14 +837,6 @@ sub update {
 			logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
 		);
 
-		if ( defined($self->paramAsScalar('ds.signing_algorithm')) ) {
-			$hash{signing_algorithm} = $self->paramAsScalar('ds.signing_algorithm');
-		} elsif ($self->paramAsScalar('ds.signed')) {
-			$hash{signing_algorithm} = "url_sig";
-		} else {
-			$hash{signing_algorithm} = undef;
-		}
-
 		my $typename = $self->typename();
 		if ( $typename =~ /^DNS/ ) {
 			$hash{dns_bypass_ip}    = $self->paramAsScalar('ds.dns_bypass_ip');
@@ -1082,14 +1074,6 @@ sub create {
 				logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
 				tenant_id => $tenant_id,
 		};
-
-		if ( defined($self->paramAsScalar('ds.signing_algorithm')) ) {
-			$new_ds->{signing_algorithm} = $self->paramAsScalar('ds.signing_algorithm');
-		} elsif ($self->paramAsScalar('ds.signed')) {
-			$new_ds->{signing_algorithm} = "url_sig";
-		} else {
-			$new_ds->{signing_algorithm} = undef;
-		}
 
 		my $insert = $self->db->resultset('Deliveryservice')->create($new_ds);
 		$insert->insert();

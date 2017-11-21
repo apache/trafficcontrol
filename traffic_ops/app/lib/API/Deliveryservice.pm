@@ -312,8 +312,8 @@ sub update {
     if ( $new_xml_id ne $ds->xml_id ) {
         return $self->alert( "A deliveryservice xmlId is immutable." );
     }
-	
-	#setting tenant_id to undef if tenant is not set. 
+
+	#setting tenant_id to undef if tenant is not set.
 	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef;
 	if ($tenant_utils->use_tenancy() and !defined($tenant_id) and defined($ds->tenant_id)) {
 		return $self->alert("Invalid tenant. Cannot clear the delivery-service tenancy.");
@@ -379,13 +379,16 @@ sub update {
 	if ( exists($params->{signingAlgorithm}) ) {
 		# If so, just use that
 		$values->{signing_algorithm} = $params->{signingAlgorithm};
-	# Else if they sent 'signed' param and it's true
-	} elsif ($params->{signed}) {
-		# Then we want url_sig
-		$values->{signing_algorithm} = "url_sig";
-	} else {
-		# Otherwise we are disabled
-		$values->{signing_algorithm} = undef;
+	# Else if they sent 'signed' param
+	} elsif (exists($params->{signed})) {
+		# and it's true
+		if ($params->{signed}) {
+			# Then we want url_sig
+			$values->{signing_algorithm} = "url_sig";
+		} else {
+			# Otherwise we are disabled
+			$values->{signing_algorithm} = undef;
+		}
 	}
 
 	my $rs = $ds->update($values);
@@ -1369,30 +1372,57 @@ sub is_deliveryservice_valid {
 			qw/active cacheurl ccrDnsTtl cdnId checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText routingName signed signingAlgorithm sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
 		],
 
-		# Validation checks to perform
+		# validation checks to perform for ALL delivery services
 		checks => [
-			xmlId                => [ is_required("is required"), is_like( qr/^\S*$/, "no spaces" ), is_long_at_most( 48, 'too long' ) ],
-			typeId               => [ is_required("is required") ],
-			cdnId                => [ is_required("is required") ],
 			active               => [ is_required("is required") ],
-			displayName          => [ is_required("is required"), is_long_at_most( 48, 'too long' ) ],
+			cdnId                => [ is_required("is required") ],
 			dscp                 => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
+			displayName          => [ is_required("is required"), is_long_at_most( 48, 'too long' ) ],
 			geoLimit             => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
 			geoProvider          => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
-			initialDispersion    => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
-			ipv6RoutingEnabled   => [ is_required("is required") ],
 			logsEnabled          => [ is_required("is required") ],
-			missLat              => [ \&is_valid_lat ],
-			missLong             => [ \&is_valid_long ],
-			multiSiteOrigin      => [ is_required("is required") ],
-			orgServerFqdn        => [ sub { is_valid_org_server_fqdn($self, @_) } ],
-			protocol             => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
-			qstringIgnore        => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
-			rangeRequestHandling => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
 			regionalGeoBlocking  => [ is_required("is required") ],
 			routingName          => [ \&is_valid_routing_name, is_long_at_most( 48, 'too long' ) ],
-		]
+			typeId               => [ is_required("is required") ],
+			xmlId                => [ is_required("is required"), is_like( qr/^\S*$/, "no spaces" ), is_long_at_most( 48, 'too long' ) ],
+		],
 	};
+
+	my $type_name = $self->db->resultset("Type")->find( { id => $params->{typeId} } )->get_column('name');
+
+	# additional validation checks to perform for ANY_MAP delivery services
+    # no additional checks
+
+	# additional validation checks to perform for DNS* delivery services
+	if ( $type_name =~ /^DNS.*$/ ) {
+		push @{$rules->{checks}}, ipv6RoutingEnabled   => [ is_required("is required") ];
+		push @{$rules->{checks}}, missLat              => [ is_required("is required"), \&is_valid_lat ];
+		push @{$rules->{checks}}, missLong             => [ is_required("is required"), \&is_valid_long ];
+		push @{$rules->{checks}}, multiSiteOrigin      => [ is_required("is required") ];
+		push @{$rules->{checks}}, orgServerFqdn        => [ is_required("is required"), sub { is_valid_org_server_fqdn($self, @_) } ];
+		push @{$rules->{checks}}, protocol             => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ];
+		push @{$rules->{checks}}, qstringIgnore        => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ];
+		push @{$rules->{checks}}, rangeRequestHandling => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ];
+	}
+
+	# additional validation checks to perform for HTTP* delivery services
+	if ( $type_name =~ /^HTTP.*$/ ) {
+		push @{$rules->{checks}}, initialDispersion    => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ];
+		push @{$rules->{checks}}, ipv6RoutingEnabled   => [ is_required("is required") ];
+		push @{$rules->{checks}}, missLat              => [ is_required("is required"), \&is_valid_lat ];
+		push @{$rules->{checks}}, missLong             => [ is_required("is required"), \&is_valid_long ];
+		push @{$rules->{checks}}, multiSiteOrigin      => [ is_required("is required") ];
+		push @{$rules->{checks}}, orgServerFqdn        => [ is_required("is required"), sub { is_valid_org_server_fqdn($self, @_) } ];
+		push @{$rules->{checks}}, protocol             => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ];
+		push @{$rules->{checks}}, qstringIgnore        => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ];
+		push @{$rules->{checks}}, rangeRequestHandling => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ];
+	}
+
+	# additional validation checks to perform for STEERING* delivery services
+	if ( $type_name =~ /^.*STEERING.*$/ ) {
+		push @{$rules->{checks}}, ipv6RoutingEnabled   => [ is_required("is required") ];
+		push @{$rules->{checks}}, protocol             => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ];
+	}
 
 	# Validate the input against the rules
 	my $result = validate( $params, $rules );
@@ -1437,10 +1467,6 @@ sub is_valid_deliveryservice_type {
 sub is_valid_lat {
 	my ( $value, $params ) = @_;
 
-	if ( !defined $value or $value eq '' ) {
-		return undef;
-	}
-
 	if ( !( $value =~ /^[-]*[0-9]+[.]*[0-9]*/ ) ) {
 		return "invalid. Must be a float number.";
 	}
@@ -1454,10 +1480,6 @@ sub is_valid_lat {
 
 sub is_valid_long {
 	my ( $value, $params ) = @_;
-
-	if ( !defined $value or $value eq '' ) {
-		return undef;
-	}
 
 	if ( !( $value =~ /^[-]*[0-9]+[.]*[0-9]*/ ) ) {
 		return "invalid. Must be a float number.";
@@ -1473,13 +1495,6 @@ sub is_valid_long {
 sub is_valid_org_server_fqdn {
 	my $self    = shift;
 	my ( $value, $params ) = @_;
-
-	if ( (!defined $value or $value eq '') ) {
-		my $type_name = $self->db->resultset("Type")->find( { id => $params->{typeId} } )->get_column('name') // undef;
-		if ( defined($type_name) && ( $type_name =~ /(^ANY_MAP$|^.*STEERING.*$)/ ) ) {
-			return undef;
-		}
-	}
 
 	if ( !( $value =~ /^(https?:\/\/)/ ) ) {
 		return "invalid. Must start with http:// or https://.";

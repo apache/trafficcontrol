@@ -31,9 +31,10 @@ import (
 	"github.com/lib/pq"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
-const MonitoringPrivLevel = PrivLevelReadOnly
+const MonitoringPrivLevel = auth.PrivLevelReadOnly
 
 const CacheMonitorConfigFile = "rascal.properties"
 const MonitorType = "RASCAL"
@@ -123,7 +124,7 @@ func monitoringHandler(db *sqlx.DB) http.HandlerFunc {
 
 		cdnName := pathParams["name"]
 
-		resp, err := getMonitoringJson(cdnName, db)
+		resp, err := getMonitoringJSON(cdnName, db)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -152,7 +153,7 @@ me.ip6_address as ip6,
 profile.name as profile,
 me.interface_name as interfaceName,
 type.name as type,
-me.xmpp_id as hashId
+me.xmpp_id as hashID
 FROM server me
 JOIN type type ON type.id = me.type
 JOIN status status ON status.id = me.status
@@ -182,9 +183,9 @@ WHERE cdn.name = $1`
 		var profile sql.NullString
 		var interfaceName sql.NullString
 		var ttype sql.NullString
-		var hashId sql.NullString
+		var hashID sql.NullString
 
-		if err := rows.Scan(&hostName, &fqdn, &status, &cachegroup, &port, &ip, &ip6, &profile, &interfaceName, &ttype, &hashId); err != nil {
+		if err := rows.Scan(&hostName, &fqdn, &status, &cachegroup, &port, &ip, &ip6, &profile, &interfaceName, &ttype, &hashID); err != nil {
 			return nil, nil, nil, err
 		}
 
@@ -215,7 +216,7 @@ WHERE cdn.name = $1`
 				},
 				InterfaceName: interfaceName.String,
 				Type:          ttype.String,
-				HashID:        hashId.String,
+				HashID:        hashID.String,
 			})
 		} else if ttype.String == RouterType {
 			routers = append(routers, Router{
@@ -242,7 +243,6 @@ WHERE id IN
 	defer rows.Close()
 
 	cachegroups := []Cachegroup{}
-
 	for rows.Next() {
 		var name sql.NullString
 		var lat sql.NullFloat64
@@ -398,7 +398,7 @@ WHERE pr.config_file = '%s'
 	return cfg, nil
 }
 
-func getMonitoringJson(cdnName string, db *sqlx.DB) (*MonitoringResponse, error) {
+func getMonitoringJSON(cdnName string, db *sqlx.DB) (*MonitoringResponse, error) {
 	monitors, caches, routers, err := getMonitoringServers(db, cdnName)
 	if err != nil {
 		return nil, fmt.Errorf("error getting servers: %v", err)

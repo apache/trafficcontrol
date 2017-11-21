@@ -90,9 +90,11 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     $scope.server = server;
 
     $scope.falseTrue = [
-        { value: false, label: 'false' },
-        { value: true, label: 'true' }
+        { value: true, label: 'true' },
+        { value: false, label: 'false' }
     ];
+
+    $scope.isCache = serverUtils.isCache;
 
     $scope.isEdge = serverUtils.isEdge;
 
@@ -134,7 +136,6 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
             // do nothing
         });
     };
-
 
     $scope.viewConfigFiles = function() {
         $location.path($location.path() + '/config-files');

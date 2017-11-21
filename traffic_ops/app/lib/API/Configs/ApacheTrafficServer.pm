@@ -272,6 +272,7 @@ sub get_profile_config {
 	elsif ( $filename eq "storage.config" ) { $file_contents = $self->storage_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "sysctl.conf" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename =~ /url_sig_.*\.config/ ) { $file_contents = $self->url_sig_dot_config( $profile_obj, $filename ); }
+	elsif ( $filename =~ /uri_signing_.*\.config/ ) { $file_contents = $self->uri_signing_dot_config( $filename ); }
 	elsif ( $filename eq "volume.config" ) { $file_contents = $self->volume_dot_config( $profile_obj, $filename ); }
 	else {
 		my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->first;
@@ -327,6 +328,7 @@ sub get_scope {
 	elsif ( $fname eq "storage.config" )                       { $scope = 'profiles' }
 	elsif ( $fname eq "sysctl.conf" )                          { $scope = 'profiles' }
 	elsif ( $fname =~ /url_sig_.*\.config/ )                   { $scope = 'profiles' }
+	elsif ( $fname =~ /uri_signing_.*\.config/ )               { $scope = 'profiles' }
 	elsif ( $fname eq "volume.config" )                        { $scope = 'profiles' }
 	elsif ( $fname eq "bg_fetch.config" )                      { $scope = 'cdns' }
 	elsif ( $fname =~ /cacheurl.*\.config/ )                   { $scope = 'cdns' }
@@ -1208,6 +1210,12 @@ sub remap_ds_data {
 				my $fname = "cacheurl_" . $ds_xml_id . ".config";
 				$response_obj->{dslist}->[$j]->{"cacheurl_file"} = $fname;
 			}
+			if ( defined( $dsinfo->profile ) ) {
+				my $dsparamrs = $self->db->resultset('ProfileParameter')->search( { profile => $dsinfo->profile }, { prefetch => [ 'profile', 'parameter' ] } );
+				while ( my $prow = $dsparamrs->next ) {
+					$response_obj->{dslist}->[$j]->{'param'}->{ $prow->parameter->config_file }->{ $prow->parameter->name } = $prow->parameter->value;
+				}
+			}
 
 			$j++;
 		}
@@ -1794,6 +1802,25 @@ sub url_sig_dot_config {
 	}
 }
 
+sub uri_signing_dot_config {
+	my $self        = shift;
+	my $filename    = shift;
+
+	my $bucket = "cdn_uri_sig_keys";
+
+	my ($key) = $filename =~ /uri_signing_(.*)\.config/;
+
+	my $response_container = $self->riak_get( $bucket, $key );
+	my $response = $response_container->{response};
+
+	if ( $response->is_success() ) {
+		return $response->content;
+	}
+	else {
+		return;
+	}
+}
+
 sub server_cache_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
@@ -2276,6 +2303,21 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 						push @null_parent_info, format_parent_info($parent);
 					}
 				}
+				
+				# If we don't find any parents in the primary parent, then use the secondary parents list as primary and clear the secondary list.
+				# Once we do that, null parent will be used in the secondary_parent category due to the join of the two arrays.
+				# This prevents blank parent entries.
+				if ( scalar @parent_info == 0  ) {
+					# If no parents are found in the secondary parent either, then set the null parent list (parents in neither secondary or primary)
+					# as the secondary parent list and clear the null parent list.
+					if ( scalar @secondary_parent_info == 0  ) {
+						@secondary_parent_info = @null_parent_info;
+						@null_parent_info = ();
+					}
+					@parent_info = @secondary_parent_info;
+					@secondary_parent_info = ();
+				}
+
 				my %seen;
 				@parent_info = grep { !$seen{$_}++ } @parent_info;
 
@@ -2459,6 +2501,12 @@ sub remap_dot_config {
 			}
 			if ( defined( $ds->{cacheurl} ) && $ds->{cacheurl} ne "" ) {
 				$mid_remap{ $ds->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $ds->{cacheurl_file};
+			}
+			if ( defined( $ds->{'param'}->{'cachekey.config'} ) ) {
+				$mid_remap{ $ds->{org} } .= " \@plugin=cachekey.so";
+				foreach my $ck_entry ( keys %{ $ds->{'param'}->{'cachekey.config'} } ) {
+					$mid_remap{ $ds->{org} } .= " \@pparam=--" . $ck_entry . "=" . $ds->{'param'}->{'cachekey.config'}->{$ck_entry};
+				}
 			}
 			if ( $ds->{range_request_handling} == RRH_CACHE_RANGE_REQUEST ) {
 				$mid_remap{ $ds->{org} } .= " \@plugin=cache_range_requests.so";

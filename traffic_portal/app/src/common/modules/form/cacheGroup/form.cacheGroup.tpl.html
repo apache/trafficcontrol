@@ -84,7 +84,8 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.latitude), 'has-feedback': hasError(cacheGroupForm.latitude)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Magnetic Latitude *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="latitude" name="latitude" type="text" class="form-control" ng-model="cacheGroup.latitude" ng-pattern="/^[-+]?[0-9]*\.?[0-9]+$/" autofocus>
+                    <input id="latitude" name="latitude" type="text" class="form-control" ng-model="cacheGroup.latitude" ng-pattern="/^[-+]?[0-9]*\.?[0-9]+$/" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.latitude, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.latitude, 'pattern')">Invalid coordinate</small>
                     <span ng-show="hasError(cacheGroupForm.latitude)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
@@ -92,7 +93,8 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.longitude), 'has-feedback': hasError(cacheGroupForm.longitude)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Magnetic Longitude *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="longitude" name="longitude" type="text" class="form-control" ng-model="cacheGroup.longitude" ng-pattern="/^[-+]?[0-9]*\.?[0-9]+$/" autofocus>
+                    <input id="longitude" name="longitude" type="text" class="form-control" ng-model="cacheGroup.longitude" ng-pattern="/^[-+]?[0-9]*\.?[0-9]+$/" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.longitude, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.longitude, 'pattern')">Invalid coordinate</small>
                     <span ng-show="hasError(cacheGroupForm.longitude)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>

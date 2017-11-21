@@ -23,14 +23,17 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
+	"github.com/jmoiron/sqlx"
+
 	"fmt"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -102,7 +105,7 @@ func TestGzip(t *testing.T) {
 	f(w, r)
 
 	// body should not be gzip'd
-	if bytes.Compare(w.Body.Bytes(), []byte(body)) != 0 {
+	if !bytes.Equal(w.Body.Bytes(), []byte(body)) {
 		t.Error("Expected body to be NOT gzip'd!")
 	}
 
@@ -110,18 +113,19 @@ func TestGzip(t *testing.T) {
 	w = httptest.NewRecorder()
 	r.Header.Add("Accept-Encoding", "gzip")
 	f(w, r)
-	if bytes.Compare(w.Body.Bytes(), gz.Bytes()) != 0 {
+	if !bytes.Equal(w.Body.Bytes(), gz.Bytes()) {
 		t.Error("Expected body to be gzip'd!")
 	}
 }
 
 func TestWrapAuth(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
 	userName := "user1"
@@ -142,12 +146,12 @@ func TestWrapAuth(t *testing.T) {
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		privLevel, err := getPrivLevel(ctx)
+		privLevel, err := auth.GetPrivLevel(ctx)
 		if err != nil {
 			t.Fatalf("unable to get privLevel: %v", err)
 			return
 		}
-		userName, err := getUserName(ctx)
+		userName, err := auth.GetUserName(ctx)
 		if err != nil {
 			t.Fatalf("unable to get userName: %v", err)
 			return
@@ -192,7 +196,7 @@ func TestWrapAuth(t *testing.T) {
 
 	f(w, r)
 
-	if bytes.Compare(w.Body.Bytes(), expectedBody) != 0 {
+	if !bytes.Equal(w.Body.Bytes(), expectedBody) {
 		t.Errorf("received: %s\n expected: %s\n", w.Body.Bytes(), expectedBody)
 	}
 
@@ -210,7 +214,7 @@ func TestWrapAuth(t *testing.T) {
 		fmt.Printf("received: %s\n expected: %s\n", w.Body.Bytes(), expectedError)
 	}
 
-	if bytes.Compare(w.Body.Bytes(), []byte(expectedError)) != 0 {
+	if !bytes.Equal(w.Body.Bytes(), []byte(expectedError)) {
 		t.Errorf("received: %s\n expected: %s\n", w.Body.Bytes(), expectedError)
 	}
 }

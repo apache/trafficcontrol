@@ -28,7 +28,7 @@ module.exports = angular.module('trafficPortal.private.iso', [])
 						controller: 'FormISOController',
 						resolve: {
 							servers: function(serverService) {
-								return serverService.getServers();
+								return serverService.getServers({ orderby: 'hostName' });
 							},
 							osversions: function(toolsService) {
 								return toolsService.getOSVersions();

@@ -109,12 +109,30 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 			}
 		});
 		modalInstance.result.then(function(selectedProfileIds) {
-			profileParameterService.linkParamProfiles(parameter.id, selectedProfileIds)
-				.then(
-					function() {
-						$scope.refresh(); // refresh the table
+			var params = {
+				title: 'Assign profiles to ' + parameter.name,
+				message: 'Are you sure you want to modify the profiles assigned to ' + parameter.name + '?'
+			};
+			var modalInstance = $uibModal.open({
+				templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+				controller: 'DialogConfirmController',
+				size: 'md',
+				resolve: {
+					params: function () {
+						return params;
 					}
-				);
+				}
+			});
+			modalInstance.result.then(function() {
+				profileParameterService.linkParamProfiles(parameter.id, selectedProfileIds)
+					.then(
+						function() {
+							$scope.refresh(); // refresh the parameter profiles table
+						}
+					);
+			}, function () {
+				// do nothing
+			});
 		}, function () {
 			// do nothing
 		});
@@ -127,6 +145,9 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 		$('#parameterProfilesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"columnDefs": [
+				{ 'orderable': false, 'targets': 2 }
+			],
 			"aaSorting": []
 		});
 	});

@@ -36,8 +36,6 @@ import (
 
 const Version = "0.1"
 
-const OldConfig = true
-
 func main() {
 	configFileName := flag.String("cfg", "", "The config file path")
 	dbConfigFileName := flag.String("dbcfg", "", "The db config file path")
@@ -56,9 +54,8 @@ func main() {
 		if !strings.Contains(err.Error(), "riak conf") {
 			fmt.Println("Error loading config: " + err.Error())
 			return
-		} else {
-			errorToLog = err
 		}
+		errorToLog = err
 	}
 
 	if err := log.InitCfg(cfg); err != nil {

@@ -29,6 +29,7 @@ import (
 	"time"
 
 	tclog "github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
 var Authenticated = true
@@ -51,8 +52,10 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, `cdns/?(\.json)?$`, cdnsHandler(d.DB), CDNsPrivLevel, Authenticated, nil},
 		{1.2, http.MethodGet, `cdns/{name}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), MonitoringPrivLevel, Authenticated, nil},
 		// Delivery services
-		{1.3, http.MethodGet, `deliveryservices/{xml-id}/urisignkeys$`, getUrisignkeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
-		{1.3, http.MethodPost, `deliveryservices/{xml-id}/urisignkeys$`, assignDeliveryServiceUriKeysHandler(d.DB, d.Config), PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodGet, `deliveryservices/{xmlID}/urisignkeys$`, getURIsignkeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodPost, `deliveryservices/{xmlID}/urisignkeys$`, assignDeliveryServiceURIKeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodPut, `deliveryservices/{xmlID}/urisignkeys$`, updateDeliveryServiceURIKeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodDelete, `deliveryservices/{xmlID}/urisignkeys$`, removeDeliveryServiceURIKeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
 		//Divisions
 		{1.2, http.MethodGet, `divisions/?(\.json)?$`, divisionsHandler(d.DB), DivisionsPrivLevel, Authenticated, nil},
 		//HwInfo
@@ -71,14 +74,18 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 
 		{1.2, http.MethodGet, `servers/?(\.json)?$`, serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
 		{1.2, http.MethodGet, `servers/{id}$`, serversHandler(d.DB), ServersPrivLevel, Authenticated, nil},
-		{1.2, http.MethodPost, `servers/{id}/deliveryservices$`, assignDeliveryServicesToServerHandler(d.DB), PrivLevelOperations, Authenticated, nil},
-		{1.2, http.MethodGet, `servers/{host_name}/update_status$`, getServerUpdateStatusHandler(d.DB), PrivLevelReadOnly, Authenticated, nil},
+		{1.2, http.MethodPost, `servers/{id}/deliveryservices$`, assignDeliveryServicesToServerHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.2, http.MethodGet, `servers/{host_name}/update_status$`, getServerUpdateStatusHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Statuses
 		{1.2, http.MethodGet, `statuses/?(\.json)?$`, statusesHandler(d.DB), StatusesPrivLevel, Authenticated, nil},
 		{1.2, http.MethodGet, `statuses/{id}$`, statusesHandler(d.DB), StatusesPrivLevel, Authenticated, nil},
 		//System
 		{1.2, http.MethodGet, `system/info/?(\.json)?$`, systemInfoHandler(d.DB), SystemInfoPrivLevel, Authenticated, nil},
+
+		//Phys_Locations
+		{1.2, http.MethodGet, `phys_locations/?(\.json)?$`, physLocationsHandler(d.DB), PhysLocationsPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `phys_locations/{id}$`, physLocationsHandler(d.DB), PhysLocationsPrivLevel, Authenticated, nil},
 	}
 	return routes, proxyHandler, nil
 }

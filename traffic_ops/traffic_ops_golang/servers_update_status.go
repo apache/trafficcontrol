@@ -65,7 +65,7 @@ func getServerUpdateStatus(hostName string, db *sqlx.DB) ([]tc.ServerUpdateStatu
 		`WITH parentservers AS (SELECT ps.id, ps.cachegroup, ps.cdn_id, ps.upd_pending, ps.reval_pending FROM server ps
          LEFT JOIN status AS pstatus ON pstatus.id = ps.status
          WHERE pstatus.name != 'OFFLINE' ),
-         use_reval AS (SELECT value::boolean FROM parameter WHERE name = 'use_reval_pending' AND config_file = 'global')
+         use_reval AS (SELECT COALESCE(value::boolean, FALSE) FROM parameter WHERE name = 'use_reval_pending' AND config_file = 'global')
          SELECT s.id, s.host_name, type.name AS type, (s.reval_pending::boolean AND use_reval.value) as combined_reval_pending, s.upd_pending, status.name AS status, COALESCE(bool_or(ps.upd_pending), FALSE) AS parent_upd_pending, COALESCE(bool_or(ps.reval_pending), FALSE) AS parent_reval_pending FROM use_reval, server s
          LEFT JOIN status ON s.status = status.id
          LEFT JOIN cachegroup cg ON s.cachegroup = cg.id
@@ -76,29 +76,21 @@ func getServerUpdateStatus(hostName string, db *sqlx.DB) ([]tc.ServerUpdateStatu
 
 	updateStatuses := []tc.ServerUpdateStatus{}
 	var rows *sql.Rows
+	var err error
 	if hostName == "all" {
-		selectAll, err := db.Prepare(baseSelectStatement + groupBy)
-		if err != nil {
-			log.Error.Printf("could not prepare select server update status query: %s\n", err)
-			return nil, tc.DBError
-		}
-		rows, err = selectAll.Query()
+		rows, err = db.Query(baseSelectStatement + groupBy)
 		if err != nil {
 			log.Error.Printf("could not execute select server update status query: %s\n", err)
 			return nil, tc.DBError
 		}
 	} else {
-		selectStatement, err := db.Prepare(baseSelectStatement + ` WHERE s.host_name = $1` + groupBy)
-		if err != nil {
-			log.Error.Printf("could not prepare select server update status by hostname query: %s\n", err)
-			return nil, tc.DBError
-		}
-		rows, err = selectStatement.Query(hostName)
+		rows, err = db.Query(baseSelectStatement + ` WHERE s.host_name = $1` + groupBy, hostName)
 		if err != nil {
 			log.Error.Printf("could not execute select server update status by hostname query: %s\n", err)
 			return nil, tc.DBError
 		}
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		var serverUpdateStatus tc.ServerUpdateStatus

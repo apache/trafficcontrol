@@ -45,7 +45,7 @@ import (
 // Start starts the poller and handler goroutines
 //
 func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticAppData, trafficMonitorConfigFileName string) error {
-	toSession := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(nil))
+	toSession := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(nil, cfg.CRConfigHistoryCount))
 	sharedClient := &http.Client{
 		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
 		Timeout:   cfg.HTTPTimeout,

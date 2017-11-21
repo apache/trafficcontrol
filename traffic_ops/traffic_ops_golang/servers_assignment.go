@@ -23,14 +23,15 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"net/http"
-	"strconv"
-	"strings"
 )
 
 func assignDeliveryServicesToServerHandler(db *sqlx.DB) http.HandlerFunc {
@@ -77,7 +78,7 @@ func assignDeliveryServicesToServerHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		type AssignedDsResponse struct {
-			ServerId int   `json:"serverId"`
+			ServerID int   `json:"serverId"`
 			DSIds    []int `json:"dsIds"`
 			Replace  bool  `json:"replace"`
 		}
@@ -189,31 +190,31 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 	insert := []string{}
 	delete := []string{}
 	for rows.Next() {
-		var XmlId sql.NullString
-		var EdgeHeaderRewrite sql.NullString
-		var RegexRemap sql.NullString
-		var CacheUrl sql.NullString
+		var xmlID sql.NullString
+		var edgeHeaderRewrite sql.NullString
+		var regexRemap sql.NullString
+		var cacheURL sql.NullString
 
-		if err := rows.Scan(&XmlId, &EdgeHeaderRewrite, &RegexRemap, &CacheUrl); err != nil {
+		if err := rows.Scan(&xmlID, &edgeHeaderRewrite, &regexRemap, &cacheURL); err != nil {
 			log.Error.Printf("could not scan ds fields row: %s\n", err)
 			return nil, tc.DBError
 		}
-		if XmlId.Valid && len(XmlId.String) > 0 {
-			//param := "hdr_rw_" + XmlId.String + ".config"
-			param := ats.GetConfigFile(ats.HeaderRewritePrefix, XmlId.String)
-			if EdgeHeaderRewrite.Valid && len(EdgeHeaderRewrite.String) > 0 {
+		if xmlID.Valid && len(xmlID.String) > 0 {
+			//param := "hdr_rw_" + xmlID.String + ".config"
+			param := ats.GetConfigFile(ats.HeaderRewritePrefix, xmlID.String)
+			if edgeHeaderRewrite.Valid && len(edgeHeaderRewrite.String) > 0 {
 				insert = append(insert, param)
 			} else {
 				delete = append(delete, param)
 			}
-			param = ats.GetConfigFile(ats.RegexRemapPrefix, XmlId.String)
-			if RegexRemap.Valid && len(RegexRemap.String) > 0 {
+			param = ats.GetConfigFile(ats.RegexRemapPrefix, xmlID.String)
+			if regexRemap.Valid && len(regexRemap.String) > 0 {
 				insert = append(insert, param)
 			} else {
 				delete = append(delete, param)
 			}
-			param = ats.GetConfigFile(ats.CacheUrlPrefix, XmlId.String)
-			if CacheUrl.Valid && len(CacheUrl.String) > 0 {
+			param = ats.GetConfigFile(ats.CacheUrlPrefix, xmlID.String)
+			if cacheURL.Valid && len(cacheURL.String) > 0 {
 				insert = append(insert, param)
 			} else {
 				delete = append(delete, param)
@@ -250,14 +251,16 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 		log.Error.Printf("could not execute parameter id select query: %s\n", err)
 		return nil, tc.DBError
 	}
+	defer rows.Close()
+
 	parameterIds := []int64{}
 	for rows.Next() {
-		var Id int64
-		if err := rows.Scan(&Id); err != nil {
-			log.Error.Printf("could not scan parameter id: %s\n", err)
+		var ID int64
+		if err := rows.Scan(&ID); err != nil {
+			log.Error.Printf("could not scan parameter ID: %s\n", err)
 			return nil, tc.DBError
 		}
-		parameterIds = append(parameterIds, Id)
+		parameterIds = append(parameterIds, ID)
 	}
 
 	//associate all parameter ids with the profiles associated with all servers associated with assigned dses.

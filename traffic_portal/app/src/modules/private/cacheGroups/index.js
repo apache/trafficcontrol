@@ -18,7 +18,6 @@
  */
 
 module.exports = angular.module('trafficPortal.private.cacheGroups', [])
-    .controller('CacheGroupsController', require('./CacheGroupsController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficPortal.private.cacheGroups', {
@@ -26,8 +25,7 @@ module.exports = angular.module('trafficPortal.private.cacheGroups', [])
                 abstract: true,
                 views: {
                     privateContent: {
-                        templateUrl: 'modules/private/cacheGroups/cacheGroups.tpl.html',
-                        controller: 'CacheGroupsController'
+                        templateUrl: 'modules/private/cacheGroups/cacheGroups.tpl.html'
                     }
                 }
             })

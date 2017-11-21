@@ -90,19 +90,18 @@ func getASNs(v url.Values, db *sqlx.DB) ([]tc.ASN, error) {
 	queryParamsToQueryCols := map[string]string{
 		"asn":        "a.asn",
 		"id":         "a.id",
-		"cachegroup": "cg.name",
+		"cachegroup": "cg.id",
 	}
 
 	query, queryValues := BuildQuery(v, selectASNsQuery(), queryParamsToQueryCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
-
 	if err != nil {
 		return nil, err
 	}
-	ASNs := []tc.ASN{}
-
 	defer rows.Close()
+
+	ASNs := []tc.ASN{}
 	for rows.Next() {
 		var s tc.ASN
 		if err = rows.StructScan(&s); err != nil {

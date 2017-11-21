@@ -65,7 +65,7 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
                     controller: 'ReleaseController',
                     size: 'sm',
                     resolve: {
-                        params: function () {
+                        releaseParams: function () {
                             return result.data;
                         }
                     }

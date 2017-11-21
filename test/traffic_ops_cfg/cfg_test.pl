@@ -19,6 +19,7 @@ use JSON;
 use Data::Dumper;
 use Term::ReadKey;
 use LWP::UserAgent;
+use File::Path qw{ make_path };
 use File::Find;
 use File::Spec;
 use Time::HiRes qw(gettimeofday tv_interval);
@@ -28,24 +29,26 @@ use Test::Deep;
 use Test::More;
 use List::Compare;
 
-my $config;
+use Getopt::Long;
+GetOptions(servercount => \my $servercount, filecount => \my $filecount);
+
 my $tmp_dir_base = "/tmp/files";
-my $tmp_dir      = $tmp_dir_base . "/ref";
 my $CURL_OPTS;
-my $cookie;
 
-&configure( $ARGV[1] );
+my $mode = shift;
+my $configFile = shift;
 
+my $config = configure( $configFile );
 my $perform_snapshot = $config->{perform_snapshot};
 
-if ( $ARGV[0] eq "getref" ) {
-	&get_ref();
+if ($mode eq 'getref') {
+    get_ref();
 }
-elsif ( $ARGV[0] eq "getnew" ) {
-	&get_new();
+elsif ($mode eq 'getnew') {
+    get_new();
 }
-elsif ( $ARGV[0] eq "compare" ) {
-	&do_the_compare();
+elsif ($mode eq 'compare') {
+    do_the_compare();
 }
 else {
 	print "Help\n";
@@ -53,34 +56,29 @@ else {
 
 sub get_ref {
 
-	# get a cookie from the reference system; cookie and CURL_OPTs are globals
-	if ( !defined( $config->{ref_to_passwd} ) ) {
-		$config->{ref_to_passwd} = &get_to_passwd( $config->{ref_to_user} );
+	# get a cookie from the reference system; CURL_OPTS is global
+	if ( !defined( $config->{to1_passwd} ) ) {
+		$config->{to1_passwd} = &get_to_passwd( $config->{to1_user} );
 	}
-	my $to_login = $config->{ref_to_user} . ":" . $config->{ref_to_passwd};
-	$cookie = &get_cookie( $config->{ref_to_url}, $to_login );
+	my $to_login = $config->{to1_user} . ":" . $config->{to1_passwd};
+	my $cookie = &get_cookie( $config->{to1_url}, $to_login );
 	$CURL_OPTS = "-H 'Cookie: $cookie' -w %{response_code} -k -L -s -S --connect-timeout 5 --retry 5 --retry-delay 5 --basic";
 
-	$tmp_dir = $tmp_dir_base . "/ref";
-
-	&get_files( $config->{ref_to_url} );
-	&get_crconfigs( $config->{ref_to_url} );
+	&get_files( $config->{to1_url}, "$tmp_dir_base/ref" );
+	&get_crconfigs( $config->{to1_url}, "$tmp_dir_base/ref" );
 }
+
 #
 sub get_new {
-	if ( !defined( $config->{to_passwd} ) ) {
-		$config->{to_passwd} = &get_to_passwd( $config->{to_user} );
+	if ( !defined( $config->{to2_passwd} ) ) {
+		$config->{to2_passwd} = &get_to_passwd( $config->{to2_user} );
 	}
-	my $to_login = $config->{to_user} . ":" . $config->{to_passwd};
-	$cookie = &get_cookie( $config->{to_url}, $to_login );
+	my $to_login = $config->{to2_user} . ":" . $config->{to2_passwd};
+	my $cookie = &get_cookie( $config->{to2_url}, $to_login );
 	$CURL_OPTS = "-H 'Cookie: $cookie' -w %{response_code} -k -L -s -S --connect-timeout 5 --retry 5 --retry-delay 5 --basic";
 
-	$tmp_dir = $tmp_dir_base . "/new";
-
-	&get_files( $config->{to_url} );    # old style
-
-	#    &get_files_new( $config->{to_url} ); # derek style
-	&get_crconfigs( $config->{to_url} );
+	&get_files( $config->{to2_url}, "$tmp_dir_base/new" );
+	&get_crconfigs( $config->{to2_url}, "$tmp_dir_base/new" );
 }
 
 sub do_the_compare {
@@ -154,12 +152,12 @@ sub compare_parent_dot_configs {
 			my $pstring = $config1->{parent};
 			$pstring =~ s/\"//g;
 			foreach my $parent ( split( /;/, $pstring ) ) {
-				$config1->{parents_hash}->{$parent} = 1;
+				$config1->{parents_hash}{$parent} = 1;
 			}
-			my $pstring = $config2->{parent};
+			$pstring = $config2->{parent};
 			$pstring =~ s/"//g;
 			foreach my $parent ( split( /;/, $pstring ) ) {
-				$config2->{parents_hash}->{$parent} = 1;
+				$config2->{parents_hash}{$parent} = 1;
 			}
 			$config1->{parent} = undef;
 			$config2->{parent} = undef;
@@ -183,6 +181,17 @@ sub compare_files {
 	while (<$fh>) {
 		next if (/^#/);
 		next if ( $f1 =~ /_xml.config$/ && /^\s*<!--.*-->\s*$/ );
+                # TODO -- experimenting with adding "substitutions" key to config
+                # not working yet...
+                if (exists $config->{substitutions}) {
+                    my %s = %{$config->{substitutions}};
+                    for my $key (keys %s) {
+                        my $val = $s{$key};
+                        if (s/$key/$val/g) {
+                            print "Substituted $key for $val:\n $_\n";
+                        }
+                    }
+                }
 		$d1 .= $_;
 	}
 	close($fh);
@@ -204,12 +213,17 @@ sub compare_files {
 		my $h1 = JSON->new->allow_nonref->utf8->decode($d1);
 		my $h2 = JSON->new->allow_nonref->utf8->decode($d2);
 		if ( defined( $h1->{stats} ) ) {
-			$h1->{stats}->{tm_user}    = $h2->{stats}->{tm_user};
-			$h1->{stats}->{date}       = $h2->{stats}->{date};
-			$h1->{stats}->{tm_version} = $h2->{stats}->{tm_version};
-			$h1->{stats}->{tm_path}    = $h2->{stats}->{tm_path};
-			$h1->{stats}->{tm_host}    = $h2->{stats}->{tm_host};
+			$h1->{stats}{tm_user}    = $h2->{stats}{tm_user};
+			$h1->{stats}{date}       = $h2->{stats}{date};
+			$h1->{stats}{tm_version} = $h2->{stats}{tm_version};
+			$h1->{stats}{tm_path}    = $h2->{stats}{tm_path};
+			$h1->{stats}{tm_host}    = $h2->{stats}{tm_host};
 		}
+		my $ok = cmp_deeply( $h1, $h2, "compare $f1" );
+	}
+	elsif ( $f1 =~ /\.json$/) {
+		my $h1 = JSON->new->allow_nonref->utf8->decode($d1);
+		my $h2 = JSON->new->allow_nonref->utf8->decode($d2);
 		my $ok = cmp_deeply( $h1, $h2, "compare $f1" );
 	}
 	else {
@@ -219,16 +233,16 @@ sub compare_files {
 
 sub get_crconfigs {
 	my $to_url = shift;
+        my $outpath = shift;
 
 	my $to_cdn_url = $to_url . '/api/1.2/cdns.json';
 	my $result     = &curl_me($to_cdn_url);
 	my $cdn_json   = decode_json($result);
 
-	my %profile_sample;
 	foreach my $cdn ( @{ $cdn_json->{response} } ) {
 		next unless $cdn->{name} ne "ALL";
-		my $dir = $tmp_dir . '/cdn-' . $cdn->{name};
-		system( 'mkdir -p ' . $dir );
+		my $dir = $outpath . '/cdn-' . $cdn->{name};
+		make_path( $dir );
 		if ($perform_snapshot) {
 			print "Generating CRConfig for " . $cdn->{name};
 			my $start = [gettimeofday];
@@ -237,113 +251,86 @@ sub get_crconfigs {
 			print " time: " . $load_time . "\n";
 		}
 		print "Getting CRConfig for " . $cdn->{name};
-			my $start = [gettimeofday];
+		my $start = [gettimeofday];
 		my $fcontents = &curl_me( $to_url . '/CRConfig-Snapshots/' . $cdn->{name} . '/CRConfig.json' );
 		open( my $fh, '>', $dir . '/CRConfig.json' );
-			my $load_time = tv_interval($start);
-			print " time: " . $load_time . "\n";
+		my $load_time = tv_interval($start);
+		print " time: " . $load_time . "\n";
 		print $fh $fcontents;
 		close $fh;
 	}
 }
 
-sub get_files {
-	my $to_url = shift;
+{
+        my %profile_sample;
+        sub get_sample_servers {
+                if (scalar keys %profile_sample > 0) {
+                    return %profile_sample;
+                }
+                my $to_url = shift;
 
-	my $to_server_url = $to_url . '/api/1.2/servers.json';
-	my $result        = &curl_me($to_server_url);
-	my $server_json   = decode_json($result);
+                my $to_server_url = $to_url . '/api/1.2/servers.json';
+                my $result        = &curl_me($to_server_url);
+                my $server_json   = decode_json($result);
 
-	my %profile_sample;
-	foreach my $server ( @{ $server_json->{response} } ) {
-		$profile_sample{ $server->{profile} } = $server->{hostName};
-	}
-
-	foreach my $sample_server ( keys %profile_sample ) {
-		my $dir = $tmp_dir . '/' . $profile_sample{$sample_server};
-		system( 'mkdir -p ' . $dir );
-		my $to_ort1_url = $to_url . '/ort/' . $profile_sample{$sample_server} . '/ort1';
-		my $result      = &curl_me($to_ort1_url);
-		open( my $fh, '>', $dir . '/ort1' );
-		print $fh $result;
-		close $fh;
-		my $file_list_json = decode_json($result);
-
-		foreach my $filename ( keys %{ $file_list_json->{config_files} } ) {
-
-			print "Getting " . $sample_server . " " . $filename;
-			my $start     = [gettimeofday];
-			my $fcontents = &curl_me( $to_url . '/genfiles/view/' . $profile_sample{$sample_server} . "/" . $filename );
-			my $load_time = tv_interval($start);
-			print " load_time: " . $load_time . "\n";
-			open( my $fh, '>', $dir . '/' . $filename );
-			print $fh $fcontents;
-			close $fh;
-		}
-	}
+                foreach my $server ( @{ $server_json->{response} } ) {
+                        my $profile = $server->{profile};
+                        next if exists $profile_sample{$profile};
+                        $profile_sample{ $profile } = $server->{hostName};
+                        last;
+                }
+                return %profile_sample;
+        }
 }
 
-sub get_files_new {
+sub get_files {
 	my $to_url = shift;
+        my $outpath = shift;
+	my %profile_sample = get_sample_servers( $to_url );
+        print "Sample servers: " . Data::Dumper->new( [ \%profile_sample ] )->Indent(1)->Terse(1)->Dump();
 
-	my $to_server_url = $to_url . '/api/1.2/servers.json';
-	my $result        = &curl_me($to_server_url);
-	my $server_json   = decode_json($result);
-
-	my %profile_sample;
-	foreach my $server ( @{ $server_json->{response} } ) {
-		$profile_sample{ $server->{profile} } = $server->{hostName};
-	}
-
+        print "Writing files to $outpath\n";
 	foreach my $sample_server ( keys %profile_sample ) {
-		my $dir = $tmp_dir . '/' . $profile_sample{$sample_server};
-		system( 'mkdir -p ' . $dir );
-		my $to_ort1_url = $to_url . '/api/1.2/server/' . $profile_sample{$sample_server} . '/configfiles/ats.json';
-		my $new_mode    = 1;
-		if ( $sample_server !~ /^EDGE/ && $sample_server !~ /^MID/ && $sample_server !~ /TEAK/ ) {
-			$to_ort1_url = $to_url . '/ort/' . $profile_sample{$sample_server} . '/ort1';
-			$new_mode    = 0;
-		}
-		my $result = &curl_me($to_ort1_url);
-		open( my $fh, '>', $dir . '/ats.json' );
-		print $fh $result;
-		close $fh;
-		my $file_list_json = decode_json($result);
+		next unless ( $sample_server =~ /^EDGE/ || $sample_server =~ /^MID/ );
+                my $dir = "$outpath/$profile_sample{$sample_server}";
+                make_path( $dir );
+                my $server_metadata = $to_url . '/api/1.2/servers/' . $profile_sample{$sample_server} . '/configfiles/ats.json';
+                my $result = &curl_me($server_metadata);
+                open( my $fh, '>', $dir . '/ats.json' );
+                print $fh $result;
+                close $fh;
+                my $file_list_json = decode_json($result);
+                my $config_files = $file_list_json->{configFiles};
+                for my $item ( @{$config_files} ) {
+                        my $filename = $item->{fnameOnDisk};
+                        my $url = $to_url . $item->{apiUri};
 
-		foreach my $filename ( keys %{ $file_list_json->{config_files} } ) {
-			my $url;
-			if ( defined( $file_list_json->{config_files}->{$filename}->{scope} ) ) {
-				$url = $to_url . $file_list_json->{config_files}->{$filename}->{API_URI};
-
-				#				my $scope   = $file_list_json->{config_files}->{$filename}->{scope};
-				#				my $cdn     = $file_list_json->{other}->{CDN_name};
-				#				my $profile = $file_list_json->{profile}->{name};
-				#				if ( $scope eq "cdn" ) {
-				#					$url = $to_url . '/api/1.2/' . $scope . "/" . $cdn . "/configfiles/ats/" . $filename;
-				#				}
-				#				elsif ( $scope eq "profile" ) {
-				#					$url = $to_url . '/api/1.2/' . $scope . "/" . $profile . "/configfiles/ats/" . $filename;
-				#				}
-				#				elsif ( $scope eq "server" ) {
-				#					$url = $to_url . '/api/1.2/' . $scope . "/" . $profile_sample{$sample_server} . "/configfiles/ats/" . $filename;
-				#				}
-			}
-			else {
-				$url = $to_url . '/genfiles/view/' . $profile_sample{$sample_server} . "/" . $filename;
-			}
-			print "Getting " . $sample_server . " " . $filename . " (url " . $url . ")\n";
-			my $fcontents = &curl_me($url);
-			open( my $fh, '>', $dir . '/' . $filename );
-			print $fh $fcontents;
-			close $fh;
-		}
-	}
+                        my $scope   = $item->{scope};
+                        my $cdn     = $file_list_json->{info}{cdnName};
+                        my $profile = $file_list_json->{info}{profileName};
+                        if ( $scope eq "cdn" ) {
+                                $url = $to_url . '/api/1.2/cdns/' . $cdn . "/configfiles/ats/" . $filename;
+                        }
+                        elsif ( $scope eq "profile" ) {
+                                $url = $to_url . '/api/1.2/profiles/' . $profile . "/configfiles/ats/" . $filename;
+                        }
+                        elsif ( $scope eq "server" ) {
+                                $url = $to_url . '/api/1.2/servers/' . $profile_sample{$sample_server} . "/configfiles/ats/" . $filename;
+                        }
+                        print "Getting " . $sample_server . " " . $filename . " (url " . $url . ")\n";
+                        my $fcontents = &curl_me($url);
+                        open( my $fh, '>', $dir . '/' . $filename );
+                        print $fh $fcontents;
+                        close $fh;
+                        last;
+                }
+        }
 }
 
 sub get_to_passwd {
 	my $user = shift;
 
-	print "Type Reference Traffic Ops passwd for " . $user . ":";
+	print "Traffic Ops passwd for " . $user . ":";
 	ReadMode('noecho');    # don't echo
 	chomp( my $passwd = <STDIN> );
 	ReadMode(0);           # back to normal
@@ -363,7 +350,7 @@ sub configure {
 	};
 
 	my $json = JSON->new;
-	$config = $json->decode($json_text);
+	return $json->decode($json_text);
 }
 
 ## rest is from other scripts, should probably be replaced by something better.
@@ -373,7 +360,7 @@ sub curl_me {
 	my $result        = `/usr/bin/curl $CURL_OPTS $url 2>&1`;
 
 	while ( $result =~ m/^curl\: \(\d+\)/ && $retry_counter > 0 ) {
-		$result =~ s/(\r|\c|\f|\t|\n)/ /g;
+		$result =~ s/(\r|\f|\t|\n)/ /g;
 		print "WARN Error receiving $url: $result\n";
 		$retry_counter--;
 		sleep 5;
@@ -384,7 +371,8 @@ sub curl_me {
 		exit 1;
 	}
 	else {
-		#print "INFO Success receiving $url.\n";
+		print "INFO Success receiving $url.\n";
+                #print "Result: $result\n\n\n";
 	}
 
 	my (@chars) = split( //, $result );
@@ -406,7 +394,7 @@ sub curl_me {
 			my $error = $@;
 			print "FATAL $url did not return valid JSON: $result | error: $error\n";
 			exit 1;
-			}
+		}
 	}
 	my $size = length($result);
 	if ( $size == 0 ) {

@@ -51,11 +51,12 @@ func getTestStatuses() []tc.Status {
 
 func TestGetStatus(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
 	testStatus := getTestStatuses()

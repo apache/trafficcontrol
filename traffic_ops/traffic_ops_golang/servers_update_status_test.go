@@ -30,21 +30,33 @@ import (
 
 func TestGetServerUpdateStatus(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
 	serverStatusRow := sqlmock.NewRows([]string{"id", "host_name", "type", "combined_reval_pending", "upd_pending", "status", "parent_upd_pending", "parent_reval_pending"})
 	serverStatusRow.AddRow(1, "host_name_1", "EDGE", true, true, "ONLINE", true, false)
 
-	mock.ExpectPrepare("WITH").ExpectQuery().WithArgs("host_name_1").WillReturnRows(serverStatusRow)
+	mock.ExpectQuery("SELECT").WillReturnRows(serverStatusRow)
 
 	result, err := getServerUpdateStatus("host_name_1", db)
+	if err != nil {
+		t.Errorf("getServerUpdateStatus: %v", err)
+	}
 
-	expected := []tc.ServerUpdateStatus{{"host_name_1", true, true, 1, "ONLINE", true, false}}
+	expected := []tc.ServerUpdateStatus{{
+		HostName:           "host_name_1",
+		UpdatePending:      true,
+		RevalPending:       true,
+		HostId:             1,
+		Status:             "ONLINE",
+		ParentPending:      true,
+		ParentRevalPending: false,
+	}}
 
 	reflect.DeepEqual(expected, result)
 }

@@ -20,8 +20,13 @@ package main
  */
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"testing"
+
+	"github.com/basho/riak-go-client"
+	"github.com/jmoiron/sqlx"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 const (
@@ -62,7 +67,7 @@ const (
   }
 }
 `
-	badJsonKeySet = `
+	badJSONKeySet = `
 
   "Kabletown URI Authority 1": {
 		"renewal_kid": "Second Key",
@@ -126,7 +131,7 @@ const (
 `
 )
 
-func TestValidateUriKeyset(t *testing.T) {
+func TestValidateURIKeyset(t *testing.T) {
 	var keyset map[string]URISignerKeyset
 
 	// unmarshal a good URISignerKeyset
@@ -140,7 +145,7 @@ func TestValidateUriKeyset(t *testing.T) {
 	}
 
 	// unmarshal a bad URISignerKeySet
-	if err := json.Unmarshal([]byte(badJsonKeySet), &keyset); err == nil {
+	if err := json.Unmarshal([]byte(badJSONKeySet), &keyset); err == nil {
 		t.Errorf("json.UnMarshal(): expected an error")
 	}
 
@@ -162,5 +167,43 @@ func TestValidateUriKeyset(t *testing.T) {
 	// now validate it, expect an erro due to missing a matching key kid to renewal_kid
 	if err := validateURIKeyset(keyset); err == nil {
 		t.Errorf("validateURIKeyset(): expected an error")
+	}
+}
+
+func TestGetRiakCluster(t *testing.T) {
+	var cfg Config
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	rows1 := sqlmock.NewRows([]string{"s.host_name", "s.domain_name"})
+	rows1.AddRow("www", "devnull.com")
+	mock.ExpectQuery("SELECT").WillReturnRows(rows1)
+
+	cfg.RiakAuthOptions = nil
+	if _, err := getRiakCluster(db, cfg); err == nil {
+		t.Errorf("expected an error due to nil RiakAuthoptions in the config but, go no error.")
+	}
+
+	cfg.RiakAuthOptions = &riak.AuthOptions{
+		User:      "riakuser",
+		Password:  "password",
+		TlsConfig: &tls.Config{},
+	}
+
+	if _, err := getRiakCluster(db, cfg); err != nil {
+		t.Errorf("expected no errors, actual: %s.", err)
+	}
+
+	rows2 := sqlmock.NewRows([]string{"s.host_name", "s.domain_name"})
+	mock.ExpectQuery("SELECT").WillReturnRows(rows2)
+
+	if _, err := getRiakCluster(db, cfg); err == nil {
+		t.Errorf("expected an error due to no available riak servers.")
 	}
 }

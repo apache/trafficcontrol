@@ -26,6 +26,7 @@ import (
 	"net/url"
 
 	"crypto/tls"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/basho/riak-go-client"
 )
@@ -129,6 +130,9 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string) (Con
 		return Config{}, fmt.Errorf("unmarshalling '%s': %v", dbConfPath, err)
 	}
 	cfg, err = ParseConfig(cfg)
+	if err != nil {
+		return Config{}, fmt.Errorf("parsing config '%s': %v", dbConfPath, err)
+	}
 
 	riakConfBytes, err := ioutil.ReadFile(riakConfPath)
 	if err != nil {
@@ -214,8 +218,8 @@ func ParseConfig(cfg Config) (Config, error) {
 	cfg.KeyPath = cfg.GetKeyPath()
 	cfg.CertPath = cfg.GetCertPath()
 
-	newUrl := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
-	cfg.URL = &newUrl
+	newURL := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
+	cfg.URL = &newURL
 
 	if len(missings) > 0 {
 		missings = "missing fields: " + missings[:len(missings)-2] // strip final `, `

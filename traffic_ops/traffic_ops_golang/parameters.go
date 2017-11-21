@@ -27,11 +27,12 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/jmoiron/sqlx"
 )
 
-const ParametersPrivLevel = PrivLevelReadOnly
+const ParametersPrivLevel = auth.PrivLevelReadOnly
 
 func parametersHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +43,7 @@ func parametersHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		ctx := r.Context()
-		privLevel, err := getPrivLevel(ctx)
+		privLevel, err := auth.GetPrivLevel(ctx)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -97,20 +98,18 @@ func getParameters(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Parameter, er
 
 	log.Debugln("Query is ", query)
 	rows, err = db.NamedQuery(query, queryValues)
-
 	if err != nil {
 		return nil, fmt.Errorf("querying: %v", err)
 	}
-	parameters := []tc.Parameter{}
-
 	defer rows.Close()
 
+	parameters := []tc.Parameter{}
 	for rows.Next() {
 		var s tc.Parameter
 		if err = rows.StructScan(&s); err != nil {
 			return nil, fmt.Errorf("getting parameters: %v", err)
 		}
-		if s.Secure && privLevel < PrivLevelAdmin {
+		if s.Secure && privLevel < auth.PrivLevelAdmin {
 			// Secure params only visible to admin
 			continue
 		}
