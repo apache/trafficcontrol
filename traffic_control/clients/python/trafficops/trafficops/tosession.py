@@ -581,6 +581,16 @@ class TOSession(restapi.RestApiSession):
         :rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
+    @restapi.api_request(u'put', u'servers/{server_id:d}/status', (u'1.1', u'1.2',))
+    def update_server_status_by_id(self, server_id=None, data=None):
+        """
+        Update server_status by Id.
+        :param server_id: The server Id
+        :type server_id: int
+        :status: https://trafficcontrol.incubator.apache.org/docs/latest/development/traffic_ops_api/v12/server.html   
+        :rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+        :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+        """
 
     @restapi.api_request(u'delete', u'servers/{server_id:d}', (u'1.1', u'1.2',))
     def delete_server_by_id(self, server_id=None):
