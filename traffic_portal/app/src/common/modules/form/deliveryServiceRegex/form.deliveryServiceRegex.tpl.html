@@ -33,7 +33,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(dsRegexForm.pattern), 'has-feedback': hasError(dsRegexForm.pattern)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Pattern *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="pattern" name="pattern" type="text" class="form-control" ng-model="regex.pattern" ng-required="true" ng-maxlength="48" ng-pattern="/^\S*$/" autofocus>
+                    <input name="pattern" type="text" class="form-control" ng-model="regex.pattern" ng-maxlength="48" ng-pattern="/^\S*$/" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(dsRegexForm.pattern, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(dsRegexForm.pattern, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(dsRegexForm.pattern, 'pattern')">No spaces</small>
@@ -43,7 +43,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(dsRegexForm.type), 'has-feedback': hasError(dsRegexForm.type)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="type" name="type" class="form-control" ng-model="regex.type" ng-options="type.id as type.name for type in types" required>
+                    <select name="type" class="form-control" ng-model="regex.type" ng-options="type.id as type.name for type in types" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(dsRegexForm.type, 'required')">Required</small>
@@ -53,7 +53,7 @@ under the License.
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Order *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input name="setNumber" type="number" class="form-control" ng-model="regex.setNumber" ng-maxlength="3" ng-pattern="/^\d+$/" required autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(dsRegexForm.setNumber, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(dsRegexForm.setNumber, 'required')">Required Whole Number</small>
                     <small class="input-error" ng-show="hasPropertyError(dsRegexForm.setNumber, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(dsRegexForm.setNumber, 'pattern')">Whole Number</small>
                     <span ng-show="hasError(dsRegexForm.setNumber)" class="form-control-feedback"><i class="fa fa-times"></i></span>

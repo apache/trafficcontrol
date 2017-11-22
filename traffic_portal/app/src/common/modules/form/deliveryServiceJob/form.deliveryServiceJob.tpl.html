@@ -33,7 +33,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(jobForm.regex), 'has-feedback': hasError(jobForm.regex)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Path Regex *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="regex" name="regex" type="text" class="form-control" placeholder="eg. /path/to/content/.*\.jpg" ng-model="job.regex" ng-required="true" ng-maxlength="255" ng-pattern="/^\//" autofocus>
+                    <input name="regex" type="text" class="form-control" placeholder="eg. /path/to/content/.*\.jpg" ng-model="job.regex" ng-required="true" ng-maxlength="255" ng-pattern="/^\//" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(jobForm.regex, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(jobForm.regex, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(jobForm.regex, 'pattern')">Must Start with /</small>
@@ -43,8 +43,9 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(jobForm.ttl), 'has-feedback': hasError(jobForm.ttl)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">TTL (hours) *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="ttl" type="number" class="form-control" ng-model="job.ttl" ng-required="true" ng-pattern="/^\d+$/" autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(jobForm.ttl, 'required')">Required</small>
+                    <input name="ttl" type="number" class="form-control" placeholder="Number of hours until the invalidate content job expires" ng-model="job.ttl" ng-maxlength="3" ng-pattern="/^\d+$/" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(jobForm.ttl, 'required')">Required Whole Number</small>
+                    <small class="input-error" ng-show="hasPropertyError(jobForm.ttl, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(jobForm.ttl, 'pattern')">Whole Number</small>
                     <span ng-show="hasError(jobForm.ttl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>

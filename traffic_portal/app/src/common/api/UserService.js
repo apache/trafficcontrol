@@ -62,7 +62,7 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
         return Restangular.service('users').post(user)
             .then(
                 function(result) {
-                    messageModel.setMessages(result.data.alerts, true);
+                    messageModel.setMessages([ { level: 'success', text: 'User created' } ], true);
                     locationUtils.navigateToPath('/users');
                 },
                 function(fault) {
