@@ -34,7 +34,8 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 )
 
 const ServerName = "traffic_ops_golang" + "/" + Version
@@ -54,8 +55,8 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 		if a.noAuth {
 			return func(w http.ResponseWriter, r *http.Request) {
 				ctx := r.Context()
-				ctx = context.WithValue(ctx, UserNameKey, "-")
-				ctx = context.WithValue(ctx, PrivLevelKey, PrivLevelInvalid)
+				ctx = context.WithValue(ctx, auth.UserNameKey, "-")
+				ctx = context.WithValue(ctx, auth.PrivLevelKey, auth.PrivLevelInvalid)
 				handlerFunc(w, r.WithContext(ctx))
 			}
 		}
@@ -94,7 +95,7 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 			}
 
 			username = oldCookie.AuthData
-			privLevel := PrivLevel(a.privLevelStmt, username)
+			privLevel := auth.PrivLevel(a.privLevelStmt, username)
 			if privLevel < privLevelRequired {
 				handleUnauthorized("insufficient privileges")
 				return
@@ -104,8 +105,8 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 			http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
 
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, UserNameKey, username)
-			ctx = context.WithValue(ctx, PrivLevelKey, privLevel)
+			ctx = context.WithValue(ctx, auth.UserNameKey, username)
+			ctx = context.WithValue(ctx, auth.PrivLevelKey, privLevel)
 
 			handlerFunc(w, r.WithContext(ctx))
 		}

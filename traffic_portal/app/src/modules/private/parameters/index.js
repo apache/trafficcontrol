@@ -18,7 +18,6 @@
  */
 
 module.exports = angular.module('trafficPortal.private.parameters', [])
-    .controller('ParametersController', require('./ParametersController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficPortal.private.parameters', {
@@ -26,8 +25,7 @@ module.exports = angular.module('trafficPortal.private.parameters', [])
                 abstract: true,
                 views: {
                     privateContent: {
-                        templateUrl: 'modules/private/parameters/parameters.tpl.html',
-                        controller: 'ParametersController'
+                        templateUrl: 'modules/private/parameters/parameters.tpl.html'
                     }
                 }
             })

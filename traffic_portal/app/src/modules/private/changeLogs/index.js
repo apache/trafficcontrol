@@ -18,7 +18,6 @@
  */
 
 module.exports = angular.module('trafficPortal.private.changeLogs', [])
-	.controller('ChangeLogsController', require('./ChangeLogsController'))
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.changeLogs', {
@@ -26,8 +25,7 @@ module.exports = angular.module('trafficPortal.private.changeLogs', [])
 				abstract: true,
 				views: {
 					privateContent: {
-						templateUrl: 'modules/private/changeLogs/changeLogs.tpl.html',
-						controller: 'ChangeLogsController'
+						templateUrl: 'modules/private/changeLogs/changeLogs.tpl.html'
 					}
 				}
 			})

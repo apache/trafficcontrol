@@ -1,0 +1,48 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="modal-header">
+    <button type="button" class="close" ng-click="cancel()"><span aria-hidden="true">&times;</span><span class="sr-only">Cancel</span></button>
+    <h4 class="modal-title">Create Federation Resolver</h4>
+</div>
+<div class="modal-body">
+    <form name="resolverForm" class="form-horizontal form-label-left" novalidate>
+        <div class="form-group" ng-class="{'has-error': hasError(resolverForm.ipAddress), 'has-feedback': hasError(resolverForm.ipAddress)}">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">IP / CIDR *</label>
+            <div class="col-md-9 col-sm-9 col-xs-12">
+                <input name="ipAddress" type="text" class="form-control" placeholder="eg. 192.168.2.29 or 192.168.2.29/16 or 2001:db8::/32" ng-model="resolver.ipAddress" ng-required="true" autofocus>
+                <small class="input-error" ng-show="hasPropertyError(resolverForm.ipAddress, 'required')">Required</small>
+                <span ng-show="hasError(resolverForm.ipAddress)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+            </div>
+        </div>
+        <div class="form-group" ng-class="{'has-error': hasError(resolverForm.type), 'has-feedback': hasError(resolverForm.type)}">
+            <label class="control-label col-md-3 col-sm-3 col-xs-12">Type *</label>
+            <div class="col-md-9 col-sm-9 col-xs-12">
+                <select name="type" class="form-control" ng-model="resolver.typeId" ng-options="type.id as type.name for type in types" required>
+                    <option value="">Select...</option>
+                </select>
+                <small class="input-error" ng-show="hasPropertyError(resolverForm.type, 'required')">Required</small>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
+    <button type="button" class="btn btn-primary" ng-disabled="resolverForm.$pristine || resolverForm.$invalid" ng-click="create(resolver)">Create</button>
+</div>

@@ -18,7 +18,6 @@
  */
 
 module.exports = angular.module('trafficPortal.private.servers', [])
-    .controller('ServersController', require('./ServersController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficPortal.private.servers', {
@@ -26,8 +25,7 @@ module.exports = angular.module('trafficPortal.private.servers', [])
                 abstract: true,
                 views: {
                     privateContent: {
-                        templateUrl: 'modules/private/servers/servers.tpl.html',
-                        controller: 'ServersController'
+                        templateUrl: 'modules/private/servers/servers.tpl.html'
                     }
                 }
             })

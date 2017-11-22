@@ -28,6 +28,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -46,7 +47,7 @@ func serversHandler(db *sqlx.DB) http.HandlerFunc {
 
 		// p PathParams, username string, privLevel int
 		ctx := r.Context()
-		privLevel, err := getPrivLevel(ctx)
+		privLevel, err := auth.GetPrivLevel(ctx)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -111,6 +112,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Server, error) {
 		"cachegroup":   "s.cachegroup",
 		"cdn":          "s.cdn_id",
 		"id":           "s.id",
+		"hostName":     "s.host_name",
 		"physLocation": "s.phys_location",
 		"profileId":    "s.profile",
 		"status":       "st.name",
@@ -134,7 +136,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Server, error) {
 		if err = rows.StructScan(&s); err != nil {
 			return nil, fmt.Errorf("getting servers: %v", err)
 		}
-		if privLevel < PrivLevelAdmin {
+		if privLevel < auth.PrivLevelAdmin {
 			s.ILOPassword = HiddenField
 			s.XMPPPasswd = HiddenField
 		}

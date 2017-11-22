@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -82,7 +83,7 @@ func TestGetParameters(t *testing.T) {
 	v := url.Values{}
 	v.Set("dsId", "1")
 
-	parameters, err := getParameters(v, db, PrivLevelAdmin)
+	parameters, err := getParameters(v, db, auth.PrivLevelAdmin)
 	if err != nil {
 		t.Errorf("getParameters expected: nil error, actual: %v", err)
 	}

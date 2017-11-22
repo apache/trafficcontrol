@@ -31,7 +31,7 @@ module.exports = angular.module('trafficPortal.private.cacheGroups.servers', [])
 								return cacheGroupService.getCacheGroup($stateParams.cacheGroupId);
 							},
 							servers: function($stateParams, serverService) {
-								return serverService.getServers({ cachegroup: $stateParams.cacheGroupId });
+								return serverService.getServers({ cachegroup: $stateParams.cacheGroupId, orderby: 'hostName' });
 							}
 						}
 					}

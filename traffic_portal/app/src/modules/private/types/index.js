@@ -18,7 +18,6 @@
  */
 
 module.exports = angular.module('trafficPortal.private.types', [])
-    .controller('TypesController', require('./TypesController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficPortal.private.types', {
@@ -26,8 +25,7 @@ module.exports = angular.module('trafficPortal.private.types', [])
                 abstract: true,
                 views: {
                     privateContent: {
-                        templateUrl: 'modules/private/types/types.tpl.html',
-                        controller: 'TypesController'
+                        templateUrl: 'modules/private/types/types.tpl.html'
                     }
                 }
             })

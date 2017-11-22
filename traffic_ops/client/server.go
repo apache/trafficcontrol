@@ -25,62 +25,89 @@ import (
 )
 
 // Servers gets an array of servers
+// Deprecated: use GetServers
 func (to *Session) Servers() ([]tc.Server, error) {
+	s, _, err := to.GetServers()
+	return s, err
+}
+
+func (to *Session) GetServers() ([]tc.Server, ReqInf, error) {
 	url := "/api/1.2/servers.json"
-	resp, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
 	var data tc.ServersResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return data.Response, nil
+	return data.Response, reqInf, nil
 }
 
 // Server gets a server by hostname
+// Deprecated: use GetServer
 func (to *Session) Server(name string) (*tc.Server, error) {
+	s, _, err := to.GetServer(name)
+	return s, err
+}
+
+func (to *Session) GetServer(name string) (*tc.Server, ReqInf, error) {
 	url := fmt.Sprintf("/api/1.2/servers/hostname/%s/details", name)
-	resp, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
 	data := tc.ServersDetailResponse{}
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return &data.Response, nil
+	return &data.Response, reqInf, nil
 }
 
 // ServersByType gets an array of serves of a specified type.
 func (to *Session) ServersByType(qparams url.Values) ([]tc.Server, error) {
+	ss, _, err := to.GetServersByType(qparams)
+	return ss, err
+}
+
+func (to *Session) GetServersByType(qparams url.Values) ([]tc.Server, ReqInf, error) {
 	url := fmt.Sprintf("/api/1.2/servers.json?%s", qparams.Encode())
-	resp, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
 	var data tc.ServersResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return data.Response, nil
+	return data.Response, reqInf, nil
 }
 
 // ServersFqdn returns a the full domain name for the server short name passed in.
+// Deprecated: use GetServersFQDN
 func (to *Session) ServersFqdn(n string) (string, error) {
+	f, _, err := to.GetServerFQDN(n)
+	return f, err
+}
+
+func (to *Session) GetServerFQDN(n string) (string, ReqInf, error) {
+	// TODO fix to only request one server
 	fdn := ""
-	servers, err := to.Servers()
+	servers, reqInf, err := to.GetServers()
 	if err != nil {
-		return "Error", err
+		return "Error", reqInf, err
 	}
 
 	for _, server := range servers {
@@ -89,18 +116,24 @@ func (to *Session) ServersFqdn(n string) (string, error) {
 		}
 	}
 	if fdn == "" {
-		return "Error", fmt.Errorf("No Server %s found", n)
+		return "Error", reqInf, fmt.Errorf("No Server %s found", n)
 	}
-	return fdn, nil
+	return fdn, reqInf, nil
 }
 
 // ServersShortNameSearch returns a slice of short server names that match a greedy match.
+// Deprecated: use GetServersShortNameSearch
 func (to *Session) ServersShortNameSearch(shortname string) ([]string, error) {
+	ss, _, err := to.GetServersShortNameSearch(shortname)
+	return ss, err
+}
+
+func (to *Session) GetServersShortNameSearch(shortname string) ([]string, ReqInf, error) {
 	var serverlst []string
-	servers, err := to.Servers()
+	servers, reqInf, err := to.GetServers()
 	if err != nil {
 		serverlst = append(serverlst, "N/A")
-		return serverlst, err
+		return serverlst, reqInf, err
 	}
 	for _, server := range servers {
 		if strings.Contains(server.HostName, shortname) {
@@ -109,7 +142,7 @@ func (to *Session) ServersShortNameSearch(shortname string) ([]string, error) {
 	}
 	if len(serverlst) == 0 {
 		serverlst = append(serverlst, "N/A")
-		return serverlst, fmt.Errorf("No Servers Found")
+		return serverlst, reqInf, fmt.Errorf("No Servers Found")
 	}
-	return serverlst, nil
+	return serverlst, reqInf, nil
 }

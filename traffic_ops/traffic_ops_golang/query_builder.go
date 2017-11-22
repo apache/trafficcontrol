@@ -30,16 +30,21 @@ func BuildQuery(v url.Values, selectStmt string, queryParamsToSQLCols map[string
 	var sqlQuery string
 	var criteria string
 	var queryValues map[string]interface{}
-	if len(v) > 0 {
-		criteria, queryValues = parseCriteriaAndQueryValues(queryParamsToSQLCols, v)
+	sqlQuery = selectStmt
+	criteria, queryValues = parseCriteriaAndQueryValues(queryParamsToSQLCols, v)
 
-		if len(queryValues) > 0 {
-			sqlQuery = selectStmt + "\nWHERE " + criteria
+	if len(queryValues) > 0 {
+		sqlQuery += "\nWHERE " + criteria
+	}
+
+	if orderby, ok := v["orderby"]; ok {
+		log.Debugln("orderby: ", orderby[0])
+		if col, ok := queryParamsToSQLCols[orderby[0]]; ok {
+			log.Debugln("orderby column ", col)
+			sqlQuery += "\nORDER BY " + col
 		} else {
-			sqlQuery = selectStmt
+			log.Debugln("Incorrect name for orderby: ", orderby[0])
 		}
-	} else {
-		sqlQuery = selectStmt
 	}
 	log.Debugln("\n--\n" + sqlQuery)
 	return sqlQuery, queryValues

@@ -63,6 +63,7 @@ type Config struct {
 	ServeWriteTimeout            time.Duration `json:"-"`
 	HealthToStatRatio            uint64        `json:"health_to_stat_ratio"`
 	StaticFileDir                string        `json:"static_file_dir"`
+	CRConfigHistoryCount         uint64        `json:"crconfig_history_count"`
 }
 
 func (c Config) ErrorLog() log.LogLocation   { return log.LogLocation(c.LogLocationError) }
@@ -93,6 +94,7 @@ var DefaultConfig = Config{
 	ServeWriteTimeout:            10 * time.Second,
 	HealthToStatRatio:            4,
 	StaticFileDir:                StaticFileDir,
+	CRConfigHistoryCount:         20000,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/

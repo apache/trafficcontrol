@@ -18,7 +18,6 @@
  */
 
 module.exports = angular.module('trafficPortal.private.physLocations', [])
-    .controller('PhysLocationsController', require('./PhysLocationsController'))
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficPortal.private.physLocations', {
@@ -26,8 +25,7 @@ module.exports = angular.module('trafficPortal.private.physLocations', [])
                 abstract: true,
                 views: {
                     privateContent: {
-                        templateUrl: 'modules/private/physLocations/physLocations.tpl.html',
-                        controller: 'PhysLocationsController'
+                        templateUrl: 'modules/private/physLocations/physLocations.tpl.html'
                     }
                 }
             })

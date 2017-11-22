@@ -46,8 +46,8 @@ var FormProfileController = function(profile, $scope, $location, $uibModal, form
     ];
 
     $scope.falseTrue = [
-        { value: false, label: 'false' },
-        { value: true, label: 'true' }
+        { value: true, label: 'true' },
+        { value: false, label: 'false' }
     ];
 
     $scope.viewParams = function() {

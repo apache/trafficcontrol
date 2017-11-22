@@ -17,32 +17,36 @@ package client
 
 import "encoding/json"
 
-func get(to *Session, endpoint string, respStruct interface{}) error {
+func get(to *Session, endpoint string, respStruct interface{}) (ReqInf, error) {
 	return makeReq(to, "GET", endpoint, nil, respStruct)
 }
 
 func post(to *Session, endpoint string, body []byte, respStruct interface{}) error {
-	return makeReq(to, "POST", endpoint, body, respStruct)
+	_, err := makeReq(to, "POST", endpoint, body, respStruct)
+	return err
 }
 
 func put(to *Session, endpoint string, body []byte, respStruct interface{}) error {
-	return makeReq(to, "PUT", endpoint, body, respStruct)
+	_, err := makeReq(to, "PUT", endpoint, body, respStruct)
+	return err
 }
 
 func del(to *Session, endpoint string, respStruct interface{}) error {
-	return makeReq(to, "DELETE", endpoint, nil, respStruct)
+	_, err := makeReq(to, "DELETE", endpoint, nil, respStruct)
+	return err
 }
 
-func makeReq(to *Session, method, endpoint string, body []byte, respStruct interface{}) error {
-	resp, err := to.request(method, endpoint, body)
+func makeReq(to *Session, method, endpoint string, body []byte, respStruct interface{}) (ReqInf, error) {
+	resp, remoteAddr, err := to.request(method, endpoint, body) // TODO change to getBytesWithTTL
+	reqInf := ReqInf{RemoteAddr: remoteAddr, CacheHitStatus: CacheHitStatusMiss}
 	if err != nil {
-		return err
+		return reqInf, err
 	}
 	defer resp.Body.Close()
 
 	if err := json.NewDecoder(resp.Body).Decode(respStruct); err != nil {
-		return err
+		return reqInf, err
 	}
 
-	return nil
+	return reqInf, nil
 }

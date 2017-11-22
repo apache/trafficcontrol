@@ -28,7 +28,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 	"github.com/jmoiron/sqlx"
 
 	"fmt"
@@ -145,12 +146,12 @@ func TestWrapAuth(t *testing.T) {
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		privLevel, err := getPrivLevel(ctx)
+		privLevel, err := auth.GetPrivLevel(ctx)
 		if err != nil {
 			t.Fatalf("unable to get privLevel: %v", err)
 			return
 		}
-		userName, err := getUserName(ctx)
+		userName, err := auth.GetUserName(ctx)
 		if err != nil {
 			t.Fatalf("unable to get userName: %v", err)
 			return

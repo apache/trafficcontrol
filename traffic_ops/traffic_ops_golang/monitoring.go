@@ -31,9 +31,10 @@ import (
 	"github.com/lib/pq"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
-const MonitoringPrivLevel = PrivLevelReadOnly
+const MonitoringPrivLevel = auth.PrivLevelReadOnly
 
 const CacheMonitorConfigFile = "rascal.properties"
 const MonitorType = "RASCAL"
