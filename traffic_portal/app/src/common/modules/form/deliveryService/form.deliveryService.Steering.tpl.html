@@ -99,7 +99,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.displayName), 'has-feedback': hasError(deliveryServiceForm.displayName)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Display Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="displayName" type="text" class="form-control" ng-model="deliveryService.displayName" ng-required="true" ng-maxlength="48" autofocus>
+                    <input name="displayName" type="text" class="form-control" ng-model="deliveryService.displayName" ng-maxlength="48" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.displayName, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.displayName, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(deliveryServiceForm.displayName)" class="form-control-feedback"><i class="fa fa-times"></i></span>

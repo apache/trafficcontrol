@@ -47,7 +47,7 @@ under the License.
                 <div class="form-group" ng-class="{'has-error': hasError(federationForm.cname), 'has-feedback': hasError(federationForm.cname)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">CNAME *</label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input name="cname" type="text" class="form-control" ng-model="federation.cname" ng-required="true" ng-pattern="/^\S*\.$/" autofocus>
+                        <input name="cname" type="text" class="form-control" ng-model="federation.cname" ng-pattern="/^\S*\.$/" required autofocus>
                         <small class="input-error" ng-show="hasPropertyError(federationForm.cname, 'required')">Required</small>
                         <small class="input-error" ng-show="hasPropertyError(federationForm.cname, 'pattern')">Invalid. Must contain no spaces and end with a dot.</small>
                         <span ng-show="hasError(federationForm.cname)" class="form-control-feedback"><i class="fa fa-times"></i></span>

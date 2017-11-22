@@ -32,16 +32,17 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(registerForm.email), 'has-feedback': hasError(registerForm.email)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Email *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="email" name="email" type="email" class="form-control" ng-model="registration.email" ng-maxlength="128" required autofocus>
+                    <input name="email" type="email" class="form-control" ng-model="registration.email" ng-maxlength="128" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(registerForm.email, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(registerForm.email, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(registerForm.email, 'email')">Invalid Email</small>
                     <span ng-show="hasError(registerForm.email)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(registerForm.role), 'has-feedback': hasError(registerForm.role)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Role (privilege level) *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="role" name="role" class="form-control" ng-model="registration.role" ng-options="role.id as roleLabel(role) for role in roles" required>
+                    <select name="role" class="form-control" ng-model="registration.role" ng-options="role.id as roleLabel(role) for role in roles" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(registerForm.role, 'required')">Required</small>

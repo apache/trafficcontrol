@@ -454,8 +454,8 @@ sub is_cachegroup_valid {
 
 		# Validation checks to perform
 		checks => [
-			name						=> [ is_required("is required"), \&is_alphanumeric ],
-			shortName					=> [ is_required("is required"), \&is_alphanumeric ],
+			name						=> [ is_required("is required"), \&is_alphanumeric, is_like( qr/^\S*$/, "must not contain spaces" ) ],
+			shortName					=> [ is_required("is required"), \&is_alphanumeric, is_like( qr/^\S*$/, "must not contain spaces" ) ],
 			latitude					=> [ \&is_valid_lat ],
 			longitude					=> [ \&is_valid_long ],
 			parentCachegroupId			=> [ \&is_int_or_undef ],
