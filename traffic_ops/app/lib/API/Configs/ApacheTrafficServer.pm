@@ -2480,11 +2480,9 @@ sub remap_dot_config {
 			}
 			if ( $ds->{qstring_ignore} == 1 ) {
 				$mid_remap{ $ds->{org} } .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
-				$self->app->log->debug("remap_dot_config doing mid remap with cacheurl.so qstring");
 			}
 			if ( defined( $ds->{cacheurl} ) && $ds->{cacheurl} ne "" ) {
 				$mid_remap{ $ds->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $ds->{cacheurl_file};
-				$self->app->log->debug("remap_dot_config doing mid remap with cacheurl.so defined file");
 			}
 			if ( defined( $ds->{'param'}->{'cachekey.config'} ) ) {
 				$mid_remap{ $ds->{org} } .= " \@plugin=cachekey.so";
@@ -2557,7 +2555,7 @@ sub build_remap_line {
 	my $ats_major_version = substr( $ats_ver, 0, 1 );
 	
 	$map_from =~ s/ccr/$hostname/;
-$self->app->log->debug("IN BUILDREMAPLINE");
+
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
 		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=dscp_remap.so \@pparam=" . $dscp;
 	}
@@ -2583,7 +2581,6 @@ $self->app->log->debug("IN BUILDREMAPLINE");
 			$self->app->log->debug(
 				"qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter if you want to change"
 			);
-			$self->app->log->debug("buildremap dbg");
 		}
 		else {
 			#If we are on ats 6 and later we want to use the cachekey plugin, otherwise we have to use cacheurl
@@ -2604,7 +2601,6 @@ $self->app->log->debug("IN BUILDREMAPLINE");
 		foreach my $ck_entry ( keys %{ $remap->{'param'}->{'cachekey.config'} } ) {
 			$text .= " \@pparam=--" . $ck_entry . "=" . $remap->{'param'}->{'cachekey.config'}->{$ck_entry};
 		}
-		$self->app->log->debug($text)
 	}
 
 	# Note: should use full path here?
