@@ -2480,9 +2480,11 @@ sub remap_dot_config {
 			}
 			if ( $ds->{qstring_ignore} == 1 ) {
 				$mid_remap{ $ds->{org} } .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
+				$self->app->log->debug("remap_dot_config doing mid remap with cacheurl.so qstring");
 			}
 			if ( defined( $ds->{cacheurl} ) && $ds->{cacheurl} ne "" ) {
 				$mid_remap{ $ds->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $ds->{cacheurl_file};
+				$self->app->log->debug("remap_dot_config doing mid remap with cacheurl.so defined file");
 			}
 			if ( defined( $ds->{'param'}->{'cachekey.config'} ) ) {
 				$mid_remap{ $ds->{org} } .= " \@plugin=cachekey.so";
@@ -2548,10 +2550,14 @@ sub build_remap_line {
 		$self->db->resultset('ProfileParameter')
 		->search( { 'parameter.name' => 'trafficserver', 'parameter.config_file' => 'package', 'profile.id' => $server_obj->profile->id },
 		{ prefetch => [ 'profile', 'parameter' ] } )->get_column('parameter.value')->single();
+	if (!defined $ats_ver) {
+	        $ats_ver = "5";
+            $self->app->log->error("Parameter package.trafficserver missing for profile ".$server->profile->name . ". Assuming version $ats_ver");
+        }
 	my $ats_major_version = substr( $ats_ver, 0, 1 );
 	
 	$map_from =~ s/ccr/$hostname/;
-
+$self->app->log->debug("IN BUILDREMAPLINE");
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
 		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=dscp_remap.so \@pparam=" . $dscp;
 	}
@@ -2577,10 +2583,12 @@ sub build_remap_line {
 			$self->app->log->debug(
 				"qstring_ignore == 1, but global cacheurl.config param exists, so skipping remap rename config_file=cacheurl.config parameter if you want to change"
 			);
+			$self->app->log->debug("buildremap dbg");
 		}
 		else {
+			#If we are on ats 6 and later we want to use the cachekey plugin, otherwise we have to use cacheurl
 			if ($ats_major_version >= 6) {
-				$text .=" \@plugin=cachekey.so \@pparam=--separator= \@pparam=--remove-all-params=true \@pparam=--remove-path=true \@pparam=--capture-prefix-uri=/http:\/\/([^?]*)/http:\/\/$1/"
+				$text .=" \@plugin=cachekey.so \@pparam=--separator= \@pparam=--remove-all-params=true \@pparam=--remove-path=true \@pparam=--capture-prefix-uri=/http:\\/\\/([^?]*)/http:\\/\\/\$1/";
 			}
 			else {
 				$text .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
