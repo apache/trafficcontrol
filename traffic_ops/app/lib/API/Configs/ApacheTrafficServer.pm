@@ -2544,7 +2544,12 @@ sub build_remap_line {
 
 	my $dscp      = $remap->{dscp};
 	my $hostname  = $server_obj->host_name;
-
+	my $ats_ver =
+		$self->db->resultset('ProfileParameter')
+		->search( { 'parameter.name' => 'trafficserver', 'parameter.config_file' => 'package', 'profile.id' => $server_obj->profile->id },
+		{ prefetch => [ 'profile', 'parameter' ] } )->get_column('parameter.value')->single();
+	my $ats_major_version = substr( $ats_ver, 0, 1 );
+	
 	$map_from =~ s/ccr/$hostname/;
 
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
@@ -2574,7 +2579,12 @@ sub build_remap_line {
 			);
 		}
 		else {
-			$text .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
+			if ($ats_major_version >= 6) {
+				$text .=" \@plugin=cachekey.so \@pparam=--separator= \@pparam=--remove-all-params=true \@pparam=--remove-path=true \@pparam=--capture-prefix-uri=/http:\/\/([^?]*)/http:\/\/$1/"
+			}
+			else {
+				$text .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
+			}
 		}
 	}
 	if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
@@ -2586,6 +2596,7 @@ sub build_remap_line {
 		foreach my $ck_entry ( keys %{ $remap->{'param'}->{'cachekey.config'} } ) {
 			$text .= " \@pparam=--" . $ck_entry . "=" . $remap->{'param'}->{'cachekey.config'}->{$ck_entry};
 		}
+		$self->app->log->debug($text)
 	}
 
 	# Note: should use full path here?
