@@ -18,18 +18,63 @@ package client_tests
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"testing"
 
+	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
-//TestCDNs compares the results of the CDN api and CDN client
-func TestCDNs(t *testing.T) {
-	fmt.Printf("TestCDNs --->\n")
-	fmt.Printf("TOSession ---> %v\n", TOSession)
-	//Get CDNs Data from API
-	resp, err := Request(*TOSession, "GET", "/api/1.2/cdns.json", nil)
+var (
+	TOSession *client.Session
+	cfg       Config
+	testData  TrafficControl
+)
+
+func TestCDNsPOST(t *testing.T) {
+
+	for _, cdn := range testData.CDNs {
+		TestDeleteCDNs(t, cdn.Name)
+	}
+
+	for _, cdn := range testData.CDNs {
+
+		b, err := json.Marshal(cdn)
+		if err != nil {
+			t.Errorf("Could not marshal data %v\n", err)
+		}
+		// TODO: drichardson centralize these routes
+		resp, err := Request(*TOSession, "POST", "/api/1.2/cdns", b)
+		if err != nil {
+			t.Errorf("Could not POST to cdns: %v\n", err)
+		}
+
+		defer resp.Body.Close()
+		var alerts tc.Alerts
+		if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
+			t.Errorf("Could not decode alert response.  Error is: %v\n", err)
+		}
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Response was not successful %v\n", err)
+		}
+	}
+
+}
+
+func DeleteCDNs(t *testing.T, cdnName string) {
+	route := fmt.Sprintf("/api/1.2/cdns/name/%s", cdnName)
+	fmt.Printf("route ---> %v\n", route)
+	resp, err := Request(*TOSession, "DELETE", route, nil)
 	fmt.Printf("resp ---> %v\n", resp)
+	if err != nil {
+		log.Warnf("Could not DELETE cdns: %s - %v\n", cdnName, err)
+	}
+}
+
+//TestCDNGETs compares the results of the CDN api and CDN client
+func TestCDNs(t *testing.T) {
+	resp, err := Request(*TOSession, "GET", "/api/1.2/cdns.json", nil)
 	if err != nil {
 		t.Errorf("Could not get cdns.json reponse was: %v\n", err)
 	}

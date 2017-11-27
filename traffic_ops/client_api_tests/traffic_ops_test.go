@@ -18,7 +18,6 @@ package client_tests
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -29,14 +28,14 @@ import (
 	"time"
 
 	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	_ "github.com/lib/pq"
 )
 
-//TODO: drichardson - put these in the config
 var (
 	TOSession *client.Session
+	cfg       Config
+	testData  TrafficControl
 )
 
 func TestMain(m *testing.M) {
@@ -44,7 +43,6 @@ func TestMain(m *testing.M) {
 	configFileName := flag.String("cfg", "", "The config file path")
 	flag.Parse()
 
-	var cfg Config
 	var err error
 	if cfg, err = LoadConfig(*configFileName); err != nil {
 		fmt.Printf("Error Loading Config %v %v\n", cfg, err)
@@ -61,6 +59,9 @@ func TestMain(m *testing.M) {
 			   Db User:              %s
 			   Db Name:              %s
 			   Db Ssl:               %t`, cfg.TOURL, cfg.DB.Hostname, cfg.DB.User, cfg.DB.Name, cfg.DB.SSL)
+
+	//Load the test data
+	loadTestCDN()
 
 	prepareDatabase(&cfg)
 
@@ -83,6 +84,7 @@ func setupSession(cfg Config, toURL string, toUser string, toPass string) (*clie
 	var err error
 	var TOSession *client.Session
 	var netAddr net.Addr
+	//TODO: drichardson make this configurable
 	toReqTimeout := time.Second * time.Duration(30)
 	TOSession, netAddr, err = client.LoginWithAgent(toURL, toUser, toPass, true, "traffic-ops-client-integration-tests", true, toReqTimeout)
 	if err != nil {
@@ -93,78 +95,24 @@ func setupSession(cfg Config, toURL string, toUser string, toPass string) (*clie
 	return TOSession, netAddr, err
 }
 
-func loadTestCDN() TrafficControl {
+func loadTestCDN() {
 
-	fixtureData, err := ioutil.ReadFile("./test_cdn.json")
+	f, err := ioutil.ReadFile("./test_cdn.json")
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	var tc TrafficControl
-	err = json.Unmarshal(fixtureData, &tc)
+	err = json.Unmarshal(f, &testData)
 	if err != nil {
 		log.Errorf("Cannot unmarshal the json ", err)
 	}
-	return tc
-}
-
-//GetCDN returns a Cdn struct
-func GetCDN() (tc.CDN, error) {
-	cdns, err := TOSession.CDNs()
-	if err != nil {
-		return *new(tc.CDN), err
-	}
-	cdn := cdns[0]
-	if cdn.Name == "ALL" {
-		cdn = cdns[1]
-	}
-	return cdn, nil
-}
-
-//GetProfile returns a Profile Struct
-func GetProfile() (tc.Profile, error) {
-	profiles, err := TOSession.Profiles()
-	if err != nil {
-		return *new(tc.Profile), err
-	}
-	return profiles[0], nil
-}
-
-//GetType returns a Type Struct
-func GetType(useInTable string) (tc.Type, error) {
-	types, err := TOSession.Types()
-	if err != nil {
-		return *new(tc.Type), err
-	}
-	for _, myType := range types {
-		if myType.UseInTable == useInTable {
-			return myType, nil
-		}
-	}
-	nfErr := fmt.Sprintf("No Types found for useInTable %s\n", useInTable)
-	return *new(tc.Type), errors.New(nfErr)
-}
-
-//GetDeliveryService returns a DeliveryService Struct
-func GetDeliveryService(cdn string) (tc.DeliveryService, error) {
-	dss, err := TOSession.DeliveryServices()
-	if err != nil {
-		return *new(tc.DeliveryService), err
-	}
-	if cdn != "" {
-		for _, ds := range dss {
-			if ds.CDNName == cdn {
-				return ds, nil
-			}
-		}
-	}
-	return dss[0], nil
 }
 
 //Request sends a request to TO and returns a response.
 //This is basically a copy of the private "request" method in the tc.go \
 //but I didn't want to make that one public.
 func Request(to client.Session, method, path string, body []byte) (*http.Response, error) {
+	fmt.Printf("method ---> %v\n", method)
 	url := fmt.Sprintf("%s%s", TOSession.URL, path)
 
 	var req *http.Request
@@ -177,7 +125,7 @@ func Request(to client.Session, method, path string, body []byte) (*http.Respons
 		}
 		req.Header.Set("Content-Type", "application/json")
 	} else {
-		req, err = http.NewRequest("GET", url, nil)
+		req, err = http.NewRequest(method, url, nil)
 		if err != nil {
 			return nil, err
 		}
