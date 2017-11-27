@@ -94,9 +94,9 @@ func setupSession(cfg Config, toURL string, toUser string, toPass string) (*clie
 	return TOSession, netAddr, err
 }
 
-func loadFixtureData() TrafficControl {
+func loadTestCDN() TrafficControl {
 
-	fixtureData, err := ioutil.ReadFile("./sample_cdn.json")
+	fixtureData, err := ioutil.ReadFile("./test_cdn.json")
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
