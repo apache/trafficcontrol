@@ -274,7 +274,7 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		bytesWritten := uint64(0)
 		code, bytesWritten, err = serveErr(w, code)
 		tryFlush(w)
-		statLog.Log(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, 0, true), 0, 0)
+		statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), true, 0, 0)
 		return
 	}
 
@@ -297,7 +297,7 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 			}
 			tryFlush(w)
-			statLog.Log(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, 0, true), 0, 0)
+			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), true, 0, 0)
 			return
 		}
 
@@ -306,7 +306,7 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 		}
 		tryFlush(w)
-		statLog.Log(cacheObj.Code, bytesWritten, true, err == nil, GetCacheHitStr(ReuseCannot, cacheObj.OriginCode, false), 0, 0)
+		statLog.Log(cacheObj.Code, bytesWritten, true, err == nil, isCacheHit(ReuseCannot, cacheObj.OriginCode), false, 0, 0)
 		return
 	}
 
@@ -319,7 +319,7 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Errorf("retrying get error (in unexpected cacheobj): %v\n", err)
 			code, bytesWritten, err := serveReqErr(w)
 			tryFlush(w)
-			statLog.Log(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, 0, false), 0, 0)
+			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), false, 0, 0)
 			return
 		}
 		bytesWritten, err := h.respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
@@ -327,7 +327,7 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 		}
 		tryFlush(w)
-		statLog.Log(cacheObj.Code, bytesWritten, err == nil, true, GetCacheHitStr(ReuseCannot, cacheObj.OriginCode, false), cacheObj.OriginCode, cacheObj.Size)
+		statLog.Log(cacheObj.Code, bytesWritten, err == nil, true, isCacheHit(ReuseCannot, cacheObj.OriginCode), false, cacheObj.OriginCode, cacheObj.Size)
 		return
 	}
 
@@ -347,7 +347,7 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 			}
 			tryFlush(w)
-			statLog.Log(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, 0, false), 0, 0)
+			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), false, 0, 0)
 			return
 		}
 	case ReuseMustRevalidate:
@@ -361,7 +361,7 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 			}
 			tryFlush(w)
-			statLog.Log(code, bytesWritten, err == nil, false, GetCacheHitStr(ReuseCannot, code, false), 0, 0)
+			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, code), false, 0, 0)
 			return
 		}
 
@@ -382,7 +382,7 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 	}
 	tryFlush(w)
-	statLog.Log(cacheObj.Code, bytesSent, err == nil, true, GetCacheHitStr(canReuseStored, cacheObj.OriginCode, false), cacheObj.OriginCode, cacheObj.Size)
+	statLog.Log(cacheObj.Code, bytesSent, err == nil, true, isCacheHit(canReuseStored, cacheObj.OriginCode), false, cacheObj.OriginCode, cacheObj.Size)
 }
 
 func tryFlush(w http.ResponseWriter) {
@@ -457,15 +457,8 @@ func atsEventLogStr(
 	return strconv.FormatInt(unixSec, 10) + "." + unixFracStr + " chi=" + clientIP + " phn=" + selfHostname + " php=" + reqPort + " shn=" + originHost + " url=" + scheme + "://" + reqHost + url + " cqhn=" + method + " cqhv=" + protocol + " pssc=" + strconv.FormatInt(int64(respCode), 10) + " ttms=" + strconv.FormatInt(int64(timeToServe/time.Millisecond), 10) + " b=" + strconv.FormatInt(int64(bytesSent), 10) + " sssc=" + strconv.FormatInt(int64(originStatus), 10) + " sscl=" + strconv.FormatInt(int64(originBytes), 10) + " cfsc=" + cfsc + " pfsc=" + pfsc + " crc=" + cacheHit + " phr=" + proxyUsed + " psqn=" + thisProxyName + " uas=" + clientUserAgent + " xmt=" + xmt + "\n"
 }
 
-// GetCacheHitStr returns the event log string for whether the request was a cache hit. For a request not in the cache, pass `ReuseCannot` to indicate a cache miss.
-func GetCacheHitStr(reuse Reuse, originCode int, originConnectFailed bool) string {
-	if originConnectFailed {
-		return "ERR_CONNECT_FAIL"
-	}
-	if reuse == ReuseCan || ((reuse == ReuseMustRevalidate || reuse == ReuseMustRevalidateCanStale) && (originCode > 299 && originCode < 400)) {
-		return "TCP_HIT"
-	}
-	return "TCP_MISS"
+func isCacheHit(reuse Reuse, originCode int) bool {
+	return reuse == ReuseCan || ((reuse == ReuseMustRevalidate || reuse == ReuseMustRevalidateCanStale) && (originCode > 299 && originCode < 400))
 }
 
 // serveRuleNotFound writes the appropriate response to the client, via given writer, for when no remap rule was found for a request.
@@ -530,7 +523,7 @@ func (h *CacheHandler) respond(w http.ResponseWriter, code int, header http.Head
 }
 
 // WriteStats writes to the remapRuleStats, and returns the bytes written to the connection
-func WriteStats(stats Stats, w http.ResponseWriter, conn *web.InterceptConn, reqFQDN string, remoteAddr string, code int, bytesWritten uint64) uint64 {
+func WriteStats(stats Stats, w http.ResponseWriter, conn *web.InterceptConn, reqFQDN string, remoteAddr string, code int, bytesWritten uint64, cacheHit bool) uint64 {
 	remapRuleStats, ok := stats.Remap().Stats(reqFQDN)
 	if !ok {
 		log.Errorf("Remap rule %v not in Stats\n", reqFQDN)
@@ -553,6 +546,15 @@ func WriteStats(stats Stats, w http.ResponseWriter, conn *web.InterceptConn, req
 	// bytesRead, bytesWritten := getConnInfoAndDestroyWriter(w, stats, remapRuleName)
 	remapRuleStats.AddInBytes(uint64(bytesRead))
 	remapRuleStats.AddOutBytes(uint64(bytesWritten))
+
+	if cacheHit {
+		stats.AddCacheHit()
+		remapRuleStats.AddCacheHit()
+	} else {
+		stats.AddCacheMiss()
+		remapRuleStats.AddCacheMiss()
+	}
+
 	switch {
 	case code < 200:
 		log.Errorf("responded with invalid code %v\n", code)
