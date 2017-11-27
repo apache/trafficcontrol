@@ -32,11 +32,12 @@ var (
 
 // Config reflects the structure of the test-to-api.conf file
 type Config struct {
-	TOURL    string             `json:"toURL" envconfig:"TO_URL" default:"https://localhost:443"`
-	TOUser   string             `json:"toUser" envconfig:"TO_USER"`
-	Insecure bool               `json:"sslInsecure" envconfig:"SSL_INSECURE"`
-	DB       TrafficOpsDatabase `json:"db"`
-	Log      Locations          `json:"logLocations"`
+	TOURL          string             `json:"TOURL" envconfig:"TO_URL" default:"https://localhost:443"`
+	TOUser         string             `json:"TOUser" envconfig:"TO_USER"`
+	TOUserPassword string             `json:"TOPassword" envconfig:"TO_USER_PASSWORD"`
+	Insecure       bool               `json:"sslInsecure" envconfig:"SSL_INSECURE"`
+	DB             TrafficOpsDatabase `json:"db"`
+	Log            Locations          `json:"logLocations"`
 }
 
 type TrafficOpsDatabase struct {
