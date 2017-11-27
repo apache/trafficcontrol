@@ -81,7 +81,7 @@ var DeliveryServiceSslKeysService = function($http, $q, locationUtils, messageMo
                     url = deliveryService.exampleURLs[1];
                 }
                 var hostName = url.split("://")[1];
-                if (deliveryService.type == ""){
+                if (deliveryService.type.indexOf('HTTP') != -1) {
                     var parts = hostName.split(".");
                     parts[0] = "*";
                     hostName = parts.join(".");
