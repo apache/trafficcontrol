@@ -20,6 +20,7 @@
 var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, sslKeys, sslRequest, $scope, $uibModal, locationUtils, deliveryServiceSslKeysService, formUtils) {
 	$scope.hasError = formUtils.hasError;
 	$scope.hasPropertyError = formUtils.hasPropertyError;
+	$scope.navigateToPath = locationUtils.navigateToPath;
 	$scope.sslRequest = sslRequest;
 
 	$scope.deliveryService = deliveryService;
