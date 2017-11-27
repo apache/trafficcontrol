@@ -22,6 +22,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"testing"
@@ -66,49 +67,46 @@ func TestMain(m *testing.M) {
 	//log.Debugln("Setting up Data")
 	prepareDatabase(&cfg)
 
-	setupSession(cfg, cfg.TOURL, cfg.TOUser, cfg.TOUserPassword)
+	TOSession, netAddr, err := setupSession(cfg, cfg.TOURL, cfg.TOUser, cfg.TOUserPassword)
+	fmt.Printf("TOSession ---> %v\n", TOSession)
+	fmt.Printf("netAddr ---> %v\n", netAddr)
+	if err != nil {
+		fmt.Printf("\nError logging in to %v: %v\nMake sure toURL, toUser, and toPass flags are included and correct.\nExample:  go test -toUser=%s -toURL=http://localhost:3000\n\n", cfg.TOURL, cfg.TOUserPassword, err)
+		os.Exit(1)
+	}
 
 }
 
 func getConfigOptionsFromEnv() {
 }
 
-func setupSession(cfg Config, toURL string, toUser string, toPass string) {
-	var loginErr error
+func setupSession(cfg Config, toURL string, toUser string, toPass string) (*client.Session, net.Addr, error) {
+	var err error
+	var TOSession *client.Session
+	var netAddr net.Addr
 	toReqTimeout := time.Second * time.Duration(30)
-	to, _, loginErr = client.LoginWithAgent(toURL, toUser, toPass, true, "traffic-ops-client-integration-tests", true, toReqTimeout)
-	if loginErr != nil {
-		fmt.Printf("\nError logging in to %v: %v\nMake sure toURL, toUser, and toPass flags are included and correct.\nExample:  go test -toUser=admin -toPass=pass -toURL=http://localhost:3000\n\n", toURL, loginErr)
-		os.Exit(1)
+	TOSession, netAddr, err = client.LoginWithAgent(toURL, toUser, toPass, true, "traffic-ops-client-integration-tests", true, toReqTimeout)
+	if err != nil {
+		return nil, nil, err
 	}
 	log.Debugln("%v-->", toURL)
 
-	testData, err := ioutil.ReadFile("./sample_cdn.json")
+	return TOSession, netAddr, err
+}
+
+func loadFixtureData() TrafficControl {
+
+	fixtureData, err := ioutil.ReadFile("./sample_cdn.json")
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 	var tc TrafficControl
-	err = json.Unmarshal(testData, &tc)
+	err = json.Unmarshal(fixtureData, &tc)
 	if err != nil {
 		log.Errorf("Cannot unmarshal the json ", err)
 	}
-	fmt.Printf("cdns ---> %v\n", tc.CDNs)
-
-	//defer db.Close()
-	//rows, err := db.Query("SELECT id, name FROM cdn")
-	//if err != nil {
-	//log.Errorf("selecting tables: %v\n", err)
-	//return
-	//}
-
-	//for rows.Next() {
-	//var id int
-	//var name string
-	//err = rows.Scan(&id, &name)
-	//fmt.Println("id | name")
-	//fmt.Printf("%v %s\n", id, name)
-	//}
+	return tc
 }
 
 //GetCDN returns a Cdn struct
