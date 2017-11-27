@@ -433,6 +433,7 @@ sub api_routes {
 	$r->post("/api/$version/cdns")->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#create', namespace => $namespace );
 	$r->put("/api/$version/cdns/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#update', namespace => $namespace );
 	$r->delete("/api/$version/cdns/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#delete', namespace => $namespace );
+	$r->delete("/api/$version/cdns/name/:name")->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#delete_by_name', namespace => $namespace );
 
 	# -- CDNS: QUEUE/DEQUEUE CDN SERVER UPDATES
 	$r->post("/api/$version/cdns/:id/queue_update" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#queue_updates', namespace => $namespace );
