@@ -98,6 +98,8 @@ ok $t->put_ok('/api/1.2/cdns/' . $cdn_id  => {Accept => 'application/json'} => j
 
 ok $t->delete_ok('/api/1.2/cdns/' . $cdn_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+ok $t->delete_ok('/api/1.2/cdns/name/cdn3')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->put_ok('/api/1.2/cdns/' . $cdn_id  => {Accept => 'application/json'} => json => {
         "name" => "cdn_test3"
         })
