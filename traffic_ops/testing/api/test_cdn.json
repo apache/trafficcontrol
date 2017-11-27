@@ -1,0 +1,103 @@
+{
+    "asns": [
+        {
+            "cachegroupName": "cachegroup1",
+            "name": "asn1"
+        },
+        {
+            "cachegroupName": "cachegroup2",
+            "name": "asn2"
+        }
+    ],
+    "cachegroups": [
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "parentCacheGroup",
+            "parentCacheGroupName": null
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "secondaryCacheGroup",
+            "parentCacheGroupName": null
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "cachegroup1",
+            "parentCacheGroupName": "parentCacheGroup",
+            "secondaryCacheGroupName": "parentCacheGroup",
+            "shortName": "cg1"
+        },
+        {
+            "latitude": 24.1234,
+            "longitude": -121.1234,
+            "name": "cachegroup2",
+            "parentCacheGroupName": "secondaryCacheGroup",
+            "secondaryCacheGroupName": "secondaryCacheGroup",
+            "shortName": "cg2"
+        }
+    ],
+    "cdns": [
+        {
+            "dnssecEnabled": "true",
+            "domainName": "test.cdn1.net",
+            "name": "cdn1"
+        },
+        {
+            "dnssecEnabled": "false",
+            "domainName": "test.cdn2.net",
+            "name": "cdn2"
+        }
+    ],
+    "deliveryServices": [
+        {
+            "active": false,
+            "dscp": 40,
+            "tenantName": "tenant1",
+            "xmlId": "ds1"
+        },
+        {
+            "active": false,
+            "dscp": 40,
+            "tenantName": "tenant2",
+            "xmlId": "ds2"
+        }
+    ],
+    "divisions": [
+        {
+            "name": "division1"
+        },
+        {
+            "name": "division2"
+        }
+    ],
+    "regions": [
+        {
+            "divisionName": "division1",
+            "name": "region1"
+        },
+        {
+            "divisionName": "division2",
+            "name": "region2"
+        }
+    ],
+    "tenants": [
+        {
+            "active": true,
+            "name": "root",
+            "parentTenantName": null
+        },
+        {
+            "active": true,
+            "name": "tenant1",
+            "parentTenantName": "root"
+        },
+        {
+            "active": false,
+            "name": "tenant2",
+            "parentTenantName": "root"
+        }
+    ]
+}
