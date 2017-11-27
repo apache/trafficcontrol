@@ -170,7 +170,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	stats := cache.NewStats(remapper.Rules())
+	stats := cache.NewStats(remapper.Rules(), lruCache, uint64(cfg.CacheSizeBytes))
 
 	buildHandler := func(scheme string, port string, conns *web.ConnMap) (http.Handler, *cache.CacheHandlerPointer) {
 		statHandler := cache.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
@@ -269,7 +269,7 @@ func main() {
 			}
 		}
 
-		stats = cache.NewStats(remapper.Rules()) // TODO copy stats from old stats object?
+		stats = cache.NewStats(remapper.Rules(), lruCache, uint64(cfg.CacheSizeBytes)) // TODO copy stats from old stats object?
 
 		httpCacheHandler := cache.NewCacheHandler(
 			lruCache,
