@@ -8,9 +8,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
-func prepareDatabaseTest(cfg *Config) {
-	fmt.Printf("cfg ---> %v\n", cfg)
-}
 func prepareDatabase(cfg *Config) {
 
 	fmt.Printf("cfg ---> %v\n", cfg)
