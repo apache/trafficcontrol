@@ -1,13 +1,8 @@
 package client_tests
 
 import (
-	"crypto/rand"
 	"database/sql"
-	"encoding/base64"
 	"fmt"
-	"strconv"
-
-	"golang.org/x/crypto/scrypt"
 
 	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -108,46 +103,4 @@ func prepareDatabase(cfg *Config) {
 	if err != nil {
 		log.Infof(err.Error())
 	}
-}
-
-func EncryptPassword(password string) string {
-	var salt []byte
-	var err error
-	salt, err = GenerateRandomBytes(64)
-	if err != nil {
-		log.Errorf(err.Error())
-	}
-	n := 16384
-	r := 8
-	p := 1
-	keyLen := 64
-	key, err := scrypt.Key([]byte(password), salt, n, r, p, keyLen)
-	//key, err := scrypt.Key([]byte("laser1"), salt, 1<<15, 8, 1, 64)
-	if err != nil {
-		log.Errorf(err.Error())
-	}
-	nStr := strconv.Itoa(n)
-	if err != nil {
-		log.Errorf(err.Error())
-	}
-	rStr := strconv.Itoa(r)
-	pStr := strconv.Itoa(p)
-	saltBase64 := base64.StdEncoding.EncodeToString(salt)
-	keyBase64 := base64.StdEncoding.EncodeToString(key)
-	return "SCRYPT:" + nStr + ":" + rStr + ":" + pStr + ":" + saltBase64 + ":" + keyBase64
-}
-
-// GenerateRandomBytes returns securely generated random bytes.
-// It will return an error if the system's secure random
-// number generator fails to function correctly, in which
-// case the caller should not continue.
-func GenerateRandomBytes(n int) ([]byte, error) {
-	b := make([]byte, n)
-	_, err := rand.Read(b)
-	// Note that err == nil only if we read len(b) bytes.
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
 }
