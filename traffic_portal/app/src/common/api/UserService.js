@@ -100,18 +100,6 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
             );
     };
 
-    this.deleteUser = function(id) {
-        return Restangular.one("users", id).remove()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'User deleted' } ], true);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
-                }
-            );
-    };
-
     this.getUnassignedUserDeliveryServices = function(userId) {
         var deferred = $q.defer();
 
