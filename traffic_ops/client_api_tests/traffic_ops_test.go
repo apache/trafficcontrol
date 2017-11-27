@@ -66,14 +66,14 @@ func TestMain(m *testing.M) {
 	//log.Debugln("Setting up Data")
 	prepareDatabase(&cfg)
 
-	//setupSession(cfg, *toURL, *toUser, *toPass)
+	setupSession(cfg, cfg.TOURL, cfg.TOUser, cfg.TOUserPassword)
 
 }
 
 func getConfigOptionsFromEnv() {
 }
 
-func setupSession(cfg *Config, toURL string, toUser string, toPass string) {
+func setupSession(cfg Config, toURL string, toUser string, toPass string) {
 	var loginErr error
 	toReqTimeout := time.Second * time.Duration(30)
 	to, _, loginErr = client.LoginWithAgent(toURL, toUser, toPass, true, "traffic-ops-client-integration-tests", true, toReqTimeout)
