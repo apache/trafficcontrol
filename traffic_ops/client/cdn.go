@@ -54,7 +54,7 @@ func (to *Session) CDNName(name string) ([]tc.CDN, error) {
 
 func (to *Session) GetCDNName(name string) ([]tc.CDN, ReqInf, error) {
 	url := fmt.Sprintf("/api/1.2/cdns/name/%s.json", name)
-	resp, remoteAddr, err := to.request(httpMethod.Get, url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -77,7 +77,7 @@ func (to *Session) CDNSSLKeys(name string) ([]tc.CDNSSLKeys, error) {
 
 func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
 	url := fmt.Sprintf("/api/1.2/cdns/name/%s/sslkeys.json", name)
-	resp, remoteAddr, err := to.request(httpMethod.Get, url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -90,4 +90,19 @@ func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
 	}
 
 	return data.Response, reqInf, nil
+}
+
+func (to *Session) DeleteCDNByName(name string) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("/api/1.2/cdns/name/%s", name)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	return alerts, reqInf, nil
 }
