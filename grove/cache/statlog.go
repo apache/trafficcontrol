@@ -49,8 +49,17 @@ func NewStatLogger(w http.ResponseWriter, conn *web.InterceptConn, h *CacheHandl
 	}
 }
 
-func (l *StatLogger) Log(code int, bytesWritten uint64, successfullyRespondedToClient bool, successfullyGotFromOrigin bool, cacheHitStr string, originStatus int, originBytes uint64) {
-	bytesSent := WriteStats(l.Stats, l.W, l.Conn, l.Host, l.RemoteAddr, code, bytesWritten)
+func (l *StatLogger) Log(
+	code int,
+	bytesWritten uint64,
+	successfullyRespondedToClient bool,
+	successfullyGotFromOrigin bool,
+	cacheHit bool,
+	originConnectFailed bool,
+	originStatus int,
+	originBytes uint64,
+) {
+	bytesSent := WriteStats(l.Stats, l.W, l.Conn, l.Host, l.RemoteAddr, code, bytesWritten, cacheHit)
 	toFQDN := ""
 	proxyStr := ""
 	if l.RemappingProducer != nil {
@@ -75,10 +84,21 @@ func (l *StatLogger) Log(code int, bytesWritten uint64, successfullyRespondedToC
 		originBytes,
 		successfullyRespondedToClient,
 		successfullyGotFromOrigin,
-		cacheHitStr,
+		getCacheHitStr(cacheHit, originConnectFailed),
 		proxyStr,
 		"-", // TODO fix?
 		l.UserAgent,
 		l.MoneyTraceHdr,
 	))
+}
+
+// getCacheHitStr returns the event log string for whether the request was a cache hit. For a request not in the cache, pass `ReuseCannot` to indicate a cache miss.
+func getCacheHitStr(hit bool, originConnectFailed bool) string {
+	if originConnectFailed {
+		return "ERR_CONNECT_FAIL"
+	}
+	if hit {
+		return "TCP_HIT"
+	}
+	return "TCP_MISS"
 }
