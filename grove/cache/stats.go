@@ -57,37 +57,37 @@ type Stats interface {
 	Connections() uint64
 	IncConnections()
 	DecConnections()
+
+	CacheHits() uint64
+	AddCacheHit()
+	CacheMisses() uint64
+	AddCacheMiss()
 }
 
 func NewStats(remapRules []RemapRule) Stats {
 	connections := uint64(0)
-	return &stats{system: NewStatsSystem(), remap: NewStatsRemaps(remapRules), connections: &connections}
+	cacheHits := uint64(0)
+	cacheMisses := uint64(0)
+	return &stats{system: NewStatsSystem(), remap: NewStatsRemaps(remapRules), connections: &connections, cacheHits: &cacheHits, cacheMisses: &cacheMisses}
 }
 
 type stats struct {
-	system StatsSystem
-	remap  StatsRemaps
-
+	system      StatsSystem
+	remap       StatsRemaps
 	connections *uint64
+	cacheHits   *uint64
+	cacheMisses *uint64
 }
 
-func (s stats) Connections() uint64 {
-	return atomic.LoadUint64(s.connections)
-}
-
-func (s stats) IncConnections() {
-	atomic.AddUint64(s.connections, 1)
-}
-
-func (s stats) DecConnections() {
-	atomic.AddUint64(s.connections, ^uint64(0))
-}
-
-func (s *stats) System() StatsSystem {
-	return StatsSystem(s.system)
-}
-
-func (s *stats) Remap() StatsRemaps { return s.remap }
+func (s stats) Connections() uint64  { return atomic.LoadUint64(s.connections) }
+func (s stats) IncConnections()      { atomic.AddUint64(s.connections, 1) }
+func (s stats) DecConnections()      { atomic.AddUint64(s.connections, ^uint64(0)) }
+func (s stats) CacheHits() uint64    { return atomic.LoadUint64(s.cacheHits) }
+func (s stats) AddCacheHit()         { atomic.AddUint64(s.cacheHits, 1) }
+func (s stats) CacheMisses() uint64  { return atomic.LoadUint64(s.cacheMisses) }
+func (s stats) AddCacheMiss()        { atomic.AddUint64(s.cacheMisses, 1) }
+func (s *stats) System() StatsSystem { return StatsSystem(s.system) }
+func (s *stats) Remap() StatsRemaps  { return s.remap }
 
 type StatsRemaps interface {
 	Stats(fqdn string) (StatsRemap, bool)
@@ -107,6 +107,11 @@ type StatsRemap interface {
 	AddStatus4xx(uint64)
 	Status5xx() uint64
 	AddStatus5xx(uint64)
+
+	CacheHits() uint64
+	AddCacheHit()
+	CacheMisses() uint64
+	AddCacheMiss()
 }
 
 func getFromFQDN(r RemapRule) string {
@@ -150,12 +155,14 @@ func NewStatsRemap() StatsRemap {
 }
 
 type statsRemap struct {
-	inBytes   uint64
-	outBytes  uint64
-	status2xx uint64
-	status3xx uint64
-	status4xx uint64
-	status5xx uint64
+	inBytes     uint64
+	outBytes    uint64
+	status2xx   uint64
+	status3xx   uint64
+	status4xx   uint64
+	status5xx   uint64
+	cacheHits   uint64
+	cacheMisses uint64
 }
 
 func (r *statsRemap) InBytes() uint64       { return atomic.LoadUint64(&r.inBytes) }
@@ -170,6 +177,12 @@ func (r *statsRemap) Status4xx() uint64     { return atomic.LoadUint64(&r.status
 func (r *statsRemap) AddStatus4xx(v uint64) { atomic.AddUint64(&r.status4xx, v) }
 func (r *statsRemap) Status5xx() uint64     { return atomic.LoadUint64(&r.status5xx) }
 func (r *statsRemap) AddStatus5xx(v uint64) { atomic.AddUint64(&r.status5xx, v) }
+
+func (r *statsRemap) CacheHits() uint64 { return atomic.LoadUint64(&r.cacheHits) }
+func (r *statsRemap) AddCacheHit()      { atomic.AddUint64(&r.cacheHits, 1) }
+
+func (r *statsRemap) CacheMisses() uint64 { return atomic.LoadUint64(&r.cacheMisses) }
+func (r *statsRemap) AddCacheMiss()       { atomic.AddUint64(&r.cacheMisses, 1) }
 
 func NewStatsSystem() StatsSystem {
 	return &statsSystem{}
@@ -295,7 +308,7 @@ func (h statHandler) LoadSystemStats() StatsSystemJSON {
 func (h statHandler) LoadRemapStats() map[string]interface{} {
 	statsRemaps := h.stats.Remap()
 	rules := statsRemaps.Rules()
-	jsonStats := make(map[string]interface{}, len(rules)*6) // remap has 6 members: in, out, 2xx, 3xx, 4xx, 5xx
+	jsonStats := make(map[string]interface{}, len(rules)*8) // remap has 8 members: in, out, 2xx, 3xx, 4xx, 5xx, hits, misses
 	jsonStats["server"] = "6.2.1"
 	for _, rule := range rules {
 		ruleName := rule
@@ -309,9 +322,13 @@ func (h statHandler) LoadRemapStats() map[string]interface{} {
 		jsonStats["plugin.remap_stats."+ruleName+".status_3xx"] = statsRemap.Status3xx()
 		jsonStats["plugin.remap_stats."+ruleName+".status_4xx"] = statsRemap.Status4xx()
 		jsonStats["plugin.remap_stats."+ruleName+".status_5xx"] = statsRemap.Status5xx()
+		jsonStats["plugin.remap_stats."+ruleName+".cache_hits"] = statsRemap.CacheHits()
+		jsonStats["plugin.remap_stats."+ruleName+".cache_misses"] = statsRemap.CacheMisses()
 	}
 
 	jsonStats["proxy.process.http.current_client_connections"] = h.stats.Connections()
+	jsonStats["proxy.process.http.cache_hits"] = h.stats.CacheHits()
+	jsonStats["proxy.process.http.cache_misses"] = h.stats.CacheMisses()
 
 	return jsonStats
 }
