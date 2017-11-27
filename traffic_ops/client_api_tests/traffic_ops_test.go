@@ -36,7 +36,7 @@ import (
 
 //TODO: drichardson - put these in the config
 var (
-	to *client.Session
+	TOSession *client.Session
 )
 
 func TestMain(m *testing.M) {
@@ -46,7 +46,6 @@ func TestMain(m *testing.M) {
 
 	var cfg Config
 	var err error
-	fmt.Printf("configFileName ---> %v\n", configFileName)
 	if cfg, err = LoadConfig(*configFileName); err != nil {
 		fmt.Printf("Error Loading Config %v %v\n", cfg, err)
 	}
@@ -55,29 +54,29 @@ func TestMain(m *testing.M) {
 		fmt.Printf("Error initializing loggers: %v\n", err)
 		return
 	}
-	log.Debugln("cfg ---> %v\n", cfg)
 
 	log.Infof(`Using Config values:
 			   TO URL:               %s
 			   Db Server:            %s
 			   Db User:              %s
 			   Db Name:              %s
-			   Db Ssl:               %t`, cfg.TOURL, cfg.DB.Hostname, cfg.DB.User, cfg.DB.DBName, cfg.DB.SSL)
+			   Db Ssl:               %t`, cfg.TOURL, cfg.DB.Hostname, cfg.DB.User, cfg.DB.Name, cfg.DB.SSL)
 
-	//log.Debugln("Setting up Data")
 	prepareDatabase(&cfg)
 
-	TOSession, netAddr, err := setupSession(cfg, cfg.TOURL, cfg.TOUser, cfg.TOUserPassword)
+	var netAddr net.Addr
+	TOSession, netAddr, err = setupSession(cfg, cfg.TOURL, cfg.TOUser, cfg.TOUserPassword)
 	fmt.Printf("TOSession ---> %v\n", TOSession)
 	fmt.Printf("netAddr ---> %v\n", netAddr)
 	if err != nil {
-		fmt.Printf("\nError logging in to %v: %v\nMake sure toURL, toUser, and toPass flags are included and correct.\nExample:  go test -toUser=%s -toURL=http://localhost:3000\n\n", cfg.TOURL, cfg.TOUserPassword, err)
+		fmt.Printf("\nError logging into TOURL: %s TOUser: %s - %v\n", cfg.TOURL, cfg.TOUser, err)
 		os.Exit(1)
 	}
 
-}
+	// Now run the test case
+	rc := m.Run()
+	os.Exit(rc)
 
-func getConfigOptionsFromEnv() {
 }
 
 func setupSession(cfg Config, toURL string, toUser string, toPass string) (*client.Session, net.Addr, error) {
@@ -111,7 +110,7 @@ func loadTestCDN() TrafficControl {
 
 //GetCDN returns a Cdn struct
 func GetCDN() (tc.CDN, error) {
-	cdns, err := to.CDNs()
+	cdns, err := TOSession.CDNs()
 	if err != nil {
 		return *new(tc.CDN), err
 	}
@@ -124,7 +123,7 @@ func GetCDN() (tc.CDN, error) {
 
 //GetProfile returns a Profile Struct
 func GetProfile() (tc.Profile, error) {
-	profiles, err := to.Profiles()
+	profiles, err := TOSession.Profiles()
 	if err != nil {
 		return *new(tc.Profile), err
 	}
@@ -133,7 +132,7 @@ func GetProfile() (tc.Profile, error) {
 
 //GetType returns a Type Struct
 func GetType(useInTable string) (tc.Type, error) {
-	types, err := to.Types()
+	types, err := TOSession.Types()
 	if err != nil {
 		return *new(tc.Type), err
 	}
@@ -148,7 +147,7 @@ func GetType(useInTable string) (tc.Type, error) {
 
 //GetDeliveryService returns a DeliveryService Struct
 func GetDeliveryService(cdn string) (tc.DeliveryService, error) {
-	dss, err := to.DeliveryServices()
+	dss, err := TOSession.DeliveryServices()
 	if err != nil {
 		return *new(tc.DeliveryService), err
 	}
@@ -166,7 +165,7 @@ func GetDeliveryService(cdn string) (tc.DeliveryService, error) {
 //This is basically a copy of the private "request" method in the tc.go \
 //but I didn't want to make that one public.
 func Request(to client.Session, method, path string, body []byte) (*http.Response, error) {
-	url := fmt.Sprintf("%s%s", to.URL, path)
+	url := fmt.Sprintf("%s%s", TOSession.URL, path)
 
 	var req *http.Request
 	var err error

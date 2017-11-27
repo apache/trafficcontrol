@@ -17,6 +17,7 @@ package client_tests
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -24,8 +25,11 @@ import (
 
 //TestCDNs compares the results of the CDN api and CDN client
 func TestCDNs(t *testing.T) {
+	fmt.Printf("TestCDNs --->\n")
+	fmt.Printf("TOSession ---> %v\n", TOSession)
 	//Get CDNs Data from API
-	resp, err := Request(*to, "GET", "/api/1.2/cdns.json", nil)
+	resp, err := Request(*TOSession, "GET", "/api/1.2/cdns.json", nil)
+	fmt.Printf("resp ---> %v\n", resp)
 	if err != nil {
 		t.Errorf("Could not get cdns.json reponse was: %v\n", err)
 	}
@@ -38,7 +42,7 @@ func TestCDNs(t *testing.T) {
 	apiCDNs := apiCDNRes.Response
 
 	//get CDNs data from client
-	clientCDNs, err := to.CDNs()
+	clientCDNs, err := TOSession.CDNs()
 	if err != nil {
 		t.Errorf("Could not get CDNs from client.  Error is: %v\n", err)
 	}
@@ -71,7 +75,7 @@ func TestCDNs(t *testing.T) {
 //TestCDNName ensures the client returns a CDN by name
 func TestCDNName(t *testing.T) {
 	//Get CDNs Data from API
-	resp, err := Request(*to, "GET", "/api/1.2/cdns.json", nil)
+	resp, err := Request(*TOSession, "GET", "/api/1.2/cdns.json", nil)
 	if err != nil {
 		t.Errorf("Could not get cdns.json reponse was: %v\n", err)
 	}
@@ -87,7 +91,7 @@ func TestCDNName(t *testing.T) {
 	apiLastUpdated := apiCDNs[0].LastUpdated
 
 	//get CDNs data from client
-	clientCDN, err := to.CDNName(apiName)
+	clientCDN, err := TOSession.CDNName(apiName)
 
 	if len(clientCDN) != 1 {
 		t.Errorf("The length of the client CDN response %v is greater than 1!\n", len(apiCDNs))
