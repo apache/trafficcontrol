@@ -18,6 +18,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
@@ -30,7 +31,7 @@ func (to *Session) CDNs() ([]tc.CDN, error) {
 
 func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
 	url := "/api/1.2/cdns.json"
-	resp, remoteAddr, err := to.request("GET", url, nil) // TODO change to getBytesWithTTL, which caches
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil) // TODO change to getBytesWithTTL, which caches
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -53,7 +54,7 @@ func (to *Session) CDNName(name string) ([]tc.CDN, error) {
 
 func (to *Session) GetCDNName(name string) ([]tc.CDN, ReqInf, error) {
 	url := fmt.Sprintf("/api/1.2/cdns/name/%s.json", name)
-	resp, remoteAddr, err := to.request("GET", url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
+	resp, remoteAddr, err := to.request(httpMethod.Get, url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -76,7 +77,7 @@ func (to *Session) CDNSSLKeys(name string) ([]tc.CDNSSLKeys, error) {
 
 func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
 	url := fmt.Sprintf("/api/1.2/cdns/name/%s/sslkeys.json", name)
-	resp, remoteAddr, err := to.request("GET", url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
+	resp, remoteAddr, err := to.request(httpMethod.Get, url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
