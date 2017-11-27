@@ -23,6 +23,10 @@ import (
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
+var (
+	uri = "/api/1.2/cdns"
+)
+
 // Deprecated: use GetCDNs.
 func (to *Session) CDNs() ([]tc.CDN, error) {
 	cdns, _, err := to.GetCDNs()
@@ -30,8 +34,7 @@ func (to *Session) CDNs() ([]tc.CDN, error) {
 }
 
 func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
-	url := "/api/1.2/cdns.json"
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil) // TODO change to getBytesWithTTL, which caches
+	resp, remoteAddr, err := to.request(http.MethodGet, uri, nil) // TODO change to getBytesWithTTL, which caches
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -46,14 +49,22 @@ func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
 }
 
 // CDNName gets an array of CDNs
-// Deprecated: use GetCDNName
+// Deprecated: use GetCDNByName
 func (to *Session) CDNName(name string) ([]tc.CDN, error) {
-	n, _, err := to.GetCDNName(name)
+	n, _, err := to.GetCDNByName(name)
 	return n, err
 }
 
-func (to *Session) GetCDNName(name string) ([]tc.CDN, ReqInf, error) {
-	url := fmt.Sprintf("/api/1.2/cdns/name/%s.json", name)
+// CDNName gets an array of CDNs
+// Deprecated: use GetCDNByName
+func (to *Session) GetCDNName(name string) ([]tc.CDN, error) {
+	n, _, err := to.GetCDNByName(name)
+	return n, err
+}
+
+// GetCDNByName gets an array of CDNs
+func (to *Session) GetCDNByName(name string) ([]tc.CDN, ReqInf, error) {
+	url := fmt.Sprintf("%s/name/%s", uri, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -76,7 +87,7 @@ func (to *Session) CDNSSLKeys(name string) ([]tc.CDNSSLKeys, error) {
 }
 
 func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
-	url := fmt.Sprintf("/api/1.2/cdns/name/%s/sslkeys.json", name)
+	url := fmt.Sprintf("%s/name/%s/sslkeys", uri, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -93,7 +104,7 @@ func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
 }
 
 func (to *Session) DeleteCDNByName(name string) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("/api/1.2/cdns/name/%s", name)
+	route := fmt.Sprintf("%s/name/%s", name)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
