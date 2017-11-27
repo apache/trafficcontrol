@@ -62,32 +62,47 @@ type Stats interface {
 	AddCacheHit()
 	CacheMisses() uint64
 	AddCacheMiss()
+
+	CacheSize() uint64
+	CacheCapacity() uint64
 }
 
-func NewStats(remapRules []RemapRule) Stats {
+func NewStats(remapRules []RemapRule, cache Cache, cacheCapacityBytes uint64) Stats {
 	connections := uint64(0)
 	cacheHits := uint64(0)
 	cacheMisses := uint64(0)
-	return &stats{system: NewStatsSystem(), remap: NewStatsRemaps(remapRules), connections: &connections, cacheHits: &cacheHits, cacheMisses: &cacheMisses}
+	return &stats{
+		system:             NewStatsSystem(),
+		remap:              NewStatsRemaps(remapRules),
+		connections:        &connections,
+		cacheHits:          &cacheHits,
+		cacheMisses:        &cacheMisses,
+		cache:              cache,
+		cacheCapacityBytes: cacheCapacityBytes,
+	}
 }
 
 type stats struct {
-	system      StatsSystem
-	remap       StatsRemaps
-	connections *uint64
-	cacheHits   *uint64
-	cacheMisses *uint64
+	system             StatsSystem
+	remap              StatsRemaps
+	connections        *uint64
+	cacheHits          *uint64
+	cacheMisses        *uint64
+	cache              Cache
+	cacheCapacityBytes uint64
 }
 
-func (s stats) Connections() uint64  { return atomic.LoadUint64(s.connections) }
-func (s stats) IncConnections()      { atomic.AddUint64(s.connections, 1) }
-func (s stats) DecConnections()      { atomic.AddUint64(s.connections, ^uint64(0)) }
-func (s stats) CacheHits() uint64    { return atomic.LoadUint64(s.cacheHits) }
-func (s stats) AddCacheHit()         { atomic.AddUint64(s.cacheHits, 1) }
-func (s stats) CacheMisses() uint64  { return atomic.LoadUint64(s.cacheMisses) }
-func (s stats) AddCacheMiss()        { atomic.AddUint64(s.cacheMisses, 1) }
-func (s *stats) System() StatsSystem { return StatsSystem(s.system) }
-func (s *stats) Remap() StatsRemaps  { return s.remap }
+func (s stats) Connections() uint64   { return atomic.LoadUint64(s.connections) }
+func (s stats) IncConnections()       { atomic.AddUint64(s.connections, 1) }
+func (s stats) DecConnections()       { atomic.AddUint64(s.connections, ^uint64(0)) }
+func (s stats) CacheHits() uint64     { return atomic.LoadUint64(s.cacheHits) }
+func (s stats) AddCacheHit()          { atomic.AddUint64(s.cacheHits, 1) }
+func (s stats) CacheMisses() uint64   { return atomic.LoadUint64(s.cacheMisses) }
+func (s stats) AddCacheMiss()         { atomic.AddUint64(s.cacheMisses, 1) }
+func (s *stats) System() StatsSystem  { return StatsSystem(s.system) }
+func (s *stats) Remap() StatsRemaps   { return s.remap }
+func (s stats) CacheSize() uint64     { return s.cache.Size() }
+func (s stats) CacheCapacity() uint64 { return s.cacheCapacityBytes }
 
 type StatsRemaps interface {
 	Stats(fqdn string) (StatsRemap, bool)
@@ -329,6 +344,8 @@ func (h statHandler) LoadRemapStats() map[string]interface{} {
 	jsonStats["proxy.process.http.current_client_connections"] = h.stats.Connections()
 	jsonStats["proxy.process.http.cache_hits"] = h.stats.CacheHits()
 	jsonStats["proxy.process.http.cache_misses"] = h.stats.CacheMisses()
+	jsonStats["proxy.process.http.cache_capacity_bytes"] = h.stats.CacheCapacity()
+	jsonStats["proxy.process.http.cache_size_bytes"] = h.stats.CacheSize()
 
 	return jsonStats
 }
