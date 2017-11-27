@@ -32,7 +32,7 @@ var (
 
 // Config reflects the structure of the test-to-api.conf file
 type Config struct {
-	TOURL          string             `json:"TOURL" envconfig:"TO_URL" default:"https://localhost:443"`
+	TOURL          string             `json:"TOURL" envconfig:"TO_URL" default:"https://localhost:8443"`
 	TOUser         string             `json:"TOUser" envconfig:"TO_USER"`
 	TOUserPassword string             `json:"TOPassword" envconfig:"TO_USER_PASSWORD"`
 	Insecure       bool               `json:"sslInsecure" envconfig:"SSL_INSECURE"`
@@ -41,7 +41,7 @@ type Config struct {
 }
 
 type TrafficOpsDatabase struct {
-	DBName      string `json:"dbname" envconfig:"TODB_NAME"`
+	Name        string `json:"dbname" envconfig:"TODB_NAME"`
 	Hostname    string `json:"hostname" envconfig:"TODB_HOSTNAME"`
 	User        string `json:"user" envconfig:"TODB_USER"`
 	Password    string `json:"password" envconfig:"TODB_PASSWORD"`
@@ -64,10 +64,7 @@ type Locations struct {
 func LoadConfig(confPath string) (Config, error) {
 	var err error
 	var cfg Config
-	fmt.Printf("LoadConfig...\n")
-	fmt.Printf("confPath ---> %v\n", confPath)
 
-	// load json from cdn.conf
 	if _, err := os.Stat(confPath); !os.IsNotExist(err) {
 		confBytes, err := ioutil.ReadFile(confPath)
 		if err != nil {
@@ -79,14 +76,11 @@ func LoadConfig(confPath string) (Config, error) {
 			return Config{}, fmt.Errorf("unmarshalling '%s': %v", confPath, err)
 		}
 	}
-	//cfg = Config{}
 	err = envconfig.Process("traffic-ops-client-tests", &cfg)
 	if err != nil {
 		fmt.Printf("Cannot parse config: %v\n", err)
 		os.Exit(0)
 	}
-
-	//cfg, err = ParseConfig(cfg)
 
 	return cfg, err
 }

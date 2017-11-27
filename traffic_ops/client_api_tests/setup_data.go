@@ -10,7 +10,7 @@ import (
 
 func prepareDatabase(cfg *Config) {
 
-	fmt.Printf("cfg ---> %v\n", cfg)
+	log.Debugln("Setting up Data")
 	var db *sql.DB
 	var err error
 
@@ -19,7 +19,7 @@ func prepareDatabase(cfg *Config) {
 		sslStr = "disable"
 	}
 
-	db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s", cfg.DB.User, cfg.DB.Password, cfg.DB.Hostname, cfg.DB.DBName, sslStr))
+	db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s", cfg.DB.User, cfg.DB.Password, cfg.DB.Hostname, cfg.DB.Name, sslStr))
 	if err != nil {
 		log.Errorf("opening database: %v\n", err)
 		return
