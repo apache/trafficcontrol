@@ -10,6 +10,7 @@ import (
 	"golang.org/x/crypto/scrypt"
 
 	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
 func prepareDatabaseTest(cfg *Config) {
@@ -93,10 +94,11 @@ func prepareDatabase(cfg *Config) {
 	if err != nil {
 		log.Errorf("Transaction Failed %v %v", err, res)
 	}
-	encryptedPassword := EncryptPassword("password")
-	fmt.Printf("encryptedPassword ---> %v\n", encryptedPassword)
+	encryptedPassword, err := auth.DerivePassword(cfg.TOUserPassword)
+	if err != nil {
+		log.Errorf("Password encryption failed %v %v", err)
+	}
 	userInsert := `INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role) VALUES ('admin','` + encryptedPassword + `','` + encryptedPassword + `', 4)`
-	fmt.Printf("userInsert ---> %v\n", userInsert)
 	res, err = tx.Exec(userInsert)
 	if err != nil {
 		log.Errorf("Transaction Failed %v %v", err, res)
