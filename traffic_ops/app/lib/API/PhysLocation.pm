@@ -348,11 +348,15 @@ sub is_phys_location_valid {
 
 		# Validation checks to perform
 		checks => [
-
-			# required fields
-			[ qw/address city name regionId shortName state zip/ ] => is_required("is required")
-
+			address		=> [ is_required("is required") ],
+			city		=> [ is_required("is required") ],
+			name		=> [ is_required("is required") ],
+			regionId	=> [ is_required("is required"), is_like( qr/^\d+$/, "must be a positive integer" ) ],
+			shortName	=> [ is_required("is required") ],
+			state		=> [ is_required("is required") ],
+			zip			=> [ is_required("is required") ],
 		]
+
 	};
 
 	# Validate the input against the rules

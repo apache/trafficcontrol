@@ -28,6 +28,7 @@ use Data::Dumper;
 use JSON;
 use MojoPlugins::Response;
 use UI::DeliveryService;
+use Scalar::Util qw(looks_like_number);
 use Validate::Tiny ':all';
 
 sub index {
@@ -1374,17 +1375,31 @@ sub is_deliveryservice_valid {
 
 		# validation checks to perform for ALL delivery services
 		checks => [
-			active               => [ is_required("is required") ],
-			cdnId                => [ is_required("is required") ],
-			dscp                 => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
-			displayName          => [ is_required("is required"), is_long_at_most( 48, 'too long' ) ],
-			geoLimit             => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
-			geoProvider          => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
-			logsEnabled          => [ is_required("is required") ],
-			regionalGeoBlocking  => [ is_required("is required") ],
-			routingName          => [ \&is_valid_routing_name, is_long_at_most( 48, 'too long' ) ],
-			typeId               => [ is_required("is required") ],
-			xmlId                => [ is_required("is required"), is_like( qr/^\S*$/, "no spaces" ), is_long_at_most( 48, 'too long' ) ],
+			active				=> [ is_required("is required") ],
+			cdnId				=> [ is_required("is required"), \&is_valid_int_or_undef ],
+			ccrDnsTtl			=> [ \&is_valid_int_or_undef ],
+			dnsBypassTtl			=> [ \&is_valid_int_or_undef ],
+			dscp				=> [ is_required("is required"), \&is_valid_int_or_undef ],
+			displayName			=> [ is_required("is required"), is_long_at_most( 48, 'too long' ) ],
+			geoLimit			=> [ is_required("is required"), \&is_valid_int_or_undef ],
+			geoProvider			=> [ is_required("is required"), \&is_valid_int_or_undef ],
+			globalMaxMbps			=> [ \&is_valid_int_or_undef ],
+			globalMaxTps			=> [ \&is_valid_int_or_undef ],
+			initialDispersion		=> [ \&is_valid_int_or_undef ],
+			logsEnabled			=> [ is_required("is required") ],
+			maxDnsAnswers			=> [ \&is_valid_int_or_undef ],
+			missLat				=> [ \&is_valid_number_or_undef ],
+			missLong			=> [ \&is_valid_number_or_undef ],
+			profileId			=> [ \&is_valid_int_or_undef ],
+			protocol			=> [ \&is_valid_int_or_undef ],
+			qstringIgnore			=> [ \&is_valid_int_or_undef ],
+			rangeRequestHandling		=> [ \&is_valid_int_or_undef ],
+			sslKeyVersion			=> [ \&is_valid_int_or_undef ],
+			tenantId			=> [ \&is_valid_int_or_undef ],
+			regionalGeoBlocking		=> [ is_required("is required") ],
+			routingName			=> [ \&is_valid_routing_name, is_long_at_most( 48, 'too long' ) ],
+			typeId				=> [ is_required("is required"), \&is_valid_int_or_undef ],
+			xmlId				=> [ is_required("is required"), is_like( qr/^\S*$/, "no spaces" ), is_long_at_most( 48, 'too long' ) ],
 		],
 	};
 
@@ -1400,28 +1415,28 @@ sub is_deliveryservice_valid {
 		push @{$rules->{checks}}, missLong             => [ is_required("is required"), \&is_valid_long ];
 		push @{$rules->{checks}}, multiSiteOrigin      => [ is_required("is required") ];
 		push @{$rules->{checks}}, orgServerFqdn        => [ is_required("is required"), sub { is_valid_org_server_fqdn($self, @_) } ];
-		push @{$rules->{checks}}, protocol             => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ];
-		push @{$rules->{checks}}, qstringIgnore        => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ];
-		push @{$rules->{checks}}, rangeRequestHandling => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ];
+		push @{$rules->{checks}}, protocol             => [ is_required("is required") ];
+		push @{$rules->{checks}}, qstringIgnore        => [ is_required("is required") ];
+		push @{$rules->{checks}}, rangeRequestHandling => [ is_required("is required") ];
 	}
 
 	# additional validation checks to perform for HTTP* delivery services
 	if ( $type_name =~ /^HTTP.*$/ ) {
-		push @{$rules->{checks}}, initialDispersion    => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ];
+		push @{$rules->{checks}}, initialDispersion    => [ is_required("is required") ];
 		push @{$rules->{checks}}, ipv6RoutingEnabled   => [ is_required("is required") ];
 		push @{$rules->{checks}}, missLat              => [ is_required("is required"), \&is_valid_lat ];
 		push @{$rules->{checks}}, missLong             => [ is_required("is required"), \&is_valid_long ];
 		push @{$rules->{checks}}, multiSiteOrigin      => [ is_required("is required") ];
 		push @{$rules->{checks}}, orgServerFqdn        => [ is_required("is required"), sub { is_valid_org_server_fqdn($self, @_) } ];
-		push @{$rules->{checks}}, protocol             => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ];
-		push @{$rules->{checks}}, qstringIgnore        => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ];
-		push @{$rules->{checks}}, rangeRequestHandling => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ];
+		push @{$rules->{checks}}, protocol             => [ is_required("is required") ];
+		push @{$rules->{checks}}, qstringIgnore        => [ is_required("is required") ];
+		push @{$rules->{checks}}, rangeRequestHandling => [ is_required("is required") ];
 	}
 
 	# additional validation checks to perform for STEERING* delivery services
 	if ( $type_name =~ /^.*STEERING.*$/ ) {
 		push @{$rules->{checks}}, ipv6RoutingEnabled   => [ is_required("is required") ];
-		push @{$rules->{checks}}, protocol             => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ];
+		push @{$rules->{checks}}, protocol             => [ is_required("is required") ];
 	}
 
 	# Validate the input against the rules
@@ -1448,6 +1463,34 @@ sub is_valid_routing_name {
 
 	if ( $value =~ /\./ ) {
 		return "invalid. Periods not allowed.";
+	}
+
+	return undef;
+}
+
+sub is_valid_int_or_undef {
+	my ( $value, $params ) = @_;
+
+	if ( !defined $value ) {
+		return undef;
+	}
+
+	if ( !( $value =~ /^\d+$/ ) ) {
+		return "invalid. Must be a whole number or null.";
+	}
+
+	return undef;
+}
+
+sub is_valid_number_or_undef {
+	my ( $value, $params ) = @_;
+
+	if ( !defined $value ) {
+		return undef;
+	}
+
+	if ( !looks_like_number($value) ) {
+		return "invalid. Must be a number or null.";
 	}
 
 	return undef;

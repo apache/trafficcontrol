@@ -34,7 +34,6 @@ under the License.
         <table id="serversTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>Update?</th>
                 <th>Host Name</th>
                 <th>Domain Name</th>
                 <th>IP</th>
@@ -49,7 +48,6 @@ under the License.
             </thead>
             <tbody>
             <tr ng-click="editServer(server.id)" ng-repeat="server in ::servers">
-                <td data-order="{{::server.updPending}}" class="clocks"><i ng-show="server.updPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i></td>
                 <td>{{::server.hostName}}</td>
                 <td>{{::server.domainName}}</td>
                 <td><a ng-click="ssh(server.ipAddress, $event)">{{::server.ipAddress}}</a></td>

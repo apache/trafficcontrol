@@ -43,7 +43,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(physLocationForm.region), 'has-feedback': hasError(physLocationForm.region)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Region *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="region" name="region" class="form-control" ng-model="physLocation.regionId" ng-options="region.id as region.name for region in regions" required>
+                    <select name="region" class="form-control" ng-model="physLocation.regionId" ng-options="region.id as region.name for region in regions" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(physLocationForm.region, 'required')">Required</small>
@@ -52,7 +52,7 @@ under the License.
             <div class="form-group">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Comments</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="comments" name="comments" rows="5" cols="17" class="form-control" ng-model="physLocation.comments" maxlength="256"></textarea>
+                    <textarea name="comments" rows="5" cols="17" class="form-control" ng-model="physLocation.comments" maxlength="256"></textarea>
                 </div>
             </div>
             <div class="modal-footer">

@@ -55,7 +55,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.name), 'has-feedback': hasError(cacheGroupForm.name)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="name" name="name" type="text" class="form-control" ng-model="cacheGroup.name" ng-required="true" ng-maxlength="45" ng-pattern="/^\S*$/" autofocus>
+                    <input name="name" type="text" class="form-control" ng-model="cacheGroup.name" ng-maxlength="45" ng-pattern="/^\S*$/" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.name, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.name, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.name, 'pattern')">No spaces</small>
@@ -65,7 +65,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.shortName), 'has-feedback': hasError(cacheGroupForm.shortName)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Short Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="shortName" name="shortName" type="text" class="form-control" ng-model="cacheGroup.shortName" ng-required="true" ng-maxlength="255" ng-pattern="/^\S*$/" autofocus>
+                    <input name="shortName" type="text" class="form-control" ng-model="cacheGroup.shortName" ng-maxlength="45" ng-pattern="/^\S*$/" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.shortName, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.shortName, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.shortName, 'pattern')">No spaces</small>
@@ -75,7 +75,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.type), 'has-feedback': hasError(cacheGroupForm.type)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="type" name="type" class="form-control" ng-model="cacheGroup.typeId" ng-options="type.id as type.name for type in types" required>
+                    <select name="type" class="form-control" ng-model="cacheGroup.typeId" ng-options="type.id as type.name for type in types" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.type, 'required')">Required</small>
@@ -84,25 +84,25 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.latitude), 'has-feedback': hasError(cacheGroupForm.latitude)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Magnetic Latitude *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="latitude" name="latitude" type="text" class="form-control" ng-model="cacheGroup.latitude" ng-pattern="/^[-+]?[0-9]*\.?[0-9]+$/" required autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.latitude, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.latitude, 'pattern')">Invalid coordinate</small>
+                    <input name="latitude" type="number" class="form-control" ng-model="cacheGroup.latitude" ng-pattern="/^[-+]?[0-9]*\.?[0-9]+$/" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.latitude, 'required')">Required Coordinate</small>
+                    <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.latitude, 'pattern')">Invalid Coordinate</small>
                     <span ng-show="hasError(cacheGroupForm.latitude)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.longitude), 'has-feedback': hasError(cacheGroupForm.longitude)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Magnetic Longitude *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="longitude" name="longitude" type="text" class="form-control" ng-model="cacheGroup.longitude" ng-pattern="/^[-+]?[0-9]*\.?[0-9]+$/" required autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.longitude, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.longitude, 'pattern')">Invalid coordinate</small>
+                    <input name="longitude" type="number" class="form-control" ng-model="cacheGroup.longitude" ng-pattern="/^[-+]?[0-9]*\.?[0-9]+$/" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.longitude, 'required')">Required Coordinate</small>
+                    <small class="input-error" ng-show="hasPropertyError(cacheGroupForm.longitude, 'pattern')">Invalid Coordinate</small>
                     <span ng-show="hasError(cacheGroupForm.longitude)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(cacheGroupForm.parentCacheGroup), 'has-feedback': hasError(cacheGroupForm.parentCacheGroup)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Parent Cache Group</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="parentCacheGroup" name="parentCacheGroup" class="form-control" ng-model="cacheGroup.parentCachegroupId" ng-options="cacheGroup.id as cacheGroup.name for cacheGroup in cacheGroups">
+                    <select name="parentCacheGroup" class="form-control" ng-model="cacheGroup.parentCachegroupId" ng-options="cacheGroup.id as cacheGroup.name for cacheGroup in cacheGroups">
                         <option value="">Select...</option>
                     </select>
                 </div>
@@ -110,7 +110,7 @@ under the License.
             <div class="form-group">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Secondary Parent Cache Group</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="secondaryParentCacheGroup" name="secondaryParentCacheGroup" class="form-control" ng-model="cacheGroup.secondaryParentCachegroupId" ng-options="cacheGroup.id as cacheGroup.name for cacheGroup in cacheGroups">
+                    <select name="secondaryParentCacheGroup" class="form-control" ng-model="cacheGroup.secondaryParentCachegroupId" ng-options="cacheGroup.id as cacheGroup.name for cacheGroup in cacheGroups">
                         <option value="">Select...</option>
                     </select>
                 </div>

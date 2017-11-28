@@ -331,7 +331,16 @@ class TOSession(restapi.RestApiSession):
         :rtype: Tuple[Dict[Text, Any], requests.Response]
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
-
+    @restapi.api_request(u'get', u'servers/hostname/{name}/details', (u'1.1', u'1.2',))
+    def get_server_details(self, name=None):
+        """
+        #GET /api/1.2/servers/hostname/:name/details
+        Get server details from trafficOps
+        https://trafficcontrol.incubator.apache.org/docs/latest/development/traffic_ops_api/v12/server.html
+        :param hostname: Server hostname
+        :rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+        :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+        """
     @restapi.api_request(u'post', u'deliveryservices', (u'1.1', u'1.2',))
     def create_deliveryservice(self, data=None):
         """

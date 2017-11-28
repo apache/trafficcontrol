@@ -23,6 +23,7 @@ use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use JSON;
 use MojoPlugins::Response;
+use Validate::Tiny ':all';
 
 my $finfo = __FILE__ . ":";
 
@@ -99,14 +100,12 @@ sub update {
 		return $self->not_found();
 	}
 
-	if ( !defined($params) ) {
-		return $self->alert("Parameters must be in JSON format.");
+	my ( $is_valid, $result ) = $self->is_tenant_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
 	}
 
-	if ( !defined( $params->{name} ) ) {
-		return $self->alert("Tenant name is required.");
-	}
-	
 	if ( $params->{name} ne $self->getTenantName($id) ) {
 	        my $name = $params->{name};
 		my $existing = $self->db->resultset('Tenant')->search( { name => $name } )->get_column('name')->single();
@@ -121,20 +120,6 @@ sub update {
     if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $id)) {
         return $self->forbidden(); #Current owning tenant is not under user's tenancy
     }
-
-    if ( $tenant_utils->is_root_tenant($tenants_data, $id) ) {
-		return $self->alert("Root tenant cannot be updated.");
-	}
-
-	if ( !defined( $params->{parentId}) ) {
-		# Cannot turn a simple tenant to a root tenant.
-		# Practically there is no problem with doing so, but it is to risky to be done by mistake. 
-		return $self->alert("Parent Id is required.");
-	}
-	
-	if ( !defined( $params->{active} ) ) {
-		return $self->alert("Active field is required.");
-	}
 
 	if ( !$params->{active} && $tenant_utils->is_root_tenant($tenants_data, $id)) {
 		return $self->alert("Root tenant cannot be in-active.");
@@ -230,18 +215,14 @@ sub create {
 		return $self->forbidden();
 	}
 
-	my $name = $params->{name};
-	if ( !defined($name) ) {
-		return $self->alert("Tenant name is required.");
+	my ( $is_valid, $result ) = $self->is_tenant_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
 	}
 
-	#not allowing to create additional root tenants.
-	#there is no real problem with that, but no real use also
 	my $parent_id = $params->{parentId};
-	if ( !defined($parent_id) ) {
-		return $self->alert("Parent Id is required.");
-	}
-	
+
 	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
 	
@@ -265,9 +246,9 @@ sub create {
 		return $self->alert("Parent tenant is invalid: heirarchy limit reached.");
 	}
 	
-	my $existing = $self->db->resultset('Tenant')->search( { name => $name } )->get_column('name')->single();
+	my $existing = $self->db->resultset('Tenant')->search( { name => $params->{name} } )->get_column('name')->single();
 	if ($existing) {
-		return $self->alert("A tenant with name \"$name\" already exists.");
+		return $self->alert("A tenant with name " . $params->{name} . " already exists.");
 	}
 
 	my $is_active = exists($params->{active})? $params->{active} : 0; #optional, if not set use default
@@ -358,5 +339,34 @@ sub delete {
 		return $self->alert( "Tenant delete failed." );
 	}
 }
+
+sub is_tenant_valid {
+	my $self   	= shift;
+	my $params 	= shift;
+
+	my $rules = {
+		fields => [
+			qw/name active parentId/
+		],
+
+		# Validation checks to perform
+		checks => [
+			name		=> [ is_required("is required") ],
+			active		=> [ is_required("is required") ],
+			parentId	=> [ is_required("is required"), is_like( qr/^\d+$/, "must be a positive integer" ) ],
+		]
+	};
+
+	# Validate the input against the rules
+	my $result = validate( $params, $rules );
+
+	if ( $result->{success} ) {
+		return ( 1, $result->{data} );
+	}
+	else {
+		return ( 0, $result->{error} );
+	}
+}
+
 
 

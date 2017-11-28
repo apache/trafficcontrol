@@ -55,6 +55,15 @@ $t->get_ok("/api/1.2/regions/100")->status_is(200)->json_is( "/response/0/id", 1
 
 ok $t->post_ok('/api/1.2/regions' => {Accept => 'application/json'} => json => {
 			"name" => "reg1",
+			"division" => "string"
+		})
+		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/alerts/0/level" => "error" )
+		->json_is( "/alerts/0/text" => "division must be a positive integer" )
+	, 'Did the region create fail?';
+
+ok $t->post_ok('/api/1.2/regions' => {Accept => 'application/json'} => json => {
+			"name" => "reg1",
 			"division" => 100
 		})
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
