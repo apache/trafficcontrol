@@ -95,7 +95,7 @@ func (m *SimpleOrderedMapUInt64Node) InsertBulk(keys []uint64, vals []*ATSConsis
 	}
 
 	m.O = nil // clear, in case there were previous inserts
-	for k, _ := range m.M {
+	for k := range m.M {
 		m.O = append(m.O, k)
 	}
 	sort.Sort(SortableUint64(m.O))

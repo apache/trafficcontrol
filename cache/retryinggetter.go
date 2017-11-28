@@ -14,7 +14,7 @@ import (
 )
 
 type Retrier struct {
-	H                 *CacheHandler
+	H                 *Handler
 	ReqHdr            http.Header
 	ReqTime           time.Time
 	ReqCacheControl   web.CacheControl
@@ -22,7 +22,7 @@ type Retrier struct {
 	RemappingProducer *RemappingProducer
 }
 
-func NewRetrier(h *CacheHandler, reqHdr http.Header, reqTime time.Time, reqCacheControl web.CacheControl, cacheKey string, RemappingProducer *RemappingProducer) *Retrier {
+func NewRetrier(h *Handler, reqHdr http.Header, reqTime time.Time, reqCacheControl web.CacheControl, cacheKey string, RemappingProducer *RemappingProducer) *Retrier {
 	return &Retrier{
 		H:                 h,
 		ReqHdr:            reqHdr,
