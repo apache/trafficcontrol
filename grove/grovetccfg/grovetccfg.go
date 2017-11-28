@@ -126,7 +126,7 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 
 	parents, err := getParents(host, servers, cachegroups)
 	if err != nil {
-		fmt.Printf("Error getting '%v' parents: %v\n", err)
+		fmt.Printf("Error getting '%v' parents: %v\n", host, err)
 		os.Exit(1)
 	}
 
