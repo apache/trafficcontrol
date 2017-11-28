@@ -172,9 +172,9 @@ func main() {
 
 	stats := cache.NewStats(remapper.Rules(), lruCache, uint64(cfg.CacheSizeBytes))
 
-	buildHandler := func(scheme string, port string, conns *web.ConnMap) (http.Handler, *cache.CacheHandlerPointer) {
+	buildHandler := func(scheme string, port string, conns *web.ConnMap) (http.Handler, *cache.HandlerPointer) {
 		statHandler := cache.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
-		cacheHandler := cache.NewCacheHandler(
+		cacheHandler := cache.NewHandler(
 			lruCache,
 			remapper,
 			uint64(cfg.ConcurrentRuleRequests),
@@ -189,7 +189,7 @@ func main() {
 			cfg.ReqMaxIdleConns,
 			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
 		)
-		cacheHandlerPointer := cache.NewCacheHandlerPointer(cacheHandler)
+		cacheHandlerPointer := cache.NewHandlerPointer(cacheHandler)
 
 		handler := http.NewServeMux()
 		handler.Handle("/_astats", statHandler)
@@ -271,7 +271,7 @@ func main() {
 
 		stats = cache.NewStats(remapper.Rules(), lruCache, uint64(cfg.CacheSizeBytes)) // TODO copy stats from old stats object?
 
-		httpCacheHandler := cache.NewCacheHandler(
+		httpCacheHandler := cache.NewHandler(
 			lruCache,
 			remapper,
 			uint64(cfg.ConcurrentRuleRequests),
@@ -288,7 +288,7 @@ func main() {
 		)
 		httpHandlerPointer.Set(httpCacheHandler)
 
-		httpsCacheHandler := cache.NewCacheHandler(
+		httpsCacheHandler := cache.NewHandler(
 			lruCache,
 			remapper,
 			uint64(cfg.ConcurrentRuleRequests),

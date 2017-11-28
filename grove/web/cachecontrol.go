@@ -8,6 +8,7 @@ import (
 
 type CacheControl map[string]string
 
+// ParseCacheControl parses the Cache-Control header from the headers object, and returns the parsed map of cache control directives.
 // TODO verify Header/CacheControl are properly CanonicalCase/LowerCase. Put cache-control text in constants?
 func ParseCacheControl(h http.Header) CacheControl {
 	c := CacheControl{}

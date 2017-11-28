@@ -34,26 +34,26 @@ type Cache interface {
 	Size() uint64
 }
 
-type CacheHandlerPointer struct {
+type HandlerPointer struct {
 	realHandler *unsafe.Pointer
 }
 
-func NewCacheHandlerPointer(realHandler *CacheHandler) *CacheHandlerPointer {
+func NewHandlerPointer(realHandler *Handler) *HandlerPointer {
 	p := (unsafe.Pointer)(realHandler)
-	return &CacheHandlerPointer{realHandler: &p}
+	return &HandlerPointer{realHandler: &p}
 }
 
-func (h *CacheHandlerPointer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	realHandler := (*CacheHandler)(atomic.LoadPointer(h.realHandler))
+func (h *HandlerPointer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	realHandler := (*Handler)(atomic.LoadPointer(h.realHandler))
 	realHandler.ServeHTTP(w, r)
 }
 
-func (h *CacheHandlerPointer) Set(newHandler *CacheHandler) {
+func (h *HandlerPointer) Set(newHandler *Handler) {
 	p := (unsafe.Pointer)(newHandler)
 	atomic.StorePointer(h.realHandler, p)
 }
 
-type CacheHandler struct {
+type Handler struct {
 	cache           Cache
 	remapper        HTTPRequestRemapper
 	getter          thread.Getter
@@ -96,7 +96,7 @@ type CacheHandler struct {
 // ruleLimit uint64, keyLimit uint64, nocacheLimit uint64
 //
 // The connectionClose parameter determines whether to send a `Connection: close` header. This is primarily designed for maintenance, to drain the cache of incoming requestors. This overrides rule-specific `connection-close: false` configuration, under the assumption that draining a cache is a temporary maintenance operation, and if connectionClose is true on the service and false on some rules, those rules' configuration is probably a permament setting whereas the operator probably wants to drain all connections if the global setting is true. If it's necessary to leave connection close false on some rules, set all other rules' connectionClose to true and leave the global connectionClose unset.
-func NewCacheHandler(
+func NewHandler(
 	cache Cache,
 	remapper HTTPRequestRemapper,
 	ruleLimit uint64,
@@ -110,7 +110,7 @@ func NewCacheHandler(
 	reqKeepAlive time.Duration,
 	reqMaxIdleConns int,
 	reqIdleConnTimeout time.Duration,
-) *CacheHandler {
+) *Handler {
 	transport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
 		DialContext: (&net.Dialer{
@@ -133,7 +133,7 @@ func NewCacheHandler(
 		log.Errorf("getting  hostname: %v\n", err)
 	}
 
-	return &CacheHandler{
+	return &Handler{
 		cache:           cache,
 		remapper:        remapper,
 		getter:          thread.NewGetter(),
@@ -167,8 +167,8 @@ func makeRuleThrottlers(remapper HTTPRequestRemapper, limit uint64) map[string]t
 const CodeConnectFailure = http.StatusBadGateway
 const NSPerSec = 1000000000
 
-// NewCacheHandlerFunc creates and returns an http.HandleFunc, which may be pipelined with other http.HandleFuncs via `http.HandleFunc`. This is a convenience wrapper around the `http.Handler` object obtainable via `New`. If you prefer objects, use `NewCacheHandler`.
-func NewCacheHandlerFunc(
+// NewHandlerFunc creates and returns an http.HandleFunc, which may be pipelined with other http.HandleFuncs via `http.HandleFunc`. This is a convenience wrapper around the `http.Handler` object obtainable via `New`. If you prefer objects, use `NewCacheHandler`.
+func NewHandlerFunc(
 	cache Cache,
 	remapper HTTPRequestRemapper,
 	ruleLimit uint64,
@@ -183,7 +183,7 @@ func NewCacheHandlerFunc(
 	reqMaxIdleConns int,
 	reqIdleConnTimeout time.Duration,
 ) http.HandlerFunc {
-	handler := NewCacheHandler(
+	handler := NewHandler(
 		cache,
 		remapper,
 		ruleLimit,
@@ -232,7 +232,7 @@ func setDSCP(conn *web.InterceptConn, dscp int) error {
 	return nil
 }
 
-func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.stats.IncConnections()
 	defer h.stats.DecConnections()
 
@@ -256,8 +256,8 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reqTime := time.Now()
 	reqHeader := web.CopyHeader(r.Header) // copy request header, because it's not guaranteed valid after actually issuing the request
 	moneyTraceHdr := reqHeader.Get("X-Money-Trace")
-	clientIp, _ := GetClientIPPort(r)
-	statLog := NewStatLogger(w, conn, h, r, moneyTraceHdr, clientIp, reqTime, remappingProducer)
+	clientIP, _ := GetClientIPPort(r)
+	statLog := NewStatLogger(w, conn, h, r, moneyTraceHdr, clientIP, reqTime, remappingProducer)
 
 	if err != nil {
 		code := 0
@@ -287,7 +287,7 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	iCacheObj, ok := h.cache.Get(cacheKey)
 
 	if !ok {
-		log.Debugf("cacheHandler.ServeHTTP: '%v' not in cache\n", cacheKey)
+		log.Debugf("cache.Handler.ServeHTTP: '%v' not in cache\n", cacheKey)
 		cacheObj, err := retrier.Get(r, nil)
 		if err != nil {
 			log.Errorf("retrying get error (in uncached): %v\n", err)
@@ -336,9 +336,9 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch canReuseStored {
 	case ReuseCan:
-		log.Debugf("cacheHandler.ServeHTTP: '%v' cache hit!\n", cacheKey)
+		log.Debugf("cache.Handler.ServeHTTP: '%v' cache hit!\n", cacheKey)
 	case ReuseCannot:
-		log.Debugf("cacheHandler.ServeHTTP: '%v' can't reuse\n", cacheKey)
+		log.Debugf("cache.Handler.ServeHTTP: '%v' can't reuse\n", cacheKey)
 		cacheObj, err = retrier.Get(r, nil)
 		if err != nil {
 			log.Errorf("retrying get error (in reuse-cannot): %v\n", err)
@@ -351,7 +351,7 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	case ReuseMustRevalidate:
-		log.Debugf("cacheHandler.ServeHTTP: '%v' must revalidate\n", cacheKey)
+		log.Debugf("cache.Handler.ServeHTTP: '%v' must revalidate\n", cacheKey)
 		r.Header.Set("If-Modified-Since", cacheObj.RespRespTime.Format(time.RFC1123))
 		cacheObj, err = retrier.Get(r, cacheObj)
 		if err != nil {
@@ -366,7 +366,7 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case ReuseMustRevalidateCanStale:
-		log.Debugf("cacheHandler.ServeHTTP: '%v' must revalidate (but allowed stale)\n", cacheKey)
+		log.Debugf("cache.Handler.ServeHTTP: '%v' must revalidate (but allowed stale)\n", cacheKey)
 		r.Header.Set("If-Modified-Since", cacheObj.RespRespTime.Format(time.RFC1123))
 		oldCacheObj := cacheObj
 		cacheObj, err = retrier.Get(r, cacheObj)
@@ -375,7 +375,7 @@ func (h *CacheHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			cacheObj = oldCacheObj
 		}
 	}
-	log.Debugf("cacheHandler.ServeHTTP: '%v' responding with %v\n", cacheKey, cacheObj.Code)
+	log.Debugf("cache.Handler.ServeHTTP: '%v' responding with %v\n", cacheKey, cacheObj.Code)
 
 	bytesSent, err := h.respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
 	if err != nil {
@@ -391,7 +391,7 @@ func tryFlush(w http.ResponseWriter) {
 	}
 }
 
-//GetClientIP returns the client IP address of the given request. It returns the first x-forwarded-for IP if any, else the RemoteAddr
+// GetClientIPPort returns the client IP address of the given request, and the port. It returns the first x-forwarded-for IP if any, else the RemoteAddr
 func GetClientIPPort(r *http.Request) (string, string) {
 	xForwardedFor := r.Header.Get("X-FORWARDED-FOR")
 	ips := strings.Split(xForwardedFor, ",")
@@ -399,9 +399,8 @@ func GetClientIPPort(r *http.Request) (string, string) {
 	if len(ips) < 1 || ips[0] == "" {
 		if err != nil {
 			return r.RemoteAddr, port // TODO log?
-		} else {
-			return ip, port
 		}
+		return ip, port
 	}
 	return strings.TrimSpace(ips[0]), port
 }
@@ -509,7 +508,7 @@ func request(transport *http.Transport, r *http.Request, proxyURL *url.URL) (int
 }
 
 // respond writes the given code, header, and body to the ResponseWriter.
-func (h *CacheHandler) respond(w http.ResponseWriter, code int, header http.Header, body []byte, connectionClose bool) (uint64, error) {
+func (h *Handler) respond(w http.ResponseWriter, code int, header http.Header, body []byte, connectionClose bool) (uint64, error) {
 	dH := w.Header()
 	web.CopyHeaderTo(header, &dH)
 	if connectionClose {

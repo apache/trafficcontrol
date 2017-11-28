@@ -44,19 +44,18 @@ type throttlers struct {
 func (t *throttlers) checkoutThrottler(k string) Throttler {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
-	if throttler, ok := t.throttlers[k]; !ok {
+	throttler, ok := t.throttlers[k]
+	if !ok {
 		throttler = NewThrottler(t.max)
 		t.throttlers[k] = throttler
-		return throttler
-	} else {
-		return throttler
 	}
+	return throttler
 }
 
 func (t *throttlers) checkinThrottler(k string) {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
-	t.checkoutCount -= 1
+	t.checkoutCount--
 	if t.checkoutCount == 0 {
 		delete(t.throttlers, k)
 	}

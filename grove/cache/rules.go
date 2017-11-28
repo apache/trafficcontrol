@@ -22,8 +22,8 @@ const (
 	ReuseMustRevalidateCanStale
 )
 
-// validHttpCodes provides fast lookup whether a HTTP response code is valid per RFC7234§3
-var ValidHttpCodes = map[int]struct{}{
+// ValidHTTPCodes provides fast lookup whether a HTTP response code is valid per RFC7234§3
+var ValidHTTPCodes = map[int]struct{}{
 	200: {},
 	201: {},
 	202: {},
@@ -103,12 +103,12 @@ var defaultCacheableResponseCodes = map[int]struct{}{
 
 // codeUnderstood returns whether the given response code is understood by this cache. Required by RFC7234§3
 func codeUnderstood(code int) bool {
-	_, ok := ValidHttpCodes[code]
+	_, ok := ValidHTTPCodes[code]
 	return ok
 }
 
-// TODO add options to ignore/violate request cache-control (to protect origins)
 // CanCache returns whether an object can be cached per RFC 7234, based on the request headers, response headers, and response code. If strictRFC is false, this ignores request headers denying cacheability such as `no-cache`, in order to protect origins.
+// TODO add options to ignore/violate request cache-control (to protect origins)
 func CanCache(reqHeaders http.Header, respCode int, respHeaders http.Header, strictRFC bool) bool {
 	log.Debugf("CanCache start\n")
 	reqCacheControl := web.ParseCacheControl(reqHeaders)
