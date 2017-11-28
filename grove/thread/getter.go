@@ -58,10 +58,9 @@ func (g *getter) atomicPopGetter(key string) (GetterObj, bool) {
 	if len(objs) == 1 {
 		delete(g.objs, key)
 		return objs[0], true
-	} else {
-		g.objs[key] = objs[1:] // if this panics, you called this function after it returned true and there were no more getters
-		return objs[0], false
 	}
+	g.objs[key] = objs[1:] // if this panics, you called this function after it returned true and there were no more getters
+	return objs[0], false
 }
 
 func gogetter(g *getter, key string, actualGet func() *cacheobj.CacheObj, canReuse func(*cacheobj.CacheObj) bool) {

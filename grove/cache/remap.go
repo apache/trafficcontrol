@@ -17,7 +17,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
-// CacheType is the type (or tier) of a CDN cache.
+// ParentSelectionType is the algorithm to use for selecting parents.
 type ParentSelectionType string
 
 const (
@@ -56,16 +56,16 @@ type HTTPRequestRemapper interface {
 	StatRules() RemapRulesStats
 }
 
-type simpleHttpRequestRemapper struct {
+type simpleHTTPRequestRemapper struct {
 	remapper Remapper
 	stats    *RemapRulesStats
 }
 
-func (hr simpleHttpRequestRemapper) Rules() []RemapRule {
+func (hr simpleHTTPRequestRemapper) Rules() []RemapRule {
 	return hr.remapper.Rules()
 }
 
-func (hr simpleHttpRequestRemapper) StatRules() RemapRulesStats {
+func (hr simpleHTTPRequestRemapper) StatRules() RemapRulesStats {
 	return *hr.stats
 }
 
@@ -99,6 +99,7 @@ type Remapping struct {
 	RetryCodes      map[int]struct{}
 }
 
+// RemappingProducer takes an HTTP Request and returns a Remapping to be used for that request.
 // TODO rename
 type RemappingProducer struct {
 	oldURI   string
@@ -107,33 +108,32 @@ type RemappingProducer struct {
 	failures int
 }
 
-func (r *RemappingProducer) CacheKey() string {
-	return r.cacheKey
+func (p *RemappingProducer) CacheKey() string {
+	return p.cacheKey
 }
 
-func (r *RemappingProducer) ConnectionClose() bool {
-	return r.rule.ConnectionClose
+func (p *RemappingProducer) ConnectionClose() bool {
+	return p.rule.ConnectionClose
 }
 
-func (r *RemappingProducer) Name() string {
-	return r.rule.Name
+func (p *RemappingProducer) Name() string {
+	return p.rule.Name
 }
 
-func (r *RemappingProducer) DSCP() int {
-	return r.rule.DSCP
+func (p *RemappingProducer) DSCP() int {
+	return p.rule.DSCP
 }
 
-func (r *RemappingProducer) ToFQDN() string {
+func (p *RemappingProducer) ToFQDN() string {
 	// TODO verify To is not allowed to be constructed with < 1 element
-	return strings.TrimPrefix(strings.TrimPrefix(r.rule.To[0].URL, "http://"), "https://")
+	return strings.TrimPrefix(strings.TrimPrefix(p.rule.To[0].URL, "http://"), "https://")
 }
 
-func (r *RemappingProducer) ProxyStr() string {
-	if r.rule.To[0].ProxyURL != nil && r.rule.To[0].ProxyURL.Host != "" {
-		return r.rule.To[0].ProxyURL.Host
-	} else {
-		return "NONE" // TODO const?
+func (p *RemappingProducer) ProxyStr() string {
+	if p.rule.To[0].ProxyURL != nil && p.rule.To[0].ProxyURL.Host != "" {
+		return p.rule.To[0].ProxyURL.Host
 	}
+	return "NONE" // TODO const?
 }
 
 var ErrRuleNotFound = errors.New("remap rule not found")
@@ -145,7 +145,7 @@ func RequestURI(r *http.Request, scheme string) string {
 	return scheme + "://" + r.Host + r.RequestURI
 }
 
-func (hr simpleHttpRequestRemapper) RemappingProducer(r *http.Request, scheme string) (*RemappingProducer, error) {
+func (hr simpleHTTPRequestRemapper) RemappingProducer(r *http.Request, scheme string) (*RemappingProducer, error) {
 	uri := RequestURI(r, scheme)
 	rule, ok := hr.remapper.Remap(uri)
 	if !ok {
@@ -175,19 +175,19 @@ func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
 		return Remapping{}, false, ErrNoMoreRetries
 	}
 
-	newUri, proxyURL := p.rule.URI(p.oldURI, r.URL.Path, r.URL.RawQuery, p.failures)
+	newURI, proxyURL := p.rule.URI(p.oldURI, r.URL.Path, r.URL.RawQuery, p.failures)
 	p.failures++
-	newReq, err := http.NewRequest(r.Method, newUri, nil)
+	newReq, err := http.NewRequest(r.Method, newURI, nil)
 	if err != nil {
 		return Remapping{}, false, fmt.Errorf("creating new request: %v\n", err)
 	}
 	web.CopyHeaderTo(r.Header, &newReq.Header)
 
 	log.Debugf("GetNext oldUri: %v, Host: %v\n", p.oldURI, newReq.Header.Get("Host"))
-	log.Debugf("GetNext newUri: %v, fqdn: %v\n", newUri, getFQDN(newUri))
+	log.Debugf("GetNext newURI: %v, fqdn: %v\n", newURI, getFQDN(newURI))
 	log.Debugf("GetNext rule name: %v\n", p.rule.Name)
 
-	newReq.Header.Set("Host", getFQDN(newUri))
+	newReq.Header.Set("Host", getFQDN(newURI))
 
 	retryAllowed := *p.rule.RetryNum < p.failures
 	return Remapping{
@@ -203,7 +203,7 @@ func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
 }
 
 func RemapperToHTTP(r Remapper, statRules *RemapRulesStats) HTTPRequestRemapper {
-	return simpleHttpRequestRemapper{remapper: r, stats: statRules}
+	return simpleHTTPRequestRemapper{remapper: r, stats: statRules}
 }
 
 func NewHTTPRequestRemapper(remap []RemapRule, statRules *RemapRulesStats) HTTPRequestRemapper {
@@ -332,13 +332,13 @@ type RemapRule struct {
 }
 
 func GetIP(r *http.Request) (net.IP, error) {
-	clientIpStr, _, err := net.SplitHostPort(r.RemoteAddr)
+	clientIPStr, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		return nil, fmt.Errorf("malformed client address '%s'", r.RemoteAddr)
 	}
-	clientIP := net.ParseIP(clientIpStr)
+	clientIP := net.ParseIP(clientIPStr)
 	if clientIP == nil {
-		return nil, fmt.Errorf("malformed client IP address '%s'", clientIpStr)
+		return nil, fmt.Errorf("malformed client IP address '%s'", clientIPStr)
 	}
 	return clientIP, nil
 }
@@ -457,7 +457,7 @@ func LoadRemapRules(path string) ([]RemapRule, *RemapRulesStats, error) {
 	if remapRulesJSON.RetryCodes != nil {
 		remapRules.RetryCodes = make(map[int]struct{}, len(*remapRulesJSON.RetryCodes))
 		for _, code := range *remapRulesJSON.RetryCodes {
-			if _, ok := ValidHttpCodes[code]; !ok {
+			if _, ok := ValidHTTPCodes[code]; !ok {
 				return nil, nil, fmt.Errorf("error parsing rules: retry code invalid: %v", code)
 			}
 			remapRules.RetryCodes[code] = struct{}{}
@@ -494,7 +494,7 @@ func LoadRemapRules(path string) ([]RemapRule, *RemapRulesStats, error) {
 		if jsonRule.RetryCodes != nil {
 			rule.RetryCodes = make(map[int]struct{}, len(*jsonRule.RetryCodes))
 			for _, code := range *jsonRule.RetryCodes {
-				if _, ok := ValidHttpCodes[code]; !ok {
+				if _, ok := ValidHTTPCodes[code]; !ok {
 					return nil, nil, fmt.Errorf("error parsing rule %v retry code invalid: %v", rule.Name, code)
 				}
 				rule.RetryCodes[code] = struct{}{}
@@ -594,7 +594,7 @@ func makeTo(tosJSON []RemapRuleToJSON, rule RemapRule) ([]RemapRuleTo, error) {
 		if toJSON.RetryCodes != nil {
 			to.RetryCodes = make(map[int]struct{}, len(*toJSON.RetryCodes))
 			for _, code := range *toJSON.RetryCodes {
-				if _, ok := ValidHttpCodes[code]; !ok {
+				if _, ok := ValidHTTPCodes[code]; !ok {
 					return nil, fmt.Errorf("error parsing to %v retry code invalid: %v", to.URL, code)
 				}
 				to.RetryCodes[code] = struct{}{}
@@ -659,7 +659,7 @@ func RemapRulesToJSON(r RemapRules) RemapRulesJSON {
 	if len(r.RetryCodes) > 0 {
 		rcs := []int{}
 		j.RetryCodes = &rcs
-		for code, _ := range r.RetryCodes {
+		for code := range r.RetryCodes {
 			*j.RetryCodes = append(*j.RetryCodes, code)
 		}
 	}
@@ -705,7 +705,7 @@ func buildRemapRuleToJSON(r RemapRule) RemapRuleJSON {
 	if r.RetryCodes != nil {
 		rc := []int{}
 		j.RetryCodes = &rc
-		for retryCode, _ := range r.RetryCodes {
+		for retryCode := range r.RetryCodes {
 			*j.RetryCodes = append(*j.RetryCodes, retryCode)
 		}
 	}
@@ -727,7 +727,7 @@ func RemapRuleToToJSON(r RemapRuleTo) RemapRuleToJSON {
 	if r.RetryCodes != nil {
 		rc := []int{}
 		j.RetryCodes = &rc
-		for retryCode, _ := range r.RetryCodes {
+		for retryCode := range r.RetryCodes {
 			*j.RetryCodes = append(*j.RetryCodes, retryCode)
 		}
 	}
