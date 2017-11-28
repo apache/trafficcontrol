@@ -101,7 +101,7 @@ var DefaultConfig = Config{
 	ServerReadTimeoutMS:    3 * MSPerSec,
 }
 
-// Load loads the given config file. If an empty string is passed, the default config is returned.
+// LoadConfig loads the given config file. If an empty string is passed, the default config is returned.
 func LoadConfig(fileName string) (Config, error) {
 	cfg := DefaultConfig
 	if fileName == "" {
