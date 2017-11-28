@@ -28,7 +28,7 @@ type StatLogger struct {
 	RemappingProducer *RemappingProducer
 }
 
-func NewStatLogger(w http.ResponseWriter, conn *web.InterceptConn, h *CacheHandler, r *http.Request, moneyTraceHdr string, clientIP string, reqTime time.Time, remappingProducer *RemappingProducer) StatLogger {
+func NewStatLogger(w http.ResponseWriter, conn *web.InterceptConn, h *Handler, r *http.Request, moneyTraceHdr string, clientIP string, reqTime time.Time, remappingProducer *RemappingProducer) StatLogger {
 	return StatLogger{
 		W:                 w,
 		Conn:              conn,

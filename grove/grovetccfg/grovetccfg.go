@@ -44,7 +44,7 @@ func main() {
 	flag.Parse()
 
 	useCache := false
-	toc, err := to.LoginWithAgent(*toURL, *toUser, *toPass, *toInsecure, UserAgent, useCache, TrafficOpsTimeout)
+	toc, _, err := to.LoginWithAgent(*toURL, *toUser, *toPass, *toInsecure, UserAgent, useCache, TrafficOpsTimeout)
 	if err != nil {
 		fmt.Printf("Error connecting to Traffic Ops: %v\n", err)
 		os.Exit(1)
@@ -409,7 +409,7 @@ func buildFrom(protocol string, pattern string, patternLiteralRegex bool, host s
 		return protocol + "://" + pattern
 	}
 
-	if isHttp := strings.HasPrefix(dsType, "http"); isHttp {
+	if isHTTP := strings.HasPrefix(dsType, "http"); isHTTP {
 		return protocol + "://" + host + "." + pattern + "." + cdnDomain
 	}
 
