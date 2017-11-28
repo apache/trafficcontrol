@@ -23,8 +23,7 @@ func TestParseCacheControl(t *testing.T) {
 	}
 
 	for _, ccStr := range testCacheControls {
-		cc := ParseCacheControl(makeHeader(ccStr))
-		cc = cc
+		ParseCacheControl(makeHeader(ccStr))
 		// TODO actually test
 		// fmt.Printf("parsed: %+v\n", cc)
 	}

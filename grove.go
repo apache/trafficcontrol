@@ -142,7 +142,7 @@ func main() {
 
 	lruCache, err := lru.NewStrLargeWithEvict(uint64(cfg.CacheSizeBytes), nil)
 	if err != nil {
-		log.Errorf("starting service: creating cache: %v\n")
+		log.Errorf("starting service: creating cache: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -241,7 +241,7 @@ func main() {
 			// TODO determine if it's ok for the cache to temporarily exceed the value. This means the cache usage could be temporarily double, as old requestors still have the old object. We could call `Purge` on the old cache, to empty it, to mitigate this.
 			lruCache, err = lru.NewStrLargeWithEvict(uint64(cfg.CacheSizeBytes), nil)
 			if err != nil {
-				log.Errorf("reloading config: creating cache: %v\n")
+				log.Errorf("reloading config: creating cache: %v\n", err)
 				return
 			}
 		}
@@ -390,11 +390,9 @@ func loadCerts(rules []cache.RemapRule) ([]tls.Certificate, error) {
 		}
 		if rule.CertificateFile == "" {
 			return nil, errors.New("rule " + rule.Name + " has a certificate but no key, using default certificate\n")
-			continue
 		}
 		if rule.CertificateKeyFile == "" {
 			return nil, errors.New("rule " + rule.Name + " has a key but no certificate, using default certificate\n")
-			continue
 		}
 
 		cert, err := tls.LoadX509KeyPair(rule.CertificateFile, rule.CertificateKeyFile)
