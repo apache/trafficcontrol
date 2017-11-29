@@ -160,6 +160,37 @@ sub server_data {
 	return $server;
 }
 
+sub get_ats_major_version {
+	my $self 	 = shift;
+	my $server   = shift;
+
+	my $ats_ver =
+		$self->db->resultset('ProfileParameter')
+		->search( { 'parameter.name' => 'trafficserver', 'parameter.config_file' => 'package', 'profile.id' => $server->profile->id },
+		{ prefetch => [ 'profile', 'parameter' ] } )->get_column('parameter.value')->single();
+		
+	if (!defined $ats_ver) {
+	        $ats_ver = "5";
+            $self->app->log->error("Parameter package.trafficserver missing for profile ".$server->profile->name . ". Assuming version $ats_ver");
+        }
+
+	my $ats_major_version = substr( $ats_ver, 0, 1 );
+
+	return $ats_major_version;
+}
+
+sub get_qstring_ignore_remap {
+	my $self	= shift;
+	my $ats_major_version = shift;
+
+	if ($ats_major_version >= 6) {
+		return " \@plugin=cachekey.so \@pparam=--separator= \@pparam=--remove-all-params=true \@pparam=--remove-path=true \@pparam=--capture-prefix-uri=/http:\\/\\/([^?]*)/http:\\/\\/\$1/";
+	}
+	else {
+		return " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
+	}
+}
+
 sub header_comment {
 	my $self      = shift;
 	my $host_name = shift;
@@ -972,7 +1003,7 @@ sub remap_dot_config {
 				$mid_remap{ $remap->{org} } .= " \@plugin=header_rewrite.so \@pparam=" . $remap->{mid_hdr_rw_file};
 			}
 			if ( $remap->{qstring_ignore} == 1 ) {
-				$mid_remap{ $remap->{org} } .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
+				$mid_remap{ $remap->{org} } .= $self->get_qstring_ignore_remap($self->get_ats_major_version($server));
 			}
 			if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
 				$mid_remap{ $remap->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $remap->{cacheurl_file};
@@ -1021,16 +1052,6 @@ sub build_remap_line {
 
 	$map_from =~ s/ccr/$host_name/;
 
-	my $ats_ver =
-		$self->db->resultset('ProfileParameter')
-		->search( { 'parameter.name' => 'trafficserver', 'parameter.config_file' => 'package', 'profile.id' => $server->profile->id },
-		{ prefetch => [ 'profile', 'parameter' ] } )->get_column('parameter.value')->single();
-	if (!defined $ats_ver) {
-	        $ats_ver = "5";
-            $self->app->log->error("Parameter package.trafficserver missing for profile ".$server->profile->name . ". Assuming version $ats_ver");
-        }
-	my $ats_major_version = substr( $ats_ver, 0, 1 );
-
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
 		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=dscp_remap.so \@pparam=" . $dscp;
 	}
@@ -1059,12 +1080,7 @@ sub build_remap_line {
 		}
 		else {
 			#If we are on ats 6 and later we want to use the cachekey plugin, otherwise we have to use cacheurl
-			if ($ats_major_version >= 6) {
-				$text .=" \@plugin=cachekey.so \@pparam=--separator= \@pparam=--remove-all-params=true \@pparam=--remove-path=true \@pparam=--capture-prefix-uri=/http:\\/\\/([^?]*)/http:\\/\\/\$1/";
-			}
-			else {
-				$text .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
-			}
+			$text .= $self->get_qstring_ignore_remap($self->get_ats_major_version($server));
 		}
 	}
 	if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
