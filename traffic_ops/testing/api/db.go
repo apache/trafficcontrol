@@ -38,21 +38,8 @@ func setupData(cfg *Config, db *sql.DB) error {
 	//}
 
 	tx, err := db.Begin()
-	if err != nil {
-		return fmt.Errorf("Transaction Failed", err)
-	}
-	res, err := tx.Exec("DELETE FROM JOB")
-	if err != nil {
-		return fmt.Errorf("Transaction Failed %v %v", err, res)
-	}
-	//db.MustExec("insert into role (name, description, priv_level) VALUES ($1, $2, $3, $4)", "disallowed", "Block all access", "0")
-	// Role
-	res, err = tx.Exec("DELETE FROM ROLE")
-	if err != nil {
-		return fmt.Errorf("Transaction Failed %v %v", err, res)
-	}
 
-	res, err = tx.Exec("INSERT INTO role (id, name, description, priv_level) VALUES (1, 'disallowed','Block all access',0) ON CONFLICT DO NOTHING")
+	res, err := tx.Exec("INSERT INTO role (id, name, description, priv_level) VALUES (1, 'disallowed','Block all access',0) ON CONFLICT DO NOTHING")
 	if err != nil {
 		return fmt.Errorf("Transaction Failed %v %v", err, res)
 	}
@@ -83,16 +70,6 @@ func setupData(cfg *Config, db *sql.DB) error {
 		return fmt.Errorf("Transaction Failed %v %v", err, res)
 	}
 
-	res, err = tx.Exec("DELETE FROM LOG")
-	if err != nil {
-		return fmt.Errorf("Transaction Failed %v %v", err, res)
-	}
-
-	res, err = tx.Exec("DELETE FROM TM_USER")
-	if err != nil {
-		return fmt.Errorf("Transaction Failed %v %v", err, res)
-	}
-
 	encryptedPassword, err := auth.DerivePassword(cfg.TOUserPassword)
 	if err != nil {
 		return fmt.Errorf("Password encryption failed %v %v", err)
@@ -116,10 +93,117 @@ func teardownData(cfg *Config, db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("Transaction Failed %v %v ", err, tx)
 	}
-	res, err := tx.Exec("DELETE FROM CDN")
+
+	res, err := tx.Exec("DELETE FROM TO_EXTENSION")
 	if err != nil {
 		return fmt.Errorf("Transaction Failed %v %v", err, res)
 	}
+
+	res, err = tx.Exec("DELETE FROM STATICDNSENTRY")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM JOB")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM JOB_AGENT")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM JOB_STATUS")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM LOG")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM ASN")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM DELIVERYSERVICE_TMUSER")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM TM_USER")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM ROLE")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM DELIVERYSERVICE_REGEX")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM REGEX")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM DELIVERYSERVICE_SERVER")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM DELIVERYSERVICE")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM SERVER")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM PHYS_LOCATION")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM REGION")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM DIVISION")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM PROFILE")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM PARAMETER")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM PROFILE_PARAMETER")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM CACHEGROUP")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM TYPE")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM STATUS")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM SNAPSHOT")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM CDN")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+	res, err = tx.Exec("DELETE FROM TENANT")
+	if err != nil {
+		return fmt.Errorf("Transaction Failed %v %v", err, res)
+	}
+
 	tx.Commit()
 	if err != nil {
 		return fmt.Errorf("Commit Failed %v %v", err, res)
