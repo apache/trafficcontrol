@@ -89,15 +89,15 @@ func getDivisions(v url.Values, db *sqlx.DB) ([]tc.Division, error) {
 	}
 	defer rows.Close()
 
-	regions := []tc.Division{}
+	o := []tc.Division{}
 	for rows.Next() {
-		var s tc.Division
+		var d tc.Division
 		if err = rows.StructScan(&s); err != nil {
-			return nil, fmt.Errorf("getting regions: %v", err)
+			return nil, fmt.Errorf("getting divisions: %v", err)
 		}
-		regions = append(regions, s)
+		o = append(o, d)
 	}
-	return regions, nil
+	return o, nil
 }
 
 func selectDivisionsQuery() string {
