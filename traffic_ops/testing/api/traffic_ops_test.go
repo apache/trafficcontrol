@@ -78,7 +78,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	err = setupData(&cfg, db)
+	err = setupUserData(&cfg, db)
 	if err != nil {
 		fmt.Errorf("\nError setting up data %s - %v\n", cfg.TOURL, cfg.TOUser, err)
 		os.Exit(1)
@@ -106,7 +106,6 @@ func setupSession(cfg Config, toURL string, toUser string, toPass string) (*clie
 	if err != nil {
 		return nil, nil, err
 	}
-	log.Debugln("%v-->", toURL)
 
 	return TOSession, netAddr, err
 }
@@ -121,6 +120,7 @@ func loadTestCDN() {
 	err = json.Unmarshal(f, &testData)
 	if err != nil {
 		log.Errorf("Cannot unmarshal the json ", err)
+		os.Exit(1)
 	}
 }
 

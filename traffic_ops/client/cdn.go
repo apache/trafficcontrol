@@ -18,23 +18,40 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 var (
-	uri = "/api/1.2/cdns"
+	API_v2_CDNs = "/api/1.2/cdns"
 )
 
-// Deprecated: use GetCDNs.
-func (to *Session) CDNs() ([]tc.CDN, error) {
-	cdns, _, err := to.GetCDNs()
-	return cdns, err
+// Create a CDN
+func (to *Session) CreateCDN(cdn tc.CDN) (tc.Alerts, ReqInf, error) {
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(cdn)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v2_CDNs, reqBody)
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	return alerts, reqInf, nil
 }
 
+// Returns a list of CDNs
 func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, uri, nil) // TODO change to getBytesWithTTL, which caches
+	resp, remoteAddr, err := to.request(http.MethodGet, API_v2_CDNs, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -46,6 +63,63 @@ func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
 		return nil, reqInf, err
 	}
 	return data.Response, reqInf, nil
+}
+
+// GET a CDN by the CDN name
+func (to *Session) GetCDNByName(name string) ([]tc.CDN, ReqInf, error) {
+	url := fmt.Sprintf("%s/name/%s", API_v2_CDNs, name)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.CDNsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// DELETE a CDN by CDN name
+func (to *Session) DeleteCDNByName(name string) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/name/%s", API_v2_CDNs, name)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	return alerts, reqInf, nil
+}
+
+func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
+	url := fmt.Sprintf("%s/name/%s/sslkeys", API_v2_CDNs, name)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.CDNSSLKeysResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// Deprecated: use GetCDNs.
+func (to *Session) CDNs() ([]tc.CDN, error) {
+	cdns, _, err := to.GetCDNs()
+	return cdns, err
 }
 
 // CDNName gets an array of CDNs
@@ -62,58 +136,8 @@ func (to *Session) GetCDNName(name string) ([]tc.CDN, error) {
 	return n, err
 }
 
-// GetCDNByName gets an array of CDNs
-func (to *Session) GetCDNByName(name string) ([]tc.CDN, ReqInf, error) {
-	url := fmt.Sprintf("%s/name/%s", uri, name)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.CDNsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
-}
-
 // Deprecated: use GetCDNSSLKeys
 func (to *Session) CDNSSLKeys(name string) ([]tc.CDNSSLKeys, error) {
 	ks, _, err := to.GetCDNSSLKeys(name)
 	return ks, err
-}
-
-func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
-	url := fmt.Sprintf("%s/name/%s/sslkeys", uri, name)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.CDNSSLKeysResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
-}
-
-func (to *Session) DeleteCDNByName(name string) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/name/%s", name)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
-	var alerts tc.Alerts
-	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	return alerts, reqInf, nil
 }

@@ -15,40 +15,14 @@
 
 package api
 
+import tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+
 type TrafficControl struct {
-	ASNs []struct {
-		CachegroupName string `json:"cachegroupName"`
-		Name           string `json:"name"`
-	} `json:"asns"`
-	Cachegroups []struct {
-		Latitude                interface{} `json:"latitude"`
-		Longitude               interface{} `json:"longitude"`
-		Name                    string      `json:"name"`
-		ParentCacheGroupName    interface{} `json:"parentCacheGroupName"`
-		SecondaryCacheGroupName string      `json:"secondaryCacheGroupName"`
-		ShortName               string      `json:"shortName"`
-	} `json:"cachegroups"`
-	CDNs []struct {
-		DNSSECEnabled string `json:"dnssecEnabled"`
-		DomainName    string `json:"domainName"`
-		Name          string `json:"name"`
-	} `json:"cdns"`
-	DeliveryServices []struct {
-		Active     bool   `json:"active"`
-		DSCP       int64  `json:"dscp"`
-		TenantName string `json:"tenantName"`
-		XmlId      string `json:"xmlId"`
-	} `json:"deliveryServices"`
-	Divisions []struct {
-		Name string `json:"name"`
-	} `json:"divisions"`
-	Regions []struct {
-		DivisionName string `json:"divisionName"`
-		Name         string `json:"name"`
-	} `json:"regions"`
-	Tenants []struct {
-		Active           bool        `json:"active"`
-		Name             string      `json:"name"`
-		ParentTenantName interface{} `json:"parentTenantName"`
-	} `json:"tenants"`
+	ASNs             []tc.ASN             `json:"asns"`
+	CDNs             []tc.CDN             `json:"cdns"`
+	Cachegroups      []tc.CacheGroup      `json:"cachegroups"`
+	DeliveryServices []tc.DeliveryService `json:"deliveryservices"`
+	Divisions        []tc.Division        `json:"divisions"`
+	Regions          []tc.Region          `json:"regions"`
+	Tenants          []tc.Tenant          `json:"tenants"`
 }

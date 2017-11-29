@@ -41,17 +41,17 @@
     ],
     "cdns": [
         {
-            "dnssecEnabled": "true",
+            "dnssecEnabled": true,
             "domainName": "test.cdn1.net",
             "name": "cdn1"
         },
         {
-            "dnssecEnabled": "false",
+            "dnssecEnabled": false,
             "domainName": "test.cdn2.net",
             "name": "cdn2"
         },
         {
-            "dnssecEnabled": "true",
+            "dnssecEnabled": true,
             "domainName": "test.cdn3.net",
             "name": "cdn3"
         }
