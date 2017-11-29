@@ -102,7 +102,7 @@ func setupSession(cfg Config, toURL string, toUser string, toPass string) (*clie
 	var netAddr net.Addr
 	//TODO: drichardson make this configurable
 	toReqTimeout := time.Second * time.Duration(30)
-	TOSession, netAddr, err = client.LoginWithAgent(toURL, toUser, toPass, true, "traffic-ops-client-integration-tests", true, toReqTimeout)
+	TOSession, netAddr, err = client.LoginWithAgent(toURL, toUser, toPass, true, "to-api-client-tests", true, toReqTimeout)
 	if err != nil {
 		return nil, nil, err
 	}
