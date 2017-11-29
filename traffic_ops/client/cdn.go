@@ -49,6 +49,28 @@ func (to *Session) CreateCDN(cdn tc.CDN) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
+// Update a CDN
+func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) {
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(cdn)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	route := fmt.Sprintf("%s/%d", API_v2_CDNs, id)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	return alerts, reqInf, nil
+}
+
 // Returns a list of CDNs
 func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_v2_CDNs, nil)
@@ -62,6 +84,24 @@ func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
+	return data.Response, reqInf, nil
+}
+
+// GET a CDN by the CDN id
+func (to *Session) GetCDNByID(id int) ([]tc.CDN, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v2_CDNs, id)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.CDNsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
 	return data.Response, reqInf, nil
 }
 

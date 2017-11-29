@@ -16,63 +16,57 @@
 package api
 
 import (
-	"encoding/json"
-	"net/http"
+	"fmt"
 	"testing"
 
 	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 func TestCDNs(t *testing.T) {
 
-	TestPostCDNs(t)
-	TestPutCDNs(t)
+	TestCreateCDNs(t)
+	TestUpdateCDNs(t)
 	TestGetCDNs(t)
 
 }
 
-func TestPostCDNs(t *testing.T) {
+func TestCreateCDNs(t *testing.T) {
 
 	for _, cdn := range testData.CDNs {
-		alerts, _, err := TOSession.CreateCDN(cdn)
-		log.Debugln("Alerts: %v", alerts)
+		resp, _, err := TOSession.CreateCDN(cdn)
+		log.Debugln("Response: ", resp)
 		if err != nil {
-			t.Errorf("could not POST to cdns: %v\n", err)
+			t.Errorf("could not CREATe cdns: %v\n", err)
 		}
 	}
 
 }
 
-func TestPutCDNs(t *testing.T) {
+func TestUpdateCDNs(t *testing.T) {
 
-	for _, cdn := range testData.CDNs {
-
-		b, err := json.Marshal(cdn)
-		if err != nil {
-			t.Errorf("could not marshal data %v\n", err)
-		}
-		resp, err := Request(*TOSession, http.MethodPost, client.API_v2_CDNs, b)
-		if err != nil {
-			t.Errorf("could not POST to cdns: %v\n", err)
-		}
-		defer resp.Body.Close()
-
-		var alerts tc.Alerts
-		if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-			t.Errorf("could not decode alert response: %v\n", err)
-		}
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Response was not successful %v\n", err)
-		}
+	firstCDN := testData.CDNs[0]
+	// Retrieve the CDN by name so we can get the id for the Update
+	resp, _, err := TOSession.GetCDNByName(firstCDN.Name)
+	if err != nil {
+		t.Errorf("cannot GET CDN by name: %v - %v\n", err)
 	}
+	remoteCDN := resp[0]
+	expectedCDNName := "testCdn1"
+	remoteCDN.Name = expectedCDNName
+	alerts, _, err := TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN)
+	if err != nil {
+		t.Errorf("cannot UPDATE CDN by id: %v - %v\n", err, alerts)
+	}
+	fmt.Printf("alerts ---> %v\n", alerts)
 
-	for _, cdn := range testData.CDNs {
-		alerts, _, err := TOSession.DeleteCDNByName(cdn.Name)
-		if err != nil {
-			t.Errorf("cannot DELETE CDN by name: %v - %v\n", err, alerts)
-		}
+	// Retrieve the CDN to check the update
+	resp, _, err = TOSession.GetCDNByID(remoteCDN.ID)
+	if err != nil {
+		t.Errorf("cannot GET CDN by name: %v - %v\n", err)
+	}
+	respCDN := resp[0]
+	if respCDN.Name != expectedCDNName {
+		t.Errorf("results do not match actual: %s, expected: %s\n", respCDN.Name, expectedCDNName)
 	}
 
 }
