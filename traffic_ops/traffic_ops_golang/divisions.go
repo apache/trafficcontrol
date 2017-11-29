@@ -92,7 +92,7 @@ func getDivisions(v url.Values, db *sqlx.DB) ([]tc.Division, error) {
 	o := []tc.Division{}
 	for rows.Next() {
 		var d tc.Division
-		if err = rows.StructScan(&s); err != nil {
+		if err = rows.StructScan(&d); err != nil {
 			return nil, fmt.Errorf("getting divisions: %v", err)
 		}
 		o = append(o, d)
