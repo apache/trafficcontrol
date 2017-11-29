@@ -36,7 +36,7 @@ func TestCreateCDNs(t *testing.T) {
 		resp, _, err := TOSession.CreateCDN(cdn)
 		log.Debugln("Response: ", resp)
 		if err != nil {
-			t.Errorf("could not CREATe cdns: %v\n", err)
+			t.Errorf("could not CREATE cdns: %v\n", err)
 		}
 	}
 
@@ -53,9 +53,9 @@ func TestUpdateCDNs(t *testing.T) {
 	remoteCDN := resp[0]
 	expectedCDNName := "testCdn1"
 	remoteCDN.Name = expectedCDNName
-	alerts, _, err := TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN)
+	resp, _, err := TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN)
 	if err != nil {
-		t.Errorf("cannot UPDATE CDN by id: %v - %v\n", err, alerts)
+		t.Errorf("cannot UPDATE CDN by id: %v - %v\n", err, resp)
 	}
 
 	// Retrieve the CDN to check CDN name got updated
@@ -73,9 +73,9 @@ func TestUpdateCDNs(t *testing.T) {
 func TestGetCDNs(t *testing.T) {
 
 	for _, cdn := range testData.CDNs {
-		alerts, _, err := TOSession.GetCDNByName(cdn.Name)
+		resp, _, err := TOSession.GetCDNByName(cdn.Name)
 		if err != nil {
-			t.Errorf("cannot GET CDN by name: %v - %v\n", err, alerts)
+			t.Errorf("cannot GET CDN by name: %v - %v\n", err, resp)
 		}
 	}
 }
