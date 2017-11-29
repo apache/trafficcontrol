@@ -16,7 +16,6 @@
 package api
 
 import (
-	"fmt"
 	"testing"
 
 	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -27,6 +26,7 @@ func TestCDNs(t *testing.T) {
 	TestCreateCDNs(t)
 	TestUpdateCDNs(t)
 	TestGetCDNs(t)
+	TestDeleteCDNs(t)
 
 }
 
@@ -57,9 +57,8 @@ func TestUpdateCDNs(t *testing.T) {
 	if err != nil {
 		t.Errorf("cannot UPDATE CDN by id: %v - %v\n", err, alerts)
 	}
-	fmt.Printf("alerts ---> %v\n", alerts)
 
-	// Retrieve the CDN to check the update
+	// Retrieve the CDN to check CDN name got updated
 	resp, _, err = TOSession.GetCDNByID(remoteCDN.ID)
 	if err != nil {
 		t.Errorf("cannot GET CDN by name: %v - %v\n", err)
@@ -83,10 +82,15 @@ func TestGetCDNs(t *testing.T) {
 
 func TestDeleteCDNs(t *testing.T) {
 
-	for _, cdn := range testData.CDNs {
-		alerts, _, err := TOSession.DeleteCDNByName(cdn.Name)
-		if err != nil {
-			t.Errorf("cannot DELETE CDN by name: %v - %v\n", err, alerts)
-		}
+	secondCDN := testData.CDNs[1]
+	resp, _, err := TOSession.DeleteCDNByName(secondCDN.Name)
+	if err != nil {
+		t.Errorf("cannot DELETE CDN by name: %v - %v\n", err, resp)
+	}
+
+	// Retrieve the CDN to see if it got deleted
+	cdns, _, err := TOSession.GetCDNByName(secondCDN.Name)
+	if len(cdns) > 0 {
+		t.Errorf("expected CDN name: %s to be deleted\n", secondCDN.Name)
 	}
 }
