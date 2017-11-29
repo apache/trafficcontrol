@@ -42,6 +42,7 @@ type Config struct {
 	Secrets                []string       `json:"secrets"`
 	// NOTE: don't care about any other fields for now..
 	RiakAuthOptions *riak.AuthOptions
+	RiakEnabled     bool
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
@@ -134,17 +135,22 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string) (Con
 		return Config{}, fmt.Errorf("parsing config '%s': %v", dbConfPath, err)
 	}
 
-	riakConfBytes, err := ioutil.ReadFile(riakConfPath)
-	if err != nil {
-		cfg.RiakAuthOptions = nil
-		return cfg, fmt.Errorf("reading riak conf '%v': %v", riakConfPath, err)
+	if riakConfPath != "" {
+		riakConfBytes, err := ioutil.ReadFile(riakConfPath)
+		if err != nil {
+			cfg.RiakAuthOptions = nil
+			return cfg, fmt.Errorf("reading riak conf '%v': %v", riakConfPath, err)
+		}
+		riakconf, err := getRiakAuthOptions(string(riakConfBytes))
+		if err != nil {
+			cfg.RiakAuthOptions = nil
+			return cfg, fmt.Errorf("parsing riak conf '%v': %v", riakConfBytes, err)
+		}
+		cfg.RiakAuthOptions = riakconf
+		cfg.RiakEnabled = true
+	} else {
+		cfg.RiakEnabled = false
 	}
-	riakconf, err := getRiakAuthOptions(string(riakConfBytes))
-	if err != nil {
-		cfg.RiakAuthOptions = nil
-		return cfg, fmt.Errorf("parsing riak conf '%v': %v", riakConfBytes, err)
-	}
-	cfg.RiakAuthOptions = riakconf
 
 	return cfg, err
 }
