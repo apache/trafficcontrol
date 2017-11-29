@@ -21,7 +21,6 @@ import (
 	"net/http"
 	"testing"
 
-	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
@@ -35,7 +34,7 @@ func TestCDNsPOST(t *testing.T) {
 		}
 		fmt.Printf("b ---> %v\n", string(b))
 		// TODO: drichardson centralize these routes
-		resp, err := Request(*TOSession, http.MethodGet, "/api/1.2/cdns", b)
+		resp, err := Request(*TOSession, http.MethodPost, "/api/1.2/cdns", b)
 		fmt.Printf("err ---> %v\n", err)
 		fmt.Printf("resp ---> %v\n", resp)
 		if err != nil {
@@ -53,24 +52,12 @@ func TestCDNsPOST(t *testing.T) {
 	}
 
 	for _, cdn := range testData.CDNs {
-		DeleteCDNByName(t, cdn.Name)
-	}
-
-}
-
-func DeleteCDNByName(t *testing.T, cdnName string) {
-	route := fmt.Sprintf("/api/1.2/cdns/name/%s", cdnName)
-	fmt.Printf("route ---> %v\n", route)
-	resp, err := Request(*TOSession, http.MethodDelete, route, nil)
-	fmt.Printf("err ---> %v\n", err)
-	fmt.Printf("resp ---> %v\n", resp)
-	if err != nil {
-		log.Warnf("Could not DELETE cdns: %s - %v\n", cdnName, err)
-		var alerts tc.Alerts
-		if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-			t.Errorf("Could not decode alert response.  Error is: %v\n", err)
+		alerts, _, err := TOSession.DeleteCDNByName(cdn.Name)
+		if err != nil {
+			t.Errorf("Cannot delete CDN by name: %v - %v\n", err, alerts)
 		}
 	}
+
 }
 
 //TestCDNGETs compares the results of the CDN api and CDN client

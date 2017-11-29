@@ -49,6 +49,11 @@
             "dnssecEnabled": "false",
             "domainName": "test.cdn2.net",
             "name": "cdn2"
+        },
+        {
+            "dnssecEnabled": "true",
+            "domainName": "test.cdn3.net",
+            "name": "cdn3"
         }
     ],
     "deliveryServices": [
