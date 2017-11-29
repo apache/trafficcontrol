@@ -1385,7 +1385,9 @@ sub get_ats_major_version {
 	        $ats_ver = "5";
             $self->app->log->error("Parameter package.trafficserver missing for profile ".$server->profile->name . ". Assuming version $ats_ver");
         }
-	my $ats_major_version = substr( $ats_ver, 0, 1 );
+
+	my @ats_fields = split /\./, $ats_ver, 2;
+	my $ats_major_version = $ats_fields[0];
 
 	return $ats_major_version;
 }
