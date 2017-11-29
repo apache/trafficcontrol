@@ -80,7 +80,7 @@ func TestMain(m *testing.M) {
 
 	err = setupData(&cfg, db)
 	if err != nil {
-		fmt.Printf("\nError setting up data %s - %v\n", cfg.TOURL, cfg.TOUser, err)
+		fmt.Errorf("\nError setting up data %s - %v\n", cfg.TOURL, cfg.TOUser, err)
 		os.Exit(1)
 	}
 
