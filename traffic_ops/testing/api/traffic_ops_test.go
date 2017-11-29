@@ -17,6 +17,7 @@ package api
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -27,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	_ "github.com/lib/pq"
 )
@@ -63,7 +64,25 @@ func TestMain(m *testing.M) {
 	//Load the test data
 	loadTestCDN()
 
-	prepareDatabase(&cfg)
+	var db *sql.DB
+	db, err = openConnection(&cfg)
+	if err != nil {
+		fmt.Errorf("\nError opening connection to %s - %v\n", cfg.TOURL, cfg.TOUser, err)
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	err = teardownData(&cfg, db)
+	if err != nil {
+		fmt.Printf("\nError tearingdown data %s - %v\n", cfg.TOURL, cfg.TOUser, err)
+		os.Exit(1)
+	}
+
+	err = setupData(&cfg, db)
+	if err != nil {
+		fmt.Printf("\nError setting up data %s - %v\n", cfg.TOURL, cfg.TOUser, err)
+		os.Exit(1)
+	}
 
 	TOSession, _, err = setupSession(cfg, cfg.TOURL, cfg.TOUser, cfg.TOUserPassword)
 	if err != nil {

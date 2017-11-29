@@ -17,17 +17,12 @@
 package api
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 
 	"github.com/kelseyhightower/envconfig"
-)
-
-var (
-	db *sql.DB
 )
 
 // Config reflects the structure of the test-to-api.conf file
