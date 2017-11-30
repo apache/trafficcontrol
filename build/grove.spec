@@ -4,7 +4,7 @@ Version: %{version}
 Release: 1
 License: Apache License, Version 2.0
 Group: Base System/System Tools
-Prefix: /opt/%{name}
+Prefix: /usr/sbin/%{name}
 Source: %{_sourcedir}/%{name}-%{version}.tgz
 URL: https://github.com/apache/incubator-trafficcontrol/%{name}
 Distribution: CentOS Linux
@@ -22,9 +22,9 @@ An HTTP Caching Proxy
 tar -xvzf %{_sourcedir}/%{name}-%{version}.tgz --directory %{_builddir}
 
 %install
-rm -rf %{buildroot}/opt/%{name}
-mkdir -p %{buildroot}/opt/%{name}/bin/
-cp -p %{name} %{buildroot}/opt/%{name}/bin/
+rm -rf %{buildroot}/usr/sbin/%{name}
+mkdir -p %{buildroot}/usr/sbin/%{name}/bin/
+cp -p %{name} %{buildroot}/usr/sbin/%{name}/bin/
 
 rm -rf %{buildroot}/etc/%{name}
 mkdir -p -m 777 %{buildroot}/etc/%{name}
@@ -41,7 +41,7 @@ echo "cleaning"
 rm -r -f %{buildroot}
 
 %files
-/opt/%{name}/bin/%{name}
+/usr/sbin/%{name}/bin/%{name}
 /var/log/%{name}
 %config(noreplace) /etc/%{name}
 /etc/init.d/%{name}
