@@ -183,6 +183,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/dialog/confirm/enter').name,
         require('./common/modules/dialog/delete').name,
         require('./common/modules/dialog/federationResolver').name,
+        require('./common/modules/dialog/import').name,
         require('./common/modules/dialog/input').name,
         require('./common/modules/dialog/reset').name,
         require('./common/modules/dialog/select').name,

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableProfilesController = function(profiles, $scope, $state, $location, $uibModal, locationUtils) {
+var TableProfilesController = function(profiles, $scope, $state, $location, $uibModal, locationUtils, profileService) {
 
     $scope.profiles = profiles;
 
@@ -30,7 +30,25 @@ var TableProfilesController = function(profiles, $scope, $state, $location, $uib
     };
 
     $scope.importProfile = function() {
-        alert('not hooked up yet: importProfile');
+        var params = {
+            title: 'Import Profile',
+            message: "Drop Profile Here"
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/import/dialog.import.tpl.html',
+            controller: 'DialogImportController',
+            size: 'lg',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function(importJSON) {
+            profileService.importProfile(importJSON);
+        }, function () {
+            // do nothing
+        });
     };
 
     $scope.compareProfiles = function() {
@@ -73,5 +91,5 @@ var TableProfilesController = function(profiles, $scope, $state, $location, $uib
 
 };
 
-TableProfilesController.$inject = ['profiles', '$scope', '$state', '$location', '$uibModal', 'locationUtils'];
+TableProfilesController.$inject = ['profiles', '$scope', '$state', '$location', '$uibModal', 'locationUtils', 'profileService'];
 module.exports = TableProfilesController;

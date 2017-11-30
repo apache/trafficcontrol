@@ -443,6 +443,121 @@ sub delete {
 	return $self->success_message("Profile was deleted.");
 }
 
+sub export {
+	my $self	= shift;
+	my $id		= $self->param('id');
+	my $export	= {};
+
+	my $rs = $self->db->resultset('ProfileParameter')->search( { profile => $id }, { prefetch => [ { parameter => undef }, { profile => undef } ] } );
+
+	my $i = 0;
+	while ( my $row = $rs->next ) {
+		if ( !defined($export->{profile}) ) {
+			$export->{profile}->{name}        	= $row->profile->name;
+			$export->{profile}->{description} 	= $row->profile->description;
+			$export->{profile}->{type}        	= $row->profile->type;
+			$export->{profile}->{cdn}        	= defined($row->profile->cdn) ? $row->profile->cdn->name : undef,
+		}
+		$export->{parameters}->[$i] = {
+			name        => $row->parameter->name,
+			config_file => $row->parameter->config_file,
+			value       => $row->parameter->value
+		};
+		$i++;
+	}
+	$self->render( json => $export );
+}
+
+sub import {
+	my $self             = shift;
+	my $new_id           = -1;
+	my $data 			= $self->req->json;
+	my $p_name           = $data->{profile}->{name};
+	my $p_desc           = $data->{profile}->{description};
+	my $p_type           = $data->{profile}->{type};
+	my $p_cdn_id         = $self->db->resultset('Cdn')->search( { name => $data->{profile}->{cdn} } )->get_column('id')->single();
+	my $existing_profile = $self->db->resultset('Profile')->search( { name => $p_name } )->get_column('name')->single();
+	my @valid_types      = @{$self->db->source('ProfileTypeValue')->column_info('value')->{extra}->{list}};
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	if (!defined($p_cdn_id)) {
+		return $self->alert($data->{profile}->{cdn} . " CDN does not exist");
+	}
+
+	if ($existing_profile) {
+		return $self->alert("A profile with the name \"$p_name\" already exists");
+	}
+
+	if (! grep(/^$p_type$/, @valid_types )) {
+		my $vtypes = join(', ', @valid_types);
+		return $self->alert("Profile contains type \"$p_type\" which is not a valid profile type. Valid types are: $vtypes");
+	}
+
+	my $insert = $self->db->resultset('Profile')->create(
+		{
+			name        => $p_name,
+			description => $p_desc,
+			type        => $p_type,
+			cdn         => $p_cdn_id,
+		}
+	);
+	$insert->insert();
+	$new_id = $insert->id;
+
+	my $new_count      = 0;
+	my $existing_count = 0;
+	my %done;
+	foreach my $param ( @{ $data->{parameters} } ) {
+		my $param_name        = $param->{name};
+		my $param_config_file = $param->{config_file};
+		my $param_value       = $param->{value};
+		my $param_id =
+			$self->db->resultset('Parameter')
+				->search( { -and => [ name => $param_name, value => $param_value, config_file => $param_config_file ] }, { rows => 1 } )->get_column('id')
+				->single();
+		if ( !defined($param_id) ) {
+			my $insert = $self->db->resultset('Parameter')->create(
+				{
+					name        => $param_name,
+					config_file => $param_config_file,
+					value       => $param_value,
+				}
+			);
+			$insert->insert();
+			$param_id = $insert->id();
+			$new_count++;
+		}
+		else {
+			next if defined( $done{$param_id} ); # just in case duplicate parameters were sent
+			$existing_count++;
+		}
+
+		my $link_insert = $self->db->resultset('ProfileParameter')->create(
+			{
+				parameter => $param_id,
+				profile   => $new_id,
+			}
+		);
+		$link_insert->insert();
+		$done{$param_id} = $new_id;
+	}
+
+	my $response;
+	$response->{id}            	= $insert->id;
+	$response->{name}          	= $insert->name;
+	$response->{description}    = $insert->description;
+	$response->{type} 			= $insert->type;
+	$response->{cdn} 			= $insert->cdn->name;
+
+	my $msg = "Profile imported [ " . $p_name . " ] with " . $new_count . " new and " . $existing_count . " existing parameters";
+	&log( $self, $msg, "APICHANGE" );
+
+	return $self->success( $response, $msg );
+}
+
 sub availableprofile {
 	my $self = shift;
 	my @data;
