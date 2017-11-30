@@ -4,7 +4,7 @@ Version: %{version}
 Release: 1
 License: Apache License, Version 2.0
 Group: Base System/System Tools
-Prefix: /opt/%{name}
+Prefix: /usr/sbin/%{name}
 Source: %{_sourcedir}/%{name}-%{version}.tgz
 URL: https://github.com/apache/incubator-trafficcontrol/%{name}
 Distribution: CentOS Linux
@@ -22,13 +22,13 @@ A Traffic Control config generator for the Grove HTTP Caching Proxy
 tar -xvzf %{_sourcedir}/%{name}-%{version}.tgz --directory %{_builddir}
 
 %install
-rm -rf %{buildroot}/opt/%{name}
-mkdir -p %{buildroot}/opt/%{name}/
-cp -p %{name} %{buildroot}/opt/%{name}/
+rm -rf %{buildroot}/usr/sbin/%{name}
+mkdir -p %{buildroot}/usr/sbin/%{name}/
+cp -p %{name} %{buildroot}/usr/sbin/%{name}/
 
 %clean
 echo "cleaning"
 rm -r -f %{buildroot}
 
 %files
-/opt/%{name}/%{name}
+/usr/sbin/%{name}/%{name}

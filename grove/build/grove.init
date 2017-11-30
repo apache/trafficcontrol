@@ -41,7 +41,7 @@
 . /etc/sysconfig/network
 
 name=grove
-basepath=/opt/$name
+basepath=/usr/sbin/$name
 binpath=bin
 runpath=var/run
 prog=$basepath/$binpath/$name
