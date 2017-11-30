@@ -1322,4 +1322,35 @@ sub add {
 	}
 }
 
+
+sub get_ats_major_version {
+	my $ui_config 	 = shift;
+	my $server   = shift;
+
+	my $ats_ver = $ui_config->db->resultset('ProfileParameter')
+		->search( { 'parameter.name' => 'trafficserver', 'parameter.config_file' => 'package', 'profile.id' => $server->profile->id },
+		{ prefetch => [ 'profile', 'parameter' ] } )->get_column('parameter.value')->single();
+
+	if (!defined $ats_ver) {
+	        $ats_ver = "5";
+            $ui_config->app->log->error("Parameter package.trafficserver missing for profile . Assuming version $ats_ver");
+        }
+
+	my @ats_fields = split /\./, $ats_ver, 2;
+	my $ats_major_version = $ats_fields[0];
+
+	return $ats_major_version;
+}
+
+sub get_qstring_ignore_remap {
+	my $ats_major_version = shift;
+
+	if ($ats_major_version >= 6) {
+		return " \@plugin=cachekey.so \@pparam=--separator= \@pparam=--remove-all-params=true \@pparam=--remove-path=true \@pparam=--capture-prefix-uri=/http:\\/\\/([^?]*)/http:\\/\\/\$1/";
+	}
+	else {
+		return " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
+	}
+}
+
 1;
