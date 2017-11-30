@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormProfileController = function(profile, $scope, $location, $uibModal, formUtils, locationUtils, cdnService, profileService) {
+var FormProfileController = function(profile, Restangular, $scope, $location, $uibModal, fileUtils, formUtils, locationUtils, cdnService, profileService) {
 
     var getCDNs = function() {
         cdnService.getCDNs(true)
@@ -84,8 +84,14 @@ var FormProfileController = function(profile, $scope, $location, $uibModal, form
         });
     };
 
-    $scope.exportProfile = function() {
-        // todo: implement export profile
+    $scope.exportProfile = function(profile) {
+        profileService.exportProfile(profile.id).
+            then(
+                function(result) {
+                    fileUtils.exportJSON(result, profile.name, 'traffic_ops');
+                }
+        );
+
     };
 
     $scope.navigateToPath = locationUtils.navigateToPath;
@@ -101,5 +107,5 @@ var FormProfileController = function(profile, $scope, $location, $uibModal, form
 
 };
 
-FormProfileController.$inject = ['profile', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'cdnService', 'profileService'];
+FormProfileController.$inject = ['profile', 'Restangular', '$scope', '$location', '$uibModal', 'fileUtils', 'formUtils', 'locationUtils', 'cdnService', 'profileService'];
 module.exports = FormProfileController;

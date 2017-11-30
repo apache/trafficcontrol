@@ -709,6 +709,10 @@ sub api_routes {
 	$r->post("/api/$version/profiles/name/:profile_name/copy/:profile_copy_from")->over( authenticated => 1, not_ldap => 1 )
 		->to( 'Profile#copy', namespace => $namespace );
 
+	# -- PROFILES: EXPORT/IMPORT
+	$r->get( "/api/$version/profiles/:id/export" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#export', namespace => $namespace );
+	$r->post("/api/$version/profiles/import")->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#import', namespace => $namespace );
+
 	# get all profiles associated with a parameter (from profile_parameter table)
 	$r->get( "/api/$version/parameters/:id/profiles" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#get_profiles_by_paramId', namespace => $namespace );
 	$r->get( "/api/$version/parameters/:id/unassigned_profiles" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#get_unassigned_profiles_by_paramId', namespace => $namespace );
