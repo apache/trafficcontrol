@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"net/http"
 
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
