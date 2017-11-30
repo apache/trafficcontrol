@@ -23,8 +23,8 @@ tar -xvzf %{_sourcedir}/%{name}-%{version}.tgz --directory %{_builddir}
 
 %install
 rm -rf %{buildroot}/usr/sbin/%{name}
-mkdir -p %{buildroot}/usr/sbin/%{name}/bin/
-cp -p %{name} %{buildroot}/usr/sbin/%{name}/bin/
+mkdir -p %{buildroot}/usr/sbin/
+cp -p %{name} %{buildroot}/usr/sbin/
 
 rm -rf %{buildroot}/etc/%{name}
 mkdir -p -m 777 %{buildroot}/etc/%{name}
@@ -41,7 +41,7 @@ echo "cleaning"
 rm -r -f %{buildroot}
 
 %files
-/usr/sbin/%{name}/bin/%{name}
+/usr/sbin/%{name}
 /var/log/%{name}
 %config(noreplace) /etc/%{name}
 /etc/init.d/%{name}
