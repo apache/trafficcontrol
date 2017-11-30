@@ -6,10 +6,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/url"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -18,12 +20,14 @@ import (
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 
 	grove "github.com/apache/incubator-trafficcontrol/grove/cache"
+	config "github.com/apache/incubator-trafficcontrol/grove/config"
 )
 
 const Version = "0.1"
 const UserAgent = "grove-tc-cfg/" + Version
 const TrafficOpsTimeout = time.Second * 90
 const DefaultCertificateDir = "/etc/grove/ssl"
+const GroveConfigPath = "/etc/grove/grove.cfg"
 
 func AvailableStatuses() map[string]struct{} {
 	return map[string]struct{}{
@@ -32,11 +36,114 @@ func AvailableStatuses() map[string]struct{} {
 	}
 }
 
+func GetRemapPath() (string, error) {
+	cfg, err := config.LoadConfig(GroveConfigPath)
+	if err != nil {
+		return "", errors.New("loading Grove config file: " + err.Error())
+	}
+	return cfg.RemapRulesFile, nil
+}
+
+// CopyFile copies the src file to dst, a la `cp`.
+func CopyFile(src, dst string) error {
+	srcF, err := os.Open(src)
+	if err != nil {
+		return errors.New("opening source file: " + err.Error())
+	}
+	defer srcF.Close()
+	dstF, err := os.Create(dst)
+	if err != nil {
+		return errors.New("creating destination file: " + err.Error())
+	}
+	defer dstF.Close()
+	_, err = io.Copy(dstF, srcF)
+	if err != nil {
+		return errors.New("copying source to destination: " + err.Error())
+	}
+
+	if err := dstF.Sync(); err != nil {
+		return errors.New("flushing copy to destination: " + err.Error())
+	}
+	return nil
+}
+
+// BackupFile copies the given file to a new file in the same directory, with the name suffixed by the current timestamp. Returns nil if the given file doesn't exist (nothing to back up).
+func BackupFile(path string) error {
+	// TODO return nil if path doesn't exist
+
+	fileTimeFormat := "2006-01-02T15_04_05_999999999Z07_00" // this is time.RFC3339Nano with : replaced by _
+	backupPath := path + "." + time.Now().Format(fileTimeFormat)
+
+	if err := CopyFile(path, backupPath); err != nil {
+		return errors.New("backuping up remap file: " + err.Error())
+	}
+	return nil
+}
+
+func NewFilename(path string) string {
+	return path + ".new"
+}
+
+func WriteNewFile(path string, bts []byte) error {
+	newPath := NewFilename(path)
+	f, err := os.Create(newPath)
+	if err != nil {
+		return errors.New("creating file: " + err.Error())
+	}
+	defer f.Close()
+	if _, err := f.Write(bts); err != nil {
+		return errors.New("writing file: " + err.Error())
+	}
+	if err := f.Sync(); err != nil {
+		return errors.New("flushing file: " + err.Error())
+	}
+	return nil
+}
+
+// WriteAndBackup creates a backup of the existing file at the given path, then writes the given bytes to the path. The write is fail-safe on operating systems with atomic file rename (Linux is).
+func WriteAndBackup(path string, bts []byte) error {
+	if err := BackupFile(path); err != nil {
+		return errors.New("backing up file: " + err.Error())
+	}
+	if err := WriteNewFile(path, bts); err != nil {
+		return errors.New("writing new file: " + err.Error())
+	}
+	if err := os.Rename(NewFilename(path), path); err != nil {
+		return errors.New("copying new file to real location: " + err.Error())
+	}
+	return nil
+}
+
+// hasUpdatePending returns whether an update is pending, the revalPending status (which will be needed later in the clear update POST), and any error.
+func hasUpdatePending(toc *to.Session, hostname string) (bool, bool, error) {
+	upd, _, err := toc.GetUpdate(hostname)
+	if err != nil {
+		return false, false, errors.New("getting update from Traffic Ops: " + err.Error())
+	}
+	return upd.UpdatePending, upd.RevalPending, nil
+}
+
+// clearUpdatePending clears the given host's update pending flag in Traffic Ops. It takes the host to clear, and the old revalPending flag to send.
+func clearUpdatePending(toc *to.Session, hostname string, revalPending bool) error {
+	revalPendingPostVal := 0
+	if revalPending == false {
+		revalPendingPostVal = to.UpdateStatusClear
+	} else {
+		revalPendingPostVal = to.UpdateStatusPending
+	}
+	_, err := toc.SetUpdate(hostname, to.UpdateStatusClear, revalPendingPostVal)
+	if err != nil {
+		return errors.New("setting update pending on Traffic Ops: " + err.Error())
+	}
+	return nil
+}
+
 func main() {
 	toURL := flag.String("tourl", "", "The Traffic Ops URL")
 	toUser := flag.String("touser", "", "The Traffic Ops username")
 	toPass := flag.String("topass", "", "The Traffic Ops password")
 	pretty := flag.Bool("pretty", false, "Whether to pretty-print output")
+	ignoreUpdateFlag := flag.Bool("ignore-update-flag", false, "Whether to fetch and apply the config, without checking or updating the Traffic Ops Update Pending flag")
 	host := flag.String("host", "", "The hostname of the server whose config to generate")
 	// api := flag.String("api", "1.2", "API version. Determines whether to use /api/1.3/configs/ or older, less efficient 1.2 APIs")
 	toInsecure := flag.Bool("insecure", false, "Whether to allow invalid certificates with Traffic Ops")
@@ -48,6 +155,19 @@ func main() {
 	if err != nil {
 		fmt.Printf("Error connecting to Traffic Ops: %v\n", err)
 		os.Exit(1)
+	}
+
+	revalPendingStatus := false
+	if !*ignoreUpdateFlag {
+		needsUpdate := false
+		needsUpdate, revalPendingStatus, err = hasUpdatePending(toc, *host)
+		if err != nil {
+			fmt.Println("Error checking Traffic Ops update pending: " + err.Error())
+			os.Exit(1)
+		}
+		if !needsUpdate {
+			os.Exit(0) // if no error and no update necessary, return success and print nothing
+		}
 	}
 
 	rules := grove.RemapRules{}
@@ -73,7 +193,32 @@ func main() {
 		fmt.Printf("Error marshalling rules JSON: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("%s", string(bts))
+
+	// TODO add app/option to print config to stdout
+
+	remapPath, err := GetRemapPath()
+	if err != nil {
+		fmt.Println("Error getting remap config path: " + err.Error())
+		os.Exit(1)
+	}
+
+	if err := WriteAndBackup(remapPath, bts); err != nil {
+		fmt.Println("Error writing new config file: " + err.Error())
+		os.Exit(1)
+	}
+
+	if err := exec.Command("service", "grove", "reload").Run(); err != nil {
+		fmt.Println("Error restarting grove service (but successfully updated config file): " + err.Error())
+		os.Exit(2)
+	}
+
+	if !*ignoreUpdateFlag {
+		if err := clearUpdatePending(toc, *host, revalPendingStatus); err != nil {
+			fmt.Println("Error clearing update pending flag in Traffic Ops (but successfully updated config): " + err.Error())
+			os.Exit(3)
+		}
+	}
+
 	os.Exit(0)
 }
 
