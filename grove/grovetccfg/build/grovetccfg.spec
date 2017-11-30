@@ -23,12 +23,12 @@ tar -xvzf %{_sourcedir}/%{name}-%{version}.tgz --directory %{_builddir}
 
 %install
 rm -rf %{buildroot}/usr/sbin/%{name}
-mkdir -p %{buildroot}/usr/sbin/%{name}/
-cp -p %{name} %{buildroot}/usr/sbin/%{name}/
+mkdir -p %{buildroot}/usr/sbin/
+cp -p %{name} %{buildroot}/usr/sbin/
 
 %clean
 echo "cleaning"
 rm -r -f %{buildroot}
 
 %files
-/usr/sbin/%{name}/%{name}
+/usr/sbin/%{name}

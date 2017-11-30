@@ -41,11 +41,10 @@
 . /etc/sysconfig/network
 
 name=grove
-basepath=/usr/sbin/$name
-binpath=bin
-runpath=var/run
-prog=$basepath/$binpath/$name
-lockfile=$basepath/$runpath/$name
+basepath=/usr/sbin
+runpath=/var/run
+prog=$basepath/$name
+lockfile=$runpath/$name
 
 options="-cfg /etc/${name}/grove.cfg"
 
