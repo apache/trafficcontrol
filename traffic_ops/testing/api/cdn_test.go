@@ -18,7 +18,8 @@ package api
 import (
 	"testing"
 
-	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 func TestCDNs(t *testing.T) {
@@ -53,9 +54,10 @@ func TestUpdateCDNs(t *testing.T) {
 	remoteCDN := resp[0]
 	expectedCDNName := "testCdn1"
 	remoteCDN.Name = expectedCDNName
-	resp, _, err := TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN)
+	var alert tc.Alerts
+	alert, _, err = TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN)
 	if err != nil {
-		t.Errorf("cannot UPDATE CDN by id: %v - %v\n", err, resp)
+		t.Errorf("cannot UPDATE CDN by id: %v - %v\n", err, alert)
 	}
 
 	// Retrieve the CDN to check CDN name got updated
