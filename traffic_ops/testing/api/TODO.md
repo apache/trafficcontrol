@@ -1,1 +1,0 @@
-- Read the fixture .json file for TestCDNs
