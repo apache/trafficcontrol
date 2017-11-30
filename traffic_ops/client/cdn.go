@@ -24,7 +24,7 @@ import (
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
-var (
+const (
 	API_v2_CDNs = "/api/1.2/cdns"
 )
 
@@ -43,9 +43,8 @@ func (to *Session) CreateCDN(cdn tc.CDN) (tc.Alerts, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 	var alerts tc.Alerts
-	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+
 	return alerts, reqInf, nil
 }
 
@@ -65,9 +64,7 @@ func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) 
 	}
 	defer resp.Body.Close()
 	var alerts tc.Alerts
-	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
 
@@ -81,9 +78,7 @@ func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
 	defer resp.Body.Close()
 
 	var data tc.CDNsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
+	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
 }
 
