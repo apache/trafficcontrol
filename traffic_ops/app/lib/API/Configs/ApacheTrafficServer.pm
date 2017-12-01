@@ -2479,7 +2479,7 @@ sub remap_dot_config {
 				$mid_remap{ $ds->{org} } .= " \@plugin=header_rewrite.so \@pparam=" . $ds->{mid_hdr_rw_file};
 			}
 			if ( $ds->{qstring_ignore} == 1 ) {
-				$mid_remap{ $ds->{org} } .= UI::DeliveryService::get_qstring_ignore_remap(UI::DeliveryService::get_ats_major_version($self, $server));
+				$mid_remap{ $ds->{org} } .= UI::DeliveryService::get_qstring_ignore_remap(UI::DeliveryService::get_ats_major_version( $self, $server_obj ));
 			}
 			if ( defined( $ds->{cacheurl} ) && $ds->{cacheurl} ne "" ) {
 				$mid_remap{ $ds->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $ds->{cacheurl_file};
@@ -2575,7 +2575,7 @@ sub build_remap_line {
 		}
 		else {
 			#If we are on ats 6 and later we want to use the cachekey plugin, otherwise we have to use cacheurl
-			$text .= UI::DeliveryService::get_qstring_ignore_remap(UI::DeliveryService::get_ats_major_version($self, $server));
+			$text .= UI::DeliveryService::get_qstring_ignore_remap(UI::DeliveryService::get_ats_major_version($self, $server_obj ));
 		}
 	}
 	if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
