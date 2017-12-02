@@ -412,7 +412,8 @@ sub process_cfg_file {
 	# submit the line_-missing to the traffic ops Config Diff API
 	my $db_lines_missing_json = encode_json(\@db_lines_missing);
 	my $disk_lines_missing_json = encode_json(\@disk_lines_missing);
-	my $json_text = "{ \"dbLinesMissing\": $db_lines_missing_json, \"diskLinesMissing\": $disk_lines_missing_json }";
+	my $datetime = gmtime();
+	my $json_text = "{ \"dbLinesMissing\": $db_lines_missing_json, \"diskLinesMissing\": $disk_lines_missing_json, \"timestamp\": \"$datetime\" }";
 	$result = &lwp_put("/api/1.2/servers/$hostname_short/$cfg_file", $json_text);
 	# TODO: validate result
 
