@@ -239,16 +239,6 @@ else {
 }
 
 
-#Test Code
-# print "Testing cfg Api\n";
-# my $meme_test = &lwp_get("/api/1.2/servers/1/cfg.json");
-# print "$meme_test\n";
-# my $cfg_test = &lwp_put('/api/1.2/servers/1/test_config2.cfg', '{"serverId": 1, "fileName": "test1.cfg", "dbLines": ["dbLine1", "dbLine1", "dbline2"], "localLines": ["localLine1", "localLine2", "localLine3"]}');
-# print "$cfg_test\n";
-# print "End Testing cfg Api\n";
-#end test code
-
-
 #### First time
 &process_config_files();
 
