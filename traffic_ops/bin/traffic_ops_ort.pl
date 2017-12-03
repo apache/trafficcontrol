@@ -399,13 +399,15 @@ sub process_cfg_file {
 		$return_code = $CFG_FILE_UNCHANGED;
 	}
 
-	# submit the line_-missing to the traffic ops Config Diff API
-	my $db_lines_missing_json = encode_json(\@db_lines_missing);
-	my $disk_lines_missing_json = encode_json(\@disk_lines_missing);
-	my $datetime = gmtime();
-	my $json_text = "{ \"dbLinesMissing\": $db_lines_missing_json, \"diskLinesMissing\": $disk_lines_missing_json, \"timestamp\": \"$datetime\" }";
-	$result = &lwp_put("/api/1.2/servers/$hostname_short/$cfg_file", $json_text);
-	# TODO: validate result
+	# submit the line_missing to the traffic ops Config Diff API
+	if ( $script_mode != $REVALIDATE ) {
+		my $db_lines_missing_json = encode_json(\@db_lines_missing);
+		my $disk_lines_missing_json = encode_json(\@disk_lines_missing);
+		my $datetime = gmtime();
+		my $json_text = "{ \"dbLinesMissing\": $db_lines_missing_json, \"diskLinesMissing\": $disk_lines_missing_json, \"timestamp\": \"$datetime\" }";
+		$result = &lwp_put("/api/1.2/servers/$hostname_short/$cfg_file", $json_text);
+		# If this fails in any significant way, it will be caught by the lwp_put method
+	}
 
 	if ( $cfg_file eq "50-ats.rules" ) {
 		&adv_processing_udev( \@db_file_lines );
