@@ -162,7 +162,7 @@ array_to_json(me.db_lines_missing) as db_lines_missing,
 array_to_json(me.disk_lines_missing) as disk_lines_missing,
 me.last_checked as timestamp
 FROM config_diffs me
-WHERE me.server_id=(SELECT server.id FROM server WHERE host_name=$1)`
+WHERE me.server=(SELECT server.id FROM server WHERE host_name=$1)`
 	
 	rows, err := db.Query(query, hostName)
 	if err != nil {
@@ -221,7 +221,7 @@ func getCfgDiffsJson(hostName string, db * sqlx.DB, getCfgDiffsMethod GetCfgDiff
 
 func insertCfgDiffs(db *sqlx.DB, hostName string, diffs CfgFileDiffs) ( error) {
 	query := `INSERT INTO 
-config_diffs(server_id, config_name, db_lines_missing, disk_lines_missing, last_checked)
+config_diffs(server, config_name, db_lines_missing, disk_lines_missing, last_checked)
 VALUES((SELECT server.id FROM server WHERE host_name=$1), $2, (SELECT ARRAY(SELECT * FROM json_array_elements_text($3))), (SELECT ARRAY(SELECT * FROM json_array_elements_text($4))), $5)`
 		
 	dbLinesMissingJson, err := json.Marshal(diffs.DBLinesMissing)
@@ -250,7 +250,7 @@ VALUES((SELECT server.id FROM server WHERE host_name=$1), $2, (SELECT ARRAY(SELE
 
 func updateCfgDiffs(db *sqlx.DB, hostName string, diffs CfgFileDiffs) (bool, error) {
 	query := `UPDATE config_diffs SET db_lines_missing=(SELECT ARRAY(SELECT * FROM json_array_elements_text($1))), 
-disk_lines_missing=(SELECT ARRAY(SELECT * FROM json_array_elements_text($2))), last_checked=$3 WHERE server_id=(SELECT server.id FROM server WHERE host_name=$4) AND config_name=$5`
+disk_lines_missing=(SELECT ARRAY(SELECT * FROM json_array_elements_text($2))), last_checked=$3 WHERE server=(SELECT server.id FROM server WHERE host_name=$4) AND config_name=$5`
 		
 	dbLinesMissingJson, err := json.Marshal(diffs.DBLinesMissing)
 	if err != nil {
