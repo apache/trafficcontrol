@@ -186,6 +186,20 @@ ALTER TABLE cdn_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE cdn_id_seq OWNED BY cdn.id;
 
+--
+-- Name: config_diffs; Type: TABLE; Schema: public; Owner: touser
+--
+
+CREATE TABLE config_diffs (
+    config_id bigserial NOT NULL PRIMARY KEY,
+    server bigint NOT NULL,
+    config_name text NOT NULL,
+    db_lines_missing text[],
+    disk_lines_missing text[],
+    last_checked timestamp without time zone NOT NULL
+);
+
+ALTER TABLE config_diffs OWNER to traffic_ops;
 
 --
 -- Name: deliveryservice; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -2594,6 +2608,14 @@ ALTER TABLE ONLY server
 
 ALTER TABLE ONLY asn
     ADD CONSTRAINT fk_cran_cachegroup1 FOREIGN KEY (cachegroup) REFERENCES cachegroup(id);
+
+
+--
+-- Name: server; Type: DEFAULT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY config_diffs 
+    ADD CONSTRAINT fk_config_diffs_server FOREIGN KEY (server) REFERENCES server(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
