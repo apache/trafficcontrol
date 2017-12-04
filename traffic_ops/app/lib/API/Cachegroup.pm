@@ -197,7 +197,7 @@ sub update {
 		$response->{typeId}   = $rs->type->id;
 		$response->{typeName} = $rs->type->name;
 
-		&log( $self, "Updated Cachegroup name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+		&log( $self, "Updated Cachegroup named '" . $rs->name . "' with id: " . $rs->id, "APICHANGE" );
 
 		return $self->success( $response, "Cachegroup update was successful." );
 	}
@@ -273,7 +273,7 @@ sub create {
 		$response->{typeId}   = $rs->type->id;
 		$response->{typeName} = $rs->type->name;
 
-		&log( $self, "Updated Cachegroup name '" . $rs->name . "' for id: " . $rs->id, "APICHANGE" );
+		&log( $self, "Created Cachegroup named '" . $rs->name . "' with id: " . $rs->id, "APICHANGE" );
 
 		return $self->success( $response, "Cachegroup creation was successful." );
 	}
@@ -318,6 +318,7 @@ sub delete {
 
 	my $rs = $cg->delete();
 	if ($rs) {
+		&log( $self, "Deleted Cachegroup named '" . $cg->name . "' with id: " . $cg->id, "APICHANGE" );
 		return $self->success_message("Cachegroup deleted.");
 	} else {
 		return $self->alert( "Cachegroup delete failed." );
@@ -433,6 +434,10 @@ sub postupdatequeue {
 	$response->{cdn}            = $cdn;
 	$response->{cachegroupName} = $name;
 	$response->{cachegroupId}   = $id;
+
+	my $msg = "Server updates $params->{action}d for $name cache group";
+	&log( $self, $msg, "APICHANGE" );
+
 	return $self->success($response);
 }
 
@@ -449,11 +454,13 @@ sub is_cachegroup_valid {
 
 		# Validation checks to perform
 		checks => [
-			name => [ is_required("is required"), \&is_alphanumeric ],
-			shortName => [ is_required("is required"), \&is_alphanumeric ],
-			typeId => [ is_required("is required") ],
-			latitude => [ \&is_valid_lat ],
-			longitude => [ \&is_valid_long ]
+			name						=> [ is_required("is required"), \&is_alphanumeric, is_like( qr/^\S*$/, "must not contain spaces" ) ],
+			shortName					=> [ is_required("is required"), \&is_alphanumeric, is_like( qr/^\S*$/, "must not contain spaces" ) ],
+			latitude					=> [ \&is_valid_lat ],
+			longitude					=> [ \&is_valid_long ],
+			parentCachegroupId			=> [ \&is_int_or_undef ],
+			secondaryParentCachegroupId => [ \&is_int_or_undef ],
+			typeId						=> [ is_required("is required"), \&is_int_or_undef ],
 		]
 	};
 
@@ -482,10 +489,24 @@ sub is_alphanumeric {
 	return undef;
 }
 
+sub is_int_or_undef {
+	my ( $value, $params ) = @_;
+
+	if ( !defined $value ) {
+		return undef;
+	}
+
+	if ( !( $value =~ /^\d+$/ ) ) {
+		return "invalid. Must be a positive integer or null.";
+	}
+
+	return undef;
+}
+
 sub is_valid_lat {
 	my ( $value, $params ) = @_;
 
-	if ( !defined $value or $value eq '' ) {
+	if ( !defined $value ) {
 		return undef;
 	}
 
@@ -503,7 +524,7 @@ sub is_valid_lat {
 sub is_valid_long {
 	my ( $value, $params ) = @_;
 
-	if ( !defined $value or $value eq '' ) {
+	if ( !defined $value ) {
 		return undef;
 	}
 

@@ -17,14 +17,14 @@
  * under the License.
  */
 
-var ProfileService = function(Restangular, locationUtils, messageModel) {
+var ProfileService = function(Restangular, $http, locationUtils, messageModel, ENV) {
 
     this.getProfiles = function(queryParams) {
         return Restangular.all('profiles').getList(queryParams);
     };
 
-    this.getProfile = function(id) {
-        return Restangular.one("profiles", id).get();
+    this.getProfile = function(id, queryParams) {
+        return Restangular.one("profiles", id).get(queryParams);
     };
 
     this.createProfile = function(profile) {
@@ -32,7 +32,7 @@ var ProfileService = function(Restangular, locationUtils, messageModel) {
             .then(
             function() {
                 messageModel.setMessages([ { level: 'success', text: 'Profile created' } ], true);
-                locationUtils.navigateToPath('/admin/profiles');
+                locationUtils.navigateToPath('/profiles');
             },
             function(fault) {
                 messageModel.setMessages(fault.data.alerts, false);
@@ -72,8 +72,20 @@ var ProfileService = function(Restangular, locationUtils, messageModel) {
         return Restangular.one('parameters', paramId).getList('unassigned_profiles');
     };
 
+    this.cloneProfile = function(sourceName, cloneName) {
+        return $http.post(ENV.api['root'] + "profiles/name/" + cloneName + "/copy/" + sourceName)
+            .then(
+                function(result) {
+                    messageModel.setMessages(result.data.alerts, true);
+                    locationUtils.navigateToPath('/profiles/' + result.data.response.id);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
 
 };
 
-ProfileService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+ProfileService.$inject = ['Restangular', '$http', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = ProfileService;

@@ -146,7 +146,7 @@ Steering Targets
 
   Authentication Required: Yes
 
-  Role(s) Required: Admin
+  Role(s) Required: Admin or Steering
 
   **Request Route Parameters**
 
@@ -163,10 +163,6 @@ Steering Targets
   +------------------------+----------+--------------------------+
   | Parameter              | Required | Description              |
   +========================+==========+==========================+
-  | ``deliveryServiceId``  | yes      | Steering DS ID           |
-  +------------------------+----------+--------------------------+
-  | ``targetId``           | yes      | Target DS ID             |
-  +------------------------+----------+--------------------------+
   | ``value``              | yes      | Target value             |
   +------------------------+----------+--------------------------+
   | ``typeId``             | yes      | Target type ID           |
@@ -175,8 +171,6 @@ Steering Targets
   **Request Example** ::
 
     {
-        "deliveryServiceId": 1
-        "targetId": 2
         "value": 34,
         "typeId": 46,
     }
@@ -223,7 +217,7 @@ Steering Targets
 
   Authentication Required: Yes
 
-  Role(s) Required: Admin
+  Role(s) Required: Admin or Steering
 
   **Request Route Parameters**
 
@@ -238,20 +232,17 @@ Steering Targets
   +------------------------+----------+--------------------------+
   | Parameter              | Required | Description              |
   +========================+==========+==========================+
-  | ``deliveryServiceId``  | yes      | Steering DS ID           |
-  +------------------------+----------+--------------------------+
   | ``targetId``           | yes      | Target DS ID             |
   +------------------------+----------+--------------------------+
   | ``value``              | yes      | Target value             |
   +------------------------+----------+--------------------------+
   | ``typeId``             | yes      | Target type ID           |
   +------------------------+----------+--------------------------+
-gi
+
   **Request Example** ::
 
     {
-        "deliveryServiceId": 1
-        "targetId": 6
+        "targetId": 6,
         "value": 22,
         "typeId": 47,
     }
@@ -297,7 +288,7 @@ gi
 
   Authentication Required: Yes
 
-  Role(s) Required:  Admin
+  Role(s) Required: Admin or Steering
 
   **Request Route Parameters**
 

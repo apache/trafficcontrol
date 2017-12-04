@@ -27,7 +27,7 @@ under the License.
     <table id="paramProfilesUnassignedTable" class="table responsive-utilities jambo_table" style="table-layout:fixed; width:100%;">
         <thead>
         <tr class="headings">
-            <th></th>
+            <th style="padding-left: 10px;"><input id="selectAllCB" type="checkbox" ng-click="selectAll($event)" ng-checked="allSelected()"></th>
             <th>name</th>
             <th>description</th>
             <th>type</th>
@@ -35,8 +35,8 @@ under the License.
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="profile in ::unassignedProfiles">
-            <td><input type="checkbox" ng-click="updateProfiles($event, profile.id)"></td>
+        <tr ng-repeat="profile in ::selectedProfiles">
+            <td><input type="checkbox" ng-click="updateProfiles($event, profile.id)" ng-checked="profile.selected"></td>
             <td>{{::profile.name}}</td>
             <td>{{::profile.description}}</td>
             <td>{{::profile.type}}</td>

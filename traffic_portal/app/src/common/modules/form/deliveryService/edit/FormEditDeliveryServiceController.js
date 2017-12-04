@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormEditDeliveryServiceController = function(deliveryService, type, types, $scope, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService) {
+var FormEditDeliveryServiceController = function(deliveryService, type, types, $scope, $state, $controller, $uibModal, locationUtils, deliveryServiceService) {
 
 	// extends the FormDeliveryServiceController to inherit common methods
 	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, type: type, types: types, $scope: $scope }));
@@ -25,11 +25,11 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 	var deleteDeliveryService = function(deliveryService) {
 		deliveryServiceService.deleteDeliveryService(deliveryService.id)
 			.then(function() {
-				locationUtils.navigateToPath('/configure/delivery-services');
+				locationUtils.navigateToPath('/delivery-services');
 			});
 	};
 
-	$scope.deliveryServiceName = angular.copy(deliveryService.displayName);
+	$scope.deliveryServiceName = angular.copy(deliveryService.xmlId);
 
 	$scope.settings = {
 		isNew: false,
@@ -38,10 +38,9 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 
 	$scope.save = function(deliveryService) {
 		deliveryServiceService.updateDeliveryService(deliveryService).
-		then(function() {
-			$scope.deliveryServiceName = angular.copy(deliveryService.displayName);
-			$anchorScroll(); // scrolls window to top
-		});
+			then(function() {
+				$state.reload(); // reloads all the resolves for the view
+			});
 	};
 
 	$scope.confirmDelete = function(deliveryService) {
@@ -68,5 +67,5 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 
 };
 
-FormEditDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService'];
+FormEditDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$state', '$controller', '$uibModal', 'locationUtils', 'deliveryServiceService'];
 module.exports = FormEditDeliveryServiceController;

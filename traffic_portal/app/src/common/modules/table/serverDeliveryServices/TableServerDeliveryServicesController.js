@@ -17,28 +17,121 @@
  * under the License.
  */
 
-var TableServerDeliveryServicesController = function(server, serverDeliveryServices, $scope, $state, locationUtils, deliveryServiceService) {
+var TableServerDeliveryServicesController = function(server, serverDeliveryServices, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, serverUtils, deliveryServiceService, serverService) {
 
-	$scope.server = server;
+	var protocols = deliveryServiceUtils.protocols;
 
-	$scope.serverDeliveryServices = serverDeliveryServices;
+	var qstrings = deliveryServiceUtils.qstrings;
 
-	$scope.cloneDsAssignments = function() {
-		alert('not hooked up yet: cloneDsAssignments');
-	};
-
-	$scope.addDeliveryService = function() {
-		alert('not hooked up yet: addDeliveryService to server');
-	};
-
-	$scope.removeDeliveryService = function(dsId, serverId) {
-		deliveryServiceService.deleteDeliveryServiceServer(dsId, serverId)
+	var removeDeliveryService = function(dsId) {
+		deliveryServiceService.deleteDeliveryServiceServer(dsId, $scope.server.id)
 			.then(
 				function() {
 					$scope.refresh();
 				}
 			);
 	};
+
+	$scope.server = server;
+
+	$scope.serverDeliveryServices = serverDeliveryServices;
+
+	$scope.isEdge = serverUtils.isEdge;
+
+	$scope.protocol = function(ds) {
+		return protocols[ds.protocol];
+	};
+
+	$scope.qstring = function(ds) {
+		return qstrings[ds.qstringIgnore];
+	};
+
+	$scope.getRelativeTime = dateUtils.getRelativeTime;
+
+	$scope.cloneDsAssignments = function() {
+		var params = {
+			title: 'Clone Delivery Service Assignments',
+			message: "Please select an edge cache to assign these " + serverDeliveryServices.length + " delivery services to.<br><br>Warning - Any delivery services currently assigned to the selected edge cache will be lost and replaced with these delivery service assignments...",
+			labelFunction: function(item) { return item['hostName'] + '.' + item['domainName'] }
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function(serverService) {
+					return serverService.getServers({ type: 'EDGE', orderby: 'hostName' });
+				}
+			}
+		});
+		modalInstance.result.then(function(selectedServer) {
+			var dsIds = _.pluck(serverDeliveryServices, 'id');
+			serverService.assignDeliveryServices(selectedServer, dsIds, true, true)
+				.then(
+					function() {
+						locationUtils.navigateToPath('/servers/' + selectedServer.id + '/delivery-services');
+					}
+				);
+		}, function () {
+			// do nothing
+		});
+	};
+
+
+	$scope.selectDeliveryServices = function() {
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/table/serverDeliveryServices/table.assignDeliveryServices.tpl.html',
+			controller: 'TableAssignDeliveryServicesController',
+			size: 'lg',
+			resolve: {
+				server: function() {
+					return server;
+				},
+				deliveryServices: function(deliveryServiceService) {
+					return deliveryServiceService.getDeliveryServices({ cdn: server.cdnId });
+				},
+				assignedDeliveryServices: function() {
+					return serverDeliveryServices;
+				}
+			}
+		});
+		modalInstance.result.then(function(selectedDsIds) {
+			serverService.assignDeliveryServices(server, selectedDsIds, true, false)
+				.then(
+					function() {
+						$scope.refresh();
+					}
+				);
+		}, function () {
+			// do nothing
+		});
+	};
+
+	$scope.confirmRemoveDS = function(ds) {
+		var params = {
+			title: 'Remove Delivery Service from Server?',
+			message: 'Are you sure you want to remove ' + ds.xmlId + ' from this server?'
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			removeDeliveryService(ds.id);
+		}, function () {
+			// do nothing
+		});
+	};
+
 
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
@@ -50,11 +143,14 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 		$('#deliveryServicesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"columnDefs": [
+				{ 'orderable': false, 'targets': 12 }
+			],
 			"aaSorting": []
 		});
 	});
 
 };
 
-TableServerDeliveryServicesController.$inject = ['server', 'serverDeliveryServices', '$scope', '$state', 'locationUtils', 'deliveryServiceService'];
+TableServerDeliveryServicesController.$inject = ['server', 'serverDeliveryServices', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'serverUtils', 'deliveryServiceService', 'serverService'];
 module.exports = TableServerDeliveryServicesController;

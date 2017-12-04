@@ -22,9 +22,9 @@ under the License.
     <h4 class="modal-title">{{::params.title}}</h4>
 </div>
 <div class="modal-body">
-    <p>{{::params.message}}</p>
+    <p ng-bind-html="params.message"></p>
     <form name="selectForm" novalidate>
-        <select id="cdn" name="cdn" class="form-control" ng-model="selectedItemId" ng-options="item.id as item.name for item in collection" required>
+        <select class="form-control" ng-model="selectedItemId" ng-options="item.id as label(item) for item in collection" required>
             <option value="">Select...</option>
         </select>
     </form>

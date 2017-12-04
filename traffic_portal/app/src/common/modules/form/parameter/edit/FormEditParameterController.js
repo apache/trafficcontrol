@@ -25,7 +25,7 @@ var FormEditParameterController = function(parameter, $scope, $controller, $uibM
     var deleteParameter = function(parameter) {
         parameterService.deleteParameter(parameter.id)
             .then(function() {
-                locationUtils.navigateToPath('/admin/parameters');
+                locationUtils.navigateToPath('/parameters');
             });
     };
 

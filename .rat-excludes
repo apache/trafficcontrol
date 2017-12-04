@@ -5,7 +5,7 @@ VERSION(?:                           This very short file doesn't support commen
 .*\.css\.map(?:                      debug files for minified css. License borne by source. ){0}
 \..*(?:                              hidden files ought not to be code. These are generally things like projects, ignore files and such. ){0}
 LICEN[SC]E.*(?:                      Licenses do not usually require meta-licenses. ){0}
-^licenses/*(?:                         Licenses do not usually require meta-licenses. ){0}
+^licenses/*(?:                       Licenses do not usually require meta-licenses. ){0}
 .*\.conf(?:ig)?(?:\.?.*)?(?:         Config files aren't code and don't typically require licenses. ){0}
 .*\.cfg(?:                           config file ){0}
 .*\.logrotate(?:                     config file ){0}
@@ -50,7 +50,14 @@ select2\..*(?:                       MIT. Properly documented in LICENSE ){0}
 prettyprint\.js(?:                   BSD 2-clause. Properly documented in LICENSE ){0}
 seelog(?:                            BSD 3-clause. Properly documented in LICENSE ){0}
 loading.scss(?:                      MIT. Properly documented in LICENSE ){0}
-theme.scss(?:                      MIT. Properly documented in LICENSE ){0}
+theme.scss(?:                        MIT. Properly documented in LICENSE ){0}
 influxdb(?:                          MIT. Properly documented in LICENSE ){0}
 errors(?:                            BSD 2-clause. Properly documented in LICENTS ){0}
 net(?:                               Go BSD. Properly documented in LICENSE ){0}
+go-sqlmock.v1(?:                     BSD 3-clause. Properly documented in LICENSE ){0}
+sqlx(?:                              MIT. Properly docuemented in LICENSE ){0}
+backoff(?:                           MIT. Properly docuemented in LICENSE ){0}
+riak-go-client(?:                    Apache 2.0. Properly docuemented in LICENSE ){0}
+protobuf(?:                          Go BSD. Properly documented in LICENSE ){0}
+go-jwx(?:                            `MIT. Properly docuemented in LICENSE ){0}
+crypto(?:                            Go BSD. Properly documented in LICENSE ){0}

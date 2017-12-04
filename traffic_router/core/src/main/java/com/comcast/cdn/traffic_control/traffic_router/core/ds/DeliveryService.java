@@ -76,6 +76,7 @@ public class DeliveryService {
 	@JsonIgnore
 	private final JSONObject props;
 	private boolean isDns;
+	private final String routingName;
 	private final boolean shouldAppendQueryString;
 	private final Geolocation missLocation;
 	private final Dispersion dispersion;
@@ -111,6 +112,7 @@ public class DeliveryService {
 		this.geoRedirectFile = this.geoRedirectUrl;
 		this.staticDnsEntries = dsJo.optJSONArray("staticDnsEntries");
 		this.bypassDestination = dsJo.optJSONObject("bypassDestination");
+		this.routingName = dsJo.getString("routingName").toLowerCase();
 		this.domains = dsJo.optJSONArray("domains");
 		this.soa = dsJo.optJSONObject("soa");
 		if(dsJo.has("appendQueryString")) {
@@ -527,6 +529,10 @@ public class DeliveryService {
 	@JsonIgnore
 	public JSONArray getDomains() {
 		return domains;
+	}
+
+	public String getRoutingName() {
+		return routingName;
 	}
 
 	public Dispersion getDispersion() {

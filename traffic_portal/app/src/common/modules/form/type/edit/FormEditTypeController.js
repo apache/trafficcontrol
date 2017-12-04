@@ -25,7 +25,7 @@ var FormEditTypeController = function(type, $scope, $controller, $uibModal, $anc
     var deleteType = function(type) {
         typeService.deleteType(type.id)
             .then(function() {
-                locationUtils.navigateToPath('/admin/types');
+                locationUtils.navigateToPath('/types');
             });
     };
 

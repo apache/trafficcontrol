@@ -25,7 +25,7 @@ var FormEditRegionController = function(region, $scope, $controller, $uibModal, 
     var deleteRegion = function(region) {
         regionService.deleteRegion(region.id)
             .then(function() {
-                locationUtils.navigateToPath('/admin/regions');
+                locationUtils.navigateToPath('/regions');
             });
     };
 

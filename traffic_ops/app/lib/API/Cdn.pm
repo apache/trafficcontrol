@@ -1086,7 +1086,7 @@ sub dnssec_keys {
 			return $self->success($keys);
 		}
 		else {
-			return $self->alert( { Error => " - Dnssec keys for $cdn_name do not exist!  Response was: " . $get_keys->content } );
+			return $self->success({}, " - Dnssec keys for $cdn_name could not be found. ");
 		}
 	}
 	return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
@@ -1223,18 +1223,7 @@ sub refresh_keys {
 					my $ds_id = $ds->id;
 
 					#create the ds domain name for dnssec keys
-					my $domain_name = $cdn_domain_name;
-					my $deliveryservice_regexes = UI::DeliveryService::get_regexp_set( $self, $ds_id );
-					my $rs_ds = $self->db->resultset('Deliveryservice')
-						->search( { 'me.xml_id' => $xml_id }, { prefetch => [ { 'type' => undef }, { 'profile' => undef } ] } );
-					my $data = $rs_ds->single;
-					my @example_urls =
-						UI::DeliveryService::get_example_urls( $self, $ds_id, $deliveryservice_regexes, $data, $domain_name, $data->protocol );
-
-					#first one is the one we want.  period at end for dnssec, substring off stuff we dont want
-					my $ds_name = $example_urls[0] . ".";
-					my $length = length($ds_name) - CORE::index( $ds_name, "." );
-					$ds_name = substr( $ds_name, CORE::index( $ds_name, "." ) + 1, $length );
+					my $ds_name = UI::DeliveryService::get_ds_domain_name($self, $ds_id, $xml_id, $cdn_domain_name);
 
 					my $inception    = time();
 					my $z_expiration = $inception + ( 86400 * $default_z_exp_days );
@@ -1383,7 +1372,7 @@ sub dnssec_keys_generate {
 		my $rc       = $response->{_rc};
 		if ( $rc eq "204" ) {
 			&log( $self, "Generated DNSSEC keys for CDN $key", "APICHANGE" );
-			$self->success("Successfully created $key_type keys for $key");
+			$self->success_message("Successfully created $key_type keys for $key");
 		}
 		else {
 			$self->alert( { Error => " - DNSSEC keys for $key could not be created.  Response was" . $response->content } );
@@ -1460,7 +1449,12 @@ sub catch_all {
 	my $mimetype = $self->req->headers->content_type;
 
 	if ( defined( $self->current_user() ) ) {
-		return $self->not_found();
+		if ( &UI::Utils::is_ldap( $self ) ) {
+			my $config = $self->app->config;
+			return $self->forbidden( $config->{'to'}{'no_account_found_msg'} );
+		} else {
+			return $self->not_found();
+		}
 	}
 	else {
 		return $self->unauthorized();

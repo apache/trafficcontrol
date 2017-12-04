@@ -25,6 +25,8 @@ use Test::More;
 use Test::Mojo;
 use Moose;
 use Schema;
+
+use Utils::Tenant;
 use Fixtures::Cdn;
 use Fixtures::Deliveryservice;
 use Fixtures::DeliveryserviceTmuser;
@@ -178,7 +180,14 @@ sub teardown {
 	my $schema     = shift;
 	my $table_name = shift;
 
-	$schema->resultset($table_name)->delete_all;
+	if ($table_name eq 'Tenant') {
+		my $tenant_utils = Utils::Tenant->new(undef, 10**9, $schema);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		$tenant_utils->cascade_delete_tenants_tree($tenants_data);
+	}
+	else {
+		$schema->resultset($table_name)->delete_all;
+	}
 }
 
 # Tearing down the Cachegroup table requires deleting them in a specific order, because

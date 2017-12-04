@@ -24,7 +24,7 @@ Software Requirements
 =====================
 To work on Traffic Portal you need a \*nix (MacOS and Linux are most commonly used) environment that has the following installed:
 
-	* `Ruby 2.0.x or above <https://www.ruby-lang.org/en/>`_
+	* `Ruby Devel 2.0.x or above <https://www.rpmfind.net/linux/rpm2html/search.php?query=ruby-devel>`_
 	* `Compass 1.0.x or above <http://compass-style.org/>`_
 	* `Node.js 6.0.x or above <https://nodejs.org/en/>`_
 	* `Bower 1.7.9 or above <https://nodejs.org/en/>`_
@@ -43,7 +43,7 @@ Installing The Traffic Portal Developer Environment
 	- Run ``npm install`` to install application dependencies. Only needs to be done the first time unless traffic_portal/package.json changes.
 	- Run ``bower install`` to install client-side dependencies. Only needs to be done the first time unless traffic_portal/bower.json changes.
 	- Run ``grunt`` to package the application into traffic_portal/app/dist, start a local http server (Express), and start a file watcher.
-	- Navigate to http://localhost:8080
+	- Navigate to https://localhost:8443
 
 Notes
 =====

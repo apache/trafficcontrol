@@ -25,7 +25,7 @@ var FormEditPhysLocationController = function(physLocation, $scope, $controller,
     var deletePhysLocation = function(physLocation) {
         physLocationService.deletePhysLocation(physLocation.id)
             .then(function() {
-                locationUtils.navigateToPath('/admin/phys-locations');
+                locationUtils.navigateToPath('/phys-locations');
             });
     };
 

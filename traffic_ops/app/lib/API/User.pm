@@ -18,6 +18,7 @@ package API::User;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use Utils::Tenant;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Utils::Helper;
@@ -30,6 +31,8 @@ use Utils::Helper::ResponseHelper;
 use Validate::Tiny ':all';
 use UI::ConfigFiles;
 use UI::Tools;
+use Data::GUID;
+use POSIX qw(strftime);
 
 sub login {
 	my $self    = shift;
@@ -62,20 +65,32 @@ sub token_login {
 sub index {
 	my $self = shift;
 	my @data;
-	my $username = $self->param('username');
+	my $username 	= $self->param('username');
+	my $tenant_id	= $self->param('tenant');
 
 	my $orderby = "username";
 	$orderby = $self->param('orderby') if ( defined $self->param('orderby') );
+
+	my %criteria;
+	if ( defined $tenant_id ) {
+		$criteria{'me.tenant_id'} = $tenant_id;
+	}
 
 	my $dbh;
 	if ( defined $username ) {
 		$dbh = $self->db->resultset("TmUser")->search( { username => $username }, { prefetch => [ 'role', 'tenant' ], order_by => 'me.' . $orderby } );
 	}
 	else {
-		$dbh = $self->db->resultset("TmUser")->search( undef, { prefetch => [ 'role', 'tenant' ], order_by => 'me.' . $orderby } );
+		$dbh = $self->db->resultset("TmUser")->search( \%criteria, { prefetch => [ 'role', 'tenant' ], order_by => 'me.' . $orderby } );
 	}
 
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
 	while ( my $row = $dbh->next ) {
+		if (!$tenant_utils->is_user_resource_accessible($tenants_data, $row->tenant_id)) {
+			next;
+		}
 		push(
 			@data, {
 				"addressLine1"     => $row->address_line1,
@@ -112,7 +127,14 @@ sub show {
 
 	my $rs_data = $self->db->resultset("TmUser")->search( { 'me.id' => $id }, { prefetch => [ 'role', 'tenant' ] } );
 	my @data = ();
+
+	my $tenant_utils = Utils::Tenant->new($self);
+   	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
 	while ( my $row = $rs_data->next ) {
+		if (!$tenant_utils->is_user_resource_accessible($tenants_data, $row->tenant_id)) {
+			return $self->forbidden("Forbidden: User is not available for your tenant.");
+		}
 		push(
 			@data, {
 				"addressLine1"     => $row->address_line1,
@@ -157,14 +179,28 @@ sub update {
 		return $self->not_found();
 	}
 
+	my $tenant_utils = Utils::Tenant->new($self);
+
+	#setting tenant_id to undef if tenant is not set.
+	my $tenant_id = exists( $params->{tenantId} ) ? $params->{tenantId} : undef;
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
+		#no access to resource tenant
+		return $self->forbidden("Forbidden: User is not available for your tenant.");
+	}
+	if ($tenant_utils->use_tenancy() and !defined($tenant_id) and defined($user->tenant_id)) {
+		return $self->alert("Invalid tenant. Cannot clear the user tenancy.");
+	}
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $tenant_id)) {
+		#no access to target tenancy
+		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
+	}
+
 	my ( $is_valid, $result ) = $self->is_valid( $params, $user_id );
 
 	if ( !$is_valid ) {
 		return $self->alert($result);
 	}
-
-	#setting tenant_id to undef if tenant is not set.
-	my $tenant_id = exists( $params->{tenantId} ) ? $params->{tenantId} : undef;
 
 	my $values = {
 		address_line1     => $params->{addressLine1},
@@ -234,6 +270,19 @@ sub create {
 		return $self->forbidden();
 	}
 
+	#setting tenant_id to the user's tenant if tenant is not set.
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
+	my $tenant_id = $params->{tenantId};
+	if (!defined($tenant_id) and $tenant_utils->use_tenancy()){
+		return $self->alert("Invalid tenant. Must set tenant for new user.");
+	}
+
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $tenant_id)) {
+		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
+	}
+
 	my ( $is_valid, $result ) = $self->is_valid( $params, 0 );
 
 	if ( !$is_valid ) {
@@ -248,8 +297,6 @@ sub create {
 		return $self->alert("confirmLocalPasswd is required.");
 	}
 
-	#setting tenant_id to the user's tenant if tenant is not set. TODO(nirs): remove when tenancy is no longer optional in the API
-	my $tenant_id = exists( $params->{tenantId} ) ? $params->{tenantId} : $self->current_user_tenant();
 
 	my $values = {
 		address_line1        => $params->{addressLine1},
@@ -330,11 +377,80 @@ sub reset_password {
 
 }
 
-sub get_deliveryservices_not_assigned_to_user {
+sub register_user {
+	my $self    = shift;
+	my $params  = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my ( $is_valid, $result ) = $self->is_registration_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+
+	my $email_to 	= $params->{email};
+	my $token    	= Data::GUID->new;
+	my $role 		= $params->{role};
+	my $tenant 		= $params->{tenantId};
+
+	my $now = strftime( "%Y-%m-%d %H:%M:%S", gmtime() );
+	my $existing_user = $self->db->resultset('TmUser')->find( { email => $email_to } );
+
+	if (!defined($existing_user)) {
+		my $new_user = $self->db->resultset('TmUser')->create(
+			{
+				email				=> $email_to,
+				role				=> $role,
+				tenant_id			=> $tenant,
+				username			=> $token,
+				token				=> $token,
+				new_user			=> 1,
+				registration_sent	=>  $now,
+			}
+		);
+		$new_user->insert();
+	} elsif ( defined($existing_user) && $existing_user->new_user() ) {
+		$existing_user->token($token);
+		$existing_user->role($role);
+		$existing_user->tenant_id($tenant);
+		$existing_user->registration_sent($now);
+		$existing_user->update();
+	} else {
+		return $self->alert("User already exists and has completed registration.");
+	}
+
+	#send the registration email with a link the user can follow to finish the registration
+	$self->send_registration_email( $email_to, $token );
+
+	my $role_name 	= $self->db->resultset("Role")->search( { id => $role } )->get_column('name')->single();
+	my $tenant_name = $self->db->resultset("Tenant")->search( { id => $tenant } )->get_column('name')->single();
+
+	my $msg = "Sent user registration to $email_to with the following permissions [ role: $role_name | tenant: $tenant_name ]";
+	&log( $self, $msg, "APICHANGE" );
+
+	return $self->success_message($msg);
+}
+
+
+sub get_available_deliveryservices_not_assigned_to_user {
 	my $self = shift;
 	my @data;
 	my $id = $self->param('id');
 	my %takendsids;
+
+	my $user = $self->db->resultset('TmUser')->find( { id => $id } );
+	if ( !defined($user) ) {
+		return $self->not_found();
+	}
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
+		#no access to resource tenant
+		return $self->forbidden();
+	}
 
 	my $rs_takendsids = undef;
 	$rs_takendsids = $self->db->resultset("DeliveryserviceTmuser")->search( { 'tm_user_id' => $id } );
@@ -345,6 +461,14 @@ sub get_deliveryservices_not_assigned_to_user {
 
 	my $rs_links = $self->db->resultset("Deliveryservice")->search( undef, { order_by => "xml_id" } );
 	while ( my $row = $rs_links->next ) {
+        if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->tenant_id)) {
+            #the current user cannot access this DS
+            next;
+        }
+		if (!$tenant_utils->is_ds_resource_accessible_to_tenant($tenants_data, $row->tenant_id, $user->tenant_id)) {
+			#the user under inspection cannot access this DS
+			next;
+		}
 		if ( !exists( $takendsids{ $row->id } ) ) {
 			push( @data, {
 				"id" 			=> $row->id,
@@ -377,9 +501,16 @@ sub assign_deliveryservices {
 	if ( !defined($user) ) {
 		return $self->not_found();
 	}
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->tenant_id)) {
+		#no access to resource tenant
+		return $self->alert("Invalid user. This user is not available to you for assignment.");
+	}
 
 	if ( $replace ) {
 		# start fresh and delete existing user/deliveryservice associations
+		# We are not checking DS tenancy on deletion - we manage the user here - we remove permissions to touch a DS
 		my $delete = $self->db->resultset('DeliveryserviceTmuser')->search( { tm_user_id => $user_id } );
 		$delete->delete();
 	}
@@ -404,7 +535,6 @@ sub current {
 	my $self = shift;
 	my @data;
 	my $current_username = $self->current_user()->{username};
-
 	if ( &is_ldap($self) ) {
 		my $role = $self->db->resultset('Role')->search( { name => "read-only" } )->get_column('id')->single;
 
@@ -474,6 +604,12 @@ sub update_current {
 	my $user = $self->req->json->{user};
 	if ( &is_ldap($self) ) {
 		return $self->alert( "Profile cannot be updated because '" . $user->{username} . "' is logged in as LDAP." );
+	}
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_user_resource_accessible($tenants_data, $user->{"tenantId"})) {
+		return $self->alert("Invalid tenant. This tenant is not available to you for assignment.");
 	}
 
 	my $db_user;
@@ -566,8 +702,10 @@ sub update_current {
 		}
 		# token is intended for new user registrations and on current user update, it should be cleared from the db
 		$db_user->{"token"} = undef;
+		# new_user flag is intended to identify new user registrations and on current user update, registration is complete
+		$db_user->{"new_user"} = 0;
 		$dbh->update($db_user);
-		return $self->success_message("UserProfile was successfully updated.");
+		return $self->success_message("User profile was successfully updated");
 	}
 	else {
 		return $self->alert($result);
@@ -587,8 +725,10 @@ sub is_valid {
 		# Checks to perform on all fields
 		checks => [
 
-			# All of these are required
-			[qw/full_name username email role/] => is_required("is required"),
+			fullName	=> [ is_required("is required") ],
+			username	=> [ is_required("is required") ],
+			email		=> [ is_required("is required") ],
+			role		=> [ is_required("is required"), sub { is_valid_role($self, @_) } ],
 
 			# pass2 must be equal to pass
 			localPasswd => sub {
@@ -639,6 +779,79 @@ sub is_valid {
 		return ( 0, $result->{error} );
 	}
 
+}
+
+sub is_registration_valid {
+	my $self   = shift;
+	my $params = shift;
+
+	my $rules = {
+		fields => [
+			qw/email role tenantId/
+		],
+
+		# Validation checks to perform
+		checks => [
+			email		=> [ is_required("is required"), sub { is_valid_email($self, @_) } ],
+			role		=> [ is_required("is required"), sub { is_valid_role($self, @_) } ],
+			tenantId	=> [ is_required("is required"), sub { is_valid_tenant($self, @_) } ],
+		]
+	};
+
+	# Validate the input against the rules
+	my $result = validate( $params, $rules );
+
+	if ( $result->{success} ) {
+		return ( 1, $result->{data} );
+	}
+	else {
+		return ( 0, $result->{error} );
+	}
+}
+
+sub is_valid_email {
+	my $self    = shift;
+	my ( $value, $params ) = @_;
+
+	return Email::Valid->address($value) ? undef : 'is not valid';
+}
+
+sub is_valid_role {
+	my $self    = shift;
+	my ( $value, $params ) = @_;
+
+	my $role_priv_level = $self->db->resultset("Role")->search( { id => $value } )->get_column('priv_level')->single();
+	if ( !defined($role_priv_level) ) {
+		return "not found";
+	}
+
+	my $my_role = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->get_column('role')->single();
+	my $my_role_priv_level = $self->db->resultset("Role")->search( { id => $my_role } )->get_column('priv_level')->single();
+
+	if ( $role_priv_level > $my_role_priv_level ) {
+		return "cannot exceed current user's privilege level ($my_role_priv_level)";
+	}
+
+	return undef;
+}
+
+sub is_valid_tenant {
+	my $self    = shift;
+	my ( $value, $params ) = @_;
+
+	my $tenant = $self->db->resultset("Tenant")->search( { id => $value } )->single();
+	if ( !defined($tenant) ) {
+		return "not found";
+	}
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db(undef);
+
+	if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $value)) {
+		return "not available to current user.";
+	}
+
+	return undef;
 }
 
 sub is_username_taken {

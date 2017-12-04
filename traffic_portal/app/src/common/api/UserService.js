@@ -22,31 +22,32 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
     var service = this;
 
     this.getCurrentUser = function() {
-        var token = $location.search().token,
-            deferred = $q.defer();
+        var deferred = $q.defer();
 
-        if (angular.isDefined(token)) {
-            $location.search('token', null); // remove the token query param
-            authService.tokenLogin(token)
-                .then(
-                    function(response) {
-                        service.getCurrentUser();
-                    }
-                );
-        } else {
-            $http.get(ENV.api['root'] + "user/current")
-                .then(
-                    function(result) {
-                        userModel.setUser(result.data.response);
-                        deferred.resolve(result.data.response);
-                    },
-                    function(fault) {
-                        deferred.reject(fault);
-                    }
-                );
+        $http.get(ENV.api['root'] + "user/current")
+            .then(
+                function(result) {
+                    userModel.setUser(result.data.response);
+                    deferred.resolve(result.data.response);
+                },
+                function(fault) {
+                    deferred.reject(fault);
+                }
+            );
 
-            return deferred.promise;
-        }
+        return deferred.promise;
+    };
+
+    this.resetPassword = function(email) {
+        return $http.post(ENV.api['root'] + "user/reset_password", { email: email })
+            .then(
+                function(result) {
+                    messageModel.setMessages(result.data.alerts, false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
     };
 
     this.getUsers = function(queryParams) {
@@ -60,9 +61,9 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
     this.createUser = function(user) {
         return Restangular.service('users').post(user)
             .then(
-                function() {
+                function(result) {
                     messageModel.setMessages([ { level: 'success', text: 'User created' } ], true);
-                    locationUtils.navigateToPath('/admin/users');
+                    locationUtils.navigateToPath('/users');
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
@@ -73,15 +74,15 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
     this.updateUser = function(user) {
         return $http.put(ENV.api['root'] + "users/" + user.id, user)
             .then(
-                function() {
+                function(result) {
                     if (userModel.user.id == user.id) {
                         // if you are updating the currently logged in user...
                         userModel.setUser(user);
                     }
-                    messageModel.setMessages([ { level: 'success', text: 'User updated' } ], false);
+                    messageModel.setMessages(result.data.alerts, false);
                 },
-                function() {
-                    messageModel.setMessages([ { level: 'error', text: 'User updated failed' } ], false);
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
                 }
             );
     };
@@ -95,18 +96,6 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
                 },
                 function() {
                     messageModel.setMessages([ { level: 'error', text: 'Current user updated failed' } ], false);
-                }
-            );
-    };
-
-    this.deleteUser = function(id) {
-        return Restangular.one("users", id).remove()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'User deleted' } ], true);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
                 }
             );
     };
@@ -150,6 +139,19 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
                 }
             );
     };
+
+    this.registerUser = function(registration) {
+        return $http.post(ENV.api['root'] + "users/register", registration)
+            .then(
+                function(result) {
+                    messageModel.setMessages(result.data.alerts, false);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
+
 
 };
 

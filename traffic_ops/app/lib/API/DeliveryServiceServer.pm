@@ -17,7 +17,9 @@ package API::DeliveryServiceServer;
 #
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
+use UI::DeliveryService;
 use UI::Utils;
+use Utils::Tenant;
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
 use Utils::Helper;
@@ -27,11 +29,21 @@ sub index {
 	my @data;
 	my $orderby = $self->param('orderby') || "deliveryservice";
 
+	#FOR THE REVIEWER - Currently I do not check DS tenancy here.
+	#I assume the operation is of a CDN owner for debug and I would not like to hide data here.
+	# Additionally I assume the operation is protected by "roles"
+	#Also note that the ds/user table is note tested here originally
+
 	# defaulted pagination and limits because there are 38129 rows in this table and counting...
 	my $page  = $self->param('page')  || 1;
 	my $limit = $self->param('limit') || 20;
 	my $rs_data = $self->db->resultset("DeliveryserviceServer")->search( undef, { prefetch => [ 'deliveryservice', 'server' ], page => $page, rows => $limit, order_by => $orderby } );
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	while ( my $row = $rs_data->next ) {
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $row->deliveryservice->tenant_id)) {
+			next;
+		}
 		push(
 			@data, {
 				"deliveryService" => $row->deliveryservice->id,
@@ -80,13 +92,19 @@ sub assign_servers_to_ds {
 		return $self->forbidden();
 	}
 
-	if ( ref($servers) ne 'ARRAY' ) {
-		return $self->alert("Servers must be an array");
-	}
-
 	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
 	if ( !defined($ds) ) {
 		return $self->not_found();
+	}
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->alert("Invalid delivery-service assignment. The delivery-service is not avaialble for your tenant.");
+	}
+
+	if ( ref($servers) ne 'ARRAY' ) {
+		return $self->alert("Servers must be an array");
 	}
 
 	if ( $replace ) {
@@ -103,6 +121,11 @@ sub assign_servers_to_ds {
 	}
 
 	$self->db->resultset("DeliveryserviceServer")->populate(\@values);
+
+	# create location parameters for header_rewrite*, regex_remap* and cacheurl* config files if necessary
+	&UI::DeliveryService::header_rewrite( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->edge_header_rewrite, "edge" );
+	&UI::DeliveryService::regex_remap( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->regex_remap );
+	&UI::DeliveryService::cacheurl( $self, $ds->id, $ds->profile, $ds->xml_id, $ds->cacheurl );
 
 	&log( $self, $count . " servers were assigned to " . $ds->xml_id, "APICHANGE" );
 
@@ -156,11 +179,16 @@ sub assign_ds_to_cachegroup {
 		}
 	}
 
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 	my $deliveryservice_IDs = "";
 	foreach my $ds_id (@{ $params->{deliveryServices} }) {
 		my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
 		if ( !defined($ds) ) {
 			return $self->alert("deliveryservice with id $ds_id does not existed");
+		}
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+			return $self->alert("deliveryservice with id $ds_id is not available to your tenant");
 		}
 		if ($cdn eq "") {
 			$cdn = $ds->cdn_id;
@@ -223,8 +251,19 @@ sub remove_server_from_ds {
 	my $ds_id  	 	= $self->param('dsId');
 	my $server_id	= $self->param('serverId');
 
-	if ( !&is_privileged($self) && !$self->is_delivery_service_assigned($ds_id) ) {
-		$self->forbidden("Forbidden. Delivery service not assigned to user.");
+	my $tenant_utils = Utils::Tenant->new($self);
+	if ( !&is_privileged($self) && !$tenant_utils->use_tenancy() && !$self->is_delivery_service_assigned($ds_id) ) {
+		return $self->forbidden("Forbidden. Delivery service not assigned to user.");
+	}
+
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
+	my $ds_tenant = undef;
+	if ( defined($ds) ) {
+		$ds_tenant = $ds->tenant_id;
+	}
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds_tenant)) {
+		return $self->forbidden("Forbidden. Delivery service not available on user tenancy.");
 	}
 
 	my $ds_server = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $ds_id, server => $server_id }, { prefetch => [ 'deliveryservice', 'server' ] } );

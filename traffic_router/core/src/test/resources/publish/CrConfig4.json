@@ -561,6 +561,7 @@
         "shuffled": "true"
       },
       "coverageZoneOnly": "false",
+      "routingName": "tr",
       "regionalGeoBlocking": "false",
       "matchsets": [{
         "protocol": "HTTP",
@@ -608,6 +609,7 @@
         "shuffled": "true"
       },
       "coverageZoneOnly": "false",
+      "routingName": "tr",
       "regionalGeoBlocking": "false",
       "matchsets": [{
         "protocol": "HTTP",
@@ -656,6 +658,7 @@
       },
       "domains": ["steering-target-2.thecdn.example.com"],
       "coverageZoneOnly": "false",
+      "routingName": "tr",
       "matchsets": [{
         "protocol": "HTTP",
         "matchlist": [{
@@ -698,6 +701,7 @@
       },
       "domains": ["test.thecdn.example.com"],
       "coverageZoneOnly": "false",
+      "routingName": "tr",
       "matchsets": [{
         "protocol": "HTTP",
         "matchlist": [{
@@ -741,6 +745,7 @@
       "bypassDestination": {"DNS": {"ttl": "30"}},
       "domains": ["federation-test.thecdn.example.com"],
       "coverageZoneOnly": "false",
+      "routingName": "edge",
       "matchsets": [
         {
           "protocol": "DNS",
@@ -803,6 +808,7 @@
       },
       "domains": ["steering-target-1.thecdn.example.com"],
       "coverageZoneOnly": "false",
+      "routingName": "tr",
       "matchsets": [
         {
           "protocol": "HTTP",
@@ -858,6 +864,7 @@
       },
       "domains": ["steering-target-4.thecdn.example.com"],
       "coverageZoneOnly": "false",
+      "routingName": "tr",
       "matchsets": [{
         "protocol": "HTTP",
         "matchlist": [{
@@ -904,6 +911,7 @@
       },
       "domains": ["steering-target-3.thecdn.example.com"],
       "coverageZoneOnly": "false",
+      "routingName": "tr",
       "matchsets": [{
         "protocol": "HTTP",
         "matchlist": [{
@@ -959,6 +967,7 @@
         "shuffled": "true"
       },
       "coverageZoneOnly": "false",
+      "routingName": "tr",
       "regionalGeoBlocking": "false",
       "matchsets": [{
         "protocol": "HTTP",
@@ -1001,6 +1010,7 @@
         "shuffled": "true"
       },
       "coverageZoneOnly": "false",
+      "routingName": "tr",
       "regionalGeoBlocking": "false",
       "matchsets": [{
         "protocol": "HTTP",
@@ -1043,6 +1053,7 @@
         "shuffled": "true"
       },
       "coverageZoneOnly": "false",
+      "routingName": "tr",
       "regionalGeoBlocking": "false",
       "matchsets": [{
         "protocol": "HTTP",
@@ -1085,6 +1096,7 @@
         "shuffled": "true"
       },
       "coverageZoneOnly": "false",
+      "routingName": "tr",
       "regionalGeoBlocking": "false",
       "matchsets": [{
         "protocol": "HTTP",
@@ -1127,6 +1139,7 @@
         "shuffled": "true"
       },
       "coverageZoneOnly": "false",
+      "routingName": "edge",
       "regionalGeoBlocking": "false",
       "matchsets": [{
         "protocol": "DNS",

@@ -40,11 +40,11 @@ var TableServersController = function(servers, $scope, $state, $uibModal, locati
     };
 
     $scope.editServer = function(id) {
-        locationUtils.navigateToPath('/configure/servers/' + id);
+        locationUtils.navigateToPath('/servers/' + id);
     };
 
     $scope.createServer = function() {
-        locationUtils.navigateToPath('/configure/servers/new');
+        locationUtils.navigateToPath('/servers/new');
     };
 
     $scope.confirmQueueServerUpdates = function() {
@@ -97,14 +97,11 @@ var TableServersController = function(servers, $scope, $state, $uibModal, locati
         });
     };
 
-
-    $scope.uploadServerCSV = function() {
-        alert('not hooked up yet: uploadServerCSV');
-    };
-
     $scope.refresh = function() {
         $state.reload(); // reloads all the resolves for the view
     };
+
+    $scope.ssh = serverUtils.ssh;
 
     $scope.isOffline = serverUtils.isOffline;
 

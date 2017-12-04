@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceController = function(deliveryService, type, types, $scope, $location, formUtils, locationUtils, cdnService, profileService, tenantService) {
+var FormDeliveryServiceController = function(deliveryService, type, types, $scope, $location, formUtils, locationUtils, tenantUtils, cdnService, profileService, tenantService) {
 
     var getCDNs = function() {
         cdnService.getCDNs()
@@ -39,10 +39,21 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
         tenantService.getTenants()
             .then(function(result) {
                 $scope.tenants = result;
+                tenantUtils.addLevels($scope.tenants);
             });
     };
 
     $scope.deliveryService = deliveryService;
+
+    $scope.edgeFQDNs = function(ds) {
+        var urlString = '';
+        if (_.isArray(ds.exampleURLs) && ds.exampleURLs.length > 0) {
+            for (var i = 0; i < ds.exampleURLs.length; i++) {
+                urlString += ds.exampleURLs[i] + '\n';
+            }
+        }
+        return urlString;
+    };
 
     $scope.types = _.filter(types, function(currentType) {
         var category;
@@ -59,8 +70,14 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
     });
 
     $scope.falseTrue = [
-        { value: false, label: 'false' },
-        { value: true, label: 'true' }
+        { value: true, label: 'true' },
+        { value: false, label: 'false' }
+    ];
+
+    $scope.signingAlgos = [
+        { value: null, label: 'None' },
+        { value: 'url_sig', label: 'URL Signature Keys' },
+        { value: 'uri_signing', label: 'URI Signing Keys' }
     ];
 
     $scope.protocols = [
@@ -138,6 +155,10 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
         { value: 4, label: "4 - Latch on Failover" }
     ];
 
+    $scope.tenantLabel = function(tenant) {
+        return '-'.repeat(tenant.level) + ' ' + tenant.name;
+    };
+
     $scope.viewTargets = function() {
         $location.path($location.path() + '/targets');
     };
@@ -155,13 +176,17 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
     };
 
     $scope.manageSslKeys = function() {
-        alert('not hooked up yet: manageSslKeys for DS');
+        $location.path($location.path() + '/ssl-keys');
     };
 
     $scope.manageUrlSigKeys = function() {
-        alert('not hooked up yet: manageUrlSigKeys for DS');
+        $location.path($location.path() + '/url-sig-keys');
     };
-
+    
+    $scope.manageUriSigningKeys = function() {
+        $location.path($location.path() + '/uri-signing-keys');
+    };
+    
     $scope.viewStaticDnsEntries = function() {
         $location.path($location.path() + '/static-dns-entries');
     };
@@ -181,5 +206,5 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$location', 'formUtils', 'locationUtils', 'cdnService', 'profileService', 'tenantService'];
+FormDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$location', 'formUtils', 'locationUtils', 'tenantUtils', 'cdnService', 'profileService', 'tenantService'];
 module.exports = FormDeliveryServiceController;

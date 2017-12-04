@@ -18,34 +18,30 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
-// ParamResponse ...
-type ParamResponse struct {
-	Response []Parameter `json:"response"`
-}
-
-// Parameter ...
-type Parameter struct {
-	Name        string `json:"name"`
-	ConfigFile  string `json:"configFile"`
-	Value       string `json:"Value"`
-	LastUpdated string `json:"lastUpdated"`
-}
-
 // Parameters gets an array of parameter structs for the profile given
-func (to *Session) Parameters(profileName string) ([]Parameter, error) {
+// Deprecated: use GetParameters
+func (to *Session) Parameters(profileName string) ([]tc.Parameter, error) {
+	ps, _, err := to.GetParameters(profileName)
+	return ps, err
+}
+
+func (to *Session) GetParameters(profileName string) ([]tc.Parameter, ReqInf, error) {
 	url := fmt.Sprintf("/api/1.2/parameters/profile/%s.json", profileName)
-	resp, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data ParamResponse
+	var data tc.ParametersResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return data.Response, nil
+	return data.Response, reqInf, nil
 }

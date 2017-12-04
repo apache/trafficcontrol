@@ -22,11 +22,11 @@ var TablePhysLocationsController = function(physLocations, $scope, $state, locat
     $scope.physLocations = physLocations;
 
     $scope.editPhysLocation = function(id) {
-        locationUtils.navigateToPath('/admin/phys-locations/' + id)
+        locationUtils.navigateToPath('/phys-locations/' + id)
     };
 
     $scope.createPhysLocation = function() {
-        locationUtils.navigateToPath('/admin/phys-locations/new')
+        locationUtils.navigateToPath('/phys-locations/new')
     };
 
     $scope.refresh = function() {

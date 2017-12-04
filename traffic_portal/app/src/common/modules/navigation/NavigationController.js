@@ -23,6 +23,8 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
 
     $scope.customMenu = propertiesModel.properties.customMenu;
 
+    $scope.showCacheChecks = propertiesModel.properties.cacheChecks.show;
+
     $scope.userLoaded = userModel.loaded;
 
     $scope.user = userModel.user;
@@ -50,6 +52,13 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
         authService.logout();
     };
 
+    $scope.popout = function() {
+        $window.open(
+            $location.absUrl(),
+            '_blank'
+        );
+    };
+
     $scope.releaseVersion = function() {
         trafficPortalService.getReleaseVersionInfo()
             .then(function(result) {
@@ -58,7 +67,7 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
                     controller: 'ReleaseController',
                     size: 'sm',
                     resolve: {
-                        params: function () {
+                        releaseParams: function () {
                             return result.data;
                         }
                     }

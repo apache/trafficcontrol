@@ -25,7 +25,7 @@ var FormEditStatusController = function(status, $scope, $controller, $uibModal, 
     var deleteStatus = function(status) {
         statusService.deleteStatus(status.id)
             .then(function() {
-                locationUtils.navigateToPath('/admin/statuses');
+                locationUtils.navigateToPath('/statuses');
             });
     };
 

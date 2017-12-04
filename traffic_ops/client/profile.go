@@ -15,34 +15,32 @@
 
 package client
 
-import "encoding/json"
+import (
+	"encoding/json"
 
-// ProfileResponse ...
-type ProfileResponse struct {
-	Response []Profile `json:"response"`
-}
-
-// Profile ...
-type Profile struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	LastUpdated string `json:"lastUpdated"`
-}
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+)
 
 // Profiles gets an array of Profiles
-func (to *Session) Profiles() ([]Profile, error) {
+// Deprecated: use GetProfiles
+func (to *Session) Profiles() ([]tc.Profile, error) {
+	ps, _, err := to.GetProfiles()
+	return ps, err
+}
+
+func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
 	url := "/api/1.2/profiles.json"
-	resp, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request("GET", url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data ProfileResponse
+	var data tc.ProfilesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return data.Response, nil
+	return data.Response, reqInf, nil
 }

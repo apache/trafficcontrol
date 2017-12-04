@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormServerController = function(server, $scope, $location, $state, $uibModal, formUtils, locationUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, statusService, typeService, messageModel) {
+var FormServerController = function(server, $scope, $location, $state, $uibModal, formUtils, locationUtils, serverUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, statusService, typeService, messageModel) {
 
     var getPhysLocations = function() {
         physLocationService.getPhysLocations()
@@ -90,9 +90,13 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     $scope.server = server;
 
     $scope.falseTrue = [
-        { value: false, label: 'false' },
-        { value: true, label: 'true' }
+        { value: true, label: 'true' },
+        { value: false, label: 'false' }
     ];
+
+    $scope.isCache = serverUtils.isCache;
+
+    $scope.isEdge = serverUtils.isEdge;
 
     $scope.queueServerUpdates = function(server) {
         serverService.queueServerUpdates(server.id)
@@ -133,9 +137,8 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         });
     };
 
-
-    $scope.viewConfig = function() {
-        alert('not hooked up yet: view config files for server');
+    $scope.viewConfigFiles = function() {
+        $location.path($location.path() + '/config-files');
     };
 
     $scope.viewDeliveryServices = function() {
@@ -160,5 +163,5 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
 
 };
 
-FormServerController.$inject = ['server', '$scope', '$location', '$state', '$uibModal', 'formUtils', 'locationUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'statusService', 'typeService', 'messageModel'];
+FormServerController.$inject = ['server', '$scope', '$location', '$state', '$uibModal', 'formUtils', 'locationUtils', 'serverUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'statusService', 'typeService', 'messageModel'];
 module.exports = FormServerController;

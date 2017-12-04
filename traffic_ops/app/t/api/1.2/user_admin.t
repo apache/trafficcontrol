@@ -37,7 +37,8 @@ sub run_ut {
 	my $schema = shift;
 	my $login_user = shift;
 	my $login_password = shift;
-	
+	my $use_tenancy = shift;
+
 	Test::TestHelper->unload_core_data($schema);
 	Test::TestHelper->teardown( $schema, 'Log' );
 	Test::TestHelper->teardown( $schema, 'Role' );
@@ -52,17 +53,27 @@ sub run_ut {
 	ok my $user = $schema->resultset('TmUser')->find( { username => $login_user } ), 'Does the user exist?';
 	
 	ok $t->post_ok( '/login', => form => { u => $login_user, p => $login_password} )->status_is(302);
-		
+
+	my $useTenancyParamId = &get_param_id('use_tenancy');
+	ok $t->put_ok('/api/1.2/parameters/' . $useTenancyParamId => {Accept => 'application/json'} => json => {
+				'value'      => $use_tenancy,
+			})->status_is(200)
+			->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/response/name" => "use_tenancy" )
+			->json_is( "/response/configFile" => "global" )
+			->json_is( "/response/value" => $use_tenancy )
+		, 'Was the disabling paramter set?';
+
 	#adding a user
 	my $addedUserName = "user1";
 	my $addedUserEmail = "abc\@z.com";
 
 	ok $t->post_ok('/api/1.2/users' => {Accept => 'application/json'} => json => {
-        	"username" => $addedUserName, "fullName"=>"full name", "email" => $addedUserEmail, "localPasswd" => "longerpass", "confirmLocalPasswd"=> "longerpass", "role" => 4 })
+        	"username" => $addedUserName, "fullName"=>"full name", "email" => $addedUserEmail, "localPasswd" => "longerpass", "confirmLocalPasswd"=> "longerpass", "role" => 4 , "tenantId" => $tenant_id})
         	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/username" =>  $addedUserName )
 		->json_is( "/response/email" =>  $addedUserEmail)
-		->json_is( "/response/tenantId" =>  $tenant_id) #tenant Id not set - getting the tenant id from the user
+		->json_is( "/response/tenantId" =>  $tenant_id)
         	    , 'Success added user?';
 
 	#same name again - fail
@@ -93,7 +104,7 @@ sub run_ut {
 	ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 	ok $t->post_ok( '/login', => form => { u => $login_user, p => $login_password} )->status_is(302);
 	       
-	if (defined($tenant_id)){
+	if (defined($tenant_id) and !$use_tenancy){
 		#verify the update with no "tenant" removed the tenant
 		$t->put_ok( '/api/1.2/users/'.$userid,
 			json => { "username" => $addedUserName."1", "fullName"=>"full name", "email" => $addedUserEmail."1", "localPasswd" => "longerpass", "confirmLocalPasswd"=> "longerpass", "role" => 4} )
@@ -125,10 +136,22 @@ my $schema = Schema->connect_to_database;
 my $dbh    = Schema->database_handle;
 my $t      = Test::Mojo->new('TrafficOps');
 
-run_ut($t, $schema, Test::TestHelper::ADMIN_USER,  Test::TestHelper::ADMIN_USER_PASSWORD);
-run_ut($t, $schema, Test::TestHelper::ADMIN_ROOT_USER,  Test::TestHelper::ADMIN_ROOT_USER_PASSWORD);
+run_ut($t, $schema, Test::TestHelper::ADMIN_USER,  Test::TestHelper::ADMIN_USER_PASSWORD, 0);
+run_ut($t, $schema, Test::TestHelper::ADMIN_ROOT_USER,  Test::TestHelper::ADMIN_ROOT_USER_PASSWORD, 0);
+run_ut($t, $schema, Test::TestHelper::ADMIN_ROOT_USER,  Test::TestHelper::ADMIN_ROOT_USER_PASSWORD, 1);
 
 $dbh->disconnect();
 done_testing();
 
+
+sub get_param_id {
+	my $name = shift;
+	my $q      = "select id from parameter where name = \'$name\'";
+	my $get_svr = $dbh->prepare($q);
+	$get_svr->execute();
+	my $p = $get_svr->fetchall_arrayref( {} );
+	$get_svr->finish();
+	my $id = $p->[0]->{id};
+	return $id;
+}
 

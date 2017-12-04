@@ -17,14 +17,28 @@
  * under the License.
  */
 
-var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $scope, $state, locationUtils) {
+var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $scope, $state, dateUtils, deliveryServiceUtils,  locationUtils) {
+
+	var protocols = deliveryServiceUtils.protocols;
+
+	var qstrings = deliveryServiceUtils.qstrings;
 
 	$scope.cdn = cdn;
 
 	$scope.deliveryServices = deliveryServices;
 
+	$scope.protocol = function(ds) {
+		return protocols[ds.protocol];
+	};
+
+	$scope.qstring = function(ds) {
+		return qstrings[ds.qstringIgnore];
+	};
+
+	$scope.getRelativeTime = dateUtils.getRelativeTime;
+
 	$scope.editDeliveryService = function(ds) {
-		locationUtils.navigateToPath('/configure/delivery-services/' + ds.id + '?type=' + ds.type);
+		locationUtils.navigateToPath('/delivery-services/' + ds.id + '?type=' + ds.type);
 	};
 
 	$scope.refresh = function() {
@@ -43,5 +57,5 @@ var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $scope,
 
 };
 
-TableCDNDeliveryServicesController.$inject = ['cdn', 'deliveryServices', '$scope', '$state', 'locationUtils'];
+TableCDNDeliveryServicesController.$inject = ['cdn', 'deliveryServices', '$scope', '$state', 'dateUtils', 'deliveryServiceUtils', 'locationUtils'];
 module.exports = TableCDNDeliveryServicesController;

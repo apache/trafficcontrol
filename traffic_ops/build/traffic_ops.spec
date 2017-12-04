@@ -34,9 +34,9 @@ Packager:         daniel_kirkwood at Cable dot Comcast dot com
 AutoReqProv:      no
 Requires:         cpanminus, expat-devel, gcc-c++, libcurl, libpcap-devel, mkisofs, tar
 Requires:         openssl-devel, perl, perl-core, perl-DBD-Pg, perl-DBI, perl-Digest-SHA1
-Requires:         libidn-devel, libcurl-devel
+Requires:         libidn-devel, libcurl-devel, libcap
 Requires:         postgresql96 >= 9.6.2 , postgresql96-devel >= 9.6.2
-Requires:         perl-JSON, perl-libwww-perl, perl-Test-CPAN-Meta, perl-WWW-Curl, perl-TermReadKey
+Requires:         perl-JSON, perl-libwww-perl, perl-Test-CPAN-Meta, perl-WWW-Curl, perl-TermReadKey, perl-Crypt-ScryptKDF
 Requires(pre):    /usr/sbin/useradd, /usr/bin/getent
 Requires(postun): /usr/sbin/userdel
 
@@ -55,6 +55,57 @@ Built: %(date) by %{getenv: USER}
     # update version referenced in the source
     perl -pi.bak -e 's/__VERSION__/%{version}-%{release}/' app/lib/UI/Utils.pm
 
+    export PATH=$PATH:/usr/local/go/bin
+    export GOPATH=$(pwd)
+
+    echo "PATH: $PATH"
+    echo "GOPATH: $GOPATH"
+    go version
+    go env
+    
+    # Create build area with proper gopath structure
+    mkdir -p src pkg bin || { echo "Could not create directories in $(pwd): $!"; exit 1; }
+
+
+
+    # build all internal go dependencies (expects package being built as argument)
+    build_dependencies () {
+       IFS=$'\n'
+       array=($(go list -f '{{ join .Deps "\n" }}' | grep incubator | grep -v $1))
+       prefix=github.com/apache/incubator-trafficcontrol
+       for (( i=0; i<${#array[@]}; i++ )); do
+           curPkg=${array[i]};
+           curPkgShort=${curPkg#$prefix};
+           echo "checking $curPkg";
+           godir=$GOPATH/src/$curPkg;
+           if [ ! -d "$godir" ]; then
+             ( echo "building $curPkg" && \
+               mkdir -p "$godir" && \
+               cd "$godir" && \
+               cp -r "$TC_DIR$curPkgShort"/* . && \
+               build_dependencies "$curPkgShort" && \
+               go get -v &&\
+               echo "go building $curPkgShort at $(pwd)" && \
+               go build \
+             ) || { echo "Could not build go $curPkgShort at $(pwd): $!"; exit 1; };
+           fi
+       done
+    }
+
+    # build traffic_ops_golang binary
+    godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
+    oldpwd=$(pwd)
+    ( mkdir -p "$godir" && \
+      cd "$godir" && \
+      cp -r "$TC_DIR"/traffic_ops/traffic_ops_golang/* . && \
+      build_dependencies traffic_ops_golang  && \
+      #with proper vendoring (as we have currently) go get is unneeded. leaving for comparison to traffic_monitor_golang
+      #echo "go getting at $(pwd)" && \
+      #go get -d -v && \
+      echo "go building at $(pwd)" && \
+      go build -ldflags "-B 0x`git rev-parse HEAD`" \
+    ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
+
 %install
 
     if [ -d $RPM_BUILD_ROOT ]; then
@@ -66,6 +117,9 @@ Built: %(date) by %{getenv: USER}
     fi
 
     %__cp -R $RPM_BUILD_DIR/traffic_ops-%{version}/* $RPM_BUILD_ROOT/%{PACKAGEDIR}
+    echo "go rming $RPM_BUILD_ROOT/%{PACKAGEDIR}/{pkg,src,bin}"
+    %__rm -rf $RPM_BUILD_ROOT/%{PACKAGEDIR}/{pkg,src,bin}
+
     %__mkdir -p $RPM_BUILD_ROOT/var/www/files
     %__cp install/data/perl/osversions.cfg $RPM_BUILD_ROOT/var/www/files/.
 
@@ -73,6 +127,13 @@ Built: %(date) by %{getenv: USER}
         %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/public/routing
     fi
 
+    # install traffic_ops_golang binary
+    if [ ! -d $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/bin ]; then
+        %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/bin
+    fi
+
+    src=src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
+    %__cp -p  "$src"/traffic_ops_golang        "${RPM_BUILD_ROOT}"/opt/traffic_ops/app/bin/traffic_ops_golang
 %pre
     /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupadd -r %{TRAFFIC_OPS_GROUP}
     /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/useradd -r -d %{PACKAGEDIR} -s /sbin/nologin %{TRAFFIC_OPS_USER} -g %{TRAFFIC_OPS_GROUP}
@@ -86,7 +147,7 @@ Built: %(date) by %{getenv: USER}
 
     # upgrade
     if [ "$1" == "2" ]; then
-	service traffic_ops stop
+	systemctl stop traffic_ops
     fi
 
 %post
@@ -95,13 +156,17 @@ Built: %(date) by %{getenv: USER}
     %__cp %{PACKAGEDIR}/etc/cron.d/trafops_dnssec_refresh /etc/cron.d/trafops_dnssec_refresh
     %__cp %{PACKAGEDIR}/etc/cron.d/trafops_clean_isos /etc/cron.d/trafops_clean_isos
     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops /etc/logrotate.d/traffic_ops
+    %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops_golang /etc/logrotate.d/traffic_ops_golang
     %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops_access /etc/logrotate.d/traffic_ops_access
+    %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops_perl_access /etc/logrotate.d/traffic_ops_perl_access
     %__cp %{PACKAGEDIR}/etc/profile.d/traffic_ops.sh /etc/profile.d/traffic_ops.sh
     %__chown root:root /etc/init.d/traffic_ops
     %__chown root:root /etc/cron.d/trafops_dnssec_refresh
     %__chown root:root /etc/cron.d/trafops_clean_isos
     %__chown root:root /etc/logrotate.d/traffic_ops
+    %__chown root:root /etc/logrotate.d/traffic_ops_golang
     %__chown root:root /etc/logrotate.d/traffic_ops_access
+    %__chown root:root /etc/logrotate.d/traffic_ops_perl_access
     %__chmod +x /etc/init.d/traffic_ops
     %__chmod +x %{PACKAGEDIR}/install/bin/*
     /sbin/chkconfig --add traffic_ops
@@ -121,20 +186,22 @@ Built: %(date) by %{getenv: USER}
 
     # upgrade
     if [ "$1" == "2" ]; then
-		    /opt/traffic_ops/install/bin/migratedb
-        echo -e "\nUpgrade complete.\n\n"
-    	 echo -e "\nRun /opt/traffic_ops/install/bin/postinstall from the root home directory to complete the update.\n"
-        echo -e "To start Traffic Ops:  service traffic_ops start\n";
-        echo -e "To stop Traffic Ops:   service traffic_ops stop\n\n";
+        echo -e "\n\nTo complete the update, perform the following steps:\n"
+        echo -e "1. If any *.rpmnew files are in /opt/traffic_ops/...,  reconcile with any local changes\n"
+        echo -e "2. Run 'PERL5LIB=/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5 ./db/admin.pl --env production upgrade'\n"
+        echo -e "   from the /opt/traffic_ops/app directory.\n"
+        echo -e "To start Traffic Ops:  systemctl start traffic_ops\n";
+        echo -e "To stop Traffic Ops:   systemctl stop traffic_ops\n\n";
     fi
     /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{PACKAGEDIR}
     /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{TRAFFIC_OPS_LOG_DIR}
+    setcap cap_net_bind_service=+ep %{PACKAGEDIR}/app/bin/traffic_ops_golang
 
 %preun
 
 if [ "$1" = "0" ]; then
     # stop service before starting the uninstall
-    service traffic_ops stop
+    systemctl stop traffic_ops
 fi
 
 %postun

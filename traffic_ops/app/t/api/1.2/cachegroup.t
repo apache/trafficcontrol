@@ -55,6 +55,32 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
 ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
+            "name" => "cache_group_mid",
+            "shortName" => "cg_mid",
+            "latitude" => 12,
+            "longitude" => 56,
+            "typeId" => 6,
+            "parentCachegroupId" => "",
+        })
+        ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        ->json_is( "/alerts/0/level", "error" )
+        ->json_is( "/alerts/0/text", "parentCachegroupId invalid. Must be a positive integer or null.")
+    , 'Does the cache group create fail?';
+
+ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
+            "name" => "cache_group_mid",
+            "shortName" => "cg_mid",
+            "latitude" => 12,
+            "longitude" => 56,
+            "typeId" => 6,
+            "secondaryParentCachegroupId" => "",
+        })
+        ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        ->json_is( "/alerts/0/level", "error" )
+        ->json_is( "/alerts/0/text", "secondaryParentCachegroupId invalid. Must be a positive integer or null.")
+    , 'Does the cache group create fail?';
+
+ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
         "name" => "cache_group_mid",
         "shortName" => "cg_mid",
         "latitude" => 12,
@@ -66,7 +92,7 @@ ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json 
     ->json_is( "/response/longitude" => "56")
     ->json_is( "/response/parentCachegroupId" => undef)
     ->json_is( "/response/secondaryParentCachegroupId" => undef)
-            , 'Does the cache group details return?';
+            , 'Is the cache group successfully created?';
 
 ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
         "name" => "mid-northeast-group",
@@ -80,7 +106,7 @@ ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json 
     ->json_is( "/response/longitude" => 66)
     ->json_is( "/response/parentCachegroupId" => undef)
     ->json_is( "/response/secondaryParentCachegroupId" => undef)
-            , 'Does the cache group details return?';
+            , 'Is the cache group successfully created?';
 
 my $cache_group_mid_id = &get_cg_id('cache_group_mid');
 my $mid_northeast_group_id = &get_cg_id('mid-northeast-group');
@@ -276,11 +302,11 @@ my $count_response = sub {
 };
 
 # there are currently 61 parameters not assigned to cachegroup 100
-$t->get_ok('/api/1.2/cachegroups/100/unassigned_parameters')->status_is(200)->$count_response(62)
+$t->get_ok('/api/1.2/cachegroups/100/unassigned_parameters')->status_is(200)->$count_response(63)
     ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # there are currently 61 parameters not assigned to cachegroup 200
-$t->get_ok('/api/1.2/cachegroups/200/unassigned_parameters')->status_is(200)->$count_response(62)
+$t->get_ok('/api/1.2/cachegroups/200/unassigned_parameters')->status_is(200)->$count_response(63)
     ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 

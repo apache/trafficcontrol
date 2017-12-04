@@ -51,12 +51,37 @@ go_get_version() {
   )
 }
 
+# build all internal go dependencies (expects package being built as argument)
+build_dependencies () {
+    IFS=$'\n'
+    array=($(go list -f '{{ join .Deps "\n" }}' | grep incubator | grep -v $1))
+    prefix=github.com/apache/incubator-trafficcontrol
+    for (( i=0; i<${#array[@]}; i++ )); do
+        curPkg=${array[i]};
+        curPkgShort=${curPkg#$prefix};
+        echo "checking $curPkg";
+        godir=$GOPATH/src/$curPkg;
+        if [ ! -d "$godir" ]; then
+          ( echo "building $curPkg" && \
+            mkdir -p "$godir" && \
+            cd "$godir" && \
+            cp -r "$TC_DIR$curPkgShort"/* . && \
+            build_dependencies "$curPkgShort" && \
+            go get -v && \
+            echo "go building $curPkgShort at $(pwd)" && \
+            go build \
+          ) || { echo "Could not build go $curPkgShort at $(pwd): $!"; exit 1; };
+        fi
+    done
+}
+
 #get traffic_stats client
 godir=src/github.com/apache/incubator-trafficcontrol/traffic_stats
 oldpwd=$(pwd)
 ( mkdir -p "$godir" && \
   cd "$godir" && \
   cp -L -r "$TC_DIR"/traffic_stats/* . && \
+  build_dependencies traffic_stats  && \
   go install -v \
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 

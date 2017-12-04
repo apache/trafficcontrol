@@ -24,6 +24,14 @@ var UserEditController = function($scope) {
         saveLabel: 'Update'
     };
 
+    $scope.label = function(role) {
+        return role.name + ' (' + role.privLevel + ')';
+    };
+
+    $scope.tenantLabel = function(tenant) {
+        return '-'.repeat(tenant.level) + ' ' + tenant.name;
+    };
+
 };
 
 UserEditController.$inject = ['$scope'];

@@ -43,11 +43,13 @@ use Utils::JsonConfig;
 use MojoX::Log::Log4perl;
 use File::Find;
 use File::Basename;
+use File::Slurp qw/read_file/;
 use Env qw(PERL5LIB);
 use Utils::Helper::TrafficOpsRoutesLoader;
 use File::Path qw(make_path);
 use IO::Compress::Gzip 'gzip';
 use IO::Socket::SSL;
+use Digest::SHA qw(sha512_base64);
 
 use Utils::Helper::Version;
 
@@ -61,14 +63,6 @@ local $/;    #Enable 'slurp' mode
 
 has schema => sub { return Schema->connect_to_database };
 has watch  => sub { [qw(lib templates)] };
-
-if ( !defined $ENV{MOJO_CONFIG} ) {
-	$ENV{MOJO_CONFIG} = find_conf_path('cdn.conf');
-	print( "Loading config from " . $ENV{MOJO_CONFIG} . "\n" );
-}
-else {
-	print( "MOJO_CONFIG overridden: " . $ENV{MOJO_CONFIG} . "\n" );
-}
 
 my $ldap_conf_path = find_conf_path('ldap.conf');
 my $ldap_info      = 0;
@@ -93,7 +87,6 @@ sub startup {
 	$self->setup_logging($mode);
 	$self->validate_cdn_conf();
 	$self->setup_mojo_plugins();
-	$self->set_secrets();
 	$self->load_password_blacklist();
 
 	$self->log->info("-------------------------------------------------------------");
@@ -171,6 +164,8 @@ sub startup {
 		after_render => sub {
 			my ( $c, $output, $format ) = @_;
 
+			$c->res->headers->header( 'Whole-Content-SHA512' => sha512_base64($$output) . '==' );
+
 			# Check if user agent accepts gzip compression
 			return unless ( $c->req->headers->accept_encoding // '' ) =~ /gzip/i;
 			$c->res->headers->append( Vary => 'Accept-Encoding' );
@@ -182,16 +177,18 @@ sub startup {
 		}
 	);
 
-	$self->hook(around_action => sub {
-		my ($next, $c, $action, $last) = @_;
-		my $user = $c->current_user();
-		my $username = '';
-		if ( defined($user) ) {
-			$username = $user->{username};
+	$self->hook(
+		around_action => sub {
+			my ( $next, $c, $action, $last ) = @_;
+			my $user     = $c->current_user();
+			my $username = '';
+			if ( defined($user) ) {
+				$username = $user->{username};
+			}
+			$c->set_username($username);
+			return $next->();
 		}
-		$c->set_username($username);
-		return $next->();
-	});
+	);
 
 	my $r = $self->routes;
 
@@ -237,7 +234,13 @@ sub setup_mojo_plugins {
 	my $self = shift;
 
 	$self->helper( db => sub { $self->schema } );
-	$config = $self->plugin('Config');
+
+        # load_conf returns a hash loaded from the cdn.conf json Files
+        my $c = $self->load_conf();
+	$config = $self->plugin( 'Config' => { default => $c } );
+
+	# setting a default message if no user account is found in tm_user. this default can be overriden in cdn.conf
+	$config->{'to'}{'no_account_found_msg'} //= "A Traffic Ops user account is required for access. Please contact your Traffic Ops user administrator.";
 
 	if ( !defined $ENV{MOJO_INACTIVITY_TIMEOUT} ) {
 		$ENV{MOJO_INACTIVITY_TIMEOUT} = $config->{inactivity_timeout} // 60;
@@ -349,9 +352,9 @@ sub setup_mojo_plugins {
 
 	$self->plugin(
 		AccessLog => {
-			log    => "$logging_root_dir/access.log",
+			log          => "$logging_root_dir/perl_access.log",
 			uname_helper => 'set_username',
-			format => '%h %l %u %t "%r" %>s %b %D "%{User-Agent}i"'
+			format       => '%h %l %u %t "%r" %>s %b %D "%{User-Agent}i"'
 		}
 	);
 
@@ -451,7 +454,7 @@ sub check_local_user {
 	my $db_user = $self->db->resultset('TmUser')->find( { username => $username } );
 	if ( defined($db_user) && defined( $db_user->local_passwd ) ) {
 		$self->app->log->info( $username . " was found in the database. " );
-		if ( Utils::Helper::verify_pass($pass, $db_user->local_passwd) ) {
+		if ( Utils::Helper::verify_pass( $pass, $db_user->local_passwd ) ) {
 			$local_user = $username;
 			$self->app->log->debug("Password matched.");
 			$is_authenticated = 1;
@@ -484,94 +487,87 @@ sub login_to_ldap {
 	}
 }
 
+# load_conf determines location and type of conf file and returns loaded content as hash ref
 sub load_conf {
-	my $self      = shift;
-	my $conf_file = shift;
+    my $self = shift;
+    my $conf_file;
 
-	open( my $in, '<', $conf_file ) || die("$conf_file $!\n");
-	local $/;
-	my $conf_info = eval <$in>;
-	undef $in;
-	return $conf_info;
+    # If MOJO_CONFIG is provided, use it.
+    if ( defined $ENV{MOJO_CONFIG} ) {
+        $self->log->info( "MOJO_CONFIG overridden: " . $ENV{MOJO_CONFIG} . "\n" );
+        $conf_file = $ENV{MOJO_CONFIG};
+    }
+    else {
+        # Look for cdn.conf -- if there, load as JSON
+        $conf_file = find_conf_path('cdn.conf');
+    }
+
+    $self->log->info("Loading JSON config from $conf_file\n");
+    my $c         = read_file($conf_file);
+    my $conf = JSON::decode_json($c) or die "Can't decode json in $conf_file $!\n";
+
+    return $conf;
 }
 
 # Validates the conf/cdn.conf for certain criteria to
 # avoid admin mistakes.
 sub validate_cdn_conf {
-	my $self = shift;
+    my $self = shift;
 
-	my $cdn_info = $self->load_conf( $ENV{MOJO_CONFIG} );
-	my $user;
-	if ( !exists( $cdn_info->{secrets} ) ) {
-		print("WARNING: no secrets found in $ENV{MOJO_CONFIG}.\n");
-	}
+    my $cdn_info = $self->load_conf();
+    my $secrets = $cdn_info->{secrets};
+    if ( ref $secrets ne 'ARRAY' ) {
+        my $e = Mojo::Exception->throw("Invalid 'secrets' entry in cdn.conf");
+    }
+    $self->secrets($secrets);    # for Mojolicious 4.67, Top Hat
 
-	if ( exists( $cdn_info->{hypnotoad}{user} ) ) {
-		for my $u ( $cdn_info->{hypnotoad}{user} ) {
-			$u =~ s/.*?\?(.*)$/$1/;
+    my $user;
 
-			$user = $u;
-		}
-	}
+    if ( exists( $cdn_info->{hypnotoad}{user} ) ) {
+        for my $u ( $cdn_info->{hypnotoad}{user} ) {
+            $u =~ s/.*?\?(.*)$/$1/;
 
-	my $group;
-	if ( exists( $cdn_info->{hypnotoad}{group} ) ) {
-		for my $g ( $cdn_info->{hypnotoad}{group} ) {
-			$g =~ s/.*?\?(.*)$/$1/;
+            $user = $u;
+        }
+    }
 
-			$group = $g;
-		}
-	}
+    my $group;
+    if ( exists( $cdn_info->{hypnotoad}{group} ) ) {
+        for my $g ( $cdn_info->{hypnotoad}{group} ) {
+            $g =~ s/.*?\?(.*)$/$1/;
 
-	if ( exists( $cdn_info->{hypnotoad}{listen} ) ) {
-		for my $listen ( @{ $cdn_info->{hypnotoad}{listen} } ) {
-			$listen =~ s/.*?\?(.*)$/$1/;
-			if ( $listen !~ /^#/ ) {
+            $group = $g;
+        }
+    }
 
-				for my $part ( split( /&/, $listen ) ) {
-					my ( $k, $v ) = split( /=/, $part );
+    if ( exists( $cdn_info->{hypnotoad}{listen} ) ) {
+        for my $listen ( @{ $cdn_info->{hypnotoad}{listen} } ) {
+            $listen =~ s/.*?\?(.*)$/$1/;
+            if ( $listen !~ /^#/ ) {
 
-					if ( $k eq "cert" || $k eq "key" ) {
+                for my $part ( split( /&/, $listen ) ) {
+                    my ( $k, $v ) = split( /=/, $part );
 
-						my @fstats = stat($v);
-						my $uid    = $fstats[4];
-						if ( defined($uid) ) {
+                    if ( $k eq "cert" || $k eq "key" ) {
 
-							my $gid = $fstats[5];
+                        my @fstats = stat($v);
+                        my $uid    = $fstats[4];
+                        if ( defined($uid) ) {
 
-							my $file_owner = getpwuid($uid)->name;
+                            my $gid = $fstats[5];
 
-							my $file_group = getgrgid($gid);
-							if ( ( $file_owner !~ /$user/ ) || ( $file_group !~ /$group/ ) ) {
-								print( "WARNING: " . $v . " is not owned by " . $user . ":" . $group . ".\n" );
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}
+                            my $file_owner = getpwuid($uid)->name;
 
-sub set_secrets {
-	my $self = shift;
-
-	# Set secret / disable annoying log message
-	# The following commit details the change from secret to secrets in 4.63
-	# https://github.com/kraih/mojo/commit/57e5129436bf3d717a13e092dd972217938e29b5
-	my $cdn_info = $self->load_conf( $ENV{MOJO_CONFIG} );
-
-	# for backward compatability -- keep old secret if not found in cdn.conf
-	my $secrets = $cdn_info->{secrets} // ['mONKEYDOmONKEYSEE.'];
-	if ( ref $secrets ne 'ARRAY' ) {
-		my $e = Mojo::Exception->throw("Invalid 'secrets' entry in cdn.conf");
-	}
-	if ( $Mojolicious::VERSION >= 4.63 ) {
-		$self->secrets($secrets);    # for Mojolicious 4.67, Top Hat
-	}
-	else {
-		$self->secret( $secrets->[0] );    # for Mojolicious 3.x
-	}
+                            my $file_group = getgrgid($gid);
+                            if ( ( $file_owner !~ /$user/ ) || ( $file_group !~ /$group/ ) ) {
+                                print( "WARNING: " . $v . " is not owned by " . $user . ":" . $group . ".\n" );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 1;

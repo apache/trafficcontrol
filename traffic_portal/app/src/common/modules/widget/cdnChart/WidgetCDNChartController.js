@@ -17,10 +17,16 @@
  * under the License.
  */
 
-var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, cdnService, cacheStatsService, dateUtils, locationUtils, numberUtils) {
+var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $interval, cdnService, cacheStatsService, dateUtils, locationUtils, numberUtils, propertiesModel) {
 
 	var chartSeries,
 		chartOptions;
+
+	var chartInterval,
+		autoRefresh = propertiesModel.properties.dashboard.autoRefresh;
+
+	var bandwidthChartData = [],
+		connectionsChartData = [];
 
 	var getCDN = function(id) {
 		cdnService.getCDN(id)
@@ -53,9 +59,9 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, cdnS
 		$q.all(promises)
 			.then(
 				function(responses) {
-					// set chart data
-					var bandwidthChartData = buildBandwidthChartData(responses[0], start),
-						connectionsChartData = buildConnectionsChartData(responses[1], start);
+						// set chart data
+						bandwidthChartData = (responses[0].series) ? buildBandwidthChartData(responses[0].series, start) : bandwidthChartData;
+						connectionsChartData = (responses[1].series) ? buildConnectionsChartData(responses[1].series, start) : connectionsChartData;
 
 					$timeout(function () {
 						buildChart(bandwidthChartData, connectionsChartData);
@@ -67,9 +73,8 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, cdnS
 
 	};
 
-	var buildBandwidthChartData = function(result, start) {
-		var normalizedChartData = [],
-			series = result.series;
+	var buildBandwidthChartData = function(series, start) {
+		var normalizedChartData = [];
 
 		if (angular.isDefined(series)) {
 			_.each(series.values, function(seriesItem) {
@@ -82,9 +87,8 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, cdnS
 		return normalizedChartData;
 	};
 
-	var buildConnectionsChartData = function(result, start) {
-		var normalizedChartData = [],
-			series = result.series;
+	var buildConnectionsChartData = function(series, start) {
+		var normalizedChartData = [];
 
 		if (angular.isDefined(series)) {
 			_.each(series.values, function(seriesItem) {
@@ -151,6 +155,18 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, cdnS
 
 	};
 
+	var createIntervals = function(cdnId) {
+		killIntervals();
+		chartInterval = $interval(function() { getCDN(cdnId) }, propertiesModel.properties.dashboard.cdnChart.refreshRateInMS );
+	};
+
+	var killIntervals = function() {
+		if (angular.isDefined(chartInterval)) {
+			$interval.cancel(chartInterval);
+			chartInterval = undefined;
+		}
+	};
+
 	var registerResizeListener = function() {
 		$(window).resize(plotChart);
 	};
@@ -169,6 +185,10 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, cdnS
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
+	$scope.$on("$destroy", function() {
+		killIntervals();
+	});
+
 	angular.element(document).ready(function () {
 		var cdnId;
 		if (cdn) {
@@ -178,9 +198,12 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, cdnS
 			cdnId = $('#' + $scope.randomId).closest('.chartContainer').data('cdnid');
 		}
 		getCDN(cdnId);
+		if (autoRefresh) {
+			createIntervals(cdnId);
+		}
 	});
 
 };
 
-WidgetCDNChartController.$inject = ['cdn', '$scope', '$timeout', '$filter', '$q', 'cdnService', 'cacheStatsService', 'dateUtils', 'locationUtils', 'numberUtils'];
+WidgetCDNChartController.$inject = ['cdn', '$scope', '$timeout', '$filter', '$q', '$interval', 'cdnService', 'cacheStatsService', 'dateUtils', 'locationUtils', 'numberUtils', 'propertiesModel'];
 module.exports = WidgetCDNChartController;

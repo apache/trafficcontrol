@@ -17,21 +17,34 @@
  * under the License.
  */
 
-var FormTenantController = function(tenant, $scope, formUtils, locationUtils, tenantService) {
+var FormTenantController = function(tenant, $scope, $location, formUtils, tenantUtils, locationUtils, tenantService) {
 
     var getTenants = function() {
         tenantService.getTenants()
             .then(function(result) {
                 $scope.tenants = result;
+                tenantUtils.addLevels($scope.tenants);
             });
     };
 
     $scope.tenant = tenant;
 
     $scope.falseTrue = [
-        { value: false, label: 'false' },
-        { value: true, label: 'true' }
+        { value: true, label: 'true' },
+        { value: false, label: 'false' }
     ];
+
+    $scope.tenantLabel = function(tenant) {
+        return '-'.repeat(tenant.level) + ' ' + tenant.name;
+    };
+
+    $scope.viewUsers = function() {
+        $location.path($location.path() + '/users');
+    };
+
+    $scope.viewDSs = function() {
+        $location.path($location.path() + '/delivery-services');
+    };
 
     $scope.navigateToPath = locationUtils.navigateToPath;
 
@@ -46,5 +59,5 @@ var FormTenantController = function(tenant, $scope, formUtils, locationUtils, te
 
 };
 
-FormTenantController.$inject = ['tenant', '$scope', 'formUtils', 'locationUtils', 'tenantService'];
+FormTenantController.$inject = ['tenant', '$scope', '$location', 'formUtils', 'tenantUtils', 'locationUtils', 'tenantService'];
 module.exports = FormTenantController;

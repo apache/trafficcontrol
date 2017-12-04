@@ -70,7 +70,7 @@ Test::TestHelper->load_all_fixtures($ft);
 ok $t->post_ok(
 	"/login",
 	=> form => {
-		u => "federation",
+		u => Test::TestHelper::FEDERATION_USER,
 		p => Test::TestHelper::FEDERATION_USER_PASSWORD
 	}
 )->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
@@ -157,10 +157,10 @@ $t->get_ok("/api/1.2/federations.json")->status_is(200)->or( sub { diag $t->tx->
 ok $t->get_ok("/logout")->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ####### Admin User ################################################################################
-ok $t->post_ok( "/login", => form => { u => "admin", p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
+ok $t->post_ok( "/login", => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
-$t->get_ok("/api/1.2/federations.json")->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level/", "error" );
+$t->get_ok("/api/1.2/federations.json")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok("/logout")->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 

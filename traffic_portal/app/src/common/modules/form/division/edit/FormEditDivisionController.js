@@ -25,7 +25,7 @@ var FormEditDivisionController = function(division, $scope, $controller, $uibMod
     var deleteDivision = function(division) {
         divisionService.deleteDivision(division.id)
             .then(function() {
-                locationUtils.navigateToPath('/admin/divisions');
+                locationUtils.navigateToPath('/divisions');
             });
     };
 

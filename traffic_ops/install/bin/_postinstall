@@ -23,7 +23,6 @@ $ENV{GOPATH} = "/opt/traffic_ops/go";
 use strict;
 use warnings;
 
-use Safe;
 use DBI;
 use POSIX;
 use File::Basename qw{dirname};
@@ -197,7 +196,7 @@ sub generateCdnConf {
     # First, read existing one -- already loaded with a bunch of stuff
     my $cdnConf;
     if ( -f $fileName ) {
-        $cdnConf = Safe->new->rdo($fileName) or errorOut("Error loading $fileName: $@");
+        $cdnConf = InstallUtils::readJson($fileName) or errorOut("Error loading $fileName: $@");
     }
     if ( lc $cdnConfiguration{genSecret} =~ /^y(?:es)?/ ) {
         my @secrets;
@@ -218,8 +217,13 @@ sub generateCdnConf {
             $#secrets = $cdnConfiguration{keepSecrets} - 1;
         }
     }
+    if (exists $cdnConfiguration{base_url}) {
+        $cdnConf->{to}{base_url} = $cdnConfiguration{base_url};
+    }
+
     $cdnConf->{hypnotoad}{workers} = $cdnConfiguration{workers};
-    InstallUtils::writePerl( $fileName, $cdnConf );
+    #InstallUtils::logger("cdnConf: " . Dumper($cdnConf), "info" );
+    InstallUtils::writeJson( $fileName, $cdnConf );
     InstallUtils::logger( "CDN configuration has been saved", "info" );
 }
 
@@ -245,6 +249,25 @@ sub generateLdapConf {
     }
 
     my %ldapConf = getConfig( $userInput, $fileName );
+    # convert any deprecated keys to the correct key name
+    my %keys_converted = ( password => 'admin_pass', hostname => 'host' );
+    for my $key (keys %ldapConf) {
+        if ( exists $keys_converted{$key} ) {
+            $ldapConf{ $keys_converted{$key} } = delete $ldapConf{$key};
+        }
+    }
+
+    my @requiredKeys = qw{ host admin_dn admin_pass search_base };
+    for my $k (@requiredKeys) {
+        if (! exists $ldapConf{$k} ) {
+            errorOut("$k is a required key in $fileName");
+        }
+    }
+
+    # do a very loose check of form -- 'host' must be hostname:port
+    if ( $ldapConf{ host } !~ /^\S+:\d+$/ ) {
+        errorOut("host in $fileName must be of form 'hostname:port'");
+    }
 
     make_path( dirname($fileName), { mode => 0755 } );
     InstallUtils::writeJson( $fileName, \%ldapConf );
@@ -426,13 +449,17 @@ sub getDefaults {
                 "config_var"             => "genSecret"
             },
             {
-                "Number of secrets to keep?" => "10",
+                "Number of secrets to keep?" => "1",
                 "config_var"                 => "keepSecrets"
             },
             {
-                "Number of workers?" => "96",
+                "Number of workers?" => "12",
                 "config_var"         => "workers"
-            }
+            },
+            {
+                "Traffic Ops url?"   => "http://localhost:3000",
+                "config_var"         => "base_url"
+            },
         ],
         $ldapConfFile => [
             {
@@ -441,7 +468,7 @@ sub getDefaults {
             },
             {
                 "LDAP server hostname" => "",
-                "config_var"           => "hostname"
+                "config_var"           => "host"
             },
             {
                 "LDAP Admin DN" => "",
@@ -449,7 +476,7 @@ sub getDefaults {
             },
             {
                 "LDAP Admin Password" => "",
-                "config_var"          => "password",
+                "config_var"          => "admin_pass",
                 "hidden"              => "true"
             },
             {
@@ -729,7 +756,7 @@ sub insert_profiles {
                 values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.infourl' and config_file = 'global' and value = '$tm_url/doc') ) 
                 ON CONFLICT (profile, parameter) DO NOTHING;
 
-    insert into profile_parameter (profile, parameter) 
+    insert into profile_parameter (profile, parameter)
                 values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'geolocation.polling.url' and config_file = 'CRConfig.json' and value = '$tm_url/routing/GeoLite2-City.mmdb.gz') ) 
                 ON CONFLICT (profile, parameter) DO NOTHING;
 
@@ -855,7 +882,6 @@ sub main {
     # The generator functions handle checking input/default/automatic mode
     # todbconf will be used later when setting up the database
     my $todbconf = generateDbConf( $userInput, $databaseConfFile, $dbConfFile );
-    generateCdnConf( $userInput, $cdnConfFile );
     generateLdapConf( $userInput, $ldapConfFile );
     my $adminconf = generateUsersConf( $userInput, $usersConfFile );
     my $custom_profile = generateProfilesDir( $userInput, $profilesConfFile );
@@ -868,6 +894,7 @@ sub main {
 
     setupMaxMind( $todbconf->{"maxmind"} );
     setupCertificates( $opensslconf );
+    generateCdnConf( $userInput, $cdnConfFile );
 
     my $dbh = Database::connect($databaseConfFile, $todbconf);
     if (!$dbh) {

@@ -32,7 +32,7 @@ var FormNewTenantController = function(tenant, $scope, $controller, locationUtil
     $scope.save = function(tenant) {
         tenantService.createTenant(tenant).
             then(function() {
-                locationUtils.navigateToPath('/admin/tenants');
+                locationUtils.navigateToPath('/tenants');
             });
     };
 

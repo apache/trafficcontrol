@@ -33,6 +33,8 @@ var DateUtils = function() {
 
 		// Regexes and supporting functions are cached through closure
 		return function (date, mask, utc) {
+			if (!date) return '';
+
 			var dF = this.dateFormat;
 
 			// You can't provide utc if you skip other args (use the "UTC:" mask prefix)
@@ -124,6 +126,10 @@ var DateUtils = function() {
 			"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
 		]
 	};
+
+	this.getRelativeTime = function(date) {
+		return moment(date).fromNow();
+	}
 
 };
 

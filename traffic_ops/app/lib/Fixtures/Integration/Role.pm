@@ -26,7 +26,6 @@ extends 'DBIx::Class::EasyFixture';
 use namespace::autoclean;
 
 my %definition_for = (
-	## id => 1
 	'0' => {
 		new => 'Role',
 		using => {
@@ -35,7 +34,6 @@ my %definition_for = (
 			priv_level => '30',
 		},
 	},
-	## id => 2
 	'1' => {
 		new => 'Role',
 		using => {
@@ -44,16 +42,6 @@ my %definition_for = (
 			priv_level => '0',
 		},
 	},
-	## id => 3
-	'2' => {
-		new => 'Role',
-		using => {
-			name => 'migrations',
-			description => 'database migrations user - DO NOT REMOVE',
-			priv_level => '20',
-		},
-	},
-	## id => 4
 	'3' => {
 		new => 'Role',
 		using => {
@@ -62,7 +50,6 @@ my %definition_for = (
 			priv_level => '20',
 		},
 	},
-	## id => 5
 	'4' => {
 		new => 'Role',
 		using => {
@@ -71,7 +58,6 @@ my %definition_for = (
 			priv_level => '2',
 		},
 	},
-	## id => 6
 	'5' => {
 		new => 'Role',
 		using => {

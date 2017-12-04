@@ -104,7 +104,7 @@ foreach my $server ( @{$jdataserver} ) {
 				ERROR "$host_name: cache size is 0!";
 				next;
 			}
-			my $percentage_cache_used = sprintf( "%3.2f", ( $used / $size ) * 100 );
+			my $percentage_cache_used = sprintf( "%3d", ( $used / $size ) * 100 );
 			TRACE "$host_name: percentage cache used == " . $percentage_cache_used;
 			$ext->post_result( $server->{id}, $check_name, $percentage_cache_used );
 		}

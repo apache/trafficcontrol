@@ -25,7 +25,7 @@ var FormEditServerController = function(server, $scope, $controller, $uibModal, 
     var deleteServer = function(server) {
         serverService.deleteServer(server.id)
             .then(function() {
-                locationUtils.navigateToPath('/configure/servers');
+                locationUtils.navigateToPath('/servers');
             });
     };
 

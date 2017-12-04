@@ -24,12 +24,14 @@ var TableTypeServersController = function(type, servers, $scope, $state, locatio
 	$scope.servers = servers;
 
 	$scope.editServer = function(id) {
-		locationUtils.navigateToPath('/configure/servers/' + id);
+		locationUtils.navigateToPath('/servers/' + id);
 	};
 
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
 	};
+
+	$scope.ssh = serverUtils.ssh;
 
 	$scope.isOffline = serverUtils.isOffline;
 

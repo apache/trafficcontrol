@@ -40,6 +40,13 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
 
 ok $t->post_ok('/api/1.2/profiles' => {Accept => 'application/json'} => json => {
+	"name" => "CCR_CREATE", "description" => "CCR_CREATE description", "cdn" => "cdn1", "type" => 'TR_PROFILE' })->status_is(400)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/alerts/0/level" => "error" )
+		->json_is( "/alerts/0/text" => "cdn must be a positive integer" )
+		, 'Does the profile create fail?';
+
+ok $t->post_ok('/api/1.2/profiles' => {Accept => 'application/json'} => json => {
 	"name" => "CCR_CREATE", "description" => "CCR_CREATE description", "cdn" => 100, "type" => 'TR_PROFILE' })->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "CCR_CREATE" )
@@ -75,12 +82,14 @@ ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/jso
         "name" => "CCR_UPDATE",
         "description" => "CCR_UPDATE description",
         "cdn" => 100,
-        "type" => "TR_PROFILE"
+        "type" => "TR_PROFILE",
+		"routingDisabled" => 1
         })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/id" => "$profile_id")
     ->json_is( "/response/name" => "CCR_UPDATE")
     ->json_is( "/response/description" => "CCR_UPDATE description")
+	->json_is( "/response/routingDisabled" => 1)
             , 'Does the profile details return?';
 
 ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/json'} => json => {
@@ -111,9 +120,11 @@ ok $t->get_ok('/api/1.2/profiles?param=9&orderby=profile' => {Accept => 'applica
 	->json_is( "/response/0/id" => "100" )
 	->json_is( "/response/0/name" => "EDGE1" )
 	->json_is( "/response/0/description" => "edge description" )
+	->json_is( "/response/0/routingDisabled" => 0 )
 	->json_is( "/response/1/id" => "200" )
 	->json_is( "/response/1/name" => "MID1" )
 	->json_is( "/response/1/description" => "mid description" )
+	->json_is( "/response/1/routingDisabled" => 0 )
 		, 'Does the profile details return?';
 
 $t->get_ok("/api/1.2/profiles/8")->status_is(200)->json_is( "/response/0/id", 8 )
@@ -132,11 +143,11 @@ my $count_response = sub {
 };
 
 # there are currently 6 parameters not assigned to profile 100
-$t->get_ok('/api/1.2/profiles/100/unassigned_parameters')->status_is(200)->$count_response(6)
+$t->get_ok('/api/1.2/profiles/100/unassigned_parameters')->status_is(200)->$count_response(7)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # there are currently 4 parameters not assigned to profile 200
-$t->get_ok('/api/1.2/profiles/200/unassigned_parameters')->status_is(200)->$count_response(4)
+$t->get_ok('/api/1.2/profiles/200/unassigned_parameters')->status_is(200)->$count_response(5)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # there are currently 7 profiles not assigned to parameter 4

@@ -20,7 +20,7 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a ng-click="navigateToPath('/admin/statuses')">Statuses</a></li>
+            <li><a ng-click="navigateToPath('/statuses')">Statuses</a></li>
             <li class="active">{{statusName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
@@ -43,7 +43,7 @@ under the License.
             <div class="form-group">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Description</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="description" name="description" rows="3" cols="17" class="form-control" ng-model="status.description" maxlength="256"></textarea>
+                    <textarea name="description" rows="3" cols="17" class="form-control" ng-model="status.description" maxlength="256"></textarea>
                 </div>
             </div>
             <div class="modal-footer">

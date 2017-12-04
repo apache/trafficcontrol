@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormProfileController = function(profile, $scope, $location, formUtils, locationUtils, cdnService) {
+var FormProfileController = function(profile, $scope, $location, $uibModal, formUtils, locationUtils, cdnService, profileService) {
 
     var getCDNs = function() {
         cdnService.getCDNs(true)
@@ -45,6 +45,11 @@ var FormProfileController = function(profile, $scope, $location, formUtils, loca
         { value: 'UNK_PROFILE' }
     ];
 
+    $scope.falseTrue = [
+        { value: true, label: 'true' },
+        { value: false, label: 'false' }
+    ];
+
     $scope.viewParams = function() {
         $location.path($location.path() + '/parameters');
     };
@@ -58,11 +63,29 @@ var FormProfileController = function(profile, $scope, $location, formUtils, loca
     };
 
     $scope.cloneProfile = function() {
-        alert('not hooked up yet: cloneProfile');
+        var params = {
+            title: 'Clone Profile',
+            message: "Your are about to clone the " + profile.name + " profile. Your clone will have the same attributes and parameter assignments as the " + profile.name + " profile.<br><br>Please enter a name for your cloned profile."
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/input/dialog.input.tpl.html',
+            controller: 'DialogInputController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function(clonedProfileName) {
+            profileService.cloneProfile(profile.name, clonedProfileName);
+        }, function () {
+            // do nothing
+        });
     };
 
     $scope.exportProfile = function() {
-        alert('not hooked up yet: exportProfile');
+        // todo: implement export profile
     };
 
     $scope.navigateToPath = locationUtils.navigateToPath;
@@ -78,5 +101,5 @@ var FormProfileController = function(profile, $scope, $location, formUtils, loca
 
 };
 
-FormProfileController.$inject = ['profile', '$scope', '$location', 'formUtils', 'locationUtils', 'cdnService'];
+FormProfileController.$inject = ['profile', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'cdnService', 'profileService'];
 module.exports = FormProfileController;

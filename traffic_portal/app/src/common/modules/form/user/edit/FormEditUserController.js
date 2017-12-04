@@ -30,13 +30,6 @@ var FormEditUserController = function(user, $scope, $controller, $uibModal, $anc
             });
     };
 
-    var deleteUser = function(user) {
-        userService.deleteUser(user.id)
-            .then(function() {
-                locationUtils.navigateToPath('/admin/users');
-            });
-    };
-
     $scope.userName = angular.copy(user.username);
 
     $scope.settings = {
@@ -46,28 +39,6 @@ var FormEditUserController = function(user, $scope, $controller, $uibModal, $anc
 
     $scope.confirmSave = function(user, usernameField) {
         saveUser(user);
-    };
-
-    $scope.confirmDelete = function(user) {
-        var params = {
-            title: 'Delete User: ' + user.username,
-            key: user.username
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
-            controller: 'DialogDeleteController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                }
-            }
-        });
-        modalInstance.result.then(function() {
-            deleteUser(user);
-        }, function () {
-            // do nothing
-        });
     };
 
 };

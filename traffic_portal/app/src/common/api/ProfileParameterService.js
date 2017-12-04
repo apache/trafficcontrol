@@ -31,11 +31,23 @@ var ProfileParameterService = function(Restangular, httpService, messageModel, E
 			);
 	};
 
-	this.linkProfileParameters = function(profileParamMappings) {
-		return Restangular.service('profileparameters').post(profileParamMappings)
+	this.linkProfileParameters = function(profileId, params) {
+		return Restangular.service('profileparameter').post({ profileId: profileId, paramIds: params, replace: true })
 			.then(
 				function() {
 					messageModel.setMessages([ { level: 'success', text: 'Parameters linked to profile' } ], false);
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
+				}
+			);
+	};
+
+	this.linkParamProfiles = function(paramId, profiles) {
+		return Restangular.service('parameterprofile').post({ paramId: paramId, profileIds: profiles, replace: true })
+			.then(
+				function() {
+					messageModel.setMessages([ { level: 'success', text: 'Profiles linked to parameter' } ], false);
 				},
 				function(fault) {
 					messageModel.setMessages(fault.data.alerts, false);

@@ -27,7 +27,16 @@ var TableProfileParametersController = function(profile, profileParameters, $sco
 		profileParameterService.unlinkProfileParameter(profile.id, paramId)
 			.then(
 				function() {
-					$scope.refresh();
+					$scope.refresh(); // refresh the profile parameters table
+				}
+			);
+	};
+
+	var linkProfileParameters = function(paramIds) {
+		profileParameterService.linkProfileParameters(profile.id, paramIds)
+			.then(
+				function() {
+					$scope.refresh(); // refresh the profile parameters table
 				}
 			);
 	};
@@ -95,22 +104,62 @@ var TableProfileParametersController = function(profile, profileParameters, $sco
 				profile: function() {
 					return profile;
 				},
-				parameters: function(parameterService) {
-					return parameterService.getProfileUnassignedParams(profile.id);
+				allParams: function(parameterService) {
+					return parameterService.getParameters();
+				},
+				assignedParams: function() {
+					return profileParameters;
 				}
 			}
 		});
-		modalInstance.result.then(function(selectedParams) {
-			var massagedArray = [];
-			for (i = 0; i < selectedParams.length; i++) {
-				massagedArray.push( { profileId: profile.id, parameterId: selectedParams[i] } );
+		modalInstance.result.then(function(selectedParamIds) {
+			if (profile.type == 'DS_PROFILE') { // if this is a ds profile, then it is used by delivery service(s) so we'll fetch the ds count...
+				deliveryServiceService.getDeliveryServices({ profile: profile.id }).
+					then(function(result) {
+						var params = {
+							title: 'Modify ' + profile.name + ' parameters',
+							message: 'The ' + profile.name + ' profile is used by ' + result.length + ' delivery service(s). Are you sure you want to modify the parameters?'
+						};
+						var modalInstance = $uibModal.open({
+							templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+							controller: 'DialogConfirmController',
+							size: 'md',
+							resolve: {
+								params: function () {
+									return params;
+								}
+							}
+						});
+						modalInstance.result.then(function() {
+							linkProfileParameters(selectedParamIds);
+						}, function () {
+							// do nothing
+						});
+					});
+			} else { // otherwise the profile is used by servers so we'll fetch the server count...
+				serverService.getServers({ profileId: profile.id }).
+					then(function(result) {
+						var params = {
+							title: 'Modify ' + profile.name + ' parameters',
+							message: 'The ' + profile.name + ' profile is used by ' + result.length + ' server(s). Are you sure you want to modify the parameters?'
+						};
+						var modalInstance = $uibModal.open({
+							templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+							controller: 'DialogConfirmController',
+							size: 'md',
+							resolve: {
+								params: function () {
+									return params;
+								}
+							}
+						});
+						modalInstance.result.then(function() {
+							linkProfileParameters(selectedParamIds);
+						}, function () {
+							// do nothing
+						});
+					});
 			}
-			profileParameterService.linkProfileParameters(massagedArray)
-				.then(
-					function() {
-						$scope.refresh();
-					}
-				);
 		}, function () {
 			// do nothing
 		});
@@ -122,6 +171,9 @@ var TableProfileParametersController = function(profile, profileParameters, $sco
 		$('#profileParametersTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"columnDefs": [
+				{ 'orderable': false, 'targets': 4 }
+			],
 			"aaSorting": []
 		});
 	});

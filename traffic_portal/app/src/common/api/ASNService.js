@@ -32,7 +32,7 @@ var ASNService = function(Restangular, locationUtils, messageModel) {
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'ASN created' } ], true);
-                    locationUtils.navigateToPath('/admin/asns');
+                    locationUtils.navigateToPath('/asns');
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);

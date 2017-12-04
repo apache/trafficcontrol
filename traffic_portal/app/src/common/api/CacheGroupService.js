@@ -32,7 +32,7 @@ var CacheGroupService = function($http, $q, Restangular, locationUtils, messageM
             .then(
                 function() {
                     messageModel.setMessages([ { level: 'success', text: 'CacheGroup created' } ], true);
-                    locationUtils.navigateToPath('/configure/cache-groups');
+                    locationUtils.navigateToPath('/cache-groups');
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);

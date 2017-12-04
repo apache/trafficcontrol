@@ -78,28 +78,28 @@ ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json 
             , 'Does the cache group details return?';
 
 ok $t->get_ok('/api/1.2/servers?type=MID')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-  ->json_is( "/response/0/hostName", "atlanta-mid-01" )
-  ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
-  ->json_is( "/response/0/type", "MID" )
+  ->content_like( "/atlanta\-mid\-01/" )
+  ->content_like("/ga\.atlanta\.kabletown\.net/" )
+  ->content_like("/MID/" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/api/1.2/servers?cdn=100')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-  ->json_is( "/response/0/hostName", "atlanta-edge-01" )
-  ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
-  ->json_is( "/response/0/cdnId", 100 )
+  ->content_like( "/atlanta\-edge\-01/" )
+  ->content_like( "/ga\.atlanta\.kabletown\.net/" )
+  ->content_like( "/100/" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/api/1.2/servers?cachegroup=200')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-  ->json_is( "/response/0/hostName", "atlanta-mid-02" )
-  ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
-  ->json_is( "/response/0/cachegroupId", 200 )
+  ->content_like( "/atlanta\-mid\-02/" )
+  ->content_like( "/ga\.atlanta\.kabletown\.net/" )
+  ->content_like( "/200/" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/api/1.2/servers?type=MID&status=ONLINE')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-  ->json_is( "/response/0/hostName", "atlanta-mid-01" )
-  ->json_is( "/response/0/domainName", "ga.atlanta.kabletown.net" )
-  ->json_is( "/response/0/type", "MID" )
-  ->json_is( "/response/0/status", "ONLINE" )
+  ->content_like(  "/atlanta\-mid\-01/" )
+  ->content_like(  "/ga\.atlanta\.kabletown\.net/" )
+  ->content_like(  "/MID/" )
+  ->content_like(  "/ONLINE/" )
   ->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->post_ok('/api/1.2/cachegroups' => {Accept => 'application/json'} => json => {
@@ -137,6 +137,50 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
 		})
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	, 'Is a server created when all required fields are provided?';
+
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"cachegroupId" => $cg2_mid_northwest,
+			"cdnId" => 100,
+			"domainName" => "example-domain.com",
+			"hostName" => "server2",
+			"httpsPort" => "string",
+			"interfaceMtu" => 1500,
+			"interfaceName" => "bond0",
+			"ipAddress" => "10.74.27.255",
+			"ipNetmask" => "255.255.255.252",
+			"ipGateway" => "10.74.27.194",
+			"physLocationId" => 100,
+			"profileId" => 100,
+			"statusId" => 1,
+			"typeId" => 1,
+			"updPending" => \0,
+		})
+		->status_is(400)
+		->json_is( "/alerts/0/level", "error" )
+		->json_is( "/alerts/0/text", "httpsPort must be an integer." )
+	, "Does the server creation fail because httpsPort is a string?";
+
+ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
+			"cachegroupId" => $cg2_mid_northwest,
+			"cdnId" => 100,
+			"domainName" => "example-domain.com",
+			"hostName" => "server2",
+			"interfaceMtu" => 1500,
+			"interfaceName" => "bond0",
+			"ipAddress" => "10.74.27.255",
+			"ipNetmask" => "255.255.255.252",
+			"ipGateway" => "10.74.27.194",
+			"physLocationId" => 100,
+			"profileId" => 100,
+			"statusId" => 1,
+			"tcpPort" => "string",
+			"typeId" => 1,
+			"updPending" => \0,
+		})
+		->status_is(400)
+		->json_is( "/alerts/0/level", "error" )
+		->json_is( "/alerts/0/text", "tcpPort must be an integer." )
+	, "Does the server creation fail because tcpPort is a string?";
 
 ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
 			"cachegroupId" => $cg2_mid_northwest,
@@ -298,30 +342,61 @@ ok $t->post_ok('/api/1.2/servers' => {Accept => 'application/json'} => json => {
 			"cdnId" => 100,
 			"domainName" => "northbound.com",
 			"hostName" => "tc2_ats2",
+			"httpsPort" => 443,
+			"iloIpAddress" => "",
+			"iloIpNetmask" => "",
+			"iloIpGateway" => "",
+			"iloUsername" => "",
+			"iloPassword" => "",
 			"interfaceMtu" => 1500,
 			"interfaceName" => "eth0",
+			"ip6Address" => "",
+			"ip6Gateway" => "",
 			"ipAddress" => "10.73.27.187",
 			"ipNetmask" => "255.255.255.0",
 			"ipGateway" => "10.73.27.1",
+			"mgmtIpAddress" => "",
+			"mgmtIpNetmask" => "",
+			"mgmtIpGateway" => "",
+			"offlineReason" => "",
 			"physLocationId" => 300,
 			"profileId" => 200,
+			"rack" => "",
+			"routerHostName" => "",
+			"routerPortName" => "",
+			"tcpPort" => 80,
 			"statusId" => 1,
 			"typeId" => 2,
 			"updPending" => \0,
 		})
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-    ->json_is( "/response/0/hostName" => "tc2_ats2")
-    ->json_is( "/response/0/domainName" => "northbound.com")
-    ->json_is( "/response/0/cachegroup" => "edge_atl_group")
-    ->json_is( "/response/0/ipNetmask" => "255.255.255.0")
-    ->json_is( "/response/0/interfaceName" => "eth0")
-    ->json_is( "/response/0/ipAddress" => "10.73.27.187")
-    ->json_is( "/response/0/ipGateway" => "10.73.27.1")
-    ->json_is( "/response/0/interfaceMtu" => "1500")
-    ->json_is( "/response/0/physLocation" => "HotAtlanta")
-    ->json_is( "/response/0/type" => "MID")
-    ->json_is( "/response/0/profile" => "MID1")
-            , 'Does the server details return?';
+		->json_is( "/response/0/cachegroup" => "edge_atl_group")
+		->json_is( "/response/0/domainName" => "northbound.com")
+		->json_is( "/response/0/hostName" => "tc2_ats2")
+		->json_is( "/response/0/httpsPort" =>443)
+		->json_is( "/response/0/iloIpAddress" => "")
+		->json_is( "/response/0/iloIpNetmask" => "")
+		->json_is( "/response/0/iloIpGateway" => "")
+		->json_is( "/response/0/iloUsername" => "")
+		->json_is( "/response/0/iloPassword" => "")
+		->json_is( "/response/0/interfaceMtu" => "1500")
+		->json_is( "/response/0/interfaceName" => "eth0")
+		->json_is( "/response/0/ip6Address" => "")
+		->json_is( "/response/0/ip6Gateway" => "")
+		->json_is( "/response/0/ipNetmask" => "255.255.255.0")
+		->json_is( "/response/0/ipAddress" => "10.73.27.187")
+		->json_is( "/response/0/ipGateway" => "10.73.27.1")
+		->json_is( "/response/0/mgmtIpAddress" => "")
+		->json_is( "/response/0/mgmtIpNetmask" => "")
+		->json_is( "/response/0/mgmtIpGateway" => "")
+		->json_is( "/response/0/offlineReason" => "")
+		->json_is( "/response/0/physLocation" => "HotAtlanta")
+		->json_is( "/response/0/type" => "MID")
+		->json_is( "/response/0/profile" => "MID1")
+		->json_is( "/response/0/rack" => "")
+		->json_is( "/response/0/routerHostName" => "")
+		->json_is( "/response/0/routerPortName" => "")
+	, 'Is the server created?';
 
 ok $t->get_ok('/api/1.2/servers/details')->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Does the validation error occur?';
@@ -380,6 +455,55 @@ ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} =
     ->json_is( "/response/0/type" => "EDGE")
     ->json_is( "/response/0/profile" => "EDGE1")
             , 'Does the server details return?';
+
+ok $t->put_ok('/api/1.2/servers/' . $svr_id  => {Accept => 'application/json'} => json => {
+			"cachegroupId" => $edge_atl_group,
+			"cdnId" => 100,
+			"domainName" => "northbound.com",
+			"hostName" => "tc1_ats3",
+			"httpsPort" => 443,
+			"iloIpAddress" => "",
+			"iloIpNetmask" => "",
+			"iloIpGateway" => "",
+			"iloUsername" => "",
+			"iloPassword" => "",
+			"interfaceMtu" => 1500,
+			"interfaceName" => "eth0",
+			"ip6Address" => "",
+			"ip6Gateway" => "",
+			"ipAddress" => "10.74.27.186",
+			"ipNetmask" => "255.255.255.0",
+			"ipGateway" => "10.74.27.1",
+			"mgmtIpAddress" => "",
+			"mgmtIpNetmask" => "",
+			"mgmtIpGateway" => "",
+			"offlineReason" => "",
+			"physLocationId" => 100,
+			"profileId" => 100,
+			"rack" => "",
+			"routerHostName" => "",
+			"routerPortName" => "",
+			"tcpPort" => 80,
+			"statusId" => 1,
+			"typeId" => 1,
+			"updPending" => \0,
+		})
+    ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+    ->json_is( "/response/0/iloIpAddress" => "")
+    ->json_is( "/response/0/iloIpNetmask" => "")
+    ->json_is( "/response/0/iloIpGateway" => "")
+    ->json_is( "/response/0/iloUsername" => "")
+    ->json_is( "/response/0/iloPassword" => "")
+    ->json_is( "/response/0/ip6Address" => "")
+    ->json_is( "/response/0/ip6Gateway" => "")
+    ->json_is( "/response/0/mgmtIpAddress" => "")
+    ->json_is( "/response/0/mgmtIpNetmask" => "")
+    ->json_is( "/response/0/mgmtIpGateway" => "")
+    ->json_is( "/response/0/offlineReason" => "")
+    ->json_is( "/response/0/rack" => "")
+    ->json_is( "/response/0/routerHostName" => "")
+    ->json_is( "/response/0/routerPortName" => "")
+            , 'Are empty strings allowed on a handful of fields?';
 
 ok $t->put_ok('/api/1.2/servers/' . $svr_id => {Accept => 'application/json'} => json => {
         "ipAddress" => "10.10.10.220",

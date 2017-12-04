@@ -90,15 +90,25 @@ var TableUserDSUnassignedController = function(user, deliveryServices, userDeliv
 	};
 
 	angular.element(document).ready(function () {
-		$('#userDSUnassignedTable').dataTable({
+		var userDSUnassignedTable = $('#userDSUnassignedTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"order": [[ 1, 'asc' ]],
 			"columnDefs": [
 				{ 'orderable': false, 'targets': 0 },
 				{ "width": "5%", "targets": 0 }
-			]
+			],
+			"stateSave": false
 		});
+		userDSUnassignedTable.on( 'search.dt', function () {
+			var search = $('#userDSUnassignedTable_filter input').val();
+			if (search.length > 0) {
+				$("#selectAllCB").attr("disabled", true);
+			} else {
+				$("#selectAllCB").removeAttr("disabled");
+			}
+		} );
+
 	});
 
 };

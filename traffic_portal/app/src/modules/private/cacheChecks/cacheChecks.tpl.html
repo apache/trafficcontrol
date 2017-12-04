@@ -1,0 +1,95 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li class="active">Cache Checks</li>
+        </ol>
+        <div class="pull-right" role="group">
+            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <table id="cacheChecksTable" class="table responsive-utilities jambo_table">
+            <thead>
+            <tr class="headings">
+                <th>Hostname</th>
+                <th>Profile</th>
+                <th>Status</th>
+                <th uib-popover="{{ccDescriptions['UPD']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">UPD</th>
+                <th ng-if="showReval == 1" uib-popover="{{ccDescriptions['RVL']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">RVL</th>
+                <th uib-popover="{{ccDescriptions['ILO']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">ILO</th>
+                <th uib-popover="{{ccDescriptions['10G']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">10G</th>
+                <th uib-popover="{{ccDescriptions['FQDN']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">FQDN</th>
+                <th uib-popover="{{ccDescriptions['DSCP']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">DSCP</th>
+                <th uib-popover="{{ccDescriptions['10G6']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">10G6</th>
+                <th uib-popover="{{ccDescriptions['MTU']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">MTU</th>
+                <th uib-popover="{{ccDescriptions['CHR']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">CHR</th>
+                <th uib-popover="{{ccDescriptions['CDU']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">CDU</th>
+                <th uib-popover="{{ccDescriptions['ORT']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">ORT</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-click="editCache(cc.id)" ng-repeat="cc in ::cacheChecks">
+                <td>{{::cc.hostName}}</td>
+                <td>{{::cc.profile}}</td>
+                <td>{{::cc.adminState}}</td>
+                <td data-order="{{::cc.updPending}}" data-search="{{(cc.updPending) ? 'UPD' : ''}}">
+                    <i ng-show="cc.updPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
+                    <i ng-show="!cc.updPending" class="fa fa-check fa-lg" aria-hidden="true"></i>
+                </td>
+                <td ng-if="showReval == 1" data-order="{{::cc.revalPending}}" data-search="{{(cc.revalPending) ? 'RVL' : ''}}">
+                    <i ng-show="cc.revalPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
+                </td>
+                <td data-order="{{::cc.checks['ILO']}}" data-search="{{(cc.checks['ILO'] == 1) ? 'ILO' : ''}}">
+                    <i ng-show="cc.checks['ILO'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
+                    <i ng-show="cc.checks['ILO'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
+                </td>
+                <td data-order="{{::cc.checks['10G']}}" data-search="{{(cc.checks['10G'] == 1) ? '10G' : ''}}">
+                    <i ng-show="cc.checks['10G'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
+                    <i ng-show="cc.checks['10G'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
+                </td>
+                <td data-order="{{::cc.checks['FQDN']}}" data-search="{{(cc.checks['FQDN'] == 1) ? 'FQDN' : ''}}">
+                    <i ng-show="cc.checks['FQDN'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
+                    <i ng-show="cc.checks['FQDN'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
+                </td>
+                <td data-order="{{::cc.checks['DSCP']}}" data-search="{{(cc.checks['DSCP'] == 1) ? 'DSCP' : ''}}">
+                    <i ng-show="cc.checks['DSCP'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
+                    <i ng-show="cc.checks['DSCP'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
+                </td>
+                <td data-order="{{::cc.checks['10G6']}}" data-search="{{(cc.checks['10G6'] == 1) ? '10G6' : ''}}">
+                    <i ng-show="cc.checks['10G6'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
+                    <i ng-show="cc.checks['10G6'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
+                </td>
+                <td data-order="{{::cc.checks['MTU']}}" data-search="{{(cc.checks['MTU'] == 1) ? 'MTU' : ''}}">
+                    <i ng-show="cc.checks['MTU'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
+                    <i ng-show="cc.checks['MTU'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
+                </td>
+                <td>{{::cc.checks['CHR']}}</td>
+                <td>{{::cc.checks['CDU']}}</td>
+                <td>{{::cc.checks['ORT']}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+

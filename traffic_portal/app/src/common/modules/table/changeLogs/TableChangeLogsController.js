@@ -17,13 +17,11 @@
  * under the License.
  */
 
-var TableChangeLogsController = function(changeLogs, $scope, $state, locationUtils) {
+var TableChangeLogsController = function(changeLogs, $scope, $state, dateUtils) {
 
 	$scope.changeLogs = changeLogs;
 
-	$scope.getRelativeTime = function(date) {
-		return moment(date).fromNow();
-	};
+	$scope.getRelativeTime = dateUtils.getRelativeTime;
 
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
@@ -39,5 +37,5 @@ var TableChangeLogsController = function(changeLogs, $scope, $state, locationUti
 
 };
 
-TableChangeLogsController.$inject = ['changeLogs', '$scope', '$state', 'locationUtils'];
+TableChangeLogsController.$inject = ['changeLogs', '$scope', '$state', 'dateUtils'];
 module.exports = TableChangeLogsController;

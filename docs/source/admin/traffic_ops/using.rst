@@ -308,6 +308,8 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | DSCP Tag                                         | The DSCP value to mark IP packets to the client with.                                                                                                                                                               |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Routing Name                                     | The routing name to use for the delivery FQDN, i.e. ``<routing-name>.<deliveryservice>.<cdn-domain>``. It must be a valid hostname without periods. [2]_                                                            |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Signed URLs                                      | Use Signed URLs? See :ref:`rl-signed-urls`.                                                                                                                                                                         |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Query String Handling                            | How to treat query strings:                                                                                                                                                                                         |
@@ -333,7 +335,7 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Bypass IPv6                                      | (For DNS routed delivery services only) This is the address to respond to AAAA requests with when the the max Bps or Max Tps for this delivery service are exceeded.                                                |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IPv6 Routing Enabled?                            | When set to yes, the Traffic Router will respond to AAAA DNS requests for the tr. and edge. names of this delivery service. Otherwise, only A records will be served.                                               |
+| IPv6 Routing Enabled?                            | When set to yes, the Traffic Router will respond to AAAA DNS requests for the routed name of this delivery service. Otherwise, only A records will be served.                                                       |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Range Request Handling                           | (experimental)  How to treat range requests:                                                                                                                                                                        |
 |                                                  |                                                                                                                                                                                                                     |
@@ -341,8 +343,7 @@ The fields in the Delivery Service view are:
 |                                                  | - 1 Use the `background_fetch <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/background_fetch.en.html>`_ plugin.                                                                              |
 |                                                  | - 2 Use the cache_range_requests plugin.                                                                                                                                                                            |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Delivery Service DNS TTL                         | The Time To Live on the DNS record for the Traffic Router A and AAAA records (``tr.<deliveryservice>.<cdn-domain>``) for a HTTP delivery service *or* for the A and                                                 |
-|                                                  | AAAA records of the edge name (``edge.<deliveryservice>.<cdn-domain>``).                                                                                                                                            |
+| Delivery Service DNS TTL                         | The Time To Live on the DNS record for the Traffic Router A and AAAA records (``<routing-name>.<deliveryservice>.<cdn-domain>``).                                                                                   |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Origin Server Base URL                           | The Origin Server's base URL. This includes the protocol (http or https). Example: ``http://movies.origin.com``                                                                                                     |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -398,6 +399,7 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. [1] These fields are not validated by Traffic Ops to be correct syntactically, and can cause Traffic Server to not start if invalid. Please use with caution.
+.. [2] It is not recommended to change the Routing Name of a Delivery Service after deployment because this changes its Delivery FQDN (i.e. ``<routing-name>.<deliveryservice>.<cdn-domain>``), which means that SSL certificates may need to be updated and clients using the Delivery Service will need to be transitioned to the new Delivery URL.
 
 
 .. index::
@@ -433,7 +435,7 @@ One of the most important settings when creating the delivery service is the sel
 +-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | ANY_MAP         | ANY_MAP is not known to Traffic Router. For this deliveryservice, the "Raw remap text" field in the input form will be used as the remap line on the cache.                                                                                                                                                                  |
 +-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| STEERING        | The Delivery Service will be used to route to other delivery services.  The target delivery services Traffic Router and the routing weights for those delivery services will be defined by an admin or steering user.  For more information see the `steering feature <traffic_router.html#steering-feature>`_ documentation |
+| STEERING        | The Delivery Service will be used to route to other delivery services. The target delivery services and the routing weights for those delivery services will be defined by an admin or steering user. For more information see the `steering feature <../traffic_router.html#steering-feature>`_ documentation               |
 +-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
@@ -443,7 +445,7 @@ Federations
 +++++++++++
   Federations allow for other (federated) CDNs (at a different ISP, MSO, etc) to add a list of resolvers and a CNAME to a delivery service Traffic Ops.  When a request is made from one of federated CDN's clients, Traffic Router will return the CNAME configured in the federation mapping.  This allows the federated CDN to serve the content without the content provider changing the URL, or having to manage multiple URLs.
 
-  Before adding a federation in the Traffic Ops UI, a user with the federations role needs to be created.  This user will be assigned to the federation and will be able to add resolvers to the federation via the Traffic Ops `Federation API <../development/traffic_ops_api/v12/federation.html>`_.
+  Before adding a federation in the Traffic Ops UI, a user with the federations role needs to be created.  This user will be assigned to the federation and will be able to add resolvers to the federation via the Traffic Ops `Federation API <../../development/traffic_ops_api/v12/federation.html>`_.
 
 .. index::
   Header Rewrite
@@ -615,7 +617,7 @@ Delivery services have a Query String Handling option that, when set to ignore, 
 Multi Site Origin
 +++++++++++++++++
 
-.. Note:: The configuration of this feature changed significantly between ATS version 5 and >= 6. Some configuration in Traffic Control is different as well. This documentation assumes ATS 6 or higher. See :ref:`rl-multi-site-origin-qht-ats5` for the ATS version 5.x configuration details.
+.. Note:: The configuration of this feature changed significantly between ATS version 5 and >= 6. Some configuration in Traffic Control is different as well. This documentation assumes ATS 6 or higher. See :ref:`rl-multi-site-origin-qht` for more details.
 
 Normally, the mid servers are not aware of any redundancy at the origin layer. With Multi Site Origin enabled this changes - Traffic Server (and Traffic Ops) are now made aware of the fact there are multiple origins, and can be configured to do more advanced failover and loadbalancing actions. A prerequisite for MSO to work is that the multiple origin sites serve identical content with identical paths, and both are configured to serve the same origin hostname as is configured in the deliveryservice `Origin Server Base URL` field. See the `Apache Traffic Server docs <https://docs.trafficserver.apache.org/en/latest/admin-guide/files/parent.config.en.html>`_ for more information on that cache's implementation.
 
@@ -1054,7 +1056,7 @@ To invalidate content:
 Manage DNSSEC Keys
 ====================
 
-In order to support `DNSSEC <https://en.wikipedia.org/wiki/Domain_Name_System_Security_Extensions>`_ in Traffic Router, Traffic Ops provides some actions for managing DNSSEC keys for a CDN and associated Delivery Services.  DNSSEC Keys consist of a Key Signing Keys (KSK) which are used to sign other DNSKEY records as well as Zone Signing Keys (ZSK) which are used to sign other records.  DNSSEC Keys are stored in `Traffic Vault <../overview/traffic_vault.html>`_ and should only be accessible to Traffic Ops.  Other applications needing access to this data, such as Traffic Router, must use the Traffic Ops `DNSSEC APIs <../development/traffic_ops_api/v12/cdn.html#dnssec-keys>`_ to retrieve this information.
+In order to support `DNSSEC <https://en.wikipedia.org/wiki/Domain_Name_System_Security_Extensions>`_ in Traffic Router, Traffic Ops provides some actions for managing DNSSEC keys for a CDN and associated Delivery Services.  DNSSEC Keys consist of a Key Signing Keys (KSK) which are used to sign other DNSKEY records as well as Zone Signing Keys (ZSK) which are used to sign other records.  DNSSEC Keys are stored in `Traffic Vault <../../overview/traffic_vault.html>`_ and should only be accessible to Traffic Ops.  Other applications needing access to this data, such as Traffic Router, must use the Traffic Ops `DNSSEC APIs <../../development/traffic_ops_api/v12/cdn.html#dnssec-keys>`_ to retrieve this information.
 
 To Manage DNSSEC Keys:
   1. Click **Tools -> Manage DNSSEC Keys**

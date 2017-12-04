@@ -20,7 +20,7 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li><a ng-click="navigateToPath('/admin/parameters')">Parameters</a></li>
+            <li><a ng-click="navigateToPath('/parameters')">Parameters</a></li>
             <li class="active">{{parameterName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-show="!settings.isNew">
@@ -45,7 +45,9 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(parameterForm.secure), 'has-feedback': hasError(parameterForm.secure)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Secure *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="secure" name="secure" class="form-control" ng-model="parameter.secure" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <select name="secure" class="form-control" ng-model="parameter.secure" ng-options="x.value as x.label for x in falseTrue" required>
+                        <option value="">Select...</option>
+                    </select>
                     <small class="input-error" ng-show="hasPropertyError(parameterForm.secure, 'required')">Required</small>
                 </div>
             </div>

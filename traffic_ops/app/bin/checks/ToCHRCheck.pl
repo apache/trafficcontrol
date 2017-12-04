@@ -149,7 +149,7 @@ foreach my $server ( @{$jdataserver} ) {
 					my $h  = $hits - $prev_hits;
 					my $m  = $miss - $prev_miss;
 					my $e  = $errors - $prev_errors;
-					my $hr = sprintf( "%3.2f", $h / ( $h + $m + $e ) * 100 );
+					my $hr = sprintf( "%3d", $h / ( $h + $m + $e ) * 100 );
 					TRACE "$host_name: \% hitratio: $hr\%   errors: $e period: $secs\n";
 					$ext->post_result( $server->{id}, $check_name, $hr );
 				}

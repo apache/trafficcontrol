@@ -19,10 +19,14 @@ under the License.
 
 <div class="x_panel">
     <div class="x_title">
-        <ol class="breadcrumb">
-            <li><a ng-click="navigateToPath('/admin/tenants')">Tenants</a></li>
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/tenants')">Tenants</a></li>
             <li class="active">{{tenantName}}</li>
         </ol>
+        <div class="pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-primary" title="View Users" ng-click="viewUsers()">View Users</button>
+            <button class="btn btn-primary" title="View Delivery Services" ng-click="viewDSs()">View Delivery Services</button>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
@@ -31,7 +35,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(tenantForm.name), 'has-feedback': hasError(tenantForm.name)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="name" name="name" type="text" class="form-control" ng-model="tenant.name" ng-required="true" ng-maxlength="45" autofocus>
+                    <input name="name" type="text" class="form-control" ng-model="tenant.name" ng-maxlength="45" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(tenantForm.name, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(tenantForm.name, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(tenantForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
@@ -40,14 +44,16 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(tenantForm.active), 'has-feedback': hasError(tenantForm.active)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Active *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="active" name="active" class="form-control" ng-model="tenant.active" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <select name="active" class="form-control" ng-model="tenant.active" ng-options="x.value as x.label for x in falseTrue" required>
+                        <option value="">Select...</option>
+                    </select>
                     <small class="input-error" ng-show="hasPropertyError(tenantForm.active, 'required')">Required</small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(tenantForm.parentId), 'has-feedback': hasError(tenantForm.parentId)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Parent Tenant *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="parentId" name="parentId" class="form-control" ng-model="tenant.parentId" ng-options="tenant.id as tenant.name for tenant in tenants" required>
+                    <select name="parentId" class="form-control" ng-model="tenant.parentId" ng-options="tenant.id as tenantLabel(tenant) for tenant in tenants" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(tenantForm.parentId, 'required')">Required</small>

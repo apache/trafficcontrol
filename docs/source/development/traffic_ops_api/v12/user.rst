@@ -31,6 +31,14 @@ Users
 
   Role(s) Required: None
 
+  **Request Query Parameters**
+
+  +-----------------+----------+---------------------------------------------------+
+  | Name            | Required | Description                                       |
+  +=================+==========+===================================================+
+  | ``tenant``      | no       | Filter users by tenant ID.                        |
+  +-----------------+----------+---------------------------------------------------+
+
   **Response Properties**
 
   +----------------------+--------+------------------------------------------------+
@@ -367,6 +375,51 @@ Users
 
 |
 
+
+**POST /api/1.2/users/register**
+
+  Register a user and send registration email.
+
+  Authentication Required: Yes
+
+  Role(s) Required: Admin or Operations
+
+  **Request Properties**
+
+  +-------------------------+--------+----------+-------------------------------------------------+
+  | Parameter               | Type   | Required | Description                                     |
+  +=========================+========+==========+=================================================+
+  |``email``                | string | yes      | Email address of the new user.                  |
+  +-------------------------+--------+----------+-------------------------------------------------+
+  |``role``                 |  int   | yes      | Role ID of the new user.                        |
+  +-------------------------+--------+----------+-------------------------------------------------+
+  |``tenantId``             |  int   | yes      | Tenant ID of the new user.                      |
+  +-------------------------+--------+----------+-------------------------------------------------+
+
+
+  **Request Example** ::
+
+    {
+        "email": "foo@bar.com"
+        "role": 1,
+        "tenantId": "1"
+    }
+
+|
+
+  **Response Example** ::
+
+    {
+    	"alerts": [
+             {
+                 "level":"success",
+                 "text":"Sent user registration to foo@bar.com with the following permissions [ role: admin | tenant: root ]"
+             }
+         ]
+     }
+
+|
+
 **GET /api/1.2/users/:id/deliveryservices**
 
   Retrieves all delivery services assigned to the user. See also `Using Traffic Ops - Delivery Service <http://trafficcontrol.apache.org/docs/latest/admin/traffic_ops_using.html#delivery-service>`_.
@@ -506,6 +559,8 @@ Users
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``remapText``            | string | Additional raw remap line text.                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``routingName``          | string | The routing name of this deliveryservice.                                                                                            |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -545,7 +600,7 @@ Users
             "dscp": "40",
             "edgeHeaderRewrite": null,
             "exampleURLs": [
-                "http://edge.foo-ds.foo.bar.net"
+                "http://foo.foo-ds.foo.bar.net"
             ],
             "geoLimit": "0",
             "geoLimitCountries": null,
@@ -587,6 +642,7 @@ Users
             "regexRemap": null,
             "regionalGeoBlocking": false,
             "remapText": null,
+            "routingName": "foo",
             "signed": false,
             "sslKeyVersion": "0",
             "tenant": "root",
