@@ -49,38 +49,38 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editCache(cc.id)" ng-repeat="cc in ::cacheChecks" ng-class="::{'active': cc.checks['RTR'] == 0}">
+            <tr ng-click="editCache(cc.id)" ng-repeat="cc in ::cacheChecks">
                 <td>{{::cc.hostName}}</td>
                 <td>{{::cc.profile}}</td>
                 <td>{{::cc.adminState}}</td>
-                <td data-order="{{::cc.updPending}}">
+                <td data-order="{{::cc.updPending}}" data-search="{{(cc.updPending) ? 'UPD' : ''}}">
                     <i ng-show="cc.updPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
                     <i ng-show="!cc.updPending" class="fa fa-check fa-lg" aria-hidden="true"></i>
                 </td>
-                <td ng-if="showReval == 1" data-order="{{::cc.revalPending}}">
+                <td ng-if="showReval == 1" data-order="{{::cc.revalPending}}" data-search="{{(cc.revalPending) ? 'RVL' : ''}}">
                     <i ng-show="cc.revalPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
                 </td>
-                <td data-order="{{::cc.checks['ILO']}}">
+                <td data-order="{{::cc.checks['ILO']}}" data-search="{{(cc.checks['ILO'] == 1) ? 'ILO' : ''}}">
                     <i ng-show="cc.checks['ILO'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
                     <i ng-show="cc.checks['ILO'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
                 </td>
-                <td data-order="{{::cc.checks['10G']}}">
+                <td data-order="{{::cc.checks['10G']}}" data-search="{{(cc.checks['10G'] == 1) ? '10G' : ''}}">
                     <i ng-show="cc.checks['10G'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
                     <i ng-show="cc.checks['10G'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
                 </td>
-                <td data-order="{{::cc.checks['FQDN']}}">
+                <td data-order="{{::cc.checks['FQDN']}}" data-search="{{(cc.checks['FQDN'] == 1) ? 'FQDN' : ''}}">
                     <i ng-show="cc.checks['FQDN'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
                     <i ng-show="cc.checks['FQDN'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
                 </td>
-                <td data-order="{{::cc.checks['DSCP']}}">
+                <td data-order="{{::cc.checks['DSCP']}}" data-search="{{(cc.checks['DSCP'] == 1) ? 'DSCP' : ''}}">
                     <i ng-show="cc.checks['DSCP'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
                     <i ng-show="cc.checks['DSCP'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
                 </td>
-                <td data-order="{{::cc.checks['10G6']}}">
+                <td data-order="{{::cc.checks['10G6']}}" data-search="{{(cc.checks['10G6'] == 1) ? '10G6' : ''}}">
                     <i ng-show="cc.checks['10G6'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
                     <i ng-show="cc.checks['10G6'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
                 </td>
-                <td data-order="{{::cc.checks['MTU']}}">
+                <td data-order="{{::cc.checks['MTU']}}" data-search="{{(cc.checks['MTU'] == 1) ? 'MTU' : ''}}">
                     <i ng-show="cc.checks['MTU'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
                     <i ng-show="cc.checks['MTU'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
                 </td>
