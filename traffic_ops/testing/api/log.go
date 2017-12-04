@@ -54,25 +54,25 @@ func Success(t *testing.T, msg string, args ...interface{}) {
 
 // ErrorLog - critical messages
 func (c Config) ErrorLog() log.LogLocation {
-	return log.LogLocation(c.Log.Error)
+	return log.LogLocation(c.APITests.Log.Error)
 }
 
 // WarningLog - warning messages
 func (c Config) WarningLog() log.LogLocation {
-	return log.LogLocation(c.Log.Warning)
+	return log.LogLocation(c.APITests.Log.Warning)
 }
 
 // InfoLog - information messages
 func (c Config) InfoLog() log.LogLocation {
-	return log.LogLocation(c.Log.Info)
+	return log.LogLocation(c.APITests.Log.Info)
 }
 
 // DebugLog - troubleshooting messages
 func (c Config) DebugLog() log.LogLocation {
-	return log.LogLocation(c.Log.Debug)
+	return log.LogLocation(c.APITests.Log.Debug)
 }
 
 // EventLog - access.log high level transactions
 func (c Config) EventLog() log.LogLocation {
-	return log.LogLocation(c.Log.Event)
+	return log.LogLocation(c.APITests.Log.Event)
 }

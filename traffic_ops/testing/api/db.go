@@ -30,11 +30,11 @@ var (
 func openConnection(cfg *Config) (*sql.DB, error) {
 	var err error
 	sslStr := "require"
-	if !cfg.DB.SSL {
+	if !cfg.TrafficOpsDB.SSL {
 		sslStr = "disable"
 	}
 
-	db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s", cfg.DB.User, cfg.DB.Password, cfg.DB.Hostname, cfg.DB.Name, sslStr))
+	db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s", cfg.TrafficOpsDB.User, cfg.TrafficOpsDB.Password, cfg.TrafficOpsDB.Hostname, cfg.TrafficOpsDB.Name, sslStr))
 	if err != nil {
 		log.Errorf("opening database: %v\n", err)
 		return nil, fmt.Errorf("transaction failed: %s", err)
@@ -83,7 +83,7 @@ func setupUserData(cfg *Config, db *sql.DB) error {
 		return fmt.Errorf("exec failed %v %v", err, res)
 	}
 
-	encryptedPassword, err := auth.DerivePassword(cfg.TOUserPassword)
+	encryptedPassword, err := auth.DerivePassword(cfg.TrafficOps.UserPassword)
 	if err != nil {
 		return fmt.Errorf("password encryption failed %v", err)
 	}
