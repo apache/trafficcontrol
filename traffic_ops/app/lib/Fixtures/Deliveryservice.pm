@@ -56,6 +56,7 @@ my %definition_for = (
 			initial_dispersion    => 1,
 			regional_geo_blocking => 1,
 			logs_enabled          => 1,
+			anonymous_blocking_enabled => 1,
 		},
 	},
 	ds_cdn2 => {
@@ -95,6 +96,7 @@ my %definition_for = (
 			regional_geo_blocking => 0,
 			ipv6_routing_enabled  => 0,
 			logs_enabled          => 0,
+			anonymous_blocking_enabled => 0,
 		},
 	},
 	ds_cdn3 => {
@@ -134,6 +136,7 @@ my %definition_for = (
 			regional_geo_blocking => 0,
 			ipv6_routing_enabled  => 0,
 			logs_enabled          => 0,
+			anonymous_blocking_enabled => 0,
 		},
 	},
 	ds_cdn4 => {
@@ -173,6 +176,7 @@ my %definition_for = (
 			regional_geo_blocking => 0,
 			ipv6_routing_enabled  => 0,
 			logs_enabled          => 1,
+			anonymous_blocking_enabled => 0,
 		},
 	},
 	ds_dns => {
@@ -212,6 +216,7 @@ my %definition_for = (
 			regional_geo_blocking => 0,
 			ipv6_routing_enabled  => 0,
 			logs_enabled          => 0,
+			anonymous_blocking_enabled => 0,
 		},
 	},
 	ds_http_no_cache => {
@@ -251,6 +256,7 @@ my %definition_for = (
 			regional_geo_blocking => 0,
 			ipv6_routing_enabled  => 0,
 			logs_enabled          => 0,
+			anonymous_blocking_enabled => 0,
 		},
 	},
 	steering_ds1 => {

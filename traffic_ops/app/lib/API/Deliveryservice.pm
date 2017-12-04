@@ -101,6 +101,7 @@ sub index {
 		push(
 			@data, {
 				"active"               => \$row->active,
+				"anonymousBlockingEnabled" => $row->anonymous_blocking_enabled
 				"cacheurl"             => $row->cacheurl,
 				"ccrDnsTtl"            => $row->ccr_dns_ttl,
 				"cdnId"                => $row->cdn->id,
@@ -221,6 +222,7 @@ sub show {
 		push(
 			@data, {
 				"active"               => \$row->active,
+				"anonymousBlockingEnabled" => $row->anonymous_blocking_enabled,
 				"cacheurl"             => $row->cacheurl,
 				"ccrDnsTtl"            => $row->ccr_dns_ttl,
 				"cdnId"                => $row->cdn->id,
@@ -328,6 +330,7 @@ sub update {
 
 	my $values = {
 		active                 => $params->{active},
+		anonymous_blocking_enabled => $params->{anonymousBlockingEnabled},
 		cacheurl               => $params->{cacheurl},
 		ccr_dns_ttl            => $params->{ccrDnsTtl},
 		cdn_id                 => $params->{cdnId},
@@ -424,6 +427,7 @@ sub update {
 		push(
 			@response, {
 				"active"                   => $rs->active,
+				"anonymousBlockingEnabled" => $rs->anonymous_blocking_enabled,
 				"cacheurl"                 => $rs->cacheurl,
 				"ccrDnsTtl"                => $rs->ccr_dns_ttl,
 				"cdnId"                    => $rs->cdn->id,
@@ -555,6 +559,7 @@ sub safe_update {
 		push(
 			@response, {
 				"active"                   => $rs->active,
+				"anonymousBlockingEnabled" => $rs->anonymous_blocking_enabled,
 				"cacheurl"                 => $rs->cacheurl,
 				"ccrDnsTtl"                => $rs->ccr_dns_ttl,
 				"cdnId"                    => $rs->cdn->id,
@@ -662,6 +667,7 @@ sub create {
 
 	my $values = {
 		active                 => $params->{active},
+		anonymous_blocking_enabled => $params->{anonymousBlockingEnabled},
 		cacheurl               => $params->{cacheurl},
 		ccr_dns_ttl            => $params->{ccrDnsTtl},
 		cdn_id                 => $params->{cdnId},
@@ -769,6 +775,7 @@ sub create {
 		push(
 			@response, {
 				"active"                   => $insert->active,
+				"anonymousBlockingEnabled" => $insert->anonymous_blocking_enabled,
 				"cacheurl"                 => $insert->cacheurl,
 				"ccrDnsTtl"                => $insert->ccr_dns_ttl,
 				"cdnId"                    => $insert->cdn->id,
@@ -961,6 +968,7 @@ sub get_deliveryservices_by_serverId {
 			push(
 				@data, {
 					"active"               => \$row->active,
+					"anonymousBlockingEnabled" => $row->anonymous_blocking_enabled,
 					"cacheurl"             => $row->cacheurl,
 					"ccrDnsTtl"            => $row->ccr_dns_ttl,
 					"cdnId"                => $row->cdn->id,
@@ -1059,6 +1067,7 @@ sub get_deliveryservices_by_userId {
 			push(
 				@data, {
 					"active"               => \$row->active,
+					"anonymousBlockingEnabled" => $row->anonymous_blocking_enabled,
 					"cacheurl"             => $row->cacheurl,
 					"ccrDnsTtl"            => $row->ccr_dns_ttl,
 					"cdnId"                => $row->cdn->id,
