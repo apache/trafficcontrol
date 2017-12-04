@@ -53,7 +53,7 @@ func TestMain(m *testing.M) {
 
 	var err error
 	configFileName := flag.String("cfg", "traffic-ops-test.conf", "The config file path")
-	tcFixturesFileName := flag.String("tcfixtures", "tc-fixtures.json", "The test fixtures for the API test tool")
+	tcFixturesFileName := flag.String("fixtures", "tc-fixtures.json", "The test fixtures for the API test tool")
 	flag.Parse()
 
 	if cfg, err = LoadConfig(*configFileName); err != nil {
@@ -66,11 +66,13 @@ func TestMain(m *testing.M) {
 	}
 
 	log.Infof(`Using Config values:
+			   TO Config File:       %s
+			   TO Fixtures:          %s
 			   TO URL:               %s
 			   DB Server:            %s
 			   DB User:              %s
 			   DB Name:              %s
-			   DB Ssl:               %t`, cfg.TrafficOps.URL, cfg.TrafficOpsDB.Hostname, cfg.TrafficOpsDB.User, cfg.TrafficOpsDB.Name, cfg.TrafficOpsDB.SSL)
+			   DB Ssl:               %t`, *configFileName, *tcFixturesFileName, cfg.TrafficOps.URL, cfg.TrafficOpsDB.Hostname, cfg.TrafficOpsDB.User, cfg.TrafficOpsDB.Name, cfg.TrafficOpsDB.SSL)
 
 	//Load the test data
 	loadTestCDN(*tcFixturesFileName)
@@ -78,7 +80,7 @@ func TestMain(m *testing.M) {
 	var db *sql.DB
 	db, err = openConnection(&cfg)
 	if err != nil {
-		fmt.Errorf("\nError opening connection to %s - %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+		log.Errorf("\nError opening connection to %s - %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
 		os.Exit(1)
 	}
 	defer db.Close()
@@ -121,16 +123,16 @@ func setupSession(cfg Config, toURL string, toUser string, toPass string) (*clie
 	return TOSession, netAddr, err
 }
 
-func loadTestCDN(tcFixturesPath string) {
+func loadTestCDN(fixturesPath string) {
 
-	f, err := ioutil.ReadFile(tcFixturesPath)
+	f, err := ioutil.ReadFile(fixturesPath)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Errorf("Cannot unmarshal fixtures json %s", err)
 		os.Exit(1)
 	}
 	err = json.Unmarshal(f, &testData)
 	if err != nil {
-		log.Errorf("Cannot unmarshal the json ", err)
+		log.Errorf("Cannot unmarshal fixtures json ", err)
 		os.Exit(1)
 	}
 }
