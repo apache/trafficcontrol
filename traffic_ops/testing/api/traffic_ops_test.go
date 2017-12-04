@@ -56,10 +56,10 @@ func TestMain(m *testing.M) {
 
 	log.Infof(`Using Config values:
 			   TO URL:               %s
-			   Db Server:            %s
-			   Db User:              %s
-			   Db Name:              %s
-			   Db Ssl:               %t`, cfg.TOURL, cfg.DB.Hostname, cfg.DB.User, cfg.DB.Name, cfg.DB.SSL)
+			   DB Server:            %s
+			   DB User:              %s
+			   DB Name:              %s
+			   DB Ssl:               %t`, cfg.TrafficOps.URL, cfg.TrafficOpsDB.Hostname, cfg.TrafficOpsDB.User, cfg.TrafficOpsDB.Name, cfg.TrafficOpsDB.SSL)
 
 	//Load the test data
 	loadTestCDN()
@@ -67,26 +67,26 @@ func TestMain(m *testing.M) {
 	var db *sql.DB
 	db, err = openConnection(&cfg)
 	if err != nil {
-		fmt.Errorf("\nError opening connection to %s - %v\n", cfg.TOURL, cfg.TOUser, err)
+		fmt.Errorf("\nError opening connection to %s - %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
 		os.Exit(1)
 	}
 	defer db.Close()
 
 	err = teardownData(&cfg, db)
 	if err != nil {
-		fmt.Printf("\nError tearingdown data %s - %v\n", cfg.TOURL, cfg.TOUser, err)
+		fmt.Printf("\nError tearingdown data %s - %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
 		os.Exit(1)
 	}
 
 	err = setupUserData(&cfg, db)
 	if err != nil {
-		fmt.Errorf("\nError setting up data %s - %v\n", cfg.TOURL, cfg.TOUser, err)
+		fmt.Errorf("\nError setting up data %s - %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
 		os.Exit(1)
 	}
 
-	TOSession, _, err = setupSession(cfg, cfg.TOURL, cfg.TOUser, cfg.TOUserPassword)
+	TOSession, _, err = setupSession(cfg, cfg.TrafficOps.URL, cfg.TrafficOps.User, cfg.TrafficOps.UserPassword)
 	if err != nil {
-		fmt.Printf("\nError logging into TOURL: %s TOUser: %s - %v\n", cfg.TOURL, cfg.TOUser, err)
+		fmt.Printf("\nError logging into TOURL: %s TOUser: %s - %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
 		os.Exit(1)
 	}
 

@@ -27,15 +27,19 @@ import (
 
 // Config reflects the structure of the test-to-api.conf file
 type Config struct {
-	TOURL          string             `json:"TOURL" envconfig:"TO_URL" default:"https://localhost:8443"`
-	TOUser         string             `json:"TOUser" envconfig:"TO_USER"`
-	TOUserPassword string             `json:"TOPassword" envconfig:"TO_USER_PASSWORD"`
-	Insecure       bool               `json:"sslInsecure" envconfig:"SSL_INSECURE"`
-	DB             TrafficOpsDatabase `json:"db"`
-	Log            Locations          `json:"logLocations"`
+	TrafficOps   TrafficOps   `json:"trafficOps"`
+	TrafficOpsDB TrafficOpsDB `json:"trafficOpsDB"`
+	APITests     APITests     `json:"APITests"`
 }
 
-type TrafficOpsDatabase struct {
+type TrafficOps struct {
+	URL          string `json:"TOURL" envconfig:"TO_URL" default:"https://localhost:8443"`
+	User         string `json:"TOUser" envconfig:"TO_USER"`
+	UserPassword string `json:"TOPassword" envconfig:"TO_USER_PASSWORD"`
+	Insecure     bool   `json:"sslInsecure" envconfig:"SSL_INSECURE"`
+}
+
+type TrafficOpsDB struct {
 	Name        string `json:"dbname" envconfig:"TODB_NAME"`
 	Hostname    string `json:"hostname" envconfig:"TODB_HOSTNAME"`
 	User        string `json:"user" envconfig:"TODB_USER"`
@@ -44,6 +48,10 @@ type TrafficOpsDatabase struct {
 	DBType      string `json:"type" envconfig:"TODB_TYPE"`
 	SSL         bool   `json:"ssl" envconfig:"TODB_SSL"`
 	Description string `json:"description" envconfig:"TODB_DESCRIPTION"`
+}
+
+type APITests struct {
+	Log Locations `json:"logLocations"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file
