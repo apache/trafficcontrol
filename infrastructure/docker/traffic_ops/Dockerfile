@@ -40,7 +40,7 @@ RUN cpanm Carton
 RUN yum install -y perl-DBIx-Connector
 
 # Override RPM arg to use a different one using --build-arg RPM=...  Can be local file or http://...
-ARG RPM=http://traffic-control-cdn.net/downloads/1.7.0/RELEASE-1.7.0/traffic_ops-1.7.0-3908.5b77f60f.x86_64.rpm
+ARG RPM=traffic_ops.rpm
 ADD $RPM /
 RUN yum install -y /$(basename $RPM)
 
