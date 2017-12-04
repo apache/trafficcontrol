@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.URL;
 
 import org.apache.log4j.Logger;
 import org.apache.wicket.ajax.json.JSONException;
@@ -54,6 +55,8 @@ public final class AnonymousIp {
 
 	private AnonymousIpWhitelist ipv4Whitelist;
 	private AnonymousIpWhitelist ipv6Whitelist;
+
+	private String redirectUrl;
 
 	public final static int BLOCK_CODE = 403;
 	public final static String WHITE_LIST_LOC = "w";
@@ -125,6 +128,10 @@ public final class AnonymousIp {
 
 			parseIPv4Whitelist(config, anonymousIp);
 			parseIPv6Whitelist(config, anonymousIp);
+
+			if (config.has("redirectUrl")) {
+				anonymousIp.redirectUrl = config.getString("redirectUrl");
+			}
 
 			return anonymousIp;
 		} catch (Exception e) {
@@ -219,8 +226,8 @@ public final class AnonymousIp {
 	 * in the anonymous ip database The ip will be blocked if it matches a
 	 * policy defined in the config file
 	 */
-	public static void enforce(final TrafficRouter trafficRouter, final Request request, final DeliveryService deliveryService, final Cache cache,
-			final HTTPRouteResult routeResult, final Track track) throws MalformedURLException {
+	public static void enforce(final TrafficRouter trafficRouter, final Request request, final DeliveryService deliveryService, final Cache cache, 
+		final HTTPRouteResult routeResult, final Track track) throws MalformedURLException {
 
 		final HTTPRequest httpRequest = HTTPRequest.class.cast(request);
 
@@ -236,6 +243,9 @@ public final class AnonymousIp {
 		if (block) {
 			routeResult.setResponseCode(AnonymousIp.BLOCK_CODE);
 			track.setResult(ResultType.ANON_BLOCK);
+			if (AnonymousIp.getCurrentConfig().redirectUrl != null) {
+				routeResult.setUrl(new URL(AnonymousIp.getCurrentConfig().redirectUrl));
+			}
 		}
 	}
 }
