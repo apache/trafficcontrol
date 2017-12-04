@@ -1048,8 +1048,7 @@ sub build_remap_line {
 	if ( defined( $remap->{edge_header_rewrite} ) ) {
 		$text .= " \@plugin=header_rewrite.so \@pparam=" . $remap->{hdr_rw_file};
 	}
-	if ( defined($remap->{signing_algorithm}))
-	{
+	if ( defined($remap->{signing_algorithm})) {
 		if ( $remap->{signing_algorithm} eq "url_sig" ) {
 			$text .= " \@plugin=url_sig.so \@pparam=url_sig_" . $remap->{ds_xml_id} . ".config";
 		}
