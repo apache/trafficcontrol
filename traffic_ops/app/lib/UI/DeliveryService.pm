@@ -257,6 +257,7 @@ sub read {
 				"regional_geo_blocking"       => $row->regional_geo_blocking,
 				"logs_enabled"                => \$row->logs_enabled,
 				"deep_caching_type"           => $row->deep_caching_type,
+				"anonymous_blocking_enabled"  => $row->anonymous_blocking_enabled,
 			}
 		);
 	}
@@ -846,6 +847,7 @@ sub update {
 			initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 			logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
 			deep_caching_type  => $self->paramAsScalar('ds.deep_caching_type'),
+			anonymous_blocking_enabled => $self->paramAsScalar('ds.anonymous_blocking_enabled'),
 		);
 
 		my $typename = $self->typename();
@@ -1088,6 +1090,7 @@ sub create {
 				logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
 				tenant_id => $tenant_id,
 				deep_caching_type  => $self->paramAsScalar('ds.deep_caching_type'),
+				anonymous_blocking_enabled => $self->paramAsScalar('ds.anonymous_blocking_enabled'),
 		};
 
 		my $insert = $self->db->resultset('Deliveryservice')->create($new_ds);

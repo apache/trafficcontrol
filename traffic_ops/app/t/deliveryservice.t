@@ -99,6 +99,7 @@ ok $t->post_ok(
 		'ds.display_name'                => 'display name 1',
 		'ds.regional_geo_blocking'       => '1',
 		'ds.geolimit_redirect_url'       => '',
+		'ds.anonymous_blocking_enabled'  => '0',
 	}
 )->status_is(302), "create HTTP delivery service";
 my $t1_id = &get_ds_id('tst_xml_id_1');
@@ -151,6 +152,7 @@ ok $t->post_ok(
 		'ds.display_name'                => 'display name 2',
 		'ds.regional_geo_blocking'       => '0',
 		'ds.geolimit_redirect_url'       => '',
+		'ds.anonymous_blocking_enabled'  => '1',
 	}
 )->status_is(302), "create DNS DeliveryService";
 $t2_id = &get_ds_id('tst_xml_id_2');
@@ -206,6 +208,7 @@ ok $t->post_ok(
 		'ds.display_name'                => 'display name 3',
 		'ds.regional_geo_blocking'       => '0',
 		'ds.geolimit_redirect_url'       => 'http://knutsel3.com',
+		'ds.anonymous_blocking_enabled'  => '0',
 	}
 )->status_is(302), "create HTTP_NO_CACHE deliveryservice";
 
@@ -230,7 +233,9 @@ ok $t->get_ok('/datadeliveryservice')->
 	->json_is( '/0/display_name' => 'display name 1' )
 	->json_is( '/0/regional_geo_blocking' => '1' )
 	->json_is( '/0/regional_geo_blocking' => '1' )
-	->json_is( '/1/regional_geo_blocking' => '0' ),
+	->json_is( '/1/regional_geo_blocking' => '0' )
+	->json_is( '/0/anonymous_blocking_enabled' => '0' )
+	->json_is( '/1/anonymous_blocking_enabled' => '1' ),
 	"validate delivery services were created";
 
 $t2_id = &get_ds_id('tst_xml_id_2');
