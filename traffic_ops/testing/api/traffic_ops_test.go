@@ -25,6 +25,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 
@@ -39,12 +40,22 @@ var (
 	testData  TrafficControl
 )
 
+// varInfo maintains information about the configuration variable
+type varInfo struct {
+	Name  string
+	Alt   string
+	Key   string
+	Field reflect.Value
+	Tags  reflect.StructTag
+}
+
 func TestMain(m *testing.M) {
 
-	configFileName := flag.String("cfg", "", "The config file path")
+	var err error
+	configFileName := flag.String("cfg", "traffic-ops-test.conf", "The config file path")
+	tcFixturesFileName := flag.String("tcfixtures", "tc-fixtures.json", "The test fixtures for the API test tool")
 	flag.Parse()
 
-	var err error
 	if cfg, err = LoadConfig(*configFileName); err != nil {
 		fmt.Printf("Error Loading Config %v %v\n", cfg, err)
 	}
@@ -62,7 +73,7 @@ func TestMain(m *testing.M) {
 			   DB Ssl:               %t`, cfg.TrafficOps.URL, cfg.TrafficOpsDB.Hostname, cfg.TrafficOpsDB.User, cfg.TrafficOpsDB.Name, cfg.TrafficOpsDB.SSL)
 
 	//Load the test data
-	loadTestCDN()
+	loadTestCDN(*tcFixturesFileName)
 
 	var db *sql.DB
 	db, err = openConnection(&cfg)
@@ -110,9 +121,9 @@ func setupSession(cfg Config, toURL string, toUser string, toPass string) (*clie
 	return TOSession, netAddr, err
 }
 
-func loadTestCDN() {
+func loadTestCDN(tcFixturesPath string) {
 
-	f, err := ioutil.ReadFile("./test_cdn.json")
+	f, err := ioutil.ReadFile(tcFixturesPath)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -128,33 +139,25 @@ func loadTestCDN() {
 //This is basically a copy of the private "request" method in the tc.go \
 //but I didn't want to make that one public.
 func Request(to client.Session, method, path string, body []byte) (*http.Response, error) {
-	fmt.Printf("method ---> %v\n", method)
 	url := fmt.Sprintf("%s%s", TOSession.URL, path)
 
 	var req *http.Request
 	var err error
 
 	if body != nil && method != "GET" {
-		fmt.Printf("1\n")
 		req, err = http.NewRequest(method, url, bytes.NewBuffer(body))
-		fmt.Printf("err1 ---> %v\n", err)
 		if err != nil {
 			return nil, err
 		}
 		req.Header.Set("Content-Type", "application/json")
 	} else {
-		fmt.Printf("2\n")
 		req, err = http.NewRequest(method, url, nil)
-		fmt.Printf("req2---> %v\n", req)
-		fmt.Printf("err2 ---> %v\n", err)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	resp, err := to.Client.Do(req)
-	fmt.Printf("err ---> %v\n", err)
-	fmt.Printf("resp ---> %v\n", resp)
 	if err != nil {
 		return nil, err
 	}

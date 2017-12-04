@@ -17,17 +17,44 @@
     under the License.
 -->
 
-# Traffic Ops Client Integration Tests
+# Traffic Ops API Tests
 
-The Traffic Ops Client Integration tests are used to validate the clients responses against those from the Traffic Ops API.  In order to run the tests you will need a Traffic Ops instance with at least one of each of the following:  CDN, Delivery Service, Type, Cachegroup, User and Server.
+The Traffic Ops Client API tests are used to validate the clients responses against those from the Traffic Ops API.  
 
-## Running the Integration Tests
-The integration tests are run using `go test`, however, there are some flags that need to be provided in order for the tests to work.  The flags are:
+In order to run the tests you will need the following:
 
-* toURL - The URL to Traffic Ops.  Default is "http://localhost:3000".
-* toUser - The Traffic Ops user to use.  Default is "admin".
-* toPass - The password of the user provided.  Deafault is "password".
+1. Port access to both the Postgres port (usually 5432) that your Traffic Ops instance is using as well as the Traffic Ops configured port (usually 443 or 60443).
 
-Example command to run the tests: `go test -v -toUrl=https://to.kabletown.net -toUser=myUser -toPass=myPass`
+2. An instance of Postgres running with a `to_test` database that has empty tables.
 
-*It can take serveral minutes for the integration tests to complete, so using the `-v` flag is recommended to see progress.*
+    To get your to_test database setup do the following:
+    `$ cd incubator-trafficcontrol/traffic_ops/app`
+    `$ db/admin.pl --env=test reset` 
+
+    For more info see: http://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html?highlight=reset
+
+3. A running Traffic Ops instance running with the `secure` (https) and is pointing to the `to_test` 
+   database by running in `MOJO_MODE=test` which will point to your `to_test` database.
+    To get your to_test database setup do the following:
+    `$ export MOJO_MODE=test`
+    `$ cd incubator-trafficcontrol/traffic_ops/app`
+    `$ bin/start.pl --secure`
+
+## Running the API Tests
+The integration tests are run using `go test`, however, there are some flags that need to be provided in order for the tests to work.  
+
+The flags are:
+
+* usage - API Test tool usage
+* cfg - the config file needed to run the tests
+* env - Environment variables that can be used to override specific config options that are specified in the config file
+* env_vars - Show environment variables that can be overridden
+* test_data - trafffic control
+* run - Go runtime flag for executing a specific test case
+
+Example command to run the tests: 
+`TO_URL=https://localhost:8443 go test -v -cfg=traffic-ops-test.conf -run TestCDNs`
+
+
+
+* It can take serveral minutes for the API tests to complete, so using the `-v` flag is recommended to see progress.*
