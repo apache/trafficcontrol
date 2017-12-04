@@ -69,10 +69,11 @@ func TestMain(m *testing.M) {
 			   TO Config File:       %s
 			   TO Fixtures:          %s
 			   TO URL:               %s
+			   TO Session Timeout In Secs:  %d
 			   DB Server:            %s
 			   DB User:              %s
 			   DB Name:              %s
-			   DB Ssl:               %t`, *configFileName, *tcFixturesFileName, cfg.TrafficOps.URL, cfg.TrafficOpsDB.Hostname, cfg.TrafficOpsDB.User, cfg.TrafficOpsDB.Name, cfg.TrafficOpsDB.SSL)
+			   DB Ssl:               %t`, *configFileName, *tcFixturesFileName, cfg.TrafficOps.URL, cfg.APITests.Session.TimeoutInSecs, cfg.TrafficOpsDB.Hostname, cfg.TrafficOpsDB.User, cfg.TrafficOpsDB.Name, cfg.TrafficOpsDB.SSL)
 
 	//Load the test data
 	loadTestCDN(*tcFixturesFileName)
@@ -80,7 +81,7 @@ func TestMain(m *testing.M) {
 	var db *sql.DB
 	db, err = openConnection(&cfg)
 	if err != nil {
-		log.Errorf("\nError opening connection to %s - %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+		fmt.Errorf("\nError opening connection to %s - %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
 		os.Exit(1)
 	}
 	defer db.Close()
@@ -113,8 +114,7 @@ func setupSession(cfg Config, toURL string, toUser string, toPass string) (*clie
 	var err error
 	var TOSession *client.Session
 	var netAddr net.Addr
-	//TODO: drichardson make this configurable
-	toReqTimeout := time.Second * time.Duration(30)
+	toReqTimeout := time.Second * time.Duration(cfg.APITests.Session.TimeoutInSecs)
 	TOSession, netAddr, err = client.LoginWithAgent(toURL, toUser, toPass, true, "to-api-client-tests", true, toReqTimeout)
 	if err != nil {
 		return nil, nil, err

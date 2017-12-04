@@ -74,7 +74,11 @@ type TrafficOpsDB struct {
 }
 
 type APITests struct {
-	Log Locations `json:"logLocations"`
+	Session Session   `json:"session"`
+	Log     Locations `json:"logLocations"`
+}
+type Session struct {
+	TimeoutInSecs int `json:"timeoutInSecs" envconfig:"SESSION_TIMEOUT_IN_SECS"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file
