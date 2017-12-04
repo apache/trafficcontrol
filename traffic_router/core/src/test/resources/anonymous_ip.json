@@ -12,5 +12,7 @@
                     
    "ip4Whitelist": ["192.168.30.0/24", "10.0.2.0/24", "5.34.32.0/24"],
    
-   "ip6Whitelist": ["2001:550:90a::/48", "::1/128"]
+   "ip6Whitelist": ["2001:550:90a::/48", "::1/128"],
+   
+   "redirectUrl": "http://youvebeenblocked.com"
 }

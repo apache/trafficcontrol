@@ -9,4 +9,5 @@
                     "blockHostingProvider": true, 
                     "blockPublicProxy": true,
                     "blockTorExitNode": false},
+   "redirectUrl": "http://youvebeenblocked.com"
 }
