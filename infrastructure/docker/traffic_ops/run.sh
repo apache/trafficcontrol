@@ -50,8 +50,6 @@ start() {
 }
 
 init() {
-	# mysql -h $SQL_IP -P $SQL_PORT -u root -p$SQL_ROOT_PASS -e "GRANT ALL ON * . * TO 'traffic_ops'@'localhost' IDENTIFIED BY 'SQL_TRAFFIC_OPS_PASS';"
-
 	local postinstall_input_file="postinstall-input.json"
 	cat > "$postinstall_input_file" <<- ENDOFMESSAGE
 {
