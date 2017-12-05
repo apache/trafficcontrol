@@ -227,6 +227,21 @@ Below is a list of Traffic Server plugins that need to be configured in the para
 |                  |               | Value is left blank.                                 |                                                                                                            |
 +------------------+---------------+------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
 
+Below is a list of cache parameters for special configuration, which are unlikely to need changes, but may be useful in particular circumstances:
+
++--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
+|           Name           |    Config file    |                                                       Description                                                       |
++==========================+===================+=========================================================================================================================+
+| not_a_parent             | parent.config     | This is a boolean flag and is considered true if it exists and has any value except 'false'.                            |
+|                          |                   | This prevents servers with this parameter in their profile from being inserted into the parent.config generated for     |
+|                          |                   | servers with this server's cachegroup as a parent of their cachegroup. This is primarily useful for when edge caches    |
+|                          |                   | are configured to have a cachegroup of other edge caches as parents (a highly unusual configuration), and it is         |
+|                          |                   | necessary to exclude some, but not all, edges in the parent cachegroup from the parent.config (for example, because they|
+|                          |                   | lack necessary capabilities), but still have all edges in the same cachegroup in order to take traffic from ordinary    |
+|                          |                   | delivery services at that cachegroup's geo location. Once again, this is a highly unusual scenario, and under ordinary  |
+|                          |                   | circumstances this parameter should not exist.                                                                          |
++--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
+
 
 Regions, Locations and Cache Groups
 ===================================
