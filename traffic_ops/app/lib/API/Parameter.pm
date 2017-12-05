@@ -27,10 +27,20 @@ use MojoPlugins::Job;
 use Utils::Helper::ResponseHelper;
 
 sub index {
-	my $self         = shift;
+    my $self        = shift;
+    my $name        = $self->param('name');
+    my $config_file = $self->param('configFile');
 
-	my $rs_data = $self->db->resultset("Parameter")->search();
-	my @data = ();
+    my %criteria;
+    if ( defined $name ) {
+        $criteria{'me.name'} = $name;
+    }
+    if ( defined $config_file ) {
+        $criteria{'me.config_file'} = $config_file;
+    }
+
+    my $rs_data = $self->db->resultset("Parameter")->search(\%criteria);
+    my @data = ();
 	while ( my $row = $rs_data->next ) {
 		my $value = $row->value;
 		&UI::Parameter::conceal_secure_parameter_value( $self, $row->secure, \$value );
@@ -107,6 +117,42 @@ sub get_profile_params {
 	$self->success( \@data );
 }
 
+sub get_profile_params_unassigned {
+    my $self         = shift;
+    my $profile_id   = $self->param('id');
+    my $profile_name = $self->param('name');
+
+    my %criteria;
+    if ( defined $profile_id ) {
+        $criteria{'profile.id'} = $profile_id;
+    } elsif ( defined $profile_name ) {
+        $criteria{'profile.name'} = $profile_name;
+    } else {
+        return $self->alert("Profile ID or Name is required");
+    }
+
+    my @assigned_params =
+        $self->db->resultset('ProfileParameter')->search( \%criteria, { prefetch => [ 'parameter', 'profile' ] } )->get_column('parameter')->all();
+
+    my $rs_data = $self->db->resultset("Parameter")->search( 'me.id' => { 'not in' => \@assigned_params } );
+    my @data = ();
+    while ( my $row = $rs_data->next ) {
+        my $value = $row->value;
+        &UI::Parameter::conceal_secure_parameter_value( $self, $row->secure, \$value );
+        push(
+            @data, {
+                "name"        => $row->name,
+                "id"          => $row->id,
+                "configFile"  => $row->config_file,
+                "value"       => $value,
+                "secure"      => \$row->secure,
+                "lastUpdated" => $row->last_updated
+            }
+        );
+    }
+    $self->success( \@data );
+}
+
 sub get_cachegroup_params {
 	my $self         = shift;
 	my $cg_id   = $self->param('id');
@@ -135,6 +181,39 @@ sub get_cachegroup_params {
 		);
 	}
 	$self->success( \@data );
+}
+
+sub get_cachegroup_params_unassigned {
+	my $self        = shift;
+	my $cg_id       = $self->param('id');
+
+	my %criteria;
+	if ( defined $cg_id ) {
+		$criteria{'cachegroup.id'} = $cg_id;
+	} else {
+        return $self->alert("Cache Group ID is required");
+    }
+
+    my @assigned_params =
+        $self->db->resultset('CachegroupParameter')->search( \%criteria, { prefetch => [ 'parameter', 'cachegroup' ] } )->get_column('parameter')->all();
+
+    my $rs_data = $self->db->resultset("Parameter")->search( 'me.id' => { 'not in' => \@assigned_params } );
+    my @data = ();
+    while ( my $row = $rs_data->next ) {
+        my $value = $row->value;
+        &UI::Parameter::conceal_secure_parameter_value( $self, $row->secure, \$value );
+        push(
+            @data, {
+                "name"        => $row->name,
+                "id"          => $row->id,
+                "configFile"  => $row->config_file,
+                "value"       => $value,
+                "secure"      => \$row->secure,
+                "lastUpdated" => $row->last_updated
+            }
+        );
+    }
+    $self->success( \@data );
 }
 
 sub create {
@@ -221,8 +300,12 @@ sub create {
             })
     }
     $self->db->txn_commit();
+
+    my $msg = scalar(@new_parameters) . " parameters created";
+    &log( $self, $msg, "APICHANGE" );
+
     my $response  = \@new_parameters;
-    return $self->success($response, "Create ". scalar(@new_parameters) . " parameters successfully.");
+    return $self->success($response, $msg);
 }
 
 sub update {
@@ -248,7 +331,7 @@ sub update {
 
     my $name = $params->{name} || $find->name;
     my $configFile = $params->{configFile} || $find->config_file;
-    my $value = $params->{value} || $find->value;
+    my $value = exists($params->{value}) ?  $params->{value} : $find->value;
     my $secure = $find->secure;
     if ( defined($params->{secure}) ) {
          $secure = $params->{secure};
@@ -263,6 +346,9 @@ sub update {
         }
     );
 
+    my $msg = "Parameter [ $name ] updated";
+    &log( $self, $msg, "APICHANGE" );
+
     my $response;
     $response->{id}     = $find->id;
     $response->{name}   = $find->name;
@@ -270,7 +356,7 @@ sub update {
     $response->{value}  = $find->value;
     $response->{secure} = $find->secure;
 
-    return $self->success($response, "Parameter was successfully edited.");
+    return $self->success($response, $msg);
 }
 
 sub delete {
@@ -297,7 +383,11 @@ sub delete {
     }
  
     $find->delete();
-    return $self->success_message("Parameter was successfully deleted.");
+
+    my $msg = "Parameter [ " . $find->name . " ] deleted";
+    &log( $self, $msg, "APICHANGE" );
+
+    return $self->success_message($msg);
 }
 
 sub validate {

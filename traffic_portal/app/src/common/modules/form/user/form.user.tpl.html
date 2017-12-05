@@ -1,0 +1,111 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/users')">Users</a></li>
+            <li class="active">{{userName}}</li>
+        </ol>
+        <div class="pull-right" role="group" ng-show="!settings.isNew">
+            <button class="btn btn-primary" title="View Delivery Services" ng-click="viewDeliveryServices()">View Delivery Services</button>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <form name="userForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group" ng-class="{'has-error': hasError(userForm.fullName), 'has-feedback': hasError(userForm.fullName)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Full Name *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="fullName" type="text" class="form-control" ng-model="user.fullName" ng-maxlength="256" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(userForm.fullName, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(userForm.fullName, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(userForm.fullName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(userForm.uName), 'has-feedback': hasError(userForm.uName)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Username *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="uName" type="text" class="form-control" ng-model="user.username" ng-maxlength="128" ng-pattern="/^\S*$/" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(userForm.uName, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(userForm.uName, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(userForm.uName, 'pattern')">No Spaces</small>
+                    <span ng-show="hasError(userForm.uName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(userForm.email), 'has-feedback': hasError(userForm.email)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Email *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="email" type="email" class="form-control" ng-model="user.email" ng-maxlength="128" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(userForm.email, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(userForm.email, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(userForm.email, 'email')">Invalid Email</small>
+                    <span ng-show="hasError(userForm.email)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(userForm.role), 'has-feedback': hasError(userForm.role)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Role (privilege level) *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select name="role" class="form-control" ng-model="user.role" ng-options="role.id as label(role) for role in roles" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(userForm.role, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(userForm.tenantId), 'has-feedback': hasError(userForm.tenantId)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Tenant *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select name="tenantId" class="form-control" ng-model="user.tenantId" ng-options="tenant.id as tenantLabel(tenant) for tenant in tenants" required>
+                        <option value="">Select...</option>
+                    </select>
+                    <small class="input-error" ng-show="hasPropertyError(userForm.tenantId, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(userForm.uPass), 'has-feedback': hasError(userForm.uPass)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Password <span ng-if="settings.isNew || user.newUser">*</span></label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="uPass" type="password" class="form-control" ng-model="user.localPasswd" ng-required="settings.isNew || user.newUser" ng-maxlength="40" ng-minlength="8" autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(userForm.uPass, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(userForm.uPass, 'minlength')">Too Short</small>
+                    <small class="input-error" ng-show="hasPropertyError(userForm.uPass, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(userForm.uPass)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(userForm.confirmPassword), 'has-feedback': hasError(userForm.confirmPassword)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Confirm Password</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="confirmPassword" type="password" class="form-control" ng-model="user.confirmLocalPasswd" match="user.localPasswd">
+                    <small class="input-error" ng-show="hasPropertyError(userForm.confirmPassword, 'match')">[ Doesn't Match ]</small>
+                    <span ng-show="hasError(userForm.confirmPassword)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Public SSH Key</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <textarea name="publicSshKey" rows="5" class="form-control" ng-model="user.publicSshKey"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" ng-disabled="userForm.$pristine || userForm.$invalid" ng-click="confirmSave(user, userForm.username)">{{settings.saveLabel}}</button>
+            </div>
+        </form>
+    </div>
+</div>

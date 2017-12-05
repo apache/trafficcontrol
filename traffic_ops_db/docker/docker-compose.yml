@@ -16,21 +16,15 @@ version: '2'
 services:
   db:
     build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      - POSTGRES_HOST=localhost
-      - POSTGRES_PORT=5432
-      - POSTGRES_DATABASE=traffic_ops
-      - POSTGRES_USER=postgres
-      - POSTGRES_USER_UID=9999
-      - POSTGRES_USER_GID=9999
-      - PGDATA=${PGDATA}
+      context: ..
+      dockerfile: /opt/traffic_ops_db/docker/Dockerfile
+    env_file:
+      - /opt/traffic_ops_db/docker/docker-compose.env
     ports:
       - 5432:5432
     volumes:
-      - ./pgdata:/pgdata
-      - ./logs:/var/log/postgresql
+      - /data:/data
+      - /var/log/postgresql:/var/log/postgresql
     networks:
       - default
 

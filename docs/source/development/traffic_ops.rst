@@ -603,17 +603,27 @@ API 1.2 Reference
 .. toctree:: 
   :maxdepth: 1
 
+  traffic_ops_api/v12/api_capability
   traffic_ops_api/v12/asn
+  traffic_ops_api/v12/cache
   traffic_ops_api/v12/cachegroup
+  traffic_ops_api/v12/cachegroup_parameter
   traffic_ops_api/v12/cache_stats
+  traffic_ops_api/v12/capability
   traffic_ops_api/v12/cdn
   traffic_ops_api/v12/changelog
+  traffic_ops_api/v12/configfiles_ats
   traffic_ops_api/v12/deliveryservice
   traffic_ops_api/v12/deliveryservice_regex
   traffic_ops_api/v12/deliveryservice_stats
   traffic_ops_api/v12/division
   traffic_ops_api/v12/federation
+  traffic_ops_api/v12/federation_deliveryservice
+  traffic_ops_api/v12/federation_federationresolver
+  traffic_ops_api/v12/federation_resolver
+  traffic_ops_api/v12/federation_user
   traffic_ops_api/v12/hwinfo
+  traffic_ops_api/v12/iso
   traffic_ops_api/v12/job
   traffic_ops_api/v12/parameter
   traffic_ops_api/v12/phys_location
@@ -625,6 +635,7 @@ API 1.2 Reference
   traffic_ops_api/v12/server
   traffic_ops_api/v12/static_dns
   traffic_ops_api/v12/status
+  traffic_ops_api/v12/steering_target
   traffic_ops_api/v12/system
   traffic_ops_api/v12/tenant
   traffic_ops_api/v12/to_extension

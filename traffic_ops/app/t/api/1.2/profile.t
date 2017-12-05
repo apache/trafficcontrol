@@ -17,6 +17,7 @@ use Mojo::Base -strict;
 use Test::More;
 use Test::Mojo;
 use DBI;
+use JSON;
 use strict;
 use warnings;
 no warnings 'once';
@@ -37,6 +38,13 @@ Test::TestHelper->load_core_data($schema);
 
 ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(302)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ), 'Should login?';
+
+ok $t->post_ok('/api/1.2/profiles' => {Accept => 'application/json'} => json => {
+	"name" => "CCR_CREATE", "description" => "CCR_CREATE description", "cdn" => "cdn1", "type" => 'TR_PROFILE' })->status_is(400)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/alerts/0/level" => "error" )
+		->json_is( "/alerts/0/text" => "cdn must be a positive integer" )
+		, 'Does the profile create fail?';
 
 ok $t->post_ok('/api/1.2/profiles' => {Accept => 'application/json'} => json => {
 	"name" => "CCR_CREATE", "description" => "CCR_CREATE description", "cdn" => 100, "type" => 'TR_PROFILE' })->status_is(200)
@@ -74,12 +82,14 @@ ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/jso
         "name" => "CCR_UPDATE",
         "description" => "CCR_UPDATE description",
         "cdn" => 100,
-        "type" => "TR_PROFILE"
+        "type" => "TR_PROFILE",
+		"routingDisabled" => 1
         })
     ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/id" => "$profile_id")
     ->json_is( "/response/name" => "CCR_UPDATE")
     ->json_is( "/response/description" => "CCR_UPDATE description")
+	->json_is( "/response/routingDisabled" => 1)
             , 'Does the profile details return?';
 
 ok $t->put_ok('/api/1.2/profiles/' . $profile_id  => {Accept => 'application/json'} => json => {
@@ -110,9 +120,11 @@ ok $t->get_ok('/api/1.2/profiles?param=9&orderby=profile' => {Accept => 'applica
 	->json_is( "/response/0/id" => "100" )
 	->json_is( "/response/0/name" => "EDGE1" )
 	->json_is( "/response/0/description" => "edge description" )
+	->json_is( "/response/0/routingDisabled" => 0 )
 	->json_is( "/response/1/id" => "200" )
 	->json_is( "/response/1/name" => "MID1" )
 	->json_is( "/response/1/description" => "mid description" )
+	->json_is( "/response/1/routingDisabled" => 0 )
 		, 'Does the profile details return?';
 
 $t->get_ok("/api/1.2/profiles/8")->status_is(200)->json_is( "/response/0/id", 8 )
@@ -121,6 +133,34 @@ $t->get_ok("/api/1.2/profiles/8")->status_is(200)->json_is( "/response/0/id", 8 
 ok $t->delete_ok('/api/1.2/profiles/8')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/api/1.2/profiles/parameter/1' => {Accept => 'application/json'})->status_is(404);
+
+# Count the 'response number'
+my $count_response = sub {
+	my ( $t, $count ) = @_;
+	my $json = decode_json( $t->tx->res->content->asset->slurp );
+	my $r    = $json->{response};
+	return $t->success( is( scalar(@$r), $count ) );
+};
+
+# there are currently 6 parameters not assigned to profile 100
+$t->get_ok('/api/1.2/profiles/100/unassigned_parameters')->status_is(200)->$count_response(7)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+# there are currently 4 parameters not assigned to profile 200
+$t->get_ok('/api/1.2/profiles/200/unassigned_parameters')->status_is(200)->$count_response(5)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+# there are currently 7 profiles not assigned to parameter 4
+$t->get_ok('/api/1.2/parameters/4/unassigned_profiles')->status_is(200)->$count_response(8)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+# there are currently 7 profiles not assigned to parameter 4
+$t->get_ok('/api/1.2/parameters/4/unassigned_profiles')->status_is(200)->$count_response(8)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
+# there are currently 6 profiles not assigned to parameter 6
+$t->get_ok('/api/1.2/parameters/6/unassigned_profiles')->status_is(200)->$count_response(7)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 $dbh->disconnect();

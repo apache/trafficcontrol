@@ -19,10 +19,10 @@ package API::Job;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use Utils::Tenant;
 
 use Mojo::Base 'Mojolicious::Controller';
 use UI::Utils;
-use Digest::SHA1 qw(sha1_hex);
 use Mojolicious::Validator;
 use Mojolicious::Validator::Validation;
 use Mojo::JSON;
@@ -42,12 +42,27 @@ sub index {
 	my $ds_id   = $self->param('dsId');
 	my $user_id = $self->param('userId');
 
-	if ( !&is_oper($self) ) {
-		return $self->forbidden();
-	}
-
 	my %criteria;
 	if ( defined $ds_id ) {
+
+		my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
+		if ( !defined($ds) ) {
+			return $self->not_found();
+		}
+
+		my $tenant_utils = Utils::Tenant->new($self);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
+		if ( $tenant_utils->use_tenancy() ) {
+			if ( !$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id) ) {
+				return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+			}
+		} else {
+			if ( !&is_oper($self) && !$self->is_delivery_service_assigned($ds_id) ) {
+				return $self->forbidden();
+			}
+		}
+
 		$criteria{'job_deliveryservice'} = $ds_id;
 	}
 	if ( defined $user_id ) {
@@ -149,18 +164,21 @@ sub create_current_user_job {
 		return $self->alert($result);
 	}
 
-	if ( !&is_oper($self) ) {
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $ds_id } );
+	if ( !defined($ds) ) {
+		return $self->not_found();
+	}
 
-		# if not ops or higher -- invalidate content (purge) requests can only be performed against assigned delivery services
-		my $tm_user = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->single();
-		my $tm_user_id = (defined($tm_user)) ? $tm_user->id : undef;
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
 
-		# select deliveryservice from deliveryservice_tmuser where deliveryservice=$ds_id
-		my $dbh = $self->db->resultset('DeliveryserviceTmuser')->search( { deliveryservice => $ds_id, tm_user_id => $tm_user_id }, { id => 1 } );
-		my $count = $dbh->count();
-
-		if ( $count == 0 ) {
-			return $self->forbidden("Forbidden. Delivery service not assigned to user.");
+	if ( $tenant_utils->use_tenancy() ) {
+		if ( !$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id) ) {
+			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+		}
+	} else {
+		if ( !&is_oper($self) && !$self->is_delivery_service_assigned($ds_id) ) {
+			return $self->forbidden();
 		}
 	}
 
@@ -171,8 +189,9 @@ sub create_current_user_job {
 	if ($new_id) {
 		my $saved_job = $self->db->resultset("Job")->find( { id => $new_id } );
 		my $asset_url = $saved_job->asset_url;
-		&log( $self, "Invalidate content request submitted for " . $asset_url, "APICHANGE" );
-		return $self->success_message( "Invalidate content request submitted for: " . $asset_url . " (" . $saved_job->parameters . ")" );
+		my $msg = "Invalidate content request submitted for " . $ds->xml_id() . " [ $asset_url - " . $saved_job->parameters . " ]";
+		&log( $self, $msg, "APICHANGE" );
+		return $self->success_message( $msg );
 	}
 	else {
 		return $self->alert( { "Error creating invalidate content request" . $ds_id } );

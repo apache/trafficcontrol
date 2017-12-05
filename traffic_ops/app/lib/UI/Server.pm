@@ -449,8 +449,11 @@ sub check_server_input {
 
 	my $profile = $self->db->resultset('Profile')->search( { 'me.id' => $paramHashRef->{'profile'}}, { prefetch => ['cdn'] } )->single();
 	my $cdn = $self->db->resultset('Cdn')->search( { 'me.id' => $paramHashRef->{'cdn'} } )->single();
-	if ( $profile->cdn->id != $cdn->id ) {
-		$err .= "the " . $paramHashRef->{'profile'} . " profile is not in the  " . $paramHashRef->{'cdn'} . " CDN." . $sep;
+	if ( !defined($profile->cdn) ) {
+		$err .= "the " . $paramHashRef->{'profile'} . " profile is not in the " . $cdn->name . " CDN." . $sep;
+	}
+	elsif ( $profile->cdn->id != $cdn->id ) {
+		$err .= "the " . $paramHashRef->{'profile'} . " profile is not in the " . $cdn->name . " CDN." . $sep;
 	}
 	return $err;
 }
@@ -955,7 +958,9 @@ sub postupdate {
 	my $reval_updated = $self->param("reval_updated");
 	my $host_name = $self->param("host_name");
 
-	if ( !&is_admin($self) ) {
+	&stash_role($self);
+	# Intentionally <= 10 rather than < 20 to allow an ORT role with level 11 to post to this, but not other admin routes.
+	if ( $self->stash('priv_level') <= 10 ) {
 		$self->render( text => "Forbidden", status => 403, layout => undef );
 		return;
 	}
@@ -1030,7 +1035,7 @@ sub postupdatequeue {
 			$message = $host;
 		}
 		$update->update( { upd_pending => $setqueue } );
-		&log( $self, "Flip Update bit ($wording) for " . $message, "OPER" );
+		&log( $self, "Flip Update bit ($wording) for " . $message, "UICHANGE" );
 	}
 	elsif ( defined($cdn) && defined($cachegroup) ) {
 		my @profiles;
@@ -1066,7 +1071,7 @@ sub postupdatequeue {
 		if ( $update->count() > 0 ) {
 			$update->update( { upd_pending => $setqueue } );
 			$self->app->log->debug("Flip Update bit ($wording) for servers in CDN: $cdn, Cachegroup: $cachegroup");
-			&log( $self, "Flip Update bit ($wording) for servers in CDN:" . $cdn . " cachegroup:" . $cachegroup, "OPER" );
+			&log( $self, "Flip Update bit ($wording) for servers in CDN:" . $cdn . " cachegroup:" . $cachegroup, "UICHANGE" );
 		}
 		else {
 			$self->app->log->debug("No Queue Updates for servers in CDN: $cdn, Cachegroup: $cachegroup");

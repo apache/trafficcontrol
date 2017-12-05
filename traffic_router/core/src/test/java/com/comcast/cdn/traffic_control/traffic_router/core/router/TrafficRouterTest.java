@@ -105,6 +105,8 @@ public class TrafficRouterTest {
 
         Track track = spy(StatTracker.getTrack());
 
+        when(deliveryService.getRoutingName()).thenReturn("edge");
+
         DNSRouteResult result = trafficRouter.route(request, track);
 
         assertThat(result.getAddresses(), containsInAnyOrder(new InetRecord("cname1", 12345)));
@@ -189,10 +191,12 @@ public class TrafficRouterTest {
         assertThat(track.getResultLocation(), equalTo(new Geolocation(50, 50)));
 
         when(federationRegistry.findInetRecords(anyString(), any(CidrAddress.class))).thenReturn(null);
+        when(deliveryService.getRoutingName()).thenReturn("ccr");
 
         DNSRequest dnsRequest = new DNSRequest();
         dnsRequest.setClientIP("192.168.1.2");
         dnsRequest.setClientIP("10.10.10.10");
+        dnsRequest.setHostname("ccr.example.com");
         dnsRequest.setQtype(Type.A);
 
         track = StatTracker.getTrack();

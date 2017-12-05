@@ -19,9 +19,24 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TreeSet;
 
-public class DefaultHashable implements Hashable {
-	private static final int DEFAULT_HASH_COUNT = 1000;
+public class DefaultHashable implements Hashable<DefaultHashable>, Comparable<DefaultHashable> {
 	private Double[] hashes;
+	private int order = 0;
+
+	@Override
+	public void setOrder(final int order) {
+		this.order = order;
+	}
+
+	@Override
+	public int getOrder() {
+		return order;
+	}
+
+	@Override
+	public boolean hasHashes() {
+		return hashes.length > 0 ? true : false;
+	}
 
 	@Override
 	public double getClosestHash(final double hash) {
@@ -32,9 +47,8 @@ public class DefaultHashable implements Hashable {
 	public DefaultHashable generateHashes(final String hashId, final int hashCount) {
 		final TreeSet<Double> hashSet = new TreeSet<Double>();
 		final MD5HashFunction hashFunction = new MD5HashFunction();
-		final int count = (hashCount > 0) ? hashCount : DEFAULT_HASH_COUNT;
 
-		for (int i = 0; i < count; i++) {
+		for (int i = 0; i < hashCount; i++) {
 			hashSet.add(hashFunction.hash(hashId + "--" + i));
 		}
 
@@ -46,5 +60,14 @@ public class DefaultHashable implements Hashable {
 	@Override
 	public List<Double> getHashValues() {
 		return Arrays.asList(hashes);
+	}
+
+	@Override
+	public int compareTo(final DefaultHashable o) {
+		if (this.getOrder() < 0 && o.getOrder() < 0) {
+			return getOrder() < o.getOrder() ? 1 : getOrder() > o.getOrder() ? -1 : 0;
+		} else {
+			return getOrder() < o.getOrder() ? -1 : getOrder() > o.getOrder() ? 1 : 0;
+		}
 	}
 }

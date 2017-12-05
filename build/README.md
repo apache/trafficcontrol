@@ -1,3 +1,22 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+
 
 # Rpm Build Instructions
 
@@ -38,7 +57,7 @@ recommended to not override them:
      directory during the rpm build process.
 * __BUILD_NUMBER__
    - generates build number from the number of commits on the current git branch followed by the 8 character short commit hash of
-     the last commit on the branch.This number is used to create the rpm version, e.g. _traffic_ops.1.2.0.1723.a18e2bb7_.  
+     the last commit on the branch.This number is used to create the rpm version, e.g. _traffic_ops.1.2.0.1723.a18e2bb7_.
 
 At the conclusion of the build,  all rpms are copied into the __$WORKSPACE/dist__ directory.
 
@@ -52,21 +71,24 @@ At the conclusion of the build,  all rpms are copied into the __$WORKSPACE/dist_
 
 #### traffic_ops:
 * perl 5.10 or higher
-* go 1.4 or higher
+* go 1.7 or higher
 
 #### traffic_stats:
-* go 1.4 or higher
-  
+* go 1.7 or higher
+
 #### traffic_monitor and traffic_router:
-* jdk 6.0 or higher
-  * CentOS 6 (java-1.[6,7,8].0-openjdk, java-1.[6,7,8].0-openjdk-devel)
+* jdk 8.0 or higher
+  * CentOS 6 (java-1.8.0-openjdk, java-1.8.0-openjdk-devel)
 * apache-maven 3.3.1 or higher
+
+#### traffic_monitor_golang:
+* go 1.7 or higher
 
 #### traffic_portal
 * npm (yum install npm)
   * bower (npm install -g bower)
   * grunt (npm install -g grunt)
- 
+
 # Docker build instructions
 
 __Building using `docker` is experimental at this time and has not been fully vetted.__

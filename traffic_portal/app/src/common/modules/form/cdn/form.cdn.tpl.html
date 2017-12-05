@@ -1,0 +1,89 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/cdns')">CDNs</a></li>
+            <li class="active">{{cdnName}}</li>
+        </ol>
+        <div class="pull-right" ng-show="!settings.isNew">
+            <button class="btn btn-primary" title="Diff CDN Snapshot" ng-click="viewConfig()"><i class="fa fa-camera"></i>&nbsp;&nbsp;Diff CDN Config Snapshot</button>
+            <div class="btn-group" role="group" uib-dropdown is-open="queue.isopen">
+                <button type="button" class="btn btn-primary dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    Queue Updates&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-click="queueServerUpdates(cdn)">Queue {{cdn.name}} Server Updates</a></li>
+                    <li role="menuitem"><a ng-click="clearServerUpdates(cdn)">Clear {{cdn.name}} Server Updates</a></li>
+                </ul>
+            </div>
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-click="manageDNSSEC()">Manage DNSSEC Keys</a></li>
+                    <li role="menuitem"><a ng-click="manageFederations()">Manage Federations</a></li>
+                    <li class="divider"></li>
+                    <li role="menuitem"><a ng-click="viewDeliveryServices()">View Delivery Services</a></li>
+                    <li role="menuitem"><a ng-click="viewProfiles()">View Profiles</a></li>
+                    <li role="menuitem"><a ng-click="viewServers()">View Servers</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <form name="cdnForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group" ng-class="{'has-error': hasError(cdnForm.name), 'has-feedback': hasError(cdnForm.name)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="name" type="text" class="form-control" ng-model="cdn.name" ng-maxlength="45" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(cdnForm.name, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(cdnForm.name, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(cdnForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(cdnForm.domainName), 'has-feedback': hasError(cdnForm.domainName)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Domain *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="domainName" type="text" class="form-control" ng-model="cdn.domainName" ng-maxlength="255" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(cdnForm.domainName, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(cdnForm.domainName, 'maxlength')">Too Long</small>
+                    <span ng-show="hasError(cdnForm.domainName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(cdnForm.dnssecEnabled), 'has-feedback': hasError(cdnForm.dnssecEnabled)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">DNSSEC Enabled *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <select name="dnssecEnabled" class="form-control" ng-model="cdn.dnssecEnabled" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <small class="input-error" ng-show="hasPropertyError(cdnForm.dnssecEnabled, 'required')">Required</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(cdn)">Delete</button>
+                <button type="button" class="btn btn-success" ng-disabled="cdnForm.$pristine || cdnForm.$invalid" ng-click="save(cdn)">{{settings.saveLabel}}</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,8 +1,6 @@
 package WebDep;
 
 #
-# Copyright 2015 Comcast Cable Communications Management, LLC
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -200,6 +198,7 @@ sub curlMe {
     $curl->setopt( CURLOPT_CONNECTTIMEOUT, 5 );
     $curl->setopt( CURLOPT_TIMEOUT,        15 );
     $curl->setopt( CURLOPT_HEADER,         0 );
+    $curl->setopt( CURLOPT_FOLLOWLOCATION, 1 );
     $curl->setopt( CURLOPT_URL,            $url );
     $curl->setopt( CURLOPT_WRITEDATA,      \$response_body );
     my $retcode       = $curl->perform;

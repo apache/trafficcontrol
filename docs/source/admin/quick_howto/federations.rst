@@ -113,9 +113,9 @@ Configure Federations
 
 	Example::
 
-		$ dig @tr.kabletown.net edge.images-c1.kabletown.net
+		$ dig @tr.kabletown.net foo.images-c1.kabletown.net
 
-		; <<>> DiG 9.7.3-RedHat-9.7.3-2.el6 <<>> @tr.kabletown.net edge.images-c1.kabletown.net
+		; <<>> DiG 9.7.3-RedHat-9.7.3-2.el6 <<>> @tr.kabletown.net foo.images-c1.kabletown.net
 		; (1 server found)
 		;; global options: +cmd
 		;; Got answer:
@@ -124,10 +124,10 @@ Configure Federations
 		;; WARNING: recursion requested but not available
 
 		;; QUESTION SECTION:
-		;edge.images-c1.kabletown.net.	IN A
+		;foo.images-c1.kabletown.net.	IN A
 
 		;; ANSWER SECTION:
-		edge.images-c1.kabletown.net.	30 IN CNAME img.mega-cdn.net.
+		foo.images-c1.kabletown.net.	30 IN CNAME img.mega-cdn.net.
 
 		;; Query time: 9 msec
 		;; SERVER: 10.10.10.10#53(10.10.10.10)

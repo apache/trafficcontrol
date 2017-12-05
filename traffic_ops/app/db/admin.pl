@@ -62,13 +62,15 @@ my $usage = "\n"
 	. "dropdb  - Execute db 'dropdb' on the database for the current environment.\n"
 	. "down  - Roll back a single migration from the current version.\n"
 	. "drop_user  - Execute 'drop_user' the user for the current environment (traffic_ops).\n"
+	. "patch  - Execute sql from db/patches.sql for loading post-migration data patches.\n" 
 	. "redo  - Roll back the most recently applied migration, then run it again.\n"
 	. "reset  - Execute db 'dropdb', 'createdb', load_schema, migrate on the database for the current environment.\n"
 	. "reverse_schema  - Reverse engineer the lib/Schema/Result files from the environment database.\n"
 	. "seed  - Execute sql from db/seeds.sql for loading static data.\n"
 	. "show_users  - Execute sql to show all of the user for the current environment.\n"
 	. "status  - Print the status of all migrations.\n"
-	. "upgrade  - Execute migrate then seed on the database for the current environment.\n";
+	. "upgrade  - Execute migrate, seed, and patches on the database for the current environment.\n";
+
 
 my $environment = 'development';
 my $db_protocol;
@@ -114,6 +116,7 @@ if ( defined($argument) ) {
 	elsif ( $argument eq 'upgrade' ) {
 		migrate('up');
 		seed();
+		patches();
 	}
 	elsif ( $argument eq 'migrate' ) {
 		migrate('up');
@@ -138,6 +141,9 @@ if ( defined($argument) ) {
 	}
 	elsif ( $argument eq 'reverse_schema' ) {
 		reverse_schema();
+	}
+	elsif ( $argument eq 'patch' ) {
+		patches();
 	}
 	else {
 		print $usage;
@@ -184,6 +190,14 @@ sub seed {
 	local $ENV{PGPASSWORD} = $db_password;
 	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e < db/seeds.sql") != 0 ) {
 		die "Can't seed database w/ required data\n";
+	}
+}
+
+sub patches {
+	print "Patching database with required data fixes.\n";
+	local $ENV{PGPASSWORD} = $db_password;
+	if ( system("psql -h $host_ip -p $host_port -d $db_name -U $db_user -e < db/patches.sql") != 0 ) {
+		die "Can't patch database w/ required data\n";
 	}
 }
 
@@ -250,6 +264,7 @@ sub reverse_schema {
 			debug                   => 1,
 			dump_directory          => './lib',
 			overwrite_modifications => 1,
+			exclude => 'goose_db_version',
 		},
 		[ $dsn, $user, $pass ],
 	);

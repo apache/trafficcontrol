@@ -45,6 +45,7 @@ ok $t->post_ok('/api/1.2/regions/Denver Region/phys_locations' => {Accept => 'ap
 	->json_is( "/response/shortName" => "physloc1" )
     ->json_is( "/response/regionName" => "Denver Region" )
             , 'Does the physical location details return?';
+
 ok $t->post_ok('/api/1.2/regions/non_region/phys_locations' => {Accept => 'application/json'} => json => {
         "name" => "physical location1",
         "shortName" => "mountain"})->status_is(400);
@@ -62,13 +63,27 @@ ok $t->post_ok('/api/1.2/phys_locations' => {Accept => 'application/json'} => js
 			"city" => "city",
 			"state" => "state",
 			"zip" => "zip",
+			"regionId" => "string",
+		})
+		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+		->json_is( "/alerts/0/level" => "error" )
+		->json_is( "/alerts/0/text" => "regionId must be a positive integer" )
+	, 'Is phys location NOT created?';
+
+ok $t->post_ok('/api/1.2/phys_locations' => {Accept => 'application/json'} => json => {
+			"name" => "phys1",
+			"shortName" => "phys1",
+			"address" => "address",
+			"city" => "city",
+			"state" => "state",
+			"zip" => "zip",
 			"regionId" => 100,
 		})
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/name" => "phys1" )
 		->json_is( "/alerts/0/level" => "success" )
 		->json_is( "/alerts/0/text" => "Phys location creation was successful." )
-	, 'Does the phys location details return?';
+	, 'Is phys location created?';
 
 my $phys_loc_id = &get_phys_location_id('phys1');
 
@@ -84,7 +99,7 @@ ok $t->put_ok('/api/1.2/phys_locations/' . $phys_loc_id  => {Accept => 'applicat
 		->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 		->json_is( "/response/name" => "phys2" )
 		->json_is( "/alerts/0/level" => "success" )
-	, 'Does the phys location details return?';
+	, 'Is the phys location updated?';
 
 ok $t->delete_ok('/api/1.2/phys_locations/' . $phys_loc_id)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 

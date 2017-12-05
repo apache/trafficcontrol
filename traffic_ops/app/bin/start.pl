@@ -19,9 +19,12 @@
 use Data::Dumper;
 use File::Basename;
 use Env qw/PERL5LIB/;
+use Getopt::Long qw(GetOptions);
 
 mkdir("log");
 my @watch_dirs;
+
+GetOptions('secure' => \$secure);
 
 # Look in the PERL5LIB directories for any TrafficOpsRoutes files.
 foreach my $dir (@INC) {
@@ -43,6 +46,12 @@ print "\n$watch_dirs\n\n";
 
 my $local_dir = dirname($0) . "/../local";
 my $export    = 'export PERL5LIB=$PERL5LIB:' . $local_dir . '/lib/perl5/:' . $to_lib;
-my $cmd       = "$export && " . $local_dir . "/bin/morbo --listen 'http://*:3000' -v $local_dir/../script/cdn -w $watch_dirs_arg";
+my $cmd;
+if ($secure ) {
+   $cmd       = "$export && " . $local_dir . "/bin/morbo --listen 'https://*:60443' -v $local_dir/../script/cdn -w $watch_dirs_arg";
+ }
+else {
+   $cmd       = "$export && " . $local_dir . "/bin/morbo --listen 'http://*:3000' -v $local_dir/../script/cdn -w $watch_dirs_arg";
+}
 
 system($cmd);

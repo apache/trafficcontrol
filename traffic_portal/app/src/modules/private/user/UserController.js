@@ -1,39 +1,53 @@
 /*
-
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ * 
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 
-var UserController = function($scope, $state, $uibModal, $timeout, formUtils, deliveryServicesModel, userService, authService, userModel) {
+var UserController = function($scope, $state, $location, $uibModal, formUtils, locationUtils, tenantUtils, userService, authService, roleService, tenantService, userModel) {
 
     var updateUser = function(user, options) {
-        user.token = null; // this will null out any token the user may have had
-        userService.updateCurrentUser(user)
-            .then(function() {
+        userService.updateCurrentUser(user).
+            then(function() {
                 if (options.signout) {
                     authService.logout();
                 }
             });
     };
 
-    $scope.deliveryServices = deliveryServicesModel.deliveryServices;
-
-    $scope.showDS = function(dsId) {
-        $state.go('trafficPortal.private.deliveryService.view.overview.detail', { deliveryServiceId: dsId } );
+    var getRoles = function() {
+        roleService.getRoles({ orderby: 'priv_level DESC' })
+            .then(function(result) {
+                $scope.roles = result;
+            });
     };
 
-    $scope.confirmUpdate = function(user, usernameField) {
+    var getTenants = function() {
+        tenantService.getTenants()
+            .then(function(result) {
+                $scope.tenants = result;
+                tenantUtils.addLevels($scope.tenants);
+            });
+    };
+
+    $scope.userName = angular.copy(userModel.user.username);
+
+    $scope.user = userModel.user;
+
+    $scope.confirmSave = function(user, usernameField) {
         if (usernameField.$dirty) {
             var params = {
                 title: 'Reauthentication Required',
@@ -52,28 +66,30 @@ var UserController = function($scope, $state, $uibModal, $timeout, formUtils, de
             modalInstance.result.then(function() {
                 updateUser(user, { signout : true });
             }, function () {
+                // do nothing
             });
         } else {
             updateUser(user, { signout : false });
         }
     };
 
+    $scope.viewDeliveryServices = function() {
+        $location.path('/users/' + $scope.user.id + '/delivery-services');
+    };
+
+    $scope.navigateToPath = locationUtils.navigateToPath;
+
     $scope.hasError = formUtils.hasError;
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
 
-    $scope.resetUser = function() {
-        $timeout(function() {
-            $scope.userData = angular.copy(userModel.user);
-        });
+    var init = function () {
+        getRoles();
+        getTenants();
     };
-    $scope.resetUser();
-
-    $scope.$on('userModel::userUpdated', function() {
-        $scope.resetUser();
-    });
+    init();
 
 };
 
-UserController.$inject = ['$scope', '$state', '$uibModal', '$timeout', 'formUtils', 'deliveryServicesModel', 'userService', 'authService', 'userModel'];
+UserController.$inject = ['$scope', '$state', '$location', '$uibModal', 'formUtils', 'locationUtils', 'tenantUtils', 'userService', 'authService', 'roleService', 'tenantService', 'userModel'];
 module.exports = UserController;

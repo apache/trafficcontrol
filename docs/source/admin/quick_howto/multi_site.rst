@@ -19,7 +19,8 @@
 Configure Multi Site Origin
 ***************************
 
-1) Create "cachegroups" for the origin locations, and assign the appropriate parent-child relationship between the mid cg's and org cgs (click the image to see full size):
+
+1) Create cachegroups for the origin locations, and assign the appropriate parent-child relationship between the mid and org cachegroups (click the image to see full size).  Each mid cachegroup can be assigned a primary and secondary origin parent cachegroup.  When the mid cache parent configuration is generated, origins in the primary cachegroups will be listed first, followed by origins in the secondary cachegroup. Origin servers assigned to the delivery service that are assigned to neither the primary nor secondary cachegroups will be listed last.
 
 .. image:: C5C4CD22-949A-48FD-8976-C673083E2177.png
 	:scale: 100%
@@ -43,7 +44,7 @@ Configure Multi Site Origin
 	:scale: 100%
 	:align: center
 
-5) Assign the org servers to the delivery service that will have the multi site feature:
+5) Assign the org servers to the delivery service that will have the multi site feature.  Org servers assigned to a delivery service with multi-site checked will be assigned to be the origin servers for this DS.
 
 .. image:: 066CEF4F-C1A3-4A89-8B52-4F72B0531367.png
 	:scale: 100%
@@ -53,6 +54,8 @@ Configure Multi Site Origin
        1) If there are multiple CDNs created on the same Traffic Ops, delivery services across different CDNs may have the same OFQDN configured.
        2) If several delivery services in the same CDN have the same MSO algorithm configured, they may share the same OFQDN.
        3) If delivery services are assigned with different MID cache groups respectively, they can share the same OFQDN.
+       4) This OFQDN must be valid - ATS will perform a DNS lookup on this FQDN even if IPs, not DNS, are used in the parent.config.
+       5) The OFQDN entered as the "Origin Server Base URL" will be sent to the origins as a host header.  All origins must be configured to respond to this host.
 
 6) Select an option from the "Multi Site Origin Algorithm" drop-down list. Four MSO algorithms are supported:
 
@@ -88,8 +91,38 @@ Configure Multi Site Origin
 	:align: center
 
 
-9) Configure the mid hdr_rewrite on the delivery service, example: ::
+9) For ATS 5.x, configure the mid hdr_rewrite on the delivery service, example: ::
 
 	cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-config proxy.config.http.parent_origin.dead_server_retry_enabled 1 __RETURN__ set-config proxy.config.http.parent_origin.simple_retry_enabled 1 __RETURN__ set-config proxy.config.http.parent_origin.simple_retry_response_codes "400,404,412" __RETURN__ set-config proxy.config.http.parent_origin.dead_server_retry_response_codes "502,503" __RETURN__ set-config proxy.config.http.connect_attempts_timeout 2 __RETURN__ set-config proxy.config.http.connect_attempts_max_retries 2 __RETURN__ set-config proxy.config.http.connect_attempts_max_retries_dead_server 1 __RETURN__ set-config proxy.config.http.transaction_active_timeout_in 5 [L] __RETURN__
 
-10) Turn on parent_proxy_routing in the MID profile.
+10) As of ATS 6.x, multi-site options must be set as parameters within the parent.config.  Header rewrite parameters will be ignored.  See `ATS parent.config <https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/files/parent.config.en.html>` for more details.  These parameters are now handled by the creation of a delivery service profile.
+
+a) Create a profile of the type DS_PROFILE for the delivery service in question.
+
+.. image:: ds-profile.png
+	:scale: 50%
+	:align: center
+
+b) Click "Show profile parameters" to bring up the parameters screen for the profile.  Create parameters for the following:
+
++----------------------------------------+------------------+--------------------------+-------------------------+
+| Parameter Name                         | Config File Name | Value                    | ATS parent.config value |
++========================================+==================+==========================+=========================+
+| mso.algorithm                          | parent.config    | true, false, strict,     | round_robin             |
+|                                        |                  | consistent_hash          |                         |
++----------------------------------------+------------------+--------------------------+-------------------------+
+| mso.parent_retry                       | parent.config    | simple_retry, both,      | parent_retry            |
+|                                        |                  | unavailable_server_retry |                         |
++----------------------------------------+------------------+--------------------------+-------------------------+
+| mso.unavailable_server_retry_responses | parent.config    | list of server response  |                         |
+|                                        |                  | codes, eg "500,502,503"  |                         |
++----------------------------------------+------------------+--------------------------+-------------------------+
+
+
+.. image:: ds_profile_parameters.png
+	:scale: 100%
+	:align: center
+
+c) In the delivery service page, select the newly created DS_PROFILE and save the delivery service.
+
+11) Turn on parent_proxy_routing in the MID profile.

@@ -25,6 +25,7 @@ use Test::More;
 use Test::Mojo;
 use Moose;
 
+use Utils::Tenant;
 use Fixtures::Integration::Asn;
 use Fixtures::Integration::CachegroupParameter;
 use Fixtures::Integration::Cachegroup;
@@ -39,7 +40,6 @@ use Fixtures::Integration::FederationFederationResolver;
 use Fixtures::Integration::Federation;
 use Fixtures::Integration::FederationResolver;
 use Fixtures::Integration::FederationTmuser;
-use Fixtures::Integration::GooseDbVersion;
 use Fixtures::Integration::Hwinfo;
 use Fixtures::Integration::JobAgent;
 use Fixtures::Integration::Job;
@@ -103,7 +103,15 @@ sub teardown {
 	my $self       = shift;
 	my $schema     = shift;
 	my $table_name = shift;
-	$schema->resultset($table_name)->delete_all;
+
+	if ($table_name eq 'Tenant') {
+		my $tenant_utils = Utils::Tenant->new(undef, 10**9, $schema);
+		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+		$tenant_utils->cascade_delete_tenants_tree($tenants_data);
+	}
+	else {
+		$schema->resultset($table_name)->delete_all;
+	}
 }
 
 ## For PSQL sequence to work correctly we cannot hard code
@@ -167,7 +175,7 @@ sub unload_core_data {
 	my $nonotice = $dbh->prepare("SET client_min_messages TO WARNING;");
 	$nonotice->execute();
 	$nonotice->finish();
-	for my $source (values $schema->source_registrations) {
+	for my $source (values %{$schema->source_registrations}) {
 		if ( ! $source->isa('DBIx::Class::ResultSource::Table') ) {
 			# Skip if it doesn't represent an actual table
 			next;

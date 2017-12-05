@@ -1,99 +1,69 @@
 {
-    "_comment": "These are the default properties for Traffic Portal. To customize these values, create your own traffic_portal_properties.json and copy to your web root replacing the existing one.",
-    "properties": {
-        "name": "Traffic Portal",
-        "about": {
-            "_comments": "Link to or embed (via iframe) a docs site for the traffic portal. If Iframe, must be the same protocol (http/https) as the traffic portal.",
-            "show": true,
-            "iframe": false,
-            "url": "http://traffic-control-cdn.net/"
-        },
-        "home": {
-            "_comments": "The sections displayed on the home page.",
-            "sections": [
-                {
-                    "header": "1. Configure the Traffic Portal",
-                    "description": "You are seeing the default view of the Traffic Portal. Customize /opt/traffic_portal/public/traffic_portal_properties.json to create a custom experience."
-                },
-                {
-                    "header": "2. Skin the Traffic Portal.",
-                    "description": "If you are not happy with the default bootstrap theme, add your own custom css declarations to /opt/traffic_portal/public/resources/assets/css/custom.css."
-                }
-            ]
-        },
-        "collateral": {
-            "_comments": "The items used on the collateral page (collateral.tpl.html).",
-            "items": [
-                {
-                    "name": "Collateral Item #1",
-                    "description": "Description goes here. Edit collateral items in traffic_portal_properties.json.",
-                    "path": "/resources/assets/other/collateral.txt"
-                }
-            ]
-        },
-        "footer": {
-            "_comments": "The links used in the footer (footer.tpl.html).",
-            "links": [
-                {
-                    "text": "Footer Link #1",
-                    "url": "http://about.example.com"
-                },
-                {
-                    "text": "Footer Link #2",
-                    "url": "http://about.example.com"
-                },
-                {
-                    "text": "Footer Link #3",
-                    "url": "http://about.example.com"
-                },
-                {
-                    "text": "Footer Link #4",
-                    "url": "http://about.example.com"
-                },
-                {
-                    "text": "Footer Link #5",
-                    "url": "http://about.example.com"
-                },
-                {
-                    "text": "Footer Link #6",
-                    "url": "http://about.example.com"
-                },
-                {
-                    "text": "Footer Link #7",
-                    "url": "http://about.example.com"
-                }
-            ]
-        },
-        "charts": {
-            "bandwidthPerSecond": {
-                "_comments": "BPS chart properties",
-                "show": true,
-                "name": "Bandwidth Per Second",
-                "description": "Bandwidth Per Second is the bits per second being sent out by servers for this delivery service at the Edge layer."
-            },
-            "transactionsPerSecond": {
-                "_comments": "TPS chart properties.",
-                "show": true,
-                "name": "Transactions Per Second",
-                "description": "Transactions Per Second are the number of requests being filled by servers for this delivery service at the Edge layer."
-            },
-            "httpStatus": {
-                "_comments": "HTTP chart properties.",
-                "show": true,
-                "name": "HTTP Status By Class",
-                "description": "HTTP Status by Class is a summary of HTTP response codes commonly referred to as \"pssc\" or proxy response status code in server log files. Data is gathered and presented for the Edge layer of the CDN only."
-            }
-        },
-        "deliveryService": {
-            "request": {
-                "_comments": "New delivery service requests are captured in a form and sent via email.",
-                "show": true,
-                "email": "foo@example.com"
-            },
-            "invalidateContent": {
-                "_comments": "Purge / invalidate content requests are available for delivery services.",
-                "show": true
-            }
+  "_comment": "These are the default properties for Traffic Portal. Customize these values to fit your needs.",
+  "properties": {
+    "name": "Traffic Portal",
+    "api": {
+      "_comment": "This should have the same value found in /etc/traffic_portal/conf/config.js",
+      "baseUrl": "https://localhost:8444/api/"
+    },
+    "dashboard": {
+      "_comments": "These are configurable properties for the dashboard",
+      "autoRefresh": true,
+      "currentStats": {
+        "refreshRateInMS": 30000
+      },
+      "healthyCacheCount": {
+        "refreshRateInMS": 60000
+      },
+      "cacheStatusCount": {
+        "refreshRateInMS": 60000
+      },
+      "cdnChart": {
+        "refreshRateInMS": 60000
+      },
+      "capacity": {
+        "refreshRateInMS": 60000
+      },
+      "routing": {
+        "refreshRateInMS": 60000
+      },
+      "cacheGroupHealth": {
+        "refreshRateInMS": 60000
+      }
+    },
+    "snapshot": {
+      "_comments": "These are configurable properties for a cdn snapshot",
+      "diff": {
+        "showUnchanged": true
+      }
+    },
+    "cacheChecks": {
+      "_comments": "These are configurable properties for the cache checks view. The data for the cache checks view is derived from TO extensions.",
+      "show": true,
+      "descriptions": {
+        "10G": "Ping the IPv4 address of the EDGE or MID servers",
+        "10G6": "Ping the IPv6 address of the EDGE or MID servers",
+        "CDU": "Cache Disk Utilization %",
+        "CHR": "Cache Hit Ratio %",
+        "DSCP": "Checks the DSCP value of packets from the edge server to the Traffic Ops server",
+        "FQDN": "DNS check that matches what the DNS servers responds with compared to what Traffic Ops has",
+        "ILO": "Ping the iLO interface for EDGE or MID servers",
+        "MTU": "Ping the EDGE or MID using the configured MTU from Traffic Ops",
+        "ORT": "Number of configuration differences as determined by ORT found between Traffic Ops and the cache",
+        "RVL": "Content invalidation request(s) are pending for the EDGE or MID",
+        "UPD": "Configuration file updates have been applied or are pending for the EDGE or MID"
+      }
+    },
+    "customMenu": {
+      "_comments": "These are custom items you want to add to the menu. 'items' is an array of hashes where each hash has 'name' (the menu item name), 'embed' (true|false to determine if content is embedded in TP or not), and 'url' (the url of the content)",
+      "name": "Other",
+      "items": [
+        {
+          "name": "Docs",
+          "embed": false,
+          "url": "http://trafficcontrol.apache.org/"
         }
+      ]
     }
+  }
 }

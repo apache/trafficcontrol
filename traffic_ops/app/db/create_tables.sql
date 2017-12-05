@@ -213,7 +213,7 @@ CREATE TABLE deliveryservice (
     long_desc text,
     long_desc_1 text,
     long_desc_2 text,
-    max_dns_answers bigint DEFAULT '0'::bigint,
+    max_dns_answers bigint DEFAULT '5'::bigint,
     info_url text,
     miss_lat numeric,
     miss_long numeric,

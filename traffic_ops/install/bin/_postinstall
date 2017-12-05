@@ -23,12 +23,11 @@ $ENV{GOPATH} = "/opt/traffic_ops/go";
 use strict;
 use warnings;
 
-use Safe;
 use DBI;
 use POSIX;
 use File::Basename qw{dirname};
 use File::Path qw{make_path};
-use Digest::SHA1 qw(sha1_hex);
+use Crypt::ScryptKDF qw(scrypt_hash);
 use Data::Dumper qw(Dumper);
 use Scalar::Util qw(looks_like_number);
 use Getopt::Long;
@@ -197,11 +196,20 @@ sub generateCdnConf {
     # First, read existing one -- already loaded with a bunch of stuff
     my $cdnConf;
     if ( -f $fileName ) {
-        $cdnConf = Safe->new->rdo($fileName) or errorOut("Error loading $fileName: $@");
+        $cdnConf = InstallUtils::readJson($fileName) or errorOut("Error loading $fileName: $@");
     }
     if ( lc $cdnConfiguration{genSecret} =~ /^y(?:es)?/ ) {
-        my @secrets   = @{ $cdnConf->{secrets} };
+        my @secrets;
         my $newSecret = InstallUtils::randomWord();
+
+        if (defined($cdnConf->{secrets})) {
+            @secrets   = @{ $cdnConf->{secrets} };
+            $cdnConf->{secrets} = \@secrets;
+            InstallUtils::logger( "Secrets found in cdn.conf file", "debug" );
+        } else {
+            $cdnConf->{secrets} = \@secrets;
+            InstallUtils::logger( "No secrets found in cdn.conf file", "debug" );
+        }
         unshift @secrets, InstallUtils::randomWord();
         if ( $cdnConfiguration{keepSecrets} > 0 && $#secrets > $cdnConfiguration{keepSecrets} - 1 ) {
 
@@ -209,7 +217,19 @@ sub generateCdnConf {
             $#secrets = $cdnConfiguration{keepSecrets} - 1;
         }
     }
-    InstallUtils::writePerl( $fileName, $cdnConf );
+    if (exists $cdnConfiguration{base_url}) {
+        $cdnConf->{to}{base_url} = $cdnConfiguration{base_url};
+    }
+
+    $cdnConf->{hypnotoad}{workers} = $cdnConfiguration{workers};
+    #InstallUtils::logger("cdnConf: " . Dumper($cdnConf), "info" );
+    InstallUtils::writeJson( $fileName, $cdnConf );
+    InstallUtils::logger( "CDN configuration has been saved", "info" );
+}
+
+sub hash_pass {
+	my $pass = shift;
+	return scrypt_hash($pass, \64, 16384, 8, 1, 64);
 }
 
 # userInput: The entire input config file which is either user input or the defaults
@@ -229,6 +249,25 @@ sub generateLdapConf {
     }
 
     my %ldapConf = getConfig( $userInput, $fileName );
+    # convert any deprecated keys to the correct key name
+    my %keys_converted = ( password => 'admin_pass', hostname => 'host' );
+    for my $key (keys %ldapConf) {
+        if ( exists $keys_converted{$key} ) {
+            $ldapConf{ $keys_converted{$key} } = delete $ldapConf{$key};
+        }
+    }
+
+    my @requiredKeys = qw{ host admin_dn admin_pass search_base };
+    for my $k (@requiredKeys) {
+        if (! exists $ldapConf{$k} ) {
+            errorOut("$k is a required key in $fileName");
+        }
+    }
+
+    # do a very loose check of form -- 'host' must be hostname:port
+    if ( $ldapConf{ host } !~ /^\S+:\d+$/ ) {
+        errorOut("host in $fileName must be of form 'hostname:port'");
+    }
 
     make_path( dirname($fileName), { mode => 0755 } );
     InstallUtils::writeJson( $fileName, \%ldapConf );
@@ -242,7 +281,7 @@ sub generateUsersConf {
     my %config = getConfig( $userInput, $fileName );
 
     $user{username} = $config{tmAdminUser};
-    $user{password} = sha1_hex( $config{tmAdminPw} );
+    $user{password} = hash_pass( $config{tmAdminPw} );
 
     InstallUtils::writeJson( $fileName, \%user );
     $user{password} = $config{tmAdminPw};
@@ -410,9 +449,17 @@ sub getDefaults {
                 "config_var"             => "genSecret"
             },
             {
-                "Number of secrets to keep?" => "10",
+                "Number of secrets to keep?" => "1",
                 "config_var"                 => "keepSecrets"
-            }
+            },
+            {
+                "Number of workers?" => "12",
+                "config_var"         => "workers"
+            },
+            {
+                "Traffic Ops url?"   => "http://localhost:3000",
+                "config_var"         => "base_url"
+            },
         ],
         $ldapConfFile => [
             {
@@ -421,7 +468,7 @@ sub getDefaults {
             },
             {
                 "LDAP server hostname" => "",
-                "config_var"           => "hostname"
+                "config_var"           => "host"
             },
             {
                 "LDAP Admin DN" => "",
@@ -429,7 +476,7 @@ sub getDefaults {
             },
             {
                 "LDAP Admin Password" => "",
-                "config_var"          => "password",
+                "config_var"          => "admin_pass",
                 "hidden"              => "true"
             },
             {
@@ -540,17 +587,18 @@ QUERY
     invoke_db_admin_pl("seed");
 
     # Skip the insert if the admin 'username' is already there.
-    my $sha1_passwd = sha1_hex( $adminconf->{"password"} );
+    my $hashed_passwd = hash_pass( $adminconf->{"password"} );
     my $insert_admin = <<"ADMIN";
     insert into tm_user (username, role, local_passwd, confirm_local_passwd)
                 values  ('$adminconf->{"username"}',
                         (select id from role where name = 'admin'),
-                         '$sha1_passwd',
-                        '$sha1_passwd' )
+                         '$hashed_passwd',
+                        '$hashed_passwd' )
                         ON CONFLICT (username) DO NOTHING;
 ADMIN
     $dbh->do($insert_admin);
 
+    insert_cdn($dbh, $paramconf);
     insert_parameters($dbh, $paramconf);
     insert_profiles($dbh, $paramconf);
 
@@ -626,6 +674,31 @@ sub setupCertificates {
 }
 
 #------------------------------------
+sub insert_cdn {
+
+    my $dbh = shift;
+    my $paramconf = shift;
+
+    InstallUtils::logger( "=========== Setting up cdn", "info" );
+
+    # Enable multiple inserts into one commit
+    $dbh->{pg_server_prepare} = 0;
+
+	my $cdn_name = $paramconf->{"cdn_name"};
+	my $dns_subdomain = $paramconf->{"dns_subdomain"};
+
+    my $insert_stmt = <<INSERTS;
+
+    -- global parameters
+    insert into cdn (name, domain_name, dnssec_enabled)
+                values ('$cdn_name', '$dns_subdomain', false) 
+                ON CONFLICT (name) DO NOTHING;
+
+INSERTS
+    doInsert($dbh, $insert_stmt);
+}
+
+#------------------------------------
 sub insert_parameters {
     my $dbh = shift;
     my $paramconf = shift;
@@ -635,32 +708,25 @@ sub insert_parameters {
     # Enable multiple inserts into one commit
     $dbh->{pg_server_prepare} = 0;
 
-    my $insert_stmt = <<"INSERTS";
+	my $tm_url = $paramconf->{"tm.url"};
 
+    my $insert_stmt = <<INSERTS;
     -- global parameters
     insert into parameter (name, config_file, value) 
-                values ('tm.url', 'global', '$paramconf->{"tm.url"}') 
+                values ('tm.url', 'global', '$tm_url') 
                 ON CONFLICT (name, config_file, value) DO NOTHING;
 
     insert into parameter (name, config_file, value) 
-                values ('tm.instance_name', 'global', '$paramconf->{"tm.instance_name"}') 
-                ON CONFLICT (name, config_file, value) DO NOTHING;
-
-    insert into parameter (name, config_file, value) 
-                values ('tm.toolname', 'global', '$paramconf->{"tm.toolname"}') 
-                ON CONFLICT (name, config_file, value) DO NOTHING;
-
-    insert into parameter (name, config_file, value) 
-                values ('tm.infourl', 'global', '$paramconf->{"tm.url"}/doc') 
+                values ('tm.infourl', 'global', '$tm_url/doc') 
                 ON CONFLICT (name, config_file, value) DO NOTHING;
 
     -- CRConfig.json parameters
     insert into parameter (name, config_file, value) 
-                values ('geolocation.polling.url', 'CRConfig.json', '$paramconf->{"tm.url"}/routing/GeoLite2-City.mmdb.gz') 
+                values ('geolocation.polling.url', 'CRConfig.json', '$tm_url/routing/GeoLite2-City.mmdb.gz') 
                 ON CONFLICT (name, config_file, value) DO NOTHING;
 
     insert into parameter (name, config_file, value) 
-                values ('geolocation6.polling.url', 'CRConfig.json', '$paramconf->{"tm.url"}/routing/GeoLiteCityv6.dat.gz') 
+                values ('geolocation6.polling.url', 'CRConfig.json', '$tm_url/routing/GeoLiteCityv6.dat.gz') 
                 ON CONFLICT (name, config_file, value) DO NOTHING;
 
 INSERTS
@@ -673,7 +739,9 @@ sub insert_profiles {
     my $paramconf = shift;
 
     InstallUtils::logger( "\n=========== Setting up profiles", "info" );
-    my $insert_stmt = <<"INSERTS";
+	my $tm_url = $paramconf->{"tm.url"};
+
+    my $insert_stmt = <<INSERTS;
 
     -- global parameters
     insert into profile (name, description, type) 
@@ -681,27 +749,19 @@ sub insert_profiles {
                 ON CONFLICT (name) DO NOTHING;
 
     insert into profile_parameter (profile, parameter) 
-                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.url' and config_file = 'global' and value = '$paramconf->{"tm.url"}') ) 
+                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.url' and config_file = 'global' and value = '$tm_url') ) 
                 ON CONFLICT (profile, parameter) DO NOTHING;
 
     insert into profile_parameter (profile, parameter) 
-                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.instance_name' and config_file = 'global' and value = '$paramconf->{"tm.instance_name"}') ) 
+                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.infourl' and config_file = 'global' and value = '$tm_url/doc') ) 
+                ON CONFLICT (profile, parameter) DO NOTHING;
+
+    insert into profile_parameter (profile, parameter)
+                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'geolocation.polling.url' and config_file = 'CRConfig.json' and value = '$tm_url/routing/GeoLite2-City.mmdb.gz') ) 
                 ON CONFLICT (profile, parameter) DO NOTHING;
 
     insert into profile_parameter (profile, parameter) 
-                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.toolname' and config_file = 'global' and value = '$paramconf->{"tm.toolname"}') ) 
-                ON CONFLICT (profile, parameter) DO NOTHING;
-
-    insert into profile_parameter (profile, parameter) 
-                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.infourl' and config_file = 'global' and value = '$paramconf->{"tm.url"}/doc') ) 
-                ON CONFLICT (profile, parameter) DO NOTHING;
-
-    insert into profile_parameter (profile, parameter) 
-                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'geolocation.polling.url' and config_file = 'CRConfig.json' and value = 'https://$paramconf->{"dns_subdomain"}/routing/GeoLite2-City.mmdb.gz') ) 
-                ON CONFLICT (profile, parameter) DO NOTHING;
-
-    insert into profile_parameter (profile, parameter) 
-                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'geolocation6.polling.url' and config_file = 'CRConfig.json' and value = 'https://$paramconf->{"dns_subdomain"}/routing/GeoLiteCityv6.dat.gz') ) 
+                values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'geolocation6.polling.url' and config_file = 'CRConfig.json' and value = '$tm_url/routing/GeoLiteCityv6.dat.gz') ) 
                 ON CONFLICT (profile, parameter) DO NOTHING;
 
 INSERTS
@@ -822,7 +882,6 @@ sub main {
     # The generator functions handle checking input/default/automatic mode
     # todbconf will be used later when setting up the database
     my $todbconf = generateDbConf( $userInput, $databaseConfFile, $dbConfFile );
-    generateCdnConf( $userInput, $cdnConfFile );
     generateLdapConf( $userInput, $ldapConfFile );
     my $adminconf = generateUsersConf( $userInput, $usersConfFile );
     my $custom_profile = generateProfilesDir( $userInput, $profilesConfFile );
@@ -835,8 +894,14 @@ sub main {
 
     setupMaxMind( $todbconf->{"maxmind"} );
     setupCertificates( $opensslconf );
+    generateCdnConf( $userInput, $cdnConfFile );
 
     my $dbh = Database::connect($databaseConfFile, $todbconf);
+    if (!$dbh) {
+        InstallUtils::logger("Can't connect to the database.  Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` on the db server to create it and run `postinstall` again.", "error");
+        exit(-1);
+    }
+
     setupDatabaseData( $dbh, $adminconf, $paramconf );
 
     InstallUtils::logger("Starting Traffic Ops", "info" );

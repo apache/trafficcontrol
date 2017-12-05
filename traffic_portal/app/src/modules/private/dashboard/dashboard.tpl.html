@@ -1,38 +1,85 @@
 <!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
 
+  http://www.apache.org/licenses/LICENSE-2.0
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
 -->
 
-<div id="dashboardContainer">
-    <h2>CDN Health</h2>
-    <div class="row">
-        <div class="locations-container col-lg-12 col-md-12 col-sm-12">
-            <div ui-view="cacheGroupsContent"></div>
+<div role="main">
+    <div class="row tile_count">
+        <div class="col-md-4 col-sm-6 col-xs-12">
+            <div class="col-md-6 col-sm-12 col-xs-12 tile_stats_count current">
+                <span class="count_top">Current Bandwidth</span>
+                <div class="count">{{totalBandwidth}}</div>
+            </div>
+            <div class="col-md-6 col-sm-12 col-xs-12 tile_stats_count current">
+                <span class="count_top">Current Connections</span>
+                <div class="count">{{totalConnections}}</div>
+            </div>
+        </div>
+        <div class="col-md-8 col-sm-6 col-xs-12">
+            <div class="col-md-4 col-sm-12 col-xs-12 tile_stats_count">
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                    <span class="count_top"><a ng-click="navigateToPath('/cache-stats')">Healthy Caches</a></span>
+                    <div class="count green">{{totalOnline}}</div>
+                </div>
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                    <span class="count_top"><a ng-click="navigateToPath('/cache-stats')">Unhealthy Caches</a></span>
+                    <div class="count red">{{totalOffline}}</div>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-12 col-xs-12 tile_stats_count">
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                    <span class="count_top">Online Caches</span>
+                    <div class="count">{{online()}}</div>
+                </div>
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                    <span class="count_top">Reported Caches</span>
+                    <div class="count">{{reported()}}</div>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-12 col-xs-12 tile_stats_count">
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                    <span class="count_top">Offline Caches</span>
+                    <div class="count">{{offline()}}</div>
+                </div>
+                <div class="col-md-6 col-sm-6 col-xs-6">
+                    <span class="count_top">Admin Down Caches</span>
+                    <div class="count">{{adminDown()}}</div>
+                </div>
+            </div>
         </div>
     </div>
-    <hr>
-    <div class="row">
-        <div class="col-lg-7 col-md-7 col-sm-7">
-            <h2>Assigned Delivery Services <small>[ {{deliveryServices.length}} ]</small></h2>
+    <div ng-repeat="cdn in ::cdns">
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-xs-12 chartContainer" data-cdnid="{{::cdn.id}}" ui-view="cdnChartContent"></div>
         </div>
-        <div class="col-lg-5 col-md-5 col-sm-5">
-            <button ng-if="properties.deliveryService.request.show" type="button" class="request-ds-btn action-btn btn" ng-click="requestDS()"><i class="fa fa-plus fa-fw"></i> New Delivery Service</button>
-        </div>
+        <br>
     </div>
-    <div class="ds-container col-lg-12 col-md-12 col-sm-12">
-        <div ui-view="deliveryServicesContent"></div>
+    <div class="row">
+        <div class="col-md-4 col-sm-4 col-xs-12">
+            <div class="x_panel tile fixed_height_320" ui-view="capacityContent"></div>
+            <div class="x_panel tile" ui-view="routingContent"></div>
+        </div>
+        <div class="col-md-8 col-sm-8 col-xs-12">
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="x_panel" ui-view="cacheGroupsContent"></div>
+                    <div class="x_panel" ui-view="changeLogsContent"></div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
