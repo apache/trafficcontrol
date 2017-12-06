@@ -3,6 +3,7 @@ package com.comcast.cdn.traffic_control;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -29,7 +30,6 @@ import com.google.common.collect.ImmutableList;
 
 @AutoValue
 public abstract class RestApiSession implements Closeable {
-	@SuppressWarnings("unused")
 	private static final Logger LOG = LoggerFactory.getLogger(RestApiSession.class);
 
 	private static final String URL_FORMAT_STR = "%s://%s:%s/%s/%s/%s";
@@ -46,14 +46,18 @@ public abstract class RestApiSession implements Closeable {
 
 	public void open() {
 		if (httpclient == null) {
-			RequestConfig globalConfig = RequestConfig.custom().setCookieSpec(CookieSpecs.DEFAULT).build();
+			RequestConfig globalConfig = RequestConfig.custom()
+					.setCookieSpec(CookieSpecs.STANDARD) //User standard instead of default. Default will result in cookie parse exceptions with the Mojolicous cookie
+					.setConnectTimeout(5000)
+					.build();
 			CookieStore cookieStore = new BasicCookieStore();
 			HttpClientContext context = HttpClientContext.create();
 			context.setCookieStore(cookieStore);
 
 			httpclient = HttpAsyncClients.custom()
 					.setDefaultRequestConfig(globalConfig)
-					.setDefaultCookieStore(cookieStore).build();
+					.setDefaultCookieStore(cookieStore)
+					.build();
 		}
 
 		if (!httpclient.isRunning()) {
@@ -103,8 +107,12 @@ public abstract class RestApiSession implements Closeable {
 	private CompletableFuture<HttpResponse> execute(HttpUriRequest request) {
 		final CompletableFutureCallback future = new CompletableFutureCallback();
 		try {
+			LOG.debug("Opening RestClient");
 			this.open();
-			this.httpclient.execute(request, future);
+			
+			LOG.debug("Dispatching request: {}", request);
+			final Future<HttpResponse> reFuture = this.httpclient.execute(request, future);
+			future.setReFuture(reFuture);
 		} catch(Throwable e) {
 			future.completeExceptionally(e);
 		}
@@ -113,19 +121,36 @@ public abstract class RestApiSession implements Closeable {
 	}
 	
 	private class CompletableFutureCallback extends CompletableFuture<HttpResponse> implements FutureCallback<HttpResponse>{
+		private Future<HttpResponse> reFuture;
+		
+		@Override
+		public boolean cancel(boolean mayInterruptIfRunning) {
+			if(reFuture != null) {
+				return reFuture.cancel(mayInterruptIfRunning);
+			}
+			return false;
+		}
+		
 		@Override
 		public void completed(HttpResponse result) {
+			LOG.debug("Request Completed: {}", result);
 			this.complete(result);
 		}
 
 		@Override
 		public void failed(Exception ex) {
+			LOG.debug("Request Failed", ex);
 			this.completeExceptionally(ex);
 		}
 
 		@Override
 		public void cancelled() {
+			LOG.debug("Request Cancelled");
 			this.completeExceptionally(new OperationException("HTTP Request was cancelled"));
+		}
+
+		public void setReFuture(Future<HttpResponse> reFuture) {
+			this.reFuture = reFuture;
 		}
 	}
 
