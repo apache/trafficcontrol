@@ -62,7 +62,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		//HwInfo
 		{1.2, http.MethodGet, `hwinfo-wip/?(\.json)?$`, hwInfoHandler(d.DB), HWInfoPrivLevel, Authenticated, nil},
 		//Parameters
-		{1.2, http.MethodGet, `parameters/?(\.json)?$`, parametersHandler(d.DB), ParametersPrivLevel, Authenticated, nil},
+		{1.3, http.MethodGet, `parameters/?(\.json)?$`, parametersHandler(d.DB), ParametersPrivLevel, Authenticated, nil},
 		//Regions
 		{1.2, http.MethodGet, `regions/?(\.json)?$`, regionsHandler(d.DB), RegionsPrivLevel, Authenticated, nil},
 		{1.2, http.MethodGet, `regions/{id}$`, regionsHandler(d.DB), RegionsPrivLevel, Authenticated, nil},

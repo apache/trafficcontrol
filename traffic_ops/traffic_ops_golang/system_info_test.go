@@ -30,6 +30,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
+	"encoding/json"
 )
 
 var sysInfoParameters = []tc.Parameter{
@@ -38,6 +39,7 @@ var sysInfoParameters = []tc.Parameter{
 		ID:          1,
 		LastUpdated: tc.Time{Time: time.Now()},
 		Name:        "paramname1",
+		Profiles:    json.RawMessage(`["foo","bar"]`),
 		Secure:      false,
 		Value:       "val1",
 	},
@@ -47,6 +49,7 @@ var sysInfoParameters = []tc.Parameter{
 		ID:          2,
 		LastUpdated: tc.Time{Time: time.Now()},
 		Name:        "paramname2",
+		Profiles:    json.RawMessage(`["foo","bar"]`),
 		Secure:      false,
 		Value:       "val2",
 	},
@@ -73,6 +76,7 @@ func TestGetSystemInfo(t *testing.T) {
 			ts.ID,
 			ts.LastUpdated,
 			ts.Name,
+			ts.Profiles,
 			ts.Secure,
 			ts.Value,
 		)

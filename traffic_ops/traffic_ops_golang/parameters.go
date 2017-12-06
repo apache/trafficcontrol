@@ -121,13 +121,16 @@ func getParameters(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Parameter, er
 func selectParametersQuery() string {
 
 	query := `SELECT
-config_file,
-id,
-last_updated,
-name,
-value,
-secure
-
-FROM parameter p`
+p.config_file,
+p.id,
+p.last_updated,
+p.name,
+p.value,
+p.secure,
+COALESCE(array_to_json(array_agg(pr.name) FILTER (WHERE pr.name IS NOT NULL)), '[]') AS profiles
+FROM parameter p
+LEFT JOIN profile_parameter pp ON p.id = pp.parameter
+LEFT JOIN profile pr ON pp.profile = pr.id
+GROUP BY p.config_file, p.id, p.last_updated, p.name, p.value, p.secure`
 	return query
 }

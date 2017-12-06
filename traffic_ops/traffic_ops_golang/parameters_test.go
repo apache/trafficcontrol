@@ -30,6 +30,7 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
+	"encoding/json"
 )
 
 func getTestParameters() []tc.Parameter {
@@ -39,6 +40,7 @@ func getTestParameters() []tc.Parameter {
 		ID:          1,
 		LastUpdated: tc.Time{Time: time.Now()},
 		Name:        "paramname1",
+		Profiles:    json.RawMessage(`["foo","bar"]`),
 		Secure:      false,
 		Value:       "val1",
 	}
@@ -48,6 +50,7 @@ func getTestParameters() []tc.Parameter {
 	testParameter2.Name = "paramname2"
 	testParameter2.Value = "val2"
 	testParameter2.ConfigFile = "some.config"
+	testParameter2.Profiles = json.RawMessage(`["foo","baz"]`)
 	parameters = append(parameters, testParameter2)
 
 	return parameters
@@ -75,6 +78,7 @@ func TestGetParameters(t *testing.T) {
 			ts.ID,
 			ts.LastUpdated,
 			ts.Name,
+			ts.Profiles,
 			ts.Secure,
 			ts.Value,
 		)
