@@ -1,5 +1,6 @@
 package com.comcast.cdn.traffic_control;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Optional;
@@ -23,14 +24,17 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 @AutoValue
-public abstract class TOSession {
-	@SuppressWarnings("unused")
+public abstract class TOSession implements Closeable {
 	private static final Logger LOG = LoggerFactory.getLogger(TOSession.class);
 	
 	private static final Gson gson = new GsonBuilder()
 			.create();
 	
 	private boolean isLoggedIn = false;
+	
+	public void close() throws IOException {
+		this.restClient().close();
+	}
 	
 	public String toUrl() {
 		return this.restClient().buildUrl("/");
@@ -41,13 +45,14 @@ public abstract class TOSession {
 	
 	public CompletableFuture<Boolean> login(final String username, final String password) {
 		final String url = this.restClient().buildUrl("user/login.json");
-		
+		LOG.debug("Logging into: {}", url);
 		return ResponseFuture.builder()
 			.setHandleException((f,t)-> {
 				f.completeExceptionally(new LoginException(String.format("Failed to login with username %s", username), t));
 			})
 			.setMethod(ResponseFuture.Method.POST)
 			.setUrl(url)
+			.setSession(this.restClient())
 			.setBody(gson.toJson(ImmutableMap.<String,String>of("u", username, "p", password))).build()
 			.thenApply(r->{
 				isLoggedIn = true;
@@ -89,6 +94,8 @@ public abstract class TOSession {
 		public abstract RestApiSession session();
 		public abstract Optional<String> body();
 		
+		private CompletableFuture<HttpResponse> subFuture;
+		
 		public static <T extends Response> Builder<T> builder(Class<T> response) {
 			return new AutoValue_TOSession_ResponseFuture.Builder<T>()
 					.setResponseType(response);
@@ -97,13 +104,23 @@ public abstract class TOSession {
 			return builder(Response.class);
 		}
 		
+		@Override
+		public boolean cancel(boolean mayInterruptIfRunning) {
+			if(subFuture != null) {
+				return subFuture.cancel(mayInterruptIfRunning);
+			}
+			return false;
+		}
+		
 		public ResponseFuture<T> execute(){
-			LOG.debug("Requesting: {} {}", this.method(), this.url());
-			RequestBuilder rBuilder = RequestBuilder.create(this.method().toString());
+			RequestBuilder rBuilder = RequestBuilder
+					.create(this.method().toString())
+					.setUri(this.url());
 			if(this.body().isPresent()) {
 				rBuilder.setEntity(new StringEntity(this.body().get(), Charsets.UTF_8));
 			}
-			this.session().execute(rBuilder).whenComplete(this);
+			subFuture = this.session().execute(rBuilder);
+			subFuture.whenComplete(this);
 			return this;
 		}
 		
@@ -166,7 +183,7 @@ public abstract class TOSession {
 	
 	public abstract RestApiSession restClient();
 	
-	static Builder builder() {
+	public static Builder builder() {
 		return new AutoValue_TOSession.Builder();
 	}
 	public abstract Builder toBuilder();
