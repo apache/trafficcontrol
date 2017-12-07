@@ -25,7 +25,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"reflect"
 	"testing"
 	"time"
 
@@ -40,17 +39,7 @@ var (
 	testData  TrafficControl
 )
 
-// varInfo maintains information about the configuration variable
-type varInfo struct {
-	Name  string
-	Alt   string
-	Key   string
-	Field reflect.Value
-	Tags  reflect.StructTag
-}
-
 func TestMain(m *testing.M) {
-
 	var err error
 	configFileName := flag.String("cfg", "traffic-ops-test.conf", "The config file path")
 	tcFixturesFileName := flag.String("fixtures", "tc-fixtures.json", "The test fixtures for the API test tool")
@@ -112,15 +101,15 @@ func TestMain(m *testing.M) {
 
 func setupSession(cfg Config, toURL string, toUser string, toPass string) (*client.Session, net.Addr, error) {
 	var err error
-	var TOSession *client.Session
+	var session *client.Session
 	var netAddr net.Addr
 	toReqTimeout := time.Second * time.Duration(cfg.Default.Session.TimeoutInSecs)
-	TOSession, netAddr, err = client.LoginWithAgent(toURL, toUser, toPass, true, "to-api-client-tests", true, toReqTimeout)
+	session, netAddr, err = client.LoginWithAgent(toURL, toUser, toPass, true, "to-api-client-tests", true, toReqTimeout)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return TOSession, netAddr, err
+	return session, netAddr, err
 }
 
 func loadTestCDN(fixturesPath string) {
