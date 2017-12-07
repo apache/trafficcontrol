@@ -922,17 +922,17 @@ sub gen_traffic_router_config {
 				&& $row->http_bypass_fqdn ne "" )
 			{
 				my $full = $row->http_bypass_fqdn;
-				my $port;
 				my $fqdn;
 				if ( $full =~ m/\:/ ) {
+					my $port;
 					( $fqdn, $port ) = split( /\:/, $full );
+					# Specify port number only if explicitly set by the DS 'Bypass FQDN' field - issue 1493
+					$bypass_destination->{'port'} = int($port);
 				}
 				else {
 					$fqdn = $full;
-					$port = 80;
 				}
 				$bypass_destination->{'fqdn'} = $fqdn;
-				$bypass_destination->{'port'} = int($port);
 			}
 		}
 		$delivery_service->{'bypassDestination'} = $bypass_destination;
