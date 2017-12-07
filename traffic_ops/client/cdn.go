@@ -44,11 +44,10 @@ func (to *Session) CreateCDN(cdn tc.CDN) (tc.Alerts, ReqInf, error) {
 	defer resp.Body.Close()
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
-
 	return alerts, reqInf, nil
 }
 
-// Update a CDN
+// Update a CDN by ID
 func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
@@ -128,9 +127,7 @@ func (to *Session) DeleteCDNByName(name string) (tc.Alerts, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 	var alerts tc.Alerts
-	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
 
