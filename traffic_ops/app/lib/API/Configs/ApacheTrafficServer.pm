@@ -1381,7 +1381,7 @@ sub logging_dot_config {
 	my $filename    = shift;
 
 	my $data = $self->profile_param_data( $profile_obj->id, "logging.config" );
-	#my $data   = $self->param_data( $server, $filename );
+
 	# This is an LUA file, so we need to massage the header a bit for LUA commenting.
 	my $text = "-- " . $self->header_comment( $profile_obj->name );
 	$text =~ s/# //;
@@ -1398,10 +1398,8 @@ sub logging_dot_config {
 		}
 
 		my $log_format_name = $data->{$log_format_field . ".Name"} || "";
-			$self->app->log->debug("log name is: $log_format_name");
 		if ( length($log_format_name) > 0 ) {
 			my $format = $data->{$log_format_field . ".Format"};
-			$self->app->log->debug("format is: $format");
 			$format =~ s/"/\\\"/g;
 			$text .= $log_format_name . " = format {\n";
 			$text .= "	Format = '" . $format . " '\n";
@@ -1417,7 +1415,7 @@ sub logging_dot_config {
 			my $log_object_rolling_size_mb      = $data->{$log_object_field . ".RollingSizeMb"}      || "";
 			my $log_object_header               = $data->{$log_object_field . ".Header"}             || "";
 
-			$text .= "log.ascii {\n";
+			$text .= "\nlog.ascii {\n";
 			$text .= "  Format = " . $log_format_name . ",\n";
 			$text .= "  Filename = '" . $log_object_filename . "',\n";
 			$text .= "  RollingEnabled = " . $log_object_rolling_enabled . ",\n" unless defined();

@@ -649,8 +649,8 @@ sub logging_dot_config {
 	my $filename = shift;
 
 	my $server = $self->server_data($id);
-	#my $data   = $self->param_data( $server, $filename );
-	my $data   = $self->param_data( $server, "logs_xml.config" );
+	my $data   = $self->param_data( $server, $filename );
+
 	my $text   = "-- Generated for " . $server->host_name . " by " . &name_version_string($self) . " - Do not edit!! --\n";
 
 	my $max_log_objects = 10;
@@ -663,10 +663,8 @@ sub logging_dot_config {
 		}
 
 		my $log_format_name = $data->{$log_format_field . ".Name"} || "";
-			$self->app->log->debug("log name is: $log_format_name");
 		if ( length($log_format_name) > 0 ) {
 			my $format = $data->{$log_format_field . ".Format"};
-			$self->app->log->debug("format is: $format");
 			$format =~ s/"/\\\"/g;
 			$text .= $log_format_name . " = format {\n";
 			$text .= "	Format = '" . $format . " '\n";
@@ -682,7 +680,7 @@ sub logging_dot_config {
 			my $log_object_rolling_size_mb      = $data->{$log_object_field . ".RollingSizeMb"}      || "";
 			my $log_object_header               = $data->{$log_object_field . ".Header"}             || "";
 
-			$text .= "log.ascii {\n";
+			$text .= "\nlog.ascii {\n";
 			$text .= "  Format = " . $log_format_name . ",\n";
 			$text .= "  Filename = '" . $log_object_filename . "',\n";
 			$text .= "  RollingEnabled = " . $log_object_rolling_enabled . ",\n" unless defined();
