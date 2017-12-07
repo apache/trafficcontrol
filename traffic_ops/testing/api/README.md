@@ -49,7 +49,7 @@ The flags are:
 * cfg - the config file needed to run the tests
 * env - Environment variables that can be used to override specific config options that are specified in the config file
 * env_vars - Show environment variables that can be overridden
-* test_data - trafffic control
+* test_data - traffic control
 * run - Go runtime flag for executing a specific test case
 
 Example command to run the tests: 
@@ -57,4 +57,4 @@ Example command to run the tests:
 
 
 
-* It can take serveral minutes for the API tests to complete, so using the `-v` flag is recommended to see progress.*
+* It can take several minutes for the API tests to complete, so using the `-v` flag is recommended to see progress.*
