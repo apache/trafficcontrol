@@ -463,17 +463,18 @@ sub gen_crconfig_json {
                 && $row->http_bypass_fqdn ne "" )
             {
                 my $full = $row->http_bypass_fqdn;
-                my $port;
                 my $fqdn;
                 if ( $full =~ m/\:/ ) {
+                    my $port;
                     ( $fqdn, $port ) = split( /\:/, $full );
+                    
+                    # Specify port number only if explicitly set by the DS 'Bypass FQDN' field
+                    $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'bypassDestination'}->{'HTTP'}->{'port'} = $port;
                 }
                 else {
                     $fqdn = $full;
-                    $port = '80';
                 }
                 $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'bypassDestination'}->{'HTTP'}->{'fqdn'} = $fqdn;
-                $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'bypassDestination'}->{'HTTP'}->{'port'} = $port;
             }
 
             $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'regionalGeoBlocking'} = $row->regional_geo_blocking ? 'true' : 'false';
