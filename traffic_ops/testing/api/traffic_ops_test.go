@@ -100,7 +100,7 @@ func TestMain(m *testing.M) {
 
 	TOSession, _, err = setupSession(cfg, cfg.TrafficOps.URL, cfg.TrafficOps.User, cfg.TrafficOps.UserPassword)
 	if err != nil {
-		fmt.Printf("\nError logging into TOURL: %s TOUser: %s - %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+		fmt.Printf("\nError logging into TOURL: %s TOUser: %s/%s - %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, cfg.TrafficOps.UserPassword, err)
 		os.Exit(1)
 	}
 
