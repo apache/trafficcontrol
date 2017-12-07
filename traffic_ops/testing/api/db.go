@@ -35,6 +35,7 @@ func openConnection(cfg *Config) (*sql.DB, error) {
 	}
 
 	db, err = sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s", cfg.TrafficOpsDB.User, cfg.TrafficOpsDB.Password, cfg.TrafficOpsDB.Hostname, cfg.TrafficOpsDB.Name, sslStr))
+
 	if err != nil {
 		log.Errorf("opening database: %v\n", err)
 		return nil, fmt.Errorf("transaction failed: %s", err)

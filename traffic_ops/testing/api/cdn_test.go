@@ -24,14 +24,14 @@ import (
 
 func TestCDNs(t *testing.T) {
 
-	TestCreateCDNs(t)
-	TestUpdateCDNs(t)
-	TestGetCDNs(t)
-	TestDeleteCDNs(t)
+	CreateTestCDNs(t)
+	UpdateTestCDNs(t)
+	GetTestCDNs(t)
+	DeleteTestCDNs(t)
 
 }
 
-func TestCreateCDNs(t *testing.T) {
+func CreateTestCDNs(t *testing.T) {
 
 	for _, cdn := range testData.CDNs {
 		resp, _, err := TOSession.CreateCDN(cdn)
@@ -43,7 +43,7 @@ func TestCreateCDNs(t *testing.T) {
 
 }
 
-func TestUpdateCDNs(t *testing.T) {
+func UpdateTestCDNs(t *testing.T) {
 
 	firstCDN := testData.CDNs[0]
 	// Retrieve the CDN by name so we can get the id for the Update
@@ -72,7 +72,7 @@ func TestUpdateCDNs(t *testing.T) {
 
 }
 
-func TestGetCDNs(t *testing.T) {
+func GetTestCDNs(t *testing.T) {
 
 	for _, cdn := range testData.CDNs {
 		resp, _, err := TOSession.GetCDNByName(cdn.Name)
@@ -82,7 +82,7 @@ func TestGetCDNs(t *testing.T) {
 	}
 }
 
-func TestDeleteCDNs(t *testing.T) {
+func DeleteTestCDNs(t *testing.T) {
 
 	secondCDN := testData.CDNs[1]
 	resp, _, err := TOSession.DeleteCDNByName(secondCDN.Name)
