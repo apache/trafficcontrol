@@ -97,7 +97,6 @@ type Locations struct {
 
 // LoadConfig - reads the config file into the Config struct
 func LoadConfig(confPath string) (Config, error) {
-	var err error
 	var cfg Config
 
 	if _, err := os.Stat(confPath); !os.IsNotExist(err) {
@@ -111,7 +110,7 @@ func LoadConfig(confPath string) (Config, error) {
 			return Config{}, fmt.Errorf("unmarshalling '%s': %v", confPath, err)
 		}
 	}
-	err = envconfig.Process("traffic-ops-client-tests", &cfg)
+	err := envconfig.Process("traffic-ops-client-tests", &cfg)
 	if err != nil {
 		fmt.Printf("Cannot parse config: %v\n", err)
 		os.Exit(0)
