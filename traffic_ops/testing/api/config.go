@@ -29,9 +29,10 @@ import (
 type Config struct {
 	TrafficOps   TrafficOps   `json:"trafficOps"`
 	TrafficOpsDB TrafficOpsDB `json:"trafficOpsDB"`
-	APITests     APITests     `json:"APITests"`
+	Default      Default      `json:"default"`
 }
 
+// TrafficOps - config section
 type TrafficOps struct {
 	// URL - The point to the Traffic Ops instance being tested
 	URL string `json:"URL" envconfig:"TO_URL" default:"https://localhost:8443"`
@@ -46,6 +47,7 @@ type TrafficOps struct {
 	Insecure bool `json:"sslInsecure" envconfig:"SSL_INSECURE"`
 }
 
+// TrafficOpsDB - config section
 type TrafficOpsDB struct {
 	// Name - Traffic Ops Database name where the test data will be setup
 	Name string `json:"dbname" envconfig:"TODB_NAME"`
@@ -73,15 +75,18 @@ type TrafficOpsDB struct {
 	Description string `json:"description" envconfig:"TODB_DESCRIPTION"`
 }
 
-type APITests struct {
+// Default - config section
+type Default struct {
 	Session Session   `json:"session"`
 	Log     Locations `json:"logLocations"`
 }
+
+// Session - config section
 type Session struct {
 	TimeoutInSecs int `json:"timeoutInSecs" envconfig:"SESSION_TIMEOUT_IN_SECS"`
 }
 
-// ConfigDatabase reflects the structure of the database.conf file
+// Locations - reflects the structure of the database.conf file
 type Locations struct {
 	Debug   string `json:"debug"`
 	Event   string `json:"event"`

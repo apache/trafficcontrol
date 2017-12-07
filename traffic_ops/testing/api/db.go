@@ -94,7 +94,7 @@ func setupUserData(cfg *Config, db *sql.DB) error {
 		return fmt.Errorf("exec failed %v %v", err, res)
 	}
 
-	tx.Commit()
+	err = tx.Commit()
 	if err != nil {
 		return fmt.Errorf("commit failed %v %v", err, res)
 	}
@@ -219,7 +219,7 @@ func teardownData(cfg *Config, db *sql.DB) error {
 		return fmt.Errorf("exec failed %v %v", err, res)
 	}
 
-	tx.Commit()
+	err = tx.Commit()
 	if err != nil {
 		return fmt.Errorf("commit failed %v %v", err, res)
 	}

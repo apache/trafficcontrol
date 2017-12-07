@@ -49,7 +49,7 @@ func UpdateTestCDNs(t *testing.T) {
 	// Retrieve the CDN by name so we can get the id for the Update
 	resp, _, err := TOSession.GetCDNByName(firstCDN.Name)
 	if err != nil {
-		t.Errorf("cannot GET CDN by name: %v - %v\n", err)
+		t.Errorf("cannot GET CDN by name: %v - %v\n", firstCDN.Name, err)
 	}
 	remoteCDN := resp[0]
 	expectedCDNName := "testCdn1"
@@ -63,7 +63,7 @@ func UpdateTestCDNs(t *testing.T) {
 	// Retrieve the CDN to check CDN name got updated
 	resp, _, err = TOSession.GetCDNByID(remoteCDN.ID)
 	if err != nil {
-		t.Errorf("cannot GET CDN by name: %v - %v\n", err)
+		t.Errorf("cannot GET CDN by name: %v - %v\n", firstCDN.Name, err)
 	}
 	respCDN := resp[0]
 	if respCDN.Name != expectedCDNName {

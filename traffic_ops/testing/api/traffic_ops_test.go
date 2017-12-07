@@ -73,7 +73,7 @@ func TestMain(m *testing.M) {
 			   DB Server:            %s
 			   DB User:              %s
 			   DB Name:              %s
-			   DB Ssl:               %t`, *configFileName, *tcFixturesFileName, cfg.TrafficOps.URL, cfg.APITests.Session.TimeoutInSecs, cfg.TrafficOpsDB.Hostname, cfg.TrafficOpsDB.User, cfg.TrafficOpsDB.Name, cfg.TrafficOpsDB.SSL)
+			   DB Ssl:               %t`, *configFileName, *tcFixturesFileName, cfg.TrafficOps.URL, cfg.Default.Session.TimeoutInSecs, cfg.TrafficOpsDB.Hostname, cfg.TrafficOpsDB.User, cfg.TrafficOpsDB.Name, cfg.TrafficOpsDB.SSL)
 
 	//Load the test data
 	loadTestCDN(*tcFixturesFileName)
@@ -81,20 +81,20 @@ func TestMain(m *testing.M) {
 	var db *sql.DB
 	db, err = openConnection(&cfg)
 	if err != nil {
-		fmt.Errorf("\nError opening connection to %s - %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+		fmt.Printf("\nError opening connection to %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
 		os.Exit(1)
 	}
 	defer db.Close()
 
 	err = teardownData(&cfg, db)
 	if err != nil {
-		fmt.Printf("\nError tearingdown data %s - %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+		fmt.Printf("\nError tearingdown data %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
 		os.Exit(1)
 	}
 
 	err = setupUserData(&cfg, db)
 	if err != nil {
-		fmt.Errorf("\nError setting up data %s - %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+		fmt.Printf("\nError setting up data %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
 		os.Exit(1)
 	}
 
@@ -114,7 +114,7 @@ func setupSession(cfg Config, toURL string, toUser string, toPass string) (*clie
 	var err error
 	var TOSession *client.Session
 	var netAddr net.Addr
-	toReqTimeout := time.Second * time.Duration(cfg.APITests.Session.TimeoutInSecs)
+	toReqTimeout := time.Second * time.Duration(cfg.Default.Session.TimeoutInSecs)
 	TOSession, netAddr, err = client.LoginWithAgent(toURL, toUser, toPass, true, "to-api-client-tests", true, toReqTimeout)
 	if err != nil {
 		return nil, nil, err
@@ -132,7 +132,7 @@ func loadTestCDN(fixturesPath string) {
 	}
 	err = json.Unmarshal(f, &testData)
 	if err != nil {
-		log.Errorf("Cannot unmarshal fixtures json ", err)
+		log.Errorf("Cannot unmarshal fixtures json %v", err)
 		os.Exit(1)
 	}
 }
