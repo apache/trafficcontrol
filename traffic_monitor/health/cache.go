@@ -196,10 +196,11 @@ func CalcAvailability(results []cache.Result, pollerName string, statResultHisto
 		}
 
 		isAvailable, usingIPV4, whyAvailable, unavailableStat := EvalCache(cache.ToInfo(result), statResults, &mc)
-
 		// if the cache is now Available, and was previously unavailable due to a threshold, make sure this poller contains the stat which exceeded the threshold.
 		previousStatus, hasPreviousStatus := localCacheStatuses[result.ID]
 		availableTuple := cache.AvailableTuple{}
+
+
 		if hasPreviousStatus {
 
 			availableTuple = previousStatus.Available
