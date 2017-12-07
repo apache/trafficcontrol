@@ -37,10 +37,10 @@ type TrafficOps struct {
 	URL string `json:"URL" envconfig:"TO_URL" default:"https://localhost:8443"`
 
 	// User - The Traffic Ops test user hitting the API
-	User string `json:"User" envconfig:"TO_USER"`
+	User string `json:"user" envconfig:"TO_USER"`
 
 	// UserPassword - The Traffic Ops test user password hitting the API
-	UserPassword string `json:"Password" envconfig:"TO_USER_PASSWORD"`
+	UserPassword string `json:"password" envconfig:"TO_USER_PASSWORD"`
 
 	// Insecure - ignores insecure ssls certs that were self-generated
 	Insecure bool `json:"sslInsecure" envconfig:"SSL_INSECURE"`
