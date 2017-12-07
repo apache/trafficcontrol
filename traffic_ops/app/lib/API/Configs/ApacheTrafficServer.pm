@@ -267,6 +267,7 @@ sub get_profile_config {
 	elsif ( $filename eq "cache.config" ) { $file_contents = $self->profile_cache_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "drop_qstring.config" ) { $file_contents = $self->drop_qstring_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "logs_xml.config" ) { $file_contents = $self->logs_xml_dot_config( $profile_obj, $filename ); }
+	elsif ( $filename eq "logging.config" ) { $file_contents = $self->logging_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "plugin.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "records.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "storage.config" ) { $file_contents = $self->storage_dot_config( $profile_obj, $filename ); }
@@ -323,6 +324,7 @@ sub get_scope {
 	elsif ( $fname eq "cache.config" )                         { $scope = 'profiles' }
 	elsif ( $fname eq "drop_qstring.config" )                  { $scope = 'profiles' }
 	elsif ( $fname eq "logs_xml.config" )                      { $scope = 'profiles' }
+	elsif ( $fname eq "logging.config" )                       { $scope = 'profiles' }
 	elsif ( $fname eq "plugin.config" )                        { $scope = 'profiles' }
 	elsif ( $fname eq "records.config" )                       { $scope = 'profiles' }
 	elsif ( $fname eq "storage.config" )                       { $scope = 'profiles' }
@@ -1368,6 +1370,62 @@ sub drop_qstring_dot_config {
 	}
 	else {
 		$text .= "/([^?]+) \$s://\$t/\$1\n";
+	}
+
+	return $text;
+}
+
+sub logging_dot_config {
+	my $self        = shift;
+	my $profile_obj = shift;
+	my $filename    = shift;
+
+	my $data = $self->profile_param_data( $profile_obj->id, "logging.config" );
+	#my $data   = $self->param_data( $server, $filename );
+	# This is an LUA file, so we need to massage the header a bit for LUA commenting.
+	my $text = "-- " . $self->header_comment( $profile_obj->name );
+	$text =~ s/# //;
+	$text =~ s/\n//;
+	$text .= " --\n";
+
+	my $max_log_objects = 10;
+	for ( my $i = 0; $i < $max_log_objects; $i = $i + 1 ) {
+		my $log_format_field = "LogFormat";
+		my $log_object_field = "LogObject";
+		if ( $i > 0 ) {
+			$log_format_field = $log_format_field . "$i";
+			$log_object_field = $log_object_field . "$i";
+		}
+
+		my $log_format_name = $data->{$log_format_field . ".Name"} || "";
+			$self->app->log->debug("log name is: $log_format_name");
+		if ( length($log_format_name) > 0 ) {
+			my $format = $data->{$log_format_field . ".Format"};
+			$self->app->log->debug("format is: $format");
+			$format =~ s/"/\\\"/g;
+			$text .= $log_format_name . " = format {\n";
+			$text .= "	Format = '" . $format . " '\n";
+			$text .= "}\n";
+		}
+
+		my $log_object_filename = $data->{$log_object_field . ".Filename"} || "";
+		if ( length($log_object_filename) > 0 ) {
+			my $log_object_format               = $data->{$log_object_field . ".Format"}             || "";
+			my $log_object_rolling_enabled      = $data->{$log_object_field . ".RollingEnabled"}     || "";
+			my $log_object_rolling_interval_sec = $data->{$log_object_field . ".RollingIntervalSec"} || "";
+			my $log_object_rolling_offset_hr    = $data->{$log_object_field . ".RollingOffsetHr"}    || "";
+			my $log_object_rolling_size_mb      = $data->{$log_object_field . ".RollingSizeMb"}      || "";
+			my $log_object_header               = $data->{$log_object_field . ".Header"}             || "";
+
+			$text .= "log.ascii {\n";
+			$text .= "  Format = " . $log_format_name . ",\n";
+			$text .= "  Filename = '" . $log_object_filename . "',\n";
+			$text .= "  RollingEnabled = " . $log_object_rolling_enabled . ",\n" unless defined();
+			$text .= "  RollingIntervalSec = " . $log_object_rolling_interval_sec . ",\n";
+			$text .= "  RollingOffsetHr = " . $log_object_rolling_offset_hr . ",\n";
+			$text .= "  RollingSizeMb = " . $log_object_rolling_size_mb . "\n";
+			$text .= "}\n";
+		}
 	}
 
 	return $text;
