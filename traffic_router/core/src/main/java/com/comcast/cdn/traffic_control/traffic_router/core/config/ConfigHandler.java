@@ -284,30 +284,36 @@ public class ConfigHandler {
 	private void parseCacheConfig(final JSONObject contentServers, final CacheRegister cacheRegister) throws JSONException, ParseException {
 		final Map<String,Cache> map = new HashMap<String,Cache>();
 		final Map<String, List<String>> statMap = new HashMap<String, List<String>>();
+
 		for (final String node : JSONObject.getNames(contentServers)) {
 			final JSONObject jo = contentServers.getJSONObject(node);
 			final CacheLocation loc = cacheRegister.getCacheLocation(jo.getString("locationId"));
+
 			if (loc != null) {
 				String hashId = node;
-				if(jo.has("hashId")) {
+
+				// not only must we check for the key, but also if it's null; problems with consistent hashing can arise if we use a null value as the hashId
+				if (jo.has("hashId") && jo.optString("hashId") != null) {
 					hashId = jo.optString("hashId");
 				}
+
 				final Cache cache = new Cache(node, hashId, jo.optInt("hashCount"));
 				cache.setFqdn(jo.getString("fqdn"));
-				//				generateCacheIPList(cache);
 				cache.setPort(jo.getInt("port"));
-//				cache.setAdminStatus(AdminStatus.valueOf(jo.getString("status")));
+
 				final String ip = jo.getString("ip");
 				final String ip6 = jo.optString("ip6");
+
 				try {
 					cache.setIpAddress(ip, ip6, 0);
 				} catch (UnknownHostException e) {
-					LOGGER.warn(e+" : "+ip);
+					LOGGER.warn(e + " : " + ip);
 				}
 
 				if(jo.has(deliveryServicesKey)) {
 					final List<DeliveryServiceReference> references = new ArrayList<Cache.DeliveryServiceReference>();
 					final JSONObject dsJos = jo.optJSONObject(deliveryServicesKey);
+
 					for (final String ds : JSONObject.getNames(dsJos)) {
 						/* technically this could be more than just a string or array,
 						 * but, as we only have had those two types, let's not worry about the future
@@ -356,12 +362,15 @@ public class ConfigHandler {
 
 						statMap.put(ds, dsNames);
 					}
+
 					cache.setDeliveryServices(references);
 				}
+
 				loc.addCache(cache);
 				map.put(cache.getId(), cache);
 			}
 		}
+
 		cacheRegister.setCacheMap(map);
 		statTracker.initialize(statMap, cacheRegister);
 	}
