@@ -17,6 +17,7 @@ package api
 
 import tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
+// TrafficControl - maps to the tc-fixtures.json file
 type TrafficControl struct {
 	ASNs             []tc.ASN             `json:"asns"`
 	CDNs             []tc.CDN             `json:"cdns"`
