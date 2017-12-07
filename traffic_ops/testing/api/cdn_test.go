@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 func TestCDNs(t *testing.T) {
@@ -92,6 +92,9 @@ func DeleteTestCDNs(t *testing.T) {
 
 	// Retrieve the CDN to see if it got deleted
 	cdns, _, err := TOSession.GetCDNByName(secondCDN.Name)
+	if err != nil {
+		t.Errorf("error deleting CDN name: %s\n", err.Error())
+	}
 	if len(cdns) > 0 {
 		t.Errorf("expected CDN name: %s to be deleted\n", secondCDN.Name)
 	}
