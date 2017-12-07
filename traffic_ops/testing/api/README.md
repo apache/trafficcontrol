@@ -31,6 +31,13 @@ In order to run the tests you will need the following:
     `$ cd incubator-trafficcontrol/traffic_ops/app`
     `$ db/admin.pl --env=test reset` 
 
+    NOTE on passwords:
+    Check that the passwords defined defined for your `to_test` database match 
+    here: `incubator-trafficcontrol/traffic_ops/app/conf/test/database.conf`
+    and here: `traffic-ops-test.conf` 
+
+    The Traffic Ops users will be created by the tool for accessing the API once the database is accessible.
+
     For more info see: http://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html?highlight=reset
 
 3. A running Traffic Ops instance running with the `secure` (https) and is pointing to the `to_test` 
