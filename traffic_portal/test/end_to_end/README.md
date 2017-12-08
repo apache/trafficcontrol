@@ -21,6 +21,9 @@
 
 - Install and run protractor
   http://www.protractortest.org/#/tutorial
+    
+- Start up Selenium Server
+    webdriver-manager start
 
 - Make sure Traffic Portal is running
 
