@@ -585,6 +585,7 @@ QUERY
     }
     invoke_db_admin_pl("migrate");
     invoke_db_admin_pl("seed");
+    invoke_db_admin_pl("patch");
 
     # Skip the insert if the admin 'username' is already there.
     my $hashed_passwd = hash_pass( $adminconf->{"password"} );
