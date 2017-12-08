@@ -306,10 +306,18 @@ under the License.
 						 }
 					 }
 					 if (jdata[server].hasOwnProperty("ipv4_available")) {
-						 document.getElementById("cache-states-" + server + "-ipv4").textContent = jdata[server].ipv4_available;
+						if (jdata[server].status.indexOf("ONLINE") != 0) {
+					        	document.getElementById("cache-states-" + server + "-ipv4").textContent = jdata[server].ipv4_available;
+					     	} else {
+					         	document.getElementById("cache-states-" + server + "-ipv4").textContent = 'N/A'
+					 	}
 					 }
 					 if (jdata[server].hasOwnProperty("ipv6_available")) {
-						 document.getElementById("cache-states-" + server + "-ipv6").textContent = jdata[server].ipv6_available;
+                         			if (jdata[server].status.indexOf("ONLINE") != 0) {
+                         			    	document.getElementById("cache-states-" + server + "-ipv6").textContent = jdata[server].ipv6_available;
+                         			} else {
+                             				document.getElementById("cache-states-" + server + "-ipv6").textContent = 'N/A'
+                         			}
 					 }
 					 if (jdata[server].hasOwnProperty("load_average")) {
 						 document.getElementById("cache-states-" + server + "-load-average").textContent = jdata[server].load_average;
