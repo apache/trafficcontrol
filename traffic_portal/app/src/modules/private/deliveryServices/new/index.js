@@ -42,65 +42,12 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.new', []
                         },
                         controller: 'FormNewDeliveryServiceController',
                         resolve: {
-                            geoMissLat: function(parameterService) {
-                                return parameterService.getParameters({ name: 'default_geo_miss_latitude', configFile: 'global' });
-                            },
-                            geoMissLong: function(parameterService) {
-                                return parameterService.getParameters({ name: 'default_geo_miss_longitude', configFile: 'global' });
-                            },
-                            deliveryService: function(geoMissLat, geoMissLong, $stateParams) {
-                                var type = $stateParams.type;
-
-                                var anyMapDefaults = {
-                                    dscp: 0, // any map ds's don't use dscp but it's required so we'll just send it to make the api/db happy
-                                    regionalGeoBlocking: false,
-                                    logsEnabled: false,
-                                    geoProvider: 0,
-                                    geoLimit: 0
-                                };
-
-                                var dnsDefaults = {
-                                    routingName: 'cdn',
-                                    dscp: 0,
-                                    ipv6RoutingEnabled: false,
-                                    rangeRequestHandling: 0,
-                                    qstringIgnore: 0,
-                                    multiSiteOrigin: false,
-                                    logsEnabled: false,
-                                    geoProvider: 0,
-                                    geoLimit: 0,
-                                    missLat: (geoMissLat[0]) ? parseFloat(geoMissLat[0].value) : null,
-                                    missLong: (geoMissLong[0]) ? parseFloat(geoMissLong[0].value) : null,
-                                    signingAlgorithm: null,
-                                    regionalGeoBlocking: false // dns ds's don't use regionalGeoBlocking but it's required so we'll just send it to make the api/db happy
-                                };
-
-                                var httpDefaults = {
-                                    routingName: 'cdn',
-                                    dscp: 0,
-                                    ipv6RoutingEnabled: false,
-                                    rangeRequestHandling: 0,
-                                    qstringIgnore: 0,
-                                    multiSiteOrigin: false,
-                                    logsEnabled: false,
-                                    initialDispersion: 0,
-                                    regionalGeoBlocking: false,
-                                    geoProvider: 0,
-                                    geoLimit: 0,
-                                    missLat: (geoMissLat[0]) ? parseFloat(geoMissLat[0].value) : null,
-                                    missLong: (geoMissLong[0]) ? parseFloat(geoMissLong[0].value) : null,
-                                    signingAlgorithm: null
-                                };
-
-                                var steeringDefaults = {
-                                    routingName: 'cdn',
-                                    ipv6RoutingEnabled: false,
-                                    logsEnabled: false,
-                                    geoProvider: 0,
-                                    geoLimit: 0,
-                                    dscp: 0, // steering ds's don't use dscp but it's required so we'll just send 0 to make the api/db happy
-                                    regionalGeoBlocking: false // steering ds's don't use regionalGeoBlocking but it's required so we'll just send 0 to make the api/db happy
-                                };
+                            deliveryService: function($stateParams, propertiesModel) {
+                                var type = $stateParams.type,
+                                    anyMapDefaults = propertiesModel.properties.defaults.deliveryservices.ANY_MAP,
+                                    dnsDefaults = propertiesModel.properties.defaults.deliveryservices.DNS,
+                                    httpDefaults = propertiesModel.properties.defaults.deliveryservices.HTTP,
+                                    steeringDefaults = propertiesModel.properties.defaults.deliveryservices.STEERING;
 
                                 if (type.indexOf('ANY_MAP') != -1) {
                                     return anyMapDefaults;
