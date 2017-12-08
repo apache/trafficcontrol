@@ -26,7 +26,7 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -40,6 +40,7 @@ func cdnsHandler(db *sqlx.DB) http.HandlerFunc {
 			w.WriteHeader(status)
 			fmt.Fprintf(w, http.StatusText(status))
 		}
+
 
 		q := r.URL.Query()
 
