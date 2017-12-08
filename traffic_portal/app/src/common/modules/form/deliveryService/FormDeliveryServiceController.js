@@ -55,6 +55,8 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
         return urlString;
     };
 
+    $scope.showAdvanced = false;
+
     $scope.types = _.filter(types, function(currentType) {
         var category;
         if (type.indexOf('ANY_MAP') != -1) {
