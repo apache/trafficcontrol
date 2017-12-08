@@ -295,7 +295,7 @@ under the License.
 							 row.classList.add("warning");
 							 row.classList.remove("error");
 							 row.classList.remove("stripes");
-						 } else if (!jdata[server].combined_available) {
+						 } else if (!jdata[server].combined_available && jdata[server].status.indexOf("ONLINE") != 0) {
 							 row.classList.add("error");
 							 row.classList.remove("warning");
 							 row.classList.remove("stripes");
