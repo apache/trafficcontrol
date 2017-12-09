@@ -17,6 +17,9 @@
 -- Name: config_diffs; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
+
+-- +goose Up
+-- SQL in section 'Up' is executed when this migration is applied
 CREATE TABLE config_diffs (
     config_id bigserial NOT NULL PRIMARY KEY,
     server bigint NOT NULL REFERENCES server (id) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -26,4 +29,12 @@ CREATE TABLE config_diffs (
     last_checked timestamp without time zone NOT NULL
 );
 
+
+-- +goose Up
+-- SQL in section 'Up' is executed when this migration is applied
 ALTER TABLE config_diffs OWNER to traffic_ops;
+
+
+-- +goose Down
+-- SQL section 'Down' is executed when this migration is rolled back
+DROP TABLE config_diffs;
