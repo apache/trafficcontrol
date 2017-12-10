@@ -611,6 +611,7 @@ API 1.2 Reference
   traffic_ops_api/v12/capability
   traffic_ops_api/v12/cdn
   traffic_ops_api/v12/changelog
+  traffic_ops_api/v12/configdiffs
   traffic_ops_api/v12/configfiles_ats
   traffic_ops_api/v12/deliveryservice
   traffic_ops_api/v12/deliveryservice_regex
