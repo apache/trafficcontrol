@@ -18,13 +18,13 @@ package main
  * specific language governing permissions and limitations
  * under the License.
  */
- 
- import (
-	"testing"
-	"fmt"
-	"time"
-	"reflect"
+
+import (
 	"encoding/json"
+	"fmt"
+	"reflect"
+	"testing"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -44,19 +44,18 @@ func TestGetCfgDiffs(t *testing.T) {
 
 	timestamp := time.Now().UTC().String()
 	cfgFileDiffs1 := CfgFileDiffs{
-		FileName: "TestFile.cfg",
-		DBLinesMissing: []string{ "db_line_missing1", "db_line_missing2", },
-		DiskLinesMissing: []string{ "disk_line_missing1", "disk_line_missing2", },
-		ReportTimestamp: timestamp,
+		FileName:         "TestFile.cfg",
+		DBLinesMissing:   []string{"db_line_missing1", "db_line_missing2"},
+		DiskLinesMissing: []string{"disk_line_missing1", "disk_line_missing2"},
+		ReportTimestamp:  timestamp,
 	}
 
-	rows := sqlmock.NewRows([]string{"config_name", "db_lines_missing", "disk_lines_missing", "last_checked", })
+	rows := sqlmock.NewRows([]string{"config_name", "db_lines_missing", "disk_lines_missing", "last_checked"})
 
 	dbLinesMissingJson, err := json.Marshal(cfgFileDiffs1.DBLinesMissing)
 	diskLinesMissingJson, err := json.Marshal(cfgFileDiffs1.DiskLinesMissing)
 	rows = rows.AddRow(cfgFileDiffs1.FileName, dbLinesMissingJson, diskLinesMissingJson, cfgFileDiffs1.ReportTimestamp)
-	
-	
+
 	mock.ExpectQuery("SELECT").WithArgs(hostName).WillReturnRows(rows)
 
 	cfgFileDiffs, err := getCfgDiffs(db, hostName)
@@ -84,18 +83,18 @@ func TestGetCfgDiffsJson(t *testing.T) {
 
 	timestamp := time.Now().UTC().String()
 	cfgFileDiffsResponse := CfgFileDiffsResponse{
-		Response: []CfgFileDiffs {{
-			FileName: "TestFile.cfg",
-			DBLinesMissing: []string{ "db_line_missing1", "db_line_missing2", },
-			DiskLinesMissing: []string{ "disk_line_missing1", "disk_line_missing2", },
-			ReportTimestamp: timestamp,
-		},},
+		Response: []CfgFileDiffs{{
+			FileName:         "TestFile.cfg",
+			DBLinesMissing:   []string{"db_line_missing1", "db_line_missing2"},
+			DiskLinesMissing: []string{"disk_line_missing1", "disk_line_missing2"},
+			ReportTimestamp:  timestamp,
+		}},
 	}
 
 	// Test successful request
-	cfgFileDiffsResponseT, err := getCfgDiffsJson(hostName, db, 
+	cfgFileDiffsResponseT, err := getCfgDiffsJson(hostName, db,
 		func(db *sqlx.DB, hostName string) ([]CfgFileDiffs, error) {
-			return cfgFileDiffsResponse.Response, nil;
+			return cfgFileDiffsResponse.Response, nil
 		})
 
 	if err != nil {
@@ -105,7 +104,7 @@ func TestGetCfgDiffsJson(t *testing.T) {
 	if len(cfgFileDiffsResponseT.Response) != 1 {
 		t.Errorf("getCfgDiffsJson expected: len(cfgFileDiffsResponseT.Response) == 1, actual: %v", len(cfgFileDiffsResponseT.Response))
 	}
-	
+
 	if !reflect.DeepEqual(*cfgFileDiffsResponseT, cfgFileDiffsResponse) {
 		t.Errorf("getCfgDiffsJson expected: cfgFileDiffsResponseT == %+v, actual: %+v", cfgFileDiffsResponseT, cfgFileDiffsResponse)
 	}
@@ -138,8 +137,8 @@ func TestServerExists(t *testing.T) {
 	hostName := "myedge"
 
 	// Test Expecting True Response
-	rows := sqlmock.NewRows([]string{"host_name", }).AddRow("true")
-	
+	rows := sqlmock.NewRows([]string{"host_name"}).AddRow("true")
+
 	mock.ExpectQuery("SELECT EXISTS").WithArgs(hostName).WillReturnRows(rows)
 
 	result, err := serverExists(db, hostName)
@@ -155,10 +154,9 @@ func TestServerExists(t *testing.T) {
 		t.Errorf("there were unfulfilled expections: %s", err)
 	}
 
-
 	// Test Expecting False Response
-	rows = sqlmock.NewRows([]string{"host_name", }).AddRow("false")
-	
+	rows = sqlmock.NewRows([]string{"host_name"}).AddRow("false")
+
 	mock.ExpectQuery("SELECT EXISTS").WithArgs(hostName).WillReturnRows(rows)
 
 	result, err = serverExists(db, hostName)
@@ -189,29 +187,29 @@ func TestInsertCfgDiffs(t *testing.T) {
 	timestamp := time.Now().UTC().String()
 
 	cfgFileDiffs := CfgFileDiffs{
-		FileName: "TestFile.cfg",
-		DBLinesMissing: []string{ "db_line_missing1", "db_line_missing2", },
-		DiskLinesMissing: []string{ "disk_line_missing1", "disk_line_missing2", },
-		ReportTimestamp: timestamp,
+		FileName:         "TestFile.cfg",
+		DBLinesMissing:   []string{"db_line_missing1", "db_line_missing2"},
+		DiskLinesMissing: []string{"disk_line_missing1", "disk_line_missing2"},
+		ReportTimestamp:  timestamp,
 	}
 
 	// Since "insertCfgDiffs" Marshals the json, we must store the unmarshalled json here.
 	//		This will need to be updated if the above text gets changed
-	dbLinesMissingJson := []uint8{91, 34, 100, 98, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 49, 34, 44, 34, 100, 98, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 50, 34, 93,}
-	diskLinesMissingJson := []uint8{91, 34, 100, 105, 115, 107, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 49, 34, 44, 34, 100, 105, 115, 107, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 50, 34, 93,}
+	dbLinesMissingJson := []uint8{91, 34, 100, 98, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 49, 34, 44, 34, 100, 98, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 50, 34, 93}
+	diskLinesMissingJson := []uint8{91, 34, 100, 105, 115, 107, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 49, 34, 44, 34, 100, 105, 115, 107, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 50, 34, 93}
 
 	mock.ExpectExec("INSERT INTO").WithArgs(
-		hostName, 
-		cfgFileDiffs.FileName, 
-		dbLinesMissingJson, 
-		diskLinesMissingJson, 
+		hostName,
+		cfgFileDiffs.FileName,
+		dbLinesMissingJson,
+		diskLinesMissingJson,
 		cfgFileDiffs.ReportTimestamp).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err = insertCfgDiffs(db, hostName, cfgFileDiffs)
 	if err != nil {
 		t.Errorf("insertCfgDiffs expected: nil error, actual: %v", err)
 	}
-	
+
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expections: %s", err)
 	}
@@ -231,23 +229,23 @@ func TestUpdateCfgDiiffs(t *testing.T) {
 	timestamp := time.Now().UTC().String()
 
 	cfgFileDiffs := CfgFileDiffs{
-		FileName: "TestFile.cfg",
-		DBLinesMissing: []string{ "db_line_missing1", "db_line_missing2", },
-		DiskLinesMissing: []string{ "disk_line_missing1", "disk_line_missing2", },
-		ReportTimestamp: timestamp,
+		FileName:         "TestFile.cfg",
+		DBLinesMissing:   []string{"db_line_missing1", "db_line_missing2"},
+		DiskLinesMissing: []string{"disk_line_missing1", "disk_line_missing2"},
+		ReportTimestamp:  timestamp,
 	}
 
 	// Since "updateCfgDiffs" Marshals the json, we must store the unmarshalled json here.
 	//		This will need to be updated if the above text gets changed
-	dbLinesMissingJson := []uint8{91, 34, 100, 98, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 49, 34, 44, 34, 100, 98, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 50, 34, 93,}
-	diskLinesMissingJson := []uint8{91, 34, 100, 105, 115, 107, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 49, 34, 44, 34, 100, 105, 115, 107, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 50, 34, 93,}
+	dbLinesMissingJson := []uint8{91, 34, 100, 98, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 49, 34, 44, 34, 100, 98, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 50, 34, 93}
+	diskLinesMissingJson := []uint8{91, 34, 100, 105, 115, 107, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 49, 34, 44, 34, 100, 105, 115, 107, 95, 108, 105, 110, 101, 95, 109, 105, 115, 115, 105, 110, 103, 50, 34, 93}
 
 	// Test Update Successful
 	mock.ExpectExec("UPDATE").WithArgs(
-		dbLinesMissingJson, 
-		diskLinesMissingJson, 
+		dbLinesMissingJson,
+		diskLinesMissingJson,
 		cfgFileDiffs.ReportTimestamp,
-		hostName, 
+		hostName,
 		cfgFileDiffs.FileName).WillReturnResult(sqlmock.NewResult(0, 1))
 
 	result, err := updateCfgDiffs(db, hostName, cfgFileDiffs)
@@ -258,17 +256,17 @@ func TestUpdateCfgDiiffs(t *testing.T) {
 	if result != true {
 		t.Errorf("updateCfgDiffs expected: result == true, actual: %v", result)
 	}
-	
+
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expections: %s", err)
 	}
 
 	// Test Update Unsuccessful
 	mock.ExpectExec("UPDATE").WithArgs(
-		dbLinesMissingJson, 
-		diskLinesMissingJson, 
+		dbLinesMissingJson,
+		diskLinesMissingJson,
 		cfgFileDiffs.ReportTimestamp,
-		hostName, 
+		hostName,
 		cfgFileDiffs.FileName).WillReturnResult(sqlmock.NewResult(0, 0))
 
 	result, err = updateCfgDiffs(db, hostName, cfgFileDiffs)
@@ -279,12 +277,11 @@ func TestUpdateCfgDiiffs(t *testing.T) {
 	if result != false {
 		t.Errorf("updateCfgDiffs expected: result == false, actual: %v", result)
 	}
-	
+
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expections: %s", err)
 	}
 }
-
 
 func serverExistsError(db *sqlx.DB, hostName string) (bool, error) {
 	return false, fmt.Errorf("Intentional Error")
@@ -317,15 +314,15 @@ func TestPutCfgDiffs(t *testing.T) {
 	timestamp := time.Now().UTC().String()
 
 	cfgFileDiffs := CfgFileDiffs{
-		FileName: "TestFile.cfg",
-		DBLinesMissing: []string{ "db_line_missing1", "db_line_missing2", },
-		DiskLinesMissing: []string{ "disk_line_missing1", "disk_line_missing2", },
-		ReportTimestamp: timestamp,
+		FileName:         "TestFile.cfg",
+		DBLinesMissing:   []string{"db_line_missing1", "db_line_missing2"},
+		DiskLinesMissing: []string{"disk_line_missing1", "disk_line_missing2"},
+		ReportTimestamp:  timestamp,
 	}
-	
+
 	// Test when server request has error
 	code, err := putCfgDiffs(db, hostName, cfgFileDiffs, serverExistsError, updateCfgDiffsError, insertCfgDiffsError)
-	
+
 	if code != -1 {
 		t.Errorf("putCfgDiffs expected: -1 code, actual: %v", code)
 	}
@@ -335,7 +332,7 @@ func TestPutCfgDiffs(t *testing.T) {
 
 	// Test when the server doesn't exist
 	code, err = putCfgDiffs(db, hostName, cfgFileDiffs, serverExistsFalse, updateCfgDiffsError, insertCfgDiffsError)
-	
+
 	if code != 0 {
 		t.Errorf("putCfgDiffs expected: 0 code, actual: %v", code)
 	}
@@ -345,7 +342,7 @@ func TestPutCfgDiffs(t *testing.T) {
 
 	// Test when the server exists and the update query fails
 	code, err = putCfgDiffs(db, hostName, cfgFileDiffs, serverExistsTrue, updateCfgDiffsError, insertCfgDiffsError)
-	
+
 	if code != -1 {
 		t.Errorf("putCfgDiffs expected: -1 code, actual: %v", code)
 	}
@@ -355,7 +352,7 @@ func TestPutCfgDiffs(t *testing.T) {
 
 	// Test when the server exists and the update is successful
 	code, err = putCfgDiffs(db, hostName, cfgFileDiffs, serverExistsTrue, updateCfgDiffsTrue, insertCfgDiffsError)
-	
+
 	if code != 2 {
 		t.Errorf("putCfgDiffs expected: 2 code, actual: %v", code)
 	}
@@ -365,7 +362,7 @@ func TestPutCfgDiffs(t *testing.T) {
 
 	// Test when the server exists and the update was unsuccessful and the insert had an error
 	code, err = putCfgDiffs(db, hostName, cfgFileDiffs, serverExistsTrue, updateCfgDiffsFalse, insertCfgDiffsError)
-	
+
 	if code != 1 {
 		t.Errorf("putCfgDiffs expected: 1 code, actual: %v", code)
 	}
@@ -375,7 +372,7 @@ func TestPutCfgDiffs(t *testing.T) {
 
 	// Test when the server exists and the update was unsuccessful and the insert was successful
 	code, err = putCfgDiffs(db, hostName, cfgFileDiffs, serverExistsTrue, updateCfgDiffsFalse, insertCfgDiffsSuccess)
-	
+
 	if code != 1 {
 		t.Errorf("putCfgDiffs expected: 1 code, actual: %v", code)
 	}
