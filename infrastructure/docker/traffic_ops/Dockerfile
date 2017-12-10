@@ -16,7 +16,7 @@
 # under the License.
 
 ############################################################
-# Dockerfile to build Traffic Ops 1.6.0 container images
+# Dockerfile to build Traffic Ops container images
 # Based on CentOS 7.2
 ############################################################
 
