@@ -149,10 +149,8 @@ func serverExists(db *sqlx.DB, hostName string) (bool, error) {
 		} else {
 			return false, nil
 		}
-		break
-	} //else {
-		return false, errors.New("Failed to load row!") // What does this mean?
-	//}
+	}
+	return false, errors.New("Failed to load row!") // What does this mean?
 }
 
 func getCfgDiffs(db *sqlx.DB, hostName string) ([]CfgFileDiffs, error) {
