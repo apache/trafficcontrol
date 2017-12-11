@@ -16,14 +16,12 @@
 package api
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"net"
-	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -124,43 +122,4 @@ func loadTestCDN(fixturesPath string) {
 		log.Errorf("Cannot unmarshal fixtures json %v", err)
 		os.Exit(1)
 	}
-}
-
-//Request sends a request to TO and returns a response.
-//This is basically a copy of the private "request" method in the tc.go \
-//but I didn't want to make that one public.
-func Request(to client.Session, method, path string, body []byte) (*http.Response, error) {
-	url := fmt.Sprintf("%s%s", TOSession.URL, path)
-
-	var req *http.Request
-	var err error
-
-	if body != nil && method != "GET" {
-		req, err = http.NewRequest(method, url, bytes.NewBuffer(body))
-		if err != nil {
-			return nil, err
-		}
-		req.Header.Set("Content-Type", "application/json")
-	} else {
-		req, err = http.NewRequest(method, url, nil)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	resp, err := to.Client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		e := client.HTTPError{
-			HTTPStatus:     resp.Status,
-			HTTPStatusCode: resp.StatusCode,
-			URL:            url,
-		}
-		return nil, &e
-	}
-
-	return resp, nil
 }
