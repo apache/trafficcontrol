@@ -186,6 +186,7 @@ ALTER TABLE cdn_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE cdn_id_seq OWNED BY cdn.id;
 
+
 --
 -- Name: deliveryservice; Type: TABLE; Schema: public; Owner: traffic_ops
 --
@@ -2593,14 +2594,6 @@ ALTER TABLE ONLY server
 
 ALTER TABLE ONLY asn
     ADD CONSTRAINT fk_cran_cachegroup1 FOREIGN KEY (cachegroup) REFERENCES cachegroup(id);
-
-
---
--- Name: server; Type: DEFAULT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY config_diffs 
-    ADD CONSTRAINT fk_config_diffs_server FOREIGN KEY (server) REFERENCES server(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
