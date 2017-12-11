@@ -708,6 +708,12 @@ sub update_trops {
 		#need to know if reval_pending is supported
 		my $uri     = "/api/1.3/servers/$hostname_short/update_status";
 		my $upd_ref = &lwp_get($uri);
+		if ($upd_ref eq '404') {
+			( $log_level >> $ERROR ) && printf("ERROR Traffic Ops version does not support update_status API. Reverting to UI route.\n");
+			$uri = "/update/$hostname_short";
+			$upd_ref = &lwp_get($uri);
+		}
+
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
 			exit 1;
@@ -774,9 +780,14 @@ sub check_revalidate_state {
 	( $log_level >> $DEBUG ) && print "DEBUG Checking revalidate state.\n";
 	if ( $script_mode == $REVALIDATE || $sleep_override == 1 ) {
 		## The herd is about to get /update/<hostname>
-
 		my $uri     = "/api/1.3/servers/$hostname_short/update_status";
 		my $upd_ref = &lwp_get($uri);
+		if ($upd_ref eq '404') {
+			( $log_level >> $ERROR ) && printf("ERROR Traffic Ops version does not support update_status API. Reverting to UI route.\n");
+			$uri = "/update/$hostname_short";
+			$upd_ref = &lwp_get($uri);
+		}
+
 		if ( $upd_ref =~ m/^\d{3}$/ ) {
 			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
 			exit 1;
@@ -863,6 +874,12 @@ sub check_syncds_state {
 		## need to check if revalidation is being used first.
 		my $uri     = "/api/1.3/servers/$hostname_short/update_status";
 		my $upd_ref = &lwp_get($uri);
+		if ($upd_ref eq '404') {
+			( $log_level >> $ERROR ) && printf("ERROR Traffic Ops version does not support update_status API. Reverting to UI route.\n");
+			$uri = "/update/$hostname_short";
+			$upd_ref = &lwp_get($uri);
+		}
+
 		my $upd_json = decode_json($upd_ref);
 		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;
 		if (defined($reval_pending) ) {
@@ -1430,6 +1447,9 @@ sub lwp_get {
 			( $log_level >> $ERROR ) && print "ERROR result for $request is: ..." . $response->content . "...\n";
 			if ( $uri =~ m/configfiles\/ats/ && $response->code == 404) {
 					return $response->code;
+			}
+			if ($uri =~ m/update_status/ &&  $response->code == 404) {
+				return $response->code;
 			}
 			if ( $rev_proxy_in_use == 1 ) {
 				( $log_level >> $ERROR ) && print "ERROR There appears to be an issue with the Traffic Ops Reverse Proxy.  Reverting to primary Traffic Ops host.\n";

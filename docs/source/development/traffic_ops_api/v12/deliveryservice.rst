@@ -2142,11 +2142,13 @@ URL Sig Keys
   | protocol               | yes|no   | - 0: serve with http:// at EDGE                                                                         |
   |                        |          | - 1: serve with https:// at EDGE                                                                        |
   |                        |          | - 2: serve with both http:// and https:// at EDGE                                                       |
+  |                        |          |                                                                                                         |
   |                        |          | Required for DNS*, HTTP* or *STEERING* delivery services.                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | qstringIgnore          | yes|no   | - 0: no special query string handling; it is for use in the cache-key and pass up to origin.            |
   |                        |          | - 1: ignore query string in cache-key, but pass it up to parent and or origin.                          |
   |                        |          | - 2: drop query string at edge, and do not use it in the cache-key.                                     |
+  |                        |          |                                                                                                         |
   |                        |          | Required for DNS* and HTTP* delivery services.                                                          |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | rangeRequestHandling   | yes|no   | How to treat range requests (required for DNS* and HTTP* delivery services):                            |
@@ -2550,11 +2552,13 @@ URL Sig Keys
   | protocol               | yes|no   | - 0: serve with http:// at EDGE                                                                         |
   |                        |          | - 1: serve with https:// at EDGE                                                                        |
   |                        |          | - 2: serve with both http:// and https:// at EDGE                                                       |
+  |                        |          |                                                                                                         |
   |                        |          | Required for DNS*, HTTP* or *STEERING* delivery services.                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | qstringIgnore          | yes|no   | - 0: no special query string handling; it is for use in the cache-key and pass up to origin.            |
   |                        |          | - 1: ignore query string in cache-key, but pass it up to parent and or origin.                          |
   |                        |          | - 2: drop query string at edge, and do not use it in the cache-key.                                     |
+  |                        |          |                                                                                                         |
   |                        |          | Required for DNS* and HTTP* delivery services.                                                          |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | rangeRequestHandling   | yes|no   | How to treat range requests (required for DNS* and HTTP* delivery services):                            |

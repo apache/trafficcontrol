@@ -197,7 +197,7 @@ sub ds_data {
 		my $dscp                        = $row->dscp;
 		my $re_type                     = $row->re_type;
 		my $ds_type                     = $row->ds_type;
-		my $signed                      = ( $row->signing_algorithm eq "url_sig" );
+		my $signed                      = defined( $row->signing_algorithm ) ? ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ) : \0;
 		my $signing_algorithm           = $row->signing_algorithm;
 		my $qstring_ignore              = $row->qstring_ignore;
 		my $ds_xml_id                   = $row->xml_id;
@@ -389,6 +389,9 @@ sub parent_data {
 	foreach my $prefix ( keys %deliveryservices ) {
 		foreach my $row ( @{ $deliveryservices{$prefix} } ) {
 			my $pid              = $row->profile->id;
+                        if ( $profile_cache{$pid}->{not_a_parent} ne 'false' ) {
+                            next;
+                        }
 			my $ds_domain        = $profile_cache{$pid}->{domain_name};
 			my $weight           = $profile_cache{$pid}->{weight};
 			my $port             = $profile_cache{$pid}->{port};
@@ -461,6 +464,7 @@ sub cachegroup_profiles {
 				port           => $self->profile_param_value( $pid, 'parent.config', 'port', undef ),
 				use_ip_address => $self->profile_param_value( $pid, 'parent.config', 'use_ip_address', 0 ),
 				rank           => $self->profile_param_value( $pid, 'parent.config', 'rank', 1 ),
+				not_a_parent   => $self->profile_param_value( $pid, 'parent.config', 'not_a_parent', 'false' ),
 			};
 		}
 	}
@@ -1048,11 +1052,13 @@ sub build_remap_line {
 	if ( defined( $remap->{edge_header_rewrite} ) ) {
 		$text .= " \@plugin=header_rewrite.so \@pparam=" . $remap->{hdr_rw_file};
 	}
-	if ( $remap->{signing_algorithm} eq "url_sig" ) {
-		$text .= " \@plugin=url_sig.so \@pparam=url_sig_" . $remap->{ds_xml_id} . ".config";
-	}
-	elsif ( $remap->{signing_algorithm} eq "uri_signing" ) {
-		$text .= " \@plugin=uri_signing.so \@pparam=uri_signing_" . $remap->{ds_xml_id} . ".config";
+	if ( defined($remap->{signing_algorithm})) {
+		if ( $remap->{signing_algorithm} eq "url_sig" ) {
+			$text .= " \@plugin=url_sig.so \@pparam=url_sig_" . $remap->{ds_xml_id} . ".config";
+		}
+		elsif ( $remap->{signing_algorithm} eq "uri_signing" ) {
+			$text .= " \@plugin=uri_signing.so \@pparam=uri_signing_" . $remap->{ds_xml_id} . ".config";
+		}
 	}
 	if ( $remap->{qstring_ignore} == 2 ) {
 		my $dqs_file = "drop_qstring.config";
