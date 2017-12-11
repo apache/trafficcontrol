@@ -33,7 +33,7 @@ To work on Traffic Router you need a \*nix (MacOS and Linux are most commonly us
 
 * Eclipse >= Kepler SR2 (or another Java IDE)
 * Maven >= 3.3.1
-* JDK >= 6.0
+* JDK >= 8.0
 
 Traffic Router Project Tree Overview
 ====================================
