@@ -30,6 +30,10 @@ var FormISOController = function(servers, osversions, $scope, $anchorScroll, for
 		{ value: 'no', label: 'no' }
 	];
 
+	$scope.iso = {
+		dhcp: 'no'
+	};
+
 	$scope.isDHCP = function() {
 		return $scope.iso.dhcp == 'yes';
 	};
