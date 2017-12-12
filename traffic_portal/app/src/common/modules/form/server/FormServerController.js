@@ -54,11 +54,11 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
             });
     };
 
-    var getProfiles = function() {
-        profileService.getProfiles({ orderby: 'name' })
+    var getProfiles = function(cdnId) {
+        profileService.getProfiles({ orderby: 'name', cdn: cdnId })
             .then(function(result) {
                 $scope.profiles = _.filter(result, function(profile) {
-                    return profile.type != 'DS_PROFILE';
+                    return profile.type != 'DS_PROFILE'; // DS profiles are not intended for servers
                 });
             });
     };
@@ -97,6 +97,11 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     $scope.isCache = serverUtils.isCache;
 
     $scope.isEdge = serverUtils.isEdge;
+
+    $scope.onCDNChange = function() {
+        $scope.server.profileId = null; // the cdn of the server changed, so we need to blank out the selected server profile (if any)
+        getProfiles($scope.server.cdnId); // and get a new list of profiles (for the selected cdn)
+    };
 
     $scope.queueServerUpdates = function(server) {
         serverService.queueServerUpdates(server.id)
@@ -157,7 +162,6 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         getTypes();
         getCDNs();
         getStatuses();
-        getProfiles();
     };
     init();
 
