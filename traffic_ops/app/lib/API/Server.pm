@@ -1181,15 +1181,13 @@ sub is_server_valid {
 	}
 
 	my $cdn_mismatch;
-	if ($id) {
 		my $profile = $self->db->resultset('Profile')->search( { 'me.id' => $params->{profileId}}, { prefetch => ['cdn'] } )->single();
 		if ( !defined($profile->cdn) ) {
 			$cdn_mismatch = 1;
-		} 
+		}
 		elsif ( $params->{cdnId} != $profile->cdn->id ) {
 			$cdn_mismatch = 1;
 		}
-	}
 
 	if ($cdn_mismatch) {
 		return ( 0, "CDN of profile does not match Server CDN" );
