@@ -212,7 +212,7 @@ sub update {
 		ilo_password		=> $params->{iloPassword},
 		interface_mtu		=> $params->{interfaceMtu},
 		interface_name		=> $params->{interfaceName},
-		ip6_address			=> $params->{ip6Address},
+		ip6_address			=> ($params->{ip6Address}) ? $params->{ip6Address} : undef, # non empty string or null
 		ip6_gateway			=> $params->{ip6Gateway},
 		ip_address			=> $params->{ipAddress},
 		ip_netmask			=> $params->{ipNetmask},
@@ -316,7 +316,7 @@ sub create {
 		ilo_password		=> $params->{iloPassword},
 		interface_mtu		=> $params->{interfaceMtu},
 		interface_name		=> $params->{interfaceName},
-		ip6_address			=> $params->{ip6Address},
+		ip6_address			=> ($params->{ip6Address}) ? $params->{ip6Address} : undef, # non empty string or null
 		ip6_gateway			=> $params->{ip6Gateway},
 		ip_address			=> $params->{ipAddress},
 		ip_netmask			=> $params->{ipNetmask},
