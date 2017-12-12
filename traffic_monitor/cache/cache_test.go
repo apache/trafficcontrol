@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/srvhttp"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/todata"
 )
@@ -35,7 +34,7 @@ func TestHandlerPrecompute(t *testing.T) {
 	if NewHandler().Precompute() {
 		t.Errorf("expected NewHandler().Precompute() false, actual true")
 	}
-	if !NewPrecomputeHandler(todata.NewThreadsafe(), peer.NewCRStatesPeersThreadsafe()).Precompute() {
+	if !NewPrecomputeHandler(todata.NewThreadsafe()).Precompute() {
 		t.Errorf("expected NewPrecomputeHandler().Precompute() true, actual false")
 	}
 }
@@ -56,12 +55,18 @@ func (f DummyFilterNever) WithinStatHistoryMax(i int) bool {
 }
 
 func TestStatsMarshall(t *testing.T) {
-	hist := randResultHistory()
+	hist := randResultStatHistory()
 	filter := DummyFilterNever{}
 	params := url.Values{}
+	info := randResultInfoHistory()
+	combinedStates := tc.CRStates{}
+	monitorConfig := tc.TrafficMonitorConfigMap{}
+	statMaxKbpses := randKbpses()
+
 	beforeStatsMarshall := time.Now()
-	bytes, err := StatsMarshall(hist, filter, params)
+	bytes, err := StatsMarshall(hist, info, combinedStates, monitorConfig, statMaxKbpses, filter, params)
 	afterStatsMarshall := time.Now()
+
 	if err != nil {
 		t.Fatalf("StatsMarshall return expected nil err, actual err: %v", err)
 	}
@@ -82,8 +87,8 @@ func TestStatsMarshall(t *testing.T) {
 	if err != nil {
 		t.Errorf(`stats.CommonAPIData.DateStr expected format %v, actual %v`, srvhttp.CommonAPIDataDateFormat, stats.CommonAPIData.DateStr)
 	}
-	if beforeStatsMarshall.Round(time.Second).After(statsDate) || statsDate.After(afterStatsMarshall.Round(time.Second)) { // round to second, because CommonAPIDataDateFormat is second-precision
-		t.Errorf(`unmarshalling stats.CommonAPIData.DateStr expected between %v and %v, actual %v`, beforeStatsMarshall, afterStatsMarshall, stats.CommonAPIData.DateStr)
+	if beforeStatsMarshall.Truncate(time.Second).After(statsDate) || statsDate.After(afterStatsMarshall.Truncate(time.Second).Add(time.Second)) { // +/- 1 second, because CommonAPIDataDateFormat is second-precision
+		t.Errorf(`unmarshalling stats.CommonAPIData.DateStr expected between %v and %v, actual (%v) %v`, beforeStatsMarshall, afterStatsMarshall, statsDate, stats.CommonAPIData.DateStr)
 	}
 	if len(stats.Caches) > 0 {
 		t.Errorf(`unmarshalling stats.Caches expected empty, actual %+v`, stats.Caches)

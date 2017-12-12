@@ -130,7 +130,7 @@ func randStatCacheStats() dsdata.StatCacheStats {
 		Tps3xx:      dsdata.StatFloat{Value: rand.Float64(), StatMeta: randStatMeta()},
 		Tps2xx:      dsdata.StatFloat{Value: rand.Float64(), StatMeta: randStatMeta()},
 		ErrorString: dsdata.StatString{Value: randStr(), StatMeta: randStatMeta()},
-		TpsTotal:    dsdata.StatInt{Value: rand.Int63(), StatMeta: randStatMeta()},
+		TpsTotal:    dsdata.StatFloat{Value: rand.Float64(), StatMeta: randStatMeta()},
 	}
 }
 
@@ -219,11 +219,86 @@ func randResult() Result {
 
 }
 
+func randResultInfo() ResultInfo {
+	return ResultInfo{
+		ID:          tc.CacheName(randStr()),
+		Error:       fmt.Errorf(randStr()),
+		Time:        time.Now(),
+		RequestTime: time.Millisecond * time.Duration(rand.Int()),
+		Vitals:      randVitals(),
+		System:      randAstatsSystem(),
+		PollID:      uint64(rand.Int63()),
+		Available:   randBool(),
+	}
+}
+
+func randResultStatVal() ResultStatVal {
+	return ResultStatVal{
+		Val:  randStr(),
+		Time: time.Now(),
+		Span: uint64(rand.Int63()),
+	}
+}
+
+func randResultStatHistory() ResultStatHistory {
+	a := ResultStatHistory{}
+	num := 5
+	for i := 0; i < num; i++ {
+		a[tc.CacheName(randStr())] = randResultStatValHistory()
+	}
+	return a
+}
+
+func randResultStatValHistory() ResultStatValHistory {
+	a := ResultStatValHistory{}
+	num := 5
+	for i := 0; i < num; i++ {
+		a[randStr()] = randResultStatValSlice()
+	}
+	return a
+}
+
 func randResultSlice() []Result {
 	a := []Result{}
 	num := 5
 	for i := 0; i < num; i++ {
 		a = append(a, randResult())
+	}
+	return a
+}
+
+func randResultStatValSlice() []ResultStatVal {
+	a := []ResultStatVal{}
+	num := 5
+	for i := 0; i < num; i++ {
+		a = append(a, randResultStatVal())
+	}
+	return a
+}
+
+func randResultInfoSlice() []ResultInfo {
+	a := []ResultInfo{}
+	num := 5
+	for i := 0; i < num; i++ {
+		a = append(a, randResultInfo())
+	}
+	return a
+}
+
+func randResultInfoHistory() ResultInfoHistory {
+	a := ResultInfoHistory{}
+	num := 5
+	for i := 0; i < num; i++ {
+		a[tc.CacheName(randStr())] = randResultInfoSlice()
+	}
+	return a
+}
+
+func randKbpses() Kbpses {
+	a := Kbpses{}
+	num := 5
+	for i := 0; i < num; i++ {
+		a[tc.CacheName(randStr())] = rand.Int63()
 	}
 	return a
 }
