@@ -147,6 +147,8 @@ func StartMonitorConfigManager(
 	return monitorConfig
 }
 
+const DefaultHealthConnectionTimeout = time.Second * 10
+
 // trafficOpsHealthConnectionTimeoutToDuration takes the int from Traffic Ops, which is in milliseconds, and returns a time.Duration
 // TODO change Traffic Ops Client API to a time.Duration
 func trafficOpsHealthConnectionTimeoutToDuration(t int) time.Duration {
@@ -258,6 +260,11 @@ func monitorConfigListen(
 			url = r.Replace(url)
 
 			connTimeout := trafficOpsHealthConnectionTimeoutToDuration(monitorConfig.Profile[srv.Profile].Parameters.HealthConnectionTimeout)
+			if connTimeout == 0 {
+				connTimeout = DefaultHealthConnectionTimeout
+				log.Warnln("profile " + srv.Profile + " health.connection.timeout Parameter is missing or zero, using default " + DefaultHealthConnectionTimeout.String())
+			}
+
 			healthURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN, Timeout: connTimeout}
 			r = strings.NewReplacer("application=system", "application=")
 			statURL := r.Replace(url)
