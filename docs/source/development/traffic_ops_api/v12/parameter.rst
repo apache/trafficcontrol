@@ -151,13 +151,15 @@ Parameter
 	+-----------------+--------+----------------------------------------------------+
 	|    Parameter    |  Type  |                    Description                     |
 	+=================+========+====================================================+
-	| ``lastUpdated`` | array  | The Time / Date this server entry was last updated |
+	| ``lastUpdated`` | string | The Time / Date this server entry was last updated |
 	+-----------------+--------+----------------------------------------------------+
 	| ``name``        | string | The name for the profile                           |
 	+-----------------+--------+----------------------------------------------------+
 	| ``id``          | string | Primary key                                        |
 	+-----------------+--------+----------------------------------------------------+
 	| ``description`` | string | The description for the profile                    |
+	+-----------------+--------+----------------------------------------------------+
+	| ``type``        | string | The type for the profile                           |
 	+-----------------+--------+----------------------------------------------------+
 
   **Response Example** ::
@@ -168,7 +170,8 @@ Parameter
             "lastUpdated": "2012-10-08 19:34:45",
             "name": "CCR_TOP",
             "id": "8",
-            "description": "Content Router for top.foobar.net"
+            "description": "Content Router for top.foobar.net",
+            "type": "ATS_PROFILE"
         }
      ]
     }
