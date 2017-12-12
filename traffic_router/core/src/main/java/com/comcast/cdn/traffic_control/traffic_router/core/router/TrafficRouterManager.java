@@ -33,6 +33,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseService;
 
 public class TrafficRouterManager implements ApplicationListener<ContextRefreshedEvent> {
 	private static final Logger LOGGER = Logger.getLogger(TrafficRouterManager.class);
@@ -43,6 +44,7 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 	private TrafficRouter trafficRouter;
 	private GeolocationService geolocationService;
 	private GeolocationService geolocationService6;
+	private AnonymousIpDatabaseService anonymousIpService;
 	private StatTracker statTracker;
 	private static final Map<String, Long> timeTracker = new ConcurrentHashMap<String, Long>();
 	private NameServer nameServer;
@@ -99,7 +101,7 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 			return;
 		}
 
-		final TrafficRouter tr = new TrafficRouter(cacheRegister, geolocationService, geolocationService6, statTracker, trafficOpsUtils, federationRegistry, this);
+		final TrafficRouter tr = new TrafficRouter(cacheRegister, geolocationService, geolocationService6, anonymousIpService, statTracker, trafficOpsUtils, federationRegistry, this);
 		tr.setSteeringRegistry(steeringRegistry);
 		synchronized(this) {
 			if (state != null) {
@@ -125,6 +127,10 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 
 	public void setGeolocationService6(final GeolocationService geolocationService) {
 		this.geolocationService6 = geolocationService;
+	}
+
+	public void setAnonymousIpService(final AnonymousIpDatabaseService anonymousIpService) {
+		this.anonymousIpService = anonymousIpService;
 	}
 
 	public void setStatTracker(final StatTracker statTracker) {
