@@ -47,7 +47,7 @@ RUN yum install -y /$(basename $RPM)
 # once installed, remove rpm to lower image size
 RUN rm /$(basename $RPM)
 
-RUN cd /opt/traffic_ops/app && carton
+RUN POSTGRES_HOME=/usr/pgsql-9.6 cd /opt/traffic_ops/app && carton
 
 RUN /opt/traffic_ops/install/bin/install_go.sh
 RUN /opt/traffic_ops/install/bin/install_goose.sh
