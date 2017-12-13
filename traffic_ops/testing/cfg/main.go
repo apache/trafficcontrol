@@ -22,7 +22,9 @@ import (
 	"log"
 	"net/http"
 	"net/http/cookiejar"
+	"strings"
 	"sync"
+	"unicode"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.comcast.com/cdn/trafficcontrol/lib/go-tc"
@@ -57,13 +59,14 @@ var creds Creds
 
 type Connect struct {
 	// URL of reference traffic_ops
-	URL    string `required:"true"`
-	Client *http.Client
+	URL         string `required:"true"`
+	Client      *http.Client
+	ResultsPath string
 }
 
 // refTO, newTO are connections to the two Traffic Ops instances
-var refTO = &Connect{}
-var newTO = &Connect{}
+var refTO = &Connect{ResultsPath: `/tmp/gofiles/ref`}
+var newTO = &Connect{ResultsPath: `/tmp/gofiles/new`}
 
 // ResultsPath ...
 //var ResultsPath = `/tmp/gofiles/`
@@ -104,40 +107,67 @@ func (to *Connect) login(creds Creds) error {
 	return nil
 }
 
-func doGetRoute(to *Connect, r string, res *[]byte) {
+func doGetRoute(to *Connect, route string, res *[]byte) {
 	var err error
-	*res, err = to.get(r)
+	*res, err = to.get(route)
 	if err != nil {
-		*res = []byte(fmt.Sprintf("Error from %s : %s", to.URL+r, err))
+		*res = []byte(fmt.Sprintf("Error from %s : %s", to.URL+route, err))
 	}
 }
 
-func testRoute(r string) {
+func testRoute(route string) {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
 	var res1, res2 []byte
 	go func() {
-		doGetRoute(refTO, r, &res1)
+		doGetRoute(refTO, route, &res1)
 		wg.Done()
 	}()
 
 	go func() {
-		doGetRoute(newTO, r, &res2)
+		doGetRoute(newTO, route, &res2)
 		wg.Done()
 	}()
 
 	wg.Wait()
 
 	if bytes.Equal(res1, res2) {
-		log.Printf("Identical results (%d bytes) from %s", len(res1), r)
+		log.Printf("Identical results (%d bytes) from %s", len(res1), route)
 	} else {
-		log.Print("Diffs from ", r)
+		refPath, err := refTO.writeResults(route, res1)
+		if err != nil {
+			log.Fatal("Error writing results for ", route)
+		}
+
+		newPath, err := newTO.writeResults(route, res2)
+		if err != nil {
+			log.Fatal("Error writing results for ", route)
+		}
+		log.Print("Diffs from ", route, " written to")
+		log.Print("  ", refPath)
+		log.Print("  ", newPath)
 	}
 }
 
-func (to *Connect) get(r string) ([]byte, error) {
-	url := to.URL + `/` + r
+func (to *Connect) writeResults(route string, res []byte) (string, error) {
+	var dst bytes.Buffer
+	json.Indent(&dst, res, "", "  ")
+
+	m := func(r rune) rune {
+		if unicode.IsPunct(r) && r != '.' || unicode.IsSymbol(r) {
+			return '-'
+		}
+		return r
+	}
+
+	p := to.ResultsPath + "/" + strings.Map(m, route)
+	err := ioutil.WriteFile(p, dst.Bytes(), 0644)
+	return p, err
+}
+
+func (to *Connect) get(route string) ([]byte, error) {
+	url := to.URL + `/` + route
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -157,13 +187,16 @@ func (to *Connect) get(r string) ([]byte, error) {
 func getCDNNames(c *Connect) ([]string, error) {
 	var res []byte
 	doGetRoute(c, `api/1.2/cdns`, &res)
-	var cdns []tc.CDN
-	err := json.Unmarshal(res, &cdns)
+	fmt.Println(string(res))
+
+	var cdnResp tc.CDNsResponse
+
+	err := json.Unmarshal(res, &cdnResp)
 	if err != nil {
 		return nil, err
 	}
 	var cdnNames []string
-	for _, c := range cdns {
+	for _, c := range cdnResp.Response {
 		cdnNames = append(cdnNames, c.Name)
 	}
 	return cdnNames, nil
@@ -187,6 +220,7 @@ func main() {
 
 	// Login to the 2 Traffic Ops instances concurrently
 	var wg sync.WaitGroup
+
 	tos := []*Connect{refTO, newTO}
 	wg.Add(len(tos))
 	for _, t := range tos {
@@ -199,6 +233,7 @@ func main() {
 			wg.Done()
 		}(t)
 	}
+
 	wg.Wait()
 
 	wg.Add(len(testRoutes))
@@ -219,7 +254,7 @@ func main() {
 	for _, cdnName := range cdnNames {
 		log.Print("CDN ", cdnName)
 		go func(c string) {
-			testRoute(`api/1.2/` + c + `/snapshot/new`)
+			testRoute(`api/1.2/cdns/` + c + `/snapshot/new`)
 			wg.Done()
 		}(cdnName)
 	}
