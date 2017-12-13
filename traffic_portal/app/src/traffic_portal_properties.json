@@ -34,7 +34,7 @@
     "snapshot": {
       "_comments": "These are configurable properties for a cdn snapshot",
       "diff": {
-        "showUnchanged": true
+        "context": 1000
       }
     },
     "cacheChecks": {
