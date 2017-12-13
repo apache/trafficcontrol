@@ -23,32 +23,32 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 
 	var diffSettings = propertiesModel.properties.snapshot.diff;
 
-	var oldConfig = currentSnapshot.config || null,
-		newConfig = newSnapshot.config || null;
+	var oldConfig = currentSnapshot.config,
+		newConfig = newSnapshot.config;
 
-	var oldContentRouters = currentSnapshot.contentRouters || null,
-		newContentRouters = newSnapshot.contentRouters || null;
+	var oldTrafficRouters = currentSnapshot.contentRouters,
+		newTrafficRouters = newSnapshot.contentRouters;
 
-	var oldMonitors = currentSnapshot.monitors || null,
-		newMonitors = newSnapshot.monitors || null;
+	var oldTrafficMonitors = currentSnapshot.monitors,
+		newTrafficMonitors = newSnapshot.monitors;
 
-	var oldContentServers = currentSnapshot.contentServers || null,
-		newContentServers = newSnapshot.contentServers || null;
+	var oldTrafficServers = currentSnapshot.contentServers,
+		newTrafficServers = newSnapshot.contentServers;
 
-	var oldDeliveryServices = currentSnapshot.deliveryServices || null,
-		newDeliveryServices = newSnapshot.deliveryServices || null;
+	var oldDeliveryServices = currentSnapshot.deliveryServices,
+		newDeliveryServices = newSnapshot.deliveryServices;
 
-	var oldEdgeLocations = currentSnapshot.edgeLocations || null,
-		newEdgeLocations = newSnapshot.edgeLocations || null;
+	var oldEdgeCacheGroups = currentSnapshot.edgeLocations,
+		newEdgeCacheGroups = newSnapshot.edgeLocations;
 
-	var oldStats = currentSnapshot.stats || null,
-		newStats = newSnapshot.stats || null;
+	var oldStats = currentSnapshot.stats,
+		newStats = newSnapshot.stats;
 
 	var performDiff = function(oldJSON, newJSON, destination) {
 		var div = null,
-			prepend = '',
 			added = 0,
-			removed = 0;
+			removed = 0,
+			context = diffSettings.context; // only show X lines of context (around added or removed parts) as defined in traffic_portal_properties.json;
 
 		var display = document.getElementById(destination),
 			fragment = document.createDocumentFragment();
@@ -56,20 +56,32 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 		if (oldJSON) {
 			var diff = JsDiff.diffJson(oldJSON, newJSON);
 			diff.forEach(function(part){
-				// if the part is unchanged and you're not supposed to show unchanged, skip it
-				if (!part.added && !part.removed && diffSettings.showUnchanged == false) {
-					return;
+				var partChanged = part.added || part.removed;
+				if (!partChanged && part.count > (context * 2)) {
+					var partArr = part.value.split("\n"),
+						newArr = [];
+					_.each(partArr, function(element, index) {
+						if (index < context || index > partArr.length - context) {
+							newArr.push(element);
+						}
+					});
+					newArr.splice(context, 0, "\n*****************\n*   TRUNCATED   *\n*****************\n");
+					part.value = newArr.join("\n");
 				}
 				if (part.added) {
 					added++;
 				} else if (part.removed) {
 					removed++;
 				}
-				prepend = part.added ? '++' : part.removed ? '--' : '';
 				div = document.createElement('div');
 				div.className = part.added ? 'added' : part.removed ? 'removed' : 'no-change';
 
-				div.appendChild(document.createTextNode(prepend + part.value));
+				if (partChanged) {
+					var prepend = part.added ? '++' : '--';
+					part.value = prepend + part.value.slice(2);
+				}
+
+				div.appendChild(document.createTextNode(part.value));
 				fragment.appendChild(div);
 			});
 
@@ -139,21 +151,21 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 	$scope.diffContentRouters = function(timeout) {
 		$('#contentRouters').html('<i class="fa fa-refresh fa-spin fa-1x fa-fw"></i> Generating diff...');
 		$timeout(function() {
-			performDiff(oldContentRouters, newContentRouters, 'contentRouters');
+			performDiff(oldTrafficRouters, newTrafficRouters, 'contentRouters');
 		}, timeout);
 	};
 
 	$scope.diffMonitors = function(timeout) {
 		$('#monitors').html('<i class="fa fa-refresh fa-spin fa-1x fa-fw"></i> Generating diff...');
 		$timeout(function() {
-			performDiff(oldMonitors, newMonitors, 'monitors');
+			performDiff(oldTrafficMonitors, newTrafficMonitors, 'monitors');
 		}, timeout);
 	};
 
 	$scope.diffContentServers = function(timeout) {
 		$('#contentServers').html('<i class="fa fa-refresh fa-spin fa-1x fa-fw"></i> Generating diff...');
 		$timeout(function() {
-			performDiff(oldContentServers, newContentServers, 'contentServers');
+			performDiff(oldTrafficServers, newTrafficServers, 'contentServers');
 		}, timeout);
 	};
 
@@ -167,7 +179,7 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 	$scope.diffEdgeLocations = function(timeout) {
 		$('#edgeLocations').html('<i class="fa fa-refresh fa-spin fa-1x fa-fw"></i> Generating diff...');
 		$timeout(function() {
-			performDiff(oldEdgeLocations, newEdgeLocations, 'edgeLocations');
+			performDiff(oldEdgeCacheGroups, newEdgeCacheGroups, 'edgeLocations');
 		}, timeout);
 	};
 
