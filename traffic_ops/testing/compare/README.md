@@ -28,15 +28,27 @@ reported and written to files in the output directory (default ./results).
 
 Two Traffic Ops instances with common login credentials.  The following
 environment variables must be set:
+
 - `TO_URL`   -- the *reference* Traffic Ops (e.g. production version)
+- `TO_USER`  -- the username for `TO_URL`
+- `TO_PASSWORD`  -- the password for `TO_URL`
+
 - `TEST_URL` -- the *test* Traffic Ops (e.g. development version)
-- `TO_USER`
-- `TO_PASSWORD`
+- `TEST_USER`  -- the username for `TO_URL` (default -- same as `TO_USER`)
+- `TEST_PASSWORD`  -- the password for `TO_URL` (default -- same as `TO_PASSWORD`)
 
 ## Usage
 
 ```
-   go run compare.go
+   go run compare.go [-results <dir>] [-route <API route] [-file <file of routes>] [-snapshot]
 ```
+
+Options:
+
+- `-results <dir>` -- directory to write difference results
+- `-route <route>` -- a specific route to compare
+- `-file <file>`   -- file containing routes to check (-route takes precedence)
+- `-snapshot`      -- compare snapshot for each CDN
+
 
 
