@@ -17,12 +17,12 @@
     under the License.
 -->
 
-# Traffic Ops Configuration Test
+# Traffic Ops Compare
 
 Use this tool to compare API output between two instances of Traffic Ops API.
-The test logs in to each instance using the same user/password combination,
+It logs in to each instance using the same user/password combination,
 then processes all given endpoints.  Any that get different results are
-reported and written to files in the output directory (default /tmp/gofiles).
+reported and written to files in the output directory (default ./results).
 
 ## Requirements
 
@@ -36,7 +36,7 @@ environment variables must be set:
 ## Usage
 
 ```
-   go test -v
+   go run compare.go
 ```
 
 

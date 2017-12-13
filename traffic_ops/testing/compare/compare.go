@@ -22,6 +22,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/cookiejar"
+	"os"
 	"strings"
 	"sync"
 	"unicode"
@@ -65,11 +66,8 @@ type Connect struct {
 }
 
 // refTO, newTO are connections to the two Traffic Ops instances
-var refTO = &Connect{ResultsPath: `/tmp/gofiles/ref`}
-var newTO = &Connect{ResultsPath: `/tmp/gofiles/new`}
-
-// ResultsPath ...
-//var ResultsPath = `/tmp/gofiles/`
+var refTO = &Connect{ResultsPath: `./results/ref`}
+var newTO = &Connect{ResultsPath: `./results/new`}
 
 func (to *Connect) login(creds Creds) error {
 	body, err := json.Marshal(creds)
@@ -161,8 +159,13 @@ func (to *Connect) writeResults(route string, res []byte) (string, error) {
 		return r
 	}
 
+	err := os.MkdirAll(to.ResultsPath, 0755)
+	if err != nil {
+		return "", err
+	}
+
 	p := to.ResultsPath + "/" + strings.Map(m, route)
-	err := ioutil.WriteFile(p, dst.Bytes(), 0644)
+	err = ioutil.WriteFile(p, dst.Bytes(), 0644)
 	return p, err
 }
 
