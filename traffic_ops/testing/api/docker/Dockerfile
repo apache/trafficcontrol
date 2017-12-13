@@ -18,7 +18,6 @@ RUN yum -y install \
         https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm
 
 RUN yum -y install \
-        vim \
         cpanminus \
         expat-devel \
         gcc-c++ \
@@ -31,7 +30,6 @@ RUN yum -y install \
         openssl-devel \
         perl \
         perl-App-cpanminus \
-        perl-Crypt-ScryptKDF \
         perl-DBD-Pg \
         perl-DBI \
         perl-Digest-SHA1 \
@@ -45,35 +43,28 @@ RUN yum -y install \
         postgresql96-devel && \
         yum clean all
 
-#RUN cpanm MIYAGAWA/Carton-v1.0.26.tar.gz
 RUN cpanm -n Carton
-
-ADD app /opt/traffic_ops/app
-WORKDIR /opt/traffic_ops/app
-#RUN carton
-RUN POSTGRES_HOME=/usr/pgsql-9.6 carton
 
 ADD install/bin/install_goose.sh /
 ADD install/bin/install_go.sh /
 RUN /install_go.sh
 RUN /install_goose.sh
 
+ADD app /opt/traffic_ops/app
+WORKDIR /opt/traffic_ops/app
+RUN POSTGRES_HOME=/usr/pgsql-9.6 carton
 
 # ignore this if it fails
-#RUN rm -rf /root/.cpan* 2>/dev/null || true
+RUN rm -rf /root/.cpan* 2>/dev/null || true
 
-ADD app/bin/tests/runtests.sh /
-ARG TESTDIR
-ARG TESTENV
-ENV TESTDIR=$TESTDIR
-ENV TESTENV=$TESTENV
-ARG DBHOST
-ARG DBPORT
-ENV DBHOST=$DBHOST
-ENV DBPORT=$DBPORT
+MAINTAINER Dewayne Richardson <dewrich@apache.org>
+ARG DIR=github.com/apache/incubator-trafficcontrol/traffic_ops/testing/api
 
-#ENTRYPOINT /runtests.sh $DBHOST $DBPORT
-CMD $TESTENV $TESTDIR
+ADD traffic_ops /go/src/$DIR/traffic_ops
+ADD lib /go/src/$DIR/lib
 
+WORKDIR /go/src/$DIR/traffic_ops/traffic_ops_golang
+
+CMD bash -c 'go test -v $(go list ./... | grep -v /vendor/)'
 #
 # vi:syntax=Dockerfile
