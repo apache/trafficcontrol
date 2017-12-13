@@ -147,7 +147,7 @@ func StartMonitorConfigManager(
 	return monitorConfig
 }
 
-const DefaultHealthConnectionTimeout = time.Second * 10
+const DefaultHealthConnectionTimeout = time.Second * 2
 
 // trafficOpsHealthConnectionTimeoutToDuration takes the int from Traffic Ops, which is in milliseconds, and returns a time.Duration
 // TODO change Traffic Ops Client API to a time.Duration
