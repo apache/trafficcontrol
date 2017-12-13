@@ -25,6 +25,7 @@ import (
 	"sync"
 
 	"github.com/kelseyhightower/envconfig"
+	"github.comcast.com/cdn/trafficcontrol/lib/go-tc"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -153,6 +154,21 @@ func (to *Connect) get(r string) ([]byte, error) {
 	return data, err
 }
 
+func getCDNNames(c *Connect) ([]string, error) {
+	var res []byte
+	doGetRoute(c, `api/1.2/cdns`, &res)
+	var cdns []tc.CDN
+	err := json.Unmarshal(res, &cdns)
+	if err != nil {
+		return nil, err
+	}
+	var cdnNames []string
+	for _, c := range cdns {
+		cdnNames = append(cdnNames, c.Name)
+	}
+	return cdnNames, nil
+}
+
 func main() {
 	err := envconfig.Process("TO", &creds)
 	if err != nil {
@@ -193,4 +209,20 @@ func main() {
 		}(route)
 	}
 	wg.Wait()
+
+	cdnNames, err := getCDNNames(refTO)
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("CDNNames are %+v", cdnNames)
+	wg.Add(len(cdnNames))
+	for _, cdnName := range cdnNames {
+		log.Print("CDN ", cdnName)
+		go func(c string) {
+			testRoute(`api/1.2/` + c + `/snapshot/new`)
+			wg.Done()
+		}(cdnName)
+	}
+	wg.Wait()
+
 }
