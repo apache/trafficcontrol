@@ -15,8 +15,10 @@ package main
 //
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -31,18 +33,6 @@ import (
 	"github.comcast.com/cdn/trafficcontrol/lib/go-tc"
 	"golang.org/x/net/publicsuffix"
 )
-
-var testRoutes = []string{
-	`api/1.2/asns?orderby=id`,
-	`api/1.2/cdns?orderby=id`,
-	`api/1.2/divisions?orderby=id`,
-	`api/1.2/parameters?orderby=id`,
-	`api/1.2/phys_locations?orderby=id`,
-	`api/1.2/regions?orderby=id`,
-	`api/1.2/servers?orderby=id`,
-	`api/1.2/statuses?orderby=id`,
-	`api/1.2/profiles?orderby=id`,
-}
 
 // Environment variables used:
 //   TO_URL      -- URL for reference Traffic Ops
@@ -65,10 +55,6 @@ type Connect struct {
 	ResultsPath string
 }
 
-// refTO, newTO are connections to the two Traffic Ops instances
-var refTO = &Connect{ResultsPath: `./results/ref`}
-var newTO = &Connect{ResultsPath: `./results/new`}
-
 func (to *Connect) login(creds Creds) error {
 	body, err := json.Marshal(creds)
 	if err != nil {
@@ -83,7 +69,7 @@ func (to *Connect) login(creds Creds) error {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	// Create cookiejar for created cookie to be placed into
+	// Create cookiejar so created cookie will be reused
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
 		return err
@@ -105,52 +91,57 @@ func (to *Connect) login(creds Creds) error {
 	return nil
 }
 
-func doGetRoute(to *Connect, route string, res *[]byte) {
-	var err error
-	*res, err = to.get(route)
-	if err != nil {
-		*res = []byte(fmt.Sprintf("Error from %s : %s", to.URL+route, err))
+func testRoute(tos []*Connect, route string) {
+	// keeps result along with instance -- no guarantee on order collected
+	type result struct {
+		TO  *Connect
+		Res string
 	}
-}
+	var res []result
+	ch := make(chan result, len(tos))
 
-func testRoute(route string) {
 	var wg sync.WaitGroup
-	wg.Add(2)
+	var m sync.Mutex
 
-	var res1, res2 []byte
-	go func() {
-		doGetRoute(refTO, route, &res1)
-		wg.Done()
-	}()
+	for _, to := range tos {
+		wg.Add(1)
+		go func(to *Connect) {
+			s, err := to.get(route)
+			if err != nil {
+				s = err.Error()
+			}
+			ch <- result{to, s}
+			wg.Done()
+		}(to)
 
-	go func() {
-		doGetRoute(newTO, route, &res2)
-		wg.Done()
-	}()
-
+		wg.Add(1)
+		go func() {
+			m.Lock()
+			defer m.Unlock()
+			res = append(res, <-ch)
+			wg.Done()
+		}()
+	}
 	wg.Wait()
+	close(ch)
 
-	if bytes.Equal(res1, res2) {
-		log.Printf("Identical results (%d bytes) from %s", len(res1), route)
+	if res[0].Res == res[1].Res {
+		log.Printf("Identical results (%d bytes) from %s", len(res[0].Res), route)
 	} else {
-		refPath, err := refTO.writeResults(route, res1)
-		if err != nil {
-			log.Fatal("Error writing results for ", route)
-		}
-
-		newPath, err := newTO.writeResults(route, res2)
-		if err != nil {
-			log.Fatal("Error writing results for ", route)
-		}
 		log.Print("Diffs from ", route, " written to")
-		log.Print("  ", refPath)
-		log.Print("  ", newPath)
+		for _, r := range res {
+			p, err := r.TO.writeResults(route, r.Res)
+			if err != nil {
+				log.Fatal("Error writing results for ", route)
+			}
+			log.Print("  ", p)
+		}
 	}
 }
 
-func (to *Connect) writeResults(route string, res []byte) (string, error) {
+func (to *Connect) writeResults(route string, res string) (string, error) {
 	var dst bytes.Buffer
-	json.Indent(&dst, res, "", "  ")
+	json.Indent(&dst, []byte(res), "", "  ")
 
 	m := func(r rune) rune {
 		if unicode.IsPunct(r) && r != '.' || unicode.IsSymbol(r) {
@@ -169,32 +160,34 @@ func (to *Connect) writeResults(route string, res []byte) (string, error) {
 	return p, err
 }
 
-func (to *Connect) get(route string) ([]byte, error) {
+func (to *Connect) get(route string) (string, error) {
 	url := to.URL + `/` + route
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := to.Client.Do(req)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
-	return data, err
+	return string(data), err
 }
 
-func getCDNNames(c *Connect) ([]string, error) {
-	var res []byte
-	doGetRoute(c, `api/1.2/cdns`, &res)
-	fmt.Println(string(res))
+func (to *Connect) getCDNNames() ([]string, error) {
+	res, err := to.get(`api/1.2/cdns`)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(res)
 
 	var cdnResp tc.CDNsResponse
 
-	err := json.Unmarshal(res, &cdnResp)
+	err = json.Unmarshal([]byte(res), &cdnResp)
 	if err != nil {
 		return nil, err
 	}
@@ -206,10 +199,25 @@ func getCDNNames(c *Connect) ([]string, error) {
 }
 
 func main() {
+	var routesFile string
+	var route string
+	var resultsPath string
+	var doSnapshot bool
+
+	flag.StringVar(&routesFile, "file", "./testroutes.txt", "File listing routes to test (ignored if -route is used)")
+	flag.StringVar(&route, "route", "", "Single route to test")
+	flag.StringVar(&resultsPath, "results", "results", "Directory to write results")
+	flag.BoolVar(&doSnapshot, "snapshot", false, "Do snapshot comparison for each CDN")
+	flag.Parse()
+
 	err := envconfig.Process("TO", &creds)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	// refTO, newTO are connections to the two Traffic Ops instances
+	var refTO = &Connect{ResultsPath: resultsPath + `/ref`}
+	var newTO = &Connect{ResultsPath: resultsPath + `/new`}
 
 	err = envconfig.Process("TO", refTO)
 	if err != nil {
@@ -221,10 +229,10 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
+	tos := []*Connect{refTO, newTO}
+
 	// Login to the 2 Traffic Ops instances concurrently
 	var wg sync.WaitGroup
-
-	tos := []*Connect{refTO, newTO}
 	wg.Add(len(tos))
 	for _, t := range tos {
 		go func(to *Connect) {
@@ -236,31 +244,55 @@ func main() {
 			wg.Done()
 		}(t)
 	}
-
 	wg.Wait()
+
+	var testRoutes []string
+
+	if route != "" {
+		// -route (specify single route) takes precedence
+		testRoutes = append(testRoutes, route)
+	} else if routesFile != "" {
+		// -file (specify  route) takes precedence
+		file, err := os.Open(routesFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			testRoutes = append(testRoutes, scanner.Text())
+		}
+
+		if err := scanner.Err(); err != nil {
+			log.Fatal(err)
+		}
+	}
 
 	wg.Add(len(testRoutes))
 	for _, route := range testRoutes {
 		go func(r string) {
-			testRoute(r)
+			testRoute(tos, r)
 			wg.Done()
 		}(route)
 	}
 	wg.Wait()
 
-	cdnNames, err := getCDNNames(refTO)
-	if err != nil {
-		panic(err)
-	}
-	log.Printf("CDNNames are %+v", cdnNames)
-	wg.Add(len(cdnNames))
-	for _, cdnName := range cdnNames {
-		log.Print("CDN ", cdnName)
-		go func(c string) {
-			testRoute(`api/1.2/cdns/` + c + `/snapshot/new`)
-			wg.Done()
-		}(cdnName)
-	}
-	wg.Wait()
+	if doSnapshot {
+		cdnNames, err := refTO.getCDNNames()
+		if err != nil {
+			panic(err)
+		}
+		log.Printf("CDNNames are %+v", cdnNames)
 
+		wg.Add(len(cdnNames))
+		for _, cdnName := range cdnNames {
+			log.Print("CDN ", cdnName)
+			go func(c string) {
+				testRoute(tos, `api/1.2/cdns/`+c+`/snapshot/new`)
+				wg.Done()
+			}(cdnName)
+		}
+		wg.Wait()
+	}
 }
