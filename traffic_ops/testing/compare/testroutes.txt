@@ -1,0 +1,9 @@
+api/1.2/asns?orderby=id
+api/1.2/cdns?orderby=id
+api/1.2/divisions?orderby=id
+api/1.2/parameters?orderby=id
+api/1.2/phys_locations?orderby=id
+api/1.2/regions?orderby=id
+api/1.2/servers?orderby=id
+api/1.2/statuses?orderby=id
+api/1.2/profiles?orderby=id
