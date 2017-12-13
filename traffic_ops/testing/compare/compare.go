@@ -45,14 +45,12 @@ type Creds struct {
 	Password string `json:"p" required:"true"`
 }
 
-// Credentials to login to both servers
-var creds Creds
-
 type Connect struct {
 	// URL of reference traffic_ops
-	URL         string `required:"true"`
-	Client      *http.Client
-	ResultsPath string
+	URL         string       `required:"true"`
+	Client      *http.Client `ignore:"true"`
+	ResultsPath string       `ignore:"true"`
+	creds       Creds        `ignore:"true"`
 }
 
 func (to *Connect) login(creds Creds) error {
@@ -210,26 +208,30 @@ func main() {
 	flag.BoolVar(&doSnapshot, "snapshot", false, "Do snapshot comparison for each CDN")
 	flag.Parse()
 
-	err := envconfig.Process("TO", &creds)
+	// refTO, testTO are connections to the two Traffic Ops instances
+	var refTO = &Connect{ResultsPath: resultsPath + `/ref`}
+	var testTO = &Connect{ResultsPath: resultsPath + `/test`}
+
+	err := envconfig.Process("TO", &refTO.creds)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-
-	// refTO, newTO are connections to the two Traffic Ops instances
-	var refTO = &Connect{ResultsPath: resultsPath + `/ref`}
-	var newTO = &Connect{ResultsPath: resultsPath + `/new`}
+	err = envconfig.Process("TEST", &testTO.creds)
+	if err != nil {
+		// if not provided, re-use the same credentials
+		testTO.creds = refTO.creds
+	}
 
 	err = envconfig.Process("TO", refTO)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-
-	err = envconfig.Process("TEST", newTO)
+	err = envconfig.Process("TEST", testTO)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	tos := []*Connect{refTO, newTO}
+	tos := []*Connect{refTO, testTO}
 
 	// Login to the 2 Traffic Ops instances concurrently
 	var wg sync.WaitGroup
@@ -237,7 +239,7 @@ func main() {
 	for _, t := range tos {
 		go func(to *Connect) {
 			log.Print("Login to ", to.URL)
-			err := to.login(creds)
+			err := to.login(to.creds)
 			if err != nil {
 				log.Fatal(err)
 			}
