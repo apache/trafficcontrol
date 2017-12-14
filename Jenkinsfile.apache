@@ -45,7 +45,7 @@ pipeline {
         stage('Build') {
             steps{
                 sh "mkdir -p bin"
-                sh "curl -L https://github.com/docker/compose/releases/download/1.13.0/docker-compose-`uname -s`-`uname -m` > ./bin/docker-compose"
+                sh "curl -L https://github.com/docker/compose/releases/download/1.17.1/docker-compose-`uname -s`-`uname -m` > ./bin/docker-compose"
                 sh "chmod +x ./bin/docker-compose"
                 sh "PATH=./bin:\$PATH ${PKG_CMD} -v"
                 stash name: 'workspace'
