@@ -30,6 +30,7 @@ import (
 
 	tclog "github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/basho/riak-go-client"
 )
 
 var Authenticated = true
@@ -109,12 +110,23 @@ func rootHandler(d ServerData) http.Handler {
 	rp := httputil.NewSingleHostReverseProxy(d.URL)
 	rp.Transport = tr
 
-	var logger interface{}
-	logger, err := tclog.GetLogWriter(d.Config.ErrorLog())
+	var errorLogger interface{}
+	errorLogger, err := tclog.GetLogWriter(d.Config.ErrorLog())
 	if err != nil {
 		tclog.Errorln("could not create error log writer for proxy: ", err)
 	}
-	rp.ErrorLog = log.New(logger.(io.Writer), "proxy error: ", log.Ldate|log.Ltime|log.Lmicroseconds|log.LUTC) //if we don't provide a logger to the reverse proxy it logs to stdout/err and is lost when ran by a script.
+	if errorLogger != nil {
+		rp.ErrorLog = log.New(errorLogger.(io.Writer), "proxy error: ", log.Ldate|log.Ltime|log.Lmicroseconds|log.LUTC) //if we don't provide a logger to the reverse proxy it logs to stdout/err and is lost when ran by a script.
+		riak.SetErrorLogger(log.New(errorLogger.(io.Writer), "riak error: ", log.Ldate|log.Ltime|log.Lmicroseconds|log.LUTC))
+	}
+	var infoLogger interface{}
+	infoLogger, err = tclog.GetLogWriter(d.Config.InfoLog())
+	if err != nil {
+		tclog.Errorln("could not create info log writer for proxy: ", err)
+	}
+	if infoLogger != nil {
+		riak.SetLogger(log.New(infoLogger.(io.Writer), "riak info: ", log.Ldate|log.Ltime|log.Lmicroseconds|log.LUTC))
+	}
 	tclog.Debugf("our reverseProxy: %++v\n", rp)
 	tclog.Debugf("our reverseProxy's transport: %++v\n", tr)
 	loggingProxyHandler := wrapAccessLog(d.Secrets[0], rp)
