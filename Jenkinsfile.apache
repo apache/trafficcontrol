@@ -19,7 +19,7 @@
 # under the License.
 */
 def TARGET_EXECUTOR_LABEL = 'ubuntu'
-def DOCKER_COMPOSE_CMD = 'docker-compose'
+def DOCKER_COMPOSE_CMD = './bin/docker-compose'
 def PKG_CMD = './pkg'
 pipeline {
     agent { label "${TARGET_EXECUTOR_LABEL}" }
@@ -44,7 +44,10 @@ pipeline {
         }
         stage('Build') {
             steps{
-                sh "${PKG_CMD} -v"
+                sh "mkdir -p bin"
+                sh "curl -L https://github.com/docker/compose/releases/download/1.13.0/docker-compose-`uname -s`-`uname -m` > ./bin/docker-compose"
+                sh "chmod +x ./bin/docker-compose"
+                sh "PATH=./bin:\$PATH ${PKG_CMD} -v"
                 stash name: 'workspace'
                 stash name: 'dist', includes: 'dist/*.rpm'
                 archiveArtifacts artifacts: 'dist/*.rpm', onlyIfSuccessful: true, fingerprint: true
