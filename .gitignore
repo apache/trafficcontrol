@@ -33,3 +33,4 @@ traffic_router/*.log
 .dbInfo
 /dist
 *.pyc
+Jenkinsfile

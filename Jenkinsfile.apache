@@ -1,0 +1,123 @@
+#!groovy
+/*
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+*/
+def TARGET_EXECUTOR_LABEL = 'ubuntu'
+def DOCKER_COMPOSE_CMD = 'docker-compose'
+def PKG_CMD = './pkg'
+pipeline {
+    agent { label "${TARGET_EXECUTOR_LABEL}" }
+    environment {
+      COMPOSE_PROJECT_NAME = "TC-${JOB_NAME}-${BRANCH_NAME}"
+    }
+    options {
+      skipDefaultCheckout()
+    }
+    stages {
+        stage('Checkout') {
+            steps{
+                script {
+                    def isGitDir = fileExists '.git'
+                    if(isGitDir){
+                        sh "git clean -x -f -d"
+                    }
+                }
+                checkout scm
+                sh 'mkdir dist'
+            }
+        }
+        stage('Build') {
+            steps{
+                sh "${PKG_CMD} -v"
+                stash name: 'workspace'
+                stash name: 'dist', includes: 'dist/*.rpm'
+                archiveArtifacts artifacts: 'dist/*.rpm', onlyIfSuccessful: true, fingerprint: true
+                archiveArtifacts artifacts: 'dist/*.tar.gz', onlyIfSuccessful: true, fingerprint: true
+                stash name: 'buildroot.tarball', includes: 'dist/*.tar.gz'
+            }
+        }
+        stage("Run Tests"){
+            parallel {
+                stage('RAT license validation') {
+                    agent { label "${TARGET_EXECUTOR_LABEL}" }
+                    steps{
+                        sh "mkdir buildroot"
+                        unstash name: "buildroot.tarball"
+                        sh "find dist -type f -name \"*.tar.gz\" -exec tar xzf {} --strip-components 1 -C buildroot \\;"
+                        sh "./buildroot/misc/ratcheck/ratcheck.sh -t buildroot -p tmp"
+                    }
+                    post {
+                        always {
+                            deleteDir()
+                        }
+                    }
+                }
+                stage('Golang Unit Tests') {
+                    agent { label "${TARGET_EXECUTOR_LABEL}" }
+                    steps{
+                        unstash name: "workspace"
+                        sh "${DOCKER_COMPOSE_CMD} -p ${COMPOSE_PROJECT_NAME}-${EXECUTOR_NUMBER} -f traffic_ops/app/bin/tests/docker-compose.yml --no-ansi build --no-cache unit_golang"
+                        sh "${DOCKER_COMPOSE_CMD} -p ${COMPOSE_PROJECT_NAME}-${EXECUTOR_NUMBER} -f traffic_ops/app/bin/tests/docker-compose.yml up --no-color --force-recreate --exit-code-from unit_golang unit_golang"
+                    }
+                    post {
+                        always {
+                            sh "${DOCKER_COMPOSE_CMD} -p ${COMPOSE_PROJECT_NAME}-${EXECUTOR_NUMBER} -f traffic_ops/app/bin/tests/docker-compose.yml --no-ansi down -v --rmi all"
+                            deleteDir()
+                        }
+                    }
+                }
+                stage('Perl Unit Tests') {
+                    agent { label "${TARGET_EXECUTOR_LABEL}" }
+                    steps{
+                        unstash name: "workspace"
+                        sh "${DOCKER_COMPOSE_CMD} -p ${COMPOSE_PROJECT_NAME}-${EXECUTOR_NUMBER} -f traffic_ops/app/bin/tests/docker-compose.yml --no-ansi build --no-cache unit"
+                        sh "${DOCKER_COMPOSE_CMD} -p ${COMPOSE_PROJECT_NAME}-${EXECUTOR_NUMBER} -f traffic_ops/app/bin/tests/docker-compose.yml up --no-color --force-recreate --exit-code-from unit unit"
+                    }
+                    post {
+                        always {
+                            sh "${DOCKER_COMPOSE_CMD} -p ${COMPOSE_PROJECT_NAME}-${EXECUTOR_NUMBER} -f traffic_ops/app/bin/tests/docker-compose.yml --no-ansi down -v --rmi all"
+                            deleteDir()
+                        }
+                    }
+                }
+                stage('Perl Integration Tests') {
+                    agent { label "${TARGET_EXECUTOR_LABEL}" }
+                    steps{
+                        unstash name: "workspace"
+                        sh "${DOCKER_COMPOSE_CMD} -p ${COMPOSE_PROJECT_NAME}-${EXECUTOR_NUMBER} -f traffic_ops/app/bin/tests/docker-compose.yml --no-ansi build --no-cache integration"
+                        sh "${DOCKER_COMPOSE_CMD} -p ${COMPOSE_PROJECT_NAME}-${EXECUTOR_NUMBER} -f traffic_ops/app/bin/tests/docker-compose.yml up --no-color --force-recreate --exit-code-from integration integration"
+                    }
+                    post {
+                        always {
+                            sh "${DOCKER_COMPOSE_CMD} -p ${COMPOSE_PROJECT_NAME}-${EXECUTOR_NUMBER} -f traffic_ops/app/bin/tests/docker-compose.yml --no-ansi down -v --rmi all"
+                            deleteDir()
+                        }
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            sh "${DOCKER_COMPOSE_CMD} -f infrastructure/docker/build/docker-compose.yml --no-ansi down -v"
+            sh "${DOCKER_COMPOSE_CMD} -p ${COMPOSE_PROJECT_NAME} -f traffic_ops/app/bin/tests/docker-compose.yml --no-ansi down -v"
+            deleteDir()
+        }
+    }
+}
