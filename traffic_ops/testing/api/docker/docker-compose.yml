@@ -19,18 +19,45 @@ version: '2'
 
 volumes:
   incubator-trafficcontrol:
+  traffic_ops:
   conf:
 
 services:
   db:
-    image: postgres:9.6
+    image: postgres:9.6.6
+
+  to_base:
+    build:
+      context: ../../../..
+      dockerfile: traffic_ops/testing/api/docker/Dockerfile-to-base
+    volumes:
+      - traffic_ops:/opt/traffic_ops
+    links:
+      - db
+
+  to_test:
+    build:
+      context: ../../../..
+      dockerfile: traffic_ops/testing/api/docker/Dockerfile-to-test
+      args:
+        TESTENV: test
+        DBHOST: db
+        DBPORT: 5432
+    links:
+      - db
 
   api_tests:
     build:
       context: ../../../..
       dockerfile: traffic_ops/testing/api/docker/Dockerfile-api-tests
+      args:
+        DBHOST: db
+        DBPORT: 5432
     env_file:
       - traffic-ops-test.env
     volumes:
       - incubator-trafficcontrol:/incubator-trafficcontrol
       - conf:/conf
+    links:
+      - db
+      - to_test

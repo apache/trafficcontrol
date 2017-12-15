@@ -13,7 +13,15 @@
 #
 FROM golang:1.8
 MAINTAINER Dewayne Richardson <dewrich@apache.org>
+
+RUN apt-get -y update
+RUN apt-get -y install vim netcat
+
 ARG DIR=github.com/apache/incubator-trafficcontrol
+ARG DBHOST
+ARG DBPORT
+ENV DBHOST=$DBHOST
+ENV DBPORT=$DBPORT
 
 #ADD . $DIR
 ADD . /go/src/$DIR
@@ -21,6 +29,6 @@ ADD lib /go/src/$DIR/lib
 
 WORKDIR /go/src/$DIR/traffic_ops/testing/api
 
-CMD bash -c 'go get -u golang.org/x/net/publicsuffix && go test -v -cfg=conf/traffic-ops-test.conf'
+CMD bash -c 'docker/run_api_tests.sh'
  
 # vi:syntax=Dockerfile

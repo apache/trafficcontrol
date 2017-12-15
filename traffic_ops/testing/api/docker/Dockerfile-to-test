@@ -1,0 +1,48 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#FROM centos:7.2.1511
+FROM docker_to_base:latest
+MAINTAINER Dewayne Richardson <dewrich@apache.org>
+
+ARG TO_DIR=traffic_ops
+ARG TESTENV=$TESTENV
+ARG API_DOCKER_DIR=traffic_ops/testing/api/docker
+# ignore this if it fails
+#RUN rm -rf /root/.cpan* 2>/dev/null || true
+
+ARG TESTDIR
+ARG TESTENV
+ENV TESTDIR=$TESTDIR
+ENV TESTENV=$TESTENV
+ARG DBHOST
+ARG DBPORT
+ENV DBHOST=$DBHOST
+ENV DBPORT=$DBPORT
+#ADD $API_DOCKER_DIR/run_traffic_ops.sh /opt/traffic_ops/app
+
+ARG TO_RPM=traffic_ops-2.2.0-7398.7bb32b09.el7.x86_64.rpm
+ADD $API_DOCKER_DIR/$TO_RPM /
+ADD $API_DOCKER_DIR/run_traffic_ops.sh /
+#WORKDIR /
+#RUN yum -y install $TO_RPM
+
+#ADD $API_DOCKER_DIR/local /opt/traffic_ops/app
+WORKDIR /opt/traffic_ops/app
+
+ENV PERL5LIB="/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5"
+
+RUN POSTGRES_HOME=/usr/pgsql-9.6 carton
+CMD /run_traffic_ops.sh
+
+#EXPOSE 60443
