@@ -464,8 +464,8 @@ func getDeliveryServiceSSLKeysByXmlIDHandler(db *sqlx.DB, cfg Config) http.Handl
 
 // Delivery Services: URI Sign Keys.
 
-// Http POST handler used to store urisigning keys to a delivery service.
-func assignDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
+// Http POST or PUT handler used to store urisigning keys to a delivery service.
+func saveDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorFunc(w, r)
 
@@ -518,18 +518,6 @@ func assignDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 				log.Errorf("%v\n", err)
 			}
 		}()
-
-		ro, err := fetchObjectValues(xmlID, CDNURIKeysBucket, cluster)
-		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
-			return
-		}
-
-		// object exists.
-		if ro != nil && ro[0].Value != nil {
-			handleErr(fmt.Errorf("a keyset already exists for this delivery service"), http.StatusBadRequest)
-			return
-		}
 
 		// create a storage object and store the data
 		obj := &riak.Object{
@@ -675,81 +663,5 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 		}
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, "%s", respBytes)
-	}
-}
-
-// Http POST handler used to store urisigning keys to a delivery service.
-func updateDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorFunc(w, r)
-
-		defer r.Body.Close()
-
-		if cfg.RiakEnabled == false {
-			handleErr(fmt.Errorf("The RIAK service is unavailable"), http.StatusServiceUnavailable)
-			return
-		}
-
-		ctx := r.Context()
-		pathParams, err := getPathParams(ctx)
-		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
-			return
-		}
-
-		xmlID := pathParams["xmlID"]
-		data, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
-			return
-		}
-
-		// validate that the received data is a valid jwk keyset
-		var keySet map[string]URISignerKeyset
-		if err := json.Unmarshal(data, &keySet); err != nil {
-			log.Errorf("%v\n", err)
-			handleErr(err, http.StatusBadRequest)
-			return
-		}
-		if err := validateURIKeyset(keySet); err != nil {
-			log.Errorf("%v\n", err)
-			handleErr(err, http.StatusBadRequest)
-			return
-		}
-
-		// create and start a cluster
-		cluster, err := getRiakCluster(db, cfg)
-		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
-			return
-		}
-		if err = cluster.Start(); err != nil {
-			handleErr(err, http.StatusInternalServerError)
-			return
-		}
-		defer func() {
-			if err := cluster.Stop(); err != nil {
-				log.Errorf("%v\n", err)
-			}
-		}()
-
-		// create a storage object and store the data
-		obj := &riak.Object{
-			ContentType:     "text/json",
-			Charset:         "utf-8",
-			ContentEncoding: "utf-8",
-			Key:             xmlID,
-			Value:           []byte(data),
-		}
-
-		err = saveObject(obj, CDNURIKeysBucket, cluster)
-		if err != nil {
-			log.Errorf("%v\n", err)
-			handleErr(err, http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", data)
 	}
 }
