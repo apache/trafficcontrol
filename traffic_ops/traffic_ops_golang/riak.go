@@ -42,6 +42,9 @@ const SSLKeysBucket = "ssl"
 // 5 second timeout
 const timeOut = time.Second * 5
 
+// maximum command execution attempts
+const MaxCommandExecutionAttempts = 5
+
 type StorageCluster interface {
 	Start() error
 	Stop() error
@@ -187,7 +190,8 @@ func getRiakCluster(db *sqlx.DB, cfg Config) (StorageCluster, error) {
 	}
 
 	opts := &riak.ClusterOptions{
-		Nodes: nodes,
+		Nodes:             nodes,
+		ExecutionAttempts: MaxCommandExecutionAttempts,
 	}
 
 	cluster, err := riak.NewCluster(opts)
