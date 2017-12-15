@@ -30,6 +30,7 @@ RUN yum -y install \
         openssl-devel \
         perl \
         perl-App-cpanminus \
+        perl-Crypt-ScryptKDF \
         perl-DBD-Pg \
         perl-DBI \
         perl-Digest-SHA1 \
