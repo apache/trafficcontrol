@@ -23,7 +23,7 @@ The following are requirements to ensure an accurate set up:
 
 **Installing Traffic Portal**
 
-	- Download the Traffic Portal RPM from the traffic control `downloads <https://trafficcontrol.apache.org/downloads/index.html>`_ page or build from `source <https://github.com/apache/incubator-trafficcontrol/traffic_portal/build>`_.
+	- Download the Traffic Portal RPM from `Apache Jenkins <https://builds.apache.org/view/S-Z/view/TrafficControl/job/incubator-trafficcontrol-master-build/>`_ or build from source (./pkg traffic_portal_build).
 	- Copy the Traffic Portal RPM to your server
 	- curl --silent --location https://rpm.nodesource.com/setup_6.x | sudo bash -
 	- sudo yum install -y nodejs
@@ -31,10 +31,9 @@ The following are requirements to ensure an accurate set up:
 
 **Configuring Traffic Portal**
 
-	- cd /etc/traffic_portal/conf
-	- sudo vi config.js (read the inline comments)
-	- sudo vi /opt/traffic_portal/public/traffic_portal_properties.json (to customize traffic portal properties)
-	- [OPTIONAL] sudo vi /opt/traffic_portal/public/resources/assets/css/custom.css (to customize traffic portal skin)
+	- update /etc/traffic_portal/conf/config.js (if upgrade, reconcile config.js with config.js.rpmnew and then delete config.js.rpmnew)
+	- update /opt/traffic_portal/public/traffic_portal_properties.json (if upgrade, reconcile traffic_portal_properties.json with traffic_portal_properties.json.rpmnew and then delete traffic_portal_properties.json.rpmnew)
+	- [OPTIONAL] update /opt/traffic_portal/public/resources/assets/css/custom.css (to customize traffic portal skin)
 
 **Starting Traffic Portal**
 
