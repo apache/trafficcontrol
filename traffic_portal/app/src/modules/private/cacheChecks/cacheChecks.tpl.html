@@ -54,8 +54,8 @@ under the License.
                 <td>{{::cc.profile}}</td>
                 <td>{{::cc.adminState}}</td>
                 <td data-order="{{::cc.updPending}}" data-search="{{(cc.updPending) ? 'UPD' : ''}}">
-                    <i ng-show="cc.updPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
-                    <i ng-show="!cc.updPending" class="fa fa-check fa-lg" aria-hidden="true"></i>
+                    <i title="Updates Pending" ng-show="cc.updPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
+                    <i title="Updates Applied" ng-show="!cc.updPending" class="fa fa-check fa-lg" aria-hidden="true"></i>
                 </td>
                 <td ng-if="showReval == 1" data-order="{{::cc.revalPending}}" data-search="{{(cc.revalPending) ? 'RVL' : ''}}">
                     <i ng-show="cc.revalPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
