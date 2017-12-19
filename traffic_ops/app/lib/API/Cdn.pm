@@ -1208,6 +1208,8 @@ sub refresh_keys {
 			my @ds_rs = $self->db->resultset('Deliveryservice')->search( \%search );
 			foreach my $ds (@ds_rs) {
 				if (   $ds->type->name !~ m/^HTTP/
+					&& $ds->type->name !~ m/^CLIENT_STEERING$/
+					&& $ds->type->name !~ m/^STEERING$/
 					&& $ds->type->name !~ m/^DNS/ )
 				{
 					next;
