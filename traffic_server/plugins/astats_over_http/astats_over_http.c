@@ -539,7 +539,7 @@ static bool is_ip_allowed(const config_t* config, const struct sockaddr* addr) {
 		const char *ip = (char*) &addr_in->sin_addr;
 
 		for(i=0; i < config->ipCount; i++) {
-			ipmask = config->allowIps + (i*5);
+			ipmask = config->allowIps + (i*(sizeof(struct in_addr) + 1));
 			if(is_ip_match(ip, ipmask, ipmask[4])) {
 				TSDebug(PLUGIN_TAG, "clientip is %s--> ALLOW", inet_ntop(AF_INET,ip,ip_port_text_buffer,INET6_ADDRSTRLEN));
 				return true;
@@ -573,7 +573,7 @@ static void parseIps(config_t* config, char* ipStr) {
 
 	if(!ipStr) {
 	    config->ipCount = 1;
-	    ip = config->allowIps = TSmalloc(5);
+	    ip = config->allowIps = TSmalloc(sizeof(struct in_addr) + 1);
             inet_pton(AF_INET, DEFAULT_IP, ip);
             ip[4] = 32;
 	    return;
@@ -594,7 +594,7 @@ static void parseIps(config_t* config, char* ipStr) {
 	while((tok1 = strtok_r(p, ", \n", &p))) {
 		TSDebug(PLUGIN_TAG, "%d) parsing: %s", i+1,tok1);
 		tok2 = strtok_r(tok1, "/", &tok1);
-		ip = config->allowIps+(5*i);
+		ip = config->allowIps+((sizeof(struct in_addr) + 1)*i);
 		if(!inet_pton(AF_INET, tok2, ip)) {
 			TSDebug(PLUGIN_TAG, "%d) skipping: %s", i+1,tok1);
 			continue;
