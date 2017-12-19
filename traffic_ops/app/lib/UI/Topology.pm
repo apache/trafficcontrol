@@ -273,7 +273,8 @@ sub gen_crconfig_json {
     my $rs_ds = $self->db->resultset('Deliveryservice')->search(
         {
 			'me.cdn_id' => $cdn_id,
-            'active'     => 1
+            'active'     => 1,
+            'type.name' => { '!=', [ 'ANY_MAP' ] }
         },
         { prefetch => [ 'deliveryservice_servers', 'deliveryservice_regexes', 'type' ] }
     );
