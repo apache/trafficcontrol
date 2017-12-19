@@ -13,10 +13,6 @@ Cisco Systems, Inc. (http://www.cisco.com)
 This product includes GeoLite2 data created by MaxMind, available from
 <a href="http://www.maxmind.com">http://www.maxmind.com</a>.
 
-The invalid_passwords.txt file is from the Projects/OWASP SecLists
-Project, created by Mark Burnett, maintained by Daniel Miessler and
-Jason Haddix, available here: https://github.com/danielmiessler/SecLists
-
 These binary fonts are provided under the SIL Open Font License 1.1 (see LICENSE and licenses/SIL-1.1 for details):
   - FontAwesome          (http://fontawesome.io/license/)
   - Inconsolata-Bold.ttf (https://github.com/google/fonts/blob/master/ofl/inconsolata/OFL.txt)
