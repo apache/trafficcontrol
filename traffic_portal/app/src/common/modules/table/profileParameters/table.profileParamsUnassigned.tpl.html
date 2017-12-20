@@ -28,17 +28,17 @@ under the License.
         <thead>
         <tr class="headings">
             <th style="padding-left: 10px;"><input id="selectAllCB" type="checkbox" ng-click="selectAll($event)" ng-checked="allSelected()"></th>
-            <th>name</th>
-            <th>configFile</th>
-            <th>value</th>
+            <th>Name</th>
+            <th>Config File</th>
+            <th>Value</th>
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="param in ::selectedParams">
-            <td><input type="checkbox" ng-click="updateParams($event, param.id)" ng-checked="param.selected"></td>
-            <td>{{::param.name}}</td>
-            <td>{{::param.configFile}}</td>
-            <td>{{::param.value}}</td>
+        <tr ng-repeat="p in ::selectedParams">
+            <td><input type="checkbox" ng-click="updateParams($event, p.id)" ng-checked="p.selected"></td>
+            <td data-search="^{{::p.name}}$">{{::p.name}}</td>
+            <td data-search="^{{::p.configFile}}$">{{::p.configFile}}</td>
+            <td data-search="^{{::p.value}}$">{{::p.value}}</td>
         </tr>
         </tbody>
     </table>

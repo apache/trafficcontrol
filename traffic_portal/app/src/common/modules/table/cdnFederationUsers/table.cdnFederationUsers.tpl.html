@@ -46,13 +46,13 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="user in ::users">
-                <td>{{::user.fullName}}</td>
-                <td>{{::user.username}}</td>
-                <td>{{::user.email}}</td>
-                <td>{{::user.company}}</td>
-                <td>{{::user.role}}</td>
-                <td><button type="button" class="btn btn-link" title="Unlink User from Federation" ng-click="confirmRemoveUser(user)"><i class="fa fa-chain-broken"></i></button></td>
+            <tr ng-repeat="u in ::users">
+                <td data-search="^{{::u.fullName}}$">{{::u.fullName}}</td>
+                <td data-search="^{{::u.username}}$">{{::u.username}}</td>
+                <td data-search="^{{::u.email}}$">{{::u.email}}</td>
+                <td data-search="^{{::u.company}}$">{{::u.company}}</td>
+                <td data-search="^{{::u.role}}$">{{::u.role}}</td>
+                <td><button type="button" class="btn btn-link" title="Unlink User from Federation" ng-click="confirmRemoveUser(u)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
         </table>

@@ -37,7 +37,7 @@ under the License.
         <table id="federationDSTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>XML ID</th>
+                <th>Key</th>
                 <th>Type</th>
                 <th>CDN</th>
                 <th></th>
@@ -45,9 +45,9 @@ under the License.
             </thead>
             <tbody>
             <tr ng-repeat="ds in ::deliveryServices">
-                <td>{{::ds.xmlId}}</td>
-                <td>{{::ds.type}}</td>
-                <td>{{::ds.cdn}}</td>
+                <td data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
+                <td data-search="^{{::ds.type}}$">{{::ds.type}}</td>
+                <td data-search="^{{::ds.cdn}}$">{{::ds.cdn}}</td>
                 <td><button type="button" class="btn btn-link" title="Unlink Delivery Service from Federation" ng-click="confirmRemoveDS(ds)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>

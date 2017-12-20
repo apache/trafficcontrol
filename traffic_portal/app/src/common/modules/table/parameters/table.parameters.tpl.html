@@ -33,18 +33,18 @@ under the License.
         <table id="parametersTable" class="table responsive-utilities jambo_table" >
             <thead>
                 <tr class="headings">
-                    <th>name</th>
-                    <th>configFile</th>
-                    <th>value</th>
-                    <th>secure</th>
+                    <th>Name</th>
+                    <th>Config File</th>
+                    <th>Value</th>
+                    <th>Secure</th>
                 </tr>
             </thead>
             <tbody>
-                <tr ng-click="editParameter(parameter.id)" ng-repeat="parameter in ::parameters">
-                    <td>{{::parameter.name}}</td>
-                    <td>{{::parameter.configFile}}</td>
-                    <td>{{::parameter.value}}</td>
-                    <td>{{::parameter.secure}}</td>
+                <tr ng-click="editParameter(p.id)" ng-repeat="p in ::parameters">
+                    <td data-search="^{{::p.name}}$">{{::p.name}}</td>
+                    <td data-search="^{{::p.configFile}}$">{{::p.configFile}}</td>
+                    <td data-search="^{{::p.value}}$">{{::p.value}}</td>
+                    <td data-search="^{{::p.secure}}$">{{::p.secure}}</td>
                 </tr>
             </tbody>
         </table>

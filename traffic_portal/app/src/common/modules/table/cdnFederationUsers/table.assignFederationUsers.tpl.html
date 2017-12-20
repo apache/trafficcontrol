@@ -35,12 +35,12 @@ under the License.
         </tr>
         </thead>
         <tbody>
-        <tr id="{{user.id}}" class="user-row" ng-repeat="user in ::users">
-            <td><input type="checkbox" ng-checked="user.selected" ng-model="user.selected" ng-change="onChange()"></td>
-            <td>{{::user.fullName}}</td>
-            <td>{{::user.username}}</td>
-            <td>{{::user.email}}</td>
-            <td>{{::user.rolename}}</td>
+        <tr id="{{u.id}}" class="user-row" ng-repeat="u in ::users">
+            <td><input type="checkbox" ng-checked="u.selected" ng-model="u.selected" ng-change="onChange()"></td>
+            <td data-search="^{{::u.fullName}}$">{{::u.fullName}}</td>
+            <td data-search="^{{::u.username}}$">{{::u.username}}</td>
+            <td data-search="^{{::u.email}}$">{{::u.email}}</td>
+            <td data-search="^{{::u.rolename}}$">{{::u.rolename}}</td>
         </tr>
         </tbody>
     </table>

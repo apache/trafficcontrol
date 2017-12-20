@@ -28,17 +28,17 @@ under the License.
         <thead>
         <tr class="headings">
             <th></th>
-            <th>name</th>
-            <th>configFile</th>
-            <th>value</th>
+            <th>Name</th>
+            <th>Config File</th>
+            <th>Value</th>
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="parameter in ::unassignedParams">
-            <td><input type="checkbox" ng-click="updateParams($event, parameter.id)"></td>
-            <td>{{::parameter.name}}</td>
-            <td>{{::parameter.configFile}}</td>
-            <td>{{::parameter.value}}</td>
+        <tr ng-repeat="p in ::unassignedParams">
+            <td><input type="checkbox" ng-click="updateParams($event, p.id)"></td>
+            <td data-search="^{{::p.name}}$">{{::p.name}}</td>
+            <td data-search="^{{::p.configFile}}$">{{::p.configFile}}</td>
+            <td data-search="^{{::p.value}}$">{{::p.value}}</td>
         </tr>
         </tbody>
     </table>

@@ -44,9 +44,9 @@ under the License.
         <table id="deliveryServicesTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>XML ID</th>
+                <th>Key</th>
                 <th>Tenant</th>
-                <th>Origin Server FQDN</th>
+                <th>Origin</th>
                 <th>Active</th>
                 <th>Type</th>
                 <th>Protocol</th>
@@ -61,18 +61,18 @@ under the License.
             </thead>
             <tbody>
             <tr ng-repeat="ds in ::serverDeliveryServices">
-                <td>{{::ds.xmlId}}</td>
-                <td>{{::ds.tenant}}</td>
-                <td>{{::ds.orgServerFqdn}}</td>
-                <td>{{::ds.active}}</td>
-                <td>{{::ds.type}}</td>
-                <td>{{::protocol(ds)}}</td>
-                <td>{{::ds.cdnName}}</td>
-                <td>{{::ds.ipv6RoutingEnabled}}</td>
-                <td>{{::ds.dscp}}</td>
-                <td>{{::ds.signingAlgorithm}}</td>
-                <td>{{::qstring(ds)}}</td>
-                <td data-order="{{::ds.lastUpdated}}">{{::getRelativeTime(ds.lastUpdated)}}</td>
+                <td data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
+                <td data-search="^{{::ds.tenant}}$">{{::ds.tenant}}</td>
+                <td data-search="^{{::ds.orgServerFqdn}}$">{{::ds.orgServerFqdn}}</td>
+                <td data-search="^{{::ds.active}}$">{{::ds.active}}</td>
+                <td data-search="^{{::ds.type}}$">{{::ds.type}}</td>
+                <td data-search="^{{::protocol(ds)}}$">{{::protocol(ds)}}</td>
+                <td data-search="^{{::ds.cdnName}}$">{{::ds.cdnName}}</td>
+                <td data-search="^{{::ds.ipv6RoutingEnabled}}$">{{::ds.ipv6RoutingEnabled}}</td>
+                <td data-search="^{{::ds.dscp}}$">{{::ds.dscp}}</td>
+                <td data-search="^{{::ds.signingAlgorithm}}$">{{::ds.signingAlgorithm}}</td>
+                <td data-search="^{{::qstring(ds)}}$">{{::qstring(ds)}}</td>
+                <td data-search="^{{::getRelativeTime(ds.lastUpdated)}}$" data-order="{{::ds.lastUpdated}}">{{::getRelativeTime(ds.lastUpdated)}}</td>
                 <td><button type="button" class="btn btn-link" title="Unlink Delivery Service from Server" ng-click="confirmRemoveDS(ds)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>

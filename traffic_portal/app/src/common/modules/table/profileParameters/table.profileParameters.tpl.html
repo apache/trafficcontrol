@@ -35,20 +35,20 @@ under the License.
         <table id="profileParametersTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>name</th>
-                <th>configFile</th>
-                <th>value</th>
-                <th>secure</th>
+                <th>Name</th>
+                <th>Config File</th>
+                <th>Value</th>
+                <th>Secure</th>
                 <th></th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="parameter in ::profileParameters">
-                <td>{{::parameter.name}}</td>
-                <td>{{::parameter.configFile}}</td>
-                <td>{{::parameter.value}}</td>
-                <td>{{::parameter.secure}}</td>
-                <td><button type="button" class="btn btn-link" title="Unlink Parameter from Profile" ng-click="confirmRemoveParam(parameter)"><i class="fa fa-chain-broken"></i></button></td>
+            <tr ng-repeat="pp in ::profileParameters">
+                <td data-search="^{{::pp.name}}$">{{::pp.name}}</td>
+                <td data-search="^{{::pp.configFile}}$">{{::pp.configFile}}</td>
+                <td data-search="^{{::pp.value}}$">{{::pp.value}}</td>
+                <td data-search="^{{::pp.secure}}$">{{::pp.secure}}</td>
+                <td><button type="button" class="btn btn-link" title="Unlink Parameter from Profile" ng-click="confirmRemoveParam(pp)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
         </table>

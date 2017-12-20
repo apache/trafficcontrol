@@ -45,8 +45,8 @@ under the License.
             <thead>
             <tr class="headings">
                 <th>UPD</th>
-                <th>Host Name</th>
-                <th>Domain Name</th>
+                <th>Host</th>
+                <th>Domain</th>
                 <th>IP</th>
                 <th>IPv6</th>
                 <th>Status</th>
@@ -58,24 +58,24 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editServer(server.id)" ng-repeat="server in ::servers" ng-class="::{'active': server.updPending}">
-                <td data-order="{{::server.updPending}}" data-search="{{(server.updPending) ? 'UPD' : ''}}">
-                    <i title="Updates Pending" ng-show="server.updPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
-                    <i title="Updates Applied" ng-show="!server.updPending" class="fa fa-check fa-lg" aria-hidden="true"></i>
+            <tr ng-click="editServer(s.id)" ng-repeat="s in ::servers" ng-class="::{'active': s.updPending}">
+                <td data-search="{{(s.updPending) ? 'UPD' : ''}}" data-order="{{::s.updPending}}">
+                    <i title="Updates Pending" ng-show="s.updPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
+                    <i title="Updates Applied" ng-show="!s.updPending" class="fa fa-check fa-lg" aria-hidden="true"></i>
                 </td>
-                <td>{{::server.hostName}}</td>
-                <td>{{::server.domainName}}</td>
-                <td><a ng-click="ssh(server.ipAddress, $event)">{{::server.ipAddress}}</a></td>
-                <td>{{::server.ip6Address}}</td>
-                <td>
-                    <span ng-if="!isOffline(server.status)">{{::server.status}}</span>
-                    <span ng-if="isOffline(server.status)" uib-popover="{{::offlineReason(server)}}" popover-title="Offline Reason" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{::server.status}}</span>
+                <td data-search="^{{::s.hostName}}$">{{::s.hostName}}</td>
+                <td data-search="^{{::s.domainName}}$">{{::s.domainName}}</td>
+                <td data-search="^{{::s.ipAddress}}$"><a ng-click="ssh(s.ipAddress, $event)">{{::s.ipAddress}}</a></td>
+                <td data-search="^{{::s.ip6Address}}$">{{::s.ip6Address}}</td>
+                <td data-search="^{{::s.status}}$">
+                    <span ng-if="!isOffline(s.status)">{{::s.status}}</span>
+                    <span ng-if="isOffline(s.status)" uib-popover="{{::offlineReason(s)}}" popover-title="Offline Reason" popover-trigger="mouseenter" popover-placement="bottom" popover-append-to-body="true">{{::s.status}}</span>
                 </td>
-                <td>{{::server.type}}</td>
-                <td>{{::server.profile}}</td>
-                <td>{{::server.cdnName}}</td>
-                <td>{{::server.cachegroup}}</td>
-                <td><a ng-click="ssh(server.iloIpAddress, $event)">{{::server.iloIpAddress}}</a></td>
+                <td data-search="^{{::s.type}}$">{{::s.type}}</td>
+                <td data-search="^{{::s.profile}}$">{{::s.profile}}</td>
+                <td data-search="^{{::s.cdnName}}$">{{::s.cdnName}}</td>
+                <td data-search="^{{::s.cachegroup}}$">{{::s.cachegroup}}</td>
+                <td data-search="^{{::s.iloIpAddress}}$"><a ng-click="ssh(s.iloIpAddress, $event)">{{::s.iloIpAddress}}</a></td>
             </tr>
             </tbody>
         </table>
