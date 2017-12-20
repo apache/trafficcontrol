@@ -164,7 +164,7 @@ my $YUM_OPTS = "";
 ( $log_level >> $DEBUG ) && print "DEBUG YUM_OPTS: $YUM_OPTS.\n";
 
 my $TS_HOME      = "/opt/trafficserver";
-my $TRAFFIC_LINE = $TS_HOME . "/bin/traffic_line";
+my $TRAFFIC_CTL = $TS_HOME . "/bin/traffic_ctl";
 
 my $out          = `/usr/bin/yum $YUM_OPTS clean expire-cache 2>&1`;
 my $return       = &check_output($out);
@@ -172,7 +172,7 @@ my @config_files = ();
 
 #### Process reboot tracker
 my $reboot_needed                = 0;
-my $traffic_line_needed          = 0;
+my $traffic_ctl_needed          = 0;
 my $sysctl_p_needed              = 0;
 my $ntpd_restart_needed          = 0;
 my $trafficserver_restart_needed = 0;
@@ -262,7 +262,7 @@ if ( ($installed_new_ssl_keys) && !$cfg_file_tracker->{'ssl_multicert.config'}->
 		if ( $syncds_update == $UPDATE_TROPS_NEEDED ) {
 			$syncds_update = $UPDATE_TROPS_SUCCESSFUL;
 		}
-		$traffic_line_needed++;
+		$traffic_ctl_needed++;
 	}
 }
 
@@ -298,7 +298,7 @@ sub revalidate_while_sleeping {
 
 		&update_trops();
 
-		$traffic_line_needed = 0;
+		$traffic_ctl_needed = 0;
 	}
 }
 
@@ -766,7 +766,7 @@ sub send_update_to_trops {
 }
 
 sub get_print_current_client_connections {
-	my $cmd                 = $TRAFFIC_LINE . " -r proxy.process.http.current_client_connections";
+	my $cmd                 = $TRAFFIC_CTL . " -r proxy.process.http.current_client_connections";
 	my $current_connections = `$cmd 2>/dev/null`;
 	chomp($current_connections);
 	( $log_level >> $DEBUG ) && print "DEBUG There are currently $current_connections connections.\n";
@@ -1236,21 +1236,21 @@ sub touch_this_file {
 	return $success;
 }
 
-sub run_traffic_line {
-	my $output = `$TRAFFIC_LINE -x 2>&1`;
+sub run_traffic_ctl {
+	my $output = `$TRAFFIC_CTL config reload 2>&1`;
 	if ( $output !~ m/error/ ) {
-		( $log_level >> $DEBUG ) && print "DEBUG traffic_line run successful.\n";
+		( $log_level >> $DEBUG ) && print "DEBUG traffic_ctl run successful.\n";
 		if ( $syncds_update == $UPDATE_TROPS_NEEDED ) {
 			$syncds_update = $UPDATE_TROPS_SUCCESSFUL;
 		}
 	}
 	else {
 		if ( $syncds_update == $UPDATE_TROPS_NEEDED ) {
-			( $log_level >> $ERROR ) && print "ERROR traffic_line run failed. Updating Traffic Ops anyway.\n";
+			( $log_level >> $ERROR ) && print "ERROR traffic_ctl run failed. Updating Traffic Ops anyway.\n";
 			$syncds_update = $UPDATE_TROPS_SUCCESSFUL;
 		}
 		else {
-			( $log_level >> $ERROR ) && print "ERROR traffic_line run failed.\n";
+			( $log_level >> $ERROR ) && print "ERROR traffic_ctl run failed.\n";
 		}
 	}
 }
@@ -1542,29 +1542,29 @@ sub process_reload_restarts {
 	( $log_level >> $DEBUG ) && print "DEBUG Applying config for: $cfg_file.\n";
 
 	if ( $cfg_file =~ m/url\_sig\_(.*)\.config/ ) {
-		( $log_level >> $DEBUG ) && print "DEBUG New keys were installed in: $cfg_file, touch remap.config, and traffic_line -x needed.\n";
-		$traffic_line_needed++;
+		( $log_level >> $DEBUG ) && print "DEBUG New keys were installed in: $cfg_file, touch remap.config, and traffic_ctl config reload needed.\n";
+		$traffic_ctl_needed++;
 	}
 	elsif ( $cfg_file =~ m/uri\_signing\_(.*)\.config/ ) {
-		( $log_level >> $DEBUG ) && print "DEBUG New keys were installed in: $cfg_file, touch remap.config, and traffic_line -x needed.\n";
-		$traffic_line_needed++;
+		( $log_level >> $DEBUG ) && print "DEBUG New keys were installed in: $cfg_file, touch remap.config, and traffic_ctl config reload needed.\n";
+		$traffic_ctl_needed++;
 	}
 	elsif ( $cfg_file =~ m/hdr\_rw\_(.*)\.config/ ) {
 		( $log_level >> $DEBUG ) && print "DEBUG New/changed header rewrite rule, installed in: $cfg_file. Later I will attempt to touch remap.config.\n";
-		$traffic_line_needed++;
+		$traffic_ctl_needed++;
 	}
 	elsif ( $cfg_file eq "plugin.config" || $cfg_file eq "50-ats.rules" ) {
 		( $log_level >> $DEBUG ) && print "DEBUG $cfg_file changed, trafficserver restart needed.\n";
 		$trafficserver_restart_needed++;
 	}
 	elsif ( $cfg_file_tracker->{$cfg_file}->{'location'} =~ m/ssl/ && ( $cfg_file =~ m/\.cer$/ || $cfg_file =~ m/\.key$/ ) ) {
-		( $log_level >> $DEBUG ) && print "DEBUG SSL key/cert $cfg_file changed, touch ssl_multicert.config, and traffic_line -x needed.\n";
+		( $log_level >> $DEBUG ) && print "DEBUG SSL key/cert $cfg_file changed, touch ssl_multicert.config, and traffic_ctl config reload needed.\n";
 		$installed_new_ssl_keys++;
-		$traffic_line_needed++;
+		$traffic_ctl_needed++;
 	}
 	elsif ( $cfg_file_tracker->{$cfg_file}->{'location'} =~ m/trafficserver/ ) {
-		( $log_level >> $DEBUG ) && print "DEBUG $cfg_file changed, traffic_line -x needed.\n";
-		$traffic_line_needed++;
+		( $log_level >> $DEBUG ) && print "DEBUG $cfg_file changed, traffic_ctl config reload needed.\n";
+		$traffic_ctl_needed++;
 	}
 	elsif ( $cfg_file eq "sysctl.conf" ) {
 		( $log_level >> $DEBUG ) && print "DEBUG $cfg_file changed, 'sysctl -p' needed.\n";
@@ -2408,12 +2408,12 @@ sub start_restart_services {
 		( $log_level >> $DEBUG ) && print "DEBUG trafficserver is installed.\n";
 		$ats_running = &start_service("trafficserver");
 		if ( $ats_running == $START_SUCCESSFUL ) {
-			$traffic_line_needed = 0;
-			( $log_level >> $DEBUG ) && print "DEBUG trafficserver was just started, no need to run $TRAFFIC_LINE -x.\n";
+			$traffic_ctl_needed = 0;
+			( $log_level >> $DEBUG ) && print "DEBUG trafficserver was just started, no need to run $TRAFFIC_CTL config reload.\n";
 		}
 		elsif ( $ats_running == $START_FAILED ) {
-			$traffic_line_needed = 0;
-			( $log_level >> $DEBUG ) && print "DEBUG trafficserver failed to start, running $TRAFFIC_LINE -x will also fail.\n";
+			$traffic_ctl_needed = 0;
+			( $log_level >> $DEBUG ) && print "DEBUG trafficserver failed to start, running $TRAFFIC_CTL config reload will also fail.\n";
 		}
 		elsif ( $ats_running == $START_NOT_ATTEMPTED ) {
 			( $log_level >> $DEBUG ) && print "DEBUG trafficserver was not attempted to be started.\n";
@@ -2421,39 +2421,39 @@ sub start_restart_services {
 	}
 
 	#### Advanced ATS processing
-	if ( $ats_running == $ALREADY_RUNNING && $traffic_line_needed && !$trafficserver_restart_needed ) {
+	if ( $ats_running == $ALREADY_RUNNING && $traffic_ctl_needed && !$trafficserver_restart_needed ) {
 		if ( $script_mode == $REPORT ) {
-			( $log_level >> $ERROR ) && print "ERROR ATS configuration has changed. '$TRAFFIC_LINE -x' needs to be run.\n";
+			( $log_level >> $ERROR ) && print "ERROR ATS configuration has changed. '$TRAFFIC_CTL config reload' needs to be run.\n";
 		}
 		elsif ( $script_mode == $BADASS || $script_mode == $SYNCDS || $script_mode == $REVALIDATE ) {
-			( $log_level >> $ERROR ) && print "ERROR ATS configuration has changed. Running '$TRAFFIC_LINE -x' now.\n";
-			&run_traffic_line();
+			( $log_level >> $ERROR ) && print "ERROR ATS configuration has changed. Running '$TRAFFIC_CTL config reload' now.\n";
+			&run_traffic_ctl();
 		}
 		elsif ( $script_mode == $INTERACTIVE ) {
 			my $select = 'n';
-			( $log_level >> $ERROR ) && print "ERROR ATS configuration has changed. '$TRAFFIC_LINE -x' needs to be run. Should I do that now? (Y/[n]):";
+			( $log_level >> $ERROR ) && print "ERROR ATS configuration has changed. '$TRAFFIC_CTL config reload' needs to be run. Should I do that now? (Y/[n]):";
 			$select = <STDIN>;
 			chomp($select);
 			if ( $select =~ m/Y/ ) {
-				&run_traffic_line();
-				( $log_level >> $DEBUG ) && print "DEBUG traffic_line run successful.\n";
+				&run_traffic_ctl();
+				( $log_level >> $DEBUG ) && print "DEBUG traffic_ctl run successful.\n";
 				if ( $syncds_update == $UPDATE_TROPS_NEEDED ) {
 					$syncds_update = $UPDATE_TROPS_SUCCESSFUL;
 				}
 			}
 			else {
-				( $log_level >> $ERROR ) && print "ERROR ATS configuration has changed. '$TRAFFIC_LINE -x' was not run.\n";
+				( $log_level >> $ERROR ) && print "ERROR ATS configuration has changed. '$TRAFFIC_CTL config reload' was not run.\n";
 				if ( $syncds_update == $UPDATE_TROPS_NEEDED ) {
-					( $log_level >> $ERROR ) && print "ERROR $TRAFFIC_LINE -x was not run, so Traffic Ops was not updated!\n";
+					( $log_level >> $ERROR ) && print "ERROR $TRAFFIC_CTL config reload was not run, so Traffic Ops was not updated!\n";
 					$syncds_update = $UPDATE_TROPS_FAILED;
 				}
 			}
 		}
 	}
-	elsif ( $traffic_line_needed && ( $ats_running == $START_FAILED || $ats_running == $START_NOT_ATTEMPTED ) ) {
+	elsif ( $traffic_ctl_needed && ( $ats_running == $START_FAILED || $ats_running == $START_NOT_ATTEMPTED ) ) {
 		( $log_level >> $ERROR ) && print "ERROR ATS configuration has changed. The new config will be picked up the next time ATS is started.\n";
 		if ( $syncds_update == $UPDATE_TROPS_NEEDED ) {
-			( $log_level >> $ERROR ) && print "ERROR $TRAFFIC_LINE -x was not run, but Traffic Ops is being updated anyway.\n";
+			( $log_level >> $ERROR ) && print "ERROR $TRAFFIC_CTL config reload was not run, but Traffic Ops is being updated anyway.\n";
 			$syncds_update = $UPDATE_TROPS_SUCCESSFUL;
 		}
 	}
