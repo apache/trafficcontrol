@@ -34,18 +34,18 @@ under the License.
         <table id="configFilesTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>name</th>
-                <th>location</th>
-                <th>scope</th>
+                <th>Name</th>
+                <th>Location</th>
+                <th>Scope</th>
                 <th></th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="view(configFile.fnameOnDisk, configFile.apiUri)" ng-repeat="configFile in ::configFiles">
-                <td>{{::configFile.fnameOnDisk}}</td>
-                <td>{{::configFile.location}}</td>
-                <td>{{::configFile.scope}}</td>
-                <td><a title="Download {{::configFile.fnameOnDisk}}" ng-click="download(configFile.fnameOnDisk, configFile.apiUri, $event)"><i class="fa fa-download" aria-hidden="true"></i></a></td>
+            <tr ng-click="view(c.fnameOnDisk, c.apiUri)" ng-repeat="c in ::configFiles">
+                <td data-search="^{{::c.fnameOnDisk}}$">{{::c.fnameOnDisk}}</td>
+                <td data-search="^{{::c.location}}$">{{::c.location}}</td>
+                <td data-search="^{{::c.scope}}$">{{::c.scope}}</td>
+                <td><a title="Download {{::c.fnameOnDisk}}" ng-click="download(c.fnameOnDisk, c.apiUri, $event)"><i class="fa fa-download" aria-hidden="true"></i></a></td>
             </tr>
             </tbody>
         </table>

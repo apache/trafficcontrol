@@ -28,19 +28,19 @@ under the License.
         <thead>
         <tr class="headings">
             <th style="padding-left: 10px;"><input id="selectAllCB" type="checkbox" ng-click="selectAll($event)" ng-checked="allSelected()"></th>
-            <th>name</th>
-            <th>description</th>
-            <th>type</th>
-            <th>cdn</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Type</th>
+            <th>CDN</th>
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="profile in ::selectedProfiles">
-            <td><input type="checkbox" ng-click="updateProfiles($event, profile.id)" ng-checked="profile.selected"></td>
-            <td>{{::profile.name}}</td>
-            <td>{{::profile.description}}</td>
-            <td>{{::profile.type}}</td>
-            <td>{{::profile.cdnName}}</td>
+        <tr ng-repeat="p in ::selectedProfiles">
+            <td><input type="checkbox" ng-click="updateProfiles($event, p.id)" ng-checked="p.selected"></td>
+            <td data-search="^{{::p.name}}$">{{::p.name}}</td>
+            <td data-search="^{{::p.description}}$">{{::p.description}}</td>
+            <td data-search="^{{::p.type}}$">{{::p.type}}</td>
+            <td data-search="^{{::p.cdnName}}$">{{::p.cdnName}}</td>
         </tr>
         </tbody>
     </table>

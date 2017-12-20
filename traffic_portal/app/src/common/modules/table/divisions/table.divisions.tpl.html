@@ -33,12 +33,12 @@ under the License.
         <table id="divisionsTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>name</th>
+                <th>Name</th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editDivision(division.id)" ng-repeat="division in ::divisions">
-                <td>{{::division.name}}</td>
+            <tr ng-click="editDivision(d.id)" ng-repeat="d in ::divisions">
+                <td data-search="^{{::d.name}}$">{{::d.name}}</td>
             </tr>
             </tbody>
         </table>

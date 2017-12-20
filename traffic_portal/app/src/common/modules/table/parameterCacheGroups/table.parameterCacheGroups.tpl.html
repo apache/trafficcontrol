@@ -35,21 +35,21 @@ under the License.
         <table id="cacheGroupsTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>name</th>
-                <th>shortName</th>
-                <th>type</th>
-                <th>latitude</th>
-                <th>longitude</th>
+                <th>Name</th>
+                <th>Short Name</th>
+                <th>Type</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
                 <th></th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="cacheGroup in ::cacheGroups">
-                <td>{{::cacheGroup.name}}</td>
-                <td>{{::cacheGroup.shortName}}</td>
-                <td>{{::cacheGroup.typeName}}</td>
-                <td>{{::cacheGroup.latitude}}</td>
-                <td>{{::cacheGroup.longitude}}</td>
+            <tr ng-repeat="cg in ::cacheGroups">
+                <td data-search="^{{::cg.name}}$">{{::cg.name}}</td>
+                <td data-search="^{{::cg.shortName}}$">{{::cg.shortName}}</td>
+                <td data-search="^{{::cg.typeName}}$">{{::cg.typeName}}</td>
+                <td data-search="^{{::cg.latitude}}$">{{::cg.latitude}}</td>
+                <td data-search="^{{::cg.longitude}}$">{{::cg.longitude}}</td>
                 <td><button type="button" class="btn btn-link" title="Remove Cache Group" ng-click="removeCacheGroup()"><i class="fa fa-trash-o"></i></button></td>
             </tr>
             </tbody>

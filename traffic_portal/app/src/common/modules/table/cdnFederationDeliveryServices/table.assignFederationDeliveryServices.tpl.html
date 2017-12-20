@@ -28,7 +28,7 @@ under the License.
         <thead>
         <tr class="headings">
             <th style="padding-left: 10px;"><input id="selectAllCB" type="checkbox" ng-click="selectAll($event)"></th>
-            <th>XML ID</th>
+            <th>Key</th>
             <th>Display Name</th>
             <th>Type</th>
         </tr>
@@ -36,9 +36,9 @@ under the License.
         <tbody>
         <tr id="{{ds.id}}" class="ds-row" ng-repeat="ds in ::deliveryServices">
             <td><input type="checkbox" ng-checked="ds.selected" ng-model="ds.selected" ng-change="onChange()"></td>
-            <td>{{::ds.xmlId}}</td>
-            <td>{{::ds.displayName}}</td>
-            <td>{{::ds.type}}</td>
+            <td data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
+            <td data-search="^{{::ds.displayName}}$">{{::ds.displayName}}</td>
+            <td data-search="^{{::ds.type}}$">{{::ds.type}}</td>
         </tr>
         </tbody>
     </table>
