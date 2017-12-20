@@ -766,7 +766,7 @@ sub send_update_to_trops {
 }
 
 sub get_print_current_client_connections {
-	my $cmd                 = $TRAFFIC_CTL . " -r proxy.process.http.current_client_connections";
+	my $cmd                 = $TRAFFIC_CTL . " metric get proxy.process.http.current_client_connections";
 	my $current_connections = `$cmd 2>/dev/null`;
 	chomp($current_connections);
 	( $log_level >> $DEBUG ) && print "DEBUG There are currently $current_connections connections.\n";
