@@ -27,13 +27,15 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/basho/riak-go-client"
-	"github.com/jmoiron/sqlx"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/basho/riak-go-client"
+	"github.com/jmoiron/sqlx"
 )
 
 // Delivery Services: SSL Keys.
@@ -254,7 +256,7 @@ func verifyAndEncodeCertificate(certificate string, rootCA string) (string, erro
 
 func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorFunc(w, r)
+		handleErr := tc.GetHandleErrorsFunc(w, r)
 		var keysObj tc.DeliveryServiceSSLKeys
 		var respBytes []byte
 
@@ -262,21 +264,21 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc 
 
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 
 		// unmarshal the request
 		if err := json.Unmarshal(data, &keysObj); err != nil {
 			log.Errorf("ERROR: could not unmarshal the request, %v\n", err)
-			handleErr(err, http.StatusBadRequest)
+			handleErr(http.StatusBadRequest, err)
 			return
 		}
 
 		dsCount, err := getDeliveryServiceCountByXmlID(keysObj.DeliveryService, db)
 		if err != nil {
 			log.Errorf("ERROR: querying deliveryservice, %v\n", err)
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 		if dsCount != 1 {
@@ -295,7 +297,7 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc 
 		var certChain string
 		if certChain, err = verifyAndEncodeCertificate(keysObj.Certificate.Crt, ""); err != nil {
 			log.Errorf("ERROR: could not unmarshal the request, %v\n", err)
-			handleErr(err, http.StatusBadRequest)
+			handleErr(http.StatusBadRequest, err)
 			return
 		}
 		keysObj.Certificate.Crt = certChain
@@ -304,18 +306,18 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc 
 		keysJson, err := json.Marshal(&keysObj)
 		if err != nil {
 			log.Errorf("ERROR: could not marshal the keys object, %v\n", err)
-			handleErr(err, http.StatusBadRequest)
+			handleErr(http.StatusBadRequest, err)
 			return
 		}
 
 		// create and start a cluster
 		cluster, err := getRiakCluster(db, cfg)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 		if err = cluster.Start(); err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 		defer func() {
@@ -336,7 +338,7 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc 
 		err = saveObject(obj, SSLKeysBucket, cluster)
 		if err != nil {
 			log.Errorf("%v\n", err)
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -348,23 +350,23 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc 
 // fetch the ssl keys for a deliveryservice specified by the fully qualified hostname
 func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorFunc(w, r)
+		handleErr := tc.GetHandleErrorsFunc(w, r)
 		var respBytes []byte
 		var domainName string
 		var hostName string
 		var hostRegex string
 
 		if cfg.RiakEnabled == false {
-			handleErr(fmt.Errorf("The RIAK service is unavailable"), http.StatusServiceUnavailable)
+			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
 			return
 		}
 
 		version := r.URL.Query().Get("version")
 
 		ctx := r.Context()
-		pathParams, err := getPathParams(ctx)
+		pathParams, err := api.GetPathParams(ctx)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -384,7 +386,7 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg Config) http.Ha
 		// lookup the cdnID
 		cdnID, err := getCDNIDByDomainname(domainName, db)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -401,7 +403,7 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg Config) http.Ha
 			// now lookup the deliveryservice xmlID
 			xmlIDStr, err := getXmlIDByCDNAndRegex(cdnID, hostRegex, db)
 			if err != nil {
-				handleErr(err, http.StatusInternalServerError)
+				handleErr(http.StatusInternalServerError, err)
 				return
 			}
 
@@ -412,14 +414,14 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg Config) http.Ha
 				respBytes, err = json.Marshal(alert)
 				if err != nil {
 					log.Errorf("failed to marshal an alert response: %s\n", err)
-					handleErr(err, http.StatusInternalServerError)
+					handleErr(http.StatusInternalServerError, err)
 					return
 				}
 			} else {
 				xmlID := xmlIDStr.String
 				respBytes, err = getDeliveryServiceSSLKeysByXmlID(xmlID, version, db, cfg)
 				if err != nil {
-					handleErr(err, http.StatusInternalServerError)
+					handleErr(http.StatusInternalServerError, err)
 					return
 				}
 			}
@@ -432,20 +434,20 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg Config) http.Ha
 // fetch the deliveryservice ssl keys by the specified xmlID.
 func getDeliveryServiceSSLKeysByXmlIDHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorFunc(w, r)
+		handleErr := tc.GetHandleErrorsFunc(w, r)
 		var respBytes []byte
 
 		if cfg.RiakEnabled == false {
-			handleErr(fmt.Errorf("The RIAK service is unavailable"), http.StatusServiceUnavailable)
+			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
 			return
 		}
 
 		version := r.URL.Query().Get("version")
 
 		ctx := r.Context()
-		pathParams, err := getPathParams(ctx)
+		pathParams, err := api.GetPathParams(ctx)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -453,7 +455,7 @@ func getDeliveryServiceSSLKeysByXmlIDHandler(db *sqlx.DB, cfg Config) http.Handl
 
 		respBytes, err = getDeliveryServiceSSLKeysByXmlID(xmlID, version, db, cfg)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -467,26 +469,26 @@ func getDeliveryServiceSSLKeysByXmlIDHandler(db *sqlx.DB, cfg Config) http.Handl
 // Http POST or PUT handler used to store urisigning keys to a delivery service.
 func saveDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorFunc(w, r)
+		handleErr := tc.GetHandleErrorsFunc(w, r)
 
 		defer r.Body.Close()
 
 		if cfg.RiakEnabled == false {
-			handleErr(fmt.Errorf("The RIAK service is unavailable"), http.StatusServiceUnavailable)
+			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
 			return
 		}
 
 		ctx := r.Context()
-		pathParams, err := getPathParams(ctx)
+		pathParams, err := api.GetPathParams(ctx)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 
 		xmlID := pathParams["xmlID"]
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -494,23 +496,23 @@ func saveDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc
 		var keySet map[string]URISignerKeyset
 		if err := json.Unmarshal(data, &keySet); err != nil {
 			log.Errorf("%v\n", err)
-			handleErr(err, http.StatusBadRequest)
+			handleErr(http.StatusBadRequest, err)
 			return
 		}
 		if err := validateURIKeyset(keySet); err != nil {
 			log.Errorf("%v\n", err)
-			handleErr(err, http.StatusBadRequest)
+			handleErr(http.StatusBadRequest, err)
 			return
 		}
 
 		// create and start a cluster
 		cluster, err := getRiakCluster(db, cfg)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 		if err = cluster.Start(); err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 		defer func() {
@@ -531,7 +533,7 @@ func saveDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc
 		err = saveObject(obj, CDNURIKeysBucket, cluster)
 		if err != nil {
 			log.Errorf("%v\n", err)
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -543,17 +545,17 @@ func saveDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc
 // endpoint handler for fetching uri signing keys from riak
 func getURIsignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorFunc(w, r)
+		handleErr := tc.GetHandleErrorsFunc(w, r)
 
 		if cfg.RiakEnabled == false {
-			handleErr(fmt.Errorf("The RIAK service is unavailable"), http.StatusServiceUnavailable)
+			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
 			return
 		}
 
 		ctx := r.Context()
-		pathParams, err := getPathParams(ctx)
+		pathParams, err := api.GetPathParams(ctx)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -562,11 +564,11 @@ func getURIsignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 		// create and start a cluster
 		cluster, err := getRiakCluster(db, cfg)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 		if err = cluster.Start(); err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 		defer func() {
@@ -577,7 +579,7 @@ func getURIsignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 
 		ro, err := fetchObjectValues(xmlID, CDNURIKeysBucket, cluster)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -603,17 +605,17 @@ func getURIsignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 // Http DELETE handler used to remove urisigning keys assigned to a delivery service.
 func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorFunc(w, r)
+		handleErr := tc.GetHandleErrorsFunc(w, r)
 
 		if cfg.RiakEnabled == false {
-			handleErr(fmt.Errorf("The RIAK service is unavailable"), http.StatusServiceUnavailable)
+			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
 			return
 		}
 
 		ctx := r.Context()
-		pathParams, err := getPathParams(ctx)
+		pathParams, err := api.GetPathParams(ctx)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -622,11 +624,11 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 		// create and start a cluster
 		cluster, err := getRiakCluster(db, cfg)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 		if err = cluster.Start(); err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 		defer func() {
@@ -637,7 +639,7 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 
 		ro, err := fetchObjectValues(xmlID, CDNURIKeysBucket, cluster)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -647,7 +649,7 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 		if ro == nil || ro[0].Value == nil {
 			alert = tc.CreateAlerts(tc.InfoLevel, "not deleted, no object found to delete")
 		} else if err := deleteObject(xmlID, CDNURIKeysBucket, cluster); err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErr(http.StatusInternalServerError, err)
 			return
 		} else { // object successfully deleted
 			alert = tc.CreateAlerts(tc.SuccessLevel, "object deleted")

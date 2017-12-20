@@ -23,10 +23,11 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"testing"
+
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-	"testing"
 )
 
 const (

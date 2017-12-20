@@ -1,4 +1,4 @@
-package tc
+package api
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,32 +19,36 @@ package tc
  * under the License.
  */
 
-type CDNsResponse struct {
-	Response []CDN `json:"response"`
+import (
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/jmoiron/sqlx"
+)
+
+type Updater interface {
+	Update(db *sqlx.DB) (error, tc.ApiErrorType)
+	Identifier
+	Validator
 }
 
-type CDN struct {
-	DNSSECEnabled bool   `json:"dnssecEnabled" db:"dnssec_enabled"`
-	DomainName    string `json:"domainName" db:"domain_name"`
-	ID            int    `json:"id" db:"id"`
-	LastUpdated   Time   `json:"lastUpdated" db:"last_updated"`
-	Name          string `json:"name" db:"name"`
+type Identifier interface {
+	GetID() int
+	GetType() string
+	GetName() string
 }
 
-// CDNSSLKeysResponse ...
-type CDNSSLKeysResponse struct {
-	Response []CDNSSLKeys `json:"response"`
+type Inserter interface {
+	Insert(db *sqlx.DB) (error, tc.ApiErrorType)
+	SetID(int)
+	Identifier
+	Validator
 }
 
-// CDNSSLKeys ...
-type CDNSSLKeys struct {
-	DeliveryService string                `json:"deliveryservice"`
-	Certificate     CDNSSLKeysCertificate `json:"certificate"`
-	Hostname        string                `json:"hostname"`
+type Deleter interface {
+	Delete(db *sqlx.DB) (error, tc.ApiErrorType)
+	SetID(int)
+	Identifier
 }
 
-// CDNSSLKeysCertificate ...
-type CDNSSLKeysCertificate struct {
-	Crt string `json:"crt"`
-	Key string `json:"key"`
+type Validator interface {
+	Validate() []error
 }

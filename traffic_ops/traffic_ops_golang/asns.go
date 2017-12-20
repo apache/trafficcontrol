@@ -27,6 +27,8 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -41,7 +43,7 @@ func ASNsHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		ctx := r.Context()
-		pathParams, err := getPathParams(ctx)
+		pathParams, err := api.GetPathParams(ctx)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -93,7 +95,7 @@ func getASNs(v url.Values, db *sqlx.DB) ([]tc.ASN, error) {
 		"cachegroup": "cg.id",
 	}
 
-	query, queryValues := BuildQuery(v, selectASNsQuery(), queryParamsToQueryCols)
+	query, queryValues := dbhelpers.BuildQuery(v, selectASNsQuery(), queryParamsToQueryCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {

@@ -54,10 +54,10 @@ func CreateAlerts(level AlertLevel, messages ...string) Alerts {
 	return Alerts{alerts}
 }
 
-func GetHandleErrorFunc(w http.ResponseWriter, r *http.Request) func(err error, status int) {
-	return func(err error, status int) {
-		log.Errorf("%v %v\n", r.RemoteAddr, err)
-		errBytes, jsonErr := json.Marshal(CreateErrorAlerts(err))
+func GetHandleErrorsFunc(w http.ResponseWriter, r *http.Request) func(status int, errs ...error) {
+	return func(status int, errs ...error) {
+		log.Errorf("%v %v\n", r.RemoteAddr, errs)
+		errBytes, jsonErr := json.Marshal(CreateErrorAlerts(errs...))
 		if jsonErr != nil {
 			log.Errorf("failed to marshal error: %s\n", jsonErr)
 			w.WriteHeader(http.StatusInternalServerError)

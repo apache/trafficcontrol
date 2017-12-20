@@ -26,7 +26,8 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -85,7 +86,7 @@ func getHWInfo(v url.Values, db *sqlx.DB) ([]tc.HWInfo, error) {
 		"lastUpdated":    "h.last_updated",
 	}
 
-	query, queryValues := BuildQuery(v, selectHWInfoQuery(), queryParamsToSQLCols)
+	query, queryValues := dbhelpers.BuildQuery(v, selectHWInfoQuery(), queryParamsToSQLCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {
