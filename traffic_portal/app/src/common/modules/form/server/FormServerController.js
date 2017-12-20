@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormServerController = function(server, $scope, $location, $state, $uibModal, formUtils, locationUtils, serverUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, statusService, typeService, messageModel) {
+var FormServerController = function(server, $scope, $location, $state, $uibModal, formUtils, locationUtils, serverUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, typeService, messageModel) {
 
     var getPhysLocations = function() {
         physLocationService.getPhysLocations()
@@ -44,13 +44,6 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         cdnService.getCDNs(true)
             .then(function(result) {
                 $scope.cdns = result;
-            });
-    };
-
-    var getStatuses = function() {
-        statusService.getStatuses()
-            .then(function(result) {
-                $scope.statuses = result;
             });
     };
 
@@ -161,12 +154,11 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         getCacheGroups();
         getTypes();
         getCDNs();
-        getStatuses();
         getProfiles(($scope.server.cdnId) ? $scope.server.cdnId : 0); // hacky but does the job. only when a cdn is selected can we fetch the appropriate profiles. otherwise, show no profiles.
     };
     init();
 
 };
 
-FormServerController.$inject = ['server', '$scope', '$location', '$state', '$uibModal', 'formUtils', 'locationUtils', 'serverUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'statusService', 'typeService', 'messageModel'];
+FormServerController.$inject = ['server', '$scope', '$location', '$state', '$uibModal', 'formUtils', 'locationUtils', 'serverUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'typeService', 'messageModel'];
 module.exports = FormServerController;
