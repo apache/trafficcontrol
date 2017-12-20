@@ -26,8 +26,9 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -43,11 +44,12 @@ func parametersHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		ctx := r.Context()
-		privLevel, err := auth.GetPrivLevel(ctx)
+		user, err := auth.GetCurrentUser(ctx)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
 		}
+		privLevel := user.PrivLevel
 
 		q := r.URL.Query()
 		resp, err := getParametersResponse(q, db, privLevel)
@@ -94,7 +96,7 @@ func getParameters(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Parameter, er
 		"secure":       "p.secure",
 	}
 
-	query, queryValues := BuildQuery(v, selectParametersQuery(), queryParamsToSQLCols)
+	query, queryValues := dbhelpers.BuildQuery(v, selectParametersQuery(), queryParamsToSQLCols)
 
 	log.Debugln("Query is ", query)
 	rows, err = db.NamedQuery(query, queryValues)

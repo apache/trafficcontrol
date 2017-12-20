@@ -26,7 +26,8 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -81,7 +82,7 @@ func getDivisions(v url.Values, db *sqlx.DB) ([]tc.Division, error) {
 		"name": "name",
 	}
 
-	query, queryValues := BuildQuery(v, selectDivisionsQuery(), queryParamsToSQLCols)
+	query, queryValues := dbhelpers.BuildQuery(v, selectDivisionsQuery(), queryParamsToSQLCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {

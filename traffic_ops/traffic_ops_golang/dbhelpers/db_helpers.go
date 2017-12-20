@@ -1,4 +1,4 @@
-package main
+package dbhelpers
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,10 +20,13 @@ package main
  */
 
 import (
+	"errors"
 	"net/url"
 	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/lib/pq"
 )
 
 func BuildQuery(v url.Values, selectStmt string, queryParamsToSQLCols map[string]string) (string, map[string]interface{}) {
@@ -67,4 +70,24 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]string, v url.V
 	criteria = strings.Join(criteriaArgs, " AND ")
 
 	return criteria, queryValues
+}
+
+//parses pq errors for uniqueness constraint violations
+func ParsePQUniqueConstraintError(err *pq.Error) (error, tc.ApiErrorType) {
+	if len(err.Constraint) > 0 && len(err.Detail) > 0 { //we only want to continue parsing if it is a constraint error with details
+		detail := err.Detail
+		if strings.HasPrefix(detail, "Key ") && strings.HasSuffix(detail, " already exists.") { //we only want to continue parsing if it is a uniqueness constraint error
+			detail = strings.TrimPrefix(detail, "Key ")
+			detail = strings.TrimSuffix(detail, " already exists.")
+			//should look like "(column)=(dupe value)" at this point
+			details := strings.Split(detail, "=")
+			if len(details) == 2 {
+				column := strings.Trim(details[0], "()")
+				dupValue := strings.Trim(details[1], "()")
+				return errors.New(column + " " + dupValue + " already exists."), tc.DataConflictError
+			}
+		}
+	}
+	log.Error.Printf("failed to parse unique constraint from pq error: %v", err)
+	return tc.DBError, tc.SystemError
 }

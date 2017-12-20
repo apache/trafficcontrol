@@ -22,12 +22,13 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
 	"github.com/lestrrat/go-jwx/jwk"
-	"strings"
-	"time"
 )
 
 // RiakPort is the port RIAK is listening on.

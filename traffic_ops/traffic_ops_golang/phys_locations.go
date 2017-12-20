@@ -26,7 +26,9 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -41,7 +43,7 @@ func physLocationsHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		ctx := r.Context()
-		pathParams, err := getPathParams(ctx)
+		pathParams, err := api.GetPathParams(ctx)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -88,11 +90,11 @@ func getPhysLocations(v url.Values, db *sqlx.DB) ([]tc.PhysLocation, error) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]string{
-		"id":       "pl.id",
-		"region":   "r.name",
+		"id":     "pl.id",
+		"region": "r.name",
 	}
 
-	query, queryValues := BuildQuery(v, selectPhysLocationsQuery(), queryParamsToQueryCols)
+	query, queryValues := dbhelpers.BuildQuery(v, selectPhysLocationsQuery(), queryParamsToQueryCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {
@@ -113,7 +115,7 @@ func getPhysLocations(v url.Values, db *sqlx.DB) ([]tc.PhysLocation, error) {
 
 func selectPhysLocationsQuery() string {
 
-query := `SELECT
+	query := `SELECT
 pl.address,
 pl.city,
 COALESCE(pl.comments, '') as comments,
@@ -129,7 +131,6 @@ pl.short_name,
 pl.state,
 pl.zip
 FROM phys_location pl
-JOIN region r ON pl.region = r.id` 
-return query
+JOIN region r ON pl.region = r.id`
+	return query
 }
-

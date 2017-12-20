@@ -27,8 +27,10 @@ import (
 	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -42,7 +44,7 @@ func statusesHandler(db *sqlx.DB) http.HandlerFunc {
 			fmt.Fprintf(w, http.StatusText(status))
 		}
 
-		pathParams, err := getPathParams(r.Context())
+		pathParams, err := api.GetPathParams(r.Context())
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
@@ -103,7 +105,7 @@ func getStatuses(v url.Values, db *sqlx.DB) ([]tc.Status, error) {
 		"description": "description",
 	}
 
-	query, queryValues := BuildQuery(v, selectStatusesQuery(), queryParamsToSQLCols)
+	query, queryValues := dbhelpers.BuildQuery(v, selectStatusesQuery(), queryParamsToSQLCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {

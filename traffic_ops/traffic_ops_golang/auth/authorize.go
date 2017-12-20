@@ -26,7 +26,14 @@ import (
 	"fmt"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/jmoiron/sqlx"
 )
+
+type CurrentUser struct {
+	UserName  string `json:"userName" db:"username"`
+	ID        int    `json:"id" db:"id"`
+	PrivLevel int    `json:"privLevel" db:"priv_level"`
+}
 
 // PrivLevelInvalid - The Default Priv level
 const PrivLevelInvalid = -1
@@ -40,47 +47,33 @@ const PrivLevelOperations = 20
 // PrivLevelAdmin - The user has full privileges
 const PrivLevelAdmin = 30
 
-const PrivLevelKey = "privLevel"
-const UserNameKey = "userName"
+const CurrentUserKey = "currentUser"
 
-// PrivLevel - returns the privilege level of the given user, or PrivLevelInvalid if the user doesn't exist.
-func PrivLevel(privLevelStmt *sql.Stmt, user string) int {
-	var privLevel int
-	err := privLevelStmt.QueryRow(user).Scan(&privLevel)
+// GetCurrentUserFromDB  - returns the id and privilege level of the given user along with the username, or -1 as the id, - as the userName and PrivLevelInvalid if the user doesn't exist.
+func GetCurrentUserFromDB(CurrentUserStmt *sqlx.Stmt, user string) CurrentUser {
+	var currentUserInfo CurrentUser
+	err := CurrentUserStmt.Get(&currentUserInfo, user)
 	switch {
 	case err == sql.ErrNoRows:
-		log.Errorf("checking user %v priv level: user not in database", user)
-		return PrivLevelInvalid
+		log.Errorf("checking user %v info: user not in database", user)
+		return CurrentUser{"-", -1, PrivLevelInvalid}
 	case err != nil:
-		log.Errorf("Error checking user %v priv level: %v", user, err.Error())
-		return PrivLevelInvalid
+		log.Errorf("Error checking user %v info: %v", user, err.Error())
+		return CurrentUser{"-", -1, PrivLevelInvalid}
 	default:
-		return privLevel
+		return currentUserInfo
 	}
 }
 
-func GetPrivLevel(ctx context.Context) (int, error) {
-	val := ctx.Value(PrivLevelKey)
+func GetCurrentUser(ctx context.Context) (*CurrentUser, error) {
+	val := ctx.Value(CurrentUserKey)
 	if val != nil {
 		switch v := val.(type) {
-		case int:
-			return v, nil
+		case CurrentUser:
+			return &v, nil
 		default:
-			return PrivLevelInvalid, fmt.Errorf("privLevel found with bad type: %T", v)
+			return nil, fmt.Errorf("CurrentUser found with bad type: %T", v)
 		}
 	}
-	return PrivLevelInvalid, errors.New("no privLevel found in Context")
-}
-
-func GetUserName(ctx context.Context) (string, error) {
-	val := ctx.Value(UserNameKey)
-	if val != nil {
-		switch v := val.(type) {
-		case string:
-			return v, nil
-		default:
-			return "-", fmt.Errorf("userName found with bad type: %T", v)
-		}
-	}
-	return "-", errors.New("No userName found in Context")
+	return &CurrentUser{"-", -1, PrivLevelInvalid}, errors.New("No user found in Context")
 }

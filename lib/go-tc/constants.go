@@ -44,3 +44,13 @@ var alertLevels = [4]string{"success", "info", "warn", "error"}
 func (a AlertLevel) String() string {
 	return alertLevels[a]
 }
+
+type ApiErrorType int
+
+const (
+	NoError ApiErrorType = iota
+	SystemError
+	DataConflictError
+	DataMissingError
+
+)

@@ -43,11 +43,12 @@ func systemInfoHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		ctx := r.Context()
-		privLevel, err := auth.GetPrivLevel(ctx)
+		user, err := auth.GetCurrentUser(ctx)
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
 			return
 		}
+		privLevel := user.PrivLevel
 
 		q := r.URL.Query()
 		resp, err := getSystemInfoResponse(q, db, privLevel)

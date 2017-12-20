@@ -24,7 +24,6 @@ import (
 	"compress/gzip"
 	"context"
 	"crypto/sha512"
-	"database/sql"
 	"encoding/base64"
 	"fmt"
 	"net/http"
@@ -36,15 +35,16 @@ import (
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
+	"github.com/jmoiron/sqlx"
 )
 
 const ServerName = "traffic_ops_golang" + "/" + Version
 
 type AuthBase struct {
-	noAuth        bool
-	secret        string
-	privLevelStmt *sql.Stmt
-	override      Middleware
+	noAuth                 bool
+	secret                 string
+	getCurrentUserInfoStmt *sqlx.Stmt
+	override               Middleware
 }
 
 func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
@@ -55,8 +55,7 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 		if a.noAuth {
 			return func(w http.ResponseWriter, r *http.Request) {
 				ctx := r.Context()
-				ctx = context.WithValue(ctx, auth.UserNameKey, "-")
-				ctx = context.WithValue(ctx, auth.PrivLevelKey, auth.PrivLevelInvalid)
+				ctx = context.WithValue(ctx, auth.CurrentUserKey, auth.CurrentUser{"-", -1, auth.PrivLevelInvalid})
 				handlerFunc(w, r.WithContext(ctx))
 			}
 		}
@@ -95,8 +94,8 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 			}
 
 			username = oldCookie.AuthData
-			privLevel := auth.PrivLevel(a.privLevelStmt, username)
-			if privLevel < privLevelRequired {
+			currentUserInfo := auth.GetCurrentUserFromDB(a.getCurrentUserInfoStmt, username)
+			if currentUserInfo.PrivLevel < privLevelRequired {
 				handleUnauthorized("insufficient privileges")
 				return
 			}
@@ -105,8 +104,7 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 			http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
 
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, auth.UserNameKey, username)
-			ctx = context.WithValue(ctx, auth.PrivLevelKey, privLevel)
+			ctx = context.WithValue(ctx, auth.CurrentUserKey, currentUserInfo)
 
 			handlerFunc(w, r.WithContext(ctx))
 		}

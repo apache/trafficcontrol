@@ -28,6 +28,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -40,7 +41,6 @@ func cdnsHandler(db *sqlx.DB) http.HandlerFunc {
 			w.WriteHeader(status)
 			fmt.Fprintf(w, http.StatusText(status))
 		}
-
 
 		q := r.URL.Query()
 
@@ -87,7 +87,7 @@ func getCDNs(v url.Values, db *sqlx.DB) ([]tc.CDN, error) {
 		"name":          "name",
 	}
 
-	query, queryValues := BuildQuery(v, selectCDNsQuery(), queryParamsToQueryCols)
+	query, queryValues := dbhelpers.BuildQuery(v, selectCDNsQuery(), queryParamsToQueryCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {
@@ -107,7 +107,6 @@ func getCDNs(v url.Values, db *sqlx.DB) ([]tc.CDN, error) {
 }
 
 func selectCDNsQuery() string {
-
 	query := `SELECT
 dnssec_enabled,
 domain_name,

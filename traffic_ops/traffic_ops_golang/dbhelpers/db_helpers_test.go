@@ -1,4 +1,4 @@
-package main
+package dbhelpers
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -23,7 +23,17 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"unicode"
 )
+
+func stripAllWhitespace(s string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			return -1
+		}
+		return r
+	}, s)
+}
 
 func TestBuildQuery(t *testing.T) {
 	v := url.Values{}
