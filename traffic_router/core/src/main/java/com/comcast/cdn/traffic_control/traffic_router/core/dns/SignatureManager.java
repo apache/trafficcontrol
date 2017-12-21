@@ -30,10 +30,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.xbill.DNS.DSRecord;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Record;
@@ -72,17 +71,19 @@ public final class SignatureManager {
 		}
 	}
 
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	private void initKeyMap() {
 		synchronized(SignatureManager.class) {
-			final JSONObject config = cacheRegister.getConfig();
+			final JsonNode config = cacheRegister.getConfig();
 
-			if (config.optBoolean("dnssec.enabled")) {
+			final boolean dnssecEnabled = config.has("dnssec.enabled") ? config.get("dnssec.enabled").asBoolean() : false;
+			if (dnssecEnabled) {
 				setDnssecEnabled(true);
-				this.useJDnsSec = config.optBoolean("usejdnssec", true);
-				setExpiredKeyAllowed(config.optBoolean("dnssec.allow.expired.keys", true)); // allowing this by default is the safest option
-				setExpirationMultiplier(config.optInt("signaturemanager.expiration.multiplier", 5)); // signature validity is maxTTL * this
+				this.useJDnsSec = config.has("usejdnssec") ? config.get("usejdnssec").asBoolean(true) : true;
+				setExpiredKeyAllowed(config.has("dnssec.allow.expired.keys") ? config.get("dnssec.allow.expired.keys").asBoolean(true) : true); // allowing this by default is the safest option
+				setExpirationMultiplier(config.has("signaturemanager.expiration.multiplier") ? config.get("signaturemanager.expiration.multiplier").asInt(5) : 5); // signature validity is maxTTL * this
 				final ScheduledExecutorService me = Executors.newScheduledThreadPool(1);
-				final int maintenanceInterval = config.optInt("keystore.maintenance.interval", 300); // default 300 seconds, do we calculate based on the complimentary settings for key generation in TO?
+				final int maintenanceInterval = config.has("keystore.maintenance.interval") ? config.get("keystore.maintenance.interval").asInt(300) : 300; // default 300 seconds, do we calculate based on the complimentary settings for key generation in TO?
 				me.scheduleWithFixedDelay(getKeyMaintenanceRunnable(cacheRegister), 0, maintenanceInterval, TimeUnit.SECONDS);
 
 				if (keyMaintenanceExecutor != null) {
@@ -113,46 +114,45 @@ public final class SignatureManager {
 					trafficRouterManager.trackEvent("lastDnsSecKeysCheck");
 
 					final Map<String, List<DnsSecKeyPair>> newKeyMap = new HashMap<String, List<DnsSecKeyPair>>();
-					final JSONObject keyPairData = fetchKeyPairData(cacheRegister);
+					final JsonNode keyPairData = fetchKeyPairData(cacheRegister);
 
 					if (keyPairData != null) {
-						final JSONObject response = keyPairData.getJSONObject("response");
-						final Iterator<?> dsIt = response.keys();
-						final JSONObject config = cacheRegister.getConfig();
-						final long defaultTTL = ZoneUtils.getLong(config.optJSONObject("ttls"), "DNSKEY", 60);
+						final JsonNode response = keyPairData.get("response");
+						final Iterator<?> dsIt = response.fieldNames();
+						final JsonNode config = cacheRegister.getConfig();
+						final long defaultTTL = ZoneUtils.getLong(config.get("ttls"), "DNSKEY", 60);
 
 						while (dsIt.hasNext()) {
-							final JSONObject keyTypes = response.getJSONObject((String) dsIt.next());
-							final Iterator<?> typeIt = keyTypes.keys();
+							final JsonNode keyTypes = response.get((String) dsIt.next());
+							final Iterator<?> typeIt = keyTypes.fieldNames();
 
 							while (typeIt.hasNext()) {
-								final JSONArray keyPairs = keyTypes.getJSONArray((String) typeIt.next());
+								final JsonNode keyPairs = keyTypes.get((String) typeIt.next());
 
-								for (int i = 0; i < keyPairs.length(); i++) {
-									try {
-										final JSONObject keyPair = keyPairs.getJSONObject(i);
-										final DnsSecKeyPair dkpw;
-										if (useJDnsSec) {
-											dkpw = new DNSKeyPairWrapper(keyPair, defaultTTL);
-										} else {
-											dkpw = new DnsSecKeyPairImpl(keyPair, defaultTTL);
+								if (keyPairs.isArray()) {
+									for (final JsonNode keyPair : keyPairs) {
+										try {
+											final DnsSecKeyPair dkpw;
+											if (useJDnsSec) {
+												dkpw = new DNSKeyPairWrapper(keyPair, defaultTTL);
+											} else {
+												dkpw = new DnsSecKeyPairImpl(keyPair, defaultTTL);
+											}
+
+											if (!newKeyMap.containsKey(dkpw.getName())) {
+												newKeyMap.put(dkpw.getName(), new ArrayList<>());
+											}
+
+											final List<DnsSecKeyPair> keyList = newKeyMap.get(dkpw.getName());
+											keyList.add(dkpw);
+											newKeyMap.put(dkpw.getName(), keyList);
+
+											LOGGER.debug("Added " + dkpw.toString() + " to incoming keyList");
+										} catch (TextParseException ex) {
+											LOGGER.fatal(ex, ex);
+										} catch (IOException ex) {
+											LOGGER.fatal(ex, ex);
 										}
-
-										if (!newKeyMap.containsKey(dkpw.getName())) {
-											newKeyMap.put(dkpw.getName(), new ArrayList<>());
-										}
-
-										final List<DnsSecKeyPair> keyList = newKeyMap.get(dkpw.getName());
-										keyList.add(dkpw);
-										newKeyMap.put(dkpw.getName(),  keyList);
-
-										LOGGER.debug("Added " + dkpw.toString() + " to incoming keyList");
-									} catch (JSONException ex) {
-										LOGGER.fatal("JSONException caught while parsing key for " + keyPairs.getJSONObject(i), ex);
-									} catch (TextParseException ex) {
-										LOGGER.fatal(ex, ex);
-									} catch (IOException ex) {
-										LOGGER.fatal(ex, ex);
 									}
 								}
 							}
@@ -171,8 +171,6 @@ public final class SignatureManager {
 					} else {
 						LOGGER.fatal("Unable to read keyPairData: " + keyPairData);
 					}
-				} catch (JSONException ex) {
-					LOGGER.fatal(ex, ex);
 				} catch (RuntimeException ex) {
 					LOGGER.fatal("RuntimeException caught while trying to maintain keyMap", ex);
 				}
@@ -206,20 +204,21 @@ public final class SignatureManager {
 		return false;
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
-	private JSONObject fetchKeyPairData(final CacheRegister cacheRegister) {
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
+	private JsonNode fetchKeyPairData(final CacheRegister cacheRegister) {
 		if (!isDnssecEnabled()) {
 			return null;
 		}
 
-		JSONObject keyPairs = null;
+		JsonNode keyPairs = null;
+		final ObjectMapper mapper = new ObjectMapper();
 
 		try {
 			final String keyUrl = trafficOpsUtils.getUrl("keystore.api.url", "https://${toHostname}/api/1.1/cdns/name/${cdnName}/dnsseckeys.json");
-			final JSONObject config = cacheRegister.getConfig();
-			final int timeout = config.optInt("keystore.fetch.timeout", 30 * 1000); // socket timeouts are in ms
-			final int retries = config.optInt("keystore.fetch.retries", 5);
-			final int wait = config.optInt("keystore.fetch.wait", 5 * 1000); // 5 seconds
+			final JsonNode config = cacheRegister.getConfig();
+			final int timeout = config.has("keystore.fetch.timeout") ? config.get("keystore.fetch.timeout").asInt(30 * 1000) : 30000; // socket timeouts are in ms
+			final int retries = config.has("keystore.fetch.retries") ? config.get("keystore.fetch.retries").asInt(5) : 5;
+			final int wait = config.has("keystore.fetch.wait") ? config.get("keystore.fetch.wait").asInt(5 * 1000) : 5000; // 5 seconds
 
 			if (fetcher == null) {
 				fetcher = new ProtectedFetcher(trafficOpsUtils.getAuthUrl(), trafficOpsUtils.getAuthJSON().toString(), timeout);
@@ -230,7 +229,7 @@ public final class SignatureManager {
 					final String content = fetcher.fetch(keyUrl);
 
 					if (content != null) {
-						keyPairs = new JSONObject(content);
+						keyPairs = mapper.readTree(content);
 						break;
 					}
 				} catch (IOException ex) {
@@ -245,7 +244,7 @@ public final class SignatureManager {
 					break;
 				}
 			}
-		} catch (JSONException ex) {
+		} catch (IOException ex) {
 			LOGGER.fatal(ex, ex);
 		}
 
@@ -475,13 +474,13 @@ public final class SignatureManager {
 		final List<Record> records = new ArrayList<Record>();
 
 		if (isDnssecEnabled() && name.subdomain(ZoneManager.getTopLevelDomain())) {
-			final JSONObject config = getCacheRegister().getConfig();
+			final JsonNode config = getCacheRegister().getConfig();
 			final List<DnsSecKeyPair> kskPairs = getKSKPairs(name, maxTTL);
 			final List<DnsSecKeyPair> zskPairs = getZSKPairs(name, maxTTL);
 
 			if (kskPairs != null && zskPairs != null && !kskPairs.isEmpty() && !zskPairs.isEmpty()) {
 				// these records go into the CDN TLD, so don't use the DS' TTLs; use the CDN's.
-				final Long dsTtl = ZoneUtils.getLong(config.optJSONObject("ttls"), "DS", 60);
+				final Long dsTtl = ZoneUtils.getLong(config.get("ttls"), "DS", 60);
 
 				for (final DnsSecKeyPair kp : kskPairs) {
 					ZoneSigner zoneSigner = new JDnsSecSigner();

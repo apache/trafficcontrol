@@ -17,6 +17,8 @@ package com.comcast.cdn.traffic_control.traffic_router.core.config;
 
 import com.comcast.cdn.traffic_control.traffic_router.shared.Certificate;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -107,7 +109,9 @@ public class CertificateCheckerTest {
 	public void itReturnsTrueWhenAllHttpsDeliveryServicesHaveCertificates() throws Exception {
 		CertificateChecker certificateChecker = new CertificateChecker();
 
-		assertThat(certificateChecker.certificatesAreValid(certificateDataList, deliveryServicesJson), equalTo(true));
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode deliveryServices = mapper.readTree(deliveryServicesJson.toString());
+		assertThat(certificateChecker.certificatesAreValid(certificateDataList, deliveryServices), equalTo(true));
 	}
 
 	@Test
@@ -130,6 +134,9 @@ public class CertificateCheckerTest {
 
 		deliveryServicesJson.put("bad-https-delivery-service", httpsDeliveryServiceJson);
 
-		assertThat(new CertificateChecker().certificatesAreValid(certificateDataList, deliveryServicesJson), equalTo(false));
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode deliveryServices = mapper.readTree(deliveryServicesJson.toString());
+
+		assertThat(new CertificateChecker().certificatesAreValid(certificateDataList, deliveryServices), equalTo(false));
 	}
 }

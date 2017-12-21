@@ -26,6 +26,7 @@ import java.util.Map;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.DefaultHashable;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.Hashable;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
@@ -81,11 +82,12 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 		return id;
 	}
 
-	public List<InetRecord> getIpAddresses(final JSONObject ttls, final Resolver resolver) {
+	public List<InetRecord> getIpAddresses(final JsonNode ttls, final Resolver resolver) {
 		return getIpAddresses(ttls, resolver, true);
 	}
 
-	public List<InetRecord> getIpAddresses(final JSONObject ttls, final Resolver resolver, final boolean ip6RoutingEnabled) {
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
+	public List<InetRecord> getIpAddresses(final JsonNode ttls, final Resolver resolver, final boolean ip6RoutingEnabled) {
 		if(ipAddresses == null || ipAddresses.isEmpty()) {
 			ipAddresses = resolver.resolve(this.getFqdn()+".");
 		}
@@ -101,9 +103,10 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 			if(ttls == null) {
 				ttl = -1;
 			} else if(ir.isInet6()) {
-				ttl = ttls.optLong("AAAA");
+				ttl = ttls.has("AAAA") ? ttls.get("AAAA").asLong() : 0;
 			} else {
-				ttl = ttls.optLong("A");
+				ttl = ttls.has("A") ? ttls.get("A").asLong() : 0;
+
 			}
 
 			ret.add(new InetRecord(ir.getAddress(), ttl));

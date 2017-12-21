@@ -20,13 +20,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.log4j.Logger;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.xbill.DNS.Record;
 
 public class ZoneUtils {
-	private static final Logger LOGGER = Logger.getLogger(ZoneUtils.class);
+	//private static final Logger LOGGER = Logger.getLogger(ZoneUtils.class);
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHH");
 
 	protected static long getMaximumTTL(final List<Record> records) {
@@ -41,18 +39,14 @@ public class ZoneUtils {
 		return maximumTTL;
 	}
 
-	protected static long getSerial(final JSONObject jo) {
+	protected static long getSerial(final JsonNode jo) {
 		synchronized(sdf) {
 			Date date = null;
 
 			if (jo != null && jo.has("date")) {
-				try {
-					final Calendar cal = Calendar.getInstance();
-					cal.setTimeInMillis(jo.getLong("date") * 1000);
-					date = cal.getTime();
-				} catch (JSONException ex) {
-					LOGGER.error(ex, ex);
-				}
+				final Calendar cal = Calendar.getInstance();
+				cal.setTimeInMillis(jo.get("date").longValue() * 1000);
+				date = cal.getTime();
 			}
 
 			if (date == null) {
@@ -63,19 +57,15 @@ public class ZoneUtils {
 		}
 	}
 
-	protected static long getLong(final JSONObject jo, final String key, final long d) {
+	protected static long getLong(final JsonNode jo, final String key, final long d) {
 		if (jo == null) {
 			return d;
 		}
 
-		if (!jo.has(key)) {
-			return d;
-		}
-
-		return jo.optLong(key);
+		return jo.has(key) ? jo.asLong(d) : d;
 	}
 
-	protected static String getAdminString(final JSONObject jo, final String key, final String d, final String domain) {
+	protected static String getAdminString(final JsonNode jo, final String key, final String d, final String domain) {
 
 		if (jo == null) {
 			return new StringBuffer(d).append(".").append(domain).toString();
@@ -86,7 +76,7 @@ public class ZoneUtils {
 		}
 
 		// check for @ sign in string
-		String admin = jo.optString(key);
+		String admin = jo.get(key).asText();
 		if (admin.contains("@")) {
 			admin = admin.replace("@",".");
 		} else {

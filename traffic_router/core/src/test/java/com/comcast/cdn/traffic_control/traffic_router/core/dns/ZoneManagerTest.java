@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -101,10 +102,10 @@ public class ZoneManagerTest {
 				continue;
 			}
 
-			final JSONArray domains = ds.getDomains();
+			final JsonNode domains = ds.getDomains();
 
-			for (int i = 0; i < domains.length(); i++) {
-				final String domain = domains.optString(i);
+			for (final JsonNode currDomain : domains) {
+				final String domain = currDomain.asText();
 				final Name edgeName = new Name(ds.getRoutingName() + "." + domain + ".");
 
 				for (CacheLocation location : cacheRegister.getCacheLocations()) {

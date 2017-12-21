@@ -20,7 +20,8 @@ import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
 
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,24 +35,26 @@ public class DeliveryServiceHTTPRoutingMissesTest {
     private DeliveryService deliveryService;
     private HTTPRequest httpRequest;
     private Track track;
-    private JSONObject bypassDestination;
+    private JsonNode bypassDestination;
 
     @Before
     public void before() throws Exception {
-        JSONObject unusedByTest = mock(JSONObject.class);
-        JSONObject ttls = mock(JSONObject.class);
-        when(unusedByTest.optJSONObject("ttls")).thenReturn(ttls);
-        when(unusedByTest.getString("routingName")).thenReturn("edge");
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode unusedByTest = mock(JsonNode.class);
+        JsonNode ttls = mock(JsonNode.class);
+        when(unusedByTest.get("ttls")).thenReturn(ttls);
+        when(unusedByTest.get("routingName")).thenReturn(mapper.readTree("\"edge\""));
+        when(unusedByTest.get("coverageZoneOnly")).thenReturn(mapper.readTree("true"));
         deliveryService = new DeliveryService("ignoredbytest", unusedByTest);
         httpRequest = mock(HTTPRequest.class);
         track = StatTracker.getTrack();
-        bypassDestination = mock(JSONObject.class);
+        bypassDestination = mock(JsonNode.class);
         setInternalState(deliveryService, "bypassDestination", bypassDestination);
     }
 
     @Test
     public void itSetsDetailsWhenNoBypass() throws Exception {
-        JSONObject nullBypassDestination = null;
+        JsonNode nullBypassDestination = null;
         setInternalState(deliveryService, "bypassDestination", nullBypassDestination);
         deliveryService.getFailureHttpResponse(httpRequest, track);
         assertThat(track.getResultDetails(), equalTo(ResultDetails.DS_NO_BYPASS));
@@ -60,7 +63,7 @@ public class DeliveryServiceHTTPRoutingMissesTest {
 
     @Test
     public void itSetsDetailsWhenNoHTTPBypass() throws Exception {
-        when(bypassDestination.optJSONObject("HTTP")).thenReturn(null);
+        when(bypassDestination.get("HTTP")).thenReturn(null);
 
         deliveryService.getFailureHttpResponse(httpRequest, track);
         assertThat(track.getResultDetails(), equalTo(ResultDetails.DS_NO_BYPASS));
@@ -69,15 +72,16 @@ public class DeliveryServiceHTTPRoutingMissesTest {
 
     @Test
     public void itSetsDetailsWhenNoFQDNBypass() throws Exception {
-        JSONObject httpJsonObject = new JSONObject();
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode httpJsonObject = mapper.createObjectNode();
         httpJsonObject = spy(httpJsonObject);
-        doReturn(null).when(httpJsonObject).optString("fqdn");
+        doReturn(null).when(httpJsonObject).get("fqdn");
 
-        when(bypassDestination.optJSONObject("HTTP")).thenReturn(httpJsonObject);
+        when(bypassDestination.get("HTTP")).thenReturn(httpJsonObject);
 
         deliveryService.getFailureHttpResponse(httpRequest, track);
 
-        verify(httpJsonObject).optString("fqdn");
+        verify(httpJsonObject).get("fqdn");
 
         assertThat(track.getResultDetails(), equalTo(ResultDetails.DS_NO_BYPASS));
         assertThat(track.getResult(), equalTo(Track.ResultType.MISS));

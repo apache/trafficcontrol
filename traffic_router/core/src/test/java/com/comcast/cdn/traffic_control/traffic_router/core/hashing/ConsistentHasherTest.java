@@ -21,7 +21,8 @@ import com.comcast.cdn.traffic_control.traffic_router.core.hash.DefaultHashable;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.Hashable;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.MD5HashFunction;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.NumberSearcher;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -76,18 +77,21 @@ public class ConsistentHasherTest {
 
 	@Test
 	public void itHashes() throws Exception {
-		DefaultHashable hashable = consistentHasher.selectHashable(hashables, new Dispersion(new JSONObject()), "some-string");
+		final ObjectMapper mapper = new ObjectMapper();
+		DefaultHashable hashable = consistentHasher.selectHashable(hashables, new Dispersion(mapper.createObjectNode()), "some-string");
 		assertThat(hashable, anyOf(equalTo(hashable1), equalTo(hashable2), equalTo(hashable3)));
-		DefaultHashable nextHashable = consistentHasher.selectHashable(hashables, new Dispersion(new JSONObject()),"some-string");
+		DefaultHashable nextHashable = consistentHasher.selectHashable(hashables, new Dispersion(mapper.createObjectNode()),"some-string");
 		assertThat(nextHashable, equalTo(hashable));
 	}
 
 	@Test
 	public void itHashesMoreThanOne() throws Exception {
-		JSONObject jo = new JSONObject("{dispersion: {\n" +
-				"limit: 2,\n" +
-				"shuffled: \"true\"\n" +
-				"}}");
+		final String jsonStr = "{\"dispersion\": {\n" +
+				"\"limit\": 2,\n" +
+				"\"shuffled\": \"true\"\n" +
+				"}}";
+		final ObjectMapper mapper = new ObjectMapper();
+		final JsonNode jo = mapper.readTree(jsonStr);
 		Dispersion dispersion = new Dispersion(jo);
 
 		List<DefaultHashable> results = consistentHasher.selectHashables(hashables, dispersion, "some-string");
@@ -97,10 +101,11 @@ public class ConsistentHasherTest {
 		List<DefaultHashable> results2 = consistentHasher.selectHashables(hashables, dispersion, "some-string");
 		assert(results.containsAll(results2));
 
-		JSONObject jo2 = new JSONObject("{dispersion: {\n" +
-				"limit: 2000000000,\n" +
-				"shuffled: \"true\"\n" +
-				"}}");
+		final String jsonStr2 = "{\"dispersion\": {\n" +
+				"\"limit\": 2000000000,\n" +
+				"\"shuffled\": \"true\"\n" +
+				"}}";
+		final JsonNode jo2 = mapper.readTree(jsonStr2);
 		Dispersion disp2 = new Dispersion(jo2);
 		List <DefaultHashable> res3 = consistentHasher.selectHashables(hashables, disp2, "some-string");
 		assert(res3.containsAll(hashables));
@@ -127,8 +132,9 @@ public class ConsistentHasherTest {
 		hashedPaths.put(smallerBucket, new ArrayList<String>());
 		hashedPaths.put(largerBucket, new ArrayList<String>());
 
+		final ObjectMapper mapper = new ObjectMapper();
 		for (String randomPath : randomPaths) {
-			Hashable hashable = consistentHasher.selectHashable(buckets, new Dispersion(new JSONObject()), randomPath);
+			Hashable hashable = consistentHasher.selectHashable(buckets, new Dispersion(mapper.createObjectNode()), randomPath);
 			hashedPaths.get(hashable).add(randomPath);
 		}
 
@@ -144,7 +150,7 @@ public class ConsistentHasherTest {
 		rehashedPaths.put(shrunkBucket, new ArrayList<String>());
 
 		for (String randomPath : randomPaths) {
-			Hashable hashable = consistentHasher.selectHashable(changedBuckets, new Dispersion(new JSONObject()), randomPath);
+			Hashable hashable = consistentHasher.selectHashable(changedBuckets, new Dispersion(mapper.createObjectNode()), randomPath);
 			rehashedPaths.get(hashable).add(randomPath);
 		}
 

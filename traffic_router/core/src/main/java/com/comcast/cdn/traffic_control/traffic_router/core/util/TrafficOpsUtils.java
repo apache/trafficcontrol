@@ -15,33 +15,34 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.util;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
 
 public class TrafficOpsUtils {
 	private String username;
 	private String password;
 	private String hostname;
 	private String cdnName;
-	private JSONObject config;
+	private JsonNode config;
 
 	public String replaceTokens(final String input) {
 		return input.replace("${tmHostname}", this.getHostname()).replace("${toHostname}", this.getHostname()).replace("${cdnName}", getCdnName());
 	}
 
-	public String getUrl(final String parameter) throws JSONException {
-		return replaceTokens(config.getString(parameter));
+	public String getUrl(final String parameter) {
+		return replaceTokens(config.has(parameter) ? config.get(parameter).textValue() : null);
 	}
 
 	public String getUrl(final String parameter, final String defaultValue) {
-		return config != null ? replaceTokens(config.optString(parameter, defaultValue)) : defaultValue;
+		return config != null ? replaceTokens(config.has(parameter) ? config.get(parameter).asText(defaultValue) : defaultValue) : defaultValue;
 	}
 
-	public JSONObject getAuthJSON() throws JSONException {
-		final JSONObject data = new JSONObject();
-
-		data.put("u", getUsername());
-		data.put("p", getPassword());
+	public JsonNode getAuthJSON() throws IOException {
+		final String jsonStr = "{\"u\":\"" + getUsername() + "\",\"p\":\"" + getPassword() + "\"}";
+		final ObjectMapper mapper = new ObjectMapper();
+		final JsonNode data = mapper.readTree(jsonStr);
 
 		return data;
 	}
@@ -82,11 +83,11 @@ public class TrafficOpsUtils {
 		this.cdnName = cdnName;
 	}
 
-	public void setConfig(final JSONObject config) {
+	public void setConfig(final JsonNode config) {
 		this.config = config;
 	}
 
 	public long getConfigLongValue(final String name, final long defaultValue) {
-		return config != null ? config.optLong(name, defaultValue) : defaultValue;
+		return config != null ? (config.has(name) ? config.get(name).asLong(defaultValue) : defaultValue) : defaultValue;
 	}
 }

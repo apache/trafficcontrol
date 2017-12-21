@@ -21,6 +21,8 @@ import com.comcast.cdn.traffic_control.traffic_router.core.dns.DnsSecKeyPair;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DnsSecKeyPairImpl;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.JDnsSecSigner;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneSignerImpl;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.verisignlabs.dnssec.security.DnsKeyPair;
 import com.verisignlabs.dnssec.security.JCEDnsSecSigner;
 import com.verisignlabs.dnssec.security.SignUtils;
@@ -52,10 +54,10 @@ public class ZoneSignerTest {
 	private DnsKeyPair kskPair2;
 	private DnsKeyPair zskPair1;
 	private DnsKeyPair zskPair2;
-	private JSONObject ksk1Json;
-	private JSONObject ksk2Json;
-	private JSONObject zsk1Json;
-	private JSONObject zsk2Json;
+	private JsonNode ksk1Json;
+	private JsonNode ksk2Json;
+	private JsonNode zsk1Json;
+	private JsonNode zsk2Json;
 	private final long dsTtl = 1234000L;
 
 	private String decodePrivateKeyString(String encodedString) {
@@ -66,6 +68,8 @@ public class ZoneSignerTest {
 		ZoneTestRecords.generateZoneRecords(false);
 		SigningData.recreateData();
 
+		final ObjectMapper mapper = new ObjectMapper();
+
 		kskPair1 = new DnsKeyPair(keySigningKeyRecord, decodePrivateKeyString(SigningData.ksk1Private));
 		kskPair2 = new DnsKeyPair(keySigningKeyRecord, decodePrivateKeyString(SigningData.ksk2Private));
 		zskPair1 = new DnsKeyPair(zoneSigningKeyRecord, decodePrivateKeyString(SigningData.zsk1Private));
@@ -73,46 +77,48 @@ public class ZoneSignerTest {
 
 		// Data like we would fetch from traffic ops api for dnsseckeys.json
 		String s = "{" +
-			"\n\t'inceptionDate':1475280000," +
-			"\n\t'effectiveDate': 1475280000," +
-			"\n\t'expirationDate': 1790812800," +
-			"\n\t'ttl': 3600," +
-			"\n\t'name':'example.com.'," +
-			"\n\t'private': '" + SigningData.ksk1Private.replaceAll("\n", "\\\\n") + "'," +
-			"\n\t'public': '" + SigningData.keyDnsKeyRecord.replaceAll("\n", "\\\\n") + "'" +
-			"\n}";
-		ksk1Json = new JSONObject(s);
+				"\n\t\"inceptionDate\":1475280000," +
+				"\n\t\"effectiveDate\": 1475280000," +
+				"\n\t\"expirationDate\": 1790812800," +
+				"\n\t\"ttl\": 3600," +
+				"\n\t\"name\":\"example.com.\"," +
+				"\n\t\"private\": \"" + SigningData.ksk1Private.replaceAll("\n", "\\\\n") + "\"," +
+				"\n\t\"public\": \"" + SigningData.keyDnsKeyRecord.replaceAll("\n", "\\\\n") + "\"" +
+				"\n}";
+		ksk1Json = mapper.readTree(s);
 
+		s = "{" +
+				"\n\t\"inceptionDate\":1475280000," +
+				"\n\t\"effectiveDate\": 1475280000," +
+				"\n\t\"expirationDate\": 1790812800," +
+				"\n\t\"ttl\": 3600," +
+				"\n\t\"name\":\"example.com.\"," +
+				"\n\t\"private\": \"" + SigningData.ksk2Private.replaceAll("\n", "\\\\n") + "\"," +
+				"\n\t\"public\": \"" + SigningData.keyDnsKeyRecord.replaceAll("\n", "\\\\n") + "\"" +
+				"\n}";
+		ksk2Json = mapper.readTree(s);
 
-		ksk2Json = new JSONObject("{" +
-			"'inceptionDate':1475280000," +
-			"'effectiveDate': 1475280000," +
-			"'expirationDate': 1790812800," +
-			"'ttl': 3600," +
-			"'name':'example.com.'," +
-			"'private': '" + SigningData.ksk2Private.replaceAll("\n", "\\\\n") + "'," +
-			"'public': '" + SigningData.keyDnsKeyRecord.replaceAll("\n", "\\\\n") + "'" +
-			"}");
+		s = "{" +
+				"\n\t\"inceptionDate\":1475280000," +
+				"\n\t\"effectiveDate\": 1475280000," +
+				"\n\t\"expirationDate\": 1790812800," +
+				"\n\t\"ttl\": 31556952," +
+				"\n\t\"name\":\"example.com.\"," +
+				"\n\t\"private\": \"" + SigningData.zsk1Private.replaceAll("\n", "\\\\n") + "\"," +
+				"\n\t\"public\": \"" + SigningData.zoneDnsKeyRecord.replaceAll("\n", "\\\\n") + "\"" +
+				"\n}";
+		zsk1Json = mapper.readTree(s);
 
-		zsk1Json = new JSONObject("{" +
-			"'inceptionDate':1475280000," +
-			"'effectiveDate': 1475280000," +
-			"'expirationDate': 1790812800," +
-			"'ttl': 31556952," +
-			"'name':'example.com.'," +
-			"'private': '" + SigningData.zsk1Private.replaceAll("\n", "\\\\n") + "'," +
-			"'public': '" + SigningData.zoneDnsKeyRecord.replaceAll("\n", "\\\\n") + "'" +
-			"}");
-
-		zsk2Json = new JSONObject("{" +
-			"'inceptionDate':1475280000," +
-			"'effectiveDate': 1475280000," +
-			"'expirationDate': 1790812800," +
-			"'ttl': 315569520," +
-			"'name':'example.com.'," +
-			"'private': '" + SigningData.zsk2Private.replaceAll("\n", "\\\\n") + "'," +
-			"'public': '" + SigningData.zoneDnsKeyRecord.replaceAll("\n", "\\\\n") + "'" +
-			"}");
+		s = "{" +
+				"\n\t\"inceptionDate\":1475280000," +
+				"\n\t\"effectiveDate\": 1475280000," +
+				"\n\t\"expirationDate\": 1790812800," +
+				"\n\t\"ttl\": 315569520," +
+				"\n\t\"name\":\"example.com.\"," +
+				"\n\t\"private\": \"" + SigningData.zsk2Private.replaceAll("\n", "\\\\n") + "\"," +
+				"\n\t\"public\": \"" + SigningData.zoneDnsKeyRecord.replaceAll("\n", "\\\\n") + "\"" +
+				"\n}";
+		zsk2Json = mapper.readTree(s);
 	}
 
 	@Test

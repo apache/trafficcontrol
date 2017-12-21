@@ -22,16 +22,13 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.config.ParseException;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
+import java.util.*;
 
 public class CacheRegisterBuilder {
 
@@ -80,7 +77,7 @@ public class CacheRegisterBuilder {
                                         references.add(new Cache.DeliveryServiceReference(ds, name));
                                     }
 
-                                    final String tld = cacheRegister.getConfig().optString("domain_name").toLowerCase();
+                                    final String tld = cacheRegister.getConfig().has("domain_name") ? cacheRegister.getConfig().get("domain_name").asText().toLowerCase() : "";
 
                                     if (name.contains(tld)) {
                                         final String reName = name.replaceAll("^.*?\\.", "");
@@ -116,22 +113,23 @@ public class CacheRegisterBuilder {
         cacheRegister.setCacheMap(map);
     }
 
-    public static void parseDeliveryServiceConfig(final JSONObject deliveryServices, final CacheRegister cacheRegister) throws JSONException {
+    public static void parseDeliveryServiceConfig(final JsonNode deliveryServices, final CacheRegister cacheRegister) {
         final TreeSet<DeliveryServiceMatcher> dnsServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
         final TreeSet<DeliveryServiceMatcher> httpServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
         final Map<String,DeliveryService> dsMap = new HashMap<String,DeliveryService>();
 
-        for(String dsId : JSONObject.getNames(deliveryServices)) {
-            final JSONObject dsJo = deliveryServices.getJSONObject(dsId);
-            final JSONArray matchsets = dsJo.getJSONArray("matchsets");
+        final Iterator<String> keyIter = deliveryServices.fieldNames();
+        while (keyIter.hasNext()) {
+            final String dsId = keyIter.next();
+            final JsonNode dsJo = deliveryServices.get(dsId);
+            final JsonNode matchsets = dsJo.get("matchsets");
             final DeliveryService ds = new DeliveryService(dsId, dsJo);
             boolean isDns = false;
 
             dsMap.put(dsId, ds);
 
-            for (int i = 0; i < matchsets.length(); i++) {
-                final JSONObject matchset = matchsets.getJSONObject(i);
-                final String protocol = matchset.getString("protocol");
+            for (final JsonNode matchset : matchsets) {
+                final String protocol = matchset.get("protocol").asText();
 
                 if ("DNS".equals(protocol)) {
                     isDns = true;
@@ -145,15 +143,12 @@ public class CacheRegisterBuilder {
                     dnsServiceMatchers.add(m);
                 }
 
-                final JSONArray list = matchset.getJSONArray("matchlist");
-                for (int j = 0; j < list.length(); j++) {
-                    final JSONObject matcherJo = list.getJSONObject(j);
-                    final DeliveryServiceMatcher.Type type = DeliveryServiceMatcher.Type.valueOf(matcherJo.getString("match-type"));
-                    final String target = matcherJo.optString("target");
-                    m.addMatch(type, matcherJo.getString("regex"), target);
+                for (JsonNode matchlist : matchset.get("matchlist")) {
+                    final DeliveryServiceMatcher.Type type = DeliveryServiceMatcher.Type.valueOf(matchlist.get("match-type").asText());
+                    final String target = matchlist.has("target") ? matchlist.get("target").asText() : "";
+                    m.addMatch(type, matchlist.get("regex").asText(), target);
                 }
             }
-
             ds.setDns(isDns);
         }
 

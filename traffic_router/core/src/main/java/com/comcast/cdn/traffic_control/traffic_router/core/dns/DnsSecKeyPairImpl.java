@@ -16,9 +16,8 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
 import com.comcast.cdn.traffic_control.traffic_router.secure.BindPrivateKey;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.xbill.DNS.DNSKEYRecord;
 import org.xbill.DNS.DNSSEC;
 import org.xbill.DNS.Master;
@@ -47,21 +46,22 @@ public class DnsSecKeyPairImpl implements DnsSecKeyPair {
 	private DNSKEYRecord dnskeyRecord;
 	private PrivateKey privateKey;
 
-	public DnsSecKeyPairImpl(final JSONObject keyPair, final long defaultTTL) throws JSONException, IOException {
-		this.inception = new Date(1000L * keyPair.getLong("inceptionDate"));
-		this.effective = new Date(1000L * keyPair.getLong("effectiveDate"));
-		this.expiration = new Date(1000L * keyPair.getLong("expirationDate"));
-		this.ttl = keyPair.optLong("ttl", defaultTTL);
-		this.name = keyPair.getString("name").toLowerCase();
+	@SuppressWarnings("PMD.CyclomaticComplexity")
+	public DnsSecKeyPairImpl(final JsonNode keyPair, final long defaultTTL) throws IOException {
+		this.inception = new Date(1000L * (keyPair.has("inceptionDate") ? keyPair.get("inceptionDate").longValue() : null));
+		this.effective = new Date(1000L * (keyPair.has("effectiveDate") ? keyPair.get("effectiveDate").longValue() : null));
+		this.expiration = new Date(1000L * (keyPair.has("expirationDate") ? keyPair.get("expirationDate").longValue() : null));
+		this.ttl = keyPair.has("ttl") ? keyPair.get("ttl").asLong(defaultTTL) : 0;
+		this.name = keyPair.has("name") ? keyPair.get("name").asText().toLowerCase() : "";
 
 		final Decoder mimeDecoder = getMimeDecoder();
 		try {
-			privateKey = new BindPrivateKey().decode(new String(mimeDecoder.decode(keyPair.getString("private"))));
+			privateKey = new BindPrivateKey().decode(new String(mimeDecoder.decode(keyPair.has("private") ? keyPair.get("private").asText() : null)));
 		} catch (Exception e) {
 			LOGGER.error("Failed to decode PKCS1 key from json data!: " + e.getMessage(), e);
 		}
 
-		final byte[] publicKey = mimeDecoder.decode(keyPair.getString("public"));
+		final byte[] publicKey = mimeDecoder.decode(keyPair.has("public") ? keyPair.get("public").asText() : null);
 
 		try (InputStream in = new ByteArrayInputStream(publicKey)) {
 			final Master master = new Master(in, new Name(name), ttl);
