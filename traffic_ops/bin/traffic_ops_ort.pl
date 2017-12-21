@@ -202,8 +202,6 @@ if ( $script_mode == $BADASS || $script_mode == $INTERACTIVE || $script_mode == 
 
 my $header_comment = &get_header_comment($traffic_ops_host);
 
-my $ats_uid;
-
 if ( !defined $traffic_ops_host ) {
 	print "FATAL Could not resolve Traffic Ops host!\n";
 	exit 1;
@@ -1063,7 +1061,6 @@ sub sleep_timer {
 sub process_config_files {
 
 	( $log_level >> $INFO ) && print "\nINFO: ======== Start processing config files ========\n";
-	$ats_uid          = getpwnam("ats");
 	foreach my $file ( keys %{$cfg_file_tracker} ) {
 		( $log_level >> $DEBUG ) && print "DEBUG Starting processing of config file: $file\n";
 		my $return = undef;
@@ -1475,6 +1472,7 @@ sub replace_cfg_file {
 	my $cfg_file    = shift;
 	my $return_code = 0;
 	my $select      = 2;
+
 	if ( $script_mode == $INTERACTIVE ) {
 		( $log_level >> $ERROR )
 			&& print
@@ -1496,6 +1494,7 @@ sub replace_cfg_file {
 			chown 0, 0, "$cfg_file_tracker->{$cfg_file}->{'location'}/$cfg_file";
 		}
 		else {
+			my $ats_uid  = getpwnam("ats");
 			chown $ats_uid, $ats_uid, "$cfg_file_tracker->{$cfg_file}->{'location'}/$cfg_file";
 		}
 		$cfg_file_tracker->{$cfg_file}->{'change_applied'}++;
@@ -2770,6 +2769,7 @@ sub backup_file {
 	my $file     = $filepath . "/" . $filename;
 
 	if ( $script_mode != $REPORT ) {
+		my $ats_uid  = getpwnam("ats");
 		my $bkp_dir;
 		my $bkp_file;
 		if ( -e $file ) {
