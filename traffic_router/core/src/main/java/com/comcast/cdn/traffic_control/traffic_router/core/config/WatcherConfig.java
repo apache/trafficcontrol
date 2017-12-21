@@ -16,7 +16,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.config;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class WatcherConfig {
 	private final String url;
@@ -24,10 +24,10 @@ public class WatcherConfig {
 	// this is an int instead of a long because of protected resource fetcher
 	private final int timeout;
 
-	public WatcherConfig(final String prefix, final JSONObject config, final TrafficOpsUtils trafficOpsUtils) {
+	public WatcherConfig(final String prefix, final JsonNode config, final TrafficOpsUtils trafficOpsUtils) {
 		url = trafficOpsUtils.getUrl(prefix + ".polling.url", "");
-		interval = config.optLong(prefix + ".polling.interval", -1L);
-		timeout = config.optInt(prefix + ".polling.timeout", -1);
+		interval = config.has(prefix + ".polling.interval") ? config.get(prefix + ".polling.interval").asLong(-1L) : -1L;
+		timeout = config.has(prefix + ".polling.timeout") ? config.get(prefix + ".polling.timeout").asInt(-1) : -1;
 	}
 
 	public long getInterval() {

@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.SortedMap;
 
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 
@@ -32,15 +32,15 @@ public class Dispersion {
 	private int limit = DEFAULT_LIMIT;
 	private boolean shuffled = DEFAULT_SHUFFLED;
 
-	public Dispersion(final JSONObject dsJo) {
-		final JSONObject jo = dsJo.optJSONObject("dispersion");
+	public Dispersion(final JsonNode dsJo) {
+		final JsonNode jo = dsJo.get("dispersion");
 
 		if (jo != null) {
-			this.setLimit(jo.optInt("limit", DEFAULT_LIMIT)); // optInt to avoid JSONException
-			this.setShuffled(jo.optBoolean("shuffled", DEFAULT_SHUFFLED));
+			this.setLimit(jo.has("limit") ? jo.get("limit").asInt(DEFAULT_LIMIT) : DEFAULT_LIMIT);
+			this.setShuffled(jo.has("shuffled") ? jo.get("shuffled").asBoolean(DEFAULT_SHUFFLED) : DEFAULT_SHUFFLED);
 		} else if (dsJo.has("maxDnsIpsForLocation")) {
 			// if no specific dispersion, use maxDnsIpsForLocation (should be DNS DSs only)
-			this.setLimit(dsJo.optInt("maxDnsIpsForLocation", DEFAULT_LIMIT));
+			this.setLimit(dsJo.has("maxDnsIpsForLocation") ? dsJo.get("maxDnsIpsForLocation").asInt(DEFAULT_LIMIT) : DEFAULT_LIMIT);
 		}
 	}
 

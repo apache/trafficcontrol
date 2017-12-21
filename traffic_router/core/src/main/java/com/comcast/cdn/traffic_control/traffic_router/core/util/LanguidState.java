@@ -17,9 +17,10 @@ package com.comcast.cdn.traffic_control.traffic_router.core.util;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Iterator;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
-import org.json.JSONObject;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
@@ -52,10 +53,12 @@ public class LanguidState {
 			return;
 		}
 
-		final JSONObject routers = tr.getCacheRegister().getTrafficRouters();
+		final JsonNode routers = tr.getCacheRegister().getTrafficRouters();
 
-		for (final String key : JSONObject.getNames(routers)) {
-			final JSONObject routerJson = routers.optJSONObject(key);
+		final Iterator<String> keyIter = routers.fieldNames();
+		while (keyIter.hasNext()) {
+			final String key = keyIter.next();
+			final JsonNode routerJson = routers.get(key);
 
 			if (! hostname.equalsIgnoreCase(key)) {
 				continue;
@@ -68,18 +71,18 @@ public class LanguidState {
 		setReady(true);
 	}
 
-	private void initPorts(final JSONObject routerJson) {
+	private void initPorts(final JsonNode routerJson) {
 		if (routerJson.has("port")) {
-			setPort(routerJson.optInt("port"));
+			setPort(routerJson.get("port").asInt());
 		}
 
 		if (routerJson.has("api.port")) {
-			setApiPort(routerJson.optInt("api.port"));
+			setApiPort(routerJson.get("api.port").asInt());
 			trafficRouterManager.setApiPort(apiPort);
 		}
 
 		if (routerJson.has("secure.port")) {
-			setSecurePort(routerJson.optInt("secure.port"));
+			setSecurePort(routerJson.get("secure.port").asInt());
 		}
 	}
 

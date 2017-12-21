@@ -39,11 +39,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.xbill.DNS.AAAARecord;
 import org.xbill.DNS.ARecord;
 import org.xbill.DNS.CNAMERecord;
@@ -91,6 +89,8 @@ public class ZoneManager extends Resolver {
 	private static ExecutorService zoneExecutor = null;
 	private static final int DEFAULT_PRIMER_LIMIT = 500;
 	private final StatTracker statTracker;
+	private static final String IP = "ip";
+	private static final String IP6 = "ip6";
 
 	private static File zoneDirectory;
 	private static SignatureManager signatureManager;
@@ -134,7 +134,7 @@ public class ZoneManager extends Resolver {
 
 	@SuppressWarnings("PMD.UseStringBufferForStringAppends")
 	private static void initTopLevelDomain(final CacheRegister data) throws TextParseException {
-		String tld = data.getConfig().optString("domain_name");
+		String tld = data.getConfig().get("domain_name") != null ? data.getConfig().get("domain_name").asText() : "";
 
 		if (!tld.endsWith(".")) {
 			tld = tld + ".";
@@ -148,13 +148,14 @@ public class ZoneManager extends Resolver {
 		ZoneManager.signatureManager = sm;
 	}
 
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	protected static void initZoneCache(final TrafficRouter tr) {
 		synchronized(ZoneManager.class) {
 			final CacheRegister cacheRegister = tr.getCacheRegister();
-			final JSONObject config = cacheRegister.getConfig();
+			final JsonNode config = cacheRegister.getConfig();
 
 			int poolSize = 1;
-			final double scale = config.optDouble("zonemanager.threadpool.scale", 0.75);
+			final double scale = config.has("zonemanager.threadpool.scale") ? config.get("zonemanager.threadpool.scale").asDouble(0.75) : 0.75;
 			final int cores = Runtime.getRuntime().availableProcessors();
 
 			if (cores > 2) {
@@ -169,8 +170,9 @@ public class ZoneManager extends Resolver {
 
 			final ExecutorService ze = Executors.newFixedThreadPool(poolSize);
 			final ScheduledExecutorService me = Executors.newScheduledThreadPool(2); // 2 threads, one for static, one for dynamic, threads to refresh zones
-			final int maintenanceInterval = config.optInt("zonemanager.cache.maintenance.interval", 300); // default 5 minutes
-			final String dspec = "expireAfterAccess=" + config.optString("zonemanager.dynamic.response.expiration", "300s"); // default to 5 minutes
+			final int maintenanceInterval = config.has("zonemanager.cache.maintenance.interval") ? config.get("zonemanager.cache.maintenance.interval").asInt(300) : 300; // default 5 minutes
+			final String dspec = "expireAfterAccess=" + (config.has("zonemanager.dynamic.response.expiration") ? config.get("zonemanager.dynamic.response.expiration").asText("300s") : "300s"); // default to 5 minutes
+
 
 			final LoadingCache<ZoneKey, Zone> dzc = createZoneCache(ZoneCacheType.DYNAMIC, CacheBuilderSpec.parse(dspec));
 			final LoadingCache<ZoneKey, Zone> zc = createZoneCache(ZoneCacheType.STATIC);
@@ -337,14 +339,14 @@ public class ZoneManager extends Resolver {
 		final String tld = getTopLevelDomain().toString(true); // Name.toString(true) - omit the trailing dot
 
 		for (final DeliveryService ds : data.getDeliveryServices().values()) {
-			final JSONArray domains = ds.getDomains();
+			final JsonNode domains = ds.getDomains();
 
 			if (domains == null) {
 				continue;
 			}
 
-			for (int j = 0; j < domains.length(); j++) {
-				String domain = domains.optString(j);
+			for (final JsonNode domainNode : domains) {
+				String domain = domainNode.asText();
 
 				if (domain.endsWith("+")) {
 					domain = domain.replaceAll("\\+\\z", ".") + tld;
@@ -389,30 +391,30 @@ public class ZoneManager extends Resolver {
 		return records;
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	private static List<Record> createZone(final String domain, final Map<String, List<Record>> zoneMap, final Map<String, DeliveryService> dsMap, 
 			final TrafficRouter tr, final LoadingCache<ZoneKey, Zone> zc, final LoadingCache<ZoneKey, Zone> dzc, final ExecutorService initExecutor, final String hostname) throws IOException {
 		final DeliveryService ds = dsMap.get(domain);
 		final CacheRegister data = tr.getCacheRegister();
-		final JSONObject trafficRouters = data.getTrafficRouters();
-		final JSONObject config = data.getConfig();
+		final JsonNode trafficRouters = data.getTrafficRouters();
+		final JsonNode config = data.getConfig();
 
-		JSONObject ttl = null;
-		JSONObject soa = null;
+		JsonNode ttl = null;
+		JsonNode soa = null;
 
 		if (ds != null) {
 			ttl = ds.getTtls();
 			soa = ds.getSoa();
 		} else {
-			ttl = config.optJSONObject("ttls");
-			soa = config.optJSONObject("soa");
+			ttl = config.get("ttls");
+			soa = config.get("soa");
 		}
 
 		final Name name = newName(domain);
 		final List<Record> list = zoneMap.get(domain);
 		final Name admin = newName(ZoneUtils.getAdminString(soa, "admin", "traffic_ops", domain));
 		list.add(new SOARecord(name, DClass.IN, 
-				ZoneUtils.getLong(ttl, "SOA", 86400), getGlueName(ds, trafficRouters.optJSONObject(hostname), name, hostname), admin,
+				ZoneUtils.getLong(ttl, "SOA", 86400), getGlueName(ds, trafficRouters.get(hostname), name, hostname), admin,
 				ZoneUtils.getLong(soa, "serial", ZoneUtils.getSerial(data.getStats())), 
 				ZoneUtils.getLong(soa, "refresh", 28800), 
 				ZoneUtils.getLong(soa, "retry", 7200), 
@@ -429,11 +431,12 @@ public class ZoneManager extends Resolver {
 			list.addAll(signatureManager.generateDNSKEYRecords(name, maxTTL));
 			initExecutor.execute(new Runnable() {
 				@Override
+				@SuppressWarnings("PMD.NPathComplexity")
 				public void run() {
 					try {
 						final Zone zone = zc.get(signatureManager.generateZoneKey(name, list)); // cause the zone to be loaded into the new cache
-						final boolean primeDynCache = config.optBoolean("dynamic.cache.primer.enabled", true);
-						final int primerLimit = config.optInt("dynamic.cache.primer.limit", DEFAULT_PRIMER_LIMIT);
+						final boolean primeDynCache = config.has("dynamic.cache.primer.enabled") ? config.get("dynamic.cache.primer.enabled").asBoolean(true) : true;
+						final int primerLimit = config.has("dynamic.cache.primer.limit") ? config.get("dynamic.cache.primer.limit").asInt(DEFAULT_PRIMER_LIMIT) : DEFAULT_PRIMER_LIMIT;
 
 						// prime the dynamic zone cache
 						if (primeDynCache && ds != null && ds.isDns()) {
@@ -488,59 +491,58 @@ public class ZoneManager extends Resolver {
 		return records;
 	}
 
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	private static void addStaticDnsEntries(final List<Record> list, final DeliveryService ds, final String domain)
 			throws TextParseException, UnknownHostException {
 		if (ds != null && ds.getStaticDnsEntries() != null) {
-			final JSONArray entryList = ds.getStaticDnsEntries();
 
-			for (int j = 0; j < entryList.length(); j++) {
-				try {
-					final JSONObject staticEntry = entryList.getJSONObject(j);
-					final String type = staticEntry.getString("type").toUpperCase();
-					final String jsName = staticEntry.getString("name");
-					final String value = staticEntry.getString("value");
-					final Name name = newName(jsName, domain);
-					long ttl = staticEntry.optInt("ttl");
+			final JsonNode entryList = ds.getStaticDnsEntries();
 
-					if (ttl == 0) {
-						ttl = ZoneUtils.getLong(ds.getTtls(), type, 60);
-					}
+			for (final JsonNode staticEntry : entryList) {
+				final String type = staticEntry.has("type") ? staticEntry.get("type").asText().toUpperCase() : null;
+				final String jsName = staticEntry.has("name") ? staticEntry.get("name").asText() : null;
+				final String value = staticEntry.has("value") ? staticEntry.get("value").asText() : null;
+				final Name name = newName(jsName, domain);
+				long ttl = staticEntry.has("ttl") ? staticEntry.get("ttl").asInt() : 0;
 
-					if ("A".equals(type)) {
-						list.add(new ARecord(name, DClass.IN, ttl, InetAddress.getByName(value)));
-					} else if (AAAA.equals(type)) {
-						list.add(new AAAARecord(name, DClass.IN, ttl, InetAddress.getByName(value)));
-					} else if ("CNAME".equals(type)) {
-						list.add(new CNAMERecord(name, DClass.IN, ttl, new Name(value)));
-					}
-				} catch (JSONException e) {
-					LOGGER.error(e);
+				if (ttl == 0) {
+					ttl = ZoneUtils.getLong(ds.getTtls(), type, 60);
+				}
+
+				if ("A".equals(type)) {
+					list.add(new ARecord(name, DClass.IN, ttl, InetAddress.getByName(value)));
+				} else if (AAAA.equals(type)) {
+					list.add(new AAAARecord(name, DClass.IN, ttl, InetAddress.getByName(value)));
+				} else if ("CNAME".equals(type)) {
+					list.add(new CNAMERecord(name, DClass.IN, ttl, new Name(value)));
 				}
 			}
 		}
 	}
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
-	private static void addTrafficRouters(final List<Record> list, final JSONObject trafficRouters, final Name name, 
-			final JSONObject ttl, final String domain, final DeliveryService ds) 
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
+	private static void addTrafficRouters(final List<Record> list, final JsonNode trafficRouters, final Name name,
+			final JsonNode ttl, final String domain, final DeliveryService ds)
 					throws TextParseException, UnknownHostException {
 		final boolean ip6RoutingEnabled = (ds == null || (ds != null && ds.isIp6RoutingEnabled())) ? true : false;
 
-		for (final String key : JSONObject.getNames(trafficRouters)) {
-			final JSONObject trJo = trafficRouters.optJSONObject(key);
+		final Iterator<String> keyIter = trafficRouters.fieldNames();
+		while (keyIter.hasNext()) {
+			final String key = keyIter.next();
+			final JsonNode trJo = trafficRouters.get(key);
 
-			if(trJo.has("status") && "OFFLINE".equals(trJo.optString("status"))) {
+			if(trJo.has("status") && "OFFLINE".equals(trJo.get("status").asText())) {
 				// if "status": "OFFLINE"
 				continue;
 			}
 
 			final Name trName = newName(key, domain);
 
-			String ip6 = trJo.optString("ip6");
+			String ip6 = trJo.has(IP6) ? trJo.get(IP6).asText() : "";
 			list.add(new NSRecord(name, DClass.IN, ZoneUtils.getLong(ttl, "NS", 60), getGlueName(ds, trJo, name, key)));
 			list.add(new ARecord(trName,
 					DClass.IN, ZoneUtils.getLong(ttl, "A", 60), 
-					InetAddress.getByName(trJo.optString("ip"))));
+					InetAddress.getByName(trJo.has(IP) ? trJo.get(IP).asText() : "")));
 
 			if (ip6 != null && !ip6.isEmpty() && ip6RoutingEnabled) {
 				ip6 = ip6.replaceAll("/.*", "");
@@ -556,14 +558,14 @@ public class ZoneManager extends Resolver {
 		}
 	}
 
-	private static void addHttpRoutingRecords(final List<Record> list, final String routingName, final String domain, final JSONObject trJo, final JSONObject ttl, final boolean addTrafficRoutersAAAA)
+	private static void addHttpRoutingRecords(final List<Record> list, final String routingName, final String domain, final JsonNode trJo, final JsonNode ttl, final boolean addTrafficRoutersAAAA)
 					throws TextParseException, UnknownHostException {
 		final Name trName = newName(routingName, domain);
 		list.add(new ARecord(trName,
 				DClass.IN,
 				ZoneUtils.getLong(ttl, "A", 60),
-				InetAddress.getByName(trJo.optString("ip"))));
-		String ip6 = trJo.optString("ip6");
+				InetAddress.getByName(trJo.has(IP) ? trJo.get(IP).asText() : "")));
+		String ip6 = trJo.has(IP6) ? trJo.get(IP6).asText() : "";
 		if (addTrafficRoutersAAAA && ip6 != null && !ip6.isEmpty()) {
 			ip6 = ip6.replaceAll("/.*", "");
 			list.add(new AAAARecord(trName,
@@ -585,9 +587,9 @@ public class ZoneManager extends Resolver {
 		}
 	}
 
-	private static Name getGlueName(final DeliveryService ds, final JSONObject trJo, final Name name, final String trName) throws TextParseException {
-		if (ds == null && trJo != null && trJo.has("fqdn") && trJo.optString("fqdn") != null) {
-			return newName(trJo.optString("fqdn"));
+	private static Name getGlueName(final DeliveryService ds, final JsonNode trJo, final Name name, final String trName) throws TextParseException {
+		if (ds == null && trJo != null && trJo.has("fqdn") && trJo.get("fqdn").textValue() != null) {
+			return newName(trJo.get("fqdn").textValue());
 		} else {
 			final Name superDomain = new Name(new Name(name.toString(true)), 1);
 			return newName(trName, superDomain.toString());
@@ -631,7 +633,7 @@ public class ZoneManager extends Resolver {
 
 				try {
 					final Name name = newName(fqdn);
-					final JSONObject ttl = ds.getTtls();
+					final JsonNode ttl = ds.getTtls();
 
 					try {
 						zholder.add(new ARecord(name, DClass.IN, ZoneUtils.getLong(ttl, "A", 60), c.getIp4()));

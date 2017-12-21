@@ -30,12 +30,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
@@ -55,10 +56,10 @@ public class DeliveryService {
 	protected static final Logger LOGGER = Logger.getLogger(DeliveryService.class);
 	private final String id;
 	@JsonIgnore
-	private final JSONObject ttls;
+	private final JsonNode ttls;
 	private final boolean coverageZoneOnly;
 	@JsonIgnore
-	private final JSONArray geoEnabled;
+	private final JsonNode geoEnabled;
 	private final String geoRedirectUrl;
 	//store the url file path info
 	private String geoRedirectFile;
@@ -66,15 +67,15 @@ public class DeliveryService {
 	//"INVALID_URL" for init status, "DS_URL" means that the request url belongs to this DeliveryService, "NOT_DS_URL" means that the request url doesn't belong to this DeliveryService
 	private String geoRedirectUrlType;
 	@JsonIgnore
-	private final JSONArray staticDnsEntries;
+	private final JsonNode staticDnsEntries;
 	@JsonIgnore
-	private final JSONArray domains;
+	private final JsonNode domains;
 	@JsonIgnore
-	private final JSONObject bypassDestination;
+	private final JsonNode bypassDestination;
 	@JsonIgnore
-	private final JSONObject soa;
+	private final JsonNode soa;
 	@JsonIgnore
-	private final JSONObject props;
+	private final JsonNode props;
 	private boolean isDns;
 	private final String routingName;
 	private final boolean shouldAppendQueryString;
@@ -93,57 +94,62 @@ public class DeliveryService {
 	private final boolean acceptHttps;
 	private final boolean redirectToHttps;
 
-	public DeliveryService(final String id, final JSONObject dsJo) throws JSONException {
+	public DeliveryService(final String id, final JsonNode dsJo) {
 		this.id = id;
 		this.props = dsJo;
-		this.ttls = dsJo.optJSONObject("ttls");
+		this.ttls = dsJo.get("ttls");
 
 		if (this.ttls == null) {
 			LOGGER.warn("ttls is null for:" + id);
 		}
 
-		this.coverageZoneOnly = dsJo.getBoolean("coverageZoneOnly");
-		this.geoEnabled = dsJo.optJSONArray("geoEnabled");
-		String rurl = dsJo.optString("geoLimitRedirectURL", null);
+		this.coverageZoneOnly = dsJo.get("coverageZoneOnly").asBoolean();
+		this.geoEnabled = dsJo.get("geoEnabled");
+		String rurl = dsJo.has("geoLimitRedirectURL") ? dsJo.get("geoLimitRedirectURL").asText(null) : null;
 		if (rurl != null && rurl.isEmpty()) { rurl = null; }
 		this.geoRedirectUrl = rurl;
 		this.geoRedirectUrlType = "INVALID_URL";
 		this.geoRedirectFile = this.geoRedirectUrl;
-		this.staticDnsEntries = dsJo.optJSONArray("staticDnsEntries");
-		this.bypassDestination = dsJo.optJSONObject("bypassDestination");
-		this.routingName = dsJo.getString("routingName").toLowerCase();
-		this.domains = dsJo.optJSONArray("domains");
-		this.soa = dsJo.optJSONObject("soa");
-		if(dsJo.has("appendQueryString")) {
-			this.shouldAppendQueryString = dsJo.optBoolean("appendQueryString");
-		} else {
-			this.shouldAppendQueryString = true;
-		}
+		this.staticDnsEntries = dsJo.get("staticDnsEntries");
+		this.bypassDestination = dsJo.get("bypassDestination");
+		this.routingName = dsJo.get("routingName").asText().toLowerCase();
+		this.domains = dsJo.get("domains");
+		this.soa = dsJo.get("soa");
+		this.shouldAppendQueryString = dsJo.has("appendQueryString") ? dsJo.get("appendQueryString").asBoolean(true) : true;
+
 		// missLocation: {lat: , long: }
-		final JSONObject mlJo = dsJo.optJSONObject("missLocation");
+		final JsonNode mlJo = dsJo.get("missLocation");
 		if(mlJo != null) {
-			missLocation = new Geolocation(mlJo.optDouble("lat"), mlJo.optDouble("long"));
+			final double lat = mlJo.has("lat") ? mlJo.get("lat").asDouble() : 0;
+			final double longitude = mlJo.has("long") ? mlJo.get("long").asDouble() : 0;
+			missLocation = new Geolocation(lat, longitude);
 		} else {
 			missLocation = null;
 		}
 
 		this.dispersion = new Dispersion(dsJo);
-		this.ip6RoutingEnabled = dsJo.optBoolean("ip6RoutingEnabled", false);
-		setResponseHeaders(dsJo.optJSONObject("responseHeaders"));
-		setRequestHeaders(dsJo.optJSONArray("requestHeaders"));
-		this.regionalGeoEnabled = dsJo.optBoolean("regionalGeoBlocking", false);
-		geolocationProvider = dsJo.optString("geolocationProvider");
+		this.ip6RoutingEnabled = dsJo.has("ip6RoutingEnabled") ? dsJo.get("ip6RoutingEnabled").asBoolean(false) : false;
+		setResponseHeaders(dsJo.get("responseHeaders"));
+		setRequestHeaders(dsJo.get("requestHeaders"));
+		this.regionalGeoEnabled = dsJo.has("regionalGeoBlocking") ? dsJo.get("regionalGeoBlocking").asBoolean(false) : false;
+		geolocationProvider = dsJo.has("geolocationProvider") ? dsJo.get("geolocationProvider").asText() : "";
 		if (geolocationProvider != null && !geolocationProvider.isEmpty()) {
 			LOGGER.info("DeliveryService '" + id + "' has configured geolocation provider '" + geolocationProvider + "'");
 		} else {
 			LOGGER.info("DeliveryService '" + id + "' will use default geolocation provider Maxmind");
 		}
-		sslEnabled = dsJo.optBoolean("sslEnabled", false);
+		sslEnabled = dsJo.has("sslEnabled") ? dsJo.get("sslEnabled").asBoolean() : false;
 
-		final JSONObject protocol = dsJo.optJSONObject("protocol");
-		acceptHttp = protocol != null ? protocol.optBoolean("acceptHttp", true) : true;
-		acceptHttps = protocol != null ? protocol.optBoolean("acceptHttps", false) : false;
-		redirectToHttps = protocol != null ? protocol.optBoolean("redirectToHttps", false) : false;
+		final JsonNode protocol = dsJo.get("protocol");
+		if (protocol != null) {
+			acceptHttp = protocol.has("acceptHttp") ? protocol.get("acceptHttp").asBoolean() : true;
+			acceptHttps = protocol.has("acceptHttps") ? protocol.get("acceptHttps").asBoolean() : false;
+			redirectToHttps = protocol.has("redirectToHttps") ? protocol.get("redirectToHttps").asBoolean() : false;
+		} else {
+			acceptHttp = true;
+			acceptHttps = false;
+			redirectToHttps = false;
+		}
 	}
 
 	public String getId() {
@@ -151,7 +157,7 @@ public class DeliveryService {
 	}
 
 	@JsonIgnore
-	public JSONObject getTtls() {
+	public JsonNode getTtls() {
 		return ttls;
 	}
 
@@ -181,25 +187,23 @@ public class DeliveryService {
 	}
 
 	private boolean isLocationBlocked(final Geolocation clientLocation) {
-		if(geoEnabled == null || geoEnabled.length() == 0) { return false; }
+		if(geoEnabled == null || geoEnabled.size() == 0) { return false; }
 
 		final Map<String, String> locData = clientLocation.getProperties();
-		for(int i = 0; i < geoEnabled.length(); i++) {
+
+		for (final JsonNode constraint : geoEnabled) {
 			boolean match = true;
-			try {
-				final JSONObject constraint = geoEnabled.optJSONObject(i);
-				for (final String t : JSONObject.getNames(constraint)) {
-					final String v = constraint.getString(t);
-					final String data = locData.get(t);
-					if(!v.equalsIgnoreCase(data)) {
-						match = false;
-						break;
-					}
+			final Iterator<String> keyIter = constraint.fieldNames();
+			while (keyIter.hasNext()) {
+				final String t = keyIter.next();
+				final String v = constraint.get(t).asText();
+				final String data = locData.get(t);
+				if(!v.equalsIgnoreCase(data)) {
+					match = false;
+					break;
 				}
-				if(match) { return false; }
-			} catch (JSONException e) {
-				LOGGER.warn(e,e);
 			}
+			if(match) { return false; }
 		}
 		return true;
 	}
@@ -215,13 +219,13 @@ public class DeliveryService {
 			return null;
 		}
 		track.setResult(ResultType.DS_REDIRECT);
-		final JSONObject httpJo = bypassDestination.optJSONObject("HTTP");
+		final JsonNode httpJo = bypassDestination.get("HTTP");
 		if(httpJo == null) {
 			track.setResult(ResultType.MISS);
 			track.setResultDetails(ResultDetails.DS_NO_BYPASS);
 			return null;
 		}
-		final String fqdn = httpJo.optString("fqdn");
+		final JsonNode fqdn = httpJo.get("fqdn");
 		if(fqdn == null) {
 			track.setResult(ResultType.MISS);
 			track.setResultDetails(ResultDetails.DS_NO_BYPASS);
@@ -229,9 +233,9 @@ public class DeliveryService {
 		}
 		int port = request.isSecure() ? 443 : 80;
 		if(httpJo.has("port")) {
-			port = httpJo.optInt("port");
+			port = httpJo.get("port").asInt();
 		}
-		return new URL(createURIString(request, fqdn, port, null));
+		return new URL(createURIString(request, fqdn.asText(), port, null));
 	}
 	private static final String REGEX_PERIOD = "\\.";
 
@@ -317,13 +321,13 @@ public class DeliveryService {
 		}
 		track.setResult(ResultType.DS_REDIRECT);
 		track.setResultDetails(ResultDetails.DS_BYPASS);
-		return getRedirectInetRecords(bypassDestination.optJSONObject("DNS"));
+		return getRedirectInetRecords(bypassDestination.get("DNS"));
 	}
 
 	private List<InetRecord> redirectInetRecords = null;
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")
-	private List<InetRecord> getRedirectInetRecords(final JSONObject dns) {
+	private List<InetRecord> getRedirectInetRecords(final JsonNode dns) {
 		if (dns == null) {
 			return null;
 		}
@@ -335,15 +339,15 @@ public class DeliveryService {
 		try {
 			synchronized (this) {
 				final List<InetRecord> list = new ArrayList<InetRecord>();
-				final int ttl = dns.getInt("ttl"); // we require a TTL to exist; will throw an exception if not present
+				final int ttl = dns.get("ttl").asInt(); // we require a TTL to exist; will throw an exception if not present
 
 				if (dns.has("ip") || dns.has("ip6")) {
 					if (dns.has("ip")) {
-						list.add(new InetRecord(InetAddress.getByName(dns.getString("ip")), ttl));
+						list.add(new InetRecord(InetAddress.getByName(dns.get("ip").asText()), ttl));
 					}
 
 					if (dns.has("ip6")) {
-						String ipStr = dns.getString("ip6");
+						String ipStr = dns.get("ip6").asText();
 
 						if (ipStr != null && !ipStr.isEmpty()) {
 							ipStr = ipStr.replaceAll("/.*", "");
@@ -355,7 +359,7 @@ public class DeliveryService {
 					 * Per section 2.4 of RFC 1912 CNAMEs cannot coexist with other record types.
 					 * As such, only add the CNAME if the above ip/ip6 keys do not exist
 					 */
-					final String cname = dns.getString("cname");
+					final String cname = dns.get("cname").asText();
 
 					if (cname != null) {
 						list.add(new InetRecord(cname, ttl));
@@ -373,7 +377,7 @@ public class DeliveryService {
 	}
 
 	@JsonIgnore
-	public JSONObject getSoa() {
+	public JsonNode getSoa() {
 		return soa;
 	}
 
@@ -448,13 +452,13 @@ public class DeliveryService {
 		if(props == null || !props.has(key)) {
 			return d;
 		}
-		return props.optString(key);
+		return props.get(key).textValue();
 	}
 	private int getProp(final String key, final int d) {
 		if(props == null || !props.has(key)) {
 			return d;
 		}
-		return props.optInt(key);
+		return props.get(key).asInt();
 	}
 
 	static StringProtector stringProtector = null;
@@ -520,12 +524,12 @@ public class DeliveryService {
 	}
 
 	@JsonIgnore
-	public JSONArray getStaticDnsEntries() {
+	public JsonNode getStaticDnsEntries() {
 		return staticDnsEntries;
 	}
 
 	@JsonIgnore
-	public JSONArray getDomains() {
+	public JsonNode getDomains() {
 		return domains;
 	}
 
@@ -565,10 +569,12 @@ public class DeliveryService {
 		return responseHeaders;
 	}
 
-	private void setResponseHeaders(final JSONObject jo) throws JSONException {
+	private void setResponseHeaders(final JsonNode jo) {
 		if (jo != null) {
-			for (final String key : JSONObject.getNames(jo)) {
-				responseHeaders.put(key, jo.getString(key));
+			final Iterator<String> keyIter = jo.fieldNames();
+			while (keyIter.hasNext()) {
+				final String key = keyIter.next();
+				responseHeaders.put(key, jo.get(key).asText());
 			}
 		}
 	}
@@ -577,13 +583,12 @@ public class DeliveryService {
 		return requestHeaders;
 	}
 
-	private void setRequestHeaders(final JSONArray jsonRequestHeaderNames) throws JSONException {
+	private void setRequestHeaders(final JsonNode jsonRequestHeaderNames) {
 		if (jsonRequestHeaderNames == null) {
 			return;
 		}
-
-		for (int i = 0; i < jsonRequestHeaderNames.length(); i++) {
-			requestHeaders.add(jsonRequestHeaderNames.getString(i));
+		for (final JsonNode name : jsonRequestHeaderNames) {
+			requestHeaders.add(name.asText());
 		}
 	}
 

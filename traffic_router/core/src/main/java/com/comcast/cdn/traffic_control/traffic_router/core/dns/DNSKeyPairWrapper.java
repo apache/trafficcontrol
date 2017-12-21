@@ -23,8 +23,7 @@ import java.util.Date;
 
 import javax.xml.bind.DatatypeConverter;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.xbill.DNS.DNSKEYRecord;
 import org.xbill.DNS.Master;
 import org.xbill.DNS.Name;
@@ -40,15 +39,16 @@ public class DNSKeyPairWrapper extends DnsKeyPair implements DnsSecKeyPair {
 	private Date expiration;
 	private String name;
 
-	public DNSKeyPairWrapper(final JSONObject keyPair, final long defaultTTL) throws JSONException, IOException {
-		this.inception = new Date(1000L * keyPair.getLong("inceptionDate"));
-		this.effective = new Date(1000L * keyPair.getLong("effectiveDate"));
-		this.expiration = new Date(1000L * keyPair.getLong("expirationDate"));
-		this.ttl = keyPair.optLong("ttl", defaultTTL);
-		this.name = keyPair.getString("name").toLowerCase();
+	@SuppressWarnings("PMD.CyclomaticComplexity")
+	public DNSKeyPairWrapper(final JsonNode keyPair, final long defaultTTL) throws IOException {
+		this.inception = new Date(1000L * (keyPair.has("inceptionDate") ? keyPair.get("inceptionDate").longValue() : null));
+		this.effective = new Date(1000L * (keyPair.has("effectiveDate") ? keyPair.get("effectiveDate").longValue() : null));
+		this.expiration = new Date(1000L * (keyPair.has("expirationDate") ? keyPair.get("expirationDate").longValue() : null));
+		this.ttl = keyPair.has("ttl") ? keyPair.get("ttl").asLong(defaultTTL) : 0;
+		this.name = keyPair.has("name") ? keyPair.get("name").asText().toLowerCase() : "";
 
-		final byte[] privateKey = DatatypeConverter.parseBase64Binary(keyPair.getString("private"));
-		final byte[] publicKey = DatatypeConverter.parseBase64Binary(keyPair.getString("public"));
+		final byte[] privateKey = DatatypeConverter.parseBase64Binary(keyPair.has("private") ? keyPair.get("private").asText() : null);
+		final byte[] publicKey = DatatypeConverter.parseBase64Binary(keyPair.has("public") ? keyPair.get("public").asText() : null);
 
 		try (InputStream in = new ByteArrayInputStream(publicKey)) {
 			final Master master = new Master(in, new Name(name), ttl);

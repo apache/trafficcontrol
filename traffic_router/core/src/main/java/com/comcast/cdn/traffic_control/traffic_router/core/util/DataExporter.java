@@ -25,9 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.cache.CacheStats;
 import org.apache.log4j.Logger;
-import org.json.JSONObject;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
@@ -227,10 +227,10 @@ public class DataExporter {
 
 			if (trafficRouter != null) {
 				final CacheRegister cacheRegister = trafficRouter.getCacheRegister();
-				final JSONObject config = cacheRegister.getConfig();
+				final JsonNode config = cacheRegister.getConfig();
 
 				if (config != null) {
-					maxAge = config.optInt("api.cache-control.max-age", 0);
+					maxAge = config.has("api.cache-control.max-age") ? config.get("api.cache-control.max-age").asInt(0) : 0;
 				}
 			}
 		}
