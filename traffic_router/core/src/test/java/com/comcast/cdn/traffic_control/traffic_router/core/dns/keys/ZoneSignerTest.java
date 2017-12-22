@@ -26,7 +26,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.verisignlabs.dnssec.security.DnsKeyPair;
 import com.verisignlabs.dnssec.security.JCEDnsSecSigner;
 import com.verisignlabs.dnssec.security.SignUtils;
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.xbill.DNS.DSRecord;

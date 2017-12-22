@@ -27,7 +27,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
