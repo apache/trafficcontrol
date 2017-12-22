@@ -69,28 +69,36 @@ public class CacheRegisterBuilder {
                             dsNames = new ArrayList<String>();
                         }
 
-                        int i = 0;
-                        for (JsonNode fqdn : dso) {
-                            final String name = fqdn.asText().toLowerCase();
+                        if (dso.isArray()) {
+                            int i = 0;
+                            for (JsonNode fqdn : dso) {
+                                final String name = fqdn.asText().toLowerCase();
 
-                            if (i == 0) {
-                                references.add(new Cache.DeliveryServiceReference(ds, name));
-                            }
-
-                            final String tld = cacheRegister.getConfig().has("domain_name") ? cacheRegister.getConfig().get("domain_name").asText().toLowerCase() : "";
-
-                            if (name.contains(tld)) {
-                                final String reName = name.replaceAll("^.*?\\.", "");
-
-                                if (!dsNames.contains(reName)) {
-                                    dsNames.add(reName);
+                                if (i == 0) {
+                                    references.add(new Cache.DeliveryServiceReference(ds, name));
                                 }
-                            } else {
-                                if (!dsNames.contains(name)) {
-                                    dsNames.add(name);
+
+                                final String tld = cacheRegister.getConfig().has("domain_name") ? cacheRegister.getConfig().get("domain_name").asText().toLowerCase() : "";
+
+                                if (name.contains(tld)) {
+                                    final String reName = name.replaceAll("^.*?\\.", "");
+
+                                    if (!dsNames.contains(reName)) {
+                                        dsNames.add(reName);
+                                    }
+                                } else {
+                                    if (!dsNames.contains(name)) {
+                                        dsNames.add(name);
+                                    }
                                 }
+                                i++;
                             }
-                            i++;
+                        } else {
+                            references.add(new Cache.DeliveryServiceReference(ds, dso.toString()));
+
+                            if (!dsNames.contains(dso.toString())) {
+                                dsNames.add(dso.toString());
+                            }
                         }
                         statMap.put(ds, dsNames);
                     }
