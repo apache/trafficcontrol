@@ -23,42 +23,45 @@ import com.comcast.cdn.traffic_control.traffic_router.core.config.ParseException
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.net.UnknownHostException;
 import java.util.*;
 
 public class CacheRegisterBuilder {
 
-    public static void parseCacheConfig(final JSONObject contentServers, final CacheRegister cacheRegister) throws JSONException, ParseException {
+    public static void parseCacheConfig(final JsonNode contentServers, final CacheRegister cacheRegister) throws ParseException {
         final Map<String,Cache> map = new HashMap<String,Cache>();
         final Map<String, List<String>> statMap = new HashMap<String, List<String>>();
-        for (final String node : JSONObject.getNames(contentServers)) {
-            final JSONObject jo = contentServers.getJSONObject(node);
-            final CacheLocation loc = cacheRegister.getCacheLocation(jo.getString("locationId"));
+
+        final Iterator<String> contentServersIter = contentServers.fieldNames();
+        while (contentServersIter.hasNext()) {
+            final String node = contentServersIter.next();
+            final JsonNode jo = contentServers.get(node);
+            final CacheLocation loc = cacheRegister.getCacheLocation(jo.get("locationId").asText());
             if (loc != null) {
                 String hashId = node;
                 if(jo.has("hashId")) {
-                    hashId = jo.optString("hashId");
+                    hashId = jo.get("hashId").asText();
                 }
-                final Cache cache = new Cache(node, hashId, jo.optInt("hashCount"));
-                cache.setFqdn(jo.getString("fqdn"));
-                cache.setPort(jo.getInt("port"));
-                final String ip = jo.getString("ip");
-                final String ip6 = jo.optString("ip6");
+                final int hashCount = jo.has("hashCount") ? jo.get("hashCount").asInt() : 0;
+                final Cache cache = new Cache(node, hashId, hashCount);
+                cache.setFqdn(jo.get("fqdn").asText());
+                cache.setPort(jo.get("port").asInt());
+                final String ip = jo.get("ip").asText();
+                final String ip6 = jo.has("ip6") ? jo.get("ip6").asText() : "";
                 try {
                     cache.setIpAddress(ip, ip6, 0);
                 } catch (UnknownHostException e) {
                     System.out.println(e + ": " + ip);
                 }
 
-                if(jo.has("deliveryServices")) {
+                if (jo.has("deliveryServices")) {
                     final List<Cache.DeliveryServiceReference> references = new ArrayList<Cache.DeliveryServiceReference>();
-                    final JSONObject dsJos = jo.optJSONObject("deliveryServices");
-                    for(String ds : JSONObject.getNames(dsJos)) {
-                        final Object dso = dsJos.get(ds);
+                    final JsonNode dsJos = jo.get("deliveryServices");
+                    final Iterator<String> dsIter = dsJos.fieldNames();
+                    while (dsIter.hasNext()) {
+                        final String ds = dsIter.next();
+                        final JsonNode dso = dsJos.get(ds);
 
                         List<String> dsNames = statMap.get(ds);
 
@@ -66,46 +69,33 @@ public class CacheRegisterBuilder {
                             dsNames = new ArrayList<String>();
                         }
 
-                        if (dso instanceof JSONArray) {
-                            final JSONArray fqdnList = (JSONArray) dso;
+                        int i = 0;
+                        for (JsonNode fqdn : dso) {
+                            final String name = fqdn.asText().toLowerCase();
 
-                            if (fqdnList != null && fqdnList.length() > 0) {
-                                for (int i = 0; i < fqdnList.length(); i++) {
-                                    final String name = fqdnList.getString(i).toLowerCase();
+                            if (i == 0) {
+                                references.add(new Cache.DeliveryServiceReference(ds, name));
+                            }
 
-                                    if (i == 0) {
-                                        references.add(new Cache.DeliveryServiceReference(ds, name));
-                                    }
+                            final String tld = cacheRegister.getConfig().has("domain_name") ? cacheRegister.getConfig().get("domain_name").asText().toLowerCase() : "";
 
-                                    final String tld = cacheRegister.getConfig().has("domain_name") ? cacheRegister.getConfig().get("domain_name").asText().toLowerCase() : "";
+                            if (name.contains(tld)) {
+                                final String reName = name.replaceAll("^.*?\\.", "");
 
-                                    if (name.contains(tld)) {
-                                        final String reName = name.replaceAll("^.*?\\.", "");
-
-                                        if (!dsNames.contains(reName)) {
-                                            dsNames.add(reName);
-                                        }
-                                    } else {
-                                        if (!dsNames.contains(name)) {
-                                            dsNames.add(name);
-                                        }
-                                    }
+                                if (!dsNames.contains(reName)) {
+                                    dsNames.add(reName);
+                                }
+                            } else {
+                                if (!dsNames.contains(name)) {
+                                    dsNames.add(name);
                                 }
                             }
-                        } else {
-                            references.add(new Cache.DeliveryServiceReference(ds, dso.toString()));
-
-                            if (!dsNames.contains(dso.toString())) {
-                                dsNames.add(dso.toString());
-                            }
+                            i++;
                         }
-
                         statMap.put(ds, dsNames);
                     }
                     cache.setDeliveryServices(references);
                 }
-
-
                 loc.addCache(cache);
                 map.put(cache.getId(), cache);
             }
