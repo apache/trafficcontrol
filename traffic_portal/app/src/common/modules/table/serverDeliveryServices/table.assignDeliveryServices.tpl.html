@@ -22,18 +22,18 @@ under the License.
     <h3 class="modal-title">Assign Delivery Services to {{::server.hostName}}</h3>
 </div>
 <div class="modal-body">
-    <table id="assignDeliveryServicesTable" class="table responsive-utilities jambo_table" style="table-layout:fixed; width:100%;">
+    <table id="assignDSTable" class="table responsive-utilities jambo_table" style="table-layout:fixed; width:100%;">
         <thead>
         <tr class="headings">
-            <th style="padding-left: 10px;"><input id="selectAllCB" type="checkbox" ng-click="selectAll($event)" ng-checked="allSelected()"></th>
+            <th style="padding-left: 10px;"><input id="selectAllCB" type="checkbox" ng-click="selectAll($event)"></th>
             <th>Key</th>
             <th>Display Name</th>
             <th>Type</th>
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="ds in ::selectedDeliveryServices">
-            <td><input type="checkbox" ng-click="updateDeliveryServices($event, ds.id)" ng-checked="ds.selected"></td>
+        <tr id="{{::ds.id}}" class="ds-row" ng-repeat="ds in ::selectedDeliveryServices">
+            <td><input type="checkbox" ng-checked="ds.selected" ng-model="ds.selected" ng-change="onChange()"></td>
             <td data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
             <td data-search="^{{::ds.displayName}}$">{{::ds.displayName}}</td>
             <td data-search="^{{::ds.type}}$">{{::ds.type}}</td>
