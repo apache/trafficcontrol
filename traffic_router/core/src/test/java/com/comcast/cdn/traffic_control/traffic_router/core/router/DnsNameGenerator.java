@@ -15,8 +15,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,31 +23,26 @@ import java.util.List;
 // Attempts to generate names like 'www.[foo].kabletown.com' to do dns queries against traffic router
 // Tries to pull 'whole' words from the regex of cr-config
 public class DnsNameGenerator {
-    public List<String> getNames(JSONObject deliveryServicesConfig, JSONObject cdnConfig) throws Exception {
+    public List<String> getNames(JsonNode deliveryServicesConfig, JsonNode cdnConfig) throws Exception {
         List<String> names = new ArrayList<String>();
 
-        String domainName = cdnConfig.getString("domain_name");
+        String domainName = cdnConfig.get("domain_name").asText();
 
-        for (String deliveryServiceId : JSONObject.getNames(deliveryServicesConfig)) {
-            final JSONArray matchsets = deliveryServicesConfig.getJSONObject(deliveryServiceId).getJSONArray("matchsets");
-
-            for (int i = 0; i < matchsets.length(); i++) {
-                final JSONObject matchset = matchsets.getJSONObject(i);
-
-                if (!"DNS".equals(matchset.getString("protocol"))) {
+        for (final JsonNode matchsets : deliveryServicesConfig.get("matchsets")) {
+            for (final JsonNode matchset : matchsets) {
+                if (!"DNS".equals(matchset.get("protocol").asText())) {
                     continue;
                 }
 
-                final JSONArray list = matchset.getJSONArray("matchlist");
-                for (int j = 0; j < list.length(); j++) {
-                    // Not bulletproof
-                    final String name = list.getJSONObject(j).getString("regex")
-                        .replaceAll("\\.", "")
-                        .replaceAll("\\*", "")
-                        .replaceAll("\\\\", "");
+                for (final JsonNode matchlist : matchset.get("matchlist")) {
+                    final String name = matchlist.get("regex").asText()
+                            .replaceAll("\\.", "")
+                            .replaceAll("\\*", "")
+                            .replaceAll("\\\\", "");
 
                     names.add("edge." + name + "." + domainName);
                 }
+
             }
         }
 
