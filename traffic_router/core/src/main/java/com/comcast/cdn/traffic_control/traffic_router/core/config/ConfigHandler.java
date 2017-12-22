@@ -43,7 +43,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesPu
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
-import org.json.JSONException;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
@@ -262,7 +261,7 @@ public class ConfigHandler {
 	 * @param stats
 	 *            the {@link TrafficRouterConfiguration} stats section
 	 *
-	 * @throws JSONException 
+	 * @throws IOException
 	 */
 	private void parseTrafficOpsConfig(final JsonNode config, final JsonNode stats) throws IOException {
 		if (stats.has("tm_host")) {
@@ -282,7 +281,7 @@ public class ConfigHandler {
 	 *
 	 * @param trConfig
 	 *            the {@link TrafficRouterConfiguration}
-	 * @throws JSONException 
+	 * @throws ParseException
 	 */
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidDeeplyNestedIfStmts", "PMD.NPathComplexity"})
 	private void parseCacheConfig(final JsonNode contentServers, final CacheRegister cacheRegister) throws ParseException {
@@ -488,7 +487,7 @@ public class ConfigHandler {
 	 * 
 	 * @param config
 	 *            the {@link TrafficRouterConfiguration}
-	 * @throws JSONException 
+	 *
 	 */
 	@SuppressWarnings("PMD.NPathComplexity")
 	private void parseGeolocationConfig(final JsonNode config) {
@@ -529,7 +528,7 @@ public class ConfigHandler {
 	 *
 	 * @param trConfig
 	 *            the {@link TrafficRouterConfiguration}
-	 * @throws JSONException 
+	 *
 	 */
 	private void parseCoverageZoneNetworkConfig(final JsonNode config) {
 		getNetworkUpdater().setDataBaseURL(
@@ -571,7 +570,7 @@ public class ConfigHandler {
 	 *            the TrafficRouterConfiguration
 	 * @return the {@link Map}, empty if there are no Locations that have both a latitude and
 	 *         longitude specified
-	 * @throws JSONException 
+	 *
 	 */
 	private void parseLocationConfig(final JsonNode locationsJo, final CacheRegister cacheRegister) {
 		final Set<CacheLocation> locations = new HashSet<CacheLocation>(locationsJo.size());
@@ -593,7 +592,7 @@ public class ConfigHandler {
 	 * @param trconfig.monitors
 	 *            the monitors section of the TrafficRouter Configuration
 	 * @return void
-	 * @throws JSONException
+	 * @throws ParseException
 	 */
 	private void parseMonitorConfig(final JsonNode monitors) throws ParseException {
 		final List<String> monitorList = new ArrayList<String>();
@@ -621,7 +620,7 @@ public class ConfigHandler {
 	 * @param trconfig.stats
 	 *            the stats section of the TrafficRouter Configuration
 	 * @return long
-	 * @throws JSONException
+	 *
 	 */
 	private long getSnapshotTimestamp(final JsonNode stats) {
 		return stats.has("date") ? stats.get("date").longValue() : 0;
