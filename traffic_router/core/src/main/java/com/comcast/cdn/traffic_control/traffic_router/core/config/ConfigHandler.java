@@ -107,7 +107,7 @@ public class ConfigHandler {
 	}
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity", "PMD.AvoidCatchingThrowable"})
-	public boolean processConfig(final String jsonStr) throws JSONException, IOException  {
+	public boolean processConfig(final String jsonStr) throws IOException  {
 		isProcessing.set(true);
 		LOGGER.info("Entered processConfig");
 		if (jsonStr == null) {

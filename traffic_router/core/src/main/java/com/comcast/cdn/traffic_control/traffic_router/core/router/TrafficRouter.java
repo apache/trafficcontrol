@@ -34,9 +34,8 @@ import com.comcast.cdn.traffic_control.traffic_router.core.ds.Steering;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.ConsistentHasher;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.MaxmindGeolocationService;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.xbill.DNS.Name;
@@ -91,7 +90,7 @@ public class TrafficRouter {
 			final StatTracker statTracker,
 			final TrafficOpsUtils trafficOpsUtils,
 			final FederationRegistry federationRegistry,
-			final TrafficRouterManager trafficRouterManager) throws IOException, JSONException {
+			final TrafficRouterManager trafficRouterManager) throws IOException {
 		this.cacheRegister = cr;
 		this.geolocationService = geolocationService;
 		this.geolocationService6 = geolocationService6;
@@ -146,22 +145,22 @@ public class TrafficRouter {
 		return deliveryService;
 	}
 
-	boolean setState(final JSONObject states) throws UnknownHostException {
-		setCacheStates(states.optJSONObject("caches"));
-		setDsStates(states.optJSONObject("deliveryServices"));
+	boolean setState(final JsonNode states) throws UnknownHostException {
+		setCacheStates(states.get("caches"));
+		setDsStates(states.get("deliveryServices"));
 		return true;
 	}
-	private boolean setDsStates(final JSONObject dsStates) {
+	private boolean setDsStates(final JsonNode dsStates) {
 		if(dsStates == null) {
 			return false;
 		}
 		final Map<String, DeliveryService> dsMap = cacheRegister.getDeliveryServices();
 		for (final String dsName : dsMap.keySet()) {
-			dsMap.get(dsName).setState(dsStates.optJSONObject(dsName));
+			dsMap.get(dsName).setState(dsStates.get(dsName));
 		}
 		return true;
 	}
-	private boolean setCacheStates(final JSONObject cacheStates) {
+	private boolean setCacheStates(final JsonNode cacheStates) {
 		if(cacheStates == null) {
 			return false;
 		}
@@ -169,7 +168,7 @@ public class TrafficRouter {
 		if(cacheMap == null) { return false; }
 		for (final String cacheName : cacheMap.keySet()) {
 			final String monitorCacheName = cacheName.replaceFirst("@.*", "");
-			final JSONObject state = cacheStates.optJSONObject(monitorCacheName);
+			final JsonNode state = cacheStates.get(monitorCacheName);
 			cacheMap.get(cacheName).setState(state);
 		}
 		return true;
