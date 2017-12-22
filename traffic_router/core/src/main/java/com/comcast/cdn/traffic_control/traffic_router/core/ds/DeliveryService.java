@@ -36,8 +36,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
@@ -481,17 +479,17 @@ public class DeliveryService {
 	}
 
 	private boolean isAvailable = true;
-	private JSONArray disabledLocations;
-	public void setState(final JSONObject state) {
+	private JsonNode disabledLocations;
+	public void setState(final JsonNode state) {
 		if(state == null) {
 			isAvailable = true;
 			return;
 		}
 		if(state.has("isAvailable")) {
-			isAvailable = state.optBoolean("isAvailable");
+			isAvailable = state.get("isAvailable").asBoolean();
 		}
 		// disabled locations
-		disabledLocations = state.optJSONArray("disabledLocations");
+		disabledLocations = state.get("disabledLocations");
 	}
 
 	public boolean isAvailable() {
@@ -502,16 +500,17 @@ public class DeliveryService {
 		if(cl==null) {
 			return false;
 		}
-		final JSONArray dls = this.disabledLocations;
+		final JsonNode dls = this.disabledLocations;
 		if(dls == null) {
 			return true;
 		}
 		final String locStr = cl.getId();
-		for(int i = 0; i < dls.length(); i++) {
-			if(locStr.equals(dls.optString(i))) {
+		for (final JsonNode curr : dls) {
+			if (locStr.equals(curr.asText())) {
 				return false;
 			}
 		}
+
 		return true;
 	}
 

@@ -30,7 +30,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
-import org.json.JSONObject;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.config.ParseException;
 
@@ -217,10 +216,10 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 		return ip6;
 	}
 
-	public void setState(final JSONObject state) {
+	public void setState(final JsonNode state) {
 		boolean isAvailable = true;
 		if(state != null && state.has("isAvailable")) {
-			isAvailable = state.optBoolean("isAvailable");
+			isAvailable = state.get("isAvailable").asBoolean();
 		}
 		this.setIsAvailable(isAvailable);
 	}

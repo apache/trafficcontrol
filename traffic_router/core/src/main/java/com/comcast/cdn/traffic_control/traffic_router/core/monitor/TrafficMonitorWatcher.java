@@ -26,9 +26,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
@@ -75,10 +74,9 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 		@Override
 		public synchronized boolean update(final String jsonStr) {
 			try {
-				return trafficRouterManager.setState(new JSONObject(jsonStr));
-			} catch (JSONException e) {
-				LOGGER.warn("problem with json: ",e);
-			} catch (UnknownHostException e) {
+				final ObjectMapper mapper = new ObjectMapper();
+				return trafficRouterManager.setState(mapper.readTree(jsonStr));
+			} catch (IOException e) {
 				LOGGER.warn(e,e);
 			}
 			return false;
@@ -110,11 +108,7 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 			@Override
 			public boolean update(final String configStr) {
 				try {
-					try {
-						return configHandler.processConfig(configStr);
-					} catch (JSONException e) {
-						LOGGER.warn(e, e);
-					}
+					return configHandler.processConfig(configStr);
 				} catch (IOException e) {
 					LOGGER.warn("error on config update", e);
 				}
