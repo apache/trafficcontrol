@@ -32,8 +32,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// DeliveryServiceRequestPrivLevel ...
 const DeliveryServiceRequestPrivLevel = 20
 
+// Handler returns a func to handle GET requests
 func Handler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := func(err error, status int) {
@@ -63,13 +65,13 @@ func Handler(db *sqlx.DB) http.HandlerFunc {
 }
 
 func getDeliveryServiceRequestsResponse(q url.Values, db *sqlx.DB) (*tc.DeliveryServiceRequestsResponse, error) {
-	DeliveryServiceRequests, err := getDeliveryServiceRequests(q, db)
+	deliveryServiceRequests, err := getDeliveryServiceRequests(q, db)
 	if err != nil {
 		return nil, fmt.Errorf("getting DeliveryServiceRequests response: %v", err)
 	}
 
 	resp := tc.DeliveryServiceRequestsResponse{
-		Response: DeliveryServiceRequests,
+		Response: deliveryServiceRequests,
 	}
 	return &resp, nil
 }
@@ -98,15 +100,15 @@ func getDeliveryServiceRequests(v url.Values, db *sqlx.DB) ([]tc.DeliveryService
 	}
 	defer rows.Close()
 
-	DeliveryServiceRequests := []tc.DeliveryServiceRequest{}
+	deliveryServiceRequests := []tc.DeliveryServiceRequest{}
 	for rows.Next() {
 		var s tc.DeliveryServiceRequest
 		if err = rows.StructScan(&s); err != nil {
 			return nil, fmt.Errorf("getting DeliveryServiceRequests: %v", err)
 		}
-		DeliveryServiceRequests = append(DeliveryServiceRequests, s)
+		deliveryServiceRequests = append(deliveryServiceRequests, s)
 	}
-	return DeliveryServiceRequests, nil
+	return deliveryServiceRequests, nil
 }
 
 func selectDeliveryServiceRequestsQuery() string {
