@@ -19,38 +19,9 @@ import (
 	"encoding/json"
 )
 
-// GetDeliveryServiceRequestResponse ...
-type GetDeliveryServiceRequestResponse struct {
-	Response []DeliveryServiceRequest `json:"response"`
-}
-
-// CreateDeliveryServiceRequestResponse ...
-type CreateDeliveryServiceRequestResponse struct {
-	Response []DeliveryServiceRequest      `json:"response"`
-	Alerts   []DeliveryServiceRequestAlert `json:"alerts"`
-}
-
-// UpdateDeliveryServiceRequestResponse ...
-type UpdateDeliveryServiceRequestResponse struct {
-	Response []DeliveryServiceRequest      `json:"response"`
-	Alerts   []DeliveryServiceRequestAlert `json:"alerts"`
-}
-
 // DeliveryServiceRequestResponse ...
-type DeliveryServiceRequestResponse struct {
-	Response DeliveryServiceRequest        `json:"response"`
-	Alerts   []DeliveryServiceRequestAlert `json:"alerts"`
-}
-
-// DeleteDeliveryServiceRequestResponse ...
-type DeleteDeliveryServiceRequestResponse struct {
-	Alerts []DeliveryServiceRequestAlert `json:"alerts"`
-}
-
-// DeliveryServiceRequestAlert ...
-type DeliveryServiceRequestAlert struct {
-	Level string `json:"level"`
-	Text  string `json:"text"`
+type DeliveryServiceRequestsResponse struct {
+	Response []DeliveryServiceRequest `json:"response"`
 }
 
 // DeliveryServiceRequest is used as part of the workflow to create, modify, or
@@ -58,6 +29,7 @@ type DeliveryServiceRequestAlert struct {
 type DeliveryServiceRequest struct {
 	AssigneeID  int             `json:"assigneeId" db:"assignee_id"`
 	AuthorID    int             `json:"authorId" db:"author_id"`
+	ChangeType  string          `json:"change_type" db:"change_type"`
 	ID          int             `json:"id" db:"id"`
 	LastUpdated Time            `json:"lastUpdated" db:"last_updated"`
 	Request     json.RawMessage `json:"request" db:"request"`
