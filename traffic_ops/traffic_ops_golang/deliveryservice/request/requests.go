@@ -23,6 +23,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -32,38 +33,55 @@ import (
 	"github.com/lib/pq"
 )
 
-//we need a type alias to define functions on
+// TODeliveryServiceRequest provides a type alias to define functions on
 type TODeliveryServiceRequest tc.DeliveryServiceRequest
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
 var refType = TODeliveryServiceRequest(tc.DeliveryServiceRequest{})
 
+// GetRefType is used to decode the JSON for deliveryservice requests
 func GetRefType() *TODeliveryServiceRequest {
 	return &refType
 }
 
 //Implementation of the Identifier, Validator interface functions
+
+// GetID ...
 func (request *TODeliveryServiceRequest) GetID() int {
 	return request.ID
 }
 
-func (request *TODeliveryServiceRequest) GetType() string {
-	return "deliveryservice_request"
-}
-
+// GetName ...
 func (request *TODeliveryServiceRequest) GetName() string {
 	return strconv.Itoa(request.ID)
 }
 
+// GetType ...
+func (request *TODeliveryServiceRequest) GetType() string {
+	return "deliveryservice_request"
+}
+
+// SetID ...
 func (request *TODeliveryServiceRequest) SetID(i int) {
 	request.ID = i
 }
 
+// Validate ...
 func (request *TODeliveryServiceRequest) Validate() []error {
-	errs := []error{}
+	log.Debugf("Got request with %++v\n", request)
+	var errs []error
+	if request.AuthorID == 0 {
+		errs = append(errs, errors.New(`'author_id' is required`))
+	}
+	if len(request.ChangeType) == 0 {
+		errs = append(errs, errors.New(`'change_type' is required`))
+	}
+	if len(request.Status) == 0 {
+		errs = append(errs, errors.New(`'status' is required`))
+	}
 	if len(request.Request) < 1 {
 		// TODO: validate request json has required deliveryservice fields
-		errs = append(errs, errors.New(`Request 'request' is required.`))
+		errs = append(errs, errors.New(`'request' is required`))
 	}
 	return errs
 }
@@ -73,6 +91,8 @@ func (request *TODeliveryServiceRequest) Validate() []error {
 //ParsePQUniqueConstraintError is used to determine if a request with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
+
+// Update ...
 func (request *TODeliveryServiceRequest) Update(db *sqlx.DB) (error, tc.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
@@ -99,13 +119,12 @@ func (request *TODeliveryServiceRequest) Update(db *sqlx.DB) (error, tc.ApiError
 				return errors.New("a request with " + err.Error()), eType
 			}
 			return err, eType
-		} else {
-			log.Errorf("received error: %++v from update execution", err)
-			return tc.DBError, tc.SystemError
 		}
+		log.Errorf("received error: %++v from update execution", err)
+		return tc.DBError, tc.SystemError
 	}
 	var lastUpdated tc.Time
-	rowsAffected := 0
+	var rowsAffected int
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&lastUpdated); err != nil {
@@ -115,12 +134,11 @@ func (request *TODeliveryServiceRequest) Update(db *sqlx.DB) (error, tc.ApiError
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
 	request.LastUpdated = lastUpdated
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no request found with this id"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
-		}
+	if rowsAffected < 1 {
+		return errors.New("no request found with this id"), tc.DataMissingError
+	}
+	if rowsAffected > 1 {
+		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 	return nil, tc.NoError
 }
@@ -132,6 +150,8 @@ func (request *TODeliveryServiceRequest) Update(db *sqlx.DB) (error, tc.ApiError
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted request and have
 //to be added to the struct
+
+// Insert ...
 func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB) (error, tc.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
@@ -149,19 +169,19 @@ func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB) (error, tc.ApiError
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
-	resultRows, err := tx.NamedQuery(insertRequestQuery(), request)
+	ir := insertRequestQuery()
+	resultRows, err := tx.NamedQuery(ir, request)
 	if err != nil {
 		if err, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(err)
-			return errors.New("a request with " + err.Error()), eType
-		} else {
-			log.Errorf("received non pq error: %++v from create execution", err)
-			return tc.DBError, tc.SystemError
+			return err, eType
 		}
+		log.Errorf("received non pq error: %++v from create execution", err)
+		return tc.DBError, tc.SystemError
 	}
 	var id int
-	var lastUpdated tc.Time
-	rowsAffected := 0
+	lastUpdated := tc.Time{Time: time.Now(), Valid: true}
+	var rowsAffected int
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
@@ -185,6 +205,8 @@ func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB) (error, tc.ApiError
 
 //The Request implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
+
+// Delete ...
 func (request *TODeliveryServiceRequest) Delete(db *sqlx.DB) (error, tc.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
@@ -212,12 +234,11 @@ func (request *TODeliveryServiceRequest) Delete(db *sqlx.DB) (error, tc.ApiError
 	if err != nil {
 		return tc.DBError, tc.SystemError
 	}
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no request with that id found"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
-		}
+	if rowsAffected < 1 {
+		return errors.New("no request with that id found"), tc.DataMissingError
+	}
+	if rowsAffected > 1 {
+		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 	return nil, tc.NoError
 }
