@@ -27,9 +27,11 @@ type DeliveryServiceRequestsResponse struct {
 // DeliveryServiceRequest is used as part of the workflow to create, modify, or
 // delete a delivery service.
 type DeliveryServiceRequest struct {
-	AssigneeID  int             `json:"assigneeId" db:"assignee_id"`
+	AssigneeID  *int            `json:"assigneeId,omitempty" db:"assignee_id"`
+	Assignee    *string         `json:"assignee,omitempty"`
 	AuthorID    int             `json:"authorId" db:"author_id"`
-	ChangeType  string          `json:"change_type" db:"change_type"`
+	Author      string          `json:"author,omitempty"`
+	ChangeType  string          `json:"changeType" db:"change_type"`
 	ID          int             `json:"id" db:"id"`
 	LastUpdated Time            `json:"lastUpdated" db:"last_updated"`
 	Request     json.RawMessage `json:"request" db:"request"`

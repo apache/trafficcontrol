@@ -32,8 +32,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// DeliveryServiceRequestPrivLevel ...
 const DeliveryServiceRequestPrivLevel = 20
 
+// Handler returns a func to handle GET requests
 func Handler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := func(err error, status int) {
@@ -63,13 +65,13 @@ func Handler(db *sqlx.DB) http.HandlerFunc {
 }
 
 func getDeliveryServiceRequestsResponse(q url.Values, db *sqlx.DB) (*tc.DeliveryServiceRequestsResponse, error) {
-	DeliveryServiceRequests, err := getDeliveryServiceRequests(q, db)
+	deliveryServiceRequests, err := getDeliveryServiceRequests(q, db)
 	if err != nil {
 		return nil, fmt.Errorf("getting DeliveryServiceRequests response: %v", err)
 	}
 
 	resp := tc.DeliveryServiceRequestsResponse{
-		Response: DeliveryServiceRequests,
+		Response: deliveryServiceRequests,
 	}
 	return &resp, nil
 }
@@ -81,10 +83,11 @@ func getDeliveryServiceRequests(v url.Values, db *sqlx.DB) ([]tc.DeliveryService
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]string{
-		"domainName":    "domain_name",
-		"dnssecEnabled": "dnssec_enabled",
-		"id":            "id",
-		"name":          "name",
+		"assignee_id": "assignee_id",
+		"author_id":   "author_id",
+		"change_type": "change_type",
+		"id":          "id",
+		"status":      "status",
 	}
 
 	query, queryValues := dbhelpers.BuildQuery(v, selectDeliveryServiceRequestsQuery(), queryParamsToQueryCols)
@@ -95,27 +98,32 @@ func getDeliveryServiceRequests(v url.Values, db *sqlx.DB) ([]tc.DeliveryService
 	}
 	defer rows.Close()
 
-	DeliveryServiceRequests := []tc.DeliveryServiceRequest{}
+	deliveryServiceRequests := []tc.DeliveryServiceRequest{}
 	for rows.Next() {
 		var s tc.DeliveryServiceRequest
 		if err = rows.StructScan(&s); err != nil {
 			return nil, fmt.Errorf("getting DeliveryServiceRequests: %v", err)
 		}
-		DeliveryServiceRequests = append(DeliveryServiceRequests, s)
+		deliveryServiceRequests = append(deliveryServiceRequests, s)
 	}
-	return DeliveryServiceRequests, nil
+	return deliveryServiceRequests, nil
 }
 
 func selectDeliveryServiceRequestsQuery() string {
 
 	query := `SELECT
-	r.id
-	r.author_id
-	r.assignee_id
-	r.request
-	r.status
-	r.change_type
+r.id,
+r.author_id,
+a.username AS author,
+r.assignee_id,
+s.username AS assignee,
+r.request,
+r.status,
+r.change_type
 
-    FROM deliveryservice_request r`
+FROM deliveryservice_request r
+JOIN tm_user a ON r.author_id = a.id
+LEFT OUTER JOIN tm_user s ON r.assignee_id = s.id`
+
 	return query
 }
