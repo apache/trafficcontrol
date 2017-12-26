@@ -1,4 +1,4 @@
-package main
+package request
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -27,17 +27,14 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/jmoiron/sqlx"
 )
 
-const DeliveryServiceRequestsPrivLevel = 10
+const DeliveryServiceRequestPrivLevel = 20
 
-func saveServiceRequestsHandler(db *sqlx.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {}
-}
-
-func deliveryServiceRequestsHandler(db *sqlx.DB) http.HandlerFunc {
+func Handler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := func(err error, status int) {
 			log.Errorf("%v %v\n", r.RemoteAddr, err)
@@ -47,7 +44,7 @@ func deliveryServiceRequestsHandler(db *sqlx.DB) http.HandlerFunc {
 
 		q := r.URL.Query()
 
-		resp, err := getDeliveryServiceRequestResponse(q, db)
+		resp, err := getDeliveryServiceRequestsResponse(q, db)
 
 		if err != nil {
 			handleErr(err, http.StatusInternalServerError)
@@ -65,13 +62,13 @@ func deliveryServiceRequestsHandler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func getDeliveryServiceRequestResponse(q url.Values, db *sqlx.DB) (*tc.DeliveryServiceRequestResponse, error) {
+func getDeliveryServiceRequestsResponse(q url.Values, db *sqlx.DB) (*tc.DeliveryServiceRequestsResponse, error) {
 	DeliveryServiceRequests, err := getDeliveryServiceRequests(q, db)
 	if err != nil {
 		return nil, fmt.Errorf("getting DeliveryServiceRequests response: %v", err)
 	}
 
-	resp := tc.DeliveryServiceRequestResponse{
+	resp := tc.DeliveryServiceRequestsResponse{
 		Response: DeliveryServiceRequests,
 	}
 	return &resp, nil
@@ -90,7 +87,7 @@ func getDeliveryServiceRequests(v url.Values, db *sqlx.DB) ([]tc.DeliveryService
 		"name":          "name",
 	}
 
-	query, queryValues := BuildQuery(v, selectDeliveryServiceRequestsQuery(), queryParamsToQueryCols)
+	query, queryValues := dbhelpers.BuildQuery(v, selectDeliveryServiceRequestsQuery(), queryParamsToQueryCols)
 
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {
