@@ -22,17 +22,12 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.File;
-import java.io.FileReader;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,16 +43,16 @@ public class NetworkNodeTest {
 	public void setUp() throws Exception {
 		final File file = new File(getClass().getClassLoader().getResource("czmap.json").toURI());
 		root = NetworkNode.generateTree(file, false);
+		final ObjectMapper mapper = new ObjectMapper();
+		final JsonNode jsonNode = mapper.readTree(file);
+		final JsonNode coverageZones = jsonNode.get("coverageZones");
 
-		final JSONObject json = new JSONObject(new JSONTokener(new FileReader(file)));
-		final JSONObject coverageZones = json.getJSONObject("coverageZones");
-
-		for (String loc : JSONObject.getNames(coverageZones)) {
-			final JSONObject locData = coverageZones.getJSONObject(loc);
-
-			for (String networkType : JSONObject.getNames(locData)) {
-				final JSONArray networks = locData.getJSONArray(networkType);
-				String network = networks.getString(0).split("/")[0];
+		final Iterator<String> networkIter = coverageZones.fieldNames();
+		while (networkIter.hasNext()) {
+			final String loc = networkIter.next();
+			final JsonNode locData = coverageZones.get(loc);
+			for (final JsonNode networkType : locData) {
+				final String network = networkType.get(0).asText().split("/")[0];
 				InetAddress ip = InetAddresses.forString(network);
 				ip = InetAddresses.increment(ip);
 
@@ -69,6 +64,7 @@ public class NetworkNodeTest {
 				addressList.add(InetAddresses.toAddrString(ip));
 
 				netMap.put(loc, addressList);
+
 			}
 		}
 	}
