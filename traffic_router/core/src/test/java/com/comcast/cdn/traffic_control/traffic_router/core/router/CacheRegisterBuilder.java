@@ -25,7 +25,12 @@ import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMat
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.TreeSet;
 
 public class CacheRegisterBuilder {
 
