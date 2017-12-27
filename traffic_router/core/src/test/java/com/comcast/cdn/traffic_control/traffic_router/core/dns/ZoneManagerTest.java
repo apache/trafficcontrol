@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.io.FileReader;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.nio.file.Files;
@@ -33,12 +32,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Iterator;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -76,19 +74,22 @@ public class ZoneManagerTest {
 		trafficRouterManager = (TrafficRouterManager) context.getBean("trafficRouterManager");
 		trafficRouterManager.getTrafficRouter().setApplicationContext(context);
 		final File file = new File("src/test/resources/czmap.json");
-		final JSONObject json = new JSONObject(new JSONTokener(new FileReader(file)));
-		final JSONObject coverageZones = json.getJSONObject("coverageZones");
+		final ObjectMapper mapper = new ObjectMapper();
+		final JsonNode jsonNode = mapper.readTree(file);
+		final JsonNode coverageZones = jsonNode.get("coverageZones");
 
-		for (String loc : JSONObject.getNames(coverageZones)) {
-			final JSONObject locData = coverageZones.getJSONObject(loc);
-			final JSONArray networks = locData.getJSONArray("network");
-			String network = networks.getString(0).split("/")[0];
+		final Iterator<String> czIter = coverageZones.fieldNames();
+		while (czIter.hasNext()) {
+			final String loc = czIter.next();
+			final JsonNode locData = coverageZones.get(loc);
+			final JsonNode networks = locData.get("network");
+			String network = networks.get(0).asText().split("/")[0];
 			InetAddress ip = InetAddresses.forString(network);
 			ip = InetAddresses.increment(ip);
 
 			netMap.put(loc, ip);
-		}
 
+		}
 	}
 
 	@Test
