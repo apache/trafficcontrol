@@ -50,7 +50,7 @@ func (i *tester) GetType() string {
 	return "tester"
 }
 
-func (i *tester) GetName() string {
+func (i *tester) GetAuditName() string {
 	return "testerInstance:" + strconv.Itoa(i.ID)
 }
 
@@ -63,7 +63,7 @@ func (v *tester) Validate() []error {
 }
 
 //Inserter interface functions
-func (i *tester) Insert(db *sqlx.DB) (error, tc.ApiErrorType) {
+func (i *tester) Insert(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
 	return i.error, i.errorType
 }
 
@@ -72,12 +72,12 @@ func (i *tester) SetID(newID int) {
 }
 
 //Updater interface functions
-func (i *tester) Update(db *sqlx.DB) (error, tc.ApiErrorType) {
+func (i *tester) Update(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
 	return i.error, i.errorType
 }
 
 //Deleter interface functions
-func (i *tester) Delete(db *sqlx.DB) (error, tc.ApiErrorType) {
+func (i *tester) Delete(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
 	return i.error, i.errorType
 }
 
@@ -105,7 +105,7 @@ func TestCreateHandler(t *testing.T) {
 
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey,
-		auth.CurrentUser{"username", 1, auth.PrivLevelAdmin})
+		auth.CurrentUser{UserName: "username", ID: 1, PrivLevel: auth.PrivLevelAdmin})
 
 	// Add our context to the request
 	r = r.WithContext(ctx)
@@ -114,7 +114,7 @@ func TestCreateHandler(t *testing.T) {
 	createFunc := CreateHandler(&typeRef, db)
 
 	//verifies we get the right changelog insertion
-	expectedMessage := Created + " " + typeRef.GetType() + ": " + typeRef.GetName() + " id: 1"
+	expectedMessage := Created + " " + typeRef.GetType() + ": " + typeRef.GetAuditName() + " id: 1"
 	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	createFunc(w, r)
@@ -144,7 +144,7 @@ func TestUpdateHandler(t *testing.T) {
 
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey,
-		auth.CurrentUser{"username", 1, auth.PrivLevelAdmin})
+		auth.CurrentUser{UserName: "username", ID: 1, PrivLevel: auth.PrivLevelAdmin})
 	ctx = context.WithValue(ctx, PathParamsKey, PathParams{"id": "1"})
 	// Add our context to the request
 	r = r.WithContext(ctx)
@@ -153,7 +153,7 @@ func TestUpdateHandler(t *testing.T) {
 	updateFunc := UpdateHandler(&typeRef, db)
 
 	//verifies we get the right changelog insertion
-	expectedMessage := Updated + " " + typeRef.GetType() + ": " + typeRef.GetName() + " id: 1"
+	expectedMessage := Updated + " " + typeRef.GetType() + ": " + typeRef.GetAuditName() + " id: 1"
 	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	updateFunc(w, r)
@@ -183,7 +183,7 @@ func TestDeleteHandler(t *testing.T) {
 
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey,
-		auth.CurrentUser{"username", 1, auth.PrivLevelAdmin})
+		auth.CurrentUser{UserName: "username", ID: 1, PrivLevel: auth.PrivLevelAdmin})
 	ctx = context.WithValue(ctx, PathParamsKey, PathParams{"id": "1"})
 	// Add our context to the request
 	r = r.WithContext(ctx)
@@ -192,7 +192,7 @@ func TestDeleteHandler(t *testing.T) {
 	deleteFunc := DeleteHandler(&typeRef, db)
 
 	//verifies we get the right changelog insertion
-	expectedMessage := Deleted + " " + typeRef.GetType() + ": " + typeRef.GetName() + " id: 1"
+	expectedMessage := Deleted + " " + typeRef.GetType() + ": " + typeRef.GetAuditName() + " id: 1"
 	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	deleteFunc(w, r)

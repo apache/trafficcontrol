@@ -29,8 +29,8 @@ import (
 	"time"
 
 	tclog "github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/cdn"
 	"github.com/basho/riak-go-client"
 )
@@ -52,13 +52,13 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		//ASNs
 		{1.2, http.MethodGet, `asns/?(\.json)?$`, ASNsHandler(d.DB), ASNsPrivLevel, Authenticated, nil},
 		//CDNs
-		{1.2, http.MethodGet, `cdns/?(\.json)?$`, cdn.CdnsHandler(d.DB), cdn.CDNsPrivLevel, Authenticated, nil},
-		{1.2, http.MethodGet, `cdns/{id}$`, cdn.CdnsHandler(d.DB), cdn.CDNsPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `cdns/?(\.json)?$`, cdn.GetHandler(d.DB), cdn.CDNsPrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `cdns/{id}$`, cdn.GetHandler(d.DB), cdn.CDNsPrivLevel, Authenticated, nil},
 		{1.2, http.MethodGet, `cdns/{name}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), MonitoringPrivLevel, Authenticated, nil},
 		//CDN generic handlers:
-		{1.3, http.MethodPut,`cdns/{id}$`, api.UpdateHandler(cdn.GetRefType(),d.DB), cdn.CDNsPrivLevel, Authenticated, nil},
-		{1.3, http.MethodPost,`cdns/?$`, api.CreateHandler(cdn.GetRefType(),d.DB), cdn.CDNsPrivLevel, Authenticated, nil},
-		{1.3, http.MethodDelete,`cdns/{id}$`, api.DeleteHandler(cdn.GetRefType(),d.DB), cdn.CDNsPrivLevel, Authenticated, nil},
+		{1.3, http.MethodPut, `cdns/{id}$`, api.UpdateHandler(cdn.GetRefType(), d.DB), cdn.CDNsPrivLevel, Authenticated, nil},
+		{1.3, http.MethodPost, `cdns/?$`, api.CreateHandler(cdn.GetRefType(), d.DB), cdn.CDNsPrivLevel, Authenticated, nil},
+		{1.3, http.MethodDelete, `cdns/{id}$`, api.DeleteHandler(cdn.GetRefType(), d.DB), cdn.CDNsPrivLevel, Authenticated, nil},
 
 		// Delivery services
 		{1.3, http.MethodGet, `deliveryservices/{xmlID}/urisignkeys$`, getURIsignkeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
