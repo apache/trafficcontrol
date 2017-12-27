@@ -26,14 +26,14 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/jmoiron/sqlx"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/jmoiron/sqlx"
 )
 
 const CDNsPrivLevel = 10
 
-func CdnsHandler(db *sqlx.DB) http.HandlerFunc {
+func GetHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
@@ -122,4 +122,3 @@ name
 FROM cdn c`
 	return query
 }
-

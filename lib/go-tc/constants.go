@@ -54,3 +54,9 @@ const (
 	DataMissingError
 
 )
+
+var apiErrorTypes = []string{"noError","systemError","dataConflictError","dataMissingError"}
+
+func (a ApiErrorType) String() string {
+	return apiErrorTypes[a]
+}

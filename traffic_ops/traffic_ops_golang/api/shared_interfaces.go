@@ -20,12 +20,14 @@ package api
  */
 
 import (
+	"context"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
 )
 
 type Updater interface {
-	Update(db *sqlx.DB) (error, tc.ApiErrorType)
+	Update(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType)
 	Identifier
 	Validator
 }
@@ -33,18 +35,18 @@ type Updater interface {
 type Identifier interface {
 	GetID() int
 	GetType() string
-	GetName() string
+	GetAuditName() string
 }
 
 type Inserter interface {
-	Insert(db *sqlx.DB) (error, tc.ApiErrorType)
+	Insert(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType)
 	SetID(int)
 	Identifier
 	Validator
 }
 
 type Deleter interface {
-	Delete(db *sqlx.DB) (error, tc.ApiErrorType)
+	Delete(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType)
 	SetID(int)
 	Identifier
 }

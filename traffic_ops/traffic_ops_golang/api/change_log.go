@@ -46,7 +46,7 @@ const (
 
 func InsertChangeLog(level string, action string, i Identifier, user auth.CurrentUser, db *sqlx.DB) error {
 	query := `INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`
-	message := action + " " + i.GetType() + ": " + i.GetName() + " id: " + strconv.Itoa(i.GetID())
+	message := action + " " + i.GetType() + ": " + i.GetAuditName() + " id: " + strconv.Itoa(i.GetID())
 	_, err := db.Exec(query, level, message, user.ID)
 	if err != nil {
 		log.Errorf("received error: %++v from audit log insertion", err)

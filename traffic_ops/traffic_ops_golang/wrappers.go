@@ -55,7 +55,7 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 		if a.noAuth {
 			return func(w http.ResponseWriter, r *http.Request) {
 				ctx := r.Context()
-				ctx = context.WithValue(ctx, auth.CurrentUserKey, auth.CurrentUser{"-", -1, auth.PrivLevelInvalid})
+				ctx = context.WithValue(ctx, auth.CurrentUserKey, auth.CurrentUser{UserName: "-", ID: -1, PrivLevel: auth.PrivLevelInvalid})
 				handlerFunc(w, r.WithContext(ctx))
 			}
 		}

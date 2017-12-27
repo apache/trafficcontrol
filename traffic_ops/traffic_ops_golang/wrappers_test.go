@@ -175,7 +175,7 @@ func TestWrapAuth(t *testing.T) {
 
 	r.Header.Add("Cookie", tocookie.Name+"="+cookie)
 
-	expected := auth.CurrentUser{userName, id, 30}
+	expected := auth.CurrentUser{UserName: userName, ID: id, PrivLevel: 30}
 
 	expectedBody, err := json.Marshal(expected)
 	if err != nil {

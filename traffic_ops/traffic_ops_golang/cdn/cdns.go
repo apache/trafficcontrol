@@ -20,15 +20,16 @@ package cdn
  */
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
 //we need a type alias to define functions on
@@ -46,7 +47,7 @@ func (cdn *TOCDN) GetID() int {
 	return cdn.ID
 }
 
-func (cdn *TOCDN) GetName() string {
+func (cdn *TOCDN) GetAuditName() string {
 	return cdn.Name
 }
 
@@ -60,10 +61,10 @@ func (cdn *TOCDN) SetID(i int) {
 
 func (cdn *TOCDN) Validate() []error {
 	errs := []error{}
-	if len(cdn.Name)<1 {
+	if len(cdn.Name) < 1 {
 		errs = append(errs, errors.New(`CDN 'name' is required.`))
 	}
-	if len(cdn.DomainName)<1 {
+	if len(cdn.DomainName) < 1 {
 		errs = append(errs, errors.New("Domain Name is required."))
 	}
 	return errs
@@ -74,7 +75,7 @@ func (cdn *TOCDN) Validate() []error {
 //ParsePQUniqueConstraintError is used to determine if a cdn with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (cdn *TOCDN) Update(db *sqlx.DB) (error, tc.ApiErrorType) {
+func (cdn *TOCDN) Update(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
@@ -89,9 +90,9 @@ func (cdn *TOCDN) Update(db *sqlx.DB) (error, tc.ApiErrorType) {
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError,tc.SystemError
+		return tc.DBError, tc.SystemError
 	}
-	log.Debugf("about to run exec query: %s with cdn: %++v",updateCDNQuery(),cdn)
+	log.Debugf("about to run exec query: %s with cdn: %++v", updateCDNQuery(), cdn)
 	resultRows, err := tx.NamedQuery(updateCDNQuery(), cdn)
 	if err != nil {
 		if err, ok := err.(*pq.Error); ok {
@@ -114,13 +115,13 @@ func (cdn *TOCDN) Update(db *sqlx.DB) (error, tc.ApiErrorType) {
 			return tc.DBError, tc.SystemError
 		}
 	}
-	log.Debugf("lastUpdated: %++v",lastUpdated)
+	log.Debugf("lastUpdated: %++v", lastUpdated)
 	cdn.LastUpdated = lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return errors.New("no cdn found with this id"),tc.DataMissingError
+			return errors.New("no cdn found with this id"), tc.DataMissingError
 		} else {
-			return fmt.Errorf("this update affected too many rows: %d", rowsAffected),tc.SystemError
+			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
 	return nil, tc.NoError
@@ -133,7 +134,7 @@ func (cdn *TOCDN) Update(db *sqlx.DB) (error, tc.ApiErrorType) {
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted cdn and have
 //to be added to the struct
-func (cdn *TOCDN) Insert(db *sqlx.DB) (error, tc.ApiErrorType) {
+func (cdn *TOCDN) Insert(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
@@ -148,7 +149,7 @@ func (cdn *TOCDN) Insert(db *sqlx.DB) (error, tc.ApiErrorType) {
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError,tc.SystemError
+		return tc.DBError, tc.SystemError
 	}
 	resultRows, err := tx.NamedQuery(insertCDNQuery(), cdn)
 	if err != nil {
@@ -157,7 +158,7 @@ func (cdn *TOCDN) Insert(db *sqlx.DB) (error, tc.ApiErrorType) {
 			return errors.New("a cdn with " + err.Error()), eType
 		} else {
 			log.Errorf("received non pq error: %++v from create execution", err)
-			return tc.DBError,tc.SystemError
+			return tc.DBError, tc.SystemError
 		}
 	}
 	var id int
@@ -165,7 +166,7 @@ func (cdn *TOCDN) Insert(db *sqlx.DB) (error, tc.ApiErrorType) {
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
-		if err := resultRows.Scan(&id,&lastUpdated); err != nil {
+		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
 			log.Error.Printf("could not scan id from insert: %s\n", err)
 			return tc.DBError, tc.SystemError
 		}
@@ -186,7 +187,7 @@ func (cdn *TOCDN) Insert(db *sqlx.DB) (error, tc.ApiErrorType) {
 
 //The CDN implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (cdn *TOCDN) Delete(db *sqlx.DB) (error, tc.ApiErrorType) {
+func (cdn *TOCDN) Delete(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
@@ -201,23 +202,23 @@ func (cdn *TOCDN) Delete(db *sqlx.DB) (error, tc.ApiErrorType) {
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError,tc.SystemError
+		return tc.DBError, tc.SystemError
 	}
-	log.Debugf("about to run exec query: %s with cdn: %++v",deleteCDNQuery(),cdn)
+	log.Debugf("about to run exec query: %s with cdn: %++v", deleteCDNQuery(), cdn)
 	result, err := tx.NamedExec(deleteCDNQuery(), cdn)
 	if err != nil {
-		log.Errorf("received error: %++v from delete execution")
-		return tc.DBError,tc.SystemError
+		log.Errorf("received error: %++v from delete execution", err)
+		return tc.DBError, tc.SystemError
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return tc.DBError,tc.SystemError
+		return tc.DBError, tc.SystemError
 	}
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return errors.New("no cdn with that id found"),tc.DataMissingError
+			return errors.New("no cdn with that id found"), tc.DataMissingError
 		} else {
-			return fmt.Errorf("this create affected too many rows: %d", rowsAffected),tc.SystemError
+			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
 	return nil, tc.NoError

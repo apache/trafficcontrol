@@ -114,7 +114,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 		//run the update and handle any error
-		err, errType := u.Update(db)
+		err, errType := u.Update(db, ctx)
 		if err != nil {
 			switch errType {
 			case tc.SystemError:
@@ -124,7 +124,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 			case tc.DataMissingError:
 				handleErrs(http.StatusNotFound, err)
 			default:
-				log.Errorf("received unknown ApiErrorType from update: %s, updating: %s id: %d\n", errType, u.GetType(), u.GetID())
+				log.Errorf("received unknown ApiErrorType from update: %s, updating: %s id: %d\n", errType.String(), u.GetType(), u.GetID())
 				handleErrs(http.StatusInternalServerError, err)
 			}
 			return
@@ -180,7 +180,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 		}
 		d.SetID(id)
 		log.Debugf("calling delete on object: %++v", d) //should have id set now
-		err, errType := d.Delete(db)
+		err, errType := d.Delete(db, ctx)
 		if err != nil {
 			switch errType {
 			case tc.SystemError:
@@ -190,7 +190,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 			case tc.DataMissingError:
 				handleErrs(http.StatusNotFound, err)
 			default:
-				log.Errorf("received unknown ApiErrorType from delete: %s, deleting: %s id: %d\n", errType, d.GetType(), d.GetID())
+				log.Errorf("received unknown ApiErrorType from delete: %s, deleting: %s id: %d\n", errType.String(), d.GetType(), d.GetID())
 				handleErrs(http.StatusInternalServerError, err)
 			}
 			return
@@ -242,7 +242,7 @@ func CreateHandler(typeRef Inserter, db *sqlx.DB) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 		}
 
-		err, errType := i.Insert(db)
+		err, errType := i.Insert(db, ctx)
 		if err != nil {
 			switch errType {
 			case tc.SystemError:
@@ -252,7 +252,7 @@ func CreateHandler(typeRef Inserter, db *sqlx.DB) http.HandlerFunc {
 			case tc.DataMissingError:
 				handleErrs(http.StatusNotFound, err)
 			default:
-				log.Errorf("received unknown ApiErrorType from insert: %s, inserting: %s id: %d\n", errType, i.GetType(), i.GetID())
+				log.Errorf("received unknown ApiErrorType from insert: %s, inserting: %s id: %d\n", errType.String(), i.GetType(), i.GetID())
 				handleErrs(http.StatusInternalServerError, err)
 			}
 			return

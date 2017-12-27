@@ -40,7 +40,7 @@ func (i *testIdentifier) GetType() string {
 	return "tester"
 }
 
-func (i *testIdentifier) GetName() string {
+func (i *testIdentifier) GetAuditName() string {
 	return "testerInstance"
 }
 
@@ -55,7 +55,7 @@ func TestInsertChangeLog(t *testing.T) {
 	defer db.Close()
 	i := testIdentifier{}
 
-	expectedMessage := Created + " " + i.GetType() + ": " + i.GetName() + " id: " + strconv.Itoa(i.GetID())
+	expectedMessage := Created + " " + i.GetType() + ": " + i.GetAuditName() + " id: " + strconv.Itoa(i.GetID())
 
 	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	user := auth.CurrentUser{ID: 1}
