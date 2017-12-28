@@ -32,11 +32,7 @@ under the License.
         <table id="dsRequestsTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>ID</th>
-                <th>Service Key</th>
-                <th>Tenant</th>
-                <th>CDN</th>
-                <th>Type</th>
+                <th>Delivery Service</th>
                 <th>Type</th>
                 <th>Status</th>
                 <th>Author</th>
@@ -46,12 +42,8 @@ under the License.
             </thead>
             <tbody>
             <tr ng-click="editDeliveryServiceRequest(request)" ng-repeat="request in ::dsRequests">
-                <td>{{::request.id}}</td>
-                <td data-search="^{{::request.xmlId}}$">{{::request.xmlId}}</td>
-                <td data-search="^{{::request.tenantId}}$">{{::request.tenantId}}</td>
-                <td data-search="^{{::request.cdnId}}$">{{::request.cdnId}}</td>
-                <td data-search="^{{::request.serviceType}}$">{{::request.serviceType}}</td>
-                <td data-search="^{{::request.requestType}}$">{{::request.requestType}}</td>
+                <td data-search="^{{::request.request.xmlId}}$">{{::request.request.xmlId}}</td>
+                <td data-search="^{{::request.changeType}}$">{{::request.changeType}}</td>
                 <td data-search="^{{::request.status}}$">{{::request.status}}</td>
                 <td data-search="^{{::request.author}}$">{{::request.author}}</td>
                 <td data-search="^{{::request.assignee}}$">{{::request.assignee}}</td>

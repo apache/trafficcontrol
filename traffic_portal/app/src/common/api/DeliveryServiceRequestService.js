@@ -17,41 +17,58 @@
  * under the License.
  */
 
-var DeliveryServiceRequestService = function(Restangular, locationUtils, messageModel, dsModel) {
+var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUtils, messageModel, ENV) {
 
 	this.getDeliveryServiceRequests = function(queryParams) {
-		// return Restangular.all('deliveryservice_requests').getList(queryParams);
-		return dsModel.requests[0];
+		return Restangular.all('deliveryservice_requests').getList(queryParams);
 	};
 
 	this.createDeliveryServiceRequest = function(dsRequest) {
-		dsModel.requests = [ dsRequest ];
-		locationUtils.navigateToPath('/delivery-service-requests');
-
-		// return Restangular.service('deliveryservice_requests').post(dsRequest)
-		// 	.then(
-		// 		function() {
-		// 			messageModel.setMessages([ { level: 'success', text: 'DS request created' } ], true);
-		// 			locationUtils.navigateToPath('/delivery-services');
-		// 		},
-		// 		function(fault) {
-		// 			messageModel.setMessages(fault.data.alerts, false);
-		// 		}
-		// 	);
+		return Restangular.service('deliveryservice_requests').post(dsRequest)
+			.then(
+				function() {
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request created' } ], true);
+					locationUtils.navigateToPath('/delivery-service-requests');
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
+				}
+			);
 	};
 
-	this.updateDeliveryServiceRequest = function(dsRequest) {
-		dsModel.requests = [ dsRequest ];
-		locationUtils.navigateToPath('/delivery-service-requests');
+	this.updateDeliveryServiceRequest = function(id, dsRequest) {
+		var request = $q.defer();
+
+		$http.put(ENV.api['root'] + "deliveryservice_requests/" + id, dsRequest)
+			.then(
+				function() {
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request updated' } ], false);
+					request.resolve();
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
+					request.reject();
+				}
+			);
+
+		return request.promise;
 	};
 
 
-	this.deleteDeliveryServiceRequest = function(dsRequestId) {
-		dsModel.requests = [];
-		locationUtils.navigateToPath('/delivery-service-requests');
+	this.deleteDeliveryServiceRequest = function(id) {
+		return Restangular.one("deliveryservice_requests", id).remove()
+			.then(
+				function() {
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request deleted' } ], true);
+					locationUtils.navigateToPath('/delivery-service-requests');
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
+				}
+			);
 	};
 
 };
 
-DeliveryServiceRequestService.$inject = ['Restangular', 'locationUtils', 'messageModel', 'dsModel'];
+DeliveryServiceRequestService.$inject = ['Restangular', '$http', '$q', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = DeliveryServiceRequestService;
