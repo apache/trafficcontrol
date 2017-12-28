@@ -20,6 +20,7 @@ package request
  */
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
@@ -51,8 +52,8 @@ func (request *TODeliveryServiceRequest) GetID() int {
 	return request.ID
 }
 
-// GetName ...
-func (request *TODeliveryServiceRequest) GetName() string {
+// GetAuditName ...
+func (request *TODeliveryServiceRequest) GetAuditName() string {
 	return strconv.Itoa(request.ID)
 }
 
@@ -93,7 +94,7 @@ func (request *TODeliveryServiceRequest) Validate() []error {
 //generic error message returned
 
 // Update ...
-func (request *TODeliveryServiceRequest) Update(db *sqlx.DB) (error, tc.ApiErrorType) {
+func (request *TODeliveryServiceRequest) Update(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
@@ -152,7 +153,7 @@ func (request *TODeliveryServiceRequest) Update(db *sqlx.DB) (error, tc.ApiError
 //to be added to the struct
 
 // Insert ...
-func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB) (error, tc.ApiErrorType) {
+func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
@@ -207,7 +208,7 @@ func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB) (error, tc.ApiError
 //all implementations of Deleter should use transactions and return the proper errorType
 
 // Delete ...
-func (request *TODeliveryServiceRequest) Delete(db *sqlx.DB) (error, tc.ApiErrorType) {
+func (request *TODeliveryServiceRequest) Delete(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
