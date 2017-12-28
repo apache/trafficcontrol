@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $state, dateUtils, locationUtils) {
+var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $state, dateUtils, locationUtils, typeService) {
 
 	$scope.dsRequests = dsRequests;
 
@@ -28,8 +28,12 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 	};
 
 	$scope.editDeliveryServiceRequest = function(request) {
-		var path = '/delivery-service-requests/' + request.id + '?type=' + request.serviceType;
-		locationUtils.navigateToPath(path);
+		var path = '/delivery-service-requests/' + request.id + '?type=';
+		typeService.getType(request.request.typeId)
+			.then(function(result) {
+				path += result.name;
+				locationUtils.navigateToPath(path);
+			});
 	};
 
 	angular.element(document).ready(function () {
@@ -42,5 +46,5 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 
 };
 
-TableDeliveryServicesRequestsController.$inject = ['dsRequests', '$scope', '$state', 'dateUtils', 'locationUtils'];
+TableDeliveryServicesRequestsController.$inject = ['dsRequests', '$scope', '$state', 'dateUtils', 'locationUtils', 'typeService'];
 module.exports = TableDeliveryServicesRequestsController;

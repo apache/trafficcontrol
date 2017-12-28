@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormEditDeliveryServiceController = function(deliveryService, type, types, $scope, $state, $controller, $uibModal, locationUtils, deliveryServiceService, deliveryServiceRequestService, userModel) {
+var FormEditDeliveryServiceController = function(deliveryService, type, types, $scope, $state, $controller, $uibModal, locationUtils, deliveryServiceService, deliveryServiceRequestService) {
 
 	// extends the FormDeliveryServiceController to inherit common methods
 	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, type: type, types: types, $scope: $scope }));
@@ -40,8 +40,8 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 
 	$scope.save = function(deliveryService) {
 		var params = {
-			title: "New 'Update Delivery Service Request'",
-			message: 'All delivery services changes must be reviewed for completeness and accuracy before deployment.'
+			title: "Update Delivery Service",
+			message: 'All delivery service changes must be reviewed for completeness and accuracy before deployment. A request will be created for you. Please select the status of your request.'
 		};
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
@@ -54,25 +54,17 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 				collection: function() {
 					return [
 						{ id: $scope.DRAFT, name: 'Save Request as Draft' },
-						{ id: $scope.SUBMITTED, name: 'Submit Request for Review' }
+						{ id: $scope.SUBMITTED, name: 'Submit Request for Review / Deployment' }
 					];
 				}
 			}
 		});
 		modalInstance.result.then(function(action) {
 			var dsRequest = {
-				id: Math.floor((Math.random() * 100) + 1),
-				xmlId: deliveryService.xmlId,
-				serviceType: 'DNS',
-				tenantId: deliveryService.tenantId,
-				cdnId: deliveryService.cdnId,
-				requestType: 'UPDATE',
-				status: (action.id == $scope.SUBMITTED) ? 'SUBMITTED' : 'DRAFT',
-				author: userModel.user.id,
-				request: deliveryService,
-				lastUpdated: moment()
+				changeType: 'update',
+				status: (action.id == $scope.SUBMITTED) ? 'submitted' : 'draft',
+				request: deliveryService
 			};
-
 			deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest);
 		}, function () {
 			// do nothing
@@ -105,5 +97,5 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 
 };
 
-FormEditDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$state', '$controller', '$uibModal', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'userModel'];
+FormEditDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$state', '$controller', '$uibModal', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService'];
 module.exports = FormEditDeliveryServiceController;
