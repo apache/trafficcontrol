@@ -25,8 +25,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/jmoiron/sqlx"
@@ -38,24 +38,30 @@ const DeliveryServiceRequestPrivLevel = 20
 // Handler returns a func to handle GET requests
 func Handler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := func(err error, status int) {
-			log.Errorf("%v %v\n", r.RemoteAddr, err)
-			w.WriteHeader(status)
-			fmt.Fprintf(w, http.StatusText(status))
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
+
+		ctx := r.Context()
+		pathParams, err := api.GetPathParams(ctx)
+		if err != nil {
+			handleErrs(http.StatusInternalServerError, err)
+			return
 		}
 
 		q := r.URL.Query()
+		for k, v := range pathParams {
+			q.Set(k, v)
+		}
 
 		resp, err := getDeliveryServiceRequestsResponse(q, db)
 
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
