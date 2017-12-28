@@ -28,6 +28,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -70,9 +71,6 @@ func (request *TODeliveryServiceRequest) SetID(i int) {
 func (request *TODeliveryServiceRequest) Validate() []error {
 	log.Debugf("Got request with %++v\n", request)
 	var errs []error
-	if request.AuthorID == 0 {
-		errs = append(errs, errors.New(`'author_id' is required`))
-	}
 	if len(request.ChangeType) == 0 {
 		errs = append(errs, errors.New(`'change_type' is required`))
 	}
@@ -169,9 +167,14 @@ func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB, ctx context.Context
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
+	ir := insertRequestQuery()
+	user, err := auth.GetCurrentUser(ctx)
+	if err != nil {
+		return err, tc.SystemError
+	}
 	request.AuthorID = user.ID
 	request.LastEditedByID = user.ID
-	ir := insertRequestQuery()
+	ir := insertRequestQuery(user.ID)
 	resultRows, err := tx.NamedQuery(ir, request)
 	if err != nil {
 		if err, ok := err.(*pq.Error); ok {
@@ -249,7 +252,6 @@ func updateRequestQuery() string {
 	query := `UPDATE
 deliveryservice_request SET
 assignee_id=:assignee_id,
-author_id=:author_id,
 change_type=:change_type,
 last_edited_by_id=:last_edited_by_id,
 request=:request,
@@ -258,8 +260,8 @@ WHERE id=:id RETURNING last_updated`
 	return query
 }
 
-func insertRequestQuery() string {
-	query := `INSERT INTO deliveryservice_request (
+func insertRequestQuery(authorID int) string {
+	query := fmt.Sprintf(`INSERT INTO deliveryservice_request (
 assignee_id,
 author_id,
 change_type,
@@ -268,12 +270,12 @@ request,
 status
 ) VALUES (
 :assignee_id,
-:author_id,
+%d,
 :change_type,
 :last_edited_by_id,
 :request,
 :status
-) RETURNING id,last_updated`
+) RETURNING id,last_updated`, authorID)
 	return query
 }
 
