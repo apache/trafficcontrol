@@ -19,7 +19,6 @@
 
 module.exports = angular.module('trafficPortal.models', [])
     .service('changeLogModel', require('./ChangeLogModel'))
-    .service('dsModel', require('./DSModel'))
     .service('messageModel', require('./MessageModel'))
 	.service('propertiesModel', require('./PropertiesModel'))
 	.service('userModel', require('./UserModel'));
