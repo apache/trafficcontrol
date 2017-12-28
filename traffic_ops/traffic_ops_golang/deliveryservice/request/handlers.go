@@ -89,6 +89,7 @@ func getDeliveryServiceRequests(v url.Values, db *sqlx.DB) ([]tc.DeliveryService
 		"author_id":   "r.author_id",
 		"change_type": "r.change_type",
 		"id":          "r.id",
+		"lastUpdated": "r.last_updated",
 		"status":      "r.status",
 	}
 
@@ -114,14 +115,15 @@ func getDeliveryServiceRequests(v url.Values, db *sqlx.DB) ([]tc.DeliveryService
 func selectDeliveryServiceRequestsQuery() string {
 
 	query := `SELECT
-r.id,
-r.author_id,
 a.username AS author,
 r.assignee_id,
-s.username AS assignee,
+r.author_id,
+r.change_type,
+r.id,
+r.last_updated,
 r.request,
 r.status,
-r.change_type
+s.username AS assignee
 
 FROM deliveryservice_request r
 JOIN tm_user a ON r.author_id = a.id
