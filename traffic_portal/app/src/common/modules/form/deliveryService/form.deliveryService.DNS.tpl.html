@@ -22,18 +22,18 @@ under the License.
         <ol class="breadcrumb pull-left">
             <li ng-if="!settings.isRequest"><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
             <li ng-if="settings.isRequest"><a ng-click="navigateToPath('/delivery-service-requests')">Delivery Service Requests</a></li>
-            <li ng-if="settings.isRequest" class="active">{{requestType}}</li>
+            <li ng-if="settings.isRequest" class="active">{{changeType}}</li>
             <li class="active">{{deliveryServiceName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-if="settings.isRequest">
             <button class="btn btn-primary" title="Fulfill Request" ng-click="fulfill(deliveryService)">Fulfill Request</button>
-            <div ng-if="requestType == 'UPDATE'" class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+            <div ng-if="changeType == 'update'" class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-click="viewUpdates()">View Delivery Service Updates</a></li>
+                    <li role="menuitem"><a ng-click="showDiff()">Show Delivery Service Diff</a></li>
                 </ul>
             </div>
         </div>
@@ -93,7 +93,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.xmlId), 'has-feedback': hasError(deliveryServiceForm.xmlId)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Key (XML ID) *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="xmlId" type="text" class="form-control" placeholder="Unique id used for the delivery service" ng-model="deliveryService.xmlId" ng-required="true" ng-maxlength="48" ng-pattern="/^\S*$/" ng-readonly="(!settings.isRequest && !settings.isNew) || (settings.isRequest && requestType == 'UPDATE')" autofocus>
+                    <input name="xmlId" type="text" class="form-control" placeholder="Unique id used for the delivery service" ng-model="deliveryService.xmlId" ng-required="true" ng-maxlength="48" ng-pattern="/^\S*$/" ng-readonly="(!settings.isRequest && !settings.isNew) || (settings.isRequest && changeType == 'update')" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'pattern')">No spaces</small>
