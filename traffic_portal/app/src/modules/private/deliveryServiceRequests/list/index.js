@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -17,9 +17,23 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.models', [])
-    .service('changeLogModel', require('./ChangeLogModel'))
-    .service('dsModel', require('./DSModel'))
-    .service('messageModel', require('./MessageModel'))
-	.service('propertiesModel', require('./PropertiesModel'))
-	.service('userModel', require('./UserModel'));
+module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.list', [])
+	.config(function($stateProvider, $urlRouterProvider) {
+		$stateProvider
+			.state('trafficPortal.private.deliveryServiceRequests.list', {
+				url: '',
+				views: {
+					deliveryServiceRequestsContent: {
+						templateUrl: 'common/modules/table/deliveryServiceRequests/table.deliveryServiceRequests.tpl.html',
+						controller: 'TableDeliveryServiceRequestsController',
+						resolve: {
+							dsRequests: function(dsModel) {
+								return dsModel.requests;
+							}
+						}
+					}
+				}
+			})
+		;
+		$urlRouterProvider.otherwise('/');
+	});
