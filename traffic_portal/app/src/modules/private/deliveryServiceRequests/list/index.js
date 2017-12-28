@@ -27,8 +27,8 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.l
 						templateUrl: 'common/modules/table/deliveryServiceRequests/table.deliveryServiceRequests.tpl.html',
 						controller: 'TableDeliveryServiceRequestsController',
 						resolve: {
-							dsRequests: function(dsModel) {
-								return dsModel.requests;
+							dsRequests: function(deliveryServiceRequestService) {
+								return deliveryServiceRequestService.getDeliveryServiceRequests();
 							}
 						}
 					}
