@@ -181,7 +181,7 @@ func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB, ctx context.Context
 		return tc.DBError, tc.SystemError
 	}
 	var id int
-	lastUpdated := tc.Time{Time: time.Now(), Valid: true}
+	var lastUpdated tc.Time
 	var rowsAffected int
 	for resultRows.Next() {
 		rowsAffected++
