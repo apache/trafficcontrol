@@ -40,16 +40,22 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
             );
     };
 
-    this.updateDeliveryService = function(deliveryService) {
-        return deliveryService.put()
+    this.updateDeliveryService = function(ds) {
+        var request = $q.defer();
+
+        $http.put(ENV.api['root'] + "deliveryservices/" + ds.id, ds)
             .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Delivery service updated' } ], false);
+                function(response) {
+                    var response2 = response.data.response[0];
+                    messageModel.setMessages([ { level: 'success', text: 'Delivery service updated' } ], true);
+                    locationUtils.navigateToPath('/delivery-services/' + response2.id + '?type=' + response2.type);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
                 }
             );
+
+        return request.promise;
     };
 
     this.deleteDeliveryService = function(id) {
