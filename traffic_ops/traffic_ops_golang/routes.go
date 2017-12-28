@@ -71,6 +71,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 
 		//Delivery service requests
 		{1.3, http.MethodGet, `deliveryservice_requests/?(\.json)?$`, request.Handler(d.DB), auth.PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodGet, `deliveryservice_requests/{id}$`, request.Handler(d.DB), auth.PrivLevelAdmin, Authenticated, nil},
 		//Delivery service requests generic handlers:
 		{1.3, http.MethodPut, `deliveryservice_requests/{id}$`, api.UpdateHandler(request.GetRefType(), d.DB), request.DeliveryServiceRequestPrivLevel, Authenticated, nil},
 		{1.3, http.MethodPost, `deliveryservice_requests/?$`, api.CreateHandler(request.GetRefType(), d.DB), request.DeliveryServiceRequestPrivLevel, Authenticated, nil},
