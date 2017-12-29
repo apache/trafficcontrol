@@ -22,7 +22,8 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 	$scope.DRAFT = 0;
 	$scope.SUBMITTED = 1;
 	$scope.REJECTED = 2;
-	$scope.COMPLETE = 3;
+	$scope.PENDING = 3;
+	$scope.COMPLETE = 4;
 
 	$scope.dsRequests = dsRequests;
 
