@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, type, types, $scope, $state, $stateParams, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService, deliveryServiceRequestService, userModel) {
+var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, type, types, $scope, $state, $stateParams, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
 
 	var dsRequest = deliveryServiceRequest[0];
 		
@@ -38,6 +38,11 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 	};
 
 	$scope.fulfill = function(deliveryService) {
+		if (dsRequest.status != 'submitted') {
+			var msg = "Only 'submitted' delivery service requests can be fulfilled. This request is in '" + dsRequest.status + "' status.";
+			messageModel.setMessages([ { level: 'warning', text: msg } ], false);
+			return;
+		}
 		var params = {
 			title: 'Delivery Service ' + $scope.changeType + ': ' + deliveryService.xmlId,
 			message: 'Are you sure you want to fulfill this delivery service request and ' + $scope.changeType + ' the ' + deliveryService.xmlId + ' delivery service?'
@@ -55,6 +60,8 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 		modalInstance.result.then(function() {
 			// make sure the ds request is assigned to the user that is fulfilling the request
 			dsRequest.assigneeId = userModel.user.id;
+			// set the status to 'pending'
+			dsRequest.status = 'pending';
 			deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest);
 			// now update or create the ds per the ds request
 			if ($scope.changeType == 'update') {
@@ -126,5 +133,5 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 
 };
 
-FormEditDeliveryServiceRequestController.$inject = ['deliveryServiceRequest', 'type', 'types', '$scope', '$state', '$stateParams', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'userModel'];
+FormEditDeliveryServiceRequestController.$inject = ['deliveryServiceRequest', 'type', 'types', '$scope', '$state', '$stateParams', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'userModel'];
 module.exports = FormEditDeliveryServiceRequestController;
