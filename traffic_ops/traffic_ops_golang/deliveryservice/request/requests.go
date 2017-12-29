@@ -21,6 +21,7 @@ package request
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -30,6 +31,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -77,10 +79,19 @@ func (request *TODeliveryServiceRequest) Validate() []error {
 	if len(request.Status) == 0 {
 		errs = append(errs, errors.New(`'status' is required`))
 	}
-	if len(request.Request) < 1 {
+	if len(request.Request) == 0 {
 		// TODO: validate request json has required deliveryservice fields
 		errs = append(errs, errors.New(`'request' is required`))
 	}
+	var ds tc.DeliveryService
+	err := json.Unmarshal([]byte(request.Request), &ds)
+	if err != nil {
+		errs = append(errs, err)
+	} else {
+		e := deliveryservice.Validate(ds)
+		errs = append(errs, e...)
+	}
+
 	return errs
 }
 

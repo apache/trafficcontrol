@@ -15,7 +15,7 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-CREATE TYPE workflow_states AS ENUM ('draft', 'submitted', 'rejected', 'complete');
+CREATE TYPE workflow_states AS ENUM ('draft', 'submitted', 'rejected', 'pending', 'complete');
 CREATE TYPE change_types AS ENUM ('create', 'update', 'delete');
 
 CREATE TABLE deliveryservice_request (
