@@ -56,8 +56,9 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
     };
 
     $scope.DRAFT = 0;
-
     $scope.SUBMITTED = 1;
+    $scope.REJECTED = 2;
+    $scope.COMPLETE = 3;
 
     $scope.types = _.filter(types, function(currentType) {
         var category;
