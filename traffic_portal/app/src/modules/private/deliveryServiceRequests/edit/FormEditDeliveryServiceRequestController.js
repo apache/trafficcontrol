@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, type, types, $scope, $state, $stateParams, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService, deliveryServiceRequestService) {
+var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, type, types, $scope, $state, $stateParams, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService, deliveryServiceRequestService, userModel) {
 
 	var dsRequest = deliveryServiceRequest[0];
 		
@@ -53,6 +53,10 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			}
 		});
 		modalInstance.result.then(function() {
+			// make sure the ds request is assigned to the user that is fulfilling the request
+			dsRequest.assigneeId = userModel.user.id;
+			deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest);
+			// now update or create the ds per the ds request
 			if ($scope.changeType == 'update') {
 				deliveryServiceService.updateDeliveryService(deliveryService);
 			} else if ($scope.changeType == 'create') {
@@ -122,5 +126,5 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 
 };
 
-FormEditDeliveryServiceRequestController.$inject = ['deliveryServiceRequest', 'type', 'types', '$scope', '$state', '$stateParams', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService'];
+FormEditDeliveryServiceRequestController.$inject = ['deliveryServiceRequest', 'type', 'types', '$scope', '$state', '$stateParams', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'userModel'];
 module.exports = FormEditDeliveryServiceRequestController;
