@@ -39,8 +39,8 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 
 	$scope.fulfill = function(deliveryService) {
 		var params = {
-			title: $scope.changeType + ' Delivery Service: ' + deliveryService.xmlId,
-			message: 'Are you sure you want to fulfill this delivery service request and ' + $scope.changeType + ' ' + deliveryService.xmlId + '?'
+			title: 'Delivery Service ' + $scope.changeType + ': ' + deliveryService.xmlId,
+			message: 'Are you sure you want to fulfill this delivery service request and ' + $scope.changeType + ' the ' + deliveryService.xmlId + ' delivery service?'
 		};
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
@@ -101,7 +101,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 	$scope.confirmDelete = function(deliveryService) {
 		var params = {
 			title: 'Delete ' + deliveryService.xmlId + ' ' + dsRequest.changeType + ' request?',
-			key: deliveryService.xmlId + ' ' + dsRequest.changeType + ' request'
+			key: deliveryService.xmlId + ' request'
 		};
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
@@ -114,7 +114,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			}
 		});
 		modalInstance.result.then(function() {
-			deliveryServiceRequestService.deleteDeliveryServiceRequest($stateParams.deliveryServiceRequestId);
+			deliveryServiceRequestService.deleteDeliveryServiceRequest($stateParams.deliveryServiceRequestId, true);
 		}, function () {
 			// do nothing
 		});

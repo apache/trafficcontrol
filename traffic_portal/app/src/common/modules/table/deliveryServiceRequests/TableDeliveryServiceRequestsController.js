@@ -17,7 +17,12 @@
  * under the License.
  */
 
-var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $state, dateUtils, locationUtils, typeService) {
+var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $state, $uibModal, dateUtils, locationUtils, typeService, deliveryServiceRequestService, userModel) {
+
+	$scope.DRAFT = 0;
+	$scope.SUBMITTED = 1;
+	$scope.REJECTED = 2;
+	$scope.COMPLETE = 3;
 
 	$scope.dsRequests = dsRequests;
 
@@ -25,6 +30,106 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
+	};
+
+	$scope.assignRequest = function(request, assign, $event) {
+		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		var params = {
+			title: 'Assign Delivery Service Request',
+			message: (assign) ? 'Are you sure you want to assign this delivery service request to yourself?' : 'Are you sure you want to unassign this delivery service request?'
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			request.assigneeId = (assign) ? userModel.user.id : null;
+			deliveryServiceRequestService.updateDeliveryServiceRequest(request.id, request).
+				then(function() {
+					$scope.refresh();
+				});
+		}, function () {
+			// do nothing
+		});
+	};
+
+	$scope.editStatus = function(request, $event) {
+		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		var params = {
+			title: "Edit Delivery Service Request Status",
+			message: 'Please select the appropriate status for this request.'
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function() {
+					return [
+						{ id: $scope.DRAFT, name: 'Draft' },
+						{ id: $scope.SUBMITTED, name: 'Submitted' },
+						{ id: $scope.REJECTED, name: 'Rejected' },
+						{ id: $scope.COMPLETE, name: 'Complete' }
+					];
+				}
+			}
+		});
+		modalInstance.result.then(function(action) {
+			switch (action.id) {
+				case $scope.DRAFT:
+					request.status = 'draft';
+					break;
+				case $scope.SUBMITTED:
+					request.status = 'submitted';
+					break;
+				case $scope.REJECTED:
+					request.status = 'rejected';
+					break;
+				case $scope.COMPLETE:
+					request.status = 'complete';
+			}
+			deliveryServiceRequestService.updateDeliveryServiceRequest(request.id, request).
+				then(function() {
+					$scope.refresh();
+				});
+		}, function () {
+			// do nothing
+		});
+	};
+
+	$scope.deleteRequest = function(request, $event) {
+		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		var params = {
+			title: 'Delete ' + request.request.xmlId + ' ' + request.changeType + ' request?',
+			key: request.request.xmlId + ' request'
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+			controller: 'DialogDeleteController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			deliveryServiceRequestService.deleteDeliveryServiceRequest(request.id, false).
+				then(function() {
+					$scope.refresh();
+				});
+		}, function () {
+			// do nothing
+		});
 	};
 
 	$scope.editDeliveryServiceRequest = function(request) {
@@ -40,11 +145,14 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 		$('#dsRequestsTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"columnDefs": [
+				{ 'orderable': false, 'targets': 6 }
+			],
 			"aaSorting": []
 		});
 	});
 
 };
 
-TableDeliveryServicesRequestsController.$inject = ['dsRequests', '$scope', '$state', 'dateUtils', 'locationUtils', 'typeService'];
+TableDeliveryServicesRequestsController.$inject = ['dsRequests', '$scope', '$state', '$uibModal', 'dateUtils', 'locationUtils', 'typeService', 'deliveryServiceRequestService', 'userModel'];
 module.exports = TableDeliveryServicesRequestsController;
