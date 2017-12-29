@@ -38,6 +38,7 @@ under the License.
                 <th>Author</th>
                 <th>Assignee</th>
                 <th>Last Updated</th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
@@ -46,8 +47,15 @@ under the License.
                 <td data-search="^{{::request.changeType}}$">{{::request.changeType}}</td>
                 <td data-search="^{{::request.status}}$">{{::request.status}}</td>
                 <td data-search="^{{::request.author}}$">{{::request.author}}</td>
-                <td data-search="^{{::request.assignee}}$">{{::request.assignee}}</td>
+                <td data-search="^{{::request.assignee}}$">
+                    <a ng-show="!request.assignee" class="link" title="Assign Yourself" ng-click="assignRequest(request, true, $event)">No one - assign yourself</a>
+                    <a ng-show="request.assignee" class="link" title="Clear Assignee" ng-click="assignRequest(request, false, $event)">{{::request.assignee}} - clear</a>
+                </td>
                 <td data-search="^{{::getRelativeTime(request.lastUpdated)}}$" data-order="{{::request.lastUpdated}}">{{::getRelativeTime(request.lastUpdated)}}</td>
+                <td style="text-align: right;">
+                    <a class="link action-link" title="Edit Status" ng-click="editStatus(request, $event)">edit status</a>|
+                    <a class="link action-link" title="Delete Request" ng-click="deleteRequest(request, $event)">delete</a>
+                </td>
             </tr>
             </tbody>
         </table>

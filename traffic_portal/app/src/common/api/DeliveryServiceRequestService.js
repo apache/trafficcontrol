@@ -55,11 +55,11 @@ var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUti
 	};
 
 
-	this.deleteDeliveryServiceRequest = function(id) {
+	this.deleteDeliveryServiceRequest = function(id, delay) {
 		return Restangular.one("deliveryservice_requests", id).remove()
 			.then(
 				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Delivery service request deleted' } ], true);
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request deleted' } ], delay);
 					locationUtils.navigateToPath('/delivery-service-requests');
 				},
 				function(fault) {
