@@ -35,7 +35,6 @@ import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.apache.wicket.ajax.json.JSONException;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 
@@ -174,8 +173,8 @@ public abstract class AbstractServiceUpdater {
 		return true;
 	}
 
-	abstract public boolean verifyDatabase(final File dbFile) throws IOException, JSONException;
-	abstract public boolean loadDatabase() throws IOException, JSONException;
+	abstract public boolean verifyDatabase(final File dbFile) throws IOException;
+	abstract public boolean loadDatabase() throws IOException;
 
 	public void setDatabaseName(final String databaseName) {
 		this.databaseName = databaseName;

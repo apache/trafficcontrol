@@ -64,7 +64,6 @@ public class NetworkNode implements Comparable<NetworkNode> {
     public static NetworkNode generateTree(final File f, final boolean verifyOnly) throws IOException {
         final ObjectMapper mapper = new ObjectMapper();
         return generateTree(mapper.readTree(f), verifyOnly);
-        //return generateTree(new JSONObject(new JSONTokener(new FileReader(f))), verifyOnly);
     }
 
     @SuppressWarnings("PMD.CyclomaticComplexity")

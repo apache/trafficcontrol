@@ -89,7 +89,7 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 	abstract protected boolean verifyData(final String data);
 
 	@Override
-	public boolean loadDatabase() throws IOException, org.apache.wicket.ajax.json.JSONException {
+	public boolean loadDatabase() throws IOException {
 		final File existingDB = databasesDirectory.resolve(databaseName).toFile();
 
 		if (!existingDB.exists() || !existingDB.canRead()) {
