@@ -32,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.apache.wicket.ajax.json.JSONException;
 
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
@@ -249,7 +248,7 @@ public class PeriodicResourceUpdater {
 		}
 
 		@Override
-		public Integer onCompleted(final Response response) throws JSONException, IOException {
+		public Integer onCompleted(final Response response) throws IOException {
 			// Do something with the Response
 			final int code = response.getStatusCode();
 

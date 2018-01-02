@@ -18,7 +18,6 @@ package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.wicket.ajax.json.JSONException;
 
 public class NetworkUpdater extends AbstractServiceUpdater {
 
@@ -29,7 +28,7 @@ public class NetworkUpdater extends AbstractServiceUpdater {
 	}
 
 	@Override
-	public boolean loadDatabase() throws IOException, JSONException {
+	public boolean loadDatabase() throws IOException {
 		final File existingDB = databasesDirectory.resolve(databaseName).toFile();
 
 		if (!existingDB.exists() || !existingDB.canRead()) {
@@ -40,7 +39,7 @@ public class NetworkUpdater extends AbstractServiceUpdater {
 	}
 
 	@Override
-	public boolean verifyDatabase(final File dbFile) throws IOException, JSONException {
+	public boolean verifyDatabase(final File dbFile) throws IOException {
 		if (!dbFile.exists() || !dbFile.canRead()) {
 			return false;
 		}
