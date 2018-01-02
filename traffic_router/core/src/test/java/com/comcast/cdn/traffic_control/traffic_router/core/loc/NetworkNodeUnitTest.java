@@ -15,8 +15,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
-import org.apache.wicket.ajax.json.JSONObject;
-import org.apache.wicket.ajax.json.JSONTokener;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
 
@@ -99,8 +99,8 @@ public class NetworkNodeUnitTest {
             "}" +
             "}";
 
-        JSONTokener jsonTokener = new JSONTokener(czmapString);
-        final JSONObject json = new JSONObject(jsonTokener);
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree(czmapString);
         NetworkNode networkNode = NetworkNode.generateTree(json, false);
         NetworkNode foundNetworkNode = networkNode.getNetwork("1234:5678::1");
 
@@ -146,8 +146,8 @@ public class NetworkNodeUnitTest {
             "}" +
             "}";
 
-        JSONTokener jsonTokener = new JSONTokener(czmapString);
-        final JSONObject json = new JSONObject(jsonTokener);
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree(czmapString);
         NetworkNode networkNode = NetworkNode.generateTree(json, false);
         NetworkNode foundNetworkNode = networkNode.getNetwork("192.168.55.2");
 
@@ -167,8 +167,8 @@ public class NetworkNodeUnitTest {
             "}" +
             "}";
 
-        JSONTokener jsonTokener = new JSONTokener(czmapString);
-        final JSONObject json = new JSONObject(jsonTokener);
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree(czmapString);
         assertThat(NetworkNode.generateTree(json, false), equalTo(null));
     }
 
@@ -185,8 +185,8 @@ public class NetworkNodeUnitTest {
             "}" +
             "}";
 
-        JSONTokener jsonTokener = new JSONTokener(czmapString);
-        final JSONObject json = new JSONObject(jsonTokener);
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree(czmapString);
         assertThat(NetworkNode.generateTree(json, false), equalTo(null));
     }
 }
