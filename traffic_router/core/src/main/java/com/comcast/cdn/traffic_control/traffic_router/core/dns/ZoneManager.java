@@ -55,6 +55,7 @@ import org.xbill.DNS.Record;
 import org.xbill.DNS.SOARecord;
 import org.xbill.DNS.SetResponse;
 import org.xbill.DNS.TextParseException;
+import org.xbill.DNS.TXTRecord;
 import org.xbill.DNS.Type;
 import org.xbill.DNS.Zone;
 
@@ -488,6 +489,7 @@ public class ZoneManager extends Resolver {
 		return records;
 	}
 
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private static void addStaticDnsEntries(final List<Record> list, final DeliveryService ds, final String domain)
 			throws TextParseException, UnknownHostException {
 		if (ds != null && ds.getStaticDnsEntries() != null) {
@@ -505,13 +507,19 @@ public class ZoneManager extends Resolver {
 					if (ttl == 0) {
 						ttl = ZoneUtils.getLong(ds.getTtls(), type, 60);
 					}
-
-					if ("A".equals(type)) {
-						list.add(new ARecord(name, DClass.IN, ttl, InetAddress.getByName(value)));
-					} else if (AAAA.equals(type)) {
-						list.add(new AAAARecord(name, DClass.IN, ttl, InetAddress.getByName(value)));
-					} else if ("CNAME".equals(type)) {
-						list.add(new CNAMERecord(name, DClass.IN, ttl, new Name(value)));
+					switch(type) {
+						case "A": 
+							list.add(new ARecord(name, DClass.IN, ttl, InetAddress.getByName(value)));
+							break;
+						case "AAAA": 
+							list.add(new AAAARecord(name, DClass.IN, ttl, InetAddress.getByName(value)));
+							break;
+						case "CNAME":
+							list.add(new CNAMERecord(name, DClass.IN, ttl, new Name(value)));
+							break;
+						case "TXT":
+							list.add(new TXTRecord(name, DClass.IN, ttl, new String(value)));
+							break;
 					}
 				} catch (JSONException e) {
 					LOGGER.error(e);
