@@ -16,23 +16,22 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.List;
+import java.util.ArrayList;
+
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
-import org.apache.wicket.ajax.json.JSONArray;
-import org.apache.wicket.ajax.json.JSONException;
-import org.apache.wicket.ajax.json.JSONObject;
-import org.apache.wicket.ajax.json.JSONTokener;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
 
@@ -62,33 +61,35 @@ public class NetworkNode implements Comparable<NetworkNode> {
         return instance;
     }
 
-    public static NetworkNode generateTree(final File f, final boolean verifyOnly) throws NetworkNodeException, FileNotFoundException, JSONException  {
-        return generateTree(new JSONObject(new JSONTokener(new FileReader(f))), verifyOnly);
+    public static NetworkNode generateTree(final File f, final boolean verifyOnly) throws IOException {
+        final ObjectMapper mapper = new ObjectMapper();
+        return generateTree(mapper.readTree(f), verifyOnly);
+        //return generateTree(new JSONObject(new JSONTokener(new FileReader(f))), verifyOnly);
     }
 
     @SuppressWarnings("PMD.CyclomaticComplexity")
-    public static NetworkNode generateTree(final JSONObject json, final boolean verifyOnly) {
+    public static NetworkNode generateTree(final JsonNode json, final boolean verifyOnly) {
         try {
-            final JSONObject coverageZones = json.getJSONObject("coverageZones");
+            final JsonNode coverageZones = json.get("coverageZones");
 
             final SuperNode root = new SuperNode();
 
-            for (final String loc : JSONObject.getNames(coverageZones)) {
-                final JSONObject locData = coverageZones.getJSONObject(loc);
-                final JSONObject coordinates = locData.optJSONObject("coordinates");
+            final Iterator<String> czIter = coverageZones.fieldNames();
+            while (czIter.hasNext()) {
+                final String loc = czIter.next();
+                final JsonNode locData = coverageZones.get(loc);
+                final JsonNode coordinates = locData.get("coordinates");
                 Geolocation geolocation = null;
 
                 if (coordinates != null && coordinates.has("latitude") && coordinates.has("longitude")) {
-                    final double latitude = coordinates.optDouble("latitude");
-                    final double longitude = coordinates.optDouble("longitude");
+                    final double latitude = coordinates.get("latitude").asDouble();
+                    final double longitude = coordinates.get("longitude").asDouble();
                     geolocation = new Geolocation(latitude, longitude);
                 }
 
                 try {
-                    final JSONArray network6 = locData.getJSONArray("network6");
-
-                    for (int i = 0; i < network6.length(); i++) {
-                        final String ip = network6.getString(i);
+                    for (final JsonNode network6 : locData.get("network6")) {
+                        final String ip = network6.asText();
 
                         try {
                             root.add6(new NetworkNode(ip, loc, geolocation));
@@ -97,15 +98,13 @@ public class NetworkNode implements Comparable<NetworkNode> {
                             return null;
                         }
                     }
-                } catch (JSONException ex) {
+                } catch (Exception ex) {
                     LOGGER.warn("An exception was caught while accessing the network6 key of " + loc + " in the incoming coverage zone file: " + ex.getMessage());
                 }
 
                 try {
-                    final JSONArray network = locData.getJSONArray("network");
-
-                    for (int i = 0; i < network.length(); i++) {
-                        final String ip = network.getString(i);
+                    for (final JsonNode network : locData.get("network")) {
+                        final String ip = network.asText();
 
                         try {
                             root.add(new NetworkNode(ip, loc, geolocation));
@@ -114,7 +113,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
                             return null;
                         }
                     }
-                } catch (JSONException ex) {
+                } catch (Exception ex) {
                     LOGGER.warn("An exception was caught while accessing the network key of " + loc + " in the incoming coverage zone file: " + ex.getMessage());
                 }
             }
@@ -124,8 +123,6 @@ public class NetworkNode implements Comparable<NetworkNode> {
             }
 
             return root;
-        } catch (JSONException e) {
-            LOGGER.warn(e,e);
         } catch (NetworkNodeException ex) {
             LOGGER.fatal(ex, ex);
         }
