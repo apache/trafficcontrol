@@ -16,7 +16,6 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
 import java.io.File;
-import java.io.FileReader;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
@@ -25,11 +24,9 @@ import java.util.regex.Pattern;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
-import org.apache.wicket.ajax.json.JSONArray;
-import org.apache.wicket.ajax.json.JSONException;
-import org.apache.wicket.ajax.json.JSONObject;
-import org.apache.wicket.ajax.json.JSONTokener;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
@@ -127,13 +124,13 @@ public final class RegionalGeo {
     }
 
     /// static methods
-    private static NetworkNode parseWhiteListJson(final JSONArray json)
-        throws JSONException, NetworkNodeException {
+    private static NetworkNode parseWhiteListJson(final JsonNode json)
+        throws NetworkNodeException {
 
         final NetworkNode.SuperNode root = new NetworkNode.SuperNode();
 
-        for (int j = 0; j < json.length(); j++) {
-            final String subnet = json.getString(j);
+        for (final JsonNode subnetNode : json) {
+            final String subnet = subnetNode.asText();
             final NetworkNode node = new NetworkNode(subnet, RegionalGeoRule.WHITE_LIST_NODE_LOCATION);
 
             if (subnet.indexOf(':') == -1) { // ipv4 or ipv6
@@ -146,16 +143,16 @@ public final class RegionalGeo {
         return root;
     }
 
-    private static RegionalGeoRule.PostalsType parseLocationJson(final JSONObject locationJson,
-        final Set<String> postals) throws JSONException {
+    private static RegionalGeoRule.PostalsType parseLocationJson(final JsonNode locationJson,
+        final Set<String> postals) {
 
         RegionalGeoRule.PostalsType postalsType = RegionalGeoRule.PostalsType.UNDEFINED;
-        JSONArray postalsJson = locationJson.optJSONArray("includePostalCode");
+        JsonNode postalsJson = locationJson.get("includePostalCode");
         
         if (postalsJson != null) {
             postalsType = RegionalGeoRule.PostalsType.INCLUDE;
         } else {
-            postalsJson = locationJson.optJSONArray("excludePostalCode");
+            postalsJson = locationJson.get("excludePostalCode");
             if (postalsJson == null) {
                 LOGGER.error("RegionalGeo ERR: no include/exclude in geolocation");
                 return RegionalGeoRule.PostalsType.UNDEFINED;
@@ -164,44 +161,45 @@ public final class RegionalGeo {
             postalsType = RegionalGeoRule.PostalsType.EXCLUDE;
         }
 
-        for (int j = 0; j < postalsJson.length(); j++) {
-            postals.add(postalsJson.getString(j));
+        for (final JsonNode postal : postalsJson) {
+            postals.add(postal.asText());
         }
+
         return postalsType;
 
     }
 
-    private static RegionalGeo parseConfigJson(final JSONObject json) {
+    @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
+    private static RegionalGeo parseConfigJson(final JsonNode json) {
 
         final RegionalGeo regionalGeo = new RegionalGeo();
         regionalGeo.setFallback(true);
         try {
-            final JSONArray dsvcsJson = json.getJSONArray("deliveryServices");
-            LOGGER.info("RegionalGeo: parse json with rule count " + dsvcsJson.length());
+            final JsonNode dsvcsJson = json.get("deliveryServices");
+            LOGGER.info("RegionalGeo: parse json with rule count " + dsvcsJson.size());
 
-            for (int i = 0; i < dsvcsJson.length(); i++) {
-                final JSONObject ruleJson = dsvcsJson.getJSONObject(i);
+            for (final JsonNode ruleJson : dsvcsJson) {
 
-                final String dsvcId = ruleJson.getString("deliveryServiceId");
+                final String dsvcId = ruleJson.has("deliveryServiceId") ? ruleJson.get("deliveryServiceId").asText() : "";
                 if (dsvcId.trim().isEmpty()) {
                     LOGGER.error("RegionalGeo ERR: deliveryServiceId empty");
                     return null;
                 }
 
-                final String urlRegex = ruleJson.getString("urlRegex");
+                final String urlRegex = ruleJson.has("urlRegex") ? ruleJson.get("urlRegex").asText() : "";
                 if (urlRegex.trim().isEmpty()) {
                     LOGGER.error("RegionalGeo ERR: urlRegex empty");
                     return null;
                 }
 
-                final String redirectUrl = ruleJson.getString("redirectUrl");
+                final String redirectUrl = ruleJson.has("redirectUrl") ? ruleJson.get("redirectUrl").asText() : "";
                 if (redirectUrl.trim().isEmpty()) {
                     LOGGER.error("RegionalGeo ERR: redirectUrl empty");
                     return null;
                 }
 
                 // FSAs (postal codes)
-                final JSONObject locationJson = ruleJson.getJSONObject("geoLocation");
+                final JsonNode locationJson = ruleJson.get("geoLocation");
                 final Set<String> postals = new HashSet<String>();
                 final RegionalGeoRule.PostalsType postalsType = parseLocationJson(locationJson, postals);
                 if (postalsType == RegionalGeoRule.PostalsType.UNDEFINED) {
@@ -211,7 +209,7 @@ public final class RegionalGeo {
 
                 // white list
                 NetworkNode whiteListRoot = null;
-                final JSONArray whiteListJson = ruleJson.optJSONArray("ipWhiteList");
+                final JsonNode whiteListJson = ruleJson.get("ipWhiteList");
                 if (whiteListJson != null) {
                     whiteListRoot = parseWhiteListJson(whiteListJson);
                 }
@@ -233,9 +231,10 @@ public final class RegionalGeo {
     }
 
     public static boolean parseConfigFile(final File f, final boolean verifyOnly) {
-        JSONObject json = null;
+        final ObjectMapper mapper = new ObjectMapper();
+        JsonNode json = null;
         try {
-            json = new JSONObject(new JSONTokener(new FileReader(f)));
+            json = mapper.readTree(f);
         } catch (Exception e) {
             LOGGER.error("RegionalGeo ERR: json file exception " + f, e);
             currentConfig.setFallback(true);
