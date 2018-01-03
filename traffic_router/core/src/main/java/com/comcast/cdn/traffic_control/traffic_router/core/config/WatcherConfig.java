@@ -15,6 +15,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.config;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -26,8 +27,8 @@ public class WatcherConfig {
 
 	public WatcherConfig(final String prefix, final JsonNode config, final TrafficOpsUtils trafficOpsUtils) {
 		url = trafficOpsUtils.getUrl(prefix + ".polling.url", "");
-		interval = config.has(prefix + ".polling.interval") ? config.get(prefix + ".polling.interval").asLong(-1L) : -1L;
-		timeout = config.has(prefix + ".polling.timeout") ? config.get(prefix + ".polling.timeout").asInt(-1) : -1;
+		interval = JsonUtils.getLong(config, prefix + ".polling.interval", -1L);
+		timeout = JsonUtils.getInt(config, prefix + ".polling.timeout", -1);
 	}
 
 	public long getInterval() {

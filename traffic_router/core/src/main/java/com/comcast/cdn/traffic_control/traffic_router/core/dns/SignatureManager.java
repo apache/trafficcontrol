@@ -30,6 +30,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
@@ -71,19 +72,18 @@ public final class SignatureManager {
 		}
 	}
 
-	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	private void initKeyMap() {
 		synchronized(SignatureManager.class) {
 			final JsonNode config = cacheRegister.getConfig();
 
-			final boolean dnssecEnabled = config.has("dnssec.enabled") ? config.get("dnssec.enabled").asBoolean() : false;
+			final boolean dnssecEnabled = JsonUtils.getBoolean(config, "dnssec.enabled", false);
 			if (dnssecEnabled) {
 				setDnssecEnabled(true);
-				this.useJDnsSec = config.has("usejdnssec") ? config.get("usejdnssec").asBoolean(true) : true;
-				setExpiredKeyAllowed(config.has("dnssec.allow.expired.keys") ? config.get("dnssec.allow.expired.keys").asBoolean(true) : true); // allowing this by default is the safest option
-				setExpirationMultiplier(config.has("signaturemanager.expiration.multiplier") ? config.get("signaturemanager.expiration.multiplier").asInt(5) : 5); // signature validity is maxTTL * this
+				this.useJDnsSec = JsonUtils.getBoolean(config, "usejdnssec", true);
+				setExpiredKeyAllowed(JsonUtils.getBoolean(config, "dnssec.allow.expired.keys", true)); // allowing this by default is the safest option
+				setExpirationMultiplier(JsonUtils.getInt(config, "signaturemanager.expiration.multiplier", 5)); // signature validity is maxTTL * this
 				final ScheduledExecutorService me = Executors.newScheduledThreadPool(1);
-				final int maintenanceInterval = config.has("keystore.maintenance.interval") ? config.get("keystore.maintenance.interval").asInt(300) : 300; // default 300 seconds, do we calculate based on the complimentary settings for key generation in TO?
+				final int maintenanceInterval = JsonUtils.getInt(config, "keystore.maintenance.interval", 300); // default 300 seconds, do we calculate based on the complimentary settings for key generation in TO?
 				me.scheduleWithFixedDelay(getKeyMaintenanceRunnable(cacheRegister), 0, maintenanceInterval, TimeUnit.SECONDS);
 
 				if (keyMaintenanceExecutor != null) {
@@ -216,9 +216,9 @@ public final class SignatureManager {
 		try {
 			final String keyUrl = trafficOpsUtils.getUrl("keystore.api.url", "https://${toHostname}/api/1.1/cdns/name/${cdnName}/dnsseckeys.json");
 			final JsonNode config = cacheRegister.getConfig();
-			final int timeout = config.has("keystore.fetch.timeout") ? config.get("keystore.fetch.timeout").asInt(30 * 1000) : 30000; // socket timeouts are in ms
-			final int retries = config.has("keystore.fetch.retries") ? config.get("keystore.fetch.retries").asInt(5) : 5;
-			final int wait = config.has("keystore.fetch.wait") ? config.get("keystore.fetch.wait").asInt(5 * 1000) : 5000; // 5 seconds
+			final int timeout = JsonUtils.getInt(config, "keystore.fetch.timeout", 30000); // socket timeouts are in ms
+			final int retries = JsonUtils.getInt(config, "keystore.fetch.retries", 5);
+			final int wait = JsonUtils.getInt(config, "keystore.fetch.wait", 5000); // 5 seconds
 
 			if (fetcher == null) {
 				fetcher = new ProtectedFetcher(trafficOpsUtils.getAuthUrl(), trafficOpsUtils.getAuthJSON().toString(), timeout);

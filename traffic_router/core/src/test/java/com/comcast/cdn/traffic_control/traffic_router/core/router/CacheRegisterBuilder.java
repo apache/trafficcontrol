@@ -22,6 +22,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.config.ParseException;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.net.UnknownHostException;
@@ -48,12 +49,12 @@ public class CacheRegisterBuilder {
                 if(jo.has("hashId")) {
                     hashId = jo.get("hashId").asText();
                 }
-                final int hashCount = jo.has("hashCount") ? jo.get("hashCount").asInt() : 0;
+                final int hashCount = JsonUtils.getInt(jo, "hashCount", 0);
                 final Cache cache = new Cache(node, hashId, hashCount);
                 cache.setFqdn(jo.get("fqdn").asText());
                 cache.setPort(jo.get("port").asInt());
                 final String ip = jo.get("ip").asText();
-                final String ip6 = jo.has("ip6") ? jo.get("ip6").asText() : "";
+                final String ip6 = JsonUtils.getString(jo, "ip6", "");
                 try {
                     cache.setIpAddress(ip, ip6, 0);
                 } catch (UnknownHostException e) {
@@ -83,7 +84,7 @@ public class CacheRegisterBuilder {
                                     references.add(new Cache.DeliveryServiceReference(ds, name));
                                 }
 
-                                final String tld = cacheRegister.getConfig().has("domain_name") ? cacheRegister.getConfig().get("domain_name").asText().toLowerCase() : "";
+                                final String tld = JsonUtils.getString(cacheRegister.getConfig(), "domain_name", "").toLowerCase();
 
                                 if (name.contains(tld)) {
                                     final String reName = name.replaceAll("^.*?\\.", "");

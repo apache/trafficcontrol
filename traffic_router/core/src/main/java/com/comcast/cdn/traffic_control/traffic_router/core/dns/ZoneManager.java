@@ -39,6 +39,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -155,7 +156,7 @@ public class ZoneManager extends Resolver {
 			final JsonNode config = cacheRegister.getConfig();
 
 			int poolSize = 1;
-			final double scale = config.has("zonemanager.threadpool.scale") ? config.get("zonemanager.threadpool.scale").asDouble(0.75) : 0.75;
+			final double scale = JsonUtils.getDouble(config, "zonemanager.threadpool.scale", 0.75);
 			final int cores = Runtime.getRuntime().availableProcessors();
 
 			if (cores > 2) {
@@ -170,8 +171,8 @@ public class ZoneManager extends Resolver {
 
 			final ExecutorService ze = Executors.newFixedThreadPool(poolSize);
 			final ScheduledExecutorService me = Executors.newScheduledThreadPool(2); // 2 threads, one for static, one for dynamic, threads to refresh zones
-			final int maintenanceInterval = config.has("zonemanager.cache.maintenance.interval") ? config.get("zonemanager.cache.maintenance.interval").asInt(300) : 300; // default 5 minutes
-			final String dspec = "expireAfterAccess=" + (config.has("zonemanager.dynamic.response.expiration") ? config.get("zonemanager.dynamic.response.expiration").asText("300s") : "300s"); // default to 5 minutes
+			final int maintenanceInterval = JsonUtils.getInt(config, "zonemanager.cache.maintenance.interval", 300); // default 5 minutes
+			final String dspec = "expireAfterAccess=" + (JsonUtils.getString(config, "zonemanager.dynamic.response.expiration", "300s")); // default to 5 minutes
 
 
 			final LoadingCache<ZoneKey, Zone> dzc = createZoneCache(ZoneCacheType.DYNAMIC, CacheBuilderSpec.parse(dspec));
@@ -435,8 +436,8 @@ public class ZoneManager extends Resolver {
 				public void run() {
 					try {
 						final Zone zone = zc.get(signatureManager.generateZoneKey(name, list)); // cause the zone to be loaded into the new cache
-						final boolean primeDynCache = config.has("dynamic.cache.primer.enabled") ? config.get("dynamic.cache.primer.enabled").asBoolean(true) : true;
-						final int primerLimit = config.has("dynamic.cache.primer.limit") ? config.get("dynamic.cache.primer.limit").asInt(DEFAULT_PRIMER_LIMIT) : DEFAULT_PRIMER_LIMIT;
+						final boolean primeDynCache = JsonUtils.getBoolean(config, "dynamic.cache.primer.enabled", true);
+						final int primerLimit = JsonUtils.getInt(config, "dynamic.cache.primer.limit", DEFAULT_PRIMER_LIMIT);
 
 						// prime the dynamic zone cache
 						if (primeDynCache && ds != null && ds.isDns()) {
@@ -499,11 +500,11 @@ public class ZoneManager extends Resolver {
 			final JsonNode entryList = ds.getStaticDnsEntries();
 
 			for (final JsonNode staticEntry : entryList) {
-				final String type = staticEntry.has("type") ? staticEntry.get("type").asText().toUpperCase() : null;
-				final String jsName = staticEntry.has("name") ? staticEntry.get("name").asText() : null;
-				final String value = staticEntry.has("value") ? staticEntry.get("value").asText() : null;
+				final String type = JsonUtils.getString(staticEntry, "type", "").toUpperCase();
+				final String jsName = JsonUtils.getString(staticEntry, "name", "");
+				final String value = JsonUtils.getString(staticEntry, "value", "");
 				final Name name = newName(jsName, domain);
-				long ttl = staticEntry.has("ttl") ? staticEntry.get("ttl").asInt() : 0;
+				long ttl = JsonUtils.getInt(staticEntry, "ttl", 0);
 
 				if (ttl == 0) {
 					ttl = ZoneUtils.getLong(ds.getTtls(), type, 60);
@@ -564,8 +565,8 @@ public class ZoneManager extends Resolver {
 		list.add(new ARecord(trName,
 				DClass.IN,
 				ZoneUtils.getLong(ttl, "A", 60),
-				InetAddress.getByName(trJo.has(IP) ? trJo.get(IP).asText() : "")));
-		String ip6 = trJo.has(IP6) ? trJo.get(IP6).asText() : "";
+				InetAddress.getByName(JsonUtils.getString(trJo, IP, ""))));
+		String ip6 = JsonUtils.getString(trJo, IP6, "");
 		if (addTrafficRoutersAAAA && ip6 != null && !ip6.isEmpty()) {
 			ip6 = ip6.replaceAll("/.*", "");
 			list.add(new AAAARecord(trName,

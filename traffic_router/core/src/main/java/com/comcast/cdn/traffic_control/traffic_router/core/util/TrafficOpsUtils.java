@@ -88,6 +88,6 @@ public class TrafficOpsUtils {
 	}
 
 	public long getConfigLongValue(final String name, final long defaultValue) {
-		return config != null ? (config.has(name) ? config.get(name).asLong(defaultValue) : defaultValue) : defaultValue;
+		return JsonUtils.getLong(config, name, defaultValue);
 	}
 }

@@ -16,6 +16,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.external;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -146,7 +147,7 @@ public class RouterTest {
 
 			while (matchsets.hasNext() && deliveryServiceId == null) {
 				if ("HTTP".equals(matchsets.next().get("protocol").asText())) {
-					final boolean sslEnabled = deliveryServiceNode.get("sslEnabled").asBoolean(false);
+					final boolean sslEnabled = JsonUtils.getBoolean(deliveryServiceNode, "sslEnabled", false);
 					if (!sslEnabled) {
 						deliveryServiceId = dsId;
 						deliveryServiceDomain = deliveryServiceNode.get("domains").get(0).asText();

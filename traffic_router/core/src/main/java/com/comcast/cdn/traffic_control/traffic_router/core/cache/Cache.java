@@ -26,6 +26,7 @@ import java.util.Map;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.DefaultHashable;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.Hashable;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -102,9 +103,9 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 			if(ttls == null) {
 				ttl = -1;
 			} else if(ir.isInet6()) {
-				ttl = ttls.has("AAAA") ? ttls.get("AAAA").asLong() : 0;
+				ttl = JsonUtils.getLong(ttls, "AAAA", 0);
 			} else {
-				ttl = ttls.has("A") ? ttls.get("A").asLong() : 0;
+				ttl = JsonUtils.getLong(ttls, "A", 0);
 
 			}
 
@@ -217,10 +218,7 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	}
 
 	public void setState(final JsonNode state) {
-		boolean isAvailable = true;
-		if(state != null && state.has("isAvailable")) {
-			isAvailable = state.get("isAvailable").asBoolean();
-		}
+		final boolean isAvailable = JsonUtils.getBoolean(state, "isAvailable", true);
 		this.setIsAvailable(isAvailable);
 	}
 
