@@ -20,13 +20,13 @@ package cdn
  */
 
 import (
-	"context"
 	"errors"
 	"fmt"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -59,7 +59,7 @@ func (cdn *TOCDN) SetID(i int) {
 	cdn.ID = i
 }
 
-func (cdn *TOCDN) Validate() []error {
+func (cdn *TOCDN) Validate(db *sqlx.DB) []error {
 	errs := []error{}
 	if len(cdn.Name) < 1 {
 		errs = append(errs, errors.New(`CDN 'name' is required.`))
@@ -75,7 +75,7 @@ func (cdn *TOCDN) Validate() []error {
 //ParsePQUniqueConstraintError is used to determine if a cdn with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (cdn *TOCDN) Update(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
+func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
@@ -134,7 +134,7 @@ func (cdn *TOCDN) Update(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorTy
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted cdn and have
 //to be added to the struct
-func (cdn *TOCDN) Insert(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
+func (cdn *TOCDN) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
@@ -187,7 +187,7 @@ func (cdn *TOCDN) Insert(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorTy
 
 //The CDN implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (cdn *TOCDN) Delete(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
+func (cdn *TOCDN) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {

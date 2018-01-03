@@ -29,8 +29,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
-	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"encoding/json"
+	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func getTestParameters() []tc.Parameter {

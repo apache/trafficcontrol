@@ -55,7 +55,7 @@ func (i *tester) GetAuditName() string {
 }
 
 //Validator interface function
-func (v *tester) Validate() []error {
+func (v *tester) Validate(db *sqlx.DB) []error {
 	if v.ID < 1 {
 		return []error{errors.New("ID is too low")}
 	}
@@ -63,7 +63,7 @@ func (v *tester) Validate() []error {
 }
 
 //Inserter interface functions
-func (i *tester) Insert(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
+func (i *tester) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	return i.error, i.errorType
 }
 
@@ -72,12 +72,12 @@ func (i *tester) SetID(newID int) {
 }
 
 //Updater interface functions
-func (i *tester) Update(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
+func (i *tester) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	return i.error, i.errorType
 }
 
 //Deleter interface functions
-func (i *tester) Delete(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
+func (i *tester) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	return i.error, i.errorType
 }
 
