@@ -76,7 +76,7 @@ public class ZoneUtils {
 		}
 
 		// check for @ sign in string
-		String admin = jo.get(key).asText();
+		String admin = jo.has(key) ? jo.get(key).asText() : "";
 		if (admin.contains("@")) {
 			admin = admin.replace("@",".");
 		} else {
