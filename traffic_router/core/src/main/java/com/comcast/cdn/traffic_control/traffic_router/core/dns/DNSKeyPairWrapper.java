@@ -40,7 +40,6 @@ public class DNSKeyPairWrapper extends DnsKeyPair implements DnsSecKeyPair {
 	private Date expiration;
 	private String name;
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public DNSKeyPairWrapper(final JsonNode keyPair, final long defaultTTL) throws IOException {
 		this.inception = new Date(1000L * JsonUtils.getLong(keyPair, "inceptionDate", 0));
 		this.effective = new Date(1000L * JsonUtils.getLong(keyPair, "effectiveDate", 0));

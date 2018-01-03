@@ -204,7 +204,6 @@ public final class SignatureManager {
 		return false;
 	}
 
-	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	private JsonNode fetchKeyPairData(final CacheRegister cacheRegister) {
 		if (!isDnssecEnabled()) {
 			return null;

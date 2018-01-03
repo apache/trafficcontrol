@@ -432,7 +432,6 @@ public class ZoneManager extends Resolver {
 			list.addAll(signatureManager.generateDNSKEYRecords(name, maxTTL));
 			initExecutor.execute(new Runnable() {
 				@Override
-				@SuppressWarnings("PMD.NPathComplexity")
 				public void run() {
 					try {
 						final Zone zone = zc.get(signatureManager.generateZoneKey(name, list)); // cause the zone to be loaded into the new cache
@@ -492,7 +491,6 @@ public class ZoneManager extends Resolver {
 		return records;
 	}
 
-	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	private static void addStaticDnsEntries(final List<Record> list, final DeliveryService ds, final String domain)
 			throws TextParseException, UnknownHostException {
 		if (ds != null && ds.getStaticDnsEntries() != null) {
@@ -521,7 +519,7 @@ public class ZoneManager extends Resolver {
 		}
 	}
 
-	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
+	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private static void addTrafficRouters(final List<Record> list, final JsonNode trafficRouters, final Name name,
 			final JsonNode ttl, final String domain, final DeliveryService ds)
 					throws TextParseException, UnknownHostException {
