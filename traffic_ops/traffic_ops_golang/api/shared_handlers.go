@@ -54,7 +54,8 @@ func GetPathParams(ctx context.Context) (PathParams, error) {
 //decodes and validates a pointer to a struct implementing the Validator interface
 //      we lose the ability to unmarshal the struct if a struct implementing the interface is passed in,
 //      because when when it is de-referenced it is a pointer to an interface. A new copy is created so that
-func decodeAndValidateRequestBody(r *http.Request, v Validator) (interface{}, []error) {
+//      there are no issues with concurrent goroutines
+func decodeAndValidateRequestBody(r *http.Request, v Validator, db *sqlx.DB) (interface{}, []error) {
 	typ := reflect.TypeOf(v)
 	if typ.Kind() == reflect.Ptr {
 		typ = typ.Elem()
@@ -64,7 +65,7 @@ func decodeAndValidateRequestBody(r *http.Request, v Validator) (interface{}, []
 	if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
 		return nil, []error{err}
 	}
-	return payload, payload.(Validator).Validate()
+	return payload, payload.(Validator).Validate(db)
 }
 
 //this creates a handler function from the pointer to a struct implementing the Updater interface
@@ -82,7 +83,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 		//create local instance of the shared typeRef pointer
 		//no operations should be made on the typeRef
 		//decode the body and validate the request struct
-		decoded, errs := decodeAndValidateRequestBody(r, typeRef)
+		decoded, errs := decodeAndValidateRequestBody(r, typeRef, db)
 		if len(errs) > 0 {
 			handleErrs(http.StatusBadRequest, errs...)
 			return
@@ -114,7 +115,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 		//run the update and handle any error
-		err, errType := u.Update(db, ctx)
+		err, errType := u.Update(db, *user)
 		if err != nil {
 			switch errType {
 			case tc.SystemError:
@@ -180,7 +181,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 		}
 		d.SetID(id)
 		log.Debugf("calling delete on object: %++v", d) //should have id set now
-		err, errType := d.Delete(db, ctx)
+		err, errType := d.Delete(db, *user)
 		if err != nil {
 			switch errType {
 			case tc.SystemError:
@@ -226,7 +227,7 @@ func CreateHandler(typeRef Inserter, db *sqlx.DB) http.HandlerFunc {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
 		//decode the body and validate the request struct
-		decoded, errs := decodeAndValidateRequestBody(r, typeRef)
+		decoded, errs := decodeAndValidateRequestBody(r, typeRef, db)
 		if len(errs) > 0 {
 			handleErrs(http.StatusBadRequest, errs...)
 			return
@@ -242,7 +243,7 @@ func CreateHandler(typeRef Inserter, db *sqlx.DB) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 		}
 
-		err, errType := i.Insert(db, ctx)
+		err, errType := i.Insert(db, *user)
 		if err != nil {
 			switch errType {
 			case tc.SystemError:
