@@ -62,7 +62,7 @@ public class ZoneUtils {
 			return d;
 		}
 
-		return jo.has(key) ? jo.asLong(d) : d;
+		return jo.has(key) ? jo.get(key).asLong(d) : d;
 	}
 
 	protected static String getAdminString(final JsonNode jo, final String key, final String d, final String domain) {
