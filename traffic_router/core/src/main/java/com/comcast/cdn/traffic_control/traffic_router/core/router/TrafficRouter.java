@@ -34,6 +34,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.ds.Steering;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.ConsistentHasher;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.MaxmindGeolocationService;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeansException;
@@ -95,7 +96,7 @@ public class TrafficRouter {
 		this.geolocationService = geolocationService;
 		this.geolocationService6 = geolocationService6;
 		this.federationRegistry = federationRegistry;
-		this.consistentDNSRouting = cr.getConfig().has("consistent.dns.routing") ? cr.getConfig().get("consistent.dns.routing").asBoolean(false) : false;
+		this.consistentDNSRouting = JsonUtils.getBoolean(cr.getConfig(), "consistent.dns.routing", false);
 		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils, trafficRouterManager);
 	}
 

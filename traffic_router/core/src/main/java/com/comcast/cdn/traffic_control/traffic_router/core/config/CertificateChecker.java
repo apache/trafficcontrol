@@ -15,6 +15,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.config;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
@@ -101,6 +102,6 @@ public class CertificateChecker {
 			return false;
 		}
 
-		return protocolJson != null ? protocolJson.get("acceptHttps").asBoolean(false) : false;
+		return JsonUtils.getBoolean(protocolJson, "acceptHttps", false);
 	}
 }

@@ -23,6 +23,7 @@ import java.util.Date;
 
 import javax.xml.bind.DatatypeConverter;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.xbill.DNS.DNSKEYRecord;
 import org.xbill.DNS.Master;
@@ -41,14 +42,14 @@ public class DNSKeyPairWrapper extends DnsKeyPair implements DnsSecKeyPair {
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public DNSKeyPairWrapper(final JsonNode keyPair, final long defaultTTL) throws IOException {
-		this.inception = new Date(1000L * (keyPair.has("inceptionDate") ? keyPair.get("inceptionDate").longValue() : null));
-		this.effective = new Date(1000L * (keyPair.has("effectiveDate") ? keyPair.get("effectiveDate").longValue() : null));
-		this.expiration = new Date(1000L * (keyPair.has("expirationDate") ? keyPair.get("expirationDate").longValue() : null));
-		this.ttl = keyPair.has("ttl") ? keyPair.get("ttl").asLong(defaultTTL) : 0;
-		this.name = keyPair.has("name") ? keyPair.get("name").asText().toLowerCase() : "";
+		this.inception = new Date(1000L * JsonUtils.getLong(keyPair, "inceptionDate", 0));
+		this.effective = new Date(1000L * JsonUtils.getLong(keyPair, "effectiveDate", 0));
+		this.expiration = new Date(1000L * JsonUtils.getLong(keyPair, "expirationDate", 0));
+		this.ttl = JsonUtils.getLong(keyPair, "ttl", defaultTTL);
+		this.name = JsonUtils.getString(keyPair, "name", "").toLowerCase();
 
-		final byte[] privateKey = DatatypeConverter.parseBase64Binary(keyPair.has("private") ? keyPair.get("private").asText() : null);
-		final byte[] publicKey = DatatypeConverter.parseBase64Binary(keyPair.has("public") ? keyPair.get("public").asText() : null);
+		final byte[] privateKey = DatatypeConverter.parseBase64Binary(JsonUtils.getString(keyPair, "private", null));
+		final byte[] publicKey = DatatypeConverter.parseBase64Binary(JsonUtils.getString(keyPair, "public", null));
 
 		try (InputStream in = new ByteArrayInputStream(publicKey)) {
 			final Master master = new Master(in, new Name(name), ttl);

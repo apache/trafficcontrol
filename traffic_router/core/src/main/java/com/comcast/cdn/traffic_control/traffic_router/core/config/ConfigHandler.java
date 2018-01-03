@@ -40,6 +40,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoUpdate
 
 import com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesPoller;
 import com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesPublisher;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
@@ -302,12 +303,12 @@ public class ConfigHandler {
 					hashId = jo.get("hashId").textValue();
 				}
 
-				final Cache cache = new Cache(node, hashId, jo.has("hashCount") ? jo.get("hashCount").asInt() : 0);
+				final Cache cache = new Cache(node, hashId, JsonUtils.getInt(jo, "hashCount", 0));
 				cache.setFqdn(jo.get("fqdn").asText());
 				cache.setPort(jo.get("port").asInt());
 
 				final String ip = jo.get("ip").asText();
-				final String ip6 = jo.has("ip6") ? jo.get("ip6").asText() : "";
+				final String ip6 = JsonUtils.getString(jo, "ip6", "");
 
 				try {
 					cache.setIpAddress(ip, ip6, 0);
@@ -498,16 +499,16 @@ public class ConfigHandler {
 		}
 
 		getGeolocationDatabaseUpdater().setDataBaseURL(
-			config.has(pollingUrlKey) ? config.get(pollingUrlKey).textValue() : null,
-			config.has("geolocation.polling.interval") ? config.get("geolocation.polling.interval").asLong() : 0
+			JsonUtils.getString(config, pollingUrlKey, null),
+			JsonUtils.getLong(config, "geolocation.polling.interval", 0)
 		);
 
 		if (config.has(NEUSTAR_POLLING_URL)) {
-			System.setProperty(NEUSTAR_POLLING_URL, config.has(NEUSTAR_POLLING_URL) ? config.get(NEUSTAR_POLLING_URL).textValue() : "");
+			System.setProperty(NEUSTAR_POLLING_URL, JsonUtils.getString(config, NEUSTAR_POLLING_URL, ""));
 		}
 
 		if (config.has(NEUSTAR_POLLING_INTERVAL)) {
-			System.setProperty(NEUSTAR_POLLING_INTERVAL, config.has(NEUSTAR_POLLING_INTERVAL) ? config.get(NEUSTAR_POLLING_INTERVAL).textValue() : "");
+			System.setProperty(NEUSTAR_POLLING_INTERVAL, JsonUtils.getString(config, NEUSTAR_POLLING_INTERVAL, ""));
 		}
 	}
 
@@ -515,7 +516,7 @@ public class ConfigHandler {
 		final String pollingInterval = "certificates.polling.interval";
 		if (config.has(pollingInterval)) {
 			try {
-				System.setProperty(pollingInterval, config.has(pollingInterval) ? config.get(pollingInterval).textValue() : "");
+				System.setProperty(pollingInterval, JsonUtils.getString(config, pollingInterval, ""));
 			} catch (Exception e) {
 				LOGGER.warn("Failed to set system property " + pollingInterval + " from configuration object: " + e.getMessage());
 			}
@@ -532,8 +533,8 @@ public class ConfigHandler {
 	 */
 	private void parseCoverageZoneNetworkConfig(final JsonNode config) {
 		getNetworkUpdater().setDataBaseURL(
-				config.has("coveragezone.polling.url") ? config.get("coveragezone.polling.url").textValue() : null,
-				config.has("coveragezone.polling.interval") ? config.get("coveragezone.polling.interval").asLong() : 5
+				JsonUtils.getString(config, "coveragezone.polling.url", null),
+				JsonUtils.getLong(config, "coveragezone.polling.interval", 5)
 			);
 	}
 
@@ -552,7 +553,7 @@ public class ConfigHandler {
 			for(final JsonNode ds : dss) {
 				if (ds.has("regionalGeoBlocking") &&
 						ds.get("regionalGeoBlocking").asText().equals("true")) {
-					final long interval = config.has("regional_geoblock.polling.interval") ? config.get("regional_geoblock.polling.interval").asLong() : 0;
+					final long interval = JsonUtils.getLong(config, "regional_geoblock.polling.interval", 0);
 					getRegionalGeoUpdater().setDataBaseURL(url, interval);
 					return;
 				}
@@ -579,8 +580,8 @@ public class ConfigHandler {
 		while (locIter.hasNext()) {
 			final String loc = locIter.next();
 			final JsonNode jo = locationsJo.get(loc);
-			final double latitude = jo.has("latitude") ? jo.get("latitude").asDouble() : 0.0;
-			final double longitude = jo.has("longitude") ? jo.get("longitude").asDouble() : 0.0;
+			final double latitude = JsonUtils.getDouble(jo, "latitude", 0.0);
+			final double longitude = JsonUtils.getDouble(jo, "longitude", 0.0);
 			locations.add(new CacheLocation(loc, new Geolocation(latitude, longitude)));
 		}
 		cacheRegister.setConfiguredLocations(locations);
@@ -599,7 +600,7 @@ public class ConfigHandler {
 
 		for (final JsonNode jo : monitors) {
 			final String fqdn = jo.get("fqdn").asText();
-			final int port = jo.has("port") ? jo.get("port").asInt(80) : 80;
+			final int port = JsonUtils.getInt(jo, "port", 80);
 			final String status = jo.get("status").asText();
 
 			if ("ONLINE".equals(status)) {
@@ -623,7 +624,7 @@ public class ConfigHandler {
 	 *
 	 */
 	private long getSnapshotTimestamp(final JsonNode stats) {
-		return stats.has("date") ? stats.get("date").longValue() : 0;
+		return JsonUtils.getLong(stats, "date", 0);
 	}
 
 	public StatTracker getStatTracker() {
