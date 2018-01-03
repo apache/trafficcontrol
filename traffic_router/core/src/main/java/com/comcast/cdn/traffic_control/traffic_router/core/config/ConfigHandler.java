@@ -490,7 +490,6 @@ public class ConfigHandler {
 	 *            the {@link TrafficRouterConfiguration}
 	 *
 	 */
-	@SuppressWarnings("PMD.NPathComplexity")
 	private void parseGeolocationConfig(final JsonNode config) {
 		String pollingUrlKey = "geolocation.polling.url";
 

@@ -47,7 +47,6 @@ public class DnsSecKeyPairImpl implements DnsSecKeyPair {
 	private DNSKEYRecord dnskeyRecord;
 	private PrivateKey privateKey;
 
-	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public DnsSecKeyPairImpl(final JsonNode keyPair, final long defaultTTL) throws IOException {
 		this.inception = new Date(1000L * JsonUtils.getLong(keyPair, "inceptionDate", 0));
 		this.effective = new Date(1000L * JsonUtils.getLong(keyPair, "effectiveDate", 0));
