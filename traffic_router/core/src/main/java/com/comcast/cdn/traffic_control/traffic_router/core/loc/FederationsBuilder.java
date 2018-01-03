@@ -15,34 +15,32 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
-import org.apache.wicket.ajax.json.JSONArray;
-import org.apache.wicket.ajax.json.JSONException;
-import org.apache.wicket.ajax.json.JSONObject;
-import org.apache.wicket.ajax.json.JSONTokener;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.net.UnknownHostException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class FederationsBuilder {
 
-    public List<Federation> fromJSON(final String jsonString) throws JSONException, UnknownHostException {
+    public List<Federation> fromJSON(final String jsonString) throws IOException {
         final List<Federation> federations = new ArrayList<Federation>();
 
-        final JSONObject jsonObject = new JSONObject(new JSONTokener(jsonString));
-        final JSONArray federationsArray = jsonObject.getJSONArray("response");
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode jsonObject = mapper.readTree(jsonString);
+        final JsonNode federationList = jsonObject.get("response");
 
-        for (int i = 0; i < federationsArray.length(); i++) {
-            final JSONObject jsonObject1 = federationsArray.getJSONObject(i);
-            final String deliveryService = jsonObject1.getString("deliveryService");
+        for (final JsonNode currFederation : federationList) {
+            final String deliveryService = currFederation.has("deliveryService") ? currFederation.get("deliveryService").asText() : "";
 
             final List<FederationMapping> mappings = new ArrayList<FederationMapping>();
 
-            final JSONArray mappingsArray = jsonObject1.getJSONArray("mappings");
+            final JsonNode mappingsList = currFederation.get("mappings");
             final FederationMappingBuilder federationMappingBuilder = new FederationMappingBuilder();
 
-            for (int j = 0; j < mappingsArray.length(); j++) {
-                mappings.add(federationMappingBuilder.fromJSON(mappingsArray.getJSONObject(j).toString()));
+            for (final JsonNode mapping : mappingsList) {
+                mappings.add(federationMappingBuilder.fromJSON(mapping.toString()));
             }
 
             final Federation federation = new Federation(deliveryService, mappings);
