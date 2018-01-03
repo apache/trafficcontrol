@@ -32,11 +32,11 @@ public class TrafficOpsUtils {
 	}
 
 	public String getUrl(final String parameter) {
-		return replaceTokens(config.has(parameter) ? config.get(parameter).textValue() : null);
+		return replaceTokens(JsonUtils.getString(config, parameter, null));
 	}
 
 	public String getUrl(final String parameter, final String defaultValue) {
-		return config != null ? replaceTokens(config.has(parameter) ? config.get(parameter).asText(defaultValue) : defaultValue) : defaultValue;
+		return config != null ? replaceTokens(JsonUtils.getString(config, parameter, defaultValue)) : defaultValue;
 	}
 
 	public JsonNode getAuthJSON() throws IOException {

@@ -34,7 +34,7 @@ public class CertificateChecker {
 				continue;
 			}
 
-			final String deliveryServiceType = matchset.has("protocol") ? matchset.get("protocol").asText("") : "";
+			final String deliveryServiceType = JsonUtils.getString(matchset, "protocol", "");
 			if (!deliveryServiceType.isEmpty()) {
 				return deliveryServiceType;
 			}
