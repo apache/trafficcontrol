@@ -149,7 +149,7 @@ public class CacheRegisterBuilder {
 
                 for (JsonNode matchlist : matchset.get("matchlist")) {
                     final DeliveryServiceMatcher.Type type = DeliveryServiceMatcher.Type.valueOf(matchlist.get("match-type").asText());
-                    final String target = matchlist.has("target") ? matchlist.get("target").asText() : "";
+                    final String target = JsonUtils.getString(matchlist, "target", "");
                     m.addMatch(type, matchlist.get("regex").asText(), target);
                 }
             }

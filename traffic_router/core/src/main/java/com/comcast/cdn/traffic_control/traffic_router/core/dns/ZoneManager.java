@@ -135,7 +135,7 @@ public class ZoneManager extends Resolver {
 
 	@SuppressWarnings("PMD.UseStringBufferForStringAppends")
 	private static void initTopLevelDomain(final CacheRegister data) throws TextParseException {
-		String tld = data.getConfig().get("domain_name") != null ? data.getConfig().get("domain_name").asText() : "";
+		String tld = JsonUtils.getString(data.getConfig(), "domain_name", "");
 
 		if (!tld.endsWith(".")) {
 			tld = tld + ".";
@@ -539,11 +539,11 @@ public class ZoneManager extends Resolver {
 
 			final Name trName = newName(key, domain);
 
-			String ip6 = trJo.has(IP6) ? trJo.get(IP6).asText() : "";
+			String ip6 = JsonUtils.getString(trJo, IP6, "");
 			list.add(new NSRecord(name, DClass.IN, ZoneUtils.getLong(ttl, "NS", 60), getGlueName(ds, trJo, name, key)));
 			list.add(new ARecord(trName,
 					DClass.IN, ZoneUtils.getLong(ttl, "A", 60), 
-					InetAddress.getByName(trJo.has(IP) ? trJo.get(IP).asText() : "")));
+					InetAddress.getByName(JsonUtils.getString(trJo, IP, ""))));
 
 			if (ip6 != null && !ip6.isEmpty() && ip6RoutingEnabled) {
 				ip6 = ip6.replaceAll("/.*", "");

@@ -273,7 +273,7 @@ public class ConfigHandler {
 			throw new IOException("Unable to find to_host or tm_host in stats section of TrConfig; unable to build TrafficOps URLs");
 		}
 
-		trafficOpsUtils.setCdnName(stats.has("CDN_name") ? stats.get("CDN_name").textValue() : null);
+		trafficOpsUtils.setCdnName(JsonUtils.getString(stats, "CDN_name", null));
 		trafficOpsUtils.setConfig(config);
 	}
 
@@ -340,7 +340,7 @@ public class ConfigHandler {
 										references.add(new DeliveryServiceReference(ds, name));
 									}
 
-									final String tld = cacheRegister.getConfig().has("domain_name") ? cacheRegister.getConfig().get("domain_name").asText().toLowerCase() : "";
+									final String tld = JsonUtils.getString(cacheRegister.getConfig(), "domain_name", "").toLowerCase();
 
 									if (name.endsWith(tld)) {
 										final String reName = name.replaceAll("^.*?\\.", "");
@@ -393,7 +393,7 @@ public class ConfigHandler {
 			final JsonNode matchsets = deliveryServiceJson.get("matchsets");
 
 			for (final JsonNode matchset : matchsets) {
-				final String protocol = matchset.has("protocol") ? matchset.get("protocol").asText(): null;
+				final String protocol = JsonUtils.getString(matchset, "protocol", "");
 				if ("DNS".equals(protocol)) {
 					isDns = true;
 				}
@@ -430,7 +430,7 @@ public class ConfigHandler {
 
 				for (final JsonNode matcherJo : matchset.get("matchlist")) {
 					final Type type = Type.valueOf(matcherJo.get("match-type").asText());
-					final String target = matcherJo.has("target") ? matcherJo.get("target").asText() : "";
+					final String target = JsonUtils.getString(matcherJo, "target", "");
 					deliveryServiceMatcher.addMatch(type, matcherJo.get("regex").asText(), target);
 				}
 
@@ -540,7 +540,7 @@ public class ConfigHandler {
 
 	private void parseRegionalGeoConfig(final JsonNode jo) {
 		final JsonNode config = jo.get("config");
-		final String url = config.has("regional_geoblock.polling.url") ? config.get("regional_geoblock.polling.url").asText(null) : null;
+		final String url = JsonUtils.getString(config, "regional_geoblock.polling.url", null);
 
 		if (url == null) {
 			LOGGER.info("regional_geoblock.polling.url not configured; stopping service updater");
