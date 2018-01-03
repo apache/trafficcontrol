@@ -29,21 +29,21 @@ public class FederationsBuilderTest {
     public void itConsumesValidJSON() throws Exception {
         FederationsBuilder federationsBuilder = new FederationsBuilder();
 
-        String json = "{ response: [ " +
+        String json = "{ \"response\": [ " +
             "{ " +
-                "'deliveryService' : 'kable-town-01', " +
-                "'mappings' : [ " +
-                    "{ 'cname' : 'cname1', " +
-                        "'ttl' : '86400', " +
-                        "'resolve4' : [ '192.168.56.78/24', '192.168.45.67/24' ], " +
-                        "'resolve6' : [ 'fdfe:dcba:9876:5::/64', 'fd12:3456:789a:1::/64' ] " +
+                "\"deliveryService\" : \"kable-town-01\", " +
+                "\"mappings\" : [ " +
+                    "{ \"cname\" : \"cname1\", " +
+                        "\"ttl\" : \"86400\", " +
+                        "\"resolve4\" : [ \"192.168.56.78/24\", \"192.168.45.67/24\" ], " +
+                        "\"resolve6\" : [ \"fdfe:dcba:9876:5::/64\", \"fd12:3456:789a:1::/64\" ] " +
                     "}, " +
-                    "{ 'cname' : 'cname2', 'ttl' : '86400' } " +
+                    "{ \"cname\" : \"cname2\", \"ttl\" : \"86400\" } " +
                 "] " +
             "}, " +
             "{ " +
-                "'deliveryService' : 'kable-town-02', " +
-                "'mappings' : [ { 'cname' : 'cname4' , 'ttl' : '86400' } ]" +
+                "\"deliveryService\" : \"kable-town-02\", " +
+                "\"mappings\" : [ { \"cname\" : \"cname4\" , \"ttl\" : \"86400\" } ]" +
             "} " +
         "] }";
 
