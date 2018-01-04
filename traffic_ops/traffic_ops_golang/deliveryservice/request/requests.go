@@ -72,7 +72,7 @@ func (request *TODeliveryServiceRequest) Validate(*sqlx.DB) []error {
 	log.Debugf("Got request with %++v\n", request)
 	var errs []error
 	if len(request.ChangeType) == 0 {
-		errs = append(errs, errors.New(`'change_type' is required`))
+		errs = append(errs, errors.New(`'changeType' is required`))
 	}
 	if len(request.Status) == 0 {
 		errs = append(errs, errors.New(`'status' is required`))
@@ -105,7 +105,7 @@ func (request *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUs
 	}()
 
 	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
+		log.Error.Println("could not begin transaction: ", err.Error())
 		return tc.DBError, tc.SystemError
 	}
 	log.Debugf("about to run exec query: %s with request: %++v", updateRequestQuery(), request)
@@ -118,7 +118,7 @@ func (request *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUs
 			}
 			return err, eType
 		}
-		log.Errorf("received error: %++v from update execution", err)
+		log.Errorf("received error from update execution: ", err.Error())
 		return tc.DBError, tc.SystemError
 	}
 	var lastUpdated tc.Time
@@ -126,17 +126,17 @@ func (request *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUs
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
+			log.Error.Println("could not scan lastUpdated from insert: ", err.Error())
 			return tc.DBError, tc.SystemError
 		}
 	}
-	log.Debugf("lastUpdated: %++v", lastUpdated)
+	log.Debugln("lastUpdated: ", lastUpdated)
 	request.LastUpdated = lastUpdated
 	if rowsAffected < 1 {
 		return errors.New("no request found with this id"), tc.DataMissingError
 	}
 	if rowsAffected > 1 {
-		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
+		return fmt.Errorf("this update affected too many rows: ", rowsAffected), tc.SystemError
 	}
 	return nil, tc.NoError
 }
@@ -164,7 +164,7 @@ func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUs
 	}()
 
 	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
+		log.Error.Println("could not begin transaction: ", err.Error())
 		return tc.DBError, tc.SystemError
 	}
 	request.AuthorID = user.ID
@@ -176,7 +176,7 @@ func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUs
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(err)
 			return err, eType
 		}
-		log.Errorf("received non pq error: %++v from create execution", err)
+		log.Errorln("received non pq error from create execution: ", err.Error())
 		return tc.DBError, tc.SystemError
 	}
 	var id int
@@ -185,7 +185,7 @@ func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUs
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			log.Error.Printf("could not scan id from insert: %s\n", err)
+			log.Error.Println("could not scan id from insert: ", err.Error())
 			return tc.DBError, tc.SystemError
 		}
 	}
@@ -221,13 +221,13 @@ func (request *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUs
 	}()
 
 	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
+		log.Error.Println("could not begin transaction: ", err.Error())
 		return tc.DBError, tc.SystemError
 	}
 	log.Debugf("about to run exec query: %s with request: %++v", deleteRequestQuery(), request)
 	result, err := tx.NamedExec(deleteRequestQuery(), request)
 	if err != nil {
-		log.Errorf("received error: %++v from delete execution", err)
+		log.Errorln("received error from delete execution: ", err.Error())
 		return tc.DBError, tc.SystemError
 	}
 	rowsAffected, err := result.RowsAffected()
@@ -238,7 +238,7 @@ func (request *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUs
 		return errors.New("no request with that id found"), tc.DataMissingError
 	}
 	if rowsAffected > 1 {
-		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
+		return fmt.Errorf("this create affected too many rows: ", rowsAffected), tc.SystemError
 	}
 	return nil, tc.NoError
 }
@@ -256,7 +256,7 @@ WHERE id=:id RETURNING last_updated`
 }
 
 func insertRequestQuery(authorID int) string {
-	query := fmt.Sprintf(`INSERT INTO deliveryservice_request (
+	query := `INSERT INTO deliveryservice_request (
 assignee_id,
 author_id,
 change_type,
@@ -265,12 +265,12 @@ request,
 status
 ) VALUES (
 :assignee_id,
-%d,
+:` + strconv.Itoa(authorID) + `,
 :change_type,
 :last_edited_by_id,
 :request,
 :status
-) RETURNING id,last_updated`, authorID)
+) RETURNING id,last_updated`
 	return query
 }
 
