@@ -19,7 +19,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 public class JsonUtils {
 
-    public static long getLong(final JsonNode jsonNode, final String key, final long d) {
+    public static long getLong(final JsonNode jsonNode, final String key) throws JsonUtilsException {
+        if (jsonNode == null || !jsonNode.has(key)) {
+            throw new JsonUtilsException("");
+        }
+
+        return jsonNode.get(key).asLong();
+    }
+
+    public static long optLong(final JsonNode jsonNode, final String key, final long d) {
         if (jsonNode == null || !jsonNode.has(key)) {
             return d;
         }
@@ -27,7 +35,19 @@ public class JsonUtils {
         return jsonNode.get(key).asLong(d);
     }
 
-    public static double getDouble(final JsonNode jsonNode, final String key, final double d) {
+    public static long optLong(final JsonNode jsonNode, final String key) {
+        return optLong(jsonNode, key, 0);
+    }
+
+    public static double getDouble(final JsonNode jsonNode, final String key) throws JsonUtilsException {
+        if (jsonNode == null || !jsonNode.has(key)) {
+            throw new JsonUtilsException("");
+        }
+
+        return jsonNode.get(key).asDouble();
+    }
+
+    public static double optDouble(final JsonNode jsonNode, final String key, final double d) {
         if (jsonNode == null || !jsonNode.has(key)) {
             return d;
         }
@@ -35,7 +55,19 @@ public class JsonUtils {
         return jsonNode.get(key).asDouble(d);
     }
 
-    public static int getInt(final JsonNode jsonNode, final String key, final int d) {
+    public static double optDouble(final JsonNode jsonNode, final String key) {
+        return optDouble(jsonNode, key, 0);
+    }
+
+    public static int getInt(final JsonNode jsonNode, final String key) throws JsonUtilsException {
+        if (jsonNode == null || !jsonNode.has(key)) {
+            throw new JsonUtilsException("");
+        }
+
+        return jsonNode.get(key).asInt();
+    }
+
+    public static int optInt(final JsonNode jsonNode, final String key, final int d) {
         if (jsonNode == null || !jsonNode.has(key)) {
             return d;
         }
@@ -43,7 +75,19 @@ public class JsonUtils {
         return jsonNode.get(key).asInt(d);
     }
 
-    public static boolean getBoolean(final JsonNode jsonNode, final String key, final boolean d) {
+    public static int optInt(final JsonNode jsonNode, final String key) {
+        return optInt(jsonNode, key, 0);
+    }
+
+    public static boolean getBoolean(final JsonNode jsonNode, final String key) throws JsonUtilsException {
+        if (jsonNode == null || !jsonNode.has(key)) {
+            throw new JsonUtilsException("");
+        }
+
+        return jsonNode.get(key).asBoolean();
+    }
+
+    public static boolean optBoolean(final JsonNode jsonNode, final String key, final boolean d) {
         if (jsonNode == null || !jsonNode.has(key)) {
             return d;
         }
@@ -51,11 +95,27 @@ public class JsonUtils {
         return jsonNode.get(key).asBoolean(d);
     }
 
-    public static String getString(final JsonNode jsonNode, final String key, final String d) {
+    public static boolean optBoolean(final JsonNode jsonNode, final String key) {
+        return optBoolean(jsonNode, key, false);
+    }
+
+    public static String getString(final JsonNode jsonNode, final String key) throws JsonUtilsException {
+        if (jsonNode == null || !jsonNode.has(key)) {
+            throw new JsonUtilsException("");
+        }
+
+        return jsonNode.get(key).asText();
+    }
+
+    public static String optString(final JsonNode jsonNode, final String key, final String d) {
         if (jsonNode == null || !jsonNode.has(key)) {
             return d;
         }
 
         return jsonNode.get(key).asText(d);
+    }
+
+    public static String optString(final JsonNode jsonNode, final String key) {
+        return optString(jsonNode, key, "");
     }
 }
