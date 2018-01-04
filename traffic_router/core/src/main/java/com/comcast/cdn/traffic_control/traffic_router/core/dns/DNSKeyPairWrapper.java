@@ -41,14 +41,14 @@ public class DNSKeyPairWrapper extends DnsKeyPair implements DnsSecKeyPair {
 	private String name;
 
 	public DNSKeyPairWrapper(final JsonNode keyPair, final long defaultTTL) throws IOException {
-		this.inception = new Date(1000L * JsonUtils.getLong(keyPair, "inceptionDate", 0));
-		this.effective = new Date(1000L * JsonUtils.getLong(keyPair, "effectiveDate", 0));
-		this.expiration = new Date(1000L * JsonUtils.getLong(keyPair, "expirationDate", 0));
-		this.ttl = JsonUtils.getLong(keyPair, "ttl", defaultTTL);
-		this.name = JsonUtils.getString(keyPair, "name", "").toLowerCase();
+		this.inception = new Date(1000L * JsonUtils.optLong(keyPair, "inceptionDate", 0));
+		this.effective = new Date(1000L * JsonUtils.optLong(keyPair, "effectiveDate", 0));
+		this.expiration = new Date(1000L * JsonUtils.optLong(keyPair, "expirationDate", 0));
+		this.ttl = JsonUtils.optLong(keyPair, "ttl", defaultTTL);
+		this.name = JsonUtils.optString(keyPair, "name", "").toLowerCase();
 
-		final byte[] privateKey = DatatypeConverter.parseBase64Binary(JsonUtils.getString(keyPair, "private", null));
-		final byte[] publicKey = DatatypeConverter.parseBase64Binary(JsonUtils.getString(keyPair, "public", null));
+		final byte[] privateKey = DatatypeConverter.parseBase64Binary(JsonUtils.optString(keyPair, "private", null));
+		final byte[] publicKey = DatatypeConverter.parseBase64Binary(JsonUtils.optString(keyPair, "public", null));
 
 		try (InputStream in = new ByteArrayInputStream(publicKey)) {
 			final Master master = new Master(in, new Name(name), ttl);

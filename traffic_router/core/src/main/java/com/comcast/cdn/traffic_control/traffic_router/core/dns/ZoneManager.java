@@ -135,7 +135,7 @@ public class ZoneManager extends Resolver {
 
 	@SuppressWarnings("PMD.UseStringBufferForStringAppends")
 	private static void initTopLevelDomain(final CacheRegister data) throws TextParseException {
-		String tld = JsonUtils.getString(data.getConfig(), "domain_name", "");
+		String tld = JsonUtils.optString(data.getConfig(), "domain_name", "");
 
 		if (!tld.endsWith(".")) {
 			tld = tld + ".";
@@ -156,7 +156,7 @@ public class ZoneManager extends Resolver {
 			final JsonNode config = cacheRegister.getConfig();
 
 			int poolSize = 1;
-			final double scale = JsonUtils.getDouble(config, "zonemanager.threadpool.scale", 0.75);
+			final double scale = JsonUtils.optDouble(config, "zonemanager.threadpool.scale", 0.75);
 			final int cores = Runtime.getRuntime().availableProcessors();
 
 			if (cores > 2) {
@@ -171,8 +171,8 @@ public class ZoneManager extends Resolver {
 
 			final ExecutorService ze = Executors.newFixedThreadPool(poolSize);
 			final ScheduledExecutorService me = Executors.newScheduledThreadPool(2); // 2 threads, one for static, one for dynamic, threads to refresh zones
-			final int maintenanceInterval = JsonUtils.getInt(config, "zonemanager.cache.maintenance.interval", 300); // default 5 minutes
-			final String dspec = "expireAfterAccess=" + (JsonUtils.getString(config, "zonemanager.dynamic.response.expiration", "300s")); // default to 5 minutes
+			final int maintenanceInterval = JsonUtils.optInt(config, "zonemanager.cache.maintenance.interval", 300); // default 5 minutes
+			final String dspec = "expireAfterAccess=" + (JsonUtils.optString(config, "zonemanager.dynamic.response.expiration", "300s")); // default to 5 minutes
 
 
 			final LoadingCache<ZoneKey, Zone> dzc = createZoneCache(ZoneCacheType.DYNAMIC, CacheBuilderSpec.parse(dspec));
@@ -435,8 +435,8 @@ public class ZoneManager extends Resolver {
 				public void run() {
 					try {
 						final Zone zone = zc.get(signatureManager.generateZoneKey(name, list)); // cause the zone to be loaded into the new cache
-						final boolean primeDynCache = JsonUtils.getBoolean(config, "dynamic.cache.primer.enabled", true);
-						final int primerLimit = JsonUtils.getInt(config, "dynamic.cache.primer.limit", DEFAULT_PRIMER_LIMIT);
+						final boolean primeDynCache = JsonUtils.optBoolean(config, "dynamic.cache.primer.enabled", true);
+						final int primerLimit = JsonUtils.optInt(config, "dynamic.cache.primer.limit", DEFAULT_PRIMER_LIMIT);
 
 						// prime the dynamic zone cache
 						if (primeDynCache && ds != null && ds.isDns()) {
@@ -498,11 +498,11 @@ public class ZoneManager extends Resolver {
 			final JsonNode entryList = ds.getStaticDnsEntries();
 
 			for (final JsonNode staticEntry : entryList) {
-				final String type = JsonUtils.getString(staticEntry, "type", "").toUpperCase();
-				final String jsName = JsonUtils.getString(staticEntry, "name", "");
-				final String value = JsonUtils.getString(staticEntry, "value", "");
+				final String type = JsonUtils.optString(staticEntry, "type", "").toUpperCase();
+				final String jsName = JsonUtils.optString(staticEntry, "name", "");
+				final String value = JsonUtils.optString(staticEntry, "value", "");
 				final Name name = newName(jsName, domain);
-				long ttl = JsonUtils.getInt(staticEntry, "ttl", 0);
+				long ttl = JsonUtils.optInt(staticEntry, "ttl", 0);
 
 				if (ttl == 0) {
 					ttl = ZoneUtils.getLong(ds.getTtls(), type, 60);
@@ -537,11 +537,11 @@ public class ZoneManager extends Resolver {
 
 			final Name trName = newName(key, domain);
 
-			String ip6 = JsonUtils.getString(trJo, IP6, "");
+			String ip6 = JsonUtils.optString(trJo, IP6, "");
 			list.add(new NSRecord(name, DClass.IN, ZoneUtils.getLong(ttl, "NS", 60), getGlueName(ds, trJo, name, key)));
 			list.add(new ARecord(trName,
 					DClass.IN, ZoneUtils.getLong(ttl, "A", 60), 
-					InetAddress.getByName(JsonUtils.getString(trJo, IP, ""))));
+					InetAddress.getByName(JsonUtils.optString(trJo, IP, ""))));
 
 			if (ip6 != null && !ip6.isEmpty() && ip6RoutingEnabled) {
 				ip6 = ip6.replaceAll("/.*", "");
@@ -563,8 +563,8 @@ public class ZoneManager extends Resolver {
 		list.add(new ARecord(trName,
 				DClass.IN,
 				ZoneUtils.getLong(ttl, "A", 60),
-				InetAddress.getByName(JsonUtils.getString(trJo, IP, ""))));
-		String ip6 = JsonUtils.getString(trJo, IP6, "");
+				InetAddress.getByName(JsonUtils.optString(trJo, IP, ""))));
+		String ip6 = JsonUtils.optString(trJo, IP6, "");
 		if (addTrafficRoutersAAAA && ip6 != null && !ip6.isEmpty()) {
 			ip6 = ip6.replaceAll("/.*", "");
 			list.add(new AAAARecord(trName,

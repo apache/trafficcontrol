@@ -96,7 +96,7 @@ public class TrafficRouter {
 		this.geolocationService = geolocationService;
 		this.geolocationService6 = geolocationService6;
 		this.federationRegistry = federationRegistry;
-		this.consistentDNSRouting = JsonUtils.getBoolean(cr.getConfig(), "consistent.dns.routing", false);
+		this.consistentDNSRouting = JsonUtils.optBoolean(cr.getConfig(), "consistent.dns.routing", false);
 		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils, trafficRouterManager);
 	}
 

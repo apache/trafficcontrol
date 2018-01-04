@@ -32,11 +32,11 @@ public class TrafficOpsUtils {
 	}
 
 	public String getUrl(final String parameter) {
-		return replaceTokens(JsonUtils.getString(config, parameter, null));
+		return replaceTokens(JsonUtils.optString(config, parameter, null));
 	}
 
 	public String getUrl(final String parameter, final String defaultValue) {
-		return config != null ? replaceTokens(JsonUtils.getString(config, parameter, defaultValue)) : defaultValue;
+		return config != null ? replaceTokens(JsonUtils.optString(config, parameter, defaultValue)) : defaultValue;
 	}
 
 	public JsonNode getAuthJSON() throws IOException {
@@ -88,6 +88,6 @@ public class TrafficOpsUtils {
 	}
 
 	public long getConfigLongValue(final String name, final long defaultValue) {
-		return JsonUtils.getLong(config, name, defaultValue);
+		return JsonUtils.optLong(config, name, defaultValue);
 	}
 }

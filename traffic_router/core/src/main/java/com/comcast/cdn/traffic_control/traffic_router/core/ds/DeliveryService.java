@@ -102,48 +102,48 @@ public class DeliveryService {
 			LOGGER.warn("ttls is null for:" + id);
 		}
 
-		this.coverageZoneOnly = JsonUtils.getBoolean(dsJo, "coverageZoneOnly", false);
+		this.coverageZoneOnly = JsonUtils.optBoolean(dsJo, "coverageZoneOnly", false);
 		this.geoEnabled = dsJo.get("geoEnabled");
-		String rurl = JsonUtils.getString(dsJo, "geoLimitRedirectURL", null);
+		String rurl = JsonUtils.optString(dsJo, "geoLimitRedirectURL", null);
 		if (rurl != null && rurl.isEmpty()) { rurl = null; }
 		this.geoRedirectUrl = rurl;
 		this.geoRedirectUrlType = "INVALID_URL";
 		this.geoRedirectFile = this.geoRedirectUrl;
 		this.staticDnsEntries = dsJo.get("staticDnsEntries");
 		this.bypassDestination = dsJo.get("bypassDestination");
-		this.routingName = JsonUtils.getString(dsJo, "routingName", "").toLowerCase();
+		this.routingName = JsonUtils.optString(dsJo, "routingName", "").toLowerCase();
 		this.domains = dsJo.get("domains");
 		this.soa = dsJo.get("soa");
-		this.shouldAppendQueryString = JsonUtils.getBoolean(dsJo, "appendQueryString", true);
+		this.shouldAppendQueryString = JsonUtils.optBoolean(dsJo, "appendQueryString", true);
 
 		// missLocation: {lat: , long: }
 		final JsonNode mlJo = dsJo.get("missLocation");
 		if(mlJo != null) {
-			final double lat = JsonUtils.getDouble(mlJo, "lat", 0);
-			final double longitude = JsonUtils.getDouble(mlJo, "long", 0);
+			final double lat = JsonUtils.optDouble(mlJo, "lat", 0);
+			final double longitude = JsonUtils.optDouble(mlJo, "long", 0);
 			missLocation = new Geolocation(lat, longitude);
 		} else {
 			missLocation = null;
 		}
 
 		this.dispersion = new Dispersion(dsJo);
-		this.ip6RoutingEnabled = JsonUtils.getBoolean(dsJo, "ip6RoutingEnabled", false);
+		this.ip6RoutingEnabled = JsonUtils.optBoolean(dsJo, "ip6RoutingEnabled", false);
 		setResponseHeaders(dsJo.get("responseHeaders"));
 		setRequestHeaders(dsJo.get("requestHeaders"));
-		this.regionalGeoEnabled = JsonUtils.getBoolean(dsJo, "regionalGeoBlocking", false);
-		geolocationProvider = JsonUtils.getString(dsJo, "geolocationProvider", "");
+		this.regionalGeoEnabled = JsonUtils.optBoolean(dsJo, "regionalGeoBlocking", false);
+		geolocationProvider = JsonUtils.optString(dsJo, "geolocationProvider", "");
 		if (geolocationProvider != null && !geolocationProvider.isEmpty()) {
 			LOGGER.info("DeliveryService '" + id + "' has configured geolocation provider '" + geolocationProvider + "'");
 		} else {
 			LOGGER.info("DeliveryService '" + id + "' will use default geolocation provider Maxmind");
 		}
-		sslEnabled = JsonUtils.getBoolean(dsJo, "sslEnabled", false);
+		sslEnabled = JsonUtils.optBoolean(dsJo, "sslEnabled", false);
 
 		final JsonNode protocol = dsJo.get("protocol");
 		if (protocol != null) {
-			acceptHttp = JsonUtils.getBoolean(protocol, "acceptHttp", true);
-			acceptHttps = JsonUtils.getBoolean(protocol, "acceptHttps", false);
-			redirectToHttps = JsonUtils.getBoolean(protocol, "redirectToHttps", false);
+			acceptHttp = JsonUtils.optBoolean(protocol, "acceptHttp", true);
+			acceptHttps = JsonUtils.optBoolean(protocol, "acceptHttps", false);
+			redirectToHttps = JsonUtils.optBoolean(protocol, "redirectToHttps", false);
 		} else {
 			acceptHttp = true;
 			acceptHttps = false;
@@ -482,7 +482,7 @@ public class DeliveryService {
 	private boolean isAvailable = true;
 	private JsonNode disabledLocations;
 	public void setState(final JsonNode state) {
-		isAvailable = JsonUtils.getBoolean(state, "isAvailable", true);
+		isAvailable = JsonUtils.optBoolean(state, "isAvailable", true);
 		if(state != null) {
 			// disabled locations
 			disabledLocations = state.get("disabledLocations");

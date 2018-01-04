@@ -49,12 +49,12 @@ public class CacheRegisterBuilder {
                 if(jo.has("hashId")) {
                     hashId = jo.get("hashId").asText();
                 }
-                final int hashCount = JsonUtils.getInt(jo, "hashCount", 0);
+                final int hashCount = JsonUtils.optInt(jo, "hashCount", 0);
                 final Cache cache = new Cache(node, hashId, hashCount);
                 cache.setFqdn(jo.get("fqdn").asText());
                 cache.setPort(jo.get("port").asInt());
                 final String ip = jo.get("ip").asText();
-                final String ip6 = JsonUtils.getString(jo, "ip6", "");
+                final String ip6 = JsonUtils.optString(jo, "ip6", "");
                 try {
                     cache.setIpAddress(ip, ip6, 0);
                 } catch (UnknownHostException e) {
@@ -84,7 +84,7 @@ public class CacheRegisterBuilder {
                                     references.add(new Cache.DeliveryServiceReference(ds, name));
                                 }
 
-                                final String tld = JsonUtils.getString(cacheRegister.getConfig(), "domain_name", "").toLowerCase();
+                                final String tld = JsonUtils.optString(cacheRegister.getConfig(), "domain_name", "").toLowerCase();
 
                                 if (name.contains(tld)) {
                                     final String reName = name.replaceAll("^.*?\\.", "");
@@ -149,7 +149,7 @@ public class CacheRegisterBuilder {
 
                 for (JsonNode matchlist : matchset.get("matchlist")) {
                     final DeliveryServiceMatcher.Type type = DeliveryServiceMatcher.Type.valueOf(matchlist.get("match-type").asText());
-                    final String target = JsonUtils.getString(matchlist, "target", "");
+                    final String target = JsonUtils.optString(matchlist, "target", "");
                     m.addMatch(type, matchlist.get("regex").asText(), target);
                 }
             }

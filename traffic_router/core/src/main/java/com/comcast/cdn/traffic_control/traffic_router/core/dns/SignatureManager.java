@@ -76,14 +76,14 @@ public final class SignatureManager {
 		synchronized(SignatureManager.class) {
 			final JsonNode config = cacheRegister.getConfig();
 
-			final boolean dnssecEnabled = JsonUtils.getBoolean(config, "dnssec.enabled", false);
+			final boolean dnssecEnabled = JsonUtils.optBoolean(config, "dnssec.enabled", false);
 			if (dnssecEnabled) {
 				setDnssecEnabled(true);
-				this.useJDnsSec = JsonUtils.getBoolean(config, "usejdnssec", true);
-				setExpiredKeyAllowed(JsonUtils.getBoolean(config, "dnssec.allow.expired.keys", true)); // allowing this by default is the safest option
-				setExpirationMultiplier(JsonUtils.getInt(config, "signaturemanager.expiration.multiplier", 5)); // signature validity is maxTTL * this
+				this.useJDnsSec = JsonUtils.optBoolean(config, "usejdnssec", true);
+				setExpiredKeyAllowed(JsonUtils.optBoolean(config, "dnssec.allow.expired.keys", true)); // allowing this by default is the safest option
+				setExpirationMultiplier(JsonUtils.optInt(config, "signaturemanager.expiration.multiplier", 5)); // signature validity is maxTTL * this
 				final ScheduledExecutorService me = Executors.newScheduledThreadPool(1);
-				final int maintenanceInterval = JsonUtils.getInt(config, "keystore.maintenance.interval", 300); // default 300 seconds, do we calculate based on the complimentary settings for key generation in TO?
+				final int maintenanceInterval = JsonUtils.optInt(config, "keystore.maintenance.interval", 300); // default 300 seconds, do we calculate based on the complimentary settings for key generation in TO?
 				me.scheduleWithFixedDelay(getKeyMaintenanceRunnable(cacheRegister), 0, maintenanceInterval, TimeUnit.SECONDS);
 
 				if (keyMaintenanceExecutor != null) {
@@ -215,9 +215,9 @@ public final class SignatureManager {
 		try {
 			final String keyUrl = trafficOpsUtils.getUrl("keystore.api.url", "https://${toHostname}/api/1.1/cdns/name/${cdnName}/dnsseckeys.json");
 			final JsonNode config = cacheRegister.getConfig();
-			final int timeout = JsonUtils.getInt(config, "keystore.fetch.timeout", 30000); // socket timeouts are in ms
-			final int retries = JsonUtils.getInt(config, "keystore.fetch.retries", 5);
-			final int wait = JsonUtils.getInt(config, "keystore.fetch.wait", 5000); // 5 seconds
+			final int timeout = JsonUtils.optInt(config, "keystore.fetch.timeout", 30000); // socket timeouts are in ms
+			final int retries = JsonUtils.optInt(config, "keystore.fetch.retries", 5);
+			final int wait = JsonUtils.optInt(config, "keystore.fetch.wait", 5000); // 5 seconds
 
 			if (fetcher == null) {
 				fetcher = new ProtectedFetcher(trafficOpsUtils.getAuthUrl(), trafficOpsUtils.getAuthJSON().toString(), timeout);

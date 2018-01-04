@@ -273,7 +273,7 @@ public class ConfigHandler {
 			throw new IOException("Unable to find to_host or tm_host in stats section of TrConfig; unable to build TrafficOps URLs");
 		}
 
-		trafficOpsUtils.setCdnName(JsonUtils.getString(stats, "CDN_name", null));
+		trafficOpsUtils.setCdnName(JsonUtils.optString(stats, "CDN_name", null));
 		trafficOpsUtils.setConfig(config);
 	}
 
@@ -303,12 +303,12 @@ public class ConfigHandler {
 					hashId = jo.get("hashId").textValue();
 				}
 
-				final Cache cache = new Cache(node, hashId, JsonUtils.getInt(jo, "hashCount", 0));
+				final Cache cache = new Cache(node, hashId, JsonUtils.optInt(jo, "hashCount", 0));
 				cache.setFqdn(jo.get("fqdn").asText());
 				cache.setPort(jo.get("port").asInt());
 
 				final String ip = jo.get("ip").asText();
-				final String ip6 = JsonUtils.getString(jo, "ip6", "");
+				final String ip6 = JsonUtils.optString(jo, "ip6", "");
 
 				try {
 					cache.setIpAddress(ip, ip6, 0);
@@ -340,7 +340,7 @@ public class ConfigHandler {
 										references.add(new DeliveryServiceReference(ds, name));
 									}
 
-									final String tld = JsonUtils.getString(cacheRegister.getConfig(), "domain_name", "").toLowerCase();
+									final String tld = JsonUtils.optString(cacheRegister.getConfig(), "domain_name", "").toLowerCase();
 
 									if (name.endsWith(tld)) {
 										final String reName = name.replaceAll("^.*?\\.", "");
@@ -393,7 +393,7 @@ public class ConfigHandler {
 			final JsonNode matchsets = deliveryServiceJson.get("matchsets");
 
 			for (final JsonNode matchset : matchsets) {
-				final String protocol = JsonUtils.getString(matchset, "protocol", "");
+				final String protocol = JsonUtils.optString(matchset, "protocol", "");
 				if ("DNS".equals(protocol)) {
 					isDns = true;
 				}
@@ -430,7 +430,7 @@ public class ConfigHandler {
 
 				for (final JsonNode matcherJo : matchset.get("matchlist")) {
 					final Type type = Type.valueOf(matcherJo.get("match-type").asText());
-					final String target = JsonUtils.getString(matcherJo, "target", "");
+					final String target = JsonUtils.optString(matcherJo, "target", "");
 					deliveryServiceMatcher.addMatch(type, matcherJo.get("regex").asText(), target);
 				}
 
@@ -498,16 +498,16 @@ public class ConfigHandler {
 		}
 
 		getGeolocationDatabaseUpdater().setDataBaseURL(
-			JsonUtils.getString(config, pollingUrlKey, null),
-			JsonUtils.getLong(config, "geolocation.polling.interval", 0)
+			JsonUtils.optString(config, pollingUrlKey, null),
+			JsonUtils.optLong(config, "geolocation.polling.interval", 0)
 		);
 
 		if (config.has(NEUSTAR_POLLING_URL)) {
-			System.setProperty(NEUSTAR_POLLING_URL, JsonUtils.getString(config, NEUSTAR_POLLING_URL, ""));
+			System.setProperty(NEUSTAR_POLLING_URL, JsonUtils.optString(config, NEUSTAR_POLLING_URL, ""));
 		}
 
 		if (config.has(NEUSTAR_POLLING_INTERVAL)) {
-			System.setProperty(NEUSTAR_POLLING_INTERVAL, JsonUtils.getString(config, NEUSTAR_POLLING_INTERVAL, ""));
+			System.setProperty(NEUSTAR_POLLING_INTERVAL, JsonUtils.optString(config, NEUSTAR_POLLING_INTERVAL, ""));
 		}
 	}
 
@@ -515,7 +515,7 @@ public class ConfigHandler {
 		final String pollingInterval = "certificates.polling.interval";
 		if (config.has(pollingInterval)) {
 			try {
-				System.setProperty(pollingInterval, JsonUtils.getString(config, pollingInterval, ""));
+				System.setProperty(pollingInterval, JsonUtils.optString(config, pollingInterval, ""));
 			} catch (Exception e) {
 				LOGGER.warn("Failed to set system property " + pollingInterval + " from configuration object: " + e.getMessage());
 			}
@@ -532,14 +532,14 @@ public class ConfigHandler {
 	 */
 	private void parseCoverageZoneNetworkConfig(final JsonNode config) {
 		getNetworkUpdater().setDataBaseURL(
-				JsonUtils.getString(config, "coveragezone.polling.url", null),
-				JsonUtils.getLong(config, "coveragezone.polling.interval", 5)
+				JsonUtils.optString(config, "coveragezone.polling.url", null),
+				JsonUtils.optLong(config, "coveragezone.polling.interval", 5)
 			);
 	}
 
 	private void parseRegionalGeoConfig(final JsonNode jo) {
 		final JsonNode config = jo.get("config");
-		final String url = JsonUtils.getString(config, "regional_geoblock.polling.url", null);
+		final String url = JsonUtils.optString(config, "regional_geoblock.polling.url", null);
 
 		if (url == null) {
 			LOGGER.info("regional_geoblock.polling.url not configured; stopping service updater");
@@ -552,7 +552,7 @@ public class ConfigHandler {
 			for(final JsonNode ds : dss) {
 				if (ds.has("regionalGeoBlocking") &&
 						ds.get("regionalGeoBlocking").asText().equals("true")) {
-					final long interval = JsonUtils.getLong(config, "regional_geoblock.polling.interval", 0);
+					final long interval = JsonUtils.optLong(config, "regional_geoblock.polling.interval", 0);
 					getRegionalGeoUpdater().setDataBaseURL(url, interval);
 					return;
 				}
@@ -579,8 +579,8 @@ public class ConfigHandler {
 		while (locIter.hasNext()) {
 			final String loc = locIter.next();
 			final JsonNode jo = locationsJo.get(loc);
-			final double latitude = JsonUtils.getDouble(jo, "latitude", 0.0);
-			final double longitude = JsonUtils.getDouble(jo, "longitude", 0.0);
+			final double latitude = JsonUtils.optDouble(jo, "latitude", 0.0);
+			final double longitude = JsonUtils.optDouble(jo, "longitude", 0.0);
 			locations.add(new CacheLocation(loc, new Geolocation(latitude, longitude)));
 		}
 		cacheRegister.setConfiguredLocations(locations);
@@ -599,7 +599,7 @@ public class ConfigHandler {
 
 		for (final JsonNode jo : monitors) {
 			final String fqdn = jo.get("fqdn").asText();
-			final int port = JsonUtils.getInt(jo, "port", 80);
+			final int port = JsonUtils.optInt(jo, "port", 80);
 			final String status = jo.get("status").asText();
 
 			if ("ONLINE".equals(status)) {
@@ -623,7 +623,7 @@ public class ConfigHandler {
 	 *
 	 */
 	private long getSnapshotTimestamp(final JsonNode stats) {
-		return JsonUtils.getLong(stats, "date", 0);
+		return JsonUtils.optLong(stats, "date", 0);
 	}
 
 	public StatTracker getStatTracker() {
