@@ -21,8 +21,9 @@ package poller
 
 import (
 	"fmt"
-	"gopkg.in/fsnotify.v1"
 	"io/ioutil"
+
+	"gopkg.in/fsnotify.v1"
 )
 
 // FilePoller starts a goroutine polling the given file for changes. When changes occur, including an initial read, the result callback is called asynchronously. Returns a kill chan, which will kill the file poller when written to.

@@ -22,11 +22,12 @@ package todata
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/towrap"
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/towrap"
 )
 
 // Regexes maps Delivery Service Regular Expressions to delivery services.

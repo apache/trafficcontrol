@@ -22,6 +22,7 @@ package main
 import (
 	"flag"
 	"fmt"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-nagios"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/tmcheck"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"

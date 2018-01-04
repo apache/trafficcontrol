@@ -22,12 +22,13 @@ package cache
 import (
 	"errors"
 	"fmt"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/dsdata"
 	"math/rand"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/dsdata"
 )
 
 func randBool() bool {

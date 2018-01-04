@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 
 	"golang.org/x/sys/unix"
 
@@ -50,6 +51,8 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticA
 		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
 		Timeout:   cfg.HTTPTimeout,
 	}
+
+	url6Regex := regexp.MustCompile(`/\d+`)
 
 	localStates := peer.NewCRStatesThreadsafe() // this is the local state as discoverer by this traffic_monitor
 	fetchCount := threadsafe.NewUint()          // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
@@ -89,6 +92,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticA
 		staticAppData,
 		toSession,
 		toData,
+		url6Regex,
 	)
 
 	combinedStates, combineStateFunc := StartStateCombiner(events, peerStates, localStates, toData)

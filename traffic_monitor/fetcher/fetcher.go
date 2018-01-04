@@ -30,7 +30,7 @@ import (
 )
 
 type Fetcher interface {
-	Fetch(id string, url string, host string, format string, pollId uint64, usingIPV4 bool, pollFinishedChan chan<- uint64)
+	Fetch(id string, url string, host string, format string, pollId uint64, usingIPv4 bool, pollFinishedChan chan<- uint64)
 }
 
 type HttpFetcher struct {
@@ -46,7 +46,7 @@ type Result struct {
 	Error  error
 }
 
-func (f HttpFetcher) Fetch(id string, url string, host string, format string, pollId uint64, usingIPV4 bool, pollFinishedChan chan<- uint64) {
+func (f HttpFetcher) Fetch(id string, url string, host string, format string, pollId uint64, usingIPv4 bool, pollFinishedChan chan<- uint64) {
 	log.Debugf("poll %v %v fetch start for url: %s\n", pollId, time.Now(), url)
 	req, err := http.NewRequest("GET", url, nil)
 	// TODO: change this to use f.Headers. -jse
@@ -76,8 +76,8 @@ func (f HttpFetcher) Fetch(id string, url string, host string, format string, po
 
 	if err == nil && response != nil {
 		log.Debugf("poll %v %v fetch end\n", pollId, time.Now())
-		f.Handler.Handle(id, response.Body, format, reqTime, reqEnd, err, pollId, usingIPV4, pollFinishedChan)
+		f.Handler.Handle(id, response.Body, format, reqTime, reqEnd, err, pollId, usingIPv4, pollFinishedChan)
 	} else {
-		f.Handler.Handle(id, nil, format, reqTime, reqEnd, err, pollId, usingIPV4, pollFinishedChan)
+		f.Handler.Handle(id, nil, format, reqTime, reqEnd, err, pollId, usingIPv4, pollFinishedChan)
 	}
 }

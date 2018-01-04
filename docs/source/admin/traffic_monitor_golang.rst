@@ -55,7 +55,13 @@ Traffic Monitor is configured via two JSON configuration files, ``traffic_ops.cf
 
 The ``traffic_ops.cfg`` config contains Traffic Ops connection information. Specify the URL, username, and password for the instance of Traffic Ops for which this Traffic Monitor is a member.
 
-The ``traffic_monitor.cfg`` config contains log file locations, as well as detailed application configuration variables, such as processing flush times and initial poll intervals.
+The ``traffic_monitor.cfg`` config contains log file locations, as well as detailed application configuration variables, such as processing flush times, initial poll intervals and the polling protocols.
+
+polling protocol can be set for peers and caches and has 3 options:
+
+ipv4only (the default): TM will communicate with the peers or caches only over ipv4
+ipv6only: TM will communicate with the peers or caches only over ipv6 (use case for peers is if the other TMs are only available over ipv6)
+both: TM will alternate its communication between ipv4 and ipv6 (note: this does not affect the polling frequency so if polling frequency is 1 second ipv4 will be polled every 2 seconds)
 
 Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops and begins polling caches. Once every cache has been polled, health protocol state is available via RESTful JSON endpoints.
 

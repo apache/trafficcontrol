@@ -21,9 +21,10 @@ package tmcheck
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
-	"time"
 )
 
 const PeerPollMax = time.Duration(10) * time.Second

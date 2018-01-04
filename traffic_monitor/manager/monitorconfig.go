@@ -130,6 +130,7 @@ func StartMonitorConfigManager(
 	staticAppData config.StaticAppData,
 	toSession towrap.ITrafficOpsSession,
 	toData todata.TODataThreadsafe,
+	url6Regex *regexp.Regexp,
 ) threadsafe.TrafficMonitorConfigMap {
 	monitorConfig := threadsafe.NewTrafficMonitorConfigMap()
 	go monitorConfigListen(monitorConfig,
@@ -145,6 +146,7 @@ func StartMonitorConfigManager(
 		staticAppData,
 		toSession,
 		toData,
+		url6Regex,
 	)
 	return monitorConfig
 }
@@ -200,6 +202,7 @@ func monitorConfigListen(
 	staticAppData config.StaticAppData,
 	toSession towrap.ITrafficOpsSession,
 	toData todata.TODataThreadsafe,
+	url6Regex *regexp.Regexp,
 ) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -219,8 +222,6 @@ func monitorConfigListen(
 		if err := toData.Update(toSession, cdn); err != nil {
 			log.Errorln("Updating Traffic Ops Data: " + err.Error())
 		}
-
-		url6Regex := regexp.MustCompile(`/\d+`)
 
 		healthURLs := map[string]poller.PollConfig{}
 		statURLs := map[string]poller.PollConfig{}
@@ -285,13 +286,13 @@ func monitorConfigListen(
 				connTimeout = DefaultHealthConnectionTimeout
 				log.Warnln("profile " + srv.Profile + " health.connection.timeout Parameter is missing or zero, using default " + DefaultHealthConnectionTimeout.String())
 			}
-			healthURLs[srv.HostName] = poller.PollConfig{URL: url4, URLV6: url6, Host: srv.FQDN, Timeout: connTimeout, Format: format}
+			healthURLs[srv.HostName] = poller.PollConfig{URL: url4, URLv6: url6, Host: srv.FQDN, Timeout: connTimeout, Format: format}
 
 			r = strings.NewReplacer("application=system", "application=")
 
 			statURL4 := r.Replace(url4)
 			statURL6 := url6Regex.ReplaceAllString(r.Replace(url6), "")
-			statURLs[srv.HostName] = poller.PollConfig{URL: statURL4, URLV6: statURL6, Host: srv.FQDN, Timeout: connTimeout, Format: format}
+			statURLs[srv.HostName] = poller.PollConfig{URL: statURL4, URLv6: statURL6, Host: srv.FQDN, Timeout: connTimeout, Format: format}
 		}
 
 		peerSet := map[tc.TrafficMonitorName]struct{}{}
@@ -305,7 +306,7 @@ func monitorConfigListen(
 			// TODO: the URL should be config driven. -jse
 			url4 := fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP, srv.Port)
 			url6 := url6Regex.ReplaceAllString(fmt.Sprintf("http://%s:%d/publish/CrStates?raw", srv.IP6, srv.Port), "")
-			peerURLs[srv.HostName] = poller.PollConfig{URL: url4, URLV6: url6, Host: srv.FQDN} // TODO determine timeout.
+			peerURLs[srv.HostName] = poller.PollConfig{URL: url4, URLv6: url6, Host: srv.FQDN} // TODO determine timeout.
 			peerSet[tc.TrafficMonitorName(srv.HostName)] = struct{}{}
 		}
 

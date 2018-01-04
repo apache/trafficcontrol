@@ -24,14 +24,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/tmcheck"
-	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 	"io"
 	"net/http"
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/tmcheck"
+	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
 const UserAgent = "tm-offline-validator/0.1"

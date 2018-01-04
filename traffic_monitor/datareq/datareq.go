@@ -316,11 +316,11 @@ func gzipIfAccepts(r *http.Request, w http.ResponseWriter, b []byte) ([]byte, er
 	zw := gzip.NewWriter(&buf)
 
 	if _, err := zw.Write(b); err != nil {
-		return nil, fmt.Errorf("gzipping bytes: %v")
+		return nil, fmt.Errorf("gzipping bytes: %v", err)
 	}
 
 	if err := zw.Close(); err != nil {
-		return nil, fmt.Errorf("closing gzip writer: %v")
+		return nil, fmt.Errorf("closing gzip writer: %v", err)
 	}
 
 	return buf.Bytes(), nil

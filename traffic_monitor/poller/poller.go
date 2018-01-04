@@ -48,7 +48,7 @@ type HttpPoller struct {
 
 type PollConfig struct {
 	URL     string
-	URLV6   string
+	URLv6   string
 	Host    string
 	Timeout time.Duration
 	Handler handler.Handler
@@ -225,7 +225,7 @@ func (p HttpPoller) Poll() {
 					}
 				}
 			}
-			go poller(info.Interval, info.ID, info.PollingProtocol, info.URL, info.URLV6, info.Host, info.Format, fetcher, kill)
+			go poller(info.Interval, info.ID, info.PollingProtocol, info.URL, info.URLv6, info.Host, info.Format, fetcher, kill)
 		}
 		p.Config = newConfig
 	}
@@ -241,19 +241,16 @@ func mustDie(die <-chan struct{}) bool {
 }
 
 // TODO iterationCount and/or p.TickChan?
-func poller(interval time.Duration, id string, pollingProtocol config.PollingProtocol, url string, urlV6 string, host string, format string, fetcher fetcher.Fetcher, die <-chan struct{}) {
+func poller(interval time.Duration, id string, pollingProtocol config.PollingProtocol, url string, urlv6 string, host string, format string, fetcher fetcher.Fetcher, die <-chan struct{}) {
 	pollSpread := time.Duration(rand.Float64()*float64(interval/time.Nanosecond)) * time.Nanosecond
 	time.Sleep(pollSpread)
 	tick := time.NewTicker(interval)
 	lastTime := time.Now()
-	swapProtocols := false
+	oscillateProtocols := false
 	if pollingProtocol == config.Both {
-		swapProtocols = true
+		oscillateProtocols = true
 	}
-	usingIPV4 := true
-	if pollingProtocol == config.IPV6Only {
-		usingIPV4 = false
-	}
+	usingIPv4 := pollingProtocol != config.IPv6Only
 	for {
 		select {
 		case <-tick.C:
@@ -266,13 +263,13 @@ func poller(interval time.Duration, id string, pollingProtocol config.PollingPro
 			pollId := atomic.AddUint64(&debugPollNum, 1)
 			pollFinishedChan := make(chan uint64)
 			log.Debugf("poll %v %v start\n", pollId, time.Now())
-			if usingIPV4 {
-				go fetcher.Fetch(id, url, host, format, pollId, usingIPV4, pollFinishedChan) // TODO persist fetcher, with its own die chan?
+			if usingIPv4 {
+				go fetcher.Fetch(id, url, host, format, pollId, usingIPv4, pollFinishedChan) // TODO persist fetcher, with its own die chan?
 			} else {
-				go fetcher.Fetch(id, urlV6, host, format, pollId, usingIPV4, pollFinishedChan) // TODO persist fetcher, with its own die chan?
+				go fetcher.Fetch(id, urlv6, host, format, pollId, usingIPv4, pollFinishedChan) // TODO persist fetcher, with its own die chan?
 			}
-			if swapProtocols {
-				usingIPV4 = !usingIPV4
+			if oscillateProtocols {
+				usingIPv4 = !usingIPv4
 			}
 			<-pollFinishedChan
 		case <-die:

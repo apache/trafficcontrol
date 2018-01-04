@@ -21,11 +21,12 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"strings"
 )
 
 // LogLocation is a location to log to. This may be stdout, stderr, null (/dev/null), or a valid file path.
@@ -45,37 +46,41 @@ const (
 type PollingProtocol string
 
 const (
-	IPV4Only               = PollingProtocol("IPV4Only")
-	IPV6Only               = PollingProtocol("IPV6Only")
-	Both                   = PollingProtocol("Both")
-	InvalidPollingProtocol = PollingProtocol("InvalidPollingProtocol")
+	IPv4Only               = PollingProtocol("ipv4only")
+	IPv6Only               = PollingProtocol("ipv6only")
+	Both                   = PollingProtocol("both")
+	InvalidPollingProtocol = PollingProtocol("invalid_polling_protocol")
 )
 
 func (t PollingProtocol) String() string {
-	switch t {
-	case IPV4Only:
-		return "IPV4Only"
-	case IPV6Only:
-		return "IPV6Only"
-	case Both:
-		return "Both"
-	default:
-		return "InvalidPollingProtocol"
-	}
+	return string(t)
 }
 
 func PollingProtocolFromString(s string) PollingProtocol {
 	s = strings.ToLower(s)
 	switch s {
-	case "ipv4only":
-		return IPV4Only
-	case "ipv6only":
-		return IPV6Only
-	case "both":
+	case IPv4Only.String():
+		return IPv4Only
+	case IPv6Only.String():
+		return IPv6Only
+	case Both.String():
 		return Both
 	default:
 		return InvalidPollingProtocol
 	}
+}
+
+func (t *PollingProtocol) UnmarshalJSON(b []byte) error {
+	var s string
+	err := json.Unmarshal(b, &s)
+	if err != nil {
+		return err
+	}
+	*t = PollingProtocolFromString(s)
+	if *t == InvalidPollingProtocol {
+		return errors.New("parsed invalid PollingProtocol: " + s)
+	}
+	return nil
 }
 
 // Config is the configuration for the application. It includes myriad data, such as polling intervals and log locations.
@@ -134,8 +139,8 @@ var DefaultConfig = Config{
 	HealthToStatRatio:            4,
 	StaticFileDir:                StaticFileDir,
 	CRConfigHistoryCount:         20000,
-	CachePollingProtocol:         IPV4Only,
-	PeerPollingProtocol:          IPV4Only,
+	CachePollingProtocol:         IPv4Only,
+	PeerPollingProtocol:          IPv4Only,
 }
 
 // MarshalJSON marshals custom millisecond durations. Aliasing inspired by http://choly.ca/post/go-json-marshalling/

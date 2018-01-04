@@ -20,9 +20,10 @@ package threadsafe
  */
 
 import (
+	"sync"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/cache"
-	"sync"
 )
 
 // CacheAvailableStatus wraps a map of cache available statuses to be safe for multiple reader goroutines and one writer.
