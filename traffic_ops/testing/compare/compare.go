@@ -17,6 +17,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -29,8 +30,8 @@ import (
 	"sync"
 	"unicode"
 
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/kelseyhightower/envconfig"
-	"github.comcast.com/cdn/trafficcontrol/lib/go-tc"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -58,8 +59,11 @@ func (to *Connect) login(creds Creds) error {
 	if err != nil {
 		return err
 	}
-	to.Client = &http.Client{}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 
+	to.Client = &http.Client{Transport: tr}
 	url := to.URL + `/api/1.2/user/login`
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
@@ -75,7 +79,11 @@ func (to *Connect) login(creds Creds) error {
 	to.Client.Jar = jar
 
 	resp, err := to.Client.Do(req)
-	defer resp.Body.Close()
+	defer func() {
+		if resp != nil && resp.Body != nil {
+			resp.Body.Close()
+		}
+	}()
 
 	if err != nil {
 		return err
