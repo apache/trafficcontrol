@@ -103,9 +103,9 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 			if(ttls == null) {
 				ttl = -1;
 			} else if(ir.isInet6()) {
-				ttl = JsonUtils.getLong(ttls, "AAAA", 0);
+				ttl = JsonUtils.optLong(ttls, "AAAA", 0);
 			} else {
-				ttl = JsonUtils.getLong(ttls, "A", 0);
+				ttl = JsonUtils.optLong(ttls, "A", 0);
 
 			}
 
@@ -218,7 +218,7 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	}
 
 	public void setState(final JsonNode state) {
-		final boolean isAvailable = JsonUtils.getBoolean(state, "isAvailable", true);
+		final boolean isAvailable = JsonUtils.optBoolean(state, "isAvailable", true);
 		this.setIsAvailable(isAvailable);
 	}
 

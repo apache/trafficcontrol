@@ -27,8 +27,8 @@ public class WatcherConfig {
 
 	public WatcherConfig(final String prefix, final JsonNode config, final TrafficOpsUtils trafficOpsUtils) {
 		url = trafficOpsUtils.getUrl(prefix + ".polling.url", "");
-		interval = JsonUtils.getLong(config, prefix + ".polling.interval", -1L);
-		timeout = JsonUtils.getInt(config, prefix + ".polling.timeout", -1);
+		interval = JsonUtils.optLong(config, prefix + ".polling.interval", -1L);
+		timeout = JsonUtils.optInt(config, prefix + ".polling.timeout", -1);
 	}
 
 	public long getInterval() {
