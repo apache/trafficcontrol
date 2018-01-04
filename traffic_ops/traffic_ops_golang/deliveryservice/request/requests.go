@@ -20,7 +20,6 @@ package request
  */
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -70,7 +69,7 @@ func (request *TODeliveryServiceRequest) SetID(i int) {
 }
 
 // Validate ...
-func (request *TODeliveryServiceRequest) Validate() []error {
+func (request *TODeliveryServiceRequest) Validate(*sqlx.DB) []error {
 	log.Debugf("Got request with %++v\n", request)
 	var errs []error
 	if len(request.ChangeType) == 0 {
@@ -102,7 +101,7 @@ func (request *TODeliveryServiceRequest) Validate() []error {
 //generic error message returned
 
 // Update ...
-func (request *TODeliveryServiceRequest) Update(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
+func (request *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
@@ -161,7 +160,7 @@ func (request *TODeliveryServiceRequest) Update(db *sqlx.DB, ctx context.Context
 //to be added to the struct
 
 // Insert ...
-func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
+func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
@@ -177,10 +176,6 @@ func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB, ctx context.Context
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
-	}
-	user, err := auth.GetCurrentUser(ctx)
-	if err != nil {
-		return err, tc.SystemError
 	}
 	ir := insertRequestQuery(user.ID)
 	resultRows, err := tx.NamedQuery(ir, request)
@@ -220,7 +215,7 @@ func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB, ctx context.Context
 //all implementations of Deleter should use transactions and return the proper errorType
 
 // Delete ...
-func (request *TODeliveryServiceRequest) Delete(db *sqlx.DB, ctx context.Context) (error, tc.ApiErrorType) {
+func (request *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
