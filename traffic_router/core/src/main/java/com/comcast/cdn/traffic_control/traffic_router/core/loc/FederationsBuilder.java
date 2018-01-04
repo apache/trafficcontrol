@@ -15,6 +15,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -32,7 +33,7 @@ public class FederationsBuilder {
         final JsonNode federationList = jsonObject.get("response");
 
         for (final JsonNode currFederation : federationList) {
-            final String deliveryService = currFederation.has("deliveryService") ? currFederation.get("deliveryService").asText() : "";
+            final String deliveryService = JsonUtils.getString(currFederation, "deliveryService", "");
 
             final List<FederationMapping> mappings = new ArrayList<FederationMapping>();
 
