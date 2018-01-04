@@ -17,6 +17,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ComparableTreeSet;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -27,13 +28,12 @@ import java.io.IOException;
 public class FederationMappingBuilder {
     private static final Logger LOGGER = LoggerFactory.getLogger(FederationMappingBuilder.class);
 
-    @SuppressWarnings("PMD.NPathComplexity")
     public FederationMapping fromJSON(final String json) throws IOException {
         final ObjectMapper mapper = new ObjectMapper();
         final JsonNode jsonNode = mapper.readTree(json);
 
-        final String cname = jsonNode.has("cname") ? jsonNode.get("cname").asText() : "";
-        final int ttl = jsonNode.has("ttl") ? jsonNode.get("ttl").asInt() : 0;
+        final String cname = JsonUtils.getString(jsonNode, "cname", "");
+        final int ttl = JsonUtils.getInt(jsonNode, "ttl", 0);
 
         final ComparableTreeSet<CidrAddress> network = new ComparableTreeSet<CidrAddress>();
         if (jsonNode.has("resolve4")) {

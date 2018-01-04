@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
@@ -180,19 +181,19 @@ public final class RegionalGeo {
 
             for (final JsonNode ruleJson : dsvcsJson) {
 
-                final String dsvcId = ruleJson.has("deliveryServiceId") ? ruleJson.get("deliveryServiceId").asText() : "";
+                final String dsvcId = JsonUtils.getString(ruleJson, "deliveryServiceId", "");
                 if (dsvcId.trim().isEmpty()) {
                     LOGGER.error("RegionalGeo ERR: deliveryServiceId empty");
                     return null;
                 }
 
-                final String urlRegex = ruleJson.has("urlRegex") ? ruleJson.get("urlRegex").asText() : "";
+                final String urlRegex = JsonUtils.getString(ruleJson, "urlRegex", "");
                 if (urlRegex.trim().isEmpty()) {
                     LOGGER.error("RegionalGeo ERR: urlRegex empty");
                     return null;
                 }
 
-                final String redirectUrl = ruleJson.has("redirectUrl") ? ruleJson.get("redirectUrl").asText() : "";
+                final String redirectUrl = JsonUtils.getString(ruleJson, "redirectUrl", "");
                 if (redirectUrl.trim().isEmpty()) {
                     LOGGER.error("RegionalGeo ERR: redirectUrl empty");
                     return null;
