@@ -118,17 +118,17 @@ public final class SignatureManager {
 					final JsonNode keyPairData = fetchKeyPairData(cacheRegister);
 
 					if (keyPairData != null) {
-						final JsonNode response = keyPairData.get("response");
+						final JsonNode response = JsonUtils.getJsonNode(keyPairData, "response");
 						final Iterator<?> dsIt = response.fieldNames();
 						final JsonNode config = cacheRegister.getConfig();
 						final long defaultTTL = ZoneUtils.getLong(config.get("ttls"), "DNSKEY", 60);
 
 						while (dsIt.hasNext()) {
-							final JsonNode keyTypes = response.get((String) dsIt.next());
+							final JsonNode keyTypes = JsonUtils.getJsonNode(response, (String) dsIt.next());
 							final Iterator<?> typeIt = keyTypes.fieldNames();
 
 							while (typeIt.hasNext()) {
-								final JsonNode keyPairs = keyTypes.get((String) typeIt.next());
+								final JsonNode keyPairs = JsonUtils.getJsonNode(keyTypes, (String) typeIt.next());
 
 								if (keyPairs.isArray()) {
 									for (final JsonNode keyPair : keyPairs) {
@@ -174,6 +174,8 @@ public final class SignatureManager {
 					} else {
 						LOGGER.fatal("Unable to read keyPairData: " + keyPairData);
 					}
+				} catch (JsonUtilsException ex) {
+					LOGGER.fatal("JsonUtilsException caught while trying to maintain keyMap", ex);
 				} catch (RuntimeException ex) {
 					LOGGER.fatal("RuntimeException caught while trying to maintain keyMap", ex);
 				}

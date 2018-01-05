@@ -20,11 +20,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.xbill.DNS.Record;
+import org.apache.log4j.Logger;
 
 public class ZoneUtils {
-	//private static final Logger LOGGER = Logger.getLogger(ZoneUtils.class);
+	private static final Logger LOGGER = Logger.getLogger(ZoneUtils.class);
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHH");
 
 	protected static long getMaximumTTL(final List<Record> records) {
@@ -44,9 +47,13 @@ public class ZoneUtils {
 			Date date = null;
 
 			if (jo != null && jo.has("date")) {
-				final Calendar cal = Calendar.getInstance();
-				cal.setTimeInMillis(jo.get("date").longValue() * 1000);
-				date = cal.getTime();
+				try {
+					final Calendar cal = Calendar.getInstance();
+					cal.setTimeInMillis(JsonUtils.getLong(jo, "date") * 1000);
+					date = cal.getTime();
+				} catch (JsonUtilsException ex) {
+					LOGGER.error(ex, ex);
+				}
 			}
 
 			if (date == null) {
