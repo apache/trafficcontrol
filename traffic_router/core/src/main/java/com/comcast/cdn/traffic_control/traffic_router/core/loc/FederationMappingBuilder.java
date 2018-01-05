@@ -18,6 +18,7 @@ package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.ComparableTreeSet;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -28,16 +29,16 @@ import java.io.IOException;
 public class FederationMappingBuilder {
     private static final Logger LOGGER = LoggerFactory.getLogger(FederationMappingBuilder.class);
 
-    public FederationMapping fromJSON(final String json) throws IOException {
+    public FederationMapping fromJSON(final String json) throws JsonUtilsException, IOException {
         final ObjectMapper mapper = new ObjectMapper();
         final JsonNode jsonNode = mapper.readTree(json);
 
-        final String cname = JsonUtils.getString(jsonNode, "cname", "");
-        final int ttl = JsonUtils.getInt(jsonNode, "ttl", 0);
+        final String cname = JsonUtils.getString(jsonNode, "cname");
+        final int ttl = JsonUtils.getInt(jsonNode, "ttl");
 
         final ComparableTreeSet<CidrAddress> network = new ComparableTreeSet<CidrAddress>();
         if (jsonNode.has("resolve4")) {
-            final JsonNode networkList = jsonNode.get("resolve4");
+            final JsonNode networkList = JsonUtils.getJsonNode(jsonNode, "resolve4");
 
             try {
                 network.addAll(buildAddresses(networkList));
@@ -49,7 +50,7 @@ public class FederationMappingBuilder {
 
         final ComparableTreeSet<CidrAddress> network6 = new ComparableTreeSet<CidrAddress>();
         if (jsonNode.has("resolve6")) {
-            final JsonNode network6List = jsonNode.get("resolve6");
+            final JsonNode network6List = JsonUtils.getJsonNode(jsonNode, "resolve6");
             try {
                 network6.addAll(buildAddresses(network6List));
             }

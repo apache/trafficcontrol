@@ -27,6 +27,8 @@ import java.util.ArrayList;
 
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -69,14 +71,14 @@ public class NetworkNode implements Comparable<NetworkNode> {
     @SuppressWarnings("PMD.CyclomaticComplexity")
     public static NetworkNode generateTree(final JsonNode json, final boolean verifyOnly) {
         try {
-            final JsonNode coverageZones = json.get("coverageZones");
+            final JsonNode coverageZones = JsonUtils.getJsonNode(json, "coverageZones");
 
             final SuperNode root = new SuperNode();
 
             final Iterator<String> czIter = coverageZones.fieldNames();
             while (czIter.hasNext()) {
                 final String loc = czIter.next();
-                final JsonNode locData = coverageZones.get(loc);
+                final JsonNode locData = JsonUtils.getJsonNode(coverageZones, loc);
                 final JsonNode coordinates = locData.get("coordinates");
                 Geolocation geolocation = null;
 
@@ -87,7 +89,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
                 }
 
                 try {
-                    for (final JsonNode network6 : locData.get("network6")) {
+                    for (final JsonNode network6 : JsonUtils.getJsonNode(locData, "network6")) {
                         final String ip = network6.asText();
 
                         try {
@@ -97,12 +99,12 @@ public class NetworkNode implements Comparable<NetworkNode> {
                             return null;
                         }
                     }
-                } catch (Exception ex) {
+                } catch (JsonUtilsException ex) {
                     LOGGER.warn("An exception was caught while accessing the network6 key of " + loc + " in the incoming coverage zone file: " + ex.getMessage());
                 }
 
                 try {
-                    for (final JsonNode network : locData.get("network")) {
+                    for (final JsonNode network : JsonUtils.getJsonNode(locData, "network")) {
                         final String ip = network.asText();
 
                         try {
@@ -112,7 +114,7 @@ public class NetworkNode implements Comparable<NetworkNode> {
                             return null;
                         }
                     }
-                } catch (Exception ex) {
+                } catch (JsonUtilsException ex) {
                     LOGGER.warn("An exception was caught while accessing the network key of " + loc + " in the incoming coverage zone file: " + ex.getMessage());
                 }
             }
@@ -122,6 +124,8 @@ public class NetworkNode implements Comparable<NetworkNode> {
             }
 
             return root;
+        } catch (JsonUtilsException ex) {
+            LOGGER.warn(ex, ex);
         } catch (NetworkNodeException ex) {
             LOGGER.fatal(ex, ex);
         }

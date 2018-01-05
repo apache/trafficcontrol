@@ -33,6 +33,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
@@ -173,8 +174,8 @@ public abstract class AbstractServiceUpdater {
 		return true;
 	}
 
-	abstract public boolean verifyDatabase(final File dbFile) throws IOException;
-	abstract public boolean loadDatabase() throws IOException;
+	abstract public boolean verifyDatabase(final File dbFile) throws IOException, JsonUtilsException;
+	abstract public boolean loadDatabase() throws IOException, JsonUtilsException;
 
 	public void setDatabaseName(final String databaseName) {
 		this.databaseName = databaseName;
