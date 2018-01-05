@@ -43,14 +43,8 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 		}`),
 	}
 	expectedErrors := []string{
-	/*
-		`'regionalGeoBlocking' is required`,
-		`'xmlId' cannot contain spaces`,
-		`'dscp' is required`,
-		`'displayName' cannot be blank`,
-		`'geoProvider' is required`,
-		`'typeId' is required`,
-	*/
+		`'status' is required`,
+		`'xmlId' is required`,
 	}
 
 	r.SetID(10)
@@ -66,7 +60,6 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 		t.Errorf("expected Type to be %s,  not %s", exp, r.GetType())
 	}
 
-	var errs []error
 	mockDB, _, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -76,21 +69,7 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	/* TODO: this section panics when deliveryservice.Validate() tries to get the type name.
-	q := `insert into type (name, description, use_in_table) values ('HTTP', 'HTTP Content Routing', 'deliveryservice') ON CONFLICT (name) DO NOTHING;`
-	qe := `insert into type \(name, description, use_in_table\) values \('HTTP', 'HTTP Content Routing', 'deliveryservice'\) ON CONFLICT \(name\) DO NOTHING;`
-	mock.ExpectExec(qe).WillReturnResult(sqlmock.NewResult(1, 1))
-	res, err := db.Exec(q)
-
-	// db.Exec(`insert into type (name, description, use_in_table) values ('HTTP_NO_CACHE', 'HTTP Content Routing, no caching', 'deliveryservice') ON CONFLICT (name) DO NOTHING;`)
-	//db.Exec(`insert into type (name, description, use_in_table) values ('HTTP_LIVE', 'HTTP Content routing cache in RAM', 'deliveryservice') ON CONFLICT (name) DO NOTHING;`)
-	if err != nil {
-		t.Error(err)
-	}
-	mock.ExpectQuery(`SELECT name from type where id=\$1`).WillReturnRows(sqlmock.NewRows([]string{"name"}))
-
-	errs := r.Validate(db)
-	*/
+	errs := r.Validate(nil)
 	if len(errs) != len(expectedErrors) {
 		for _, e := range errs {
 			t.Error(e)
