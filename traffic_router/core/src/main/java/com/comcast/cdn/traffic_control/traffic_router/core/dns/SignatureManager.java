@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
@@ -148,6 +149,8 @@ public final class SignatureManager {
 											newKeyMap.put(dkpw.getName(), keyList);
 
 											LOGGER.debug("Added " + dkpw.toString() + " to incoming keyList");
+										} catch (JsonUtilsException ex) {
+											LOGGER.fatal("JsonUtilsException caught while parsing key for " + keyPair, ex);
 										} catch (TextParseException ex) {
 											LOGGER.fatal(ex, ex);
 										} catch (IOException ex) {

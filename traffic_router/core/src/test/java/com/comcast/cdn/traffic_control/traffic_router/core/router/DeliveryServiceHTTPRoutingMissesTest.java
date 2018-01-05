@@ -43,7 +43,9 @@ public class DeliveryServiceHTTPRoutingMissesTest {
         JsonNode unusedByTest = mock(JsonNode.class);
         JsonNode ttls = mock(JsonNode.class);
         when(unusedByTest.get("ttls")).thenReturn(ttls);
+        when(unusedByTest.has("routingName")).thenReturn(true);
         when(unusedByTest.get("routingName")).thenReturn(mapper.readTree("\"edge\""));
+        when(unusedByTest.has("coverageZoneOnly")).thenReturn(true);
         when(unusedByTest.get("coverageZoneOnly")).thenReturn(mapper.readTree("true"));
         deliveryService = new DeliveryService("ignoredbytest", unusedByTest);
         httpRequest = mock(HTTPRequest.class);

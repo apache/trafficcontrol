@@ -23,6 +23,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.config.ParseException
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.net.UnknownHostException;
@@ -35,26 +36,26 @@ import java.util.TreeSet;
 
 public class CacheRegisterBuilder {
 
-    public static void parseCacheConfig(final JsonNode contentServers, final CacheRegister cacheRegister) throws ParseException {
+    public static void parseCacheConfig(final JsonNode contentServers, final CacheRegister cacheRegister) throws JsonUtilsException, ParseException {
         final Map<String,Cache> map = new HashMap<String,Cache>();
         final Map<String, List<String>> statMap = new HashMap<String, List<String>>();
 
         final Iterator<String> contentServersIter = contentServers.fieldNames();
         while (contentServersIter.hasNext()) {
             final String node = contentServersIter.next();
-            final JsonNode jo = contentServers.get(node);
-            final CacheLocation loc = cacheRegister.getCacheLocation(jo.get("locationId").asText());
+            final JsonNode jo = JsonUtils.getJsonNode(contentServers, node);
+            final CacheLocation loc = cacheRegister.getCacheLocation(JsonUtils.getString(jo, "locationId"));
             if (loc != null) {
                 String hashId = node;
                 if(jo.has("hashId")) {
                     hashId = jo.get("hashId").asText();
                 }
-                final int hashCount = JsonUtils.optInt(jo, "hashCount", 0);
+                final int hashCount = JsonUtils.optInt(jo, "hashCount");
                 final Cache cache = new Cache(node, hashId, hashCount);
-                cache.setFqdn(jo.get("fqdn").asText());
-                cache.setPort(jo.get("port").asInt());
-                final String ip = jo.get("ip").asText();
-                final String ip6 = JsonUtils.optString(jo, "ip6", "");
+                cache.setFqdn(JsonUtils.getString(jo, "fqdn"));
+                cache.setPort(JsonUtils.getInt(jo, "port"));
+                final String ip = JsonUtils.getString(jo, "ip");
+                final String ip6 = JsonUtils.optString(jo, "ip6");
                 try {
                     cache.setIpAddress(ip, ip6, 0);
                 } catch (UnknownHostException e) {
@@ -84,7 +85,7 @@ public class CacheRegisterBuilder {
                                     references.add(new Cache.DeliveryServiceReference(ds, name));
                                 }
 
-                                final String tld = JsonUtils.optString(cacheRegister.getConfig(), "domain_name", "").toLowerCase();
+                                final String tld = JsonUtils.optString(cacheRegister.getConfig(), "domain_name").toLowerCase();
 
                                 if (name.contains(tld)) {
                                     final String reName = name.replaceAll("^.*?\\.", "");
@@ -117,7 +118,7 @@ public class CacheRegisterBuilder {
         cacheRegister.setCacheMap(map);
     }
 
-    public static void parseDeliveryServiceConfig(final JsonNode deliveryServices, final CacheRegister cacheRegister) {
+    public static void parseDeliveryServiceConfig(final JsonNode deliveryServices, final CacheRegister cacheRegister) throws JsonUtilsException {
         final TreeSet<DeliveryServiceMatcher> dnsServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
         final TreeSet<DeliveryServiceMatcher> httpServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
         final Map<String,DeliveryService> dsMap = new HashMap<String,DeliveryService>();
@@ -125,15 +126,15 @@ public class CacheRegisterBuilder {
         final Iterator<String> keyIter = deliveryServices.fieldNames();
         while (keyIter.hasNext()) {
             final String dsId = keyIter.next();
-            final JsonNode dsJo = deliveryServices.get(dsId);
-            final JsonNode matchsets = dsJo.get("matchsets");
+            final JsonNode dsJo = JsonUtils.getJsonNode(deliveryServices, dsId);
+            final JsonNode matchsets = JsonUtils.getJsonNode(dsJo, "machsets");
             final DeliveryService ds = new DeliveryService(dsId, dsJo);
             boolean isDns = false;
 
             dsMap.put(dsId, ds);
 
             for (final JsonNode matchset : matchsets) {
-                final String protocol = matchset.get("protocol").asText();
+                final String protocol = JsonUtils.getString(matchset, "protocol");
 
                 if ("DNS".equals(protocol)) {
                     isDns = true;
@@ -148,9 +149,9 @@ public class CacheRegisterBuilder {
                 }
 
                 for (JsonNode matchlist : matchset.get("matchlist")) {
-                    final DeliveryServiceMatcher.Type type = DeliveryServiceMatcher.Type.valueOf(matchlist.get("match-type").asText());
+                    final DeliveryServiceMatcher.Type type = DeliveryServiceMatcher.Type.valueOf(JsonUtils.getString(matchlist, "match-type"));
                     final String target = JsonUtils.optString(matchlist, "target", "");
-                    m.addMatch(type, matchlist.get("regex").asText(), target);
+                    m.addMatch(type, JsonUtils.getString(matchlist, "regex"), target);
                 }
             }
             ds.setDns(isDns);

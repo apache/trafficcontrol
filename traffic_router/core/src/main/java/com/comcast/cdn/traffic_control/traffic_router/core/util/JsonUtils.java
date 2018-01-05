@@ -21,7 +21,7 @@ public class JsonUtils {
 
     public static long getLong(final JsonNode jsonNode, final String key) throws JsonUtilsException {
         if (jsonNode == null || !jsonNode.has(key)) {
-            throw new JsonUtilsException("");
+            throwException(key);
         }
 
         return jsonNode.get(key).asLong();
@@ -41,7 +41,7 @@ public class JsonUtils {
 
     public static double getDouble(final JsonNode jsonNode, final String key) throws JsonUtilsException {
         if (jsonNode == null || !jsonNode.has(key)) {
-            throw new JsonUtilsException("");
+            throwException(key);
         }
 
         return jsonNode.get(key).asDouble();
@@ -61,7 +61,7 @@ public class JsonUtils {
 
     public static int getInt(final JsonNode jsonNode, final String key) throws JsonUtilsException {
         if (jsonNode == null || !jsonNode.has(key)) {
-            throw new JsonUtilsException("");
+            throwException(key);
         }
 
         return jsonNode.get(key).asInt();
@@ -81,7 +81,7 @@ public class JsonUtils {
 
     public static boolean getBoolean(final JsonNode jsonNode, final String key) throws JsonUtilsException {
         if (jsonNode == null || !jsonNode.has(key)) {
-            throw new JsonUtilsException("");
+            throwException(key);
         }
 
         return jsonNode.get(key).asBoolean();
@@ -101,7 +101,7 @@ public class JsonUtils {
 
     public static String getString(final JsonNode jsonNode, final String key) throws JsonUtilsException {
         if (jsonNode == null || !jsonNode.has(key)) {
-            throw new JsonUtilsException("");
+            throwException(key);
         }
 
         return jsonNode.get(key).asText();
@@ -117,5 +117,17 @@ public class JsonUtils {
 
     public static String optString(final JsonNode jsonNode, final String key) {
         return optString(jsonNode, key, "");
+    }
+
+    public static JsonNode getJsonNode(final JsonNode jsonNode, final String key) throws JsonUtilsException {
+        if (jsonNode == null || !jsonNode.has(key)) {
+            throwException(key);
+        }
+
+        return jsonNode.get(key);
+    }
+
+    public static void throwException(final String key) throws JsonUtilsException {
+        throw new JsonUtilsException("Key: " + key + " not found in JSON");
     }
 }

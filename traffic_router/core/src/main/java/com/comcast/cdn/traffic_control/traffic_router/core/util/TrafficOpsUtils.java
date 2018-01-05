@@ -31,8 +31,8 @@ public class TrafficOpsUtils {
 		return input.replace("${tmHostname}", this.getHostname()).replace("${toHostname}", this.getHostname()).replace("${cdnName}", getCdnName());
 	}
 
-	public String getUrl(final String parameter) {
-		return replaceTokens(JsonUtils.optString(config, parameter, null));
+	public String getUrl(final String parameter) throws JsonUtilsException {
+		return replaceTokens(JsonUtils.getString(config, parameter));
 	}
 
 	public String getUrl(final String parameter, final String defaultValue) {
