@@ -22,14 +22,14 @@
 Apache Traffic Control (incubating) is an Open Source implementation of a Content Delivery Network.
 
 #### Documentation
-* [Intro](http://traffic-control-cdn.readthedocs.io/en/latest//index.html)
-* [CDN Basics](http://traffic-control-cdn.readthedocs.io/en/latest//basics/index.html)
-* [Traffic Control Overview](http://traffic-control-cdn.readthedocs.io/en/latest//overview/index.html)
-* [Administrator's Guide](http://traffic-control-cdn.readthedocs.io/en/latest//admin/index.html)
-* [Developer's Guide](http://traffic-control-cdn.readthedocs.io/en/latest//development/index.html)
+* [Intro](http://traffic-control-cdn.readthedocs.io/en/latest/index.html)
+* [CDN Basics](http://traffic-control-cdn.readthedocs.io/en/latest/basics/index.html)
+* [Traffic Control Overview](http://traffic-control-cdn.readthedocs.io/en/latest/overview/index.html)
+* [Administrator's Guide](http://traffic-control-cdn.readthedocs.io/en/latest/admin/index.html)
+* [Developer's Guide](http://traffic-control-cdn.readthedocs.io/en/latest/development/index.html)
 
 ####  Questions, Comments, Bugs and More
-* [Frequently Asked Questions](http://traffic-control-cdn.readthedocs.io/en/latest//faq/index.html)
+* [Frequently Asked Questions](http://traffic-control-cdn.readthedocs.io/en/latest/faq/index.html)
 * [Found a bug or file a feature request](https://github.com/apache/incubator-trafficcontrol/issues)
 * [Subscribe to our users list](mailto:users-subscribe@trafficcontrol.incubator.apache.org)
 * [Subscribe to our dev list](mailto:dev-subscribe@trafficcontrol.incubator.apache.org)
