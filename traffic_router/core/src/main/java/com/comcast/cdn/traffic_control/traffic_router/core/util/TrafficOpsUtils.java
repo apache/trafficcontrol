@@ -19,6 +19,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TrafficOpsUtils {
 	private String username;
@@ -40,9 +42,12 @@ public class TrafficOpsUtils {
 	}
 
 	public JsonNode getAuthJSON() throws IOException {
-		final String jsonStr = "{\"u\":\"" + getUsername() + "\",\"p\":\"" + getPassword() + "\"}";
+		final Map<String, String> authMap = new HashMap<>();
+		authMap.put("u", getUsername());
+		authMap.put("p", getPassword());
+
 		final ObjectMapper mapper = new ObjectMapper();
-		final JsonNode data = mapper.readTree(jsonStr);
+		final JsonNode data = mapper.valueToTree(authMap);
 
 		return data;
 	}
