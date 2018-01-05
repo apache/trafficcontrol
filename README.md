@@ -17,9 +17,7 @@
     under the License.
 -->
 
-Build: [![Build Status](https://builds.apache.org/buildStatus/icon?job=incubator-trafficcontrol-master-build)](https://builds.apache.org/view/Incubator%20Projects/job/incubator-trafficcontrol-master-build/)
-
-Documentation: [![Documentation Status](https://readthedocs.org/projects/traffic-control-cdn/badge/?version=latest)](http://traffic-control-cdn.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://builds.apache.org/buildStatus/icon?job=incubator-trafficcontrol-master-build)](https://builds.apache.org/view/Incubator%20Projects/job/incubator-trafficcontrol-master-build/) [![Documentation Status](https://readthedocs.org/projects/traffic-control-cdn/badge/?version=latest)](http://traffic-control-cdn.readthedocs.io/en/latest/?badge=latest)
 
 Apache Traffic Control (incubating) is an Open Source implementation of a Content Delivery Network.
 
