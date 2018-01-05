@@ -136,7 +136,7 @@ public class ZoneManager extends Resolver {
 
 	@SuppressWarnings("PMD.UseStringBufferForStringAppends")
 	private static void initTopLevelDomain(final CacheRegister data) throws TextParseException {
-		String tld = JsonUtils.optString(data.getConfig(), "domain_name", "");
+		String tld = JsonUtils.optString(data.getConfig(), "domain_name");
 
 		if (!tld.endsWith(".")) {
 			tld = tld + ".";
@@ -504,7 +504,7 @@ public class ZoneManager extends Resolver {
 					final String jsName = JsonUtils.getString(staticEntry, "name");
 					final String value = JsonUtils.getString(staticEntry, "value");
 					final Name name = newName(jsName, domain);
-					long ttl = JsonUtils.optInt(staticEntry, "ttl", 0);
+					long ttl = JsonUtils.optInt(staticEntry, "ttl");
 
 					if (ttl == 0) {
 						ttl = ZoneUtils.getLong(ds.getTtls(), type, 60);
@@ -542,11 +542,11 @@ public class ZoneManager extends Resolver {
 
 			final Name trName = newName(key, domain);
 
-			String ip6 = JsonUtils.optString(trJo, IP6, "");
+			String ip6 = JsonUtils.optString(trJo, IP6);
 			list.add(new NSRecord(name, DClass.IN, ZoneUtils.getLong(ttl, "NS", 60), getGlueName(ds, trJo, name, key)));
 			list.add(new ARecord(trName,
 					DClass.IN, ZoneUtils.getLong(ttl, "A", 60), 
-					InetAddress.getByName(JsonUtils.optString(trJo, IP, ""))));
+					InetAddress.getByName(JsonUtils.optString(trJo, IP))));
 
 			if (ip6 != null && !ip6.isEmpty() && ip6RoutingEnabled) {
 				ip6 = ip6.replaceAll("/.*", "");
@@ -568,8 +568,8 @@ public class ZoneManager extends Resolver {
 		list.add(new ARecord(trName,
 				DClass.IN,
 				ZoneUtils.getLong(ttl, "A", 60),
-				InetAddress.getByName(JsonUtils.optString(trJo, IP, ""))));
-		String ip6 = JsonUtils.optString(trJo, IP6, "");
+				InetAddress.getByName(JsonUtils.optString(trJo, IP))));
+		String ip6 = JsonUtils.optString(trJo, IP6);
 		if (addTrafficRoutersAAAA && ip6 != null && !ip6.isEmpty()) {
 			ip6 = ip6.replaceAll("/.*", "");
 			list.add(new AAAARecord(trName,

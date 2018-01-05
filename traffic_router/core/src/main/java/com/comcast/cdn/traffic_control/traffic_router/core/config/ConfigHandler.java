@@ -309,7 +309,7 @@ public class ConfigHandler {
 				cache.setPort(JsonUtils.getInt(jo, "port"));
 
 				final String ip = JsonUtils.getString(jo, "ip");
-				final String ip6 = JsonUtils.optString(jo, "ip6", "");
+				final String ip6 = JsonUtils.optString(jo, "ip6");
 
 				try {
 					cache.setIpAddress(ip, ip6, 0);

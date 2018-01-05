@@ -128,6 +128,6 @@ public class JsonUtils {
     }
 
     public static void throwException(final String key) throws JsonUtilsException {
-        throw new JsonUtilsException("Key: " + key + " not found in JSON");
+        throw new JsonUtilsException("Failed querying JSON for key: " + key);
     }
 }

@@ -230,7 +230,7 @@ public class DataExporter {
 				final JsonNode config = cacheRegister.getConfig();
 
 				if (config != null) {
-					maxAge = JsonUtils.optInt(config, "api.cache-control.max-age", 0);
+					maxAge = JsonUtils.optInt(config, "api.cache-control.max-age");
 				}
 			}
 		}

@@ -77,7 +77,7 @@ public final class SignatureManager {
 		synchronized(SignatureManager.class) {
 			final JsonNode config = cacheRegister.getConfig();
 
-			final boolean dnssecEnabled = JsonUtils.optBoolean(config, "dnssec.enabled", false);
+			final boolean dnssecEnabled = JsonUtils.optBoolean(config, "dnssec.enabled");
 			if (dnssecEnabled) {
 				setDnssecEnabled(true);
 				this.useJDnsSec = JsonUtils.optBoolean(config, "usejdnssec", true);

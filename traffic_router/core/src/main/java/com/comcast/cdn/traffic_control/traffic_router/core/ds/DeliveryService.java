@@ -128,22 +128,22 @@ public class DeliveryService {
 		}
 
 		this.dispersion = new Dispersion(dsJo);
-		this.ip6RoutingEnabled = JsonUtils.optBoolean(dsJo, "ip6RoutingEnabled", false);
+		this.ip6RoutingEnabled = JsonUtils.optBoolean(dsJo, "ip6RoutingEnabled");
 		setResponseHeaders(dsJo.get("responseHeaders"));
 		setRequestHeaders(dsJo.get("requestHeaders"));
-		this.regionalGeoEnabled = JsonUtils.optBoolean(dsJo, "regionalGeoBlocking", false);
-		geolocationProvider = JsonUtils.optString(dsJo, "geolocationProvider", "");
+		this.regionalGeoEnabled = JsonUtils.optBoolean(dsJo, "regionalGeoBlocking");
+		geolocationProvider = JsonUtils.optString(dsJo, "geolocationProvider");
 		if (geolocationProvider != null && !geolocationProvider.isEmpty()) {
 			LOGGER.info("DeliveryService '" + id + "' has configured geolocation provider '" + geolocationProvider + "'");
 		} else {
 			LOGGER.info("DeliveryService '" + id + "' will use default geolocation provider Maxmind");
 		}
-		sslEnabled = JsonUtils.optBoolean(dsJo, "sslEnabled", false);
+		sslEnabled = JsonUtils.optBoolean(dsJo, "sslEnabled");
 
 		final JsonNode protocol = dsJo.get("protocol");
 		acceptHttp = JsonUtils.optBoolean(protocol, "acceptHttp", true);
-		acceptHttps = JsonUtils.optBoolean(protocol, "acceptHttps", false);
-		redirectToHttps = JsonUtils.optBoolean(protocol, "redirectToHttps", false);
+		acceptHttps = JsonUtils.optBoolean(protocol, "acceptHttps");
+		redirectToHttps = JsonUtils.optBoolean(protocol, "redirectToHttps");
 
 	}
 
