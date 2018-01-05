@@ -34,7 +34,7 @@ public class CertificateChecker {
 				continue;
 			}
 
-			final String deliveryServiceType = JsonUtils.optString(matchset, "protocol", "");
+			final String deliveryServiceType = JsonUtils.optString(matchset, "protocol");
 			if (!deliveryServiceType.isEmpty()) {
 				return deliveryServiceType;
 			}
@@ -102,6 +102,6 @@ public class CertificateChecker {
 			return false;
 		}
 
-		return JsonUtils.optBoolean(protocolJson, "acceptHttps", false);
+		return JsonUtils.optBoolean(protocolJson, "acceptHttps");
 	}
 }

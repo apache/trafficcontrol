@@ -147,7 +147,7 @@ public class RouterTest {
 
 			while (matchsets.hasNext() && deliveryServiceId == null) {
 				if ("HTTP".equals(matchsets.next().get("protocol").asText())) {
-					final boolean sslEnabled = JsonUtils.optBoolean(deliveryServiceNode, "sslEnabled", false);
+					final boolean sslEnabled = JsonUtils.optBoolean(deliveryServiceNode, "sslEnabled");
 					if (!sslEnabled) {
 						deliveryServiceId = dsId;
 						deliveryServiceDomain = deliveryServiceNode.get("domains").get(0).asText();
