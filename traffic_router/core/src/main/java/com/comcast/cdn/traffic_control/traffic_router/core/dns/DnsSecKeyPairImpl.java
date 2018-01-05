@@ -16,6 +16,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.comcast.cdn.traffic_control.traffic_router.secure.BindPrivateKey;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
@@ -47,21 +48,21 @@ public class DnsSecKeyPairImpl implements DnsSecKeyPair {
 	private DNSKEYRecord dnskeyRecord;
 	private PrivateKey privateKey;
 
-	public DnsSecKeyPairImpl(final JsonNode keyPair, final long defaultTTL) throws IOException {
-		this.inception = new Date(1000L * JsonUtils.optLong(keyPair, "inceptionDate", 0));
-		this.effective = new Date(1000L * JsonUtils.optLong(keyPair, "effectiveDate", 0));
-		this.expiration = new Date(1000L * JsonUtils.optLong(keyPair, "expirationDate", 0));
+	public DnsSecKeyPairImpl(final JsonNode keyPair, final long defaultTTL) throws JsonUtilsException, IOException {
+		this.inception = new Date(1000L * JsonUtils.getLong(keyPair, "inceptionDate"));
+		this.effective = new Date(1000L * JsonUtils.getLong(keyPair, "effectiveDate"));
+		this.expiration = new Date(1000L * JsonUtils.getLong(keyPair, "expirationDate"));
 		this.ttl = JsonUtils.optLong(keyPair, "ttl", defaultTTL);
-		this.name = JsonUtils.optString(keyPair, "name", "").toLowerCase();
+		this.name = JsonUtils.getString(keyPair, "name").toLowerCase();
 
 		final Decoder mimeDecoder = getMimeDecoder();
 		try {
-			privateKey = new BindPrivateKey().decode(new String(mimeDecoder.decode(JsonUtils.optString(keyPair, "private", null))));
+			privateKey = new BindPrivateKey().decode(new String(mimeDecoder.decode(JsonUtils.getString(keyPair, "private"))));
 		} catch (Exception e) {
 			LOGGER.error("Failed to decode PKCS1 key from json data!: " + e.getMessage(), e);
 		}
 
-		final byte[] publicKey = mimeDecoder.decode(JsonUtils.optString(keyPair, "public", null));
+		final byte[] publicKey = mimeDecoder.decode(JsonUtils.getString(keyPair, "public"));
 
 		try (InputStream in = new ByteArrayInputStream(publicKey)) {
 			final Master master = new Master(in, new Name(name), ttl);

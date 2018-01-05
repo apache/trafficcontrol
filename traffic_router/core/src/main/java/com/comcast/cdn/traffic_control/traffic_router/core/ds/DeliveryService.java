@@ -34,6 +34,7 @@ import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
@@ -93,7 +94,7 @@ public class DeliveryService {
 	private final boolean acceptHttps;
 	private final boolean redirectToHttps;
 
-	public DeliveryService(final String id, final JsonNode dsJo) {
+	public DeliveryService(final String id, final JsonNode dsJo) throws JsonUtilsException {
 		this.id = id;
 		this.props = dsJo;
 		this.ttls = dsJo.get("ttls");
@@ -102,7 +103,7 @@ public class DeliveryService {
 			LOGGER.warn("ttls is null for:" + id);
 		}
 
-		this.coverageZoneOnly = JsonUtils.optBoolean(dsJo, "coverageZoneOnly", false);
+		this.coverageZoneOnly = JsonUtils.getBoolean(dsJo, "coverageZoneOnly");
 		this.geoEnabled = dsJo.get("geoEnabled");
 		String rurl = JsonUtils.optString(dsJo, "geoLimitRedirectURL", null);
 		if (rurl != null && rurl.isEmpty()) { rurl = null; }
@@ -111,7 +112,7 @@ public class DeliveryService {
 		this.geoRedirectFile = this.geoRedirectUrl;
 		this.staticDnsEntries = dsJo.get("staticDnsEntries");
 		this.bypassDestination = dsJo.get("bypassDestination");
-		this.routingName = JsonUtils.optString(dsJo, "routingName", "").toLowerCase();
+		this.routingName = JsonUtils.getString(dsJo, "routingName").toLowerCase();
 		this.domains = dsJo.get("domains");
 		this.soa = dsJo.get("soa");
 		this.shouldAppendQueryString = JsonUtils.optBoolean(dsJo, "appendQueryString", true);
@@ -119,8 +120,8 @@ public class DeliveryService {
 		// missLocation: {lat: , long: }
 		final JsonNode mlJo = dsJo.get("missLocation");
 		if(mlJo != null) {
-			final double lat = JsonUtils.optDouble(mlJo, "lat", 0);
-			final double longitude = JsonUtils.optDouble(mlJo, "long", 0);
+			final double lat = JsonUtils.optDouble(mlJo, "lat");
+			final double longitude = JsonUtils.optDouble(mlJo, "long");
 			missLocation = new Geolocation(lat, longitude);
 		} else {
 			missLocation = null;
@@ -140,15 +141,10 @@ public class DeliveryService {
 		sslEnabled = JsonUtils.optBoolean(dsJo, "sslEnabled", false);
 
 		final JsonNode protocol = dsJo.get("protocol");
-		if (protocol != null) {
-			acceptHttp = JsonUtils.optBoolean(protocol, "acceptHttp", true);
-			acceptHttps = JsonUtils.optBoolean(protocol, "acceptHttps", false);
-			redirectToHttps = JsonUtils.optBoolean(protocol, "redirectToHttps", false);
-		} else {
-			acceptHttp = true;
-			acceptHttps = false;
-			redirectToHttps = false;
-		}
+		acceptHttp = JsonUtils.optBoolean(protocol, "acceptHttp", true);
+		acceptHttps = JsonUtils.optBoolean(protocol, "acceptHttps", false);
+		redirectToHttps = JsonUtils.optBoolean(protocol, "redirectToHttps", false);
+
 	}
 
 	public String getId() {
@@ -565,12 +561,12 @@ public class DeliveryService {
 		return responseHeaders;
 	}
 
-	private void setResponseHeaders(final JsonNode jo) {
+	private void setResponseHeaders(final JsonNode jo) throws JsonUtilsException {
 		if (jo != null) {
 			final Iterator<String> keyIter = jo.fieldNames();
 			while (keyIter.hasNext()) {
 				final String key = keyIter.next();
-				responseHeaders.put(key, jo.get(key).asText());
+				responseHeaders.put(key, JsonUtils.getString(jo, key));
 			}
 		}
 	}

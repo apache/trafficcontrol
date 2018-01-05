@@ -24,6 +24,7 @@ import java.util.Date;
 import javax.xml.bind.DatatypeConverter;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.xbill.DNS.DNSKEYRecord;
 import org.xbill.DNS.Master;
@@ -40,15 +41,15 @@ public class DNSKeyPairWrapper extends DnsKeyPair implements DnsSecKeyPair {
 	private Date expiration;
 	private String name;
 
-	public DNSKeyPairWrapper(final JsonNode keyPair, final long defaultTTL) throws IOException {
-		this.inception = new Date(1000L * JsonUtils.optLong(keyPair, "inceptionDate", 0));
-		this.effective = new Date(1000L * JsonUtils.optLong(keyPair, "effectiveDate", 0));
-		this.expiration = new Date(1000L * JsonUtils.optLong(keyPair, "expirationDate", 0));
+	public DNSKeyPairWrapper(final JsonNode keyPair, final long defaultTTL) throws JsonUtilsException, IOException {
+		this.inception = new Date(1000L * JsonUtils.getLong(keyPair, "inceptionDate"));
+		this.effective = new Date(1000L * JsonUtils.getLong(keyPair, "effectiveDate"));
+		this.expiration = new Date(1000L * JsonUtils.getLong(keyPair, "expirationDate"));
 		this.ttl = JsonUtils.optLong(keyPair, "ttl", defaultTTL);
-		this.name = JsonUtils.optString(keyPair, "name", "").toLowerCase();
+		this.name = JsonUtils.getString(keyPair, "name").toLowerCase();
 
-		final byte[] privateKey = DatatypeConverter.parseBase64Binary(JsonUtils.optString(keyPair, "private", null));
-		final byte[] publicKey = DatatypeConverter.parseBase64Binary(JsonUtils.optString(keyPair, "public", null));
+		final byte[] privateKey = DatatypeConverter.parseBase64Binary(JsonUtils.getString(keyPair, "private"));
+		final byte[] publicKey = DatatypeConverter.parseBase64Binary(JsonUtils.getString(keyPair, "public"));
 
 		try (InputStream in = new ByteArrayInputStream(publicKey)) {
 			final Master master = new Master(in, new Name(name), ttl);

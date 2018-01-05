@@ -41,6 +41,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoUpdate
 import com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesPoller;
 import com.comcast.cdn.traffic_control.traffic_router.core.secure.CertificatesPublisher;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
@@ -107,7 +108,7 @@ public class ConfigHandler {
 	}
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity", "PMD.AvoidCatchingThrowable"})
-	public boolean processConfig(final String jsonStr) throws IOException  {
+	public boolean processConfig(final String jsonStr) throws JsonUtilsException, IOException  {
 		isProcessing.set(true);
 		LOGGER.info("Entered processConfig");
 		if (jsonStr == null) {
@@ -123,8 +124,8 @@ public class ConfigHandler {
 		synchronized(configSync) {
 			final ObjectMapper mapper = new ObjectMapper();
 			final JsonNode jo = mapper.readTree(jsonStr);
-			final JsonNode config = jo.get("config");
-			final JsonNode stats = jo.get("stats");
+			final JsonNode config = JsonUtils.getJsonNode(jo, "config");
+			final JsonNode stats = JsonUtils.getJsonNode(jo, "stats");
 
 			final long sts = getSnapshotTimestamp(stats);
 			date = new Date(sts * 1000L);
@@ -143,13 +144,13 @@ public class ConfigHandler {
 				parseRegionalGeoConfig(jo);
 
 				final CacheRegister cacheRegister = new CacheRegister();
-				final JsonNode deliveryServicesJson = jo.get("deliveryServices");
-				cacheRegister.setTrafficRouters(jo.get("contentRouters"));
+				final JsonNode deliveryServicesJson = JsonUtils.getJsonNode(jo, "deliveryServices");
+				cacheRegister.setTrafficRouters(JsonUtils.getJsonNode(jo, "contentRouters"));
 				cacheRegister.setConfig(config);
 				cacheRegister.setStats(stats);
 				parseTrafficOpsConfig(config, stats);
 
-				final Map<String, DeliveryService> deliveryServiceMap = parseDeliveryServiceConfig(jo.get(deliveryServicesKey));
+				final Map<String, DeliveryService> deliveryServiceMap = parseDeliveryServiceConfig(JsonUtils.getJsonNode(jo, deliveryServicesKey));
 
 				parseCertificatesConfig(config);
 				certificatesPublisher.setDeliveryServicesJson(deliveryServicesJson);
@@ -194,9 +195,9 @@ public class ConfigHandler {
 				}
 
 				parseDeliveryServiceMatchSets(deliveryServicesJson, deliveryServiceMap, cacheRegister);
-				parseLocationConfig(jo.get("edgeLocations"), cacheRegister);
-				parseCacheConfig(jo.get("contentServers"), cacheRegister);
-				parseMonitorConfig(jo.get("monitors"));
+				parseLocationConfig(JsonUtils.getJsonNode(jo, "edgeLocations"), cacheRegister);
+				parseCacheConfig(JsonUtils.getJsonNode(jo, "contentServers"), cacheRegister);
+				parseMonitorConfig(JsonUtils.getJsonNode(jo, "monitors"));
 
 				federationsWatcher.configure(config);
 				steeringWatcher.configure(config);
@@ -262,15 +263,15 @@ public class ConfigHandler {
 	 * @param stats
 	 *            the {@link TrafficRouterConfiguration} stats section
 	 *
-	 * @throws IOException
+	 * @throws JsonUtilsException
 	 */
-	private void parseTrafficOpsConfig(final JsonNode config, final JsonNode stats) throws IOException {
+	private void parseTrafficOpsConfig(final JsonNode config, final JsonNode stats) throws JsonUtilsException {
 		if (stats.has("tm_host")) {
-			trafficOpsUtils.setHostname(stats.get("tm_host").asText());
+			trafficOpsUtils.setHostname(JsonUtils.getString(stats, "tm_host"));
 		} else if (stats.has("to_host")) {
-			trafficOpsUtils.setHostname(stats.get("to_host").asText());
+			trafficOpsUtils.setHostname(JsonUtils.getString(stats, "to_host"));
 		} else {
-			throw new IOException("Unable to find to_host or tm_host in stats section of TrConfig; unable to build TrafficOps URLs");
+			throw new JsonUtilsException("Unable to find to_host or tm_host in stats section of TrConfig; unable to build TrafficOps URLs");
 		}
 
 		trafficOpsUtils.setCdnName(JsonUtils.optString(stats, "CDN_name", null));
@@ -282,10 +283,10 @@ public class ConfigHandler {
 	 *
 	 * @param trConfig
 	 *            the {@link TrafficRouterConfiguration}
-	 * @throws ParseException
+	 * @throws JsonUtilsException, ParseException
 	 */
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidDeeplyNestedIfStmts", "PMD.NPathComplexity"})
-	private void parseCacheConfig(final JsonNode contentServers, final CacheRegister cacheRegister) throws ParseException {
+	private void parseCacheConfig(final JsonNode contentServers, final CacheRegister cacheRegister) throws JsonUtilsException, ParseException {
 		final Map<String,Cache> map = new HashMap<String,Cache>();
 		final Map<String, List<String>> statMap = new HashMap<String, List<String>>();
 
@@ -293,8 +294,8 @@ public class ConfigHandler {
 		final Iterator<String> nodeIter = contentServers.fieldNames();
 		while (nodeIter.hasNext()) {
 			final String node = nodeIter.next();
-			final JsonNode jo = contentServers.get(node);
-			final CacheLocation loc = cacheRegister.getCacheLocation(jo.get("locationId").asText());
+			final JsonNode jo = JsonUtils.getJsonNode(contentServers, node);
+			final CacheLocation loc = cacheRegister.getCacheLocation(JsonUtils.getString(jo, "locationId"));
 
 			if (loc != null) {
 				String hashId = node;
@@ -303,11 +304,11 @@ public class ConfigHandler {
 					hashId = jo.get("hashId").textValue();
 				}
 
-				final Cache cache = new Cache(node, hashId, JsonUtils.optInt(jo, "hashCount", 0));
-				cache.setFqdn(jo.get("fqdn").asText());
-				cache.setPort(jo.get("port").asInt());
+				final Cache cache = new Cache(node, hashId, JsonUtils.optInt(jo, "hashCount"));
+				cache.setFqdn(JsonUtils.getString(jo, "fqdn"));
+				cache.setPort(JsonUtils.getInt(jo, "port"));
 
-				final String ip = jo.get("ip").asText();
+				final String ip = JsonUtils.getString(jo, "ip");
 				final String ip6 = JsonUtils.optString(jo, "ip6", "");
 
 				try {
@@ -322,6 +323,9 @@ public class ConfigHandler {
 
 					final Iterator<String> dsIter = dsJos.fieldNames();
 					while (dsIter.hasNext()) {
+						/* technically this could be more than just a string or array,
+						 * but, as we only have had those two types, let's not worry about the future
+						 */
 						final String ds = dsIter.next();
 						final JsonNode dso = dsJos.get(ds);
 
@@ -340,7 +344,7 @@ public class ConfigHandler {
 										references.add(new DeliveryServiceReference(ds, name));
 									}
 
-									final String tld = JsonUtils.optString(cacheRegister.getConfig(), "domain_name", "").toLowerCase();
+									final String tld = JsonUtils.optString(cacheRegister.getConfig(), "domain_name").toLowerCase();
 
 									if (name.endsWith(tld)) {
 										final String reName = name.replaceAll("^.*?\\.", "");
@@ -380,20 +384,20 @@ public class ConfigHandler {
 		statTracker.initialize(statMap, cacheRegister);
 	}
 
-	private Map<String, DeliveryService> parseDeliveryServiceConfig(final JsonNode allDeliveryServices) {
+	private Map<String, DeliveryService> parseDeliveryServiceConfig(final JsonNode allDeliveryServices) throws JsonUtilsException {
 		final Map<String,DeliveryService> deliveryServiceMap = new HashMap<>();
 
 		final Iterator<String> deliveryServiceIter = allDeliveryServices.fieldNames();
 		while (deliveryServiceIter.hasNext()) {
 			final String deliveryServiceId = deliveryServiceIter.next();
-			final JsonNode deliveryServiceJson = allDeliveryServices.get(deliveryServiceId);
+			final JsonNode deliveryServiceJson = JsonUtils.getJsonNode(allDeliveryServices, deliveryServiceId);
 			final DeliveryService deliveryService = new DeliveryService(deliveryServiceId, deliveryServiceJson);
 			boolean isDns = false;
 
-			final JsonNode matchsets = deliveryServiceJson.get("matchsets");
+			final JsonNode matchsets = JsonUtils.getJsonNode(deliveryServiceJson, "matchsets");
 
 			for (final JsonNode matchset : matchsets) {
-				final String protocol = JsonUtils.optString(matchset, "protocol", "");
+				final String protocol = JsonUtils.getString(matchset, "protocol");
 				if ("DNS".equals(protocol)) {
 					isDns = true;
 				}
@@ -406,19 +410,19 @@ public class ConfigHandler {
 		return deliveryServiceMap;
 	}
 
-	private void parseDeliveryServiceMatchSets(final JsonNode allDeliveryServices, final Map<String, DeliveryService> deliveryServiceMap, final CacheRegister cacheRegister) {
+	private void parseDeliveryServiceMatchSets(final JsonNode allDeliveryServices, final Map<String, DeliveryService> deliveryServiceMap, final CacheRegister cacheRegister) throws JsonUtilsException {
 		final TreeSet<DeliveryServiceMatcher> dnsServiceMatchers = new TreeSet<>();
 		final TreeSet<DeliveryServiceMatcher> httpServiceMatchers = new TreeSet<>();
 
 		final Iterator<String> deliveryServiceIds = allDeliveryServices.fieldNames();
 		while (deliveryServiceIds.hasNext()) {
 			final String deliveryServiceId = deliveryServiceIds.next();
-			final JsonNode deliveryServiceJson = allDeliveryServices.get(deliveryServiceId);
-			final JsonNode matchsets = deliveryServiceJson.get("matchsets");
+			final JsonNode deliveryServiceJson = JsonUtils.getJsonNode(allDeliveryServices, deliveryServiceId);
+			final JsonNode matchsets = JsonUtils.getJsonNode(deliveryServiceJson, "matchsets");
 			final DeliveryService deliveryService = deliveryServiceMap.get(deliveryServiceId);
 
 			for (final JsonNode matchset : matchsets) {
-				final String protocol = matchset.get("protocol").asText();
+				final String protocol = JsonUtils.getString(matchset, "protocol");
 
 				final DeliveryServiceMatcher deliveryServiceMatcher = new DeliveryServiceMatcher(deliveryService);
 
@@ -428,10 +432,10 @@ public class ConfigHandler {
 					dnsServiceMatchers.add(deliveryServiceMatcher);
 				}
 
-				for (final JsonNode matcherJo : matchset.get("matchlist")) {
-					final Type type = Type.valueOf(matcherJo.get("match-type").asText());
-					final String target = JsonUtils.optString(matcherJo, "target", "");
-					deliveryServiceMatcher.addMatch(type, matcherJo.get("regex").asText(), target);
+				for (final JsonNode matcherJo : JsonUtils.getJsonNode(matchset, "matchlist")) {
+					final Type type = Type.valueOf(JsonUtils.getString(matcherJo, "match-type"));
+					final String target = JsonUtils.optString(matcherJo, "target");
+					deliveryServiceMatcher.addMatch(type, JsonUtils.getString(matcherJo, "regex"), target);
 				}
 
 			}
@@ -488,9 +492,9 @@ public class ConfigHandler {
 	 * 
 	 * @param config
 	 *            the {@link TrafficRouterConfiguration}
-	 *
+	 * @throws JsonUtilsException
 	 */
-	private void parseGeolocationConfig(final JsonNode config) {
+	private void parseGeolocationConfig(final JsonNode config) throws JsonUtilsException {
 		String pollingUrlKey = "geolocation.polling.url";
 
 		if (config.has("alt.geolocation.polling.url")) {
@@ -498,16 +502,16 @@ public class ConfigHandler {
 		}
 
 		getGeolocationDatabaseUpdater().setDataBaseURL(
-			JsonUtils.optString(config, pollingUrlKey, null),
-			JsonUtils.optLong(config, "geolocation.polling.interval", 0)
+			JsonUtils.getString(config, pollingUrlKey),
+			JsonUtils.optLong(config, "geolocation.polling.interval")
 		);
 
 		if (config.has(NEUSTAR_POLLING_URL)) {
-			System.setProperty(NEUSTAR_POLLING_URL, JsonUtils.optString(config, NEUSTAR_POLLING_URL, ""));
+			System.setProperty(NEUSTAR_POLLING_URL, JsonUtils.getString(config, NEUSTAR_POLLING_URL));
 		}
 
 		if (config.has(NEUSTAR_POLLING_INTERVAL)) {
-			System.setProperty(NEUSTAR_POLLING_INTERVAL, JsonUtils.optString(config, NEUSTAR_POLLING_INTERVAL, ""));
+			System.setProperty(NEUSTAR_POLLING_INTERVAL, JsonUtils.getString(config, NEUSTAR_POLLING_INTERVAL));
 		}
 	}
 
@@ -515,7 +519,7 @@ public class ConfigHandler {
 		final String pollingInterval = "certificates.polling.interval";
 		if (config.has(pollingInterval)) {
 			try {
-				System.setProperty(pollingInterval, JsonUtils.optString(config, pollingInterval, ""));
+				System.setProperty(pollingInterval, JsonUtils.getString(config, pollingInterval));
 			} catch (Exception e) {
 				LOGGER.warn("Failed to set system property " + pollingInterval + " from configuration object: " + e.getMessage());
 			}
@@ -528,17 +532,17 @@ public class ConfigHandler {
 	 *
 	 * @param trConfig
 	 *            the {@link TrafficRouterConfiguration}
-	 *
+	 * @throws JsonUtilsException
 	 */
-	private void parseCoverageZoneNetworkConfig(final JsonNode config) {
+	private void parseCoverageZoneNetworkConfig(final JsonNode config) throws JsonUtilsException {
 		getNetworkUpdater().setDataBaseURL(
-				JsonUtils.optString(config, "coveragezone.polling.url", null),
-				JsonUtils.optLong(config, "coveragezone.polling.interval", 5)
+				JsonUtils.getString(config, "coveragezone.polling.url"),
+				JsonUtils.optLong(config, "coveragezone.polling.interval")
 			);
 	}
 
-	private void parseRegionalGeoConfig(final JsonNode jo) {
-		final JsonNode config = jo.get("config");
+	private void parseRegionalGeoConfig(final JsonNode jo) throws JsonUtilsException {
+		final JsonNode config = JsonUtils.getJsonNode(jo, "config");
 		final String url = JsonUtils.optString(config, "regional_geoblock.polling.url", null);
 
 		if (url == null) {
@@ -551,8 +555,8 @@ public class ConfigHandler {
 			final JsonNode dss = jo.get(deliveryServicesKey);
 			for(final JsonNode ds : dss) {
 				if (ds.has("regionalGeoBlocking") &&
-						ds.get("regionalGeoBlocking").asText().equals("true")) {
-					final long interval = JsonUtils.optLong(config, "regional_geoblock.polling.interval", 0);
+						JsonUtils.getString(ds, "regionalGeoBlocking").equals("true")) {
+					final long interval = JsonUtils.optLong(config, "regional_geoblock.polling.interval");
 					getRegionalGeoUpdater().setDataBaseURL(url, interval);
 					return;
 				}
@@ -570,18 +574,20 @@ public class ConfigHandler {
 	 *            the TrafficRouterConfiguration
 	 * @return the {@link Map}, empty if there are no Locations that have both a latitude and
 	 *         longitude specified
-	 *
+	 * @throws JsonUtilsException
 	 */
-	private void parseLocationConfig(final JsonNode locationsJo, final CacheRegister cacheRegister) {
+	private void parseLocationConfig(final JsonNode locationsJo, final CacheRegister cacheRegister) throws JsonUtilsException {
 		final Set<CacheLocation> locations = new HashSet<CacheLocation>(locationsJo.size());
 
 		final Iterator<String> locIter = locationsJo.fieldNames();
 		while (locIter.hasNext()) {
 			final String loc = locIter.next();
-			final JsonNode jo = locationsJo.get(loc);
-			final double latitude = JsonUtils.optDouble(jo, "latitude", 0.0);
-			final double longitude = JsonUtils.optDouble(jo, "longitude", 0.0);
-			locations.add(new CacheLocation(loc, new Geolocation(latitude, longitude)));
+			final JsonNode jo = JsonUtils.getJsonNode(locationsJo, loc);
+			try {
+				locations.add(new CacheLocation(loc, new Geolocation(JsonUtils.getDouble(jo, "latitude"), JsonUtils.getDouble(jo, "longitude"))));
+			} catch (JsonUtilsException e) {
+				LOGGER.warn(e,e);
+			}
 		}
 		cacheRegister.setConfiguredLocations(locations);
 	}
@@ -592,15 +598,15 @@ public class ConfigHandler {
 	 * @param trconfig.monitors
 	 *            the monitors section of the TrafficRouter Configuration
 	 * @return void
-	 * @throws ParseException
+	 * @throws JsonUtilsException, ParseException
 	 */
-	private void parseMonitorConfig(final JsonNode monitors) throws ParseException {
+	private void parseMonitorConfig(final JsonNode monitors) throws JsonUtilsException, ParseException {
 		final List<String> monitorList = new ArrayList<String>();
 
 		for (final JsonNode jo : monitors) {
-			final String fqdn = jo.get("fqdn").asText();
+			final String fqdn = JsonUtils.getString(jo, "fqdn");
 			final int port = JsonUtils.optInt(jo, "port", 80);
-			final String status = jo.get("status").asText();
+			final String status = JsonUtils.getString(jo, "status");
 
 			if ("ONLINE".equals(status)) {
 				monitorList.add(fqdn + ":" + port);
@@ -620,10 +626,10 @@ public class ConfigHandler {
 	 * @param trconfig.stats
 	 *            the stats section of the TrafficRouter Configuration
 	 * @return long
-	 *
+	 * @throws JsonUtilsException
 	 */
-	private long getSnapshotTimestamp(final JsonNode stats) {
-		return JsonUtils.optLong(stats, "date", 0);
+	private long getSnapshotTimestamp(final JsonNode stats) throws JsonUtilsException {
+		return JsonUtils.getLong(stats, "date");
 	}
 
 	public StatTracker getStatTracker() {
@@ -660,6 +666,8 @@ public class ConfigHandler {
 		for (final JsonNode header : requestHeaders) {
 			if (header != null) {
 				headers.add(header.asText());
+			} else {
+				LOGGER.warn("Failed parsing request header from config");
 			}
 		}
 
