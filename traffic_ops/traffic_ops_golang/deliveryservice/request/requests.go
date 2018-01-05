@@ -178,7 +178,8 @@ func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUs
 		log.Error.Println("could not begin transaction: ", err.Error())
 		return tc.DBError, tc.SystemError
 	}
-	ir := insertRequestQuery(user.ID)
+	request.AuthorID = user.ID
+	ir := insertRequestQuery()
 	resultRows, err := tx.NamedQuery(ir, request)
 	if err != nil {
 		if err, ok := err.(*pq.Error); ok {
@@ -263,7 +264,7 @@ WHERE id=:id RETURNING last_updated`
 	return query
 }
 
-func insertRequestQuery(authorID int) string {
+func insertRequestQuery() string {
 	query := `INSERT INTO deliveryservice_request (
 assignee_id,
 author_id,
@@ -272,7 +273,7 @@ request,
 status
 ) VALUES (
 :assignee_id,
-:` + strconv.Itoa(authorID) + `,
+:author_id,
 :change_type,
 :request,
 :status
