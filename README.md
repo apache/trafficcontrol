@@ -28,7 +28,7 @@ Apache Traffic Control (incubating) is an Open Source implementation of a Conten
 * [Administrator's Guide](http://traffic-control-cdn.readthedocs.io/en/latest//admin/index.html)
 * [Developer's Guide](http://traffic-control-cdn.readthedocs.io/en/latest//development/index.html)
 
-####Questions, Comments, Bugs and More
+####  Questions, Comments, Bugs and More
 * [Frequently Asked Questions](http://traffic-control-cdn.readthedocs.io/en/latest//faq/index.html)
 * [Found a bug or file a feature request](https://github.com/apache/incubator-trafficcontrol/issues)
 * [Subscribe to our users list](mailto:users-subscribe@trafficcontrol.incubator.apache.org)
