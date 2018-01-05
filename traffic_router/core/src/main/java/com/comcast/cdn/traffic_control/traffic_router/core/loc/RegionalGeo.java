@@ -176,31 +176,31 @@ public final class RegionalGeo {
         final RegionalGeo regionalGeo = new RegionalGeo();
         regionalGeo.setFallback(true);
         try {
-            final JsonNode dsvcsJson = json.get("deliveryServices");
+            final JsonNode dsvcsJson = JsonUtils.getJsonNode(json, "deliveryServices");
             LOGGER.info("RegionalGeo: parse json with rule count " + dsvcsJson.size());
 
             for (final JsonNode ruleJson : dsvcsJson) {
 
-                final String dsvcId = JsonUtils.getString(ruleJson, "deliveryServiceId", "");
+                final String dsvcId = JsonUtils.getString(ruleJson, "deliveryServiceId");
                 if (dsvcId.trim().isEmpty()) {
                     LOGGER.error("RegionalGeo ERR: deliveryServiceId empty");
                     return null;
                 }
 
-                final String urlRegex = JsonUtils.getString(ruleJson, "urlRegex", "");
+                final String urlRegex = JsonUtils.getString(ruleJson, "urlRegex");
                 if (urlRegex.trim().isEmpty()) {
                     LOGGER.error("RegionalGeo ERR: urlRegex empty");
                     return null;
                 }
 
-                final String redirectUrl = JsonUtils.getString(ruleJson, "redirectUrl", "");
+                final String redirectUrl = JsonUtils.getString(ruleJson, "redirectUrl");
                 if (redirectUrl.trim().isEmpty()) {
                     LOGGER.error("RegionalGeo ERR: redirectUrl empty");
                     return null;
                 }
 
                 // FSAs (postal codes)
-                final JsonNode locationJson = ruleJson.get("geoLocation");
+                final JsonNode locationJson = JsonUtils.getJsonNode(ruleJson, "geoLocation");
                 final Set<String> postals = new HashSet<String>();
                 final RegionalGeoRule.PostalsType postalsType = parseLocationJson(locationJson, postals);
                 if (postalsType == RegionalGeoRule.PostalsType.UNDEFINED) {
