@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -498,22 +499,26 @@ public class ZoneManager extends Resolver {
 			final JsonNode entryList = ds.getStaticDnsEntries();
 
 			for (final JsonNode staticEntry : entryList) {
-				final String type = JsonUtils.optString(staticEntry, "type", "").toUpperCase();
-				final String jsName = JsonUtils.optString(staticEntry, "name", "");
-				final String value = JsonUtils.optString(staticEntry, "value", "");
-				final Name name = newName(jsName, domain);
-				long ttl = JsonUtils.optInt(staticEntry, "ttl", 0);
+				try {
+					final String type = JsonUtils.getString(staticEntry, "type").toUpperCase();
+					final String jsName = JsonUtils.getString(staticEntry, "name");
+					final String value = JsonUtils.getString(staticEntry, "value");
+					final Name name = newName(jsName, domain);
+					long ttl = JsonUtils.optInt(staticEntry, "ttl", 0);
 
-				if (ttl == 0) {
-					ttl = ZoneUtils.getLong(ds.getTtls(), type, 60);
-				}
+					if (ttl == 0) {
+						ttl = ZoneUtils.getLong(ds.getTtls(), type, 60);
+					}
 
-				if ("A".equals(type)) {
-					list.add(new ARecord(name, DClass.IN, ttl, InetAddress.getByName(value)));
-				} else if (AAAA.equals(type)) {
-					list.add(new AAAARecord(name, DClass.IN, ttl, InetAddress.getByName(value)));
-				} else if ("CNAME".equals(type)) {
-					list.add(new CNAMERecord(name, DClass.IN, ttl, new Name(value)));
+					if ("A".equals(type)) {
+						list.add(new ARecord(name, DClass.IN, ttl, InetAddress.getByName(value)));
+					} else if (AAAA.equals(type)) {
+						list.add(new AAAARecord(name, DClass.IN, ttl, InetAddress.getByName(value)));
+					} else if ("CNAME".equals(type)) {
+						list.add(new CNAMERecord(name, DClass.IN, ttl, new Name(value)));
+					}
+				} catch (JsonUtilsException ex) {
+					LOGGER.error(ex);
 				}
 			}
 		}

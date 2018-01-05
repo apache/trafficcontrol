@@ -188,17 +188,23 @@ public class DeliveryService {
 
 		for (final JsonNode constraint : geoEnabled) {
 			boolean match = true;
-			final Iterator<String> keyIter = constraint.fieldNames();
-			while (keyIter.hasNext()) {
-				final String t = keyIter.next();
-				final String v = constraint.get(t).asText();
-				final String data = locData.get(t);
-				if(!v.equalsIgnoreCase(data)) {
-					match = false;
-					break;
+			try {
+				final Iterator<String> keyIter = constraint.fieldNames();
+				while (keyIter.hasNext()) {
+					final String t = keyIter.next();
+					final String v = JsonUtils.getString(constraint, t);
+					final String data = locData.get(t);
+					if (!v.equalsIgnoreCase(data)) {
+						match = false;
+						break;
+					}
 				}
+				if (match) {
+					return false;
+				}
+			} catch (JsonUtilsException ex) {
+				LOGGER.warn(ex, ex);
 			}
-			if(match) { return false; }
 		}
 		return true;
 	}
