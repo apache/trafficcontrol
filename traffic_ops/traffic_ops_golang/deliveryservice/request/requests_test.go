@@ -22,6 +22,9 @@ package request
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/jmoiron/sqlx"
+	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func TestGetDeliveryServiceRequest(t *testing.T) {
@@ -32,7 +35,7 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 			"xmlId":"this is not a valid xmlid.  Bad characters and too long."
 		}`),
 	}
-	expected_errors := []string{
+	expectedErrors := []string{
 		`'status' is required`,
 		`'xmlId' is required`,
 	}
@@ -48,8 +51,18 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 	if r.GetType() != "deliveryservice_request" {
 		t.Errorf("expected Type to be %s,  not %s", exp, r.GetType())
 	}
-	errs := r.Validate()
-	if len(errs) != len(expected_errors) {
+
+	mockDB, _, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	errs := r.Validate(nil)
+	if len(errs) != len(expectedErrors) {
 		for _, e := range errs {
 			t.Error(e)
 		}

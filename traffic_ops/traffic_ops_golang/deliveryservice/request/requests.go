@@ -30,7 +30,6 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -68,30 +67,13 @@ func (request *TODeliveryServiceRequest) SetID(i int) {
 	request.ID = i
 }
 
-// Validate ...
-func (request *TODeliveryServiceRequest) Validate(*sqlx.DB) []error {
-	log.Debugf("Got request with %++v\n", request)
-	var errs []error
-	if len(request.ChangeType) == 0 {
-		errs = append(errs, errors.New(`'changeType' is required`))
-	}
-	if len(request.Status) == 0 {
-		errs = append(errs, errors.New(`'status' is required`))
-	}
-	if len(request.Request) == 0 {
-		// TODO: validate request json has required deliveryservice fields
-		errs = append(errs, errors.New(`'request' is required`))
-	}
-	var ds tc.DeliveryService
-	err := json.Unmarshal([]byte(request.Request), &ds)
-	if err != nil {
-		errs = append(errs, err)
-	} else {
-		e := deliveryservice.Validate(ds)
-		errs = append(errs, e...)
-	}
-
-	return errs
+// uniqQuery returns the query needed for a unique new request
+func uniqXMLIDQuery(ds tc.DeliveryService) string {
+	// no two active ds requests can exist for the same xmlid
+	q := `SELECT * FROM deliveryservice_request r 
+WHERE r.request->>'xml_id' = '` + ds.XMLID + `'
+AND r.workflow_state IN ('draft', 'submitted', 'pending')`
+	return q
 }
 
 //The TODeliveryServiceRequest implementation of the Updater interface
@@ -128,7 +110,7 @@ func (request *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUs
 			}
 			return err, eType
 		}
-		log.Errorf("received error from update execution: ", err.Error())
+		log.Errorf("received error from update execution: %s", err.Error())
 		return tc.DBError, tc.SystemError
 	}
 	var lastUpdated tc.Time
@@ -146,8 +128,27 @@ func (request *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUs
 		return errors.New("no request found with this id"), tc.DataMissingError
 	}
 	if rowsAffected > 1 {
-		return fmt.Errorf("this update affected too many rows: ", rowsAffected), tc.SystemError
+		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 	}
+
+	// get the xmlid from the ds
+	var ds tc.DeliveryService
+	err = json.Unmarshal([]byte(request.Request), &ds)
+	if err != nil {
+		return err, tc.DataConflictError
+	}
+	r, err := db.Exec(uniqXMLIDQuery(ds))
+	if err != nil {
+		return err, tc.SystemError
+	}
+	n, err := r.RowsAffected()
+	if err != nil {
+		return err, tc.SystemError
+	}
+	if n != 1 {
+		return errors.New("multiple requests for the same xmlId"), tc.DataConflictError
+	}
+
 	return nil, tc.NoError
 }
 
@@ -246,7 +247,7 @@ func (request *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUs
 		return errors.New("no request with that id found"), tc.DataMissingError
 	}
 	if rowsAffected > 1 {
-		return fmt.Errorf("this create affected too many rows: ", rowsAffected), tc.SystemError
+		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 	return nil, tc.NoError
 }
