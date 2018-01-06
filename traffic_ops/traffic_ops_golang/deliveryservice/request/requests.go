@@ -72,8 +72,29 @@ func uniqXMLIDQuery(ds tc.DeliveryService) string {
 	// no two active ds requests can exist for the same xmlid
 	q := `SELECT * FROM deliveryservice_request r 
 WHERE r.request->>'xml_id' = '` + ds.XMLID + `'
-AND r.workflow_state IN ('draft', 'submitted', 'pending')`
+AND r.status IN ('draft', 'submitted', 'pending')`
 	return q
+}
+
+func validRequest(db *sqlx.DB, request *TODeliveryServiceRequest) error {
+	// get the xmlid from the ds
+	var ds tc.DeliveryService
+	err := json.Unmarshal([]byte(request.Request), &ds)
+	if err != nil {
+		return err
+	}
+	r, err := db.Exec(uniqXMLIDQuery(ds))
+	if err != nil {
+		return err
+	}
+	n, err := r.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n != 1 {
+		return errors.New("multiple requests for the same xmlId")
+	}
+	return nil
 }
 
 //The TODeliveryServiceRequest implementation of the Updater interface
@@ -131,22 +152,9 @@ func (request *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUs
 		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 
-	// get the xmlid from the ds
-	var ds tc.DeliveryService
-	err = json.Unmarshal([]byte(request.Request), &ds)
-	if err != nil {
-		return err, tc.DataConflictError
-	}
-	r, err := db.Exec(uniqXMLIDQuery(ds))
+	err = validRequest(db, request)
 	if err != nil {
 		return err, tc.SystemError
-	}
-	n, err := r.RowsAffected()
-	if err != nil {
-		return err, tc.SystemError
-	}
-	if n != 1 {
-		return errors.New("multiple requests for the same xmlId"), tc.DataConflictError
 	}
 
 	return nil, tc.NoError
@@ -210,6 +218,10 @@ func (request *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUs
 	}
 	request.SetID(id)
 	request.LastUpdated = lastUpdated
+	err = validRequest(db, request)
+	if err != nil {
+		return err, tc.SystemError
+	}
 	return nil, tc.NoError
 }
 
