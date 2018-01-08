@@ -91,7 +91,7 @@ func validRequest(db *sqlx.DB, request *TODeliveryServiceRequest) error {
 	if err != nil {
 		return err
 	}
-	if n != 1 {
+	if n > 1 {
 		return errors.New("multiple requests for the same xmlId")
 	}
 	return nil
