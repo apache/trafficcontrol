@@ -52,6 +52,14 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		//ASNs
 		{1.2, http.MethodGet, `asns/?(\.json)?$`, ASNsHandler(d.DB), ASNsPrivLevel, Authenticated, nil},
 		//CDNs
+		// explicitly passed to legacy system until fully implemented.  Auth handled by legacy system.
+		{1.2, http.MethodGet, `cdns/capacity$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
+		{1.2, http.MethodGet, `cdns/configs$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
+		{1.2, http.MethodGet, `cdns/dnsseckeys$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
+		{1.2, http.MethodGet, `cdns/domains$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
+		{1.2, http.MethodGet, `cdns/health$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
+		{1.2, http.MethodGet, `cdns/routing$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
+
 		{1.2, http.MethodGet, `cdns/?(\.json)?$`, cdn.GetHandler(d.DB), cdn.CDNsPrivLevel, Authenticated, nil},
 		{1.2, http.MethodGet, `cdns/{id}$`, cdn.GetHandler(d.DB), cdn.CDNsPrivLevel, Authenticated, nil},
 		{1.2, http.MethodGet, `cdns/{name}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), MonitoringPrivLevel, Authenticated, nil},
