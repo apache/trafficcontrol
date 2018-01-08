@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceController = function(deliveryService, type, types, $scope, $location, $uibModal, formUtils, locationUtils, tenantUtils, cdnService, profileService, tenantService) {
+var FormDeliveryServiceController = function(deliveryService, type, types, $scope, $location, $uibModal, formUtils, locationUtils, tenantUtils, cdnService, profileService, tenantService, propertiesModel) {
 
     var getCDNs = function() {
         cdnService.getCDNs()
@@ -45,13 +45,15 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
 
     $scope.deliveryService = deliveryService;
 
-    $scope.manageKeys = {
-        sslKeys: deliveryService.protocol > 0,
-        urlSigKeys: deliveryService.signingAlgorithm == 'url_sig',
-        uriSigningKeys: deliveryService.signingAlgorithm == 'uri_signing'
-    };
+    $scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
 
-    $scope.edgeFQDNs = function(ds) {
+	$scope.manageKeys = {
+		sslKeys: deliveryService.protocol > 0,
+		urlSigKeys: deliveryService.signingAlgorithm == 'url_sig',
+		uriSigningKeys: deliveryService.signingAlgorithm == 'uri_signing'
+	};
+
+	$scope.edgeFQDNs = function(ds) {
         var urlString = '';
         if (_.isArray(ds.exampleURLs) && ds.exampleURLs.length > 0) {
             for (var i = 0; i < ds.exampleURLs.length; i++) {
@@ -265,5 +267,5 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'tenantUtils', 'cdnService', 'profileService', 'tenantService'];
+FormDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'tenantUtils', 'cdnService', 'profileService', 'tenantService', 'propertiesModel'];
 module.exports = FormDeliveryServiceController;
