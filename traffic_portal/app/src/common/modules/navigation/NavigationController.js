@@ -25,6 +25,8 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
 
     $scope.showCacheChecks = propertiesModel.properties.cacheChecks.show;
 
+    $scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
+
     $scope.userLoaded = userModel.loaded;
 
     $scope.user = userModel.user;
