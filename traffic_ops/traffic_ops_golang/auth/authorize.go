@@ -33,6 +33,7 @@ type CurrentUser struct {
 	UserName  string `json:"userName" db:"username"`
 	ID        int    `json:"id" db:"id"`
 	PrivLevel int    `json:"privLevel" db:"priv_level"`
+	TenantID  int    `json:"tenantID" db:"tenant_id"`
 }
 
 // PrivLevelInvalid - The Default Priv level
@@ -47,6 +48,9 @@ const PrivLevelOperations = 20
 // PrivLevelAdmin - The user has full privileges
 const PrivLevelAdmin = 30
 
+// TenantIDInvalid - The default Tenant ID
+const TenantIDInvalid = -1
+
 const CurrentUserKey = "currentUser"
 
 // GetCurrentUserFromDB  - returns the id and privilege level of the given user along with the username, or -1 as the id, - as the userName and PrivLevelInvalid if the user doesn't exist.
@@ -56,10 +60,10 @@ func GetCurrentUserFromDB(CurrentUserStmt *sqlx.Stmt, user string) CurrentUser {
 	switch {
 	case err == sql.ErrNoRows:
 		log.Errorf("checking user %v info: user not in database", user)
-		return CurrentUser{"-", -1, PrivLevelInvalid}
+		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid}
 	case err != nil:
 		log.Errorf("Error checking user %v info: %v", user, err.Error())
-		return CurrentUser{"-", -1, PrivLevelInvalid}
+		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid}
 	default:
 		return currentUserInfo
 	}
@@ -75,5 +79,5 @@ func GetCurrentUser(ctx context.Context) (*CurrentUser, error) {
 			return nil, fmt.Errorf("CurrentUser found with bad type: %T", v)
 		}
 	}
-	return &CurrentUser{"-", -1, PrivLevelInvalid}, errors.New("No user found in Context")
+	return &CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid}, errors.New("No user found in Context")
 }
