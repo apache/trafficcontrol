@@ -35,7 +35,7 @@ under the License.
                 <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Services</span></a>
                     <ul class="nav child_menu" style="display: none">
                         <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.deliveryServices')}"><a href="/#!/delivery-services">Delivery Services</a></li>
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.deliveryServiceRequests')}"><a href="/#!/delivery-service-requests">Delivery Service Requests</a></li>
+                        <li class="side-menu-category-item" ng-if="::dsRequestsEnabled" ng-class="{'current-page': isState('trafficPortal.private.deliveryServiceRequests')}"><a href="/#!/delivery-service-requests">Delivery Service Requests</a></li>
                     </ul>
                 </li>
                 <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Admin</span></a>
