@@ -132,8 +132,8 @@ func TestWrapAuth(t *testing.T) {
 	id := 1
 	secret := "secret"
 
-	rows := sqlmock.NewRows([]string{"priv_level", "username", "id"})
-	rows.AddRow(30, "user1", 1)
+	rows := sqlmock.NewRows([]string{"priv_level", "username", "id", "tenant_id"})
+	rows.AddRow(30, "user1", 1, 1)
 	mock.ExpectPrepare("SELECT").ExpectQuery().WithArgs(userName).WillReturnRows(rows)
 
 	sqlStatement, err := prepareUserInfoStmt(db)
@@ -175,7 +175,7 @@ func TestWrapAuth(t *testing.T) {
 
 	r.Header.Add("Cookie", tocookie.Name+"="+cookie)
 
-	expected := auth.CurrentUser{UserName: userName, ID: id, PrivLevel: 30}
+	expected := auth.CurrentUser{UserName: userName, ID: id, PrivLevel: 30, TenantID: 1}
 
 	expectedBody, err := json.Marshal(expected)
 	if err != nil {

@@ -53,3 +53,7 @@ type Deleter interface {
 type Validator interface {
 	Validate(db *sqlx.DB) []error
 }
+
+type Tenantable interface {
+	IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error)
+}
