@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormNewDeliveryServiceController = function(deliveryService, type, types, $scope, $controller, $uibModal, deliveryServiceRequestService) {
+var FormNewDeliveryServiceController = function(deliveryService, type, types, $scope, $controller, $uibModal, deliveryServiceService, deliveryServiceRequestService) {
 
 	// extends the FormDeliveryServiceController to inherit common methods
 	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, type: type, types: types, $scope: $scope }));
@@ -31,40 +31,43 @@ var FormNewDeliveryServiceController = function(deliveryService, type, types, $s
 	};
 
 	$scope.save = function(deliveryService) {
-		var params = {
-			title: "Create Delivery Service",
-			message: 'All new delivery services must be reviewed for completeness and accuracy before deployment. A request will be created for you. Please select the status of your request.'
-		};
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-			controller: 'DialogSelectController',
-			size: 'md',
-			resolve: {
-				params: function () {
-					return params;
-				},
-				collection: function() {
-					return [
-						{ id: $scope.DRAFT, name: 'Save Request as Draft' },
-						{ id: $scope.SUBMITTED, name: 'Submit Request for Review / Deployment' }
-					];
-				}
-			}
-		});
-		modalInstance.result.then(function(action) {
-			var dsRequest = {
-				changeType: 'create',
-				status: (action.id == $scope.SUBMITTED) ? 'submitted' : 'draft',
-				request: deliveryService
+		if ($scope.dsRequestsEnabled) {
+			var params = {
+				title: "Create Delivery Service",
+				message: 'All new delivery services must be reviewed for completeness and accuracy before deployment. A request will be created for you. Please select the status of your request.'
 			};
-			deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest);
-		}, function () {
-			// do nothing
-		});
-
+			var modalInstance = $uibModal.open({
+				templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+				controller: 'DialogSelectController',
+				size: 'md',
+				resolve: {
+					params: function () {
+						return params;
+					},
+					collection: function() {
+						return [
+							{ id: $scope.DRAFT, name: 'Save Request as Draft' },
+							{ id: $scope.SUBMITTED, name: 'Submit Request for Review / Deployment' }
+						];
+					}
+				}
+			});
+			modalInstance.result.then(function(action) {
+				var dsRequest = {
+					changeType: 'create',
+					status: (action.id == $scope.SUBMITTED) ? 'submitted' : 'draft',
+					request: deliveryService
+				};
+				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest);
+			}, function () {
+				// do nothing
+			});
+		} else {
+			deliveryServiceService.createDeliveryService(deliveryService);
+		}
 	};
 
 };
 
-FormNewDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$controller', '$uibModal', 'deliveryServiceRequestService'];
+FormNewDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$controller', '$uibModal', 'deliveryServiceService', 'deliveryServiceRequestService'];
 module.exports = FormNewDeliveryServiceController;

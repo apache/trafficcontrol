@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceController = function(deliveryService, type, types, $scope, $location, $uibModal, $window, formUtils, locationUtils, tenantUtils, cdnService, profileService, tenantService, propertiesModel) {
+var FormDeliveryServiceController = function(deliveryService, type, types, $scope, $location, $uibModal, formUtils, locationUtils, tenantUtils, cdnService, profileService, tenantService, propertiesModel) {
 
     var getCDNs = function() {
         cdnService.getCDNs()
@@ -45,15 +45,15 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
 
     $scope.deliveryService = deliveryService;
 
-    $scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
+    $scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
 
-    $scope.manageKeys = {
-        sslKeys: deliveryService.protocol > 0,
-        urlSigKeys: deliveryService.signingAlgorithm == 'url_sig',
-        uriSigningKeys: deliveryService.signingAlgorithm == 'uri_signing'
-    };
+	$scope.manageKeys = {
+		sslKeys: deliveryService.protocol > 0,
+		urlSigKeys: deliveryService.signingAlgorithm == 'url_sig',
+		uriSigningKeys: deliveryService.signingAlgorithm == 'uri_signing'
+	};
 
-    $scope.edgeFQDNs = function(ds) {
+	$scope.edgeFQDNs = function(ds) {
         var urlString = '';
         if (_.isArray(ds.exampleURLs) && ds.exampleURLs.length > 0) {
             for (var i = 0; i < ds.exampleURLs.length; i++) {
@@ -188,13 +188,6 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
         return '-'.repeat(tenant.level) + ' ' + tenant.name;
     };
 
-    $scope.openCharts = function(ds) {
-        $window.open(
-            propertiesModel.properties.deliveryServices.charts.baseUrl + ds.xmlId,
-            '_blank'
-        );
-    };
-
     $scope.clone = function(ds) {
         var params = {
             title: 'Clone Delivery Service: ' + ds.xmlId,
@@ -274,5 +267,5 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$location', '$uibModal', '$window', 'formUtils', 'locationUtils', 'tenantUtils', 'cdnService', 'profileService', 'tenantService', 'propertiesModel'];
+FormDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'tenantUtils', 'cdnService', 'profileService', 'tenantService', 'propertiesModel'];
 module.exports = FormDeliveryServiceController;

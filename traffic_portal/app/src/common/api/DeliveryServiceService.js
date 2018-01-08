@@ -27,11 +27,11 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
         return Restangular.one("deliveryservices", id).get();
     };
 
-    this.createDeliveryService = function(deliveryService) {
-        return Restangular.service('deliveryservices').post(deliveryService)
+    this.createDeliveryService = function(ds) {
+        return Restangular.service('deliveryservices').post(ds)
             .then(
                 function(response) {
-                    messageModel.setMessages([ { level: 'success', text: 'DeliveryService created' } ], true);
+                    messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + ds.xmlId + ' ] created' } ], true);
                     locationUtils.navigateToPath('/delivery-services/' + response.id + '?type=' + response.type);
                 },
                 function(fault) {
@@ -47,7 +47,7 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
             .then(
                 function(response) {
                     var response2 = response.data.response[0];
-                    messageModel.setMessages([ { level: 'success', text: 'Delivery service updated' } ], true);
+                    messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + ds.xmlId + ' ] updated' } ], false);
                     locationUtils.navigateToPath('/delivery-services/' + response2.id + '?type=' + response2.type);
                 },
                 function(fault) {
@@ -58,11 +58,11 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
         return request.promise;
     };
 
-    this.deleteDeliveryService = function(id) {
-        return Restangular.one("deliveryservices", id).remove()
+    this.deleteDeliveryService = function(ds) {
+        return Restangular.one("deliveryservices", ds.id).remove()
             .then(
                 function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Delivery service deleted' } ], true);
+                    messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + ds.xmlId + ' ] deleted' } ], true);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, true);
