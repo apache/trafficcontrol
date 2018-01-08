@@ -21,7 +21,6 @@ package tc
 
 import (
 	"database/sql/driver"
-	"fmt"
 	"strings"
 	"time"
 )
@@ -32,7 +31,7 @@ type Time struct {
 }
 
 // TimeLayout is the format used in lastUpdated fields in Traffic Ops
-const TimeLayout = "2006-01-02 15:04:05+00"
+const TimeLayout = "2006-01-02 15:04:05-07"
 
 // Scan implements the database/sql Scanner interface.
 func (jt *Time) Scan(value interface{}) error {
@@ -48,15 +47,12 @@ func (jt Time) Value() (driver.Value, error) {
 	return jt.Time, nil
 }
 
-// MarshalJSON formats the Time field as Traffic Control expects it.
-func (t *Time) MarshalJSON() ([]byte, error) {
-	if t.Time.IsZero() {
-		return []byte("null"), nil
-	}
-	return []byte(fmt.Sprintf("\"%s\"", t.Time.Format(TimeLayout))), nil
+// MarshalJSON implements the json.Marshaller interface
+func (t Time) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + t.Time.Format(TimeLayout) + `"`), nil
 }
 
-// UnmarshalJSON reads time from JSON into Time var
+// UnmarshalJSON implements the json.Unmarshaller interface
 func (t *Time) UnmarshalJSON(b []byte) (err error) {
 	s := strings.Trim(string(b), "\"")
 	if s == "null" {
