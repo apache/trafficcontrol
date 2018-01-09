@@ -35,7 +35,7 @@ type Tenant struct {
 // returns a Tenant list that the specified user has access too.
 func GetUserTenantList(user CurrentUser, db *sqlx.DB) ([]Tenant, error) {
 	query := `WITH RECURSIVE q AS (SELECT id, name, active, parent_id FROM tenant where id = $1
-	UNION SELECT t.id, t.name, t.parent_id  FROM TENANT t JOIN q on q.id = t.parent_id)
+	UNION SELECT t.id, t.name, t.active, t.parent_id  FROM TENANT t JOIN q on q.id = t.parent_id)
 	SELECT id, name, active, parent_id from q;`
 
 	var tenantID int
@@ -64,7 +64,7 @@ func GetUserTenantList(user CurrentUser, db *sqlx.DB) ([]Tenant, error) {
 func IsResourceAuthorizedToUser(resourceTenantID int, user CurrentUser, db *sqlx.DB) (bool, error) {
 	// $1 is the user tenant ID and $2 is the resource tenant ID
 	query := `WITH RECURSIVE q AS (SELECT id, active FROM tenant where id = $1
-	UNION SELECT t.id FROM TENANT t JOIN q on q.id = t.parent_id)
+	UNION SELECT t.id, t.active FROM TENANT t JOIN q on q.id = t.parent_id)
 	SELECT id, active from q where id = $2;`
 
 	var tenantId int
