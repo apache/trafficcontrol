@@ -89,7 +89,7 @@
           "qstringIgnore": 0,
           "multiSiteOrigin": false,
           "logsEnabled": false,
-          "initialDispersion": 0,
+          "initialDispersion": 1,
           "regionalGeoBlocking": false,
           "geoProvider": 0,
           "geoLimit": 0,
