@@ -1422,7 +1422,7 @@ sub is_deliveryservice_valid {
 
 	# additional validation checks to perform for HTTP* delivery services
 	if ( $type_name =~ /^HTTP.*$/ ) {
-		push @{$rules->{checks}}, initialDispersion    => [ is_required("is required") ];
+		push @{$rules->{checks}}, initialDispersion    => [ is_required("is required"), \&is_valid_initial_dispersion ];
 		push @{$rules->{checks}}, ipv6RoutingEnabled   => [ is_required("is required") ];
 		push @{$rules->{checks}}, missLat              => [ is_required("is required"), \&is_valid_lat ];
 		push @{$rules->{checks}}, missLong             => [ is_required("is required"), \&is_valid_long ];
@@ -1516,6 +1516,16 @@ sub is_valid_lat {
 
 	if ( abs $value > 90 ) {
 		return "invalid. May not exceed +- 90.0.";
+	}
+
+	return undef;
+}
+
+sub is_valid_initial_dispersion {
+	my ( $value, $params ) = @_;
+
+	if ( $value < 1 ) {
+		return "invalid. Must be 1 or greater.";
 	}
 
 	return undef;

@@ -147,7 +147,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 				"dscp" => 0,
 				"geoLimit" => 0,
 				"geoProvider" => 0,
-				"initialDispersion" => 0,
+				"initialDispersion" => 1,
 				"ipv6RoutingEnabled" => 0,
 				"logsEnabled" => 0,
 				"missLat" => 45,
@@ -174,6 +174,33 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 			->json_is( "/response/0/protocol" => 1)
 			->json_is( "/response/0/type" => "HTTP")
 		, 'Is the HTTP delivery service created?';
+
+	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
+				"active" => \0,
+				"cdnId" => 100,
+				"displayName" => "ds_http_display_name",
+				"dscp" => 0,
+				"geoLimit" => 0,
+				"geoProvider" => 0,
+				"initialDispersion" => 0,
+				"ipv6RoutingEnabled" => 1,
+				"logsEnabled" => 0,
+				"missLat" => 45,
+				"missLong" => 45,
+				"multiSiteOrigin" => 0,
+				"orgServerFqdn" => "http://10.75.168.91",
+				"protocol" => 1,
+				"qstringIgnore" => 0,
+				"rangeRequestHandling" => 0,
+				"regionalGeoBlocking" => 0,
+				"routingName" => "foo",
+				"typeId" => 36,
+				"tenantId" => $tenant_id,
+				"xmlId" => "ds_http_2",
+			})
+			->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/alerts/0/text" => "initialDispersion invalid. Must be 1 or greater.")
+		, 'Does the HTTP deliveryservice create fail when initial dispersion is set to 0?';
 
 	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
 			"active" => \0,
@@ -253,6 +280,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 				"geoLimit" => 1,
 				"geoProvider" => 1,
 				"ipv6RoutingEnabled" => 1,
+				"initialDispersion" => 0,
 				"logsEnabled" => 1,
 				"missLat" => 45,
 				"missLong" => 45,
