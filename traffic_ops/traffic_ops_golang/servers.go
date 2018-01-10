@@ -21,6 +21,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -63,7 +64,7 @@ func serversHandler(db *sqlx.DB) http.HandlerFunc {
 			if k == `id` {
 				if _, err := strconv.Atoi(v); err != nil {
 					log.Errorf("Expected {id} to be an integer: %s", v)
-					handleErrs(http.StatusBadRequest, err)
+					handleErrs(http.StatusNotFound, errors.New("Resource not found.")) //matches perl response
 					return
 				}
 			}
