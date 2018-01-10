@@ -21,11 +21,14 @@ package cdn
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
@@ -46,6 +49,13 @@ func GetHandler(db *sqlx.DB) http.HandlerFunc {
 
 		q := r.URL.Query()
 		for k, v := range pathParams {
+			if k == `id` {
+				if _, err := strconv.Atoi(v); err != nil {
+					log.Errorf("Expected {id} to be an integer: %s", v)
+					handleErrs(http.StatusNotFound, errors.New("Resource not found.")) //matches perl response
+					return
+				}
+			}
 			q.Set(k, v)
 		}
 
