@@ -70,7 +70,7 @@ func IsResourceAuthorizedToUser(resourceTenantID int, user CurrentUser, db *sqlx
 	var tenantId int
 	var active bool
 
-	err := db.QueryRow(query, resourceTenantID, user.TenantID).Scan(&tenantId, &active)
+	err := db.QueryRow(query, user.TenantID, resourceTenantID).Scan(&tenantId, &active)
 
 	switch {
 	case err == sql.ErrNoRows:
