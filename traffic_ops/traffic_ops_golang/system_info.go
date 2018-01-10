@@ -23,7 +23,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -45,8 +44,7 @@ func systemInfoHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 		privLevel := user.PrivLevel
 
-		q := r.URL.Query()
-		resp, err := getSystemInfoResponse(q, db, privLevel)
+		resp, err := getSystemInfoResponse(db, privLevel)
 		if err != nil {
 			handleErrs(http.StatusInternalServerError, err)
 			return
@@ -62,8 +60,8 @@ func systemInfoHandler(db *sqlx.DB) http.HandlerFunc {
 		fmt.Fprintf(w, "%s", respBts)
 	}
 }
-func getSystemInfoResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.SystemInfoResponse, error) {
-	info, err := getSystemInfo(q, db, privLevel)
+func getSystemInfoResponse(db *sqlx.DB, privLevel int) (*tc.SystemInfoResponse, error) {
+	info, err := getSystemInfo(db, privLevel)
 	if err != nil {
 		return nil, fmt.Errorf("getting SystemInfo: %v", err)
 	}
@@ -73,20 +71,37 @@ func getSystemInfoResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.System
 	return &resp, nil
 }
 
-func getSystemInfo(_ url.Values, db *sqlx.DB, privLevel int) (map[string]string, error) {
+func getSystemInfo(db *sqlx.DB, privLevel int) (map[string]string, error) {
 	// system info returns all global parameters
-	// no parameters on the url, but use that mechanism to get the right params from the db
+	query := `SELECT
+p.name,
+p.secure,
+p.value
+FROM parameter p
+WHERE p.config_file='global'`
 
-	v := url.Values{}
-	v.Set("config_file", "global")
-	params, err := getParameters(v, db, SystemInfoPrivLevel)
+	rows, err := db.Queryx(query)
+
+	if err != nil {
+		return nil, fmt.Errorf("querying: %v", err)
+	}
+	defer rows.Close()
+
+	info := make(map[string]string)
+	for rows.Next() {
+		p := tc.Parameter{}
+		if err = rows.StructScan(&p); err != nil {
+			return nil, fmt.Errorf("getting system_info: %v", err)
+		}
+		if p.Secure && privLevel < auth.PrivLevelAdmin {
+			// Secure params only visible to admin
+			continue
+		}
+		info[p.Name] = p.Value
+	}
 	if err != nil {
 		return nil, err
 	}
 
-	info := make(map[string]string, len(params))
-	for _, p := range params {
-		info[p.Name] = p.Value
-	}
 	return info, nil
 }

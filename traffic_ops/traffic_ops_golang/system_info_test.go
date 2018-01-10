@@ -20,7 +20,6 @@ package main
  */
 
 import (
-	"net/url"
 	"testing"
 	"time"
 
@@ -83,10 +82,8 @@ func TestGetSystemInfo(t *testing.T) {
 		)
 	}
 
-	mock.ExpectQuery("SELECT.*WHERE p.config_file='?").WillReturnRows(rows)
-	v := url.Values{}
-
-	sysinfo, err := getSystemInfo(v, db, auth.PrivLevelReadOnly)
+	mock.ExpectQuery("SELECT.*WHERE p.config_file='global'").WillReturnRows(rows)
+	sysinfo, err := getSystemInfo(db, auth.PrivLevelReadOnly)
 	if err != nil {
 		t.Errorf("getSystemInfo expected: nil error, actual: %v", err)
 	}
