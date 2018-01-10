@@ -27,6 +27,7 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 
 	"encoding/json"
+
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"

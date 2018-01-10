@@ -21,6 +21,7 @@ package auth
 
 import (
 	"database/sql"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/jmoiron/sqlx"
 )

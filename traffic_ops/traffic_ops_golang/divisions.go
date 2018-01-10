@@ -25,7 +25,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
@@ -35,22 +34,18 @@ const DivisionsPrivLevel = 10
 
 func divisionsHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := func(err error, status int) {
-			log.Errorf("%v %v\n", r.RemoteAddr, err)
-			w.WriteHeader(status)
-			fmt.Fprintf(w, http.StatusText(status))
-		}
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
 		q := r.URL.Query()
 		resp, err := getDivisionsResponse(q, db)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 

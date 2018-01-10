@@ -30,7 +30,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
@@ -111,15 +111,12 @@ type DeliveryService struct {
 // TODO change to use the PathParams, instead of parsing the URL
 func monitoringHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := func(err error, status int) {
-			log.Errorf("%v %v\n", r.RemoteAddr, err)
-			w.WriteHeader(status)
-			fmt.Fprintf(w, http.StatusText(status))
-		}
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
+
 		ctx := r.Context()
 		pathParams, err := api.GetPathParams(ctx)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -127,13 +124,13 @@ func monitoringHandler(db *sqlx.DB) http.HandlerFunc {
 
 		resp, err := getMonitoringJSON(cdnName, db)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 

@@ -38,15 +38,11 @@ const StatusesPrivLevel = 10
 
 func statusesHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := func(err error, status int) {
-			log.Errorf("%v %v\n", r.RemoteAddr, err)
-			w.WriteHeader(status)
-			fmt.Fprintf(w, http.StatusText(status))
-		}
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
 		pathParams, err := api.GetPathParams(r.Context())
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -56,7 +52,7 @@ func statusesHandler(db *sqlx.DB) http.HandlerFunc {
 			if k == `id` {
 				if _, err := strconv.Atoi(v); err != nil {
 					log.Errorf("Expected {id} to be an integer: %s", v)
-					handleErr(err, http.StatusBadRequest)
+					handleErrs(http.StatusBadRequest, err)
 					return
 				}
 			}
@@ -66,13 +62,13 @@ func statusesHandler(db *sqlx.DB) http.HandlerFunc {
 		resp, err := getStatusesResponse(q, db)
 
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 

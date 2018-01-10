@@ -37,16 +37,12 @@ const ParametersPrivLevel = auth.PrivLevelReadOnly
 
 func parametersHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := func(err error, status int) {
-			log.Errorf("%v %v\n", r.RemoteAddr, err)
-			w.WriteHeader(status)
-			fmt.Fprintf(w, http.StatusText(status))
-		}
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
 		ctx := r.Context()
 		user, err := auth.GetCurrentUser(ctx)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 		privLevel := user.PrivLevel
@@ -54,13 +50,13 @@ func parametersHandler(db *sqlx.DB) http.HandlerFunc {
 		q := r.URL.Query()
 		resp, err := getParametersResponse(q, db, privLevel)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 

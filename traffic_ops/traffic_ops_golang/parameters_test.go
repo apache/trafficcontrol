@@ -30,6 +30,7 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	"encoding/json"
+
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
