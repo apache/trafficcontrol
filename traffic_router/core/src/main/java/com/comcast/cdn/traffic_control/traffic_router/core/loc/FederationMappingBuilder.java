@@ -39,24 +39,14 @@ public class FederationMappingBuilder {
         final ComparableTreeSet<CidrAddress> network = new ComparableTreeSet<CidrAddress>();
         if (jsonNode.has("resolve4")) {
             final JsonNode networkList = JsonUtils.getJsonNode(jsonNode, "resolve4");
+            network.addAll(buildAddresses(networkList));
 
-            try {
-                network.addAll(buildAddresses(networkList));
-            }
-            catch (Exception e) {
-                LOGGER.warn("Failed getting ipv4 address array likely due to bad json data: " + e.getMessage());
-            }
         }
 
         final ComparableTreeSet<CidrAddress> network6 = new ComparableTreeSet<CidrAddress>();
         if (jsonNode.has("resolve6")) {
             final JsonNode network6List = JsonUtils.getJsonNode(jsonNode, "resolve6");
-            try {
-                network6.addAll(buildAddresses(network6List));
-            }
-            catch (Exception e) {
-                LOGGER.warn("Failed getting ipv6 address array likely due to bad json data: " + e.getMessage());
-            }
+            network6.addAll(buildAddresses(network6List));
         }
 
         return new FederationMapping(cname, ttl, network, network6);
