@@ -25,7 +25,6 @@ import (
 	"net/http"
 	"net/url"
 
-	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
@@ -36,16 +35,12 @@ const SystemInfoPrivLevel = 10
 
 func systemInfoHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := func(err error, status int) {
-			log.Errorf("%v %v\n", r.RemoteAddr, err)
-			w.WriteHeader(status)
-			fmt.Fprintf(w, http.StatusText(status))
-		}
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
 		ctx := r.Context()
 		user, err := auth.GetCurrentUser(ctx)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 		privLevel := user.PrivLevel
@@ -53,13 +48,13 @@ func systemInfoHandler(db *sqlx.DB) http.HandlerFunc {
 		q := r.URL.Query()
 		resp, err := getSystemInfoResponse(q, db, privLevel)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 

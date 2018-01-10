@@ -40,25 +40,20 @@ const ServersPrivLevel = 10
 
 func serversHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		handleErr := func(err error, status int) {
-			log.Errorf("%v %v\n", r.RemoteAddr, err)
-			w.WriteHeader(status)
-			fmt.Fprintf(w, http.StatusText(status))
-		}
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
 		// p PathParams, username string, privLevel int
 		ctx := r.Context()
 		user, err := auth.GetCurrentUser(ctx)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 		privLevel := user.PrivLevel
 
 		pathParams, err := api.GetPathParams(ctx)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -68,7 +63,7 @@ func serversHandler(db *sqlx.DB) http.HandlerFunc {
 			if k == `id` {
 				if _, err := strconv.Atoi(v); err != nil {
 					log.Errorf("Expected {id} to be an integer: %s", v)
-					handleErr(err, http.StatusBadRequest)
+					handleErrs(http.StatusBadRequest, err)
 					return
 				}
 			}
@@ -77,14 +72,14 @@ func serversHandler(db *sqlx.DB) http.HandlerFunc {
 		resp, err := getServersResponse(q, db, privLevel)
 		if err != nil {
 			log.Errorln(err)
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
 			log.Errorln("marshaling response %v", err)
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
