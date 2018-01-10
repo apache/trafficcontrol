@@ -20,6 +20,7 @@ package tc
  */
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -64,8 +65,14 @@ func GetHandleErrorsFunc(w http.ResponseWriter, r *http.Request) func(status int
 			fmt.Fprintf(w, http.StatusText(http.StatusInternalServerError))
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(status)
+		w.Header().Set(ContentType, ApplicationJson)
+
+		ctx := r.Context()
+		ctx = context.WithValue(ctx,StatusKey,status)
+		*r = *r.WithContext(ctx)
+
 		fmt.Fprintf(w, "%s", errBytes)
 	}
 }
+
+var StatusKey = "status"

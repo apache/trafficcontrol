@@ -163,6 +163,12 @@ func gzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
 		}
 		return
 	}
+	ctx := r.Context()
+	val := ctx.Value(tc.StatusKey)
+	status, ok := val.(int)
+	if ok { //if not we assume it is a 200
+		w.WriteHeader(status)
+	}
 
 	w.Write(bytes)
 }
