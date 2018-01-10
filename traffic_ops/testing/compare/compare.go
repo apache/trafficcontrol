@@ -64,7 +64,7 @@ func (to *Connect) login(creds Creds) error {
 	}
 
 	to.Client = &http.Client{Transport: tr}
-	url := to.URL + `/api/1.2/user/login`
+	url := to.URL + `/api/1.3/user/login`
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
 	if err != nil {
 		return err
@@ -185,7 +185,7 @@ func (to *Connect) get(route string) (string, error) {
 }
 
 func (to *Connect) getCDNNames() ([]string, error) {
-	res, err := to.get(`api/1.2/cdns`)
+	res, err := to.get(`api/1.3/cdns`)
 	if err != nil {
 		return nil, err
 	}
@@ -299,7 +299,7 @@ func main() {
 		for _, cdnName := range cdnNames {
 			log.Print("CDN ", cdnName)
 			go func(c string) {
-				testRoute(tos, `api/1.2/cdns/`+c+`/snapshot/new`)
+				testRoute(tos, `api/1.3/cdns/`+c+`/snapshot/new`)
 				wg.Done()
 			}(cdnName)
 		}
