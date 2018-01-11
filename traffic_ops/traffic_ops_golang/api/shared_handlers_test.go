@@ -32,6 +32,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
 
+	"net/url"
+
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
@@ -69,6 +71,11 @@ func (i *tester) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorT
 
 func (i *tester) SetID(newID int) {
 	i.ID = newID
+}
+
+//Reader interface functions
+func (i *tester) Read(db *sqlx.DB, v url.Values, user auth.CurrentUser) ([]interface{}, error, tc.ApiErrorType) {
+	return []interface{}{tester{ID: 1}}, nil, tc.NoError
 }
 
 //Updater interface functions
@@ -121,6 +128,41 @@ func TestCreateHandler(t *testing.T) {
 
 	//verifies the body is in the expected format
 	body := `{"response":{"ID":1},"alerts":[{"text":"tester was created.","level":"success"}]}`
+	if w.Body.String() != body {
+		t.Error("Expected body", body, "got", w.Body.String())
+	}
+}
+
+func TestReadHandler(t *testing.T) {
+	mockDB, _, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("", "", nil)
+	if err != nil {
+		t.Error("Error creating new request")
+	}
+
+	ctx := r.Context()
+	ctx = context.WithValue(ctx, auth.CurrentUserKey,
+		auth.CurrentUser{UserName: "username", ID: 1, PrivLevel: auth.PrivLevelAdmin})
+	ctx = context.WithValue(ctx, PathParamsKey, PathParams{"id": "1"})
+	// Add our context to the request
+	r = r.WithContext(ctx)
+
+	typeRef := tester{}
+	readFunc := ReadHandler(&typeRef, db)
+
+	readFunc(w, r)
+
+	//verifies the body is in the expected format
+	body := `{"response":[{"ID":1}]}`
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}

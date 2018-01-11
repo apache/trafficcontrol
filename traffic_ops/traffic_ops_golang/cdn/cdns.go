@@ -22,6 +22,7 @@ package cdn
 import (
 	"errors"
 	"fmt"
+	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -31,6 +32,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
+
+const CDNsPrivLevel = 10
 
 //we need a type alias to define functions on
 type TOCDN tc.CDN
@@ -68,6 +71,53 @@ func (cdn *TOCDN) Validate(db *sqlx.DB) []error {
 		errs = append(errs, errors.New("Domain Name is required."))
 	}
 	return errs
+}
+
+func (cdn *TOCDN) Read(db *sqlx.DB, v url.Values, user auth.CurrentUser) ([]interface{}, error, tc.ApiErrorType) {
+	var rows *sqlx.Rows
+	var err error
+
+	// Query Parameters to Database Query column mappings
+	// see the fields mapped in the SQL query
+	queryParamsToQueryCols := map[string]string{
+		"domainName":    "domain_name",
+		"dnssecEnabled": "dnssec_enabled",
+		"id":            "id",
+		"name":          "name",
+	}
+
+	query, queryValues := dbhelpers.BuildQuery(v, selectCDNsQuery(), queryParamsToQueryCols)
+
+	rows, err = db.NamedQuery(query, queryValues)
+	if err != nil {
+		log.Errorf("Error querying CDNs: %v", err)
+		return nil, tc.DBError, tc.SystemError
+	}
+	defer rows.Close()
+
+	CDNs := []interface{}{}
+	for rows.Next() {
+		var s tc.CDN
+		if err = rows.StructScan(&s); err != nil {
+			log.Errorf("error parsing CDN rows: %v", err)
+			return nil, tc.DBError, tc.SystemError
+		}
+		CDNs = append(CDNs, s)
+	}
+
+	return CDNs, nil, tc.NoError
+}
+
+func selectCDNsQuery() string {
+	query := `SELECT
+dnssec_enabled,
+domain_name,
+id,
+last_updated,
+name
+
+FROM cdn c`
+	return query
 }
 
 //The TOCDN implementation of the Updater interface
