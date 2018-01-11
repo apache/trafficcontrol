@@ -50,7 +50,7 @@ under the License.
 					<verbose>true</verbose>
 					<failurePriority>5</failurePriority>
 					<rulesets>
-						<ruleset>build/pmd/ruleset.xml</ruleset>
+						<ruleset>${project.basedir}/build/pmd/ruleset.xml</ruleset>
 					</rulesets>
 				</configuration>
 			</plugin>
