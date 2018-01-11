@@ -16,10 +16,12 @@
 package protocol;
 
 import com.comcast.cdn.traffic_control.traffic_router.protocol.RouterSslImplementation;
+import com.comcast.cdn.traffic_control.traffic_router.protocol.RouterSslUtil;
 import org.apache.tomcat.util.net.SSLHostConfig;
 import org.apache.tomcat.util.net.SSLHostConfigCertificate;
 import org.apache.tomcat.util.net.SSLSupport;
 import org.apache.tomcat.util.net.SSLUtil;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -32,12 +34,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({RouterSslImplementation.class, SSLHostConfigCertificate.class})
+@PrepareForTest({RouterSslImplementation.class, SSLHostConfigCertificate.class, RouterSslUtil.class})
 public class RouterSslImplementationTest {
 	SSLSession sslSession = PowerMockito.mock(SSLSession.class);
 	SSLHostConfig sslHostConfig = PowerMockito.mock(SSLHostConfig.class);
 	SSLHostConfigCertificate.Type type = PowerMockito.mock(SSLHostConfigCertificate.Type.class);
 	SSLHostConfigCertificate sslHostConfigCertificate = new SSLHostConfigCertificate(sslHostConfig, type);
+	RouterSslUtil sslutil = PowerMockito.mock(RouterSslUtil.class);
 
 	@Test
 	public void itReturnsSSLSupport() throws Exception {
@@ -46,7 +49,12 @@ public class RouterSslImplementationTest {
 
 	@Test
 	public void itReturnsSSLUtil() throws Exception {
+		//System.setProperty("java.library.path", "/usr/local/opt/tomcat-native/lib");
+		PowerMockito.whenNew(RouterSslUtil.class).withArguments(sslHostConfigCertificate).thenReturn(sslutil);
 		assertThat(new RouterSslImplementation().getSSLUtil(sslHostConfigCertificate), instanceOf(SSLUtil.class));
 	}
 
+	@Before
+	public void before() {
+	}
 }

@@ -40,11 +40,12 @@
 				   connectionTimeout="20000" mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="ApiPort"/>
 		<Connector port="443" protocol="com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
 		scheme="https" secure="true" SSLEnabled="true" sslProtocol="TLS" connectionTimeout="20000"
-				   mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="SecurePort" sslImplementationName="org.apache.tomcat.util.net.openssl.OpenSSLImplementation">
+			       mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="SecurePort" sslImplementationName="org.apache.tomcat.util.net.openssl.OpenSSLImplementation">
 		</Connector>
 		<Engine name="traffic_router_core" defaultHost="localhost">
 			<Host name="localhost" appBase="/opt/traffic_router/webapps/core/">
-				<Context path=""/>
+				<!-- These Context setting allow the project .war to server the root '/' context of the Tomcat server -->
+				<Context path="" docBase=""><JarScanner scanManifest="false" /></Context>
 			</Host>
 		</Engine>
 	</Service>

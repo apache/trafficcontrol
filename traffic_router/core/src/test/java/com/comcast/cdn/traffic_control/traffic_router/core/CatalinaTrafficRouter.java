@@ -33,7 +33,7 @@ public class CatalinaTrafficRouter {
 		java.util.logging.Logger logger = java.util.logging.Logger.getLogger("");
 		java.util.logging.Handler[] handlers = logger.getHandlers();
 		for (java.util.logging.Handler handler : handlers) {
-			handler.setLevel(Level.INFO);
+			handler.setLevel(Level.FINE);
 		}
 
 		System.setProperty("dns.tcp.port", "1053");
@@ -43,6 +43,7 @@ public class CatalinaTrafficRouter {
 
 		catalina = new Catalina();
 		catalina.load(new String[] {"-config", serverXmlPath});
+
 
 
 		// Override the port and app base property of server.xml
