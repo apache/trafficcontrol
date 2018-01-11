@@ -297,6 +297,15 @@ type RemapRuleTo struct {
 	RetryCodes map[int]struct{}
 }
 
+type Hdr struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+type HeaderManipulationList struct {
+	Set  []Hdr    `json:"set"`
+	Drop []string `json:"drop"`
+}
 type RemapRuleBase struct {
 	Name               string          `json:"name"`
 	From               string          `json:"from"`
@@ -305,9 +314,11 @@ type RemapRuleBase struct {
 	ConnectionClose    bool            `json:"connection-close"`
 	QueryString        QueryStringRule `json:"query-string"`
 	// ConcurrentRuleRequests is the number of concurrent requests permitted to a remap rule, that is, to an origin. If this is 0, the global config is used.
-	ConcurrentRuleRequests int  `json:"concurrent_rule_requests"`
-	RetryNum               *int `json:"retry_num"`
-	DSCP                   int  `json:"dscp"`
+	ConcurrentRuleRequests int                    `json:"concurrent_rule_requests"`
+	RetryNum               *int                   `json:"retry_num"`
+	DSCP                   int                    `json:"dscp"`
+	ToOriginHeaders        HeaderManipulationList `json:"to_origin_headers"`
+	ToClientHeaders        HeaderManipulationList `json:"to_client_headers"`
 }
 
 type RemapRuleJSON struct {
