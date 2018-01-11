@@ -60,10 +60,10 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, `cdns/health$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
 		{1.2, http.MethodGet, `cdns/routing$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
 
-		{1.2, http.MethodGet, `cdns/?(\.json)?$`, cdn.GetHandler(d.DB), cdn.CDNsPrivLevel, Authenticated, nil},
-		{1.2, http.MethodGet, `cdns/{id}$`, cdn.GetHandler(d.DB), cdn.CDNsPrivLevel, Authenticated, nil},
 		{1.2, http.MethodGet, `cdns/{name}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), MonitoringPrivLevel, Authenticated, nil},
 		//CDN generic handlers:
+		{1.3, http.MethodGet, `cdns/?(\.json)?$`, api.ReadHandler(cdn.GetRefType(), d.DB), cdn.CDNsPrivLevel, Authenticated, nil},
+		{1.3, http.MethodGet, `cdns/{id}$`, api.ReadHandler(cdn.GetRefType(), d.DB), cdn.CDNsPrivLevel, Authenticated, nil},
 		{1.3, http.MethodPut, `cdns/{id}$`, api.UpdateHandler(cdn.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.3, http.MethodPost, `cdns/?$`, api.CreateHandler(cdn.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.3, http.MethodDelete, `cdns/{id}$`, api.DeleteHandler(cdn.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},

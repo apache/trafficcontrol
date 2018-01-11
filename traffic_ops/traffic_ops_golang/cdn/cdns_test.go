@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -50,7 +51,7 @@ func getTestCDNs() []tc.CDN {
 	return cdns
 }
 
-func TestGetCDNs(t *testing.T) {
+func TestReadCDNs(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -59,6 +60,8 @@ func TestGetCDNs(t *testing.T) {
 
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
+
+	refType := GetRefType()
 
 	testCDNs := getTestCDNs()
 	cols := test.ColsFromStructByTag("db", tc.CDN{})
@@ -79,25 +82,12 @@ func TestGetCDNs(t *testing.T) {
 	v := url.Values{}
 	v.Set("dsId", "1")
 
-	servers, err := getCDNs(v, db)
+	servers, err, _ := refType.Read(db, v, auth.CurrentUser{})
 	if err != nil {
-		t.Errorf("getCDNs expected: nil error, actual: %v", err)
+		t.Errorf("cdn.Read expected: nil error, actual: %v", err)
 	}
 
 	if len(servers) != 2 {
-		t.Errorf("getCDNs expected: len(servers) == 1, actual: %v", len(servers))
+		t.Errorf("cdn.Read expected: len(servers) == 2, actual: %v", len(servers))
 	}
-
-}
-
-type SortableCDNs []tc.CDN
-
-func (s SortableCDNs) Len() int {
-	return len(s)
-}
-func (s SortableCDNs) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-func (s SortableCDNs) Less(i, j int) bool {
-	return s[i].Name < s[j].Name
 }

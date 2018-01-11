@@ -20,6 +20,8 @@ package api
  */
 
 import (
+	"net/url"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
@@ -56,4 +58,8 @@ type Validator interface {
 
 type Tenantable interface {
 	IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error)
+}
+
+type Reader interface {
+	Read(db *sqlx.DB, v url.Values, user auth.CurrentUser) ([]interface{}, error, tc.ApiErrorType)
 }

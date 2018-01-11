@@ -31,6 +31,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -66,6 +67,72 @@ func decodeAndValidateRequestBody(r *http.Request, v Validator, db *sqlx.DB) (in
 		return nil, []error{err}
 	}
 	return payload, payload.(Validator).Validate(db)
+}
+
+//this creates a handler function from the pointer to a struct implementing the Reader interface
+//      this handler retrieves the user from the context
+//      combines the path and query parameters
+//      produces the proper status code based on the error code returned
+//      marshals the structs returned into the proper response json
+func ReadHandler(typeRef Reader, db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		//create error function with ResponseWriter and Request
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
+
+		ctx := r.Context()
+		pathParams, err := GetPathParams(ctx)
+		if err != nil {
+			handleErrs(http.StatusInternalServerError, err)
+			return
+		}
+
+		// Load the PathParams into the query parameters for pass through
+		q := r.URL.Query()
+		for k, v := range pathParams {
+			if k == `id` {
+				if _, err := strconv.Atoi(v); err != nil {
+					log.Errorf("Expected {id} to be an integer: %s", v)
+					handleErrs(http.StatusNotFound, errors.New("Resource not found.")) //matches perl response
+					return
+				}
+			}
+			q.Set(k, v)
+		}
+
+		user, err := auth.GetCurrentUser(ctx)
+		if err != nil {
+			log.Errorf("unable to retrieve current user from context: %s", err)
+			handleErrs(http.StatusInternalServerError, err)
+		}
+
+		results, err, errType := typeRef.Read(db, q, *user)
+		if err != nil {
+			switch errType {
+			case tc.SystemError:
+				handleErrs(http.StatusInternalServerError, err)
+			case tc.DataConflictError:
+				handleErrs(http.StatusBadRequest, err)
+			case tc.DataMissingError:
+				handleErrs(http.StatusNotFound, err)
+			default:
+				log.Errorf("received unknown ApiErrorType from read: %s\n", errType.String())
+				handleErrs(http.StatusInternalServerError, err)
+			}
+			return
+		}
+		resp := struct {
+			Response []interface{} `json:"response"`
+		}{results}
+
+		respBts, err := json.Marshal(resp)
+		if err != nil {
+			handleErrs(http.StatusInternalServerError, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, "%s", respBts)
+	}
 }
 
 //this creates a handler function from the pointer to a struct implementing the Updater interface
