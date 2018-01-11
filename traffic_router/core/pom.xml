@@ -36,7 +36,7 @@
 	</repositories>
 
 	<build>
-		<finalName>ROOT</finalName>
+		<!--finalName>ROOT</finalName-->
 		<resources>
 			<resource>
 				<filtering>false</filtering>
@@ -175,7 +175,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.19.1</version>
 				<configuration>
-					<argLine>-XX:-UseSplitVerifier</argLine>
+					<argLine>-XX:-UseSplitVerifier -Djava.library.path=/usr/local/opt/tomcat-native/lib</argLine>
 					<excludedGroups>com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest,com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest</excludedGroups>
 				</configuration>
 			</plugin>
@@ -203,6 +203,7 @@
 							<goal>verify</goal>
 						</goals>
 						<configuration>
+                            <argLine> -Djava.library.path=/usr/local/opt/tomcat-native/lib</argLine> <!-- This needs to be parameterized -->
 							<groups>com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest</groups>
 							<includes>
 								<include>**/*Suite.java</include>
@@ -338,6 +339,11 @@
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-coyote</artifactId>
+			<version>8.5.15</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-jni</artifactId>
 			<version>8.5.15</version>
 		</dependency>
 		<dependency>

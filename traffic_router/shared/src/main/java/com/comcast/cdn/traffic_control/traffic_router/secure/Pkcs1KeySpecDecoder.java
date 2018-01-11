@@ -41,7 +41,6 @@ public class Pkcs1KeySpecDecoder {
 
 	public KeySpec decode(final String data) throws IOException, GeneralSecurityException {
 		final String pemData = data.replaceAll(HEADER, "").replaceAll(FOOTER, "").replaceAll("\\s", "");
-
 		final DerInputStream derInputStream = new DerInputStream(Base64.getDecoder().decode(pemData));
 		final DerValue[] derSequence = derInputStream.getSequence(0);
 

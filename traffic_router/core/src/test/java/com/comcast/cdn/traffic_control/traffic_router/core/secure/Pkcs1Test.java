@@ -20,10 +20,15 @@ import org.junit.Test;
 
 import java.math.BigInteger;
 import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.security.spec.KeySpec;
-import java.security.spec.RSAMultiPrimePrivateCrtKeySpec;
+//import java.security.spec.RSAMultiPrimePrivateCrtKeySpec;
+//import java.security.spec.RSAPrivateKeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 public class Pkcs1Test {
@@ -99,20 +104,20 @@ public class Pkcs1Test {
 
 	@Test
 	public void itReadsPkcs1() throws Exception {
+		java.security.Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 		Pkcs1 pkcs1 = new Pkcs1(pkcs1RsaPrivateKey);
 		KeySpec keySpec = pkcs1.getKeySpec();
-		assertThat(keySpec instanceof RSAMultiPrimePrivateCrtKeySpec, equalTo(true));
+		//assertThat(keySpec instanceof RSAMultiPrimePrivateCrtKeySpec, equalTo(true));
+		assertThat(keySpec instanceof PKCS8EncodedKeySpec, equalTo(true));
 
-		RSAMultiPrimePrivateCrtKeySpec rsaKeySpec = (RSAMultiPrimePrivateCrtKeySpec) keySpec;
-
-		assertThat(rsaKeySpec.getModulus(), equalTo(new BigInteger(modulus)));
-		assertThat(rsaKeySpec.getPublicExponent(), equalTo(new BigInteger("65537")));
-		assertThat(rsaKeySpec.getPrivateExponent(), equalTo(new BigInteger(primeExponent)));
-		assertThat(rsaKeySpec.getPrimeP(), equalTo(new BigInteger(primeP)));
-		assertThat(rsaKeySpec.getPrimeQ(), equalTo(new BigInteger(primeQ)));
-		assertThat(rsaKeySpec.getPrimeExponentP(), equalTo(new BigInteger(primeExponentP)));
-		assertThat(rsaKeySpec.getPrimeExponentQ(), equalTo(new BigInteger(primeExponentQ)));
-		assertThat(rsaKeySpec.getCrtCoefficient(), equalTo(new BigInteger(crtCoefficient)));
+		PKCS8EncodedKeySpec rsaKeySpec = (PKCS8EncodedKeySpec) keySpec;
+		//RSAMultiPrimePrivateCrtKeySpec rsaKeySpec = (RSAMultiPrimePrivateCrtKeySpec) keySpec;
+		//assertThat(rsaKeySpec.getPrivateExponent(), equalTo(new BigInteger(primeExponent)));
+		//assertThat(rsaKeySpec.getPrimeP(), equalTo(new BigInteger(primeP)));
+		//assertThat(rsaKeySpec.getPrimeQ(), equalTo(new BigInteger(primeQ)));
+		//assertThat(rsaKeySpec.getPrimeExponentP(), equalTo(new BigInteger(primeExponentP)));
+		//assertThat(rsaKeySpec.getPrimeExponentQ(), equalTo(new BigInteger(primeExponentQ)));
+		//assertThat(rsaKeySpec.getCrtCoefficient(), equalTo(new BigInteger(crtCoefficient)));
 
 		RSAPrivateKey rsaPrivateKey = (RSAPrivateKey) pkcs1.getPrivateKey();
 		assertThat(rsaPrivateKey.getPrivateExponent(), equalTo(new BigInteger(primeExponent)));

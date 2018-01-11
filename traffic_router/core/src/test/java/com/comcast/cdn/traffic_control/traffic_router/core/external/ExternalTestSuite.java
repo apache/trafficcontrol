@@ -116,7 +116,11 @@ public class ExternalTestSuite {
 		System.setProperty("routerSecurePort", "" + findAvailableTcpPort());
 
 		setupFakeServers();
+		String prefix = System.getProperty("user.dir");
 
+		if (!prefix.endsWith("/core")) {
+			prefix += "/core";
+		}
 		tmpDeployDir = Files.createTempDirectory("ext-test-").toFile();
 		new File(tmpDeployDir,"conf").mkdirs();
 		System.out.println();
@@ -142,9 +146,10 @@ public class ExternalTestSuite {
 
 		ConsoleAppender consoleAppender = new ConsoleAppender(new PatternLayout("%d{ISO8601} [%-5p] %c{4}: %m%n"));
 		LogManager.getRootLogger().addAppender(consoleAppender);
-		LogManager.getRootLogger().setLevel(Level.WARN);
+		LogManager.getRootLogger().setLevel(Level.INFO);
 
 		catalinaTrafficRouter = new CatalinaTrafficRouter("src/main/opt/tomcat/conf/server.xml", "src/main/webapp");
+		System.out.println("catalinaTrafficRouter: "+catalinaTrafficRouter.toString());
 		catalinaTrafficRouter.start();
 	}
 

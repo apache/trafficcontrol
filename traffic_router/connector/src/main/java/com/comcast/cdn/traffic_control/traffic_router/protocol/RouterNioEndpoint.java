@@ -24,7 +24,7 @@ import java.util.List;
 
 
 public class RouterNioEndpoint extends NioEndpoint {
-
+    protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(LanguidProtocol.class);
     // Grabs the aliases from our custom certificate registry, creates a sslHostConfig for them
     // and adds the newly created config to the list of sslHostConfigs.  We also remove the default config
     // since it won't be found in our registry.  This allows OpenSSL to start successfully and serve our
@@ -40,11 +40,21 @@ public class RouterNioEndpoint extends NioEndpoint {
             //remove default config since it won't be found in our keystore
             sslHostConfigs.clear();
 
+            String hostname = "";
             for (final String alias : aliases) {
                 final SSLHostConfig sslHostConfig = new SSLHostConfig();
                 sslHostConfig.setCertificateKeyAlias(alias);
-                addSslHostConfig(sslHostConfig);
+                log.info("sslHostConfig: "+sslHostConfig.getHostName()+" "+sslHostConfig.getTruststoreAlgorithm());
+
+                if (!hostname.equals(sslHostConfig.getHostName())) {
+                    addSslHostConfig(sslHostConfig);
+                    hostname = sslHostConfig.getHostName();
+                }
+
+
             }
+
+            log.info("java.library.path = "+System.getProperty("java.library.path"));
 
             //Now let initialiseSsl do it's thing.
             super.initialiseSsl();
