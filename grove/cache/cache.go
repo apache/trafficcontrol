@@ -232,6 +232,23 @@ func setDSCP(conn *web.InterceptConn, dscp int) error {
 	return nil
 }
 
+// ManipulateHeaders drops and sets headers according to the input dropList and setList
+func ManipulateHeaders(dropList []string, setList []Hdr, h *http.Header) error {
+	log.Debugf("Changing headers: drop:%v set:%v\n", dropList, setList)
+	if len(dropList) != 0 {
+		for _, key := range dropList {
+			h.Del(key)
+		}
+	}
+	if len(setList) != 0 {
+		for _, hdr := range setList {
+			h.Del(hdr.Name) // delete the old header regardles
+			h.Add(hdr.Name, hdr.Value)
+		}
+	}
+	return nil
+}
+
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.stats.IncConnections()
 	defer h.stats.DecConnections()
@@ -288,6 +305,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if !ok {
 		log.Debugf("cache.Handler.ServeHTTP: '%v' not in cache\n", cacheKey)
+		if remappingProducer.rule.ToOriginHeaders.Drop != nil || remappingProducer.rule.ToOriginHeaders.Set != nil {
+			if err := ManipulateHeaders(remappingProducer.rule.ToOriginHeaders.Drop, remappingProducer.rule.ToOriginHeaders.Set, &r.Header); err != nil {
+				log.Debugf("ERR: %v", err)
+			}
+		}
 		cacheObj, err := retrier.Get(r, nil)
 		if err != nil {
 			log.Errorf("retrying get error (in uncached): %v\n", err)
@@ -300,7 +322,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), true, 0, 0)
 			return
 		}
-
+		if remappingProducer.rule.ToClientHeaders.Drop != nil || remappingProducer.rule.ToClientHeaders.Set != nil {
+			if err := ManipulateHeaders(remappingProducer.rule.ToClientHeaders.Drop, remappingProducer.rule.ToClientHeaders.Set, &cacheObj.RespHeaders); err != nil {
+				log.Debugf("ERR: %v", err)
+			}
+		}
 		bytesWritten, err := h.respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
 		if err != nil {
 			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
@@ -377,6 +403,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Debugf("cache.Handler.ServeHTTP: '%v' responding with %v\n", cacheKey, cacheObj.Code)
 
+	if remappingProducer.rule.ToClientHeaders.Drop != nil || remappingProducer.rule.ToClientHeaders.Set != nil {
+		if err := ManipulateHeaders(remappingProducer.rule.ToClientHeaders.Drop, remappingProducer.rule.ToClientHeaders.Set, &cacheObj.RespHeaders); err != nil {
+			log.Debugf("ERR: %v", err)
+		}
+	}
 	bytesSent, err := h.respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
 	if err != nil {
 		log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
