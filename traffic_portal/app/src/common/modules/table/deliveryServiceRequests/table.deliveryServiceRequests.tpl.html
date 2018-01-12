@@ -23,6 +23,7 @@ under the License.
             <li class="active">Delivery Service Requests</li>
         </ol>
         <div class="pull-right" role="group">
+            <button class="btn btn-primary" title="Create Delivery Service Request" ng-click="createRequest()"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
@@ -38,23 +39,29 @@ under the License.
                 <th>Author</th>
                 <th>Assignee</th>
                 <th>Last Updated</th>
-                <th></th>
+                <th style="text-align: right;">Actions</th>
             </tr>
             </thead>
             <tbody>
             <tr ng-click="editDeliveryServiceRequest(request)" ng-repeat="request in ::dsRequests">
                 <td data-search="^{{::request.request.xmlId}}$">{{::request.request.xmlId}}</td>
                 <td data-search="^{{::request.changeType}}$">{{::request.changeType}}</td>
-                <td data-search="^{{::request.status}}$">{{::request.status}}</td>
+                <td data-search="^{{::request.status}}$">
+                    <span ng-if="!statusEditable(request)">{{::request.status}}</span>
+                    <a ng-if="statusEditable(request)" class="link" title="Change Status" ng-click="editStatus(request, $event)">{{::request.status}}</a>
+                </td>
                 <td data-search="^{{::request.author}}$">{{::request.author}}</td>
                 <td data-search="^{{::request.assignee}}$">
-                    <a ng-show="!request.assignee" class="link" title="Assign Yourself" ng-click="assignRequest(request, true, $event)">No one - assign yourself</a>
-                    <a ng-show="request.assignee" class="link" title="Clear Assignee" ng-click="assignRequest(request, false, $event)">{{::request.assignee}} - clear</a>
+                    <span ng-show="!assignable(request)">{{::request.assignee}}</span>
+                    <a ng-show="assignable(request) && !request.assignee" class="link" title="Assign Yourself" ng-click="assignRequest(request, true, $event)">No one - assign yourself</a>
+                    <a ng-show="assignable(request) && request.assignee" class="link" title="Unassign" ng-click="assignRequest(request, false, $event)">{{::request.assignee}} - unassign</a>
                 </td>
                 <td data-search="^{{::getRelativeTime(request.lastUpdated)}}$" data-order="{{::request.lastUpdated}}">{{::getRelativeTime(request.lastUpdated)}}</td>
                 <td style="text-align: right;">
-                    <a class="link action-link" title="Edit Status" ng-click="editStatus(request, $event)">edit status</a>|
-                    <a class="link action-link" title="Delete Request" ng-click="deleteRequest(request, $event)">delete</a>
+                    <span ng-if="fulfillable(request)"><a class="link action-link" title="Fulfill Request" ng-click="fulfillRequest(request, $event)">fulfill</a>| </span>
+                    <span ng-if="rejectable(request)"><a class="link action-link" title="Reject Request" ng-click="rejectRequest(request, $event)">reject</a>| </span>
+                    <span ng-if="completeable(request)"><a class="link action-link" title="Complete Request" ng-click="completeRequest(request, $event)">complete</a></span>
+                    <span ng-if="deleteable(request)"><a class="link action-link" title="Delete Request" ng-click="deleteRequest(request, $event)">delete</a></span>
                 </td>
             </tr>
             </tbody>

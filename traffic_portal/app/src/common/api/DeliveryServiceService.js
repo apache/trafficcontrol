@@ -40,14 +40,14 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
             );
     };
 
-    this.updateDeliveryService = function(ds) {
+    this.updateDeliveryService = function(ds, delay) {
         var request = $q.defer();
 
         $http.put(ENV.api['root'] + "deliveryservices/" + ds.id, ds)
             .then(
                 function(response) {
                     var response2 = response.data.response[0];
-                    messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + ds.xmlId + ' ] updated' } ], false);
+                    messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + ds.xmlId + ' ] updated' } ], delay);
                     locationUtils.navigateToPath('/delivery-services/' + response2.id + '?type=' + response2.type);
                 },
                 function(fault) {
