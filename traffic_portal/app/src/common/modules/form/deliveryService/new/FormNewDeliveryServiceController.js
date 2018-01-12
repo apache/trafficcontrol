@@ -33,8 +33,8 @@ var FormNewDeliveryServiceController = function(deliveryService, type, types, $s
 	$scope.save = function(deliveryService) {
 		if ($scope.dsRequestsEnabled) {
 			var params = {
-				title: "Create Delivery Service",
-				message: 'All new delivery services must be reviewed for completeness and accuracy before deployment. A request will be created for you. Please select the status of your request.'
+				title: "Delivery Service Create Request",
+				message: 'All new delivery services must be reviewed for completeness and accuracy before deployment.<br><br>Please select the status of your delivery service create request.'
 			};
 			var modalInstance = $uibModal.open({
 				templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
@@ -46,8 +46,8 @@ var FormNewDeliveryServiceController = function(deliveryService, type, types, $s
 					},
 					collection: function() {
 						return [
-							{ id: $scope.DRAFT, name: 'Save Request as Draft' },
-							{ id: $scope.SUBMITTED, name: 'Submit Request for Review / Deployment' }
+							{ id: $scope.DRAFT, name: 'Save as Draft' },
+							{ id: $scope.SUBMITTED, name: 'Submit for Review and Deployment' }
 						];
 					}
 				}

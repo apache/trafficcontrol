@@ -26,16 +26,7 @@ under the License.
             <li class="active">{{deliveryServiceName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-if="settings.isRequest">
-            <button class="btn btn-primary" title="Fulfill Request" ng-click="fulfill(deliveryService)">Fulfill Request</button>
-            <div ng-if="changeType == 'update'" class="btn-group" role="group" uib-dropdown is-open="more.isopen">
-                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
-                    More
-                    <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-click="showDiff()">Show Delivery Service Diff</a></li>
-                </ul>
-            </div>
+            <button class="btn btn-link request-status" title="Edit Status" ng-disabled="!statusEditable()" ng-click="editStatus()">[ {{::requestStatus}} ]</button>
         </div>
         <div class="pull-right" role="group" ng-if="!settings.isRequest && !settings.isNew">
             <div class="btn-group" role="group" uib-dropdown is-open="keys.isopen">
@@ -503,8 +494,9 @@ under the License.
 
             <div class="modal-footer">
                 <button class="btn btn-link" ng-click="advancedShowing = !advancedShowing"><span ng-show="!advancedShowing">Show</span><span ng-show="advancedShowing">Hide</span> Advanced</button>
-                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(deliveryService)">{{settings.deleteLabel}}</button>
-                <button type="button" class="btn btn-success" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
+                <button type="button" class="btn btn-danger" ng-if="!settings.isNew && !fulfill" ng-disabled="!deletable()" ng-click="confirmDelete(deliveryService)">{{settings.deleteLabel}}</button>
+                <button type="button" class="btn btn-success" ng-if="!fulfill" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid || !saveable()" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
+                <button type="button" class="btn btn-success" ng-if="settings.isRequest && fulfill" ng-disabled="deliveryServiceForm.$invalid" ng-click="fulfillRequest(deliveryService)">Fulfill Request</button>
             </div>
         </form>
     </div>
