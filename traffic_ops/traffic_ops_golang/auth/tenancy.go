@@ -20,8 +20,6 @@ package auth
  */
 
 import (
-	"database/sql"
-
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/jmoiron/sqlx"
 )
@@ -81,9 +79,6 @@ func IsResourceAuthorizedToUser(resourceTenantID int, user CurrentUser, db *sqlx
 	err := db.QueryRow(query, user.TenantID, resourceTenantID).Scan(&tenantID, &active, &useTenancy)
 
 	switch {
-	case err == sql.ErrNoRows:
-		log.Errorf("checking user tenant %v access on resourceTenant %v: user has no access", user.TenantID, resourceTenantID)
-		return false, nil
 	case err != nil:
 		log.Errorf("Error checking user tenant %v access on resourceTenant  %v: %v", user.TenantID, resourceTenantID, err.Error())
 		return false, err
