@@ -94,6 +94,7 @@ func getParameters(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Parameter, er
 
 	query, queryValues := dbhelpers.BuildQuery(v, selectParametersQuery(), queryParamsToSQLCols)
 
+	query += ParametersGroupBy()
 	log.Debugln("Query is ", query)
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {
@@ -128,7 +129,11 @@ p.secure,
 COALESCE(array_to_json(array_agg(pr.name) FILTER (WHERE pr.name IS NOT NULL)), '[]') AS profiles
 FROM parameter p
 LEFT JOIN profile_parameter pp ON p.id = pp.parameter
-LEFT JOIN profile pr ON pp.profile = pr.id
-GROUP BY p.config_file, p.id, p.last_updated, p.name, p.value, p.secure`
+LEFT JOIN profile pr ON pp.profile = pr.id`
 	return query
+}
+
+func ParametersGroupBy() string {
+	groupBy := ` GROUP BY p.config_file, p.id, p.last_updated, p.name, p.value, p.secure`
+	return groupBy
 }
