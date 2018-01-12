@@ -76,46 +76,28 @@ The remap rules file is JSON of the following form:
 ```json
 {
     "parent_selection": "consistent-hash",
-    "retry_codes": [
-        501,
-        404
-    ],
+    "retry_codes": [ 501, 404 ],
     "retry_num": null,
     "rules": [
         {
-            "allow": [
-                "::1/128",
-                "0.0.0.0/0"
-            ],
+            "allow": [ "::1/128", "0.0.0.0/0" ],
             "certificate-file": "",
             "certificate-key-file": "",
             "concurrent_rule_requests": 0,
             "connection-close": false,
-            "deny": [
-                "::1/128",
-                "0.0.0.0/0"
-            ],
+            "deny": [ "::1/128", "0.0.0.0/0" ],
             "from": "http://foo.example.net",
             "name": "foo.example.com.http.http",
             "parent_selection": "consistent-hash",
-            "query-string": {
-                "cache": true,
-                "remap": true
-            },
-            "retry_codes": [
-                404,
-                500
-            ],
+            "query-string": { "cache": true, "remap": true },
+            "retry_codes": [ 404, 500 ],
             "retry_num": 5,
             "timeout_ms": 5000,
             "to": [
                 {
                     "parent_selection": "consistent-hash",
                     "proxy_url": "http://proxy.example.net:80",
-                    "retry_codes": [
-                        500,
-                        404
-                    ],
+                    "retry_codes": [ 500, 404 ],
                     "retry_num": 5,
                     "timeout_ms": 5000,
                     "url": "http://bar.example.net",
@@ -124,21 +106,13 @@ The remap rules file is JSON of the following form:
             ],
             "to_client_headers": {
                 "drop": [],
-                "set": [
-                    {
-                        "name": "Accept-Ranges",
-                        "value": "None"
-                    }
-                ]
+                "set": [ { "name": "Accept-Ranges", "value": "None" } ]
             },
             "to_origin_headers": {
-                "drop": [
-                    "Range"
-                ],
+                "drop": [ "Range" ],
                 "set": []
             }
-        },
-        { .. }, ..
+        }
     ],
     "timeout_ms": 5000
 }
@@ -168,7 +142,7 @@ The global object must also include a `rules` key, with an array of rule objects
 | `query-string` | A JSON object with the boolean keys `remap` and `cache`. The `remap` key indicates whether to append request query strings to the parent request. The `cache` key incidates whether to cache requests with different query strings separately. |
 | `to` | The array of parents for the given rule. |
 |`to_client_headers`| JSON object of header manipulation rules for the response to the client. `set` is an array of headers to set, and `drop` is an array of headers to remove. |
-|`to_origin_headers`| JSON object of header manipulation rules for the rerequest to the origin server. `set` is an array of headers to set, and `drop` is an array of headers to remove. |
+|`to_origin_headers`| JSON object of header manipulation rules for the request to the origin server. `set` is an array of headers to set, and `drop` is an array of headers to remove. |
 
 The objects in the `to` array of parents have the following fields:
 
