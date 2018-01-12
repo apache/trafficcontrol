@@ -27,7 +27,7 @@ var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUti
 		return Restangular.service('deliveryservice_requests').post(dsRequest)
 			.then(
 				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Delivery service request created' } ], true);
+					messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + dsRequest.request.xmlId + ' delivery service' } ], true);
 					locationUtils.navigateToPath('/delivery-service-requests');
 				},
 				function(fault) {
@@ -42,7 +42,6 @@ var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUti
 		$http.put(ENV.api['root'] + "deliveryservice_requests/" + id, dsRequest)
 			.then(
 				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Delivery service request updated' } ], false);
 					request.resolve();
 				},
 				function(fault) {
