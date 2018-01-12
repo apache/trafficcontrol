@@ -1,4 +1,4 @@
-package auth
+package tenant
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,8 +20,12 @@ package auth
  */
 
 import (
+	"database/sql"
+	"fmt"
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
+	"net/http"
 )
 
 type Tenant struct {
@@ -31,11 +35,62 @@ type Tenant struct {
 	ParentID int
 }
 
+type DeliveryServiceTenantInfo struct {
+	XMLID    string `db:"xml_id"`
+	TenantID int    `db:"tenant_id"`
+}
+
+// returns true if the user has tenant access on this deliveryservice
+func (dsInfo DeliveryServiceTenantInfo) IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error) {
+	return IsResourceAuthorizedToUser(dsInfo.TenantID, user, db)
+}
+
+// returns tenant information for a deliveryservice
+func GetDeliveryServiceTenantInfo(xmlId string, db *sqlx.DB) (*DeliveryServiceTenantInfo, error) {
+	ds := DeliveryServiceTenantInfo{}
+	tenantInfoStmt, err := db.Preparex("SELECT xml_id,tenant_id FROM deliveryservice where xml_id = $1")
+	if err != nil {
+		log.Errorf("deliveryservice sql query error, xmlId '%s': %v\n", xmlId, err)
+		return nil, err
+	}
+
+	err = tenantInfoStmt.Get(&ds, xmlId)
+	switch {
+	case err == sql.ErrNoRows:
+		ds = DeliveryServiceTenantInfo{}
+		return &ds, fmt.Errorf("a deliveryservice with xml_id '%s' was not found", xmlId)
+	case err != nil:
+		return nil, err
+	default:
+		return &ds, nil
+	}
+}
+
+// tenancy check wrapper for deliveryservice
+func UserHasDeliveryServiceTenantAccess(user auth.CurrentUser, dsXmlID string, db *sqlx.DB) (bool, error, int) {
+	dsInfo, err := GetDeliveryServiceTenantInfo(dsXmlID, db)
+	if err != nil {
+		if dsInfo == nil {
+			return false, fmt.Errorf("deliveryservice lookup failure: %v", err), http.StatusInternalServerError
+		} else {
+			return false, fmt.Errorf("no such deliveryservice: '%s'", dsXmlID), http.StatusBadRequest
+		}
+	}
+	hasAccess, err := dsInfo.IsTenantAuthorized(user, db)
+	if err != nil {
+		return false, fmt.Errorf("user tenancy check failure: %v", err), http.StatusInternalServerError
+	}
+	if !hasAccess {
+		return false, fmt.Errorf("Access to this resource is not authorized"), http.StatusForbidden
+	}
+	return true, nil, http.StatusOK
+}
+
 // returns a Tenant list that the specified user has access too.
 // NOTE: This method does not use the use_tenancy parameter and if this method is being used
 // to control tenancy the parameter must be checked. The method IsResourceAuthorizedToUser checks the use_tenancy parameter
 // and should be used for this purpose in most cases.
-func GetUserTenantList(user CurrentUser, db *sqlx.DB) ([]Tenant, error) {
+func GetUserTenantList(user auth.CurrentUser, db *sqlx.DB) ([]Tenant, error) {
 	query := `WITH RECURSIVE q AS (SELECT id, name, active, parent_id FROM tenant WHERE id = $1
 	UNION SELECT t.id, t.name, t.active, t.parent_id  FROM tenant t JOIN q ON q.id = t.parent_id)
 	SELECT id, name, active, parent_id FROM q;`
@@ -65,7 +120,7 @@ func GetUserTenantList(user CurrentUser, db *sqlx.DB) ([]Tenant, error) {
 
 // returns a boolean value describing if the user has access to the provided resource tenant id and an error
 // if use_tenancy is set to false (0 in the db) this method will return true allowing access.
-func IsResourceAuthorizedToUser(resourceTenantID int, user CurrentUser, db *sqlx.DB) (bool, error) {
+func IsResourceAuthorizedToUser(resourceTenantID int, user auth.CurrentUser, db *sqlx.DB) (bool, error) {
 	// $1 is the user tenant ID and $2 is the resource tenant ID
 	query := `WITH RECURSIVE q AS (SELECT id, active FROM tenant WHERE id = $1
 	UNION SELECT t.id, t.active FROM TENANT t JOIN q ON q.id = t.parent_id),

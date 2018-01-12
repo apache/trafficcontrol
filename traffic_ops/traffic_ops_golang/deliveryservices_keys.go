@@ -34,6 +34,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
 )
@@ -63,25 +65,6 @@ func getCDNIDByDomainname(domainName string, db *sqlx.DB) (sql.NullInt64, error)
 	}
 
 	return cdnID, nil
-}
-
-func getDeliveryServiceCountByXmlID(xmlID string, db *sqlx.DB) (int64, error) {
-	dsQuery := `SELECT count(*)  from deliveryservice WHERE xml_id = $1`
-	var count sql.NullInt64
-
-	rows, err := db.Query(dsQuery, xmlID)
-	if err != nil {
-		return 0, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		if err := rows.Scan(&count); err != nil {
-			return 0, err
-		}
-	}
-
-	return count.Int64, nil
 }
 
 // returns a delivery service xmlId for a cdn by host regex.
@@ -258,9 +241,15 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc 
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorsFunc(w, r)
 		var keysObj tc.DeliveryServiceSSLKeys
-		var respBytes []byte
 
 		defer r.Body.Close()
+
+		ctx := r.Context()
+		user, err := auth.GetCurrentUser(ctx)
+		if err != nil {
+			handleErr(http.StatusInternalServerError, err)
+			return
+		}
 
 		data, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -275,22 +264,10 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc 
 			return
 		}
 
-		dsCount, err := getDeliveryServiceCountByXmlID(keysObj.DeliveryService, db)
-		if err != nil {
-			log.Errorf("ERROR: querying deliveryservice, %v\n", err)
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-		if dsCount != 1 {
-			alert := tc.CreateAlerts(tc.InfoLevel, fmt.Sprintf(" - a delivery service does not exist named: %s",
-				keysObj.DeliveryService))
-			respBytes, err = json.Marshal(alert)
-			if err != nil {
-				log.Errorf("failed to marshal an alert response: %s\n", err)
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			fmt.Fprintf(w, "%s", respBytes)
+		// check user tenancy access to this resource.
+		hasAccess, err, httpStatus := tenant.UserHasDeliveryServiceTenantAccess(*user, keysObj.DeliveryService, db)
+		if !hasAccess {
+			handleErr(httpStatus, err)
 			return
 		}
 
@@ -364,6 +341,11 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg Config) http.Ha
 		version := r.URL.Query().Get("version")
 
 		ctx := r.Context()
+		user, err := auth.GetCurrentUser(ctx)
+		if err != nil {
+			handleErr(http.StatusInternalServerError, err)
+			return
+		}
 		pathParams, err := api.GetPathParams(ctx)
 		if err != nil {
 			handleErr(http.StatusInternalServerError, err)
@@ -419,6 +401,12 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg Config) http.Ha
 				}
 			} else {
 				xmlID := xmlIDStr.String
+				// check user tenancy access to this resource.
+				hasAccess, err, httpStatus := tenant.UserHasDeliveryServiceTenantAccess(*user, xmlID, db)
+				if !hasAccess {
+					handleErr(httpStatus, err)
+					return
+				}
 				respBytes, err = getDeliveryServiceSSLKeysByXmlID(xmlID, version, db, cfg)
 				if err != nil {
 					handleErr(http.StatusInternalServerError, err)
@@ -445,6 +433,11 @@ func getDeliveryServiceSSLKeysByXmlIDHandler(db *sqlx.DB, cfg Config) http.Handl
 		version := r.URL.Query().Get("version")
 
 		ctx := r.Context()
+		user, err := auth.GetCurrentUser(ctx)
+		if err != nil {
+			handleErr(http.StatusInternalServerError, err)
+			return
+		}
 		pathParams, err := api.GetPathParams(ctx)
 		if err != nil {
 			handleErr(http.StatusInternalServerError, err)
@@ -452,6 +445,13 @@ func getDeliveryServiceSSLKeysByXmlIDHandler(db *sqlx.DB, cfg Config) http.Handl
 		}
 
 		xmlID := pathParams["xmlID"]
+
+		// check user tenancy access to this resource.
+		hasAccess, err, httpStatus := tenant.UserHasDeliveryServiceTenantAccess(*user, xmlID, db)
+		if !hasAccess {
+			handleErr(httpStatus, err)
+			return
+		}
 
 		respBytes, err = getDeliveryServiceSSLKeysByXmlID(xmlID, version, db, cfg)
 		if err != nil {
