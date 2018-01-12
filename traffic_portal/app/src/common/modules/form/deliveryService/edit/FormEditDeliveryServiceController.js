@@ -41,8 +41,8 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 	$scope.save = function(deliveryService) {
 		if ($scope.dsRequestsEnabled) {
 			var params = {
-				title: "Update Delivery Service",
-				message: 'All delivery service changes must be reviewed for completeness and accuracy before deployment. A request will be created for you. Please select the status of your request.'
+				title: "Delivery Service Update Request",
+				message: 'All delivery service updates must be reviewed for completeness and accuracy before deployment.<br><br>Please select the status of your delivery service update request.'
 			};
 			var modalInstance = $uibModal.open({
 				templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
@@ -54,8 +54,8 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 					},
 					collection: function() {
 						return [
-							{ id: $scope.DRAFT, name: 'Save Request as Draft' },
-							{ id: $scope.SUBMITTED, name: 'Submit Request for Review / Deployment' }
+							{ id: $scope.DRAFT, name: 'Save as Draft' },
+							{ id: $scope.SUBMITTED, name: 'Submit for Review and Deployment' }
 						];
 					}
 				}
@@ -71,7 +71,7 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 				// do nothing
 			});
 		} else {
-			deliveryServiceService.updateDeliveryService(deliveryService).
+			deliveryServiceService.updateDeliveryService(deliveryService, false).
 				then(function() {
 					$state.reload(); // reloads all the resolves for the view
 				});

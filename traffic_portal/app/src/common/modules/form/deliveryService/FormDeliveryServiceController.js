@@ -63,6 +63,14 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
     $scope.PENDING = 3;
     $scope.COMPLETE = 4;
 
+    $scope.saveable = function() {
+        return true;
+    };
+
+    $scope.deletable = function() {
+        return true;
+    };
+
     $scope.types = _.filter(types, function(currentType) {
         var category;
         if (type.indexOf('ANY_MAP') != -1) {
