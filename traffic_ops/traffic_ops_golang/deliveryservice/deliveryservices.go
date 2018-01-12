@@ -92,9 +92,10 @@ func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 	// isCIDR := validation.NewStringRule(govalidator.IsCIDR, "must be a valid CIDR address")
 	isHost := validation.NewStringRule(govalidator.IsHost, "must be a valid hostname")
 	errs := validation.Errors{
-		"active":       validation.Validate(ds.Active, validation.NotNil),
-		"cdnId":        validation.Validate(ds.CDNID, validation.NotNil),
-		"displayName":  validation.Validate(ds.DisplayName, validation.Required),
+		"active": validation.Validate(ds.Active, validation.NotNil),
+		"cdnId":  validation.Validate(ds.CDNID, validation.NotNil),
+		"displayName": validation.Validate(ds.DisplayName,
+			validation.Required),
 		"dnsBypassIp":  validation.Validate(ds.DNSBypassIP, is.IP),
 		"dnsBypassIp6": validation.Validate(ds.DNSBypassIP6, is.IPv6),
 		"dscp":         validation.Validate(ds.DSCP, validation.NotNil),
@@ -129,7 +130,7 @@ func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 		"routingName": validation.Validate(ds.RoutingName,
 			isHost,
 			noPeriods,
-			validation.Length(1, 2)),
+			validation.Length(1, 48)),
 		"typeId": validation.Validate(*ds.TypeID,
 			validation.NotNil,
 			validation.By(tovalidate.GreaterThanZero)),

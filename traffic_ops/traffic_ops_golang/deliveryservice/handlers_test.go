@@ -22,6 +22,7 @@ package deliveryservice
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 	"testing"
@@ -48,44 +49,33 @@ func TestValidateErrors(t *testing.T) {
 		"'active' is required",
 		"'cdnId' is required",
 		"'initialDispersion' must be greater than zero",
+		"'routingName' the length must be between 1 and 48",
 		"'xmlId' the length must be between 1 and 48",
 	}
 	sort.Strings(expected)
 	expectedFmt, _ := json.MarshalIndent(expected, "", "  ")
 
-	for _, e := range expected {
-		if !findExpected(e, errorStrs) {
-			t.Errorf("\nExpected %s \n Actual %v", string(expectedFmt), string(errorsFmt))
-			break
-		}
+	same := reflect.DeepEqual(expected, errorStrs)
+	if !same {
+		t.Errorf("\nExpected %s \n Actual %v", string(expectedFmt), string(errorsFmt))
 	}
 
-}
-
-func findExpected(exp string, errs []string) bool {
-	found := false
-	for _, errMsg := range errs {
-		if errMsg == exp {
-			found = true
-			break
-		}
-		//fmt.Printf("(%t) Comparing [%v] with [%v]\n", found, exp, et)
-	}
-	return found
 }
 
 func errorTestCase() string {
 
-	routingName := strings.Repeat("X", 50)
+	routingName := strings.Repeat("X", 49)
 
 	// Test the xmlId length
 	xmlId := strings.Repeat("X", 49)
 
+	displayName := strings.Repeat("X", 49)
+
 	errorTestCase := `
 {
    "ccrDnsTtl": 1,
-   "checkPath": "disp1",
-   "displayName": "/crossdomain.xml",
+   "checkPath": "/crossdomain.xml",
+   "displayName": "` + displayName + `",
    "dnsBypassCname": "cname",
    "dnsBypassIp": "127.0.0.1",
    "dnsBypassIp6": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
@@ -122,7 +112,7 @@ func errorTestCase() string {
    "regexRemap": "^/([^\/]+)/(.*) http://$1.foo.com/$2",
    "regionalGeoBlocking": false,
    "remapText": "@action=allow @src_ip=127.0.0.1-127.0.0.1",
-   "routineName": "` + routingName + `",
+   "routingName": "` + routingName + `",
    "signingAlgorithm": "url_sig",
    "sslKeyVersion": 1,
    "tenantId": 1,
@@ -179,7 +169,7 @@ func goodTestCase() string {
    "regexRemap": "^/([^\/]+)/(.*) http://$1.foo.com/$2",
    "regionalGeoBlocking": false,
    "remapText": "@action=allow @src_ip=127.0.0.1-127.0.0.1",
-   "routineName": "ccr",
+   "routingName": "ccr",
    "signingAlgorithm": "url_sig",
    "sslKeyVersion": 1,
    "tenantId": 1,
