@@ -77,8 +77,9 @@ func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 
 	var typeName string
 	var err error
-	if db != nil {
-		typeName, err = getTypeName(db, *ds.TypeID)
+	if db != nil && ds.TypeID != nil {
+		typeID := *ds.TypeID
+		typeName, err = getTypeName(db, typeID)
 		if err != nil {
 			return []error{err}
 		}
@@ -106,7 +107,6 @@ func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 			validation.By(tovalidate.GreaterThanZero),
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 		"ipv6RoutingEnabled": validation.Validate(ds.IPV6RoutingEnabled,
-			validation.NotNil,
 			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
 		"logsEnabled": validation.Validate(ds.LogsEnabled, validation.NotNil),
 		"missLat": validation.Validate(ds.MissLat,
@@ -114,7 +114,6 @@ func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 		"missLong": validation.Validate(ds.MissLong,
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 		"multiSiteOrigin": validation.Validate(ds.MultiSiteOrigin,
-			is.URL,
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 		"orgServerFqdn": validation.Validate(ds.OrgServerFQDN,
 			is.URL,
@@ -131,7 +130,7 @@ func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 			isHost,
 			noPeriods,
 			validation.Length(1, 48)),
-		"typeId": validation.Validate(*ds.TypeID,
+		"typeId": validation.Validate(ds.TypeID,
 			validation.NotNil,
 			validation.By(tovalidate.GreaterThanZero)),
 		"xmlId": validation.Validate(ds.XMLID,
