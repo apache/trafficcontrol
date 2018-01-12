@@ -21,11 +21,12 @@ CREATE TYPE change_types AS ENUM ('create', 'update', 'delete');
 CREATE TABLE deliveryservice_request (
     assignee_id bigint,
     author_id bigint NOT NULL,
-    change_type change_types,
+    change_type change_types NOT NULL,
+    created_at timestamp WITH time zone NOT NULL DEFAULT now(),
     id bigserial primary key NOT NULL,
-    last_updated timestamp with time zone DEFAULT now(),
+    last_updated timestamp WITH time zone NOT NULL DEFAULT now(),
     request jsonb NOT NULL,
-    status workflow_states
+    status workflow_states NOT NULL
 );
 
 ALTER TABLE deliveryservice_request

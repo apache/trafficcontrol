@@ -32,6 +32,7 @@ type DeliveryServiceRequest struct {
 	AuthorID    int             `json:"authorId" db:"author_id"`
 	Author      string          `json:"author,omitempty"`
 	ChangeType  string          `json:"changeType" db:"change_type"`
+	CreatedAt   Time            `json:"createdAt" db:"created_at"`
 	ID          int             `json:"id" db:"id"`
 	LastUpdated Time            `json:"lastUpdated" db:"last_updated"`
 	Request     json.RawMessage `json:"request" db:"request"`
