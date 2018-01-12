@@ -129,11 +129,14 @@ func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 		"routingName": validation.Validate(ds.RoutingName,
 			isHost,
 			noPeriods,
-			validation.Length(1, 48)),
+			validation.Length(1, 2)),
 		"typeId": validation.Validate(*ds.TypeID,
 			validation.NotNil,
 			validation.By(tovalidate.GreaterThanZero)),
-		"xmlId": validation.Validate(ds.XMLID, validation.Required, noSpaces, validation.Length(1, 48)),
+		"xmlId": validation.Validate(ds.XMLID,
+			validation.Required,
+			noSpaces,
+			validation.Length(1, 48)),
 	}
 	return tovalidate.ToErrors(errs)
 }

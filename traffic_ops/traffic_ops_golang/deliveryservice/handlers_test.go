@@ -22,73 +22,66 @@ package deliveryservice
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"testing"
 
-	tcapi "github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/utils"
 )
 
 // TestValidateErrors ...
 func TestValidateErrors(t *testing.T) {
 
 	ds := GetRefType()
-	if err := json.Unmarshal([]byte(errorsTestCase), &ds); err != nil {
+	if err := json.Unmarshal([]byte(errorTestCase()), &ds); err != nil {
 		fmt.Printf("err ---> %v\n", err)
 		return
 	}
 
 	errors := ds.Validate(nil)
+	errorStrs := utils.ErrorsToStrings(errors)
+	sort.Strings(errorStrs)
+	errorsFmt, _ := json.MarshalIndent(errorStrs, "", "  ")
+	fmt.Printf("returned errors ---> %v\n", string(errorsFmt))
 
 	expected := []string{
 		"'active' is required",
 		"'cdnId' is required",
 		"'initialDispersion' must be greater than zero",
+		"'xmlId' the length must be between 1 and 48",
 	}
+	sort.Strings(expected)
+	expectedFmt, _ := json.MarshalIndent(expected, "", "  ")
 
 	for _, e := range expected {
-		if !contains(errors, e) {
-			t.Errorf("Expected %v errors, got %v", expected, errors)
+		if !findExpected(e, errorStrs) {
+			t.Errorf("\nExpected %s \n Actual %v", string(expectedFmt), string(errorsFmt))
+			break
 		}
 	}
 
 }
 
-func contains(errs []error, exp string) bool {
+func findExpected(exp string, errs []string) bool {
 	found := false
-	for _, a := range errs {
-		if a.Error() == exp {
+	for _, errMsg := range errs {
+		if errMsg == exp {
 			found = true
 			break
 		}
+		//fmt.Printf("(%t) Comparing [%v] with [%v]\n", found, exp, et)
 	}
 	return found
 }
 
-// TestValidate2 ...
-func TestValidate2(t *testing.T) {
+func errorTestCase() string {
 
-	var ds tcapi.DeliveryService
-	if err := json.Unmarshal([]byte(testCase), &ds); err != nil {
-		fmt.Printf("err ---> %v\n", err)
-		return
-	}
-	var refType = TODeliveryService(ds)
-	errors := refType.Validate(nil)
-	// Test the routingName length
-	routingName := strings.Repeat("#", 48)
-	ds.RoutingName = routingName
+	routingName := strings.Repeat("X", 50)
 
 	// Test the xmlId length
-	xmlId := strings.Repeat("#", 48)
-	ds.XMLID = &xmlId
+	xmlId := strings.Repeat("X", 49)
 
-	for _, e := range errors {
-		fmt.Printf("%s\n", e)
-	}
-
-}
-
-const errorsTestCase = `
+	errorTestCase := `
 {
    "ccrDnsTtl": 1,
    "checkPath": "disp1",
@@ -129,18 +122,22 @@ const errorsTestCase = `
    "regexRemap": "^/([^\/]+)/(.*) http://$1.foo.com/$2",
    "regionalGeoBlocking": false,
    "remapText": "@action=allow @src_ip=127.0.0.1-127.0.0.1",
-   "routineName": "ccr",
+   "routineName": "` + routingName + `",
    "signingAlgorithm": "url_sig",
    "sslKeyVersion": 1,
    "tenantId": 1,
    "trRequestHeaders": "xyz",
    "trResponseHeaders": "Access-Control-Allow-Origin: *",
    "typeId": 1,
-   "xmlId": "ds1"
-}
+   "xmlId": "` + xmlId + `"
+ }
 `
+	return errorTestCase
+}
 
-const testCase = `
+func goodTestCase() string {
+
+	goodTestCase := `
 {
    "active": true,
    "ccrDnsTtl": 1,
@@ -192,3 +189,5 @@ const testCase = `
    "xmlId": "ds1"
 }
 `
+	return goodTestCase
+}
