@@ -97,7 +97,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		//SSLKeys deliveryservice endpoints here that are marked  marked as '-wip' need to have tenancy checks added
 		{1.2, http.MethodGet, `deliveryservices-wip/xmlId/{xmlID}/sslkeys$`, getDeliveryServiceSSLKeysByXmlIDHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
 		{1.2, http.MethodGet, `deliveryservices-wip/hostname/{hostName}/sslkeys$`, getDeliveryServiceSSLKeysByHostNameHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
-		{1.2, http.MethodPut, `deliveryservices-wip/hostname/{hostName}/sslkeys$`, addDeliveryServiceSSLKeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
+		{1.2, http.MethodPost, `deliveryservices-wip/hostname/{hostName}/sslkeys/add$`, addDeliveryServiceSSLKeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
 		//Statuses
 		{1.2, http.MethodGet, `statuses/?(\.json)?$`, statusesHandler(d.DB), StatusesPrivLevel, Authenticated, nil},
 		{1.2, http.MethodGet, `statuses/{id}$`, statusesHandler(d.DB), StatusesPrivLevel, Authenticated, nil},
