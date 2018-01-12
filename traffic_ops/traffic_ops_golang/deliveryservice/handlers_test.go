@@ -22,7 +22,6 @@ package deliveryservice
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"sort"
 	"strings"
 	"testing"
@@ -43,31 +42,53 @@ func TestValidateErrors(t *testing.T) {
 	errorStrs := utils.ErrorsToStrings(errors)
 	sort.Strings(errorStrs)
 	errorsFmt, _ := json.MarshalIndent(errorStrs, "", "  ")
-	fmt.Printf("returned errors ---> %v\n", string(errorsFmt))
 
 	expected := []string{
 		"'active' is required",
 		"'cdnId' is required",
+		"'geoLimit' is required",
+		"'geoProvider' is required",
+		"'infoUrl' must be a valid URL",
 		"'initialDispersion' must be greater than zero",
+		"'logsEnabled' is required",
+		"'orgServerFqdn' must be a valid URL",
+		"'routingName' cannot contain periods",
 		"'routingName' the length must be between 1 and 48",
+		"'typeId' is required",
+		"'xmlId' cannot contain spaces",
+		"'xmlId' is required",
 		"'xmlId' the length must be between 1 and 48",
 	}
 	sort.Strings(expected)
 	expectedFmt, _ := json.MarshalIndent(expected, "", "  ")
 
-	same := reflect.DeepEqual(expected, errorStrs)
-	if !same {
-		t.Errorf("\nExpected %s \n Actual %v", string(expectedFmt), string(errorsFmt))
+	for _, e := range errorStrs {
+		if !findNeedle(e, expected) {
+			t.Errorf("\nExpected %s \n Actual %v", string(expectedFmt), string(errorsFmt))
+			break
+		}
 	}
 
 }
 
+func findNeedle(needle string, haystack []string) bool {
+	found := false
+	for _, s := range haystack {
+		if s == needle {
+			found = true
+			break
+		}
+		//fmt.Printf("(%t) Comparing [%v] with [%v]\n", found, exp, et)
+	}
+	return found
+}
+
 func errorTestCase() string {
 
-	routingName := strings.Repeat("X", 49)
+	routingName := strings.Repeat("X", 1) + "." + strings.Repeat("X", 48)
 
 	// Test the xmlId length
-	xmlId := strings.Repeat("X", 49)
+	xmlId := strings.Repeat("X", 1) + " " + strings.Repeat("X", 48)
 
 	displayName := strings.Repeat("X", 49)
 
@@ -82,19 +103,15 @@ func errorTestCase() string {
    "dnsBypassTTL": 10,
    "dscp": 0,
    "edgeHeaderRewrite": "cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-config proxy.config.http.transaction_active_timeout_in 10800 [L]",
-   "geoLimit": 0,
    "geoLimitCountries": "Can,Mex",
    "geoRedirectURL": "http://localhost/redirect",
-   "geoProvider": 0,
    "globalMaxMBPS": 0,
    "globalMaxTPS": 0,
    "httpBypassFqdn": "http://bypass",
    "id": 1,
    "initialDispersion": 0,
-   "infoUrl": "http://info.url",
-   "ipv6RoutingEnabled": false,
+   "infoUrl": "htt://info.url",
    "lastUpdated": "2017-01-05 15:04:05+00",
-   "logsEnabled": true,
    "longDesc": "longdesc",
    "longDesc1": "longdesc1",
    "longDesc2": "longdesc2",
@@ -104,7 +121,7 @@ func errorTestCase() string {
    "missLong": -1.0,
    "multiSiteOrigin": false,
    "multiSiteOriginAlgorithm": 1,
-   "orgServerFqdn": "http://localhost",
+   "orgServerFqdn": "htt://localhost",
    "profile": 1,
    "protocol": 2,
    "qstringIgnore": 1,
@@ -118,66 +135,8 @@ func errorTestCase() string {
    "tenantId": 1,
    "trRequestHeaders": "xyz",
    "trResponseHeaders": "Access-Control-Allow-Origin: *",
-   "typeId": 1,
    "xmlId": "` + xmlId + `"
  }
 `
 	return errorTestCase
-}
-
-func goodTestCase() string {
-
-	goodTestCase := `
-{
-   "active": true,
-   "ccrDnsTtl": 1,
-   "cdnId": 1,
-   "checkPath": "disp1",
-   "displayName": "/crossdomain.xml",
-   "dnsBypassCname": "cname",
-   "dnsBypassIp": "127.0.0.1",
-   "dnsBypassIp6": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
-   "dnsBypassTTL": 10,
-   "dscp": 0,
-   "edgeHeaderRewrite": "cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-config proxy.config.http.transaction_active_timeout_in 10800 [L]",
-   "geoLimit": 0,
-   "geoLimitCountries": "Can,Mex",
-   "geoRedirectURL": "http://localhost/redirect",
-   "geoProvider": 0,
-   "globalMaxMBPS": 0,
-   "globalMaxTPS": 0,
-   "httpBypassFqdn": "http://bypass",
-   "id": 1,
-   "infoUrl": "http://info.url",
-   "ipv6RoutingEnabled": false,
-   "lastUpdated": "2017-01-05 15:04:05+00",
-   "logsEnabled": true,
-   "longDesc": "longdesc",
-   "longDesc1": "longdesc1",
-   "longDesc2": "longdesc2",
-   "maxDnsAnswers": 5,
-   "midHeaderRewrite": "cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-config proxy.config.http.cache.ignore_authentication 1 __RETURN__ set-config proxy.config.http.auth_server_session_private 0 __RETURN__ set-config proxy.config.http.transaction_no_activity_timeout_out 10 __RETURN__ set-config proxy.config.http.transaction_active_timeout_out 10  [L] __RETURN__",
-   "missLat": -2.0,
-   "missLong": -1.0,
-   "multiSiteOrigin": false,
-   "multiSiteOriginAlgorithm": 1,
-   "orgServerFqdn": "http://localhost",
-   "profile": 1,
-   "protocol": 2,
-   "qstringIgnore": 1,
-   "rangeRequestHandling": 1,
-   "regexRemap": "^/([^\/]+)/(.*) http://$1.foo.com/$2",
-   "regionalGeoBlocking": false,
-   "remapText": "@action=allow @src_ip=127.0.0.1-127.0.0.1",
-   "routingName": "ccr",
-   "signingAlgorithm": "url_sig",
-   "sslKeyVersion": 1,
-   "tenantId": 1,
-   "trRequestHeaders": "xyz",
-   "trResponseHeaders": "Access-Control-Allow-Origin: *",
-   "typeId": 1,
-   "xmlId": "ds1"
-}
-`
-	return goodTestCase
 }

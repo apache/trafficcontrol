@@ -79,7 +79,7 @@ type DeliveryService struct {
 	RegexRemap               string                 `json:"regexRemap" db:"regex_remap"`
 	RegionalGeoBlocking      *bool                  `json:"regionalGeoBlocking" db:"regional_geo_blocking"`
 	RemapText                string                 `json:"remapText" db:"remap_text"`
-	RoutingName              *string                `json:"routingName" db:"routing_name"`
+	RoutingName              string                 `json:"routingName" db:"routing_name"`
 	SigningAlgorithm         string                 `json:"signingAlgorithm" db:"signing_algorithm"`
 	SSLKeyVersion            int                    `json:"sslKeyVersion" db:"ssl_key_version"`
 	TRRequestHeaders         string                 `json:"trRequestHeaders" db:"tr_request_headers"`
