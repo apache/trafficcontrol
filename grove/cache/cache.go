@@ -233,20 +233,19 @@ func setDSCP(conn *web.InterceptConn, dscp int) error {
 }
 
 // ManipulateHeaders drops and sets headers according to the input dropList and setList
-func ManipulateHeaders(dropList []string, setList []Hdr, h *http.Header) error {
-	log.Debugf("Changing headers: drop:%v set:%v\n", dropList, setList)
-	if len(dropList) != 0 {
-		for _, key := range dropList {
-			h.Del(key)
-		}
+func ManipulateHeaders(dropList []string, setList []Hdr, h *http.Header) {
+	if len(*h) == 0 { // this happens on a dial tcp timeout
+		log.Debugf("Header is  a nill map")
+		return
 	}
-	if len(setList) != 0 {
-		for _, hdr := range setList {
-			h.Del(hdr.Name) // delete the old header regardles
-			h.Add(hdr.Name, hdr.Value)
-		}
+	for _, key := range dropList {
+		log.Debugf("Dropping header %s\n", key)
+		h.Del(key)
 	}
-	return nil
+	for _, hdr := range setList {
+		log.Debugf("Setting header %s: %s (%v) \n", hdr.Name, hdr.Value, h)
+		h.Set(hdr.Name, hdr.Value)
+	}
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -306,9 +305,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		log.Debugf("cache.Handler.ServeHTTP: '%v' not in cache\n", cacheKey)
 		if remappingProducer.rule.ToOriginHeaders.Drop != nil || remappingProducer.rule.ToOriginHeaders.Set != nil {
-			if err := ManipulateHeaders(remappingProducer.rule.ToOriginHeaders.Drop, remappingProducer.rule.ToOriginHeaders.Set, &r.Header); err != nil {
-				log.Debugf("ERR: %v", err)
-			}
+			ManipulateHeaders(remappingProducer.rule.ToOriginHeaders.Drop, remappingProducer.rule.ToOriginHeaders.Set, &r.Header)
 		}
 		cacheObj, err := retrier.Get(r, nil)
 		if err != nil {
@@ -323,9 +320,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if remappingProducer.rule.ToClientHeaders.Drop != nil || remappingProducer.rule.ToClientHeaders.Set != nil {
-			if err := ManipulateHeaders(remappingProducer.rule.ToClientHeaders.Drop, remappingProducer.rule.ToClientHeaders.Set, &cacheObj.RespHeaders); err != nil {
-				log.Debugf("ERR: %v", err)
-			}
+			ManipulateHeaders(remappingProducer.rule.ToClientHeaders.Drop, remappingProducer.rule.ToClientHeaders.Set, &cacheObj.RespHeaders)
 		}
 		bytesWritten, err := h.respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
 		if err != nil {
@@ -404,9 +399,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Debugf("cache.Handler.ServeHTTP: '%v' responding with %v\n", cacheKey, cacheObj.Code)
 
 	if remappingProducer.rule.ToClientHeaders.Drop != nil || remappingProducer.rule.ToClientHeaders.Set != nil {
-		if err := ManipulateHeaders(remappingProducer.rule.ToClientHeaders.Drop, remappingProducer.rule.ToClientHeaders.Set, &cacheObj.RespHeaders); err != nil {
-			log.Debugf("ERR: %v", err)
-		}
+		ManipulateHeaders(remappingProducer.rule.ToClientHeaders.Drop, remappingProducer.rule.ToClientHeaders.Set, &cacheObj.RespHeaders)
 	}
 	bytesSent, err := h.respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
 	if err != nil {
