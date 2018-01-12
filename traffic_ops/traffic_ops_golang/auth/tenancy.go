@@ -53,16 +53,16 @@ func GetUserTenantList(user CurrentUser, db *sqlx.DB) ([]Tenant, error) {
 	}
 	defer rows.Close()
 
-	Tenants := []Tenant{}
+	tenants := []Tenant{}
 
 	for rows.Next() {
 		if err := rows.Scan(&tenantID, &name, &active, &parentID); err != nil {
 			return nil, err
 		}
-		Tenants = append(Tenants, Tenant{ID: tenantID, Name: name, Active: active, ParentID: parentID})
+		tenants = append(tenants, Tenant{ID: tenantID, Name: name, Active: active, ParentID: parentID})
 	}
 
-	return Tenants, nil
+	return tenants, nil
 }
 
 // returns a boolean value describing if the user has access to the provided resource tenant id and an error
@@ -74,11 +74,11 @@ func IsResourceAuthorizedToUser(resourceTenantID int, user CurrentUser, db *sqlx
 	tenancy AS (SELECT COALESCE(value::boolean,FALSE) AS value FROM parameter WHERE name = 'use_tenancy' AND config_file = 'global' UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY)
 	SELECT id, active, tenancy.value AS use_tenancy FROM tenancy, q WHERE id = $2 UNION ALL SELECT -1, false, tenancy.value AS use_tenancy FROM tenancy FETCH FIRST 1 ROW ONLY;`
 
-	var tenantId int
+	var tenantID int
 	var active bool
 	var useTenancy bool
 
-	err := db.QueryRow(query, user.TenantID, resourceTenantID).Scan(&tenantId, &active, &useTenancy)
+	err := db.QueryRow(query, user.TenantID, resourceTenantID).Scan(&tenantID, &active, &useTenancy)
 
 	switch {
 	case err == sql.ErrNoRows:
@@ -88,10 +88,10 @@ func IsResourceAuthorizedToUser(resourceTenantID int, user CurrentUser, db *sqlx
 		log.Errorf("Error checking user tenant %v access on resourceTenant  %v: %v", user.TenantID, resourceTenantID, err.Error())
 		return false, err
 	default:
-		if useTenancy == false {
+		if !useTenancy {
 			return true, nil
 		}
-		if tenantId == resourceTenantID && active == true {
+		if active && tenantID == resourceTenantID {
 			return true, nil
 		} else {
 			return false, nil
