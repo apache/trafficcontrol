@@ -26,7 +26,11 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 	
 	$scope.changeType = dsRequest.changeType;
 
+	$scope.requestStatus = dsRequest.status;
+
 	$scope.deliveryServiceName = angular.copy(dsRequest.request.xmlId);
+
+	$scope.fulfill = $stateParams.fulfill;
 
 	$scope.advancedShowing = true;
 
@@ -37,15 +41,78 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 		deleteLabel: 'Delete Request'
 	};
 
-	$scope.fulfill = function(deliveryService) {
+	$scope.saveable = function() {
+		return (dsRequest.status == 'draft' || dsRequest.status == 'submitted');
+	};
+
+	$scope.deletable = function() {
+		return (dsRequest.status == 'draft' || dsRequest.status == 'submitted');
+	};
+
+	$scope.statusEditable = function() {
+		return (dsRequest.status == 'draft' || dsRequest.status == 'submitted' || dsRequest.status == 'pending');
+	};
+
+	$scope.editStatus = function() {
+		var params = {
+			title: "Edit Delivery Service Request Status",
+			message: 'Please select the appropriate status for this request.'
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+			controller: 'DialogSelectController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function() {
+					var statuses = [];
+					if (dsRequest.status == 'draft' || dsRequest.status == 'submitted') {
+						statuses.push({ id: $scope.DRAFT, name: 'Save as Draft' });
+						statuses.push({ id: $scope.SUBMITTED, name: 'Submit for Review / Deployment' });
+					} else if (dsRequest.status == 'pending') {
+						statuses.push({ id: $scope.COMPLETE, name: 'Complete' });
+					}
+					return statuses;
+				}
+			}
+		});
+		modalInstance.result.then(function(action) {
+			switch (action.id) {
+				case $scope.DRAFT:
+					dsRequest.status = 'draft';
+					break;
+				case $scope.SUBMITTED:
+					dsRequest.status = 'submitted';
+					break;
+				case $scope.COMPLETE:
+					if (dsRequest.assigneeId != userModel.user.id) {
+						messageModel.setMessages([ { level: 'error', text: 'Only the Assignee can mark a delivery service request as complete' } ], false);
+						$anchorScroll(); // scrolls window to top
+						return;
+					}
+					dsRequest.status = 'complete';
+			}
+			deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest).
+				then(function() {
+					$state.reload();
+				});
+		}, function () {
+			// do nothing
+		});
+	};
+
+	$scope.fulfillRequest = function(ds) {
 		if (dsRequest.status != 'submitted') {
 			var msg = "Only 'submitted' delivery service requests can be fulfilled. This request is in '" + dsRequest.status + "' status.";
-			messageModel.setMessages([ { level: 'warning', text: msg } ], false);
+			messageModel.setMessages([ { level: 'error', text: msg } ], false);
+			$anchorScroll(); // scrolls window to top
 			return;
 		}
 		var params = {
-			title: 'Delivery Service ' + $scope.changeType + ': ' + deliveryService.xmlId,
-			message: 'Are you sure you want to fulfill this delivery service request and ' + $scope.changeType + ' the ' + deliveryService.xmlId + ' delivery service?'
+			title: 'Delivery Service ' + $scope.changeType + ': ' + ds.xmlId,
+			message: 'Are you sure you want to fulfill this delivery service request and ' + $scope.changeType + ' the ' + ds.xmlId + ' delivery service with these configuration settings?'
 		};
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
@@ -65,9 +132,9 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest);
 			// now update or create the ds per the ds request
 			if ($scope.changeType == 'update') {
-				deliveryServiceService.updateDeliveryService(deliveryService);
+				deliveryServiceService.updateDeliveryService(ds, true);
 			} else if ($scope.changeType == 'create') {
-				deliveryServiceService.createDeliveryService(deliveryService);
+				deliveryServiceService.createDeliveryService(ds);
 			}
 		}, function () {
 			// do nothing
@@ -76,8 +143,8 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 
 	$scope.save = function(deliveryService) {
 		var params = {
-			title: 'Edit Delivery Service Request',
-			message: 'All delivery service changes must be reviewed for completeness and accuracy before deployment. Please select the status of your request.'
+			title: 'Delivery Service Request Status',
+			message: 'Please select the status of your delivery service request.'
 		};
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
@@ -89,8 +156,8 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 				},
 				collection: function() {
 					return [
-						{ id: $scope.DRAFT, name: 'Save Request as Draft' },
-						{ id: $scope.SUBMITTED, name: 'Submit Request for Review / Deployment' }
+						{ id: $scope.DRAFT, name: 'Save as Draft' },
+						{ id: $scope.SUBMITTED, name: 'Submit for Review / Deployment' }
 					];
 				}
 			}
@@ -99,14 +166,15 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			dsRequest.status = (action.id == $scope.SUBMITTED) ? 'submitted' : 'draft';
 			dsRequest.request = deliveryService;
 			deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest).
-				then(function() {
-					$anchorScroll(); // scrolls window to top
-				});
+			then(function() {
+				messageModel.setMessages([ { level: 'success', text: 'Updated delivery service request for ' + dsRequest.request.xmlId + ' and set status to ' + dsRequest.status } ], false);
+				$anchorScroll(); // scrolls window to top
+				$state.reload();
+			});
 
 		}, function () {
 			// do nothing
 		});
-
 	};
 
 	$scope.confirmDelete = function(deliveryService) {
