@@ -235,15 +235,15 @@ func setDSCP(conn *web.InterceptConn, dscp int) error {
 // ManipulateHeaders drops and sets headers according to the input dropList and setList
 func ManipulateHeaders(dropList []string, setList []Hdr, h *http.Header) {
 	if len(*h) == 0 { // this happens on a dial tcp timeout
-		log.Debugf("Header is  a nill map")
+		log.Debugf("ManipulateHeader: Header is  a nill map")
 		return
 	}
 	for _, key := range dropList {
-		log.Debugf("Dropping header %s\n", key)
+		log.Debugf("ManipulateHeader: Dropping header %s\n", key)
 		h.Del(key)
 	}
 	for _, hdr := range setList {
-		log.Debugf("Setting header %s: %s (%v) \n", hdr.Name, hdr.Value, h)
+		log.Debugf("ManipulateHeader: Setting header %s: %s \n", hdr.Name, hdr.Value)
 		h.Set(hdr.Name, hdr.Value)
 	}
 }
