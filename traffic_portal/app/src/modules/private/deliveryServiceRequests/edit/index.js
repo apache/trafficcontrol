@@ -22,7 +22,7 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.e
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.deliveryServiceRequests.edit', {
-				url: '/{deliveryServiceRequestId:[0-9]{1,8}}?type',
+				url: '/{deliveryServiceRequestId:[0-9]{1,8}}?type&fulfill',
 				views: {
 					deliveryServiceRequestsContent: {
 						templateUrl: function ($stateParams) {
