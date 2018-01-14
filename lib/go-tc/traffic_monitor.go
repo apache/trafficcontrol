@@ -96,6 +96,7 @@ type TMProfile struct {
 type TMParameters struct {
 	HealthConnectionTimeout int    `json:"health.connection.timeout"`
 	HealthPollingURL        string `json:"health.polling.url"`
+	HealthPollingFormat     string `json:"health.polling.format"`
 	HistoryCount            int    `json:"history.count"`
 	MinFreeKbps             int64
 	Thresholds              map[string]HealthThreshold `json:"health_threshold"`
