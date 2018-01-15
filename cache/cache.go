@@ -290,7 +290,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		bytesWritten := uint64(0)
 		code, bytesWritten, err = serveErr(w, code)
 		tryFlush(w)
-		statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), true, 0, 0)
+		statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), true, 0, 0, "-")
 		return
 	}
 
@@ -316,7 +316,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 			}
 			tryFlush(w)
-			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), true, 0, 0)
+			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), true, 0, 0, cacheObj.ProxyURL)
 			return
 		}
 		if remappingProducer.rule.ToClientHeaders.Drop != nil || remappingProducer.rule.ToClientHeaders.Set != nil {
@@ -327,7 +327,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 		}
 		tryFlush(w)
-		statLog.Log(cacheObj.Code, bytesWritten, true, err == nil, isCacheHit(ReuseCannot, cacheObj.OriginCode), false, 0, 0)
+		statLog.Log(cacheObj.Code, bytesWritten, true, err == nil, isCacheHit(ReuseCannot, cacheObj.OriginCode), false, 0, 0, cacheObj.ProxyURL)
 		return
 	}
 
@@ -340,7 +340,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Errorf("retrying get error (in unexpected cacheobj): %v\n", err)
 			code, bytesWritten, err := serveReqErr(w)
 			tryFlush(w)
-			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), false, 0, 0)
+			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), false, 0, 0, "-")
 			return
 		}
 		bytesWritten, err := h.respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
@@ -348,7 +348,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 		}
 		tryFlush(w)
-		statLog.Log(cacheObj.Code, bytesWritten, err == nil, true, isCacheHit(ReuseCannot, cacheObj.OriginCode), false, cacheObj.OriginCode, cacheObj.Size)
+		statLog.Log(cacheObj.Code, bytesWritten, err == nil, true, isCacheHit(ReuseCannot, cacheObj.OriginCode), false, cacheObj.OriginCode, cacheObj.Size, cacheObj.ProxyURL)
 		return
 	}
 
@@ -368,7 +368,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 			}
 			tryFlush(w)
-			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), false, 0, 0)
+			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), false, 0, 0, "-")
 			return
 		}
 	case ReuseMustRevalidate:
@@ -382,7 +382,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 			}
 			tryFlush(w)
-			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, code), false, 0, 0)
+			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, code), false, 0, 0, "-")
 			return
 		}
 
@@ -406,7 +406,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 	}
 	tryFlush(w)
-	statLog.Log(cacheObj.Code, bytesSent, err == nil, true, isCacheHit(canReuseStored, cacheObj.OriginCode), false, cacheObj.OriginCode, cacheObj.Size)
+	statLog.Log(cacheObj.Code, bytesSent, err == nil, true, isCacheHit(canReuseStored, cacheObj.OriginCode), false, cacheObj.OriginCode, cacheObj.Size, cacheObj.ProxyURL)
 }
 
 func tryFlush(w http.ResponseWriter) {
