@@ -2,6 +2,7 @@ package cache
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/grove/web"
@@ -58,14 +59,14 @@ func (l *StatLogger) Log(
 	originConnectFailed bool,
 	originStatus int,
 	originBytes uint64,
+	proxyStr string,
 ) {
 	bytesSent := WriteStats(l.Stats, l.W, l.Conn, l.Host, l.RemoteAddr, code, bytesWritten, cacheHit)
 	toFQDN := ""
-	proxyStr := ""
 	if l.RemappingProducer != nil {
 		toFQDN = l.RemappingProducer.ToFQDN()
-		proxyStr = l.RemappingProducer.ProxyStr()
 	}
+	proxyHierarchyStr, proxyNameStr := getParentStrings(code, cacheHit, proxyStr, toFQDN)
 	log.EventRaw(atsEventLogStr(
 		time.Now(),
 		l.ClientIP,
@@ -85,11 +86,27 @@ func (l *StatLogger) Log(
 		successfullyRespondedToClient,
 		successfullyGotFromOrigin,
 		getCacheHitStr(cacheHit, originConnectFailed),
-		proxyStr,
-		"-", // TODO fix?
+		proxyHierarchyStr,
+		proxyNameStr,
 		l.UserAgent,
 		l.MoneyTraceHdr,
 	))
+}
+
+// getParentStrings returns the phr and pqsn ATS log event strings (in that order).
+// This covers almost all occurences that we currently see from ATS.
+func getParentStrings(code int, hit bool, proxyStr string, toFQDN string) (string, string) {
+	// the most common case (hopefully), do this first
+	if hit {
+		return "NONE", "-"
+	}
+	if code >= 200 {
+		if proxyStr != "" {
+			return "PARENT_HIT", strings.Split(proxyStr, ":")[0]
+		}
+		return "DIRECT", toFQDN
+	}
+	return "EMPTY", "-"
 }
 
 // getCacheHitStr returns the event log string for whether the request was a cache hit. For a request not in the cache, pass `ReuseCannot` to indicate a cache miss.
