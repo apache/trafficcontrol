@@ -20,7 +20,7 @@
 var FormEditDeliveryServiceController = function(deliveryService, type, types, $scope, $state, $controller, $uibModal, locationUtils, deliveryServiceService, deliveryServiceRequestService) {
 
 	// extends the FormDeliveryServiceController to inherit common methods
-	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, type: type, types: types, $scope: $scope }));
+	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, dsOriginal: deliveryService, type: type, types: types, $scope: $scope }));
 
 	var deleteDeliveryService = function(deliveryService) {
 		deliveryServiceService.deleteDeliveryService(deliveryService)
