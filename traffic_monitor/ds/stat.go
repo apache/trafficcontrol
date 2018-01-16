@@ -277,7 +277,7 @@ func addDSPerSecStats(dsName tc.DeliveryServiceName, stat dsdata.Stat, lastStats
 			Description: desc,
 			Name:        dsName.String(),
 			Hostname:    dsName.String(),
-			Type:        "Delivery Service",
+			Type:        "DELIVERYSERVICE",
 			Available:   stat.CommonStats.IsAvailable.Value,
 		}
 	}
