@@ -48,6 +48,17 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.e
 							deliveryServiceRequest: function($stateParams, deliveryServiceRequestService) {
 								return deliveryServiceRequestService.getDeliveryServiceRequests({ id: $stateParams.deliveryServiceRequestId });
 							},
+							deliveryService: function(deliveryServiceRequest, deliveryServiceService) {
+								var dsRequest = deliveryServiceRequest[0];
+
+								if (dsRequest.changeType == 'update') {
+									// fetch the ds that the request is attempting to update for comparison reasons
+									return deliveryServiceService.getDeliveryService(dsRequest.request.id);
+								} else {
+									// on create, there is nothing to compare so comparing A to A shows no difference
+									return dsRequest.request;
+								}
+							},
 							type: function($stateParams) {
 								return $stateParams.type;
 							},
