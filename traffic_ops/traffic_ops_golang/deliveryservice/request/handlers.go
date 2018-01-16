@@ -133,7 +133,10 @@ s.username AS assignee
 
 FROM deliveryservice_request r
 JOIN tm_user a ON r.author_id = a.id
-LEFT OUTER JOIN tm_user s ON r.assignee_id = s.id`
+LEFT OUTER JOIN tm_user s ON r.assignee_id = s.id
+
+ORDER BY r.request->'xmlId';
+`
 
 	return query
 }
