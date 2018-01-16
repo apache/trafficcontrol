@@ -55,10 +55,12 @@ influxdb(?:                          MIT. Properly documented in LICENSE ){0}
 errors(?:                            BSD 2-clause. Properly documented in LICENTS ){0}
 net(?:                               Go BSD. Properly documented in LICENSE ){0}
 go-sqlmock.v1(?:                     BSD 3-clause. Properly documented in LICENSE ){0}
-sqlx(?:                              MIT. Properly docuemented in LICENSE ){0}
-backoff(?:                           MIT. Properly docuemented in LICENSE ){0}
-riak-go-client(?:                    Apache 2.0. Properly docuemented in LICENSE ){0}
+sqlx(?:                              MIT. Properly documented in LICENSE ){0}
+backoff(?:                           MIT. Properly documented in LICENSE ){0}
+riak-go-client(?:                    Apache 2.0. Properly documented in LICENSE ){0}
 protobuf(?:                          Go BSD. Properly documented in LICENSE ){0}
-go-jwx(?:                            `MIT. Properly docuemented in LICENSE ){0}
+go-jwx(?:                            `MIT. Properly documented in LICENSE ){0}
 crypto(?:                            Go BSD. Properly documented in LICENSE ){0}
-kelseyhightower(?:                   MIT. Properly docuemented in LICENSE ){0}
+kelseyhightower(?:                   MIT. Properly documented in LICENSE ){0}
+asaskevich(?:                        MIT. Properly documented in LICENSE ){0}
+go-ozzo(?:                           MIT. Properly documented in LICENSE ){0}
