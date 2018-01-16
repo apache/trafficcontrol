@@ -157,6 +157,7 @@ func requiredIfMatchesTypeName(patterns []string, typeName string) func(interfac
 	}
 }
 
+// TODO: drichardson - refactor to the types.go once implemented.
 func getTypeName(db *sqlx.DB, typeID int) (string, error) {
 
 	query := `SELECT name from type where id=$1`
