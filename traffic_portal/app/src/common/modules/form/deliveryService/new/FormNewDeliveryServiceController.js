@@ -58,7 +58,7 @@ var FormNewDeliveryServiceController = function(deliveryService, type, types, $s
 					status: (action.id == $scope.SUBMITTED) ? 'submitted' : 'draft',
 					request: deliveryService
 				};
-				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest);
+				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, true);
 			}, function () {
 				// do nothing
 			});
