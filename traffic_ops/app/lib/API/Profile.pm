@@ -52,7 +52,7 @@ sub index {
 		if ( defined $cdn_id ) {
 			$criteria{'cdn'} = $cdn_id;
 		}
-		my $rs_data = $self->db->resultset("Profile")->search( \%criteria, { order_by => 'me.name' } );
+		my $rs_data = $self->db->resultset("Profile")->search( \%criteria, { prefetch => [ 'cdn' ], order_by => 'me.name' } );
 		while ( my $row = $rs_data->next ) {
 			push(
 				@data, {
