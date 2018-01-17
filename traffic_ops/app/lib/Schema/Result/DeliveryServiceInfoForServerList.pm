@@ -60,7 +60,8 @@ SELECT
     deliveryservice.remap_text as remap_text,
     mid_header_rewrite as mid_header_rewrite,
     deliveryservice.protocol as protocol,
-    deliveryservice.profile as profile
+    deliveryservice.profile as profile,
+    deliveryservice.anonymous_blocking_enabled as anonymous_blocking_enabled
 FROM
     deliveryservice
         JOIN deliveryservice_regex ON deliveryservice_regex.deliveryservice = deliveryservice.id
@@ -97,6 +98,7 @@ __PACKAGE__->add_columns(
 	"range_request_handling",      { data_type => "tinyint", is_nullable => 0, size => 4 },
 	"origin_shield",               { data_type => "varchar", is_nullable => 0, size => 1024 },
 	"profile",                     { data_type => "integer", is_nullable => 1},
+    "anonymous_blocking_enabled",  { data_type => "tinyint", is_nullable => 1, size => 1 },
 );
 
 1;

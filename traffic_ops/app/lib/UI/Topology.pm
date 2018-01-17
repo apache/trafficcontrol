@@ -529,6 +529,8 @@ sub gen_crconfig_json {
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'admin'}   = $cdn_soa_admin;
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ip6RoutingEnabled'} = $row->ipv6_routing_enabled ? 'true' : 'false';
 
+        $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'anonymousBlockingEnabled'} = $row->anonymous_blocking_enabled ? 'true' : 'false';
+
     }
 
     my $rs_dns = $self->db->resultset('Staticdnsentry')->search(

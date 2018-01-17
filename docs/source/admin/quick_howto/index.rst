@@ -25,4 +25,5 @@ Traffic Control is a complicated system, and documenting it is not trivial. Some
   dnssec.rst
   federations.rst
   regionalgeo.rst
+  anonymous_blocking.rst
   steering.rst

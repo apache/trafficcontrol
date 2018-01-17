@@ -587,6 +587,21 @@
 			<% } %>
         <% } %>
 	</div>
+	<div class="block form-row" id='anonymous_blocking_enabled_row'>
+		<% unless (field('ds.anonymous_blocking_enabled')->valid) { %>
+			<span class="field-with-error"><%= field('ds.anonymous_blocking_enabled')->error %></span>
+		<% } %>
+		%= label_for 'anonymous_blocking_enabled' => 'Anonymous Blocking', class => 'label'
+		<% if ($priv_level >= 20) { %>
+			%= field('ds.anonymous_blocking_enabled')->select([ [Disabled => 0], [Enabled => 1]]);
+		<% } else { %>
+			<% if ($ds->anonymous_blocking_enabled == 0) { %>
+				%= field('ds.anonymous_blocking_enabled')->text(class => 'field', value =>  'Disabled', readonly => 'readonly');
+			<% } else { %>
+				%= field('ds.anonymous_blocking_enabled')->text(class => 'field', value =>  'Enabled', readonly => 'readonly');
+			<% } %>
+		<% } %>
+  </div>
 	<div class="block form-row" id="active_row">
 		<% unless (field('ds.active')->valid) { %>
 			<span class="field-with-error"><%= field('ds.active')->error %></span>
