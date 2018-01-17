@@ -99,6 +99,7 @@ func getDeliveryServiceRequests(v url.Values, db *sqlx.DB) ([]tc.DeliveryService
 	}
 
 	query, queryValues := dbhelpers.BuildQuery(v, selectDeliveryServiceRequestsQuery(), queryParamsToQueryCols)
+	query += ` ORDER BY r.request->>'xmlId'`
 
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {
@@ -134,9 +135,6 @@ s.username AS assignee
 FROM deliveryservice_request r
 JOIN tm_user a ON r.author_id = a.id
 LEFT OUTER JOIN tm_user s ON r.assignee_id = s.id
-
-ORDER BY r.request->'xmlId';
 `
-
 	return query
 }
