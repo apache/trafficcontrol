@@ -381,14 +381,30 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 	};
 
 	angular.element(document).ready(function () {
-		$('#dsRequestsTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
+		var dsRequestsTable = $('#dsRequestsTable').dataTable({
+			"paging": false,
+			"dom": '<"filter-checkbox">frtip',
 			"columnDefs": [
 				{ 'orderable': false, 'targets': 6 }
 			],
 			"aaSorting": []
 		});
+		$('div.filter-checkbox').html('<input id="showClosed" type="checkbox"><label for="showClosed">&nbsp;&nbsp;Show Closed</label>');
+
+		$('#showClosed').click(function() {
+			var checked = $('#showClosed').is(':checked');
+			localStorage.setItem('showClosed', checked);
+			if (checked) {
+				dsRequestsTable.fnFilter('', 2, true, false);
+			} else {
+				dsRequestsTable.fnFilter('draft|submitted|pending', 2, true, false);
+			}
+		});
+
+		if (localStorage.showClosed == 'true') {
+			$('#showClosed').attr('checked', true).triggerHandler('click');
+		}
+
 	});
 
 };
