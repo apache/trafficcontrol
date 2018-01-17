@@ -191,6 +191,8 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 				handleErrs(http.StatusBadRequest, err)
 			case tc.DataMissingError:
 				handleErrs(http.StatusNotFound, err)
+			case tc.ForbiddenError:
+				handleErrs(http.StatusForbidden, err)
 			default:
 				log.Errorf("received unknown ApiErrorType from update: %s, updating: %s id: %d\n", errType.String(), u.GetType(), u.GetID())
 				handleErrs(http.StatusInternalServerError, err)
