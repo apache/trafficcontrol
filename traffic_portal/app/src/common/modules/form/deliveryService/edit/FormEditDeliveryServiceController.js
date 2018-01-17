@@ -22,11 +22,31 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 	// extends the FormDeliveryServiceController to inherit common methods
 	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, dsOriginal: deliveryService, type: type, types: types, $scope: $scope }));
 
-	var deleteDeliveryService = function(deliveryService) {
-		deliveryServiceService.deleteDeliveryService(deliveryService)
-			.then(function() {
-				locationUtils.navigateToPath('/delivery-services');
-			});
+	var createDeliveryServiceRequest = function(deliveryService) {
+		var params = {
+			title: "Delivery Service Delete Request",
+			message: 'All delivery service changes must be reviewed before completion.<br><br>Are you sure you want to submit a request to delete the ' + deliveryService.xmlId + ' delivery service?'
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			var dsRequest = {
+				changeType: 'delete',
+				status: 'submitted',
+				request: deliveryService
+			};
+			deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, true);
+		}, function () {
+			// do nothing
+		});
 	};
 
 	$scope.deliveryServiceName = angular.copy(deliveryService.xmlId);
@@ -66,7 +86,7 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 					status: (action.id == $scope.SUBMITTED) ? 'submitted' : 'draft',
 					request: deliveryService
 				};
-				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest);
+				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, true);
 			}, function () {
 				// do nothing
 			});
@@ -79,25 +99,33 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 	};
 
 	$scope.confirmDelete = function(deliveryService) {
-		var params = {
-			title: 'Delete Delivery Service: ' + deliveryService.displayName,
-			key: deliveryService.xmlId
-		};
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
-			controller: 'DialogDeleteController',
-			size: 'md',
-			resolve: {
-				params: function () {
-					return params;
+		if ($scope.dsRequestsEnabled) {
+			createDeliveryServiceRequest(deliveryService);
+		} else {
+			var params = {
+				title: 'Delete Delivery Service: ' + deliveryService.displayName,
+				key: deliveryService.xmlId
+			};
+			var modalInstance = $uibModal.open({
+				templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+				controller: 'DialogDeleteController',
+				size: 'md',
+				resolve: {
+					params: function () {
+						return params;
+					}
 				}
-			}
-		});
-		modalInstance.result.then(function() {
-			deleteDeliveryService(deliveryService);
-		}, function () {
-			// do nothing
-		});
+			});
+			modalInstance.result.then(function() {
+				deliveryServiceService.deleteDeliveryService(deliveryService, true)
+					.then(function() {
+						locationUtils.navigateToPath('/delivery-services');
+					});
+			}, function () {
+				// do nothing
+			});
+		}
+
 	};
 
 };
