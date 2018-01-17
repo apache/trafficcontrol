@@ -58,11 +58,11 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
         return request.promise;
     };
 
-    this.deleteDeliveryService = function(ds) {
+    this.deleteDeliveryService = function(ds, delay) {
         return Restangular.one("deliveryservices", ds.id).remove()
             .then(
                 function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + ds.xmlId + ' ] deleted' } ], true);
+                    messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + ds.xmlId + ' ] deleted' } ], delay);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, true);
