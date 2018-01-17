@@ -23,11 +23,11 @@ var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUti
 		return Restangular.all('deliveryservice_requests').getList(queryParams);
 	};
 
-	this.createDeliveryServiceRequest = function(dsRequest) {
+	this.createDeliveryServiceRequest = function(dsRequest, delay) {
 		return Restangular.service('deliveryservice_requests').post(dsRequest)
 			.then(
 				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + dsRequest.request.xmlId + ' delivery service' } ], true);
+					messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + dsRequest.request.xmlId + ' delivery service' } ], delay);
 					locationUtils.navigateToPath('/delivery-service-requests');
 				},
 				function(fault) {

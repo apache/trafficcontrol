@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, deliveryService, type, types, $scope, $state, $stateParams, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
+var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, deliveryService, type, types, $scope, $state, $stateParams, $controller, $uibModal, $anchorScroll, $q, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
 
 	var dsRequest = deliveryServiceRequest[0];
 		
@@ -110,10 +110,12 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			$anchorScroll(); // scrolls window to top
 			return;
 		}
+		var promises = [];
 		var params = {
 			title: 'Delivery Service ' + $scope.changeType + ': ' + ds.xmlId,
-			message: 'Are you sure you want to fulfill this delivery service request and ' + $scope.changeType + ' the ' + ds.xmlId + ' delivery service with these configuration settings?'
+			message: 'Are you sure you want to fulfill this delivery service request and ' + $scope.changeType + ' the ' + ds.xmlId + ' delivery service'
 		};
+		params['message'] += ($scope.changeType == 'create' || $scope.changeType == 'update') ? ' with these configuration settings?' : '?';
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
 			controller: 'DialogConfirmController',
@@ -129,13 +131,25 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			dsRequest.assigneeId = userModel.user.id;
 			// set the status to 'pending'
 			dsRequest.status = 'pending';
-			deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest);
-			// now update or create the ds per the ds request
-			if ($scope.changeType == 'update') {
-				deliveryServiceService.updateDeliveryService(ds, true);
-			} else if ($scope.changeType == 'create') {
-				deliveryServiceService.createDeliveryService(ds);
+			// update the ds request
+			promises.push(deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest));
+			// now create, update or delete the ds per the ds request
+			if ($scope.changeType == 'create') {
+				promises.push(deliveryServiceService.createDeliveryService(ds));
+			} else if ($scope.changeType == 'update') {
+				promises.push(deliveryServiceService.updateDeliveryService(ds, true));
+			} else if ($scope.changeType == 'delete') {
+				promises.push(deliveryServiceService.deleteDeliveryService(ds, true));
 			}
+
+			$q.all(promises)
+				.then(
+					function() {
+						if ($scope.changeType == 'delete') {
+							locationUtils.navigateToPath('/delivery-service-requests');
+						}
+					});
+
 		}, function () {
 			// do nothing
 		});
@@ -201,5 +215,5 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 
 };
 
-FormEditDeliveryServiceRequestController.$inject = ['deliveryServiceRequest', 'deliveryService', 'type', 'types', '$scope', '$state', '$stateParams', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'userModel'];
+FormEditDeliveryServiceRequestController.$inject = ['deliveryServiceRequest', 'deliveryService', 'type', 'types', '$scope', '$state', '$stateParams', '$controller', '$uibModal', '$anchorScroll', '$q', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'userModel'];
 module.exports = FormEditDeliveryServiceRequestController;
