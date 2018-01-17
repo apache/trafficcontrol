@@ -38,6 +38,7 @@ under the License.
                 <th>Status</th>
                 <th>Author</th>
                 <th>Assignee</th>
+                <th>Created (UTC)</th>
                 <th>Last Updated</th>
                 <th style="text-align: right;">Actions</th>
             </tr>
@@ -56,6 +57,7 @@ under the License.
                     <a ng-show="assignable(request) && !request.assignee" class="link" title="Assign Yourself" ng-click="assignRequest(request, true, $event)">No one - assign yourself</a>
                     <a ng-show="assignable(request) && request.assignee" class="link" title="Unassign" ng-click="assignRequest(request, false, $event)">{{::request.assignee}} - unassign</a>
                 </td>
+                <td data-search="^{{::request.createdAt}}$">{{::request.createdAt}}</td>
                 <td data-search="^{{::getRelativeTime(request.lastUpdated)}}$" data-order="{{::request.lastUpdated}}">{{::getRelativeTime(request.lastUpdated)}}</td>
                 <td style="text-align: right;">
                     <span ng-if="fulfillable(request)"><a class="link action-link" title="Fulfill Request" ng-click="fulfillRequest(request, $event)">fulfill</a>| </span>
