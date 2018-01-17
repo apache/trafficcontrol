@@ -50,7 +50,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 	};
 
 	$scope.assignable = function(request) {
-		return (request.status == 'draft' || request.status == 'submitted');
+		return (request.status == 'submitted');
 	};
 
 	$scope.deleteable = function(request) {
