@@ -214,7 +214,9 @@ func monitorConfigListen(
 		monitorConfig := pollerMonitorCfg.Cfg
 		cdn := pollerMonitorCfg.CDN
 		monitorConfigTS.Set(monitorConfig)
-		toData.Update(toSession, cdn)
+		if err := toData.Update(toSession, cdn); err != nil {
+			log.Errorln("Updating Traffic Ops Data: " + err.Error())
+		}
 
 		healthURLs := map[string]poller.PollConfig{}
 		statURLs := map[string]poller.PollConfig{}
