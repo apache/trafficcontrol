@@ -33,18 +33,23 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 		Status:     "submitted",
 		Request: json.RawMessage(`{
 			"xmlId" : "this is not a valid xmlid.  Bad characters and too long.",
+			"status" : "submitted",
 			"cdnId" : 1,
 			"logsEnabled": false,
 			"dscp" : null,
 			"geoLimit" : 2,
 			"active" : true,
 			"displayName" : "",
-			"typeId" : 1
+			"typeId" : 3
 		}`),
 	}
 	expectedErrors := []string{
-		`'status' is required`,
-		`'xmlId' is required`,
+		`'regionalGeoBlocking' is required`,
+		`'xmlId' cannot contain spaces`,
+		`'dscp' is required`,
+		`'displayName' cannot be blank`,
+		`'geoProvider' is required`,
+		`'typeId' is required`,
 	}
 
 	r.SetID(10)
@@ -69,7 +74,7 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	errs := r.Validate(nil)
+	errs := r.Validate(db)
 	if len(errs) != len(expectedErrors) {
 		for _, e := range errs {
 			t.Error(e)
