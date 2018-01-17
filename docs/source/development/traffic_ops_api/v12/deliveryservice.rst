@@ -109,6 +109,9 @@ Delivery Service
   |                          |        | traffic will be sent to the dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for                                      |
   |                          |        | HTTP deliveryservices                                                                                                                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``fqPacingRate``         |  int   | The maximum rate in bytes per second for each TCP connection in this delivery service. If exceeded,                                  |
+  |                          |        | will be rate limited by the Linux kernel. A default value of 0 disables this feature                                                 |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+  
   | ``httpBypassFqdn``       | string | The HTTP destination to use for bypass on an HTTP deliveryservice - bypass starts when serving more than the                         |
   |                          |        | globalMaxMbps traffic on this deliveryservice.                                                                                       |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -228,6 +231,7 @@ Delivery Service
             "geoProvider": "0",
             "globalMaxMbps": null,
             "globalMaxTps": "0",
+	    "fqPacingRate": "0",
             "httpBypassFqdn": "",
             "id": "442",
             "infoUrl": "",
@@ -349,6 +353,9 @@ Delivery Service
   | ``globalMaxTps``         |  int   | The maximum global transactions per second allowed on this deliveryservice. When this is exceeded                                    |
   |                          |        | traffic will be sent to the dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for                                      |
   |                          |        | HTTP deliveryservices                                                                                                                |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``fqPacingRate``         |  int   | The maximum rate in bytes per second for each TCP connection in this delivery service. If exceeded,                                  |
+  |                          |        | will be rate limited by the Linux kernel. A default value of 0 disables this feature                                                 |  
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``httpBypassFqdn``       | string | The HTTP destination to use for bypass on an HTTP deliveryservice - bypass starts when serving more than the                         |
   |                          |        | globalMaxMbps traffic on this deliveryservice.                                                                                       |
@@ -477,6 +484,7 @@ Delivery Service
             "geoProvider": "0",
             "globalMaxMbps": null,
             "globalMaxTps": "0",
+	    "fqPacingRate": "0",
             "httpBypassFqdn": "",
             "id": "442",
             "infoUrl": "",
@@ -2122,6 +2130,9 @@ URL Sig Keys
   |                        |          | traffic will be sent to the dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for         |
   |                        |          | HTTP deliveryservices                                                                                   |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | fqPacingRate           | no       | The maximum rate in bytes per second for each TCP connection in this delivery service. If exceeded,     |
+  |                        |          | will be rate limited by the Linux kernel. A default value of 0 disables this feature                    |  
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | httpBypassFqdn         | no       | The HTTP destination to use for bypass on an HTTP deliveryservice - bypass starts when serving more     |
   |                        |          | than the globalMaxMbps traffic on this deliveryservice.                                                 |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -2303,6 +2314,9 @@ URL Sig Keys
   | ``httpBypassFqdn``       | string | The HTTP destination to use for bypass on an HTTP deliveryservice - bypass starts when serving more than the                         |
   |                          |        | globalMaxMbps traffic on this deliveryservice.                                                                                       |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``fqPacingRate``         |  int   | The maximum rate in bytes per second for each TCP connection in this delivery service. If exceeded,                                  |
+  |                          |        | will be rate limited by the Linux kernel. A default value of 0 disables this feature                                                 |  
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``id``                   |  int   | The deliveryservice id (database row number).                                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``infoUrl``              | string | Use this to add a URL that points to more information about that deliveryservice.                                                    |
@@ -2423,6 +2437,7 @@ URL Sig Keys
             "geoProvider": "0",
             "globalMaxMbps": null,
             "globalMaxTps": "0",
+	    "fqPacingRate": "0",
             "httpBypassFqdn": "",
             "id": "442",
             "infoUrl": "",
@@ -2544,6 +2559,9 @@ URL Sig Keys
   | globalMaxTps           | no       | The maximum global transactions per second allowed on this deliveryservice. When this is exceeded       |
   |                        |          | traffic will be sent to the dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for         |
   |                        |          | HTTP deliveryservices                                                                                   |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | fqPacingRate           | no       | The maximum rate in bytes per second for each TCP connection in this delivery service. If exceeded,     |
+  |                        |          | will be rate limited by the Linux kernel. A default value of 0 disables this feature                    |  
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | httpBypassFqdn         | no       | The HTTP destination to use for bypass on an HTTP deliveryservice - bypass starts when serving more     |
   |                        |          | than the globalMaxMbps traffic on this deliveryservice.                                                 |
@@ -2723,6 +2741,9 @@ URL Sig Keys
   |                          |        | traffic will be sent to the dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for                                      |
   |                          |        | HTTP deliveryservices                                                                                                                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``fqPacingRate``         |  int   | The maximum rate in bytes per second for each TCP connection in this delivery service. If exceeded,                                  |
+  |                          |        | will be rate limited by the Linux kernel. A default value of 0 disables this feature                                                 |  
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``httpBypassFqdn``       | string | The HTTP destination to use for bypass on an HTTP deliveryservice - bypass starts when serving more than the                         |
   |                          |        | globalMaxMbps traffic on this deliveryservice.                                                                                       |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -2846,6 +2867,7 @@ URL Sig Keys
             "geoProvider": "0",
             "globalMaxMbps": null,
             "globalMaxTps": "0",
+	    "fqPacingRate": "0",
             "httpBypassFqdn": "",
             "id": "442",
             "infoUrl": "",
@@ -2998,6 +3020,9 @@ URL Sig Keys
   |                          |        | traffic will be sent to the dnsByPassIp* for DNS deliveryservices and to the httpBypassFqdn for                                      |
   |                          |        | HTTP deliveryservices                                                                                                                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``fqPacingRate``         |  int   | The maximum rate in bytes per second for each TCP connection in this delivery service. If exceeded,                                  |
+  |                          |        | will be rate limited by the Linux kernel. A default value of 0 disables this feature                                                 |  
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``httpBypassFqdn``       | string | The HTTP destination to use for bypass on an HTTP deliveryservice - bypass starts when serving more than the                         |
   |                          |        | globalMaxMbps traffic on this deliveryservice.                                                                                       |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -3121,6 +3146,7 @@ URL Sig Keys
             "geoProvider": "0",
             "globalMaxMbps": null,
             "globalMaxTps": "0",
+	    "fqPacingRate": "0",
             "httpBypassFqdn": "",
             "id": "442",
             "infoUrl": "www.info.com",

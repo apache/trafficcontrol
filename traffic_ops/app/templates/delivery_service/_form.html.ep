@@ -399,6 +399,17 @@
 		%= field('ds.global_max_tps')->text(class => 'field', readonly => 'readonly');
 		<% }  %>
 	</div>
+	<div class="block form-row" id="fq_pacing_rate_row">
+		<% unless (field('ds.fq_pacing_rate')->valid) { %>
+			<span class="field-with-error"><%= field('ds.fq_pacing_rate')->error %></span>
+		<% } %>
+		%= label_for 'fq_pacing_rate' => 'Max Bytes per Second allowed per session (3000k or 5M are valid entries)', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.fq_pacing_rate')->text(class => 'field', id => 'fq_pacing_rate', name => 'ds.fq_pacing_rate');
+		<% } else { %>
+		%= field('ds.fq_pacing_rate')->text(class => 'field', readonly => 'readonly');
+		<% } %>
+	</div>	
 	<div class="block form-row" id="miss_lat_row">
 		<% unless (field('ds.miss_lat')->valid) { %>
 			<span class="field-with-error"><%= field('ds.miss_lat')->error %></span>

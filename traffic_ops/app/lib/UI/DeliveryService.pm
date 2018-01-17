@@ -232,6 +232,7 @@ sub read {
 				"profile_description"         => $row->profile->description,
 				"global_max_mbps"             => $row->global_max_mbps,
 				"global_max_tps"              => $row->global_max_tps,
+				"fq_pacing_rate"              => $row->fq_pacing_rate,    
 				"edge_header_rewrite"         => $row->edge_header_rewrite,
 				"mid_header_rewrite"          => $row->mid_header_rewrite,
 				"tr_response_headers"         => $row->tr_response_headers,
@@ -498,6 +499,13 @@ sub check_deliveryservice_input {
 	{
 		$self->field('ds.global_max_tps')->is_equal( "", "Invalid global_max_tps (NaN)." );
 	}
+	if (   defined( $self->param('ds.fq_pacing_rate') )
+	        && $self->param('ds.fq_pacing_rate') ne "" )
+	{
+		if ( $self->hr_string_to_bps( $self->param('ds.fq_pacing_rate') ) < 0 ) {
+			$self->field('ds.fq_pacing_rate')->is_equal( "", "Invalid fq_pacing_rate (NaN)." );
+		}	    
+ 	}    	       
 
 	if ( $typename =~ /^DNS/ ) {
 		if ( defined( $self->param('ds.tr_response_headers') )
@@ -814,6 +822,7 @@ sub update {
 			profile                     => ($self->paramAsScalar('ds.profile') == -1) ? undef : $self->paramAsScalar('ds.profile'),
 			global_max_mbps             => $self->hr_string_to_mbps( $self->paramAsScalar( 'ds.global_max_mbps', 0 ) ),
 			global_max_tps              => $self->paramAsScalar( 'ds.global_max_tps', 0 ),
+			fq_pacing_rate              => $self->hr_string_to_bps( $self->paramAsScalar('ds.fq_pacing_rate', 0) ),
 			miss_lat                    => $self->paramAsScalar('ds.miss_lat'),
 			miss_long                   => $self->paramAsScalar('ds.miss_long'),
 			long_desc                   => $self->paramAsScalar('ds.long_desc'),
@@ -1053,6 +1062,7 @@ sub create {
 				profile                     => ($self->paramAsScalar('ds.profile') == -1) ? undef : $self->paramAsScalar('ds.profile'),
 				global_max_mbps             => $self->hr_string_to_mbps( $self->paramAsScalar( 'ds.global_max_mbps', 0 ) ),
 				global_max_tps              => $self->paramAsScalar( 'ds.global_max_tps', 0 ),
+				fq_pacing_rate              => $self->hr_string_to_bps($self->paramAsScalar('ds.fq_pacing_rate', 0)),
 				miss_lat                    => $self->paramAsScalar('ds.miss_lat'),
 				miss_long                   => $self->paramAsScalar('ds.miss_long'),
 				long_desc                   => $self->paramAsScalar('ds.long_desc'),
