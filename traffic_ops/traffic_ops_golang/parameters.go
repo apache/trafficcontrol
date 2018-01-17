@@ -30,6 +30,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
+	"strings"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -94,7 +96,11 @@ func getParameters(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Parameter, er
 
 	query, queryValues := dbhelpers.BuildQuery(v, selectParametersQuery(), queryParamsToSQLCols)
 
-	query += ParametersGroupBy()
+	queryPieces := strings.Split(query, "ORDER BY")
+
+	queryPieces[0] += ParametersGroupBy()
+
+	query = strings.Join(queryPieces, "ORDER BY")
 	log.Debugln("Query is ", query)
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {
@@ -134,6 +140,6 @@ LEFT JOIN profile pr ON pp.profile = pr.id`
 }
 
 func ParametersGroupBy() string {
-	groupBy := ` GROUP BY p.config_file, p.id, p.last_updated, p.name, p.value, p.secure`
+	groupBy := ` GROUP BY p.config_file, p.id, p.last_updated, p.name, p.value, p.secure `
 	return groupBy
 }
