@@ -216,6 +216,7 @@ function setup_form(speed) {
             $('#org_server_fqdn_row').show(speed);
             $('#global_max_mbps_row').show(speed);
             $('#global_max_tps_row').show(speed);
+            $('#fq_pacing_rate_row').show(speed);    
             $('#miss_lat_row').show(speed);
             $('#miss_long_row').show(speed);
             $('#edge_header_rewrite_row').show(speed);
@@ -256,6 +257,7 @@ function setup_form(speed) {
             $('#org_server_fqdn_row').show(speed);
             $('#global_max_mbps_row').show(speed);
             $('#global_max_tps_row').show(speed);
+            $('#fq_pacing_rate_row').show(speed);    
             $('#miss_lat_row').show(speed);
             $('#miss_long_row').show(speed);
             $('#edge_header_rewrite_row').show(speed);
@@ -294,6 +296,7 @@ function setup_form(speed) {
             $('#org_server_fqdn_row').hide(speed);
             $('#global_max_mbps_row').hide(speed);
             $('#global_max_tps_row').hide(speed);
+            $('#fq_pacing_rate_row').hide(speed);    
             $('#miss_lat_row').hide(speed);
             $('#miss_long_row').hide(speed);
             $('#edge_header_rewrite_row').hide(speed);
@@ -332,6 +335,7 @@ function setup_form(speed) {
             $('#org_server_fqdn_row').hide(speed);
             $('#global_max_mbps_row').hide(speed);
             $('#global_max_tps_row').hide(speed);
+            $('#fq_pacing_rate_row').hide(speed);    
             $('#miss_lat_row').show(speed);
             $('#miss_long_row').show(speed);
             $('#edge_header_rewrite_row').hide(speed);

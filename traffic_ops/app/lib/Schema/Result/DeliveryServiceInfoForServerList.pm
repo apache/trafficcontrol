@@ -48,6 +48,7 @@ SELECT
     deliveryservice.org_server_fqdn as org_server_fqdn,
     deliveryservice.multi_site_origin as multi_site_origin,
     deliveryservice.range_request_handling as range_request_handling,
+    deliveryservice.fq_pacing_rate as fq_pacing_rate,
     deliveryservice.origin_shield as origin_shield,
     regex.pattern AS pattern,
     retype.name AS re_type,
@@ -95,6 +96,7 @@ __PACKAGE__->add_columns(
 	"remap_text",                  { data_type => "varchar", is_nullable => 0, size => 2048 },
 	"protocol",                    { data_type => "tinyint", is_nullable => 0, size => 4 },
 	"range_request_handling",      { data_type => "tinyint", is_nullable => 0, size => 4 },
+        "fq_pacing_rate",              { data_type => "bigint",  is_nullable => 0},
 	"origin_shield",               { data_type => "varchar", is_nullable => 0, size => 1024 },
 	"profile",                     { data_type => "integer", is_nullable => 1},
 );
