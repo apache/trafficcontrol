@@ -21,8 +21,12 @@ package main
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/x509"
+	"crypto/x509/pkix"
 	"database/sql"
+	"encoding/asn1"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
@@ -41,6 +45,64 @@ import (
 )
 
 // Delivery Services: SSL Keys.
+
+// generates an unencrypted private key and a signing request, CSR
+func generateDeliveryServiceSSLKeysCertificate(sslKeys *tc.DeliveryServiceSSLKeys) error {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+
+	country := []string{sslKeys.Country}
+	province := []string{sslKeys.State}
+	locality := []string{sslKeys.City}
+	organization := []string{sslKeys.Organization}
+	organizationUnit := []string{sslKeys.BusinessUnit}
+
+	// data needed for a signing request, CSR
+	subj := pkix.Name{
+		CommonName:         sslKeys.Hostname,
+		Country:            country,
+		Province:           province,
+		Locality:           locality,
+		Organization:       organization,
+		OrganizationalUnit: organizationUnit}
+
+	// create the CSR subject
+	rawSubj := subj.ToRDNSequence()
+	asn1Subj, _ := asn1.Marshal(rawSubj)
+	template := x509.CertificateRequest{
+		RawSubject:         asn1Subj,
+		SignatureAlgorithm: x509.SHA256WithRSA,
+	}
+
+	// create the CSR
+	csrBlock := pem.Block{
+		Type: "CERTIFICATE REQUEST",
+	}
+	csrBytes, err := x509.CreateCertificateRequest(rand.Reader, &template, privateKey)
+	if err != nil {
+		return err
+	} else {
+		csrBlock.Bytes = csrBytes
+	}
+	// pem encode the CSR
+	csrPem := pem.EncodeToMemory(&csrBlock)
+
+	// pem encode the private key
+	privKeyBlock := pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+	}
+	privKeyPem := pem.EncodeToMemory(&privKeyBlock)
+
+	// base64 encode the private key and CSR.
+	cert := tc.DeliveryServiceSSLKeysCertificate{
+		Key: base64.StdEncoding.EncodeToString(privKeyPem),
+		CSR: base64.StdEncoding.EncodeToString(csrPem),
+	}
+	// finally assign the result.
+	sslKeys.Certificate = cert
+
+	return nil
+}
 
 // returns the cdn_id found by domainname.
 func getCDNIDByDomainname(domainName string, db *sqlx.DB) (sql.NullInt64, error) {

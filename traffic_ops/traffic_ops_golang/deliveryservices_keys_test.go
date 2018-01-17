@@ -20,7 +20,10 @@ package main
  */
 
 import (
+	"crypto/x509"
 	"encoding/base64"
+	"encoding/pem"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"strings"
 	"testing"
 )
@@ -236,5 +239,96 @@ func TestVerifyAndEncodeCertificate(t *testing.T) {
 	length := len(certs) - 1
 	if length != 2 {
 		t.Errorf("Test failure: expected 2 certs from verifyAndEncodeCertificate(), got: %d ", length)
+	}
+}
+
+// tests the generateDeliveryServiceSSLKeysCertificate() function.
+// verifys the proper creation of a CSR and private key and that
+// both are encoded properly.
+func TestGenerateDeliveryServiceSSLKeysCertificate(t *testing.T) {
+	// test data
+	const cdn = "over-the-top"
+	const deliveryservice = "test-ds"
+	const businessUnit = "IPCDN"
+	const city = "Denver"
+	const organization = "Comcast"
+	const hostName = "foobar.test-ds.com"
+	const country = "US"
+	const state = "CO"
+	const version = 1
+
+	dsSslKeys := tc.DeliveryServiceSSLKeys{
+		CDN:             cdn,
+		DeliveryService: deliveryservice,
+		BusinessUnit:    businessUnit,
+		City:            city,
+		Organization:    organization,
+		Hostname:        hostName,
+		Country:         country,
+		State:           state,
+		Key:             deliveryservice,
+		Version:         version,
+	}
+
+	// test generating a certificate request and privte key
+	err := generateDeliveryServiceSSLKeysCertificate(&dsSslKeys)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+
+	// CSR should be base64 encoded, test that it can be decoded.
+	csrPem := make([]byte, base64.StdEncoding.EncodedLen(len(dsSslKeys.Certificate.CSR)))
+	_, err = base64.StdEncoding.Decode(csrPem, []byte(dsSslKeys.Certificate.CSR))
+	if err != nil {
+		t.Errorf("unexpected error while trying to base64 decode the CSR")
+	}
+
+	// test that the CSR may be pem decoded.
+	csrBlock, _ := pem.Decode(csrPem)
+	if csrBlock == nil {
+		t.Errorf("failed to decode PEM block containing the CSR")
+	}
+
+	// verify that the CSR is valid by parsing and reading it.
+	csr, err := x509.ParseCertificateRequest(csrBlock.Bytes)
+	if err != nil {
+		t.Errorf("unexpected error parsing the CSR: %v", err)
+	}
+	if csr.Subject.Country[0] != country {
+		t.Errorf("expected '%s' in csr.Subject.Country, got %v", country, csr.Subject.Country[0])
+	}
+	if csr.Subject.Organization[0] != organization {
+		t.Errorf("expected '%s' in csr.Subject.Organization, got %v", organization, csr.Subject.Organization[0])
+	}
+	if csr.Subject.OrganizationalUnit[0] != businessUnit {
+		t.Errorf("expected '%s' in csr.Subject.OrganizationalUnit, got %v", businessUnit, csr.Subject.OrganizationalUnit[0])
+	}
+	if csr.Subject.Locality[0] != city {
+		t.Errorf("expected '%s' in csr.Subject.Locality, got %v", city, csr.Subject.Locality[0])
+	}
+	if csr.Subject.Province[0] != state {
+		t.Errorf("expected '%s' in csr.Subject.Province, got %v", state, csr.Subject.Province[0])
+	}
+	if csr.Subject.CommonName != hostName {
+		t.Errorf("expected '%s' in csr.Subject.CommonName, got %v", hostName, csr.Subject.CommonName)
+	}
+
+	// The private key should be base64 encoded, test that it can be decoded.
+	keyPem := make([]byte, base64.StdEncoding.EncodedLen(len(dsSslKeys.Certificate.Key)))
+	_, err = base64.StdEncoding.Decode(keyPem, []byte(dsSslKeys.Certificate.Key))
+	if err != nil {
+		t.Errorf("unexpected error while trying to base64 decode the CSR")
+	}
+
+	// test that the private key may be pem decoded.
+	keyBlock, _ := pem.Decode(keyPem)
+	if keyBlock == nil {
+		t.Errorf("failed to decode PEM block containing the CSR")
+	}
+
+	// test that the private key may be properly parsed.
+	_, err = x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
+	if err != nil {
+		t.Errorf("failed to parse the generated private key: %v", err)
 	}
 }

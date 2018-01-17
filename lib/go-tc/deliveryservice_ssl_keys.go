@@ -36,10 +36,10 @@ type DeliveryServiceSSLKeysCertificate struct {
 // DeliveryServiceSSLKeys ...
 type DeliveryServiceSSLKeys struct {
 	CDN             string                            `json:"cdn,omitempty"`
-	DeliveryService string                            `json:"DeliveryService,omitempty"`
-	BusinessUnit    string                            `json:"businessUnit,omitempty"`
+	DeliveryService string                            `json:"deliveryservice,omitempty"`
+	BusinessUnit    string                            `json:"unit,omitempty"`
 	City            string                            `json:"city,omitempty"`
-	Organization    string                            `json:"organization,omitempty"`
+	Organization    string                            `json:"org,omitempty"`
 	Hostname        string                            `json:"hostname,omitempty"`
 	Country         string                            `json:"country,omitempty"`
 	State           string                            `json:"state,omitempty"`
