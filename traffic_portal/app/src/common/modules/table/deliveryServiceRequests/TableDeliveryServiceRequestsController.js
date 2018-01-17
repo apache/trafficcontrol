@@ -17,7 +17,37 @@
  * under the License.
  */
 
-var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $state, $uibModal, $anchorScroll, dateUtils, locationUtils, typeService, deliveryServiceRequestService, messageModel, userModel) {
+var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $state, $uibModal, $anchorScroll, $q, dateUtils, locationUtils, typeService, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
+
+	var createDeliveryServiceDeleteRequest = function(deliveryService) {
+		var params = {
+			title: "Delivery Service Delete Request",
+			message: 'All delivery service changes must be reviewed before completion.<br><br>Are you sure you want to submit a request to delete the ' + deliveryService.xmlId + ' delivery service?'
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			var dsRequest = {
+				changeType: 'delete',
+				status: 'submitted',
+				request: deliveryService
+			};
+			deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, false).
+				then(function() {
+					$scope.refresh();
+				});
+		}, function () {
+			// do nothing
+		});
+	};
 
 	$scope.DRAFT = 0;
 	$scope.SUBMITTED = 1;
@@ -143,9 +173,9 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 			request.assigneeId = userModel.user.id;
 			request.status = 'rejected';
 			deliveryServiceRequestService.updateDeliveryServiceRequest(request.id, request).
-			then(function() {
-				$scope.refresh();
-			});
+				then(function() {
+					$scope.refresh();
+				});
 		}, function () {
 			// do nothing
 		});
@@ -188,8 +218,8 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 	$scope.deleteRequest = function(request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		var params = {
-			title: 'Delete ' + request.request.xmlId + ' ' + request.changeType + ' request?',
-			key: request.request.xmlId + ' request'
+			title: 'Delete the ' + request.request.xmlId + ' ' + request.changeType + ' request?',
+			key: request.request.xmlId + ' ' + request.changeType + ' request'
 		};
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
@@ -212,6 +242,10 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 	};
 
 	$scope.createRequest = function() {
+		var CREATE = 1,
+			UPDATE = 2,
+			DELETE = 3;
+
 		var params = {
 			title: 'Create Delivery Service Request',
 			message: 'What kind of delivery service request would you like to create?'
@@ -226,73 +260,104 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 				},
 				collection: function() {
 					return [
-						{ id: 1, name: 'A request for a new delivery service' },
-						{ id: 2, name: 'A request to update an existing delivery service' }
+						{ id: CREATE, name: 'A request for a new delivery service' },
+						{ id: UPDATE, name: 'A request to update an existing delivery service' },
+						{ id: DELETE, name: 'A request to delete an existing delivery service' }
 					];
 				}
 			}
 		});
 		modalInstance.result.then(function(action) {
-			switch (action.id) {
-				case 1: // if you want to create a new DS
-					var params = {
-						title: 'Create Delivery Service',
-						message: "Please select a content routing category"
-					};
-					var modalInstance = $uibModal.open({
-						templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-						controller: 'DialogSelectController',
-						size: 'md',
-						resolve: {
-							params: function () {
-								return params;
-							},
-							collection: function() {
-								// the following represent the 4 categories of delivery services
-								// the ids are arbitrary but the dialog.select dropdown needs them
-								return [
-									{ id: 1, name: 'ANY_MAP' },
-									{ id: 2, name: 'DNS' },
-									{ id: 3, name: 'HTTP' },
-									{ id: 4, name: 'STEERING' }
-								];
-							}
+			var params,
+				modalInstance;
+
+			if (action.id == CREATE) {
+				params = {
+					title: 'Create Delivery Service',
+					message: "Please select a content routing category"
+				};
+				modalInstance = $uibModal.open({
+					templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+					controller: 'DialogSelectController',
+					size: 'md',
+					resolve: {
+						params: function () {
+							return params;
+						},
+						collection: function() {
+							// the following represent the 4 categories of delivery services
+							// the ids are arbitrary but the dialog.select dropdown needs them
+							return [
+								{ id: 1, name: 'ANY_MAP' },
+								{ id: 2, name: 'DNS' },
+								{ id: 3, name: 'HTTP' },
+								{ id: 4, name: 'STEERING' }
+							];
 						}
-					});
-					modalInstance.result.then(function(type) {
-						var path = '/delivery-services/new?type=' + type.name;
-						locationUtils.navigateToPath(path);
-					}, function () {
-						// do nothing
-					});
-					break;
-				case 2: // if you want to update an existing DS
-					var params = {
-						title: 'Update Delivery Service',
-						message: "Please select a delivery service to update",
-						labelFunction: function(item) { return item['xmlId'] }
-					};
-					var modalInstance = $uibModal.open({
-						templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-						controller: 'DialogSelectController',
-						size: 'md',
-						resolve: {
-							params: function () {
-								return params;
-							},
-							collection: function(deliveryServiceService) {
-								return deliveryServiceService.getDeliveryServices();
-							}
+					}
+				});
+				modalInstance.result.then(function(type) {
+					var path = '/delivery-services/new?type=' + type.name;
+					locationUtils.navigateToPath(path);
+				}, function () {
+					// do nothing on cancel
+				});
+			} else if (action.id == UPDATE) {
+				params = {
+					title: 'Update Delivery Service',
+					message: "Please select a delivery service to update",
+					labelFunction: function (item) {
+						return item['xmlId']
+					}
+				};
+				modalInstance = $uibModal.open({
+					templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+					controller: 'DialogSelectController',
+					size: 'md',
+					resolve: {
+						params: function () {
+							return params;
+						},
+						collection: function (deliveryServiceService) {
+							return deliveryServiceService.getDeliveryServices();
 						}
-					});
-					modalInstance.result.then(function(ds) {
-						locationUtils.navigateToPath('/delivery-services/' + ds.id + '?type=' + ds.type);
-					}, function () {
-						// do nothing
-					});
+					}
+				});
+				modalInstance.result.then(function (ds) {
+					locationUtils.navigateToPath('/delivery-services/' + ds.id + '?type=' + ds.type);
+				}, function () {
+					// do nothing on cancel
+				});
+			} else if (action.id == DELETE) {
+				params = {
+					title: 'Delete Delivery Service',
+					message: "Please select a delivery service to delete",
+					labelFunction: function (item) {
+						return item['xmlId']
+					}
+				};
+				modalInstance = $uibModal.open({
+					templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+					controller: 'DialogSelectController',
+					size: 'md',
+					resolve: {
+						params: function () {
+							return params;
+						},
+						collection: function(deliveryServiceService) {
+							return deliveryServiceService.getDeliveryServices();
+						}
+					}
+				});
+				modalInstance.result.then(function(ds) {
+					createDeliveryServiceDeleteRequest(ds);
+				}, function () {
+					// do nothing on cancel
+				});
 			}
+
 		}, function () {
-			// do nothing
+			// do nothing on cancel
 		});
 	};
 
@@ -328,5 +393,5 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 
 };
 
-TableDeliveryServicesRequestsController.$inject = ['dsRequests', '$scope', '$state', '$uibModal', '$anchorScroll', 'dateUtils', 'locationUtils', 'typeService', 'deliveryServiceRequestService', 'messageModel', 'userModel'];
+TableDeliveryServicesRequestsController.$inject = ['dsRequests', '$scope', '$state', '$uibModal', '$anchorScroll', '$q', 'dateUtils', 'locationUtils', 'typeService', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'userModel'];
 module.exports = TableDeliveryServicesRequestsController;
