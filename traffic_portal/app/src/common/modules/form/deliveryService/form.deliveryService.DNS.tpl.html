@@ -468,6 +468,18 @@ under the License.
                     </div>
                 </div>
 
+                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.fqPacingRate), 'has-feedback': hasError(deliveryServiceForm.fqPacingRate)}">
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12">
+                        <span uib-popover-html="label('fqPacingRate', 'desc')" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('fqPacingRate', 'title')}}</span>
+                    </label>
+                    <div class="col-md-10 col-sm-10 col-xs-12">
+                        <input name="fqPacingRate" type="number" class="form-control" placeholder="Rate-limit connections to this Bytes per second" ng-model="deliveryService.fqPacingRate" ng-pattern="/^\d+$/" autofocus>
+                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.fqPacingRate, 'pattern')">Whole Number</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.fqPacingRate != dsCurrent.fqPacingRate">Current Value: [ {{dsCurrent.fqPacingRate}} ]</small>
+                        <span ng-show="hasError(deliveryServiceForm.fqPacingRate)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    </div>
+                </div>		
+
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.edgeHeaderRewrite), 'has-feedback': hasError(deliveryServiceForm.edgeHeaderRewrite)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
                         <span uib-popover-html="label('edgeHeaderRewrite', 'desc')" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('edgeHeaderRewrite', 'title')}}</span>

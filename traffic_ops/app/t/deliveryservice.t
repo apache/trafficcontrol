@@ -256,6 +256,7 @@ ok $t->post_ok(
 		'ds.global_max_mbps'             => '4T',
 		'ds.http_bypass_fqdn'            => '',
 		'ds.global_max_tps'              => '10001',
+		'ds.fq_pacing_rate'              => '500k',
 		'ds.info_url'                    => 'http://knutsel-update.com',
 		'ds.long_desc'                   => 'long_update',
 		'ds.long_desc_1'                 => 'cust_update',
@@ -311,6 +312,7 @@ ok $t->get_ok('/datadeliveryservice')->status_is(200)
   ->json_is( '/1/ccr_dns_ttl' => 3601 )
   ->json_is( '/1/global_max_mbps' => 4000000 )
   ->json_is( '/1/global_max_tps' => 10001 )
+  ->json_is( '/1/fq_pacing_rate' => 500000 )
   ->json_is( '/1/miss_lat' => '0' )
   ->json_is( '/1/miss_long' => '0' )
   ->json_is( '/1/long_desc' => 'long_update' )

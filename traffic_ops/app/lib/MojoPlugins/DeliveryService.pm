@@ -55,12 +55,28 @@ sub register {
 			elsif ( $inp =~ /^(\d+)G$/ ) { return $1 * 1000; }
 			elsif ( $inp =~ /^(\d+)M$/ ) { return $1; }
 			elsif ( $inp =~ /^(\d+)k$/ ) { return int( $1 / 1000 ); }
-			elsif ( $inp =~ /^\d+$/ )    { return $1; }
+			elsif ( $inp =~ /^(\d+)$/  ) { return $1; }
 			else                         { return -1; }
 
 		}
 	);
 
+	$app->renderer->add_helper(
+		hr_string_to_bps => sub {
+			my $self = shift;
+			my $inp  = shift;
+
+			if    ( !defined($inp) )     { return 0; }                  # default is 0
+			elsif ( $inp =~ /^(\d+)T$/ ) { return $1 * 1000000000000; }
+			elsif ( $inp =~ /^(\d+)G$/ ) { return $1 * 1000000000; }
+			elsif ( $inp =~ /^(\d+)M$/ ) { return $1 * 1000000; }
+			elsif ( $inp =~ /^(\d+)k$/ ) { return $1 * 1000; }
+			elsif ( $inp =~ /^(\d+)$/  ) { return $1; }
+			else                         { return -1; }
+
+		}
+	);
+	
 	$app->renderer->add_helper(
 		is_delivery_service_assigned => sub {
 			my $self = shift || confess($no_instance_message);

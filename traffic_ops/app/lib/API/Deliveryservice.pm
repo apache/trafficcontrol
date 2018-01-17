@@ -121,6 +121,7 @@ sub index {
 				"geoProvider"          => $row->geo_provider,
 				"globalMaxMbps"        => $row->global_max_mbps,
 				"globalMaxTps"         => $row->global_max_tps,
+				"fqPacingRate"         => $row->fq_pacing_rate,
 				"httpBypassFqdn"       => $row->http_bypass_fqdn,
 				"id"                   => $row->id,
 				"infoUrl"              => $row->info_url,
@@ -242,6 +243,7 @@ sub show {
 				"geoProvider"          => $row->geo_provider,
 				"globalMaxMbps"        => $row->global_max_mbps,
 				"globalMaxTps"         => $row->global_max_tps,
+				"fqPacingRate"         => $row->fq_pacing_rate,
 				"httpBypassFqdn"       => $row->http_bypass_fqdn,
 				"id"                   => $row->id,
 				"infoUrl"              => $row->info_url,
@@ -348,6 +350,7 @@ sub update {
 		geo_provider           => $params->{geoProvider},
 		global_max_mbps        => $params->{globalMaxMbps},
 		global_max_tps         => $params->{globalMaxTps},
+		fq_pacing_rate         => $params->{fqPacingRate},
 		http_bypass_fqdn       => $params->{httpBypassFqdn},
 		info_url               => $params->{infoUrl},
 		initial_dispersion     => $params->{initialDispersion},
@@ -447,6 +450,7 @@ sub update {
 				"geoProvider"              => $rs->geo_provider,
 				"globalMaxMbps"            => $rs->global_max_mbps,
 				"globalMaxTps"             => $rs->global_max_tps,
+				"fqPacingRate"             => $rs->fq_pacing_rate,
 				"httpBypassFqdn"           => $rs->http_bypass_fqdn,
 				"id"                       => $rs->id,
 				"infoUrl"                  => $rs->info_url,
@@ -579,6 +583,7 @@ sub safe_update {
 				"geoProvider"              => $rs->geo_provider,
 				"globalMaxMbps"            => $rs->global_max_mbps,
 				"globalMaxTps"             => $rs->global_max_tps,
+				"fqPacingRate"             => $rs->fq_pacing_rate,
 				"httpBypassFqdn"           => $rs->http_bypass_fqdn,
 				"id"                       => $rs->id,
 				"infoUrl"                  => $rs->info_url,
@@ -685,6 +690,7 @@ sub create {
 		geo_provider           => $params->{geoProvider},
 		global_max_mbps        => $params->{globalMaxMbps},
 		global_max_tps         => $params->{globalMaxTps},
+		fq_pacing_rate         => $params->{fqPacingRate},
 		http_bypass_fqdn       => $params->{httpBypassFqdn},
 		info_url               => $params->{infoUrl},
 		initial_dispersion     => $params->{initialDispersion},
@@ -795,6 +801,7 @@ sub create {
 				"geoProvider"              => $insert->geo_provider,
 				"globalMaxMbps"            => $insert->global_max_mbps,
 				"globalMaxTps"             => $insert->global_max_tps,
+				"fqPacingRate"             => $insert->fq_pacing_rate,
 				"httpBypassFqdn"           => $insert->http_bypass_fqdn,
 				"id"                       => $insert->id,
 				"infoUrl"                  => $insert->info_url,
@@ -987,6 +994,7 @@ sub get_deliveryservices_by_serverId {
 					"geoProvider"          => $row->geo_provider,
 					"globalMaxMbps"        => $row->global_max_mbps,
 					"globalMaxTps"         => $row->global_max_tps,
+					"fqPacingRate"         => $row->fq_pacing_rate,
 					"httpBypassFqdn"       => $row->http_bypass_fqdn,
 					"id"                   => $row->id,
 					"infoUrl"              => $row->info_url,
@@ -1086,6 +1094,7 @@ sub get_deliveryservices_by_userId {
 					"geoProvider"          => $row->geo_provider,
 					"globalMaxMbps"        => $row->global_max_mbps,
 					"globalMaxTps"         => $row->global_max_tps,
+					"fqPacingRate"         => $row->fq_pacing_rate,    
 					"httpBypassFqdn"       => $row->http_bypass_fqdn,
 					"id"                   => $row->id,
 					"infoUrl"              => $row->info_url,
@@ -1379,7 +1388,7 @@ sub is_deliveryservice_valid {
 
 	my $rules = {
 		fields => [
-			qw/active cacheurl ccrDnsTtl cdnId checkPath deepCachingType displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText routingName signed signingAlgorithm sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
+			qw/active cacheurl ccrDnsTtl cdnId checkPath deepCachingType displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite fqPacingRate geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText routingName signed signingAlgorithm sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
 		],
 
 		# validation checks to perform for ALL delivery services
@@ -1395,6 +1404,7 @@ sub is_deliveryservice_valid {
 			geoProvider			=> [ is_required("is required"), \&is_valid_int_or_undef ],
 			globalMaxMbps			=> [ \&is_valid_int_or_undef ],
 			globalMaxTps			=> [ \&is_valid_int_or_undef ],
+			fqPacingRate                    => [ \&is_valid_int_or_undef ],
 			initialDispersion		=> [ \&is_valid_int_or_undef ],
 			logsEnabled			=> [ is_required("is required") ],
 			maxDnsAnswers			=> [ \&is_valid_int_or_undef ],

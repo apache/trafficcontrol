@@ -199,6 +199,10 @@
             "title": "Global Max TPS",
             "desc": "The maximum transactions this delivery service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS delivery service, the Bypass Ipv4 or Ipv6 will be used (depending on whether this was a A or AAAA request), and for HTTP delivery services the Bypass FQDN will be used."
           },
+	  "fqPacingRate": {
+	    "title": "Fair Queuing Pacing Rate Bps",
+            "desc": "The maximum bytes per second a cache will delivery on any single TCP connection. This uses the Linux kernel's Fair Queuing setsockopt(SO_MAX_PACING_RATE) to limit the rate of delivery."
+	   },
           "httpBypassFqdn": {
             "title": "HTTP Bypass FQDN",
             "desc": "This is the FQDN Traffic Router will redirect to (with the same path) when the max Bps or Max Tps for this delivery service are exceeded."

@@ -138,7 +138,7 @@ __PACKAGE__->table("deliveryservice");
 =head2 max_dns_answers
 
   data_type: 'bigint'
-  default_value: 0
+  default_value: 5
   is_nullable: 1
 
 =head2 info_url
@@ -306,6 +306,12 @@ __PACKAGE__->table("deliveryservice");
   extra: {custom_type_name => "deep_caching_type",list => ["NEVER","ALWAYS"]}
   is_nullable: 1
 
+=head2 fq_pacing_rate
+
+  data_type: 'bigint'
+  default_value: 0
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -357,7 +363,7 @@ __PACKAGE__->add_columns(
   "long_desc_2",
   { data_type => "text", is_nullable => 1 },
   "max_dns_answers",
-  { data_type => "bigint", default_value => 0, is_nullable => 1 },
+  { data_type => "bigint", default_value => 5, is_nullable => 1 },
   "info_url",
   { data_type => "text", is_nullable => 1 },
   "miss_lat",
@@ -431,6 +437,8 @@ __PACKAGE__->add_columns(
     },
     is_nullable => 1,
   },
+  "fq_pacing_rate",
+  { data_type => "bigint", default_value => 0, is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -449,7 +457,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_140234_ds_id_unique>
+=head2 C<idx_89502_ds_id_unique>
 
 =over 4
 
@@ -459,9 +467,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_140234_ds_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_89502_ds_id_unique", ["id"]);
 
-=head2 C<idx_140234_ds_name_unique>
+=head2 C<idx_89502_ds_name_unique>
 
 =over 4
 
@@ -471,7 +479,7 @@ __PACKAGE__->add_unique_constraint("idx_140234_ds_id_unique", ["id"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_140234_ds_name_unique", ["xml_id"]);
+__PACKAGE__->add_unique_constraint("idx_89502_ds_name_unique", ["xml_id"]);
 
 =head1 RELATIONS
 
@@ -666,8 +674,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2017-11-09 14:44:59
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:IA1IQ3w/BEYermjf9PoVtA
+# Created by DBIx::Class::Schema::Loader v0.07047 @ 2018-02-28 21:54:35
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:3ETqht/3FTxKgD/YuRf3Bg
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #
