@@ -70,8 +70,8 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.3, http.MethodDelete, `cdns/{id}$`, api.DeleteHandler(cdn.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//Delivery service requests
-		{1.3, http.MethodGet, `deliveryservice_requests/?(\.json)?$`, dsrequest.Handler(d.DB), auth.PrivLevelAdmin, Authenticated, nil},
-		{1.3, http.MethodGet, `deliveryservice_requests/{id}$`, dsrequest.Handler(d.DB), auth.PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodGet, `deliveryservice_requests/?(\.json)?$`, dsrequest.Handler(d.DB), dsrequest.DeliveryServiceRequestPrivLevel, Authenticated, nil},
+		{1.3, http.MethodGet, `deliveryservice_requests/{id}$`, dsrequest.Handler(d.DB), dsrequest.DeliveryServiceRequestPrivLevel, Authenticated, nil},
 		//Delivery service requests generic handlers:
 		{1.3, http.MethodPut, `deliveryservice_requests/{id}$`, api.UpdateHandler(dsrequest.GetRefType(), d.DB), dsrequest.DeliveryServiceRequestPrivLevel, Authenticated, nil},
 		{1.3, http.MethodPost, `deliveryservice_requests/?$`, api.CreateHandler(dsrequest.GetRefType(), d.DB), dsrequest.DeliveryServiceRequestPrivLevel, Authenticated, nil},
