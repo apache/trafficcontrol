@@ -118,9 +118,6 @@ public class ExternalTestSuite {
 		setupFakeServers();
 		String prefix = System.getProperty("user.dir");
 
-		if (!prefix.endsWith("/core")) {
-			prefix += "/core";
-		}
 		tmpDeployDir = Files.createTempDirectory("ext-test-").toFile();
 		new File(tmpDeployDir,"conf").mkdirs();
 		System.out.println();
@@ -135,8 +132,7 @@ public class ExternalTestSuite {
 		System.setProperty("cache.config.json.refresh.period", "10000");
 		System.setProperty("dns.tcp.port", "" + findAvailableTcpPort());
 		System.setProperty("dns.udp.port", "" + findAvailableUdpPort());
-
-		System.setProperty("traffic_monitor.properties", "src/test/conf/traffic_monitor.properties");
+		System.setProperty("traffic_monitor.properties", "not_needed");
 
 		File dbDirectory = new File(tmpDeployDir, "db");
 		dbDirectory.mkdir();
@@ -148,7 +144,7 @@ public class ExternalTestSuite {
 		LogManager.getRootLogger().addAppender(consoleAppender);
 		LogManager.getRootLogger().setLevel(Level.INFO);
 
-		catalinaTrafficRouter = new CatalinaTrafficRouter("src/main/opt/tomcat/conf/server.xml", "src/main/webapp");
+		catalinaTrafficRouter = new CatalinaTrafficRouter("src/main/opt/tomcat/conf/server.xml", "target/traffic_router_core");
 		System.out.println("catalinaTrafficRouter: "+catalinaTrafficRouter.toString());
 		catalinaTrafficRouter.start();
 	}

@@ -28,6 +28,11 @@
 		<connection>scm:git:file://</connection>
 		<developerConnection>scm:git:file://</developerConnection>
 	</scm>
+	<properties>
+		    <!-- Make sure to add -Djava.library.path=[tomcat native library path on your box] on the Maven
+		         command line -->
+			<java.library.path>must be passed on the Maven commandline</java.library.path>
+    </properties>
 	<repositories>
 		<repository>
 			<id>cloudera</id>
@@ -36,7 +41,7 @@
 	</repositories>
 
 	<build>
-		<!--finalName>ROOT</finalName-->
+		<finalName>traffic_router_core</finalName>
 		<resources>
 			<resource>
 				<filtering>false</filtering>
@@ -95,7 +100,7 @@
 					<verbose>true</verbose>
 					<failurePriority>5</failurePriority>
 					<rulesets>
-						<ruleset>${project.basedir}/build/pmd/ruleset.xml</ruleset>
+						<ruleset>file://${project.basedir}/build/pmd/ruleset.xml</ruleset>
 					</rulesets>
 				</configuration>
 			</plugin>
@@ -175,7 +180,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.19.1</version>
 				<configuration>
-					<argLine>-XX:-UseSplitVerifier -Djava.library.path=/usr/local/opt/tomcat-native/lib</argLine>
+					<argLine>-XX:-UseSplitVerifier -Djava.library.path=${java.library.path}</argLine>
 					<excludedGroups>com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest,com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest</excludedGroups>
 				</configuration>
 			</plugin>
@@ -184,29 +189,29 @@
 				<version>2.19</version>
 				<executions>
 					<execution>
+						<id>external</id>
+						<goals>
+							<goal>integration-test</goal>
+						</goals>
+						<configuration>
+							<argLine>-Djava.library.path=${java.library.path}</argLine> <!-- This needs to be parameterized -->
+							<groups>com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest</groups>
+							<includes>
+								<include>**/*Suite.java</include>
+							</includes>
+						</configuration>
+					</execution>
+					<execution>
 						<id>integration</id>
 						<goals>
 							<goal>integration-test</goal>
 							<goal>verify</goal>
 						</goals>
 						<configuration>
+							<argLine>-Djava.library.path=${java.library.path}</argLine> <!-- This needs to be parameterized -->
 							<groups>com.comcast.cdn.traffic_control.traffic_router.core.util.IntegrationTest</groups>
 							<includes>
 								<include>**/*.java</include>
-							</includes>
-						</configuration>
-					</execution>
-					<execution>
-						<id>external</id>
-						<goals>
-							<goal>integration-test</goal>
-							<goal>verify</goal>
-						</goals>
-						<configuration>
-                            <argLine> -Djava.library.path=/usr/local/opt/tomcat-native/lib</argLine> <!-- This needs to be parameterized -->
-							<groups>com.comcast.cdn.traffic_control.traffic_router.core.util.ExternalTest</groups>
-							<includes>
-								<include>**/*Suite.java</include>
 							</includes>
 						</configuration>
 					</execution>
@@ -334,17 +339,17 @@
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-catalina</artifactId>
-			<version>8.5.15</version>
+			<version>8.5.24</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-coyote</artifactId>
-			<version>8.5.15</version>
+			<version>8.5.24</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-jni</artifactId>
-			<version>8.5.15</version>
+			<version>8.5.24</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>

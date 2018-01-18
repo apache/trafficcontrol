@@ -93,9 +93,9 @@ public class KeyManager extends X509ExtendedKeyManager implements X509KeyManager
 		}
 
 		if (stringBuilder.length() > 0) {
-			log.warn("No certificate registry aliases matching " + stringBuilder.toString());
+			log.warn("KeyManager: No certificate registry aliases matching " + stringBuilder.toString());
 		} else {
-			log.warn("Client " + sslSession.getPeerHost() + " did not send any Server Name Indicators");
+			log.warn("KeyManager: Client " + sslSession.getPeerHost() + " did not send any Server Name Indicators");
 		}
 		return null;
 	}
@@ -107,7 +107,7 @@ public class KeyManager extends X509ExtendedKeyManager implements X509KeyManager
 			return handshakeData.getCertificateChain();
 		}
 
-		log.error("No certificate chain for alias " + alias);
+		log.error("KeyManager: No certificate chain for alias " + alias);
 		return null;
 	}
 
@@ -118,7 +118,7 @@ public class KeyManager extends X509ExtendedKeyManager implements X509KeyManager
 			return handshakeData.getPrivateKey();
 		}
 
-		log.error("No private key for alias " + alias);
+		log.error("KeyManager: No private key for alias " + alias);
 		return null;
 	}
 

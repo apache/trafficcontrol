@@ -25,10 +25,10 @@ done
 
 mkdir -p /opt/traffic_router/webapps/core
 
-if [ ! -e /opt/traffic_router/webapps/core/ROOT.war ]; then
+#if [ ! -e /opt/traffic_router/webapps/core/ROOT.war ]; then
     #echo "Symlinking /opt/traffic_router/webapps/traffic_router_core.war to /opt/traffic_router/webapps/core/ROOT.war"
-    /bin/ln -s /opt/traffic_router/webapps/traffic_router_core.war /opt/traffic_router/webapps/core/ROOT.war
-fi
+    #/bin/ln -s /opt/traffic_router/webapps/traffic_router_core.war /opt/traffic_router/webapps/core/ROOT.war
+#fi
 
 if [ -f /opt/traffic_router/conf/*.crt ]; then
 	cd /opt/traffic_router/conf

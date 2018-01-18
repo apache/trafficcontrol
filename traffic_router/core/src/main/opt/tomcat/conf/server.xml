@@ -38,13 +38,16 @@
 				   connectionTimeout="20000" mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="Port"/>
 		<Connector port="3333" protocol="com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidProtocol" maxThreads="10000"
 				   connectionTimeout="20000" mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="ApiPort"/>
+		<!-- The LanguidNioProtocol class automatically constructs the OpenSSLImplementation it wants to use and it also consumes
+		     a keystore service for loading certs and keys and it dynamically builds a list of SSLHostConfigs so setting any of
+		     these through the Connector configuration will have no effect. -->
 		<Connector port="443" protocol="com.comcast.cdn.traffic_control.traffic_router.protocol.LanguidNioProtocol" maxThreads="10000"
-		scheme="https" secure="true" SSLEnabled="true" sslProtocol="TLS" connectionTimeout="20000"
-			       mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="SecurePort" sslImplementationName="org.apache.tomcat.util.net.openssl.OpenSSLImplementation">
+				   scheme="https" secure="true" SSLEnabled="true" sslProtocol="TLS" connectionTimeout="20000"
+				   mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="SecurePort">
 		</Connector>
 		<Engine name="traffic_router_core" defaultHost="localhost">
 			<Host name="localhost" appBase="/opt/traffic_router/webapps/core/">
-				<!-- These Context setting allow the project .war to server the root '/' context of the Tomcat server -->
+				<!-- The Context setting docBase="" allows the project .war to server the root '/' context of the Tomcat server -->
 				<Context path="" docBase=""><JarScanner scanManifest="false" /></Context>
 			</Host>
 		</Engine>
