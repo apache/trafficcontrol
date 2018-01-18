@@ -181,6 +181,19 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 			handleErrs(http.StatusBadRequest, errors.New("id in body does not match id in path"))
 			return
 		}
+
+		// if the object has tenancy enabled, check that user is able to access the tenant
+		if t, ok := u.(Tenantable); ok {
+			authorized, err := t.IsTenantAuthorized(*user, db)
+			if err != nil {
+				handleErrs(http.StatusBadRequest, err)
+				return
+			}
+			if !authorized {
+				handleErrs(http.StatusForbidden, errors.New("not authorized on this tenant"))
+			}
+		}
+
 		//run the update and handle any error
 		err, errType := u.Update(db, *user)
 		if err != nil {
@@ -249,6 +262,19 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 		d.SetID(id)
+
+		// if the object has tenancy enabled, check that user is able to access the tenant
+		if t, ok := d.(Tenantable); ok {
+			authorized, err := t.IsTenantAuthorized(*user, db)
+			if err != nil {
+				handleErrs(http.StatusBadRequest, err)
+				return
+			}
+			if !authorized {
+				handleErrs(http.StatusForbidden, errors.New("not authorized on this tenant"))
+			}
+		}
+
 		log.Debugf("calling delete on object: %++v", d) //should have id set now
 		err, errType := d.Delete(db, *user)
 		if err != nil {
@@ -310,6 +336,18 @@ func CreateHandler(typeRef Inserter, db *sqlx.DB) http.HandlerFunc {
 		if err != nil {
 			log.Errorf("unable to retrieve current user from context: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
+		}
+
+		// if the object has tenancy enabled, check that user is able to access the tenant
+		if t, ok := i.(Tenantable); ok {
+			authorized, err := t.IsTenantAuthorized(*user, db)
+			if err != nil {
+				handleErrs(http.StatusBadRequest, err)
+				return
+			}
+			if !authorized {
+				handleErrs(http.StatusForbidden, errors.New("not authorized on this tenant"))
+			}
 		}
 
 		err, errType := i.Insert(db, *user)
