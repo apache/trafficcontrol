@@ -20,7 +20,6 @@ package request
  */
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -69,11 +68,12 @@ func (req *TODeliveryServiceRequest) SetID(i int) {
 
 // IsTenantAuthorized implements the Tenantable interface to ensure the user is authorized on the deliveryservice tenant
 func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error) {
-	ds, err := req.getDeliveryService()
+	tenantID, err := req.getTenantID(db)
 	if err != nil {
+		log.Debugf("from getTenantID: %v", err)
 		return false, err
 	}
-	return auth.IsResourceAuthorizedToUser(ds.TenantID, user, db)
+	return auth.IsResourceAuthorizedToUser(tenantID, user, db)
 }
 
 //The TODeliveryServiceRequest implementation of the Updater interface
@@ -84,15 +84,7 @@ func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, d
 
 // Update ...
 func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	// check tenancy prior to transaction to modify the db
-	authorized, err := req.IsTenantAuthorized(user, db)
-	if err != nil {
-		return err, tc.SystemError
-	}
-	if !authorized {
-		return errors.New("User not authorized on this tenant"), tc.ForbiddenError
-	}
-	XMLID, err := req.getXMLID()
+	XMLID, err := req.getXMLID(db)
 	if err != nil {
 		return err, tc.SystemError
 	}
@@ -121,7 +113,6 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 		log.Error.Println("could not begin transaction: ", err.Error())
 		return tc.DBError, tc.SystemError
 	}
-	log.Debugf("about to run exec query: %s with request: %++v", updateRequestQuery(), req)
 	resultRows, err := tx.NamedQuery(updateRequestQuery(), req)
 	if err != nil {
 		if err, ok := err.(*pq.Error); ok {
@@ -165,15 +156,7 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 
 // Insert ...
 func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	// check tenancy prior to transaction to modify the db
-	authorized, err := req.IsTenantAuthorized(user, db)
-	if err != nil {
-		return err, tc.SystemError
-	}
-	if !authorized {
-		return errors.New("User not authorized on this tenant"), tc.ForbiddenError
-	}
-	XMLID, err := req.getXMLID()
+	XMLID, err := req.getXMLID(db)
 	if err != nil {
 		return err, tc.SystemError
 	}
@@ -242,15 +225,7 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 
 // Delete ...
 func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	// check tenancy prior to transaction to modify the db
-	authorized, err := req.IsTenantAuthorized(user, db)
-	if err != nil {
-		return err, tc.SystemError
-	}
-	if !authorized {
-		return errors.New("User not authorized on this tenant"), tc.ForbiddenError
-	}
-	XMLID, err := req.getXMLID()
+	XMLID, err := req.getXMLID(db)
 	if err != nil {
 		return err, tc.SystemError
 	}
@@ -279,7 +254,6 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 		log.Error.Println("could not begin transaction: ", err.Error())
 		return tc.DBError, tc.SystemError
 	}
-	log.Debugf("about to run exec query: %s with request: %++v", deleteRequestQuery(), req)
 	result, err := tx.NamedExec(deleteRequestQuery(), req)
 	if err != nil {
 		log.Errorln("received error from delete execution: ", err.Error())
@@ -298,33 +272,44 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 	return nil, tc.NoError
 }
 
+// getXMLID retrieves the XMLID of the deliveryservice to be created or modified
+func (req TODeliveryServiceRequest) getXMLID(db *sqlx.DB) (string, error) {
+	var XMLID string
+	q := `SELECT request->>'xmlId' FROM deliveryservice_request WHERE id=` + strconv.Itoa(req.ID)
+	row := db.QueryRow(q)
+
+	err := row.Scan(&XMLID)
+	if err != nil {
+		log.Debugln("ERROR: ", err, ";  QUERY:", q)
+	}
+	return XMLID, err
+}
+
+// getTenantID retrieves the tenantID of the deliveryservice to be created or modified
+func (req TODeliveryServiceRequest) getTenantID(db *sqlx.DB) (int, error) {
+	var tenantID int
+	q := `SELECT request->>'tenantId' FROM deliveryservice_request WHERE id=` + strconv.Itoa(req.ID)
+	row := db.QueryRow(q)
+
+	err := row.Scan(&tenantID)
+	if err != nil {
+		log.Debugln("ERROR: ", err, ";  QUERY:", q)
+	}
+	return tenantID, err
+}
+
 // isActiveRequest returns true if a request using this XMLID is currently in an active state
 func isActiveRequest(db *sqlx.DB, XMLID string) (bool, error) {
 	q := `SELECT EXISTS(SELECT 1 FROM deliveryservice_request
 WHERE request->>'xml_id' = '` + XMLID + `'
-AND r.status IN ('draft', 'submitted', 'pending')`
-	r, err := db.Exec(q)
+AND status IN ('draft', 'submitted', 'pending'))`
+	row := db.QueryRow(q)
+	var active bool
+	err := row.Scan(&active)
 	if err != nil {
-		return false, err
+		log.Debugln("ERROR: ", err, ";  QUERY:", q)
 	}
-	rowsAffected, err := r.RowsAffected()
-	return rowsAffected > 0, nil
-}
-
-// countDeliveryServicesRequest returns query for number of existing
-func (req *TODeliveryServiceRequest) getDeliveryService() (tc.DeliveryService, error) {
-	var ds tc.DeliveryService
-	err := json.Unmarshal([]byte(req.Request), &ds)
-	return ds, err
-}
-
-func (req *TODeliveryServiceRequest) getXMLID() (string, error) {
-	var ds tc.DeliveryService
-	err := json.Unmarshal([]byte(req.Request), &ds)
-	if err != nil {
-		return "", err
-	}
-	return ds.XMLID, nil
+	return active, err
 }
 
 func updateRequestQuery() string {
