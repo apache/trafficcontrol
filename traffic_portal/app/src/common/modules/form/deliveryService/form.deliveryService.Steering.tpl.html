@@ -134,7 +134,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.protocol, 'required')">Required</small>
-                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.protocol != dsOriginal.protocol">Current Value: [ {{dsOriginal.protocol}} ]</small>
+                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.protocol != dsOriginal.protocol">Current Value: [ {{magicNumberLabel(protocols, dsOriginal.protocol)}} ]</small>
                 </div>
             </div>
 
@@ -200,7 +200,7 @@ under the License.
                             <option value="">Select...</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoProvider, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoProvider != dsOriginal.geoProvider">Current Value: [ {{dsOriginal.geoProvider}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoProvider != dsOriginal.geoProvider">Current Value: [ {{magicNumberLabel(geoProviders, dsOriginal.geoProvider)}} ]</small>
                     </div>
                 </div>
 
@@ -211,7 +211,7 @@ under the License.
                             <option value="">Select...</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimit, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoLimit != dsOriginal.geoLimit">Current Value: [ {{dsOriginal.geoLimit}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoLimit != dsOriginal.geoLimit">Current Value: [ {{magicNumberLabel(geoLimits, dsOriginal.geoLimit)}} ]</small>
                     </div>
                 </div>
 
