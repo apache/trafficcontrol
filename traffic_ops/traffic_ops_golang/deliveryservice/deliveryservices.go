@@ -27,7 +27,6 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	tcapi "github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 	"github.com/asaskevich/govalidator"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
@@ -40,13 +39,23 @@ import (
 )
 
 //we need a type alias to define functions on
-type TODeliveryService tcapi.DeliveryService
+type TODeliveryService tc.DeliveryService
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TODeliveryService(tcapi.DeliveryService{})
+var refType = TODeliveryService(tc.DeliveryService{})
 
 func GetRefType() *TODeliveryService {
 	return &refType
+}
+
+// Nullables are only used for the Create Update and Delete(s)
+type TODeliveryServiceNullable tc.DeliveryServiceNullable
+
+//the refType is passed into the handlers where a copy of its type is used to decode the json.
+var refTypeNullable = TODeliveryServiceNullable(tc.DeliveryServiceNullable{})
+
+func GetRefTypeNullable() *TODeliveryServiceNullable {
+	return &refTypeNullable
 }
 
 //Implementation of the Identifier, Validator interface functions
@@ -55,7 +64,7 @@ func (ds *TODeliveryService) GetID() int {
 }
 
 func (ds *TODeliveryService) GetAuditName() string {
-	xmlId := *ds.XMLID
+	xmlId := ds.XMLID
 	return xmlId
 }
 
@@ -67,7 +76,7 @@ func (ds *TODeliveryService) SetID(i int) {
 	ds.ID = i
 }
 
-func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
+func (ds *TODeliveryServiceNullable) Validate(db *sqlx.DB) []error {
 
 	noSpaces := validation.Match(regexp.MustCompile("^\\S*$"))
 	noSpaces.Error("cannot contain spaces")

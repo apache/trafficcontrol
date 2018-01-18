@@ -26,7 +26,6 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	tcapi "github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
@@ -68,19 +67,19 @@ func Handler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func getDeliveryServicesResponse(q url.Values, db *sqlx.DB) (*tcapi.DeliveryServicesResponse, error) {
+func getDeliveryServicesResponse(q url.Values, db *sqlx.DB) (*tc.DeliveryServicesResponse, error) {
 	dses, err := getDeliveryServices(q, db)
 	if err != nil {
 		return nil, fmt.Errorf("getting DeliveryServices response: %v", err)
 	}
 
-	resp := tcapi.DeliveryServicesResponse{
+	resp := tc.DeliveryServicesResponse{
 		Response: dses,
 	}
 	return &resp, nil
 }
 
-func getDeliveryServices(v url.Values, db *sqlx.DB) ([]tcapi.DeliveryService, error) {
+func getDeliveryServices(v url.Values, db *sqlx.DB) ([]tc.DeliveryService, error) {
 	var rows *sqlx.Rows
 	var err error
 
@@ -100,9 +99,9 @@ func getDeliveryServices(v url.Values, db *sqlx.DB) ([]tcapi.DeliveryService, er
 	}
 	defer rows.Close()
 
-	dses := []tcapi.DeliveryService{}
+	dses := []tc.DeliveryService{}
 	for rows.Next() {
-		var s tcapi.DeliveryService
+		var s tc.DeliveryService
 		if err = rows.StructScan(&s); err != nil {
 			return nil, fmt.Errorf("getting Delivery Services: %v", err)
 		}
