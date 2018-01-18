@@ -174,7 +174,7 @@ under the License.
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select name="geoProvider" class="form-control" ng-model="deliveryService.geoProvider" ng-options="gp.value as gp.label for gp in geoProviders" required></select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoProvider, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoProvider != dsOriginal.geoProvider">Current Value: [ {{dsOriginal.geoProvider}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoProvider != dsOriginal.geoProvider">Current Value: [ {{magicNumberLabel(geoProviders, dsOriginal.geoProvider)}} ]</small>
                     </div>
                 </div>
 
@@ -185,7 +185,7 @@ under the License.
                             <option value="">Select...</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimit, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoLimit != dsOriginal.geoLimit">Current Value: [ {{dsOriginal.geoLimit}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoLimit != dsOriginal.geoLimit">Current Value: [ {{magicNumberLabel(geoLimits, dsOriginal.geoLimit)}} ]</small>
                     </div>
                 </div>
 

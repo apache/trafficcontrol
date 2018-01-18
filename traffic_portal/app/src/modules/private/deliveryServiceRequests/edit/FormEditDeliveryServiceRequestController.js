@@ -53,6 +53,11 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 		return (dsRequest.status == 'draft' || dsRequest.status == 'submitted' || dsRequest.status == 'pending');
 	};
 
+	$scope.magicNumberLabel = function(collection, magicNumber) {
+		var item = _.findWhere(collection, { value: magicNumber });
+		return item.label;
+	};
+
 	$scope.editStatus = function() {
 		var params = {
 			title: "Edit Delivery Service Request Status",
