@@ -43,7 +43,7 @@
 					<verbose>true</verbose>
 					<failurePriority>5</failurePriority>
 					<rulesets>
-						<ruleset>${project.basedir}/build/pmd/ruleset.xml</ruleset>
+						<ruleset>file://${project.basedir}/build/pmd/ruleset.xml</ruleset>
 					</rulesets>
 				</configuration>
 			</plugin>
@@ -93,13 +93,13 @@
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-coyote</artifactId>
-			<version>8.5.15</version>
+			<version>8.5.24</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-catalina</artifactId>
-			<version>8.5.15</version>
+			<version>8.5.24</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>

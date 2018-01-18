@@ -27,12 +27,9 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
-import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.util.EntityUtils;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -221,11 +218,13 @@ public class RouterTest {
 		trustStore.load(keystoreStream, "changeit".toCharArray());
 		TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).init(trustStore);
 
+
 		httpClient = HttpClientBuilder.create()
 			.setSSLSocketFactory(new ClientSslSocketFactory("tr.https-only-test.thecdn.example.com"))
 			.setSSLHostnameVerifier(new TestHostnameVerifier())
 			.disableRedirectHandling()
 			.build();
+
 	}
 
 	@After
@@ -441,7 +440,8 @@ public class RouterTest {
 		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
 			int code = response.getStatusLine().getStatusCode();
 			assertThat("Expected to get an ssl handshake error! But got: "+code,
-					code, equalTo(503));
+					code, greaterThan(500));
+			//fail("Expected and SSLHandshakeException");
 		} catch (SSLHandshakeException e) {
 			// Expected, this means we're doing the right thing
 		}
@@ -476,7 +476,7 @@ public class RouterTest {
 			int code = response.getStatusLine().getStatusCode();
 			assertThat("Expected to get an ssl handshake error! But got: "+code,
 					code, greaterThan(500));
-			//fail("Expected and SSLHandshakeException");
+			//fail("Expected and SSLHandshakeException but got: "+code);
 		} catch (SSLHandshakeException e) {
 			// Expected, this means we're doing the right thing
 		}

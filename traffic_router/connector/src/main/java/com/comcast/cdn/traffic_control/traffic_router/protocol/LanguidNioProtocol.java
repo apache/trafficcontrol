@@ -80,7 +80,7 @@ public class LanguidNioProtocol extends AbstractHttp11JsseProtocol<NioChannel> i
 	@Override
 	@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 	public void start() throws Exception {
-		log.info("Start called; waiting for initialization to occur");
+		log.info("LanguidNioProtocol Handler Start called; waiting for initialization to occur");
 
 		while (!isInitialized()) {
 			try {
@@ -90,7 +90,7 @@ public class LanguidNioProtocol extends AbstractHttp11JsseProtocol<NioChannel> i
 			}
 		}
 
-		log.info("Initialization complete; calling super.start()");
+		log.info("LanguidNioProtocol Handler Initialization complete; calling super.start()");
 
 		super.start();
 	}
