@@ -1,4 +1,4 @@
-package v13
+package tc
 
 /*
 
@@ -14,19 +14,8 @@ package v13
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-import (
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-)
-
-// This struct supports /api/1.3
-
-// DeliveryServicesResponse ...
-type DeliveryServicesResponse struct {
-	Response []DeliveryService `json:"response"`
-}
-
-// DeliveryService ...
-type DeliveryService struct {
+// DeliveryServiceNullable - a version of the deliveryservice that allows for fields to be nullable for field level existence checks
+type DeliveryServiceNullable struct {
 	// NOTE: Fields that are pointers (with an asterisk '*') are required
 	// for existence checking
 	//
@@ -56,7 +45,7 @@ type DeliveryService struct {
 	InfoURL                  string                 `json:"infoUrl" db:"info_url"`
 	InitialDispersion        *int                   `json:"initialDispersion" db:"initial_dispersion"`
 	IPV6RoutingEnabled       bool                   `json:"ipv6RoutingEnabled" db:"ipv6_routing_enabled"`
-	LastUpdated              tc.Time                `json:"lastUpdated" db:"last_updated""`
+	LastUpdated              Time                   `json:"lastUpdated" db:"last_updated""`
 	LogsEnabled              *bool                  `json:"logsEnabled" db:"logs_enabled"`
 	LongDesc                 string                 `json:"longDesc" db:"long_desc"`
 	LongDesc1                string                 `json:"longDesc1" db:"long_desc_1"`
@@ -88,11 +77,4 @@ type DeliveryService struct {
 	TypeName                 string                 `json:"typeName"`
 	TypeID                   *int                   `json:"typeId" db:"type"`
 	XMLID                    *string                `json:"xmlId" db:"xml_id"`
-}
-
-// DeliveryServiceMatch ...
-type DeliveryServiceMatch struct {
-	Type      string `json:"type"`
-	SetNumber int    `json:"setNumber"`
-	Pattern   string `json:"pattern"`
 }
