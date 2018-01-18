@@ -146,7 +146,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.protocol, 'required')">Required</small>
-                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.protocol != dsOriginal.protocol">Current Value: [ {{dsOriginal.protocol}} ]</small>
+                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.protocol != dsOriginal.protocol">Current Value: [ {{magicNumberLabel(protocols, dsOriginal.protocol)}} ]</small>
                 </div>
             </div>
 
@@ -200,7 +200,7 @@ under the License.
                             <option value="">Select...</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.dscp, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.dscp != dsOriginal.dscp">Current Value: [ {{dsOriginal.dscp}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.dscp != dsOriginal.dscp">Current Value: [ {{magicNumberLabel(dscps, dsOriginal.dscp)}} ]</small>
                     </div>
                 </div>
 
@@ -222,7 +222,7 @@ under the License.
                             <option value="">Select...</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.rangeRequestHandling, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.rangeRequestHandling != dsOriginal.rangeRequestHandling">Current Value: [ {{dsOriginal.rangeRequestHandling}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.rangeRequestHandling != dsOriginal.rangeRequestHandling">Current Value: [ {{magicNumberLabel(rrhs, dsOriginal.rangeRequestHandling)}} ]</small>
                     </div>
                 </div>
 
@@ -233,7 +233,7 @@ under the License.
                             <option value="">Select...</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.qstringIgnore, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.qstringIgnore != dsOriginal.qstringIgnore">Current Value: [ {{dsOriginal.qstringIgnore}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.qstringIgnore != dsOriginal.qstringIgnore">Current Value: [ {{magicNumberLabel(qStrings, dsOriginal.qstringIgnore)}} ]</small>
                     </div>
                 </div>
 
@@ -266,7 +266,7 @@ under the License.
                             <option value="">Select...</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.initialDispersion, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.initialDispersion != dsOriginal.initialDispersion">Current Value: [ {{dsOriginal.initialDispersion}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.initialDispersion != dsOriginal.initialDispersion">Current Value: [ {{magicNumberLabel(dispersions, dsOriginal.initialDispersion)}} ]</small>
                     </div>
                 </div>
 
@@ -288,7 +288,7 @@ under the License.
                             <option value="">Select...</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoProvider, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoProvider != dsOriginal.geoProvider">Current Value: [ {{dsOriginal.geoProvider}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoProvider != dsOriginal.geoProvider">Current Value: [ {{magicNumberLabel(geoProviders, dsOriginal.geoProvider)}} ]</small>
                     </div>
                 </div>
 
@@ -319,7 +319,7 @@ under the License.
                             <option value="">Select...</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimit, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoLimit != dsOriginal.geoLimit">Current Value: [ {{dsOriginal.geoLimit}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoLimit != dsOriginal.geoLimit">Current Value: [ {{magicNumberLabel(geoLimits, dsOriginal.geoLimit)}} ]</small>
                     </div>
                 </div>
 
@@ -349,7 +349,7 @@ under the License.
                         <select name="signingAlgorithm" class="form-control" ng-model="deliveryService.signingAlgorithm" ng-options="sa.value as sa.label for sa in signingAlgos">
                             <option value="">Select...</option>
                         </select>
-                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.signingAlgorithm != dsOriginal.signingAlgorithm">Current Value: [ {{dsOriginal.signingAlgorithm}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.signingAlgorithm != dsOriginal.signingAlgorithm">Current Value: [ {{magicNumberLabel(signingAlgos, dsOriginal.signingAlgorithm)}} ]</small>
                     </div>
                 </div>
 
