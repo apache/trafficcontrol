@@ -20,12 +20,12 @@
 var FormEditDeliveryServiceController = function(deliveryService, type, types, $scope, $state, $controller, $uibModal, locationUtils, deliveryServiceService, deliveryServiceRequestService) {
 
 	// extends the FormDeliveryServiceController to inherit common methods
-	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, dsOriginal: deliveryService, type: type, types: types, $scope: $scope }));
+	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, dsCurrent: deliveryService, type: type, types: types, $scope: $scope }));
 
-	var createDeliveryServiceRequest = function(deliveryService) {
+	var createDeliveryServiceDeleteRequest = function(deliveryService) {
 		var params = {
 			title: "Delivery Service Delete Request",
-			message: 'All delivery service changes must be reviewed before completion.<br><br>Are you sure you want to submit a request to delete the ' + deliveryService.xmlId + ' delivery service?'
+			message: 'All delivery service deletions must be reviewed.<br><br>Are you sure you want to submit a request to delete the ' + deliveryService.xmlId + ' delivery service?'
 		};
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
@@ -100,7 +100,7 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 
 	$scope.confirmDelete = function(deliveryService) {
 		if ($scope.dsRequestsEnabled) {
-			createDeliveryServiceRequest(deliveryService);
+			createDeliveryServiceDeleteRequest(deliveryService);
 		} else {
 			var params = {
 				title: 'Delete Delivery Service: ' + deliveryService.displayName,
