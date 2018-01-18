@@ -22,7 +22,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 	var createDeliveryServiceDeleteRequest = function(deliveryService) {
 		var params = {
 			title: "Delivery Service Delete Request",
-			message: 'All delivery service changes must be reviewed before completion.<br><br>Are you sure you want to submit a request to delete the ' + deliveryService.xmlId + ' delivery service?'
+			message: 'All delivery service deletions must be reviewed.<br><br>Are you sure you want to submit a request to delete the ' + deliveryService.xmlId + ' delivery service?'
 		};
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
@@ -144,6 +144,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 				case $scope.SUBMITTED:
 					request.status = 'submitted';
 			}
+			// todo jeremy: this needs to call the api to update ds request status
 			deliveryServiceRequestService.updateDeliveryServiceRequest(request.id, request).
 				then(function() {
 					$scope.refresh();
@@ -375,7 +376,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 		var path = '/delivery-service-requests/' + request.id + '?type=';
 		typeService.getType(request.request.typeId)
 			.then(function(result) {
-				path += result.name + '&fulfill=true';
+				path += result.name;
 				locationUtils.navigateToPath(path);
 			});
 	};
