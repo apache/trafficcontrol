@@ -54,8 +54,10 @@ func (ds *TODeliveryService) GetID() int {
 }
 
 func (ds *TODeliveryService) GetAuditName() string {
-	xmlId := *ds.XMLID
-	return xmlId
+	if ds.XMLID != nil {
+		return *ds.XMLID
+	}
+	return ""
 }
 
 func (ds *TODeliveryService) GetType() string {
