@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"flag"
@@ -25,6 +26,8 @@ import (
 
 	"github.com/hashicorp/golang-lru"
 )
+
+const ShutdownTimeout = 60 * time.Second
 
 func main() {
 	runtime.GOMAXPROCS(32) // DEBUG
@@ -220,9 +223,19 @@ func main() {
 			handler := http.NewServeMux()
 			handler.Handle("/_astats", statHandler)
 			handler.Handle("/", httpHandlerPointer)
-			if err := httpServer.Close(); err != nil {
-				log.Errorf("closing http server: %v\n", err)
+
+			ctx, cancel := context.WithTimeout(context.Background(), ShutdownTimeout)
+			defer cancel()
+			if err := httpServer.Shutdown(ctx); err != nil {
+				if err == context.DeadlineExceeded {
+					log.Errorf("closing http server: connections didn't close gracefully in %v, forcefully closing.\n", ShutdownTimeout)
+					httpServer.Close()
+				} else {
+					log.Errorf("closing http server: %v\n", err)
+				}
+
 			}
+
 			httpServer = startServer(handler, httpListener, httpConnStateCallback, cfg.Port, idleTimeout, readTimeout, writeTimeout, "http")
 		}
 
@@ -231,11 +244,20 @@ func main() {
 			handler := http.NewServeMux()
 			handler.Handle("/_astats", statHandler)
 			handler.Handle("/", httpsHandlerPointer)
+
 			if httpsServer != nil {
-				if err := httpsServer.Close(); err != nil {
-					log.Errorf("closing https server: %v\n", err)
+				ctx, cancel := context.WithTimeout(context.Background(), ShutdownTimeout)
+				defer cancel()
+				if err := httpsServer.Shutdown(ctx); err != nil {
+					if err == context.DeadlineExceeded {
+						log.Errorf("closing https server: connections didn't close gracefully in %v, forcefully closing.\n", ShutdownTimeout)
+						httpServer.Close()
+					} else {
+						log.Errorf("closing https server: %v\n", err)
+					}
 				}
 			}
+
 			httpsServer = startServer(handler, httpsListener, httpsConnStateCallback, cfg.HTTPSPort, idleTimeout, readTimeout, writeTimeout, "https")
 		}
 	}
