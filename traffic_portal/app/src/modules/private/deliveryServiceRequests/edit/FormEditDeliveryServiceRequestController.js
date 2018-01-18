@@ -49,7 +49,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 		return (dsRequest.status == 'draft' || dsRequest.status == 'submitted');
 	};
 
-	$scope.statusEditable = function() {
+	$scope.open = function() {
 		return (dsRequest.status == 'draft' || dsRequest.status == 'submitted' || dsRequest.status == 'pending');
 	};
 

@@ -48,8 +48,8 @@ under the License.
                 <td data-search="^{{::request.request.xmlId}}$">{{::request.request.xmlId}}</td>
                 <td data-search="^{{::request.changeType}}$">{{::request.changeType}}</td>
                 <td data-search="^{{::request.status}}$">
-                    <span ng-if="!statusEditable(request)">{{::request.status}}</span>
-                    <a ng-if="statusEditable(request)" class="link" title="Change Status" ng-click="editStatus(request, $event)">{{::request.status}}</a>
+                    <span ng-if="!open(request)">{{::request.status}}</span>
+                    <a ng-if="open(request)" class="link" title="Change Status" ng-click="editStatus(request, $event)">{{::request.status}}</a>
                 </td>
                 <td data-search="^{{::request.author}}$">{{::request.author}}</td>
                 <td data-search="^{{::request.assignee}}$">
