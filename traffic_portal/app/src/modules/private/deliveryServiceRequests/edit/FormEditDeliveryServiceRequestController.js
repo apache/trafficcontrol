@@ -22,15 +22,13 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 	var dsRequest = deliveryServiceRequest[0];
 		
 	// extends the FormDeliveryServiceController to inherit common methods
-	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: dsRequest.request, dsOriginal: deliveryService, type: type, types: types, $scope: $scope }));
+	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: dsRequest.request, dsCurrent: deliveryService, type: type, types: types, $scope: $scope }));
 
 	$scope.changeType = dsRequest.changeType;
 
 	$scope.requestStatus = dsRequest.status;
 
 	$scope.deliveryServiceName = angular.copy(dsRequest.request.xmlId);
-
-	$scope.fulfill = $stateParams.fulfill;
 
 	$scope.advancedShowing = true;
 
@@ -47,6 +45,10 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 
 	$scope.deletable = function() {
 		return (dsRequest.status == 'draft' || dsRequest.status == 'submitted');
+	};
+
+	$scope.fulfillable = function() {
+		return dsRequest.status == 'submitted';
 	};
 
 	$scope.open = function() {
@@ -99,6 +101,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 					}
 					dsRequest.status = 'complete';
 			}
+			// todo jeremy: this needs to call the api to update ds request status
 			deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest).
 				then(function() {
 					$state.reload();
@@ -109,12 +112,6 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 	};
 
 	$scope.fulfillRequest = function(ds) {
-		if (dsRequest.status != 'submitted') {
-			var msg = "Only 'submitted' delivery service requests can be fulfilled. This request is in '" + dsRequest.status + "' status.";
-			messageModel.setMessages([ { level: 'error', text: msg } ], false);
-			$anchorScroll(); // scrolls window to top
-			return;
-		}
 		var promises = [];
 		var params = {
 			title: 'Delivery Service ' + $scope.changeType + ': ' + ds.xmlId,
@@ -135,6 +132,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			// make sure the ds request is assigned to the user that is fulfilling the request
 			dsRequest.assigneeId = userModel.user.id;
 			// set the status to 'pending'
+			// todo jeremy: this needs to call the api to update ds request status
 			dsRequest.status = 'pending';
 			// update the ds request
 			promises.push(deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest));
