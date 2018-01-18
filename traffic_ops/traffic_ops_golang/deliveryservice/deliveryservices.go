@@ -39,23 +39,13 @@ import (
 )
 
 //we need a type alias to define functions on
-type TODeliveryService tc.DeliveryService
+type TODeliveryService tc.DeliveryServiceNullable
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TODeliveryService(tc.DeliveryService{})
+var refType = TODeliveryService(tc.DeliveryServiceNullable{})
 
 func GetRefType() *TODeliveryService {
 	return &refType
-}
-
-// Nullables are only used for the Create Update and Delete(s)
-type TODeliveryServiceNullable tc.DeliveryServiceNullable
-
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refTypeNullable = TODeliveryServiceNullable(tc.DeliveryServiceNullable{})
-
-func GetRefTypeNullable() *TODeliveryServiceNullable {
-	return &refTypeNullable
 }
 
 //Implementation of the Identifier, Validator interface functions
@@ -64,7 +54,7 @@ func (ds *TODeliveryService) GetID() int {
 }
 
 func (ds *TODeliveryService) GetAuditName() string {
-	xmlId := ds.XMLID
+	xmlId := *ds.XMLID
 	return xmlId
 }
 
@@ -76,7 +66,7 @@ func (ds *TODeliveryService) SetID(i int) {
 	ds.ID = i
 }
 
-func (ds *TODeliveryServiceNullable) Validate(db *sqlx.DB) []error {
+func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 
 	noSpaces := validation.Match(regexp.MustCompile("^\\S*$"))
 	noSpaces.Error("cannot contain spaces")
