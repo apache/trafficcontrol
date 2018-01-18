@@ -75,7 +75,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 		return request.status == 'pending';
 	};
 
-	$scope.statusEditable = function(request) {
+	$scope.open = function(request) {
 		return (request.status == 'draft' || request.status == 'submitted');
 	};
 
