@@ -26,7 +26,7 @@ under the License.
             <li class="active">{{deliveryServiceName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-if="settings.isRequest">
-            <button class="btn btn-link request-status" title="Edit Status" ng-disabled="!statusEditable()" ng-click="editStatus()">[ {{::requestStatus}} ]</button>
+            <button class="btn btn-link request-status" title="Edit Status" ng-disabled="!open()" ng-click="editStatus()">[ {{::requestStatus}} ]</button>
         </div>
         <div class="pull-right" role="group" ng-if="!settings.isRequest && !settings.isNew">
             <div class="btn-group" role="group" uib-dropdown is-open="keys.isopen">
@@ -67,7 +67,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.active, 'required')">Required</small>
-                    <small class="input-diff" ng-show="settings.isRequest && deliveryService.active != dsOriginal.active">Current Value: [ {{dsOriginal.active}} ]</small>
+                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.active != dsOriginal.active">Current Value: [ {{dsOriginal.active}} ]</small>
                 </div>
             </div>
 
@@ -78,7 +78,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.type, 'required')">Required</small>
-                    <small class="input-diff" ng-show="settings.isRequest && deliveryService.typeId != dsOriginal.typeId">Current Value: [ {{dsOriginal.type}} ]</small>
+                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.typeId != dsOriginal.typeId">Current Value: [ {{dsOriginal.type}} ]</small>
                 </div>
             </div>
 
@@ -89,7 +89,7 @@ under the License.
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.xmlId, 'pattern')">No spaces</small>
-                    <small class="input-diff" ng-show="settings.isRequest && deliveryService.xmlId != dsOriginal.xmlId">Current Value: [ {{dsOriginal.xmlId}} ]</small>
+                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.xmlId != dsOriginal.xmlId">Current Value: [ {{dsOriginal.xmlId}} ]</small>
                     <span ng-show="hasError(deliveryServiceForm.xmlId)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
@@ -100,7 +100,7 @@ under the License.
                     <input name="displayName" type="text" class="form-control" ng-model="deliveryService.displayName" ng-maxlength="48" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.displayName, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.displayName, 'maxlength')">Too Long</small>
-                    <small class="input-diff" ng-show="settings.isRequest && deliveryService.displayName != dsOriginal.displayName">Current Value: [ {{dsOriginal.displayName}} ]</small>
+                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.displayName != dsOriginal.displayName">Current Value: [ {{dsOriginal.displayName}} ]</small>
                     <span ng-show="hasError(deliveryServiceForm.displayName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
@@ -112,7 +112,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.tenantId, 'required')">Required</small>
-                    <small class="input-diff" ng-show="settings.isRequest && deliveryService.tenantId != dsOriginal.tenantId">Current Value: [ {{dsOriginal.tenant}} ]</small>
+                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.tenantId != dsOriginal.tenantId">Current Value: [ {{dsOriginal.tenant}} ]</small>
                 </div>
             </div>
 
@@ -123,7 +123,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.cdn, 'required')">Required</small>
-                    <small class="input-diff" ng-show="settings.isRequest && deliveryService.cdnId != dsOriginal.cdnId">Current Value: [ {{dsOriginal.cdnName}} ]</small>
+                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.cdnId != dsOriginal.cdnId">Current Value: [ {{dsOriginal.cdnName}} ]</small>
                 </div>
             </div>
 
@@ -134,7 +134,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.protocol, 'required')">Required</small>
-                    <small class="input-diff" ng-show="settings.isRequest && deliveryService.protocol != dsOriginal.protocol">Current Value: [ {{dsOriginal.protocol}} ]</small>
+                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.protocol != dsOriginal.protocol">Current Value: [ {{dsOriginal.protocol}} ]</small>
                 </div>
             </div>
 
@@ -144,7 +144,7 @@ under the License.
                     <input name="longDesc" type="text" class="form-control" ng-model="deliveryService.longDesc" ng-maxlength="1024" autofocus required>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.longDesc, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.longDesc, 'maxlength')">Too Long</small>
-                    <small class="input-diff" ng-show="settings.isRequest && deliveryService.longDesc != dsOriginal.longDesc">Current Value: [ {{dsOriginal.longDesc}} ]</small>
+                    <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.longDesc != dsOriginal.longDesc">Current Value: [ {{dsOriginal.longDesc}} ]</small>
                     <span ng-show="hasError(deliveryServiceForm.longDesc)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
@@ -166,7 +166,7 @@ under the License.
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.routingName, 'required')">Required</small>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.routingName, 'maxlength')">Too Long</small>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.routingName, 'pattern')">Invalid. Must be a valid hostname without periods</small>
-                        <small class="input-diff" ng-show="settings.isRequest && deliveryService.routingName != dsOriginal.routingName">Current Value: [ {{dsOriginal.routingName}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.routingName != dsOriginal.routingName">Current Value: [ {{dsOriginal.routingName}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.routingName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
@@ -178,7 +178,7 @@ under the License.
                             <option value="">Select...</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.ipv6RoutingEnabled, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && deliveryService.ipv6RoutingEnabled != dsOriginal.ipv6RoutingEnabled">Current Value: [ {{dsOriginal.ipv6RoutingEnabled}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.ipv6RoutingEnabled != dsOriginal.ipv6RoutingEnabled">Current Value: [ {{dsOriginal.ipv6RoutingEnabled}} ]</small>
                     </div>
                 </div>
 
@@ -189,7 +189,7 @@ under the License.
                             <option value="">Select...</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.logsEnabled, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && deliveryService.logsEnabled != dsOriginal.logsEnabled">Current Value: [ {{dsOriginal.logsEnabled}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.logsEnabled != dsOriginal.logsEnabled">Current Value: [ {{dsOriginal.logsEnabled}} ]</small>
                     </div>
                 </div>
 
@@ -200,7 +200,7 @@ under the License.
                             <option value="">Select...</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoProvider, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && deliveryService.geoProvider != dsOriginal.geoProvider">Current Value: [ {{dsOriginal.geoProvider}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoProvider != dsOriginal.geoProvider">Current Value: [ {{dsOriginal.geoProvider}} ]</small>
                     </div>
                 </div>
 
@@ -211,7 +211,7 @@ under the License.
                             <option value="">Select...</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimit, 'required')">Required</small>
-                        <small class="input-diff" ng-show="settings.isRequest && deliveryService.geoLimit != dsOriginal.geoLimit">Current Value: [ {{dsOriginal.geoLimit}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoLimit != dsOriginal.geoLimit">Current Value: [ {{dsOriginal.geoLimit}} ]</small>
                     </div>
                 </div>
 
@@ -220,7 +220,7 @@ under the License.
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="geoLimitCountries" type="text" class="form-control" ng-model="deliveryService.geoLimitCountries" ng-maxlength="255" autofocus>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.geoLimitCountries, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-show="settings.isRequest && deliveryService.geoLimitCountries != dsOriginal.geoLimitCountries">Current Value: [ {{dsOriginal.geoLimitCountries}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.geoLimitCountries != dsOriginal.geoLimitCountries">Current Value: [ {{dsOriginal.geoLimitCountries}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.geoLimitCountries)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
@@ -231,7 +231,7 @@ under the License.
                         <select name="profile" class="form-control" ng-model="deliveryService.profileId" ng-options="profile.id as profile.name for profile in profiles">
                             <option value="">Select...</option>
                         </select>
-                        <small class="input-diff" ng-show="settings.isRequest && deliveryService.profileId != dsOriginal.profileId">Current Value: [ {{dsOriginal.profileName}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.profileId != dsOriginal.profileId">Current Value: [ {{dsOriginal.profileName}} ]</small>
                     </div>
                 </div>
 
@@ -240,7 +240,7 @@ under the License.
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="ccrDnsTtl" type="number" class="form-control" ng-model="deliveryService.ccrDnsTtl" ng-pattern="/^\d+$/" autofocus>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.ccrDnsTtl, 'pattern')">Whole Number</small>
-                        <small class="input-diff" ng-show="settings.isRequest && deliveryService.ccrDnsTtl != dsOriginal.ccrDnsTtl">Current Value: [ {{dsOriginal.ccrDnsTtl}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.ccrDnsTtl != dsOriginal.ccrDnsTtl">Current Value: [ {{dsOriginal.ccrDnsTtl}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.ccrDnsTtl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
@@ -250,7 +250,7 @@ under the License.
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="longDesc1" type="text" class="form-control" ng-model="deliveryService.longDesc1" ng-maxlength="1024" autofocus>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.longDesc1, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-show="settings.isRequest && deliveryService.longDesc1 != dsOriginal.longDesc1">Current Value: [ {{dsOriginal.longDesc1}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.longDesc1 != dsOriginal.longDesc1">Current Value: [ {{dsOriginal.longDesc1}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.longDesc1)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
@@ -260,7 +260,7 @@ under the License.
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="longDesc2" type="text" class="form-control" ng-model="deliveryService.longDesc2" ng-maxlength="1024" autofocus>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.longDesc2, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-show="settings.isRequest && deliveryService.longDesc2 != dsOriginal.longDesc2">Current Value: [ {{dsOriginal.longDesc2}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.longDesc2 != dsOriginal.longDesc2">Current Value: [ {{dsOriginal.longDesc2}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.longDesc2)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
@@ -270,7 +270,7 @@ under the License.
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="infoUrl" type="text" class="form-control" ng-model="deliveryService.infoUrl" ng-maxlength="255" autofocus>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.infoUrl, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-show="settings.isRequest && deliveryService.infoUrl != dsOriginal.infoUrl">Current Value: [ {{dsOriginal.infoUrl}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.infoUrl != dsOriginal.infoUrl">Current Value: [ {{dsOriginal.infoUrl}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.infoUrl)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
@@ -280,7 +280,7 @@ under the License.
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="checkPath" type="text" class="form-control" ng-model="deliveryService.checkPath" ng-maxlength="255" autofocus>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.checkPath, 'maxlength')">Too Long</small>
-                        <small class="input-diff" ng-show="settings.isRequest && deliveryService.checkPath != dsOriginal.checkPath">Current Value: [ {{dsOriginal.checkPath}} ]</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.checkPath != dsOriginal.checkPath">Current Value: [ {{dsOriginal.checkPath}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.checkPath)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
                 </div>
