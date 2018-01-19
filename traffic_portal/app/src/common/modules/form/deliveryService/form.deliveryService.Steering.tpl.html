@@ -40,6 +40,8 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-click="clone(deliveryService)">Clone Delivery Service</a></li>
+                    <li class="divider"></li>
                     <li role="menuitem"><a ng-click="viewTargets()">View Targets</a></li>
                     <li role="menuitem"><a ng-click="viewRegexes()">View Regexes</a></li>
                     <li role="menuitem"><a ng-click="viewJobs()">View Invalidate Content Jobs</a></li>
@@ -134,7 +136,7 @@ under the License.
                 </div>
             </div>
 
-            <div class="form-group" ng-if="deliveryService.exampleURLs.length > 0">
+            <div class="form-group" ng-if="!settings.isNew && deliveryService.exampleURLs.length > 0">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Delivery Service URLs</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <textarea name="edgeFQDNs" rows="4" cols="17" class="form-control readonly" readonly>{{edgeFQDNs(deliveryService)}}</textarea>
