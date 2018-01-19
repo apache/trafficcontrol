@@ -297,14 +297,9 @@ type RemapRuleTo struct {
 	RetryCodes map[int]struct{}
 }
 
-type Hdr struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
 type ModHdrs struct {
-	Set  []Hdr    `json:"set"`
-	Drop []string `json:"drop"`
+	Set  []web.Hdr `json:"set"`
+	Drop []string  `json:"drop"`
 }
 type RemapRuleBase struct {
 	Name               string          `json:"name"`

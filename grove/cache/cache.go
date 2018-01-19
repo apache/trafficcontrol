@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -9,22 +8,15 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	"strings"
 	"sync/atomic"
 	"time"
 	"unsafe"
 
 	"github.com/apache/incubator-trafficcontrol/grove/cacheobj"
 	"github.com/apache/incubator-trafficcontrol/grove/thread"
-	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-
-	"golang.org/x/net/ipv4"
-	"golang.org/x/net/ipv6"
 )
-
-// TODO add logging
 
 type Cache interface {
 	AddSize(key string, value interface{}, size uint64) bool
@@ -203,54 +195,10 @@ func NewHandlerFunc(
 	}
 }
 
-func setDSCP(conn *web.InterceptConn, dscp int) error {
-	if dscp == 0 {
-		return nil
-	}
-	if conn == nil {
-		return errors.New("Conn is nil")
-	}
-	realConn := conn.Real()
-	if realConn == nil {
-		return errors.New("real Conn is nil")
-	}
-	ipv4Err := ipv4.NewConn(realConn).SetTOS(dscp)
-	ipv6Err := ipv6.NewConn(realConn).SetTrafficClass(dscp)
-	if ipv4Err != nil || ipv6Err != nil {
-		errStr := ""
-		if ipv4Err != nil {
-			errStr = "setting IPv4 TOS: " + ipv4Err.Error()
-		}
-		if ipv6Err != nil {
-			if ipv4Err != nil {
-				errStr += "; "
-			}
-			errStr += "setting IPv6 TrafficClass: " + ipv6Err.Error()
-		}
-		return errors.New(errStr)
-	}
-	return nil
-}
-
-// modHdrs drops and sets headers in h according to the input drop and set lists
-func modHdrs(h *http.Header, drop []string, set []Hdr) {
-	if h == nil || len(*h) == 0 { // this happens on a dial tcp timeout
-		log.Debugf("modHdrs: Header is  a nil map")
-		return
-	}
-	for _, hdr := range drop {
-		log.Debugf("modHdrs: Dropping header %s\n", hdr)
-		h.Del(hdr)
-	}
-	for _, hdr := range set {
-		log.Debugf("modHdrs: Setting header %s: %s \n", hdr.Name, hdr.Value)
-		h.Set(hdr.Name, hdr.Value)
-	}
-}
-
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.stats.IncConnections()
 	defer h.stats.DecConnections()
+	reqTime := time.Now()
 
 	conn := (*web.InterceptConn)(nil)
 	if realConn, ok := h.conns.Pop(r.RemoteAddr); !ok {
@@ -264,15 +212,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	remappingProducer, err := h.remapper.RemappingProducer(r, h.scheme)
 
 	if err == nil { // if we failed to get a remapping, there's no DSCP to set.
-		if err := setDSCP(conn, remappingProducer.DSCP()); err != nil {
+		if err := conn.SetDSCP(remappingProducer.DSCP()); err != nil {
 			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": could not set DSCP: " + err.Error())
 		}
 	}
 
-	reqTime := time.Now()
 	reqHeader := web.CopyHeader(r.Header) // copy request header, because it's not guaranteed valid after actually issuing the request
 	moneyTraceHdr := reqHeader.Get("X-Money-Trace")
-	clientIP, _ := GetClientIPPort(r)
+	clientIP, _ := web.GetClientIPPort(r)
 	statLog := NewStatLogger(w, conn, h, r, moneyTraceHdr, clientIP, reqTime, remappingProducer)
 
 	if err != nil {
@@ -289,7 +236,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		bytesWritten := uint64(0)
 		code, bytesWritten, err = serveErr(w, code)
-		tryFlush(w)
+		web.TryFlush(w)
 		statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), true, 0, 0, "-")
 		return
 	}
@@ -304,7 +251,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if !ok {
 		log.Debugf("cache.Handler.ServeHTTP: '%v' not in cache\n", cacheKey)
-		modHdrs(&r.Header, remappingProducer.rule.ToOriginHeaders.Drop, remappingProducer.rule.ToOriginHeaders.Set)
+		web.ModHdrs(&r.Header, remappingProducer.rule.ToOriginHeaders.Drop, remappingProducer.rule.ToOriginHeaders.Set)
 		cacheObj, err := retrier.Get(r, nil)
 		if err != nil {
 			log.Errorf("retrying get error (in uncached): %v\n", err)
@@ -313,16 +260,16 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 			}
-			tryFlush(w)
+			web.TryFlush(w)
 			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), true, 0, 0, cacheObj.ProxyURL)
 			return
 		}
-		modHdrs(&cacheObj.RespHeaders, remappingProducer.rule.ToClientHeaders.Drop, remappingProducer.rule.ToClientHeaders.Set)
+		web.ModHdrs(&cacheObj.RespHeaders, remappingProducer.rule.ToClientHeaders.Drop, remappingProducer.rule.ToClientHeaders.Set)
 		bytesWritten, err := h.respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
 		if err != nil {
 			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 		}
-		tryFlush(w)
+		web.TryFlush(w)
 		statLog.Log(cacheObj.Code, bytesWritten, true, err == nil, isCacheHit(ReuseCannot, cacheObj.OriginCode), false, 0, 0, cacheObj.ProxyURL)
 		return
 	}
@@ -335,7 +282,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Errorf("retrying get error (in unexpected cacheobj): %v\n", err)
 			code, bytesWritten, err := serveReqErr(w)
-			tryFlush(w)
+			web.TryFlush(w)
 			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), false, 0, 0, "-")
 			return
 		}
@@ -343,7 +290,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 		}
-		tryFlush(w)
+		web.TryFlush(w)
 		statLog.Log(cacheObj.Code, bytesWritten, err == nil, true, isCacheHit(ReuseCannot, cacheObj.OriginCode), false, cacheObj.OriginCode, cacheObj.Size, cacheObj.ProxyURL)
 		return
 	}
@@ -363,7 +310,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 			}
-			tryFlush(w)
+			web.TryFlush(w)
 			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, 0), false, 0, 0, "-")
 			return
 		}
@@ -377,7 +324,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 			}
-			tryFlush(w)
+			web.TryFlush(w)
 			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(ReuseCannot, code), false, 0, 0, "-")
 			return
 		}
@@ -393,33 +340,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	log.Debugf("cache.Handler.ServeHTTP: '%v' responding with %v\n", cacheKey, cacheObj.Code)
-	modHdrs(&cacheObj.RespHeaders, remappingProducer.rule.ToClientHeaders.Drop, remappingProducer.rule.ToClientHeaders.Set)
+	web.ModHdrs(&cacheObj.RespHeaders, remappingProducer.rule.ToClientHeaders.Drop, remappingProducer.rule.ToClientHeaders.Set)
 	bytesSent, err := h.respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
 	if err != nil {
 		log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
 	}
-	tryFlush(w)
+	web.TryFlush(w)
 	statLog.Log(cacheObj.Code, bytesSent, err == nil, true, isCacheHit(canReuseStored, cacheObj.OriginCode), false, cacheObj.OriginCode, cacheObj.Size, cacheObj.ProxyURL)
-}
-
-func tryFlush(w http.ResponseWriter) {
-	if f, ok := w.(http.Flusher); ok {
-		f.Flush()
-	}
-}
-
-// GetClientIPPort returns the client IP address of the given request, and the port. It returns the first x-forwarded-for IP if any, else the RemoteAddr
-func GetClientIPPort(r *http.Request) (string, string) {
-	xForwardedFor := r.Header.Get("X-FORWARDED-FOR")
-	ips := strings.Split(xForwardedFor, ",")
-	ip, port, err := net.SplitHostPort(r.RemoteAddr)
-	if len(ips) < 1 || ips[0] == "" {
-		if err != nil {
-			return r.RemoteAddr, port // TODO log?
-		}
-		return ip, port
-	}
-	return strings.TrimSpace(ips[0]), port
 }
 
 func atsEventLogStr(
@@ -477,16 +404,6 @@ func isCacheHit(reuse Reuse, originCode int) bool {
 	return reuse == ReuseCan || ((reuse == ReuseMustRevalidate || reuse == ReuseMustRevalidateCanStale) && (originCode > 299 && originCode < 400))
 }
 
-// serveRuleNotFound writes the appropriate response to the client, via given writer, for when no remap rule was found for a request.
-func serveRuleNotFound(w http.ResponseWriter) (int, uint64, error) {
-	return serveErr(w, http.StatusNotFound)
-}
-
-// serveNotAllowed writes the appropriate response to the client, via given writer, for when the client's IP is not allowed for the requested rule.
-func serveNotAllowed(w http.ResponseWriter) (int, uint64, error) {
-	return serveErr(w, http.StatusForbidden)
-}
-
 // serveReqErr writes the appropriate response to the client, via given writer, for a generic request error. Returns the code sent, the body bytes written, and any write error.
 func serveReqErr(w http.ResponseWriter) (int, uint64, error) {
 	return serveErr(w, http.StatusBadRequest)
@@ -536,54 +453,4 @@ func (h *Handler) respond(w http.ResponseWriter, code int, header http.Header, b
 
 	// bytesWritten = int(WriteStats(stats, w, conn, reqFQDN, remoteAddr, code, uint64(bytesWritten))) // TODO write err to stats?
 	return uint64(bytesWritten), err
-}
-
-// WriteStats writes to the remapRuleStats, and returns the bytes written to the connection
-func WriteStats(stats Stats, w http.ResponseWriter, conn *web.InterceptConn, reqFQDN string, remoteAddr string, code int, bytesWritten uint64, cacheHit bool) uint64 {
-	remapRuleStats, ok := stats.Remap().Stats(reqFQDN)
-	if !ok {
-		log.Errorf("Remap rule %v not in Stats\n", reqFQDN)
-		return bytesWritten
-	}
-
-	if wFlusher, ok := w.(http.Flusher); !ok {
-		log.Errorf("ResponseWriter is not a Flusher, could not flush written bytes, stat out_bytes will be inaccurate!\n")
-	} else {
-		wFlusher.Flush()
-	}
-
-	bytesRead := 0 // TODO get somehow? Count body? Sum header?
-	if conn != nil {
-		bytesRead = conn.BytesRead()
-		bytesWritten = uint64(conn.BytesWritten()) // get the more accurate interceptConn bytes written, if we can
-		// Don't log - the Handler has already logged the failure to get the conn
-	}
-
-	// bytesRead, bytesWritten := getConnInfoAndDestroyWriter(w, stats, remapRuleName)
-	remapRuleStats.AddInBytes(uint64(bytesRead))
-	remapRuleStats.AddOutBytes(uint64(bytesWritten))
-
-	if cacheHit {
-		stats.AddCacheHit()
-		remapRuleStats.AddCacheHit()
-	} else {
-		stats.AddCacheMiss()
-		remapRuleStats.AddCacheMiss()
-	}
-
-	switch {
-	case code < 200:
-		log.Errorf("responded with invalid code %v\n", code)
-	case code < 300:
-		remapRuleStats.AddStatus2xx(1)
-	case code < 400:
-		remapRuleStats.AddStatus3xx(1)
-	case code < 500:
-		remapRuleStats.AddStatus4xx(1)
-	case code < 600:
-		remapRuleStats.AddStatus5xx(1)
-	default:
-		log.Errorf("responded with invalid code %v\n", code)
-	}
-	return bytesWritten
 }
