@@ -68,7 +68,7 @@ func getCDNIDByDomainname(domainName string, db *sqlx.DB) (sql.NullInt64, error)
 }
 
 // returns a delivery service xmlId for a cdn by host regex.
-func getXmlIDByCDNAndRegex(cdnID sql.NullInt64, hostRegex string, db *sqlx.DB) (sql.NullString, error) {
+func getXMLID(cdnID sql.NullInt64, hostRegex string, db *sqlx.DB) (sql.NullString, error) {
 	dsQuery := `
 			SELECT ds.xml_id from deliveryservice ds
 			INNER JOIN deliveryservice_regex dr 
@@ -95,7 +95,7 @@ func getXmlIDByCDNAndRegex(cdnID sql.NullInt64, hostRegex string, db *sqlx.DB) (
 	return xmlID, nil
 }
 
-func getDeliveryServiceSSLKeysByXmlID(xmlID string, version string, db *sqlx.DB, cfg Config) ([]byte, error) {
+func getDeliveryServiceSSLKeysByXMLID(xmlID string, version string, db *sqlx.DB, cfg Config) ([]byte, error) {
 	var respBytes []byte
 	// create and start a cluster
 	cluster, err := getRiakCluster(db, cfg)
@@ -265,7 +265,7 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc 
 		}
 
 		// check user tenancy access to this resource.
-		hasAccess, err, httpStatus := tenant.UserHasDeliveryServiceTenantAccess(*user, keysObj.DeliveryService, db)
+		hasAccess, err, httpStatus := tenant.HasDeliveryServiceTenant(*user, keysObj.DeliveryService, db)
 		if !hasAccess {
 			handleErr(httpStatus, err)
 			return
@@ -383,7 +383,7 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg Config) http.Ha
 			}
 		} else {
 			// now lookup the deliveryservice xmlID
-			xmlIDStr, err := getXmlIDByCDNAndRegex(cdnID, hostRegex, db)
+			xmlIDStr, err := getXMLID(cdnID, hostRegex, db)
 			if err != nil {
 				handleErr(http.StatusInternalServerError, err)
 				return
@@ -402,12 +402,12 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg Config) http.Ha
 			} else {
 				xmlID := xmlIDStr.String
 				// check user tenancy access to this resource.
-				hasAccess, err, httpStatus := tenant.UserHasDeliveryServiceTenantAccess(*user, xmlID, db)
+				hasAccess, err, httpStatus := tenant.HasDeliveryServiceTenant(*user, xmlID, db)
 				if !hasAccess {
 					handleErr(httpStatus, err)
 					return
 				}
-				respBytes, err = getDeliveryServiceSSLKeysByXmlID(xmlID, version, db, cfg)
+				respBytes, err = getDeliveryServiceSSLKeysByXMLID(xmlID, version, db, cfg)
 				if err != nil {
 					handleErr(http.StatusInternalServerError, err)
 					return
@@ -420,7 +420,7 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg Config) http.Ha
 }
 
 // fetch the deliveryservice ssl keys by the specified xmlID.
-func getDeliveryServiceSSLKeysByXmlIDHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
+func getDeliveryServiceSSLKeysByXMLIDHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorsFunc(w, r)
 		var respBytes []byte
@@ -447,13 +447,13 @@ func getDeliveryServiceSSLKeysByXmlIDHandler(db *sqlx.DB, cfg Config) http.Handl
 		xmlID := pathParams["xmlID"]
 
 		// check user tenancy access to this resource.
-		hasAccess, err, httpStatus := tenant.UserHasDeliveryServiceTenantAccess(*user, xmlID, db)
+		hasAccess, err, httpStatus := tenant.HasDeliveryServiceTenant(*user, xmlID, db)
 		if !hasAccess {
 			handleErr(httpStatus, err)
 			return
 		}
 
-		respBytes, err = getDeliveryServiceSSLKeysByXmlID(xmlID, version, db, cfg)
+		respBytes, err = getDeliveryServiceSSLKeysByXMLID(xmlID, version, db, cfg)
 		if err != nil {
 			handleErr(http.StatusInternalServerError, err)
 			return

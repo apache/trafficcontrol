@@ -67,13 +67,13 @@ func GetDeliveryServiceTenantInfo(xmlId string, db *sqlx.DB) (*DeliveryServiceTe
 }
 
 // tenancy check wrapper for deliveryservice
-func UserHasDeliveryServiceTenantAccess(user auth.CurrentUser, dsXmlID string, db *sqlx.DB) (bool, error, int) {
-	dsInfo, err := GetDeliveryServiceTenantInfo(dsXmlID, db)
+func HasDeliveryServiceTenant(user auth.CurrentUser, XMLID string, db *sqlx.DB) (bool, error, int) {
+	dsInfo, err := GetDeliveryServiceTenantInfo(XMLID, db)
 	if err != nil {
 		if dsInfo == nil {
 			return false, fmt.Errorf("deliveryservice lookup failure: %v", err), http.StatusInternalServerError
 		} else {
-			return false, fmt.Errorf("no such deliveryservice: '%s'", dsXmlID), http.StatusBadRequest
+			return false, fmt.Errorf("no such deliveryservice: '%s'", XMLID), http.StatusBadRequest
 		}
 	}
 	hasAccess, err := dsInfo.IsTenantAuthorized(user, db)
