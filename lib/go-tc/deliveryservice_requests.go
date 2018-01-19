@@ -19,14 +19,9 @@ import (
 	"encoding/json"
 )
 
-// DeliveryServiceRequestResponse ...
-type DeliveryServiceRequestsResponse struct {
-	Response []DeliveryServiceRequest `json:"response"`
-}
-
-// DeliveryServiceRequest is used as part of the workflow to create, modify, or
-// delete a delivery service.
-type DeliveryServiceRequest struct {
+// DeliveryServiceRequestNullable is used as part of the workflow to create,
+// modify, or delete a delivery service.
+type DeliveryServiceRequestNullable struct {
 	AssigneeID  *int            `json:"assigneeId,omitempty" db:"assignee_id"`
 	Assignee    *string         `json:"assignee,omitempty"`
 	AuthorID    int             `json:"authorId" db:"author_id"`
