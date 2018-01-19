@@ -2,10 +2,15 @@ package web
 
 import (
 	"crypto/tls"
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"errors"
 	"net"
 	"net/http"
 	"time"
+
+	"golang.org/x/net/ipv4"
+	"golang.org/x/net/ipv6"
+
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
 type InterceptListener struct {
@@ -125,4 +130,34 @@ func (c *InterceptConn) SetWriteDeadline(t time.Time) error {
 
 func (c *InterceptConn) Real() net.Conn {
 	return c.realConn
+}
+
+// SetDSCP attempts to set the DSCP flag on the TCP connection of the InterceptConn (TOS in IPv4, Traffic Class in IPv6). Returns any error. Note this is not guaranteed to succeed on all operating systems. In particular, these functions are known to fail on OS X, and may or may not succeed on various Linux kernels and distributions. Callers should expect failure, and it is recommended the connection and request continue to be handled.
+func (c *InterceptConn) SetDSCP(dscp int) error {
+	if dscp == 0 {
+		return nil
+	}
+	if c == nil {
+		return errors.New("Conn is nil")
+	}
+	realConn := c.Real()
+	if realConn == nil {
+		return errors.New("real Conn is nil")
+	}
+	ipv4Err := ipv4.NewConn(realConn).SetTOS(dscp)
+	ipv6Err := ipv6.NewConn(realConn).SetTrafficClass(dscp)
+	if ipv4Err != nil || ipv6Err != nil {
+		errStr := ""
+		if ipv4Err != nil {
+			errStr = "setting IPv4 TOS: " + ipv4Err.Error()
+		}
+		if ipv6Err != nil {
+			if ipv4Err != nil {
+				errStr += "; "
+			}
+			errStr += "setting IPv6 TrafficClass: " + ipv6Err.Error()
+		}
+		return errors.New(errStr)
+	}
+	return nil
 }
