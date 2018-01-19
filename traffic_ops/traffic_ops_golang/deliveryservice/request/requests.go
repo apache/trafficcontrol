@@ -34,10 +34,10 @@ import (
 )
 
 // TODeliveryServiceRequest provides a type alias to define functions on
-type TODeliveryServiceRequest tc.DeliveryServiceRequest
+type TODeliveryServiceRequest tc.DeliveryServiceRequestNullable
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TODeliveryServiceRequest(tc.DeliveryServiceRequest{})
+var refType = TODeliveryServiceRequest(tc.DeliveryServiceRequestNullable{})
 
 // GetRefType is used to decode the JSON for deliveryservice requests
 func GetRefType() *TODeliveryServiceRequest {
