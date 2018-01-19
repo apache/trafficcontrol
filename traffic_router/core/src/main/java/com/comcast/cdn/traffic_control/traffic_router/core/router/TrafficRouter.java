@@ -487,6 +487,7 @@ public class TrafficRouter {
 			return null;
 		}
 
+		routeResult.setDeliveryService(entryDeliveryService);
 		for (final DeliveryService deliveryService : deliveryServices) {
 			if (deliveryService.isRegionalGeoEnabled()) {
 				LOGGER.error("Regional Geo Blocking is not supported with multi-route delivery services.. skipping " + entryDeliveryService.getId() + "/" + deliveryService.getId());
@@ -495,7 +496,6 @@ public class TrafficRouter {
 
 			if (deliveryService.isAvailable()) {
 				final List<Cache> caches = selectCaches(request, deliveryService, track);
-				routeResult.addDeliveryService(deliveryService);
 
 				if (caches != null && !caches.isEmpty()) {
 					final Cache cache = consistentHasher.selectHashable(caches, deliveryService.getDispersion(), request.getPath());
