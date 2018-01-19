@@ -52,7 +52,14 @@ func Handler(db *sqlx.DB) http.HandlerFunc {
 			q.Set(k, v)
 		}
 
-		resp, err := getDeliveryServiceRequestsResponse(q, db)
+		deliveryServiceRequests, err := getDeliveryServiceRequests(q, db)
+		if err != nil {
+			handleErrs(http.StatusInternalServerError, err)
+		}
+
+		resp := struct {
+			Response []tc.DeliveryServiceRequestNullable
+		}{deliveryServiceRequests}
 
 		if err != nil {
 			handleErrs(http.StatusInternalServerError, err)
@@ -70,19 +77,7 @@ func Handler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func getDeliveryServiceRequestsResponse(q url.Values, db *sqlx.DB) (*tc.DeliveryServiceRequestsResponse, error) {
-	deliveryServiceRequests, err := getDeliveryServiceRequests(q, db)
-	if err != nil {
-		return nil, fmt.Errorf("getting DeliveryServiceRequests response: %v", err)
-	}
-
-	resp := tc.DeliveryServiceRequestsResponse{
-		Response: deliveryServiceRequests,
-	}
-	return &resp, nil
-}
-
-func getDeliveryServiceRequests(v url.Values, db *sqlx.DB) ([]tc.DeliveryServiceRequest, error) {
+func getDeliveryServiceRequests(v url.Values, db *sqlx.DB) ([]tc.DeliveryServiceRequestNullable, error) {
 	var rows *sqlx.Rows
 	var err error
 
@@ -107,9 +102,9 @@ func getDeliveryServiceRequests(v url.Values, db *sqlx.DB) ([]tc.DeliveryService
 	}
 	defer rows.Close()
 
-	deliveryServiceRequests := []tc.DeliveryServiceRequest{}
+	deliveryServiceRequests := []tc.DeliveryServiceRequestNullable{}
 	for rows.Next() {
-		var s tc.DeliveryServiceRequest
+		var s tc.DeliveryServiceRequestNullable
 		if err = rows.StructScan(&s); err != nil {
 			return nil, fmt.Errorf("getting DeliveryServiceRequests: %v", err)
 		}
