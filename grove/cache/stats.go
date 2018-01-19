@@ -14,6 +14,8 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/apache/incubator-trafficcontrol/grove/web"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
@@ -405,4 +407,54 @@ func (h statHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(bytes)
+}
+
+// WriteStats writes to the remapRuleStats, and returns the bytes written to the connection
+func WriteStats(stats Stats, w http.ResponseWriter, conn *web.InterceptConn, reqFQDN string, remoteAddr string, code int, bytesWritten uint64, cacheHit bool) uint64 {
+	remapRuleStats, ok := stats.Remap().Stats(reqFQDN)
+	if !ok {
+		log.Errorf("Remap rule %v not in Stats\n", reqFQDN)
+		return bytesWritten
+	}
+
+	if wFlusher, ok := w.(http.Flusher); !ok {
+		log.Errorf("ResponseWriter is not a Flusher, could not flush written bytes, stat out_bytes will be inaccurate!\n")
+	} else {
+		wFlusher.Flush()
+	}
+
+	bytesRead := 0 // TODO get somehow? Count body? Sum header?
+	if conn != nil {
+		bytesRead = conn.BytesRead()
+		bytesWritten = uint64(conn.BytesWritten()) // get the more accurate interceptConn bytes written, if we can
+		// Don't log - the Handler has already logged the failure to get the conn
+	}
+
+	// bytesRead, bytesWritten := getConnInfoAndDestroyWriter(w, stats, remapRuleName)
+	remapRuleStats.AddInBytes(uint64(bytesRead))
+	remapRuleStats.AddOutBytes(uint64(bytesWritten))
+
+	if cacheHit {
+		stats.AddCacheHit()
+		remapRuleStats.AddCacheHit()
+	} else {
+		stats.AddCacheMiss()
+		remapRuleStats.AddCacheMiss()
+	}
+
+	switch {
+	case code < 200:
+		log.Errorf("responded with invalid code %v\n", code)
+	case code < 300:
+		remapRuleStats.AddStatus2xx(1)
+	case code < 400:
+		remapRuleStats.AddStatus3xx(1)
+	case code < 500:
+		remapRuleStats.AddStatus4xx(1)
+	case code < 600:
+		remapRuleStats.AddStatus5xx(1)
+	default:
+		log.Errorf("responded with invalid code %v\n", code)
+	}
+	return bytesWritten
 }
