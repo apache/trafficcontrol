@@ -113,6 +113,29 @@ sub show {
 	$self->success( \@data );
 }
 
+
+sub delete {
+	my $self = shift;
+	my $id     = $self->param('id');
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my $job = $self->db->resultset('Job')->find( { id => $id } );
+	if ( !defined($job) ) {
+		return $self->not_found();
+	}
+
+	my $rs = $job->delete();
+	if ($rs) {
+		return $self->success_message("Job deleted.");
+	} else {
+		return $self->alert( "Job delete failed." );
+	}
+}
+
+
 sub get_current_user_jobs {
 	my $self = shift;
 

@@ -53,6 +53,9 @@ $t->get_ok("/api/1.2/jobs?userId=200")->status_is(200)->json_is( "/response/0/id
 $t->get_ok("/api/1.2/jobs/100")->status_is(200)->json_is( "/response/0/id", 100 )
     ->json_is( "/response/0/keyword", "PURGE" )->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
+# delete specific job
+$t->delete_ok("/api/1.2/jobs/100")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
+
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 done_testing();
 
