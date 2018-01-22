@@ -304,6 +304,11 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc 
 		handleErr := tc.GetHandleErrorsFunc(w, r)
 		var keysObj tc.DeliveryServiceSSLKeys
 
+		if cfg.RiakEnabled == false {
+			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
+			return
+		}
+
 		defer r.Body.Close()
 
 		ctx := r.Context()
@@ -334,7 +339,7 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc 
 				handleErr(http.StatusInternalServerError, err)
 				return
 			case tc.DataMissingError:
-				handleErr(http.StatusBadRequest, err)
+				handleErr(http.StatusNotFound, err)
 				return
 			case tc.ForbiddenError:
 				handleErr(http.StatusForbidden, err)
@@ -392,6 +397,100 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc 
 
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, "%s", keysJSON)
+	}
+}
+
+// handler to delete SSL Keys for a delivery service.
+func deleteDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleErr := tc.GetHandleErrorsFunc(w, r)
+
+		if cfg.RiakEnabled == false {
+			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
+			return
+		}
+
+		version := r.URL.Query().Get("version")
+
+		ctx := r.Context()
+		user, err := auth.GetCurrentUser(ctx)
+		if err != nil {
+			handleErr(http.StatusInternalServerError, err)
+			return
+		}
+		pathParams, err := api.GetPathParams(ctx)
+		if err != nil {
+			handleErr(http.StatusInternalServerError, err)
+			return
+		}
+
+		xmlID := pathParams["xmlID"]
+
+		// check user tenancy access to this resource.
+		hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlID, db)
+		if !hasAccess {
+			switch apiStatus {
+			case tc.SystemError:
+				handleErr(http.StatusInternalServerError, err)
+				return
+			case tc.DataMissingError:
+				handleErr(http.StatusNotFound, err)
+				return
+			case tc.ForbiddenError:
+				handleErr(http.StatusForbidden, err)
+				return
+			}
+		}
+
+		if version == "" {
+			xmlID = xmlID + "-latest"
+		} else {
+			xmlID = xmlID + "-" + version
+		}
+
+		// create and start a cluster
+		cluster, err := getRiakCluster(db, cfg)
+		if err != nil {
+			handleErr(http.StatusInternalServerError, err)
+			return
+		}
+		if err = cluster.Start(); err != nil {
+			handleErr(http.StatusInternalServerError, err)
+			return
+		}
+		defer func() {
+			if err := cluster.Stop(); err != nil {
+				log.Errorf("%v\n", err)
+			}
+		}()
+
+		ro, err := fetchObjectValues(xmlID, SSLKeysBucket, cluster)
+		if err != nil {
+			handleErr(http.StatusInternalServerError, err)
+			return
+		}
+
+		var alert tc.Alerts
+
+		if ro == nil || ro[0].Value == nil {
+			alert = tc.CreateAlerts(tc.InfoLevel, "not deleted, no object found to delete")
+		} else if err := deleteObject(xmlID, SSLKeysBucket, cluster); err != nil {
+			handleErr(http.StatusInternalServerError, err)
+			return
+		} else { // object successfully deleted
+			alert = tc.CreateAlerts(tc.SuccessLevel, "object deleted")
+		}
+
+		// send response
+		respBytes, err := json.Marshal(alert)
+		if err != nil {
+			log.Errorf("failed to marshal an alert response: %s\n", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, http.StatusText(http.StatusInternalServerError))
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, "%s", respBytes)
 	}
 }
 
@@ -480,7 +579,7 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg Config) http.Ha
 						handleErr(http.StatusInternalServerError, err)
 						return
 					case tc.DataMissingError:
-						handleErr(http.StatusBadRequest, err)
+						handleErr(http.StatusNotFound, err)
 						return
 					case tc.ForbiddenError:
 						handleErr(http.StatusForbidden, err)
@@ -534,7 +633,7 @@ func getDeliveryServiceSSLKeysByXMLIDHandler(db *sqlx.DB, cfg Config) http.Handl
 				handleErr(http.StatusInternalServerError, err)
 				return
 			case tc.DataMissingError:
-				handleErr(http.StatusBadRequest, err)
+				handleErr(http.StatusNotFound, err)
 				return
 			case tc.ForbiddenError:
 				handleErr(http.StatusForbidden, err)
@@ -726,13 +825,13 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 			}
 		}()
 
+		// fetch the object and delete it if it exists.
 		ro, err := fetchObjectValues(xmlID, CDNURIKeysBucket, cluster)
 		if err != nil {
 			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 
-		// fetch the object and delete it if it exists.
 		var alert tc.Alerts
 
 		if ro == nil || ro[0].Value == nil {
