@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package api
+package config
 
 import (
 	"encoding/json"
@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -117,4 +118,29 @@ func LoadConfig(confPath string) (Config, error) {
 	}
 
 	return cfg, err
+}
+
+// ErrorLog - critical messages
+func (c Config) ErrorLog() log.LogLocation {
+	return log.LogLocation(c.Default.Log.Error)
+}
+
+// WarningLog - warning messages
+func (c Config) WarningLog() log.LogLocation {
+	return log.LogLocation(c.Default.Log.Warning)
+}
+
+// InfoLog - information messages
+func (c Config) InfoLog() log.LogLocation {
+	return log.LogLocation(c.Default.Log.Info)
+}
+
+// DebugLog - troubleshooting messages
+func (c Config) DebugLog() log.LogLocation {
+	return log.LogLocation(c.Default.Log.Debug)
+}
+
+// EventLog - access.log high level transactions
+func (c Config) EventLog() log.LogLocation {
+	return log.LogLocation(c.Default.Log.Event)
 }

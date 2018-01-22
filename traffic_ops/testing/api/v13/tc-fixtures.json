@@ -56,6 +56,31 @@
             "name": "cdn3"
         }
     ],
+    "deliveryServiceRequests": [
+        {
+            "author": "billybob",
+            "authorId": 400,
+            "changeType": "create",
+            "createdAt": "2018-01-16 19:46:14+00",
+            "lastUpdated": "2018-01-16 19:46:14+00",
+            "request": {
+                "active": true,
+                "ccrDnsTtl": 30,
+                "cdnId": 1,
+                "displayName": "ZZZ",
+                "dscp": 0,
+                "geoLimit": 0,
+                "geoProvider": 0,
+                "logsEnabled": false,
+                "longDesc": "long desc",
+                "regionalGeoBlocking": false,
+                "tenantId": 60,
+                "typeId": 70,
+                "xmlId": "xmlId"
+            },
+            "status": "draft"
+        }
+    ],
     "deliveryServices": [
         {
             "active": false,

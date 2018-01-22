@@ -13,27 +13,26 @@
    limitations under the License.
 */
 
-package api
+package v13
 
 import (
 	"database/sql"
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
-	"net"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/client"
+	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/testing/api/config"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/testing/api/todb"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/testing/api/towrap"
 	_ "github.com/lib/pq"
 )
 
 var (
-	TOSession *client.Session
-	cfg       Config
+	TOSession *to.Session
+	cfg       config.Config
 	testData  TrafficControl
 )
 
@@ -43,7 +42,7 @@ func TestMain(m *testing.M) {
 	tcFixturesFileName := flag.String("fixtures", "tc-fixtures.json", "The test fixtures for the API test tool")
 	flag.Parse()
 
-	if cfg, err = LoadConfig(*configFileName); err != nil {
+	if cfg, err = config.LoadConfig(*configFileName); err != nil {
 		fmt.Printf("Error Loading Config %v %v\n", cfg, err)
 	}
 
@@ -63,29 +62,29 @@ func TestMain(m *testing.M) {
 			   DB Ssl:               %t`, *configFileName, *tcFixturesFileName, cfg.TrafficOps.URL, cfg.Default.Session.TimeoutInSecs, cfg.TrafficOpsDB.Hostname, cfg.TrafficOpsDB.User, cfg.TrafficOpsDB.Name, cfg.TrafficOpsDB.SSL)
 
 	//Load the test data
-	loadTestCDN(*tcFixturesFileName)
+	LoadFixtures(*tcFixturesFileName)
 
 	var db *sql.DB
-	db, err = openConnection(&cfg)
+	db, err = todb.OpenConnection(&cfg)
 	if err != nil {
 		fmt.Printf("\nError opening connection to %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
 		os.Exit(1)
 	}
 	defer db.Close()
 
-	err = teardownData(&cfg, db)
+	err = todb.Teardown(&cfg, db)
 	if err != nil {
 		fmt.Printf("\nError tearingdown data %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
 		os.Exit(1)
 	}
 
-	err = setupUserData(&cfg, db)
+	err = todb.SetupTestData(&cfg, db)
 	if err != nil {
 		fmt.Printf("\nError setting up data %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
 		os.Exit(1)
 	}
 
-	TOSession, _, err = setupSession(cfg, cfg.TrafficOps.URL, cfg.TrafficOps.User, cfg.TrafficOps.UserPassword)
+	TOSession, _, err = towrap.SetupSession(cfg, cfg.TrafficOps.URL, cfg.TrafficOps.User, cfg.TrafficOps.UserPassword)
 	if err != nil {
 		fmt.Printf("\nError logging into TOURL: %s TOUser: %s/%s - %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, cfg.TrafficOps.UserPassword, err)
 		os.Exit(1)
@@ -95,31 +94,4 @@ func TestMain(m *testing.M) {
 	rc := m.Run()
 	os.Exit(rc)
 
-}
-
-func setupSession(cfg Config, toURL string, toUser string, toPass string) (*client.Session, net.Addr, error) {
-	var err error
-	var session *client.Session
-	var netAddr net.Addr
-	toReqTimeout := time.Second * time.Duration(cfg.Default.Session.TimeoutInSecs)
-	session, netAddr, err = client.LoginWithAgent(toURL, toUser, toPass, true, "to-api-client-tests", true, toReqTimeout)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return session, netAddr, err
-}
-
-func loadTestCDN(fixturesPath string) {
-
-	f, err := ioutil.ReadFile(fixturesPath)
-	if err != nil {
-		log.Errorf("Cannot unmarshal fixtures json %s", err)
-		os.Exit(1)
-	}
-	err = json.Unmarshal(f, &testData)
-	if err != nil {
-		log.Errorf("Cannot unmarshal fixtures json %v", err)
-		os.Exit(1)
-	}
 }
