@@ -17,7 +17,6 @@ package client
 
 import (
 	"encoding/json"
-	"fmt"
 	"net"
 	"net/http"
 
@@ -47,6 +46,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 	return alerts, reqInf, nil
 }
 
+/*
 // Update a DeliveryServiceRequest by ID
 func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServiceRequest) (tc.Alerts, ReqInf, error) {
 
@@ -130,3 +130,4 @@ func (to *Session) DeleteDeliveryServiceRequestByAssignee(assignee string) (tc.A
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
+*/
