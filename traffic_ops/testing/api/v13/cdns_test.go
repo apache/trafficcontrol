@@ -13,13 +13,13 @@
    limitations under the License.
 */
 
-package api
+package v13
 
 import (
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 func TestCDNs(t *testing.T) {

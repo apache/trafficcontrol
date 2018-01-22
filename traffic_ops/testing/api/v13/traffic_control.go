@@ -13,17 +13,13 @@
    limitations under the License.
 */
 
-package api
+package v13
 
-import tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+import tcapi "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
 // TrafficControl - maps to the tc-fixtures.json file
 type TrafficControl struct {
-	ASNs             []tc.ASN             `json:"asns"`
-	CDNs             []tc.CDN             `json:"cdns"`
-	Cachegroups      []tc.CacheGroup      `json:"cachegroups"`
-	DeliveryServices []tc.DeliveryService `json:"deliveryservices"`
-	Divisions        []tc.Division        `json:"divisions"`
-	Regions          []tc.Region          `json:"regions"`
-	Tenants          []tc.Tenant          `json:"tenants"`
+	CDNs                    []tcapi.CDN                    `json:"cdns"`
+	DeliveryServices        []tcapi.DeliveryService        `json:"deliveryservices"`
+	DeliveryServiceRequests []tcapi.DeliveryServiceRequest `json:"deliveryServiceRequests"`
 }
