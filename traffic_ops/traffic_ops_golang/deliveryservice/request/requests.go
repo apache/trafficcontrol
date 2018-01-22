@@ -29,6 +29,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -73,7 +74,7 @@ func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, d
 		log.Debugf("from getTenantID: %v", err)
 		return false, err
 	}
-	return auth.IsResourceAuthorizedToUser(tenantID, user, db)
+	return tenant.IsResourceAuthorizedToUser(tenantID, user, db)
 }
 
 //The TODeliveryServiceRequest implementation of the Updater interface
