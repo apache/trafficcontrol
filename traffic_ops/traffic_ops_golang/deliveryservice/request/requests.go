@@ -186,6 +186,7 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 		return tc.DBError, tc.SystemError
 	}
 	req.AuthorID = user.ID
+	req.LastEditedByID = user.ID
 	ir := insertRequestQuery()
 	resultRows, err := tx.NamedQuery(ir, req)
 	if err != nil {
@@ -317,6 +318,7 @@ func updateRequestQuery() string {
 deliveryservice_request
 SET assignee_id=:assignee_id,
 change_type=:change_type,
+last_edited_by_id=:last_edited_by_id,
 request=:request,
 status=:status
 WHERE id=:id RETURNING last_updated`
@@ -328,12 +330,14 @@ func insertRequestQuery() string {
 assignee_id,
 author_id,
 change_type,
+last_edited_by_id,
 request,
 status
 ) VALUES (
 :assignee_id,
 :author_id,
 :change_type,
+:last_edited_by_id,
 :request,
 :status
 ) RETURNING id,last_updated`
