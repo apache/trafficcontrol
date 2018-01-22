@@ -52,10 +52,10 @@ const (
 	SystemError
 	DataConflictError
 	DataMissingError
-
+	ForbiddenError
 )
 
-var apiErrorTypes = []string{"noError","systemError","dataConflictError","dataMissingError"}
+var apiErrorTypes = []string{"noError", "systemError", "dataConflictError", "dataMissingError", "forbiddenError"}
 
 func (a ApiErrorType) String() string {
 	return apiErrorTypes[a]

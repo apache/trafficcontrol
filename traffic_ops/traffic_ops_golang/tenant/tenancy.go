@@ -23,9 +23,9 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
-	"net/http"
 )
 
 type Tenant struct {
@@ -35,10 +35,7 @@ type Tenant struct {
 	ParentID int
 }
 
-type DeliveryServiceTenantInfo struct {
-	XMLID    string `db:"xml_id"`
-	TenantID int    `db:"tenant_id"`
-}
+type DeliveryServiceTenantInfo tc.DeliveryServiceNullable
 
 // returns true if the user has tenant access on this deliveryservice
 func (dsInfo DeliveryServiceTenantInfo) IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error) {
@@ -67,23 +64,23 @@ func GetDeliveryServiceTenantInfo(xmlId string, db *sqlx.DB) (*DeliveryServiceTe
 }
 
 // tenancy check wrapper for deliveryservice
-func HasDeliveryServiceTenant(user auth.CurrentUser, XMLID string, db *sqlx.DB) (bool, error, int) {
+func HasTenant(user auth.CurrentUser, XMLID string, db *sqlx.DB) (bool, error, tc.ApiErrorType) {
 	dsInfo, err := GetDeliveryServiceTenantInfo(XMLID, db)
 	if err != nil {
 		if dsInfo == nil {
-			return false, fmt.Errorf("deliveryservice lookup failure: %v", err), http.StatusInternalServerError
+			return false, fmt.Errorf("deliveryservice lookup failure: %v", err), tc.SystemError
 		} else {
-			return false, fmt.Errorf("no such deliveryservice: '%s'", XMLID), http.StatusBadRequest
+			return false, fmt.Errorf("no such deliveryservice: '%s'", XMLID), tc.DataMissingError
 		}
 	}
 	hasAccess, err := dsInfo.IsTenantAuthorized(user, db)
 	if err != nil {
-		return false, fmt.Errorf("user tenancy check failure: %v", err), http.StatusInternalServerError
+		return false, fmt.Errorf("user tenancy check failure: %v", err), tc.SystemError
 	}
 	if !hasAccess {
-		return false, fmt.Errorf("Access to this resource is not authorized"), http.StatusForbidden
+		return false, fmt.Errorf("Access to this resource is not authorized"), tc.ForbiddenError
 	}
-	return true, nil, http.StatusOK
+	return true, nil, tc.NoError
 }
 
 // returns a Tenant list that the specified user has access too.

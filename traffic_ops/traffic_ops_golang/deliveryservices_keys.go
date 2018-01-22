@@ -265,10 +265,19 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc 
 		}
 
 		// check user tenancy access to this resource.
-		hasAccess, err, httpStatus := tenant.HasDeliveryServiceTenant(*user, keysObj.DeliveryService, db)
+		hasAccess, err, apiStatus := tenant.HasTenant(*user, keysObj.DeliveryService, db)
 		if !hasAccess {
-			handleErr(httpStatus, err)
-			return
+			switch apiStatus {
+			case tc.SystemError:
+				handleErr(http.StatusInternalServerError, err)
+				return
+			case tc.DataMissingError:
+				handleErr(http.StatusBadRequest, err)
+				return
+			case tc.ForbiddenError:
+				handleErr(http.StatusForbidden, err)
+				return
+			}
 		}
 
 		var certChain string
@@ -402,10 +411,19 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg Config) http.Ha
 			} else {
 				xmlID := xmlIDStr.String
 				// check user tenancy access to this resource.
-				hasAccess, err, httpStatus := tenant.HasDeliveryServiceTenant(*user, xmlID, db)
+				hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlID, db)
 				if !hasAccess {
-					handleErr(httpStatus, err)
-					return
+					switch apiStatus {
+					case tc.SystemError:
+						handleErr(http.StatusInternalServerError, err)
+						return
+					case tc.DataMissingError:
+						handleErr(http.StatusBadRequest, err)
+						return
+					case tc.ForbiddenError:
+						handleErr(http.StatusForbidden, err)
+						return
+					}
 				}
 				respBytes, err = getDeliveryServiceSSLKeysByXMLID(xmlID, version, db, cfg)
 				if err != nil {
@@ -447,10 +465,19 @@ func getDeliveryServiceSSLKeysByXMLIDHandler(db *sqlx.DB, cfg Config) http.Handl
 		xmlID := pathParams["xmlID"]
 
 		// check user tenancy access to this resource.
-		hasAccess, err, httpStatus := tenant.HasDeliveryServiceTenant(*user, xmlID, db)
+		hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlID, db)
 		if !hasAccess {
-			handleErr(httpStatus, err)
-			return
+			switch apiStatus {
+			case tc.SystemError:
+				handleErr(http.StatusInternalServerError, err)
+				return
+			case tc.DataMissingError:
+				handleErr(http.StatusBadRequest, err)
+				return
+			case tc.ForbiddenError:
+				handleErr(http.StatusForbidden, err)
+				return
+			}
 		}
 
 		respBytes, err = getDeliveryServiceSSLKeysByXMLID(xmlID, version, db, cfg)
