@@ -24,6 +24,7 @@ CREATE TABLE deliveryservice_request (
     change_type change_types NOT NULL,
     created_at timestamp WITH time zone NOT NULL DEFAULT now(),
     id bigserial primary key NOT NULL,
+    last_edited_by_id NOT NULL,
     last_updated timestamp WITH time zone NOT NULL DEFAULT now(),
     request jsonb NOT NULL,
     status workflow_states NOT NULL
@@ -34,6 +35,9 @@ ALTER TABLE deliveryservice_request
 
 ALTER TABLE deliveryservice_request
     ADD CONSTRAINT fk_assignee FOREIGN KEY (assignee_id) REFERENCES tm_user(id) ON DELETE SET NULL;
+
+ALTER TABLE deliveryservice_request
+    ADD CONSTRAINT fk_last_edited_by FOREIGN KEY (last_edited_by_id) REFERENCES tm_user(id) ON DELETE CASCADE;
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON deliveryservice_request FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 

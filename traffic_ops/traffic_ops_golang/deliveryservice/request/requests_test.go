@@ -29,7 +29,6 @@ import (
 
 func TestGetDeliveryServiceRequest(t *testing.T) {
 	r := &TODeliveryServiceRequest{
-		ID:         10,
 		ChangeType: "UPDATE",
 		Status:     "submitted",
 		Request: json.RawMessage(`{
@@ -40,7 +39,7 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 			"geoLimit" : 2,
 			"active" : true,
 			"displayName" : "",
-			"typeId" : 3
+			"typeId" : 1
 		}`),
 	}
 	expectedErrors := []string{
@@ -54,6 +53,7 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 	*/
 	}
 
+	r.SetID(10)
 	if r.GetID() != 10 {
 		t.Errorf("expected ID to be %d,  not %d", 10, r.GetID())
 	}
@@ -95,8 +95,12 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 		for _, e := range errs {
 			t.Error(e)
 		}
-		t.Errorf("expected no errors,  got %d", len(errs))
 	}
+
+	for e := range expectedErrors {
+		t.Error(e)
+	}
+
 	/*
 		if r.Update(db *sqlx.DB, ctx context.Context) {
 			t.Errorf("expected ID to be %d,  not %d", 10, r.GetID())
