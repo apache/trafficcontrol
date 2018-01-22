@@ -20,6 +20,7 @@ package request
  */
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -289,10 +290,16 @@ func (req TODeliveryServiceRequest) getXMLID(db *sqlx.DB) (string, error) {
 
 // getTenantID retrieves the tenantID of the deliveryservice to be created or modified
 func (req TODeliveryServiceRequest) getTenantID(db *sqlx.DB) (int, error) {
-	var tenantID int
+	if req.Request != nil {
+		//  on Create request -- it's not in the db.  Pull the tenantID from Request json blob
+		var ds tc.DeliveryService
+		err := json.Unmarshal(req.Request, &ds)
+		return ds.TenantID, err
+	}
 	q := `SELECT request->>'tenantId' FROM deliveryservice_request WHERE id=` + strconv.Itoa(req.ID)
 	row := db.QueryRow(q)
 
+	var tenantID int
 	err := row.Scan(&tenantID)
 	if err != nil {
 		log.Debugln("ERROR: ", err, ";  QUERY:", q)
