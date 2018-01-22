@@ -76,6 +76,25 @@ func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 	noPeriods := validation.Match(regexp.MustCompile("^[^\\.]*$"))
 	noPeriods.Error("cannot contain periods")
 
+	DNSRegexType := "^DNS.*$"
+	HTTPRegexType := "^HTTP.*$"
+	SteeringRegexType := "^STEERING.*$"
+
+	// Validate that the required fields are sent first to prevent panics below
+	errs := validation.Errors{
+		"active":              validation.Validate(ds.Active, validation.NotNil),
+		"cdnId":               validation.Validate(ds.CDNID, validation.NotNil),
+		"typeId":              validation.Validate(ds.TypeID, validation.NotNil),
+		"dscp":                validation.Validate(ds.DSCP, validation.NotNil),
+		"geoLimit":            validation.Validate(ds.GeoLimit, validation.NotNil),
+		"geoProvider":         validation.Validate(ds.GeoProvider, validation.NotNil),
+		"logsEnabled":         validation.Validate(ds.LogsEnabled, validation.NotNil),
+		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.NotNil),
+	}
+	if errs != nil {
+		return tovalidate.ToErrors(errs)
+	}
+
 	var typeName string
 	var err error
 	if db != nil && ds.TypeID != nil {
@@ -86,30 +105,21 @@ func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 		}
 	}
 
-	DNSRegexType := "^DNS.*$"
-	HTTPRegexType := "^HTTP.*$"
-	SteeringRegexType := "^STEERING.*$"
 	// Custom Examples:
 	// Just add isCIDR as a parameter to Validate()
 	// isCIDR := validation.NewStringRule(govalidator.IsCIDR, "must be a valid CIDR address")
 	isHost := validation.NewStringRule(govalidator.IsHost, "must be a valid hostname")
-	errs := validation.Errors{
-		"active": validation.Validate(ds.Active, validation.NotNil),
-		"cdnId":  validation.Validate(ds.CDNID, validation.NotNil),
+	errs = validation.Errors{
 		"displayName": validation.Validate(ds.DisplayName,
 			validation.Required),
 		"dnsBypassIp":  validation.Validate(ds.DNSBypassIP, is.IP),
 		"dnsBypassIp6": validation.Validate(ds.DNSBypassIP6, is.IPv6),
-		"dscp":         validation.Validate(ds.DSCP, validation.NotNil),
-		"geoLimit":     validation.Validate(ds.GeoLimit, validation.NotNil),
-		"geoProvider":  validation.Validate(ds.GeoProvider, validation.NotNil),
 		"infoUrl":      validation.Validate(ds.InfoURL, is.URL),
 		"initialDispersion": validation.Validate(ds.InitialDispersion,
 			validation.By(tovalidate.GreaterThanZero),
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 		"ipv6RoutingEnabled": validation.Validate(ds.IPV6RoutingEnabled,
 			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
-		"logsEnabled": validation.Validate(ds.LogsEnabled, validation.NotNil),
 		"missLat": validation.Validate(ds.MissLat,
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 		"missLong": validation.Validate(ds.MissLong,
@@ -125,14 +135,11 @@ func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 		"rangeRequestHandling": validation.Validate(ds.RangeRequestHandling,
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
-		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking,
-			validation.NotNil),
 		"routingName": validation.Validate(ds.RoutingName,
 			isHost,
 			noPeriods,
 			validation.Length(1, 48)),
 		"typeId": validation.Validate(ds.TypeID,
-			validation.NotNil,
 			validation.By(tovalidate.GreaterThanZero)),
 		"xmlId": validation.Validate(ds.XMLID,
 			validation.Required,
