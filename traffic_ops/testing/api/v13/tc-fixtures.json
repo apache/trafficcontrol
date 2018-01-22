@@ -72,7 +72,7 @@
                 "logsEnabled": false,
                 "longDesc": "long desc",
                 "regionalGeoBlocking": false,
-                "tenantId": 60,
+                "tenantId": 2,
                 "typeId": 70,
                 "xmlId": "xmlId"
             },
