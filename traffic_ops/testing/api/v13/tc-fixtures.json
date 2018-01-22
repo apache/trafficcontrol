@@ -61,8 +61,6 @@
             "author": "billybob",
             "authorId": 400,
             "changeType": "create",
-            "createdAt": "2018-01-16 19:46:14+00",
-            "lastUpdated": "2018-01-16 19:46:14+00",
             "request": {
                 "active": true,
                 "ccrDnsTtl": 30,
