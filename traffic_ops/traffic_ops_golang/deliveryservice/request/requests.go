@@ -104,16 +104,17 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 		if tx == nil {
 			return
 		}
+		if err == nil {
+			err = tx.Commit()
+		}
 		if err != nil {
 			tx.Rollback()
-			return
 		}
-		tx.Commit()
 	}()
 
 	if err != nil {
 		log.Error.Println("could not begin transaction: ", err.Error())
-		return tc.DBError, tc.SystemError
+		return err, tc.SystemError
 	}
 	resultRows, err := tx.NamedQuery(updateRequestQuery(), req)
 	if err != nil {
@@ -125,24 +126,28 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 			return err, eType
 		}
 		log.Errorf("received error from update execution: %s", err.Error())
-		return tc.DBError, tc.SystemError
+		return err, tc.SystemError
 	}
+	defer resultRows.Close()
+
 	var lastUpdated tc.Time
 	var rowsAffected int
 	for resultRows.Next() {
 		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
+		if err = resultRows.Scan(&lastUpdated); err != nil {
 			log.Error.Println("could not scan lastUpdated from insert: ", err.Error())
-			return tc.DBError, tc.SystemError
+			return err, tc.SystemError
 		}
 	}
 	log.Debugln("lastUpdated: ", lastUpdated)
 	req.LastUpdated = lastUpdated
 	if rowsAffected < 1 {
-		return errors.New("no request found with this id"), tc.DataMissingError
+		err = errors.New("no request found with this id")
+		return err, tc.DataMissingError
 	}
 	if rowsAffected > 1 {
-		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
+		err = fmt.Errorf("this update affected too many rows: %d", rowsAffected)
+		return err, tc.SystemError
 	}
 
 	return nil, tc.NoError
@@ -176,11 +181,12 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 		if tx == nil {
 			return
 		}
+		if err == nil {
+			err = tx.Commit()
+		}
 		if err != nil {
 			tx.Rollback()
-			return
 		}
-		tx.Commit()
 	}()
 
 	if err != nil {
@@ -197,14 +203,16 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 			return err, eType
 		}
 		log.Errorln("received non pq error from create execution: ", err.Error())
-		return tc.DBError, tc.SystemError
+		return err, tc.SystemError
 	}
+	defer resultRows.Close()
+
 	var id int
 	var lastUpdated tc.Time
 	var rowsAffected int
 	for resultRows.Next() {
 		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
+		if err = resultRows.Scan(&id, &lastUpdated); err != nil {
 			log.Error.Println("could not scan id from insert: ", err.Error())
 			return tc.DBError, tc.SystemError
 		}
@@ -246,11 +254,12 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 		if tx == nil {
 			return
 		}
+		if err == nil {
+			err = tx.Commit()
+		}
 		if err != nil {
 			tx.Rollback()
-			return
 		}
-		tx.Commit()
 	}()
 
 	if err != nil {
