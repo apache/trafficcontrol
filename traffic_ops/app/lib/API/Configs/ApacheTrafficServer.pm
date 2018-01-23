@@ -2198,6 +2198,7 @@ sub cachegroup_profiles {
 				port           => $self->profile_param_value( $pid, 'parent.config', 'port', undef ),
 				use_ip_address => $self->profile_param_value( $pid, 'parent.config', 'use_ip_address', 0 ),
 				rank           => $self->profile_param_value( $pid, 'parent.config', 'rank', 1 ),
+				not_a_parent   => $self->profile_param_value( $pid, 'parent.config', 'not_a_parent', 'false' ),
 			};
 		}
 	}
@@ -2235,6 +2236,9 @@ sub parent_data {
 	foreach my $prefix ( keys %deliveryservices ) {
 		foreach my $row ( @{ $deliveryservices{$prefix} } ) {
 			my $pid              = $row->profile->id;
+			if ( $profile_cache{$pid}->{not_a_parent} ne 'false' ) {
+				next;
+			}
 			my $ds_domain        = $profile_cache{$pid}->{domain_name};
 			my $weight           = $profile_cache{$pid}->{weight};
 			my $port             = $profile_cache{$pid}->{port};
