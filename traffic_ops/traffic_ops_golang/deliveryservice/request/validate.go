@@ -21,30 +21,28 @@ package request
 
 import (
 	"encoding/json"
-	"errors"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 )
 
-// Validate ...
-func (request *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
-	log.Debugf("Got request with %++v\n", request)
-	var errs []error
-	if len(request.ChangeType) == 0 {
-		errs = append(errs, errors.New(`'changeType' is required`))
-	}
-	if len(request.Status) == 0 {
-		errs = append(errs, errors.New(`'status' is required`))
-	}
-	if len(request.Request) == 0 {
-		// TODO: validate request json has required deliveryservice fields
-		errs = append(errs, errors.New(`'request' is required`))
+// Validate ensures all required fields are present and in correct form.  Also checks request JSON is complete and valid
+func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
+	log.Debugf("Got request with %++v\n", req)
+	errMap := validation.Errors{
+		"authorId":   validation.Validate(req.AuthorID, validation.NotNil, validation.By(tovalidate.GreaterThanZero)),
+		"changeType": validation.Validate(req.ChangeType, validation.Required),
+		"request":    validation.Validate(req.Request, validation.Required),
+		"status":     validation.Validate(req.Status, validation.Required),
 	}
 
+	errs := tovalidate.ToErrors(errMap)
+
 	var ds deliveryservice.TODeliveryService
-	err := json.Unmarshal([]byte(request.Request), &ds)
+	err := json.Unmarshal([]byte(req.Request), &ds)
 	if err != nil {
 		errs = append(errs, err)
 		return errs
