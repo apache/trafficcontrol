@@ -2,18 +2,22 @@ package cache
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/apache/incubator-trafficcontrol/grove/remap"
+	"github.com/apache/incubator-trafficcontrol/grove/stat"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
+// StatLogger constructed from initial connection data, which both writes stats and writes to the event log, after the response is prepared and sent.
 type StatLogger struct {
 	W                 http.ResponseWriter
 	Conn              *web.InterceptConn
-	Stats             Stats
+	Stats             stat.Stats
 	Hostname          string
 	Port              string
 	Scheme            string
@@ -26,10 +30,10 @@ type StatLogger struct {
 	ReqTime           time.Time
 	UserAgent         string
 	RemoteAddr        string
-	RemappingProducer *RemappingProducer
+	RemappingProducer *remap.RemappingProducer
 }
 
-func NewStatLogger(w http.ResponseWriter, conn *web.InterceptConn, h *Handler, r *http.Request, moneyTraceHdr string, clientIP string, reqTime time.Time, remappingProducer *RemappingProducer) StatLogger {
+func NewStatLogger(w http.ResponseWriter, conn *web.InterceptConn, h *Handler, r *http.Request, moneyTraceHdr string, clientIP string, reqTime time.Time, remappingProducer *remap.RemappingProducer) StatLogger {
 	return StatLogger{
 		W:                 w,
 		Conn:              conn,
@@ -50,6 +54,7 @@ func NewStatLogger(w http.ResponseWriter, conn *web.InterceptConn, h *Handler, r
 	}
 }
 
+// Log both writes stats and writes to the event log, with the given response data, along with the connection data in l.
 func (l *StatLogger) Log(
 	code int,
 	bytesWritten uint64,
@@ -61,7 +66,7 @@ func (l *StatLogger) Log(
 	originBytes uint64,
 	proxyStr string,
 ) {
-	bytesSent := WriteStats(l.Stats, l.W, l.Conn, l.Host, l.RemoteAddr, code, bytesWritten, cacheHit)
+	bytesSent := l.Stats.Write(l.W, l.Conn, l.Host, l.RemoteAddr, code, bytesWritten, cacheHit)
 	toFQDN := ""
 	if l.RemappingProducer != nil {
 		toFQDN = l.RemappingProducer.ToFQDN()
@@ -118,4 +123,55 @@ func getCacheHitStr(hit bool, originConnectFailed bool) string {
 		return "TCP_HIT"
 	}
 	return "TCP_MISS"
+}
+
+func atsEventLogStr(
+	timestamp time.Time, // (prefix)
+	clientIP string, // chi
+	selfHostname string,
+	reqHost string, // phn
+	reqPort string, // php
+	originHost string, // shn
+	scheme string, // url
+	url string, // url
+	method string, // cqhm
+	protocol string, // cqhv
+	respCode int, // pssc
+	timeToServe time.Duration, // ttms
+	bytesSent uint64, // b
+	originStatus int, // sssc
+	originBytes uint64, // sscl
+	successfullyRespondedToClient bool, // cfsc
+	successfullyGotFromOrigin bool, // pfsc
+	cacheHit string, // crc
+	proxyUsed string, // phr
+	thisProxyName string, // pqsn
+	clientUserAgent string, // client user agent
+	xmt string, // moneytrace header
+) string {
+	unixNano := timestamp.UnixNano()
+	unixSec := unixNano / NSPerSec
+	unixFrac := 1 / (unixNano % NSPerSec)
+	unixFracStr := strconv.FormatInt(unixFrac, 10)
+	if len(unixFracStr) > 3 {
+		unixFracStr = unixFracStr[:3]
+	}
+	cfsc := "FIN"
+	if !successfullyRespondedToClient {
+		cfsc = "INTR"
+	}
+	pfsc := "FIN"
+	if !successfullyGotFromOrigin {
+		pfsc = "INTR"
+	}
+
+	// TODO escape quotes within useragent, moneytrace
+	clientUserAgent = `"` + clientUserAgent + `"`
+	if xmt == "" {
+		xmt = `"-"`
+	} else {
+		xmt = `"` + xmt + `"`
+	}
+
+	return strconv.FormatInt(unixSec, 10) + "." + unixFracStr + " chi=" + clientIP + " phn=" + selfHostname + " php=" + reqPort + " shn=" + originHost + " url=" + scheme + "://" + reqHost + url + " cqhn=" + method + " cqhv=" + protocol + " pssc=" + strconv.FormatInt(int64(respCode), 10) + " ttms=" + strconv.FormatInt(int64(timeToServe/time.Millisecond), 10) + " b=" + strconv.FormatInt(int64(bytesSent), 10) + " sssc=" + strconv.FormatInt(int64(originStatus), 10) + " sscl=" + strconv.FormatInt(int64(originBytes), 10) + " cfsc=" + cfsc + " pfsc=" + pfsc + " crc=" + cacheHit + " phr=" + proxyUsed + " psqn=" + thisProxyName + " uas=" + clientUserAgent + " xmt=" + xmt + "\n"
 }

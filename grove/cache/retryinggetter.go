@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/grove/cacheobj"
+	"github.com/apache/incubator-trafficcontrol/grove/remap"
 	"github.com/apache/incubator-trafficcontrol/grove/thread"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
@@ -19,23 +20,23 @@ type Retrier struct {
 	ReqTime           time.Time
 	ReqCacheControl   web.CacheControl
 	CacheKey          string
-	RemappingProducer *RemappingProducer
+	RemappingProducer *remap.RemappingProducer
 }
 
-func NewRetrier(h *Handler, reqHdr http.Header, reqTime time.Time, reqCacheControl web.CacheControl, cacheKey string, RemappingProducer *RemappingProducer) *Retrier {
+func NewRetrier(h *Handler, reqHdr http.Header, reqTime time.Time, reqCacheControl web.CacheControl, cacheKey string, remappingProducer *remap.RemappingProducer) *Retrier {
 	return &Retrier{
 		H:                 h,
 		ReqHdr:            reqHdr,
 		ReqCacheControl:   reqCacheControl,
-		RemappingProducer: RemappingProducer,
+		RemappingProducer: remappingProducer,
 	}
 }
 
 func (r *Retrier) Get(req *http.Request, obj *cacheobj.CacheObj) (*cacheobj.CacheObj, error) {
-	retryGetFunc := func(remapping Remapping, retryFailures bool, obj *cacheobj.CacheObj) *cacheobj.CacheObj {
+	retryGetFunc := func(remapping remap.Remapping, retryFailures bool, obj *cacheobj.CacheObj) *cacheobj.CacheObj {
 		// return true for Revalidate, and issue revalidate requests separately.
 		canReuse := func(cacheObj *cacheobj.CacheObj) bool {
-			return CanReuse(r.ReqHdr, r.ReqCacheControl, cacheObj, r.H.strictRFC, true)
+			return remap.CanReuse(r.ReqHdr, r.ReqCacheControl, cacheObj, r.H.strictRFC, true)
 		}
 		getAndCache := func() *cacheobj.CacheObj {
 			return GetAndCache(remapping.Request, remapping.ProxyURL, remapping.CacheKey, remapping.Name, remapping.Request.Header, r.ReqTime, r.H.strictRFC, r.H.cache, r.H.ruleThrottlers[remapping.Name], obj, remapping.Timeout, retryFailures, remapping.RetryNum, remapping.RetryCodes, r.H.transport)
@@ -48,11 +49,11 @@ func (r *Retrier) Get(req *http.Request, obj *cacheobj.CacheObj) (*cacheobj.Cach
 
 // RetryingGet takes a function, and retries failures up to the RemappingProducer RetryNum limit. On failure, it creates a new remapping. The func f should use `remapping` to make its request. If it hits failures up to the limit, it returns the last received cacheobj.CacheObj
 // TODO refactor to not close variables - it's awkward and confusing.
-func retryingGet(getCacheObj func(remapping Remapping, retryFailures bool, obj *cacheobj.CacheObj) *cacheobj.CacheObj, request *http.Request, remappingProducer *RemappingProducer, cachedObj *cacheobj.CacheObj) (*cacheobj.CacheObj, error) {
+func retryingGet(getCacheObj func(remapping remap.Remapping, retryFailures bool, obj *cacheobj.CacheObj) *cacheobj.CacheObj, request *http.Request, remappingProducer *remap.RemappingProducer, cachedObj *cacheobj.CacheObj) (*cacheobj.CacheObj, error) {
 	obj := (*cacheobj.CacheObj)(nil)
 	for {
 		remapping, retryAllowed, err := remappingProducer.GetNext(request)
-		if err == ErrNoMoreRetries {
+		if err == remap.ErrNoMoreRetries {
 			if obj == nil {
 				return nil, errors.New("remapping producer allows no requests") // should never happen
 			}
@@ -70,11 +71,6 @@ func retryingGet(getCacheObj func(remapping Remapping, retryFailures bool, obj *
 func isFailure(o *cacheobj.CacheObj, retryCodes map[int]struct{}) bool {
 	_, failureCode := retryCodes[o.Code]
 	return failureCode || o.Code == CodeConnectFailure
-}
-
-func CanReuse(reqHeader http.Header, reqCacheControl web.CacheControl, cacheObj *cacheobj.CacheObj, strictRFC bool, revalidateCanReuse bool) bool {
-	canReuse := CanReuseStored(reqHeader, cacheObj.RespHeaders, reqCacheControl, cacheObj.RespCacheControl, cacheObj.ReqHeaders, cacheObj.ReqRespTime, cacheObj.RespRespTime, strictRFC)
-	return canReuse == ReuseCan || (canReuse == ReuseMustRevalidate && revalidateCanReuse)
 }
 
 // GetAndCache makes a client request for the given `http.Request` and caches it if `CanCache`.
@@ -105,7 +101,7 @@ func GetAndCache(
 		if proxyURL != nil {
 			proxyURLStr = proxyURL.Host
 		}
-		respCode, respHeader, respBody, reqTime, reqRespTime, err := request(transport, req, proxyURL)
+		respCode, respHeader, respBody, reqTime, reqRespTime, err := web.Request(transport, req, proxyURL)
 		if err != nil {
 			log.Errorf("Parent error for URI %v %v %v cacheKey %v rule %v parent %v error %v\n", req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), cacheKey, remapName, proxyURLStr, err)
 			code := CodeConnectFailure
@@ -117,7 +113,7 @@ func GetAndCache(
 		}
 
 		log.Debugf("GetAndCache request returned %v headers %+v\n", respCode, respHeader)
-		respRespTime, ok := GetHTTPDate(respHeader, "Date")
+		respRespTime, ok := remap.GetHTTPDate(respHeader, "Date")
 		if !ok {
 			log.Errorf("request %v returned no Date header - RFC Violation!\n", req.RequestURI)
 			respRespTime = reqRespTime // if no Date was returned using the client response time simulates latency 0
@@ -125,7 +121,7 @@ func GetAndCache(
 
 		obj := (*cacheobj.CacheObj)(nil)
 		// TODO This means if we can't cache the object, we return nil. Verify this is ok
-		if !CanCache(reqHeader, respCode, respHeader, strictRFC) {
+		if !remap.CanCache(reqHeader, respCode, respHeader, strictRFC) {
 			return cacheobj.New(reqHeader, respBody, respCode, respCode, proxyURLStr, respHeader, reqTime, reqRespTime, reqRespTime)
 		}
 		log.Debugf("h.cache.AddSize %v\n", cacheKey)

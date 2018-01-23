@@ -1,4 +1,4 @@
-package cache
+package remap
 
 import (
 	"encoding/json"
@@ -100,7 +100,7 @@ type Remapping struct {
 }
 
 // RemappingProducer takes an HTTP Request and returns a Remapping to be used for that request.
-// TODO rename
+// TODO rename? interface?
 type RemappingProducer struct {
 	oldURI   string
 	rule     RemapRule
@@ -108,22 +108,12 @@ type RemappingProducer struct {
 	failures int
 }
 
-func (p *RemappingProducer) CacheKey() string {
-	return p.cacheKey
-}
-
-func (p *RemappingProducer) ConnectionClose() bool {
-	return p.rule.ConnectionClose
-}
-
-func (p *RemappingProducer) Name() string {
-	return p.rule.Name
-}
-
-func (p *RemappingProducer) DSCP() int {
-	return p.rule.DSCP
-}
-
+func (p *RemappingProducer) CacheKey() string        { return p.cacheKey }
+func (p *RemappingProducer) ConnectionClose() bool   { return p.rule.ConnectionClose }
+func (p *RemappingProducer) Name() string            { return p.rule.Name }
+func (p *RemappingProducer) DSCP() int               { return p.rule.DSCP }
+func (p *RemappingProducer) ToOriginHdrs() HdrModder { return &p.rule.ToOriginHeaders }
+func (p *RemappingProducer) ToClientHdrs() HdrModder { return &p.rule.ToClientHeaders }
 func (p *RemappingProducer) ToFQDN() string {
 	// TODO verify To is not allowed to be constructed with < 1 element
 	return strings.TrimPrefix(strings.TrimPrefix(p.rule.To[0].URL, "http://"), "https://")
@@ -144,7 +134,6 @@ var ErrNoMoreRetries = errors.New("retry num exceeded")
 func RequestURI(r *http.Request, scheme string) string {
 	return scheme + "://" + r.Host + r.RequestURI
 }
-
 func (hr simpleHTTPRequestRemapper) RemappingProducer(r *http.Request, scheme string) (*RemappingProducer, error) {
 	uri := RequestURI(r, scheme)
 	rule, ok := hr.remapper.Remap(uri)
@@ -152,7 +141,7 @@ func (hr simpleHTTPRequestRemapper) RemappingProducer(r *http.Request, scheme st
 		return nil, ErrRuleNotFound
 	}
 
-	if ip, err := GetIP(r); err != nil {
+	if ip, err := web.GetIP(r); err != nil {
 		return nil, fmt.Errorf("parsing client IP: %v", err)
 	} else if !rule.Allowed(ip) {
 		return nil, ErrIPNotAllowed
@@ -297,10 +286,31 @@ type RemapRuleTo struct {
 	RetryCodes map[int]struct{}
 }
 
+type HdrModder interface {
+	Mod(h *http.Header)
+}
+
 type ModHdrs struct {
 	Set  []web.Hdr `json:"set"`
 	Drop []string  `json:"drop"`
 }
+
+// Mod drops and sets the headers in h according to its rules.
+func (mh *ModHdrs) Mod(h *http.Header) {
+	if h == nil || len(*h) == 0 { // this happens on a dial tcp timeout
+		log.Debugf("modHdrs: Header is  a nil map")
+		return
+	}
+	for _, hdr := range mh.Drop {
+		log.Debugf("modHdrs: Dropping header %s\n", hdr)
+		h.Del(hdr)
+	}
+	for _, hdr := range mh.Set {
+		log.Debugf("modHdrs: Setting header %s: %s \n", hdr.Name, hdr.Value)
+		h.Set(hdr.Name, hdr.Value)
+	}
+}
+
 type RemapRuleBase struct {
 	Name               string          `json:"name"`
 	From               string          `json:"from"`
@@ -335,18 +345,6 @@ type RemapRule struct {
 	Deny            []*net.IPNet
 	RetryCodes      map[int]struct{}
 	ConsistentHash  chash.ATSConsistentHash
-}
-
-func GetIP(r *http.Request) (net.IP, error) {
-	clientIPStr, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		return nil, fmt.Errorf("malformed client address '%s'", r.RemoteAddr)
-	}
-	clientIP := net.ParseIP(clientIPStr)
-	if clientIP == nil {
-		return nil, fmt.Errorf("malformed client IP address '%s'", clientIPStr)
-	}
-	return clientIP, nil
 }
 
 func (r *RemapRule) Allowed(ip net.IP) bool {
