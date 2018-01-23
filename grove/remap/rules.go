@@ -1,4 +1,4 @@
-package cache
+package remap
 
 import (
 	"math"
@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/incubator-trafficcontrol/grove/cacheobj"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -153,6 +154,12 @@ func CanReuseStored(reqHeaders http.Header, respHeaders http.Header, reqCacheCon
 
 	log.Debugf("CanReuseStored true (respCacheControl %+v)\n", respCacheControl)
 	return ReuseCan
+}
+
+// CanReuse is a helper wrapping CanReuseStored, returning a boolean rather than an enum, for when it's known whether MustRevalidate can be used.
+func CanReuse(reqHeader http.Header, reqCacheControl web.CacheControl, cacheObj *cacheobj.CacheObj, strictRFC bool, revalidateCanReuse bool) bool {
+	canReuse := CanReuseStored(reqHeader, cacheObj.RespHeaders, reqCacheControl, cacheObj.RespCacheControl, cacheObj.ReqHeaders, cacheObj.ReqRespTime, cacheObj.RespRespTime, strictRFC)
+	return canReuse == ReuseCan || (canReuse == ReuseMustRevalidate && revalidateCanReuse)
 }
 
 // canStoreAuthenticated checks the constraints in RFC7234§3.2

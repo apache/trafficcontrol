@@ -1,41 +1,19 @@
-package cache
+package stat
 
 import (
-	"bufio"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net"
 	"net/http"
-	"os"
-	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
-	"unicode"
 
+	"github.com/apache/incubator-trafficcontrol/grove/remap"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
-type statHandler struct {
-	interfaceName string
-	stats         Stats
-	statRules     RemapRulesStats
-}
-
-// NewStatHandler returns an HTTP handler
-func NewStatHandler(interfaceName string, remapRules []RemapRule, stats Stats, statRules RemapRulesStats) http.Handler {
-	return statHandler{interfaceName: interfaceName, stats: stats, statRules: statRules}
-}
-
-func NewStatHandlerFunc(interfaceName string, remapRules []RemapRule, stats Stats, statRules RemapRulesStats) http.HandlerFunc {
-	handler := NewStatHandler(interfaceName, remapRules, stats, statRules)
-	f := func(w http.ResponseWriter, r *http.Request) {
-		handler.ServeHTTP(w, r)
-	}
-	return f
+type Cache interface {
+	Size() uint64
 }
 
 type StatsSystem interface {
@@ -67,9 +45,12 @@ type Stats interface {
 
 	CacheSize() uint64
 	CacheCapacity() uint64
+
+	// Write writes to the remapRuleStats of s, and returns the bytes written to the connection
+	Write(w http.ResponseWriter, conn *web.InterceptConn, reqFQDN string, remoteAddr string, code int, bytesWritten uint64, cacheHit bool) uint64
 }
 
-func NewStats(remapRules []RemapRule, cache Cache, cacheCapacityBytes uint64) Stats {
+func NewStats(remapRules []remap.RemapRule, cache Cache, cacheCapacityBytes uint64) Stats {
 	connections := uint64(0)
 	cacheHits := uint64(0)
 	cacheMisses := uint64(0)
@@ -84,6 +65,57 @@ func NewStats(remapRules []RemapRule, cache Cache, cacheCapacityBytes uint64) St
 	}
 }
 
+// Write writes to the remapRuleStats of s, and returns the bytes written to the connection
+func (stats *stats) Write(w http.ResponseWriter, conn *web.InterceptConn, reqFQDN string, remoteAddr string, code int, bytesWritten uint64, cacheHit bool) uint64 {
+	remapRuleStats, ok := stats.Remap().Stats(reqFQDN)
+	if !ok {
+		log.Errorf("Remap rule %v not in Stats\n", reqFQDN)
+		return bytesWritten
+	}
+
+	if wFlusher, ok := w.(http.Flusher); !ok {
+		log.Errorf("ResponseWriter is not a Flusher, could not flush written bytes, stat out_bytes will be inaccurate!\n")
+	} else {
+		wFlusher.Flush()
+	}
+
+	bytesRead := 0 // TODO get somehow? Count body? Sum header?
+	if conn != nil {
+		bytesRead = conn.BytesRead()
+		bytesWritten = uint64(conn.BytesWritten()) // get the more accurate interceptConn bytes written, if we can
+		// Don't log - the Handler has already logged the failure to get the conn
+	}
+
+	// bytesRead, bytesWritten := getConnInfoAndDestroyWriter(w, stats, remapRuleName)
+	remapRuleStats.AddInBytes(uint64(bytesRead))
+	remapRuleStats.AddOutBytes(uint64(bytesWritten))
+
+	if cacheHit {
+		stats.AddCacheHit()
+		remapRuleStats.AddCacheHit()
+	} else {
+		stats.AddCacheMiss()
+		remapRuleStats.AddCacheMiss()
+	}
+
+	switch {
+	case code < 200:
+		log.Errorf("responded with invalid code %v\n", code)
+	case code < 300:
+		remapRuleStats.AddStatus2xx(1)
+	case code < 400:
+		remapRuleStats.AddStatus3xx(1)
+	case code < 500:
+		remapRuleStats.AddStatus4xx(1)
+	case code < 600:
+		remapRuleStats.AddStatus5xx(1)
+	default:
+		log.Errorf("responded with invalid code %v\n", code)
+	}
+	return bytesWritten
+}
+
+// stats fulfills the Stats interface
 type stats struct {
 	system             StatsSystem
 	remap              StatsRemaps
@@ -131,7 +163,7 @@ type StatsRemap interface {
 	AddCacheMiss()
 }
 
-func getFromFQDN(r RemapRule) string {
+func getFromFQDN(r remap.RemapRule) string {
 	path := r.From
 	schemeEnd := `://`
 	if i := strings.Index(path, schemeEnd); i != -1 {
@@ -144,7 +176,7 @@ func getFromFQDN(r RemapRule) string {
 	return path
 }
 
-func NewStatsRemaps(remapRules []RemapRule) StatsRemaps {
+func NewStatsRemaps(remapRules []remap.RemapRule) StatsRemaps {
 	m := make(map[string]StatsRemap, len(remapRules))
 	for _, rule := range remapRules {
 		m[getFromFQDN(rule)] = NewStatsRemap() // must pre-allocate, for threadsafety, so users are never changing the map itself, only the value pointed to.
@@ -152,6 +184,7 @@ func NewStatsRemaps(remapRules []RemapRule) StatsRemaps {
 	return statsRemaps(m)
 }
 
+// statsRemaps fulfills the StatsRemaps interface
 type statsRemaps map[string]StatsRemap
 
 func (s statsRemaps) Stats(rule string) (StatsRemap, bool) {
@@ -267,194 +300,4 @@ type StatsSystemJSON struct {
 type StatsJSON struct {
 	ATS    map[string]interface{} `json:"ats"`
 	System StatsSystemJSON        `json:"system"`
-}
-
-func loadFileAndLogGrep(filename string, grepStr string) string {
-	file, err := os.Open(filename)
-	if err != nil {
-		log.Errorf("reading system stat file %v: %v\n", filename, err)
-		return ""
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		l := scanner.Text()
-		l = strings.TrimLeftFunc(l, unicode.IsSpace)
-		if strings.HasPrefix(l, grepStr) {
-			return l
-		}
-	}
-	log.Errorf("reading system stat file %v looking for %v: not found\n", filename, grepStr)
-	return ""
-}
-
-func loadFileAndLog(filename string) string {
-	f, err := ioutil.ReadFile(filename)
-	if err != nil {
-		log.Errorf("reading system stat file %v: %v\n", filename, err)
-		return ""
-	}
-	return strings.TrimSpace(string(f))
-}
-
-func loadFileAndLogInt(filename string) int64 {
-	s := loadFileAndLog(filename)
-	i, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		log.Errorf("parsing system stat file %v: %v\n", filename, err)
-	}
-	return i
-}
-
-func (h statHandler) LoadSystemStats() StatsSystemJSON {
-	s := StatsSystemJSON{}
-	s.InterfaceName = h.interfaceName
-	s.InterfaceSpeed = loadFileAndLogInt(fmt.Sprintf("/sys/class/net/%v/speed", h.interfaceName))
-	s.ProcNetDev = loadFileAndLogGrep("/proc/net/dev", h.interfaceName)
-	s.ProcLoadAvg = loadFileAndLog("/proc/loadavg")
-	s.ConfigReloadRequests = h.stats.System().ConfigReloadRequests()
-	s.LastReloadRequest = h.stats.System().LastReloadRequest().Unix()
-	s.ConfigReloads = h.stats.System().ConfigReloads()
-	s.LastReload = h.stats.System().LastReload().Unix()
-	s.AstatsLoad = h.stats.System().AstatsLoad().Unix()
-	s.Something = "here" // emulate existing ATS Astats behavior
-	return s
-}
-
-func (h statHandler) LoadRemapStats() map[string]interface{} {
-	statsRemaps := h.stats.Remap()
-	rules := statsRemaps.Rules()
-	jsonStats := make(map[string]interface{}, len(rules)*8) // remap has 8 members: in, out, 2xx, 3xx, 4xx, 5xx, hits, misses
-	jsonStats["server"] = "6.2.1"
-	for _, rule := range rules {
-		ruleName := rule
-		statsRemap, ok := statsRemaps.Stats(ruleName)
-		if !ok {
-			continue // TODO warn?
-		}
-		jsonStats["plugin.remap_stats."+ruleName+".in_bytes"] = statsRemap.InBytes()
-		jsonStats["plugin.remap_stats."+ruleName+".out_bytes"] = statsRemap.OutBytes()
-		jsonStats["plugin.remap_stats."+ruleName+".status_2xx"] = statsRemap.Status2xx()
-		jsonStats["plugin.remap_stats."+ruleName+".status_3xx"] = statsRemap.Status3xx()
-		jsonStats["plugin.remap_stats."+ruleName+".status_4xx"] = statsRemap.Status4xx()
-		jsonStats["plugin.remap_stats."+ruleName+".status_5xx"] = statsRemap.Status5xx()
-		jsonStats["plugin.remap_stats."+ruleName+".cache_hits"] = statsRemap.CacheHits()
-		jsonStats["plugin.remap_stats."+ruleName+".cache_misses"] = statsRemap.CacheMisses()
-	}
-
-	jsonStats["proxy.process.http.current_client_connections"] = h.stats.Connections()
-	jsonStats["proxy.process.http.cache_hits"] = h.stats.CacheHits()
-	jsonStats["proxy.process.http.cache_misses"] = h.stats.CacheMisses()
-	jsonStats["proxy.process.http.cache_capacity_bytes"] = h.stats.CacheCapacity()
-	jsonStats["proxy.process.http.cache_size_bytes"] = h.stats.CacheSize()
-
-	return jsonStats
-}
-
-func (h statHandler) Allowed(ip net.IP) bool {
-	// TODO remove duplication
-	for _, network := range h.statRules.Deny {
-		if network.Contains(ip) {
-			log.Debugf("deny contains ip\n")
-			return false
-		}
-	}
-	if len(h.statRules.Allow) == 0 {
-		log.Debugf("Allowed len 0\n")
-		return true
-	}
-	for _, network := range h.statRules.Allow {
-		if network.Contains(ip) {
-			log.Debugf("allow contains ip\n")
-			return true
-		}
-	}
-	return false
-}
-
-func (h statHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// TODO access log? Stats byte count?
-	ip, err := GetIP(r)
-	if err != nil {
-		code := http.StatusInternalServerError
-		w.WriteHeader(code)
-		w.Write([]byte(http.StatusText(code)))
-		log.Errorln("statHandler ServeHTTP failed to get IP: " + ip.String())
-		return
-	}
-	if !h.Allowed(ip) {
-		code := http.StatusForbidden
-		w.WriteHeader(code)
-		w.Write([]byte(http.StatusText(code)))
-		log.Debugln("statHandler.ServeHTTP IP " + ip.String() + " FORBIDDEN") // TODO event?
-		return
-	}
-
-	// TODO gzip
-	system := h.LoadSystemStats() // TODO goroutine on a timer?
-	ats := map[string]interface{}{"server": "6.2.1"}
-	if r.URL.Query().Get("application") != "system" {
-		ats = h.LoadRemapStats()
-	}
-	stats := StatsJSON{System: system, ATS: ats}
-
-	bytes, err := json.Marshal(stats)
-	if err != nil {
-		code := http.StatusInternalServerError
-		w.WriteHeader(code)
-		w.Write([]byte(http.StatusText(code)))
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(bytes)
-}
-
-// WriteStats writes to the remapRuleStats, and returns the bytes written to the connection
-func WriteStats(stats Stats, w http.ResponseWriter, conn *web.InterceptConn, reqFQDN string, remoteAddr string, code int, bytesWritten uint64, cacheHit bool) uint64 {
-	remapRuleStats, ok := stats.Remap().Stats(reqFQDN)
-	if !ok {
-		log.Errorf("Remap rule %v not in Stats\n", reqFQDN)
-		return bytesWritten
-	}
-
-	if wFlusher, ok := w.(http.Flusher); !ok {
-		log.Errorf("ResponseWriter is not a Flusher, could not flush written bytes, stat out_bytes will be inaccurate!\n")
-	} else {
-		wFlusher.Flush()
-	}
-
-	bytesRead := 0 // TODO get somehow? Count body? Sum header?
-	if conn != nil {
-		bytesRead = conn.BytesRead()
-		bytesWritten = uint64(conn.BytesWritten()) // get the more accurate interceptConn bytes written, if we can
-		// Don't log - the Handler has already logged the failure to get the conn
-	}
-
-	// bytesRead, bytesWritten := getConnInfoAndDestroyWriter(w, stats, remapRuleName)
-	remapRuleStats.AddInBytes(uint64(bytesRead))
-	remapRuleStats.AddOutBytes(uint64(bytesWritten))
-
-	if cacheHit {
-		stats.AddCacheHit()
-		remapRuleStats.AddCacheHit()
-	} else {
-		stats.AddCacheMiss()
-		remapRuleStats.AddCacheMiss()
-	}
-
-	switch {
-	case code < 200:
-		log.Errorf("responded with invalid code %v\n", code)
-	case code < 300:
-		remapRuleStats.AddStatus2xx(1)
-	case code < 400:
-		remapRuleStats.AddStatus3xx(1)
-	case code < 500:
-		remapRuleStats.AddStatus4xx(1)
-	case code < 600:
-		remapRuleStats.AddStatus5xx(1)
-	default:
-		log.Errorf("responded with invalid code %v\n", code)
-	}
-	return bytesWritten
 }
