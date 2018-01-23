@@ -22,6 +22,8 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/grove/cache"
 	"github.com/apache/incubator-trafficcontrol/grove/config"
+	"github.com/apache/incubator-trafficcontrol/grove/remap"
+	"github.com/apache/incubator-trafficcontrol/grove/stat"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/hashicorp/golang-lru"
@@ -59,7 +61,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	remapper, err := cache.LoadRemapper(cfg.RemapRulesFile)
+	remapper, err := remap.LoadRemapper(cfg.RemapRulesFile)
 	if err != nil {
 		log.Errorf("starting service: loading remap rules: %v\n", err)
 		os.Exit(1)
@@ -83,10 +85,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	stats := cache.NewStats(remapper.Rules(), lruCache, uint64(cfg.CacheSizeBytes))
+	stats := stat.NewStats(remapper.Rules(), lruCache, uint64(cfg.CacheSizeBytes)) // TODO rename
 
 	buildHandler := func(scheme string, port string, conns *web.ConnMap) (http.Handler, *cache.HandlerPointer) {
-		statHandler := cache.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
+		statHandler := stat.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
 		cacheHandler := cache.NewHandler(
 			lruCache,
 			remapper,
@@ -159,7 +161,7 @@ func main() {
 			}
 		}
 
-		remapper, err = cache.LoadRemapper(cfg.RemapRulesFile)
+		remapper, err = remap.LoadRemapper(cfg.RemapRulesFile)
 		if err != nil {
 			log.Errorf("starting service: loading remap rules: %v\n", err)
 			os.Exit(1)
@@ -182,7 +184,7 @@ func main() {
 			}
 		}
 
-		stats = cache.NewStats(remapper.Rules(), lruCache, uint64(cfg.CacheSizeBytes)) // TODO copy stats from old stats object?
+		stats = stat.NewStats(remapper.Rules(), lruCache, uint64(cfg.CacheSizeBytes)) // TODO copy stats from old stats object?
 
 		httpCacheHandler := cache.NewHandler(
 			lruCache,
@@ -219,7 +221,7 @@ func main() {
 		httpsHandlerPointer.Set(httpsCacheHandler)
 
 		if cfg.Port != oldCfg.Port {
-			statHandler := cache.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
+			statHandler := stat.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
 			handler := http.NewServeMux()
 			handler.Handle("/_astats", statHandler)
 			handler.Handle("/", httpHandlerPointer)
@@ -240,7 +242,7 @@ func main() {
 		}
 
 		if (httpsServer == nil || cfg.HTTPSPort != oldCfg.HTTPSPort) && cfg.CertFile != "" && cfg.KeyFile != "" {
-			statHandler := cache.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
+			statHandler := stat.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
 			handler := http.NewServeMux()
 			handler.Handle("/_astats", statHandler)
 			handler.Handle("/", httpsHandlerPointer)
@@ -314,7 +316,7 @@ func startServer(handler http.Handler, listener net.Listener, connState func(net
 	return server
 }
 
-func loadCerts(rules []cache.RemapRule) ([]tls.Certificate, error) {
+func loadCerts(rules []remap.RemapRule) ([]tls.Certificate, error) {
 	certs := []tls.Certificate{}
 	for _, rule := range rules {
 		if rule.CertificateFile == "" && rule.CertificateKeyFile == "" {
