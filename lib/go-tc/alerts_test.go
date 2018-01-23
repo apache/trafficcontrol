@@ -35,8 +35,8 @@ func TestGetHandleErrorFunc(t *testing.T) {
 	}
 	body := `{"alerts":[{"text":"this is an error","level":"error"}]}`
 
-	errHandler := GetHandleErrorFunc(w, r)
-	errHandler(fmt.Errorf("this is an error"), http.StatusBadRequest)
+	errHandler := GetHandleErrorsFunc(w, r)
+	errHandler(http.StatusBadRequest, fmt.Errorf("this is an error"))
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}
@@ -44,8 +44,8 @@ func TestGetHandleErrorFunc(t *testing.T) {
 	w = httptest.NewRecorder()
 	body = `{"alerts":[]}`
 
-	errHandler = GetHandleErrorFunc(w, r)
-	errHandler(nil, http.StatusBadRequest)
+	errHandler = GetHandleErrorsFunc(w, r)
+	errHandler(http.StatusBadRequest, nil)
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}
