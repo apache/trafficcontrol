@@ -867,7 +867,7 @@ The Coverage Zone File (CZF) should contain a cachegroup name to network prefix 
           "192.168.8.0/24",
           "192.168.9.0/24"
         ]
-      }
+      },
       "cache-group-02": {
         "coordinates": {
           "latitude":  3.3,
@@ -916,7 +916,7 @@ The Deep Coverage Zone File (DCZF) format is similar to the CZF format but adds 
           "edge-01",
           "edge-02"
         ]
-      }
+      },
       "location-02": {
         "coordinates": {
           "latitude":  7.7,
