@@ -103,6 +103,7 @@ func ReadHandler(typeRef Reader, db *sqlx.DB) http.HandlerFunc {
 		if err != nil {
 			log.Errorf("unable to retrieve current user from context: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
+			return
 		}
 
 		results, err, errType := typeRef.Read(db, q, *user)
@@ -170,6 +171,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 		if err != nil {
 			log.Errorf("unable to retrieve current user from context: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
+			return
 		}
 		id, err := strconv.Atoi(pathParams["id"])
 		if err != nil {
@@ -191,6 +193,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 			}
 			if !authorized {
 				handleErrs(http.StatusForbidden, errors.New("not authorized on this tenant"))
+				return
 			}
 		}
 
@@ -254,6 +257,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 		if err != nil {
 			log.Errorf("unable to retrieve current user from context: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
+			return
 		}
 
 		id, err := strconv.Atoi(pathParams["id"])
@@ -272,6 +276,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 			}
 			if !authorized {
 				handleErrs(http.StatusForbidden, errors.New("not authorized on this tenant"))
+				return
 			}
 		}
 
@@ -336,6 +341,7 @@ func CreateHandler(typeRef Inserter, db *sqlx.DB) http.HandlerFunc {
 		if err != nil {
 			log.Errorf("unable to retrieve current user from context: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
+			return
 		}
 
 		// if the object has tenancy enabled, check that user is able to access the tenant
@@ -347,6 +353,7 @@ func CreateHandler(typeRef Inserter, db *sqlx.DB) http.HandlerFunc {
 			}
 			if !authorized {
 				handleErrs(http.StatusForbidden, errors.New("not authorized on this tenant"))
+				return
 			}
 		}
 
