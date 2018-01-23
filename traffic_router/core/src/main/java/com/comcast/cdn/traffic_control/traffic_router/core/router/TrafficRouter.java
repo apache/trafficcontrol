@@ -257,7 +257,6 @@ public class TrafficRouter {
 				result = ResultType.DEEP_CZ;
 			} else {
 				// No deep caches for this client, would have used them if there were any. Fallback to regular CZ
-				result = ResultType.DEEP_CZ_MISS;
 				cacheLocation = getCoverageZoneCacheLocation(request.getClientIP(), ds);
 			}
 		} else {
