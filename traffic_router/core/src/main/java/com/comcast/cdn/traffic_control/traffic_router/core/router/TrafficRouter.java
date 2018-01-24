@@ -648,9 +648,9 @@ public class TrafficRouter {
 		final DeliveryService deliveryService = cacheRegister.getDeliveryService(deliveryServiceId);
 		CacheLocation cacheLocation = networkNode.getCacheLocation();
 
-		if (useDeep && cacheLocation != null && cacheLocation.getCaches().isEmpty()) {
+		if (useDeep && cacheLocation != null) {
 			// lazily load deep Caches into the deep CacheLocation
-			loadDeepCaches(networkNode, cacheLocation);
+			cacheLocation.loadDeepCaches(networkNode.getDeepCacheNames(), cacheRegister);
 		}
 
 		if (cacheLocation != null && !getSupportingCaches(cacheLocation.getCaches(), deliveryService).isEmpty()) {
@@ -677,18 +677,6 @@ public class TrafficRouter {
 		// We had a hit in the CZF but the name does not match a known cache location.
 		// Check whether the CZF entry has a geolocation and use it if so.
 		return getClosestCacheLocation(cacheRegister.filterAvailableLocations(deliveryServiceId), networkNode.getGeolocation(), cacheRegister.getDeliveryService(deliveryServiceId));
-	}
-
-	private void loadDeepCaches(final NetworkNode networkNode, final CacheLocation cacheLocation) {
-		if (networkNode.getDeepCacheNames() != null) {
-			for (final String deepCacheName : networkNode.getDeepCacheNames()) {
-				final Cache deepCache = cacheRegister.getCacheMap().get(deepCacheName);
-				if (deepCache != null) {
-					LOGGER.debug("DDC: Adding " + deepCacheName + " to " + cacheLocation.getId());
-					cacheLocation.addCache(deepCache);
-				}
-			}
-		}
 	}
 
 	public CacheLocation getDeepCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService) {
