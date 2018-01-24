@@ -20,7 +20,6 @@ package main
  */
 
 import (
-	"net/url"
 	"testing"
 	"time"
 
@@ -90,12 +89,11 @@ func TestGetPhysLocations(t *testing.T) {
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := url.Values{}
-	v.Set("dsId", "1")
+	v := map[string]string{"dsId": "1"}
 
-	servers, err := getPhysLocations(v, db)
-	if err != nil {
-		t.Errorf("getPhysLocations expected: nil error, actual: %v", err)
+	servers, errs, errType := getPhysLocations(v, db)
+	if len(errs) > 0 {
+		t.Errorf("getPhysLocations expected: no errors, actual: %v with error type: %s", err, errType.String())
 	}
 
 	if len(servers) != 2 {

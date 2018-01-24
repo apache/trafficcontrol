@@ -20,7 +20,6 @@ package main
  */
 
 import (
-	"net/url"
 	"testing"
 	"time"
 
@@ -69,12 +68,11 @@ func TestGetDivisions(t *testing.T) {
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := url.Values{}
-	v.Set("dsId", "1")
+	v := map[string]string{"dsId": "1"}
 
-	servers, err := getDivisions(v, db)
-	if err != nil {
-		t.Errorf("getDivisions expected: nil error, actual: %v", err)
+	servers, errs, errType := getDivisions(v, db)
+	if len(errs) > 0 {
+		t.Errorf("getDivisions expected: no errors, actual: %v with error type: %s", errs, errType.String())
 	}
 
 	if len(servers) != 2 {

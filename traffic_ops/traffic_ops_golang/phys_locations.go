@@ -23,8 +23,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -35,21 +35,15 @@ func physLocationsHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
-		ctx := r.Context()
-		pathParams, err := api.GetPathParams(ctx)
+		params, err := api.GetCombinedParams(r)
 		if err != nil {
+			log.Errorf("unable to get parameters from request: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
-			return
 		}
 
-		// Load the PathParams into the query parameters for pass through
-		q := r.URL.Query()
-		for k, v := range pathParams {
-			q.Set(k, v)
-		}
-		resp, err := getPhysLocationsResponse(q, db)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
+		resp, errs, errType := getPhysLocationsResponse(params, db)
+		if len(errs) > 0 {
+			tc.HandleErrorsWithType(errs, errType, handleErrs)
 			return
 		}
 
@@ -64,34 +58,39 @@ func physLocationsHandler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func getPhysLocationsResponse(q url.Values, db *sqlx.DB) (*tc.PhysLocationsResponse, error) {
-	physLocations, err := getPhysLocations(q, db)
-	if err != nil {
-		return nil, fmt.Errorf("getting physLocations response: %v", err)
+func getPhysLocationsResponse(params map[string]string, db *sqlx.DB) (*tc.PhysLocationsResponse, []error, tc.ApiErrorType) {
+	physLocations, errs, errType := getPhysLocations(params, db)
+	if len(errs) > 0 {
+		return nil, errs, errType
 	}
-
 	resp := tc.PhysLocationsResponse{
 		Response: physLocations,
 	}
-	return &resp, nil
+	return &resp, nil, tc.NoError
 }
 
-func getPhysLocations(v url.Values, db *sqlx.DB) ([]tc.PhysLocation, error) {
+func getPhysLocations(params map[string]string, db *sqlx.DB) ([]tc.PhysLocation, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 	var err error
 
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]string{
-		"id":     "pl.id",
-		"region": "pl.region",
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"id":     dbhelpers.WhereColumnInfo{"pl.id", api.IsInt},
+		"region": dbhelpers.WhereColumnInfo{"pl.region", api.IsInt},
 	}
 
-	query, queryValues := dbhelpers.BuildQuery(v, selectPhysLocationsQuery(), queryParamsToQueryCols)
+	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return nil, errs, tc.DataConflictError
+	}
+
+	query := selectPhysLocationsQuery() + where + orderBy
+	log.Debugln("Query is ", query)
 
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, err
+		return nil, []error{err}, tc.SystemError
 	}
 	defer rows.Close()
 
@@ -99,11 +98,11 @@ func getPhysLocations(v url.Values, db *sqlx.DB) ([]tc.PhysLocation, error) {
 	for rows.Next() {
 		var s tc.PhysLocation
 		if err = rows.StructScan(&s); err != nil {
-			return nil, fmt.Errorf("getting physLocations: %v", err)
+			return nil, []error{fmt.Errorf("getting physLocations: %v", err)}, tc.SystemError
 		}
 		physLocations = append(physLocations, s)
 	}
-	return physLocations, nil
+	return physLocations, nil, tc.NoError
 }
 
 func selectPhysLocationsQuery() string {

@@ -22,11 +22,11 @@ package cdn
 import (
 	"errors"
 	"fmt"
-	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
@@ -71,25 +71,29 @@ func (cdn *TOCDN) Validate(db *sqlx.DB) []error {
 	return errs
 }
 
-func (cdn *TOCDN) Read(db *sqlx.DB, v url.Values, user auth.CurrentUser) ([]interface{}, error, tc.ApiErrorType) {
+func (cdn *TOCDN) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
-	var err error
 
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]string{
-		"domainName":    "domain_name",
-		"dnssecEnabled": "dnssec_enabled",
-		"id":            "id",
-		"name":          "name",
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"domainName":    dbhelpers.WhereColumnInfo{"domain_name", nil},
+		"dnssecEnabled": dbhelpers.WhereColumnInfo{"dnssec_enabled", nil},
+		"id":            dbhelpers.WhereColumnInfo{"id", api.IsInt},
+		"name":          dbhelpers.WhereColumnInfo{"name", nil},
+	}
+	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return nil, errs, tc.DataConflictError
 	}
 
-	query, queryValues := dbhelpers.BuildQuery(v, selectCDNsQuery(), queryParamsToQueryCols)
+	query := selectCDNsQuery() + where + orderBy
+	log.Debugln("Query is ", query)
 
-	rows, err = db.NamedQuery(query, queryValues)
+	rows, err := db.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying CDNs: %v", err)
-		return nil, tc.DBError, tc.SystemError
+		return nil, []error{tc.DBError}, tc.SystemError
 	}
 	defer rows.Close()
 
@@ -98,12 +102,12 @@ func (cdn *TOCDN) Read(db *sqlx.DB, v url.Values, user auth.CurrentUser) ([]inte
 		var s tc.CDN
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorf("error parsing CDN rows: %v", err)
-			return nil, tc.DBError, tc.SystemError
+			return nil, []error{tc.DBError}, tc.SystemError
 		}
 		CDNs = append(CDNs, s)
 	}
 
-	return CDNs, nil, tc.NoError
+	return CDNs, []error{}, tc.NoError
 }
 
 func selectCDNsQuery() string {

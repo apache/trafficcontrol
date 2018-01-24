@@ -20,7 +20,6 @@ package main
  */
 
 import (
-	"net/url"
 	"testing"
 	"time"
 
@@ -72,12 +71,11 @@ func TestGetASNs(t *testing.T) {
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := url.Values{}
-	v.Set("dsId", "1")
+	v := map[string]string{"dsId": "1"}
 
-	servers, err := getASNs(v, db)
-	if err != nil {
-		t.Errorf("getASNs expected: nil error, actual: %v", err)
+	servers, errs, errType := getASNs(v, db)
+	if len(errs) > 0 {
+		t.Errorf("getASNs expected: no errors, actual: %v with type %s", errs, errType.String())
 	}
 
 	if len(servers) != 2 {

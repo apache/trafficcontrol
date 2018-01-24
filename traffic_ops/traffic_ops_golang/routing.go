@@ -165,7 +165,7 @@ func Handler(routes map[string][]CompiledRoute, catchall http.Handler, w http.Re
 
 		ctx := r.Context()
 
-		params := api.PathParams{}
+		params := map[string]string{}
 		for i, v := range compiledRoute.Params {
 			params[v] = match[i+1]
 		}

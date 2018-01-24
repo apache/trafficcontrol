@@ -22,6 +22,7 @@ package tenant
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -47,7 +48,7 @@ func GetDeliveryServiceTenantInfo(xmlId string, db *sqlx.DB) (*DeliveryServiceTe
 	ds := DeliveryServiceTenantInfo{}
 	query := "SELECT xml_id,tenant_id FROM deliveryservice where xml_id = $1"
 
-	err := db.Get(&ds,query,xmlId)
+	err := db.Get(&ds, query, xmlId)
 	switch {
 	case err == sql.ErrNoRows:
 		ds = DeliveryServiceTenantInfo{}
