@@ -17,6 +17,7 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 
@@ -46,6 +47,46 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// GET a DeliveryServiceRequest by the DeliveryServiceRequest xmlId
+func (to *Session) GetDeliveryServiceRequestByXMLID(id int) ([]tc.DeliveryServiceRequest, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_DS_REQUESTS, id)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	data := struct {
+		Response []tc.DeliveryServiceRequest `json:"response"`
+	}{}
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// GET a DeliveryServiceRequest by the DeliveryServiceRequest id
+func (to *Session) GetDeliveryServiceRequestByID(id int) ([]tc.DeliveryServiceRequest, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_DS_REQUESTS, id)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	data := struct {
+		Response []tc.DeliveryServiceRequest `json:"response"`
+	}{}
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
 }
 
 /*
@@ -80,24 +121,6 @@ func (to *Session) GetDeliveryServiceRequests() ([]tc.DeliveryServiceRequest, Re
 
 	var data tc.DeliveryServiceRequestsResponse
 	err = json.NewDecoder(resp.Body).Decode(&data)
-	return data.Response, reqInf, nil
-}
-
-// GET a DeliveryServiceRequest by the DeliveryServiceRequest id
-func (to *Session) GetDeliveryServiceRequestByID(id int) ([]tc.DeliveryServiceRequest, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_DS_REQUESTS, id)
-	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.DeliveryServiceRequestsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
 	return data.Response, reqInf, nil
 }
 
