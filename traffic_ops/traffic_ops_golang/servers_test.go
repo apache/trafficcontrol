@@ -20,7 +20,6 @@ package main
  */
 
 import (
-	"net/url"
 	"testing"
 	"time"
 
@@ -159,13 +158,12 @@ func TestGetServersByCachegroup(t *testing.T) {
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := url.Values{}
-	v.Set("cachegroup", "cachegroup2")
+	v := map[string]string{"cachegroup": "cachegroup2"}
 
-	servers, err := getServers(v, db, auth.PrivLevelAdmin)
+	servers, errs, errType := getServers(v, db, auth.PrivLevelAdmin)
 	log.Debugln("%v-->", servers)
-	if err != nil {
-		t.Errorf("getServers expected: nil error, actual: %v", err)
+	if len(errs) > 0 {
+		t.Errorf("getServers expected: no errors, actual: %v with error type: %s", errs, errType.String())
 	}
 
 	if len(servers) != 3 {

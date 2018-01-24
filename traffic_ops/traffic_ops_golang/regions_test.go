@@ -20,7 +20,6 @@ package main
  */
 
 import (
-	"net/url"
 	"testing"
 	"time"
 
@@ -72,12 +71,11 @@ func TestGetRegions(t *testing.T) {
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := url.Values{}
-	v.Set("dsId", "1")
+	v := map[string]string{"dsId": "1"}
 
-	servers, err := getRegions(v, db)
-	if err != nil {
-		t.Errorf("getRegions expected: nil error, actual: %v", err)
+	servers, errs, errType := getRegions(v, db)
+	if len(errs) > 0 {
+		t.Errorf("getRegions expected: no errors, actual: %v with error type: %s", errs, errType.String())
 	}
 
 	if len(servers) != 2 {

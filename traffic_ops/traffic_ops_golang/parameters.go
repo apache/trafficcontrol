@@ -23,10 +23,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
@@ -45,10 +45,15 @@ func parametersHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 		privLevel := user.PrivLevel
 
-		q := r.URL.Query()
-		resp, err := getParametersResponse(q, db, privLevel)
+		params, err := api.GetCombinedParams(r)
 		if err != nil {
+			log.Errorf("unable to get parameters from request: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
+		}
+
+		resp, errs, errType := getParametersResponse(params, db, privLevel)
+		if len(errs) > 0 {
+			tc.HandleErrorsWithType(errs, errType, handleErrs)
 			return
 		}
 
@@ -63,40 +68,44 @@ func parametersHandler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func getParametersResponse(q url.Values, db *sqlx.DB, privLevel int) (*tc.ParametersResponse, error) {
-	parameters, err := getParameters(q, db, privLevel)
-	if err != nil {
-		return nil, fmt.Errorf("getting parameters response: %v", err)
+func getParametersResponse(params map[string]string, db *sqlx.DB, privLevel int) (*tc.ParametersResponse, []error, tc.ApiErrorType) {
+	parameters, errs, errType := getParameters(params, db, privLevel)
+	if len(errs) > 0 {
+		return nil, errs, errType
 	}
 
 	resp := tc.ParametersResponse{
 		Response: parameters,
 	}
-	return &resp, nil
+	return &resp, nil, tc.NoError
 }
 
-func getParameters(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Parameter, error) {
+func getParameters(params map[string]string, db *sqlx.DB, privLevel int) ([]tc.Parameter, []error, tc.ApiErrorType) {
 
 	var rows *sqlx.Rows
 	var err error
 
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
-	queryParamsToSQLCols := map[string]string{
-		"config_file":  "p.config_file",
-		"id":           "p.id",
-		"last_updated": "p.last_updated",
-		"name":         "p.name",
-		"secure":       "p.secure",
+	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
+		"config_file":  dbhelpers.WhereColumnInfo{"p.config_file", nil},
+		"id":           dbhelpers.WhereColumnInfo{"p.id", api.IsInt},
+		"last_updated": dbhelpers.WhereColumnInfo{"p.last_updated", nil},
+		"name":         dbhelpers.WhereColumnInfo{"p.name", nil},
+		"secure":       dbhelpers.WhereColumnInfo{"p.secure", api.IsBool},
 	}
 
-	query, queryValues := dbhelpers.BuildQuery(v, selectParametersQuery(), queryParamsToSQLCols)
+	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
+	if len(errs) > 0 {
+		return nil, errs, tc.DataConflictError
+	}
 
-	query += ParametersGroupBy()
+	query := selectParametersQuery() + where + ParametersGroupBy() + orderBy
 	log.Debugln("Query is ", query)
+
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, fmt.Errorf("querying: %v", err)
+		return nil, []error{fmt.Errorf("querying: %v", err)}, tc.SystemError
 	}
 	defer rows.Close()
 
@@ -104,7 +113,7 @@ func getParameters(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Parameter, er
 	for rows.Next() {
 		var s tc.Parameter
 		if err = rows.StructScan(&s); err != nil {
-			return nil, fmt.Errorf("getting parameters: %v", err)
+			return nil, []error{fmt.Errorf("getting parameters: %v", err)}, tc.SystemError
 		}
 		if s.Secure && privLevel < auth.PrivLevelAdmin {
 			// Secure params only visible to admin
@@ -112,7 +121,7 @@ func getParameters(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Parameter, er
 		}
 		parameters = append(parameters, s)
 	}
-	return parameters, nil
+	return parameters, nil, tc.NoError
 }
 
 func selectParametersQuery() string {

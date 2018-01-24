@@ -20,7 +20,6 @@ package main
  */
 
 import (
-	"net/url"
 	"testing"
 	"time"
 
@@ -74,12 +73,11 @@ func TestGetStatus(t *testing.T) {
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := url.Values{}
-	v.Set("dsId", "1")
+	v := map[string]string{"dsId": "1"}
 
-	servers, err := getStatuses(v, db)
-	if err != nil {
-		t.Errorf("getStatus expected: nil error, actual: %v", err)
+	servers, errs, errType := getStatuses(v, db)
+	if len(errs) > 0 {
+		t.Errorf("getStatus expected: no errors, actual: %v with error type: %s", errs, errType.String())
 	}
 
 	if len(servers) != 2 {

@@ -35,21 +35,55 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type PathParams map[string]string
-
 const PathParamsKey = "pathParams"
 
-func GetPathParams(ctx context.Context) (PathParams, error) {
+func GetPathParams(ctx context.Context) (map[string]string, error) {
 	val := ctx.Value(PathParamsKey)
 	if val != nil {
 		switch v := val.(type) {
-		case PathParams:
+		case map[string]string:
 			return v, nil
 		default:
-			return nil, fmt.Errorf("PathParams found with bad type: %T", v)
+			return nil, fmt.Errorf("path parameters found with bad type: %T", v)
 		}
 	}
 	return nil, errors.New("no PathParams found in Context")
+}
+
+func IsInt(s string) error {
+	_, err := strconv.Atoi(s)
+	if err != nil {
+		err = errors.New("cannot parse to integer")
+	}
+	return err
+}
+
+func IsBool(s string) error {
+	_, err := strconv.ParseBool(s)
+	if err != nil {
+		err = errors.New("cannot parse to boolean")
+	}
+	return err
+}
+
+func GetCombinedParams(r *http.Request) (map[string]string, error) {
+	combinedParams := make(map[string]string)
+	q := r.URL.Query()
+	for k, v := range q {
+		combinedParams[k] = v[0] //we take the first value and do not support multiple keys in query parameters
+	}
+
+	ctx := r.Context()
+	pathParams, err := GetPathParams(ctx)
+	if err != nil {
+		return combinedParams, fmt.Errorf("no path parameters: %s", err)
+	}
+	//path parameters will overwrite query parameters
+	for k, v := range pathParams {
+		combinedParams[k] = v
+	}
+
+	return combinedParams, nil
 }
 
 //decodes and validates a pointer to a struct implementing the Validator interface
@@ -80,23 +114,12 @@ func ReadHandler(typeRef Reader, db *sqlx.DB) http.HandlerFunc {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
 		ctx := r.Context()
-		pathParams, err := GetPathParams(ctx)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
 
 		// Load the PathParams into the query parameters for pass through
-		q := r.URL.Query()
-		for k, v := range pathParams {
-			if k == `id` {
-				if _, err := strconv.Atoi(v); err != nil {
-					log.Errorf("Expected {id} to be an integer: %s", v)
-					handleErrs(http.StatusNotFound, errors.New("Resource not found.")) //matches perl response
-					return
-				}
-			}
-			q.Set(k, v)
+		params, err := GetCombinedParams(r)
+		if err != nil {
+			log.Errorf("unable to get parameters from request: %s", err)
+			handleErrs(http.StatusInternalServerError, err)
 		}
 
 		user, err := auth.GetCurrentUser(ctx)
@@ -105,19 +128,9 @@ func ReadHandler(typeRef Reader, db *sqlx.DB) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 		}
 
-		results, err, errType := typeRef.Read(db, q, *user)
-		if err != nil {
-			switch errType {
-			case tc.SystemError:
-				handleErrs(http.StatusInternalServerError, err)
-			case tc.DataConflictError:
-				handleErrs(http.StatusBadRequest, err)
-			case tc.DataMissingError:
-				handleErrs(http.StatusNotFound, err)
-			default:
-				log.Errorf("received unknown ApiErrorType from read: %s\n", errType.String())
-				handleErrs(http.StatusInternalServerError, err)
-			}
+		results, errs, errType := typeRef.Read(db, params, *user)
+		if len(errs) > 0 {
+			tc.HandleErrorsWithType(errs, errType, handleErrs)
 			return
 		}
 		resp := struct {
@@ -184,17 +197,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 		//run the update and handle any error
 		err, errType := u.Update(db, *user)
 		if err != nil {
-			switch errType {
-			case tc.SystemError:
-				handleErrs(http.StatusInternalServerError, err)
-			case tc.DataConflictError:
-				handleErrs(http.StatusBadRequest, err)
-			case tc.DataMissingError:
-				handleErrs(http.StatusNotFound, err)
-			default:
-				log.Errorf("received unknown ApiErrorType from update: %s, updating: %s id: %d\n", errType.String(), u.GetType(), u.GetID())
-				handleErrs(http.StatusInternalServerError, err)
-			}
+			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
 			return
 		}
 		//auditing here
@@ -250,17 +253,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 		log.Debugf("calling delete on object: %++v", d) //should have id set now
 		err, errType := d.Delete(db, *user)
 		if err != nil {
-			switch errType {
-			case tc.SystemError:
-				handleErrs(http.StatusInternalServerError, err)
-			case tc.DataConflictError:
-				handleErrs(http.StatusBadRequest, err)
-			case tc.DataMissingError:
-				handleErrs(http.StatusNotFound, err)
-			default:
-				log.Errorf("received unknown ApiErrorType from delete: %s, deleting: %s id: %d\n", errType.String(), d.GetType(), d.GetID())
-				handleErrs(http.StatusInternalServerError, err)
-			}
+			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
 			return
 		}
 		//audit here
@@ -312,17 +305,7 @@ func CreateHandler(typeRef Inserter, db *sqlx.DB) http.HandlerFunc {
 
 		err, errType := i.Insert(db, *user)
 		if err != nil {
-			switch errType {
-			case tc.SystemError:
-				handleErrs(http.StatusInternalServerError, err)
-			case tc.DataConflictError:
-				handleErrs(http.StatusBadRequest, err)
-			case tc.DataMissingError:
-				handleErrs(http.StatusNotFound, err)
-			default:
-				log.Errorf("received unknown ApiErrorType from insert: %s, inserting: %s id: %d\n", errType.String(), i.GetType(), i.GetID())
-				handleErrs(http.StatusInternalServerError, err)
-			}
+			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
 			return
 		}
 

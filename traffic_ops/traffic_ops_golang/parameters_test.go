@@ -20,7 +20,6 @@ package main
  */
 
 import (
-	"net/url"
 	"testing"
 	"time"
 
@@ -85,12 +84,11 @@ func TestGetParameters(t *testing.T) {
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := url.Values{}
-	v.Set("dsId", "1")
+	v := map[string]string{"dsId": "1"}
 
-	parameters, err := getParameters(v, db, auth.PrivLevelAdmin)
-	if err != nil {
-		t.Errorf("getParameters expected: nil error, actual: %v", err)
+	parameters, errs, errType := getParameters(v, db, auth.PrivLevelAdmin)
+	if len(errs) > 0 {
+		t.Errorf("getParameters expected: no errors, actual: %v with error type: %s", errs, errType.String())
 	}
 
 	if len(parameters) != 2 {

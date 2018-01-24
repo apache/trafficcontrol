@@ -35,14 +35,12 @@ func getServerUpdateStatusHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
-		// p PathParams, username string, privLevel int
-		ctx := r.Context()
-		pathParams, err := api.GetPathParams(ctx)
+		params, err := api.GetCombinedParams(r)
 		if err != nil {
+			log.Errorf("unable to get parameters from request: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
-			return
 		}
-		hostName := pathParams["host_name"]
+		hostName := params["host_name"]
 
 		serverUpdateStatus, err := getServerUpdateStatus(hostName, db)
 		if err != nil {
