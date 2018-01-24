@@ -110,12 +110,14 @@ func Respond(w http.ResponseWriter, code int, header http.Header, body []byte, c
 
 // ServeReqErr writes the appropriate response to the client, via given writer, for a generic request error. Returns the code sent, the body bytes written, and any write error.
 func ServeReqErr(w http.ResponseWriter) (int, uint64, error) {
-	return ServeErr(w, http.StatusBadRequest)
+	code := http.StatusBadRequest
+	bytes, err := ServeErr(w, http.StatusBadRequest)
+	return code, bytes, err
 }
 
 // ServeErr writes the given error code to w, writes the text for that code to the body, and returns the code sent, bytes written, and any write error.
-func ServeErr(w http.ResponseWriter, code int) (int, uint64, error) {
+func ServeErr(w http.ResponseWriter, code int) (uint64, error) {
 	w.WriteHeader(code)
 	bytesWritten, err := w.Write([]byte(http.StatusText(code)))
-	return code, uint64(bytesWritten), err
+	return uint64(bytesWritten), err
 }
