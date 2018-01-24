@@ -46,9 +46,11 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 
 func GetTestDeliveryServiceRequests(t *testing.T) {
 
-	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID("xmlId")
-	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v\n", err, resp)
+	for _, dsr := range testData.DeliveryServiceRequests {
+		resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
+		if err != nil {
+			t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v\n", err, resp)
+		}
 	}
 }
 

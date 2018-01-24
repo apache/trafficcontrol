@@ -31,8 +31,8 @@ type DeliveryServiceRequest struct {
 	ID              int             `json:"id" db:"id"`
 	LastEditedBy    string          `json:"lastEditedBy"`
 	LastEditedByID  int             `json:"lastEditedById" db:"last_edited_by_id"`
-	LastUpdated     string          `json:"lastUpdated,omitempty" db:"last_updated"`
-	DeliveryService json.RawMessage `json:"deliveryService" db:"deliveryservice"`
+	LastUpdated     *Time           `json:"lastUpdated" db:"last_updated"`
+	DeliveryService DeliveryService `json:"request" db:"request"`
 	Status          string          `json:"status" db:"status"`
 }
 
