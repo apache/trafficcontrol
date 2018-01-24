@@ -1068,6 +1068,8 @@ sub create {
 				range_request_handling      => $self->paramAsScalar('ds.range_request_handling'),
 				edge_header_rewrite         => $self->paramAsScalar('ds.edge_header_rewrite'),
 				mid_header_rewrite          => $self->paramAsScalar( 'ds.mid_header_rewrite', undef ),
+				tr_response_headers         => $self->paramAsScalar('ds.tr_response_headers'),
+				tr_request_headers          => $self->paramAsScalar('ds.tr_request_headers'),
 				regex_remap        => $self->paramAsScalar( 'ds.regex_remap',        undef ),
 				origin_shield      => $self->paramAsScalar( 'ds.origin_shield',      undef ),
 				cacheurl           => $self->paramAsScalar( 'ds.cacheurl',           undef ),
