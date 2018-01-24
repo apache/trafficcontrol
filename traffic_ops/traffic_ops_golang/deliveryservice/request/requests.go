@@ -30,6 +30,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -70,12 +71,12 @@ func (req *TODeliveryServiceRequest) SetID(i int) {
 
 // IsTenantAuthorized implements the Tenantable interface to ensure the user is authorized on the deliveryservice tenant
 func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error) {
-	tenantID, err := req.getTenantID(db)
+	ds, err := req.getDeliveryService()
 	if err != nil {
-		log.Debugf("from getTenantID: %v", err)
+		log.Debugf("from getDeliveryService: %v", err)
 		return false, err
 	}
-	return tenant.IsResourceAuthorizedToUser(tenantID, user, db)
+	return tenant.IsResourceAuthorizedToUser(ds.TenantID, user, db)
 }
 
 //The TODeliveryServiceRequest implementation of the Updater interface
@@ -86,19 +87,6 @@ func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, d
 
 // Update ...
 func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	XMLID, err := req.getXMLID(db)
-	if err != nil {
-		return err, tc.SystemError
-	}
-
-	active, err := isActiveRequest(db, XMLID)
-	if err != nil {
-		return err, tc.SystemError
-	}
-	if active {
-		return errors.New("An active request exists for delivery service '" + XMLID), tc.DataConflictError
-	}
-
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
@@ -163,10 +151,14 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 
 // Insert ...
 func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	XMLID, err := req.getXMLID(db)
+	ds, err := req.getDeliveryService()
 	if err != nil {
 		return err, tc.SystemError
 	}
+	if ds.XMLID == nil {
+		return errors.New("No xmlId associated with this request"), tc.DataMissingError
+	}
+	XMLID := *ds.XMLID
 
 	active, err := isActiveRequest(db, XMLID)
 	if err != nil {
@@ -234,21 +226,8 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 //The Request implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
 
-// Delete ...
+// Delete removes the request from the db
 func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	XMLID, err := req.getXMLID(db)
-	if err != nil {
-		return err, tc.SystemError
-	}
-
-	active, err := isActiveRequest(db, XMLID)
-	if err != nil {
-		return err, tc.SystemError
-	}
-	if active {
-		return errors.New("An active request exists for delivery service '" + XMLID), tc.DataConflictError
-	}
-
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
@@ -284,36 +263,14 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 	return nil, tc.NoError
 }
 
-// getXMLID retrieves the XMLID of the deliveryservice to be created or modified
-func (req TODeliveryServiceRequest) getXMLID(db *sqlx.DB) (string, error) {
-	var XMLID string
-	q := `SELECT request->>'xmlId' FROM deliveryservice_request WHERE id=` + strconv.Itoa(req.ID)
-	row := db.QueryRow(q)
-
-	err := row.Scan(&XMLID)
-	if err != nil {
-		log.Debugln("ERROR: ", err, ";  QUERY:", q)
+// getDeliveryService retrieves a deliveryservice struct from the Request JSON
+func (req TODeliveryServiceRequest) getDeliveryService() (deliveryservice.TODeliveryService, error) {
+	var ds deliveryservice.TODeliveryService
+	if req.Request == nil {
+		return ds, errors.New("No deliveryservice data available")
 	}
-	return XMLID, err
-}
-
-// getTenantID retrieves the tenantID of the deliveryservice to be created or modified
-func (req TODeliveryServiceRequest) getTenantID(db *sqlx.DB) (int, error) {
-	if req.Request != nil {
-		//  on Create request -- it's not in the db.  Pull the tenantID from Request json blob
-		var ds tc.DeliveryService
-		err := json.Unmarshal(req.Request, &ds)
-		return ds.TenantID, err
-	}
-	q := `SELECT request->>'tenantId' FROM deliveryservice_request WHERE id=` + strconv.Itoa(req.ID)
-	row := db.QueryRow(q)
-
-	var tenantID int
-	err := row.Scan(&tenantID)
-	if err != nil {
-		log.Debugln("ERROR: ", err, ";  QUERY:", q)
-	}
-	return tenantID, err
+	err := json.Unmarshal(req.Request, &ds)
+	return ds, err
 }
 
 // isActiveRequest returns true if a request using this XMLID is currently in an active state
