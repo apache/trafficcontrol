@@ -63,7 +63,7 @@
                 "active": true,
                 "ccrDnsTtl": 30,
                 "cdnId": 1,
-                "displayName": "ZZZ",
+                "displayName": "Kabletown CDN",
                 "dscp": 0,
                 "geoLimit": 0,
                 "geoProvider": 0,
@@ -72,7 +72,7 @@
                 "regionalGeoBlocking": false,
                 "tenantId": 2,
                 "typeId": 70,
-                "xmlId": "xmlId"
+                "xmlId": "test-ds1"
             },
             "status": "draft"
         }

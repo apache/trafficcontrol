@@ -50,8 +50,10 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 }
 
 // GET a DeliveryServiceRequest by the DeliveryServiceRequest xmlId
-func (to *Session) GetDeliveryServiceRequestByXMLID(id int) ([]tc.DeliveryServiceRequest, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_DS_REQUESTS, id)
+func (to *Session) GetDeliveryServiceRequestByXMLID(XMLID string) ([]tc.DeliveryServiceRequest, ReqInf, error) {
+
+	route := fmt.Sprintf("%s?xmlId=%s", API_DS_REQUESTS, XMLID)
+
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

@@ -85,7 +85,7 @@ type DeliveryService struct {
 	MissLat              float64                `json:"missLat"`
 	MissLong             float64                `json:"missLong"`
 	CheckPath            string                 `json:"checkPath"`
-	LastUpdated          Time                   `json:"lastUpdated" db:"last_updated"`
+	LastUpdated          *Time                  `json:"lastUpdated" db:"last_updated"`
 	Protocol             int                    `json:"protocol"`
 	IPV6RoutingEnabled   bool                   `json:"ipv6RoutingEnabled"`
 	RangeRequestHandling int                    `json:"rangeRequestHandling"`
