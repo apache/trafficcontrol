@@ -51,4 +51,5 @@ type DeliveryServiceRequestNullable struct {
 	LastUpdated    Time            `json:"lastUpdated" db:"last_updated"`
 	Request        json.RawMessage `json:"request" db:"request"`
 	Status         string          `json:"status" db:"status"`
+	XMLID          string          `json:"-" db:"xml_id"`
 }
