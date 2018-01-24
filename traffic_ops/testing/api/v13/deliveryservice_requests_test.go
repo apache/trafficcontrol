@@ -24,9 +24,9 @@ import (
 func TestDeliveryServiceRequests(t *testing.T) {
 
 	CreateTestDeliveryServiceRequests(t)
+	GetTestDeliveryServiceRequests(t)
 	/*
 		UpdateTestDeliveryServiceRequests(t)
-		GetTestDeliveryServiceRequests(t)
 		DeleteTestDeliveryServiceRequests(t)
 	*/
 
@@ -42,6 +42,14 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 		}
 	}
 
+}
+
+func GetTestDeliveryServiceRequests(t *testing.T) {
+
+	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID("xmlId")
+	if err != nil {
+		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v\n", err, resp)
+	}
 }
 
 /*
@@ -72,16 +80,6 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 		t.Errorf("results do not match actual: %s, expected: %s\n", respDeliveryServiceRequest.Name, expectedDeliveryServiceRequestName)
 	}
 
-}
-
-func GetTestDeliveryServiceRequests(t *testing.T) {
-
-	for _, dsr := range testData.DeliveryServiceRequests {
-		resp, _, err := TOSession.GetDeliveryServiceRequestByAssignee(dsr.Assignee)
-		if err != nil {
-			t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v\n", err, resp)
-		}
-	}
 }
 
 func DeleteTestDeliveryServiceRequests(t *testing.T) {
