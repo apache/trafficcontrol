@@ -22,18 +22,18 @@ import (
 // DeliveryServiceRequestNullable is used as part of the workflow to create,
 // modify, or delete a delivery service.
 type DeliveryServiceRequest struct {
-	AssigneeID      int             `json:"assigneeId,omitempty" db:"assignee_id"`
+	AssigneeID      int             `json:"assigneeId,omitempty"`
 	Assignee        string          `json:"assignee,omitempty"`
-	AuthorID        int             `json:"authorId" db:"author_id"`
+	AuthorID        int             `json:"authorId"`
 	Author          string          `json:"author"`
-	ChangeType      string          `json:"changeType" db:"change_type"`
-	CreatedAt       string          `json:"createdAt,omitempty" db:"created_at"`
-	ID              int             `json:"id" db:"id"`
+	ChangeType      string          `json:"changeType"`
+	CreatedAt       *Time           `json:"createdAt"`
+	ID              int             `json:"id"`
 	LastEditedBy    string          `json:"lastEditedBy"`
-	LastEditedByID  int             `json:"lastEditedById" db:"last_edited_by_id"`
-	LastUpdated     *Time           `json:"lastUpdated" db:"last_updated"`
-	DeliveryService DeliveryService `json:"request" db:"request"`
-	Status          string          `json:"status" db:"status"`
+	LastEditedByID  int             `json:"lastEditedById"`
+	LastUpdated     *Time           `json:"lastUpdated"`
+	DeliveryService DeliveryService `json:"request"`
+	Status          string          `json:"status"`
 }
 
 // DeliveryServiceRequestNullable is used as part of the workflow to create,
