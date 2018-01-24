@@ -156,42 +156,6 @@ func makeRuleThrottlers(remapper remap.HTTPRequestRemapper, limit uint64) map[st
 const CodeConnectFailure = http.StatusBadGateway
 const NSPerSec = 1000000000
 
-// NewHandlerFunc creates and returns an http.HandleFunc, which may be pipelined with other http.HandleFuncs via `http.HandleFunc`. This is a convenience wrapper around the `http.Handler` object obtainable via `New`. If you prefer objects, use `NewCacheHandler`.
-func NewHandlerFunc(
-	cache Cache,
-	remapper remap.HTTPRequestRemapper,
-	ruleLimit uint64,
-	stats stat.Stats,
-	scheme string,
-	port string,
-	conns *web.ConnMap,
-	strictRFC bool,
-	connectionClose bool,
-	reqTimeout time.Duration,
-	reqKeepAlive time.Duration,
-	reqMaxIdleConns int,
-	reqIdleConnTimeout time.Duration,
-) http.HandlerFunc {
-	handler := NewHandler(
-		cache,
-		remapper,
-		ruleLimit,
-		stats,
-		scheme,
-		port,
-		conns,
-		strictRFC,
-		connectionClose,
-		reqTimeout,
-		reqKeepAlive,
-		reqMaxIdleConns,
-		reqIdleConnTimeout,
-	)
-	return func(w http.ResponseWriter, r *http.Request) {
-		handler.ServeHTTP(w, r)
-	}
-}
-
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.stats.IncConnections()
 	defer h.stats.DecConnections()
@@ -217,24 +181,21 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reqHeader := web.CopyHeader(r.Header) // copy request header, because it's not guaranteed valid after actually issuing the request
 	moneyTraceHdr := reqHeader.Get("X-Money-Trace")
 	clientIP, _ := web.GetClientIPPort(r)
-	statLog := NewStatLogger(w, conn, h, r, moneyTraceHdr, clientIP, reqTime, remappingProducer)
+	responder := NewResponder(w, r, NewStatLogger(w, conn, h, r, moneyTraceHdr, clientIP, reqTime, remappingProducer))
 
 	if err != nil {
-		code := 0
-		if err == remap.ErrRuleNotFound {
+		switch err {
+		case remap.ErrRuleNotFound:
 			log.Debugf("rule not found for %v\n", r.RequestURI)
-			code = http.StatusNotFound
-		} else if err == remap.ErrIPNotAllowed {
+			responder.ResponseCode = http.StatusNotFound
+		case remap.ErrIPNotAllowed:
 			log.Debugf("IP %v not allowed\n", r.RemoteAddr)
-			code = http.StatusForbidden
-		} else {
+			responder.ResponseCode = http.StatusForbidden
+		default:
 			log.Debugf("request error: %v\n", err)
-			code = http.StatusBadRequest
 		}
-		bytesWritten := uint64(0)
-		code, bytesWritten, err = web.ServeErr(w, code)
-		web.TryFlush(w)
-		statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(remap.ReuseCannot, 0), true, 0, 0, "-")
+		responder.OriginConnectFailed = true
+		responder.Do()
 		return
 	}
 
@@ -244,30 +205,30 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	connectionClose := h.connectionClose || remappingProducer.ConnectionClose()
 	cacheKey := remappingProducer.CacheKey()
 	retrier := NewRetrier(h, reqHeader, reqTime, reqCacheControl, cacheKey, remappingProducer)
-	iCacheObj, ok := h.cache.Get(cacheKey)
 
+	iCacheObj, ok := h.cache.Get(cacheKey)
 	if !ok {
 		log.Debugf("cache.Handler.ServeHTTP: '%v' not in cache\n", cacheKey)
 		remappingProducer.ToOriginHdrs().Mod(&r.Header)
 		cacheObj, err := retrier.Get(r, nil)
 		if err != nil {
 			log.Errorf("retrying get error (in uncached): %v\n", err)
-
-			code, bytesWritten, err := web.ServeReqErr(w)
-			if err != nil {
-				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
-			}
-			web.TryFlush(w)
-			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(remap.ReuseCannot, 0), true, 0, 0, cacheObj.ProxyURL)
+			responder.OriginConnectFailed = true
+			responder.ProxyStr = cacheObj.ProxyURL
+			responder.Do()
 			return
 		}
+
 		remappingProducer.ToClientHdrs().Mod(&cacheObj.RespHeaders)
-		bytesWritten, err := web.Respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
-		if err != nil {
-			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
+
+		responder.ResponseCode = cacheObj.Code
+		responder.OriginCode = cacheObj.OriginCode
+		responder.F = func() (uint64, error) {
+			return web.Respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
 		}
-		web.TryFlush(w)
-		statLog.Log(cacheObj.Code, bytesWritten, true, err == nil, isCacheHit(remap.ReuseCannot, cacheObj.OriginCode), false, 0, 0, cacheObj.ProxyURL)
+		responder.SuccessfullyGotFromOrigin = true
+		responder.ProxyStr = cacheObj.ProxyURL
+		responder.Do()
 		return
 	}
 
@@ -278,17 +239,17 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		cacheObj, err = retrier.Get(r, nil)
 		if err != nil {
 			log.Errorf("retrying get error (in unexpected cacheobj): %v\n", err)
-			code, bytesWritten, err := web.ServeReqErr(w)
-			web.TryFlush(w)
-			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(remap.ReuseCannot, 0), false, 0, 0, "-")
+			responder.Do()
 			return
 		}
-		bytesWritten, err := web.Respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
-		if err != nil {
-			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
-		}
-		web.TryFlush(w)
-		statLog.Log(cacheObj.Code, bytesWritten, err == nil, true, isCacheHit(remap.ReuseCannot, cacheObj.OriginCode), false, cacheObj.OriginCode, cacheObj.Size, cacheObj.ProxyURL)
+
+		responder.ResponseCode = cacheObj.Code
+		responder.OriginCode = cacheObj.OriginCode
+		responder.SetResponse(cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
+		responder.SuccessfullyGotFromOrigin = true
+		responder.OriginBytes = cacheObj.Size
+		responder.ProxyStr = cacheObj.ProxyURL
+		responder.Do()
 		return
 	}
 
@@ -303,12 +264,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		cacheObj, err = retrier.Get(r, nil)
 		if err != nil {
 			log.Errorf("retrying get error (in reuse-cannot): %v\n", err)
-			code, bytesWritten, err := web.ServeReqErr(w)
-			if err != nil {
-				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
-			}
-			web.TryFlush(w)
-			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(remap.ReuseCannot, 0), false, 0, 0, "-")
+			responder.Do()
 			return
 		}
 	case remap.ReuseMustRevalidate:
@@ -317,12 +273,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		cacheObj, err = retrier.Get(r, cacheObj)
 		if err != nil {
 			log.Errorf("retrying get error: %v\n", err)
-			code, bytesWritten, err := web.ServeReqErr(w)
-			if err != nil {
-				log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
-			}
-			web.TryFlush(w)
-			statLog.Log(code, bytesWritten, err == nil, false, isCacheHit(remap.ReuseCannot, code), false, 0, 0, "-")
+			responder.Do()
 			return
 		}
 
@@ -338,14 +289,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Debugf("cache.Handler.ServeHTTP: '%v' responding with %v\n", cacheKey, cacheObj.Code)
 	remappingProducer.ToClientHdrs().Mod(&cacheObj.RespHeaders)
-	bytesSent, err := web.Respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
-	if err != nil {
-		log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": responding: " + err.Error())
-	}
-	web.TryFlush(w)
-	statLog.Log(cacheObj.Code, bytesSent, err == nil, true, isCacheHit(canReuseStored, cacheObj.OriginCode), false, cacheObj.OriginCode, cacheObj.Size, cacheObj.ProxyURL)
-}
 
-func isCacheHit(reuse remap.Reuse, originCode int) bool {
-	return reuse == remap.ReuseCan || ((reuse == remap.ReuseMustRevalidate || reuse == remap.ReuseMustRevalidateCanStale) && (originCode > 299 && originCode < 400))
+	responder.SetResponse(cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
+	responder.SuccessfullyGotFromOrigin = true
+	responder.Reuse = canReuseStored
+	responder.OriginCode = cacheObj.OriginCode
+	responder.ResponseCode = cacheObj.Code
+	responder.OriginBytes = cacheObj.Size
+	responder.ProxyStr = cacheObj.ProxyURL
+	responder.Do()
 }
