@@ -90,7 +90,7 @@ type DeliveryService struct {
 	RangeRequestHandling int                    `json:"rangeRequestHandling"`
 	EdgeHeaderRewrite    string                 `json:"edgeHeaderRewrite"`
 	MidHeaderRewrite     string                 `json:"midHeaderRewrite"`
-	TenantID             int                    `json:"tenant_id,omitempty"`
+	TenantID             int                    `json:"tenantId,omitempty"`
 	TRResponseHeaders    string                 `json:"trResponseHeaders"`
 	RegexRemap           string                 `json:"regexRemap"`
 	CacheURL             string                 `json:"cacheurl"`
