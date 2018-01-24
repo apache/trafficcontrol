@@ -55,16 +55,12 @@ func Handler(db *sqlx.DB) http.HandlerFunc {
 		deliveryServiceRequests, err := getDeliveryServiceRequests(q, db)
 		if err != nil {
 			handleErrs(http.StatusInternalServerError, err)
+			return
 		}
 
 		resp := struct {
-			Response []tc.DeliveryServiceRequestNullable
+			Response []tc.DeliveryServiceRequestNullable `json:"response"`
 		}{deliveryServiceRequests}
-
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
@@ -91,6 +87,7 @@ func getDeliveryServiceRequests(v url.Values, db *sqlx.DB) ([]tc.DeliveryService
 		"changeType": "r.change_type",
 		"id":         "r.id",
 		"status":     "r.status",
+		"xmlId":      "r.request->>'xmlId'",
 	}
 
 	query, queryValues := dbhelpers.BuildQuery(v, selectDeliveryServiceRequestsQuery(), queryParamsToQueryCols)
@@ -125,7 +122,8 @@ r.id,
 r.last_updated,
 r.request,
 r.status,
-s.username AS assignee
+s.username AS assignee,
+r.request->>'xmlId' as xml_id
 
 FROM deliveryservice_request r
 JOIN tm_user a ON r.author_id = a.id
