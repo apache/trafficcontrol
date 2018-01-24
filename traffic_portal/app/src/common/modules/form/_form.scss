@@ -15,21 +15,7 @@
 
 */
 
-.update-column {
-  text-align: center;
-  .fa-flag {
-    font-weight: bold;
-  }
-}
-
-.action-link {
-  padding: 5px;
-}
-
-td span {
-  line-height: 19px;
-}
-
-.filter-checkbox {
-  float: left;
+.btn-link.request-status {
+  font-size: 20px;
+  color: #cd1323;
 }

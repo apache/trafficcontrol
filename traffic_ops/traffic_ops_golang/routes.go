@@ -32,6 +32,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/cdn"
+	dsrequest "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request"
 	"github.com/basho/riak-go-client"
 )
 
@@ -68,7 +69,14 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.3, http.MethodPost, `cdns/?$`, api.CreateHandler(cdn.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.3, http.MethodDelete, `cdns/{id}$`, api.DeleteHandler(cdn.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
-		// Delivery services
+		//Delivery service requests
+		{1.3, http.MethodGet, `deliveryservice_requests/?(\.json)?$`, dsrequest.Handler(d.DB), dsrequest.DeliveryServiceRequestPrivLevel, Authenticated, nil},
+		{1.3, http.MethodGet, `deliveryservice_requests/{id}$`, dsrequest.Handler(d.DB), dsrequest.DeliveryServiceRequestPrivLevel, Authenticated, nil},
+		//Delivery service requests generic handlers:
+		{1.3, http.MethodPut, `deliveryservice_requests/{id}$`, api.UpdateHandler(dsrequest.GetRefType(), d.DB), dsrequest.DeliveryServiceRequestPrivLevel, Authenticated, nil},
+		{1.3, http.MethodPost, `deliveryservice_requests/?$`, api.CreateHandler(dsrequest.GetRefType(), d.DB), dsrequest.DeliveryServiceRequestPrivLevel, Authenticated, nil},
+		{1.3, http.MethodDelete, `deliveryservice_requests/{id}$`, api.DeleteHandler(dsrequest.GetRefType(), d.DB), dsrequest.DeliveryServiceRequestPrivLevel, Authenticated, nil},
+
 		{1.3, http.MethodGet, `deliveryservices/{xmlID}/urisignkeys$`, getURIsignkeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
 		{1.3, http.MethodPost, `deliveryservices/{xmlID}/urisignkeys$`, saveDeliveryServiceURIKeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
 		{1.3, http.MethodPut, `deliveryservices/{xmlID}/urisignkeys$`, saveDeliveryServiceURIKeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
