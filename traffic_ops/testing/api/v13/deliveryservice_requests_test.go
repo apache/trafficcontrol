@@ -16,8 +16,6 @@
 package v13
 
 import (
-	"encoding/json"
-	"sort"
 	"strings"
 	"testing"
 
@@ -48,17 +46,9 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 
 }
 
-func TestBadDeliveryServiceCreateRequests(t *testing.T) {
-
-	routingName := strings.Repeat("X", 1) + "." + strings.Repeat("X", 48)
-	// Test the xmlId length
-	XMLID := strings.Repeat("X", 1) + " " + strings.Repeat("X", 48)
-	displayName := strings.Repeat("X", 49)
+func TestDeliveryServiceRequestRequired(t *testing.T) {
 
 	dsr := testData.DeliveryServiceRequests[2]
-	dsr.DeliveryService.DisplayName = displayName
-	dsr.DeliveryService.RoutingName = routingName
-	dsr.DeliveryService.XMLID = XMLID
 	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
 	if err != nil {
 		t.Errorf("Error occurred %v", err)
@@ -75,32 +65,54 @@ func TestBadDeliveryServiceCreateRequests(t *testing.T) {
 		"'logsEnabled' cannot be blank",
 		"'orgServerFqdn' must be a valid URL",
 		"'regionalGeoBlocking' cannot be blank",
-		"'routingName' cannot contain periods",
+		"'routingName' must be a valid hostname",
 		"'typeId' cannot be blank",
 		"'xmlId' cannot contain spaces",
+	}
+
+	utils.Compare(t, expected, alerts.ToStrings())
+
+}
+
+func TestDeliveryServiceRequestRules(t *testing.T) {
+
+	routingName := strings.Repeat("X", 1) + "." + strings.Repeat("X", 48)
+	// Test the xmlId length
+	XMLID := strings.Repeat("X", 48)
+	displayName := strings.Repeat("X", 49)
+
+	dsr := testData.DeliveryServiceRequests[0]
+	dsr.DeliveryService.DisplayName = displayName
+	dsr.DeliveryService.RoutingName = routingName
+	dsr.DeliveryService.XMLID = XMLID
+	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+	if err != nil {
+		t.Errorf("Error occurred %v", err)
+	}
+
+	expected := []string{
+		"'routingName' cannot contain periods",
+		"'xmlId' cannot contain spaces",
+	}
+
+	utils.Compare(t, expected, alerts.ToStrings())
+
+}
+
+func TestDeliveryServiceRequestTypeFields(t *testing.T) {
+
+	dsr := testData.DeliveryServiceRequests[0]
+	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+	if err != nil {
+		t.Errorf("Error occurred %v", err)
+	}
+
+	expected := []string{
+		"not authorized on this tenant",
 		//"'xmlId' the length must be between 1 and 48",
 	}
 
-	alertsStrs := alerts.ToStrings()
-	sort.Strings(alertsStrs)
-	expectedFmt, _ := json.MarshalIndent(expected, "", "  ")
-	errorsFmt, _ := json.MarshalIndent(alertsStrs, "", "  ")
-
-	// Compare both directions
-	for _, s := range alertsStrs {
-		if !utils.FindNeedle(s, expected) {
-			t.Errorf("\nExpected %s and \n Actual %v must match exactly", string(expectedFmt), string(errorsFmt))
-			break
-		}
-	}
-
-	// Compare both directions
-	for _, s := range expected {
-		if !utils.FindNeedle(s, alertsStrs) {
-			t.Errorf("\nExpected %s and \n Actual %v must match exactly", string(expectedFmt), string(errorsFmt))
-			break
-		}
-	}
+	utils.Compare(t, expected, alerts.ToStrings())
 
 }
 
