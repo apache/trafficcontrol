@@ -58,10 +58,8 @@
     ],
     "deliveryServiceRequests": [
         {
-            "author": "billybob",
-            "authorId": 400,
             "changeType": "create",
-            "request": {
+            "deliveryservice": {
                 "active": true,
                 "ccrDnsTtl": 30,
                 "cdnId": 1,

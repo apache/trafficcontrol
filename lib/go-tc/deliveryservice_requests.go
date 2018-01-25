@@ -22,34 +22,34 @@ import (
 // DeliveryServiceRequestNullable is used as part of the workflow to create,
 // modify, or delete a delivery service.
 type DeliveryServiceRequest struct {
-	AssigneeID     int             `json:"assigneeId,omitempty" db:"assignee_id"`
-	Assignee       string          `json:"assignee,omitempty"`
-	AuthorID       int             `json:"authorId" db:"author_id"`
-	Author         string          `json:"author"`
-	ChangeType     string          `json:"changeType" db:"change_type"`
-	CreatedAt      string          `json:"createdAt,omitempty" db:"created_at"`
-	ID             int             `json:"id" db:"id"`
-	LastEditedBy   string          `json:"lastEditedBy"`
-	LastEditedByID int             `json:"lastEditedById" db:"last_edited_by_id"`
-	LastUpdated    string          `json:"lastUpdated,omitempty" db:"last_updated"`
-	Request        json.RawMessage `json:"request" db:"request"`
-	Status         string          `json:"status" db:"status"`
+	AssigneeID      int             `json:"assigneeId,omitempty" db:"assignee_id"`
+	Assignee        string          `json:"assignee,omitempty"`
+	AuthorID        int             `json:"authorId" db:"author_id"`
+	Author          string          `json:"author"`
+	ChangeType      string          `json:"changeType" db:"change_type"`
+	CreatedAt       string          `json:"createdAt,omitempty" db:"created_at"`
+	ID              int             `json:"id" db:"id"`
+	LastEditedBy    string          `json:"lastEditedBy"`
+	LastEditedByID  int             `json:"lastEditedById" db:"last_edited_by_id"`
+	LastUpdated     string          `json:"lastUpdated,omitempty" db:"last_updated"`
+	Deliveryservice json.RawMessage `json:"deliveryservice" db:"deliveryservice"`
+	Status          string          `json:"status" db:"status"`
 }
 
 // DeliveryServiceRequestNullable is used as part of the workflow to create,
 // modify, or delete a delivery service.
 type DeliveryServiceRequestNullable struct {
-	AssigneeID     *int            `json:"assigneeId,omitempty" db:"assignee_id"`
-	Assignee       *string         `json:"assignee,omitempty"`
-	AuthorID       int             `json:"authorId" db:"author_id"`
-	Author         string          `json:"author"`
-	ChangeType     string          `json:"changeType" db:"change_type"`
-	CreatedAt      Time            `json:"createdAt" db:"created_at"`
-	ID             int             `json:"id" db:"id"`
-	LastEditedBy   string          `json:"lastEditedBy"`
-	LastEditedByID int             `json:"lastEditedById" db:"last_edited_by_id"`
-	LastUpdated    Time            `json:"lastUpdated" db:"last_updated"`
-	Request        json.RawMessage `json:"request" db:"request"`
-	Status         string          `json:"status" db:"status"`
-	XMLID          string          `json:"-" db:"xml_id"`
+	AssigneeID      *int            `json:"assigneeId,omitempty" db:"assignee_id"`
+	Assignee        *string         `json:"assignee,omitempty"`
+	AuthorID        int             `json:"authorId" db:"author_id"`
+	Author          string          `json:"author"`
+	ChangeType      string          `json:"changeType" db:"change_type"`
+	CreatedAt       Time            `json:"createdAt" db:"created_at"`
+	ID              int             `json:"id" db:"id"`
+	LastEditedBy    string          `json:"lastEditedBy"`
+	LastEditedByID  int             `json:"lastEditedById" db:"last_edited_by_id"`
+	LastUpdated     Time            `json:"lastUpdated" db:"last_updated"`
+	Deliveryservice json.RawMessage `json:"deliveryservice" db:"deliveryservice"`
+	Status          string          `json:"status" db:"status"`
+	XMLID           string          `json:"-" db:"xml_id"`
 }

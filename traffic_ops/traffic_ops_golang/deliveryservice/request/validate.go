@@ -33,15 +33,15 @@ import (
 func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
 	log.Debugf("Got request with %++v\n", req)
 	errMap := validation.Errors{
-		"changeType": validation.Validate(req.ChangeType, validation.Required),
-		"request":    validation.Validate(req.Request, validation.Required),
-		"status":     validation.Validate(req.Status, validation.Required),
+		"changeType":      validation.Validate(req.ChangeType, validation.Required),
+		"deliveryservice": validation.Validate(req.Deliveryservice, validation.Required),
+		"status":          validation.Validate(req.Status, validation.Required),
 	}
 
 	errs := tovalidate.ToErrors(errMap)
 
 	var ds deliveryservice.TODeliveryService
-	err := json.Unmarshal([]byte(req.Request), &ds)
+	err := json.Unmarshal([]byte(req.Deliveryservice), &ds)
 	if err != nil {
 		errs = append(errs, err)
 		return errs
