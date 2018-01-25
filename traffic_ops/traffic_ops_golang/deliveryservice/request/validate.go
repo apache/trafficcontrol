@@ -33,7 +33,6 @@ import (
 func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
 	log.Debugf("Got request with %++v\n", req)
 	errMap := validation.Errors{
-		"authorId":   validation.Validate(req.AuthorID, validation.NotNil, validation.By(tovalidate.GreaterThanZero)),
 		"changeType": validation.Validate(req.ChangeType, validation.Required),
 		"request":    validation.Validate(req.Request, validation.Required),
 		"status":     validation.Validate(req.Status, validation.Required),
