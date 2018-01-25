@@ -110,6 +110,7 @@ func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 }
 
 func (ds *TODeliveryService) validateTypeFields(db *sqlx.DB) []error {
+	fmt.Printf("validateTypeFields\n")
 	// Validate the TypeName related fields below
 	var typeName string
 	var err error

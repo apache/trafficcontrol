@@ -22,7 +22,6 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
@@ -36,7 +35,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(dsr)
-	log.Debugln("Request: ", string(reqBody))
+	fmt.Printf("reqBody ---> %v\n", string(reqBody))
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return alerts, reqInf, err

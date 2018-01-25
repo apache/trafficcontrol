@@ -15,6 +15,12 @@
 
 package utils
 
+import (
+	"encoding/json"
+	"sort"
+	"testing"
+)
+
 func FindNeedle(needle string, haystack []string) bool {
 	found := false
 	for _, s := range haystack {
@@ -33,4 +39,32 @@ func ErrorsToStrings(errs []error) []string {
 		errorStrs = append(errorStrs, et)
 	}
 	return errorStrs
+}
+
+func Compare(t *testing.T, expected []string, alertsStrs []string) {
+	sort.Strings(alertsStrs)
+	expectedFmt, _ := json.MarshalIndent(expected, "", "  ")
+	errorsFmt, _ := json.MarshalIndent(alertsStrs, "", "  ")
+
+	var found bool
+	// Compare both directions
+	for _, s := range alertsStrs {
+		found = FindNeedle(s, expected)
+		if !found {
+			t.Errorf("\nExpected %s and \n Actual %v must match exactly", string(expectedFmt), string(errorsFmt))
+			break
+		}
+	}
+
+	found = false
+	if !found {
+		// Compare both directions
+		for _, s := range expected {
+			found = FindNeedle(s, expected)
+			if !found {
+				t.Errorf("\nExpected %s and \n Actual %v must match exactly", string(expectedFmt), string(errorsFmt))
+				break
+			}
+		}
+	}
 }
