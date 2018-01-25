@@ -26,7 +26,7 @@ CREATE TABLE deliveryservice_request (
     id bigserial primary key NOT NULL,
     last_edited_by_id bigint NOT NULL,
     last_updated timestamp WITH time zone NOT NULL DEFAULT now(),
-    request jsonb NOT NULL,
+    deliveryservice jsonb NOT NULL,
     status workflow_states NOT NULL
 );
 
