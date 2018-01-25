@@ -32,7 +32,7 @@ type DeliveryServiceRequest struct {
 	LastEditedBy    string          `json:"lastEditedBy"`
 	LastEditedByID  int             `json:"lastEditedById" db:"last_edited_by_id"`
 	LastUpdated     string          `json:"lastUpdated,omitempty" db:"last_updated"`
-	Deliveryservice json.RawMessage `json:"deliveryservice" db:"deliveryservice"`
+	DeliveryService json.RawMessage `json:"deliveryService" db:"deliveryservice"`
 	Status          string          `json:"status" db:"status"`
 }
 
@@ -49,7 +49,7 @@ type DeliveryServiceRequestNullable struct {
 	LastEditedBy    string          `json:"lastEditedBy"`
 	LastEditedByID  int             `json:"lastEditedById" db:"last_edited_by_id"`
 	LastUpdated     Time            `json:"lastUpdated" db:"last_updated"`
-	Deliveryservice json.RawMessage `json:"deliveryservice" db:"deliveryservice"`
+	DeliveryService json.RawMessage `json:"deliveryService" db:"deliveryservice"`
 	Status          string          `json:"status" db:"status"`
 	XMLID           string          `json:"-" db:"xml_id"`
 }

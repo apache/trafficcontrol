@@ -59,7 +59,7 @@
     "deliveryServiceRequests": [
         {
             "changeType": "create",
-            "deliveryservice": {
+            "deliveryService": {
                 "active": true,
                 "ccrDnsTtl": 30,
                 "cdnId": 1,
