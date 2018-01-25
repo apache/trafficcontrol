@@ -69,6 +69,16 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
         return currentType.name.indexOf(category) != -1;
     });
 
+    $scope.clientSteeringType = _.findWhere(types, {name: "CLIENT_STEERING"});
+    $scope.isClientSteering = function(ds) {
+        if (ds.typeId == $scope.clientSteeringType.id) {
+            return true;
+        } else {
+            ds.trResponseHeaders = "";
+            return false;
+        }
+    };
+
     $scope.falseTrue = [
         { value: true, label: 'true' },
         { value: false, label: 'false' }
