@@ -88,10 +88,11 @@ func getDeliveryServiceRequests(v url.Values, db *sqlx.DB) ([]tc.DeliveryService
 		"id":          "r.id",
 		"lastUpdated": "r.last_updated",
 		"status":      "r.status",
+		"xmlId":       "r.deliveryservice->>'xmlId'",
 	}
 
 	query, queryValues := dbhelpers.BuildQuery(v, selectDeliveryServiceRequestsQuery(), queryParamsToQueryCols)
-	query += ` ORDER BY r.request->>'xmlId'`
+	query += ` ORDER BY r.deliveryservice->>'xmlId'`
 
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {
@@ -120,10 +121,10 @@ r.change_type,
 r.created_at,
 r.id,
 r.last_updated,
-r.request,
+r.deliveryservice,
 r.status,
 s.username AS assignee,
-r.request->>'xmlId' as xml_id
+r.deliveryservice->>'xmlId' as xml_id
 
 FROM deliveryservice_request r
 JOIN tm_user a ON r.author_id = a.id

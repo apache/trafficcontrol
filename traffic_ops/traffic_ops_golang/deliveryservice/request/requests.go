@@ -266,17 +266,17 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 // getDeliveryService retrieves a deliveryservice struct from the Request JSON
 func (req TODeliveryServiceRequest) getDeliveryService() (deliveryservice.TODeliveryService, error) {
 	var ds deliveryservice.TODeliveryService
-	if req.Request == nil {
+	if req.Deliveryservice == nil {
 		return ds, errors.New("No deliveryservice data available")
 	}
-	err := json.Unmarshal(req.Request, &ds)
+	err := json.Unmarshal(req.Deliveryservice, &ds)
 	return ds, err
 }
 
 // isActiveRequest returns true if a request using this XMLID is currently in an active state
 func isActiveRequest(db *sqlx.DB, XMLID string) (bool, error) {
 	q := `SELECT EXISTS(SELECT 1 FROM deliveryservice_request
-WHERE request->>'xml_id' = '` + XMLID + `'
+WHERE deliveryservice->>'xml_id' = '` + XMLID + `'
 AND status IN ('draft', 'submitted', 'pending'))`
 	row := db.QueryRow(q)
 	var active bool
@@ -293,7 +293,7 @@ deliveryservice_request
 SET assignee_id=:assignee_id,
 change_type=:change_type,
 last_edited_by_id=:last_edited_by_id,
-request=:request,
+deliveryservice=:deliveryservice,
 status=:status
 WHERE id=:id RETURNING last_updated`
 	return query
@@ -305,14 +305,14 @@ assignee_id,
 author_id,
 change_type,
 last_edited_by_id,
-request,
+deliveryservice,
 status
 ) VALUES (
 :assignee_id,
 :author_id,
 :change_type,
 :last_edited_by_id,
-:request,
+:deliveryservice,
 :status
 ) RETURNING id,last_updated`
 	return query
