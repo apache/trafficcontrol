@@ -18,6 +18,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 
@@ -32,20 +33,26 @@ const (
 // Create a Delivery Service Request
 func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (tc.Alerts, ReqInf, error) {
 
+	var alerts tc.Alerts
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(dsr)
 	log.Debugln("Request: ", string(reqBody))
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return alerts, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_DS_REQUESTS, reqBody)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
+	resp, remoteAddr, err := to.rawRequest(http.MethodPost, API_DS_REQUESTS, reqBody)
+	if err == nil {
+		body, readErr := ioutil.ReadAll(resp.Body)
+		if readErr != nil {
+			return alerts, reqInf, readErr
+		}
+		if err := json.Unmarshal(body, &alerts); err == nil {
+			return alerts, reqInf, err
+		}
 	}
+
 	defer resp.Body.Close()
-	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
 
