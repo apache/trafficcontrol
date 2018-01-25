@@ -44,13 +44,23 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 
 }
 
+func TestBadDeliveryServiceCreateRequests(t *testing.T) {
+
+	dsr := testData.DeliveryServiceRequests[1]
+	resp, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+	log.Debugln("Response: ", resp)
+	if err != nil {
+		t.Errorf("could not CREATE DeliveryServiceRequests: %v\n", err)
+	}
+
+}
+
 func GetTestDeliveryServiceRequests(t *testing.T) {
 
-	for _, dsr := range testData.DeliveryServiceRequests {
-		resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
-		if err != nil {
-			t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v\n", err, resp)
-		}
+	dsr := testData.DeliveryServiceRequests[0]
+	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
+	if err != nil {
+		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v\n", err, resp)
 	}
 }
 
