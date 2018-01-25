@@ -44,20 +44,19 @@ func TestValidateErrors(t *testing.T) {
 	errorsFmt, _ := json.MarshalIndent(errorStrs, "", "  ")
 
 	expected := []string{
-		"'active' is required",
-		"'cdnId' is required",
-		"'geoLimit' is required",
-		"'geoProvider' is required",
+		"'active' cannot be blank",
+		"'cdnId' cannot be blank",
+		"'dscp' cannot be blank",
+		"'geoLimit' cannot be blank",
+		"'geoProvider' cannot be blank",
 		"'infoUrl' must be a valid URL",
 		"'initialDispersion' must be greater than zero",
-		"'logsEnabled' is required",
+		"'logsEnabled' cannot be blank",
 		"'orgServerFqdn' must be a valid URL",
+		"'regionalGeoBlocking' cannot be blank",
 		"'routingName' cannot contain periods",
-		"'routingName' the length must be between 1 and 48",
-		"'typeId' is required",
+		"'typeId' cannot be blank",
 		"'xmlId' cannot contain spaces",
-		"'xmlId' is required",
-		"'xmlId' the length must be between 1 and 48",
 	}
 	sort.Strings(expected)
 	expectedFmt, _ := json.MarshalIndent(expected, "", "  ")
@@ -69,18 +68,6 @@ func TestValidateErrors(t *testing.T) {
 		}
 	}
 
-}
-
-func findNeedle(needle string, haystack []string) bool {
-	found := false
-	for _, s := range haystack {
-		if s == needle {
-			found = true
-			break
-		}
-		//fmt.Printf("(%t) Comparing [%v] with [%v]\n", found, exp, et)
-	}
-	return found
 }
 
 func errorTestCase() string {
@@ -139,4 +126,15 @@ func errorTestCase() string {
  }
 `
 	return errorTestCase
+}
+
+func findNeedle(needle string, haystack []string) bool {
+	found := false
+	for _, s := range haystack {
+		if s == needle {
+			found = true
+			break
+		}
+	}
+	return found
 }

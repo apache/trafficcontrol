@@ -16,9 +16,13 @@
 package v13
 
 import (
+	"encoding/json"
+	"sort"
+	"strings"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/testing/api/utils"
 )
 
 func TestDeliveryServiceRequests(t *testing.T) {
@@ -46,11 +50,56 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 
 func TestBadDeliveryServiceCreateRequests(t *testing.T) {
 
-	dsr := testData.DeliveryServiceRequests[1]
-	resp, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
-	log.Debugln("Response: ", resp)
+	routingName := strings.Repeat("X", 1) + "." + strings.Repeat("X", 48)
+	// Test the xmlId length
+	XMLID := strings.Repeat("X", 1) + " " + strings.Repeat("X", 48)
+	displayName := strings.Repeat("X", 49)
+
+	dsr := testData.DeliveryServiceRequests[2]
+	dsr.DeliveryService.DisplayName = displayName
+	dsr.DeliveryService.RoutingName = routingName
+	dsr.DeliveryService.XMLID = XMLID
+	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
 	if err != nil {
-		t.Errorf("could not CREATE DeliveryServiceRequests: %v\n", err)
+		t.Errorf("Error occurred %v", err)
+	}
+
+	expected := []string{
+		"'active' cannot be blank",
+		"'cdnId' cannot be blank",
+		"'dscp' cannot be blank",
+		"'geoLimit' cannot be blank",
+		"'geoProvider' cannot be blank",
+		"'infoUrl' must be a valid URL",
+		"'initialDispersion' must be greater than zero",
+		"'logsEnabled' cannot be blank",
+		"'orgServerFqdn' must be a valid URL",
+		"'regionalGeoBlocking' cannot be blank",
+		"'routingName' cannot contain periods",
+		"'typeId' cannot be blank",
+		"'xmlId' cannot contain spaces",
+		//"'xmlId' the length must be between 1 and 48",
+	}
+
+	alertsStrs := alerts.ToStrings()
+	sort.Strings(alertsStrs)
+	expectedFmt, _ := json.MarshalIndent(expected, "", "  ")
+	errorsFmt, _ := json.MarshalIndent(alertsStrs, "", "  ")
+
+	// Compare both directions
+	for _, s := range alertsStrs {
+		if !utils.FindNeedle(s, expected) {
+			t.Errorf("\nExpected %s and \n Actual %v must match exactly", string(expectedFmt), string(errorsFmt))
+			break
+		}
+	}
+
+	// Compare both directions
+	for _, s := range expected {
+		if !utils.FindNeedle(s, alertsStrs) {
+			t.Errorf("\nExpected %s and \n Actual %v must match exactly", string(expectedFmt), string(errorsFmt))
+			break
+		}
 	}
 
 }

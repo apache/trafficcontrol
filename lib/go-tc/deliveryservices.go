@@ -98,7 +98,7 @@ type DeliveryService struct {
 	RemapText            string                 `json:"remapText"`
 	MultiSiteOrigin      bool                   `json:"multiSiteOrigin"`
 	DisplayName          string                 `json:"displayName"`
-	InitialDispersion    int                    `json:"initialDispersion"`
+	InitialDispersion    float32                `json:"initialDispersion"`
 	MatchList            []DeliveryServiceMatch `json:"matchList,omitempty"`
 	RegionalGeoBlocking  bool                   `json:"regionalGeoBlocking"`
 	LogsEnabled          bool                   `json:"logsEnabled"`

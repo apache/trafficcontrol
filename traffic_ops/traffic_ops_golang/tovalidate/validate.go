@@ -19,11 +19,10 @@ import (
 
 // GreaterThanZero ...
 func GreaterThanZero(value interface{}) error {
-
 	ok := false
 	var val *int
 	var v int
-	if val != nil {
+	if value != nil {
 		typ := reflect.TypeOf(value)
 		if typ.Kind() == reflect.Ptr {
 			val, ok = value.(*int)

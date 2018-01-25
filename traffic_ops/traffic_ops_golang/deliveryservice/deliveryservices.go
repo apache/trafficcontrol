@@ -34,7 +34,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate/rules"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -75,26 +74,27 @@ func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 	// Just add isCIDR as a parameter to Validate()
 	// isCIDR := validation.NewStringRule(govalidator.IsCIDR, "must be a valid CIDR address")
 	isHost := validation.NewStringRule(govalidator.IsHost, "must be a valid hostname")
-	noPeriods := validation.NewStringRule(rules.NoPeriods, "must not contain periods")
-	noSpaces := validation.NewStringRule(rules.NoSpaces, "must not contain spaces")
+	noPeriods := validation.NewStringRule(tovalidate.NoPeriods, "cannot contain periods")
+	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 
 	// Validate that the required fields are sent first to prevent panics below
 	errs := validation.Errors{
-		"typeId":              validation.Validate(ds.TypeID, validation.NotNil, validation.Required),
-		"active":              validation.Validate(ds.Active, validation.NotNil, validation.Required),
-		"cdnId":               validation.Validate(ds.CDNID, validation.NotNil, validation.Required),
+		"active":              validation.Validate(ds.Active, validation.Required),
+		"cdnId":               validation.Validate(ds.CDNID, validation.Required),
 		"displayName":         validation.Validate(ds.DisplayName, validation.Required),
 		"dnsBypassIp":         validation.Validate(ds.DNSBypassIP, is.IP),
 		"dnsBypassIp6":        validation.Validate(ds.DNSBypassIP6, is.IPv6),
-		"dscp":                validation.Validate(ds.DSCP, validation.NotNil, validation.Required),
-		"geoLimit":            validation.Validate(ds.GeoLimit, validation.NotNil, validation.Required),
-		"geoProvider":         validation.Validate(ds.GeoProvider, validation.NotNil, validation.Required),
+		"dscp":                validation.Validate(ds.DSCP, validation.Required),
+		"geoLimit":            validation.Validate(ds.GeoLimit, validation.Required),
+		"geoProvider":         validation.Validate(ds.GeoProvider, validation.Required),
 		"infoUrl":             validation.Validate(ds.InfoURL, is.URL),
-		"logsEnabled":         validation.Validate(ds.LogsEnabled, validation.NotNil, validation.Required),
+		"initialDispersion":   validation.Validate(ds.InitialDispersion, validation.By(tovalidate.GreaterThanZero)),
+		"logsEnabled":         validation.Validate(ds.LogsEnabled, validation.Required),
 		"orgServerFqdn":       validation.Validate(ds.OrgServerFQDN, is.URL),
-		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.NotNil, validation.Required),
+		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.Required),
 		"routingName":         validation.Validate(ds.RoutingName, isHost, noPeriods, validation.Length(1, 48)),
-		"xmlId":               validation.Validate(ds.XMLID, noSpaces, noPeriods),
+		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.By(tovalidate.GreaterThanZero)),
+		"xmlId":               validation.Validate(ds.XMLID, noSpaces, noPeriods, validation.Length(1, 48)),
 	}
 
 	if errs != nil {
@@ -128,7 +128,6 @@ func (ds *TODeliveryService) validateTypeFields(db *sqlx.DB) []error {
 	if typeName != "" {
 		errs := validation.Errors{
 			"initialDispersion": validation.Validate(ds.InitialDispersion,
-				validation.By(tovalidate.GreaterThanZero),
 				validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 			"ipv6RoutingEnabled": validation.Validate(ds.IPV6RoutingEnabled,
 				validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
@@ -146,7 +145,6 @@ func (ds *TODeliveryService) validateTypeFields(db *sqlx.DB) []error {
 				validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 			"rangeRequestHandling": validation.Validate(ds.RangeRequestHandling,
 				validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
-			"typeId": validation.Validate(validation.By(tovalidate.GreaterThanZero)),
 		}
 		return tovalidate.ToErrors(errs)
 	}

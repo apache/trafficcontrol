@@ -68,7 +68,7 @@ func GetHandleErrorsFunc(w http.ResponseWriter, r *http.Request) func(status int
 		w.Header().Set(ContentType, ApplicationJson)
 
 		ctx := r.Context()
-		ctx = context.WithValue(ctx,StatusKey,status)
+		ctx = context.WithValue(ctx, StatusKey, status)
 		*r = *r.WithContext(ctx)
 
 		fmt.Fprintf(w, "%s", errBytes)
@@ -76,17 +76,26 @@ func GetHandleErrorsFunc(w http.ResponseWriter, r *http.Request) func(status int
 }
 
 func HandleErrorsWithType(errs []error, errType ApiErrorType, handleErrs func(status int, errs ...error)) {
-		switch errType {
-		case SystemError:
-			handleErrs(http.StatusInternalServerError, errs...)
-		case DataConflictError:
-			handleErrs(http.StatusBadRequest, errs...)
-		case DataMissingError:
-			handleErrs(http.StatusNotFound, errs...)
-		default:
-			log.Errorf("received unknown ApiErrorType from read: %s\n", errType.String())
-			handleErrs(http.StatusInternalServerError, errs...)
-		}
+	switch errType {
+	case SystemError:
+		handleErrs(http.StatusInternalServerError, errs...)
+	case DataConflictError:
+		handleErrs(http.StatusBadRequest, errs...)
+	case DataMissingError:
+		handleErrs(http.StatusNotFound, errs...)
+	default:
+		log.Errorf("received unknown ApiErrorType from read: %s\n", errType.String())
+		handleErrs(http.StatusInternalServerError, errs...)
+	}
+}
+
+func (alerts *Alerts) ToStrings() []string {
+	alertStrs := []string{}
+	for _, alrt := range alerts.Alerts {
+		at := alrt.Text
+		alertStrs = append(alertStrs, at)
+	}
+	return alertStrs
 }
 
 var StatusKey = "status"

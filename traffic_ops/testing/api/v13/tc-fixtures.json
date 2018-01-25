@@ -98,16 +98,18 @@
             "status": "draft"
         },
         {
-            "author": "billybob",
+            "author": "bad billybob",
             "authorId": 400,
             "changeType": "create",
             "request": {
                 "ccrDnsTtl": 30,
+                "infoUrl": "xxx",
+                "orgServerFqdn": "xxx",
                 "routingName": "x routing",
-                "displayName": "Kabletown CDN",
+                "displayName": "Bad Test Case CDN",
                 "longDesc": "long desc",
                 "tenantId": 2,
-                "xmlId": "test-bad-ds1"
+                "xmlId": "test ds1"
             },
             "status": "draft"
         }
