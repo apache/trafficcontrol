@@ -63,6 +63,7 @@ func decodeAndValidateRequestBody(r *http.Request, v Validator, db *sqlx.DB) (in
 	}
 	payload := reflect.New(typ).Interface()
 	defer r.Body.Close()
+
 	if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
 		return nil, []error{err}
 	}
