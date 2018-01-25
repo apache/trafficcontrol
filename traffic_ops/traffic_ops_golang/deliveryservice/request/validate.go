@@ -22,7 +22,6 @@ package request
 import (
 	"encoding/json"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -31,7 +30,6 @@ import (
 
 // Validate ensures all required fields are present and in correct form.  Also checks request JSON is complete and valid
 func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
-	log.Debugf("Got request with %++v\n", req)
 	errMap := validation.Errors{
 		"changeType":      validation.Validate(req.ChangeType, validation.Required),
 		"deliveryservice": validation.Validate(req.DeliveryService, validation.Required),

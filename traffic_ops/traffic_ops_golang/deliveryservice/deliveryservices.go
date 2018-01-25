@@ -34,6 +34,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate/rules"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -70,33 +71,52 @@ func (ds *TODeliveryService) SetID(i int) {
 
 func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 
-	noSpaces := validation.Match(regexp.MustCompile("^\\S*$"))
-	noSpaces.Error("cannot contain spaces")
-
-	noPeriods := validation.Match(regexp.MustCompile("^[^\\.]*$"))
-	noPeriods.Error("cannot contain periods")
-
-	DNSRegexType := "^DNS.*$"
-	HTTPRegexType := "^HTTP.*$"
-	SteeringRegexType := "^STEERING.*$"
+	// Custom Examples:
+	// Just add isCIDR as a parameter to Validate()
+	// isCIDR := validation.NewStringRule(govalidator.IsCIDR, "must be a valid CIDR address")
+	isHost := validation.NewStringRule(govalidator.IsHost, "must be a valid hostname")
+	noPeriods := validation.NewStringRule(rules.NoPeriods, "must not contain periods")
+	noSpaces := validation.NewStringRule(rules.NoSpaces, "must not contain spaces")
 
 	// Validate that the required fields are sent first to prevent panics below
 	errs := validation.Errors{
-		"active":              validation.Validate(ds.Active, validation.NotNil),
-		"cdnId":               validation.Validate(ds.CDNID, validation.NotNil),
-		"typeId":              validation.Validate(ds.TypeID, validation.NotNil),
-		"dscp":                validation.Validate(ds.DSCP, validation.NotNil),
-		"geoLimit":            validation.Validate(ds.GeoLimit, validation.NotNil),
-		"geoProvider":         validation.Validate(ds.GeoProvider, validation.NotNil),
-		"logsEnabled":         validation.Validate(ds.LogsEnabled, validation.NotNil),
-		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.NotNil),
+		"typeId":              validation.Validate(ds.TypeID, validation.NotNil, validation.Required),
+		"active":              validation.Validate(ds.Active, validation.NotNil, validation.Required),
+		"cdnId":               validation.Validate(ds.CDNID, validation.NotNil, validation.Required),
+		"displayName":         validation.Validate(ds.DisplayName, validation.Required),
+		"dnsBypassIp":         validation.Validate(ds.DNSBypassIP, is.IP),
+		"dnsBypassIp6":        validation.Validate(ds.DNSBypassIP6, is.IPv6),
+		"dscp":                validation.Validate(ds.DSCP, validation.NotNil, validation.Required),
+		"geoLimit":            validation.Validate(ds.GeoLimit, validation.NotNil, validation.Required),
+		"geoProvider":         validation.Validate(ds.GeoProvider, validation.NotNil, validation.Required),
+		"infoUrl":             validation.Validate(ds.InfoURL, is.URL),
+		"logsEnabled":         validation.Validate(ds.LogsEnabled, validation.NotNil, validation.Required),
+		"orgServerFqdn":       validation.Validate(ds.OrgServerFQDN, is.URL),
+		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.NotNil, validation.Required),
+		"routingName":         validation.Validate(ds.RoutingName, isHost, noPeriods, validation.Length(1, 48)),
+		"xmlId":               validation.Validate(ds.XMLID, noSpaces, noPeriods),
 	}
+
 	if errs != nil {
 		return tovalidate.ToErrors(errs)
 	}
 
+	errsResponse := ds.validateTypeFields(db)
+	if errsResponse != nil {
+		return errsResponse
+	}
+
+	return nil
+}
+
+func (ds *TODeliveryService) validateTypeFields(db *sqlx.DB) []error {
+	// Validate the TypeName related fields below
 	var typeName string
 	var err error
+	DNSRegexType := "^DNS.*$"
+	HTTPRegexType := "^HTTP.*$"
+	SteeringRegexType := "^STEERING.*$"
+
 	if db != nil && ds.TypeID != nil {
 		typeID := *ds.TypeID
 		typeName, err = getTypeName(db, typeID)
@@ -105,48 +125,32 @@ func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 		}
 	}
 
-	// Custom Examples:
-	// Just add isCIDR as a parameter to Validate()
-	// isCIDR := validation.NewStringRule(govalidator.IsCIDR, "must be a valid CIDR address")
-	isHost := validation.NewStringRule(govalidator.IsHost, "must be a valid hostname")
-	errs = validation.Errors{
-		"displayName": validation.Validate(ds.DisplayName,
-			validation.Required),
-		"dnsBypassIp":  validation.Validate(ds.DNSBypassIP, is.IP),
-		"dnsBypassIp6": validation.Validate(ds.DNSBypassIP6, is.IPv6),
-		"infoUrl":      validation.Validate(ds.InfoURL, is.URL),
-		"initialDispersion": validation.Validate(ds.InitialDispersion,
-			validation.By(tovalidate.GreaterThanZero),
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
-		"ipv6RoutingEnabled": validation.Validate(ds.IPV6RoutingEnabled,
-			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
-		"missLat": validation.Validate(ds.MissLat,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
-		"missLong": validation.Validate(ds.MissLong,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
-		"multiSiteOrigin": validation.Validate(ds.MultiSiteOrigin,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
-		"orgServerFqdn": validation.Validate(ds.OrgServerFQDN,
-			is.URL,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
-		"protocol": validation.Validate(ds.Protocol,
-			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
-		"qstringIgnore": validation.Validate(ds.QStringIgnore,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
-		"rangeRequestHandling": validation.Validate(ds.RangeRequestHandling,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
-		"routingName": validation.Validate(ds.RoutingName,
-			isHost,
-			noPeriods,
-			validation.Length(1, 48)),
-		"typeId": validation.Validate(ds.TypeID,
-			validation.By(tovalidate.GreaterThanZero)),
-		"xmlId": validation.Validate(ds.XMLID,
-			validation.Required,
-			noSpaces,
-			validation.Length(1, 48)),
+	if typeName != "" {
+		errs := validation.Errors{
+			"initialDispersion": validation.Validate(ds.InitialDispersion,
+				validation.By(tovalidate.GreaterThanZero),
+				validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+			"ipv6RoutingEnabled": validation.Validate(ds.IPV6RoutingEnabled,
+				validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
+			"missLat": validation.Validate(ds.MissLat,
+				validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+			"missLong": validation.Validate(ds.MissLong,
+				validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+			"multiSiteOrigin": validation.Validate(ds.MultiSiteOrigin,
+				validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+			"orgServerFqdn": validation.Validate(ds.OrgServerFQDN,
+				validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+			"protocol": validation.Validate(ds.Protocol,
+				validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
+			"qstringIgnore": validation.Validate(ds.QStringIgnore,
+				validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+			"rangeRequestHandling": validation.Validate(ds.RangeRequestHandling,
+				validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+			"typeId": validation.Validate(validation.By(tovalidate.GreaterThanZero)),
+		}
+		return tovalidate.ToErrors(errs)
 	}
-	return tovalidate.ToErrors(errs)
+	return nil
 }
 
 func requiredIfMatchesTypeName(patterns []string, typeName string) func(interface{}) error {
