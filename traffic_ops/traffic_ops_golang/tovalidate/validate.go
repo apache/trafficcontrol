@@ -23,18 +23,20 @@ func GreaterThanZero(value interface{}) error {
 	ok := false
 	var val *int
 	var v int
-	typ := reflect.TypeOf(value)
-	if typ.Kind() == reflect.Ptr {
-		val, ok = value.(*int)
-		v = *val
-	} else {
-		v, ok = value.(int)
-	}
-	if !ok {
-		return fmt.Errorf("cannot parse value '%s'", value)
-	}
-	if v < 1 {
-		return fmt.Errorf("must be greater than zero")
+	if val != nil {
+		typ := reflect.TypeOf(value)
+		if typ.Kind() == reflect.Ptr {
+			val, ok = value.(*int)
+			v = *val
+		} else {
+			v, ok = value.(int)
+		}
+		if !ok {
+			return fmt.Errorf("cannot parse value '%s'", value)
+		}
+		if v < 1 {
+			return fmt.Errorf("must be greater than zero")
+		}
 	}
 	return nil
 }
