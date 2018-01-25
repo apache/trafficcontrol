@@ -266,10 +266,10 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 // getDeliveryService retrieves a deliveryservice struct from the Request JSON
 func (req TODeliveryServiceRequest) getDeliveryService() (deliveryservice.TODeliveryService, error) {
 	var ds deliveryservice.TODeliveryService
-	if req.Deliveryservice == nil {
+	if req.DeliveryService == nil {
 		return ds, errors.New("No deliveryservice data available")
 	}
-	err := json.Unmarshal(req.Deliveryservice, &ds)
+	err := json.Unmarshal(req.DeliveryService, &ds)
 	return ds, err
 }
 
