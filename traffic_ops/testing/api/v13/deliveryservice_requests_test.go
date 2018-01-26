@@ -33,9 +33,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 	CreateTestDeliveryServiceRequests(t)
 	GetTestDeliveryServiceRequests(t)
 	UpdateTestDeliveryServiceRequests(t)
-	/*
-		DeleteTestDeliveryServiceRequests(t)
-	*/
+	DeleteTestDeliveryServiceRequests(t)
 
 }
 
@@ -138,49 +136,54 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
 	dsr := testData.DeliveryServiceRequests[GOOD_DSR]
 	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
-	fmt.Printf("resp ---> %v\n", resp)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v\n", dsr.DeliveryService.XMLID, err)
 	}
 	respDSR := resp[0]
-	fmt.Printf("lastEditedBy ---> %v\n", respDSR.LastEditedBy)
-	expectedDeliveryServiceRequestName := "test-ds1-x"
-	respDSR.DeliveryService.XMLID = expectedDeliveryServiceRequestName
+	expDisplayName := "new display name"
+	respDSR.DeliveryService.DisplayName = expDisplayName
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateDeliveryServiceRequestByID(respDSR.ID, respDSR)
+	log.Debugln("Response: ", alert)
 	if err != nil {
 		t.Errorf("cannot UPDATE DeliveryServiceRequest by id: %v - %v\n", err, alert)
+		return
 	}
 
 	// Retrieve the DeliveryServiceRequest to check DeliveryServiceRequest name got updated
 	resp, _, err = TOSession.GetDeliveryServiceRequestByID(respDSR.ID)
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v\n", respDSR.DeliveryService.XMLID, err)
-	}
-	respDSR = resp[0]
-	if respDSR.DeliveryService.XMLID != expectedDeliveryServiceRequestName {
-		t.Errorf("results do not match actual: %s, expected: %s\n", respDSR.DeliveryService.XMLID, expectedDeliveryServiceRequestName)
+		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v\n", respDSR.ID, err)
+	} else {
+		respDSR = resp[0]
+		if respDSR.DeliveryService.DisplayName != expDisplayName {
+			t.Errorf("results do not match actual: %s, expected: %s\n", respDSR.DeliveryService.DisplayName, expDisplayName)
+		}
 	}
 
 }
 
-/*
-
 func DeleteTestDeliveryServiceRequests(t *testing.T) {
 
-	secondDeliveryServiceRequest := testData.DeliveryServiceRequests[1]
-	resp, _, err := TOSession.DeleteDeliveryServiceRequestByName(secondDeliveryServiceRequest.Name)
+	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
+	dsr := testData.DeliveryServiceRequests[GOOD_DSR]
+	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
 	if err != nil {
-		t.Errorf("cannot DELETE DeliveryServiceRequest by name: %v - %v\n", err, resp)
+		t.Errorf("cannot GET DeliveryServiceRequest by id: %v - %v\n", dsr.DeliveryService.XMLID, err)
+	}
+	respDSR := resp[0]
+	alert, _, err := TOSession.DeleteDeliveryServiceRequestByID(respDSR.ID)
+	log.Debugln("Response: ", alert)
+	if err != nil {
+		t.Errorf("cannot DELETE DeliveryServiceRequest by id: %d - %v - %v\n", respDSR.ID, err, alert)
 	}
 
 	// Retrieve the DeliveryServiceRequest to see if it got deleted
-	dsrs, _, err := TOSession.GetDeliveryServiceRequestByName(secondDeliveryServiceRequest.Name)
+	dsrs, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
 	if err != nil {
 		t.Errorf("error deleting DeliveryServiceRequest name: %s\n", err.Error())
 	}
 	if len(dsrs) > 0 {
-		t.Errorf("expected DeliveryServiceRequest name: %s to be deleted\n", secondDeliveryServiceRequest.Name)
+		t.Errorf("expected DeliveryServiceRequest name: %s to be deleted\n", dsr.DeliveryService.XMLID)
 	}
 }
-*/

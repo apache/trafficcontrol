@@ -228,6 +228,7 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 
 // Delete removes the request from the db
 func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	fmt.Printf("DELETE\n")
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
