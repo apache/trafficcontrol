@@ -128,7 +128,7 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 		}
 	}
 	log.Debugln("lastUpdated: ", lastUpdated)
-	req.LastUpdated = lastUpdated
+	req.LastUpdated = &lastUpdated
 	if rowsAffected < 1 {
 		err = errors.New("no request found with this id")
 		return err, tc.DataMissingError
@@ -219,7 +219,7 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 		return tc.DBError, tc.SystemError
 	}
 	req.SetID(id)
-	req.LastUpdated = lastUpdated
+	req.LastUpdated = &lastUpdated
 	return nil, tc.NoError
 }
 
