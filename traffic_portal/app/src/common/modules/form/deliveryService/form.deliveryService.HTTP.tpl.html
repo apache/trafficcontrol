@@ -190,6 +190,7 @@ under the License.
                             <option value="">Select...</option>
                         </select>
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.deepCachingType, 'required')">Required</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.deepCachingType != dsCurrent.deepCachingType">Current Value: [ {{dsCurrent.deepCachingType}} ]</small>
                     </div>
                 </div>
 
