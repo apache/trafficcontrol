@@ -33,7 +33,7 @@ type CurrentUser struct {
 	UserName  string `json:"userName" db:"username"`
 	ID        int    `json:"id" db:"id"`
 	PrivLevel int    `json:"privLevel" db:"priv_level"`
-	TenantID  int    `json:"tenantID" db:"tenant_id"`
+	TenantID  int    `json:"tenantId" db:"tenant_id"`
 }
 
 // PrivLevelInvalid - The Default Priv level
