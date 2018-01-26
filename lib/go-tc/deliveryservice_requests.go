@@ -48,7 +48,7 @@ type DeliveryServiceRequestNullable struct {
 	ID              int             `json:"id" db:"id"`
 	LastEditedBy    string          `json:"lastEditedBy"`
 	LastEditedByID  int             `json:"lastEditedById" db:"last_edited_by_id"`
-	LastUpdated     Time            `json:"lastUpdated" db:"last_updated"`
+	LastUpdated     *Time           `json:"lastUpdated" db:"last_updated"`
 	DeliveryService json.RawMessage `json:"deliveryService" db:"deliveryservice"`
 	Status          string          `json:"status" db:"status"`
 	XMLID           string          `json:"-" db:"xml_id"`
