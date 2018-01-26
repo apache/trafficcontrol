@@ -119,6 +119,7 @@ type DeliveryServiceNullable struct {
 	CheckPath                string                 `json:"checkPath" db:"check_path"`
 	DisplayName              *string                `json:"displayName" db:"display_name"`
 	CDNName                  string                 `json:"cdnName"`
+	DeepCachingType          DeepCachingType        `json:"deepCachingType"`
 	DNSBypassCNAME           string                 `json:"dnsBypassCname" db:"dns_bypass_cname"`
 	DNSBypassIP              string                 `json:"dnsBypassIp" db:"dns_bypass_ip"`
 	DNSBypassIP6             string                 `json:"dnsBypassIp6" db:"dns_bypass_ip6"`
