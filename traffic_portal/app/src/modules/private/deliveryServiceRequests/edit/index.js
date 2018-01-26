@@ -53,10 +53,10 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.e
 
 								if (dsRequest.changeType == 'update') {
 									// fetch the ds that the request is attempting to update for comparison reasons
-									return deliveryServiceService.getDeliveryService(dsRequest.request.id);
+									return deliveryServiceService.getDeliveryService(dsRequest.deliveryService.id);
 								} else {
 									// on create, there is nothing to compare so comparing A to A shows no difference
-									return dsRequest.request;
+									return dsRequest.deliveryService;
 								}
 							},
 							type: function($stateParams) {

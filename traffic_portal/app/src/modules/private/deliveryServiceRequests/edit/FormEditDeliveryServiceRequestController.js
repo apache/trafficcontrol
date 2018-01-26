@@ -22,13 +22,13 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 	var dsRequest = deliveryServiceRequest[0];
 		
 	// extends the FormDeliveryServiceController to inherit common methods
-	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: dsRequest.request, dsCurrent: deliveryService, type: type, types: types, $scope: $scope }));
+	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: dsRequest.deliveryService, dsCurrent: deliveryService, type: type, types: types, $scope: $scope }));
 
 	$scope.changeType = dsRequest.changeType;
 
 	$scope.requestStatus = dsRequest.status;
 
-	$scope.deliveryServiceName = angular.copy(dsRequest.request.xmlId);
+	$scope.deliveryServiceName = angular.copy(dsRequest.deliveryService.xmlId);
 
 	$scope.advancedShowing = true;
 
@@ -181,10 +181,10 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 		});
 		modalInstance.result.then(function(action) {
 			dsRequest.status = (action.id == $scope.SUBMITTED) ? 'submitted' : 'draft';
-			dsRequest.request = deliveryService;
+			dsRequest.deliveryService = deliveryService;
 			deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest).
 			then(function() {
-				messageModel.setMessages([ { level: 'success', text: 'Updated delivery service request for ' + dsRequest.request.xmlId + ' and set status to ' + dsRequest.status } ], false);
+				messageModel.setMessages([ { level: 'success', text: 'Updated delivery service request for ' + dsRequest.deliveryService.xmlId + ' and set status to ' + dsRequest.status } ], false);
 				$anchorScroll(); // scrolls window to top
 				$state.reload();
 			});
