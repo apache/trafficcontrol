@@ -184,6 +184,6 @@ func DeleteTestDeliveryServiceRequests(t *testing.T) {
 		t.Errorf("error deleting DeliveryServiceRequest name: %s\n", err.Error())
 	}
 	if len(dsrs) > 0 {
-		t.Errorf("expected DeliveryServiceRequest name: %s to be deleted\n", dsr.DeliveryService.XMLID)
+		t.Errorf("expected DeliveryServiceRequest XMLID: %s to be deleted\n", dsr.DeliveryService.XMLID)
 	}
 }
