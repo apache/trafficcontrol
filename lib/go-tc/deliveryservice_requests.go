@@ -32,7 +32,7 @@ type DeliveryServiceRequest struct {
 	LastEditedBy    string          `json:"lastEditedBy"`
 	LastEditedByID  int             `json:"lastEditedById"`
 	LastUpdated     *Time           `json:"lastUpdated"`
-	DeliveryService DeliveryService `json:"request"`
+	DeliveryService DeliveryService `json:"deliveryService"`
 	Status          string          `json:"status"`
 }
 
