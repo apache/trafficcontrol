@@ -1387,7 +1387,7 @@ sub is_deliveryservice_valid {
 			active				=> [ is_required("is required") ],
 			cdnId				=> [ is_required("is required"), \&is_valid_int_or_undef ],
 			ccrDnsTtl			=> [ \&is_valid_int_or_undef ],
-			deepCachingType      => [ is_like( qr/^NEVER|ALWAYS$/, "must be NEVER or ALWAYS" ) ],
+			deepCachingType			=> [ is_like( qr/^(NEVER|ALWAYS)$/, "must be NEVER or ALWAYS" ) ],
 			dnsBypassTtl			=> [ \&is_valid_int_or_undef ],
 			dscp				=> [ is_required("is required"), \&is_valid_int_or_undef ],
 			displayName			=> [ is_required("is required"), is_long_at_most( 48, 'too long' ) ],
