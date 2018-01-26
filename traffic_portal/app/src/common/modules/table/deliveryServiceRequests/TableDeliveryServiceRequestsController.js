@@ -38,7 +38,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 			var dsRequest = {
 				changeType: 'delete',
 				status: 'submitted',
-				request: deliveryService
+				deliveryService: deliveryService
 			};
 			deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, false).
 				then(function() {
@@ -219,8 +219,8 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 	$scope.deleteRequest = function(request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		var params = {
-			title: 'Delete the ' + request.request.xmlId + ' ' + request.changeType + ' request?',
-			key: request.request.xmlId + ' ' + request.changeType + ' request'
+			title: 'Delete the ' + request.deliveryService.xmlId + ' ' + request.changeType + ' request?',
+			key: request.deliveryService.xmlId + ' ' + request.changeType + ' request'
 		};
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
@@ -364,7 +364,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 
 	$scope.editDeliveryServiceRequest = function(request) {
 		var path = '/delivery-service-requests/' + request.id + '?type=';
-		typeService.getType(request.request.typeId)
+		typeService.getType(request.deliveryService.typeId)
 			.then(function(result) {
 				path += result.name;
 				locationUtils.navigateToPath(path);
@@ -374,7 +374,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 	$scope.fulfillRequest = function(request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		var path = '/delivery-service-requests/' + request.id + '?type=';
-		typeService.getType(request.request.typeId)
+		typeService.getType(request.deliveryService.typeId)
 			.then(function(result) {
 				path += result.name;
 				locationUtils.navigateToPath(path);
