@@ -34,6 +34,7 @@ type DeliveryServiceRequest struct {
 	LastUpdated     *Time           `json:"lastUpdated"`
 	DeliveryService DeliveryService `json:"deliveryService"`
 	Status          string          `json:"status"`
+	XMLID           string          `json:"-" db:"xml_id"`
 }
 
 // DeliveryServiceRequestNullable is used as part of the workflow to create,

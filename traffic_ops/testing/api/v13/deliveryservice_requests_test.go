@@ -153,7 +153,7 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 	}
 
 	// Retrieve the DeliveryServiceRequest to check DeliveryServiceRequest name got updated
-	resp, _, err = TOSession.GetDeliveryServiceRequestByID(dsr.ID)
+	resp, _, err = TOSession.GetDeliveryServiceRequestByID(respDSR.ID)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v\n", respDSR.DeliveryService.XMLID, err)
 	}
