@@ -35,7 +35,6 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(dsr)
-	fmt.Printf("reqBody ---> %v\n", string(reqBody))
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return alerts, reqInf, err
@@ -59,11 +58,11 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 func (to *Session) GetDeliveryServiceRequestByXMLID(XMLID string) ([]tc.DeliveryServiceRequest, ReqInf, error) {
 
 	route := fmt.Sprintf("%s?xmlId=%s", API_DS_REQUESTS, XMLID)
-	fmt.Printf("route ---> %v\n", route)
 
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
+		fmt.Printf("route: %v\n", route)
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
@@ -102,7 +101,6 @@ func (to *Session) GetDeliveryServiceRequestByID(id int) ([]tc.DeliveryServiceRe
 func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServiceRequest) (tc.Alerts, ReqInf, error) {
 
 	route := fmt.Sprintf("%s/%d", API_DS_REQUESTS, id)
-	fmt.Printf("route ---> %v\n", route)
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(dsr)
@@ -110,9 +108,25 @@ func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServi
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	fmt.Printf("reqBody ---> %v\n", string(reqBody))
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
+		fmt.Printf("route: %v\n", route)
+		fmt.Printf("reqBody: %v\n", string(reqBody))
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
+}
+
+// DELETE a DeliveryServiceRequest by DeliveryServiceRequest assignee
+func (to *Session) DeleteDeliveryServiceRequestByID(id int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_DS_REQUESTS, id)
+	resp, remoteAddr, err := to.rawRequest(http.MethodDelete, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		fmt.Printf("route: %v\n", route)
 		return tc.Alerts{}, reqInf, err
 	}
 	defer resp.Body.Close()
@@ -155,17 +169,4 @@ func (to *Session) GetDeliveryServiceRequestByAssignee(assignee string) ([]tc.De
 	return data.Response, reqInf, nil
 }
 
-// DELETE a DeliveryServiceRequest by DeliveryServiceRequest assignee
-func (to *Session) DeleteDeliveryServiceRequestByAssignee(assignee string) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/assignee/%s", API_DS_REQUESTS, assignee)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
-	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
-}
 */
