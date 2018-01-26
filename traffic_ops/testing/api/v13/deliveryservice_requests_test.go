@@ -21,15 +21,19 @@ import (
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/testing/api/utils"
 )
+
+const GOOD_DSR = 0
+const REQUIRED_DSR = 2
 
 func TestDeliveryServiceRequests(t *testing.T) {
 
 	CreateTestDeliveryServiceRequests(t)
 	GetTestDeliveryServiceRequests(t)
+	UpdateTestDeliveryServiceRequests(t)
 	/*
-		UpdateTestDeliveryServiceRequests(t)
 		DeleteTestDeliveryServiceRequests(t)
 	*/
 
@@ -38,19 +42,18 @@ func TestDeliveryServiceRequests(t *testing.T) {
 func CreateTestDeliveryServiceRequests(t *testing.T) {
 	fmt.Printf("CreateTestDeliveryServiceRequests\n")
 
-	for _, dsr := range testData.DeliveryServiceRequests {
-		resp, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
-		log.Debugln("Response: ", resp)
-		if err != nil {
-			t.Errorf("could not CREATE DeliveryServiceRequests: %v\n", err)
-		}
+	dsr := testData.DeliveryServiceRequests[GOOD_DSR]
+	resp, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+	log.Debugln("Response: ", resp)
+	if err != nil {
+		t.Errorf("could not CREATE DeliveryServiceRequests: %v\n", err)
 	}
 
 }
 
 func TestDeliveryServiceRequestRequired(t *testing.T) {
 
-	dsr := testData.DeliveryServiceRequests[2]
+	dsr := testData.DeliveryServiceRequests[REQUIRED_DSR]
 	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
 	if err != nil {
 		t.Errorf("Error occurred %v", err)
@@ -84,7 +87,7 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 	XMLID := strings.Repeat("X", 48)
 	displayName := strings.Repeat("X", 49)
 
-	dsr := testData.DeliveryServiceRequests[0]
+	dsr := testData.DeliveryServiceRequests[GOOD_DSR]
 	dsr.DeliveryService.DisplayName = displayName
 	dsr.DeliveryService.RoutingName = routingName
 	dsr.DeliveryService.XMLID = XMLID
@@ -105,7 +108,7 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 	fmt.Printf("TestDeliveryServiceRequestTypeFields\n")
 
-	dsr := testData.DeliveryServiceRequests[0]
+	dsr := testData.DeliveryServiceRequests[GOOD_DSR]
 	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
 	if err != nil {
 		t.Errorf("Error occurred %v", err)
@@ -123,42 +126,45 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 func GetTestDeliveryServiceRequests(t *testing.T) {
 	fmt.Printf("GetTestDeliveryServiceRequests\n")
 
-	dsr := testData.DeliveryServiceRequests[0]
+	dsr := testData.DeliveryServiceRequests[GOOD_DSR]
 	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceRequest by XMLID: %v - %v\n", err, resp)
 	}
 }
 
-/*
 func UpdateTestDeliveryServiceRequests(t *testing.T) {
 
-	firstDeliveryServiceRequest := testData.DeliveryServiceRequests[0]
 	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
-	resp, _, err := TOSession.GetDeliveryServiceRequestByName(firstDeliveryServiceRequest.Name)
+	dsr := testData.DeliveryServiceRequests[GOOD_DSR]
+	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
+	fmt.Printf("resp ---> %v\n", resp)
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v\n", firstDeliveryServiceRequest.Name, err)
+		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v\n", dsr.DeliveryService.XMLID, err)
 	}
-	remoteDeliveryServiceRequest := resp[0]
-	expectedDeliveryServiceRequestName := "testDSR1"
-	remoteDeliveryServiceRequest.Name = expectedDeliveryServiceRequestName
+	respDSR := resp[0]
+	fmt.Printf("lastEditedBy ---> %v\n", respDSR.LastEditedBy)
+	expectedDeliveryServiceRequestName := "test-ds1-x"
+	respDSR.DeliveryService.XMLID = expectedDeliveryServiceRequestName
 	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateDeliveryServiceRequestByID(remoteDeliveryServiceRequest.ID, remoteDeliveryServiceRequest)
+	alert, _, err = TOSession.UpdateDeliveryServiceRequestByID(respDSR.ID, respDSR)
 	if err != nil {
 		t.Errorf("cannot UPDATE DeliveryServiceRequest by id: %v - %v\n", err, alert)
 	}
 
 	// Retrieve the DeliveryServiceRequest to check DeliveryServiceRequest name got updated
-	resp, _, err = TOSession.GetDeliveryServiceRequestByID(remoteDeliveryServiceRequest.ID)
+	resp, _, err = TOSession.GetDeliveryServiceRequestByID(dsr.ID)
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v\n", firstDeliveryServiceRequest.Name, err)
+		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v\n", respDSR.DeliveryService.XMLID, err)
 	}
-	respDeliveryServiceRequest := resp[0]
-	if respDeliveryServiceRequest.Name != expectedDeliveryServiceRequestName {
-		t.Errorf("results do not match actual: %s, expected: %s\n", respDeliveryServiceRequest.Name, expectedDeliveryServiceRequestName)
+	respDSR = resp[0]
+	if respDSR.DeliveryService.XMLID != expectedDeliveryServiceRequestName {
+		t.Errorf("results do not match actual: %s, expected: %s\n", respDSR.DeliveryService.XMLID, expectedDeliveryServiceRequestName)
 	}
 
 }
+
+/*
 
 func DeleteTestDeliveryServiceRequests(t *testing.T) {
 

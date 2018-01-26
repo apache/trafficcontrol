@@ -29,8 +29,8 @@ type DeliveryServiceRequest struct {
 	ChangeType      string          `json:"changeType"`
 	CreatedAt       *Time           `json:"createdAt"`
 	ID              int             `json:"id"`
-	LastEditedBy    string          `json:"lastEditedBy"`
-	LastEditedByID  int             `json:"lastEditedById"`
+	LastEditedBy    string          `json:"lastEditedBy,omitempty"`
+	LastEditedByID  int             `json:"lastEditedById,omitempty"`
 	LastUpdated     *Time           `json:"lastUpdated"`
 	DeliveryService DeliveryService `json:"deliveryService"`
 	Status          string          `json:"status"`
