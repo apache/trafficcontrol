@@ -41,7 +41,7 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 			var dsRequest = {
 				changeType: 'delete',
 				status: 'submitted',
-				request: deliveryService
+				deliveryService: deliveryService
 			};
 			deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, true);
 		}, function () {
@@ -84,7 +84,7 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 				var dsRequest = {
 					changeType: 'update',
 					status: (action.id == $scope.SUBMITTED) ? 'submitted' : 'draft',
-					request: deliveryService
+					deliveryService: deliveryService
 				};
 				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, true);
 			}, function () {
