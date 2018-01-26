@@ -63,7 +63,7 @@
                 "active": true,
                 "ccrDnsTtl": 30,
                 "cdnId": 1,
-                "displayName": "Kabletown CDN",
+                "displayName": "Good Kabletown CDN",
                 "dscp": 1,
                 "geoLimit": 1,
                 "geoProvider": 1,
@@ -71,7 +71,7 @@
                 "logsEnabled": true,
                 "longDesc": "long desc",
                 "regionalGeoBlocking": true,
-                "routingName": "routingName",
+                "routingName": "goodroute",
                 "tenantId": 2,
                 "typeId": 70,
                 "xmlId": "test-ds1"
@@ -79,8 +79,6 @@
             "status": "draft"
         },
         {
-            "author": "billybob",
-            "authorId": 400,
             "changeType": "create",
             "request": {
                 "active": true,
@@ -100,8 +98,6 @@
             "status": "draft"
         },
         {
-            "author": "bad billybob",
-            "authorId": 400,
             "changeType": "create",
             "request": {
                 "ccrDnsTtl": 30,
