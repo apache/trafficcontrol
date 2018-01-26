@@ -81,7 +81,7 @@
         },
         {
             "changeType": "create",
-            "request": {
+            "deliverService": {
                 "active": true,
                 "ccrDnsTtl": 30,
                 "cdnId": 1,
@@ -101,7 +101,7 @@
         },
         {
             "changeType": "create",
-            "request": {
+            "deliverService": {
                 "ccrDnsTtl": 30,
                 "infoUrl": "xxx",
                 "orgServerFqdn": "xxx",
