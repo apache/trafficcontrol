@@ -55,7 +55,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 	return alerts, reqInf, nil
 }
 
-// GET a DeliveryServiceRequest by the DeliveryServiceRequest xmlId
+// GET a DeliveryServiceRequest by the DeliveryServiceRequest XMLID
 func (to *Session) GetDeliveryServiceRequestByXMLID(XMLID string) ([]tc.DeliveryServiceRequest, ReqInf, error) {
 
 	route := fmt.Sprintf("%s?xmlId=%s", API_DS_REQUESTS, XMLID)
@@ -98,9 +98,11 @@ func (to *Session) GetDeliveryServiceRequestByID(id int) ([]tc.DeliveryServiceRe
 	return data.Response, reqInf, nil
 }
 
-/*
 // Update a DeliveryServiceRequest by ID
 func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServiceRequest) (tc.Alerts, ReqInf, error) {
+
+	route := fmt.Sprintf("%s/%d", API_DS_REQUESTS, id)
+	fmt.Printf("route ---> %v\n", route)
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(dsr)
@@ -108,7 +110,7 @@ func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServi
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_DS_REQUESTS, id)
+	fmt.Printf("reqBody ---> %v\n", string(reqBody))
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -118,6 +120,8 @@ func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServi
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
+
+/*
 
 // Returns a list of DeliveryServiceRequests
 func (to *Session) GetDeliveryServiceRequests() ([]tc.DeliveryServiceRequest, ReqInf, error) {
