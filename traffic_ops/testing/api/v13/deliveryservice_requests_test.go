@@ -16,6 +16,7 @@
 package v13
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -35,6 +36,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 }
 
 func CreateTestDeliveryServiceRequests(t *testing.T) {
+	fmt.Printf("CreateTestDeliveryServiceRequests\n")
 
 	for _, dsr := range testData.DeliveryServiceRequests {
 		resp, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
@@ -75,6 +77,7 @@ func TestDeliveryServiceRequestRequired(t *testing.T) {
 }
 
 func TestDeliveryServiceRequestRules(t *testing.T) {
+	fmt.Printf("TestDeliveryServiceRequestRules\n")
 
 	routingName := strings.Repeat("X", 1) + "." + strings.Repeat("X", 48)
 	// Test the xmlId length
@@ -100,6 +103,7 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 }
 
 func TestDeliveryServiceRequestTypeFields(t *testing.T) {
+	fmt.Printf("TestDeliveryServiceRequestTypeFields\n")
 
 	dsr := testData.DeliveryServiceRequests[0]
 	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
@@ -117,11 +121,12 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 }
 
 func GetTestDeliveryServiceRequests(t *testing.T) {
+	fmt.Printf("GetTestDeliveryServiceRequests\n")
 
 	dsr := testData.DeliveryServiceRequests[0]
 	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v\n", err, resp)
+		t.Errorf("cannot GET DeliveryServiceRequest by XMLID: %v - %v\n", err, resp)
 	}
 }
 
