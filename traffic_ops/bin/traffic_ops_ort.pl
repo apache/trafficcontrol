@@ -407,6 +407,9 @@ sub process_cfg_file {
 	elsif ( $cfg_file eq "ssl_multicert.config" ) {
 		&adv_processing_ssl( \@db_file_lines );
 	}
+        elsif ( $cfg_file eq "remap.config") {
+                &adv_processing_remap( \@db_file_lines );
+        }
 
 	( $log_level >> $INFO )
 		&& print "INFO: ======== End processing config file: $cfg_file for service: " . $cfg_file_tracker->{$cfg_file}->{'service'} . " ========\n";
@@ -2955,6 +2958,29 @@ sub adv_processing_ssl {
 				exit 1;
 			}
 		}
+	}
+	return 0;
+}
+
+
+# If fast_revalidation plugin is enabled, check that sysctl
+# net.core.default_qdisc is set to "fq" or exit.
+sub adv_processing_remap {
+
+	my @db_file_lines = @{ $_[0] };
+
+	( $log_level >> $DEBUG ) && print "DEBUG Entering advanced processing for remap.config\n";
+	foreach my $remap_line (@db_file_lines) {
+	    if ( $remap_line =~ /^map.*\@plugin=fq_pacing\.so/) {
+		my $default_qdisc = `sysctl -n net.core.default_qdisc`;
+		chomp($default_qdisc);
+		if ( $default_qdisc eq "fq" ){
+		    return 0;
+		} else {
+		    ( $log_level >> $FATAL ) && print "FQ Pacing plugin enabled, set 'net.core.default_qdisc=fq' in /etc/sysctl.conf and REBOOT! Exiting\n";
+		    exit 1;
+		}
+	    }
 	}
 	return 0;
 }
