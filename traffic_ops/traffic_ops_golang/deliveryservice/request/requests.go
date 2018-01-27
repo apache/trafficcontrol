@@ -71,7 +71,7 @@ func (req *TODeliveryServiceRequest) SetID(i int) {
 
 // IsTenantAuthorized implements the Tenantable interface to ensure the user is authorized on the deliveryservice tenant
 func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error) {
-	ds, err := req.getDeliveryService()
+	ds, err := req.getDeliveryService(db)
 	if err != nil {
 		log.Debugf("from getDeliveryService: %v", err)
 		return false, err
@@ -151,7 +151,7 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 
 // Insert ...
 func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	ds, err := req.getDeliveryService()
+	ds, err := req.getDeliveryService(db)
 	if err != nil {
 		return err, tc.SystemError
 	}
@@ -265,10 +265,20 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 }
 
 // getDeliveryService retrieves a deliveryservice struct from the Request JSON
-func (req TODeliveryServiceRequest) getDeliveryService() (deliveryservice.TODeliveryService, error) {
+func (req TODeliveryServiceRequest) getDeliveryService(db *sqlx.DB) (deliveryservice.TODeliveryService, error) {
 	var ds deliveryservice.TODeliveryService
 	if req.DeliveryService == nil {
-		return ds, errors.New("No deliveryservice data available")
+		if req.ID == 0 {
+			log.Debugf("MISSING: %++v", req)
+			return ds, errors.New("Missing DeliveryService data in request")
+		}
+		// get from the db
+		q := `SELECT deliveryservice FROM deliveryservice_request WHERE id=` + strconv.Itoa(req.ID)
+		row := db.QueryRow(q)
+		err := row.Scan(&req.DeliveryService)
+		if err != nil {
+			return ds, err
+		}
 	}
 	err := json.Unmarshal(req.DeliveryService, &ds)
 	return ds, err
