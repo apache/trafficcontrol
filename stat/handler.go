@@ -25,16 +25,8 @@ type statHandler struct {
 }
 
 // NewStatHandler returns an HTTP handler
-func NewStatHandler(interfaceName string, remapRules []remap.RemapRule, stats Stats, statRules remap.RemapRulesStats) http.Handler {
+func NewHandler(interfaceName string, remapRules []remap.RemapRule, stats Stats, statRules remap.RemapRulesStats) http.Handler {
 	return statHandler{interfaceName: interfaceName, stats: stats, statRules: statRules}
-}
-
-func NewStatHandlerFunc(interfaceName string, remapRules []remap.RemapRule, stats Stats, statRules remap.RemapRulesStats) http.HandlerFunc {
-	handler := NewStatHandler(interfaceName, remapRules, stats, statRules)
-	f := func(w http.ResponseWriter, r *http.Request) {
-		handler.ServeHTTP(w, r)
-	}
-	return f
 }
 
 func (h statHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
