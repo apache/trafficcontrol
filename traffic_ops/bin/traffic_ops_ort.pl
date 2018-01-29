@@ -40,11 +40,13 @@ my $wait_for_parents = 1;
 my $login_dispersion = 0;
 my $reval_wait_time = 60;
 my $reval_in_use = 0;
+my $rev_proxy_disable = 0;
 
 GetOptions( "dispersion=i"       => \$dispersion, # dispersion (in seconds)
             "retries=i"          => \$retries,
             "wait_for_parents=i" => \$wait_for_parents,
-            "login_dispersion=i" => \$login_dispersion );
+            "login_dispersion=i" => \$login_dispersion,
+            "rev_proxy_disable=i" => \$rev_proxy_disable );
 
 if ( $#ARGV < 1 ) {
 	&usage();
@@ -330,6 +332,7 @@ sub usage {
 	print "\t   login_dispersion=<time>  => wait a random number between 0 and <time> before login. Default = 0.\n";
 	print "\t   retries=<number>         => retry connection to Traffic Ops URL <number> times. Default = 3.\n";
 	print "\t   wait_for_parents=<0|1>   => do not update if parent_pending = 1 in the update json. Default = 1, wait for parents.\n";
+	print "\t   rev_proxy_disable=<0|1>  => bypass the reverse proxy even if one has been configured Default = 0.\n";
 	print "====-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-====\n";
 	exit 1;
 }
@@ -1784,7 +1787,7 @@ sub get_cfg_file_list {
 	
 	if ($api_in_use == 1) {
 		$to_rev_proxy_url = $ort_ref->{'info'}->{'toRevProxyUrl'};
-		if ( $to_rev_proxy_url ) {
+		if ( $to_rev_proxy_url && $rev_proxy_disable == 0 ) {
 			$to_rev_proxy_url =~ s/\/*$//g;
                         # Note: If traffic_ops_url is changing, would be suggested to get a new cookie.
                         #       Secrets might not be the same on all Traffic Ops instance.
@@ -1792,6 +1795,9 @@ sub get_cfg_file_list {
 			$rev_proxy_in_use = 1;
 			( $log_level >> $INFO ) && printf("INFO Found Traffic Ops Reverse Proxy URL from Traffic Ops: $to_rev_proxy_url\n");
 		} else {
+			if ( $rev_proxy_disable == 1 ) {
+				( $log_level >> $INFO ) && printf("INFO Reverse proxy disabled - connecting directly to traffic ops for all files.\n");
+			}
 			$traffic_ops_host = $to_url;
 		}
 		$profile_name = $ort_ref->{'info'}->{'profileName'};
