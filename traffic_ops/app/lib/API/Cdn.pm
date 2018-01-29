@@ -1205,12 +1205,14 @@ sub refresh_keys {
 
 			#get DeliveryServices for CDN
 			my %search = ( cdn_id => $row->id );
-			my @ds_rs = $self->db->resultset('Deliveryservice')->search( \%search );
+			my @ds_rs = $self->db->resultset('Deliveryservice')->search( \%search, { prefetch => ['type'] });
+
 			foreach my $ds (@ds_rs) {
-				if (   $ds->type->name !~ m/^HTTP/
-					&& $ds->type->name !~ m/^CLIENT_STEERING$/
-					&& $ds->type->name !~ m/^STEERING$/
-					&& $ds->type->name !~ m/^DNS/ )
+				my $type = $ds->type->name;
+				if (   $type !~ m/^HTTP/
+					&& $type !~ m/^CLIENT_STEERING$/
+					&& $type !~ m/^STEERING$/
+					&& $type !~ m/^DNS/ )
 				{
 					next;
 				}
