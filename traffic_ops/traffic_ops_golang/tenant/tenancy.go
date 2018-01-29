@@ -45,13 +45,9 @@ func (dsInfo DeliveryServiceTenantInfo) IsTenantAuthorized(user auth.CurrentUser
 // returns tenant information for a deliveryservice
 func GetDeliveryServiceTenantInfo(xmlId string, db *sqlx.DB) (*DeliveryServiceTenantInfo, error) {
 	ds := DeliveryServiceTenantInfo{}
-	tenantInfoStmt, err := db.Preparex("SELECT xml_id,tenant_id FROM deliveryservice where xml_id = $1")
-	if err != nil {
-		log.Errorf("deliveryservice sql query error, xmlId '%s': %v\n", xmlId, err)
-		return nil, err
-	}
+	query := "SELECT xml_id,tenant_id FROM deliveryservice where xml_id = $1"
 
-	err = tenantInfoStmt.Get(&ds, xmlId)
+	err := db.Get(&ds,query,xmlId)
 	switch {
 	case err == sql.ErrNoRows:
 		ds = DeliveryServiceTenantInfo{}
