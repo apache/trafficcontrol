@@ -196,6 +196,10 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, type, t
         { value: 4, label: "4 - Latch on Failover" }
     ];
 
+    $scope.label = function(field, attribute) {
+        return propertiesModel.properties.defaults.deliveryservices.descriptions[field][attribute];
+    };
+
     $scope.tenantLabel = function(tenant) {
         return '-'.repeat(tenant.level) + ' ' + tenant.name;
     };
