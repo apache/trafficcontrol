@@ -219,7 +219,7 @@ under the License.
                      ng-if="isClientSteering(deliveryService)">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">Traffic Router Additional Response Headers</label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input name="trResponseHeaders" type="text" class="form-control" ng-model="deliveryService.trResponseHeaders" ng-maxlength="1024" autofocus>
+                        <input name="trResponseHeaders" type="text" class="form-control" ng-model="deliveryService.trResponseHeaders" ng-maxlength="1024">
                         <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.trResponseHeaders, 'maxlength')">Too Long</small>
                         <span ng-show="hasError(deliveryServiceForm.trResponseHeaders)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
