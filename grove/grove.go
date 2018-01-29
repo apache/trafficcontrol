@@ -85,10 +85,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	stats := stat.NewStats(remapper.Rules(), lruCache, uint64(cfg.CacheSizeBytes)) // TODO rename
+	stats := stat.New(remapper.Rules(), lruCache, uint64(cfg.CacheSizeBytes)) // TODO rename
 
 	buildHandler := func(scheme string, port string, conns *web.ConnMap) (http.Handler, *cache.HandlerPointer) {
-		statHandler := stat.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
+		statHandler := stat.NewHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
 		cacheHandler := cache.NewHandler(
 			lruCache,
 			remapper,
@@ -184,7 +184,7 @@ func main() {
 			}
 		}
 
-		stats = stat.NewStats(remapper.Rules(), lruCache, uint64(cfg.CacheSizeBytes)) // TODO copy stats from old stats object?
+		stats = stat.New(remapper.Rules(), lruCache, uint64(cfg.CacheSizeBytes)) // TODO copy stats from old stats object?
 
 		httpCacheHandler := cache.NewHandler(
 			lruCache,
@@ -221,7 +221,7 @@ func main() {
 		httpsHandlerPointer.Set(httpsCacheHandler)
 
 		if cfg.Port != oldCfg.Port {
-			statHandler := stat.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
+			statHandler := stat.NewHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
 			handler := http.NewServeMux()
 			handler.Handle("/_astats", statHandler)
 			handler.Handle("/", httpHandlerPointer)
@@ -242,7 +242,7 @@ func main() {
 		}
 
 		if (httpsServer == nil || cfg.HTTPSPort != oldCfg.HTTPSPort) && cfg.CertFile != "" && cfg.KeyFile != "" {
-			statHandler := stat.NewStatHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
+			statHandler := stat.NewHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules())
 			handler := http.NewServeMux()
 			handler.Handle("/_astats", statHandler)
 			handler.Handle("/", httpsHandlerPointer)
