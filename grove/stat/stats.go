@@ -50,7 +50,7 @@ type Stats interface {
 	Write(w http.ResponseWriter, conn *web.InterceptConn, reqFQDN string, remoteAddr string, code int, bytesWritten uint64, cacheHit bool) uint64
 }
 
-func NewStats(remapRules []remap.RemapRule, cache Cache, cacheCapacityBytes uint64) Stats {
+func New(remapRules []remap.RemapRule, cache Cache, cacheCapacityBytes uint64) Stats {
 	connections := uint64(0)
 	cacheHits := uint64(0)
 	cacheMisses := uint64(0)
