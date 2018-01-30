@@ -63,7 +63,7 @@ under the License.
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.active), 'has-feedback': hasError(deliveryServiceForm.active)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                    <span uib-popover-html="label('active', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('active', 'title')}} <i class="fa fa-info-circle"></i></span>
+                    <span uib-popover-html="label('active', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('active', 'title')}}</span>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select name="active" class="form-control" ng-model="deliveryService.active" ng-options="x.value as x.label for x in falseTrue" required>
@@ -76,7 +76,7 @@ under the License.
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.type), 'has-feedback': hasError(deliveryServiceForm.type)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                    <span uib-popover-html="label('typeId', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('typeId', 'title')}} <i class="fa fa-info-circle"></i></span>
+                    <span uib-popover-html="label('typeId', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('typeId', 'title')}}</span>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select name="type" class="form-control" ng-model="deliveryService.typeId" ng-options="type.id as type.name for type in types" required>
@@ -89,7 +89,7 @@ under the License.
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.xmlId), 'has-feedback': hasError(deliveryServiceForm.xmlId)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                    <span uib-popover-html="label('xmlId', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('xmlId', 'title')}} <i class="fa fa-info-circle"></i></span>
+                    <span uib-popover-html="label('xmlId', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('xmlId', 'title')}}</span>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input name="xmlId" type="text" class="form-control" placeholder="Unique id used for the delivery service" ng-model="deliveryService.xmlId" ng-required="true" ng-maxlength="48" ng-pattern="/^\S*$/" ng-readonly="(!settings.isRequest && !settings.isNew) || (settings.isRequest && changeType == 'update')" autofocus>
@@ -103,7 +103,7 @@ under the License.
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.displayName), 'has-feedback': hasError(deliveryServiceForm.displayName)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                    <span uib-popover-html="label('displayName', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('displayName', 'title')}} <i class="fa fa-info-circle"></i></span>
+                    <span uib-popover-html="label('displayName', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('displayName', 'title')}}</span>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input name="displayName" type="text" class="form-control" ng-model="deliveryService.displayName" ng-maxlength="48" required autofocus>
@@ -116,7 +116,7 @@ under the License.
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.tenantId), 'has-feedback': hasError(deliveryServiceForm.tenantId)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                    <span uib-popover-html="label('tenantId', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('tenantId', 'title')}} <i class="fa fa-info-circle"></i></span>
+                    <span uib-popover-html="label('tenantId', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('tenantId', 'title')}}</span>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select name="tenantId" class="form-control" ng-model="deliveryService.tenantId" ng-options="tenant.id as tenantLabel(tenant) for tenant in tenants" required>
@@ -129,7 +129,7 @@ under the License.
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.cdn), 'has-feedback': hasError(deliveryServiceForm.cdn)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                    <span uib-popover-html="label('cdnId', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('cdnId', 'title')}} <i class="fa fa-info-circle"></i></span>
+                    <span uib-popover-html="label('cdnId', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('cdnId', 'title')}}</span>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select name="cdn" class="form-control" ng-model="deliveryService.cdnId" ng-options="cdn.id as cdn.name for cdn in cdns" required>
@@ -142,7 +142,7 @@ under the License.
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.orgServerFqdn), 'has-feedback': hasError(deliveryServiceForm.orgServerFqdn)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                    <span uib-popover-html="label('orgServerFqdn', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('orgServerFqdn', 'title')}} <i class="fa fa-info-circle"></i></span>
+                    <span uib-popover-html="label('orgServerFqdn', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('orgServerFqdn', 'title')}}</span>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input name="orgServerFqdn" type="text" class="form-control" placeholder="http(s)//:" ng-model="deliveryService.orgServerFqdn" ng-pattern="/^(https?:\/\/)/" required autofocus>
@@ -155,7 +155,7 @@ under the License.
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.protocol), 'has-feedback': hasError(deliveryServiceForm.protocol)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                    <span uib-popover-html="label('protocol', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('protocol', 'title')}} <i class="fa fa-info-circle"></i></span>
+                    <span uib-popover-html="label('protocol', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('protocol', 'title')}}</span>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <select name="protocol" class="form-control" ng-model="deliveryService.protocol" ng-options="protocol.value as protocol.label for protocol in protocols" required>
@@ -168,7 +168,7 @@ under the License.
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc), 'has-feedback': hasError(deliveryServiceForm.longDesc)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                    <span uib-popover-html="label('longDesc', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('longDesc', 'title')}} <i class="fa fa-info-circle"></i></span>
+                    <span uib-popover-html="label('longDesc', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('longDesc', 'title')}}</span>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <input name="longDesc" type="text" class="form-control" ng-model="deliveryService.longDesc" ng-maxlength="1024" autofocus required>
@@ -190,7 +190,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.routingName), 'has-feedback': hasError(deliveryServiceForm.routingName)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('routingName', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('routingName', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('routingName', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('routingName', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <small class="input-warning" ng-show="!settings.isNew && deliveryServiceForm.routingName.$dirty">Warning: Changing the routing name may require SSL certificates to be updated.</small>
@@ -205,7 +205,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.deepCachingType), 'has-feedback': hasError(deliveryServiceForm.deepCachingType)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('deepCachingType', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('deepCachingType', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('deepCachingType', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('deepCachingType', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select id="deepCachingType" name="deepCachingType" class="form-control" ng-model="deliveryService.deepCachingType" ng-options="dct.value as dct.label for dct in deepCachingTypes" required>
@@ -218,7 +218,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.dscp), 'has-feedback': hasError(deliveryServiceForm.dscp)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('dscp', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('dscp', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('dscp', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('dscp', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select name="dscp" class="form-control" ng-model="deliveryService.dscp" ng-options="dcsp.value as dcsp.label for dcsp in dscps" required>
@@ -231,7 +231,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.ipv6RoutingEnabled), 'has-feedback': hasError(deliveryServiceForm.ipv6RoutingEnabled)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('ipv6RoutingEnabled', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('ipv6RoutingEnabled', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('ipv6RoutingEnabled', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('ipv6RoutingEnabled', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select name="ipv6RoutingEnabled" class="form-control" ng-model="deliveryService.ipv6RoutingEnabled" ng-options="x.value as x.label for x in falseTrue" required>
@@ -244,7 +244,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.rangeRequestHandling), 'has-feedback': hasError(deliveryServiceForm.rangeRequestHandling)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('rangeRequestHandling', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('rangeRequestHandling', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('rangeRequestHandling', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('rangeRequestHandling', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select name="rangeRequestHandling" class="form-control" ng-model="deliveryService.rangeRequestHandling" ng-options="rrh.value as rrh.label for rrh in rrhs" required>
@@ -257,7 +257,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.qstringIgnore), 'has-feedback': hasError(deliveryServiceForm.qstringIgnore)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('qstringIgnore', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('qstringIgnore', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('qstringIgnore', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('qstringIgnore', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select name="qstringIgnore" class="form-control" ng-model="deliveryService.qstringIgnore" ng-options="qs.value as qs.label for qs in qStrings" required>
@@ -270,7 +270,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.multiSiteOrigin), 'has-feedback': hasError(deliveryServiceForm.multiSiteOrigin)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('multiSiteOrigin', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('multiSiteOrigin', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('multiSiteOrigin', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('multiSiteOrigin', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select name="multiSiteOrigin" class="form-control" ng-model="deliveryService.multiSiteOrigin" ng-options="x.value as x.label for x in falseTrue" required>
@@ -283,7 +283,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.logsEnabled), 'has-feedback': hasError(deliveryServiceForm.logsEnabled)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('logsEnabled', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('logsEnabled', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('logsEnabled', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('logsEnabled', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select name="logsEnabled" class="form-control" ng-model="deliveryService.logsEnabled" ng-options="x.value as x.label for x in falseTrue" required>
@@ -296,7 +296,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.initialDispersion), 'has-feedback': hasError(deliveryServiceForm.initialDispersion)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('initialDispersion', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('initialDispersion', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('initialDispersion', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('initialDispersion', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select name="initialDispersion" class="form-control" ng-model="deliveryService.initialDispersion" ng-options="disp.value as disp.label for disp in dispersions" required>
@@ -309,7 +309,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.regionalGeoBlocking), 'has-feedback': hasError(deliveryServiceForm.regionalGeoBlocking)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('regionalGeoBlocking', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('regionalGeoBlocking', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('regionalGeoBlocking', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('regionalGeoBlocking', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select name="regionalGeoBlocking" class="form-control" ng-model="deliveryService.regionalGeoBlocking" ng-options="x.value as x.label for x in falseTrue" required>
@@ -322,7 +322,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoProvider), 'has-feedback': hasError(deliveryServiceForm.geoProvider)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('geoProvider', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('geoProvider', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('geoProvider', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('geoProvider', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select name="geoProvider" class="form-control" ng-model="deliveryService.geoProvider" ng-options="gp.value as gp.label for gp in geoProviders" required>
@@ -335,7 +335,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.missLat), 'has-feedback': hasError(deliveryServiceForm.missLat)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('missLat', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('missLat', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('missLat', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('missLat', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="missLat" type="number" class="form-control" ng-model="deliveryService.missLat" required autofocus>
@@ -347,7 +347,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.missLong), 'has-feedback': hasError(deliveryServiceForm.missLong)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('missLong', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('missLong', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('missLong', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('missLong', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="missLong" type="number" class="form-control" ng-model="deliveryService.missLong" required autofocus>
@@ -359,7 +359,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimit), 'has-feedback': hasError(deliveryServiceForm.geoLimit)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('geoLimit', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('geoLimit', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('geoLimit', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('geoLimit', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select name="geoLimit" class="form-control" ng-model="deliveryService.geoLimit" ng-options="gl.value as gl.label for gl in geoLimits" required>
@@ -372,7 +372,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimitCountries), 'has-feedback': hasError(deliveryServiceForm.geoLimitCountries)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('geoLimitCountries', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('geoLimitCountries', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('geoLimitCountries', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('geoLimitCountries', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="geoLimitCountries" type="text" class="form-control" ng-model="deliveryService.geoLimitCountries" ng-maxlength="255" autofocus>
@@ -384,7 +384,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.geoLimitRedirectURL), 'has-feedback': hasError(deliveryServiceForm.geoLimitRedirectURL)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('geoLimitRedirectURL', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('geoLimitRedirectURL', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('geoLimitRedirectURL', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('geoLimitRedirectURL', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="geoLimitRedirectURL" type="text" class="form-control" ng-model="deliveryService.geoLimitRedirectURL" ng-pattern="/^(https?:\/\/)/" autofocus>
@@ -396,7 +396,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.signingAlgorithm), 'has-feedback': hasError(deliveryServiceForm.signingAlgorithm)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('signingAlgorithm', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('signingAlgorithm', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('signingAlgorithm', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('signingAlgorithm', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select name="signingAlgorithm" class="form-control" ng-model="deliveryService.signingAlgorithm" ng-options="sa.value as sa.label for sa in signingAlgos">
@@ -408,7 +408,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.httpBypassFqdn), 'has-feedback': hasError(deliveryServiceForm.httpBypassFqdn)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('httpBypassFqdn', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('httpBypassFqdn', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('httpBypassFqdn', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('httpBypassFqdn', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="httpBypassFqdn" type="text" class="form-control" ng-model="deliveryService.httpBypassFqdn" ng-pattern="/^(https?:\/\/)/" autofocus>
@@ -420,7 +420,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.dnsBypassTtl), 'has-feedback': hasError(deliveryServiceForm.dnsBypassTtl)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('dnsBypassTtl', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('dnsBypassTtl', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('dnsBypassTtl', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('dnsBypassTtl', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="dnsBypassTtl" type="number" class="form-control" ng-model="deliveryService.dnsBypassTtl" ng-pattern="/^\d+$/" autofocus>
@@ -432,7 +432,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.ccrDnsTtl), 'has-feedback': hasError(deliveryServiceForm.ccrDnsTtl)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('ccrDnsTtl', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('ccrDnsTtl', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('ccrDnsTtl', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('ccrDnsTtl', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="ccrDnsTtl" type="number" class="form-control" ng-model="deliveryService.ccrDnsTtl" ng-pattern="/^\d+$/" autofocus>
@@ -444,7 +444,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.profile), 'has-feedback': hasError(deliveryServiceForm.profile)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('profileId', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('profileId', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('profileId', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('profileId', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <select name="profile" class="form-control" ng-model="deliveryService.profileId" ng-options="profile.id as profile.name for profile in profiles">
@@ -456,7 +456,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.globalMaxMbps), 'has-feedback': hasError(deliveryServiceForm.globalMaxMbps)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('globalMaxMbps', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('globalMaxMbps', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('globalMaxMbps', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('globalMaxMbps', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="globalMaxMbps" type="number" class="form-control" placeholder="Max bits per second allowed globally" ng-model="deliveryService.globalMaxMbps" ng-pattern="/^\d+$/" autofocus>
@@ -468,7 +468,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.globalMaxTps), 'has-feedback': hasError(deliveryServiceForm.globalMaxTps)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('globalMaxTps', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('globalMaxTps', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('globalMaxTps', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('globalMaxTps', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="globalMaxTps" type="number" class="form-control" placeholder="Max transactions per second allowed globally" ng-model="deliveryService.globalMaxTps" ng-pattern="/^\d+$/" autofocus>
@@ -480,7 +480,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.edgeHeaderRewrite), 'has-feedback': hasError(deliveryServiceForm.edgeHeaderRewrite)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('edgeHeaderRewrite', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('edgeHeaderRewrite', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('edgeHeaderRewrite', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('edgeHeaderRewrite', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="edgeHeaderRewrite" type="text" class="form-control" ng-model="deliveryService.edgeHeaderRewrite" ng-maxlength="2048" autofocus>
@@ -492,7 +492,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.midHeaderRewrite), 'has-feedback': hasError(deliveryServiceForm.midHeaderRewrite)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('midHeaderRewrite', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('midHeaderRewrite', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('midHeaderRewrite', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('midHeaderRewrite', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="midHeaderRewrite" type="text" class="form-control" ng-model="deliveryService.midHeaderRewrite" ng-maxlength="2048" autofocus>
@@ -504,7 +504,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.trResponseHeaders), 'has-feedback': hasError(deliveryServiceForm.trResponseHeaders)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('trResponseHeaders', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('trResponseHeaders', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('trResponseHeaders', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('trResponseHeaders', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="trResponseHeaders" type="text" class="form-control" ng-model="deliveryService.trResponseHeaders" ng-maxlength="1024" autofocus>
@@ -516,7 +516,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.trRequestHeaders), 'has-feedback': hasError(deliveryServiceForm.trRequestHeaders)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('trRequestHeaders', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('trRequestHeaders', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('trRequestHeaders', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('trRequestHeaders', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="trRequestHeaders" type="text" class="form-control" ng-model="deliveryService.trRequestHeaders" ng-maxlength="1024" autofocus>
@@ -528,7 +528,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.regexRemap), 'has-feedback': hasError(deliveryServiceForm.regexRemap)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('regexRemap', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('regexRemap', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('regexRemap', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('regexRemap', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="regexRemap" type="text" class="form-control" ng-model="deliveryService.regexRemap" ng-maxlength="1024" autofocus>
@@ -540,7 +540,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.cacheurl), 'has-feedback': hasError(deliveryServiceForm.cacheurl)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('cacheurl', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('cacheurl', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('cacheurl', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('cacheurl', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="cacheurl" type="text" class="form-control" ng-model="deliveryService.cacheurl" ng-maxlength="1024" autofocus>
@@ -552,7 +552,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.remapText), 'has-feedback': hasError(deliveryServiceForm.remapText)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('cacheurl', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('cacheurl', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('cacheurl', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('cacheurl', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="remapText" type="text" class="form-control" ng-model="deliveryService.remapText" ng-maxlength="2048" autofocus>
@@ -564,7 +564,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc1), 'has-feedback': hasError(deliveryServiceForm.longDesc1)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('longDesc1', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('longDesc1', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('longDesc1', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('longDesc1', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="longDesc1" type="text" class="form-control" ng-model="deliveryService.longDesc1" ng-maxlength="1024" autofocus>
@@ -576,7 +576,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc2), 'has-feedback': hasError(deliveryServiceForm.longDesc2)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('longDesc2', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('longDesc2', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('longDesc2', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('longDesc2', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="longDesc2" type="text" class="form-control" ng-model="deliveryService.longDesc2" ng-maxlength="1024" autofocus>
@@ -588,7 +588,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.infoUrl), 'has-feedback': hasError(deliveryServiceForm.infoUrl)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('infoUrl', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('infoUrl', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('infoUrl', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('infoUrl', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="infoUrl" type="text" class="form-control" ng-model="deliveryService.infoUrl" ng-maxlength="255" autofocus>
@@ -600,7 +600,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.checkPath), 'has-feedback': hasError(deliveryServiceForm.checkPath)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('checkPath', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('checkPath', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('checkPath', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('checkPath', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="checkPath" type="text" class="form-control" ng-model="deliveryService.checkPath" ng-maxlength="255" autofocus>
@@ -612,7 +612,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.originShield), 'has-feedback': hasError(deliveryServiceForm.originShield)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('originShield', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('originShield', 'title')}} <i class="fa fa-info-circle"></i></span>
+                        <span uib-popover-html="label('originShield', 'desc')" popover-trigger="mouseenter" popover-popup-close-delay="2000" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('originShield', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="originShield" type="text" class="form-control" ng-model="deliveryService.originShield" ng-maxlength="1024" autofocus>
