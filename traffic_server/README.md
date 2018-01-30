@@ -17,7 +17,7 @@
     under the License.
 -->
 
-You can download the trafficserver 5.2.0 source here:
-http://archive.apache.org/dist/trafficserver/trafficserver-5.2.0.tar.bz2
+You can download the trafficserver source here:
+http://archive.apache.org/dist/trafficserver/?C=M;O=D
 
-Then with the spec file you can build an RPM for trafficserver and astats_over_http.
+Then with the spec file you can build an RPM for trafficserver.
