@@ -14,6 +14,7 @@ CHANGELOG$, Docs
 # These files cannot contain comments, so no header can be added.
 # They are nevertheless covered by the Apache license.
 \.gitignore$, Apache
+\.mailmap$, Apache
 \.gitattributes$, Apache
 \.classpath$, Apache
 \.pmd$, Apache
@@ -39,7 +40,7 @@ CrStates$, Apache # JSON with a specific format.
 ^traffic_monitor_java/src/main/webapp/.*\.(png|jpe?g|ico|gif)$, Apache
 /images/.*\.(png|jpe?g|ico|gif)$, Apache
 favicon.ico$, Apache
-^traffic_ops/goto/testFiles/, Apache
+^traffic_ops/experimental/goto/testFiles/, Apache
 cron\.d/[^/]*$, Apache
 \.pem$, Apache # Single certificate file.
 
