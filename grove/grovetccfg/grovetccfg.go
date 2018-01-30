@@ -19,8 +19,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 
-	grove "github.com/apache/incubator-trafficcontrol/grove/cache"
-	config "github.com/apache/incubator-trafficcontrol/grove/config"
+	"github.com/apache/incubator-trafficcontrol/grove/remap"
+	"github.com/apache/incubator-trafficcontrol/grove/config"
 )
 
 const Version = "0.1"
@@ -170,7 +170,7 @@ func main() {
 		}
 	}
 
-	rules := grove.RemapRules{}
+	rules := remap.RemapRules{}
 	// if *api == "1.3" {
 	// 	rules, err = createRulesNewAPI(toc, *host, *certDir)
 	// } else {
@@ -181,7 +181,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	jsonRules := grove.RemapRulesToJSON(rules)
+	jsonRules := remap.RemapRulesToJSON(rules)
 	bts := []byte{}
 	if *pretty {
 		bts, err = json.MarshalIndent(jsonRules, "", "  ")
@@ -222,7 +222,7 @@ func main() {
 	os.Exit(0)
 }
 
-func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.RemapRules, error) {
+func createRulesOldAPI(toc *to.Session, host string, certDir string) (remap.RemapRules, error) {
 	cachegroupsArr, err := toc.CacheGroups()
 	if err != nil {
 		fmt.Printf("Error getting Traffic Ops Cachegroups: %v\n", err)
@@ -299,18 +299,18 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 	return createRulesOld(host, deliveryservices, parents, deliveryserviceRegexes, cdns, serverParameters, dsCerts, certDir)
 }
 
-// func createRulesNewAPI(toc *to.Session, host string, certDir string) (grove.RemapRules, error) {
+// func createRulesNewAPI(toc *to.Session, host string, certDir string) (remap.RemapRules, error) {
 // 	cacheCfg, err := toc.CacheConfig(host)
 // 	if err != nil {
 // 		fmt.Printf("Error getting Traffic Ops Cache Config: %v\n", err)
 // 		os.Exit(1)
 // 	}
 
-// 	rules := []grove.RemapRule{}
+// 	rules := []remap.RemapRule{}
 
 // 	allowedIPs, err := makeAllowIP(cacheCfg.AllowIP)
 // 	if err != nil {
-// 		return grove.RemapRules{}, fmt.Errorf("creating allowed IPs: %v", err)
+// 		return remap.RemapRules{}, fmt.Errorf("creating allowed IPs: %v", err)
 // 	}
 
 // 	cdnSSLKeys, err := toc.CDNSSLKeys(cacheCfg.CDN)
@@ -329,7 +329,7 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 // 		protocol := ds.Protocol
 // 		queryStringRule, err := getQueryStringRule(ds.QueryStringIgnore)
 // 		if err != nil {
-// 			return grove.RemapRules{}, fmt.Errorf("getting deliveryservice %v Query String Rule: %v", ds.XMLID, err)
+// 			return remap.RemapRules{}, fmt.Errorf("getting deliveryservice %v Query String Rule: %v", ds.XMLID, err)
 // 		}
 
 // 		protocolStrs := []ProtocolStr{}
@@ -364,7 +364,7 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 
 // 		for _, protocolStr := range protocolStrs {
 // 			for _, dsRegex := range ds.Regexes {
-// 				rule := grove.RemapRule{}
+// 				rule := remap.RemapRule{}
 // 				pattern, patternLiteralRegex := trimLiteralRegex(dsRegex)
 // 				rule.Name = fmt.Sprintf("%s.%s.%s.%s", ds.XMLID, protocolStr.From, protocolStr.To, pattern)
 // 				rule.From = buildFrom(protocolStr.From, pattern, patternLiteralRegex, host, dsType, cacheCfg.Domain)
@@ -379,11 +379,11 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 // 					to, proxyURLStr := buildToNew(parent, protocolStr.To, ds.OriginFQDN, dsType)
 // 					proxyURL, err := url.Parse(proxyURLStr)
 // 					if err != nil {
-// 						return grove.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v parent %v proxy_url: %v", ds.XMLID, parent.Host, proxyURLStr)
+// 						return remap.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v parent %v proxy_url: %v", ds.XMLID, parent.Host, proxyURLStr)
 // 					}
 
-// 					ruleTo := grove.RemapRuleTo{
-// 						RemapRuleToBase: grove.RemapRuleToBase{
+// 					ruleTo := remap.RemapRuleTo{
+// 						RemapRuleToBase: remap.RemapRuleToBase{
 // 							URL:      to,
 // 							Weight:   &weight,
 // 							RetryNum: &retryNum,
@@ -400,7 +400,7 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 // 					rule.QueryString = queryStringRule
 // 					rule.DSCP = ds.DSCP
 // 					if err != nil {
-// 						return grove.RemapRules{}, err
+// 						return remap.RemapRules{}, err
 // 					}
 // 					rule.ConnectionClose = DefaultRuleConnectionClose
 // 					rule.ParentSelection = &parentSelection
@@ -410,12 +410,12 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (grove.Rema
 // 		}
 // 	}
 
-// 	remapRules := grove.RemapRules{
+// 	remapRules := remap.RemapRules{
 // 		Rules:           rules,
 // 		RetryCodes:      DefaultRetryCodes(),
 // 		Timeout:         &timeout,
 // 		ParentSelection: &parentSelection,
-// 		Stats:           grove.RemapRulesStats{Allow: allowedIPs},
+// 		Stats:           remap.RemapRulesStats{Allow: allowedIPs},
 // 	}
 
 // 	return remapRules, nil
@@ -598,16 +598,16 @@ const DeliveryServiceQueryStringCacheAndRemap = 0
 const DeliveryServiceQueryStringNoCacheRemap = 1
 const DeliveryServiceQueryStringNoCacheNoRemap = 2
 
-func getQueryStringRule(dsQstringIgnore int) (grove.QueryStringRule, error) {
+func getQueryStringRule(dsQstringIgnore int) (remap.QueryStringRule, error) {
 	switch dsQstringIgnore {
 	case DeliveryServiceQueryStringCacheAndRemap:
-		return grove.QueryStringRule{Remap: true, Cache: true}, nil
+		return remap.QueryStringRule{Remap: true, Cache: true}, nil
 	case DeliveryServiceQueryStringNoCacheRemap:
-		return grove.QueryStringRule{Remap: true, Cache: true}, nil
+		return remap.QueryStringRule{Remap: true, Cache: true}, nil
 	case DeliveryServiceQueryStringNoCacheNoRemap:
-		return grove.QueryStringRule{Remap: false, Cache: false}, nil
+		return remap.QueryStringRule{Remap: false, Cache: false}, nil
 	default:
-		return grove.QueryStringRule{}, fmt.Errorf("unknown delivery service qstringIgnore value '%v'", dsQstringIgnore)
+		return remap.QueryStringRule{}, fmt.Errorf("unknown delivery service qstringIgnore value '%v'", dsQstringIgnore)
 	}
 }
 
@@ -619,7 +619,7 @@ const DefaultRuleWeight = 1.0
 const DefaultRetryNum = 5
 const DefaultTimeout = time.Millisecond * 5000
 const DefaultRuleConnectionClose = false
-const DefaultRuleParentSelection = grove.ParentSelectionTypeConsistentHash
+const DefaultRuleParentSelection = remap.ParentSelectionTypeConsistentHash
 
 func getAllowIP(params []tc.Parameter) ([]*net.IPNet, error) {
 	ips := []string{}
@@ -660,11 +660,11 @@ func createRulesOld(
 	hostParams []tc.Parameter,
 	dsCerts map[string]tc.CDNSSLKeys,
 	certDir string,
-) (grove.RemapRules, error) {
-	rules := []grove.RemapRule{}
+) (remap.RemapRules, error) {
+	rules := []remap.RemapRule{}
 	allowedIPs, err := getAllowIP(hostParams)
 	if err != nil {
-		return grove.RemapRules{}, fmt.Errorf("getting allowed IPs: %v", err)
+		return remap.RemapRules{}, fmt.Errorf("getting allowed IPs: %v", err)
 	}
 
 	weight := DefaultRuleWeight
@@ -676,12 +676,12 @@ func createRulesOld(
 		protocol := ds.Protocol
 		queryStringRule, err := getQueryStringRule(ds.QStringIgnore)
 		if err != nil {
-			return grove.RemapRules{}, fmt.Errorf("getting deliveryservice %v Query String Rule: %v", ds.XMLID, err)
+			return remap.RemapRules{}, fmt.Errorf("getting deliveryservice %v Query String Rule: %v", ds.XMLID, err)
 		}
 
 		cdn, ok := cdns[ds.CDNName]
 		if !ok {
-			return grove.RemapRules{}, fmt.Errorf("deliveryservice '%v' CDN '%v' not found", ds.XMLID, ds.CDNName)
+			return remap.RemapRules{}, fmt.Errorf("deliveryservice '%v' CDN '%v' not found", ds.XMLID, ds.CDNName)
 		}
 
 		protocolStrs := []ProtocolStr{}
@@ -716,11 +716,11 @@ func createRulesOld(
 		for _, protocolStr := range protocolStrs {
 			regexes, ok := dsRegexes[ds.XMLID]
 			if !ok {
-				return grove.RemapRules{}, fmt.Errorf("deliveryservice '%v' has no regexes", ds.XMLID)
+				return remap.RemapRules{}, fmt.Errorf("deliveryservice '%v' has no regexes", ds.XMLID)
 			}
 
 			for _, dsRegex := range regexes {
-				rule := grove.RemapRule{}
+				rule := remap.RemapRule{}
 				pattern, patternLiteralRegex := trimLiteralRegex(dsRegex.Pattern)
 				rule.Name = fmt.Sprintf("%s.%s.%s.%s", ds.XMLID, protocolStr.From, protocolStr.To, pattern)
 				rule.From = buildFrom(protocolStr.From, pattern, patternLiteralRegex, hostname, dsType, cdn.DomainName)
@@ -735,11 +735,11 @@ func createRulesOld(
 					to, proxyURLStr := buildTo(parent, protocolStr.To, ds.OrgServerFQDN, dsType)
 					proxyURL, err := url.Parse(proxyURLStr)
 					if err != nil {
-						return grove.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v parent %v proxy_url: %v", ds.XMLID, parent.HostName, proxyURLStr)
+						return remap.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v parent %v proxy_url: %v", ds.XMLID, parent.HostName, proxyURLStr)
 					}
 
-					ruleTo := grove.RemapRuleTo{
-						RemapRuleToBase: grove.RemapRuleToBase{
+					ruleTo := remap.RemapRuleTo{
+						RemapRuleToBase: remap.RemapRuleToBase{
 							URL:      to,
 							Weight:   &weight,
 							RetryNum: &retryNum,
@@ -756,7 +756,7 @@ func createRulesOld(
 					rule.QueryString = queryStringRule
 					rule.DSCP = ds.DSCP
 					if err != nil {
-						return grove.RemapRules{}, err
+						return remap.RemapRules{}, err
 					}
 					rule.ConnectionClose = DefaultRuleConnectionClose
 					rule.ParentSelection = &parentSelection
@@ -766,12 +766,12 @@ func createRulesOld(
 		}
 	}
 
-	remapRules := grove.RemapRules{
+	remapRules := remap.RemapRules{
 		Rules:           rules,
 		RetryCodes:      DefaultRetryCodes(),
 		Timeout:         &timeout,
 		ParentSelection: &parentSelection,
-		Stats:           grove.RemapRulesStats{Allow: allowedIPs},
+		Stats:           remap.RemapRulesStats{Allow: allowedIPs},
 	}
 
 	return remapRules, nil
