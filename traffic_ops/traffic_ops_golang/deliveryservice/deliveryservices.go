@@ -226,12 +226,11 @@ func (ds *TODeliveryService) Update(db *sqlx.DB, user auth.CurrentUser) (error, 
 				return errors.New("a delivery service with " + err.Error()), eType
 			}
 			return err, eType
-		} else {
-			log.Errorf("received error: %++v from update execution", err)
-			return tc.DBError, tc.SystemError
 		}
+		log.Errorf("received error: %++v from update execution", err)
+		return tc.DBError, tc.SystemError
 	}
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
@@ -245,14 +244,13 @@ func (ds *TODeliveryService) Update(db *sqlx.DB, user auth.CurrentUser) (error, 
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
 			return errors.New("no delivery service found with this id"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
+		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 	return nil, tc.NoError
 }
 
-//The TODeliveryService implementation of the Inserter interface
+// Insert implements the Inserter interface.
 //all implementations of Inserter should use transactions and return the proper errorType
 //ParsePQUniqueConstraintError is used to determine if a ds with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
@@ -282,13 +280,12 @@ func (ds *TODeliveryService) Insert(db *sqlx.DB, user auth.CurrentUser) (error, 
 		if pqerr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqerr)
 			return errors.New("a delivery service with " + err.Error()), eType
-		} else {
-			log.Errorf("received non pq error: %++v from create execution", err)
-			return tc.DBError, tc.SystemError
 		}
+		log.Errorf("received non pq error: %++v from create execution", err)
+		return tc.DBError, tc.SystemError
 	}
 	var id int
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
@@ -343,9 +340,8 @@ func (ds *TODeliveryService) Delete(db *sqlx.DB, user auth.CurrentUser) (error, 
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
 			return errors.New("no delivery service with that id found"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 		}
+		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 	return nil, tc.NoError
 }

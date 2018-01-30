@@ -118,7 +118,7 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 	}
 	defer resultRows.Close()
 
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	var rowsAffected int
 	for resultRows.Next() {
 		rowsAffected++
@@ -185,8 +185,8 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 		log.Error.Println("could not begin transaction: ", err.Error())
 		return tc.DBError, tc.SystemError
 	}
-	req.AuthorID = user.ID
-	req.LastEditedByID = user.ID
+	req.AuthorID = tc.IDNoMod(user.ID)
+	req.LastEditedByID = tc.IDNoMod(user.ID)
 	ir := insertRequestQuery()
 	resultRows, err := tx.NamedQuery(ir, req)
 	if err != nil {
@@ -200,7 +200,7 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 	defer resultRows.Close()
 
 	var id int
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	var rowsAffected int
 	for resultRows.Next() {
 		rowsAffected++
