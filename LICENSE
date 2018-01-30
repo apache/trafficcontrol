@@ -317,6 +317,7 @@ For the jwt-go component:
 
 For the pq component:
 @traffic_ops/experimental/traffic_ops_auth/vendor/github.com/lib/pq/*
+@traffic_ops/testing/api/vendor/github.com/lib/pq/*
 ./traffic_ops/experimental/traffic_ops_auth/vendor/github.com/lib/pq/LICENSE.md
 
 and also:
@@ -393,6 +394,7 @@ For the protobuf component:
 
 For the sqlx component:
 @traffic_ops/traffic_ops_golang/vendor/github.com/jmoiron/sqlx/*
+@traffic_ops/testing/api/vendor/github.com/jmoiron/sqlx/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/jmoiron/sqlx/LICENSE
 
 For the backoff component:
@@ -405,8 +407,21 @@ The riak-go-client component is used under the Apache license:
 
 The x/crypto library is used under the BSD License from the Go Authors:
 @traffic_ops/traffic_ops_golang/vendor/golang.org/x/crypto/*
+@traffic_ops/testing/api/vendor/golang.org/x/crypto/*
 ./traffic_ops/traffic_ops_golang/vendor/golang.org/x/crypto/LICENSE
+
+The x/net library is used under the BSD License from the Go Authors:
+@traffic_ops/testing/api/vendor/golang.org/x/net/*
+./traffic_ops/testing/api/vendor/golang.org/x/net/LICENSE
 
 The envconfig component is used under the MIT license:
 @traffic_ops/testing/api/vendor/github.com/kelseyhightower/envconfig/*
 ./traffic_ops/testing/api/vendor/github.com/kelseyhightower/envconfig/LICENSE
+
+The govalidator component is used under the MIT license:
+@traffic_ops/traffic_ops_golang/vendor/github.com/asaskevich/govalidator/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/asaskevich/govalidator/LICENSE
+
+The ozzo-validation component is used under the MIT license:
+@traffic_ops/traffic_ops_golang/vendor/github.com/go-ozzo/ozzo-validation/*
+./traffic_ops/traffic_ops_golang/vendor/github.com/go-ozzo/ozzo-validation/LICENSE
