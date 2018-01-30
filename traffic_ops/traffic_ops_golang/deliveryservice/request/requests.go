@@ -49,22 +49,22 @@ func GetRefType() *TODeliveryServiceRequest {
 
 //Implementation of the Identifier, Validator interface functions
 
-// GetID ...
+// GetID is part of the tc.Identifier interface
 func (req *TODeliveryServiceRequest) GetID() int {
 	return req.ID
 }
 
-// GetAuditName ...
+// GetAuditName is part of the tc.Identifier interface
 func (req *TODeliveryServiceRequest) GetAuditName() string {
 	return strconv.Itoa(req.ID)
 }
 
-// GetType ...
+// GetType is part of the tc.Identifier interface
 func (req *TODeliveryServiceRequest) GetType() string {
 	return "deliveryservice_request"
 }
 
-// SetID ...
+// SetID is part of the tc.Identifier interface
 func (req *TODeliveryServiceRequest) SetID(i int) {
 	req.ID = i
 }
@@ -79,13 +79,11 @@ func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, d
 	return tenant.IsResourceAuthorizedToUser(ds.TenantID, user, db)
 }
 
-//The TODeliveryServiceRequest implementation of the Updater interface
+// Update implements the tc.Updater interface.
 //all implementations of Updater should use transactions and return the proper errorType
 //ParsePQUniqueConstraintError is used to determine if a request with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-
-// Update ...
 func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
@@ -104,6 +102,9 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 		log.Error.Println("could not begin transaction: ", err.Error())
 		return err, tc.SystemError
 	}
+
+	// update lasteditedby field prior to making the query -- updated by current user
+	req.LastEditedByID = tc.IDNoMod(user.ID)
 	resultRows, err := tx.NamedQuery(updateRequestQuery(), req)
 	if err != nil {
 		if err, ok := err.(*pq.Error); ok {
@@ -118,38 +119,34 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 	}
 	defer resultRows.Close()
 
-	var lastUpdated tc.TimeNoMod
-	var rowsAffected int
-	for resultRows.Next() {
-		rowsAffected++
-		if err = resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Println("could not scan lastUpdated from insert: ", err.Error())
-			return err, tc.SystemError
-		}
-	}
-	log.Debugln("lastUpdated: ", lastUpdated)
-	req.LastUpdated = &lastUpdated
-	if rowsAffected < 1 {
+	if !resultRows.Next() {
 		err = errors.New("no request found with this id")
 		return err, tc.DataMissingError
 	}
-	if rowsAffected > 1 {
-		err = fmt.Errorf("this update affected too many rows: %d", rowsAffected)
+
+	// get LastUpdated field -- updated by trigger in the db
+	var lastUpdated tc.TimeNoMod
+	if err = resultRows.Scan(&lastUpdated); err != nil {
+		log.Error.Println("could not scan lastUpdated from insert: ", err.Error())
+		return err, tc.SystemError
+	}
+	req.LastUpdated = &lastUpdated
+
+	if resultRows.Next() {
+		err = errors.New("this update affected too many rows")
 		return err, tc.SystemError
 	}
 
 	return nil, tc.NoError
 }
 
-//The TODeliveryServiceRequest implementation of the Inserter interface
+// Insert implements the tc.Inserter interface
 //all implementations of Inserter should use transactions and return the proper errorType
 //ParsePQUniqueConstraintError is used to determine if a request with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted request and have
 //to be added to the struct
-
-// Insert ...
 func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	ds, err := req.getDeliveryService(db)
 	if err != nil {
@@ -199,24 +196,21 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 	}
 	defer resultRows.Close()
 
-	var id int
-	var lastUpdated tc.TimeNoMod
-	var rowsAffected int
-	for resultRows.Next() {
-		rowsAffected++
-		if err = resultRows.Scan(&id, &lastUpdated); err != nil {
-			log.Error.Println("could not scan id from insert: ", err.Error())
-			return tc.DBError, tc.SystemError
-		}
-	}
-	if rowsAffected == 0 {
+	if !resultRows.Next() {
 		err = errors.New("no request was inserted, no id was returned")
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
-	} else if rowsAffected > 1 {
-		err = errors.New("too many ids returned from request insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+	}
+
+	var id int
+	var lastUpdated tc.TimeNoMod
+	if err = resultRows.Scan(&id, &lastUpdated); err != nil {
+		log.Error.Println("could not scan id from insert: ", err.Error())
+		return err, tc.SystemError
+	}
+
+	if resultRows.Next() {
+		return errors.New("too many ids returned from request insert"), tc.SystemError
 	}
 	req.SetID(id)
 	req.LastUpdated = &lastUpdated
