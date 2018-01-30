@@ -284,7 +284,8 @@ sub is_target_valid {
 	my $self   = shift;
 	my $params = shift;
 
-	if ( !$self->is_valid_target_type( $params->{typeId} ) ) {
+	my ( $is_valid, $target_type ) = $self->is_valid_target_type( $params->{typeId} );
+	if ( !$is_valid ) {
 		return ( 0, "Invalid target type" );
 	}
 
@@ -302,6 +303,9 @@ sub is_target_valid {
 	my $result = validate( $params, $rules );
 
 	if ( $result->{success} ) {
+                if ( ( $target_type eq "STEERING_WEIGHT" ) and ( $params->{value} < 0 ) ) {
+		    return ( 0, "Invalid value for target type STEERING_WEIGHT: can not be negative" );
+                }
 		return ( 1, $result->{data} );
 	}
 	else {
@@ -315,9 +319,9 @@ sub is_valid_target_type {
 
 	my $rs = $self->db->resultset("Type")->find( { id => $type_id } );
 	if ( defined($rs) && ( $rs->use_in_table eq "steering_target" ) ) {
-		return 1;
+		return ( 1, $rs->name );
 	}
-	return 0;
+	return ( 0, "" );
 }
 
 1;
