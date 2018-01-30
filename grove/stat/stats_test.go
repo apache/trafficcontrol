@@ -1,7 +1,9 @@
-package cache
+package stat
 
 import (
 	"testing"
+
+	"github.com/apache/incubator-trafficcontrol/grove/remap"
 )
 
 func StatsInc(s Stats, num int) {
@@ -18,8 +20,8 @@ func StatsDec(s Stats, num int) {
 
 func TestStatsCount(t *testing.T) {
 	{
-		r := RemapRule{RemapRuleBase: RemapRuleBase{Name: "foo"}}
-		stats := NewStats([]RemapRule{r})
+		r := remap.RemapRule{RemapRuleBase: remap.RemapRuleBase{Name: "foo"}}
+		stats := New([]remap.RemapRule{r}, nil, 0)
 		expected := 10
 		StatsInc(stats, expected)
 		if actual := stats.Connections(); actual != uint64(expected) {
@@ -28,8 +30,8 @@ func TestStatsCount(t *testing.T) {
 	}
 
 	{
-		r := RemapRule{RemapRuleBase: RemapRuleBase{Name: "foo"}}
-		stats := NewStats([]RemapRule{r})
+		r := remap.RemapRule{RemapRuleBase: remap.RemapRuleBase{Name: "foo"}}
+		stats := New([]remap.RemapRule{r}, nil, 0)
 		count := 10
 		StatsInc(stats, count)
 		StatsDec(stats, count)
@@ -39,13 +41,13 @@ func TestStatsCount(t *testing.T) {
 	}
 
 	{
-		r := RemapRule{RemapRuleBase: RemapRuleBase{Name: "foo"}}
-		stats := NewStats([]RemapRule{r})
+		r := remap.RemapRule{RemapRuleBase: remap.RemapRuleBase{Name: "foo"}}
+		stats := New([]remap.RemapRule{r}, nil, 0)
 		count := 10
 		StatsInc(stats, count)
 		StatsDec(stats, 1)
 		if actual := stats.Connections(); actual != uint64(count-1) {
-			t.Errorf("Stats.Connections() expected %v actual %v", count-1, actual)
+			t.Errorf("stats.Connections() expected %v actual %v", count-1, actual)
 		}
 	}
 
