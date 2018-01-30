@@ -152,9 +152,12 @@ sub update {
 
 		my $response;
 		$response->{deliveryServiceId} = $update->deliveryservice->id;
+		$response->{deliveryService}   = $update->deliveryservice->xml_id;
 		$response->{targetId}          = $update->target->id;
+		$response->{target}            = $update->target->xml_id;
 		$response->{value}             = $update->value;
 		$response->{typeId}            = $update->type->id;
+		$response->{type}              = $update->type->name;
 
 		&log( $self, "Updated steering target [ " . $target_ds_id . " ] for deliveryservice: " . $steering_ds_id, "APICHANGE" );
 
@@ -220,9 +223,12 @@ sub create {
 		my @response;
 		push( @response, {
 				deliveryServiceId 	=> $insert->deliveryservice->id,
+				deliveryService 	=> $insert->deliveryservice->xml_id,
 				targetId          	=> $insert->target->id,
+				target          	=> $insert->target->xml_id,
 				value           	=> $insert->value,
 				typeId            	=> $insert->type->id,
+				type            	=> $insert->type->name,
 			} );
 
 		&log( $self, "Created steering target [ '" . $target_ds_id . "' ] for delivery service: " . $steering_ds_id, "APICHANGE" );

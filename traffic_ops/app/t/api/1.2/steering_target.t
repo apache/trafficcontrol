@@ -52,9 +52,12 @@ ok $t->post_ok('/api/1.2/steering/900/targets' => {Accept => 'application/json'}
             "typeId" => 40
         })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         ->json_is( "/response/0/deliveryServiceId" => 900 )
+        ->json_is( "/response/0/deliveryService" => "steering-ds3" )
         ->json_is( "/response/0/targetId" => 1000 )
+        ->json_is( "/response/0/target" => "steering-target-ds1" )
         ->json_is( "/response/0/value" => 852 )
         ->json_is( "/response/0/typeId" => 40 )
+        ->json_is( "/response/0/type" => "STEERING_ORDER" )
     , 'Is the steering target created?';
 
 ok $t->post_ok('/api/1.2/steering/900/targets' => {Accept => 'application/json'} => json => {
@@ -89,9 +92,12 @@ ok $t->put_ok('/api/1.2/steering/900/targets/1000' => {Accept => 'application/js
         })
         ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
         ->json_is( "/response/deliveryServiceId" => 900 )
+        ->json_is( "/response/deliveryService" => "steering-ds3" )
         ->json_is( "/response/targetId" => 1000 )
+        ->json_is( "/response/target" => "steering-target-ds1" )
         ->json_is( "/response/value" => 999 )
         ->json_is( "/response/typeId" => 40 )
+        ->json_is( "/response/type" => "STEERING_ORDER" )
         ->json_is( "/alerts/0/level" => "success" )
     , 'Did the steering target update?';
 
