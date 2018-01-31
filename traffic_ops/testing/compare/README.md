@@ -20,13 +20,13 @@
 # Traffic Ops Compare
 
 Use this tool to compare API output between two instances of Traffic Ops API.
-It logs in to each instance using the same user/password combination,
-then processes all given endpoints.  Any that get different results are
-reported and written to files in the output directory (default ./results).
+It logs in to each instance and then processes all given endpoints.  Any that get
+different results are reported and written to files in the output directory
+(default ./results).
 
 ## Requirements
 
-Two Traffic Ops instances with common login credentials.  The following
+Two Traffic Ops instances with login credentials (possibly different).  The following
 environment variables must be set:
 
 - `TO_URL`   -- the *reference* Traffic Ops (e.g. production version)
@@ -34,6 +34,9 @@ environment variables must be set:
 - `TO_PASSWORD`  -- the password for `TO_URL`
 
 - `TEST_URL` -- the *test* Traffic Ops (e.g. development version)
+
+These are optional:
+
 - `TEST_USER`  -- the username for `TO_URL` (default -- same as `TO_USER`)
 - `TEST_PASSWORD`  -- the password for `TO_URL` (default -- same as `TO_PASSWORD`)
 
@@ -49,6 +52,3 @@ Options:
 - `-route <route>` -- a specific route to compare
 - `-file <file>`   -- file containing routes to check (-route takes precedence)
 - `-snapshot`      -- compare snapshot for each CDN
-
-
-
