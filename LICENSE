@@ -337,6 +337,7 @@ For the errors component:
 For the x/net component:
 @traffic_stats/vendor/golang.org/x/net/*
 ./traffic_stats/vendor/golang.org/x/net/LICENSE
+./traffic_stats/vendor/golang.org/x/net/PATENTS
 
 For the MaxMind DB GeoLite2 Database:
 @traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz
@@ -410,6 +411,7 @@ The x/crypto library is used under the BSD License from the Go Authors:
 @traffic_ops/traffic_ops_golang/vendor/golang.org/x/crypto/*
 @traffic_ops/testing/api/vendor/golang.org/x/crypto/*
 ./traffic_ops/traffic_ops_golang/vendor/golang.org/x/crypto/LICENSE
+./traffic_ops/traffic_ops_golang/vendor/golang.org/x/crypto/PATENTS
 
 The x/net library is used under the BSD License from the Go Authors:
 @traffic_ops/testing/api/vendor/golang.org/x/net/*
