@@ -191,7 +191,7 @@ type DeepCachingType string
 const (
 	DeepCachingTypeAlways  = DeepCachingType("ALWAYS")
 	DeepCachingTypeNever   = DeepCachingType("NEVER")
-	DeepCachingTypeInvalid = DeepCachingType("")
+	DeepCachingTypeInvalid = DeepCachingType("INVALID")
 )
 
 // String returns a string representation of this deep caching type
@@ -212,6 +212,9 @@ func DeepCachingTypeFromString(s string) DeepCachingType {
 	case "always":
 		return DeepCachingTypeAlways
 	case "never":
+		return DeepCachingTypeNever
+	case "":
+		// default when omitted
 		return DeepCachingTypeNever
 	default:
 		return DeepCachingTypeInvalid
