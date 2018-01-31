@@ -35,10 +35,13 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// RoutePrefix ...
 const RoutePrefix = "api" // TODO config?
 
+// Middleware ...
 type Middleware func(handlerFunc http.HandlerFunc) http.HandlerFunc
 
+// Route ...
 type Route struct {
 	// Order matters! Do not reorder this! Routes() uses positional construction for readability.
 	Version           float64
@@ -54,11 +57,13 @@ func getDefaultMiddleware() []Middleware {
 	return []Middleware{wrapHeaders}
 }
 
+// ServerData ...
 type ServerData struct {
 	Config
 	DB *sqlx.DB
 }
 
+// CompiledRoute ...
 type CompiledRoute struct {
 	Handler http.HandlerFunc
 	Regex   *regexp.Regexp
@@ -78,6 +83,7 @@ func getSortedRouteVersions(rs []Route) []float64 {
 	return versions
 }
 
+// PathHandler ...
 type PathHandler struct {
 	Path    string
 	Handler http.HandlerFunc
@@ -116,7 +122,7 @@ func CreateRouteMap(rs []Route, authBase AuthBase) map[string][]PathHandler {
 	return m
 }
 
-// CompiledRoutes takes a map of methods to paths and handlers, and returns a map of methods to CompiledRoutes.
+// CompileRoutes - takes a map of methods to paths and handlers, and returns a map of methods to CompiledRoutes
 func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 	compiledRoutes := map[string][]CompiledRoute{}
 	for method, mRoutes := range routes {
@@ -141,6 +147,7 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 	return compiledRoutes
 }
 
+// Handler - generic handler func used by the Handlers hooking into the routes
 func Handler(routes map[string][]CompiledRoute, catchall http.Handler, w http.ResponseWriter, r *http.Request) {
 	requested := r.URL.Path[1:]
 
@@ -170,6 +177,7 @@ func Handler(routes map[string][]CompiledRoute, catchall http.Handler, w http.Re
 	catchall.ServeHTTP(w, r)
 }
 
+// RegisterRoutes - parses the routes and registers the handlers with the Go Router
 func RegisterRoutes(d ServerData) error {
 	routeSlice, catchall, err := Routes(d)
 	if err != nil {

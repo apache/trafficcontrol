@@ -31,8 +31,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// ASNsPrivLevel ...
 const ASNsPrivLevel = 10
 
+// ASNsHandler ...
 func ASNsHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)

@@ -35,7 +35,10 @@ import (
 	"github.com/basho/riak-go-client"
 )
 
+// Authenticated ...
 var Authenticated = true
+
+// NoAuth ...
 var NoAuth = false
 
 func handlerToFunc(handler http.Handler) http.HandlerFunc {
@@ -156,6 +159,7 @@ func CreateThrottledHandler(handler http.Handler, maxConcurrentCalls int) Thrott
 	return ThrottledHandler{handler, make(chan struct{}, maxConcurrentCalls)}
 }
 
+// ThrottledHandler ...
 type ThrottledHandler struct {
 	Handler http.Handler
 	ReqChan chan struct{}

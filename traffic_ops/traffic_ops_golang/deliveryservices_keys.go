@@ -167,7 +167,7 @@ func verifyAndEncodeCertificate(certificate string, rootCA string) (string, erro
 	pemCerts := make([]byte, base64.StdEncoding.EncodedLen(len(b64crt)))
 	_, err := base64.StdEncoding.Decode(pemCerts, []byte(b64crt))
 	if err != nil {
-		return "", fmt.Errorf("ERROR: could not base64 decode the certificate, %v\n", err)
+		return "", fmt.Errorf("could not base64 decode the certificate %v", err)
 	}
 
 	// decode, verify, and order certs for storgae
@@ -178,10 +178,10 @@ func verifyAndEncodeCertificate(certificate string, rootCA string) (string, erro
 		block, _ := pem.Decode([]byte(certs[0]))
 		cert, err := x509.ParseCertificate(block.Bytes)
 		if err != nil {
-			return "", fmt.Errorf("ERROR: could not parse the server certificate, %v\n", err)
+			return "", fmt.Errorf("could not parse the server certificate %v", err)
 		}
 		if !(cert.KeyUsage&x509.KeyUsageKeyEncipherment > 0) {
-			return "", fmt.Errorf("ERROR: no key encipherment usage for the server certificate\n")
+			return "", fmt.Errorf("no key encipherment usage for the server certificate")
 		}
 		for i := 0; i < len(certs)-1; i++ {
 			bundle += certs[i]
@@ -192,13 +192,13 @@ func verifyAndEncodeCertificate(certificate string, rootCA string) (string, erro
 		rootPool := x509.NewCertPool()
 		if rootCA != "" {
 			if !rootPool.AppendCertsFromPEM([]byte(rootCA)) {
-				return "", fmt.Errorf("ERROR: root  CA certificate is empty, %v\n", err)
+				return "", fmt.Errorf("root  CA certificate is empty, %v", err)
 			}
 		}
 
 		intermediatePool := x509.NewCertPool()
 		if !intermediatePool.AppendCertsFromPEM([]byte(bundle)) {
-			return "", fmt.Errorf("ERROR: certificate CA bundle is empty, %v\n", err)
+			return "", fmt.Errorf("certificate CA bundle is empty, %v", err)
 		}
 
 		if rootCA != "" {
@@ -215,7 +215,7 @@ func verifyAndEncodeCertificate(certificate string, rootCA string) (string, erro
 
 		chain, err := cert.Verify(opts)
 		if err != nil {
-			return "", fmt.Errorf("ERROR: could verify the certificate chain, %v\n", err)
+			return "", fmt.Errorf("could verify the certificate chain %v", err)
 		}
 		if len(chain) > 0 {
 			for _, link := range chain[0] {
@@ -289,7 +289,7 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc 
 		keysObj.Certificate.Crt = certChain
 
 		// marshal the keysObj
-		keysJson, err := json.Marshal(&keysObj)
+		keysJSON, err := json.Marshal(&keysObj)
 		if err != nil {
 			log.Errorf("ERROR: could not marshal the keys object, %v\n", err)
 			handleErr(http.StatusBadRequest, err)
@@ -318,7 +318,7 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc 
 			Charset:         "utf-8",
 			ContentEncoding: "utf-8",
 			Key:             keysObj.DeliveryService,
-			Value:           []byte(keysJson),
+			Value:           []byte(keysJSON),
 		}
 
 		err = saveObject(obj, SSLKeysBucket, cluster)

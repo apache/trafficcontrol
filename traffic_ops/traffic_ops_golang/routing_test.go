@@ -32,10 +32,14 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
+type key int
+
+const AuthWasCalled key = iota
+
 func TestCreateRouteMap(t *testing.T) {
 	authBase := AuthBase{false, "secret", nil, func(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), "authWasCalled", "true")
+			ctx := context.WithValue(r.Context(), AuthWasCalled, "true")
 			handlerFunc(w, r.WithContext(ctx))
 		}
 	}}

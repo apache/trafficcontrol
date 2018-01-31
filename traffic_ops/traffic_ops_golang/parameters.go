@@ -131,6 +131,7 @@ LEFT JOIN profile pr ON pp.profile = pr.id`
 	return query
 }
 
+// ParametersGroupBy ...
 func ParametersGroupBy() string {
 	groupBy := ` GROUP BY p.config_file, p.id, p.last_updated, p.name, p.value, p.secure`
 	return groupBy

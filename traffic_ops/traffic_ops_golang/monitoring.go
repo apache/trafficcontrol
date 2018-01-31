@@ -34,14 +34,28 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
+// CacheMonitorConfigFile ...
 const CacheMonitorConfigFile = "rascal.properties"
+
+// MonitorType ...
 const MonitorType = "RASCAL"
+
+// RouterType ...
 const RouterType = "CCR"
+
+// MonitorProfilePrefix ...
 const MonitorProfilePrefix = "RASCAL"
+
+// MonitorConfigFile ...
 const MonitorConfigFile = "rascal-config.txt"
+
+// KilobitsPerMegabit ...
 const KilobitsPerMegabit = 1000
+
+// DeliveryServiceStatus ...
 const DeliveryServiceStatus = "REPORTED"
 
+// BasicServer ...
 type BasicServer struct {
 	Profile    string `json:"profile"`
 	Status     string `json:"status"`
@@ -53,10 +67,12 @@ type BasicServer struct {
 	FQDN       string `json:"fqdn"`
 }
 
+// Monitor ...
 type Monitor struct {
 	BasicServer
 }
 
+// Cache ...
 type Cache struct {
 	BasicServer
 	InterfaceName string `json:"interfacename"`
@@ -64,22 +80,26 @@ type Cache struct {
 	HashID        string `json:"hashid"`
 }
 
+// Cachegroup ...
 type Cachegroup struct {
 	Name        string      `json:"name"`
 	Coordinates Coordinates `json:"coordinates"`
 }
 
+// Coordinates ...
 type Coordinates struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 }
 
+// Profile ...
 type Profile struct {
 	Name       string                 `json:"name"`
 	Type       string                 `json:"type"`
 	Parameters map[string]interface{} `json:"parameters"`
 }
 
+// Monitoring ...
 type Monitoring struct {
 	TrafficServers   []Cache                `json:"trafficServers"`
 	TrafficMonitors  []Monitor              `json:"trafficMonitors"`
@@ -89,15 +109,18 @@ type Monitoring struct {
 	Config           map[string]interface{} `json:"config"`
 }
 
+// MonitoringResponse ...
 type MonitoringResponse struct {
 	Response Monitoring `json:"response"`
 }
 
+// Router ...
 type Router struct {
 	Type    string
 	Profile string
 }
 
+// DeliveryService ...
 type DeliveryService struct {
 	XMLID              string  `json:"xmlId"`
 	TotalTPSThreshold  float64 `json:"totalTpsThreshold"`
