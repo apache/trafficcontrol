@@ -36,13 +36,38 @@ RobotoSlab-Regular\.ttf$, Apache
 traffic_monitor_config\.js$, Apache # Actually JSON with a specific format.
 CrStates$, Apache # JSON with a specific format.
 ^docs/.*\.(png|jpe?g|ico|gif)$, Apache
-^traffic_ops/app/public/.*\.(png|jpe?g|ico|gif)$, Apache
-^traffic_monitor_java/src/main/webapp/.*\.(png|jpe?g|ico|gif)$, Apache
-/images/.*\.(png|jpe?g|ico|gif)$, Apache
-favicon.ico$, Apache
+favicon.(ico|png)$, Apache
 ^traffic_ops/experimental/goto/testFiles/, Apache
 cron\.d/[^/]*$, Apache
 \.pem$, Apache # Single certificate file.
+
+# Images, created for this project or used under an Apache license.
+^misc/traffic-control-cdn/images/atc_logo\.png, Apache
+^misc/traffic-control-cdn/images/header_bkgd\.png, Apache
+^misc/traffic-control-cdn/images/main_bkgd\.png, Apache
+^misc/traffic-control-cdn/images/tc_logo\.png, Apache
+^misc/traffic-control-cdn/images/traffic_monitor_logo\.png, Apache
+^misc/traffic-control-cdn/images/traffic_operations_logo\.png, Apache
+^misc/traffic-control-cdn/images/traffic_portal_logo\.png, Apache
+^misc/traffic-control-cdn/images/traffic_router_logo\.png, Apache
+^misc/traffic-control-cdn/images/traffic_stats_logo\.png, Apache
+^traffic_monitor_java/src/main/webapp/tune(-grey)?\.png, Apache
+^traffic_ops/app/public/images/anchor\.gif, Apache
+^traffic_ops/app/public/images/bad\.png, Apache
+^traffic_ops/app/public/images/blank\.png, Apache
+^traffic_ops/app/public/images/clock-black., Apache
+^traffic_ops/app/public/images/clock\.png, Apache
+^traffic_ops/app/public/images/good\.png, Apache
+^traffic_ops/app/public/images/graph\.png, Apache
+^traffic_ops/app/public/images/info\.png, Apache
+^traffic_ops/app/public/images/input_field_background\.png, Apache
+^traffic_ops/app/public/images/na\.png, Apache
+^traffic_ops/app/public/images/notrun\.png, Apache
+^traffic_ops/app/public/images/tc_logo\.png, Apache
+^traffic_ops/app/public/images/tc_logo_c_only\.png, Apache
+^traffic_ops/app/public/images/traffic_operations_logo\.png, Apache
+^traffic_ops/app/public/images/warning\.png, Apache
+^traffic_ops/app/public/images/select2.*, Apache
 
 # Demo certificates
 ssl\.(crt|key)$, Apache
@@ -59,6 +84,7 @@ Inconsolata-Bold\.ttf$, SIL OFL 1.1
 Lato-Bold\.ttf$, SIL OFL 1.1
 Lato-Regular\.ttf$, SIL OFL 1.1
 ssl-bundle\.crt$, MPL
+^traffic_portal/app/src/assets/images/sort_, MIT
 
 # Code dependencies
 #
