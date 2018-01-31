@@ -205,7 +205,7 @@ The Graph View shows a live view of the last 24 hours of bits per seconds served
 
 Server Checks
 +++++++++++++
-The server checks page is inteded to give an overview of the Servers managed by Traffic Control as well as their status. This data comes from `Traffic Ops extensions <traffic_ops_extensions.html>`_.
+The server checks page is intended to give an overview of the Servers managed by Traffic Control as well as their status. This data comes from `Traffic Ops extensions <traffic_ops_extensions.html>`_.
 
 +------+-----------------------------------------------------------------------+
 | Name |                 Description                                           |
