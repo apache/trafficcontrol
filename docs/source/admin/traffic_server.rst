@@ -19,9 +19,10 @@ Traffic Server Administration
 Installing Traffic Server
 =========================
 
-#. Build the Traffic Server RPM: ::
+#. Build the Traffic Server RPM. The best way to do this is to follow the Traffic Server documents: ::
 
-    http://archive.apache.org/dist/trafficserver/?C=M;O=D
+    https://docs.trafficserver.apache.org/en/latest/getting-started/index.en.html#installation
+
 #. Build the astats RPM using the appropriate version number: ::
 
     https://github.com/apache/incubator-trafficcontrol/tree/<version>/traffic_server
@@ -50,7 +51,7 @@ Installing Traffic Server
 
 #.  Start the service: ``sudo service trafficserver start``
 
-#.  Configure traffic server to start automatically: ``sudo chkconfig trafficserver on``
+#.  Configure traffic server to start automatically: ``sudo systemctl enable trafficserver``
 
 #.  Verify that the installation is good:
 
@@ -92,7 +93,11 @@ The traffic_ops_ort.pl should be installed on all caches (by puppet or other non
 Installing the ORT script
 --------------------------
 
-#.  Build the ORT script RPM and install it: ::
+#.  Build the ORT script RPM from the Apache Build Server and install it: ::
+
+        https://builds.apache.org/view/S-Z/view/TrafficControl/
+
+    Sample command: ::
 
         sudo wget https://builds.apache.org/view/S-Z/view/TrafficControl/job/incubator-trafficcontrol-2.1.x-build/lastSuccessfulBuild/artifact/dist/traffic_ops_ort-2.1.0-6807.1dcd512f.el7.x86_64.rpm
         sudo yum install traffic_ops_ort*.rpm
