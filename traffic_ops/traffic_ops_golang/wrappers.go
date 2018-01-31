@@ -38,8 +38,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// ServerName - the server identifier
 const ServerName = "traffic_ops_golang" + "/" + Version
 
+// AuthBase ...
 type AuthBase struct {
 	noAuth                 bool
 	secret                 string
@@ -47,6 +49,7 @@ type AuthBase struct {
 	override               Middleware
 }
 
+// GetWrapper ...
 func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 	if a.override != nil {
 		return a.override
@@ -129,6 +132,7 @@ func wrapHeaders(h http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// AccessLogTimeFormat ...
 const AccessLogTimeFormat = "02/Jan/2006:15:04:05 -0700"
 
 func wrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
@@ -219,17 +223,20 @@ func stripAllWhitespace(s string) string {
 	}, s)
 }
 
+// Interceptor ...
 type Interceptor struct {
 	w         http.ResponseWriter
 	code      int
 	byteCount int
 }
 
+// WriteHeader ...
 func (i *Interceptor) WriteHeader(rc int) {
 	i.w.WriteHeader(rc)
 	i.code = rc
 }
 
+// Write ...
 func (i *Interceptor) Write(b []byte) (int, error) {
 	wi, werr := i.w.Write(b)
 	i.byteCount += wi
@@ -239,6 +246,7 @@ func (i *Interceptor) Write(b []byte) (int, error) {
 	return wi, werr
 }
 
+// Header ...
 func (i *Interceptor) Header() http.Header {
 	return i.w.Header()
 }
@@ -249,20 +257,29 @@ type BodyInterceptor struct {
 	body []byte
 }
 
+// WriteHeader ...
 func (i *BodyInterceptor) WriteHeader(rc int) {
 	i.w.WriteHeader(rc)
 }
+
+// Write ...
 func (i *BodyInterceptor) Write(b []byte) (int, error) {
 	i.body = append(i.body, b...)
 	return len(b), nil
 }
+
+// Header ...
 func (i *BodyInterceptor) Header() http.Header {
 	return i.w.Header()
 }
+
+// RealWrite ...
 func (i *BodyInterceptor) RealWrite(b []byte) (int, error) {
 	wi, werr := i.w.Write(i.body)
 	return wi, werr
 }
+
+// Body ...
 func (i *BodyInterceptor) Body() []byte {
 	return i.body
 }

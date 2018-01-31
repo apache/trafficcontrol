@@ -56,7 +56,9 @@ const PrivLevelAdmin = 30
 // TenantIDInvalid - The default Tenant ID
 const TenantIDInvalid = -1
 
-const CurrentUserKey = "currentUser"
+type key int
+
+const CurrentUserKey key = iota
 
 // GetCurrentUserFromDB  - returns the id and privilege level of the given user along with the username, or -1 as the id, - as the userName and PrivLevelInvalid if the user doesn't exist.
 func GetCurrentUserFromDB(CurrentUserStmt *sqlx.Stmt, user string) CurrentUser {

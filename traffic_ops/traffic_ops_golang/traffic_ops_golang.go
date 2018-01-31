@@ -34,6 +34,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// Version ...
 const Version = "0.1"
 
 func main() {
