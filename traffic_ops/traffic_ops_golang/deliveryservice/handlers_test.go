@@ -88,7 +88,7 @@ func errorTestCase() string {
    "dnsBypassIp": "127.0.0.1",
    "dnsBypassIp6": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
    "dnsBypassTTL": 10,
-   "dscp": 0,
+   "dscp": null,
    "edgeHeaderRewrite": "cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-config proxy.config.http.transaction_active_timeout_in 10800 [L]",
    "geoLimitCountries": "Can,Mex",
    "geoRedirectURL": "http://localhost/redirect",

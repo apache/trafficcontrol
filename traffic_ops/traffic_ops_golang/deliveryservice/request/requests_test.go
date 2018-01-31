@@ -20,7 +20,6 @@ package request
  */
 
 import (
-	"encoding/json"
 	"testing"
 
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -29,19 +28,22 @@ import (
 )
 
 func TestGetDeliveryServiceRequest(t *testing.T) {
+	s := "this is not a valid xmlid.  Bad characters and too long."
+	i := 1
+	b := true
+
 	r := &TODeliveryServiceRequest{
 		ChangeType: "UPDATE",
 		Status:     tc.RequestStatusSubmitted,
-		DeliveryService: json.RawMessage(`{
-			"xmlId" : "this is not a valid xmlid.  Bad characters and too long.",
-			"cdnId" : 1,
-			"logsEnabled": false,
-			"dscp" : null,
-			"geoLimit" : 2,
-			"active" : true,
-			"displayName" : "",
-			"typeId" : 3
-		}`),
+		DeliveryService: &tc.DeliveryServiceNullable{
+			XMLID:       &s,
+			CDNID:       &i,
+			LogsEnabled: &b,
+			DSCP:        nil,
+			GeoLimit:    &i,
+			Active:      &b,
+			TypeID:      &i,
+		},
 	}
 	expectedErrors := []string{
 	/*

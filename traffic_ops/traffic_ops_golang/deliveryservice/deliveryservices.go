@@ -68,6 +68,14 @@ func (ds *TODeliveryService) SetID(i int) {
 	ds.ID = i
 }
 
+func Validate(db *sqlx.DB, ds *tc.DeliveryServiceNullable) []error {
+	if ds == nil {
+		return []error{}
+	}
+	tods := TODeliveryService(*ds)
+	return tods.Validate(db)
+}
+
 func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 
 	// Custom Examples:
@@ -84,11 +92,11 @@ func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 		"displayName":         validation.Validate(ds.DisplayName, validation.Required),
 		"dnsBypassIp":         validation.Validate(ds.DNSBypassIP, is.IP),
 		"dnsBypassIp6":        validation.Validate(ds.DNSBypassIP6, is.IPv6),
-		"dscp":                validation.Validate(ds.DSCP, validation.NotNil),
+		"dscp":                validation.Validate(ds.DSCP, validation.Required),
 		"geoLimit":            validation.Validate(ds.GeoLimit, validation.NotNil),
 		"geoProvider":         validation.Validate(ds.GeoProvider, validation.NotNil),
 		"infoUrl":             validation.Validate(ds.InfoURL, is.URL),
-		"initialDispersion":   validation.Validate(ds.InitialDispersion, validation.By(tovalidate.GreaterThanZero)),
+		"initialDispersion":   validation.Validate(ds.InitialDispersion, validation.NotNil, validation.By(tovalidate.GreaterThanZero)),
 		"logsEnabled":         validation.Validate(ds.LogsEnabled, validation.NotNil),
 		"orgServerFqdn":       validation.Validate(ds.OrgServerFQDN, is.URL),
 		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.NotNil),

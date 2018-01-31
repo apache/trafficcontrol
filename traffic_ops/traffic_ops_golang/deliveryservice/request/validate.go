@@ -20,8 +20,6 @@ package request
  */
 
 import (
-	"encoding/json"
-
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
@@ -49,15 +47,8 @@ func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
 
 	errs := tovalidate.ToErrors(errMap)
 
-	var ds deliveryservice.TODeliveryService
-	err := json.Unmarshal([]byte(req.DeliveryService), &ds)
-	if err != nil {
-		errs = append(errs, err)
-		return errs
-	}
-
 	// ensure the deliveryservice requested is valid
-	e := ds.Validate(db)
+	e := deliveryservice.Validate(db, req.DeliveryService)
 	errs = append(errs, e...)
 
 	return errs
