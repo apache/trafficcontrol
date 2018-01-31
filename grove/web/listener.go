@@ -31,12 +31,12 @@ func getConnStateCallback(connMap *ConnMap) func(net.Conn, http.ConnState) {
 				iconn.bytesRead = 0
 				iconn.bytesWritten = 0
 			}
-			connMap.Pop(conn.RemoteAddr().String())
+			connMap.Remove(conn.RemoteAddr().String())
 		case http.StateActive:
 			if iconn, ok := conn.(*InterceptConn); !ok {
 				log.Errorf("ConnState callback: active conn is not a InterceptConn: '%T'\n", conn)
 			} else {
-				connMap.Push(iconn)
+				connMap.Add(iconn)
 			}
 		}
 	}
@@ -73,7 +73,7 @@ func (l *InterceptListener) Accept() (net.Conn, error) {
 		return c, err
 	}
 	interceptConn := &InterceptConn{realConn: c}
-	l.connMap.Push(interceptConn)
+	l.connMap.Add(interceptConn)
 	return interceptConn, nil
 }
 

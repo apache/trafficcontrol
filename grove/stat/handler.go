@@ -22,11 +22,13 @@ type statHandler struct {
 	interfaceName string
 	stats         Stats
 	statRules     remap.RemapRulesStats
+	httpConns     *web.ConnMap
+	httpsConns    *web.ConnMap
 }
 
 // NewStatHandler returns an HTTP handler
-func NewHandler(interfaceName string, remapRules []remap.RemapRule, stats Stats, statRules remap.RemapRulesStats) http.Handler {
-	return statHandler{interfaceName: interfaceName, stats: stats, statRules: statRules}
+func NewHandler(interfaceName string, remapRules []remap.RemapRule, stats Stats, statRules remap.RemapRulesStats, httpConns *web.ConnMap, httpsConns *web.ConnMap) http.Handler {
+	return statHandler{interfaceName: interfaceName, stats: stats, statRules: statRules, httpConns: httpConns, httpsConns: httpsConns}
 }
 
 func (h statHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -101,7 +103,7 @@ func (h statHandler) LoadRemapStats() map[string]interface{} {
 		jsonStats["plugin.remap_stats."+ruleName+".cache_misses"] = statsRemap.CacheMisses()
 	}
 
-	jsonStats["proxy.process.http.current_client_connections"] = h.stats.Connections()
+	jsonStats["proxy.process.http.current_client_connections"] = h.httpConns.Len() + h.httpsConns.Len()
 	jsonStats["proxy.process.http.cache_hits"] = h.stats.CacheHits()
 	jsonStats["proxy.process.http.cache_misses"] = h.stats.CacheMisses()
 	jsonStats["proxy.process.http.cache_capacity_bytes"] = h.stats.CacheCapacity()
