@@ -20,7 +20,6 @@ package request
  */
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -30,7 +29,6 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -71,10 +69,14 @@ func (req *TODeliveryServiceRequest) SetID(i int) {
 
 // IsTenantAuthorized implements the Tenantable interface to ensure the user is authorized on the deliveryservice tenant
 func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error) {
-	ds, err := req.GetDeliveryService(db)
-	if err != nil {
-		log.Debugf("from GetDeliveryService: %v", err)
-		return false, err
+	ds := req.DeliveryService
+	if ds == nil {
+		// No deliveryservice applied yet -- wide open
+		return true, nil
+	}
+	if ds.TenantID == 0 {
+		log.Debugf("TenantID is 0 -- THIS SHOULD NEVER HAPPEN!!")
+		return false, errors.New("TenantID is 0 -- THIS SHOULD NEVER HAPPEN!!")
 	}
 	return tenant.IsResourceAuthorizedToUser(ds.TenantID, user, db)
 }
@@ -148,12 +150,12 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 //The insert sql returns the id and lastUpdated values of the newly inserted request and have
 //to be added to the struct
 func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	ds, err := req.GetDeliveryService(db)
-	if err != nil {
-		return err, tc.SystemError
+	ds := req.DeliveryService
+	if ds == nil {
+		return errors.New("no deliveryservice to create"), tc.DataMissingError
 	}
 	if ds.XMLID == nil {
-		return errors.New("No xmlId associated with this request"), tc.DataMissingError
+		return errors.New("no xmlId associated with this request"), tc.DataMissingError
 	}
 	XMLID := *ds.XMLID
 
@@ -256,30 +258,6 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 	return nil, tc.NoError
-}
-
-// GetDeliveryService retrieves a deliveryservice struct from the Request JSON
-func (req TODeliveryServiceRequest) GetDeliveryService(db *sqlx.DB) (deliveryservice.TODeliveryService, error) {
-	var ds deliveryservice.TODeliveryService
-	if req.DeliveryService == nil {
-		if db == nil {
-			log.Debugf("no database connection")
-			return ds, errors.New("no database connection getting deliveryservice from deliveryservice_request")
-		}
-		if req.ID == 0 {
-			log.Debugf("MISSING: %++v", req)
-			return ds, errors.New("Missing DeliveryService data in request")
-		}
-		// get from the db
-		q := `SELECT deliveryservice FROM deliveryservice_request WHERE id=` + strconv.Itoa(req.ID)
-		row := db.QueryRow(q)
-		err := row.Scan(&req.DeliveryService)
-		if err != nil {
-			return ds, err
-		}
-	}
-	err := json.Unmarshal(req.DeliveryService, &ds)
-	return ds, err
 }
 
 // isActiveRequest returns true if a request using this XMLID is currently in an active state
