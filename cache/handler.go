@@ -157,12 +157,10 @@ const CodeConnectFailure = http.StatusBadGateway
 const NSPerSec = 1000000000
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.stats.IncConnections()
-	defer h.stats.DecConnections()
 	reqTime := time.Now()
 
 	conn := (*web.InterceptConn)(nil)
-	if realConn, ok := h.conns.Pop(r.RemoteAddr); !ok {
+	if realConn, ok := h.conns.Get(r.RemoteAddr); !ok {
 		log.Errorf("RemoteAddr '%v' not in Conns\n", r.RemoteAddr)
 	} else {
 		if conn, ok = realConn.(*web.InterceptConn); !ok {

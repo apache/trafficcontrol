@@ -19,8 +19,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 
-	"github.com/apache/incubator-trafficcontrol/grove/remap"
 	"github.com/apache/incubator-trafficcontrol/grove/config"
+	"github.com/apache/incubator-trafficcontrol/grove/remap"
 )
 
 const Version = "0.1"

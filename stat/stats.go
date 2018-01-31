@@ -35,8 +35,6 @@ type Stats interface {
 	Remap() StatsRemaps
 
 	Connections() uint64
-	IncConnections()
-	DecConnections()
 
 	CacheHits() uint64
 	AddCacheHit()
@@ -50,18 +48,18 @@ type Stats interface {
 	Write(w http.ResponseWriter, conn *web.InterceptConn, reqFQDN string, remoteAddr string, code int, bytesWritten uint64, cacheHit bool) uint64
 }
 
-func New(remapRules []remap.RemapRule, cache Cache, cacheCapacityBytes uint64) Stats {
-	connections := uint64(0)
+func New(remapRules []remap.RemapRule, cache Cache, cacheCapacityBytes uint64, httpConns *web.ConnMap, httpsConns *web.ConnMap) Stats {
 	cacheHits := uint64(0)
 	cacheMisses := uint64(0)
 	return &stats{
 		system:             NewStatsSystem(),
 		remap:              NewStatsRemaps(remapRules),
-		connections:        &connections,
 		cacheHits:          &cacheHits,
 		cacheMisses:        &cacheMisses,
 		cache:              cache,
 		cacheCapacityBytes: cacheCapacityBytes,
+		httpConns:          httpConns,
+		httpsConns:         httpsConns,
 	}
 }
 
@@ -119,16 +117,24 @@ func (stats *stats) Write(w http.ResponseWriter, conn *web.InterceptConn, reqFQD
 type stats struct {
 	system             StatsSystem
 	remap              StatsRemaps
-	connections        *uint64
 	cacheHits          *uint64
 	cacheMisses        *uint64
 	cache              Cache
 	cacheCapacityBytes uint64
+	httpConns          *web.ConnMap
+	httpsConns         *web.ConnMap
 }
 
-func (s stats) Connections() uint64   { return atomic.LoadUint64(s.connections) }
-func (s stats) IncConnections()       { atomic.AddUint64(s.connections, 1) }
-func (s stats) DecConnections()       { atomic.AddUint64(s.connections, ^uint64(0)) }
+func (s stats) Connections() uint64 {
+	l := uint64(0)
+	if s.httpConns != nil {
+		l += uint64(s.httpConns.Len())
+	}
+	if s.httpsConns != nil {
+		l += uint64(s.httpsConns.Len())
+	}
+	return l
+}
 func (s stats) CacheHits() uint64     { return atomic.LoadUint64(s.cacheHits) }
 func (s stats) AddCacheHit()          { atomic.AddUint64(s.cacheHits, 1) }
 func (s stats) CacheMisses() uint64   { return atomic.LoadUint64(s.cacheMisses) }
