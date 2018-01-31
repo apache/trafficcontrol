@@ -74,9 +74,9 @@ insert into role (name, description, priv_level) values ('admin', 'super-user', 
 insert into role (name, description, priv_level) values ('operations', 'Operations user', 20) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('federation', 'Role for Secondary CZF', 15) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('steering', 'Role for Steering Delivery Services', 15) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('portal', 'Portal User', 15) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('ort', 'ORT User', 11) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('read-only', 'Read-Only user', 10) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('portal', 'Portal User', 2) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('disallowed', 'Block all access', 0) ON CONFLICT (name) DO NOTHING;
 
 -- tenants
