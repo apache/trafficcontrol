@@ -95,7 +95,7 @@ func deleteObject(key string, bucket string, cluster StorageCluster) error {
 		return err
 	}
 
-	err := cluster.Execute(cmd)
+	err = cluster.Execute(cmd)
 
 	if err != nil {
 		return err
@@ -148,7 +148,7 @@ func saveObject(obj *riak.Object, bucket string, cluster StorageCluster) error {
 	if err != nil {
 		return err
 	}
-	err := cluster.Execute(cmd)
+	err = cluster.Execute(cmd)
 	if err != nil {
 		return err
 	}

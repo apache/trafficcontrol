@@ -329,7 +329,7 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc 
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", keysJson)
+		fmt.Fprintf(w, "%s", keysJSON)
 	}
 }
 
