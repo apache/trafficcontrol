@@ -33,8 +33,6 @@ import (
 	"github.com/lib/pq"
 )
 
-const CDNsPrivLevel = 10
-
 //we need a type alias to define functions on
 type TOCDN tc.CDN
 

@@ -36,9 +36,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// ServersPrivLevel - privileges for the /servers endpoint
-const ServersPrivLevel = 10
-
 func serversHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)

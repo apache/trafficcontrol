@@ -30,8 +30,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const SystemInfoPrivLevel = 10
-
 func systemInfoHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)

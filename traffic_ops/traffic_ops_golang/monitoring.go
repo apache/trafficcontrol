@@ -32,10 +32,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
-
-const MonitoringPrivLevel = auth.PrivLevelReadOnly
 
 const CacheMonitorConfigFile = "rascal.properties"
 const MonitorType = "RASCAL"
