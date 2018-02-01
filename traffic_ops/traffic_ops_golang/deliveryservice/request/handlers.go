@@ -32,9 +32,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// DeliveryServiceRequestPrivLevel ...
-const DeliveryServiceRequestPrivLevel = 20
-
 // Handler returns a func to handle GET requests
 func Handler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
