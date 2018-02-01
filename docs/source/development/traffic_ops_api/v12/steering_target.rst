@@ -184,11 +184,17 @@ Steering Targets
   +========================+==========+==========================+
   | ``deliveryServiceId``  | int      | Steering DS ID           |
   +------------------------+----------+--------------------------+
+  | ``deliveryService``    | string   | DS XML ID                |
+  +------------------------+----------+--------------------------+
   | ``targetId``           | int      | Target DS ID             |
+  +------------------------+----------+--------------------------+
+  | ``target``             | string   | Target DS XML ID         |
   +------------------------+----------+--------------------------+
   | ``value``              | string   | Target value             |
   +------------------------+----------+--------------------------+
   | ``typeId``             | int      | Target type ID           |
+  +------------------------+----------+--------------------------+
+  | ``type``               | string   | Steering target type name|
   +------------------------+----------+--------------------------+
 
   **Response Example** ::
@@ -196,9 +202,12 @@ Steering Targets
 	{
 		"response": {
 			"deliveryServiceId": 1,
+			"deliveryService": "steering-ds-one",
 			"targetId": 2,
+			"target": "steering-target-two",
 			"value": "34",
-			"typeId": 45
+			"typeId": 45,
+			"type": "STEERING_ORDER"
 		},
 		"alerts": [
 			{
@@ -256,11 +265,17 @@ Steering Targets
   +========================+==========+==========================+
   | ``deliveryServiceId``  | int      | Steering DS ID           |
   +------------------------+----------+--------------------------+
+  | ``deliveryService``    | string   | DS XML ID                |
+  +------------------------+----------+--------------------------+
   | ``targetId``           | int      | Target DS ID             |
+  +------------------------+----------+--------------------------+
+  | ``target``             | string   | Target DS XML ID         |
   +------------------------+----------+--------------------------+
   | ``value``              | string   | Target value             |
   +------------------------+----------+--------------------------+
   | ``typeId``             | int      | Target type ID           |
+  +------------------------+----------+--------------------------+
+  | ``type``               | string   | Steering target type name|
   +------------------------+----------+--------------------------+
 
   **Response Example** ::
@@ -268,9 +283,12 @@ Steering Targets
 	{
 		"response": {
 			"deliveryServiceId": 1,
+			"deliveryService": "steering-ds-one",
 			"targetId": 6,
+			"target": "steering-target-six",
 			"value": "22",
-			"typeId": 47
+			"typeId": 47,
+			"type": "STEERING_ORDER"
 		},
 		"alerts": [
 			{
