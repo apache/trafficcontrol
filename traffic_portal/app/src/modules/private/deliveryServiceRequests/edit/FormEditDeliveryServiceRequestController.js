@@ -86,12 +86,13 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			}
 		});
 		modalInstance.result.then(function(action) {
+			var status;
 			switch (action.id) {
 				case $scope.DRAFT:
-					dsRequest.status = 'draft';
+					status = 'draft';
 					break;
 				case $scope.SUBMITTED:
-					dsRequest.status = 'submitted';
+					status = 'submitted';
 					break;
 				case $scope.COMPLETE:
 					if (dsRequest.assigneeId != userModel.user.id) {
@@ -99,10 +100,9 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 						$anchorScroll(); // scrolls window to top
 						return;
 					}
-					dsRequest.status = 'complete';
+					status = 'complete';
 			}
-			// todo jeremy: this needs to call the api to update ds request status
-			deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest).
+			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(dsRequest.id, status).
 				then(function() {
 					$state.reload();
 				});
@@ -129,13 +129,15 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			}
 		});
 		modalInstance.result.then(function() {
+			// update the ds request if the ds request actually changed
+			if ($scope.deliveryServiceForm.$dirty) {
+				promises.push(deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest));
+			}
 			// make sure the ds request is assigned to the user that is fulfilling the request
-			dsRequest.assigneeId = userModel.user.id;
+			promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(dsRequest.id, userModel.user.id));
 			// set the status to 'pending'
-			// todo jeremy: this needs to call the api to update ds request status
-			dsRequest.status = 'pending';
-			// update the ds request
-			promises.push(deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest));
+			promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(dsRequest.id, 'pending'));
+
 			// now create, update or delete the ds per the ds request
 			if ($scope.changeType == 'create') {
 				promises.push(deliveryServiceService.createDeliveryService(ds));
@@ -152,7 +154,6 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 							locationUtils.navigateToPath('/delivery-service-requests');
 						}
 					});
-
 		}, function () {
 			// do nothing
 		});
@@ -183,12 +184,11 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			dsRequest.status = (action.id == $scope.SUBMITTED) ? 'submitted' : 'draft';
 			dsRequest.deliveryService = deliveryService;
 			deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest).
-			then(function() {
-				messageModel.setMessages([ { level: 'success', text: 'Updated delivery service request for ' + dsRequest.deliveryService.xmlId + ' and set status to ' + dsRequest.status } ], false);
-				$anchorScroll(); // scrolls window to top
-				$state.reload();
-			});
-
+				then(function() {
+					messageModel.setMessages([ { level: 'success', text: 'Updated delivery service request for ' + dsRequest.deliveryService.xmlId + ' and set status to ' + dsRequest.status } ], false);
+					$anchorScroll(); // scrolls window to top
+					$state.reload();
+				});
 		}, function () {
 			// do nothing
 		});
