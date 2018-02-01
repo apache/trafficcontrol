@@ -84,7 +84,7 @@ func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 		"displayName":         validation.Validate(ds.DisplayName, validation.Required),
 		"dnsBypassIp":         validation.Validate(ds.DNSBypassIP, is.IP),
 		"dnsBypassIp6":        validation.Validate(ds.DNSBypassIP6, is.IPv6),
-		"dscp":                validation.Validate(ds.DSCP, validation.Required),
+		"dscp":                validation.Validate(ds.DSCP, validation.NotNil),
 		"geoLimit":            validation.Validate(ds.GeoLimit, validation.NotNil),
 		"geoProvider":         validation.Validate(ds.GeoProvider, validation.NotNil),
 		"infoUrl":             validation.Validate(ds.InfoURL, is.URL),
