@@ -90,6 +90,7 @@
                 "dscp": 0,
                 "geoLimit": 0,
                 "geoProvider": 0,
+                "initialDispersion": 3,
                 "logsEnabled": false,
                 "longDesc": "long desc",
                 "regionalGeoBlocking": false,
