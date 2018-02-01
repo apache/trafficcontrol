@@ -25,8 +25,11 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/testing/api/utils"
 )
 
-const GOOD_DSR = 0
-const REQUIRED_DSR = 2
+const (
+	dsrGood      = 0
+	dsrBadTenant = 1
+	dsrRequired  = 2
+)
 
 func TestDeliveryServiceRequests(t *testing.T) {
 
@@ -38,9 +41,9 @@ func TestDeliveryServiceRequests(t *testing.T) {
 }
 
 func CreateTestDeliveryServiceRequests(t *testing.T) {
-	fmt.Printf("CreateTestDeliveryServiceRequests\n")
+	log.Debugln("CreateTestDeliveryServiceRequests")
 
-	dsr := testData.DeliveryServiceRequests[GOOD_DSR]
+	dsr := testData.DeliveryServiceRequests[dsrGood]
 	resp, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
 	log.Debugln("Response: ", resp)
 	if err != nil {
@@ -51,7 +54,7 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 
 func TestDeliveryServiceRequestRequired(t *testing.T) {
 
-	dsr := testData.DeliveryServiceRequests[REQUIRED_DSR]
+	dsr := testData.DeliveryServiceRequests[dsrRequired]
 	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
 	if err != nil {
 		t.Errorf("Error occurred %v", err)
@@ -85,7 +88,7 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 	XMLID := strings.Repeat("X", 48)
 	displayName := strings.Repeat("X", 49)
 
-	dsr := testData.DeliveryServiceRequests[GOOD_DSR]
+	dsr := testData.DeliveryServiceRequests[dsrGood]
 	dsr.DeliveryService.DisplayName = displayName
 	dsr.DeliveryService.RoutingName = routingName
 	dsr.DeliveryService.XMLID = XMLID
@@ -106,7 +109,7 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 	fmt.Printf("TestDeliveryServiceRequestTypeFields\n")
 
-	dsr := testData.DeliveryServiceRequests[GOOD_DSR]
+	dsr := testData.DeliveryServiceRequests[dsrBadTenant]
 	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
 	if err != nil {
 		t.Errorf("Error occurred %v", err)
@@ -124,7 +127,7 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 func GetTestDeliveryServiceRequests(t *testing.T) {
 	fmt.Printf("GetTestDeliveryServiceRequests\n")
 
-	dsr := testData.DeliveryServiceRequests[GOOD_DSR]
+	dsr := testData.DeliveryServiceRequests[dsrGood]
 	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceRequest by XMLID: %v - %v\n", err, resp)
@@ -134,10 +137,13 @@ func GetTestDeliveryServiceRequests(t *testing.T) {
 func UpdateTestDeliveryServiceRequests(t *testing.T) {
 
 	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
-	dsr := testData.DeliveryServiceRequests[GOOD_DSR]
+	dsr := testData.DeliveryServiceRequests[dsrGood]
 	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
 	if err != nil {
-		t.Errorf("cannot GET DeliveryServiceRequest by name: %v - %v\n", dsr.DeliveryService.XMLID, err)
+		t.Fatalf("cannot GET DeliveryServiceRequest by name: %v - %v\n", dsr.DeliveryService.XMLID, err)
+	}
+	if len(resp) == 0 {
+		t.Fatal("Length of GET DeliveryServiceRequest is 0")
 	}
 	respDSR := resp[0]
 	expDisplayName := "new display name"
@@ -166,7 +172,7 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 func DeleteTestDeliveryServiceRequests(t *testing.T) {
 
 	// Retrieve the DeliveryServiceRequest by name so we can get the id for the Update
-	dsr := testData.DeliveryServiceRequests[GOOD_DSR]
+	dsr := testData.DeliveryServiceRequests[dsrGood]
 	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
 	if err != nil {
 		t.Errorf("cannot GET DeliveryServiceRequest by id: %v - %v\n", dsr.DeliveryService.XMLID, err)

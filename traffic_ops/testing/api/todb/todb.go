@@ -216,7 +216,14 @@ func SetupTmusers(cfg *config.Config, db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("password encryption failed %v", err)
 	}
-	sqlStmt := `INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('admin','` + encryptedPassword + `','` + encryptedPassword + `', 4, 2)`
+
+	// Creates users in different tenants
+	sqlStmt := `
+INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('admin','` + encryptedPassword + `','` + encryptedPassword + `', 4, 1);
+INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('user1','` + encryptedPassword + `','` + encryptedPassword + `', 3, 2);
+INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('user2','` + encryptedPassword + `','` + encryptedPassword + `', 3, 3);
+INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('user3','` + encryptedPassword + `','` + encryptedPassword + `', 3, 4);
+`
 	err = execSQL(cfg, db, sqlStmt, "tm_user")
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)

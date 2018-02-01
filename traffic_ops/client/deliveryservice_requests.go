@@ -40,29 +40,28 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 		return alerts, reqInf, err
 	}
 	resp, remoteAddr, err := to.rawRequest(http.MethodPost, API_DS_REQUESTS, reqBody)
+	defer resp.Body.Close()
+
 	if err == nil {
 		body, readErr := ioutil.ReadAll(resp.Body)
 		if readErr != nil {
 			return alerts, reqInf, readErr
 		}
-		if err := json.Unmarshal(body, &alerts); err == nil {
+		if err = json.Unmarshal(body, &alerts); err != nil {
 			return alerts, reqInf, err
 		}
 	}
 
-	defer resp.Body.Close()
-	return alerts, reqInf, nil
+	return alerts, reqInf, err
 }
 
 // GET a DeliveryServiceRequest by the DeliveryServiceRequest XMLID
 func (to *Session) GetDeliveryServiceRequestByXMLID(XMLID string) ([]tc.DeliveryServiceRequest, ReqInf, error) {
-
 	route := fmt.Sprintf("%s?xmlId=%s", API_DS_REQUESTS, XMLID)
-
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		fmt.Printf("route: %v\n", route)
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
@@ -70,7 +69,7 @@ func (to *Session) GetDeliveryServiceRequestByXMLID(XMLID string) ([]tc.Delivery
 	data := struct {
 		Response []tc.DeliveryServiceRequest `json:"response"`
 	}{}
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
 
@@ -110,8 +109,6 @@ func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServi
 	}
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
-		fmt.Printf("route: %v\n", route)
-		fmt.Printf("reqBody: %v\n", string(reqBody))
 		return tc.Alerts{}, reqInf, err
 	}
 	defer resp.Body.Close()
@@ -126,7 +123,6 @@ func (to *Session) DeleteDeliveryServiceRequestByID(id int) (tc.Alerts, ReqInf, 
 	resp, remoteAddr, err := to.rawRequest(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		fmt.Printf("route: %v\n", route)
 		return tc.Alerts{}, reqInf, err
 	}
 	defer resp.Body.Close()
