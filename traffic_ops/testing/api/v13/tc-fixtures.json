@@ -64,7 +64,7 @@
                 "ccrDnsTtl": 30,
                 "cdnId": 1,
                 "displayName": "Good Kabletown CDN",
-                "deepCachingType": "never",
+                "deepCachingType": "NEVER",
                 "dscp": 1,
                 "geoLimit": 1,
                 "geoProvider": 1,
@@ -81,19 +81,19 @@
         },
         {
             "changeType": "create",
-            "deliverService": {
+            "deliveryService": {
                 "active": true,
                 "ccrDnsTtl": 30,
                 "cdnId": 1,
-                "displayName": "Kabletown CDN",
-                "deepCachingType": "never",
+                "displayName": "Bad Tenant",
+                "deepCachingType": "NEVER",
                 "dscp": 0,
                 "geoLimit": 0,
                 "geoProvider": 0,
                 "logsEnabled": false,
                 "longDesc": "long desc",
                 "regionalGeoBlocking": false,
-                "tenantId": 2,
+                "tenantId": 1,
                 "typeId": 70,
                 "xmlId": "test-ds1"
             },
@@ -101,14 +101,20 @@
         },
         {
             "changeType": "create",
-            "deliverService": {
+            "deliveryService": {
                 "ccrDnsTtl": 30,
                 "infoUrl": "xxx",
                 "orgServerFqdn": "xxx",
                 "routingName": "x routing",
-                "deepCachingType": "never",
+                "deepCachingType": "NEVER",
+                "dscp": 0,
                 "displayName": "Bad Test Case CDN",
+                "geoLimit": 0,
+                "geoProvider": 1,
+                "initialDispersion": 1,
+                "logsEnabled": true,
                 "longDesc": "long desc",
+                "regionalGeoBlocking": true,
                 "tenantId": 2,
                 "xmlId": "test ds1"
             },
