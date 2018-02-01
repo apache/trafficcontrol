@@ -104,8 +104,8 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 			}
 		});
 		modalInstance.result.then(function() {
-			request.assigneeId = (assign) ? userModel.user.id : null;
-			deliveryServiceRequestService.updateDeliveryServiceRequest(request.id, request).
+			var assigneeId = (assign) ? userModel.user.id : null;
+			deliveryServiceRequestService.assignDeliveryServiceRequest(request.id, assigneeId).
 				then(function() {
 					$scope.refresh();
 				});
@@ -137,15 +137,8 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 			}
 		});
 		modalInstance.result.then(function(action) {
-			switch (action.id) {
-				case $scope.DRAFT:
-					request.status = 'draft';
-					break;
-				case $scope.SUBMITTED:
-					request.status = 'submitted';
-			}
-			// todo jeremy: this needs to call the api to update ds request status
-			deliveryServiceRequestService.updateDeliveryServiceRequest(request.id, request).
+			var status = (action.id == $scope.DRAFT) ? 'draft' : 'submitted';
+			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, status).
 				then(function() {
 					$scope.refresh();
 				});
@@ -171,12 +164,15 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 			}
 		});
 		modalInstance.result.then(function() {
-			request.assigneeId = userModel.user.id;
-			request.status = 'rejected';
-			deliveryServiceRequestService.updateDeliveryServiceRequest(request.id, request).
-				then(function() {
-					$scope.refresh();
-				});
+			var promises = [];
+			promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(request.id, userModel.user.id));
+			promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, 'rejected'));
+
+			$q.all(promises)
+				.then(
+					function() {
+						$scope.refresh();
+					});
 		}, function () {
 			// do nothing
 		});
@@ -206,8 +202,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 			}
 		});
 		modalInstance.result.then(function() {
-			request.status = 'complete';
-			deliveryServiceRequestService.updateDeliveryServiceRequest(request.id, request).
+			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, 'complete').
 				then(function() {
 					$scope.refresh();
 				});
