@@ -53,7 +53,6 @@ var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUti
 		return request.promise;
 	};
 
-
 	this.deleteDeliveryServiceRequest = function(id, delay) {
 		return Restangular.one("deliveryservice_requests", id).remove()
 			.then(
@@ -65,6 +64,40 @@ var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUti
 					messageModel.setMessages(fault.data.alerts, false);
 				}
 			);
+	};
+
+	this.assignDeliveryServiceRequest = function(id, userId) {
+		var request = $q.defer();
+
+		$http.put(ENV.api['root'] + "deliveryservice_requests/" + id + "/assign", { assigneeId: userId })
+			.then(
+				function() {
+					request.resolve();
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
+					request.reject();
+				}
+			);
+
+		return request.promise;
+	};
+
+	this.updateDeliveryServiceRequestStatus = function(id, status) {
+		var request = $q.defer();
+
+		$http.put(ENV.api['root'] + "deliveryservice_requests/" + id + "/status", { status: status })
+			.then(
+				function() {
+					request.resolve();
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
+					request.reject();
+				}
+			);
+
+		return request.promise;
 	};
 
 };
