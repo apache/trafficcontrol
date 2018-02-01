@@ -21,6 +21,8 @@ package request
 
 import (
 	"encoding/json"
+	"errors"
+	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
@@ -28,12 +30,91 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type requestStatus int
+
+const (
+	statusDraft = requestStatus(iota)
+	statusSubmitted
+	statusRejected
+	statusPending
+	statusComplete
+	statusInvalid = requestStatus(-1)
+)
+
+var statusNames = [...]string{
+	"draft",
+	"submitted",
+	"rejected",
+	"pending",
+	"complete",
+}
+
+func statusFromString(s string) requestStatus {
+	t := strings.ToLower(s)
+	for i, st := range statusNames {
+		if t == st {
+			return requestStatus(i)
+		}
+	}
+	return statusInvalid
+}
+
+func (s requestStatus) name() string {
+	i := int(s)
+	if i < 0 || i > len(statusNames) {
+		return "INVALID"
+	}
+	return statusNames[i]
+}
+
+// validTransition returns nil if the transition is allowed for the workflow, or an error if not
+func (s requestStatus) validTransition(to requestStatus) error {
+	if s == to {
+		// no change -- always allowed
+		return nil
+	}
+
+	// indicate if valid transitioning to this requestStatus
+	switch to {
+	case statusDraft:
+		// can go back to draft if submitted or rejected
+		if s == statusSubmitted || s == statusRejected {
+			return nil
+		}
+	case statusSubmitted:
+		// can go be submitted if draft or rejected
+		if s == statusDraft || s == statusRejected {
+			return nil
+		}
+	case statusRejected:
+		// only submitted can be rejected
+		if s == statusSubmitted {
+			return nil
+		}
+	case statusPending:
+		// only submitted can move to pending
+		if s == statusSubmitted {
+			return nil
+		}
+	case statusComplete:
+		// only pending can be completed.  Completed can never change.
+		if s == statusPending {
+			return nil
+		}
+	}
+	return errors.New("invalid transition from " + s.name() + " to " + to.name())
+}
+
 // Validate ensures all required fields are present and in correct form.  Also checks request JSON is complete and valid
 func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
+	validation.NewStringRule(tovalidate.NoPeriods, "cannot contain periods")
+	st := statusFromString(req.Status)
+
 	errMap := validation.Errors{
 		"changeType":      validation.Validate(req.ChangeType, validation.Required),
 		"deliveryservice": validation.Validate(req.DeliveryService, validation.Required),
-		"status":          validation.Validate(req.Status, validation.Required),
+		"status": validation.Validate(req.Status, validation.Required,
+			validation.By(func(s interface{}) error { return st.validTransition(s.(requestStatus)) })),
 	}
 
 	errs := tovalidate.ToErrors(errMap)
