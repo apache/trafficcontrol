@@ -110,7 +110,7 @@ func TestCreateRouteMap(t *testing.T) {
 }
 
 func getAuthWasCalled(ctx context.Context) string {
-	val := ctx.Value("authWasCalled")
+	val := ctx.Value(AuthWasCalled)
 	if val != nil {
 		return val.(string)
 	}
