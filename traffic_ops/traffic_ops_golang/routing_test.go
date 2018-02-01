@@ -28,6 +28,8 @@ import (
 	"bytes"
 	"context"
 	"net/http/httptest"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
 func TestCreateRouteMap(t *testing.T) {
@@ -57,7 +59,7 @@ func TestCreateRouteMap(t *testing.T) {
 	}
 
 	routes := []Route{
-		{1.2, http.MethodGet, `path1`, PathOneHandler, ServersPrivLevel, true, nil},
+		{1.2, http.MethodGet, `path1`, PathOneHandler, auth.PrivLevelReadOnly, true, nil},
 		{1.2, http.MethodGet, `path2`, PathTwoHandler, 0, false, nil},
 		{1.2, http.MethodGet, `path3`, PathThreeHandler, 0, false, []Middleware{}},
 	}

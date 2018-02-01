@@ -30,8 +30,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const DivisionsPrivLevel = 10
-
 func divisionsHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)

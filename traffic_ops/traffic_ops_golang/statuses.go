@@ -34,8 +34,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const StatusesPrivLevel = 10
-
 func statusesHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)

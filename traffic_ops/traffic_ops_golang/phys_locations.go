@@ -31,8 +31,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const PhysLocationsPrivLevel = 10
-
 func physLocationsHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)

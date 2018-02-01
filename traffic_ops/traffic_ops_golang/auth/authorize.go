@@ -39,13 +39,18 @@ type CurrentUser struct {
 // PrivLevelInvalid - The Default Priv level
 const PrivLevelInvalid = -1
 
-// PrivLevelReadOnly - The user cannot do any API updates
 const PrivLevelReadOnly = 10
 
-// PrivLevelOperations - The user has minimal privileges
+const PrivLevelORT = 11
+
+const PrivLevelSteering = 15
+
+const PrivLevelFederation = 15
+
+const PrivLevelPortal = 15
+
 const PrivLevelOperations = 20
 
-// PrivLevelAdmin - The user has full privileges
 const PrivLevelAdmin = 30
 
 // TenantIDInvalid - The default Tenant ID

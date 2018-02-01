@@ -33,8 +33,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const ParametersPrivLevel = auth.PrivLevelReadOnly
-
 func parametersHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
