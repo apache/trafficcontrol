@@ -39,7 +39,7 @@ under the License.
                 <th>Author</th>
                 <th>Assignee</th>
                 <th>Created (UTC)</th>
-                <th>Last Updated</th>
+                <th>Last Edited By</th>
                 <th style="text-align: right;">Actions</th>
             </tr>
             </thead>
@@ -58,7 +58,7 @@ under the License.
                     <a ng-show="assignable(request) && request.assignee" class="link" title="Unassign" ng-click="assignRequest(request, false, $event)">{{::request.assignee}} - unassign</a>
                 </td>
                 <td data-search="^{{::request.createdAt}}$">{{::request.createdAt}}</td>
-                <td data-search="^{{::getRelativeTime(request.lastUpdated)}}$" data-order="{{::request.lastUpdated}}">{{::getRelativeTime(request.lastUpdated)}}</td>
+                <td data-search="^{{::request.lastEditedBy}}$">{{::request.lastEditedBy}}</td>
                 <td style="text-align: right;">
                     <span ng-if="fulfillable(request)"><a class="link action-link" title="Fulfill Request" ng-click="fulfillRequest(request, $event)">fulfill</a>| </span>
                     <span ng-if="rejectable(request)"><a class="link action-link" title="Reject Request" ng-click="rejectRequest(request, $event)">reject</a>| </span>
