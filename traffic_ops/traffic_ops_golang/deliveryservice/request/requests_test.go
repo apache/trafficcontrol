@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -30,7 +31,7 @@ import (
 func TestGetDeliveryServiceRequest(t *testing.T) {
 	r := &TODeliveryServiceRequest{
 		ChangeType: "UPDATE",
-		Status:     "submitted",
+		Status:     tc.RequestStatusFromString("submitted"),
 		DeliveryService: json.RawMessage(`{
 			"xmlId" : "this is not a valid xmlid.  Bad characters and too long.",
 			"cdnId" : 1,

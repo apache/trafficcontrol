@@ -17,6 +17,8 @@ package tc
 
 import (
 	"encoding/json"
+	"errors"
+	"strings"
 )
 
 // IDNoMod type is used to suppress JSON unmarshalling
@@ -36,7 +38,7 @@ type DeliveryServiceRequest struct {
 	LastEditedByID  IDNoMod         `json:"lastEditedById,omitempty"`
 	LastUpdated     *TimeNoMod      `json:"lastUpdated"`
 	DeliveryService DeliveryService `json:"deliveryService"`
-	Status          string          `json:"status"`
+	Status          RequestStatus   `json:"status"`
 	XMLID           string          `json:"-" db:"xml_id"`
 }
 
@@ -54,11 +56,87 @@ type DeliveryServiceRequestNullable struct {
 	LastEditedByID  IDNoMod         `json:"lastEditedById" db:"last_edited_by_id"`
 	LastUpdated     *TimeNoMod      `json:"lastUpdated" db:"last_updated"`
 	DeliveryService json.RawMessage `json:"deliveryService" db:"deliveryservice"`
-	Status          string          `json:"status" db:"status"`
+	Status          RequestStatus   `json:"status" db:"status"`
 	XMLID           string          `json:"-" db:"xml_id"`
 }
 
 // UnmarshalJSON implements the json.Unmarshaller interface to suppress unmarshalling for IDNoMod
 func (a *IDNoMod) UnmarshalJSON([]byte) error {
 	return nil
+}
+
+//
+type RequestStatus int
+
+const (
+	RequestStatusDraft = RequestStatus(iota)
+	RequestStatusSubmitted
+	RequestStatusRejected
+	RequestStatusPending
+	RequestStatusComplete
+	RequestStatusInvalid = RequestStatus(-1)
+)
+
+var RequestStatusNames = [...]string{
+	"draft",
+	"submitted",
+	"rejected",
+	"pending",
+	"complete",
+}
+
+func RequestStatusFromString(s string) RequestStatus {
+	t := strings.ToLower(s)
+	for i, st := range RequestStatusNames {
+		if t == st {
+			return RequestStatus(i)
+		}
+	}
+	return RequestStatusInvalid
+}
+
+func (s RequestStatus) Name() string {
+	i := int(s)
+	if i < 0 || i > len(RequestStatusNames) {
+		return "INVALID"
+	}
+	return RequestStatusNames[i]
+}
+
+// ValidTransition returns nil if the transition is allowed for the workflow, an error if not
+func (s RequestStatus) ValidTransition(to RequestStatus) error {
+	if s == to {
+		// no change -- always allowed
+		return nil
+	}
+
+	// indicate if valid transitioning to this RequestStatus
+	switch to {
+	case RequestStatusDraft:
+		// can go back to draft if submitted or rejected
+		if s == RequestStatusSubmitted || s == RequestStatusRejected {
+			return nil
+		}
+	case RequestStatusSubmitted:
+		// can go be submitted if draft or rejected
+		if s == RequestStatusDraft || s == RequestStatusRejected {
+			return nil
+		}
+	case RequestStatusRejected:
+		// only submitted can be rejected
+		if s == RequestStatusSubmitted {
+			return nil
+		}
+	case RequestStatusPending:
+		// only submitted can move to pending
+		if s == RequestStatusSubmitted {
+			return nil
+		}
+	case RequestStatusComplete:
+		// only pending can be completed.  Completed can never change.
+		if s == RequestStatusPending {
+			return nil
+		}
+	}
+	return errors.New("invalid transition from " + s.Name() + " to " + to.Name())
 }
