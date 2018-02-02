@@ -69,7 +69,9 @@ func CopyFile(src, dst string) error {
 
 // BackupFile copies the given file to a new file in the same directory, with the name suffixed by the current timestamp. Returns nil if the given file doesn't exist (nothing to back up).
 func BackupFile(path string) error {
-	// TODO return nil if path doesn't exist
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return nil
+	}
 
 	fileTimeFormat := "2006-01-02T15_04_05_999999999Z07_00" // this is time.RFC3339Nano with : replaced by _
 	backupPath := path + "." + time.Now().Format(fileTimeFormat)
