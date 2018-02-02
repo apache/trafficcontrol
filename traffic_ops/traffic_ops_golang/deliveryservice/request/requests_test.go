@@ -31,7 +31,7 @@ import (
 func TestGetDeliveryServiceRequest(t *testing.T) {
 	r := &TODeliveryServiceRequest{
 		ChangeType: "UPDATE",
-		Status:     tc.RequestStatusFromString("submitted"),
+		Status:     tc.RequestStatusSubmitted,
 		DeliveryService: json.RawMessage(`{
 			"xmlId" : "this is not a valid xmlid.  Bad characters and too long.",
 			"cdnId" : 1,

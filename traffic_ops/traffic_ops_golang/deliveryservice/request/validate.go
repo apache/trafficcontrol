@@ -32,10 +32,14 @@ import (
 // Validate ensures all required fields are present and in correct form.  Also checks request JSON is complete and valid
 func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
 	validation.NewStringRule(tovalidate.NoPeriods, "cannot contain periods")
-	st := req.Status
+	fromStatus := req.Status
 
 	validTransition := func(s interface{}) error {
-		return st.ValidTransition(tc.RequestStatusFromString(s.(string)))
+		toStatus, err := tc.RequestStatusFromString(s.(string))
+		if err != nil {
+			return err
+		}
+		return fromStatus.ValidTransition(toStatus)
 	}
 	errMap := validation.Errors{
 		"changeType":      validation.Validate(req.ChangeType, validation.Required),

@@ -20,6 +20,8 @@ package tc
  */
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"testing"
 )
@@ -27,6 +29,7 @@ import (
 func TestStatusTransition(t *testing.T) {
 	bad := errors.New("")
 	var validTests = [][]error{
+		//      Dra  Sub  Rej  Pen  Com
 		[]error{nil, nil, bad, bad, bad}, // Draft
 		[]error{nil, nil, nil, nil, bad}, // Submitted
 		[]error{nil, nil, nil, bad, bad}, // Rejected
@@ -34,7 +37,7 @@ func TestStatusTransition(t *testing.T) {
 		[]error{bad, bad, bad, bad, nil}, // Complete
 	}
 
-	// test all proper transitions
+	// test all transitions
 	for i := range validTests {
 		from := RequestStatus(i)
 		for j, exp := range validTests[i] {
@@ -72,4 +75,26 @@ func TestStatusTransition(t *testing.T) {
 		}
 
 	}
+}
+
+func TestRequestStatusJSON(t *testing.T) {
+	b, err := json.Marshal(RequestStatusDraft)
+	if err != nil {
+		t.Errorf("Error marshalling %v: %s", RequestStatusDraft, err.Error())
+	}
+
+	exp := []byte(`"draft"`)
+	if !bytes.Equal(exp, b) {
+		t.Errorf("expected %s, got %s", exp, string(b))
+	}
+
+	var r RequestStatus
+	err = json.Unmarshal(b, &r)
+	if err != nil {
+		t.Errorf("Error unmarshalling %s: %s", b, err.Error())
+	}
+	if r != RequestStatusDraft {
+		t.Errorf("expected %v, got %v", RequestStatusDraft, r)
+	}
+
 }
