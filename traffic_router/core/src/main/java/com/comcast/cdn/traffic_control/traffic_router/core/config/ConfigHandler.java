@@ -207,7 +207,6 @@ public class ConfigHandler {
 
 				federationsWatcher.configure(config);
 				steeringWatcher.configure(config);
-				steeringWatcher.setCacheRegister(cacheRegister);
 				trafficRouterManager.setCacheRegister(cacheRegister);
 				trafficRouterManager.getTrafficRouter().setRequestHeaders(parseRequestHeaders(config.get("requestHeaders")));
 				trafficRouterManager.getTrafficRouter().configurationChanged();
