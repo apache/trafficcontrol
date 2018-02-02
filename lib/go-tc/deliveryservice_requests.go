@@ -69,7 +69,7 @@ func (a *IDNoMod) UnmarshalJSON([]byte) error {
 type RequestStatus int
 
 const (
-	RequestStatusDraft = RequestStatus(iota)
+	RequestStatusDraft = RequestStatus(iota) // default
 	RequestStatusSubmitted
 	RequestStatusRejected
 	RequestStatusPending

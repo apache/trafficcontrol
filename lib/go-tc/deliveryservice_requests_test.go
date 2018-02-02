@@ -1,4 +1,4 @@
-package request
+package tc
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -22,8 +22,6 @@ package request
 import (
 	"errors"
 	"testing"
-
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 func TestStatusTransition(t *testing.T) {
@@ -38,9 +36,9 @@ func TestStatusTransition(t *testing.T) {
 
 	// test all proper transitions
 	for i := range validTests {
-		from := tc.RequestStatus(i)
+		from := RequestStatus(i)
 		for j, exp := range validTests[i] {
-			to := tc.RequestStatus(j)
+			to := RequestStatus(j)
 			if exp == nil {
 				continue
 			}
@@ -52,34 +50,26 @@ func TestStatusTransition(t *testing.T) {
 		}
 	}
 
-	// test names including out of range
-	i := -1
-	if tc.RequestStatus(i).Name() != "INVALID" {
-		t.Errorf("%d should be INVALID", i)
+	type tester struct {
+		st   RequestStatus
+		name string
+	}
+	tests := []tester{
+		tester{RequestStatus(-1), "INVALID"},
+		tester{RequestStatus(9999), "INVALID"},
+		tester{RequestStatusDraft, "draft"},
+		tester{RequestStatusSubmitted, "submitted"},
+		tester{RequestStatusRejected, "rejected"},
+		tester{RequestStatusPending, "pending"},
+		tester{RequestStatusComplete, "complete"},
 	}
 
-	i = len(tc.RequestStatusNames) + 1
-	if tc.RequestStatus(i).Name() != "INVALID" {
-		t.Errorf("%d should be INVALID", i)
-	}
+	for _, tst := range tests {
+		got := tst.st.Name()
+		exp := tst.name
+		if got != exp {
+			t.Errorf("%v: expected %s, got %s", tst.st, exp, got)
+		}
 
-	if tc.RequestStatusDraft.Name() != "draft" {
-		t.Errorf("%d should be draft", int(tc.RequestStatusDraft))
-	}
-
-	if tc.RequestStatusSubmitted.Name() != "submitted" {
-		t.Errorf("%d should be submitted", int(tc.RequestStatusSubmitted))
-	}
-
-	if tc.RequestStatusRejected.Name() != "rejected" {
-		t.Errorf("%d should be rejected", int(tc.RequestStatusRejected))
-	}
-
-	if tc.RequestStatusPending.Name() != "pending" {
-		t.Errorf("%d should be pending", int(tc.RequestStatusPending))
-	}
-
-	if tc.RequestStatusComplete.Name() != "complete" {
-		t.Errorf("%d should be complete", int(tc.RequestStatusComplete))
 	}
 }
