@@ -36,6 +36,7 @@ our @ISA = qw(Exporter);
 
 use constant READ       => 10;
 use constant FEDERATION => 15;
+use constant PORTAL		=> 15;
 use constant OPER       => 20;
 use constant ADMIN      => 30;
 
@@ -252,6 +253,13 @@ sub is_admin() {
 
 	return &has_priv( $self, ADMIN );
 }
+
+sub is_portal() {
+	my $self = shift;
+
+	return &has_priv( $self, PORTAL );
+}
+
 
 # returns true if the user is logged in via LDAP.
 sub is_ldap() {

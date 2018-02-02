@@ -38,8 +38,8 @@ sub add {
 	my $cdn = $self->req->json->{cdn};
 	my $deliveryservice = $self->req->json->{deliveryservice};
 
-	if ( !&is_admin($self) ) {
-		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
+	if ( !&is_portal($self) ) {
+		return $self->forbidden();
 	}
 
 	my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $deliveryservice })->single();
@@ -92,9 +92,10 @@ sub generate {
 	my $deliveryservice = $self->req->json->{deliveryservice};
 	my $tmp_location = "/var/tmp";
 
-	if ( !&is_admin($self) ) {
-		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
+	if ( !&is_portal($self) ) {
+		return $self->forbidden();
 	}
+
 	if (defined($deliveryservice)) {
 		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $deliveryservice })->single();
 		if (!$ds) {
@@ -142,42 +143,42 @@ sub view_by_xml_id {
 		$decode = 0;
 	}
 
-	if ( !&is_admin($self) ) {
-		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
+	if ( !$version ) {
+		$version = 'latest';
 	}
-	else {
-		if ( !$version ) {
-			$version = 'latest';
+
+	if ( !&is_portal($self) ) {
+		return $self->forbidden();
+	}
+
+	my $key = "$xml_id-$version";
+	my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $xml_id })->single();
+	if (!$ds) {
+		return $self->not_found();
+	}
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+	}
+	my $response_container = $self->riak_get( "ssl", $key );
+	my $response = $response_container->{"response"};
+
+
+	if ( $response->is_success() ){
+		my $toSend = decode_json( $response->content );
+
+		if ( $decode ){
+			$toSend->{certificate}->{csr} = decode_base64($toSend->{certificate}->{csr});
+			$toSend->{certificate}->{crt} = decode_base64($toSend->{certificate}->{crt});
+			$toSend->{certificate}->{key} = decode_base64($toSend->{certificate}->{key});
 		}
-		my $key = "$xml_id-$version";
-		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $xml_id })->single();
-		if (!$ds) {
-			return $self->alert( { Error => " - Could not found delivery service with xml_id=$xml_id!" } );
-		}
-		my $tenant_utils = Utils::Tenant->new($self);
-		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
-		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
-			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
-		}
-		my $response_container = $self->riak_get( "ssl", $key );
-		my $response = $response_container->{"response"};
 
 
-		if ( $response->is_success() ){
-			my $toSend = decode_json( $response->content );
+		$self->success( $toSend )
 
-			if ( $decode ){
-				$toSend->{certificate}->{csr} = decode_base64($toSend->{certificate}->{csr});
-				$toSend->{certificate}->{crt} = decode_base64($toSend->{certificate}->{crt});
-				$toSend->{certificate}->{key} = decode_base64($toSend->{certificate}->{key});
-			}
-
-		
-			$self->success( $toSend )
-
-		} else {
-			$self->success({}, " - A record for ssl key $key could not be found. ");
-		}
+	} else {
+		$self->success({}, " - A record for ssl key $key could not be found. ");
 	}
 }
 
