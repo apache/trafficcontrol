@@ -18,6 +18,7 @@ package tc
 import (
 	"encoding/json"
 	"errors"
+	"strconv"
 	"strings"
 )
 
@@ -85,14 +86,33 @@ var RequestStatusNames = [...]string{
 	"complete",
 }
 
-func RequestStatusFromString(s string) RequestStatus {
+func (r *RequestStatus) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(string(b), `"`)
+	x, err := RequestStatusFromString(s)
+	if err != nil {
+		return err
+	}
+	*r = x
+	return nil
+}
+
+func (r RequestStatus) MarshalJSON() ([]byte, error) {
+	i := int(r)
+	if i > len(RequestStatusNames) || i < 0 {
+		return nil, errors.New("RequestStatus " + strconv.Itoa(i) + " out of range")
+	}
+	return json.Marshal(RequestStatusNames[i])
+}
+
+func RequestStatusFromString(s string) (RequestStatus, error) {
+
 	t := strings.ToLower(s)
 	for i, st := range RequestStatusNames {
 		if t == st {
-			return RequestStatus(i)
+			return RequestStatus(i), nil
 		}
 	}
-	return RequestStatusInvalid
+	return RequestStatusInvalid, errors.New(s + " is not a valid RequestStatus name")
 }
 
 func (s RequestStatus) Name() string {
