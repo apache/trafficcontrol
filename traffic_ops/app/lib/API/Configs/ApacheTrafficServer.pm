@@ -917,7 +917,7 @@ sub ds_data {
 				$re =~ s/\.\*//g;
 				my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "__http__";
 				my $portstr = "";
-				if ( $hname eq "__http__r" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
+				if ( $hname eq "__http__" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
 					$portstr = ":" . $server_obj->tcp_port;
 				}
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
