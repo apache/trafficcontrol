@@ -105,7 +105,9 @@ func (r RequestStatus) MarshalJSON() ([]byte, error) {
 }
 
 func RequestStatusFromString(s string) (RequestStatus, error) {
-
+	if s == "" {
+		return RequestStatusDraft, nil
+	}
 	t := strings.ToLower(s)
 	for i, st := range RequestStatusNames {
 		if t == st {
