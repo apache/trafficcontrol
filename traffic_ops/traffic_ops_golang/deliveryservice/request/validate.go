@@ -44,8 +44,7 @@ func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
 	errMap := validation.Errors{
 		"changeType":      validation.Validate(req.ChangeType, validation.Required),
 		"deliveryservice": validation.Validate(req.DeliveryService, validation.Required),
-		"status": validation.Validate(req.Status, validation.Required,
-			validation.By(validTransition)),
+		"status":          validation.Validate(req.Status, validation.By(validTransition)),
 	}
 
 	errs := tovalidate.ToErrors(errMap)
