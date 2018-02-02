@@ -45,13 +45,13 @@ Traffic Portal is a replacement for the Traffic Ops UI. The following tabs are a
   | Dashboard     | A real time view into the main performance indicators of the CDNs managed by Traffic Control.                                      |
   |               | This view is sourced directly by the Traffic Monitor data and is updated every 10 seconds.                                         |
   |               | This is the default screen of Traffic Portal.                                                                                      |
-  |               | See :ref:`rl-dashboard` for details.                                                                                               |
+  |               | See :ref:`tp-dashboard` for details.                                                                                               |
   +---------------+------------------------------------------------------------------------------------------------------------------------------------+
   | Cache Checks  | A real time view into the status of each cache.                                                                                    |
   |               | This view is sourced by the Traffic Monitor data and is updated on demand.                                                         |
-  |               | See :ref:`rl-cache-checks` for details.                                                                                            |
+  |               | See :ref:`tp-cache-checks` for details.                                                                                            |
   +---------------+------------------------------------------------------------------------------------------------------------------------------------+
-  | Cache Stats   | A table showing the results of the periodic check extension scripts that are run. See :ref:`rl-cache-stats`                        |
+  | Cache Stats   | A table showing the results of the periodic check extension scripts that are run. See :ref:`tp-cache-stats`                        |
   +---------------+------------------------------------------------------------------------------------------------------------------------------------+
 
 * **Configure**
@@ -75,10 +75,10 @@ Traffic Portal is a replacement for the Traffic Ops UI. The following tabs are a
   +-------------------+------------------------------------------------------------------------------------------+
   |       Option      |                                       Description                                        |
   +===================+==========================================================================================+
-  | ASNs              | Create/Read/Update/Delete Autonomous System Numbers See :ref:`rl-asn-czf`                |
+  | ASNs              | Create/Read/Update/Delete Autonomous System Numbers See :ref:`tp-asn-czf`                |
   +-------------------+------------------------------------------------------------------------------------------+
-  | CDNs              | Create/Read/Update/Delete CDNs, Manage Federations(:ref:`rl-federations`),               |
-  |                   | Manage DNSSEC Keys(:ref:`rl-manage-dnssec-keys`),                                        |
+  | CDNs              | Create/Read/Update/Delete CDNs, Manage Federations(:ref:`tp-federations`),               |
+  |                   | Manage DNSSEC Keys(:ref:`tp-manage-dnssec-keys`),                                        |
   |                   | View Delivery Services, Profiles, and Servers                                            |
   +-------------------+------------------------------------------------------------------------------------------+
   | Divisions         | Create/Read/Update/Delete divisions                                                      |
@@ -89,7 +89,7 @@ Traffic Portal is a replacement for the Traffic Ops UI. The following tabs are a
   +-------------------+------------------------------------------------------------------------------------------+
   | Parameters        | Create/Read/Update/Delete Parameters                                                     |
   +-------------------+------------------------------------------------------------------------------------------+
-  | Profiles          | Create/Read/Update/Delete profiles. See :ref:`rl-working-with-profiles`                  |
+  | Profiles          | Create/Read/Update/Delete profiles. See :ref:`tp-working-with-profiles`                  |
   +-------------------+------------------------------------------------------------------------------------------+
   | Regions           | Create/Read/Update/Delete regions                                                        |
   +-------------------+------------------------------------------------------------------------------------------+
@@ -109,7 +109,7 @@ Traffic Portal is a replacement for the Traffic Ops UI. The following tabs are a
   +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
   |       Option       |                                                            Description                                                            |
   +====================+===================================================================================================================================+
-  | Generate ISO       | Generate a bootable image for any of the servers in the Servers table (or any server for that matter). See :ref:`rl-generate-iso` |
+  | Generate ISO       | Generate a bootable image for any of the servers in the Servers table (or any server for that matter). See :ref:`tp-generate-iso` |
   +--------------------+-----------------------------------------------------------------------------------------------------------------------------------+
 
 
@@ -158,7 +158,7 @@ Traffic Portal is a replacement for the Traffic Ops UI. The following tabs are a
 Monitor
 =======
 
-.. _rl-dashboard:
+.. _tp-dashboard:
 
 Dashboard
 +++++++++
@@ -175,7 +175,7 @@ The Dashboard is the default landing screen for Traffic Portal, it displays vari
 * **Admin Down Caches**: Number of caches with ADMIN_DOWN status.
 
 
-.. _rl-cache-checks:
+.. _tp-cache-checks:
 
 Cache Checks
 ++++++++++++
@@ -222,7 +222,7 @@ The cache checks page is intended to give an overview of the Servers managed by 
 +----------+-----------------------------------------------------------------------+
 
 
-.. _rl-cache-stats:
+.. _tp-cache-stats:
 
 Cache Stats
 +++++++++++
@@ -255,7 +255,7 @@ The fields in the Delivery Service view are:
 +==================================================+=====================================================================================================================================================================================================================+
 | Active                                           | When this is set to no Traffic Router will not serve DNS or HTTP responses for this delivery service.                                                                                                               |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Content Routing Type                             | The type of content routing this delivery service will use. See :ref:`rl-ds-types`.                                                                                                                                 |
+| Content Routing Type                             | The type of content routing this delivery service will use. See :ref:`tp-ds-types`.                                                                                                                                 |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Key(XML ID)                                      | A unique string that identifies this delivery service.                                                                                                                                                              |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -298,8 +298,8 @@ The fields in the Delivery Service view are:
 |                                                  | - 1 Do not use in cache key, but pass up to origin - this means a 2 URLs that are the same except for the query string will match, and cache HIT, while the origin still sees original query string in the request. |
 |                                                  | - 2 Drop at edge - this means a 2 URLs that are the same except for  the query string will match, and cache HIT, while the origin will not see original query string in the request.                                |
 |                                                  |                                                                                                                                                                                                                     |
-|                                                  | **Note:** Choosing to drop query strings at the edge will preclude the use of a Regex Remap Expression. See :ref:`rl-regex-remap`.                                                                                  |
-|                                                  | To set the qstring without the use of regex remap, or for further options, see :ref:`rl-qstring-handling`.                                                                                                          |
+|                                                  | **Note:** Choosing to drop query strings at the edge will preclude the use of a Regex Remap Expression. See :ref:`tp-regex-remap`.                                                                                  |
+|                                                  | To set the qstring without the use of regex remap, or for further options, see :ref:`tp-qstring-handling`.                                                                                                          |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Use Multi Site Origin Feature                    | Enable the Multi Site Origin feature for this delivery service. See :ref:`rl-multi-site-origin`                                                                                                                     |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -321,7 +321,7 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Geo Limit Redirect URL                           | (for HTTP routed delivery services only) This is the URL Traffic Router will redirect to when Geo Limit Failure. See :ref:`rl-tr-ngb`                                                                               |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Signing Algorithm                                | See :ref:`rl-signed-urls`.                                                                                                                                                                                          |
+| Signing Algorithm                                | See :ref:`tp-signed-urls`.                                                                                                                                                                                          |
 | Signing Algorithm                                | None                                                                                                                                                                                                                |
 |                                                  | URL Signature Keys                                                                                                                                                                                                  |
 |                                                  | URI Signing Keys                                                                                                                                                                                                    |
@@ -346,11 +346,11 @@ The fields in the Delivery Service view are:
 | Global Max TPS                                   | The maximum transactions per se this delivery service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS delivery service, the Bypass Ipv4 or Ipv6  will be used |
 |                                                  | (depending on whether this was a A or AAAA request), and for HTTP delivery services the Bypass FQDN will be used.                                                                                                   |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Signed URLs                                      | Use Signed URLs? See :ref:`rl-signed-urls`.                                                                                                                                                                         |
+| Signed URLs                                      | Use Signed URLs? See :ref:`tp-signed-urls`.                                                                                                                                                                         |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Edge Header Rewrite Rules                        | Header Rewrite rules to apply for this delivery service at the EDGE tier. See :ref:`rl-header-rewrite`. [1]_                                                                                                        |
+| Edge Header Rewrite Rules                        | Header Rewrite rules to apply for this delivery service at the EDGE tier. See :ref:`tp-header-rewrite`. [1]_                                                                                                        |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Mid Header Rewrite Rules                         | Header Rewrite rules to apply for this delivery service at the MID tier. See :ref:`rl-header-rewrite`. [1]_                                                                                                         |
+| Mid Header Rewrite Rules                         | Header Rewrite rules to apply for this delivery service at the MID tier. See :ref:`tp-header-rewrite`. [1]_                                                                                                         |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Traffic Router Additional Response Headers       |                                                                                                                                                                                                                     |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -358,7 +358,7 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Regex Remap Expression                           | Regex Remap rule to apply to this delivery service at the Edge tier. See `ATS documentation on regex_remap <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_. [1]_        |
 |                                                  |                                                                                                                                                                                                                     |
-|                                                  | **Note:** you will not be able to save a Regex Remap Expression if you have Query String Handling set to drop query strings at the edge. See :ref:`rl-regex-remap`.                                                 |
+|                                                  | **Note:** you will not be able to save a Regex Remap Expression if you have Query String Handling set to drop query strings at the edge. See :ref:`tp-regex-remap`.                                                 |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Cache URL expression                             | Cache URL rule to apply to this delivery service. See `ATS documentation on cacheurl <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/cacheurl.en.html>`_. [1]_                                 |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -381,7 +381,7 @@ The fields in the Delivery Service view are:
 .. index::
   Delivery Service Type
 
-.. _rl-ds-types:
+.. _tp-ds-types:
 
 Delivery Service Types
 ++++++++++++++++++++++
@@ -418,7 +418,7 @@ One of the most important settings when creating the delivery service is the sel
 .. Note:: Once created, the Traffic Ops user interface does not allow you to change the delivery service type; the drop down is greyed out. There are many things that can go wrong when changing the type, and it is safer to delete the delivery service, and recreate it.
 
 
-.. _rl-server:
+.. _tp-server:
 
 Servers
 =======
@@ -455,7 +455,7 @@ These are the types of servers that can be managed in Traffic Ops:
 
 
 
-.. _rl-federations:
+.. _tp-federations:
 
 Federations
 +++++++++++
@@ -467,7 +467,7 @@ Federations
 .. index::
   Header Rewrite
 
-.. _rl-header-rewrite:
+.. _tp-header-rewrite:
 
 Header Rewrite Options and DSCP
 +++++++++++++++++++++++++++++++
@@ -490,7 +490,7 @@ The deliveryservice screen also allows you to set the DSCP value of traffic sent
   Token Based Authentication
   Signed URLs
 
-.. _rl-signed-urls:
+.. _tp-signed-urls:
 
 Token Based Authentication
 ++++++++++++++++++++++++++
@@ -615,7 +615,7 @@ Parameters in the Mid (parent) profile that influence this feature:
 | use_ip_address | parent.config | 0       | 1 means use IP(v4) address of this parent in the parent.config, 0 means use the host_name.domain_name concatenation.                                                              |
 +----------------+---------------+---------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-.. _rl-qstring-handling:
+.. _tp-qstring-handling:
 
 Qstring Handling
 ++++++++++++++++
@@ -629,7 +629,7 @@ Delivery services have a Query String Handling option that, when set to ignore, 
 |                       |               |         | for associated servers when assigned to a server profile. Value must be "consider" or "ignore".                                                                                   |
 +-----------------------+---------------+---------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-.. _rl-multi-site-origin:
+.. _tp-multi-site-origin:
 
 Multi Site Origin
 +++++++++++++++++
@@ -679,7 +679,7 @@ Parameters in the deliveryservice profile that influence this feature:
 
 see :ref:`rl-multi-site-origin-qht` for a *quick how to* on this feature.
 
-.. _rl-ccr-profile:
+.. _tp-ccr-profile:
 
 Traffic Router Profile
 ++++++++++++++++++++++
@@ -772,7 +772,7 @@ Traffic Router Profile
 .. index::
   Regex Remap Expression
 
-.. _rl-regex-remap:
+.. _tp-regex-remap:
 
 Regex Remap Expression
 ++++++++++++++++++++++
@@ -790,7 +790,7 @@ The regex remap expression allows to to use a regex and resulting match group(s)
   HEADER_REGEXP
   Delivery Service regexp
 
-.. _rl-ds-regexp:
+.. _tp-ds-regexp:
 
 Delivery Service Regexp
 +++++++++++++++++++++++
@@ -816,7 +816,7 @@ Example:
 .. index::
   Static DNS Entries
 
-.. _rl-static-dns:
+.. _tp-static-dns:
 
 Static DNS Entries
 ++++++++++++++++++
@@ -825,14 +825,14 @@ Static DNS entries allow you to create other names *under* the delivery service 
 .. index::
   Server Assignments
 
-.. _rl-assign-edges:
+.. _tp-assign-edges:
 
 Server Assignments
 ++++++++++++++++++
 Click the **Server Assignments** button at the bottom of the screen to assign servers to this delivery service.  Servers can be selected by drilling down in a tree, starting at the profile, then the cache group, and then the individual servers. Traffic Router will only route traffic for this delivery service to servers that are assigned to it.
 
 
-.. _rl-asn-czf:
+.. _tp-asn-czf:
 
 The Coverage Zone File and ASN Table
 ++++++++++++++++++++++++++++++++++++
@@ -867,7 +867,7 @@ The CZF is an input to the Traffic Control CDN, and as such does not get generat
 
 The script that generates the CZF file is not part of Traffic Control, since it is different for each situation.
 
-.. _rl-working-with-profiles:
+.. _tp-working-with-profiles:
 
 Parameters and Profiles
 =======================
@@ -884,7 +884,7 @@ Tools
   ISO
   Generate ISO
 
-.. _rl-generate-iso:
+.. _tp-generate-iso:
 
 Generate ISO
 ++++++++++++
@@ -982,7 +982,7 @@ We have included the two scripts we use in the "misc" directory of the git repo:
 
 These scripts were written to support a very narrow set of expectations and environment and are almost certainly not suitable to just drop in, but they might provide a good starting point.
 
-.. _rl-queue-updates:
+.. _tp-queue-updates:
 
 Queue Updates and Snapshot CRConfig
 +++++++++++++++++++++++++++++++++++
@@ -1020,12 +1020,12 @@ To schedule updates for just one cache, use the "Server Checks" page, and click 
 .. index::
   Snapshot CRConfig
 
-.. _rl-snapshot-crconfig:
+.. _tp-snapshot-crconfig:
 
 Snapshot CRConfig
 ^^^^^^^^^^^^^^^^^
 
-Every 60 seconds Traffic Monitor will check with Traffic Ops to see if a new CRConfig snapshot exists; Traffic Monitor polls Traffic Ops for a new CRConfig, and Traffic Router polls Traffic Monitor for the same file. This is necessary to ensure that Traffic Monitor sees configuration changes first, which helps to ensure that the health and state of caches and delivery services propagates properly to Traffic Router. See :ref:`rl-ccr-profile` for more information on the CRConfig file.
+Every 60 seconds Traffic Monitor will check with Traffic Ops to see if a new CRConfig snapshot exists; Traffic Monitor polls Traffic Ops for a new CRConfig, and Traffic Router polls Traffic Monitor for the same file. This is necessary to ensure that Traffic Monitor sees configuration changes first, which helps to ensure that the health and state of caches and delivery services propagates properly to Traffic Router. See :ref:`tp-ccr-profile` for more information on the CRConfig file.
 
 To create a new snapshot, use the *Tools > Snapshot CRConfig* menu:
 
@@ -1049,7 +1049,7 @@ To create a new snapshot, use the *Tools > Snapshot CRConfig* menu:
   Invalidate Content
   Purge
 
-.. _rl-purge:
+.. _tp-purge:
 
 Invalidate Content
 ==================
@@ -1069,7 +1069,7 @@ To invalidate content:
 
   3. Click the **Submit** button.
 
-.. _rl-manage-dnssec-keys:
+.. _tp-manage-dnssec-keys:
 
 Manage DNSSEC Keys
 ====================
