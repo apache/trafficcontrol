@@ -29,6 +29,7 @@ package tc
  */
 
 import (
+	"encoding/json"
 	"errors"
 	"strconv"
 	"strings"
@@ -232,4 +233,9 @@ func (t *DeepCachingType) UnmarshalJSON(data []byte) error {
 		return errors.New(string(data) + " is not a DeepCachingType")
 	}
 	return nil
+}
+
+// MarshalJSON marshals into a JSON representation
+func (t DeepCachingType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.String())
 }
