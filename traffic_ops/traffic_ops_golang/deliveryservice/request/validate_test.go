@@ -22,62 +22,64 @@ package request
 import (
 	"errors"
 	"testing"
+
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 func TestStatusTransition(t *testing.T) {
 	bad := errors.New("")
 	var validTests = [][]error{
-		[]error{nil, nil, bad, bad, bad}, //statusDraft
-		[]error{nil, nil, nil, nil, bad}, //statusSubmitted
-		[]error{nil, nil, nil, bad, bad}, //statusRejected
-		[]error{bad, bad, bad, nil, nil}, //statusPending
-		[]error{bad, bad, bad, bad, nil}, //statusComplete
+		[]error{nil, nil, bad, bad, bad}, // Draft
+		[]error{nil, nil, nil, nil, bad}, // Submitted
+		[]error{nil, nil, nil, bad, bad}, // Rejected
+		[]error{bad, bad, bad, nil, nil}, // Pending
+		[]error{bad, bad, bad, bad, nil}, // Complete
 	}
 
 	// test all proper transitions
 	for i := range validTests {
-		from := requestStatus(i)
+		from := tc.RequestStatus(i)
 		for j, exp := range validTests[i] {
-			to := requestStatus(j)
+			to := tc.RequestStatus(j)
 			if exp == nil {
 				continue
 			}
 
-			exp = errors.New("invalid transition from " + from.name() + " to " + to.name())
-			if from.validTransition(to).Error() != exp.Error() {
-				t.Errorf("%s -> %s : expected %v, got %v", from.name(), to.name(), exp, from.validTransition(to))
+			exp = errors.New("invalid transition from " + from.Name() + " to " + to.Name())
+			if from.ValidTransition(to).Error() != exp.Error() {
+				t.Errorf("%s -> %s : expected %v, got %v", from.Name(), to.Name(), exp, from.ValidTransition(to))
 			}
 		}
 	}
 
 	// test names including out of range
 	i := -1
-	if requestStatus(i).name() != "INVALID" {
+	if tc.RequestStatus(i).Name() != "INVALID" {
 		t.Errorf("%d should be INVALID", i)
 	}
 
-	i = len(statusNames) + 1
-	if requestStatus(i).name() != "INVALID" {
+	i = len(tc.RequestStatusNames) + 1
+	if tc.RequestStatus(i).Name() != "INVALID" {
 		t.Errorf("%d should be INVALID", i)
 	}
 
-	if statusDraft.name() != "draft" {
-		t.Errorf("%d should be draft", int(statusDraft))
+	if tc.RequestStatusDraft.Name() != "draft" {
+		t.Errorf("%d should be draft", int(tc.RequestStatusDraft))
 	}
 
-	if statusSubmitted.name() != "submitted" {
-		t.Errorf("%d should be submitted", int(statusSubmitted))
+	if tc.RequestStatusSubmitted.Name() != "submitted" {
+		t.Errorf("%d should be submitted", int(tc.RequestStatusSubmitted))
 	}
 
-	if statusRejected.name() != "rejected" {
-		t.Errorf("%d should be rejected", int(statusRejected))
+	if tc.RequestStatusRejected.Name() != "rejected" {
+		t.Errorf("%d should be rejected", int(tc.RequestStatusRejected))
 	}
 
-	if statusPending.name() != "pending" {
-		t.Errorf("%d should be pending", int(statusPending))
+	if tc.RequestStatusPending.Name() != "pending" {
+		t.Errorf("%d should be pending", int(tc.RequestStatusPending))
 	}
 
-	if statusComplete.name() != "complete" {
-		t.Errorf("%d should be complete", int(statusComplete))
+	if tc.RequestStatusComplete.Name() != "complete" {
+		t.Errorf("%d should be complete", int(tc.RequestStatusComplete))
 	}
 }
