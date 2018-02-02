@@ -19,6 +19,8 @@
 .. |X| image:: ../../../../traffic_ops/app/public/images/bad.png
 .. |clock| image:: ../../../../traffic_ops/app/public/images/clock-black.png
 
+.. _usingtrafficportal:
+
 Traffic Portal - Using
 %%%%%%%%%%%%%%%%%%%%%%
 
