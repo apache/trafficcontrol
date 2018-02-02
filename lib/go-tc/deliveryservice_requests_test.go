@@ -26,6 +26,30 @@ import (
 	"testing"
 )
 
+func TestStatus(t *testing.T) {
+	type tester struct {
+		st   RequestStatus
+		name string
+	}
+	tests := []tester{
+		tester{RequestStatus(-1), "INVALID"},
+		tester{RequestStatus(9999), "INVALID"},
+		tester{RequestStatusDraft, "draft"},
+		tester{RequestStatusSubmitted, "submitted"},
+		tester{RequestStatusRejected, "rejected"},
+		tester{RequestStatusPending, "pending"},
+		tester{RequestStatusComplete, "complete"},
+	}
+
+	for _, tst := range tests {
+		got := tst.st.Name()
+		exp := tst.name
+		if got != exp {
+			t.Errorf("%v: expected %s, got %s", tst.st, exp, got)
+		}
+	}
+}
+
 func TestStatusTransition(t *testing.T) {
 	bad := errors.New("")
 	var validTests = [][]error{
@@ -51,29 +75,6 @@ func TestStatusTransition(t *testing.T) {
 				t.Errorf("%s -> %s : expected %v, got %v", from.Name(), to.Name(), exp, from.ValidTransition(to))
 			}
 		}
-	}
-
-	type tester struct {
-		st   RequestStatus
-		name string
-	}
-	tests := []tester{
-		tester{RequestStatus(-1), "INVALID"},
-		tester{RequestStatus(9999), "INVALID"},
-		tester{RequestStatusDraft, "draft"},
-		tester{RequestStatusSubmitted, "submitted"},
-		tester{RequestStatusRejected, "rejected"},
-		tester{RequestStatusPending, "pending"},
-		tester{RequestStatusComplete, "complete"},
-	}
-
-	for _, tst := range tests {
-		got := tst.st.Name()
-		exp := tst.name
-		if got != exp {
-			t.Errorf("%v: expected %s, got %s", tst.st, exp, got)
-		}
-
 	}
 }
 

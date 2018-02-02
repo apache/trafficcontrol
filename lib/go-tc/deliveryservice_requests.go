@@ -20,6 +20,8 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+
+	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
 // IDNoMod type is used to suppress JSON unmarshalling
@@ -92,6 +94,7 @@ func (r *RequestStatus) UnmarshalJSON(b []byte) error {
 	if err != nil {
 		return err
 	}
+	log.Debugf("from string '%s':  status %v", string(s), x)
 	*r = x
 	return nil
 }
