@@ -177,7 +177,7 @@ To install the Traffic Ops Developer environment:
 
 3. Set up a role (user) in Postgres
 
-   See Postgres instructions on init https://wiki.postgresql.org/wiki/First_steps 
+   See Postgres instructions on initdb https://wiki.postgresql.org/wiki/First_steps 
 
 
 4. Enter ``db/admin.pl --env=<enviroment name> setup`` to set up the traffic_ops database(s). 
