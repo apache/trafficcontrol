@@ -189,8 +189,8 @@ func CacheStatusFromString(s string) CacheStatus {
 type DeepCachingType string
 
 const (
+	DeepCachingTypeNever   = DeepCachingType("") // default value
 	DeepCachingTypeAlways  = DeepCachingType("ALWAYS")
-	DeepCachingTypeNever   = DeepCachingType("NEVER")
 	DeepCachingTypeInvalid = DeepCachingType("INVALID")
 )
 
@@ -200,7 +200,7 @@ func (t DeepCachingType) String() string {
 	case DeepCachingTypeAlways:
 		return string(t)
 	case DeepCachingTypeNever:
-		return string(t)
+		return "NEVER"
 	default:
 		return "INVALID"
 	}
