@@ -281,6 +281,22 @@ sub delete_ds {
 	my $id = shift;
 	my @regexp_id_list = $self->db->resultset('DeliveryserviceRegex')->search( { deliveryservice => $id } )->get_column('regex')->all();
 
+	my $ds = $self->db->resultset('Deliveryservice')->find( { id => $id } );
+	my $xml_id = $ds->xml_id;
+	my $sslkey = $xml_id."-latest";
+	my $response_container = $self->riak_get( "ssl", $sslkey );
+	my $response = $response_container->{"response"};
+	if ($response->is_success()) {
+		my $delete_response_container = $self->riak_delete( "ssl", $sslkey );
+		my $delete_response = $delete_response_container->{"response"};
+		if ( $delete_response->is_success() ) {
+			&log( $self, "Deleted ssl keys for Delivery Service $xml_id as part of its deletion", "APICHANGE" );
+		}
+		else {
+			return $self->alert( "Failed to delete ssl-keys for the delivery-service" );
+		}
+	}
+
 	my $dsname = $self->db->resultset('Deliveryservice')->search( { id => $id } )->get_column('xml_id')->single();
 	my $delete = $self->db->resultset('Deliveryservice')->search( { id => $id } );
 	$delete->delete();
