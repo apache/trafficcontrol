@@ -18,10 +18,6 @@ package tc
 import (
 	"encoding/json"
 	"errors"
-	"strconv"
-	"strings"
-
-	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
 // IDNoMod type is used to suppress JSON unmarshalling
@@ -69,25 +65,26 @@ func (a *IDNoMod) UnmarshalJSON([]byte) error {
 }
 
 // RequestStatus captures where in the workflow this request is
-type RequestStatus int
+type RequestStatus string
 
 const (
+	// RequestStatusInvalid -- invalid state
+	RequestStatusInvalid = "invalid"
 	// RequestStatusDraft -- newly created; not ready to be reviewed
-	RequestStatusDraft = RequestStatus(iota) // default
+	RequestStatusDraft = "draft"
 	// RequestStatusSubmitted -- newly created; ready to be reviewed
-	RequestStatusSubmitted
+	RequestStatusSubmitted = "submitted"
 	// RequestStatusRejected -- reviewed, but problems found
-	RequestStatusRejected
+	RequestStatusRejected = "rejected"
 	// RequestStatusPending -- reviewed and locked; ready to be implemented
-	RequestStatusPending
+	RequestStatusPending = "pending"
 	// RequestStatusComplete -- implemented and locked
-	RequestStatusComplete
-	// RequestStatusInvalid -- placeholder
-	RequestStatusInvalid = RequestStatus(-1)
+	RequestStatusComplete = "complete"
 )
 
-// RequestStatusNames -- user-visible string associated with each of the above
-var RequestStatusNames = [...]string{
+// RequestStatuses -- user-visible string associated with each of the above
+var RequestStatuses = []RequestStatus{
+	// "invalid" -- don't list here..
 	"draft",
 	"submitted",
 	"rejected",
@@ -97,46 +94,26 @@ var RequestStatusNames = [...]string{
 
 // UnmarshalJSON implements json.Unmarshaller
 func (r *RequestStatus) UnmarshalJSON(b []byte) error {
-	s := strings.Trim(string(b), `"`)
-	x, err := RequestStatusFromString(s)
+	new, err := RequestStatusFromString(string(b))
 	if err != nil {
 		return err
 	}
-	log.Debugf("from string '%s':  status %v", string(s), x)
-	*r = x
-	return nil
+	return json.Unmarshal([]byte(new), (*string)(r))
 }
 
 // UnmarshalJSON implements json.Marshaller
 func (r RequestStatus) MarshalJSON() ([]byte, error) {
-	i := int(r)
-	if i > len(RequestStatusNames) || i < 0 {
-		return nil, errors.New("RequestStatus " + strconv.Itoa(i) + " out of range")
-	}
-	return json.Marshal(RequestStatusNames[i])
+	return json.Marshal(string(r))
 }
 
 // RequestStatusFromString gets the status enumeration from a string
-func RequestStatusFromString(s string) (RequestStatus, error) {
-	if s == "" {
-		return RequestStatusDraft, nil
-	}
-	t := strings.ToLower(s)
-	for i, st := range RequestStatusNames {
-		if t == st {
-			return RequestStatus(i), nil
+func RequestStatusFromString(rs string) (RequestStatus, error) {
+	for _, s := range RequestStatuses {
+		if string(s) == rs {
+			return s, nil
 		}
 	}
-	return RequestStatusInvalid, errors.New(s + " is not a valid RequestStatus name")
-}
-
-// Name returns user-friendly string from the enumeration
-func (s RequestStatus) Name() string {
-	i := int(s)
-	if i < 0 || i > len(RequestStatusNames) {
-		return "INVALID"
-	}
-	return RequestStatusNames[i]
+	return RequestStatusInvalid, errors.New(rs + " is not a valid RequestStatus name")
 }
 
 // ValidTransition returns nil if the transition is allowed for the workflow, an error if not
@@ -174,5 +151,5 @@ func (s RequestStatus) ValidTransition(to RequestStatus) error {
 			return nil
 		}
 	}
-	return errors.New("invalid transition from " + s.Name() + " to " + to.Name())
+	return errors.New("invalid transition from " + string(s) + " to " + string(to))
 }
