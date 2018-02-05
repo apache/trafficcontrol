@@ -31,6 +31,7 @@ package tc
 import (
 	"encoding/json"
 	"errors"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"strconv"
 	"strings"
 )
@@ -224,7 +225,9 @@ func DeepCachingTypeFromString(s string) DeepCachingType {
 
 // UnmarshalJSON unmarshals a JSON representation of a DeepCachingType (i.e. a string) or returns an error if the DeepCachingType is invalid
 func (t *DeepCachingType) UnmarshalJSON(data []byte) error {
+	log.Debugf("-- DeepCachingType `%s`", string(data))
 	s, err := strconv.Unquote(string(data))
+	log.Debugf("-- Unquoted `%s`", string(s))
 	if err != nil {
 		return errors.New(string(data) + " JSON not quoted")
 	}
