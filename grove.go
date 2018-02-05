@@ -22,6 +22,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/grove/cache"
 	"github.com/apache/incubator-trafficcontrol/grove/config"
+	"github.com/apache/incubator-trafficcontrol/grove/plugin"
 	"github.com/apache/incubator-trafficcontrol/grove/remap"
 	"github.com/apache/incubator-trafficcontrol/grove/stat"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
@@ -61,7 +62,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	remapper, err := remap.LoadRemapper(cfg.RemapRulesFile)
+	plugins := plugin.Get()
+	remapper, err := remap.LoadRemapper(cfg.RemapRulesFile, plugins.LoadFuncs())
 	if err != nil {
 		log.Errorf("starting service: loading remap rules: %v\n", err)
 		os.Exit(1)
@@ -114,6 +116,7 @@ func main() {
 			time.Duration(cfg.ReqKeepAliveMS)*time.Millisecond,
 			cfg.ReqMaxIdleConns,
 			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
+			plugins,
 		)
 		cacheHandlerPointer := cache.NewHandlerPointer(cacheHandler)
 
@@ -129,6 +132,8 @@ func main() {
 	idleTimeout := time.Duration(cfg.ServerIdleTimeoutMS) * time.Millisecond
 	readTimeout := time.Duration(cfg.ServerReadTimeoutMS) * time.Millisecond
 	writeTimeout := time.Duration(cfg.ServerWriteTimeoutMS) * time.Millisecond
+
+	plugins.Startup.Call(cfg)
 
 	// TODO add config to not serve HTTP (only HTTPS). If port is not set?
 	httpServer := startServer(httpHandler, httpListener, httpConnStateCallback, cfg.Port, idleTimeout, readTimeout, writeTimeout, "http")
@@ -161,7 +166,7 @@ func main() {
 			}
 		}
 
-		remapper, err = remap.LoadRemapper(cfg.RemapRulesFile)
+		remapper, err = remap.LoadRemapper(cfg.RemapRulesFile, plugins.LoadFuncs())
 		if err != nil {
 			log.Errorf("starting service: loading remap rules: %v\n", err)
 			os.Exit(1)
@@ -200,6 +205,7 @@ func main() {
 			time.Duration(cfg.ReqKeepAliveMS)*time.Millisecond,
 			cfg.ReqMaxIdleConns,
 			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
+			plugins,
 		)
 		httpHandlerPointer.Set(httpCacheHandler)
 
@@ -217,6 +223,7 @@ func main() {
 			time.Duration(cfg.ReqKeepAliveMS)*time.Millisecond,
 			cfg.ReqMaxIdleConns,
 			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
+			plugins,
 		)
 		httpsHandlerPointer.Set(httpsCacheHandler)
 
