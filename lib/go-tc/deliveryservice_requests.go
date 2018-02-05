@@ -18,6 +18,7 @@ package tc
 import (
 	"encoding/json"
 	"errors"
+	"strconv"
 )
 
 // IDNoMod type is used to suppress JSON unmarshalling
@@ -94,11 +95,17 @@ var RequestStatuses = []RequestStatus{
 
 // UnmarshalJSON implements json.Unmarshaller
 func (r *RequestStatus) UnmarshalJSON(b []byte) error {
-	new, err := RequestStatusFromString(string(b))
+	u, err := strconv.Unquote(string(b))
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal([]byte(new), (*string)(r))
+
+	// just check to see if the string represents a valid requeststatus
+	_, err = RequestStatusFromString(u)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(b, (*string)(r))
 }
 
 // UnmarshalJSON implements json.Marshaller
@@ -108,6 +115,9 @@ func (r RequestStatus) MarshalJSON() ([]byte, error) {
 
 // RequestStatusFromString gets the status enumeration from a string
 func RequestStatusFromString(rs string) (RequestStatus, error) {
+	if rs == "" {
+		return RequestStatusDraft, nil
+	}
 	for _, s := range RequestStatuses {
 		if string(s) == rs {
 			return s, nil
@@ -118,6 +128,11 @@ func RequestStatusFromString(rs string) (RequestStatus, error) {
 
 // ValidTransition returns nil if the transition is allowed for the workflow, an error if not
 func (s RequestStatus) ValidTransition(to RequestStatus) error {
+	if s == RequestStatusRejected || s == RequestStatusComplete {
+		// once rejected or completed,  no changes allowed
+		return errors.New(string(s) + " request cannot be changed")
+	}
+
 	if s == to {
 		// no change -- always allowed
 		return nil
@@ -127,12 +142,12 @@ func (s RequestStatus) ValidTransition(to RequestStatus) error {
 	switch to {
 	case RequestStatusDraft:
 		// can go back to draft if submitted or rejected
-		if s == RequestStatusSubmitted || s == RequestStatusRejected {
+		if s == RequestStatusSubmitted {
 			return nil
 		}
 	case RequestStatusSubmitted:
 		// can go be submitted if draft or rejected
-		if s == RequestStatusDraft || s == RequestStatusRejected {
+		if s == RequestStatusDraft {
 			return nil
 		}
 	case RequestStatusRejected:

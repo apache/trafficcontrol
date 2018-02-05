@@ -32,8 +32,7 @@ func TestStatus(t *testing.T) {
 		name string
 	}
 	tests := []tester{
-		tester{RequestStatus(-1), "INVALID"},
-		tester{RequestStatus(9999), "INVALID"},
+		tester{RequestStatus("foo"), "invalid"},
 		tester{RequestStatusDraft, "draft"},
 		tester{RequestStatusSubmitted, "submitted"},
 		tester{RequestStatusRejected, "rejected"},
@@ -42,38 +41,46 @@ func TestStatus(t *testing.T) {
 	}
 
 	for _, tst := range tests {
-		got := tst.st.Name()
-		exp := tst.name
-		if got != exp {
-			t.Errorf("%v: expected %s, got %s", tst.st, exp, got)
+		v, _ := RequestStatusFromString(tst.name)
+		if tst.name != string(v) {
+			t.Errorf("%v: expected %s, got %s", tst, tst.name, string(v))
 		}
 	}
 }
 
 func TestStatusTransition(t *testing.T) {
-	bad := errors.New("")
+	bad := errors.New("bad error")
 	var validTests = [][]error{
-		//      Dra  Sub  Rej  Pen  Com
+		// To:  Dra  Sub  Rej  Pen  Com   // From:
 		[]error{nil, nil, bad, bad, bad}, // Draft
 		[]error{nil, nil, nil, nil, bad}, // Submitted
-		[]error{nil, nil, nil, bad, bad}, // Rejected
+		[]error{bad, bad, bad, bad, bad}, // Rejected
 		[]error{bad, bad, bad, nil, nil}, // Pending
-		[]error{bad, bad, bad, bad, nil}, // Complete
+		[]error{bad, bad, bad, bad, bad}, // Complete
 	}
 
 	// test all transitions
 	for i := range validTests {
-		from := RequestStatus(i)
+		from := RequestStatuses[i]
 		for j, exp := range validTests[i] {
-			to := RequestStatus(j)
-			if exp == nil {
+			to := RequestStatuses[j]
+			if exp != nil {
+				if from == RequestStatusRejected || from == RequestStatusComplete {
+					exp = errors.New(string(from) + " request cannot be changed")
+				} else {
+					exp = errors.New("invalid transition from " + string(from) + " to " + string(to))
+				}
+			}
+			got := from.ValidTransition(to)
+			if got == exp {
 				continue
 			}
 
-			exp = errors.New("invalid transition from " + from.Name() + " to " + to.Name())
-			if from.ValidTransition(to).Error() != exp.Error() {
-				t.Errorf("%s -> %s : expected %v, got %v", from.Name(), to.Name(), exp, from.ValidTransition(to))
+			if got != nil && exp != nil && got.Error() == exp.Error() {
+				continue
 			}
+
+			t.Errorf("%s -> %s : expected %++v, got %++v", string(from), string(to), exp, got)
 		}
 	}
 }
@@ -90,12 +97,11 @@ func TestRequestStatusJSON(t *testing.T) {
 	}
 
 	var r RequestStatus
-	err = json.Unmarshal(b, &r)
+	err = json.Unmarshal([]byte(b), &r)
 	if err != nil {
-		t.Errorf("Error unmarshalling %s: %s", b, err.Error())
+		t.Errorf("Error unmarshalling %s: %v", b, err)
 	}
 	if r != RequestStatusDraft {
 		t.Errorf("expected %v, got %v", RequestStatusDraft, r)
 	}
-
 }
