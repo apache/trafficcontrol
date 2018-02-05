@@ -78,6 +78,7 @@ public class AbstractServiceUpdaterTest {
 	public void itUsesETag() throws Exception {
 		Updater updater = new Updater();
 		updater.setDatabasesDirectory(databasesDirectory);
+		updater.dataBaseURL = "http://www.example.com";
 		updater.updateDatabase();
 
 		verify(connection, times(0)).setRequestProperty(eq("If-None-Match"), anyString());
