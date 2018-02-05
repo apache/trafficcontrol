@@ -9,6 +9,7 @@ import (
 	"unsafe"
 
 	"github.com/apache/incubator-trafficcontrol/grove/cacheobj"
+	"github.com/apache/incubator-trafficcontrol/grove/plugin"
 	"github.com/apache/incubator-trafficcontrol/grove/remap"
 	"github.com/apache/incubator-trafficcontrol/grove/stat"
 	"github.com/apache/incubator-trafficcontrol/grove/thread"
@@ -57,6 +58,7 @@ type Handler struct {
 	conns           *web.ConnMap
 	connectionClose bool
 	transport       *http.Transport
+	plugins         plugin.Plugins
 	// keyThrottlers     Throttlers
 	// nocacheThrottlers Throttlers
 }
@@ -99,6 +101,7 @@ func NewHandler(
 	reqKeepAlive time.Duration,
 	reqMaxIdleConns int,
 	reqIdleConnTimeout time.Duration,
+	plugins plugin.Plugins,
 ) *Handler {
 	transport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -135,6 +138,7 @@ func NewHandler(
 		conns:           conns,
 		connectionClose: connectionClose,
 		transport:       transport,
+		plugins:         plugins,
 		// keyThrottlers:     NewThrottlers(keyLimit),
 		// nocacheThrottlers: NewThrottlers(nocacheLimit),
 	}
@@ -217,15 +221,16 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		remappingProducer.ToClientHdrs().Mod(&cacheObj.RespHeaders)
-
 		responder.ResponseCode = cacheObj.Code
 		responder.OriginCode = cacheObj.OriginCode
+		hdrsPtr := &cacheObj.RespHeaders // create a new pointer, so we don't modify the cacheObj
+		bodyPtr := &cacheObj.Body        // create a new pointer, so we don't modify the cacheObj
 		responder.F = func() (uint64, error) {
-			return web.Respond(w, cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
+			return web.Respond(w, responder.ResponseCode, *hdrsPtr, *bodyPtr, connectionClose)
 		}
 		responder.SuccessfullyGotFromOrigin = true
 		responder.ProxyStr = cacheObj.ProxyURL
+		h.plugins.BeforeRespond.Call(remappingProducer.PluginCfg(), &responder.ResponseCode, hdrsPtr, bodyPtr) // note we pass a ref to the responder.ResponseCode, because we want to modify the Responder, to log the code correctly.
 		responder.Do()
 		return
 	}
@@ -243,7 +248,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		responder.ResponseCode = cacheObj.Code
 		responder.OriginCode = cacheObj.OriginCode
-		responder.SetResponse(cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
+		responder.SetResponse(cacheObj.Code, &cacheObj.RespHeaders, &cacheObj.Body, connectionClose)
 		responder.SuccessfullyGotFromOrigin = true
 		responder.OriginBytes = cacheObj.Size
 		responder.ProxyStr = cacheObj.ProxyURL
@@ -283,14 +288,16 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	log.Debugf("cache.Handler.ServeHTTP: '%v' responding with %v\n", cacheKey, cacheObj.Code)
-	remappingProducer.ToClientHdrs().Mod(&cacheObj.RespHeaders)
 
-	responder.SetResponse(cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body, connectionClose)
+	hdrsPtr := &cacheObj.RespHeaders // create a new pointer, so we don't modify the cacheObj
+	bodyPtr := &cacheObj.Body        // create a new pointer, so we don't modify the cacheObj
+	responder.ResponseCode = cacheObj.Code
+	responder.SetResponse(responder.ResponseCode, hdrsPtr, bodyPtr, connectionClose)
 	responder.SuccessfullyGotFromOrigin = true
 	responder.Reuse = canReuseStored
 	responder.OriginCode = cacheObj.OriginCode
-	responder.ResponseCode = cacheObj.Code
 	responder.OriginBytes = cacheObj.Size
 	responder.ProxyStr = cacheObj.ProxyURL
+	h.plugins.BeforeRespond.Call(remappingProducer.PluginCfg(), &responder.ResponseCode, hdrsPtr, bodyPtr)
 	responder.Do()
 }
