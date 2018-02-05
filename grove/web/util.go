@@ -96,6 +96,7 @@ func Request(transport *http.Transport, r *http.Request, proxyURL *url.URL) (int
 
 // Respond writes the given code, header, and body to the ResponseWriter. If connectionClose, a Connection: Close header is also written. Returns the bytes written, and any error.
 func Respond(w http.ResponseWriter, code int, header http.Header, body []byte, connectionClose bool) (uint64, error) {
+	// TODO move connectionClose to modhdr plugin
 	dH := w.Header()
 	CopyHeaderTo(header, &dH)
 	if connectionClose {

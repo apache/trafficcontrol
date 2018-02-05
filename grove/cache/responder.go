@@ -45,9 +45,9 @@ func NewResponder(w http.ResponseWriter, r *http.Request, statLog *StatLogger) *
 	return responder
 }
 
-// SetResponse is a helper which sets the RespondFunc of r to `web.Respond` with the given code, headers, body, and connectionClose
-func (r *Responder) SetResponse(code int, hdrs http.Header, body []byte, connectionClose bool) {
-	r.F = func() (uint64, error) { return web.Respond(r.W, code, hdrs, body, connectionClose) }
+// SetResponse is a helper which sets the RespondFunc of r to `web.Respond` with the given code, headers, body, and connectionClose. Note it takes a pointer to the headers and body, which may be modified after calling this but before the Do() sends the response.
+func (r *Responder) SetResponse(code int, hdrs *http.Header, body *[]byte, connectionClose bool) {
+	r.F = func() (uint64, error) { return web.Respond(r.W, code, *hdrs, *body, connectionClose) }
 }
 
 // Do responds to the client, according to the data in r, with the given code, headers, and body. It additionally writes to the event log, and adds statistics about this request. This should always be called for the final response to a client, in order to properly log, stat, and other final operations.

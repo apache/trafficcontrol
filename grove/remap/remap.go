@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/grove/chash"
+	"github.com/apache/incubator-trafficcontrol/grove/plugin"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -108,17 +109,17 @@ type RemappingProducer struct {
 	failures int
 }
 
-func (p *RemappingProducer) CacheKey() string        { return p.cacheKey }
-func (p *RemappingProducer) ConnectionClose() bool   { return p.rule.ConnectionClose }
-func (p *RemappingProducer) Name() string            { return p.rule.Name }
-func (p *RemappingProducer) DSCP() int               { return p.rule.DSCP }
-func (p *RemappingProducer) ToOriginHdrs() HdrModder { return &p.rule.ToOriginHeaders }
-func (p *RemappingProducer) ToClientHdrs() HdrModder { return &p.rule.ToClientHeaders }
+func (p *RemappingProducer) CacheKey() string                  { return p.cacheKey }
+func (p *RemappingProducer) ConnectionClose() bool             { return p.rule.ConnectionClose }
+func (p *RemappingProducer) Name() string                      { return p.rule.Name }
+func (p *RemappingProducer) DSCP() int                         { return p.rule.DSCP }
+func (p *RemappingProducer) ToOriginHdrs() HdrModder           { return &p.rule.ToOriginHeaders }
+func (p *RemappingProducer) ToClientHdrs() HdrModder           { return &p.rule.ToClientHeaders }
+func (p *RemappingProducer) PluginCfg() map[string]interface{} { return p.rule.Plugins }
 func (p *RemappingProducer) ToFQDN() string {
 	// TODO verify To is not allowed to be constructed with < 1 element
 	return strings.TrimPrefix(strings.TrimPrefix(p.rule.To[0].URL, "http://"), "https://")
 }
-
 func (p *RemappingProducer) ProxyStr() string {
 	if p.rule.To[0].ProxyURL != nil && p.rule.To[0].ProxyURL.Host != "" {
 		return p.rule.To[0].ProxyURL.Host
@@ -250,11 +251,12 @@ type RemapRulesBase struct {
 
 type RemapRulesJSON struct {
 	RemapRulesBase
-	Rules           []RemapRuleJSON     `json:"rules"`
-	RetryCodes      *[]int              `json:"retry_codes"`
-	TimeoutMS       *int                `json:"timeout_ms"`
-	ParentSelection *string             `json:"parent_selection"`
-	Stats           RemapRulesStatsJSON `json:"stats"`
+	Rules           []RemapRuleJSON            `json:"rules"`
+	RetryCodes      *[]int                     `json:"retry_codes"`
+	TimeoutMS       *int                       `json:"timeout_ms"`
+	ParentSelection *string                    `json:"parent_selection"`
+	Stats           RemapRulesStatsJSON        `json:"stats"`
+	Plugins         map[string]json.RawMessage `json:"plugins"`
 }
 
 type RemapRules struct {
@@ -264,6 +266,7 @@ type RemapRules struct {
 	Timeout         *time.Duration
 	ParentSelection *ParentSelectionType
 	Stats           RemapRulesStats
+	Plugins         map[string]interface{}
 }
 
 type RemapRuleToBase struct {
@@ -328,12 +331,13 @@ type RemapRuleBase struct {
 
 type RemapRuleJSON struct {
 	RemapRuleBase
-	TimeoutMS       *int              `json:"timeout_ms"`
-	ParentSelection *string           `json:"parent_selection"`
-	To              []RemapRuleToJSON `json:"to"`
-	Allow           []string          `json:"allow"`
-	Deny            []string          `json:"deny"`
-	RetryCodes      *[]int            `json:"retry_codes"`
+	TimeoutMS       *int                       `json:"timeout_ms"`
+	ParentSelection *string                    `json:"parent_selection"`
+	To              []RemapRuleToJSON          `json:"to"`
+	Allow           []string                   `json:"allow"`
+	Deny            []string                   `json:"deny"`
+	RetryCodes      *[]int                     `json:"retry_codes"`
+	Plugins         map[string]json.RawMessage `json:"plugins"`
 }
 
 type RemapRule struct {
@@ -345,6 +349,7 @@ type RemapRule struct {
 	Deny            []*net.IPNet
 	RetryCodes      map[int]struct{}
 	ConsistentHash  chash.ATSConsistentHash
+	Plugins         map[string]interface{}
 }
 
 func (r *RemapRule) Allowed(ip net.IP) bool {
@@ -441,7 +446,7 @@ func (r RemapRule) CacheKey(method string, fromURI string) string {
 	return key
 }
 
-func LoadRemapRules(path string) ([]RemapRule, *RemapRulesStats, error) {
+func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.PluginLoadF) ([]RemapRule, *RemapRulesStats, error) {
 	fmt.Printf("Loading Remap Rules\n")
 	defer func() {
 		fmt.Printf("Loaded Remap Rules\n")
@@ -458,6 +463,7 @@ func LoadRemapRules(path string) ([]RemapRule, *RemapRulesStats, error) {
 	}
 
 	remapRules := RemapRules{RemapRulesBase: remapRulesJSON.RemapRulesBase}
+
 	if remapRulesJSON.RetryCodes != nil {
 		remapRules.RetryCodes = make(map[int]struct{}, len(*remapRulesJSON.RetryCodes))
 		for _, code := range *remapRulesJSON.RetryCodes {
@@ -490,10 +496,29 @@ func LoadRemapRules(path string) ([]RemapRule, *RemapRulesStats, error) {
 		}
 	}
 
+	remapRules.Plugins = make(map[string]interface{}, len(remapRulesJSON.Plugins))
+	for name, b := range remapRulesJSON.Plugins {
+		if loadF := pluginConfigLoaders[name]; loadF != nil {
+			remapRules.Plugins[name] = loadF(b)
+		}
+	}
+
 	rules := make([]RemapRule, len(remapRulesJSON.Rules))
 	for i, jsonRule := range remapRulesJSON.Rules {
 		fmt.Printf("Creating Remap Rule %v\n", jsonRule.Name)
 		rule := RemapRule{RemapRuleBase: jsonRule.RemapRuleBase}
+
+		rule.Plugins = make(map[string]interface{}, len(jsonRule.Plugins))
+		for name, b := range jsonRule.Plugins {
+			if loadF := pluginConfigLoaders[name]; loadF != nil {
+				rule.Plugins[name] = loadF(b)
+			}
+		}
+		for name, loader := range remapRules.Plugins {
+			if _, ok := rule.Plugins[name]; !ok {
+				rule.Plugins[name] = loader
+			}
+		}
 
 		if jsonRule.RetryCodes != nil {
 			rule.RetryCodes = make(map[int]struct{}, len(*jsonRule.RetryCodes))
@@ -645,8 +670,8 @@ func makeIPNet(cidr string) (*net.IPNet, error) {
 	return cidrnet, nil
 }
 
-func LoadRemapper(path string) (HTTPRequestRemapper, error) {
-	rules, statRules, err := LoadRemapRules(path)
+func LoadRemapper(path string, pluginConfigLoaders map[string]plugin.PluginLoadF) (HTTPRequestRemapper, error) {
+	rules, statRules, err := LoadRemapRules(path, pluginConfigLoaders)
 	if err != nil {
 		return nil, err
 	}
