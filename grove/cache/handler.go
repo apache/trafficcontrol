@@ -267,17 +267,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	case remap.ReuseMustRevalidate:
 		log.Debugf("cache.Handler.ServeHTTP: '%v' must revalidate\n", cacheKey)
-		r.Header.Set("If-Modified-Since", cacheObj.RespRespTime.Format(time.RFC1123))
 		cacheObj, err = retrier.Get(r, cacheObj)
 		if err != nil {
 			log.Errorf("retrying get error: %v\n", err)
 			responder.Do()
 			return
 		}
-
 	case remap.ReuseMustRevalidateCanStale:
 		log.Debugf("cache.Handler.ServeHTTP: '%v' must revalidate (but allowed stale)\n", cacheKey)
-		r.Header.Set("If-Modified-Since", cacheObj.RespRespTime.Format(time.RFC1123))
 		oldCacheObj := cacheObj
 		cacheObj, err = retrier.Get(r, cacheObj)
 		if err != nil {
