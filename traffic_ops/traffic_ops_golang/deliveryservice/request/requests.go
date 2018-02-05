@@ -75,8 +75,8 @@ func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, d
 		return true, nil
 	}
 	if ds.TenantID == 0 {
-		log.Debugf("TenantID is 0 -- THIS SHOULD NEVER HAPPEN!!")
-		return false, errors.New("TenantID is 0 -- THIS SHOULD NEVER HAPPEN!!")
+		log.Debugf("tenantID is 0 -- THIS SHOULD NEVER HAPPEN!!")
+		return false, errors.New("tenantID is 0 -- THIS SHOULD NEVER HAPPEN!!")
 	}
 	return tenant.IsResourceAuthorizedToUser(ds.TenantID, user, db)
 }
@@ -152,13 +152,14 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	ds := req.DeliveryService
 	if ds == nil {
+		log.Debugln(" -- no ds")
 		return errors.New("no deliveryservice to create"), tc.DataMissingError
 	}
 	if ds.XMLID == nil {
+		log.Debugln(" -- no XMLID")
 		return errors.New("no xmlId associated with this request"), tc.DataMissingError
 	}
 	XMLID := *ds.XMLID
-
 	active, err := isActiveRequest(db, XMLID)
 	if err != nil {
 		return err, tc.SystemError

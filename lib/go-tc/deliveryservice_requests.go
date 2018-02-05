@@ -16,8 +16,10 @@ package tc
 */
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 )
 
@@ -108,9 +110,24 @@ func (r *RequestStatus) UnmarshalJSON(b []byte) error {
 	return json.Unmarshal(b, (*string)(r))
 }
 
-// UnmarshalJSON implements json.Marshaller
+// MarshalJSON implements json.Marshaller
 func (r RequestStatus) MarshalJSON() ([]byte, error) {
 	return json.Marshal(string(r))
+}
+
+// Value implements driver.Valuer
+func (r *RequestStatus) Value() (driver.Value, error) {
+	return json.Marshal(r)
+}
+
+// Scan implements sql.Scanner
+func (r *RequestStatus) Scan(src interface{}) error {
+	b, ok := src.([]byte)
+	if !ok {
+		return fmt.Errorf("expected requeststatus in byte array form; got %T", src)
+	}
+	b = []byte(`"` + string(b) + `"`)
+	return json.Unmarshal(b, r)
 }
 
 // RequestStatusFromString gets the status enumeration from a string
@@ -127,13 +144,13 @@ func RequestStatusFromString(rs string) (RequestStatus, error) {
 }
 
 // ValidTransition returns nil if the transition is allowed for the workflow, an error if not
-func (s RequestStatus) ValidTransition(to RequestStatus) error {
-	if s == RequestStatusRejected || s == RequestStatusComplete {
+func (r RequestStatus) ValidTransition(to RequestStatus) error {
+	if r == RequestStatusRejected || r == RequestStatusComplete {
 		// once rejected or completed,  no changes allowed
-		return errors.New(string(s) + " request cannot be changed")
+		return errors.New(string(r) + " request cannot be changed")
 	}
 
-	if s == to {
+	if r == to {
 		// no change -- always allowed
 		return nil
 	}
@@ -142,29 +159,29 @@ func (s RequestStatus) ValidTransition(to RequestStatus) error {
 	switch to {
 	case RequestStatusDraft:
 		// can go back to draft if submitted or rejected
-		if s == RequestStatusSubmitted {
+		if r == RequestStatusSubmitted {
 			return nil
 		}
 	case RequestStatusSubmitted:
 		// can go be submitted if draft or rejected
-		if s == RequestStatusDraft {
+		if r == RequestStatusDraft {
 			return nil
 		}
 	case RequestStatusRejected:
 		// only submitted can be rejected
-		if s == RequestStatusSubmitted {
+		if r == RequestStatusSubmitted {
 			return nil
 		}
 	case RequestStatusPending:
 		// only submitted can move to pending
-		if s == RequestStatusSubmitted {
+		if r == RequestStatusSubmitted {
 			return nil
 		}
 	case RequestStatusComplete:
 		// only pending can be completed.  Completed can never change.
-		if s == RequestStatusPending {
+		if r == RequestStatusPending {
 			return nil
 		}
 	}
-	return errors.New("invalid transition from " + string(s) + " to " + string(to))
+	return errors.New("invalid transition from " + string(r) + " to " + string(to))
 }
