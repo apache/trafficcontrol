@@ -415,6 +415,7 @@ Special regular expressions called Filters can also be configured for target del
 A client can bypass the steering functionality by providing a header called X-TC-Steering-Option with the xml_id of the target delivery service to route to.  When Traffic Router receives this header it will route to the requested target delivery service regardless of weight configuration.
 
 Some other points of interest:
+
 - Steering is currently only available for HTTP delivery services that are a part of the same CDN.
 - A new role called STEERING has been added to the traffic ops database.  Only users with Admin or Steering privileges can modify steering assignments for a Delivery Service.
 - A new API has been created in Traffic Ops under /internal.  This API is used by a Steering user to add filters and modify assignments.  (Filters can only be added via the API).
