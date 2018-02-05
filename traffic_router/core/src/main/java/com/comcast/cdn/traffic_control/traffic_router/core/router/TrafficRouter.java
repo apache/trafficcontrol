@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.comcast.cdn.traffic_control.traffic_router.configuration.ConfigurationListener;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringTarget;
@@ -772,7 +773,7 @@ public class TrafficRouter {
 		for (final SteeringTarget steeringTarget : steeringTargets) {
 			final DeliveryService target = cacheRegister.getDeliveryService(steeringTarget.getDeliveryService());
 
-			if (target != null) {
+			if (target != null) { // target might not be in CRConfig yet
 				deliveryServices.add(target);
 			}
 		}
@@ -797,10 +798,17 @@ public class TrafficRouter {
 
 		final String bypassDeliveryServiceId = steering.getBypassDestination(requestPath);
 		if (bypassDeliveryServiceId != null && !bypassDeliveryServiceId.isEmpty()) {
-			return cacheRegister.getDeliveryService(bypassDeliveryServiceId);
+			final DeliveryService bypass = cacheRegister.getDeliveryService(bypassDeliveryServiceId);
+			if (bypass != null) { // bypass DS target might not be in CRConfig yet. Until then, try existing targets
+				return bypass;
+			}
 		}
 
-		final SteeringTarget steeringTarget = consistentHasher.selectHashable(steering.getTargets(), deliveryService.getDispersion(), requestPath);
+		// only select from targets in CRConfig
+		final List<SteeringTarget> availableTargets = steering.getTargets().stream()
+				.filter(target -> cacheRegister.getDeliveryService(target.getDeliveryService()) != null)
+				.collect(Collectors.toList());
+		final SteeringTarget steeringTarget = consistentHasher.selectHashable(availableTargets, deliveryService.getDispersion(), requestPath);
 		return cacheRegister.getDeliveryService(steeringTarget.getDeliveryService());
 	}
 
