@@ -20,6 +20,8 @@ package request
  */
 
 import (
+	"fmt"
+
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
@@ -29,16 +31,16 @@ import (
 
 // Validate ensures all required fields are present and in correct form.  Also checks request JSON is complete and valid
 func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
-	validation.NewStringRule(tovalidate.NoPeriods, "cannot contain periods")
 	fromStatus := req.Status
 
 	validTransition := func(s interface{}) error {
-		toStatus, err := tc.RequestStatusFromString(s.(string))
-		if err != nil {
-			return err
+		toStatus, ok := s.(tc.RequestStatus)
+		if !ok {
+			return fmt.Errorf("Expected tc.RequestStatus type,  got %T", s)
 		}
 		return fromStatus.ValidTransition(toStatus)
 	}
+
 	errMap := validation.Errors{
 		"changeType":      validation.Validate(req.ChangeType, validation.Required),
 		"deliveryservice": validation.Validate(req.DeliveryService, validation.Required),

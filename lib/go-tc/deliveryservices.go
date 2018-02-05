@@ -1,5 +1,11 @@
 package tc
 
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
+)
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -169,6 +175,23 @@ type DeliveryServiceNullable struct {
 	TypeName                 string                 `json:"typeName"`
 	TypeID                   *int                   `json:"typeId" db:"type"`
 	XMLID                    *string                `json:"xmlId" db:"xml_id"`
+}
+
+// Value implements the driver.Valuer interface
+// marshals struct to json to pass back as a json.RawMessage
+func (d *DeliveryServiceNullable) Value() (driver.Value, error) {
+	b, err := json.Marshal(d)
+	return b, err
+}
+
+// Scan implements the sql.Scanner interface
+// expects json.RawMessage and unmarshals to a deliveryservice struct
+func (d *DeliveryServiceNullable) Scan(src interface{}) error {
+	b, ok := src.([]byte)
+	if !ok {
+		return fmt.Errorf("expected deliveryservice in byte array form; got %T", src)
+	}
+	return json.Unmarshal(b, d)
 }
 
 // DeliveryServiceMatch ...
