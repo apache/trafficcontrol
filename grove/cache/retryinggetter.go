@@ -102,6 +102,9 @@ func GetAndCache(
 		if proxyURL != nil {
 			proxyURLStr = proxyURL.Host
 		}
+		if revalidateObj != nil {
+			req.Header.Set("If-Modified-Since", revalidateObj.RespRespTime.Format(time.RFC1123))
+		}
 		respCode, respHeader, respBody, reqTime, reqRespTime, err := web.Request(transport, req, proxyURL)
 		if err != nil {
 			log.Errorf("Parent error for URI %v %v %v cacheKey %v rule %v parent %v error %v\n", req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), cacheKey, remapName, proxyURLStr, err)
@@ -121,15 +124,14 @@ func GetAndCache(
 		}
 
 		obj := (*cacheobj.CacheObj)(nil)
-		// TODO This means if we can't cache the object, we return nil. Verify this is ok
-		if !remap.CanCache(reqHeader, respCode, respHeader, strictRFC) {
-			return cacheobj.New(reqHeader, respBody, respCode, respCode, proxyURLStr, respHeader, reqTime, reqRespTime, reqRespTime)
-		}
 		log.Debugf("h.cache.AddSize %v\n", cacheKey)
 		log.Debugf("GetAndCache respCode %v\n", respCode)
-		if revalidateObj == nil || respCode < 300 || respCode > 399 {
+		if revalidateObj == nil || respCode != http.StatusNotModified {
 			log.Debugf("GetAndCache new %v\n", cacheKey)
 			obj = cacheobj.New(reqHeader, respBody, respCode, respCode, proxyURLStr, respHeader, reqTime, reqRespTime, respRespTime)
+			if !remap.CanCache(reqHeader, respCode, respHeader, strictRFC) {
+				return obj // return without caching
+			}
 		} else {
 			log.Debugf("GetAndCache revalidating %v\n", cacheKey)
 			// must copy, because this cache object may be concurrently read by other goroutines
