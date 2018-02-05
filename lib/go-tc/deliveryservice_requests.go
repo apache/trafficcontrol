@@ -40,7 +40,7 @@ type DeliveryServiceRequest struct {
 	LastEditedBy    string          `json:"lastEditedBy,omitempty"`
 	LastEditedByID  IDNoMod         `json:"lastEditedById,omitempty"`
 	LastUpdated     *TimeNoMod      `json:"lastUpdated"`
-	DeliveryService DeliveryService `json:"deliveryService"`
+	DeliveryService json.RawMessage `json:"deliveryService"`
 	Status          RequestStatus   `json:"status"`
 	XMLID           string          `json:"-" db:"xml_id"`
 }
