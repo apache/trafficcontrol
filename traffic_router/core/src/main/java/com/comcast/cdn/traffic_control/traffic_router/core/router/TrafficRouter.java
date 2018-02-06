@@ -85,6 +85,8 @@ public class TrafficRouter {
 	private final ConsistentHasher consistentHasher = new ConsistentHasher();
 	private SteeringRegistry steeringRegistry;
 
+	private final Geolocation defaultLocationToOverride;
+
 	public TrafficRouter(final CacheRegister cr, 
 			final GeolocationService geolocationService, 
 			final GeolocationService geolocationService6, 
@@ -98,6 +100,13 @@ public class TrafficRouter {
 		this.federationRegistry = federationRegistry;
 		this.consistentDNSRouting = JsonUtils.optBoolean(cr.getConfig(), "consistent.dns.routing");
 		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils, trafficRouterManager);
+		final double geoLat = JsonUtils.optDouble(cr.getConfig(), "default.lat.to.override");
+		final double geoLong = JsonUtils.optDouble(cr.getConfig(), "default.long.to.override");
+		if (geoLat != 0 && geoLong != 0) {
+			this.defaultLocationToOverride = new Geolocation(geoLat, geoLong);
+		} else {
+			this.defaultLocationToOverride = null;
+		}
 	}
 
 	public ZoneManager getZoneManager() {
@@ -306,6 +315,10 @@ public class TrafficRouter {
 				track.setResultDetails(ResultDetails.DS_CLIENT_GEO_UNSUPPORTED);
 				return null;
 			}
+		}
+
+		if (deliveryService.getMissLocation() != null && clientLocation.equals(this.defaultLocationToOverride)) {
+			clientLocation = deliveryService.getMissLocation();
 		}
 
 		final List<Cache> caches = getCachesByGeo(deliveryService, clientLocation, track);
