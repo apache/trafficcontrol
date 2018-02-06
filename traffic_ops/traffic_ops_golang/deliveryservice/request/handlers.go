@@ -77,15 +77,14 @@ func getDeliveryServiceRequests(v url.Values, db *sqlx.DB) ([]tc.DeliveryService
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]string{
-		"assignee":    "s.username",
-		"assigneeId":  "r.assignee_id",
-		"author":      "a.username",
-		"authorId":    "r.author_id",
-		"changeType":  "r.change_type",
-		"id":          "r.id",
-		"lastUpdated": "r.last_updated",
-		"status":      "r.status",
-		"xmlId":       "r.deliveryservice->>'xmlId'",
+		"assignee":   "s.username",
+		"assigneeId": "r.assignee_id",
+		"author":     "a.username",
+		"authorId":   "r.author_id",
+		"changeType": "r.change_type",
+		"id":         "r.id",
+		"status":     "r.status",
+		"xmlId":      "r.deliveryservice->>'xmlId'",
 	}
 
 	query, queryValues := dbhelpers.BuildQuery(v, selectDeliveryServiceRequestsQuery(), queryParamsToQueryCols)
