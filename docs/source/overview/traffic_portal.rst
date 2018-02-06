@@ -18,26 +18,16 @@
 	
 Traffic Portal
 ==============
-Traffic Portal is an `AngularJS 1.x <https://angularjs.org/>`_ client served from a `Node.js <https://nodejs.org/en/>`_ web server designed to consume the Traffic Ops 1.x API. Traffic Portal provides a set of functionality restricted to the delivery service(s) of the authenticated user. Functionality primarily includes a set of charts / graphs designed to provide insight into the performance of a user's delivery service(s).
+Traffic Portal is an `AngularJS 1.x <https://angularjs.org/>`_ client served from a `Node.js <https://nodejs.org/en/>`_ web server designed to consume the Traffic Ops API. It is the official replacement for the legacy Traffic Ops UI.
 
-Charts / Graphs include:
+Features include:
 
-	- Overall Cache Group Status
-	- Delivery Service Bandwidth Per Second
-	- Delivery Service Transactions Per Second
-	- Delivery Service HTTP Status By Class
-	- Delivery Service Capacity
-	- Delivery Service Routing Methods
-	- Delivery Service Cache Group Status
+	- CDN Monitoring
+	- CDN Administration
+	- Delivery Service Configuration
+	- Cache Maintenance
 
-Other features:
-
-	- Ability to manager user profile
-	- Ability to reset user password
-	- Ability to view delivery service configuration
-	- Ability to invalidate content for a delivery service
-	- Ability to retrieve all caches associated with a delivery service
-	- Ability to request a new delivery service
+See :ref:`usingtrafficportal`
 
 
 
