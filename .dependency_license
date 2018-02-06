@@ -85,6 +85,7 @@ Lato-Bold\.ttf$, SIL OFL 1.1
 Lato-Regular\.ttf$, SIL OFL 1.1
 ssl-bundle\.crt$, MPL
 ^traffic_portal/app/src/assets/images/sort_, MIT
+^traffic_ops/app/public/images/spinner-small\.gif$, WTFPL
 
 # Code dependencies
 #
