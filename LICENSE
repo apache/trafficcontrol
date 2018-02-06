@@ -428,3 +428,7 @@ The govalidator component is used under the MIT license:
 The ozzo-validation component is used under the MIT license:
 @traffic_ops/traffic_ops_golang/vendor/github.com/go-ozzo/ozzo-validation/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/go-ozzo/ozzo-validation/LICENSE
+
+The spinner-small.gif is used under the WTFPL license:
+@traffic_ops/app/public/images/spinner-small.gif
+./licenses/WTFPL
