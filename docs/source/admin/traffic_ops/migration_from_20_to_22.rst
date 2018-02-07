@@ -13,11 +13,6 @@
 .. limitations under the License.
 .. 
 
-.. index::
-  Traffic Ops - Migrating from Traffic Ops 2.0 to Traffic Ops 2.2
-  
-.. _rl-migration_2_2:
-
 Traffic Ops - Migrating from 2.0 to 2.2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
