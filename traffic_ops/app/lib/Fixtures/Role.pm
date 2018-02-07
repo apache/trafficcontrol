@@ -70,7 +70,7 @@ my %definition_for = (
 			id          => 6,
 			name        => 'portal',
 			description => 'Portal User',
-			priv_level  => 2,
+			priv_level  => 15,
 		},
 	},
 	steering => {

@@ -261,42 +261,42 @@ sub delete {
 	my $version = $self->param('version');
 	my $response_container;
 	my $response;
-	if ( !&is_admin($self) ) {
-		return $self->alert( { Error => " - You must be an ADMIN to perform this operation!" } );
+
+	if ( !&is_portal($self) ) {
+		return $self->forbidden();
+	}
+
+	my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $xml_id })->single();
+	if (!$ds) {
+		return $self->alert( { Error => " - Could not found delivery service with xml_id=$xml_id!" } );
+	}
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+	if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
+		return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+	}
+	my $key = $xml_id;
+	if ($version) {
+		$key = $key . "-" . $version;
+		$self->app->log->info("deleting key_type = ssl, key = $key");
+		$response_container = $self->riak_delete( "ssl", $key );
+		$response = $response_container->{"response"};
 	}
 	else {
-		my $ds = $self->db->resultset('Deliveryservice')->search( { xml_id => $xml_id })->single();
-		if (!$ds) {
-			return $self->alert( { Error => " - Could not found delivery service with xml_id=$xml_id!" } );
-		}
-		my $tenant_utils = Utils::Tenant->new($self);
-		my $tenants_data = $tenant_utils->create_tenants_data_from_db();
-		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
-			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
-		}
-		my $key = $xml_id;
-		if ($version) {
-			$key = $key . "-" . $version;
-			$self->app->log->info("deleting key_type = ssl, key = $key");
-			$response_container = $self->riak_delete( "ssl", $key );
-			$response = $response_container->{"response"};
-		}
-		else {
-			#TODO figure out riak searching so we dont have to hardcode "latest"
-			$key = "$key-latest";
-			$self->app->log->info("deleting key_type = ssl, key = $key");
-			$response_container = $self->riak_delete( "ssl", $key );
-			$response = $response_container->{"response"};
-		}
+		#TODO figure out riak searching so we dont have to hardcode "latest"
+		$key = "$key-latest";
+		$self->app->log->info("deleting key_type = ssl, key = $key");
+		$response_container = $self->riak_delete( "ssl", $key );
+		$response = $response_container->{"response"};
+	}
 
-		# $self->app->log->info("delete rc = $rc");
-		if ( $response->is_success() ) {
-			&log( $self, "Deleted ssl keys for Delivery Service $xml_id", "APICHANGE" );
-			return $self->success("Successfully deleted ssl keys for $key");
-		}
-		else {
-			return $self->alert( $response->content );
-		}
+	# $self->app->log->info("delete rc = $rc");
+	if ( $response->is_success() ) {
+		&log( $self, "Deleted ssl keys for Delivery Service $xml_id", "APICHANGE" );
+		return $self->success("Successfully deleted ssl keys for $key");
+	}
+	else {
+		return $self->alert( $response->content );
 	}
 }
 
