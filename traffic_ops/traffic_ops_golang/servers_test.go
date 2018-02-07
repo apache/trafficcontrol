@@ -158,7 +158,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := map[string]string{"cachegroup": "cachegroup2"}
+	v := map[string]string{"cachegroup": "2"}
 
 	servers, errs, errType := getServers(v, db, auth.PrivLevelAdmin)
 	log.Debugln("%v-->", servers)

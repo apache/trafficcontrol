@@ -20,7 +20,6 @@ package dbhelpers
  */
 
 import (
-	"net/url"
 	"strings"
 	"testing"
 	"unicode"
@@ -36,9 +35,7 @@ func stripAllWhitespace(s string) string {
 }
 
 func TestBuildQuery(t *testing.T) {
-	v := url.Values{}
-	v.Set("param1", "queryParamv1")
-	v.Set("param2", "queryParamv2")
+	v := map[string]string{"param1": "queryParamv1","param2": "queryParamv2"}
 
 	selectStmt := `SELECT
 	t.col1,
@@ -47,18 +44,18 @@ FROM table t
 `
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
-	queryParamsToSQLCols := map[string]string{
-		"param1": "t.col1",
-		"param2": "t.col2",
+	queryParamsToSQLCols := map[string]WhereColumnInfo{
+		"param1": WhereColumnInfo{"t.col1",nil},
+		"param2": WhereColumnInfo{"t.col2",nil},
 	}
-	query, queryValues := BuildQuery(v, selectStmt, queryParamsToSQLCols)
-
+	where, orderBy, queryValues, _ := BuildWhereAndOrderBy(v, queryParamsToSQLCols)
+	query := selectStmt + where + orderBy
 	actualQuery := stripAllWhitespace(query)
 
 	if queryValues == nil {
 		t.Errorf("expected: nil error, actual: %v", queryValues)
 	}
-	expectedV1 := v.Get("param1")
+	expectedV1 := v["param1"]
 	actualV1 := queryValues["param1"]
 	if expectedV1 != actualV1 {
 		t.Errorf("expected: %v error, actual: %v", expectedV1, actualV1)
@@ -68,7 +65,7 @@ FROM table t
 		t.Errorf("expected: %v error, actual: %v", actualQuery, expectedV1)
 	}
 
-	expectedV2 := v.Get("param2")
+	expectedV2 := v["param2"]
 	if strings.Contains(actualQuery, expectedV2) {
 		t.Errorf("expected: %v error, actual: %v", actualQuery, expectedV2)
 	}

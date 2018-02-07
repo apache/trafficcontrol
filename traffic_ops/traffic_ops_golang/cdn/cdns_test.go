@@ -20,7 +20,6 @@ package cdn
  */
 
 import (
-	"net/url"
 	"testing"
 	"time"
 
@@ -79,12 +78,11 @@ func TestReadCDNs(t *testing.T) {
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := url.Values{}
-	v.Set("dsId", "1")
+	v := map[string]string{"dsId": "1"}
 
-	servers, err, _ := refType.Read(db, v, auth.CurrentUser{})
-	if err != nil {
-		t.Errorf("cdn.Read expected: nil error, actual: %v", err)
+	servers, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+	if len(errs) > 0 {
+		t.Errorf("cdn.Read expected: no errors, actual: %v", errs)
 	}
 
 	if len(servers) != 2 {
