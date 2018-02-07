@@ -90,7 +90,7 @@ public class SteeringTest {
 			weights.put(targetId, targetWeight);
 			domains.put(targetId, "");
 		}
-        System.out.println("steeringNode.get = "+ steeringNode.get("deliveryService").asText());
+        //System.out.println("steeringNode.get = "+ steeringNode.get("deliveryService").asText());
 		return steeringNode.get("deliveryService").asText();
 	}
 
@@ -153,7 +153,7 @@ public class SteeringTest {
 			response = httpClient.execute(httpGet);
 			assertThat("Failed getting 302 for request " + httpGet.getFirstHeader("Host").getValue(), response.getStatusLine().getStatusCode(), equalTo(302));
 			assertThat(response.getFirstHeader("Location").getValue(), isIn(validLocations));
-			System.out.println("itUsesSteered = "+response.getFirstHeader("Location").getValue());
+			//System.out.println("itUsesSteered = "+response.getFirstHeader("Location").getValue());
 		} finally {
 			if (response != null) { response.close(); }
 		}
@@ -224,7 +224,7 @@ public class SteeringTest {
 			results.put(steeredId, 0);
 		}
 
-		System.out.println("Going to execute " + count + " requests through steering delivery service '" + steeringDeliveryServiceId + "'");
+		//System.out.println("Going to execute " + count + " requests through steering delivery service '" + steeringDeliveryServiceId + "'");
 
 		for (int i = 0; i < count; i++) {
 			String path = generateRandomPath();

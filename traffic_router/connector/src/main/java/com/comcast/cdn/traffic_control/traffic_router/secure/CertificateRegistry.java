@@ -15,6 +15,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.secure;
 
+import com.comcast.cdn.traffic_control.traffic_router.protocol.RouterNioEndpoint;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 
 import java.util.ArrayList;
@@ -27,6 +28,8 @@ public class CertificateRegistry {
 
 	private CertificateDataConverter certificateDataConverter = new CertificateDataConverter();
 	volatile private Map<String, HandshakeData>	handshakeDataMap = new HashMap<>();
+	private RouterNioEndpoint sslEndpoint = null;
+	final private Map<String, CertificateData> previousData = new HashMap<>();
 
 	// Recommended Singleton Pattern implementation
 	// https://community.oracle.com/docs/DOC-918906
@@ -45,25 +48,64 @@ public class CertificateRegistry {
 		return handshakeDataMap.get(alias);
 	}
 
+	public Map<String, HandshakeData> getHandshakeData() {
+	    return handshakeDataMap;
+    }
+
+	public void setEndPoint(final RouterNioEndpoint routerNioEndpoint) {
+		sslEndpoint = routerNioEndpoint;
+	}
+
 	@SuppressWarnings("PMD.AccessorClassGeneration")
 	private static class CertificateRegistryHolder {
 		private static final CertificateRegistry DELIVERY_SERVICE_CERTIFICATES = new CertificateRegistry();
 	}
 
-	public void importCertificateDataList(final List<CertificateData> certificateDataList) {
-		final Map<String, HandshakeData> map = new HashMap<>();
+	synchronized public void importCertificateDataList(final List<CertificateData> certificateDataList) {
+		log.info("CertificateRegistry.import" );
+		final Map<String, HandshakeData> changes = new HashMap<>();
+		final Map<String, HandshakeData> master = new HashMap<>();
+
+		// find CertificateData which has changed
 		for (final CertificateData certificateData : certificateDataList) {
 			try {
-				final HandshakeData handshakeData = certificateDataConverter.toHandshakeData(certificateData);
-				final String alias = handshakeData.getHostname().replaceFirst("\\*\\.", "");
-				log.warn("Imported handshake data with alias " + alias);
-				map.put(alias, handshakeData);
-			} catch (Exception e) {
+			final HandshakeData handshakeData = certificateDataConverter.toHandshakeData(certificateData);
+			final String alias = handshakeData.getHostname().replaceFirst("\\*\\.", "");
+			master.put(alias, handshakeData);
+
+			if (certificateData.equals(previousData.get(certificateData.getHostname()))) {
+				continue;
+			}
+			changes.put(alias, handshakeData);
+			log.warn("Imported handshake data with alias " + alias);
+		} catch (Exception e) {
 				log.error("Failed to import certificate data for delivery service: '" + certificateData.getDeliveryservice() + "', hostname: '" + certificateData.getHostname() + "'");
 			}
 		}
 
-		handshakeDataMap = map;
+		// find CertificateData which has been removed
+		for (final String hostname : previousData.keySet())
+		{
+			if (!master.containsKey(hostname.replaceFirst("\\*\\.", "")) && sslEndpoint != null)
+			{
+					sslEndpoint.removeSslHostConfig(hostname);
+				    log.warn("Removed handshake data with hostname " + hostname);
+			}
+		}
+
+		// store the result for the next import
+		previousData.clear();
+		for (final CertificateData certificateData : certificateDataList )
+		{
+			previousData.put(certificateData.getHostname(), certificateData);
+		}
+
+		handshakeDataMap = master;
+
+		if (sslEndpoint != null ) {
+			sslEndpoint.reloadSSLHosts(changes);
+		}
+
 	}
 
 	public CertificateDataConverter getCertificateDataConverter() {

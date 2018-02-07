@@ -16,7 +16,6 @@
 package com.comcast.cdn.traffic_control.traffic_router.protocol;
 
 import java.lang.management.ManagementFactory;
-
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
@@ -47,7 +46,7 @@ public class LanguidPoller extends Thread {
 				if (firstTime) {
 					log.info("Waiting for ready state from Traffic Router before accepting connections on port " + port);
 				}
-				
+
 				if (ready) {
 					if (port > 0) {
 						protocolHandler.setPort(port);
@@ -58,6 +57,7 @@ public class LanguidPoller extends Thread {
 					protocolHandler.init();
 					break;
 				}
+
 			} catch (Exception ex) {
 				// the above will throw an exception if the mbean has yet to be published
 				log.debug(ex);
