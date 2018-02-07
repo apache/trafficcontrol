@@ -37,6 +37,7 @@ Once everything is installed, you will need to configure the servers to talk to 
   traffic_ops/installation.rst
   traffic_ops/default_profiles.rst
   traffic_ops/migration_from_10_to_20.rst
+  traffic_ops/migration_from_20_to_22.rst
   traffic_ops/configuration.rst
   traffic_ops/using.rst
   traffic_ops/extensions.rst
