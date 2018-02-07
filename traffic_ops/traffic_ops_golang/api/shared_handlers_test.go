@@ -32,8 +32,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
 
-	"net/url"
-
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
@@ -74,7 +72,7 @@ func (i *tester) SetID(newID int) {
 }
 
 //Reader interface functions
-func (i *tester) Read(db *sqlx.DB, v url.Values, user auth.CurrentUser) ([]interface{}, error, tc.ApiErrorType) {
+func (i *tester) Read(db *sqlx.DB, v map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
 	return []interface{}{tester{ID: 1}}, nil, tc.NoError
 }
 
@@ -152,7 +150,7 @@ func TestReadHandler(t *testing.T) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey,
 		auth.CurrentUser{UserName: "username", ID: 1, PrivLevel: auth.PrivLevelAdmin})
-	ctx = context.WithValue(ctx, PathParamsKey, PathParams{"id": "1"})
+	ctx = context.WithValue(ctx, PathParamsKey, map[string]string{"id": "1"})
 	// Add our context to the request
 	r = r.WithContext(ctx)
 
@@ -187,7 +185,7 @@ func TestUpdateHandler(t *testing.T) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey,
 		auth.CurrentUser{UserName: "username", ID: 1, PrivLevel: auth.PrivLevelAdmin})
-	ctx = context.WithValue(ctx, PathParamsKey, PathParams{"id": "1"})
+	ctx = context.WithValue(ctx, PathParamsKey, map[string]string{"id": "1"})
 	// Add our context to the request
 	r = r.WithContext(ctx)
 
@@ -226,7 +224,7 @@ func TestDeleteHandler(t *testing.T) {
 	ctx := r.Context()
 	ctx = context.WithValue(ctx, auth.CurrentUserKey,
 		auth.CurrentUser{UserName: "username", ID: 1, PrivLevel: auth.PrivLevelAdmin})
-	ctx = context.WithValue(ctx, PathParamsKey, PathParams{"id": "1"})
+	ctx = context.WithValue(ctx, PathParamsKey, map[string]string{"id": "1"})
 	// Add our context to the request
 	r = r.WithContext(ctx)
 
