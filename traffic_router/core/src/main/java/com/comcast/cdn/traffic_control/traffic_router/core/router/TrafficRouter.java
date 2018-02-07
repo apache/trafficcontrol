@@ -22,6 +22,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +87,8 @@ public class TrafficRouter {
 	private final ConsistentHasher consistentHasher = new ConsistentHasher();
 	private SteeringRegistry steeringRegistry;
 
+	private final Map<String, Geolocation> defaultGeolocations = new HashMap<String, Geolocation>();
+
 	public TrafficRouter(final CacheRegister cr, 
 			final GeolocationService geolocationService, 
 			final GeolocationService geolocationService6, 
@@ -99,6 +102,19 @@ public class TrafficRouter {
 		this.federationRegistry = federationRegistry;
 		this.consistentDNSRouting = JsonUtils.optBoolean(cr.getConfig(), "consistent.dns.routing");
 		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils, trafficRouterManager);
+
+		if (cr.getConfig() != null) {
+			// geolocationOverride: {CountryCode: , Lat: , Long: }
+			final JsonNode geolocations = cr.getConfig().get("geolocationOverride");
+			if (geolocations != null) {
+				for (final JsonNode geolocation : geolocations) {
+					final String countryCode = JsonUtils.optString(geolocation, "CountryCode");
+					final double lat = JsonUtils.optDouble(geolocation, "Lat");
+					final double longitude = JsonUtils.optDouble(geolocation, "Long");
+					defaultGeolocations.put(countryCode, new Geolocation(lat, longitude));
+				}
+			}
+		}
 	}
 
 	public ZoneManager getZoneManager() {
@@ -307,6 +323,10 @@ public class TrafficRouter {
 				track.setResultDetails(ResultDetails.DS_CLIENT_GEO_UNSUPPORTED);
 				return null;
 			}
+		}
+
+		if (clientLocation.isDefault() == true && defaultGeolocations.containsKey(clientLocation.getCountryCode())) {
+			clientLocation = defaultGeolocations.get(clientLocation.getCountryCode());
 		}
 
 		final List<Cache> caches = getCachesByGeo(deliveryService, clientLocation, track);

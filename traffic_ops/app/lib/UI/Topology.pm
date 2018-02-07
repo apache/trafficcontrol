@@ -153,6 +153,19 @@ sub gen_crconfig_json {
             }
             $data_obj->{'config'}->{'requestHeaders'} = $headers;
         }
+        elsif ( $param eq 'geolocation.default.override' ) {
+            ( my $country_code, my $coordinates ) = split( /\;/, $row->parameter->value );
+            ( my $lat, my $long ) = split( /\,/, $coordinates );
+            my $geolocation = {
+                'CountryCode' => "$country_code",
+                'Lat' => "$lat",
+                'Long' => "$long"
+            };
+            if ( !$data_obj->{'config'}->{'geolocationOverride'} ) {
+                $data_obj->{'config'}->{'geolocationOverride'} = [];
+            }
+            push ( $data_obj->{'config'}->{'geolocationOverride'}, $geolocation );
+        }
         elsif ( !exists $requested_param_names{$param} ) {
             $data_obj->{'config'}->{$param} = $row->parameter->value;
         }

@@ -158,6 +158,9 @@ Many of the settings for the different servers in a Traffic Control CDN are cont
 +--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
 | geolocation6.polling.url | CRConfig.json | The location to get the IPv6 GeoLiteCity database from.                                                                               |
 +--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
+| geolocation.default /    | CRConfig.json | The country code and destination geo coordinates to use when the geo database service returns a default location.                     |
+| override                 |               | Format: <CountryCode>;<Lat>,<Long>   Ex: US;37.751,-97.822                                                                            |
++--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
 
 These parameters should be set to reflect the local environment.
 
