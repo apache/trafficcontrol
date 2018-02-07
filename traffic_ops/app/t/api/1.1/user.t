@@ -55,8 +55,8 @@ $t->post_ok( '/api/1.1/user/current/update',
 	->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/text", "User profile was successfully updated" );
 
 $t->post_ok( '/api/1.1/user/current/update',
-	json => { user => { username => Test::TestHelper::PORTAL_USER, fullName => 'tom sawyer', email => 'testportal1@kabletown.com', address_line1 => 'newaddress', role => 2 } } )
-	->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/text", "role cannot exceed current user's privilege level (2)" );
+	json => { user => { username => Test::TestHelper::PORTAL_USER, fullName => 'tom sawyer', email => 'testportal1@kabletown.com', address_line1 => 'newaddress', role => 3 } } )
+	->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/text", "role cannot exceed current user's privilege level (15)" );
 
 # Ensure unique emails
 ok $t->post_ok( '/api/1.1/user/current/update', json => { user => { fullName => 'tom sawyer', username => Test::TestHelper::PORTAL_USER, email => 'testportal1@kabletown.com', role => 6 } } )

@@ -77,6 +77,9 @@ use constant ADMIN_ROOT_USER_PASSWORD => 'password';
 use constant PORTAL_ROOT_USER          => 'portal-root';
 use constant PORTAL_ROOT_USER_PASSWORD => 'password';
 
+use constant READ_ONLY_ROOT_USER          => 'read-only-root';
+use constant READ_ONLY_ROOT_USER_PASSWORD => 'password';
+
 sub load_all_fixtures {
 	my $self    = shift;
 	my $fixture = shift;
