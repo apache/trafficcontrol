@@ -117,7 +117,8 @@
           "edge-cache-012.steering-target-1.thecdn.example.com",
           "edge-cache-012.steering-target-1-b-b.thecdn.example.com"
         ],
-        "http-only-test": ["edge-cache-012.http-only-test.thecdn.example.com"]
+        "http-only-test": ["edge-cache-012.http-only-test.thecdn.example.com"],
+        "https-additional": ["edge-cache-012.http-only-test.thecdn.example.com"]
       }
     },
     "edge-cache-020": {
@@ -985,6 +986,50 @@
       },
       "geolocationProvider": "maxmindGeolocationService"
     },
+    "https-additional": {
+      "sslEnabled": "true",
+      "protocol": {
+        "acceptHttp" : "false",
+        "acceptHttps" : "true",
+        "redirectToHttps" : "false"
+      },
+      "domains": ["https-additional.thecdn.example.com"],
+      "missLocation": {
+        "long": "-87.627778",
+        "lat": "41.881944"
+      },
+      "ttls": {
+        "AAAA": "3600",
+        "SOA": "7200",
+        "A": "3600",
+        "NS": "3600"
+      },
+      "ttl": "3600",
+      "ip6RoutingEnabled": "false",
+      "dispersion": {
+        "limit": 1,
+        "shuffled": "true"
+      },
+      "coverageZoneOnly": "false",
+      "routingName": "tr",
+      "regionalGeoBlocking": "false",
+      "matchsets": [{
+        "protocol": "HTTP",
+        "matchlist": [{
+          "regex": ".*\\.https-additional\\..*",
+          "match-type": "HOST"
+        }]
+      }],
+      "soa": {
+        "expire": "604800",
+        "minimum": "30",
+        "admin": "admin@thecdn.example.com",
+        "retry": "7200",
+        "refresh": "28800"
+      },
+      "geolocationProvider": "maxmindGeolocationService"
+    },
+
     "http-and-https-test": {
       "sslEnabled": "true",
       "protocol": {

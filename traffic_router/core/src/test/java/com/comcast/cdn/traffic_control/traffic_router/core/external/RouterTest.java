@@ -436,14 +436,10 @@ public class RouterTest {
 		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/x?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
 
-		// TODO: Figure out why this is returning 503 instead of throwing an exception
 		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
 			int code = response.getStatusLine().getStatusCode();
 			assertThat("Expected to get an ssl handshake error! But got: "+code,
 					code, greaterThan(500));
-			//fail("Expected and SSLHandshakeException");
-		} catch (SSLHandshakeException e) {
-			// Expected, this means we're doing the right thing
 		}
 
 		// Pretend someone did a cr-config snapshot that would have updated the location to be different
@@ -467,19 +463,6 @@ public class RouterTest {
 			)));
 		}
 
-		// assert that we still get a handshake error on the new delivery service
-		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
-		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
-
-		// TODO: Figure out why this is returning 503 instead of throwing an exception
-		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
-			int code = response.getStatusLine().getStatusCode();
-			assertThat("Expected to get an ssl handshake error! But got: "+code,
-					code, greaterThan(500));
-			//fail("Expected and SSLHandshakeException but got: "+code);
-		} catch (SSLHandshakeException e) {
-			// Expected, this means we're doing the right thing
-		}
 
 		// verify that if we get a new cr-config that turns off https for the problematic delivery service
 		// that it's able to get through while TR is still concurrently trying to get certs
@@ -505,6 +488,16 @@ public class RouterTest {
 			));
 		}
 
+		// assert that request gets rejected because SSL is turned off
+		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
+
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
+			int code = response.getStatusLine().getStatusCode();
+			assertThat("Expected to get an ssl handshake error! But got: "+code,
+					code, greaterThan(500));
+		}
+
 		// Go back to the cr-config that makes the delivery service https again
 		// Pretend someone did a cr-config snapshot that would have updated the location to be different
 		httpPost = new HttpPost("http://localhost:" + testHttpPort + "/crconfig-4");
@@ -520,6 +513,17 @@ public class RouterTest {
 
 		// Our initial test cr config data sets cert poller to 10 seconds
 		Thread.sleep(25000L);
+
+		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "tr." + "https-additional" + ".bar");
+
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+			int code = response.getStatusLine().getStatusCode();
+			assertThat("Expected to get an ssl handshake error! But got: "+code,
+					code, equalTo(525));
+	    } catch (SSLHandshakeException e) {
+		// Expected, this means we're doing the right thing
+	    }
 
 		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
@@ -617,7 +621,8 @@ public class RouterTest {
 	class TestHostnameVerifier implements HostnameVerifier {
 		@Override
 		public boolean verify(String s, SSLSession sslSession) {
-			return true;
+			assertThat("s = "+s+", getPeerHost() = "+ sslSession.getPeerHost(), sslSession.getPeerHost(), equalTo(s));
+			return sslSession.getPeerHost().equals(s);
 		}
 	}
 }

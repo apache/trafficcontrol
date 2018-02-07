@@ -18,7 +18,6 @@ package com.comcast.cdn.traffic_control.traffic_router.protocol;
 import org.apache.coyote.http11.AbstractHttp11JsseProtocol;
 import org.apache.juli.logging.Log;
 import org.apache.tomcat.util.net.NioChannel;
-import org.apache.tomcat.util.net.SSLImplementation;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import java.security.Security;
 
@@ -30,7 +29,7 @@ public class LanguidNioProtocol extends AbstractHttp11JsseProtocol<NioChannel> i
 	private String mbeanPath;
 	private String readyAttribute;
 	private String portAttribute;
-	String sslClassName = SSLImplementation.class.getCanonicalName();
+
 
 	//add BouncyCastle provider to support converting PKCS1 to PKCS8 since OpenSSL does not support PKCS1
 	//TODO:  Figure out if we can convert from PKCS1 to PKCS8 with out BC
@@ -41,39 +40,33 @@ public class LanguidNioProtocol extends AbstractHttp11JsseProtocol<NioChannel> i
 	public LanguidNioProtocol() {
 		super(new RouterNioEndpoint());
 		log.warn("Serving wildcard certs for multiple domains");
-		setSSLImplementation(RouterSslImplementation.class.getCanonicalName());
 	}
 
-
-	public boolean setSSLImplementation(final String sslClassName) {
+	@Override
+	public void setSslImplementationName(final String sslClassName) {
 		try {
 			Class.forName(sslClassName);
-			this.sslClassName = sslClassName;
-			return true;
+			log.info("setSslImplementation: "+sslClassName);
+			super.setSslImplementationName(sslClassName);
 		} catch (ClassNotFoundException e) {
-			log.error("Failed to set SSL implementation to " + sslClassName + " class was not found, defaulting to OpenSSL");
-			this.sslClassName = SSLImplementation.class.getCanonicalName();
+			log.error("LanguidNIOProtocol: Failed to set SSL implementation to " + sslClassName + " class was not found, defaulting to OpenSSL");
 		}
 
-
-		return false;
 	}
 
 	@Override
 	@SuppressWarnings("PMD.SignatureDeclareThrowsException")
 	public void init() throws Exception {
+
 		if (!isReady()) {
 			log.info("Init called; creating thread to monitor the state of Traffic Router");
 			new LanguidPoller(this).start();
 			return;
 		}
 
-		log.info("Traffic Router is ready; calling super.init()");
-		super.setSslImplementationName(sslClassName);
+		log.info("Traffic Router SSL Protocol is ready; calling super.init()");
+		getEndpoint().setBindOnInit(false);
 		super.init();
-
-
-
 		setInitialized(true);
 	}
 

@@ -16,10 +16,13 @@
 package com.comcast.cdn.traffic_control.traffic_router.protocol;
 
 import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateRegistry;
+import com.comcast.cdn.traffic_control.traffic_router.secure.HandshakeData;
 import com.comcast.cdn.traffic_control.traffic_router.secure.KeyManager;
 import org.apache.tomcat.util.net.NioEndpoint;
 import org.apache.tomcat.util.net.SSLHostConfig;
-import java.util.List;
+import org.apache.tomcat.util.net.SSLHostConfigCertificate;
+import java.util.Map;
+import java.util.Set;
 
 public class RouterNioEndpoint extends NioEndpoint {
     protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(LanguidProtocol.class);
@@ -31,32 +34,59 @@ public class RouterNioEndpoint extends NioEndpoint {
     @Override
     protected void initialiseSsl() throws Exception {
         if (isSSLEnabled()) {
+            destroySsl();
+            sslHostConfigs.clear();
             final KeyManager keyManager = new KeyManager();
             final CertificateRegistry certificateRegistry =  keyManager.getCertificateRegistry();
-            final List<String> aliases = certificateRegistry.getAliases();
-
-            //remove default config since it won't be found in our keystore
-            sslHostConfigs.clear();
-
-            String hostname = "";
-            for (final String alias : aliases) {
-                final SSLHostConfig sslHostConfig = new SSLHostConfig();
-                sslHostConfig.setCertificateKeyAlias(alias);
-                log.info("sslHostConfig: "+sslHostConfig.getHostName()+" "+sslHostConfig.getTruststoreAlgorithm());
-
-                if (!hostname.equals(sslHostConfig.getHostName())) {
-                    addSslHostConfig(sslHostConfig);
-                    hostname = sslHostConfig.getHostName();
-                }
-
-            }
-
-            log.info("java.library.path = "+System.getProperty("java.library.path"));
+            replaceSSLHosts(certificateRegistry.getHandshakeData());
 
             //Now let initialiseSsl do it's thing.
             super.initialiseSsl();
+            log.info("java.library.path = "+System.getProperty("java.library.path"));
+            certificateRegistry.setEndPoint(this);
+        }
+    }
 
+    synchronized private void replaceSSLHosts(final Map<String, HandshakeData> sslHostsData)
+    {
+        final Set<String> aliases = sslHostsData.keySet();
+        boolean firstAlias = true;
+        String lastHostName = "";
 
+        for (final String alias : aliases) {
+            final SSLHostConfig sslHostConfig = new SSLHostConfig();
+            final SSLHostConfigCertificate cert = new SSLHostConfigCertificate(sslHostConfig, SSLHostConfigCertificate.Type.RSA);
+            cert.setCertificateKeyAlias(alias);
+            sslHostConfig.addCertificate(cert);
+            sslHostConfig.setCertificateKeyAlias(alias);
+            sslHostConfig.setHostName(sslHostsData.get(alias).getHostname());
+            sslHostConfig.setProtocols("all");
+            sslHostConfig.setConfigType(getSslConfigType());
+            sslHostConfig.setCertificateVerification("optionalNoCA");
+            log.info("sslHostConfig: "+sslHostConfig.getHostName()+" "+sslHostConfig.getTruststoreAlgorithm());
+
+            if (!sslHostConfig.getHostName().equals(lastHostName)) {
+                addSslHostConfig(sslHostConfig, true);
+                lastHostName = sslHostConfig.getHostName();
+            }
+
+            if (firstAlias && ! "".equals(alias))
+            {
+                // One of the configs must be set as the default
+                setDefaultSSLHostConfigName(sslHostConfig.getHostName());
+                firstAlias = false;
+            }
+        }
+
+    }
+
+    synchronized public void reloadSSLHosts(final Map<String, HandshakeData> cr) {
+        replaceSSLHosts(cr);
+
+        for (final HandshakeData data : cr.values()) {
+            final SSLHostConfig sslHostConfig = sslHostConfigs.get(data.getHostname());
+            sslHostConfig.setConfigType(getSslConfigType());
+            createSSLContext(sslHostConfig);
         }
     }
 }

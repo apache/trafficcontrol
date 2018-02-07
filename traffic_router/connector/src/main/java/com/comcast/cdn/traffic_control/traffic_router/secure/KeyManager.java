@@ -15,6 +15,9 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.secure;
 
+import org.apache.juli.logging.LogFactory;
+import org.apache.juli.logging.Log;
+
 import javax.net.ssl.ExtendedSSLSession;
 import javax.net.ssl.SNIServerName;
 import javax.net.ssl.SSLEngine;
@@ -32,9 +35,8 @@ import java.util.Optional;
 // The provided default implementation does not allow for the key store to change state
 // once the JVM loads the default classes.
 public class KeyManager extends X509ExtendedKeyManager implements X509KeyManager {
-	private final static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(KeyManager.class);
 	private final CertificateRegistry certificateRegistry = CertificateRegistry.getInstance();
-
+	private static final Log log = LogFactory.getLog(KeyManager.class);
 	// To date this method is not getting exercised while running the router
 	@Override
 	public String chooseClientAlias(final String[] strings, final Principal[] principals, final Socket socket) {
@@ -65,7 +67,7 @@ public class KeyManager extends X509ExtendedKeyManager implements X509KeyManager
 
 	@Override
 	public String chooseServerAlias(final String keyType, final Principal[] principals, final Socket socket) {
-		if (keyType == null) {
+		if (keyType == null || socket == null) {
 			return null;
 		}
 
@@ -88,6 +90,7 @@ public class KeyManager extends X509ExtendedKeyManager implements X509KeyManager
 
 			final Optional<String> optionalAlias = certificateRegistry.getAliases().stream().filter(sniString::contains).findFirst();
 			if (optionalAlias.isPresent()) {
+				log.info("KeyManager: FOUND certificate registry aliases matching " + optionalAlias.get());
 				return optionalAlias.get();
 			}
 		}
