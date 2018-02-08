@@ -76,18 +76,6 @@ var DeliveryServiceSslKeysService = function($http, $q, locationUtils, messageMo
         $http.get(ENV.api['root'] + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys?decode=true")
         .then(
             function(result) {
-                var url = deliveryService.exampleURLs[0];
-                if( deliveryService.protocol == 2 && deliveryService.exampleURLs > 1 ) {
-                    url = deliveryService.exampleURLs[1];
-                }
-                var hostName = url.split("://")[1];
-                if (deliveryService.type.indexOf('HTTP') != -1) {
-                    var parts = hostName.split(".");
-                    parts[0] = "*";
-                    hostName = parts.join(".");
-                }
-                result.data.response.hostname = hostName;
-                
                 request.resolve(result.data.response);
             },
             function(fault) {
