@@ -27,6 +27,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
@@ -67,6 +68,82 @@ func (req *TODeliveryServiceRequest) SetID(i int) {
 	req.ID = i
 }
 
+// Read implements the api.Reader interface
+func (req *TODeliveryServiceRequest) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+	var rows *sqlx.Rows
+
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"assignee":   dbhelpers.WhereColumnInfo{Column: "s.username"},
+		"assigneeId": dbhelpers.WhereColumnInfo{Column: "r.assignee_id", Checker: api.IsInt},
+		"author":     dbhelpers.WhereColumnInfo{Column: "a.username"},
+		"authorId":   dbhelpers.WhereColumnInfo{Column: "r.author_id", Checker: api.IsInt},
+		"changeType": dbhelpers.WhereColumnInfo{Column: "r.change_type"},
+		"id":         dbhelpers.WhereColumnInfo{Column: "r.id", Checker: api.IsInt},
+		"status":     dbhelpers.WhereColumnInfo{Column: "r.status"},
+		"xmlId":      dbhelpers.WhereColumnInfo{Column: "r.deliveryservice->>'xmlId'"},
+	}
+
+	p := parameters
+	if _, ok := parameters["orderby"]; !ok {
+		// if orderby not provided, default to orderby xmlId.  Making a copy of parameters to not modify input arg
+		p = make(map[string]string, len(parameters))
+		for k, v := range parameters {
+			p[k] = v
+		}
+		p["orderby"] = "xmlId"
+	}
+
+	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(p, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return nil, errs, tc.DataConflictError
+	}
+
+	query := selectDeliveryServiceRequestsQuery() + where + orderBy
+	log.Debugln("Query is ", query)
+
+	rows, err := db.NamedQuery(query, queryValues)
+	if err != nil {
+		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
+		return nil, []error{tc.DBError}, tc.SystemError
+	}
+	defer rows.Close()
+
+	var deliveryServiceRequests []interface{}
+	for rows.Next() {
+		var s tc.DeliveryServiceRequestNullable
+		if err = rows.StructScan(&s); err != nil {
+			log.Errorf("error parsing DeliveryServiceRequest rows: %v", err)
+			return nil, []error{tc.DBError}, tc.SystemError
+		}
+		deliveryServiceRequests = append(deliveryServiceRequests, s)
+	}
+
+	return deliveryServiceRequests, []error{}, tc.NoError
+}
+
+func selectDeliveryServiceRequestsQuery() string {
+
+	query := `SELECT
+a.username AS author,
+r.assignee_id,
+r.author_id,
+r.change_type,
+r.created_at,
+r.id,
+r.last_edited_by_id,
+r.last_updated,
+r.deliveryservice,
+r.status,
+s.username AS assignee,
+r.deliveryservice->>'xmlId' as xml_id
+
+FROM deliveryservice_request r
+JOIN tm_user a ON r.author_id = a.id
+LEFT OUTER JOIN tm_user s ON r.assignee_id = s.id
+`
+	return query
+}
+
 // IsTenantAuthorized implements the Tenantable interface to ensure the user is authorized on the deliveryservice tenant
 func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error) {
 	ds := req.DeliveryService
@@ -76,7 +153,7 @@ func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, d
 	}
 	if ds.TenantID == 0 {
 		log.Debugf("tenantID is 0 -- THIS SHOULD NEVER HAPPEN!!")
-		return false, errors.New("tenantID is 0 -- THIS SHOULD NEVER HAPPEN!!")
+		return false, errors.New("tenantID is 0")
 	}
 	return tenant.IsResourceAuthorizedToUser(ds.TenantID, user, db)
 }
@@ -87,16 +164,15 @@ func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, d
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
-		if tx == nil {
+		if tx == nil || !rollbackTransaction {
 			return
 		}
-		if err == nil {
-			err = tx.Commit()
-		}
+		err := tx.Rollback()
 		if err != nil {
-			tx.Rollback()
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
 		}
 	}()
 
@@ -109,15 +185,15 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 	req.LastEditedByID = tc.IDNoMod(user.ID)
 	resultRows, err := tx.NamedQuery(updateRequestQuery(), req)
 	if err != nil {
-		if err, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(err)
+		if pqErr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
 			if eType == tc.DataConflictError {
-				return errors.New("a request with " + err.Error()), eType
+				return errors.New("a deliveryservice request with " + err.Error()), eType
 			}
 			return err, eType
 		}
-		log.Errorf("received error from update execution: %s", err.Error())
-		return err, tc.SystemError
+		log.Errorf("received error: %++v from update execution", err)
+		return tc.DBError, tc.SystemError
 	}
 	defer resultRows.Close()
 
@@ -128,17 +204,29 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 
 	// get LastUpdated field -- updated by trigger in the db
 	var lastUpdated tc.TimeNoMod
-	if err = resultRows.Scan(&lastUpdated); err != nil {
-		log.Error.Println("could not scan lastUpdated from insert: ", err.Error())
-		return err, tc.SystemError
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&lastUpdated); err != nil {
+			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
+			return tc.DBError, tc.SystemError
+		}
 	}
+	log.Debugf("lastUpdated: %++v", lastUpdated)
 	req.LastUpdated = &lastUpdated
 
-	if resultRows.Next() {
-		err = errors.New("this update affected too many rows")
-		return err, tc.SystemError
+	if rowsAffected < 1 {
+		return errors.New("no deliveryservice request found with this id"), tc.DataMissingError
+	} else if rowsAffected > 1 {
+		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
@@ -150,10 +238,11 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 //The insert sql returns the id and lastUpdated values of the newly inserted request and have
 //to be added to the struct
 func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	// first, ensure there's not an active request with this XMLID
 	ds := req.DeliveryService
 	if ds == nil {
 		log.Debugln(" -- no ds")
-		return errors.New("no deliveryservice to create"), tc.DataMissingError
+		return errors.New("no delivery service associated with this request"), tc.DataMissingError
 	}
 	if ds.XMLID == nil {
 		log.Debugln(" -- no XMLID")
@@ -168,55 +257,66 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 		return errors.New("An active request exists for delivery service '" + XMLID), tc.DataConflictError
 	}
 
+	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
-		if tx == nil {
+		if tx == nil || !rollbackTransaction {
 			return
 		}
-		if err == nil {
-			err = tx.Commit()
-		}
+		err := tx.Rollback()
 		if err != nil {
-			tx.Rollback()
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
 		}
 	}()
 
 	if err != nil {
-		log.Error.Println("could not begin transaction: ", err.Error())
+		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
+
 	req.AuthorID = tc.IDNoMod(user.ID)
 	req.LastEditedByID = tc.IDNoMod(user.ID)
-	ir := insertRequestQuery()
-	resultRows, err := tx.NamedQuery(ir, req)
+	resultRows, err := tx.NamedQuery(insertRequestQuery(), req)
 	if err != nil {
-		if err, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(err)
+		if pqErr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
+			if eType == tc.DataConflictError {
+				return errors.New("a deliveryservice request with " + err.Error()), eType
+			}
 			return err, eType
 		}
-		log.Errorln("received non pq error from create execution: ", err.Error())
-		return err, tc.SystemError
+		log.Errorf("received non pq error: %++v from create execution", err)
+		return tc.DBError, tc.SystemError
 	}
 	defer resultRows.Close()
 
-	if !resultRows.Next() {
-		err = errors.New("no request was inserted, no id was returned")
+	var id int
+	var lastUpdated tc.TimeNoMod
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
+			log.Error.Printf("could not scan id from insert: %s\n", err)
+			return tc.DBError, tc.SystemError
+		}
+	}
+	if rowsAffected == 0 {
+		err = errors.New("no deliveryservice request inserted, no id was returned")
+		log.Errorln(err)
+		return tc.DBError, tc.SystemError
+	} else if rowsAffected > 1 {
+		err = errors.New("too many ids returned from deliveryservice request insert")
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
-
-	var id int
-	var lastUpdated tc.TimeNoMod
-	if err = resultRows.Scan(&id, &lastUpdated); err != nil {
-		log.Error.Println("could not scan id from insert: ", err.Error())
-		return err, tc.SystemError
-	}
-
-	if resultRows.Next() {
-		return errors.New("too many ids returned from request insert"), tc.SystemError
-	}
 	req.SetID(id)
 	req.LastUpdated = &lastUpdated
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
@@ -225,17 +325,15 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 
 // Delete removes the request from the db
 func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	fmt.Printf("DELETE\n")
+	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
-		if tx == nil {
+		if tx == nil || !rollbackTransaction {
 			return
 		}
-		if err == nil {
-			err = tx.Commit()
-		}
+		err := tx.Rollback()
 		if err != nil {
-			tx.Rollback()
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
 		}
 	}()
 
@@ -243,6 +341,7 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 		log.Error.Println("could not begin transaction: ", err.Error())
 		return tc.DBError, tc.SystemError
 	}
+	log.Debugf("about to run exec query: %s with ds request: %++v", deleteRequestQuery(), req)
 	result, err := tx.NamedExec(deleteRequestQuery(), req)
 	if err != nil {
 		log.Errorln("received error from delete execution: ", err.Error())
