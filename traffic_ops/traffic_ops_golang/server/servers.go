@@ -1,4 +1,4 @@
-package main
+package server
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,78 +20,74 @@ package main
  */
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
-func serversHandler(db *sqlx.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
+//we need a type alias to define functions on
+type TOServer tc.Server
 
-		// p PathParams, username string, privLevel int
-		ctx := r.Context()
-		user, err := auth.GetCurrentUser(ctx)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-		privLevel := user.PrivLevel
+//the refType is passed into the handlers where a copy of its type is used to decode the json.
+var refType = TOServer(tc.Server{})
 
-		params, err := api.GetCombinedParams(r)
-		if err != nil {
-			log.Errorf("unable to get parameters from request: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-		}
-
-		resp, errs, errType := getServersResponse(params, db, privLevel)
-		if len(errs) > 0 {
-			for _, err := range errs {
-				if err.Error() == `id cannot parse to integer` {
-					handleErrs(http.StatusNotFound, errors.New("Resource not found.")) //matches perl response
-					return
-				}
-			}
-			tc.HandleErrorsWithType(errs, errType, handleErrs)
-			return
-		}
-
-		respBts, err := json.Marshal(resp)
-		if err != nil {
-			log.Errorln("marshaling response %v", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
-		fmt.Fprintf(w, "%s", respBts)
-	}
+func GetRefType() *TOServer {
+	return &refType
 }
 
-func getServersResponse(params map[string]string, db *sqlx.DB, privLevel int) (*tc.ServersResponse, []error, tc.ApiErrorType) {
+//Implementation of the Identifier, Validator interface functions
+func (server *TOServer) GetID() int {
+	return server.ID
+}
+
+func (server *TOServer) GetAuditName() string {
+	return server.DomainName
+}
+
+func (server *TOServer) GetType() string {
+	return "server"
+}
+
+func (server *TOServer) SetID(i int) {
+	server.ID = i
+}
+
+func (server *TOServer) Validate(db *sqlx.DB) []error {
+	return nil
+}
+
+func (server *TOServer) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+	returnable := []interface{}{}
+
+	privLevel := user.PrivLevel
+
 	servers, errs, errType := getServers(params, db, privLevel)
 	if len(errs) > 0 {
+		for _, err := range errs {
+			if err.Error() == `id cannot parse to integer` {
+				return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError //matches perl response
+			}
+		}
 		return nil, errs, errType
 	}
 
-	resp := tc.ServersResponse{
-		Response: servers,
+	for _, server := range servers {
+		returnable = append(returnable, server)
 	}
-	return &resp, nil, tc.NoError
+
+	return returnable, nil, tc.NoError
 }
 
 func getServers(params map[string]string, db *sqlx.DB, privLevel int) ([]tc.Server, []error, tc.ApiErrorType) {
-
 	var rows *sqlx.Rows
 	var err error
 
@@ -201,4 +197,271 @@ JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id`
 
 	return selectStmt
+}
+
+//The TOServer implementation of the Updater interface
+//all implementations of Updater should use transactions and return the proper errorType
+//ParsePQUniqueConstraintError is used to determine if a cdn with conflicting values exists
+//if so, it will return an errorType of DataConflict and the type should be appended to the
+//generic error message returned
+func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	tx, err := db.Beginx()
+	defer func() {
+		if tx == nil {
+			return
+		}
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+	}()
+
+	if err != nil {
+		log.Error.Printf("could not begin transaction: %v", err)
+		return tc.DBError, tc.SystemError
+	}
+
+	log.Debugf("about to run exec query: %s with server: %++v", updateServerQuery(), server)
+	resultRows, err := tx.NamedQuery(updateServerQuery(), server)
+	if err != nil {
+		if pqerr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqerr)
+			if eType == tc.DataConflictError {
+				return errors.New("a server with " + err.Error()), eType
+			}
+			return err, eType
+		} else {
+			log.Errorf("received error: %++v from update execution", err)
+			return tc.DBError, tc.SystemError
+		}
+	}
+	var lastUpdated tc.Time
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&lastUpdated); err != nil {
+			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
+			return tc.DBError, tc.SystemError
+		}
+	}
+	log.Debugf("lastUpdated: %++v", lastUpdated)
+	server.LastUpdated = lastUpdated
+	if rowsAffected != 1 {
+		if rowsAffected < 1 {
+			return errors.New("no cdn found with this id"), tc.DataMissingError
+		} else {
+			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
+		}
+	}
+	return nil, tc.NoError
+}
+
+func updateServerQuery() string {
+	query := `UPDATE
+server SET
+cachegroup=:cachegroup_id,
+cdn_id=:cdn_id,
+domain_name=:domain_name,
+host_name=:host_name,
+https_port=:https_port,
+ilo_ip_address=:ilo_ip_address,
+ilo_ip_netmask=:ilo_ip_netmask,
+ilo_ip_gateway=:ilo_ip_gateway,
+ilo_username=:ilo_username,
+ilo_password=:ilo_password,
+interface_mtu=:interface_mtu,
+interface_name=:interface_name,
+ip6_address=:ip6_address,
+ip6_gateway=:ip6_gateway,
+ip_address=:ip_address,
+ip_netmask=:ip_netmask,
+ip_gateway=:ip_gateway,
+mgmt_ip_address=:mgmt_ip_address,
+mgmt_ip_netmask=:mgmt_ip_netmask,
+mgmt_ip_gateway=:mgmt_ip_gateway,
+offline_reason=:offline_reason,
+phys_location=:phys_location_id,
+profile=:profile_id,
+rack=:rack,
+router_host_name=:router_host_name,
+router_port_name=:router_port_name,
+status=:status_id,
+tcp_port=:tcp_port,
+type=:server_type_id,
+upd_pending=:upd_pending
+WHERE id=:id RETURNING last_updated`
+	return query
+}
+
+//The TOServer implementation of the Inserter interface
+//all implementations of Inserter should use transactions and return the proper errorType
+//ParsePQUniqueConstraintError is used to determine if a server with conflicting values exists
+//if so, it will return an errorType of DataConflict and the type should be appended to the
+//generic error message returned
+//The insert sql returns the id and lastUpdated values of the newly inserted server and have
+//to be added to the struct
+func (server *TOServer) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	tx, err := db.Beginx()
+	defer func() {
+		if tx == nil {
+			return
+		}
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+	}()
+
+	if err != nil {
+		log.Error.Printf("could not begin transaction: %v", err)
+		return tc.DBError, tc.SystemError
+	}
+	if server.XMPPID == "" {
+		server.XMPPID = server.HostName
+	}
+
+	resultRows, err := tx.NamedQuery(insertServerQuery(), server)
+	if err != nil {
+		if err, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(err)
+			return errors.New("a server with " + err.Error()), eType
+		} else {
+			log.Errorf("received non pq error: %++v from create execution", err)
+			return tc.DBError, tc.SystemError
+		}
+	}
+	var id int
+	var lastUpdated tc.Time
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
+			log.Error.Printf("could not scan id from insert: %s\n", err)
+			return tc.DBError, tc.SystemError
+		}
+	}
+	if rowsAffected == 0 {
+		err = errors.New("no server was inserted, no id was returned")
+		log.Errorln(err)
+		return tc.DBError, tc.SystemError
+	} else if rowsAffected > 1 {
+		err = errors.New("too many ids returned from server insert")
+		log.Errorln(err)
+		return tc.DBError, tc.SystemError
+	}
+	server.SetID(id)
+	server.LastUpdated = lastUpdated
+	return nil, tc.NoError
+}
+
+func insertServerQuery() string {
+	query := `INSERT INTO server (
+cachegroup,
+cdn_id,
+domain_name,
+host_name,
+https_port,
+ilo_ip_address,
+ilo_ip_netmask,
+ilo_ip_gateway,
+ilo_username,
+ilo_password,
+interface_mtu,
+interface_name,
+ip6_address,
+ip6_gateway,
+ip_address,
+ip_netmask,
+ip_gateway,
+mgmt_ip_address,
+mgmt_ip_netmask,
+mgmt_ip_gateway,
+offline_reason,
+phys_location,
+profile,
+rack,
+router_host_name,
+router_port_name,
+status,
+tcp_port,
+type,
+upd_pending) VALUES (
+:cachegroup_id,
+:cdn_id,
+:domain_name,
+:host_name,
+:https_port,
+:ilo_ip_address,
+:ilo_ip_netmask,
+:ilo_ip_gateway,
+:ilo_username,
+:ilo_password,
+:interface_mtu,
+:interface_name,
+:ip6_address,
+:ip6_gateway,
+:ip_address,
+:ip_netmask,
+:ip_gateway,
+:mgmt_ip_address,
+:mgmt_ip_netmask,
+:mgmt_ip_gateway,
+:offline_reason,
+:phys_location_id,
+:profile_id,
+:rack,
+:router_host_name,
+:router_port_name,
+:status_id,
+:tcp_port,
+:server_type_id,
+:upd_pending) RETURNING id,last_updated`
+	return query
+}
+
+//The Server implementation of the Deleter interface
+//all implementations of Deleter should use transactions and return the proper errorType
+func (server *TOServer) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	tx, err := db.Beginx()
+	defer func() {
+		if tx == nil {
+			return
+		}
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		tx.Commit()
+	}()
+
+	if err != nil {
+		log.Error.Printf("could not begin transaction: %v", err)
+		return tc.DBError, tc.SystemError
+	}
+	log.Debugf("about to run exec query: %s with server: %++v", deleteServerQuery(), server)
+	result, err := tx.NamedExec(deleteServerQuery(), server)
+	if err != nil {
+		log.Errorf("received error: %++v from delete execution", err)
+		return tc.DBError, tc.SystemError
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return tc.DBError, tc.SystemError
+	}
+	if rowsAffected != 1 {
+		if rowsAffected < 1 {
+			return errors.New("no server with that id found"), tc.DataMissingError
+		} else {
+			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
+		}
+	}
+	return nil, tc.NoError
+}
+
+func deleteServerQuery() string {
+	query := `DELETE FROM server
+WHERE id=:id`
+	return query
 }

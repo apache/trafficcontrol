@@ -1,4 +1,4 @@
-package main
+package server
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -31,7 +31,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func getServerUpdateStatusHandler(db *sqlx.DB) http.HandlerFunc {
+func GetServerUpdateStatusHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 

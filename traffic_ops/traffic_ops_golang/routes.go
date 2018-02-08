@@ -41,6 +41,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/status"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/systeminfo"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/types"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/server"
+
 	"github.com/basho/riak-go-client"
 )
 
@@ -154,10 +156,14 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, `ping$`, ping.PingHandler(), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Servers
-		{1.2, http.MethodGet, `servers/?(\.json)?$`, serversHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.2, http.MethodGet, `servers/{id}$`, serversHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.2, http.MethodPost, `servers/{id}/deliveryservices$`, assignDeliveryServicesToServerHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.2, http.MethodGet, `servers/{host_name}/update_status$`, getServerUpdateStatusHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.2, http.MethodGet, `servers/?(\.json)?$`, api.ReadHandler(server.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.2, http.MethodGet, `servers/{id}$`, api.ReadHandler(server.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.2, http.MethodPut, `servers/{id}$`, api.UpdateHandler(server.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.2, http.MethodPost, `servers/?$`, api.CreateHandler(server.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.2, http.MethodDelete, `servers/{id}$`, api.DeleteHandler(server.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+
+		{1.2, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.2, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//SSLKeys deliveryservice endpoints here that are marked  marked as '-wip' need to have tenancy checks added
 		{1.2, http.MethodGet, `deliveryservices-wip/xmlId/{xmlID}/sslkeys$`, getDeliveryServiceSSLKeysByXMLIDHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
