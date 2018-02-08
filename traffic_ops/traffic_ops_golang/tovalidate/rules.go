@@ -27,7 +27,7 @@ func NoPeriods(str string) bool {
 }
 
 // IsOneOfString generates a validator function returning whether string is in the set of strings
-func IsOneOfString(set ...string) {
+func IsOneOfString(set ...string) func(string) bool {
 	return func(s string) bool {
 		for _, x := range set {
 			if s == x {
@@ -39,18 +39,10 @@ func IsOneOfString(set ...string) {
 }
 
 // IsOneOfStringICase is a case-insensitive version of IsOneOfString
-func IsOneOfStringICase(set ...string) bool {
+func IsOneOfStringICase(set ...string) func(string) bool {
 	var lowcased []string
 	for _, s := range set {
-		lowcased = append(lowcase, strings.ToLower(s))
+		lowcased = append(lowcased, strings.ToLower(s))
 	}
-	return func(s string) bool {
-		ss := strings.ToLower(s)
-		for _, x := range lowcased {
-			if s == x {
-				return true
-			}
-		}
-		return false
-	}
+	return IsOneOfString(lowcased...)
 }

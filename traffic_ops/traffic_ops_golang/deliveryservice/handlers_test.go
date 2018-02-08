@@ -46,6 +46,7 @@ func TestValidateErrors(t *testing.T) {
 	expected := []string{
 		"'active' is required",
 		"'cdnId' cannot be blank",
+		"'displayName' the length must be between 1 and 48",
 		"'dscp' is required",
 		"'geoLimit' is required",
 		"'geoProvider' is required",

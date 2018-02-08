@@ -23,9 +23,37 @@ import (
 	"testing"
 
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
+
+func getInterface(req *TODeliveryServiceRequest) interface{} {
+	return req
+}
+
+func TestInterfaces(t *testing.T) {
+	r := getInterface(&TODeliveryServiceRequest{})
+
+	if _, ok := r.(api.Inserter); !ok {
+		t.Errorf("DeliveryServiceRequest must be Inserter")
+	}
+	if _, ok := r.(api.Reader); !ok {
+		t.Errorf("DeliveryServiceRequest must be Reader")
+	}
+	if _, ok := r.(api.Updater); !ok {
+		t.Errorf("DeliveryServiceRequest must be Updater")
+	}
+	if _, ok := r.(api.Deleter); !ok {
+		t.Errorf("DeliveryServiceRequest must be Deleter")
+	}
+	if _, ok := r.(api.Identifier); !ok {
+		t.Errorf("DeliveryServiceRequest must be Identifier")
+	}
+	if _, ok := r.(api.Tenantable); !ok {
+		t.Errorf("DeliveryServiceRequest must be Tenantable")
+	}
+}
 
 func TestGetDeliveryServiceRequest(t *testing.T) {
 	s := "this is not a valid xmlid.  Bad characters and too long."
@@ -45,6 +73,7 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 			TypeID:      &i,
 		},
 	}
+
 	expectedErrors := []string{
 	/*
 		`'regionalGeoBlocking' is required`,
