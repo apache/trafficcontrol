@@ -147,8 +147,8 @@ func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 	log.Debugf("about to run exec query: %s with cdn: %++v", updateCDNQuery(), cdn)
 	resultRows, err := tx.NamedQuery(updateCDNQuery(), cdn)
 	if err != nil {
-		if err, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(err)
+		if pqErr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
 			if eType == tc.DataConflictError {
 				return errors.New("a cdn with " + err.Error()), eType
 			}
@@ -158,6 +158,8 @@ func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 			return tc.DBError, tc.SystemError
 		}
 	}
+	defer resultRows.Close()
+
 	var lastUpdated tc.Time
 	rowsAffected := 0
 	for resultRows.Next() {
@@ -205,14 +207,19 @@ func (cdn *TOCDN) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 	}
 	resultRows, err := tx.NamedQuery(insertCDNQuery(), cdn)
 	if err != nil {
-		if err, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(err)
-			return errors.New("a cdn with " + err.Error()), eType
+		if pqErr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
+			if eType == tc.DataConflictError {
+				return errors.New("a cdn with " + err.Error()), eType
+			}
+			return err, eType
 		} else {
 			log.Errorf("received non pq error: %++v from create execution", err)
 			return tc.DBError, tc.SystemError
 		}
 	}
+	defer resultRows.Close()
+
 	var id int
 	var lastUpdated tc.Time
 	rowsAffected := 0
