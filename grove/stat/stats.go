@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/grove/remap"
+	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -48,7 +48,7 @@ type Stats interface {
 	Write(w http.ResponseWriter, conn *web.InterceptConn, reqFQDN string, remoteAddr string, code int, bytesWritten uint64, cacheHit bool) uint64
 }
 
-func New(remapRules []remap.RemapRule, cache Cache, cacheCapacityBytes uint64, httpConns *web.ConnMap, httpsConns *web.ConnMap) Stats {
+func New(remapRules []remapdata.RemapRule, cache Cache, cacheCapacityBytes uint64, httpConns *web.ConnMap, httpsConns *web.ConnMap) Stats {
 	cacheHits := uint64(0)
 	cacheMisses := uint64(0)
 	return &stats{
@@ -169,7 +169,7 @@ type StatsRemap interface {
 	AddCacheMiss()
 }
 
-func getFromFQDN(r remap.RemapRule) string {
+func getFromFQDN(r remapdata.RemapRule) string {
 	path := r.From
 	schemeEnd := `://`
 	if i := strings.Index(path, schemeEnd); i != -1 {
@@ -182,7 +182,7 @@ func getFromFQDN(r remap.RemapRule) string {
 	return path
 }
 
-func NewStatsRemaps(remapRules []remap.RemapRule) StatsRemaps {
+func NewStatsRemaps(remapRules []remapdata.RemapRule) StatsRemaps {
 	m := make(map[string]StatsRemap, len(remapRules))
 	for _, rule := range remapRules {
 		m[getFromFQDN(rule)] = NewStatsRemap() // must pre-allocate, for threadsafety, so users are never changing the map itself, only the value pointed to.
