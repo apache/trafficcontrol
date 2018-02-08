@@ -8,9 +8,11 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/apache/incubator-trafficcontrol/grove/cachedata"
 	"github.com/apache/incubator-trafficcontrol/grove/cacheobj"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin"
 	"github.com/apache/incubator-trafficcontrol/grove/remap"
+	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 	"github.com/apache/incubator-trafficcontrol/grove/stat"
 	"github.com/apache/incubator-trafficcontrol/grove/thread"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
@@ -157,9 +159,6 @@ func makeRuleThrottlers(remapper remap.HTTPRequestRemapper, limit uint64) map[st
 	return ruleThrottlers
 }
 
-const CodeConnectFailure = http.StatusBadGateway
-const NSPerSec = 1000000000
-
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reqTime := time.Now()
 
@@ -181,9 +180,19 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqHeader := web.CopyHeader(r.Header) // copy request header, because it's not guaranteed valid after actually issuing the request
-	moneyTraceHdr := reqHeader.Get("X-Money-Trace")
 	clientIP, _ := web.GetClientIPPort(r)
-	responder := NewResponder(w, r, NewStatLogger(w, conn, h, r, moneyTraceHdr, clientIP, reqTime, remappingProducer))
+
+	toFQDN := ""
+	pluginCfg := map[string]interface{}{}
+	if remappingProducer != nil {
+		toFQDN = remappingProducer.ToFQDN()
+		pluginCfg = remappingProducer.PluginCfg()
+	}
+
+	reqData := cachedata.ReqData{r, conn, clientIP, reqTime, toFQDN}
+	srvrData := cachedata.SrvrData{h.hostname, h.port, h.scheme}
+
+	responder := NewResponder(w, pluginCfg, srvrData, reqData, h.plugins, h.stats)
 
 	if err != nil {
 		switch err {
@@ -228,7 +237,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		responder.F = func() (uint64, error) {
 			return web.Respond(w, responder.ResponseCode, *hdrsPtr, *bodyPtr, connectionClose)
 		}
-		responder.SuccessfullyGotFromOrigin = true
+		responder.OriginReqSuccess = true
 		responder.ProxyStr = cacheObj.ProxyURL
 		h.plugins.BeforeRespond.Call(remappingProducer.PluginCfg(), &responder.ResponseCode, hdrsPtr, bodyPtr) // note we pass a ref to the responder.ResponseCode, because we want to modify the Responder, to log the code correctly.
 		responder.Do()
@@ -249,7 +258,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		responder.ResponseCode = cacheObj.Code
 		responder.OriginCode = cacheObj.OriginCode
 		responder.SetResponse(cacheObj.Code, &cacheObj.RespHeaders, &cacheObj.Body, connectionClose)
-		responder.SuccessfullyGotFromOrigin = true
+		responder.OriginReqSuccess = true
 		responder.OriginBytes = cacheObj.Size
 		responder.ProxyStr = cacheObj.ProxyURL
 		responder.Do()
@@ -260,9 +269,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	canReuseStored := remap.CanReuseStored(reqHeaders, cacheObj.RespHeaders, reqCacheControl, cacheObj.RespCacheControl, cacheObj.ReqHeaders, cacheObj.ReqRespTime, cacheObj.RespRespTime, h.strictRFC)
 
 	switch canReuseStored {
-	case remap.ReuseCan:
+	case remapdata.ReuseCan:
 		log.Debugf("cache.Handler.ServeHTTP: '%v' cache hit!\n", cacheKey)
-	case remap.ReuseCannot:
+	case remapdata.ReuseCannot:
 		log.Debugf("cache.Handler.ServeHTTP: '%v' can't reuse\n", cacheKey)
 		cacheObj, err = retrier.Get(r, nil)
 		if err != nil {
@@ -270,7 +279,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			responder.Do()
 			return
 		}
-	case remap.ReuseMustRevalidate:
+	case remapdata.ReuseMustRevalidate:
 		log.Debugf("cache.Handler.ServeHTTP: '%v' must revalidate\n", cacheKey)
 		cacheObj, err = retrier.Get(r, cacheObj)
 		if err != nil {
@@ -278,7 +287,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			responder.Do()
 			return
 		}
-	case remap.ReuseMustRevalidateCanStale:
+	case remapdata.ReuseMustRevalidateCanStale:
 		log.Debugf("cache.Handler.ServeHTTP: '%v' must revalidate (but allowed stale)\n", cacheKey)
 		oldCacheObj := cacheObj
 		cacheObj, err = retrier.Get(r, cacheObj)
@@ -293,7 +302,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	bodyPtr := &cacheObj.Body        // create a new pointer, so we don't modify the cacheObj
 	responder.ResponseCode = cacheObj.Code
 	responder.SetResponse(responder.ResponseCode, hdrsPtr, bodyPtr, connectionClose)
-	responder.SuccessfullyGotFromOrigin = true
+	responder.OriginReqSuccess = true
 	responder.Reuse = canReuseStored
 	responder.OriginCode = cacheObj.OriginCode
 	responder.OriginBytes = cacheObj.Size

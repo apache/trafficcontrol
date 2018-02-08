@@ -1,12 +1,26 @@
-package beforerespond
+package afterrespond
 
 import (
 	"encoding/json"
 	"net/http"
 	"sort"
 
+	"github.com/apache/incubator-trafficcontrol/grove/cachedata"
+	"github.com/apache/incubator-trafficcontrol/grove/stat"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
+
+type Data struct {
+	// request data
+	W     http.ResponseWriter
+	Stats stat.Stats
+
+	cachedata.ReqData
+	cachedata.SrvrData
+	cachedata.ParentRespData
+	cachedata.RespData
+}
 
 // AddPlugin registers a request plugin, which will be called when a request is received.
 //
@@ -22,7 +36,7 @@ func AddPlugin(priority uint64, name string, f Func, loadF LoadFunc) {
 	plugins = append(plugins, plugin{f: f, priority: priority, name: name, loadF: loadF})
 }
 
-type Func func(icfg interface{}, code *int, hdr *http.Header, body *[]byte)
+type Func func(icfg interface{}, d Data)
 
 // The LoadFunc is the function which loads any necessary configuration for the plugin. This config  should be placed in the remap rules file, in the "plugins" object, under the key with the name of this plugin. Both keys within remap rules, and in the outer object will be passed to this function. As with all remap rules, if the object exists for a specific rule, it will be used, and in this case passed to the plugin call func; if the rule object doesn't exist, the outer object will be used.
 //
@@ -52,7 +66,7 @@ func Get() Plugin {
 
 type Plugin interface {
 	// Call executes this plugin. Note the header and body objects MUST NOT be modified. If this plugin modifies the response header or body, set the object pointed to to a new object, which must be copied from the original if necessary.
-	Call(cfgs map[string]interface{}, code *int, hdr *http.Header, body *[]byte)
+	Call(cfgs map[string]interface{}, d Data)
 	LoadFuncs() map[string]LoadFunc
 }
 
@@ -65,11 +79,16 @@ func (ps pluginSlice) LoadFuncs() map[string]LoadFunc {
 	return lf
 }
 
-func (ps pluginSlice) Call(cfgs map[string]interface{}, code *int, hdr *http.Header, body *[]byte) {
+func (ps pluginSlice) Call(cfgs map[string]interface{}, d Data) {
 	// TODO implement plugins signalling whether they'll modify, in order to only copy once here.
-	log.Debugf("beforerespond.pluginSlice.Call looping over %+v cfgs %+v\n", len(ps), cfgs)
+	log.Debugf("afterrespond.pluginSlice.Call looping over %+v cfgs %+v\n", len(ps), cfgs)
+	if cfgs == nil {
+		// easier and probably faster to make a map that returns nil for everything, than to check if cfgs is nil every time
+		cfgs = map[string]interface{}{}
+	}
+
 	for _, p := range ps {
-		log.Debugf("beforerespond.pluginSlice.Call calling %+v\n", p.name)
-		p.f(cfgs[p.name], code, hdr, body)
+		log.Debugf("afterrespond.pluginSlice.Call calling %+v\n", p.name)
+		p.f(cfgs[p.name], d)
 	}
 }

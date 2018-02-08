@@ -12,7 +12,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/apache/incubator-trafficcontrol/grove/remap"
+	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -21,13 +21,13 @@ import (
 type statHandler struct {
 	interfaceName string
 	stats         Stats
-	statRules     remap.RemapRulesStats
+	statRules     remapdata.RemapRulesStats
 	httpConns     *web.ConnMap
 	httpsConns    *web.ConnMap
 }
 
 // NewStatHandler returns an HTTP handler
-func NewHandler(interfaceName string, remapRules []remap.RemapRule, stats Stats, statRules remap.RemapRulesStats, httpConns *web.ConnMap, httpsConns *web.ConnMap) http.Handler {
+func NewHandler(interfaceName string, remapRules []remapdata.RemapRule, stats Stats, statRules remapdata.RemapRulesStats, httpConns *web.ConnMap, httpsConns *web.ConnMap) http.Handler {
 	return statHandler{interfaceName: interfaceName, stats: stats, statRules: statRules, httpConns: httpConns, httpsConns: httpsConns}
 }
 

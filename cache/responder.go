@@ -4,7 +4,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/grove/remap"
+	"github.com/apache/incubator-trafficcontrol/grove/cachedata"
+	"github.com/apache/incubator-trafficcontrol/grove/plugin"
+	"github.com/apache/incubator-trafficcontrol/grove/plugin/afterrespond"
+	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
+	"github.com/apache/incubator-trafficcontrol/grove/stat"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -12,34 +16,43 @@ import (
 
 // Responder is an object encapsulating the cache's response to the client. It holds all the data necessary to respond, log the response, and add the stats.
 type Responder struct {
-	W                         http.ResponseWriter
-	R                         *http.Request
-	StatLog                   *StatLogger
-	F                         RespondFunc
-	Reuse                     remap.Reuse
-	OriginCode                int
-	ResponseCode              int
-	SuccessfullyGotFromOrigin bool
-	OriginConnectFailed       bool
-	OriginBytes               uint64
-	ProxyStr                  string
+	W            http.ResponseWriter
+	PluginCfg    map[string]interface{}
+	Plugins      plugin.Plugins
+	Stats        stat.Stats
+	F            RespondFunc
+	ResponseCode int
+	cachedata.ParentRespData
+	cachedata.SrvrData
+	cachedata.ReqData
 }
+
+func DefaultParentRespData() cachedata.ParentRespData {
+	return cachedata.ParentRespData{
+		Reuse:               remapdata.ReuseCannot,
+		OriginCode:          0,
+		OriginReqSuccess:    false,
+		OriginConnectFailed: false,
+		OriginBytes:         0,
+		ProxyStr:            "-",
+	}
+}
+
+func DefaultRespCode() int { return http.StatusBadRequest }
 
 type RespondFunc func() (uint64, error)
 
 // NewResponder creates a Responder, which defaults to a generic error response.
-func NewResponder(w http.ResponseWriter, r *http.Request, statLog *StatLogger) *Responder {
+func NewResponder(w http.ResponseWriter, pluginCfg map[string]interface{}, srvrData cachedata.SrvrData, reqData cachedata.ReqData, plugins plugin.Plugins, stats stat.Stats) *Responder {
 	responder := &Responder{
-		W:                         w,
-		R:                         r,
-		StatLog:                   statLog,
-		Reuse:                     remap.ReuseCannot,
-		OriginCode:                0,
-		ResponseCode:              http.StatusBadRequest,
-		SuccessfullyGotFromOrigin: false,
-		OriginConnectFailed:       false,
-		OriginBytes:               0,
-		ProxyStr:                  "-",
+		W:              w,
+		PluginCfg:      pluginCfg,
+		Plugins:        plugins,
+		Stats:          stats,
+		ResponseCode:   DefaultRespCode(),
+		ParentRespData: DefaultParentRespData(),
+		SrvrData:       srvrData,
+		ReqData:        reqData,
 	}
 	responder.F = func() (uint64, error) { return web.ServeErr(w, responder.ResponseCode) }
 	return responder
@@ -47,6 +60,7 @@ func NewResponder(w http.ResponseWriter, r *http.Request, statLog *StatLogger) *
 
 // SetResponse is a helper which sets the RespondFunc of r to `web.Respond` with the given code, headers, body, and connectionClose. Note it takes a pointer to the headers and body, which may be modified after calling this but before the Do() sends the response.
 func (r *Responder) SetResponse(code int, hdrs *http.Header, body *[]byte, connectionClose bool) {
+	r.ResponseCode = code // TODO verify this is correct?
 	r.F = func() (uint64, error) { return web.Respond(r.W, code, *hdrs, *body, connectionClose) }
 }
 
@@ -54,26 +68,20 @@ func (r *Responder) SetResponse(code int, hdrs *http.Header, body *[]byte, conne
 // For cache misses, reuse should be ReuseCannot.
 // For parent connect failures, originCode should be 0.
 func (r *Responder) Do() {
+	// TODO move plugins.BeforeRespond here? How do we distinguish between success, and know to set headers? r.OriginReqSuccess?
 	bytesSent, err := r.F()
 	if err != nil {
-		log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.R.RemoteAddr + " " + r.R.Method + " " + r.R.RequestURI + ": responding: " + err.Error())
+		log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.Req.RemoteAddr + " " + r.Req.Method + " " + r.Req.RequestURI + ": responding: " + err.Error())
 	}
-	web.TryFlush(r.W)
+	web.TryFlush(r.W) // TODO remove? Let plugins do it, if they need to?
 
-	successfullyRespondedToClient := err != nil
-
-	r.StatLog.Log(
-		r.ResponseCode,
-		bytesSent,
-		successfullyRespondedToClient,
-		r.SuccessfullyGotFromOrigin,
-		isCacheHit(r.Reuse, r.OriginCode),
-		r.OriginConnectFailed,
-		r.OriginCode,
-		r.OriginBytes,
-		r.ProxyStr)
+	respSuccess := err != nil
+	respData := cachedata.RespData{r.ResponseCode, bytesSent, respSuccess, isCacheHit(r.Reuse, r.OriginCode)}
+	arData := afterrespond.Data{r.W, r.Stats, r.ReqData, r.SrvrData, r.ParentRespData, respData}
+	r.Plugins.AfterRespond.Call(r.PluginCfg, arData)
 }
 
-func isCacheHit(reuse remap.Reuse, originCode int) bool {
-	return reuse == remap.ReuseCan || ((reuse == remap.ReuseMustRevalidate || reuse == remap.ReuseMustRevalidateCanStale) && (originCode > 299 && originCode < 400))
+func isCacheHit(reuse remapdata.Reuse, originCode int) bool {
+	// TODO move to web? remap?
+	return reuse == remapdata.ReuseCan || ((reuse == remapdata.ReuseMustRevalidate || reuse == remapdata.ReuseMustRevalidateCanStale) && originCode == http.StatusNotModified)
 }

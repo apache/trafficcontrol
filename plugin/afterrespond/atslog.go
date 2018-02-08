@@ -1,100 +1,55 @@
-package cache
+package afterrespond
 
 import (
-	"net/http"
+	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/grove/remap"
-	"github.com/apache/incubator-trafficcontrol/grove/stat"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
-// StatLogger constructed from initial connection data, which both writes stats and writes to the event log, after the response is prepared and sent.
-type StatLogger struct {
-	W                 http.ResponseWriter
-	Conn              *web.InterceptConn
-	Stats             stat.Stats
-	Hostname          string
-	Port              string
-	Scheme            string
-	Host              string
-	URL               string
-	Method            string
-	Proto             string
-	MoneyTraceHdr     string
-	ClientIP          string
-	ReqTime           time.Time
-	UserAgent         string
-	RemoteAddr        string
-	RemappingProducer *remap.RemappingProducer
+const NSPerSec = 1000000000
+
+const ATSLogName = "record_stats"
+
+func init() {
+	AddPlugin(20000, ATSLogName, atsLog, atsLogLoad)
 }
 
-func NewStatLogger(w http.ResponseWriter, conn *web.InterceptConn, h *Handler, r *http.Request, moneyTraceHdr string, clientIP string, reqTime time.Time, remappingProducer *remap.RemappingProducer) *StatLogger {
-	return &StatLogger{
-		W:                 w,
-		Conn:              conn,
-		Stats:             h.stats,
-		Hostname:          h.hostname,
-		Port:              h.port,
-		Scheme:            h.scheme,
-		Host:              r.Host,
-		URL:               r.URL.String(),
-		Method:            r.Method,
-		Proto:             r.Proto,
-		MoneyTraceHdr:     moneyTraceHdr,
-		ClientIP:          clientIP,
-		ReqTime:           reqTime,
-		UserAgent:         r.UserAgent(),
-		RemoteAddr:        r.RemoteAddr,
-		RemappingProducer: remappingProducer,
-	}
-}
+func atsLogLoad(b json.RawMessage) interface{} { return nil }
 
-// Log both writes stats and writes to the event log, with the given response data, along with the connection data in l.
-func (l *StatLogger) Log(
-	code int,
-	bytesWritten uint64,
-	successfullyRespondedToClient bool,
-	successfullyGotFromOrigin bool,
-	cacheHit bool,
-	originConnectFailed bool,
-	originStatus int,
-	originBytes uint64,
-	proxyStr string,
-) {
-	bytesSent := l.Stats.Write(l.W, l.Conn, l.Host, l.RemoteAddr, code, bytesWritten, cacheHit)
-	toFQDN := ""
-	if l.RemappingProducer != nil {
-		toFQDN = l.RemappingProducer.ToFQDN()
-	}
-	proxyHierarchyStr, proxyNameStr := getParentStrings(code, cacheHit, proxyStr, toFQDN)
+func atsLog(icfg interface{}, d Data) {
+	now := time.Now()
+	bytesSent := web.TryGetBytesWritten(d.W, d.Conn, d.BytesWritten)
+
+	proxyHierarchyStr, proxyNameStr := getParentStrings(d.RespCode, d.CacheHit, d.ProxyStr, d.ToFQDN)
+
 	log.EventRaw(atsEventLogStr(
-		time.Now(),
-		l.ClientIP,
-		l.Hostname,
-		l.Host,
-		l.Port,
-		toFQDN,
-		l.Scheme,
-		l.URL,
-		l.Method,
-		l.Proto,
-		code,
-		time.Now().Sub(l.ReqTime),
+		now,
+		d.ClientIP,
+		d.Hostname,
+		d.Req.Host,
+		d.Port,
+		d.ToFQDN,
+		d.Scheme,
+		d.Req.URL.String(),
+		d.Req.Method,
+		d.Req.Proto,
+		d.RespCode,
+		now.Sub(d.ReqTime),
 		bytesSent,
-		originStatus,
-		originBytes,
-		successfullyRespondedToClient,
-		successfullyGotFromOrigin,
-		getCacheHitStr(cacheHit, originConnectFailed),
+		d.OriginCode,
+		d.OriginBytes,
+		d.RespSuccess,
+		d.OriginReqSuccess,
+		getCacheHitStr(d.CacheHit, d.OriginConnectFailed),
 		proxyHierarchyStr,
 		proxyNameStr,
-		l.UserAgent,
-		l.MoneyTraceHdr,
+		d.Req.UserAgent(),
+		d.Req.Header.Get("X-Money-Trace"),
 	))
 }
 
@@ -141,8 +96,8 @@ func atsEventLogStr(
 	bytesSent uint64, // b
 	originStatus int, // sssc
 	originBytes uint64, // sscl
-	successfullyRespondedToClient bool, // cfsc
-	successfullyGotFromOrigin bool, // pfsc
+	clientRespSuccess bool, // cfsc
+	originReqSuccess bool, // pfsc
 	cacheHit string, // crc
 	proxyUsed string, // phr
 	thisProxyName string, // pqsn
@@ -157,11 +112,11 @@ func atsEventLogStr(
 		unixFracStr = unixFracStr[:3]
 	}
 	cfsc := "FIN"
-	if !successfullyRespondedToClient {
+	if !clientRespSuccess {
 		cfsc = "INTR"
 	}
 	pfsc := "FIN"
-	if !successfullyGotFromOrigin {
+	if !originReqSuccess {
 		pfsc = "INTR"
 	}
 

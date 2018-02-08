@@ -8,19 +8,10 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/grove/cacheobj"
+	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-)
-
-type Reuse int
-
-const (
-	ReuseCan Reuse = iota
-	ReuseCannot
-	ReuseMustRevalidate
-	// ReuseMustRevalidateCanStale indicates the response must be revalidated, but if the parent cannot be reached, may be served stale, per RFC7234§4.2.4
-	ReuseMustRevalidateCanStale
 )
 
 // ValidHTTPCodes provides fast lookup whether a HTTP response code is valid per RFC7234§3
@@ -119,12 +110,12 @@ func CanCache(reqHeaders http.Header, respCode int, respHeaders http.Header, str
 }
 
 // CanReuseStored checks the constraints in RFC7234§4
-func CanReuseStored(reqHeaders http.Header, respHeaders http.Header, reqCacheControl web.CacheControl, respCacheControl web.CacheControl, respReqHeaders http.Header, respReqTime time.Time, respRespTime time.Time, strictRFC bool) Reuse {
+func CanReuseStored(reqHeaders http.Header, respHeaders http.Header, reqCacheControl web.CacheControl, respCacheControl web.CacheControl, respReqHeaders http.Header, respReqTime time.Time, respRespTime time.Time, strictRFC bool) remapdata.Reuse {
 	// TODO: remove allowed_stale, check in cache manager after revalidate fails? (since RFC7234§4.2.4 prohibits serving stale response unless disconnected).
 
 	if !selectedHeadersMatch(reqHeaders, respReqHeaders, strictRFC) {
 		log.Debugf("CanReuseStored false - selected headers don't match\n") // debug
-		return ReuseCannot
+		return remapdata.ReuseCannot
 	}
 
 	if !fresh(respHeaders, respCacheControl, respReqTime, respRespTime) {
@@ -135,31 +126,31 @@ func CanReuseStored(reqHeaders http.Header, respHeaders http.Header, reqCacheCon
 
 	if hasPragmaNoCache(reqHeaders) && strictRFC {
 		log.Debugf("CanReuseStored MustRevalidate - has pragma no-cache\n")
-		return ReuseMustRevalidate
+		return remapdata.ReuseMustRevalidate
 	}
 
 	if _, ok := reqCacheControl["no-cache"]; ok && strictRFC {
 		log.Debugf("CanReuseStored false - request has cache-control no-cache\n")
-		return ReuseCannot
+		return remapdata.ReuseCannot
 	}
 
 	if _, ok := respCacheControl["no-cache"]; ok {
 		log.Debugf("CanReuseStored false - response has cache-control no-cache\n")
-		return ReuseCannot
+		return remapdata.ReuseCannot
 	}
 
 	if strictRFC && !inMinFresh(respHeaders, reqCacheControl, respCacheControl, respReqTime, respRespTime) {
-		return ReuseMustRevalidate
+		return remapdata.ReuseMustRevalidate
 	}
 
 	log.Debugf("CanReuseStored true (respCacheControl %+v)\n", respCacheControl)
-	return ReuseCan
+	return remapdata.ReuseCan
 }
 
 // CanReuse is a helper wrapping CanReuseStored, returning a boolean rather than an enum, for when it's known whether MustRevalidate can be used.
 func CanReuse(reqHeader http.Header, reqCacheControl web.CacheControl, cacheObj *cacheobj.CacheObj, strictRFC bool, revalidateCanReuse bool) bool {
 	canReuse := CanReuseStored(reqHeader, cacheObj.RespHeaders, reqCacheControl, cacheObj.RespCacheControl, cacheObj.ReqHeaders, cacheObj.ReqRespTime, cacheObj.RespRespTime, strictRFC)
-	return canReuse == ReuseCan || (canReuse == ReuseMustRevalidate && revalidateCanReuse)
+	return canReuse == remapdata.ReuseCan || (canReuse == remapdata.ReuseMustRevalidate && revalidateCanReuse)
 }
 
 // canStoreAuthenticated checks the constraints in RFC7234§3.2
@@ -438,8 +429,8 @@ func inMinFresh(respHeaders http.Header, reqCacheControl web.CacheControl, respC
 // TODO add warning generation funcs
 
 // AllowedStale checks the constraints in RFC7234§4 via RFC7234§4.2.4
-func allowedStale(respHeaders http.Header, reqCacheControl web.CacheControl, respCacheControl web.CacheControl, respReqTime time.Time, respRespTime time.Time, strictRFC bool) Reuse {
-	// TODO return ReuseMustRevalidate where permitted
+func allowedStale(respHeaders http.Header, reqCacheControl web.CacheControl, respCacheControl web.CacheControl, respReqTime time.Time, respRespTime time.Time, strictRFC bool) remapdata.Reuse {
+	// TODO return remapdata.ReuseMustRevalidate where permitted
 	_, reqHasMaxAge := reqCacheControl["max-age"]
 	_, reqHasMaxStale := reqCacheControl["max-stale"]
 	_, respHasMustReval := respCacheControl["must-revalidate"]
@@ -447,26 +438,26 @@ func allowedStale(respHeaders http.Header, reqCacheControl web.CacheControl, res
 	log.Debugf("AllowedStale: reqHasMaxAge %v reqHasMaxStale %v strictRFC %v\n", reqHasMaxAge, reqHasMaxStale, strictRFC)
 	if respHasMustReval || respHasProxyReval {
 		log.Debugf("AllowedStale: returning mustreval - must-revalidate\n")
-		return ReuseMustRevalidate
+		return remapdata.ReuseMustRevalidate
 	}
 	if strictRFC && reqHasMaxAge && !reqHasMaxStale {
 		log.Debugf("AllowedStale: returning can - strictRFC & reqHasMaxAge & !reqHasMaxStale\n")
-		return ReuseMustRevalidateCanStale
+		return remapdata.ReuseMustRevalidateCanStale
 	}
 	if _, ok := respCacheControl["no-cache"]; ok {
 		log.Debugf("AllowedStale: returning reusecannot - no-cache\n")
-		return ReuseCannot // TODO verify RFC doesn't allow Revalidate here
+		return remapdata.ReuseCannot // TODO verify RFC doesn't allow Revalidate here
 	}
 	if _, ok := respCacheControl["no-store"]; ok {
 		log.Debugf("AllowedStale: returning reusecannot - no-store\n")
-		return ReuseCannot // TODO verify RFC doesn't allow revalidate here
+		return remapdata.ReuseCannot // TODO verify RFC doesn't allow revalidate here
 	}
 	if !inMaxStale(respHeaders, respCacheControl, respReqTime, respRespTime) {
 		log.Debugf("AllowedStale: returning mustreval - not in max stale\n")
-		return ReuseMustRevalidate // TODO verify RFC allows
+		return remapdata.ReuseMustRevalidate // TODO verify RFC allows
 	}
 	log.Debugf("AllowedStale: returning can - all preconditions passed\n")
-	return ReuseMustRevalidateCanStale
+	return remapdata.ReuseMustRevalidateCanStale
 }
 
 // InMaxStale returns whether the given response is within the `max-stale` request directive. If no `max-stale` directive exists in the request, `true` is returned.
