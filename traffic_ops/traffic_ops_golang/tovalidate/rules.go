@@ -16,10 +16,41 @@ import (
 	"strings"
 )
 
+// NoSpaces returns true if the string has no spaces
 func NoSpaces(str string) bool {
 	return !strings.ContainsAny(str, " ")
 }
 
+// NoPeriods returns true if the string has no periods
 func NoPeriods(str string) bool {
 	return !strings.ContainsAny(str, ".")
+}
+
+// IsOneOfString generates a validator function returning whether string is in the set of strings
+func IsOneOfString(set ...string) {
+	return func(s string) bool {
+		for _, x := range set {
+			if s == x {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+// IsOneOfStringICase is a case-insensitive version of IsOneOfString
+func IsOneOfStringICase(set ...string) bool {
+	var lowcased []string
+	for _, s := range set {
+		lowcased = append(lowcase, strings.ToLower(s))
+	}
+	return func(s string) bool {
+		ss := strings.ToLower(s)
+		for _, x := range lowcased {
+			if s == x {
+				return true
+			}
+		}
+		return false
+	}
 }
