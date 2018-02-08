@@ -3,6 +3,7 @@ package plugin
 import (
 	"encoding/json"
 
+	"github.com/apache/incubator-trafficcontrol/grove/plugin/afterrespond"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin/beforerespond"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin/startup"
 )
@@ -11,6 +12,7 @@ import (
 type Plugins struct {
 	Startup       startup.Startup
 	BeforeRespond beforerespond.Plugin
+	AfterRespond  afterrespond.Plugin
 }
 
 // Get gets all the plugins. This must not be called in an init function, since plugins use init for registration. This must be called after initialization, after main has started executing.
@@ -18,6 +20,7 @@ func Get() Plugins {
 	return Plugins{
 		Startup:       startup.Get(),
 		BeforeRespond: beforerespond.Get(),
+		AfterRespond:  afterrespond.Get(),
 	}
 }
 

@@ -14,6 +14,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
+const CodeConnectFailure = http.StatusBadGateway
+
 type Retrier struct {
 	H                 *Handler
 	ReqHdr            http.Header

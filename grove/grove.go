@@ -24,6 +24,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/grove/config"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin"
 	"github.com/apache/incubator-trafficcontrol/grove/remap"
+	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 	"github.com/apache/incubator-trafficcontrol/grove/stat"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
@@ -323,7 +324,7 @@ func startServer(handler http.Handler, listener net.Listener, connState func(net
 	return server
 }
 
-func loadCerts(rules []remap.RemapRule) ([]tls.Certificate, error) {
+func loadCerts(rules []remapdata.RemapRule) ([]tls.Certificate, error) {
 	certs := []tls.Certificate{}
 	for _, rule := range rules {
 		if rule.CertificateFile == "" && rule.CertificateKeyFile == "" {
