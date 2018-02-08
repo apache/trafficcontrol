@@ -84,24 +84,26 @@ func (ds *TODeliveryService) Validate(db *sqlx.DB) []error {
 	isHost := validation.NewStringRule(govalidator.IsHost, "must be a valid hostname")
 	noPeriods := validation.NewStringRule(tovalidate.NoPeriods, "cannot contain periods")
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
+	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
+		"must be one of 'NEVER' or 'ALWAYS'")
 
 	// Validate that the required fields are sent first to prevent panics below
 	errs := validation.Errors{
-		"active":              validation.Validate(ds.Active, validation.Required),
+		"active":              validation.Validate(ds.Active, validation.NotNil),
 		"cdnId":               validation.Validate(ds.CDNID, validation.Required),
-		"displayName":         validation.Validate(ds.DisplayName, validation.Required),
+		"displayName":         validation.Validate(ds.DisplayName, validation.Required, validation.Length(1, 48)),
+		"deepCachingType":     validation.Validate(neverOrAlways),
 		"dnsBypassIp":         validation.Validate(ds.DNSBypassIP, is.IP),
 		"dnsBypassIp6":        validation.Validate(ds.DNSBypassIP6, is.IPv6),
-		"dscp":                validation.Validate(ds.DSCP, validation.Required),
+		"dscp":                validation.Validate(ds.DSCP, validation.NotNil, validation.Min(0)),
 		"geoLimit":            validation.Validate(ds.GeoLimit, validation.NotNil),
 		"geoProvider":         validation.Validate(ds.GeoProvider, validation.NotNil),
 		"infoUrl":             validation.Validate(ds.InfoURL, is.URL),
-		"initialDispersion":   validation.Validate(ds.InitialDispersion, validation.NotNil, validation.By(tovalidate.GreaterThanZero)),
 		"logsEnabled":         validation.Validate(ds.LogsEnabled, validation.NotNil),
 		"orgServerFqdn":       validation.Validate(ds.OrgServerFQDN, is.URL),
 		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.NotNil),
 		"routingName":         validation.Validate(ds.RoutingName, isHost, noPeriods, validation.Length(1, 48)),
-		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.By(tovalidate.GreaterThanZero)),
+		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.Min(1)),
 		"xmlId":               validation.Validate(ds.XMLID, noSpaces, noPeriods, validation.Length(1, 48)),
 	}
 

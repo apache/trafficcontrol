@@ -44,9 +44,9 @@ func TestValidateErrors(t *testing.T) {
 	errorsFmt, _ := json.MarshalIndent(errorStrs, "", "  ")
 
 	expected := []string{
-		"'active' cannot be blank",
+		"'active' is required",
 		"'cdnId' cannot be blank",
-		"'dscp' cannot be blank",
+		"'dscp' is required",
 		"'geoLimit' is required",
 		"'geoProvider' is required",
 		"'infoUrl' must be a valid URL",
