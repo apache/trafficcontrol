@@ -122,3 +122,16 @@ func ServeErr(w http.ResponseWriter, code int) (uint64, error) {
 	bytesWritten, err := w.Write([]byte(http.StatusText(code)))
 	return uint64(bytesWritten), err
 }
+
+// TryGetBytesWritten attempts to get the real bytes written to the given conn. It takes the bytesWritten as returned by Write(). It forcibly calls Flush() in order to force a write to the conn. Then, it attempts to get the more accurate bytes written to the Conn. If this fails, the given and less accurate bytesWritten is returned. If everything succeeds, the accurate bytes written to the Conn is returned.
+func TryGetBytesWritten(w http.ResponseWriter, conn *InterceptConn, bytesWritten uint64) uint64 {
+	if wFlusher, ok := w.(http.Flusher); !ok {
+		log.Errorln("ResponseWriter is not a Flusher, could not flush written bytes, stat out_bytes will be inaccurate!")
+	} else {
+		wFlusher.Flush()
+	}
+	if conn != nil {
+		return uint64(conn.BytesWritten()) // get the more accurate interceptConn bytes written, if we can
+	}
+	return bytesWritten
+}
