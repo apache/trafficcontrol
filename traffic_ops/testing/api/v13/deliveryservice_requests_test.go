@@ -16,7 +16,6 @@
 package v13
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -29,6 +28,7 @@ const (
 	dsrGood      = 0
 	dsrBadTenant = 1
 	dsrRequired  = 2
+	dsrDraft     = 3
 )
 
 func TestDeliveryServiceRequests(t *testing.T) {
@@ -81,11 +81,9 @@ func TestDeliveryServiceRequestRequired(t *testing.T) {
 }
 
 func TestDeliveryServiceRequestRules(t *testing.T) {
-	fmt.Printf("TestDeliveryServiceRequestRules\n")
-
 	routingName := strings.Repeat("X", 1) + "." + strings.Repeat("X", 48)
-	// Test the xmlId length
-	XMLID := strings.Repeat("X", 48)
+	// Test the xmlId length and form
+	XMLID := "X " + strings.Repeat("X", 46)
 	displayName := strings.Repeat("X", 49)
 
 	dsr := testData.DeliveryServiceRequests[dsrGood]
@@ -98,6 +96,7 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 	}
 
 	expected := []string{
+		"'displayName' the length must be between 1 and 48",
 		"'routingName' cannot contain periods",
 		"'xmlId' cannot contain spaces",
 	}
@@ -107,8 +106,6 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 }
 
 func TestDeliveryServiceRequestTypeFields(t *testing.T) {
-	fmt.Printf("TestDeliveryServiceRequestTypeFields\n")
-
 	dsr := testData.DeliveryServiceRequests[dsrBadTenant]
 	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
 	if err != nil {
@@ -124,9 +121,64 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 
 }
 
-func GetTestDeliveryServiceRequests(t *testing.T) {
-	fmt.Printf("GetTestDeliveryServiceRequests\n")
+// TestDeliveryServiceRequestWorkflow tests that transitions of Status are
+func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 
+	// Create a draft request
+	src := testData.DeliveryServiceRequests[dsrDraft]
+
+	alerts, _, err := TOSession.CreateDeliveryServiceRequest(src)
+	if err != nil {
+		t.Errorf("Error creating DeliveryServiceRequest %v", err)
+	}
+
+	expected := []string{`deliveryservice_request was created.`}
+	utils.Compare(t, expected, alerts.ToStrings())
+
+	dsrs, _, err := TOSession.GetDeliveryServiceRequestByXMLID(`test-transitions`)
+	if len(dsrs) != 1 {
+		t.Errorf("Expected 1 deliveryServiceRequest -- got %d", len(dsrs))
+		if len(dsrs) == 0 {
+			t.Fatal("Cannot proceed")
+		}
+	}
+
+	alerts, dsr := updateDeliveryServiceRequestStatus(t, dsrs[0], "submitted")
+
+	expected = []string{
+		"deliveryservice_request was updated.",
+	}
+
+	utils.Compare(t, expected, alerts.ToStrings())
+	if dsr.Status != tc.RequestStatus("submitted") {
+		t.Errorf("expected status=submitted,  got %s", string(dsr.Status))
+	}
+
+}
+
+func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequest, newstate string) (tc.Alerts, tc.DeliveryServiceRequest) {
+	ID := dsr.ID
+	dsr.Status = tc.RequestStatus("submitted")
+
+	alerts, _, err := TOSession.UpdateDeliveryServiceRequestByID(ID, dsr)
+	if err != nil {
+		t.Errorf("Error updating deliveryservice_request: %v", err)
+		return alerts, dsr
+	}
+
+	d, _, err := TOSession.GetDeliveryServiceRequestByID(ID)
+	if err != nil {
+		t.Errorf("Error updating deliveryservice_request %d: %v", ID, err)
+		return alerts, dsr
+	}
+
+	if len(d) != 1 {
+		t.Errorf("Expected 1 deliveryservice_request, got %d", len(d))
+	}
+	return alerts, d[0]
+}
+
+func GetTestDeliveryServiceRequests(t *testing.T) {
 	dsr := testData.DeliveryServiceRequests[dsrGood]
 	resp, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
 	if err != nil {

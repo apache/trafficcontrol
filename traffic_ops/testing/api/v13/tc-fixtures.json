@@ -120,6 +120,28 @@
                 "xmlId": "test ds1"
             },
             "status": "draft"
+        },
+        {
+            "changeType": "update",
+            "deliveryService": {
+                "active": false,
+                "ccrDnsTtl": 30,
+                "cdnId": 1,
+                "displayName": "Testing transitions",
+                "deepCachingType": "ALWAYS",
+                "dscp": 3,
+                "geoLimit": 1,
+                "geoProvider": 1,
+                "initialDispersion": 1,
+                "logsEnabled": true,
+                "longDesc": "long desc",
+                "regionalGeoBlocking": true,
+                "routingName": "goodroute",
+                "tenantId": 2,
+                "typeId": 70,
+                "xmlId": "test-transitions"
+            },
+            "status": "draft"
         }
     ],
     "deliveryServices": [
