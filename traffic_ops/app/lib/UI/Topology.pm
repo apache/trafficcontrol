@@ -153,18 +153,18 @@ sub gen_crconfig_json {
             }
             $data_obj->{'config'}->{'requestHeaders'} = $headers;
         }
-        elsif ( $param eq 'geolocation.default.override' ) {
+        elsif ( $param eq 'maxmind.default.override' ) {
             ( my $country_code, my $coordinates ) = split( /\;/, $row->parameter->value );
             ( my $lat, my $long ) = split( /\,/, $coordinates );
             my $geolocation = {
                 'countryCode' => "$country_code",
-                'lat' => "$lat",
-                'long' => "$long"
+                'lat' => $lat + 0,
+                'long' => $long + 0
             };
-            if ( !$data_obj->{'config'}->{'geolocationOverride'} ) {
-                $data_obj->{'config'}->{'geolocationOverride'} = [];
+            if ( !$data_obj->{'config'}->{'maxmindDefaultOverride'} ) {
+                $data_obj->{'config'}->{'maxmindDefaultOverride'} = [];
             }
-            push ( $data_obj->{'config'}->{'geolocationOverride'}, $geolocation );
+            push ( $data_obj->{'config'}->{'maxmindDefaultOverride'}, $geolocation );
         }
         elsif ( !exists $requested_param_names{$param} ) {
             $data_obj->{'config'}->{$param} = $row->parameter->value;
