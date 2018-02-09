@@ -34,11 +34,6 @@
 				  -webkit-font-smoothing: antialiased;
 				  font: normal 14px Roboto,arial,sans-serif;
 				}
-				.browsers {
-					width: 107px;
-					height: 25px;
-					background: url('/images/browser-icons.png') no-repeat 0 0;
-				}
 				.container {
 					padding: 25px;
 					position: fixed;
@@ -92,10 +87,6 @@
 						<span class="group-btn">     
 							<a id="login_button" href="#" class="btn btn-primary btn-md">login <i class="fa fa-sign-in"></i></a>
 						</span>
-					</div>
-					<div style="float:right;">
-						<label>Supported Browsers: </label>
-						<div id="browsers" class="browsers" title="Browsers"></div>
 					</div>
             </div>
 			</form>
