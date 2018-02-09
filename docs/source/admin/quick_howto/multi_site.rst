@@ -57,45 +57,12 @@ Configure Multi Site Origin
        4) This OFQDN must be valid - ATS will perform a DNS lookup on this FQDN even if IPs, not DNS, are used in the parent.config.
        5) The OFQDN entered as the "Origin Server Base URL" will be sent to the origins as a host header.  All origins must be configured to respond to this host.
 
-6) Select an option from the "Multi Site Origin Algorithm" drop-down list. Four MSO algorithms are supported:
 
-+------------------+--------------------------------------------------------------------------------------------------------------------+
-|     Option       |                                                            Description                                             |
-+==================+====================================================================================================================+
-| Consistent hash  | Origin server selection is based on the consistent hash of requested URLs.                                         |
-+------------------+--------------------------------------------------------------------------------------------------------------------+
-| Primary/back     | Round robin selection does not occur. The first origin server is selected unless it fails.                         |
-|                  | If the first fails, the second and other following origin servers will be tried by order.                          |
-|                  | Order is defined by 2 factors - if the origin server's cachegroup is configured as the                             |
-|                  | parent cachegroup for the mid, then this server will be used as the primary. The same rules                        |
-|                  | apply for secondary parents, in order.  Within the cachegroups, the rank parameter will sort                       |
-|                  | order further. If no parents are defined at the mid, then only rank is considered.                                 |  
-+------------------+--------------------------------------------------------------------------------------------------------------------+
-| Strict           | MID caches serve requests strictly in turn. For example: origin server 1 serves the first request,                 |
-| round-robin      | origin server 2 serves the second request, and so on.                                                              |
-+------------------+--------------------------------------------------------------------------------------------------------------------+
-| IP based         | MID cache goes through the origin server list in a round robin-based on the IP address of EDGE cache.              |
-| round-robin      |                                                                                                                    |
-+------------------+--------------------------------------------------------------------------------------------------------------------+
-
-7) Optionally, there are two configuration options that can set the order of the origins used if "Primary/backup" is selected for "Multi Site Origin Algorithm". By creating location-based cachegroups and assigning the origin servers accordingly and defining these cachegroups as parents for specific mids, location-based primary/secondary selection can be made.   If primary/secondary selection should be the same for all mids, then a new parameter “rank” should be configured for each origin server profile. Origin servers with lower values of rank have higher ranking in the origin server list on MID caches, e.g. OS with rank of "2" precedes OS with the rank of "5". For any OS, if rank value is not defined in its profile, its rank value will default to “1”.  In the event that both location based cachegroups are used alongside rank, sorting will be by cachegroup first and rank second.  In this way it is possible to have specific backup servers for use at specific locations.
-
-.. image:: mso-rank.png
-	:scale: 60%
-	:align: center
-
-8) Assign the parent.config location parameter to the MID profile:
-
-.. image:: D22DCAA3-18CC-48F4-965B-5312993F9820.png
-	:scale: 100%
-	:align: center
-
-
-9) For ATS 5.x, configure the mid hdr_rewrite on the delivery service, example: ::
+6) For ATS 5.x, configure the mid hdr_rewrite on the delivery service, example: ::
 
 	cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-config proxy.config.http.parent_origin.dead_server_retry_enabled 1 __RETURN__ set-config proxy.config.http.parent_origin.simple_retry_enabled 1 __RETURN__ set-config proxy.config.http.parent_origin.simple_retry_response_codes "400,404,412" __RETURN__ set-config proxy.config.http.parent_origin.dead_server_retry_response_codes "502,503" __RETURN__ set-config proxy.config.http.connect_attempts_timeout 2 __RETURN__ set-config proxy.config.http.connect_attempts_max_retries 2 __RETURN__ set-config proxy.config.http.connect_attempts_max_retries_dead_server 1 __RETURN__ set-config proxy.config.http.transaction_active_timeout_in 5 [L] __RETURN__
 
-10) As of ATS 6.x, multi-site options must be set as parameters within the parent.config.  Header rewrite parameters will be ignored.  See `ATS parent.config <https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/files/parent.config.en.html>` for more details.  These parameters are now handled by the creation of a delivery service profile.
+7) Create a delivery service profile. This must be done to set the MSO algorithm.  Also, as of ATS 6.x, multi-site options must be set as parameters within the parent.config.  Header rewrite parameters will be ignored.  See `ATS parent.config <https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/files/parent.config.en.html>` for more details.  These parameters are now handled by the creation of a delivery service profile.
 
 a) Create a profile of the type DS_PROFILE for the delivery service in question.
 
@@ -114,8 +81,17 @@ b) Click "Show profile parameters" to bring up the parameters screen for the pro
 | mso.parent_retry                       | parent.config    | simple_retry, both,      | parent_retry            |
 |                                        |                  | unavailable_server_retry |                         |
 +----------------------------------------+------------------+--------------------------+-------------------------+
-| mso.unavailable_server_retry_responses | parent.config    | list of server response  |                         |
-|                                        |                  | codes, eg "500,502,503"  |                         |
+| mso.unavailable_server_retry_responses | parent.config    | list of server response  | defaults to the value   |
+|                                        |                  | codes, eg "500,502,503"  | in records.config       |
+|                                        |                  |                          | when unused.            |
++----------------------------------------+------------------+--------------------------+-------------------------+
+| mso.max_simple_retries                 | parent.config    | Nubmer of retries made   | defaults to the value   |
+|                                        |                  | after a 4xx error        | in records.config       |
+|                                        |                  |                          | when unused.            |
++----------------------------------------+------------------+--------------------------+-------------------------+
+| mso.max_unavailable_server_retries     | parent.config    | Nubmer of retries made   | defaults to the value   |
+|                                        |                  | after a 5xx error        | in records.config       |
+|                                        |                  |                          | when unused.            |
 +----------------------------------------+------------------+--------------------------+-------------------------+
 
 
