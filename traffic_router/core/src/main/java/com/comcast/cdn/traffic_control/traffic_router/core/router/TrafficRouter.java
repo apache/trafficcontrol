@@ -104,13 +104,13 @@ public class TrafficRouter {
 		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils, trafficRouterManager);
 
 		if (cr.getConfig() != null) {
-			// geolocationOverride: {CountryCode: , Lat: , Long: }
+			// geolocationOverride: {countryCode: , lat: , long: }
 			final JsonNode geolocations = cr.getConfig().get("geolocationOverride");
 			if (geolocations != null) {
 				for (final JsonNode geolocation : geolocations) {
-					final String countryCode = JsonUtils.optString(geolocation, "CountryCode");
-					final double lat = JsonUtils.optDouble(geolocation, "Lat");
-					final double longitude = JsonUtils.optDouble(geolocation, "Long");
+					final String countryCode = JsonUtils.optString(geolocation, "countryCode");
+					final double lat = JsonUtils.optDouble(geolocation, "lat");
+					final double longitude = JsonUtils.optDouble(geolocation, "long");
 					defaultGeolocations.put(countryCode, new Geolocation(lat, longitude));
 				}
 			}
