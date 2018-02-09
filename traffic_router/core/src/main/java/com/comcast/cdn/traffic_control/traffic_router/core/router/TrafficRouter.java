@@ -104,7 +104,7 @@ public class TrafficRouter {
 		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils, trafficRouterManager);
 
 		if (cr.getConfig() != null) {
-			// geolocationOverride: {countryCode: , lat: , long: }
+			// maxmindDefaultOverride: {countryCode: , lat: , long: }
 			final JsonNode geolocations = cr.getConfig().get("maxmindDefaultOverride");
 			if (geolocations != null) {
 				for (final JsonNode geolocation : geolocations) {
