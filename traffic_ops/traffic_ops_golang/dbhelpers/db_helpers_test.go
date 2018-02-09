@@ -35,7 +35,7 @@ func stripAllWhitespace(s string) string {
 }
 
 func TestBuildQuery(t *testing.T) {
-	v := map[string]string{"param1": "queryParamv1","param2": "queryParamv2"}
+	v := map[string]string{"param1": "queryParamv1", "param2": "queryParamv2"}
 
 	selectStmt := `SELECT
 	t.col1,
@@ -45,8 +45,8 @@ FROM table t
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]WhereColumnInfo{
-		"param1": WhereColumnInfo{"t.col1",nil},
-		"param2": WhereColumnInfo{"t.col2",nil},
+		"param1": WhereColumnInfo{"t.col1", nil},
+		"param2": WhereColumnInfo{"t.col2", nil},
 	}
 	where, orderBy, queryValues, _ := BuildWhereAndOrderBy(v, queryParamsToSQLCols)
 	query := selectStmt + where + orderBy

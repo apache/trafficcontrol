@@ -128,16 +128,16 @@ FROM cdn c`
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
-		if tx == nil {
+		if tx == nil || !rollbackTransaction {
 			return
 		}
+		err := tx.Rollback()
 		if err != nil {
-			tx.Rollback()
-			return
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
 		}
-		tx.Commit()
 	}()
 
 	if err != nil {
@@ -178,6 +178,12 @@ func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
@@ -189,16 +195,16 @@ func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 //The insert sql returns the id and lastUpdated values of the newly inserted cdn and have
 //to be added to the struct
 func (cdn *TOCDN) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
-		if tx == nil {
+		if tx == nil || !rollbackTransaction {
 			return
 		}
+		err := tx.Rollback()
 		if err != nil {
-			tx.Rollback()
-			return
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
 		}
-		tx.Commit()
 	}()
 
 	if err != nil {
@@ -241,22 +247,28 @@ func (cdn *TOCDN) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 	}
 	cdn.SetID(id)
 	cdn.LastUpdated = lastUpdated
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
 //The CDN implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
 func (cdn *TOCDN) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
-		if tx == nil {
+		if tx == nil || !rollbackTransaction {
 			return
 		}
+		err := tx.Rollback()
 		if err != nil {
-			tx.Rollback()
-			return
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
 		}
-		tx.Commit()
 	}()
 
 	if err != nil {
@@ -280,6 +292,12 @@ func (cdn *TOCDN) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
