@@ -33,7 +33,7 @@ var DeliveryServiceSslKeysService = function($http, $q, locationUtils, messageMo
         $http.post(ENV.api['root'] + "deliveryservices/sslkeys/generate", generateSslKeyForm)
         .then(
             function(result) {
-            	messageModel.setMessages([ { level: 'success', text: 'New SSL Keys generated' } ], true);
+            	messageModel.setMessages([ { level: 'success', text: 'SSL Keys generated and updated for ' + deliveryService.xmlId } ], true);
                 request.resolve(result.data.response);
             },
             function(fault) {
@@ -60,7 +60,7 @@ var DeliveryServiceSslKeysService = function($http, $q, locationUtils, messageMo
         $http.post(ENV.api['root'] + "deliveryservices/sslkeys/add", sslKeys)
         .then(
             function(result) {
-            	messageModel.setMessages([ { level: 'success', text: 'New SSL Keys added' } ], false);
+            	messageModel.setMessages([ { level: 'success', text: 'SSL Keys updated for ' + deliveryService.xmlId } ], false);
                 request.resolve(result.data.response);
             },
             function(fault) {
