@@ -157,9 +157,9 @@ sub gen_crconfig_json {
             ( my $country_code, my $coordinates ) = split( /\;/, $row->parameter->value );
             ( my $lat, my $long ) = split( /\,/, $coordinates );
             my $geolocation = {
-                'CountryCode' => "$country_code",
-                'Lat' => "$lat",
-                'Long' => "$long"
+                'countryCode' => "$country_code",
+                'lat' => "$lat",
+                'long' => "$long"
             };
             if ( !$data_obj->{'config'}->{'geolocationOverride'} ) {
                 $data_obj->{'config'}->{'geolocationOverride'} = [];
