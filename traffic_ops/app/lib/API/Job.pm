@@ -96,8 +96,15 @@ sub show {
 	}
 
 	my $jobs = $self->db->resultset("Job")->search( { 'me.id' => $id }, { prefetch => [ 'job_deliveryservice', 'job_user' ] } );
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
 	my @data = ();
 	while ( my $job = $jobs->next ) {
+		if ($tenant_utils->use_tenancy() && !$tenant_utils->is_ds_resource_accessible($tenants_data, $job->job_deliveryservice->tenant_id)) {
+			next;
+		}
 		push(
 			@data, {
 				"id"              => $job->id,
@@ -122,9 +129,18 @@ sub delete {
 		return $self->forbidden();
 	}
 
-	my $job = $self->db->resultset('Job')->find( { id => $id } );
+	my $job = $self->db->resultset('Job')->find( { id => $id }, { prefetch => [ 'job_deliveryservice'] });
 	if ( !defined($job) ) {
 		return $self->not_found();
+	}
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
+	if ( $tenant_utils->use_tenancy() ) {
+		if ( !$tenant_utils->is_ds_resource_accessible($tenants_data, $job->job_deliveryservice->tenant_id) ) {
+			return $self->forbidden("Forbidden. Delivery-service tenant is not available to the user.");
+		}
 	}
 
 	my $rs = $job->delete();
