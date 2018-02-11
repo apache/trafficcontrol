@@ -267,7 +267,7 @@ ok $t->post_ok(
 		'ds.multi_site_origin'           => '0',
 		'ds.multi_site_origin_algorithm' => '0',
 		'ds.profile'                     => '200',
-		'ds.cdn_id'                      => '200',
+		'ds.cdn_id'                      => '100',
 		'ds.qstring_ignore'              => '0',
 		'ds.signed'                      => '0',
 		'ds.type'                        => '7',
