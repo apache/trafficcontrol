@@ -197,11 +197,6 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 	}
 	defer resultRows.Close()
 
-	if !resultRows.Next() {
-		err = errors.New("no request found with this id")
-		return err, tc.DataMissingError
-	}
-
 	// get LastUpdated field -- updated by trigger in the db
 	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
@@ -357,6 +352,14 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 	if rowsAffected > 1 {
 		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 	}
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	// success!
+	rollbackTransaction = false
+	log.Infoln("Delete succeeded")
 	return nil, tc.NoError
 }
 
