@@ -31,7 +31,7 @@ public class Geolocation {
 	private String city;
 	private String countryCode;
 	private String countryName;
-	private boolean isDefault;
+	private boolean isDefault = false;
 
 	/**
 	 * Creates an immutable {@link Geolocation}.
