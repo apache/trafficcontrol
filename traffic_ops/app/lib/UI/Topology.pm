@@ -162,9 +162,9 @@ sub gen_crconfig_json {
                 'long' => $long + 0
             };
             if ( !$data_obj->{'config'}->{'maxmindDefaultOverride'} ) {
-                $data_obj->{'config'}->{'maxmindDefaultOverride'} = [];
+                @{ $data_obj->{'config'}->{'maxmindDefaultOverride'} } = ();
             }
-            push ( $data_obj->{'config'}->{'maxmindDefaultOverride'}, $geolocation );
+            push ( @{ $data_obj->{'config'}->{'maxmindDefaultOverride'} }, $geolocation );
         }
         elsif ( !exists $requested_param_names{$param} ) {
             $data_obj->{'config'}->{$param} = $row->parameter->value;
@@ -681,11 +681,21 @@ sub crconfig_strings {
             foreach my $key ( sort keys %{ $config_json->{'config'}->{$cfg} } ) {
                 $string .= "|$key:" . $config_json->{'config'}->{$cfg}->{$key};
             }
+            push( @config_strings, $string );
+        }
+        elsif ( $cfg eq 'maxmindDefaultOverride' ) {
+            foreach my $element ( @{ $config_json->{'config'}->{$cfg} } ) {
+                $string = "|param:$cfg";
+                foreach my $key ( sort keys %{ $element } ) {
+                    $string .= "|$key:" . $element->{$key};
+                }
+                push( @config_strings, $string );
+            }
         }
         else {
             $string = "|param:$cfg|value:" . $config_json->{'config'}->{$cfg} . "|";
+            push( @config_strings, $string );
         }
-        push( @config_strings, $string );
     }
     foreach my $rascal ( sort keys %{ $config_json->{'monitors'} } ) {
         my $return = &stringify_rascal( $config_json->{'monitors'}->{$rascal} );
