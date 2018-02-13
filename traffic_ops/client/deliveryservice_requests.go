@@ -55,6 +55,26 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (
 	return alerts, reqInf, err
 }
 
+// GetDeliveryServiceRequests retrieves all deliveryservices available to session user.
+func (to *Session) GetDeliveryServiceRequests() ([]tc.DeliveryServiceRequest, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_DS_REQUESTS, nil)
+
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	data := struct {
+		Response []tc.DeliveryServiceRequest `json:"response"`
+	}{}
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
 // GET a DeliveryServiceRequest by the DeliveryServiceRequest XMLID
 func (to *Session) GetDeliveryServiceRequestByXMLID(XMLID string) ([]tc.DeliveryServiceRequest, ReqInf, error) {
 	route := fmt.Sprintf("%s?xmlId=%s", API_DS_REQUESTS, XMLID)
