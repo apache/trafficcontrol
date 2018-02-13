@@ -31,7 +31,7 @@ public class Geolocation {
 	private String city;
 	private String countryCode;
 	private String countryName;
-	private boolean isDefault = false;
+	private boolean defaultLocation = false;
 
 	/**
 	 * Creates an immutable {@link Geolocation}.
@@ -146,12 +146,12 @@ public class Geolocation {
 		this.countryName = countryName;
 	}
 
-	public boolean isDefault() {
-		return isDefault;
+	public boolean isDefaultLocation() {
+		return defaultLocation;
 	}
 
-	public void setIsDefault(boolean isDefault) {
-		this.isDefault = isDefault;
+	public void setDefaultLocation(boolean defaultLocation) {
+		this.defaultLocation = defaultLocation;
 	}
 
 	@Override
