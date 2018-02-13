@@ -13,30 +13,10 @@
 .. limitations under the License.
 ..
 
-Quick How To Guides
-*******************
+.. _ds_requests:
 
-Traffic Control is a complicated system, and documenting it is not trivial. Sometimes a picture says more than a thousand words, so here are some screen shot based tutorials on how to use some of the more involved features.
+Delivery Service Requests
+=========================
 
-Traffic Ops
-===========
-
-.. toctree::
-
-  multi_site.rst
-  dnssec.rst
-  federations.rst
-  regionalgeo.rst
-  steering.rst
-
-Traffic Portal
-==============
-
-.. toctree::
-
-  ds_requests.rst
-
-
-
-
+Here we will walk through the process of creating a delivery service request.
 

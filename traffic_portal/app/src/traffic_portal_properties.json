@@ -39,7 +39,7 @@
     },
     "dsRequests": {
       "_comments": "Should all delivery service changes go through the delivery service review process?",
-      "enabled": false
+      "enabled": true
     },
     "cacheChecks": {
       "_comments": "These are configurable properties for the cache checks view. The data for the cache checks view is derived from TO extensions.",
