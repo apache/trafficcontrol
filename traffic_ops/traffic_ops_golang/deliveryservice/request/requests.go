@@ -242,6 +242,12 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 //The insert sql returns the id and lastUpdated values of the newly inserted request and have
 //to be added to the struct
 func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	if req == nil {
+		return errors.New("nil deliveryservice_request"), tc.SystemError
+	}
+	if req.Status != "draft" && req.Status != "submitted" {
+		return errors.New("invalid initial request status " + string(req.Status) + ".  Must be 'draft' or 'submitted'"), tc.DataConflictError
+	}
 	// first, ensure there's not an active request with this XMLID
 	ds := req.DeliveryService
 	if ds == nil {
