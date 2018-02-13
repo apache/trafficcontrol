@@ -110,12 +110,21 @@ func (req *TODeliveryServiceRequest) Read(db *sqlx.DB, parameters map[string]str
 
 	var deliveryServiceRequests []interface{}
 	for rows.Next() {
-		var s tc.DeliveryServiceRequestNullable
+		var s TODeliveryServiceRequest
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorf("error parsing DeliveryServiceRequest rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
-		deliveryServiceRequests = append(deliveryServiceRequests, s)
+
+		// TODO: combine tenancy with the query above so there's a single db call
+		t, err := s.IsTenantAuthorized(user, db)
+		if err != nil {
+			log.Errorf("error checking tenancy: %v", err)
+			return nil, []error{tc.DBError}, tc.SystemError
+		}
+		if t {
+			deliveryServiceRequests = append(deliveryServiceRequests, s)
+		}
 	}
 
 	return deliveryServiceRequests, []error{}, tc.NoError
