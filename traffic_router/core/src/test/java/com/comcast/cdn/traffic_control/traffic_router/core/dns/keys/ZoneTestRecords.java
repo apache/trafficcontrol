@@ -120,8 +120,8 @@ public class ZoneTestRecords {
 				adminEmail, 2016091400L, oneDay.getSeconds(), oneHour, threeWeeks.getSeconds(), threeDays.getSeconds()),
 			new AAAARecord(ftpServer, DClass.IN, threeDays.getSeconds(), Inet6Address.getByName("2001:db8::21:43:65:87")),
 			new CNAMERecord(webMirror, DClass.IN, tenYears.getSeconds(), webServer),
-			new CNAMERecord(ftpMirror, DClass.IN, tenYears.getSeconds(), ftpServer)
-			new TXTRecord(txtRecord, DClass.IN, tenYears.getSeconds(), txtRecord)
+			new CNAMERecord(ftpMirror, DClass.IN, tenYears.getSeconds(), ftpServer),
+			new TXTRecord(webServer, DClass.IN, tenYears.getSeconds(), txtRecord)
 		));
 
 		if (makeNewKeyPairs) {
