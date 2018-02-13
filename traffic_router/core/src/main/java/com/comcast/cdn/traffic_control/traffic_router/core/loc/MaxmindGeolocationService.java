@@ -151,7 +151,7 @@ public class MaxmindGeolocationService implements GeolocationService {
 		}
 
 		if (geolocation.getCity() == null && geolocation.getPostalCode() == null && response.getSubdivisions().isEmpty()) {
-			geolocation.setIsDefault(true);
+			geolocation.setDefaultLocation(true);
 		}
 
 		return geolocation;

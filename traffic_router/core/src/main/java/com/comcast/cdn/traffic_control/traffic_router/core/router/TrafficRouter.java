@@ -325,7 +325,7 @@ public class TrafficRouter {
 			}
 		}
 
-		if (clientLocation.isDefault() && defaultGeolocations.containsKey(clientLocation.getCountryCode())) {
+		if (clientLocation.isDefaultLocation() && defaultGeolocations.containsKey(clientLocation.getCountryCode())) {
 			clientLocation = defaultGeolocations.get(clientLocation.getCountryCode());
 		}
 
