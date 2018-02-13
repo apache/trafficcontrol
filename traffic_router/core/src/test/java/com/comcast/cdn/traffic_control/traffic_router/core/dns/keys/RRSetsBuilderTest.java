@@ -45,11 +45,12 @@ public class RRSetsBuilderTest {
 	@Test
 	public void itGroupsResourceRecordsAccordingToRfc4034() throws Exception {
 		List<RRset> rRsets = new RRSetsBuilder().build(ZoneTestRecords.records);
-		assertThat(rRsets.size(), equalTo(8));
+		assertThat(rRsets.size(), equalTo(9));
 		assertThat(findRRSet(rRsets, "mirror.www.example.com.", Type.CNAME), notNullValue());
 		assertThat(findRRSet(rRsets, "ftp.example.com.", Type.AAAA), notNullValue());
 		assertThat(findRRSet(rRsets, "ftp.example.com.", Type.A), notNullValue());
 		assertThat(findRRSet(rRsets, "www.example.com.", Type.A), notNullValue());
+		assertThat(findRRSet(rRsets, "www.example.com.", Type.TXT), notNullValue());
 		assertThat(findRRSet(rRsets, "example.com.", Type.NS), notNullValue());
 		assertThat(findRRSet(rRsets, "mirror.ftp.example.com.", Type.CNAME), notNullValue());
 		assertThat(findRRSet(rRsets, "www.example.com.", Type.AAAA), notNullValue());
