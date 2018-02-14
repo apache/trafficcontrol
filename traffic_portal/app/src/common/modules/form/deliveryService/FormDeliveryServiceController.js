@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceController = function(deliveryService, type, types, $scope, $location, $uibModal, formUtils, locationUtils, tenantUtils, cdnService, profileService, tenantService) {
+var FormDeliveryServiceController = function(deliveryService, type, types, $scope, $location, $uibModal, $window, formUtils, locationUtils, tenantUtils, cdnService, profileService, tenantService, propertiesModel) {
 
     var getCDNs = function() {
         cdnService.getCDNs()
@@ -44,6 +44,8 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
     };
 
     $scope.deliveryService = deliveryService;
+
+    $scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
 
     $scope.manageKeys = {
         sslKeys: deliveryService.protocol > 0,
@@ -180,6 +182,13 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
         return '-'.repeat(tenant.level) + ' ' + tenant.name;
     };
 
+    $scope.openCharts = function(ds) {
+        $window.open(
+            propertiesModel.properties.deliveryServices.charts.baseUrl + ds.xmlId,
+            '_blank'
+        );
+    };
+
     $scope.clone = function(ds) {
         var params = {
             title: 'Clone Delivery Service: ' + ds.xmlId,
@@ -259,5 +268,5 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'tenantUtils', 'cdnService', 'profileService', 'tenantService'];
+FormDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$location', '$uibModal', '$window', 'formUtils', 'locationUtils', 'tenantUtils', 'cdnService', 'profileService', 'tenantService', 'propertiesModel'];
 module.exports = FormDeliveryServiceController;
