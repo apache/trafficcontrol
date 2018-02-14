@@ -336,6 +336,7 @@ For the errors component:
 
 For the x/net component:
 @traffic_stats/vendor/golang.org/x/net/*
+@traffic_ops/testing/compare/vendor/golang.org/x/net/*
 ./traffic_stats/vendor/golang.org/x/net/LICENSE
 ./traffic_stats/vendor/golang.org/x/net/PATENTS
 
@@ -419,6 +420,7 @@ The x/net library is used under the BSD License from the Go Authors:
 
 The envconfig component is used under the MIT license:
 @traffic_ops/testing/api/vendor/github.com/kelseyhightower/envconfig/*
+@traffic_ops/testing/compare/vendor/github.com/kelseyhightower/envconfig/*
 ./traffic_ops/testing/api/vendor/github.com/kelseyhightower/envconfig/LICENSE
 
 The govalidator component is used under the MIT license:
