@@ -37,8 +37,8 @@ type Identifier interface {
 	GetAuditName() string
 }
 
-type Inserter interface {
-	Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType)
+type Creator interface {
+	Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType)
 	SetID(int)
 	Identifier
 	Validator
