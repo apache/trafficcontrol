@@ -70,8 +70,6 @@ func (req *TODeliveryServiceRequest) SetID(i int) {
 
 // Read implements the api.Reader interface
 func (req *TODeliveryServiceRequest) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
-
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"assignee":   dbhelpers.WhereColumnInfo{Column: "s.username"},
 		"assigneeId": dbhelpers.WhereColumnInfo{Column: "r.assignee_id", Checker: api.IsInt},
@@ -395,11 +393,9 @@ AND status IN ('draft', 'submitted', 'pending'))`
 func updateRequestQuery() string {
 	query := `UPDATE
 deliveryservice_request
-SET assignee_id=:assignee_id,
-change_type=:change_type,
+SET change_type=:change_type,
 last_edited_by_id=:last_edited_by_id,
 deliveryservice=:deliveryservice,
-status=:status
 WHERE id=:id RETURNING last_updated`
 	return query
 }
@@ -427,4 +423,176 @@ func deleteRequestQuery() string {
 	query := `DELETE FROM deliveryservice_request
 WHERE id=:id`
 	return query
+}
+
+////////////////////////////////////////////////////////////////
+// Assignment change
+type TODeliveryServiceRequestAssignment TODeliveryServiceRequest
+
+// GetAssignRefType is used to decode the JSON for deliveryservice_request assignment
+func GetAssignRefType() *TODeliveryServiceRequestAssignment {
+	return &TODeliveryServiceRequestAssignment{}
+}
+
+func (req *TODeliveryServiceRequestAssignment) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	// req represents the state the deliveryservice_request is to transition to
+	// we want to limit what changes here -- only assignee can change
+
+	// get original
+	var current TODeliveryServiceRequestAssignment
+	err := db.QueryRowx(selectDeliveryServiceRequestsQuery() + " WHERE r.id=" + strconv.Itoa(req.ID)).StructScan(&current)
+	if err != nil {
+		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
+		return err, tc.SystemError
+	}
+
+	if current.AssigneeID == req.AssigneeID {
+		log.Infof("assignee unchanged")
+		return nil, tc.NoError
+	}
+
+	rollbackTransaction := true
+	tx, err := db.Beginx()
+	defer func() {
+		if tx == nil || !rollbackTransaction {
+			return
+		}
+		err := tx.Rollback()
+		if err != nil {
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
+		}
+	}()
+
+	if err != nil {
+		log.Error.Println("could not begin transaction: ", err.Error())
+		return err, tc.SystemError
+	}
+
+	// LastEditedBy field should not change with status update
+	v := "null"
+	if req.AssigneeID != nil {
+		v = strconv.Itoa(*req.AssigneeID)
+	}
+	query := fmt.Sprintf(`UPDATE deliveryservice_request SET assignee_id = %s WHERE id=%d`, v, current.ID)
+	_, err = tx.Exec(query)
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
+			if eType == tc.DataConflictError {
+				return errors.New("a deliveryservice request with " + err.Error()), eType
+			}
+			return err, eType
+		}
+		log.Errorf("received error: %++v from update execution", err)
+		return tc.DBError, tc.SystemError
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
+	return nil, tc.NoError
+}
+
+func (req *TODeliveryServiceRequestAssignment) GetID() int {
+	return (*TODeliveryServiceRequest)(req).GetID()
+}
+
+func (req *TODeliveryServiceRequestAssignment) GetType() string {
+	return (*TODeliveryServiceRequest)(req).GetType()
+}
+
+func (req *TODeliveryServiceRequestAssignment) GetAuditName() string {
+	return (*TODeliveryServiceRequest)(req).GetAuditName()
+}
+
+func (req *TODeliveryServiceRequestAssignment) Validate(db *sqlx.DB) []error {
+	return nil
+}
+
+////////////////////////////////////////////////////////////////
+// Status change
+
+type TODeliveryServiceRequestStatus TODeliveryServiceRequest
+
+// GetAssignRefType is used to decode the JSON for deliveryservice_request status change
+func GetStatusRefType() *TODeliveryServiceRequestStatus {
+	return &TODeliveryServiceRequestStatus{}
+}
+
+func (req *TODeliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	// req represents the state the deliveryservice_request is to transition to
+	// we want to limit what changes here -- only status can change,  and only according to the established rules
+	// for status transition
+
+	// get original
+	var current TODeliveryServiceRequestStatus
+	err := db.QueryRowx(selectDeliveryServiceRequestsQuery() + " WHERE r.id=" + strconv.Itoa(req.ID)).StructScan(&current)
+	if err != nil {
+		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
+		return err, tc.SystemError
+	}
+
+	st := req.Status
+	if err = current.Status.ValidTransition(st); err != nil {
+		return err, tc.DataConflictError
+	}
+
+	rollbackTransaction := true
+	tx, err := db.Beginx()
+	defer func() {
+		if tx == nil || !rollbackTransaction {
+			return
+		}
+		err := tx.Rollback()
+		if err != nil {
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
+		}
+	}()
+
+	if err != nil {
+		log.Error.Println("could not begin transaction: ", err.Error())
+		return err, tc.SystemError
+	}
+
+	// LastEditedBy field should not change with status update
+	query := fmt.Sprintf(`UPDATE deliveryservice_request SET status = '%s' WHERE id=%d`, req.Status, current.ID)
+	_, err = tx.Exec(query)
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
+			if eType == tc.DataConflictError {
+				return errors.New("a deliveryservice request with " + err.Error()), eType
+			}
+			return err, eType
+		}
+		log.Errorf("received error: %++v from update execution", err)
+		return tc.DBError, tc.SystemError
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
+	return nil, tc.NoError
+}
+
+func (req *TODeliveryServiceRequestStatus) GetID() int {
+	return (*TODeliveryServiceRequest)(req).GetID()
+}
+
+func (req *TODeliveryServiceRequestStatus) GetType() string {
+	return (*TODeliveryServiceRequest)(req).GetType()
+}
+
+func (req *TODeliveryServiceRequestStatus) GetAuditName() string {
+	return (*TODeliveryServiceRequest)(req).GetAuditName()
+}
+
+func (req *TODeliveryServiceRequestStatus) Validate(db *sqlx.DB) []error {
+	return nil
 }
