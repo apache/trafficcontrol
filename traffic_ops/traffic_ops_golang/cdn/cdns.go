@@ -187,8 +187,8 @@ func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 	return nil, tc.NoError
 }
 
-//The TOCDN implementation of the Inserter interface
-//all implementations of Inserter should use transactions and return the proper errorType
+//The TOCDN implementation of the Creator interface
+//all implementations of Creator should use transactions and return the proper errorType
 //ParsePQUniqueConstraintError is used to determine if a cdn with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
