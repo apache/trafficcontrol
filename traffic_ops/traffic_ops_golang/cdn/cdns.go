@@ -95,7 +95,7 @@ func (cdn *TOCDN) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
-	resultRows, err := tx.NamedQuery(insertCDNQuery(), cdn)
+	resultRows, err := tx.NamedQuery(insertQuery(), cdn)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -275,8 +275,8 @@ func (cdn *TOCDN) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
-	log.Debugf("about to run exec query: %s with cdn: %++v", deleteCDNQuery(), cdn)
-	result, err := tx.NamedExec(deleteCDNQuery(), cdn)
+	log.Debugf("about to run exec query: %s with cdn: %++v", deleteQuery(), cdn)
+	result, err := tx.NamedExec(deleteQuery(), cdn)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -311,7 +311,7 @@ WHERE id=:id RETURNING last_updated`
 	return query
 }
 
-func insertCDNQuery() string {
+func insertQuery() string {
 	query := `INSERT INTO cdn (
 dnssec_enabled,
 domain_name,
@@ -322,7 +322,7 @@ name) VALUES (
 	return query
 }
 
-func deleteCDNQuery() string {
+func deleteQuery() string {
 	query := `DELETE FROM cdn
 WHERE id=:id`
 	return query
