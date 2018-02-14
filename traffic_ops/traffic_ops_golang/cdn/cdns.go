@@ -71,6 +71,75 @@ func (cdn *TOCDN) Validate(db *sqlx.DB) []error {
 	return errs
 }
 
+//The TOCDN implementation of the Creator interface
+//all implementations of Creator should use transactions and return the proper errorType
+//ParsePQUniqueConstraintError is used to determine if a cdn with conflicting values exists
+//if so, it will return an errorType of DataConflict and the type should be appended to the
+//generic error message returned
+//The insert sql returns the id and lastUpdated values of the newly inserted cdn and have
+//to be added to the struct
+func (cdn *TOCDN) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
+	tx, err := db.Beginx()
+	defer func() {
+		if tx == nil || !rollbackTransaction {
+			return
+		}
+		err := tx.Rollback()
+		if err != nil {
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
+		}
+	}()
+
+	if err != nil {
+		log.Error.Printf("could not begin transaction: %v", err)
+		return tc.DBError, tc.SystemError
+	}
+	resultRows, err := tx.NamedQuery(insertCDNQuery(), cdn)
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
+			if eType == tc.DataConflictError {
+				return errors.New("a cdn with " + err.Error()), eType
+			}
+			return err, eType
+		} else {
+			log.Errorf("received non pq error: %++v from create execution", err)
+			return tc.DBError, tc.SystemError
+		}
+	}
+	defer resultRows.Close()
+
+	var id int
+	var lastUpdated tc.Time
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
+			log.Error.Printf("could not scan id from insert: %s\n", err)
+			return tc.DBError, tc.SystemError
+		}
+	}
+	if rowsAffected == 0 {
+		err = errors.New("no cdn was inserted, no id was returned")
+		log.Errorln(err)
+		return tc.DBError, tc.SystemError
+	} else if rowsAffected > 1 {
+		err = errors.New("too many ids returned from cdn insert")
+		log.Errorln(err)
+		return tc.DBError, tc.SystemError
+	}
+	cdn.SetID(id)
+	cdn.LastUpdated = lastUpdated
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
+	return nil, tc.NoError
+}
+
 func (cdn *TOCDN) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
@@ -144,8 +213,8 @@ func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
-	log.Debugf("about to run exec query: %s with cdn: %++v", updateCDNQuery(), cdn)
-	resultRows, err := tx.NamedQuery(updateCDNQuery(), cdn)
+	log.Debugf("about to run exec query: %s with cdn: %++v", updateQuery(), cdn)
+	resultRows, err := tx.NamedQuery(updateQuery(), cdn)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -178,75 +247,6 @@ func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
-	return nil, tc.NoError
-}
-
-//The TOCDN implementation of the Creator interface
-//all implementations of Creator should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a cdn with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-//The insert sql returns the id and lastUpdated values of the newly inserted cdn and have
-//to be added to the struct
-func (cdn *TOCDN) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	resultRows, err := tx.NamedQuery(insertCDNQuery(), cdn)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a cdn with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received non pq error: %++v from create execution", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	defer resultRows.Close()
-
-	var id int
-	var lastUpdated tc.Time
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	if rowsAffected == 0 {
-		err = errors.New("no cdn was inserted, no id was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	} else if rowsAffected > 1 {
-		err = errors.New("too many ids returned from cdn insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-	cdn.SetID(id)
-	cdn.LastUpdated = lastUpdated
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
@@ -301,7 +301,7 @@ func (cdn *TOCDN) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 	return nil, tc.NoError
 }
 
-func updateCDNQuery() string {
+func updateQuery() string {
 	query := `UPDATE
 cdn SET
 dnssec_enabled=:dnssec_enabled,
