@@ -20,6 +20,7 @@ package division
  */
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -28,6 +29,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 //we need a type alias to define functions on
@@ -40,7 +42,99 @@ func GetRefType() *TODivision {
 	return &refType
 }
 
-func (cdn *TODivision) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (division *TODivision) GetAuditName() string {
+	return division.Name
+}
+
+//Implementation of the Identifier, Validator interface functions
+func (division *TODivision) GetID() int {
+	return division.ID
+}
+func (division *TODivision) SetID(i int) {
+	division.ID = i
+}
+func (division *TODivision) GetType() string {
+	return "division"
+}
+
+func (division *TODivision) Validate(db *sqlx.DB) []error {
+	errs := []error{}
+	if len(division.Name) < 1 {
+		errs = append(errs, errors.New(`Division 'name' is required.`))
+	}
+	return errs
+}
+
+//The TODivision implementation of the Creator interface
+//all implementations of Creator should use transactions and return the proper errorType
+//ParsePQUniqueConstraintError is used to determine if a division with conflicting values exists
+//if so, it will return an errorType of DataConflict and the type should be appended to the
+//generic error message returned
+//The insert sql returns the id and lastUpdated values of the newly inserted division and have
+//to be added to the struct
+func (division *TODivision) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
+	tx, err := db.Beginx()
+	defer func() {
+		if tx == nil || !rollbackTransaction {
+			return
+		}
+		err := tx.Rollback()
+		if err != nil {
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
+		}
+	}()
+
+	if err != nil {
+		log.Error.Printf("could not begin transaction: %v", err)
+		return tc.DBError, tc.SystemError
+	}
+	resultRows, err := tx.NamedQuery(insertQuery(), division)
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
+			if eType == tc.DataConflictError {
+				return errors.New("a division with " + err.Error()), eType
+			}
+			return err, eType
+		} else {
+			log.Errorf("received non pq error: %++v from create execution", err)
+			return tc.DBError, tc.SystemError
+		}
+	}
+	defer resultRows.Close()
+
+	var id int
+	var lastUpdated tc.Time
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
+			log.Error.Printf("could not scan id from insert: %s\n", err)
+			return tc.DBError, tc.SystemError
+		}
+	}
+	if rowsAffected == 0 {
+		err = errors.New("no division was inserted, no id was returned")
+		log.Errorln(err)
+		return tc.DBError, tc.SystemError
+	} else if rowsAffected > 1 {
+		err = errors.New("too many ids returned from division insert")
+		log.Errorln(err)
+		return tc.DBError, tc.SystemError
+	}
+	division.SetID(id)
+	division.LastUpdated = lastUpdated
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
+	return nil, tc.NoError
+}
+
+func (division *TODivision) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
@@ -52,7 +146,7 @@ func (cdn *TODivision) Read(db *sqlx.DB, parameters map[string]string, user auth
 		return nil, errs, tc.DataConflictError
 	}
 
-	query := selectDivisionsQuery() + where + orderBy
+	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
 	rows, err := db.NamedQuery(query, queryValues)
@@ -73,6 +167,71 @@ func (cdn *TODivision) Read(db *sqlx.DB, parameters map[string]string, user auth
 	}
 
 	return divisions, []error{}, tc.NoError
+}
+
+//The TODivision implementation of the Updater interface
+//all implementations of Updater should use transactions and return the proper errorType
+//ParsePQUniqueConstraintError is used to determine if a division with conflicting values exists
+//if so, it will return an errorType of DataConflict and the type should be appended to the
+//generic error message returned
+func (division *TODivision) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
+	tx, err := db.Beginx()
+	defer func() {
+		if tx == nil || !rollbackTransaction {
+			return
+		}
+		err := tx.Rollback()
+		if err != nil {
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
+		}
+	}()
+
+	if err != nil {
+		log.Error.Printf("could not begin transaction: %v", err)
+		return tc.DBError, tc.SystemError
+	}
+	log.Debugf("about to run exec query: %s with division: %++v", updateQuery(), division)
+	resultRows, err := tx.NamedQuery(updateQuery(), division)
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
+			if eType == tc.DataConflictError {
+				return errors.New("a division with " + err.Error()), eType
+			}
+			return err, eType
+		} else {
+			log.Errorf("received error: %++v from update execution", err)
+			return tc.DBError, tc.SystemError
+		}
+	}
+	defer resultRows.Close()
+
+	var lastUpdated tc.Time
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&lastUpdated); err != nil {
+			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
+			return tc.DBError, tc.SystemError
+		}
+	}
+	log.Debugf("lastUpdated: %++v", lastUpdated)
+	division.LastUpdated = lastUpdated
+	if rowsAffected != 1 {
+		if rowsAffected < 1 {
+			return errors.New("no division found with this id"), tc.DataMissingError
+		} else {
+			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
+	return nil, tc.NoError
 }
 
 func getDivisionsResponse(params map[string]string, db *sqlx.DB) (*tc.DivisionsResponse, []error, tc.ApiErrorType) {
@@ -103,7 +262,7 @@ func getDivisions(params map[string]string, db *sqlx.DB) ([]tc.Division, []error
 		return nil, errs, tc.DataConflictError
 	}
 
-	query := selectDivisionsQuery() + where + orderBy
+	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
 	rows, err = db.NamedQuery(query, queryValues)
@@ -123,7 +282,58 @@ func getDivisions(params map[string]string, db *sqlx.DB) ([]tc.Division, []error
 	return o, nil, tc.NoError
 }
 
-func selectDivisionsQuery() string {
+//The Division implementation of the Deleter interface
+//all implementations of Deleter should use transactions and return the proper errorType
+func (division *TODivision) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
+	tx, err := db.Beginx()
+	defer func() {
+		if tx == nil || !rollbackTransaction {
+			return
+		}
+		err := tx.Rollback()
+		if err != nil {
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
+		}
+	}()
+
+	if err != nil {
+		log.Error.Printf("could not begin transaction: %v", err)
+		return tc.DBError, tc.SystemError
+	}
+	log.Debugf("about to run exec query: %s with division: %++v", deleteQuery(), division)
+	result, err := tx.NamedExec(deleteQuery(), division)
+	if err != nil {
+		log.Errorf("received error: %++v from delete execution", err)
+		return tc.DBError, tc.SystemError
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return tc.DBError, tc.SystemError
+	}
+	if rowsAffected != 1 {
+		if rowsAffected < 1 {
+			return errors.New("no division with that id found"), tc.DataMissingError
+		} else {
+			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
+	return nil, tc.NoError
+}
+
+func insertQuery() string {
+	query := `INSERT INTO division (
+name) VALUES (:name) RETURNING id,last_updated`
+	return query
+}
+
+func selectQuery() string {
 
 	query := `SELECT
 id,
@@ -131,5 +341,19 @@ last_updated,
 name 
 
 FROM division d`
+	return query
+}
+
+func updateQuery() string {
+	query := `UPDATE
+division SET
+name=:name
+WHERE id=:id RETURNING last_updated`
+	return query
+}
+
+func deleteQuery() string {
+	query := `DELETE FROM division
+WHERE id=:id`
 	return query
 }
