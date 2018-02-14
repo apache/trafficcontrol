@@ -144,22 +144,26 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			// set the status to 'pending'
 			promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(dsRequest.id, 'pending'));
 
-			// now create, update or delete the ds per the ds request
+			// create, update or delete the ds per the ds request
 			if ($scope.changeType == 'create') {
-				promises.push(deliveryServiceService.createDeliveryService(ds));
-			} else if ($scope.changeType == 'update') {
-				promises.push(deliveryServiceService.updateDeliveryService(ds, true));
-			} else if ($scope.changeType == 'delete') {
-				promises.push(deliveryServiceService.deleteDeliveryService(ds, true));
-			}
-
-			$q.all(promises)
-				.then(
-					function() {
-						if ($scope.changeType == 'delete') {
-							locationUtils.navigateToPath('/delivery-service-requests');
-						}
+				deliveryServiceService.createDeliveryService(ds).
+					then(function() {
+						$q.all(promises); // after a successful create, update the ds request
 					});
+			} else if ($scope.changeType == 'update') {
+				deliveryServiceService.updateDeliveryService(ds, true).
+					then(function() {
+						$q.all(promises); // after a successful update, update the ds request
+					});
+			} else if ($scope.changeType == 'delete') {
+				deliveryServiceService.deleteDeliveryService(ds, true).
+					then(function() {
+						$q.all(promises) // after a successful delete, update the ds request and navigate to ds requests page
+							.then(function() {
+								locationUtils.navigateToPath('/delivery-service-requests');
+							});
+						});
+			}
 		}, function () {
 			// do nothing
 		});
