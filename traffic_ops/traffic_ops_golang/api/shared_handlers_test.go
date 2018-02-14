@@ -62,8 +62,8 @@ func (v *tester) Validate(db *sqlx.DB) []error {
 	return []error{}
 }
 
-//Inserter interface functions
-func (i *tester) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+//Creator interface functions
+func (i *tester) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	return i.error, i.errorType
 }
 

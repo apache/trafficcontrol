@@ -44,7 +44,7 @@ func (i *testIdentifier) GetAuditName() string {
 	return "testerInstance"
 }
 
-func TestInsertChangeLog(t *testing.T) {
+func TestCreateChangeLog(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -60,7 +60,7 @@ func TestInsertChangeLog(t *testing.T) {
 
 	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	user := auth.CurrentUser{ID: 1}
-	err = InsertChangeLog(ApiChange, Created, &i, user, db)
+	err = CreateChangeLog(ApiChange, Created, &i, user, db)
 	if err != nil {
 		t.Fatal(err)
 	}
