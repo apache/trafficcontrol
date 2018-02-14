@@ -132,6 +132,8 @@ func selectDeliveryServiceRequestsQuery() string {
 
 	query := `SELECT
 a.username AS author,
+e.username AS lastEditedBy,
+s.username AS assignee,
 r.assignee_id,
 r.author_id,
 r.change_type,
@@ -141,12 +143,12 @@ r.last_edited_by_id,
 r.last_updated,
 r.deliveryservice,
 r.status,
-s.username AS assignee,
 r.deliveryservice->>'xmlId' as xml_id
 
 FROM deliveryservice_request r
 JOIN tm_user a ON r.author_id = a.id
 LEFT OUTER JOIN tm_user s ON r.assignee_id = s.id
+LEFT OUTER JOIN tm_user e ON r.last_edited_by_id = e.id
 `
 	return query
 }
@@ -395,7 +397,7 @@ func updateRequestQuery() string {
 deliveryservice_request
 SET change_type=:change_type,
 last_edited_by_id=:last_edited_by_id,
-deliveryservice=:deliveryservice,
+deliveryservice=:deliveryservice
 WHERE id=:id RETURNING last_updated`
 	return query
 }
