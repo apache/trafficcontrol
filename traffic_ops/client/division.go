@@ -101,7 +101,7 @@ func (to *Session) GetDivisionByID(id int) ([]tc.Division, ReqInf, error) {
 
 // GET a Division by the Division name
 func (to *Session) GetDivisionByName(name string) ([]tc.Division, ReqInf, error) {
-	url := fmt.Sprintf("%s/name/%s", API_v2_Divisions, name)
+	url := fmt.Sprintf("%s?name=%s", API_v2_Divisions, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
