@@ -63,7 +63,7 @@ type DeliveryService struct {
 	DSCP                 int                    `json:"dscp"`
 	RoutingName          string                 `json:"routingName"`
 	DeepCachingType      DeepCachingType        `json:"deepCachingType"`
-	Signed               bool                   `json:"signed"`
+	SigningAlgorithm     string                 `json:"signingAlgorithm" db:"signing_algorithm"`
 	QStringIgnore        int                    `json:"qstringIgnore"`
 	GeoLimit             int                    `json:"geoLimit"`
 	GeoProvider          int                    `json:"geoProvider"`
@@ -167,7 +167,7 @@ type DeliveryServiceNullable struct {
 	RegionalGeoBlocking      *bool                  `json:"regionalGeoBlocking" db:"regional_geo_blocking"`
 	RemapText                string                 `json:"remapText" db:"remap_text"`
 	RoutingName              string                 `json:"routingName" db:"routing_name"`
-	SigningAlgorithm         string                 `json:"signingAlgorithm" db:"signing_algorithm"`
+	SigningAlgorithm         *string                `json:"signingAlgorithm" db:"signing_algorithm"`
 	SSLKeyVersion            int                    `json:"sslKeyVersion" db:"ssl_key_version"`
 	TRRequestHeaders         string                 `json:"trRequestHeaders" db:"tr_request_headers"`
 	TRResponseHeaders        string                 `json:"trResponseHeaders" db:"tr_response_headers"`
