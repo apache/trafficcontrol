@@ -56,7 +56,6 @@ public final class SignatureManager {
 	private Map<String, List<DnsSecKeyPair>> keyMap;
 	private ProtectedFetcher fetcher = null;
 	private ZoneManager zoneManager;
-	private boolean useJDnsSec = true;
 	private final TrafficRouterManager trafficRouterManager;
 
 	public SignatureManager(final ZoneManager zoneManager, final CacheRegister cacheRegister, final TrafficOpsUtils trafficOpsUtils, final TrafficRouterManager trafficRouterManager) {
@@ -80,7 +79,6 @@ public final class SignatureManager {
 			final boolean dnssecEnabled = JsonUtils.optBoolean(config, "dnssec.enabled");
 			if (dnssecEnabled) {
 				setDnssecEnabled(true);
-				this.useJDnsSec = JsonUtils.optBoolean(config, "usejdnssec", true);
 				setExpiredKeyAllowed(JsonUtils.optBoolean(config, "dnssec.allow.expired.keys", true)); // allowing this by default is the safest option
 				setExpirationMultiplier(JsonUtils.optInt(config, "signaturemanager.expiration.multiplier", 5)); // signature validity is maxTTL * this
 				final ScheduledExecutorService me = Executors.newScheduledThreadPool(1);
@@ -133,12 +131,7 @@ public final class SignatureManager {
 								if (keyPairs.isArray()) {
 									for (final JsonNode keyPair : keyPairs) {
 										try {
-											final DnsSecKeyPair dkpw;
-											if (useJDnsSec) {
-												dkpw = new DNSKeyPairWrapper(keyPair, defaultTTL);
-											} else {
-												dkpw = new DnsSecKeyPairImpl(keyPair, defaultTTL);
-											}
+											final DnsSecKeyPair dkpw = new DnsSecKeyPairImpl(keyPair, defaultTTL);
 
 											if (!newKeyMap.containsKey(dkpw.getName())) {
 												newKeyMap.put(dkpw.getName(), new ArrayList<>());
@@ -451,11 +444,7 @@ public final class SignatureManager {
 
 				final List<Record> signedRecords;
 
-				ZoneSigner zoneSigner = new JDnsSecSigner();
-
-				if (!useJDnsSec) {
-					zoneSigner = new ZoneSignerImpl();
-				}
+				final ZoneSigner zoneSigner = new ZoneSignerImpl();
 
 				signedRecords = zoneSigner.signZone(name, records, kskPairs, zskPairs, start.getTime(), signatureExpiration.getTime(), true, DSRecord.SHA256_DIGEST_ID);
 
@@ -487,11 +476,7 @@ public final class SignatureManager {
 				final Long dsTtl = ZoneUtils.getLong(config.get("ttls"), "DS", 60);
 
 				for (final DnsSecKeyPair kp : kskPairs) {
-					ZoneSigner zoneSigner = new JDnsSecSigner();
-
-					if (!useJDnsSec) {
-						zoneSigner = new ZoneSignerImpl();
-					}
+					final ZoneSigner zoneSigner = new ZoneSignerImpl();
 
 					final DSRecord dsRecord = zoneSigner.calculateDSRecord(kp.getDNSKEYRecord(), DSRecord.SHA256_DIGEST_ID, dsTtl);
 					LOGGER.debug(name + ": adding DS record " + dsRecord);
