@@ -1,4 +1,4 @@
-package main
+package division
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
