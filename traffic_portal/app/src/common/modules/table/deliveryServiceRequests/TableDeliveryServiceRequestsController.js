@@ -137,8 +137,8 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 			}
 		});
 		modalInstance.result.then(function(action) {
-			var status = (action.id == $scope.DRAFT) ? 'draft' : 'submitted';
-			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, status).
+			request.status = (action.id == $scope.DRAFT) ? 'draft' : 'submitted';
+			deliveryServiceRequestService.updateDeliveryServiceRequest(request.id, request).
 				then(function() {
 					$scope.refresh();
 				});
