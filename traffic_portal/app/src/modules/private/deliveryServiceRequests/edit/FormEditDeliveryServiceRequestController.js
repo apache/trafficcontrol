@@ -86,13 +86,20 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			}
 		});
 		modalInstance.result.then(function(action) {
-			var status;
 			switch (action.id) {
 				case $scope.DRAFT:
-					status = 'draft';
+					dsRequest.status = 'draft';
+					deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest).
+						then(function() {
+							$state.reload();
+						});
 					break;
 				case $scope.SUBMITTED:
-					status = 'submitted';
+					dsRequest.status = 'submitted';
+					deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest).
+						then(function() {
+							$state.reload();
+						});
 					break;
 				case $scope.COMPLETE:
 					if (dsRequest.assigneeId != userModel.user.id) {
@@ -100,12 +107,11 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 						$anchorScroll(); // scrolls window to top
 						return;
 					}
-					status = 'complete';
+					deliveryServiceRequestService.updateDeliveryServiceRequestStatus(dsRequest.id, 'complete').
+						then(function() {
+							$state.reload();
+						});
 			}
-			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(dsRequest.id, status).
-				then(function() {
-					$state.reload();
-				});
 		}, function () {
 			// do nothing
 		});
