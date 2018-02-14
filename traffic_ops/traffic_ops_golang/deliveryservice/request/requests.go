@@ -427,19 +427,20 @@ WHERE id=:id`
 
 ////////////////////////////////////////////////////////////////
 // Assignment change
-type TODeliveryServiceRequestAssignment TODeliveryServiceRequest
+type deliveryServiceRequestAssignment TODeliveryServiceRequest
 
 // GetAssignRefType is used to decode the JSON for deliveryservice_request assignment
-func GetAssignRefType() *TODeliveryServiceRequestAssignment {
-	return &TODeliveryServiceRequestAssignment{}
+func GetAssignRefType() *deliveryServiceRequestAssignment {
+	return &deliveryServiceRequestAssignment{}
 }
 
-func (req *TODeliveryServiceRequestAssignment) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+// Update assignee only
+func (req *deliveryServiceRequestAssignment) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	// req represents the state the deliveryservice_request is to transition to
 	// we want to limit what changes here -- only assignee can change
 
 	// get original
-	var current TODeliveryServiceRequestAssignment
+	var current deliveryServiceRequestAssignment
 	err := db.QueryRowx(selectDeliveryServiceRequestsQuery() + " WHERE r.id=" + strconv.Itoa(req.ID)).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
@@ -496,39 +497,41 @@ func (req *TODeliveryServiceRequestAssignment) Update(db *sqlx.DB, user auth.Cur
 	return nil, tc.NoError
 }
 
-func (req *TODeliveryServiceRequestAssignment) GetID() int {
+func (req *deliveryServiceRequestAssignment) GetID() int {
 	return (*TODeliveryServiceRequest)(req).GetID()
 }
 
-func (req *TODeliveryServiceRequestAssignment) GetType() string {
+func (req *deliveryServiceRequestAssignment) GetType() string {
 	return (*TODeliveryServiceRequest)(req).GetType()
 }
 
-func (req *TODeliveryServiceRequestAssignment) GetAuditName() string {
+func (req *deliveryServiceRequestAssignment) GetAuditName() string {
 	return (*TODeliveryServiceRequest)(req).GetAuditName()
 }
 
-func (req *TODeliveryServiceRequestAssignment) Validate(db *sqlx.DB) []error {
+func (req *deliveryServiceRequestAssignment) Validate(db *sqlx.DB) []error {
 	return nil
 }
 
 ////////////////////////////////////////////////////////////////
 // Status change
 
-type TODeliveryServiceRequestStatus TODeliveryServiceRequest
+// deliveryServiceRequestStatus implements interfaces needed to update the request status only
+type deliveryServiceRequestStatus TODeliveryServiceRequest
 
-// GetAssignRefType is used to decode the JSON for deliveryservice_request status change
-func GetStatusRefType() *TODeliveryServiceRequestStatus {
-	return &TODeliveryServiceRequestStatus{}
+// GetStatusRefType is used to decode the JSON for deliveryservice_request status change
+func GetStatusRefType() *deliveryServiceRequestStatus {
+	return &deliveryServiceRequestStatus{}
 }
 
-func (req *TODeliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+// Update status only
+func (req *deliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	// req represents the state the deliveryservice_request is to transition to
 	// we want to limit what changes here -- only status can change,  and only according to the established rules
 	// for status transition
 
 	// get original
-	var current TODeliveryServiceRequestStatus
+	var current deliveryServiceRequestStatus
 	err := db.QueryRowx(selectDeliveryServiceRequestsQuery() + " WHERE r.id=" + strconv.Itoa(req.ID)).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
@@ -581,18 +584,22 @@ func (req *TODeliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.Current
 	return nil, tc.NoError
 }
 
-func (req *TODeliveryServiceRequestStatus) GetID() int {
+// GetID from base type
+func (req *deliveryServiceRequestStatus) GetID() int {
 	return (*TODeliveryServiceRequest)(req).GetID()
 }
 
-func (req *TODeliveryServiceRequestStatus) GetType() string {
+// GetType from base type
+func (req *deliveryServiceRequestStatus) GetType() string {
 	return (*TODeliveryServiceRequest)(req).GetType()
 }
 
-func (req *TODeliveryServiceRequestStatus) GetAuditName() string {
+// GetAuditName from base type
+func (req *deliveryServiceRequestStatus) GetAuditName() string {
 	return (*TODeliveryServiceRequest)(req).GetAuditName()
 }
 
-func (req *TODeliveryServiceRequestStatus) Validate(db *sqlx.DB) []error {
+// Validate is not needed when only Status is updated
+func (req *deliveryServiceRequestStatus) Validate(db *sqlx.DB) []error {
 	return nil
 }
