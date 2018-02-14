@@ -44,7 +44,7 @@ const (
 	Deleted   = "Deleted"
 )
 
-func InsertChangeLog(level string, action string, i Identifier, user auth.CurrentUser, db *sqlx.DB) error {
+func CreateChangeLog(level string, action string, i Identifier, user auth.CurrentUser, db *sqlx.DB) error {
 	query := `INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`
 	id, _ := i.GetID()
 	message := action + " " + i.GetType() + ": " + i.GetAuditName() + " id: " + strconv.Itoa(id)

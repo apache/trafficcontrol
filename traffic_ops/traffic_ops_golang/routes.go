@@ -66,6 +66,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, `cdns/routing$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
 
 		{1.2, http.MethodGet, `cdns/{name}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+
 		//CDN generic handlers:
 		{1.3, http.MethodGet, `cdns/?(\.json)?$`, api.ReadHandler(cdn.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.3, http.MethodGet, `cdns/{id}$`, api.ReadHandler(cdn.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
@@ -89,14 +90,18 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 
 		//Divisions
 		{1.2, http.MethodGet, `divisions/?(\.json)?$`, api.ReadHandler(division.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodGet, `divisions/{id}$`, api.ReadHandler(division.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//HwInfo
 		{1.2, http.MethodGet, `hwinfo-wip/?(\.json)?$`, hwInfoHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+
 		//Parameters
 		{1.3, http.MethodGet, `parameters/?(\.json)?$`, parametersHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+
 		//Regions
 		{1.2, http.MethodGet, `regions/?(\.json)?$`, regionsHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.2, http.MethodGet, `regions/{id}$`, regionsHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+
 		//Servers
 		// explicitly passed to legacy system until fully implemented.  Auth handled by legacy system.
 		{1.2, http.MethodGet, `servers/checks$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},

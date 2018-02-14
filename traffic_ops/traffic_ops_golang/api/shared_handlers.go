@@ -220,7 +220,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 		//auditing here
-		InsertChangeLog(ApiChange, Updated, u, *user, db)
+		CreateChangeLog(ApiChange, Updated, u, *user, db)
 		//form response to send across the wire
 		resp := struct {
 			Response interface{} `json:"response"`
@@ -291,7 +291,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 		//audit here
-		InsertChangeLog(ApiChange, Deleted, d, *user, db)
+		CreateChangeLog(ApiChange, Deleted, d, *user, db)
 		//
 		resp := struct {
 			tc.Alerts
@@ -308,7 +308,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-//this creates a handler function from the pointer to a struct implementing the Inserter interface
+//this creates a handler function from the pointer to a struct implementing the Creator interface
 //it must be immediately assigned to a local variable
 //   this generic handler encapsulates the logic for handling:
 //   *fetching the id from the path parameter
@@ -316,7 +316,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 //   *decoding and validating the struct
 //   *change log entry
 //   *forming and writing the body over the wire
-func CreateHandler(typeRef Inserter, db *sqlx.DB) http.HandlerFunc {
+func CreateHandler(typeRef Creator, db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
@@ -326,7 +326,7 @@ func CreateHandler(typeRef Inserter, db *sqlx.DB) http.HandlerFunc {
 			handleErrs(http.StatusBadRequest, errs...)
 			return
 		}
-		i := decoded.(Inserter)
+		i := decoded.(Creator)
 		log.Debugf("%++v", i)
 		//now we have a validated local object to insert
 
@@ -351,13 +351,13 @@ func CreateHandler(typeRef Inserter, db *sqlx.DB) http.HandlerFunc {
 			}
 		}
 
-		err, errType := i.Insert(db, *user)
+		err, errType := i.Create(db, *user)
 		if err != nil {
 			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
 			return
 		}
 
-		InsertChangeLog(ApiChange, Created, i, *user, db)
+		CreateChangeLog(ApiChange, Created, i, *user, db)
 
 		resp := struct {
 			Response interface{} `json:"response"`

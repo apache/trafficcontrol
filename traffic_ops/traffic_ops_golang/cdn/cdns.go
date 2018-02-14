@@ -194,7 +194,7 @@ func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted cdn and have
 //to be added to the struct
-func (cdn *TOCDN) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (cdn *TOCDN) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
