@@ -76,6 +76,8 @@ func isFailure(o *cacheobj.CacheObj, retryCodes map[int]struct{}) bool {
 	return failureCode || o.Code == CodeConnectFailure
 }
 
+const ModifiedSinceHdr = "If-Modified-Since"
+
 // GetAndCache makes a client request for the given `http.Request` and caches it if `CanCache`.
 // THe `ruleThrottler` may be nil, in which case the request will be unthrottled.
 func GetAndCache(
@@ -105,24 +107,31 @@ func GetAndCache(
 			proxyURLStr = proxyURL.Host
 		}
 		if revalidateObj != nil {
-			req.Header.Set("If-Modified-Since", revalidateObj.RespRespTime.Format(time.RFC1123))
+			req.Header.Set(ModifiedSinceHdr, revalidateObj.RespRespTime.Format(time.RFC1123))
+		} else {
+			req.Header.Del(ModifiedSinceHdr)
 		}
 		respCode, respHeader, respBody, reqTime, reqRespTime, err := web.Request(transport, req, proxyURL)
 		if err != nil {
 			log.Errorf("Parent error for URI %v %v %v cacheKey %v rule %v parent %v error %v\n", req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), cacheKey, remapName, proxyURLStr, err)
 			code := CodeConnectFailure
 			body := []byte(http.StatusText(code))
-			return cacheobj.New(reqHeader, body, code, code, proxyURLStr, respHeader, reqTime, reqRespTime, reqRespTime)
+			return cacheobj.New(reqHeader, body, code, code, proxyURLStr, respHeader, reqTime, reqRespTime, reqRespTime, time.Time{})
 		}
 		if _, ok := retryCodes[respCode]; ok && !cacheFailure {
-			return cacheobj.New(reqHeader, respBody, respCode, respCode, proxyURLStr, respHeader, reqTime, reqRespTime, reqRespTime)
+			return cacheobj.New(reqHeader, respBody, respCode, respCode, proxyURLStr, respHeader, reqTime, reqRespTime, reqRespTime, time.Time{})
 		}
 
 		log.Debugf("GetAndCache request returned %v headers %+v\n", respCode, respHeader)
-		respRespTime, ok := remap.GetHTTPDate(respHeader, "Date")
+		respRespTime, ok := web.GetHTTPDate(respHeader, "Date")
 		if !ok {
-			log.Errorf("request %v returned no Date header - RFC Violation!\n", req.RequestURI)
+			log.Errorf("request %v returned no Date header - RFC Violation! Using local response timestamp.\n", req.RequestURI)
 			respRespTime = reqRespTime // if no Date was returned using the client response time simulates latency 0
+		}
+
+		lastModified, ok := web.GetHTTPDate(respHeader, "Last-Modified")
+		if !ok {
+			lastModified = respRespTime
 		}
 
 		obj := (*cacheobj.CacheObj)(nil)
@@ -130,7 +139,7 @@ func GetAndCache(
 		log.Debugf("GetAndCache respCode %v\n", respCode)
 		if revalidateObj == nil || respCode != http.StatusNotModified {
 			log.Debugf("GetAndCache new %v\n", cacheKey)
-			obj = cacheobj.New(reqHeader, respBody, respCode, respCode, proxyURLStr, respHeader, reqTime, reqRespTime, respRespTime)
+			obj = cacheobj.New(reqHeader, respBody, respCode, respCode, proxyURLStr, respHeader, reqTime, reqRespTime, respRespTime, lastModified)
 			if !remap.CanCache(reqHeader, respCode, respHeader, strictRFC) {
 				return obj // return without caching
 			}
@@ -150,6 +159,7 @@ func GetAndCache(
 				ReqTime:          reqTime,
 				ReqRespTime:      reqRespTime,
 				RespRespTime:     respRespTime,
+				LastModified:     revalidateObj.LastModified,
 				Size:             revalidateObj.Size,
 			}
 		}

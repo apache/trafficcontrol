@@ -258,18 +258,6 @@ func fresh(
 	return fresh
 }
 
-// GetHTTPDate is a helper function which gets an HTTP date from the given map (which is typically a `http.Header` or `CacheControl`. Returns false if the given key doesn't exist in the map, or if the value isn't a valid HTTP Date per RFC2616§3.3.
-func GetHTTPDate(headers http.Header, key string) (time.Time, bool) {
-	maybeDate, ok := headers[key]
-	if !ok {
-		return time.Time{}, false
-	}
-	if len(maybeDate) == 0 {
-		return time.Time{}, false
-	}
-	return parseHTTPDate(maybeDate[0])
-}
-
 // GetHTTPDeltaSeconds is a helper function which gets an HTTP Delta Seconds from the given map (which is typically a `http.Header` or `CacheControl`. Returns false if the given key doesn't exist in the map, or if the value isn't a valid Delta Seconds per RFC2616§3.3.2.
 func getHTTPDeltaSeconds(m map[string][]string, key string) (time.Duration, bool) {
 	maybeSeconds, ok := m[key]
@@ -311,11 +299,11 @@ func getFreshnessLifetime(respHeaders http.Header, respCacheControl web.CacheCon
 	}
 
 	getExpires := func() (time.Duration, bool) {
-		expires, ok := GetHTTPDate(respHeaders, "Expires")
+		expires, ok := web.GetHTTPDate(respHeaders, "Expires")
 		if !ok {
 			return 0, false
 		}
-		date, ok := GetHTTPDate(respHeaders, "Date")
+		date, ok := web.GetHTTPDate(respHeaders, "Date")
 		if !ok {
 			return 0, false
 		}
@@ -341,31 +329,17 @@ func heuristicFreshness(respHeaders http.Header) time.Duration {
 }
 
 func sinceLastModified(headers http.Header) (time.Duration, bool) {
-	lastModified, ok := GetHTTPDate(headers, "last-modified")
+	lastModified, ok := web.GetHTTPDate(headers, "last-modified")
 	if !ok {
 		return 0, false
 	}
-	date, ok := GetHTTPDate(headers, "date")
+	date, ok := web.GetHTTPDate(headers, "date")
 	if !ok {
 		return 0, false
 	}
 	return date.Sub(lastModified), true
 }
 
-// parseHTTPDate parses the given RFC7231§7.1.1 HTTP-date
-func parseHTTPDate(d string) (time.Time, bool) {
-	if t, err := time.Parse(time.RFC1123, d); err == nil {
-		return t, true
-	}
-	if t, err := time.Parse(time.RFC850, d); err == nil {
-		return t, true
-	}
-	if t, err := time.Parse(time.ANSIC, d); err == nil {
-		return t, true
-	}
-	return time.Time{}, false
-
-}
 
 // ageValue is used to calculate current_age per RFC7234§4.2.3
 func ageValue(respHeaders http.Header) time.Duration {
@@ -378,7 +352,7 @@ func ageValue(respHeaders http.Header) time.Duration {
 
 // dateValue is used to calculate current_age per RFC7234§4.2.3. It returns time, or false if the response had no Date header (in violation of HTTP/1.1).
 func dateValue(respHeaders http.Header) (time.Time, bool) {
-	return GetHTTPDate(respHeaders, "date")
+	return web.GetHTTPDate(respHeaders, "date")
 }
 
 func apparentAge(respHeaders http.Header, respRespTime time.Time) time.Duration {

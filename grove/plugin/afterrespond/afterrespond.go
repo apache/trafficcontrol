@@ -74,7 +74,9 @@ func (ps pluginSlice) LoadFuncs() map[string]LoadFunc {
 	// TODO change to slice? Slice is faster, since we always iterate; but map is more intuitive
 	lf := map[string]LoadFunc{}
 	for _, p := range ps {
-		lf[p.name] = p.loadF
+		if p.loadF != nil {
+			lf[p.name] = p.loadF
+		}
 	}
 	return lf
 }
