@@ -21,6 +21,7 @@ package request
 
 import (
 	"fmt"
+	"strconv"
 
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
@@ -31,7 +32,12 @@ import (
 
 // Validate ensures all required fields are present and in correct form.  Also checks request JSON is complete and valid
 func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
-	fromStatus := req.Status
+	var fromStatus tc.RequestStatus
+	err := db.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(req.ID)).Scan(&fromStatus)
+
+	if err != nil {
+		return []error{err}
+	}
 
 	validTransition := func(s interface{}) error {
 		toStatus, ok := s.(tc.RequestStatus)
