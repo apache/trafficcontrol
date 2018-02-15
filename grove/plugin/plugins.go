@@ -35,6 +35,9 @@ func (p Plugins) LoadFuncs() map[string]PluginLoadF {
 	for name, f := range p.BeforeRespond.LoadFuncs() {
 		lf[name] = PluginLoadF(f)
 	}
+	for name, f := range p.AfterRespond.LoadFuncs() {
+		lf[name] = PluginLoadF(f)
+	}
 	return lf
 }
 

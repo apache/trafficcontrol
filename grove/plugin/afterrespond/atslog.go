@@ -1,7 +1,6 @@
 package afterrespond
 
 import (
-	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -16,10 +15,8 @@ const NSPerSec = 1000000000
 const ATSLogName = "record_stats"
 
 func init() {
-	AddPlugin(20000, ATSLogName, atsLog, atsLogLoad)
+	AddPlugin(20000, ATSLogName, atsLog, nil)
 }
-
-func atsLogLoad(b json.RawMessage) interface{} { return nil }
 
 func atsLog(icfg interface{}, d Data) {
 	now := time.Now()

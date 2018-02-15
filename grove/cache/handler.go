@@ -16,6 +16,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/grove/stat"
 	"github.com/apache/incubator-trafficcontrol/grove/thread"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
+	"github.com/apache/incubator-trafficcontrol/grove/plugin/beforerespond"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
@@ -198,10 +199,10 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		switch err {
 		case remap.ErrRuleNotFound:
 			log.Debugf("rule not found for %v\n", r.RequestURI)
-			responder.ResponseCode = http.StatusNotFound
+			*responder.ResponseCode = http.StatusNotFound
 		case remap.ErrIPNotAllowed:
 			log.Debugf("IP %v not allowed\n", r.RemoteAddr)
-			responder.ResponseCode = http.StatusForbidden
+			*responder.ResponseCode = http.StatusForbidden
 		default:
 			log.Debugf("request error: %v\n", err)
 		}
@@ -230,16 +231,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		responder.ResponseCode = cacheObj.Code
 		responder.OriginCode = cacheObj.OriginCode
-		hdrsPtr := &cacheObj.RespHeaders // create a new pointer, so we don't modify the cacheObj
-		bodyPtr := &cacheObj.Body        // create a new pointer, so we don't modify the cacheObj
-		responder.F = func() (uint64, error) {
-			return web.Respond(w, responder.ResponseCode, *hdrsPtr, *bodyPtr, connectionClose)
-		}
+		// create new pointers, so plugins don't modify the cacheObj
+		codePtr, hdrsPtr, bodyPtr := cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body
+		responder.SetResponse(&codePtr, &hdrsPtr, &bodyPtr, connectionClose)
 		responder.OriginReqSuccess = true
 		responder.ProxyStr = cacheObj.ProxyURL
-		h.plugins.BeforeRespond.Call(remappingProducer.PluginCfg(), &responder.ResponseCode, hdrsPtr, bodyPtr) // note we pass a ref to the responder.ResponseCode, because we want to modify the Responder, to log the code correctly.
+		beforeRespData := beforerespond.Data{r, cacheObj, &codePtr, &hdrsPtr, &bodyPtr}
+		h.plugins.BeforeRespond.Call(remappingProducer.PluginCfg(), beforeRespData)
 		responder.Do()
 		return
 	}
@@ -255,9 +254,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		responder.ResponseCode = cacheObj.Code
 		responder.OriginCode = cacheObj.OriginCode
-		responder.SetResponse(cacheObj.Code, &cacheObj.RespHeaders, &cacheObj.Body, connectionClose)
+		responder.SetResponse(&cacheObj.Code, &cacheObj.RespHeaders, &cacheObj.Body, connectionClose)
 		responder.OriginReqSuccess = true
 		responder.OriginBytes = cacheObj.Size
 		responder.ProxyStr = cacheObj.ProxyURL
@@ -298,15 +296,15 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Debugf("cache.Handler.ServeHTTP: '%v' responding with %v\n", cacheKey, cacheObj.Code)
 
-	hdrsPtr := &cacheObj.RespHeaders // create a new pointer, so we don't modify the cacheObj
-	bodyPtr := &cacheObj.Body        // create a new pointer, so we don't modify the cacheObj
-	responder.ResponseCode = cacheObj.Code
-	responder.SetResponse(responder.ResponseCode, hdrsPtr, bodyPtr, connectionClose)
+	// create new pointers, so plugins don't modify the cacheObj
+	codePtr, hdrsPtr, bodyPtr := cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body
+	responder.SetResponse(&codePtr, &hdrsPtr, &bodyPtr, connectionClose)
 	responder.OriginReqSuccess = true
 	responder.Reuse = canReuseStored
 	responder.OriginCode = cacheObj.OriginCode
 	responder.OriginBytes = cacheObj.Size
 	responder.ProxyStr = cacheObj.ProxyURL
-	h.plugins.BeforeRespond.Call(remappingProducer.PluginCfg(), &responder.ResponseCode, hdrsPtr, bodyPtr)
+	beforeRespData := beforerespond.Data{r, cacheObj, &codePtr, &hdrsPtr, &bodyPtr}
+	h.plugins.BeforeRespond.Call(remappingProducer.PluginCfg(), beforeRespData)
 	responder.Do()
 }
