@@ -173,6 +173,25 @@ func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, d
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	var curStatus tc.RequestStatus
+	err := db.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(req.ID)).Scan(&curStatus)
+	if err != nil {
+		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
+		return err, tc.SystemError
+	}
+
+	// Update can only change status between draft & submitted.  All other transitions must go thru
+	// the PUT /api/<version>/deliveryservice_request/:id/status endpoint
+	if curStatus != tc.RequestStatusDraft && curStatus != tc.RequestStatusSubmitted {
+		return fmt.Errorf("Cannot change DeliveryServiceRequest in '%s' status.", string(curStatus)),
+			tc.DataConflictError
+	}
+
+	if req.Status != tc.RequestStatusDraft && req.Status != tc.RequestStatusSubmitted {
+		return fmt.Errorf("Cannot change DeliveryServiceRequest status from '%s' to '%s'", string(curStatus), string(req.Status)),
+			tc.DataConflictError
+	}
+
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -190,7 +209,6 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 		return err, tc.SystemError
 	}
 
-	// update lasteditedby field prior to making the query -- updated by current user
 	req.LastEditedByID = tc.IDNoMod(user.ID)
 	resultRows, err := tx.NamedQuery(updateRequestQuery(), req)
 	if err != nil {
@@ -245,8 +263,10 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 	if req == nil {
 		return errors.New("nil deliveryservice_request"), tc.SystemError
 	}
-	if req.Status != "draft" && req.Status != "submitted" {
-		return errors.New("invalid initial request status " + string(req.Status) + ".  Must be 'draft' or 'submitted'"), tc.DataConflictError
+	if req.Status != tc.RequestStatusDraft && req.Status != tc.RequestStatusSubmitted {
+		return fmt.Errorf("invalid initial request status '%s'.  Must be '%s' or '%s'",
+				req.Status, tc.RequestStatusDraft, tc.RequestStatusSubmitted),
+			tc.DataConflictError
 	}
 	// first, ensure there's not an active request with this XMLID
 	ds := req.DeliveryService
@@ -374,7 +394,6 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 	}
 	// success!
 	rollbackTransaction = false
-	log.Infoln("Delete succeeded")
 	return nil, tc.NoError
 }
 
@@ -397,7 +416,8 @@ func updateRequestQuery() string {
 deliveryservice_request
 SET change_type=:change_type,
 last_edited_by_id=:last_edited_by_id,
-deliveryservice=:deliveryservice
+deliveryservice=:deliveryservice,
+status=:status
 WHERE id=:id RETURNING last_updated`
 	return query
 }
@@ -442,14 +462,15 @@ func (req *deliveryServiceRequestAssignment) Update(db *sqlx.DB, user auth.Curre
 	// we want to limit what changes here -- only assignee can change
 
 	// get original
-	var current deliveryServiceRequestAssignment
-	err := db.QueryRowx(selectDeliveryServiceRequestsQuery() + " WHERE r.id=" + strconv.Itoa(req.ID)).StructScan(&current)
+	var assigneeID *int
+	err := db.QueryRow(`SELECT assignee_id FROM deliveryservice_request WHERE id=` + strconv.Itoa(req.ID)).Scan(&assigneeID)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
 	}
 
-	if current.AssigneeID == req.AssigneeID {
+	// both nil or pointing to same memory
+	if assigneeID == req.AssigneeID {
 		log.Infof("assignee unchanged")
 		return nil, tc.NoError
 	}
@@ -476,7 +497,7 @@ func (req *deliveryServiceRequestAssignment) Update(db *sqlx.DB, user auth.Curre
 	if req.AssigneeID != nil {
 		v = strconv.Itoa(*req.AssigneeID)
 	}
-	query := fmt.Sprintf(`UPDATE deliveryservice_request SET assignee_id = %s WHERE id=%d`, v, current.ID)
+	query := fmt.Sprintf(`UPDATE deliveryservice_request SET assignee_id = %s WHERE id=%d`, v, req.ID)
 	_, err = tx.Exec(query)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -533,15 +554,14 @@ func (req *deliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUs
 	// for status transition
 
 	// get original
-	var current deliveryServiceRequestStatus
-	err := db.QueryRowx(selectDeliveryServiceRequestsQuery() + " WHERE r.id=" + strconv.Itoa(req.ID)).StructScan(&current)
+	var curStatus tc.RequestStatus
+	err := db.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(req.ID)).Scan(&curStatus)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
 	}
 
-	st := req.Status
-	if err = current.Status.ValidTransition(st); err != nil {
+	if err = curStatus.ValidTransition(req.Status); err != nil {
 		return err, tc.DataConflictError
 	}
 
@@ -563,7 +583,7 @@ func (req *deliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUs
 	}
 
 	// LastEditedBy field should not change with status update
-	query := fmt.Sprintf(`UPDATE deliveryservice_request SET status = '%s' WHERE id=%d`, req.Status, current.ID)
+	query := fmt.Sprintf(`UPDATE deliveryservice_request SET status = '%s' WHERE id=%d`, req.Status, req.ID)
 	_, err = tx.Exec(query)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
