@@ -15,9 +15,10 @@ type CacheObj struct {
 	Code             int
 	OriginCode       int
 	ProxyURL         string
-	ReqTime          time.Time // this is our client's time when the object was requested
-	ReqRespTime      time.Time // this is our client's time when the object was received
-	RespRespTime     time.Time // this is the origin server's Date time when the object was sent
+	ReqTime          time.Time // our client's time when the object was requested
+	ReqRespTime      time.Time // our client's time when the object was received
+	RespRespTime     time.Time // the origin server's Date time when the object was sent
+	LastModified     time.Time // the origin LastModified if it exists, or Date if it doesn't
 	Size             uint64
 }
 
@@ -27,7 +28,7 @@ func (c CacheObj) ComputeSize() uint64 {
 	return uint64(len(c.Body))
 }
 
-func New(reqHeader http.Header, bytes []byte, code int, originCode int, proxyURL string, respHeader http.Header, reqTime time.Time, reqRespTime time.Time, respRespTime time.Time) *CacheObj {
+func New(reqHeader http.Header, bytes []byte, code int, originCode int, proxyURL string, respHeader http.Header, reqTime time.Time, reqRespTime time.Time, respRespTime time.Time, lastModified time.Time) *CacheObj {
 	obj := &CacheObj{
 		Body:             bytes,
 		ReqHeaders:       reqHeader,
@@ -39,6 +40,7 @@ func New(reqHeader http.Header, bytes []byte, code int, originCode int, proxyURL
 		ReqTime:          reqTime,
 		ReqRespTime:      reqRespTime,
 		RespRespTime:     respRespTime,
+		LastModified:     lastModified,
 	}
 	// copyHeader(reqHeader, &obj.reqHeaders)
 	// copyHeader(respHeader, &obj.respHeaders)

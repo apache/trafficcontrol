@@ -21,7 +21,7 @@ type Responder struct {
 	Plugins      plugin.Plugins
 	Stats        stat.Stats
 	F            RespondFunc
-	ResponseCode int
+	ResponseCode *int
 	cachedata.ParentRespData
 	cachedata.SrvrData
 	cachedata.ReqData
@@ -38,7 +38,10 @@ func DefaultParentRespData() cachedata.ParentRespData {
 	}
 }
 
-func DefaultRespCode() int { return http.StatusBadRequest }
+func DefaultRespCode() *int {
+	c := http.StatusBadRequest
+	return &c
+}
 
 type RespondFunc func() (uint64, error)
 
@@ -54,14 +57,14 @@ func NewResponder(w http.ResponseWriter, pluginCfg map[string]interface{}, srvrD
 		SrvrData:       srvrData,
 		ReqData:        reqData,
 	}
-	responder.F = func() (uint64, error) { return web.ServeErr(w, responder.ResponseCode) }
+	responder.F = func() (uint64, error) { return web.ServeErr(w, *responder.ResponseCode) }
 	return responder
 }
 
 // SetResponse is a helper which sets the RespondFunc of r to `web.Respond` with the given code, headers, body, and connectionClose. Note it takes a pointer to the headers and body, which may be modified after calling this but before the Do() sends the response.
-func (r *Responder) SetResponse(code int, hdrs *http.Header, body *[]byte, connectionClose bool) {
-	r.ResponseCode = code // TODO verify this is correct?
-	r.F = func() (uint64, error) { return web.Respond(r.W, code, *hdrs, *body, connectionClose) }
+func (r *Responder) SetResponse(code *int, hdrs *http.Header, body *[]byte, connectionClose bool) {
+	r.ResponseCode = code
+	r.F = func() (uint64, error) { return web.Respond(r.W, *code, *hdrs, *body, connectionClose) }
 }
 
 // Do responds to the client, according to the data in r, with the given code, headers, and body. It additionally writes to the event log, and adds statistics about this request. This should always be called for the final response to a client, in order to properly log, stat, and other final operations.
@@ -76,7 +79,7 @@ func (r *Responder) Do() {
 	web.TryFlush(r.W) // TODO remove? Let plugins do it, if they need to?
 
 	respSuccess := err != nil
-	respData := cachedata.RespData{r.ResponseCode, bytesSent, respSuccess, isCacheHit(r.Reuse, r.OriginCode)}
+	respData := cachedata.RespData{*r.ResponseCode, bytesSent, respSuccess, isCacheHit(r.Reuse, r.OriginCode)}
 	arData := afterrespond.Data{r.W, r.Stats, r.ReqData, r.SrvrData, r.ParentRespData, respData}
 	r.Plugins.AfterRespond.Call(r.PluginCfg, arData)
 }
