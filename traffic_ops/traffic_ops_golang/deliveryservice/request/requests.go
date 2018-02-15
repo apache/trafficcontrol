@@ -160,7 +160,7 @@ func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, d
 		// No deliveryservice applied yet -- wide open
 		return true, nil
 	}
-	if ds.TenantID == 0 {
+	if *ds.TenantID == 0 {
 		log.Debugf("tenantID is 0 -- THIS SHOULD NEVER HAPPEN!!")
 		return false, errors.New("tenantID is 0")
 	}
