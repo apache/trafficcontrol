@@ -355,6 +355,16 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 
 // Delete removes the request from the db
 func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	var st tc.RequestStatus
+	err := db.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(req.ID)).Scan(&st)
+	if err != nil {
+		return err, tc.SystemError
+	}
+
+	if st == tc.RequestStatusComplete || st == tc.RequestStatusPending || st == tc.RequestStatusRejected {
+		return fmt.Errorf("cannot delete a deliveryservice_request with state %s", string(st)), tc.DataConflictError
+	}
+
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
