@@ -20,7 +20,6 @@ package request
  */
 
 import (
-	"fmt"
 	"strconv"
 
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -33,24 +32,26 @@ import (
 // Validate ensures all required fields are present and in correct form.  Also checks request JSON is complete and valid
 func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
 	var fromStatus tc.RequestStatus
-	err := db.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(req.ID)).Scan(&fromStatus)
 
-	if err != nil {
-		return []error{err}
-	}
-
-	validTransition := func(s interface{}) error {
-		toStatus, ok := s.(tc.RequestStatus)
-		if !ok {
-			return fmt.Errorf("Expected tc.RequestStatus type,  got %T", s)
+	if (req.ID > 0) {
+		err := db.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(req.ID)).Scan(&fromStatus)
+		if err != nil {
+			return []error{err}
 		}
-		return fromStatus.ValidTransition(toStatus)
 	}
+
+	//validTransition := func(s interface{}) error {
+	//	toStatus, ok := s.(tc.RequestStatus)
+	//	if !ok {
+	//		return fmt.Errorf("Expected tc.RequestStatus type,  got %T", s)
+	//	}
+	//	return fromStatus.ValidTransition(toStatus)
+	//}
 
 	errMap := validation.Errors{
 		"changeType":      validation.Validate(req.ChangeType, validation.Required),
 		"deliveryservice": validation.Validate(req.DeliveryService, validation.Required),
-		"status":          validation.Validate(req.Status, validation.By(validTransition)),
+		//"status":          validation.Validate(req.Status, validation.By(validTransition)),
 	}
 
 	errs := tovalidate.ToErrors(errMap)
