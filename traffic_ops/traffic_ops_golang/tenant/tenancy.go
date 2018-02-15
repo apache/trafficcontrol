@@ -116,7 +116,7 @@ func GetUserTenantList(user auth.CurrentUser, db *sqlx.DB) ([]Tenant, error) {
 
 // returns a boolean value describing if the user has access to the provided resource tenant id and an error
 // if use_tenancy is set to false (0 in the db) this method will return true allowing access.
-func IsResourceAuthorizedToUser(resourceTenantID int, user auth.CurrentUser, db *sqlx.DB) (bool, error) {
+func IsResourceAuthorizedToUser(resourceTenantID *int, user auth.CurrentUser, db *sqlx.DB) (bool, error) {
 	// $1 is the user tenant ID and $2 is the resource tenant ID
 	query := `WITH RECURSIVE q AS (SELECT id, active FROM tenant WHERE id = $1
 	UNION SELECT t.id, t.active FROM TENANT t JOIN q ON q.id = t.parent_id),
@@ -138,7 +138,7 @@ func IsResourceAuthorizedToUser(resourceTenantID int, user auth.CurrentUser, db 
 		if !useTenancy {
 			return true, nil
 		}
-		if active && tenantID == resourceTenantID {
+		if active && tenantID == *resourceTenantID {
 			return true, nil
 		} else {
 			fmt.Printf("default")

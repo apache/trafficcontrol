@@ -49,7 +49,7 @@ func GetRefType() *TODeliveryService {
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (ds *TODeliveryService) GetID() int {
+func (ds *TODeliveryService) GetID() *int {
 	return ds.ID
 }
 
@@ -64,7 +64,7 @@ func (ds *TODeliveryService) GetType() string {
 	return "ds"
 }
 
-func (ds *TODeliveryService) SetID(i int) {
+func (ds *TODeliveryService) SetID(i *int) {
 	ds.ID = i
 }
 
@@ -250,7 +250,7 @@ func (ds *TODeliveryService) Update(db *sqlx.DB, user auth.CurrentUser) (error, 
 		}
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
-	ds.LastUpdated = lastUpdated
+	ds.LastUpdated = &lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
 			return errors.New("no delivery service found with this id"), tc.DataMissingError
@@ -313,8 +313,8 @@ func (ds *TODeliveryService) Insert(db *sqlx.DB, user auth.CurrentUser) (error, 
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
-	ds.SetID(id)
-	ds.LastUpdated = lastUpdated
+	ds.SetID(&id)
+	ds.LastUpdated = &lastUpdated
 	return nil, tc.NoError
 }
 
