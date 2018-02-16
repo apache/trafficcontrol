@@ -291,6 +291,8 @@ Delivery Service Requests
 
 A table of your delivery service requests with the following columns:
 
+.. image:: ./images/tp_table_ds_requests.png
+
 +-------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |            Name               |                                                                                                     Description                                                                                                     |
 +===============================+=====================================================================================================================================================================================================================+
@@ -306,17 +308,23 @@ A table of your delivery service requests with the following columns:
 |                               |                                                                                                                                                                                                                     |
 |                               | -  draft (the delivery service request is NOT ready for review and fulfillment)                                                                                                                                     |
 |                               | -  submitted (the delivery service request is ready for review and fulfillment)                                                                                                                                     |
-|                               | -  rejected (the delivery service request has been rejected)                                                                                                                                                        |
+|                               | -  rejected (the delivery service request has been rejected and cannot be modified)                                                                                                                                 |
 |                               | -  pending (the delivery service request has been fulfilled but the changes have yet to be deployed)                                                                                                                |
 |                               | -  complete (the delivery service request has been fulfilled and the changes have been deployed)                                                                                                                    |
 +-------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Author                        | The user responsible for creating the delivery service request.                                                                                                                                                     |
 +-------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Assignee                      | The user responsible for fulfilling the delivery service request. If unassigned, this value will be blank.                                                                                                          |
+| Assignee                      | The user responsible for fulfilling the delivery service request. Currently, the operations role or above is required to assign delivery service requests.                                                          |
 +-------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Last Edited By                | The last user to edit the delivery service request.                                                                                                                                                                 |
 +-------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Created (UTC)                 | Timestamp when the delivery service request was created.                                                                                                                                                            |
+| Created                       | Relative time indicating when the delivery service was created.                                                                                                                                                     |
++-------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Actions                       | Actions that can be performed on a delivery service request:                                                                                                                                                        |
+|                               |                                                                                                                                                                                                                     |
+|                               | -  fulfill (Implement the changes captured in the delivery service request. Currently limited to users with the operations role or above.)                                                                          |
+|                               | -  reject (Reject the changes captured in the delivery service request. Currently limited to users with the operations role or above.)                                                                              |
+|                               | -  delete (Delete the delivery service request. Currently limited to users with the portal role or above.)                                                                                                          |
 +-------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 Delivery service request management includes the ability to (where applicable):
@@ -329,7 +337,7 @@ Delivery service request management includes the ability to (where applicable):
 - reject a delivery service request
 - fulfill a delivery service request
 
-See :ref:`ds_requests`
+See :ref:`ds_requests` for details.
 
 Admin
 =====
