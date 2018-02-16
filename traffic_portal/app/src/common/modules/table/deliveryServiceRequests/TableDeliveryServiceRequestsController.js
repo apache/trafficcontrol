@@ -83,10 +83,6 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 		return (request.status == 'submitted');
 	};
 
-	$scope.deleteable = function(request) {
-		return (request.status == 'draft' || request.status == 'submitted' || request.status == 'rejected');
-	};
-
 	$scope.assignRequest = function(request, assign, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		var params = {
