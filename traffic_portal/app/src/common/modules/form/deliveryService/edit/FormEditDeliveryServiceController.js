@@ -24,12 +24,12 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 
 	var createDeliveryServiceDeleteRequest = function(deliveryService) {
 		var params = {
-			title: "Delivery Service Delete Request",
-			message: 'All delivery service deletions must be reviewed.<br><br>Are you sure you want to submit a request to delete the ' + deliveryService.xmlId + ' delivery service?'
+			title: 'Delete Delivery Service: ' + deliveryService.xmlId,
+			key: deliveryService.xmlId
 		};
 		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-			controller: 'DialogConfirmController',
+			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+			controller: 'DialogDeleteController',
 			size: 'md',
 			resolve: {
 				params: function () {
