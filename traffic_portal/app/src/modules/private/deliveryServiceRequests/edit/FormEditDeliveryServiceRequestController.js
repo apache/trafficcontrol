@@ -148,21 +148,40 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			if ($scope.changeType == 'create') {
 				deliveryServiceService.createDeliveryService(ds).
 					then(function() {
-						$q.all(promises); // after a successful create, update the ds request
+						$q.all(promises); // after a successful create, update the ds request, assignee and status
 					});
 			} else if ($scope.changeType == 'update') {
 				deliveryServiceService.updateDeliveryService(ds, true).
 					then(function() {
-						$q.all(promises); // after a successful update, update the ds request
+						$q.all(promises); // after a successful update, update the ds request, assignee and status
 					});
 			} else if ($scope.changeType == 'delete') {
-				deliveryServiceService.deleteDeliveryService(ds, true).
+				// and we're going to ask even again if they really want to delete but this time they need to enter the ds name to confirm the delete
+				params = {
+					title: 'Delete Delivery Service: ' + ds.xmlId,
+					key: ds.xmlId
+				};
+				modalInstance = $uibModal.open({
+					templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+					controller: 'DialogDeleteController',
+					size: 'md',
+					resolve: {
+						params: function () {
+							return params;
+						}
+					}
+				});
+				modalInstance.result.then(function() {
+					deliveryServiceService.deleteDeliveryService(ds, true).
 					then(function() {
-						$q.all(promises) // after a successful delete, update the ds request and navigate to ds requests page
+						$q.all(promises) // after a successful delete, update the ds request, assignee and status and navigate to ds requests page
 							.then(function() {
 								locationUtils.navigateToPath('/delivery-service-requests');
 							});
-						});
+					});
+				}, function () {
+					// do nothing
+				});
 			}
 		}, function () {
 			// do nothing
