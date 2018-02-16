@@ -387,19 +387,17 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 		});
 		$('div.filter-checkbox').html('<input id="showClosed" type="checkbox"><label for="showClosed">&nbsp;&nbsp;Show Closed</label>');
 
+		// only show "open" ds requests on render
+		dsRequestsTable.fnFilter('draft|submitted|pending', 2, true, false);
+
 		$('#showClosed').click(function() {
 			var checked = $('#showClosed').is(':checked');
-			localStorage.setItem('showClosed', checked);
 			if (checked) {
 				dsRequestsTable.fnFilter('', 2, true, false);
 			} else {
 				dsRequestsTable.fnFilter('draft|submitted|pending', 2, true, false);
 			}
 		});
-
-		if (localStorage.showClosed == 'true') {
-			$('#showClosed').attr('checked', true).triggerHandler('click');
-		}
 
 	});
 
