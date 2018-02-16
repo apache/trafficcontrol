@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.json.JSONObject;
 import org.xbill.DNS.DClass;
 import org.xbill.DNS.ExtendedFlags;
 import org.xbill.DNS.Flags;
@@ -40,8 +39,10 @@ import org.xbill.DNS.Zone;
 import org.xbill.DNS.EDNSOption;
 import org.xbill.DNS.ClientSubnetOption;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
+
 
 public class NameServer {
 	private static final int MAX_SUPPORTED_EDNS_VERS = 0;
@@ -90,8 +91,7 @@ public class NameServer {
 			boolean dnssecRequest = false;
 			int qtype = question.getType();
 			final CacheRegister data = trafficRouterManager.getTrafficRouter().getCacheRegister();
-			final JSONObject config = data.getConfig();
-			final boolean ecsEnable = config.optBoolean("ecsEnable", false);
+			final boolean ecsEnable = JsonUtils.optBoolean(data.getConfig(), "ecsEnable", false);
 			int flags = 0;
 
 			if ((qopt != null) && (qopt.getVersion() > MAX_SUPPORTED_EDNS_VERS)) {
