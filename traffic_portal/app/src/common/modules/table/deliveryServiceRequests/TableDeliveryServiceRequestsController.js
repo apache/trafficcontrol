@@ -79,6 +79,10 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 		return (request.status == 'draft' || request.status == 'submitted');
 	};
 
+	$scope.closed = function(request) {
+		return (request.status == 'rejected' || request.status == 'complete');
+	};
+
 	$scope.assignable = function(request) {
 		return (request.status == 'submitted');
 	};
