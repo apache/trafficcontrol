@@ -381,7 +381,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 			"paging": false,
 			"dom": '<"filter-checkbox">frtip',
 			"columnDefs": [
-				{ 'orderable': false, 'targets': 6 }
+				{ 'orderable': false, 'targets': 7 }
 			],
 			"aaSorting": []
 		});
