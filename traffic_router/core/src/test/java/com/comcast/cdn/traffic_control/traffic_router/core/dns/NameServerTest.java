@@ -30,9 +30,8 @@ import static org.powermock.api.mockito.PowerMockito.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.json.JSONObject;
 
-
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Header.class, NameServer.class, TrafficRouterManager.class, TrafficRouter.class, CacheRegister.class})
@@ -53,7 +52,7 @@ public class NameServerTest {
         trafficRouter = mock(TrafficRouter.class);
         CacheRegister cacheRegister = mock(CacheRegister.class);
         doReturn(cacheRegister).when(trafficRouter).getCacheRegister();
-        JSONObject js = new JSONObject().put("ecsEnable", true);
+        JSONNode js = JSONNodeFactory.instance.objectNode().put("ecsEnable", true);
         when(cacheRegister.getConfig()).thenReturn(js);
         
         Name m_an, m_host, m_admin;
