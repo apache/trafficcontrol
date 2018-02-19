@@ -340,7 +340,6 @@ func sinceLastModified(headers http.Header) (time.Duration, bool) {
 	return date.Sub(lastModified), true
 }
 
-
 // ageValue is used to calculate current_age per RFC7234§4.2.3
 func ageValue(respHeaders http.Header) time.Duration {
 	s, ok := getHTTPDeltaSeconds(respHeaders, "age")

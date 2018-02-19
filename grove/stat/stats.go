@@ -6,15 +6,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/apache/incubator-trafficcontrol/grove/icache"
 	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
-
-type Cache interface {
-	Size() uint64
-}
 
 type StatsSystem interface {
 	AddConfigReloadRequests()
@@ -48,7 +45,7 @@ type Stats interface {
 	Write(w http.ResponseWriter, conn *web.InterceptConn, reqFQDN string, remoteAddr string, code int, bytesWritten uint64, cacheHit bool) uint64
 }
 
-func New(remapRules []remapdata.RemapRule, cache Cache, cacheCapacityBytes uint64, httpConns *web.ConnMap, httpsConns *web.ConnMap) Stats {
+func New(remapRules []remapdata.RemapRule, caches map[string]icache.Cache, cacheCapacityBytes uint64, httpConns *web.ConnMap, httpsConns *web.ConnMap) Stats {
 	cacheHits := uint64(0)
 	cacheMisses := uint64(0)
 	return &stats{
@@ -56,7 +53,7 @@ func New(remapRules []remapdata.RemapRule, cache Cache, cacheCapacityBytes uint6
 		remap:              NewStatsRemaps(remapRules),
 		cacheHits:          &cacheHits,
 		cacheMisses:        &cacheMisses,
-		cache:              cache,
+		caches:             caches,
 		cacheCapacityBytes: cacheCapacityBytes,
 		httpConns:          httpConns,
 		httpsConns:         httpsConns,
@@ -119,7 +116,7 @@ type stats struct {
 	remap              StatsRemaps
 	cacheHits          *uint64
 	cacheMisses        *uint64
-	cache              Cache
+	caches             map[string]icache.Cache
 	cacheCapacityBytes uint64
 	httpConns          *web.ConnMap
 	httpsConns         *web.ConnMap
@@ -135,13 +132,19 @@ func (s stats) Connections() uint64 {
 	}
 	return l
 }
-func (s stats) CacheHits() uint64     { return atomic.LoadUint64(s.cacheHits) }
-func (s stats) AddCacheHit()          { atomic.AddUint64(s.cacheHits, 1) }
-func (s stats) CacheMisses() uint64   { return atomic.LoadUint64(s.cacheMisses) }
-func (s stats) AddCacheMiss()         { atomic.AddUint64(s.cacheMisses, 1) }
-func (s *stats) System() StatsSystem  { return StatsSystem(s.system) }
-func (s *stats) Remap() StatsRemaps   { return s.remap }
-func (s stats) CacheSize() uint64     { return s.cache.Size() }
+func (s stats) CacheHits() uint64    { return atomic.LoadUint64(s.cacheHits) }
+func (s stats) AddCacheHit()         { atomic.AddUint64(s.cacheHits, 1) }
+func (s stats) CacheMisses() uint64  { return atomic.LoadUint64(s.cacheMisses) }
+func (s stats) AddCacheMiss()        { atomic.AddUint64(s.cacheMisses, 1) }
+func (s *stats) System() StatsSystem { return StatsSystem(s.system) }
+func (s *stats) Remap() StatsRemaps  { return s.remap }
+func (s stats) CacheSize() uint64 {
+	sum := uint64(0)
+	for _, c := range s.caches {
+		sum += c.Size()
+	}
+	return sum
+}
 func (s stats) CacheCapacity() uint64 { return s.cacheCapacityBytes }
 
 type StatsRemaps interface {
