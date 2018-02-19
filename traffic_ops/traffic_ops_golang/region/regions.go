@@ -43,8 +43,13 @@ func GetRefType() *TORegion {
 }
 
 //Implementation of the Identifier, Validator interface functions
+<<<<<<< HEAD
 func (region *TORegion) GetID() (int, bool) {
 	return region.ID, true
+=======
+func (region *TORegion) GetID() int {
+	return region.ID
+>>>>>>> updated to use the CRUD interface
 }
 
 func (region *TORegion) GetAuditName() string {
@@ -73,16 +78,27 @@ func (region *TORegion) Read(db *sqlx.DB, parameters map[string]string, user aut
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+<<<<<<< HEAD
 		"name":     dbhelpers.WhereColumnInfo{"r.name", nil},
 		"division": dbhelpers.WhereColumnInfo{"r.division", nil},
 		"id":       dbhelpers.WhereColumnInfo{"r.id", api.IsInt},
+=======
+		"domainName":    dbhelpers.WhereColumnInfo{"domain_name", nil},
+		"dnssecEnabled": dbhelpers.WhereColumnInfo{"dnssec_enabled", nil},
+		"id":            dbhelpers.WhereColumnInfo{"id", api.IsInt},
+		"name":          dbhelpers.WhereColumnInfo{"name", nil},
+>>>>>>> updated to use the CRUD interface
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		return nil, errs, tc.DataConflictError
 	}
 
+<<<<<<< HEAD
 	query := selectQuery() + where + orderBy
+=======
+	query := selectRegionsQuery() + where + orderBy
+>>>>>>> updated to use the CRUD interface
 	log.Debugln("Query is ", query)
 
 	rows, err := db.NamedQuery(query, queryValues)
@@ -92,13 +108,18 @@ func (region *TORegion) Read(db *sqlx.DB, parameters map[string]string, user aut
 	}
 	defer rows.Close()
 
+<<<<<<< HEAD
 	regions := []interface{}{}
+=======
+	Regions := []interface{}{}
+>>>>>>> updated to use the CRUD interface
 	for rows.Next() {
 		var s tc.Region
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorf("error parsing Region rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
+<<<<<<< HEAD
 		regions = append(regions, s)
 	}
 
@@ -115,6 +136,23 @@ r.last_updated,
 r.name
 FROM region r
 JOIN division d ON r.division = d.id`
+=======
+		Regions = append(Regions, s)
+	}
+
+	return Regions, []error{}, tc.NoError
+}
+
+func selectRegionsQuery() string {
+	query := `SELECT
+description,
+division,
+id,
+last_updated,
+name
+
+FROM region r`
+>>>>>>> updated to use the CRUD interface
 	return query
 }
 
@@ -149,9 +187,16 @@ func (region *TORegion) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 				return errors.New("a region with " + err.Error()), eType
 			}
 			return err, eType
+<<<<<<< HEAD
 		}
 		log.Errorf("received error: %++v from update execution", err)
 		return tc.DBError, tc.SystemError
+=======
+		} else {
+			log.Errorf("received error: %++v from update execution", err)
+			return tc.DBError, tc.SystemError
+		}
+>>>>>>> updated to use the CRUD interface
 	}
 	defer resultRows.Close()
 
@@ -169,8 +214,14 @@ func (region *TORegion) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
 			return errors.New("no region found with this id"), tc.DataMissingError
+<<<<<<< HEAD
 		}
 		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
+=======
+		} else {
+			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
+		}
+>>>>>>> updated to use the CRUD interface
 	}
 	err = tx.Commit()
 	if err != nil {
@@ -181,14 +232,23 @@ func (region *TORegion) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	return nil, tc.NoError
 }
 
+<<<<<<< HEAD
 //The TORegion implementation of the Creator interface
 //all implementations of Creator should use transactions and return the proper errorType
+=======
+//The TORegion implementation of the Inserter interface
+//all implementations of Inserter should use transactions and return the proper errorType
+>>>>>>> updated to use the CRUD interface
 //ParsePQUniqueConstraintError is used to determine if a region with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted region and have
 //to be added to the struct
+<<<<<<< HEAD
 func (region *TORegion) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+=======
+func (region *TORegion) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+>>>>>>> updated to use the CRUD interface
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -213,9 +273,16 @@ func (region *TORegion) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 				return errors.New("a region with " + err.Error()), eType
 			}
 			return err, eType
+<<<<<<< HEAD
 		}
 		log.Errorf("received non pq error: %++v from create execution", err)
 		return tc.DBError, tc.SystemError
+=======
+		} else {
+			log.Errorf("received non pq error: %++v from create execution", err)
+			return tc.DBError, tc.SystemError
+		}
+>>>>>>> updated to use the CRUD interface
 	}
 	defer resultRows.Close()
 
@@ -233,8 +300,12 @@ func (region *TORegion) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		err = errors.New("no region was inserted, no id was returned")
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
+<<<<<<< HEAD
 	}
 	if rowsAffected > 1 {
+=======
+	} else if rowsAffected > 1 {
+>>>>>>> updated to use the CRUD interface
 		err = errors.New("too many ids returned from region insert")
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
@@ -279,6 +350,7 @@ func (region *TORegion) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	if err != nil {
 		return tc.DBError, tc.SystemError
 	}
+<<<<<<< HEAD
 	if rowsAffected < 1 {
 		return errors.New("no region with that id found"), tc.DataMissingError
 	}
@@ -286,6 +358,15 @@ func (region *TORegion) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 
+=======
+	if rowsAffected != 1 {
+		if rowsAffected < 1 {
+			return errors.New("no region with that id found"), tc.DataMissingError
+		} else {
+			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
+		}
+	}
+>>>>>>> updated to use the CRUD interface
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
@@ -298,6 +379,10 @@ func (region *TORegion) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 func updateQuery() string {
 	query := `UPDATE
 region SET
+<<<<<<< HEAD
+=======
+description=:description,
+>>>>>>> updated to use the CRUD interface
 division=:division,
 name=:name
 WHERE id=:id RETURNING last_updated`
@@ -306,8 +391,15 @@ WHERE id=:id RETURNING last_updated`
 
 func insertQuery() string {
 	query := `INSERT INTO region (
+<<<<<<< HEAD
 division,
 name) VALUES (
+=======
+description,
+division,
+name) VALUES (
+:description,
+>>>>>>> updated to use the CRUD interface
 :division,
 :name) RETURNING id,last_updated`
 	return query
