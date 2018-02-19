@@ -37,7 +37,10 @@ public class Dispersion {
 		final JsonNode jo = dsJo.get("dispersion");
 
 		if (jo != null) {
-			this.setLimit(JsonUtils.optInt(jo, "limit", DEFAULT_LIMIT));
+			final int limit = JsonUtils.optInt(jo, "limit", DEFAULT_LIMIT);
+			if (limit != 0) {
+				this.setLimit(limit);
+			}
 			this.setShuffled(JsonUtils.optBoolean(jo, "shuffled", DEFAULT_SHUFFLED));
 		} else if (dsJo.has("maxDnsIpsForLocation")) {
 			// if no specific dispersion, use maxDnsIpsForLocation (should be DNS DSs only)

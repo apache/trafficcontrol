@@ -383,7 +383,6 @@ func CreateStats(precomputed map[tc.CacheName]cache.PrecomputedData, toData toda
 			httpDsStat.CacheGroups[cachegroup] = httpDsStat.CacheGroups[cachegroup].Sum(resultStat.CacheGroups[cachegroup])
 			httpDsStat.Types[serverType] = httpDsStat.Types[serverType].Sum(resultStat.Types[serverType])
 			httpDsStat.Caches[server] = httpDsStat.Caches[server].Sum(resultStat.Caches[server])
-			httpDsStat.CachesTimeReceived[server] = resultStat.CachesTimeReceived[server]
 			httpDsStat.CommonStats = dsStats.DeliveryService[ds].CommonStats
 			dsStats.DeliveryService[ds] = httpDsStat // TODO determine if necessary
 		}

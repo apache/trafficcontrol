@@ -45,7 +45,9 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, type, t
 
     $scope.deliveryService = deliveryService;
 
-    $scope.dsCurrent = dsCurrent; // this ds is used primarily for showing the diff between a ds request and the current DS
+	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
+
+	$scope.dsCurrent = dsCurrent; // this ds is used primarily for showing the diff between a ds request and the current DS
 
     $scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
 
@@ -202,6 +204,13 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, type, t
 
     $scope.tenantLabel = function(tenant) {
         return '-'.repeat(tenant.level) + ' ' + tenant.name;
+    };
+
+    $scope.openCharts = function(ds) {
+        $window.open(
+            propertiesModel.properties.deliveryServices.charts.baseUrl + ds.xmlId,
+            '_blank'
+        );
     };
 
     $scope.clone = function(ds) {

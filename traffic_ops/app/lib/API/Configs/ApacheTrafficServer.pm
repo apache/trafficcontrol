@@ -660,7 +660,7 @@ sub profile_ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname    = $ds_type =~ /^DNS/ ? $row->{'routing_name'} : "ccr";
+				my $hname    = $ds_type =~ /^DNS/ ? $row->{'routing_name'} : "__http__";
 				my $portstr  = ":" . "__SERVER_TCP_PORT__";
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
 				if ( $protocol == HTTP ) {
@@ -784,7 +784,7 @@ sub cdn_ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname    = $ds_type =~ /^DNS/ ? $row->routing_name : "ccr";
+				my $hname    = $ds_type =~ /^DNS/ ? $row->routing_name : "__http__";
 				my $portstr  = ":" . "SERVER_TCP_PORT";
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
 				if ( $protocol == HTTP ) {
@@ -915,9 +915,9 @@ sub ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "ccr";
+				my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "__http__";
 				my $portstr = "";
-				if ( $hname eq "ccr" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
+				if ( $hname eq "__http__" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
 					$portstr = ":" . $server_obj->tcp_port;
 				}
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
@@ -1148,9 +1148,9 @@ sub remap_ds_data {
 					my $re = $host_re;
 					$re =~ s/\\//g;
 					$re =~ s/\.\*//g;
-					my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "ccr";
+					my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "__http__";
 					my $portstr = "";
-					if ( $hname eq "ccr" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
+					if ( $hname eq "__http__" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
 						$portstr = ":" . $server_obj->tcp_port;
 					}
 					my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
@@ -2035,7 +2035,7 @@ sub ip_allow_data {
 		my $rtype = &type_id( $self, 'RASCAL' );
 		push( @types, $rtype );
 		my $rs_allowed = $self->db->resultset('Server')->search( { 'me.type' => { -in => \@types } }, { prefetch => [ 'type', 'cachegroup' ] } );
-		
+
 		while ( my $allow_row = $rs_allowed->next ) {
 			if ( $allow_row->type->id == $rtype
 				|| ( defined( $allow_locs{ $allow_row->cachegroup->id } ) && $allow_locs{ $allow_row->cachegroup->id } == 1 ) )
@@ -2363,7 +2363,7 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 						push @null_parent_info, format_parent_info($parent);
 					}
 				}
-				
+
 				# If we don't find any parents in the primary parent, then use the secondary parents list as primary and clear the secondary list.
 				# Once we do that, null parent will be used in the secondary_parent category due to the join of the two arrays.
 				# This prevents blank parent entries.
@@ -2402,7 +2402,7 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 
 				if ( $ats_major_version >= 6 && $parent_retry ne "" ) {
 					if ( $unavailable_server_retry_responses ne "" && $unavailable_server_retry_responses =~ /^"(?:\d{3},)+\d{3}"\s*$/) {
-						$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";	
+						$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";
 					} else {
 						$text .= " parent_retry=$parent_retry";
 					}
@@ -2457,7 +2457,7 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 		}
 		else {
 			$parents = 'parent="' . join( '', sort @parent_info ) . join( '', sort @secondary_parent_info ) . '"';
-		}	
+		}
 
 		my $round_robin = 'round_robin=consistent_hash';
 		my $go_direct   = 'go_direct=false';
@@ -2622,8 +2622,8 @@ sub build_remap_line {
 
 	my $dscp      = $remap->{dscp};
 	my $hostname  = $server_obj->host_name;
-	
-	$map_from =~ s/ccr/$hostname/;
+
+	$map_from =~ s/__http__/$hostname/;
 
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
 		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=dscp_remap.so \@pparam=" . $dscp;

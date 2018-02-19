@@ -221,9 +221,9 @@ sub ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname = $ds_type =~ /^DNS/ ? $row->routing_name : "ccr";
+				my $hname = $ds_type =~ /^DNS/ ? $row->routing_name : "__http__";
 				my $portstr = "";
-				if ( $hname eq "ccr" && $server->tcp_port > 0 && $server->tcp_port != 80 ) {
+				if ( $hname eq "__http__" && $server->tcp_port > 0 && $server->tcp_port != 80 ) {
 					$portstr = ":" . $server->tcp_port;
 				}
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
@@ -1093,7 +1093,7 @@ sub build_remap_line {
 	my $host_name = $data->{host_name};
 	my $dscp      = $remap->{dscp};
 
-	$map_from =~ s/ccr/$host_name/;
+	$map_from =~ s/__http__/$host_name/;
 
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
 		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=dscp_remap.so \@pparam=" . $dscp;

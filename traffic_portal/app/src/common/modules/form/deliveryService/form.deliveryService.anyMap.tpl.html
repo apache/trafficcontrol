@@ -25,37 +25,7 @@ under the License.
             <li ng-if="settings.isRequest" class="active">{{changeType}}</li>
             <li class="active">{{deliveryServiceName}}</li>
         </ol>
-        <div class="pull-right" role="group" ng-if="settings.isRequest">
-            <button class="btn btn-link request-status" title="Edit Status" ng-disabled="!open()" ng-click="editStatus()">[ {{requestStatus}} ]</button>
-        </div>
-        <div class="pull-right" role="group" ng-if="!settings.isRequest && !settings.isNew">
-            <div class="btn-group" role="group" uib-dropdown is-open="keys.isopen">
-                <button ng-if="manageKeys.sslKeys || manageKeys.urlSigKeys || manageKeys.uriSigningKeys" type="button" class="btn btn-primary dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
-                    <i class="fa fa-key"></i>&nbsp;
-                    <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-if="manageKeys.sslKeys" ng-click="manageSslKeys()">Manage SSL Keys</a></li>
-                    <li role="menuitem"><a ng-if="manageKeys.urlSigKeys" ng-click="manageUrlSigKeys()">Manage URL Sig Keys</a></li>
-                    <li role="menuitem"><a ng-if="manageKeys.uriSigningKeys" ng-click="manageUriSigningKeys()">Manage URI Signing Keys</a></li>
-                </ul>
-            </div>
-            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
-                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
-                    More&nbsp;
-                    <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-click="clone(deliveryService)">Clone Delivery Service</a></li>
-                    <li class="divider"></li>
-                    <li role="menuitem"><a ng-click="viewServers()">View Servers</a></li>
-                    <li role="menuitem"><a ng-click="viewRegexes()">View Regexes</a></li>
-                    <li role="menuitem"><a ng-click="viewJobs()">View Invalidate Content Jobs</a></li>
-                    <li role="menuitem"><a ng-click="viewStaticDnsEntries()">View Static DNS Entries</a></li>
-                </ul>
-            </div>
-        </div>
-        <div class="clearfix"></div>
+        git rebase --continue        <div class="clearfix"></div>
     </div>
     <div class="x_content">
         <br>

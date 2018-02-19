@@ -58,6 +58,14 @@
         "UPD": "Configuration file updates have been applied or are pending for the EDGE or MID"
       }
     },
+    "deliveryServices": {
+      "_comment": "Delivery service settings",
+      "charts": {
+        "_comment": "Do you want to show a charts button for each ds? If so, where can the charts be found? xml id will be appended to the provided url.",
+        "show": false,
+        "baseUrl": "https://trafficstats.domain.com/dashboard/script/traffic_ops_deliveryservice.js?which="
+      }
+    },
     "defaults": {
       "_comments": "These are default values used when creating resources",
       "deliveryservices": {
