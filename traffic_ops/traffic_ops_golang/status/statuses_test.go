@@ -1,4 +1,4 @@
-package main
+package status
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -48,7 +49,7 @@ func getTestStatuses() []tc.Status {
 	return cdns
 }
 
-func TestGetStatus(t *testing.T) {
+func TestReadStatuses(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -58,13 +59,13 @@ func TestGetStatus(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	testStatus := getTestStatuses()
+	refType := GetRefType()
+
+	testStatuses := getTestStatuses()
 	cols := test.ColsFromStructByTag("db", tc.Status{})
 	rows := sqlmock.NewRows(cols)
 
-	//TODO: drichardson - build helper to add these Rows from the struct values
-	//                    or by CSV if types get in the way
-	for _, ts := range testStatus {
+	for _, ts := range testStatuses {
 		rows = rows.AddRow(
 			ts.Description,
 			ts.ID,
@@ -75,25 +76,12 @@ func TestGetStatus(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	v := map[string]string{"dsId": "1"}
 
-	servers, errs, errType := getStatuses(v, db)
+	servers, errs, _ := refType.Read(db, v, auth.CurrentUser{})
 	if len(errs) > 0 {
-		t.Errorf("getStatus expected: no errors, actual: %v with error type: %s", errs, errType.String())
+		t.Errorf("cdn.Read expected: no errors, actual: %v", errs)
 	}
 
 	if len(servers) != 2 {
-		t.Errorf("getStatus expected: len(servers) == 1, actual: %v", len(servers))
+		t.Errorf("cdn.Read expected: len(servers) == 2, actual: %v", len(servers))
 	}
-
-}
-
-type SortableStatuses []tc.Status
-
-func (s SortableStatuses) Len() int {
-	return len(s)
-}
-func (s SortableStatuses) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-func (s SortableStatuses) Less(i, j int) bool {
-	return s[i].Name < s[j].Name
 }
