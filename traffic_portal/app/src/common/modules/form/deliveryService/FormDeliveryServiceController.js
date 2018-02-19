@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceController = function(deliveryService, type, types, $scope, $location, $uibModal, $window, formUtils, locationUtils, tenantUtils, cdnService, profileService, tenantService, propertiesModel) {
+var FormDeliveryServiceController = function(deliveryService, dsCurrent, type, types, $scope, $location, $uibModal, formUtils, locationUtils, tenantUtils, cdnService, profileService, tenantService, propertiesModel) {
 
     var getCDNs = function() {
         cdnService.getCDNs()
@@ -45,15 +45,19 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
 
     $scope.deliveryService = deliveryService;
 
-    $scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
+	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
 
-    $scope.manageKeys = {
-        sslKeys: deliveryService.protocol > 0,
-        urlSigKeys: deliveryService.signingAlgorithm == 'url_sig',
-        uriSigningKeys: deliveryService.signingAlgorithm == 'uri_signing'
-    };
+	$scope.dsCurrent = dsCurrent; // this ds is used primarily for showing the diff between a ds request and the current DS
 
-    $scope.edgeFQDNs = function(ds) {
+    $scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
+
+	$scope.manageKeys = {
+		sslKeys: deliveryService.protocol > 0,
+		urlSigKeys: deliveryService.signingAlgorithm == 'url_sig',
+		uriSigningKeys: deliveryService.signingAlgorithm == 'uri_signing'
+	};
+
+	$scope.edgeFQDNs = function(ds) {
         var urlString = '';
         if (_.isArray(ds.exampleURLs) && ds.exampleURLs.length > 0) {
             for (var i = 0; i < ds.exampleURLs.length; i++) {
@@ -61,6 +65,22 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
             }
         }
         return urlString;
+    };
+
+    $scope.DRAFT = 0;
+    $scope.SUBMITTED = 1;
+    $scope.REJECTED = 2;
+    $scope.PENDING = 3;
+    $scope.COMPLETE = 4;
+
+    $scope.saveable = function() {
+        // this may be overriden in a child class. i.e. FormEditDeliveryServiceController
+        return true;
+    };
+
+    $scope.deletable = function() {
+        // this may be overriden in a child class. i.e. FormEditDeliveryServiceController
+        return true;
     };
 
     $scope.types = _.filter(types, function(currentType) {
@@ -123,27 +143,27 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
     ];
 
     $scope.dscps = [
-        { value: 0, label: '0  - Best Effort' },
+        { value: 0, label: '0 - Best Effort' },
         { value: 10, label: '10 - AF11' },
         { value: 12, label: '12 - AF12' },
         { value: 14, label: '14 - AF13' },
-        { value: 18, label: '18  - AF21' },
-        { value: 20, label: '20  - AF22' },
-        { value: 22, label: '22  - AF23' },
-        { value: 26, label: '26  - AF31' },
-        { value: 28, label: '28  - AF32' },
-        { value: 30, label: '30  - AF33' },
-        { value: 34, label: '34  - AF41' },
-        { value: 36, label: '36  - AF42' },
-        { value: 37, label: '37  - ' },
-        { value: 38, label: '38  - AF43' },
-        { value: 8, label: '8  - CS1' },
-        { value: 16, label: '16  - CS2' },
-        { value: 24, label: '24  - CS3' },
-        { value: 32, label: '32  - CS4' },
-        { value: 40, label: '40  - CS5' },
-        { value: 48, label: '48  - CS6' },
-        { value: 56, label: '56  - CS7' }
+        { value: 18, label: '18 - AF21' },
+        { value: 20, label: '20 - AF22' },
+        { value: 22, label: '22 - AF23' },
+        { value: 26, label: '26 - AF31' },
+        { value: 28, label: '28 - AF32' },
+        { value: 30, label: '30 - AF33' },
+        { value: 34, label: '34 - AF41' },
+        { value: 36, label: '36 - AF42' },
+        { value: 37, label: '37 - ' },
+        { value: 38, label: '38 - AF43' },
+        { value: 8, label: '8 - CS1' },
+        { value: 16, label: '16 - CS2' },
+        { value: 24, label: '24 - CS3' },
+        { value: 32, label: '32 - CS4' },
+        { value: 40, label: '40 - CS5' },
+        { value: 48, label: '48 - CS6' },
+        { value: 56, label: '56 - CS7' }
     ];
 
     $scope.deepCachingTypes = [
@@ -177,6 +197,10 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
         { value: 3, label: "3 - IP-based Round Robin" },
         { value: 4, label: "4 - Latch on Failover" }
     ];
+
+    $scope.label = function(field, attribute) {
+        return propertiesModel.properties.defaults.deliveryservices.descriptions[field][attribute];
+    };
 
     $scope.tenantLabel = function(tenant) {
         return '-'.repeat(tenant.level) + ' ' + tenant.name;
@@ -268,5 +292,5 @@ var FormDeliveryServiceController = function(deliveryService, type, types, $scop
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$location', '$uibModal', '$window', 'formUtils', 'locationUtils', 'tenantUtils', 'cdnService', 'profileService', 'tenantService', 'propertiesModel'];
+FormDeliveryServiceController.$inject = ['deliveryService', 'dsCurrent', 'type', 'types', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'tenantUtils', 'cdnService', 'profileService', 'tenantService', 'propertiesModel'];
 module.exports = FormDeliveryServiceController;
