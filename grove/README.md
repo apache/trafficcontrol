@@ -63,7 +63,8 @@ The config file has the following fields:
 | `server_idle_timeout_ms` | The length of time in milliseconds to allow a kept-alive client connection to remain idle, before terminating it. |
 | `server_read_timeout_ms` | The length of time in milliseconds to allow a client to read data, before the connection is terminated. This value should be carefully considered, as too short a timeout will result in terminating legitimate clients with slow connections, while too long a timeout will make the server vulnerable to SlowLoris attacks.  |
 | `server_write_timeout_ms` | The length of time in milliseconds to allow a client to write data, before the connection is terminated. This value should be carefully considered, as too short a timeout will result in terminating legitimate clients with slow connections, while too long a timeout will make the server vulnerable to SlowLoris attacks.|
-
+| `cache_files` | Groups of cache files to use for disk caching. See [Disk Cache](#disk-cache) |
+| `file_mem_bytes` | The size in bytes of the memory cache to use for each group of cache files. Note this size is used for each group, and thus the total memory used is `file_mem_bytes*len(cache_files)+cache_size_bytes`.  See [Disk Cache](#disk-cache) |
 
 # Remap Rules
 
@@ -92,6 +93,7 @@ The remap rules file is JSON of the following form:
             "query-string": { "cache": true, "remap": true },
             "retry_codes": [ 404, 500 ],
             "retry_num": 5,
+            "cache_name": "disk",
             "timeout_ms": 5000,
             "to": [
                 {
@@ -123,6 +125,7 @@ Rule configuration may be specified at the global, rule, or `to` level, and the 
 | Field | Description |
 | --- | --- |
 | `retry_num` | The number of times to retry a parent request. |
+| `cache_name` | The name of the cache to use, specified in the global config. Defaults to the memory cache. |
 | `retry_codes` | The HTTP codes which will be considered failures and cause a failure and cause a retry on the next parent. If `retry_num` tries are exceeded, the final failure response will be cached and returned to the client. |
 | `timeout_ms` | The request timeout in milliseconds for the given parent. |
 | `parent_selection` | The parent selection algorithm. Currently, only `consistent-hash` is supported. |
@@ -151,6 +154,44 @@ The objects in the `to` array of parents have the following fields:
 | `url` | The parent URL to remap to, including the scheme and fully qualified domain name. This may also optionally include URL path parts. |
 | `weight` | The weight of this parent in the parent selection algorithm. |
 | `proxy_url` | The proxy URL, if this parent is being used as a forward proxy. Must include the scheme, fully qualified domain name, and port. If this rule is omitted, the parent will be requested directly with the `url` as a reverse proxy. |
+
+# Disk Cache
+
+By default, all remap rules use a shared memory cache, of the size specified in the global config `cache_size_bytes` key. However, it is also possible to use disk caching.
+
+Disk caching uses files, organized into groups. They are specified in the global config with the key `cache_files`, of the form:
+
+```json
+"cache_files": {
+    "my-disk-cache": [
+        {
+          "path": "/mnt/sdb/diskcachefile0.db",
+          "size_bytes": 100000000000
+        },
+        {
+          "path": "/mnt/sdc/diskcachefile1.db",
+          "size_bytes": 100000000000
+        }
+    ],
+    "my-disk-cache-two": [
+        {
+          "path": "/etc/grove/singlefilecache.db",
+          "size_bytes": 1000000000
+        }
+    ]
+},
+```
+
+Then, to specify that a remap rule uses the disk cache, add `"cache_name": "my-disk-cache",` to that remap rule's object in the remap rules file.
+
+Note the `size_bytes` is a soft maximum, as with the memory cache, which may be exceeded in order to perform better than a hard maximum.
+
+Each cache of disk files also has a memory cache in front of it, for performance. The size of this memory cache is determined by the global config `file_mem_bytes` setting.
+
+Groups of files are used primarily to allow a cache to distribute objects across multiple physical devices. Each request object will be consistent-hashed to a file.
+You can, of course, use a single file.
+
+Each file is a key-value database, which internally uses a B+tree (see https://github.com/coreos/bbolt). The database is optimized for read over write, and access is frequently random so SSDs should outperform HDDs.
 
 # Running
 

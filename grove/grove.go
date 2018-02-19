@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"reflect"
 	"runtime"
 	"runtime/pprof"
 	"strconv"
@@ -22,13 +23,15 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/grove/cache"
 	"github.com/apache/incubator-trafficcontrol/grove/config"
+	"github.com/apache/incubator-trafficcontrol/grove/diskcache"
+	"github.com/apache/incubator-trafficcontrol/grove/icache"
+	"github.com/apache/incubator-trafficcontrol/grove/memcache"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin"
 	"github.com/apache/incubator-trafficcontrol/grove/remap"
 	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 	"github.com/apache/incubator-trafficcontrol/grove/stat"
+	"github.com/apache/incubator-trafficcontrol/grove/tiercache"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
-
-	"github.com/hashicorp/golang-lru"
 )
 
 const ShutdownTimeout = 60 * time.Second
@@ -57,14 +60,14 @@ func main() {
 	}
 	log.Init(eventW, errW, warnW, infoW, debugW)
 
-	lruCache, err := lru.NewStrLargeWithEvict(uint64(cfg.CacheSizeBytes), nil)
+	caches, err := createCaches(cfg.CacheFiles, uint64(cfg.FileMemBytes), uint64(cfg.CacheSizeBytes))
 	if err != nil {
-		log.Errorf("starting service: creating cache: %v\n", err)
+		log.Errorln("starting service: creating caches: " + err.Error())
 		os.Exit(1)
 	}
 
 	plugins := plugin.Get()
-	remapper, err := remap.LoadRemapper(cfg.RemapRulesFile, plugins.LoadFuncs())
+	remapper, err := remap.LoadRemapper(cfg.RemapRulesFile, plugins.LoadFuncs(), caches)
 	if err != nil {
 		log.Errorf("starting service: loading remap rules: %v\n", err)
 		os.Exit(1)
@@ -99,12 +102,12 @@ func main() {
 		}
 	}
 
-	stats := stat.New(remapper.Rules(), lruCache, uint64(cfg.CacheSizeBytes), httpConns, httpsConns) // TODO rename
+	// TODO pass total size for all file groups?
+	stats := stat.New(remapper.Rules(), caches, uint64(cfg.CacheSizeBytes), httpConns, httpsConns)
 
 	buildHandler := func(scheme string, port string, conns *web.ConnMap, stats stat.Stats) (http.Handler, *cache.HandlerPointer) {
 		statHandler := stat.NewHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules(), httpConns, httpsConns)
 		cacheHandler := cache.NewHandler(
-			lruCache,
 			remapper,
 			uint64(cfg.ConcurrentRuleRequests),
 			stats,
@@ -154,20 +157,18 @@ func main() {
 		}
 		eventW, errW, warnW, infoW, debugW, err := log.GetLogWriters(cfg)
 		if err != nil {
-			log.Errorf("relaoding config: getting log writers '%v': %v", *configFileName, err)
+			log.Errorf("reloading config: getting log writers '%v': %v", *configFileName, err)
 		}
 		log.Init(eventW, errW, warnW, infoW, debugW)
 
-		if cfg.CacheSizeBytes != oldCfg.CacheSizeBytes {
-			// TODO determine if it's ok for the cache to temporarily exceed the value. This means the cache usage could be temporarily double, as old requestors still have the old object. We could call `Purge` on the old cache, to empty it, to mitigate this.
-			lruCache, err = lru.NewStrLargeWithEvict(uint64(cfg.CacheSizeBytes), nil)
-			if err != nil {
-				log.Errorf("reloading config: creating cache: %v\n", err)
-				return
-			}
+		// TODO add cache file reloading
+		// The problem is, the disk db needs file locks, so there's no way to close and create new files without making all requests cache miss in the meantime.
+		// Thus, the file paths must be kept, diffed, only removed paths' dbs closed, only new paths opened, and dbs for existing paths passed into the new caches object.
+		if cachesChanged(oldCfg, cfg) {
+			log.Warnln("reloading config: caches changed in new config! Dynamic cache reloading is not supported! Old cache files and sizes will be used, and new cache config will NOT be loaded! Restart service to apply cache changes!")
 		}
 
-		remapper, err = remap.LoadRemapper(cfg.RemapRulesFile, plugins.LoadFuncs())
+		remapper, err = remap.LoadRemapper(cfg.RemapRulesFile, plugins.LoadFuncs(), caches)
 		if err != nil {
 			log.Errorf("starting service: loading remap rules: %v\n", err)
 			os.Exit(1)
@@ -190,10 +191,9 @@ func main() {
 			}
 		}
 
-		stats = stat.New(remapper.Rules(), lruCache, uint64(cfg.CacheSizeBytes), httpConns, httpsConns) // TODO copy stats from old stats object?
+		stats = stat.New(remapper.Rules(), caches, uint64(cfg.CacheSizeBytes), httpConns, httpsConns) // TODO copy stats from old stats object?
 
 		httpCacheHandler := cache.NewHandler(
-			lruCache,
 			remapper,
 			uint64(cfg.ConcurrentRuleRequests),
 			stats,
@@ -211,7 +211,6 @@ func main() {
 		httpHandlerPointer.Set(httpCacheHandler)
 
 		httpsCacheHandler := cache.NewHandler(
-			lruCache,
 			remapper,
 			uint64(cfg.ConcurrentRuleRequests),
 			stats,
@@ -344,4 +343,35 @@ func loadCerts(rules []remapdata.RemapRule) ([]tls.Certificate, error) {
 		certs = append(certs, cert)
 	}
 	return certs, nil
+}
+
+// createCaches creates the caches specified in the config. The nameFiles is the map of names to groups of files, nameMemBytes is the amount of memory to use for each named group, and memCacheBytes is the amount of memory to use for the default memory cache.
+func createCaches(nameFiles map[string][]config.CacheFile, nameMemBytes uint64, memCacheBytes uint64) (map[string]icache.Cache, error) {
+	caches := map[string]icache.Cache{}
+
+	memCache, err := memcache.New(memCacheBytes)
+	if err != nil {
+		return nil, errors.New("creating memory cache: " + err.Error())
+	}
+	caches[""] = memCache // default empty names to the mem cache
+
+	for name, files := range nameFiles {
+		multiDiskCache, err := diskcache.NewMulti(files)
+		if err != nil {
+			return nil, errors.New("creating cache '" + name + "': " + err.Error())
+		}
+		memCache, err := memcache.New(nameMemBytes)
+		if err != nil {
+			return nil, errors.New("creating memory cache for '" + name + "': " + err.Error())
+		}
+		caches[name] = tiercache.New(memCache, multiDiskCache)
+	}
+
+	return caches, nil
+}
+
+func cachesChanged(oldCfg, newCfg config.Config) bool {
+	return oldCfg.FileMemBytes == newCfg.FileMemBytes &&
+		oldCfg.CacheSizeBytes != newCfg.CacheSizeBytes &&
+		!reflect.DeepEqual(oldCfg.CacheFiles, newCfg.CacheFiles)
 }

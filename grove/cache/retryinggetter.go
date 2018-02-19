@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/grove/cacheobj"
+	"github.com/apache/incubator-trafficcontrol/grove/icache"
 	"github.com/apache/incubator-trafficcontrol/grove/remap"
 	"github.com/apache/incubator-trafficcontrol/grove/thread"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
@@ -42,7 +43,7 @@ func (r *Retrier) Get(req *http.Request, obj *cacheobj.CacheObj) (*cacheobj.Cach
 			return remap.CanReuse(r.ReqHdr, r.ReqCacheControl, cacheObj, r.H.strictRFC, true)
 		}
 		getAndCache := func() *cacheobj.CacheObj {
-			return GetAndCache(remapping.Request, remapping.ProxyURL, remapping.CacheKey, remapping.Name, remapping.Request.Header, r.ReqTime, r.H.strictRFC, r.H.cache, r.H.ruleThrottlers[remapping.Name], obj, remapping.Timeout, retryFailures, remapping.RetryNum, remapping.RetryCodes, r.H.transport)
+			return GetAndCache(remapping.Request, remapping.ProxyURL, remapping.CacheKey, remapping.Name, remapping.Request.Header, r.ReqTime, r.H.strictRFC, remapping.Cache, r.H.ruleThrottlers[remapping.Name], obj, remapping.Timeout, retryFailures, remapping.RetryNum, remapping.RetryCodes, r.H.transport)
 		}
 		return r.H.getter.Get(r.CacheKey, getAndCache, canReuse)
 	}
@@ -88,7 +89,7 @@ func GetAndCache(
 	reqHeader http.Header,
 	reqTime time.Time,
 	strictRFC bool,
-	cache Cache,
+	cache icache.Cache,
 	ruleThrottler thread.Throttler,
 	revalidateObj *cacheobj.CacheObj,
 	timeout time.Duration,
@@ -135,7 +136,7 @@ func GetAndCache(
 		}
 
 		obj := (*cacheobj.CacheObj)(nil)
-		log.Debugf("h.cache.AddSize %v\n", cacheKey)
+		log.Debugf("h.cache.Add %v\n", cacheKey)
 		log.Debugf("GetAndCache respCode %v\n", respCode)
 		if revalidateObj == nil || respCode != http.StatusNotModified {
 			log.Debugf("GetAndCache new %v\n", cacheKey)
@@ -163,7 +164,7 @@ func GetAndCache(
 				Size:             revalidateObj.Size,
 			}
 		}
-		cache.AddSize(cacheKey, obj, obj.Size) // TODO store pointer?
+		cache.Add(cacheKey, obj) // TODO store pointer?
 		return obj
 	}
 

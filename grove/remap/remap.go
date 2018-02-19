@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/grove/chash"
+	"github.com/apache/incubator-trafficcontrol/grove/icache"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin"
 	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
@@ -68,6 +69,7 @@ type Remapping struct {
 	Timeout         time.Duration
 	RetryNum        int
 	RetryCodes      map[int]struct{}
+	Cache           icache.Cache
 }
 
 // RemappingProducer takes an HTTP Request and returns a Remapping to be used for that request.
@@ -86,6 +88,7 @@ func (p *RemappingProducer) DSCP() int                         { return p.rule.D
 func (p *RemappingProducer) ToOriginHdrs() HdrModder           { return &p.rule.ToOriginHeaders }
 func (p *RemappingProducer) ToClientHdrs() HdrModder           { return &p.rule.ToClientHeaders }
 func (p *RemappingProducer) PluginCfg() map[string]interface{} { return p.rule.Plugins }
+func (p *RemappingProducer) Cache() icache.Cache               { return p.rule.Cache }
 func (p *RemappingProducer) ToFQDN() string {
 	// TODO verify To is not allowed to be constructed with < 1 element
 	return strings.TrimPrefix(strings.TrimPrefix(p.rule.To[0].URL, "http://"), "https://")
@@ -159,6 +162,7 @@ func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
 		Timeout:         *p.rule.Timeout,
 		RetryNum:        *p.rule.RetryNum,
 		RetryCodes:      p.rule.RetryCodes,
+		Cache:           p.rule.Cache,
 	}, retryAllowed, nil
 }
 
@@ -232,6 +236,7 @@ type RemapRules struct {
 	ParentSelection *remapdata.ParentSelectionType
 	Stats           remapdata.RemapRulesStats
 	Plugins         map[string]interface{}
+	Cache           icache.Cache
 }
 
 type RemapRuleToJSON struct {
@@ -253,10 +258,11 @@ type RemapRuleJSON struct {
 	Allow           []string                   `json:"allow"`
 	Deny            []string                   `json:"deny"`
 	RetryCodes      *[]int                     `json:"retry_codes"`
+	CacheName       *string                    `json:"cache_name"`
 	Plugins         map[string]json.RawMessage `json:"plugins"`
 }
 
-func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.PluginLoadF) ([]remapdata.RemapRule, *remapdata.RemapRulesStats, error) {
+func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.PluginLoadF, caches map[string]icache.Cache) ([]remapdata.RemapRule, *remapdata.RemapRulesStats, error) {
 	fmt.Printf("Loading Remap Rules\n")
 	defer func() {
 		fmt.Printf("Loaded Remap Rules\n")
@@ -353,6 +359,15 @@ func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.PluginLoa
 
 		if rule.RetryNum == nil {
 			rule.RetryNum = remapRules.RetryNum
+		}
+
+		cacheName := "" // default string is the default cache
+		if jsonRule.CacheName != nil {
+			cacheName = *jsonRule.CacheName
+		}
+		ok := false
+		if rule.Cache, ok = caches[cacheName]; !ok {
+			return nil, nil, fmt.Errorf("error parsing rule %v: cache name %v not found", rule.Name, cacheName)
 		}
 
 		if rule.Allow, err = makeIPNets(jsonRule.Allow); err != nil {
@@ -480,8 +495,8 @@ func makeIPNet(cidr string) (*net.IPNet, error) {
 	return cidrnet, nil
 }
 
-func LoadRemapper(path string, pluginConfigLoaders map[string]plugin.PluginLoadF) (HTTPRequestRemapper, error) {
-	rules, statRules, err := LoadRemapRules(path, pluginConfigLoaders)
+func LoadRemapper(path string, pluginConfigLoaders map[string]plugin.PluginLoadF, caches map[string]icache.Cache) (HTTPRequestRemapper, error) {
+	rules, statRules, err := LoadRemapRules(path, pluginConfigLoaders, caches)
 	if err != nil {
 		return nil, err
 	}
