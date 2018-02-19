@@ -35,6 +35,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/cdn"
 	dsrequest "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/division"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/region"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/status"
 	"github.com/basho/riak-go-client"
 )
@@ -110,12 +111,15 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		//HwInfo
 		{1.2, http.MethodGet, `hwinfo-wip/?(\.json)?$`, hwInfoHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
+		//Regions
+		{1.3, http.MethodGet, `regions/?(\.json)?$`, api.ReadHandler(region.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodGet, `regions/{id}$`, api.ReadHandler(region.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodPut, `regions/{id}$`, api.UpdateHandler(region.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.3, http.MethodPost, `regions/?$`, api.CreateHandler(region.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.3, http.MethodDelete, `regions/{id}$`, api.DeleteHandler(region.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+
 		//Parameters
 		{1.3, http.MethodGet, `parameters/?(\.json)?$`, parametersHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-
-		//Regions
-		{1.2, http.MethodGet, `regions/?(\.json)?$`, regionsHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.2, http.MethodGet, `regions/{id}$`, regionsHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Servers
 		// explicitly passed to legacy system until fully implemented.  Auth handled by legacy system.
