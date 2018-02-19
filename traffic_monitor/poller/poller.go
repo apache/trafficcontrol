@@ -23,6 +23,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"runtime"
 	"sync/atomic"
 	"time"
 
@@ -135,6 +136,7 @@ func (p MonitorConfigPoller) Poll() {
 		} else {
 			log.Errorf("MonitorConfigPoller failed without panic\n")
 		}
+		log.Errorf("%s\n", stacktrace())
 		os.Exit(1) // The Monitor can't run without a MonitorConfigPoller
 	}()
 	for {
@@ -273,7 +275,7 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 				Interval:    new.Interval,
 				NoKeepAlive: new.NoKeepAlive,
 				ID:          id,
-				PollConfig: pollCfg,
+				PollConfig:  pollCfg,
 			})
 		}
 		return deletions, additions
@@ -289,7 +291,7 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 				Interval:    new.Interval,
 				NoKeepAlive: new.NoKeepAlive,
 				ID:          id,
-				PollConfig: newPollCfg,
+				PollConfig:  newPollCfg,
 			})
 		}
 	}
@@ -301,10 +303,22 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 				Interval:    new.Interval,
 				NoKeepAlive: new.NoKeepAlive,
 				ID:          id,
-				PollConfig: newPollCfg,
+				PollConfig:  newPollCfg,
 			})
 		}
 	}
 
 	return deletions, additions
+}
+
+func stacktrace() []byte {
+	initialBufSize := 1024
+	buf := make([]byte, initialBufSize)
+	for {
+		n := runtime.Stack(buf, true)
+		if n < len(buf) {
+			return buf[:n]
+		}
+		buf = make([]byte, len(buf)*2)
+	}
 }
