@@ -21,6 +21,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -32,8 +33,10 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
+	"math/big"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -46,8 +49,20 @@ import (
 
 // Delivery Services: SSL Keys.
 
+func publicKey(priv interface{}) interface{} {
+	switch k := priv.(type) {
+	case *rsa.PrivateKey:
+		return &k.PublicKey
+	case *ecdsa.PrivateKey:
+		return &k.PublicKey
+	default:
+		return nil
+	}
+}
+
 // generates an unencrypted private key and a signing request, CSR
 func generateDeliveryServiceSSLKeysCertificate(sslKeys *tc.DeliveryServiceSSLKeys) error {
+	// generate the private key.
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 
 	country := []string{sslKeys.Country}
@@ -55,6 +70,49 @@ func generateDeliveryServiceSSLKeysCertificate(sslKeys *tc.DeliveryServiceSSLKey
 	locality := []string{sslKeys.City}
 	organization := []string{sslKeys.Organization}
 	organizationUnit := []string{sslKeys.BusinessUnit}
+
+	// generate a self signed certificate.
+	var validFor = 365 * 24 * time.Hour
+	var notBefore = time.Now()
+	notAfter := notBefore.Add(validFor)
+
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+	if err != nil {
+		log.Errorf("failed to generate serial number: %s", err)
+		return err
+	}
+
+	crt_template := x509.Certificate{
+		SerialNumber: serialNumber,
+		Subject: pkix.Name{
+			CommonName:         sslKeys.Hostname,
+			Country:            country,
+			Province:           province,
+			Locality:           locality,
+			Organization:       organization,
+			OrganizationalUnit: organizationUnit,
+		},
+		NotBefore: notBefore,
+		NotAfter:  notAfter,
+
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+	}
+	crt_template.DNSNames = append(crt_template.DNSNames, sslKeys.Hostname)
+	crtBlock := pem.Block{
+		Type: "CERTIFICATE",
+	}
+	crtBytes, err := x509.CreateCertificate(rand.Reader, &crt_template, &crt_template, publicKey(privateKey), privateKey)
+	if err != nil {
+		log.Errorf("failed to create certificate: %s", err)
+		return err
+	} else {
+		crtBlock.Bytes = crtBytes
+	}
+	// pem encode the CRT
+	crtPem := pem.EncodeToMemory(&crtBlock)
 
 	// data needed for a signing request, CSR
 	subj := pkix.Name{
@@ -79,6 +137,7 @@ func generateDeliveryServiceSSLKeysCertificate(sslKeys *tc.DeliveryServiceSSLKey
 	}
 	csrBytes, err := x509.CreateCertificateRequest(rand.Reader, &template, privateKey)
 	if err != nil {
+		log.Errorf("failed to create certificate request: %s", err)
 		return err
 	} else {
 		csrBlock.Bytes = csrBytes
@@ -96,6 +155,7 @@ func generateDeliveryServiceSSLKeysCertificate(sslKeys *tc.DeliveryServiceSSLKey
 	// base64 encode the private key and CSR.
 	cert := tc.DeliveryServiceSSLKeysCertificate{
 		Key: base64.StdEncoding.EncodeToString(privKeyPem),
+		Crt: base64.StdEncoding.EncodeToString(crtPem),
 		CSR: base64.StdEncoding.EncodeToString(csrPem),
 	}
 	// finally assign the result.
@@ -493,6 +553,31 @@ func deleteDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 		fmt.Fprintf(w, "%s", respBytes)
 	}
 }
+
+/*
+func generateDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleErr := tc.GetHandleErrorsFunc(w, r)
+
+		if cfg.RiakEnabled == false {
+			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
+			return
+		}
+
+		ctx := r.Context()
+		user, err := auth.GetCurrentUser(ctx)
+		if err != nil {
+			handleErr(http.StatusInternalServerError, err)
+			return
+		}
+		pathParams, err := api.GetPathParams(ctx)
+		if err != nil {
+			handleErr(http.StatusInternalServerError, err)
+			return
+		}
+	}
+}
+*/
 
 // fetch the ssl keys for a deliveryservice specified by the fully qualified hostname
 func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {

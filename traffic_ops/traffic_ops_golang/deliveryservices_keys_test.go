@@ -22,7 +22,9 @@ package main
 import (
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"strings"
 	"testing"
@@ -274,6 +276,33 @@ func TestGenerateDeliveryServiceSSLKeysCertificate(t *testing.T) {
 	err := generateDeliveryServiceSSLKeysCertificate(&dsSslKeys)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
+	}
+	respBts, err := json.MarshalIndent(dsSslKeys, "", " ")
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	fmt.Println(string(respBts))
+
+	// The Crt should be base64 encoded, test that it can be decoded.
+	crtPem := make([]byte, base64.StdEncoding.EncodedLen(len(dsSslKeys.Certificate.Crt)))
+	_, err = base64.StdEncoding.Decode(crtPem, []byte(dsSslKeys.Certificate.Crt))
+	if err != nil {
+		t.Errorf("unexpected error while trying to base64 decode the Crt")
+	}
+
+	// test that the Crt may be pem decoded.
+	crtBlock, _ := pem.Decode(crtPem)
+	if crtBlock == nil {
+		t.Errorf("failed to decode PEM block containing the Crt")
+	}
+
+	// verify that the Crt is valid by parsing and reading it.
+	crt, err := x509.ParseCertificate(crtBlock.Bytes)
+	if err != nil {
+		t.Errorf("unexpected error parsing the Crt: %v", err)
+	}
+	if crt.Subject.CommonName != hostName {
+		t.Errorf("expected '%s' in crt.DNSNames[0], got %v", hostName, crt.Subject.CommonName)
 	}
 
 	// CSR should be base64 encoded, test that it can be decoded.
