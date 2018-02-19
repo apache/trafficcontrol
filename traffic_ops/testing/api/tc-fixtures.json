@@ -7,8 +7,14 @@
         },
         {
             "asn": 2222,
-            "cachegroup": "cachegroup2",
-            "cachegroupId": 2
+            "cachegroupId": 2,
+            "cachegroupName": "cachegroup1",
+            "name": "asn1"
+        },
+        {
+            "asn": 3333,
+            "cachegroupName": "cachegroup3",
+            "name": "asn2"
         }
     ],
     "cachegroups": [
@@ -88,6 +94,32 @@
         {
             "divisionName": "division2",
             "name": "region2"
+        }
+    ],
+    "statuses": [
+        {
+            "name": "OFFLINE",
+            "description": "Edge: Puts server in CCR config file in this state, but CCR will never route traffic to it. Mid: Server will not be included in parent.config files for its edge caches"
+        },
+        {
+            "name": "ONLINE",
+            "description": "Edge: Puts server in CCR config file in this state, and CCR will always route traffic to it. Mid: Server will be included in parent.config files for its edges"
+        },
+        {
+            "name": "REPORTED",
+            "description": "Edge: Puts server in CCR config file in this state, and CCR will adhere to the health protocol. Mid: N/A for now"
+        },
+        {
+            "name": "ADMIN_DOWN",
+            "description": "Temporary down. Edge: XMPP client will send status OFFLINE to CCR, otherwise similar to REPORTED. Mid: Server will not be included in parent.config files for its edge caches"
+        },
+        {
+            "name": "CCR_IGNORE",
+            "description": "Edge: 12M will not include caches in this state in CCR config files. Mid: N/A for now"
+        },
+        {
+            "name": "PRE_PROD",
+            "description": "Pre Production. Not active in any configuration."
         }
     ],
     "tenants": [
