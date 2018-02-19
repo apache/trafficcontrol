@@ -19,7 +19,14 @@ import tcapi "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
 // TrafficControl - maps to the tc-fixtures.json file
 type TrafficControl struct {
+	ASNs                    []tc.ASN                       `json:"asns"`
 	CDNs                    []tcapi.CDN                    `json:"cdns"`
-	DeliveryServices        []tcapi.DeliveryService        `json:"deliveryservices"`
+	Cachegroups             []tc.CacheGroup                `json:"cachegroups"`
 	DeliveryServiceRequests []tcapi.DeliveryServiceRequest `json:"deliveryServiceRequests"`
+	DeliveryServices        []tc.DeliveryService           `json:"deliveryservices"`
+	DeliveryServices        []tcapi.DeliveryService        `json:"deliveryservices"`
+	Divisions               []tc.Division                  `json:"divisions"`
+	Regions                 []tc.Region                    `json:"regions"`
+	Statuses                []tc.Status                    `json:"statuses"`
+	Tenants                 []tc.Tenant                    `json:"tenants"`
 }
