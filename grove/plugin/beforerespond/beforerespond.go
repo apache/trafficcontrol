@@ -10,12 +10,11 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
-
 // Data holds the data passed to plugins. The objects pointed to MAY NOT be modified, however, the location pointed to may be changed for the Code, Hdr, and Body. That iss, `*d.Hdr = myHdr` is ok, but `d.Hdr.Add("a", "b") is not.
 //
 // If that's confusing, recall `http.Header` is a map, therefore Hdr and Body are both pointers-to-pointers.
 type Data struct {
-	Req      *http.Request
+	Req *http.Request
 	// CacheObj is the object to be cached, containing information about the origin request. The code, headers, and body should not be considered authoritative. Look at Code, Hdr, and Body instead, as the actual values about to be sent. Note CacheObj may be nil, if an error occurred (e.g. the Origin failed to respond).
 	CacheObj *cacheobj.CacheObj
 	Code     *int

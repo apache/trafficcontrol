@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/grove/chash"
+	"github.com/apache/incubator-trafficcontrol/grove/icache"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -85,6 +86,7 @@ type RemapRule struct {
 	Deny            []*net.IPNet
 	RetryCodes      map[int]struct{}
 	ConsistentHash  chash.ATSConsistentHash
+	Cache           icache.Cache
 	Plugins         map[string]interface{}
 }
 

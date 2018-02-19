@@ -9,25 +9,16 @@ import (
 	"unsafe"
 
 	"github.com/apache/incubator-trafficcontrol/grove/cachedata"
-	"github.com/apache/incubator-trafficcontrol/grove/cacheobj"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin"
+	"github.com/apache/incubator-trafficcontrol/grove/plugin/beforerespond"
 	"github.com/apache/incubator-trafficcontrol/grove/remap"
 	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 	"github.com/apache/incubator-trafficcontrol/grove/stat"
 	"github.com/apache/incubator-trafficcontrol/grove/thread"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
-	"github.com/apache/incubator-trafficcontrol/grove/plugin/beforerespond"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
-
-type Cache interface {
-	AddSize(key string, value interface{}, size uint64) bool
-	Get(key string) (interface{}, bool)
-	Remove(key string)
-	RemoveOldest()
-	Size() uint64
-}
 
 type HandlerPointer struct {
 	realHandler *unsafe.Pointer
@@ -49,7 +40,6 @@ func (h *HandlerPointer) Set(newHandler *Handler) {
 }
 
 type Handler struct {
-	cache           Cache
 	remapper        remap.HTTPRequestRemapper
 	getter          thread.Getter
 	ruleThrottlers  map[string]thread.Throttler // doesn't need threadsafe keys, because it's never added to or deleted after creation. TODO fix for hot rule reloading
@@ -91,7 +81,6 @@ type Handler struct {
 //
 // The connectionClose parameter determines whether to send a `Connection: close` header. This is primarily designed for maintenance, to drain the cache of incoming requestors. This overrides rule-specific `connection-close: false` configuration, under the assumption that draining a cache is a temporary maintenance operation, and if connectionClose is true on the service and false on some rules, those rules' configuration is probably a permament setting whereas the operator probably wants to drain all connections if the global setting is true. If it's necessary to leave connection close false on some rules, set all other rules' connectionClose to true and leave the global connectionClose unset.
 func NewHandler(
-	cache Cache,
 	remapper remap.HTTPRequestRemapper,
 	ruleLimit uint64,
 	stats stat.Stats,
@@ -129,7 +118,6 @@ func NewHandler(
 	}
 
 	return &Handler{
-		cache:           cache,
 		remapper:        remapper,
 		getter:          thread.NewGetter(),
 		ruleThrottlers:  makeRuleThrottlers(remapper, ruleLimit),
@@ -218,7 +206,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	cacheKey := remappingProducer.CacheKey()
 	retrier := NewRetrier(h, reqHeader, reqTime, reqCacheControl, cacheKey, remappingProducer)
 
-	iCacheObj, ok := h.cache.Get(cacheKey)
+	cache := remappingProducer.Cache()
+
+	cacheObj, ok := cache.Get(cacheKey)
 	if !ok {
 		log.Debugf("cache.Handler.ServeHTTP: '%v' not in cache\n", cacheKey)
 		remappingProducer.ToOriginHdrs().Mod(&r.Header)
@@ -239,26 +229,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		responder.ProxyStr = cacheObj.ProxyURL
 		beforeRespData := beforerespond.Data{r, cacheObj, &codePtr, &hdrsPtr, &bodyPtr}
 		h.plugins.BeforeRespond.Call(remappingProducer.PluginCfg(), beforeRespData)
-		responder.Do()
-		return
-	}
-
-	cacheObj, ok := iCacheObj.(*cacheobj.CacheObj)
-	if !ok {
-		// should never happen
-		log.Errorf("cache key '%v' value '%v' type '%T' expected *cacheobj.CacheObj\n", cacheKey, iCacheObj, iCacheObj)
-		cacheObj, err = retrier.Get(r, nil)
-		if err != nil {
-			log.Errorf("retrying get error (in unexpected cacheobj): %v\n", err)
-			responder.Do()
-			return
-		}
-
-		responder.OriginCode = cacheObj.OriginCode
-		responder.SetResponse(&cacheObj.Code, &cacheObj.RespHeaders, &cacheObj.Body, connectionClose)
-		responder.OriginReqSuccess = true
-		responder.OriginBytes = cacheObj.Size
-		responder.ProxyStr = cacheObj.ProxyURL
 		responder.Do()
 		return
 	}
