@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
@@ -86,14 +87,23 @@ func TestGetASNs(t *testing.T) {
 
 }
 
-type SortableASNs []tc.ASN
+func TestInterfaces(t *testing.T) {
+	var i interface{}
+	i = &TOASN{}
 
-func (s SortableASNs) Len() int {
-	return len(s)
-}
-func (s SortableASNs) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-func (s SortableASNs) Less(i, j int) bool {
-	return s[i].ASN < s[j].ASN
+	if _, ok := i.(api.Creator); !ok {
+		t.Errorf("asn must be creator")
+	}
+	if _, ok := i.(api.Reader); !ok {
+		t.Errorf("asn must be reader")
+	}
+	if _, ok := i.(api.Updater); !ok {
+		t.Errorf("asn must be updater")
+	}
+	if _, ok := i.(api.Deleter); !ok {
+		t.Errorf("asn must be deleter")
+	}
+	if _, ok := i.(api.Identifier); !ok {
+		t.Errorf("asn must be Identifier")
+	}
 }
