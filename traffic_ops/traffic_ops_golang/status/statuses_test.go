@@ -76,12 +76,12 @@ func TestReadStatuses(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	v := map[string]string{"dsId": "1"}
 
-	servers, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+	statuses, errs, _ := refType.Read(db, v, auth.CurrentUser{})
 	if len(errs) > 0 {
-		t.Errorf("cdn.Read expected: no errors, actual: %v", errs)
+		t.Errorf("status.Read expected: no errors, actual: %v", errs)
 	}
 
-	if len(servers) != 2 {
-		t.Errorf("cdn.Read expected: len(servers) == 2, actual: %v", len(servers))
+	if len(statuses) != 2 {
+		t.Errorf("status.Read expected: len(statuses) == 2, actual: %v", len(statuses))
 	}
 }
