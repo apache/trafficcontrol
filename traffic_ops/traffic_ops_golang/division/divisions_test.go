@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -81,14 +82,23 @@ func TestGetDivisions(t *testing.T) {
 
 }
 
-type SortableDivisions []tc.Division
+func TestInterfaces(t *testing.T) {
+	var i interface{}
+	i = &TODivision{}
 
-func (s SortableDivisions) Len() int {
-	return len(s)
-}
-func (s SortableDivisions) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-func (s SortableDivisions) Less(i, j int) bool {
-	return s[i].Name < s[j].Name
+	if _, ok := i.(api.Creator); !ok {
+		t.Errorf("division must be creator")
+	}
+	if _, ok := i.(api.Reader); !ok {
+		t.Errorf("division must be reader")
+	}
+	if _, ok := i.(api.Updater); !ok {
+		t.Errorf("division must be updater")
+	}
+	if _, ok := i.(api.Deleter); !ok {
+		t.Errorf("division must be deleter")
+	}
+	if _, ok := i.(api.Identifier); !ok {
+		t.Errorf("division must be Identifier")
+	}
 }
