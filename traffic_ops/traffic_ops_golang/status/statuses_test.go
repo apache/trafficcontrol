@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
@@ -83,5 +84,26 @@ func TestReadStatuses(t *testing.T) {
 
 	if len(statuses) != 2 {
 		t.Errorf("status.Read expected: len(statuses) == 2, actual: %v", len(statuses))
+	}
+}
+
+func TestInterfaces(t *testing.T) {
+	var i interface{}
+	i = &TOStatus{}
+
+	if _, ok := i.(api.Inserter); !ok {
+		t.Errorf("Status must be Inserter")
+	}
+	if _, ok := i.(api.Reader); !ok {
+		t.Errorf("Status must be Reader")
+	}
+	if _, ok := i.(api.Updater); !ok {
+		t.Errorf("Status must be Updater")
+	}
+	if _, ok := i.(api.Deleter); !ok {
+		t.Errorf("Status must be Deleter")
+	}
+	if _, ok := i.(api.Identifier); !ok {
+		t.Errorf("Status must be Identifier")
 	}
 }
