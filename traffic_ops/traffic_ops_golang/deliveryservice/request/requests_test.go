@@ -28,29 +28,26 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getInterface(req *TODeliveryServiceRequest) interface{} {
-	return req
-}
-
 func TestInterfaces(t *testing.T) {
-	r := getInterface(&TODeliveryServiceRequest{})
+	var i interface{}
+	i = &TODeliveryServiceRequest{}
 
-	if _, ok := r.(api.Inserter); !ok {
+	if _, ok := i.(api.Inserter); !ok {
 		t.Errorf("DeliveryServiceRequest must be Inserter")
 	}
-	if _, ok := r.(api.Reader); !ok {
+	if _, ok := i.(api.Reader); !ok {
 		t.Errorf("DeliveryServiceRequest must be Reader")
 	}
-	if _, ok := r.(api.Updater); !ok {
+	if _, ok := i.(api.Updater); !ok {
 		t.Errorf("DeliveryServiceRequest must be Updater")
 	}
-	if _, ok := r.(api.Deleter); !ok {
+	if _, ok := i.(api.Deleter); !ok {
 		t.Errorf("DeliveryServiceRequest must be Deleter")
 	}
-	if _, ok := r.(api.Identifier); !ok {
+	if _, ok := i.(api.Identifier); !ok {
 		t.Errorf("DeliveryServiceRequest must be Identifier")
 	}
-	if _, ok := r.(api.Tenantable); !ok {
+	if _, ok := i.(api.Tenantable); !ok {
 		t.Errorf("DeliveryServiceRequest must be Tenantable")
 	}
 }
