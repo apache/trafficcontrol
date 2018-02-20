@@ -86,6 +86,44 @@
             "name": "division2"
         }
     ],
+    "physLocations": [
+        {
+            "address": "1234 mile high circle",
+            "name": "Denver",
+            "comments": "comments 1",
+            "email": "test1@email.com",
+            "shortName": "denver",
+            "poc": "Point Of Contact1",
+            "phone": "303-111-1111",
+            "city": "Denver",
+            "state": "CO",
+            "zip": "80202"
+        },
+        {
+            "address": "1234 green way",
+            "name": "Boulder",
+            "comments": "comments 2",
+            "email": "test2@email.com",
+            "shortName": "boulder",
+            "poc": "Point Of Contact1",
+            "phone": "303-222-2222",
+            "city": "Boulder",
+            "state": "CO",
+            "zip": "80301"
+        },
+        {
+            "address": "1234 green way",
+            "name": "HotAtlanta",
+            "comments": "comments 3",
+            "email": "test2@email.com",
+            "shortName": "boulder",
+            "poc": "Point Of Contact1",
+            "phone": "404-222-2222",
+            "city": "Atlanta",
+            "state": "GA",
+            "zip": "30301"
+        }
+    ],
     "regions": [
         {
             "divisionName": "division1",
