@@ -49,13 +49,19 @@ func GetRefType() *TODeliveryServiceRequest {
 //Implementation of the Identifier, Validator interface functions
 
 // GetID is part of the tc.Identifier interface
-func (req *TODeliveryServiceRequest) GetID() int {
-	return req.ID
+func (req *TODeliveryServiceRequest) GetID() (int, bool) {
+	if req.ID == nil {
+		return 0, false
+	}
+	return *req.ID, true
 }
 
 // GetAuditName is part of the tc.Identifier interface
 func (req *TODeliveryServiceRequest) GetAuditName() string {
-	return strconv.Itoa(req.ID)
+	if req.ID == nil {
+		return "0"
+	}
+	return strconv.Itoa(*req.ID)
 }
 
 // GetType is part of the tc.Identifier interface
@@ -65,7 +71,7 @@ func (req *TODeliveryServiceRequest) GetType() string {
 
 // SetID is part of the tc.Identifier interface
 func (req *TODeliveryServiceRequest) SetID(i int) {
-	req.ID = i
+	req.ID = &i
 }
 
 // Read implements the api.Reader interface
@@ -160,11 +166,11 @@ func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, d
 		// No deliveryservice applied yet -- wide open
 		return true, nil
 	}
-	if *ds.TenantID == 0 {
-		log.Debugf("tenantID is 0 -- THIS SHOULD NEVER HAPPEN!!")
-		return false, errors.New("tenantID is 0")
+	if ds.TenantID == nil {
+		log.Debugf("tenantID is nil")
+		return false, errors.New("tenantID is nil")
 	}
-	return tenant.IsResourceAuthorizedToUser(ds.TenantID, user, db)
+	return tenant.IsResourceAuthorizedToUser(*ds.TenantID, user, db)
 }
 
 // Update implements the tc.Updater interface.
@@ -174,7 +180,11 @@ func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, d
 //generic error message returned
 func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	var current TODeliveryServiceRequest
-	err := db.QueryRowx(selectDeliveryServiceRequestsQuery() + `WHERE r.id=` + strconv.Itoa(req.ID)).StructScan(&current)
+	if req.ID == nil {
+		log.Errorf("error updating DeliveryServiceRequest: ID is nil")
+		return errors.New("error updating DeliveryServiceRequest: ID is nil"), tc.DataMissingError
+	}
+	err := db.QueryRowx(selectDeliveryServiceRequestsQuery() + `WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
@@ -182,13 +192,17 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 
 	// Update can only change status between draft & submitted.  All other transitions must go thru
 	// the PUT /api/<version>/deliveryservice_request/:id/status endpoint
-	if current.Status != tc.RequestStatusDraft && current.Status != tc.RequestStatusSubmitted {
-		return fmt.Errorf("Cannot change DeliveryServiceRequest in '%s' status.", string(current.Status)),
+	if current.Status == nil || req.Status == nil {
+		return errors.New("Missing status for DeliveryServiceRequest"), tc.DataMissingError
+	}
+
+	if *current.Status != tc.RequestStatusDraft && *current.Status != tc.RequestStatusSubmitted {
+		return fmt.Errorf("Cannot change DeliveryServiceRequest in '%s' status.", string(*current.Status)),
 			tc.DataConflictError
 	}
 
-	if req.Status != tc.RequestStatusDraft && req.Status != tc.RequestStatusSubmitted {
-		return fmt.Errorf("Cannot change DeliveryServiceRequest status from '%s' to '%s'", string(current.Status), string(req.Status)),
+	if *req.Status != tc.RequestStatusDraft && *req.Status != tc.RequestStatusSubmitted {
+		return fmt.Errorf("Cannot change DeliveryServiceRequest status from '%s' to '%s'", string(*current.Status), string(*req.Status)),
 			tc.DataConflictError
 	}
 
@@ -209,7 +223,8 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 		return err, tc.SystemError
 	}
 
-	req.LastEditedByID = tc.IDNoMod(user.ID)
+	userID := tc.IDNoMod(user.ID)
+	req.LastEditedByID = &userID
 	resultRows, err := tx.NamedQuery(updateRequestQuery(), req)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -263,9 +278,12 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 	if req == nil {
 		return errors.New("nil deliveryservice_request"), tc.SystemError
 	}
-	if req.Status != tc.RequestStatusDraft && req.Status != tc.RequestStatusSubmitted {
-		return fmt.Errorf("invalid initial request status '%s'.  Must be '%s' or '%s'",
-				req.Status, tc.RequestStatusDraft, tc.RequestStatusSubmitted),
+	if req.Status == nil {
+		return errors.New("nil deliveryservice_request status"), tc.SystemError
+	}
+	if *req.Status != tc.RequestStatusDraft && *req.Status != tc.RequestStatusSubmitted {
+		return fmt.Errorf("invalid initial request status '%v'.  Must be '%v' or '%v'",
+				*req.Status, tc.RequestStatusDraft, tc.RequestStatusSubmitted),
 			tc.DataConflictError
 	}
 	// first, ensure there's not an active request with this XMLID
@@ -304,8 +322,9 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 		return tc.DBError, tc.SystemError
 	}
 
-	req.AuthorID = tc.IDNoMod(user.ID)
-	req.LastEditedByID = tc.IDNoMod(user.ID)
+	userID := tc.IDNoMod(user.ID)
+	req.AuthorID = &userID
+	req.LastEditedByID = &userID
 	resultRows, err := tx.NamedQuery(insertRequestQuery(), req)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -356,7 +375,11 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 // Delete removes the request from the db
 func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	var st tc.RequestStatus
-	err := db.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(req.ID)).Scan(&st)
+	if req.ID == nil {
+		return errors.New("cannot delete deliveryservice_request -- ID is nil"), tc.SystemError
+	}
+
+	err := db.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(*req.ID)).Scan(&st)
 	if err != nil {
 		return err, tc.SystemError
 	}
@@ -470,10 +493,13 @@ func GetAssignRefType() *deliveryServiceRequestAssignment {
 func (req *deliveryServiceRequestAssignment) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	// req represents the state the deliveryservice_request is to transition to
 	// we want to limit what changes here -- only assignee can change
+	if req.ID == nil {
+		return errors.New("cannot update DeliveryServiceRequestAssignment -- ID is nil"), tc.SystemError
+	}
 
 	// get original
 	var current TODeliveryServiceRequest
-	err := db.QueryRowx(selectDeliveryServiceRequestsQuery() + `WHERE r.id=` + strconv.Itoa(req.ID)).StructScan(&current)
+	err := db.QueryRowx(selectDeliveryServiceRequestsQuery() + `WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
@@ -535,7 +561,7 @@ func (req *deliveryServiceRequestAssignment) Update(db *sqlx.DB, user auth.Curre
 	return nil, tc.NoError
 }
 
-func (req *deliveryServiceRequestAssignment) GetID() int {
+func (req *deliveryServiceRequestAssignment) GetID() (int, bool) {
 	return (*TODeliveryServiceRequest)(req).GetID()
 }
 
@@ -570,13 +596,16 @@ func (req *deliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUs
 
 	// get original
 	var current deliveryServiceRequestStatus
-	err := db.QueryRowx(selectDeliveryServiceRequestsQuery() + ` WHERE r.id=` + strconv.Itoa(req.ID)).StructScan(&current)
+	if req.ID == nil {
+		log.Errorf("error updating DeliveryServiceRequestStatus: ID is nil")
+	}
+	err := db.QueryRowx(selectDeliveryServiceRequestsQuery() + ` WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
 	}
 
-	if err = current.Status.ValidTransition(req.Status); err != nil {
+	if err = current.Status.ValidTransition(*req.Status); err != nil {
 		return err, tc.DataConflictError
 	}
 
@@ -603,7 +632,7 @@ func (req *deliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUs
 	}
 
 	// LastEditedBy field should not change with status update
-	query := fmt.Sprintf(`UPDATE deliveryservice_request SET status = '%s' WHERE id=%d`, req.Status, req.ID)
+	query := fmt.Sprintf(`UPDATE deliveryservice_request SET status = '%v' WHERE id=%d`, req.Status, req.ID)
 	_, err = tx.Exec(query)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -627,7 +656,7 @@ func (req *deliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUs
 }
 
 // GetID from base type
-func (req *deliveryServiceRequestStatus) GetID() int {
+func (req *deliveryServiceRequestStatus) GetID() (int, bool) {
 	return (*TODeliveryServiceRequest)(req).GetID()
 }
 
