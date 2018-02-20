@@ -311,7 +311,6 @@ func insertQuery() string {
 division,
 name) VALUES (
 :division,
-:name,
 :name) RETURNING id,last_updated`
 	return query
 }
