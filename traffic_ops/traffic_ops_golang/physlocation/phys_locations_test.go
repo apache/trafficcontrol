@@ -1,4 +1,4 @@
-package main
+package physlocation
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -91,25 +92,13 @@ func TestGetPhysLocations(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	v := map[string]string{"dsId": "1"}
 
-	servers, errs, errType := getPhysLocations(v, db)
+	physLocations, errs, _ := refType.Read(db, v, auth.CurrentUser{})
 	if len(errs) > 0 {
-		t.Errorf("getPhysLocations expected: no errors, actual: %v with error type: %s", err, errType.String())
+		t.Errorf("physLocation.Read expected: no errors, actual: %v", errs)
 	}
 
-	if len(servers) != 2 {
-		t.Errorf("getPhysLocations expected: len(servers) == 2, actual: %v", len(servers))
+	if len(physLocations) != 2 {
+		t.Errorf("physLocation.Read expected: len(physLocations) == 2, actual: %v", len(physLocations))
 	}
 
-}
-
-type SortablePhysLocations []tc.PhysLocation
-
-func (s SortablePhysLocations) Len() int {
-	return len(s)
-}
-func (s SortablePhysLocations) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-func (s SortablePhysLocations) Less(i, j int) bool {
-	return s[i].Name < s[j].Name
 }
