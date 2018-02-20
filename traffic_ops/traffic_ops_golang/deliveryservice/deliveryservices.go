@@ -33,6 +33,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -49,8 +50,11 @@ func GetRefType() *TODeliveryService {
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (ds *TODeliveryService) GetID() *int {
-	return ds.ID
+func (ds *TODeliveryService) GetID() (int, bool) {
+	if ds.ID == nil {
+		return 0, false
+	}
+	return *ds.ID, true
 }
 
 func (ds *TODeliveryService) GetAuditName() string {
@@ -64,8 +68,8 @@ func (ds *TODeliveryService) GetType() string {
 	return "ds"
 }
 
-func (ds *TODeliveryService) SetID(i *int) {
-	ds.ID = i
+func (ds *TODeliveryService) SetID(i int) {
+	ds.ID = &i
 }
 
 func Validate(db *sqlx.DB, ds *tc.DeliveryServiceNullable) []error {
@@ -313,7 +317,7 @@ func (ds *TODeliveryService) Insert(db *sqlx.DB, user auth.CurrentUser) (error, 
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
-	ds.SetID(&id)
+	ds.SetID(id)
 	ds.LastUpdated = &lastUpdated
 	return nil, tc.NoError
 }
@@ -354,6 +358,15 @@ func (ds *TODeliveryService) Delete(db *sqlx.DB, user auth.CurrentUser) (error, 
 		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 	return nil, tc.NoError
+}
+
+// IsTenantAuthorized implements the Tenantable interface to ensure the user is authorized on the deliveryservice tenant
+func (ds *TODeliveryService) IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error) {
+	if ds.TenantID == nil {
+		log.Debugf("tenantID is nil")
+		return false, errors.New("tenantID is nil")
+	}
+	return tenant.IsResourceAuthorizedToUser(*ds.TenantID, user, db)
 }
 
 //TODO: drichardson - plumb these out!
