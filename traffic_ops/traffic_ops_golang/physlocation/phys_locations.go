@@ -25,6 +25,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
@@ -72,9 +73,9 @@ func (pl *TOPhysLocation) Read(db *sqlx.DB, parameters map[string]string, user a
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"name":   dbhelpers.WhereColumnInfo{"name", nil},
-		"id":     dbhelpers.WhereColumnInfo{"id", nil},
-		"region": dbhelpers.WhereColumnInfo{"region", nil},
+		"name":   dbhelpers.WhereColumnInfo{"pl.name", nil},
+		"id":     dbhelpers.WhereColumnInfo{"pl.id", api.IsInt},
+		"region": dbhelpers.WhereColumnInfo{"pl.region", api.IsInt},
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
