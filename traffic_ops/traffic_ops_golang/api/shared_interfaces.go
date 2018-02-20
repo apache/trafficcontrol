@@ -32,7 +32,7 @@ type Updater interface {
 }
 
 type Identifier interface {
-	GetID() int
+	GetID() (int, bool)
 	GetType() string
 	GetAuditName() string
 }

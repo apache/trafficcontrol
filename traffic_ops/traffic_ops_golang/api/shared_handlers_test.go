@@ -42,8 +42,8 @@ type tester struct {
 }
 
 //Identifier interface functions
-func (i *tester) GetID() int {
-	return i.ID
+func (i *tester) GetID() (int, bool) {
+	return i.ID, true
 }
 
 func (i *tester) GetType() string {

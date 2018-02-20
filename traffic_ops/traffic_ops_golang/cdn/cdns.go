@@ -44,8 +44,8 @@ func GetRefType() *TOCDN {
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (cdn *TOCDN) GetID() int {
-	return cdn.ID
+func (cdn *TOCDN) GetID() (int, bool) {
+	return cdn.ID, true
 }
 
 func (cdn *TOCDN) GetAuditName() string {

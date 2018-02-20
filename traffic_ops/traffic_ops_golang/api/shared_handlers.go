@@ -193,7 +193,9 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 			handleErrs(http.StatusBadRequest, errors.New("id from path not parseable as int"))
 			return
 		}
-		if id != u.GetID() {
+
+		iid, ok := u.GetID()
+		if !ok || iid != id {
 			handleErrs(http.StatusBadRequest, errors.New("id in body does not match id in path"))
 			return
 		}
