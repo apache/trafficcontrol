@@ -35,9 +35,17 @@ func TestPhysLocations(t *testing.T) {
 func CreateTestPhysLocations(t *testing.T) {
 	for _, physLocation := range testData.PhysLocations {
 		fmt.Printf("physLocation ---> %v\n", physLocation)
+		fmt.Printf("physLocation.Address ---> %v\n", physLocation.Address)
+		fmt.Printf("physLocation.City ---> %v\n", physLocation.City)
+		fmt.Printf("physLocation.Comments ---> %v\n", physLocation.Comments)
+		fmt.Printf("physLocation.Email ---> %v\n", physLocation.Email)
 		fmt.Printf("physLocation.Name ---> %v\n", physLocation.Name)
-		fmt.Printf("physLocation.Region ---> %v\n", physLocation.Region)
+		fmt.Printf("physLocation.Phone ---> %v\n", physLocation.Phone)
+		fmt.Printf("physLocation.RegionName ---> %v\n", physLocation.RegionName)
 		fmt.Printf("physLocation.RegionId ---> %v\n", physLocation.RegionID)
+		fmt.Printf("physLocation.ShortName ---> %v\n", physLocation.ShortName)
+		fmt.Printf("physLocation.State ---> %v\n", physLocation.State)
+		fmt.Printf("physLocation.Zip ---> %v\n", physLocation.Zip)
 		resp, _, err := TOSession.CreatePhysLocation(physLocation)
 		log.Debugln("Response: ", resp)
 		if err != nil {
