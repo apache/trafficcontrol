@@ -16,7 +16,6 @@
 package api
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -34,7 +33,6 @@ func TestStatuses(t *testing.T) {
 
 func CreateTestStatuses(t *testing.T) {
 	for _, status := range testData.Statuses {
-		fmt.Printf("status ---> %v\n", status)
 		resp, _, err := TOSession.CreateStatus(status)
 		log.Debugln("Response: ", resp)
 		if err != nil {
