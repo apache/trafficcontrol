@@ -35,6 +35,9 @@ func TestPhysLocations(t *testing.T) {
 func CreateTestPhysLocations(t *testing.T) {
 	for _, physLocation := range testData.PhysLocations {
 		fmt.Printf("physLocation ---> %v\n", physLocation)
+		fmt.Printf("physLocation.Name ---> %v\n", physLocation.Name)
+		fmt.Printf("physLocation.Region ---> %v\n", physLocation.Region)
+		fmt.Printf("physLocation.RegionId ---> %v\n", physLocation.RegionID)
 		resp, _, err := TOSession.CreatePhysLocation(physLocation)
 		log.Debugln("Response: ", resp)
 		if err != nil {

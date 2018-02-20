@@ -97,7 +97,9 @@
             "phone": "303-111-1111",
             "city": "Denver",
             "state": "CO",
-            "zip": "80202"
+            "zip": "80202",
+            "region": "region1",
+            "regionId": 100
         },
         {
             "address": "1234 green way",
@@ -109,7 +111,9 @@
             "phone": "303-222-2222",
             "city": "Boulder",
             "state": "CO",
-            "zip": "80301"
+            "zip": "80301",
+            "region": "region1",
+            "regionId": 100
         },
         {
             "address": "1234 green way",
@@ -121,7 +125,9 @@
             "phone": "404-222-2222",
             "city": "Atlanta",
             "state": "GA",
-            "zip": "30301"
+            "zip": "30301",
+            "region": "region2",
+            "regionId": 200
         }
     ],
     "regions": [
