@@ -20,6 +20,7 @@ package request
  */
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -41,17 +42,20 @@ func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
 	}
 
 	validTransition := func(s interface{}) error {
-		toStatus, ok := s.(tc.RequestStatus)
-		if !ok {
-			return fmt.Errorf("Expected tc.RequestStatus type,  got %T", s)
+		if s == nil {
+			return errors.New("cannot transition to nil status")
 		}
-		return fromStatus.ValidTransition(toStatus)
+		toStatus, ok := s.(*tc.RequestStatus)
+		if !ok {
+			return fmt.Errorf("Expected *tc.RequestStatus type,  got %T", s)
+		}
+		return fromStatus.ValidTransition(*toStatus)
 	}
 
 	errMap := validation.Errors{
 		"changeType":      validation.Validate(req.ChangeType, validation.Required),
 		"deliveryservice": validation.Validate(req.DeliveryService, validation.Required),
-		"status":          validation.Validate(req.Status, validation.By(validTransition)),
+		"status":          validation.Validate(req.Status, validation.Required, validation.By(validTransition)),
 	}
 
 	errs := tovalidate.ToErrors(errMap)
