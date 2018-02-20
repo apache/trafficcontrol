@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -47,7 +48,7 @@ func getTestRegions() []tc.Region {
 	return regions
 }
 
-func TestGetRegions(t *testing.T) {
+func TestReadRegions(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -57,13 +58,14 @@ func TestGetRegions(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	testCase := getTestRegions()
+	refType := GetRefType()
+
+	testRegions := getTestRegions()
 	cols := test.ColsFromStructByTag("db", tc.Region{})
 	rows := sqlmock.NewRows(cols)
 
-	for _, ts := range testCase {
+	for _, ts := range testRegions {
 		rows = rows.AddRow(
-			ts.DivisionName,
 			ts.Division,
 			ts.ID,
 			ts.LastUpdated,
@@ -73,25 +75,12 @@ func TestGetRegions(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	v := map[string]string{"dsId": "1"}
 
-	servers, errs, errType := getRegions(v, db)
+	servers, errs, _ := refType.Read(db, v, auth.CurrentUser{})
 	if len(errs) > 0 {
-		t.Errorf("getRegions expected: no errors, actual: %v with error type: %s", errs, errType.String())
+		t.Errorf("cdn.Read expected: no errors, actual: %v", errs)
 	}
 
 	if len(servers) != 2 {
-		t.Errorf("getRegions expected: len(servers) == 1, actual: %v", len(servers))
+		t.Errorf("cdn.Read expected: len(servers) == 2, actual: %v", len(servers))
 	}
-
-}
-
-type SortableRegions []tc.Region
-
-func (s SortableRegions) Len() int {
-	return len(s)
-}
-func (s SortableRegions) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-func (s SortableRegions) Less(i, j int) bool {
-	return s[i].Name < s[j].Name
 }

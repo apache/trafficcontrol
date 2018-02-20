@@ -73,17 +73,16 @@ func (region *TORegion) Read(db *sqlx.DB, parameters map[string]string, user aut
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"domainName":    dbhelpers.WhereColumnInfo{"domain_name", nil},
-		"dnssecEnabled": dbhelpers.WhereColumnInfo{"dnssec_enabled", nil},
-		"id":            dbhelpers.WhereColumnInfo{"id", api.IsInt},
-		"name":          dbhelpers.WhereColumnInfo{"name", nil},
+		"name":     dbhelpers.WhereColumnInfo{"name", nil},
+		"division": dbhelpers.WhereColumnInfo{"division", nil},
+		"id":       dbhelpers.WhereColumnInfo{"id", api.IsInt},
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		return nil, errs, tc.DataConflictError
 	}
 
-	query := selectRegionsQuery() + where + orderBy
+	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
 	rows, err := db.NamedQuery(query, queryValues)
@@ -106,15 +105,16 @@ func (region *TORegion) Read(db *sqlx.DB, parameters map[string]string, user aut
 	return Regions, []error{}, tc.NoError
 }
 
-func selectRegionsQuery() string {
-	query := `SELECT
-description,
-division,
-id,
-last_updated,
-name
+func selectQuery() string {
 
-FROM region r`
+	query := `SELECT
+r.division,
+d.name as divisionname,
+r.id,
+r.last_updated,
+r.name
+FROM region r
+JOIN division d ON r.division = d.id`
 	return query
 }
 
@@ -300,7 +300,6 @@ func (region *TORegion) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 func updateQuery() string {
 	query := `UPDATE
 region SET
-description=:description,
 division=:division,
 name=:name
 WHERE id=:id RETURNING last_updated`
@@ -309,11 +308,10 @@ WHERE id=:id RETURNING last_updated`
 
 func insertQuery() string {
 	query := `INSERT INTO region (
-description,
 division,
 name) VALUES (
-:description,
 :division,
+:name,
 :name) RETURNING id,last_updated`
 	return query
 }
