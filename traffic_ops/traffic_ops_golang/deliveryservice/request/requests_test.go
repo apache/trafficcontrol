@@ -56,10 +56,11 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 	s := "this is not a valid xmlid.  Bad characters and too long."
 	i := 1
 	b := true
-
+	u := "UPDATE"
+	st := tc.RequestStatusSubmitted
 	r := &TODeliveryServiceRequest{
-		ChangeType: "UPDATE",
-		Status:     tc.RequestStatusSubmitted,
+		ChangeType: &u,
+		Status:     &st,
 		DeliveryService: &tc.DeliveryServiceNullable{
 			XMLID:       &s,
 			CDNID:       &i,
@@ -83,8 +84,9 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 	}
 
 	r.SetID(10)
-	if r.GetID() != 10 {
-		t.Errorf("expected ID to be %d,  not %d", 10, r.GetID())
+	id, _ := r.GetID()
+	if id != 10 {
+		t.Errorf("expected ID to be %d,  not %d", 10, id)
 	}
 	exp := "10"
 	if r.GetAuditName() != exp {

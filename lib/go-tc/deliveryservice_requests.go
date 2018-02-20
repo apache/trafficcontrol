@@ -49,17 +49,17 @@ type DeliveryServiceRequest struct {
 type DeliveryServiceRequestNullable struct {
 	AssigneeID      *int                     `json:"assigneeId,omitempty" db:"assignee_id"`
 	Assignee        *string                  `json:"assignee,omitempty"`
-	AuthorID        IDNoMod                  `json:"authorId" db:"author_id"`
-	Author          string                   `json:"author"`
-	ChangeType      string                   `json:"changeType" db:"change_type"`
+	AuthorID        *IDNoMod                 `json:"authorId" db:"author_id"`
+	Author          *string                  `json:"author"`
+	ChangeType      *string                  `json:"changeType" db:"change_type"`
 	CreatedAt       *TimeNoMod               `json:"createdAt" db:"created_at"`
-	ID              int                      `json:"id" db:"id"`
-	LastEditedBy    string                   `json:"lastEditedBy"`
-	LastEditedByID  IDNoMod                  `json:"lastEditedById" db:"last_edited_by_id"`
+	ID              *int                     `json:"id" db:"id"`
+	LastEditedBy    *string                  `json:"lastEditedBy"`
+	LastEditedByID  *IDNoMod                 `json:"lastEditedById" db:"last_edited_by_id"`
 	LastUpdated     *TimeNoMod               `json:"lastUpdated" db:"last_updated"`
 	DeliveryService *DeliveryServiceNullable `json:"deliveryService" db:"deliveryservice"`
-	Status          RequestStatus            `json:"status" db:"status"`
-	XMLID           string                   `json:"-" db:"xml_id"`
+	Status          *RequestStatus           `json:"status" db:"status"`
+	XMLID           *string                  `json:"-" db:"xml_id"`
 }
 
 // UnmarshalJSON implements the json.Unmarshaller interface to suppress unmarshalling for IDNoMod
@@ -72,17 +72,17 @@ type RequestStatus string
 
 const (
 	// RequestStatusInvalid -- invalid state
-	RequestStatusInvalid = "invalid"
+	RequestStatusInvalid = RequestStatus("invalid")
 	// RequestStatusDraft -- newly created; not ready to be reviewed
-	RequestStatusDraft = "draft"
+	RequestStatusDraft = RequestStatus("draft")
 	// RequestStatusSubmitted -- newly created; ready to be reviewed
-	RequestStatusSubmitted = "submitted"
+	RequestStatusSubmitted = RequestStatus("submitted")
 	// RequestStatusRejected -- reviewed, but problems found
-	RequestStatusRejected = "rejected"
+	RequestStatusRejected = RequestStatus("rejected")
 	// RequestStatusPending -- reviewed and locked; ready to be implemented
-	RequestStatusPending = "pending"
+	RequestStatusPending = RequestStatus("pending")
 	// RequestStatusComplete -- implemented and locked
-	RequestStatusComplete = "complete"
+	RequestStatusComplete = RequestStatus("complete")
 )
 
 // RequestStatuses -- user-visible string associated with each of the above
