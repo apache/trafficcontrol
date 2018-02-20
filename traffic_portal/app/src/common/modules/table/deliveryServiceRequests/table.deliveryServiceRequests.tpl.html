@@ -53,9 +53,9 @@ under the License.
                 </td>
                 <td data-search="^{{::request.author}}$">{{::request.author}}</td>
                 <td data-search="^{{::request.assignee}}$">
-                    <span ng-show="!assignable(request)">{{::request.assignee}}</span>
-                    <a ng-show="assignable(request) && !request.assignee" class="link" title="Assign Yourself" ng-click="assignRequest(request, true, $event)">No one - assign yourself</a>
-                    <a ng-show="assignable(request) && request.assignee" class="link" title="Unassign" ng-click="assignRequest(request, false, $event)">{{::request.assignee}} - unassign</a>
+                    <span ng-show="!open(request)">{{::request.assignee}}</span>
+                    <a ng-show="open(request) && !request.assignee" class="link" title="Assign Yourself" ng-click="assignRequest(request, true, $event)">No one - assign yourself</a>
+                    <a ng-show="open(request) && request.assignee" class="link" title="Unassign" ng-click="assignRequest(request, false, $event)">{{::request.assignee}} - unassign</a>
                 </td>
                 <td data-search="^{{::request.lastEditedBy}}$">{{::request.lastEditedBy}}</td>
                 <td title="{{request.createdAt}} (UTC)" data-search="^{{::getRelativeTime(request.createdAt)}}$" data-order="{{::request.createdAt}}">{{::getRelativeTime(request.createdAt)}}</td>
