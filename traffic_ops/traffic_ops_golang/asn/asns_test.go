@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -73,13 +74,14 @@ func TestGetASNs(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	v := map[string]string{"dsId": "1"}
 
-	servers, errs, errType := getASNs(v, db)
+	asns, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+
 	if len(errs) > 0 {
-		t.Errorf("getASNs expected: no errors, actual: %v with type %s", errs, errType.String())
+		t.Errorf("asn.Read expected: no errors, actual: %v", errs)
 	}
 
-	if len(servers) != 2 {
-		t.Errorf("getASNs expected: len(servers) == 1, actual: %v", len(servers))
+	if len(asns) != 2 {
+		t.Errorf("asn.Read expected: len(asns) == 2, actual: %v", len(asns))
 	}
 
 }
