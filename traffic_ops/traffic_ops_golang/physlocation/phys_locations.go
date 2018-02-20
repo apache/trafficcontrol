@@ -73,9 +73,9 @@ func (pl *TOPhysLocation) Read(db *sqlx.DB, parameters map[string]string, user a
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"name":   dbhelpers.WhereColumnInfo{"pl.name", nil},
-		"id":     dbhelpers.WhereColumnInfo{"pl.id", api.IsInt},
-		"region": dbhelpers.WhereColumnInfo{"pl.region", api.IsInt},
+		"name":     dbhelpers.WhereColumnInfo{"pl.name", nil},
+		"id":       dbhelpers.WhereColumnInfo{"pl.id", api.IsInt},
+		"regionId": dbhelpers.WhereColumnInfo{"r.id", api.IsInt},
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
@@ -117,7 +117,7 @@ pl.last_updated,
 pl.name,
 COALESCE(pl.phone, '') as phone,
 COALESCE(pl.poc, '') as poc,
-pl.region as regionid,
+r.id as regionId,
 r.name as region,
 pl.short_name,
 pl.state,
