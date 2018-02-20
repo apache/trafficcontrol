@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
@@ -101,4 +102,25 @@ func TestGetPhysLocations(t *testing.T) {
 		t.Errorf("physLocation.Read expected: len(physLocations) == 2, actual: %v", len(physLocations))
 	}
 
+}
+
+func TestInterfaces(t *testing.T) {
+	var i interface{}
+	i = &TOPhysLocation{}
+
+	if _, ok := i.(api.Inserter); !ok {
+		t.Errorf("PhysLocation must be Inserter")
+	}
+	if _, ok := i.(api.Reader); !ok {
+		t.Errorf("PhysLocation must be Reader")
+	}
+	if _, ok := i.(api.Updater); !ok {
+		t.Errorf("PhysLocation must be Updater")
+	}
+	if _, ok := i.(api.Deleter); !ok {
+		t.Errorf("PhysLocation must be Deleter")
+	}
+	if _, ok := i.(api.Identifier); !ok {
+		t.Errorf("PhysLocation must be Identifier")
+	}
 }
