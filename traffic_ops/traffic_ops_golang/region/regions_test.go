@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
@@ -82,5 +83,26 @@ func TestReadRegions(t *testing.T) {
 
 	if len(regions) != 2 {
 		t.Errorf("region.Read expected: len(regions) == 2, actual: %v", len(regions))
+	}
+}
+
+func TestInterfaces(t *testing.T) {
+	var i interface{}
+	i = &TORegion{}
+
+	if _, ok := i.(api.Inserter); !ok {
+		t.Errorf("Region must be Inserter")
+	}
+	if _, ok := i.(api.Reader); !ok {
+		t.Errorf("Region must be Reader")
+	}
+	if _, ok := i.(api.Updater); !ok {
+		t.Errorf("Region must be Updater")
+	}
+	if _, ok := i.(api.Deleter); !ok {
+		t.Errorf("Region must be Deleter")
+	}
+	if _, ok := i.(api.Identifier); !ok {
+		t.Errorf("Region must be Identifier")
 	}
 }
