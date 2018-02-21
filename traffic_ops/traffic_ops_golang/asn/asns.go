@@ -314,7 +314,7 @@ func updateQuery() string {
 	query := `UPDATE
 asn SET
 asn=:asn,
-cachegroup=:cachegroup,
+cachegroup=:cachegroup
 WHERE id=:id RETURNING last_updated`
 	return query
 }
