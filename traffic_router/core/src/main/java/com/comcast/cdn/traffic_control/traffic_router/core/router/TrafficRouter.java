@@ -22,6 +22,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,6 +32,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.comcast.cdn.traffic_control.traffic_router.configuration.ConfigurationListener;
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringResult;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringTarget;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.Steering;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
@@ -51,6 +53,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringGeolocationComparator;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationException;
@@ -504,34 +507,36 @@ public class TrafficRouter {
 	public HTTPRouteResult multiRoute(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
 		final DeliveryService entryDeliveryService = cacheRegister.getDeliveryService(request, true);
 
-		if (isTlsMismatch(request, entryDeliveryService)) {
-			track.setResult(ResultType.ERROR);
-			track.setResultDetails(ResultDetails.DS_TLS_MISMATCH);
+		final List<SteeringResult> steeringResults = getSteeringResults(request, track, entryDeliveryService);
+
+		if (steeringResults == null) {
 			return null;
 		}
 
 		final HTTPRouteResult routeResult = new HTTPRouteResult(true);
-		final List<DeliveryService> deliveryServices = getDeliveryServices(request, track, entryDeliveryService);
+		routeResult.setDeliveryService(entryDeliveryService);
 
-		if (deliveryServices == null) {
-			return null;
+		final List<SteeringResult> resultsToRemove = new ArrayList<>();
+
+		for (final SteeringResult steeringResult : steeringResults) {
+			final DeliveryService ds = steeringResult.getDeliveryService();
+
+			final List<Cache> caches = selectCaches(request, ds, track);
+
+			if (caches != null && !caches.isEmpty()) {
+				final Cache cache = consistentHasher.selectHashable(caches, ds.getDispersion(), request.getPath());
+				steeringResult.setCache(cache);
+			} else {
+				resultsToRemove.add(steeringResult);
+			}
 		}
 
-		routeResult.setDeliveryService(entryDeliveryService);
-		for (final DeliveryService deliveryService : deliveryServices) {
-			if (deliveryService.isRegionalGeoEnabled()) {
-				LOGGER.error("Regional Geo Blocking is not supported with multi-route delivery services.. skipping " + entryDeliveryService.getId() + "/" + deliveryService.getId());
-				continue;
-			}
+		steeringResults.removeAll(resultsToRemove);
 
-			if (deliveryService.isAvailable()) {
-				final List<Cache> caches = selectCaches(request, deliveryService, track);
+		geoSortSteeringResults(steeringResults, request.getClientIP(), entryDeliveryService);
 
-				if (caches != null && !caches.isEmpty()) {
-					final Cache cache = consistentHasher.selectHashable(caches, deliveryService.getDispersion(), request.getPath());
-					routeResult.addUrl(new URL(deliveryService.createURIString(request, cache)));
-				}
-			}
+		for (final SteeringResult steeringResult: steeringResults) {
+			routeResult.addUrl(new URL(steeringResult.getDeliveryService().createURIString(request, steeringResult.getCache())));
 		}
 
 		if (routeResult.getUrls().isEmpty()) {
@@ -606,24 +611,41 @@ public class TrafficRouter {
 		return routeResult;
 	}
 
-	private List<DeliveryService> getDeliveryServices(final HTTPRequest request, final Track track, final DeliveryService entryDeliveryService) {
-		final List<DeliveryService> deliveryServices = consistentHashMultiDeliveryService(entryDeliveryService, request.getPath());
+	private List<SteeringResult> getSteeringResults(final HTTPRequest request, final Track track, final DeliveryService entryDeliveryService) {
 
-		if (deliveryServices == null || deliveryServices.isEmpty()) {
+		if (isTlsMismatch(request, entryDeliveryService)) {
+			track.setResult(ResultType.ERROR);
+			track.setResultDetails(ResultDetails.DS_TLS_MISMATCH);
+			return null;
+		}
+
+		final List<SteeringResult> steeringResults = consistentHashMultiDeliveryService(entryDeliveryService, request.getPath());
+
+		if (steeringResults == null || steeringResults.isEmpty()) {
 			track.setResult(ResultType.DS_MISS);
 			track.setResultDetails(ResultDetails.DS_NOT_FOUND);
 			return null;
 		}
 
-		for (final DeliveryService deliveryService : deliveryServices) {
-			if (isTlsMismatch(request, deliveryService)) {
+		List<SteeringResult> toBeRemoved = new ArrayList<>();
+		for (final SteeringResult steeringResult : steeringResults) {
+			final DeliveryService ds = steeringResult.getDeliveryService();
+			if (isTlsMismatch(request, ds)) {
 				track.setResult(ResultType.ERROR);
 				track.setResultDetails(ResultDetails.DS_TLS_MISMATCH);
 				return null;
 			}
+			if (ds.isRegionalGeoEnabled()) {
+				LOGGER.error("Regional Geo Blocking is not supported with multi-route delivery services.. skipping " + entryDeliveryService.getId() + "/" + ds.getId());
+				toBeRemoved.add(steeringResult);
+			} else if (!ds.isAvailable()) {
+				toBeRemoved.add(steeringResult);
+			}
+
 		}
 
-		return deliveryServices;
+		steeringResults.removeAll(toBeRemoved);
+		return steeringResults.isEmpty() ? null : steeringResults;
 	}
 
 	private DeliveryService getDeliveryService(final HTTPRequest request, final Track track) {
@@ -782,10 +804,6 @@ public class TrafficRouter {
 		return consistentHasher.selectHashable(caches, deliveryService.getDispersion(), requestPath);
 	}
 
-	public DeliveryService consistentHashDeliveryService(final String deliveryServiceId, final String requestPath) {
-		return consistentHashDeliveryService(cacheRegister.getDeliveryService(deliveryServiceId), requestPath, "");
-	}
-
 	private boolean isSteeringDeliveryService(final DeliveryService deliveryService) {
 		return deliveryService != null && steeringRegistry.has(deliveryService.getId());
 	}
@@ -800,16 +818,45 @@ public class TrafficRouter {
 		return steeringRegistry.get(deliveryService.getId()).isClientSteering();
 	}
 
-	public List<DeliveryService> consistentHashMultiDeliveryService(final DeliveryService deliveryService, final String requestPath) {
+	private Geolocation getClientLocationByCoverageZoneOrGeo(final String clientIP, final DeliveryService deliveryService) {
+		Geolocation clientLocation;
+		final NetworkNode networkNode = getNetworkNode(clientIP);
+		if (networkNode != null && networkNode.getGeolocation() != null) {
+			clientLocation = networkNode.getGeolocation();
+		} else {
+			try {
+				clientLocation = getLocation(clientIP, deliveryService);
+			} catch (GeolocationException e) {
+				clientLocation = null;
+			}
+		}
+		return deliveryService.supportLocation(clientLocation);
+	}
+
+	// TODO: add unit test for this method
+	private void geoSortSteeringResults(final List<SteeringResult> steeringResults, final String clientIP, final DeliveryService deliveryService) {
+		if (clientIP == null || clientIP.isEmpty()
+				|| steeringResults.stream().allMatch(t -> t.getSteeringTarget().getGeolocation() == null)) {
+			return;
+		}
+
+		final Geolocation clientLocation = getClientLocationByCoverageZoneOrGeo(clientIP, deliveryService);
+		if (clientLocation != null) {
+			Collections.sort(steeringResults, new SteeringGeolocationComparator(clientLocation));
+			Collections.sort(steeringResults, Comparator.comparingInt(s -> s.getSteeringTarget().getOrder())); // re-sort by order to preserve the ordering done by ConsistentHasher
+		}
+	}
+
+	public List<SteeringResult> consistentHashMultiDeliveryService(final DeliveryService deliveryService, final String requestPath) {
 		if (deliveryService == null) {
 			return null;
 		}
 
-		final List<DeliveryService> deliveryServices = new ArrayList<DeliveryService>();
+		final List<SteeringResult> steeringResults = new ArrayList<>();
 
 		if (!isSteeringDeliveryService(deliveryService)) {
-			deliveryServices.add(deliveryService);
-			return deliveryServices;
+			steeringResults.add(new SteeringResult(null, deliveryService));
+			return steeringResults;
 		}
 
 		final Steering steering = steeringRegistry.get(deliveryService.getId());
@@ -819,11 +866,15 @@ public class TrafficRouter {
 			final DeliveryService target = cacheRegister.getDeliveryService(steeringTarget.getDeliveryService());
 
 			if (target != null) { // target might not be in CRConfig yet
-				deliveryServices.add(target);
+				steeringResults.add(new SteeringResult(steeringTarget, target));
 			}
 		}
 
-		return deliveryServices;
+		return steeringResults;
+	}
+
+	public DeliveryService consistentHashDeliveryService(final String deliveryServiceId, final String requestPath) {
+		return consistentHashDeliveryService(cacheRegister.getDeliveryService(deliveryServiceId), requestPath, "");
 	}
 
 	public DeliveryService consistentHashDeliveryService(final DeliveryService deliveryService, final String requestPath, final String xtcSteeringOption) {

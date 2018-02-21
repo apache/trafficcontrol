@@ -340,7 +340,7 @@ public class ConfigHandler {
 					hashId = jo.get("hashId").textValue();
 				}
 
-				final Cache cache = new Cache(node, hashId, JsonUtils.optInt(jo, "hashCount"));
+				final Cache cache = new Cache(node, hashId, JsonUtils.optInt(jo, "hashCount"), loc.getGeolocation());
 				cache.setFqdn(JsonUtils.getString(jo, "fqdn"));
 				cache.setPort(JsonUtils.getInt(jo, "port"));
 

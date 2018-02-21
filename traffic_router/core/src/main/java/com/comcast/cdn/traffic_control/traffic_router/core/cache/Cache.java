@@ -27,6 +27,7 @@ import java.util.Map;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.DefaultHashable;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.Hashable;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -43,12 +44,18 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 	private List<InetRecord> ipAddresses;
 	private int port;
 	private final Map<String, DeliveryServiceReference> deliveryServices = new HashMap<String, DeliveryServiceReference>();
+	private final Geolocation geolocation;
 	private final Hashable hashable = new DefaultHashable();
 	private int httpsPort = 443;
 
-	public Cache(final String id, final String hashId, final int hashCount) {
+	public Cache(final String id, final String hashId, final int hashCount, final Geolocation geolocation) {
 		this.id = id;
 		hashable.generateHashes(hashId, hashCount > 0 ? hashCount : REPLICAS);
+		this.geolocation = geolocation;
+	}
+
+	public Cache(final String id, final String hashId, final int hashCount) {
+		this(id, hashId, hashCount, null);
 	}
 
 	@Override
@@ -72,6 +79,10 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 
 	public Collection<DeliveryServiceReference> getDeliveryServices() {
 		return deliveryServices.values();
+	}
+
+	public Geolocation getGeolocation() {
+		return geolocation;
 	}
 
 	public String getFqdn() {

@@ -16,15 +16,29 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.ds;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.DefaultHashable;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SteeringTarget extends DefaultHashable {
+
+	private static final double DEFAULT_LAT = 0.0;
+	private static final double DEFAULT_LON = 0.0;
+
 	@JsonProperty
 	private String deliveryService;
 	@JsonProperty
 	private int weight;
 	@JsonProperty
 	private int order = 0;
+	@JsonProperty
+	private int geoOrder = 0;
+	// TODO: lat/long should probably be moved to the DeliveryService itself, but this is ok for a start
+	@JsonProperty
+	private double latitude = DEFAULT_LAT;
+	@JsonProperty
+	private double longitude = DEFAULT_LON;
+
+	private Geolocation geolocation;
 
 	public DefaultHashable generateHashes() {
 		return generateHashes(deliveryService, weight);
@@ -54,6 +68,40 @@ public class SteeringTarget extends DefaultHashable {
 		return order;
 	}
 
+	public void setGeoOrder(final int geoOrder) {
+		this.geoOrder = geoOrder;
+	}
+
+	public int getGeoOrder() {
+		return geoOrder;
+	}
+
+	public void setLatitude(final double latitude) {
+		this.latitude = latitude;
+	}
+
+	public double getLatitude() {
+		return latitude;
+	}
+
+	public void setLongitude(final double longitude) {
+		this.longitude = longitude;
+	}
+
+	public double getLongitude() {
+		return longitude;
+	}
+
+	public Geolocation getGeolocation() {
+		if (geolocation != null) {
+			return geolocation;
+		}
+		if (latitude != DEFAULT_LAT && longitude != DEFAULT_LON) {
+			geolocation = new Geolocation(latitude, longitude);
+		}
+		return geolocation;
+	}
+
 	@Override
 	@SuppressWarnings("PMD")
 	public boolean equals(Object o) {
@@ -64,6 +112,9 @@ public class SteeringTarget extends DefaultHashable {
 
 		if (weight != target.weight) return false;
 		if (order != target.order) return false;
+		if (geoOrder != target.geoOrder) return false;
+		if (latitude != target.latitude) return false;
+		if (longitude != target.longitude) return false;
 		return deliveryService != null ? deliveryService.equals(target.deliveryService) : target.deliveryService == null;
 
 	}
@@ -73,6 +124,9 @@ public class SteeringTarget extends DefaultHashable {
 		int result = deliveryService != null ? deliveryService.hashCode() : 0;
 		result = 31 * result + weight;
 		result = 31 * result + order;
+		result = 31 * result + geoOrder;
+		result = 31 * result + (int) latitude;
+		result = 31 * result + (int) longitude;
 		return result;
 	}
 }

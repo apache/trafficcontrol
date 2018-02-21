@@ -46,7 +46,7 @@ sub find_steering {
     my $rs_data = $self->db->resultset('SteeringView')->search({}, {order_by => ['steering_xml_id', 'target_xml_id']});
 
     while ( my $row = $rs_data->next ) {
-        if ($steering_xml_id && $row->steering_xml_id ne $steering_xml_id) {
+        if ($steering_xml_id && $row->steering_xml_id ne $steering_xml_id) { # TODO: can this be optimized into the SQL query?
             next;
         }
 
@@ -92,6 +92,9 @@ sub find_steering {
 
         my $targets = $steering_entry->{"targets"};
 
+        # TODO: add new STEERING_GEO_WEIGHT and STEERING_GEO_ORDER types, handle them here
+        # verify if STEERING_ORDER and STEERING_WEIGHT should omit latitude, longitude, and geoOrder
+        # if GEO, get the target DS's lat/long, add it to result (add it to SteeringView?)
         if ( $row->type eq "STEERING_ORDER" ) {
             push(@{$targets},{
             'deliveryService' => $row->target_xml_id,
@@ -191,6 +194,7 @@ sub update() {
     my $req_targets = $self->req->json->{'targets'};
 
     foreach my $req_target (@{$req_targets}) {
+        # TODO: update this validation to handle new GEO types
         if (!$req_target->{'deliveryService'} && ( !$req_target->{'weight'} || !$req_target->{'order'} ) || ( $req_target->{'weight'} && $req_target->{'order'} ) ) {
            return $self->render(json => {"message" => "please provide a valid json for targets"}, status => 400);
         }
@@ -218,6 +222,7 @@ sub update() {
     foreach my $req_target (@{$req_targets}) {
         my $target_id = $valid_targets->{$req_target->{'deliveryService'}};
 
+        # TODO: update this to handle GEO-type targets
         if ($req_target->{'weight'}) {
             my $steering_target_row = $self->db->resultset('SteeringTarget')->find({ deliveryservice => $steering_id, target => $target_id});
             $steering_target_row->value($req_target->{weight});
