@@ -47,8 +47,8 @@ func (division *TODivision) GetAuditName() string {
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (division *TODivision) GetID() int {
-	return division.ID
+func (division *TODivision) GetID() (int, bool) {
+	return division.ID, true
 }
 func (division *TODivision) SetID(i int) {
 	division.ID = i

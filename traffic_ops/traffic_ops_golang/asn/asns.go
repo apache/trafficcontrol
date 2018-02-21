@@ -47,8 +47,8 @@ func GetRefType() *TOASN {
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (asn *TOASN) GetID() int {
-	return asn.ID
+func (asn *TOASN) GetID() (int, bool) {
+	return asn.ID, true
 }
 
 func (asn *TOASN) GetAuditName() string {

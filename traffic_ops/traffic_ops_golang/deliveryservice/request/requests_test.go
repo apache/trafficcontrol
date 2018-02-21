@@ -32,8 +32,8 @@ func TestInterfaces(t *testing.T) {
 	var i interface{}
 	i = &TODeliveryServiceRequest{}
 
-	if _, ok := i.(api.Inserter); !ok {
-		t.Errorf("DeliveryServiceRequest must be Inserter")
+	if _, ok := i.(api.Creator); !ok {
+		t.Errorf("DeliveryServiceRequest must be Creator")
 	}
 	if _, ok := i.(api.Reader); !ok {
 		t.Errorf("DeliveryServiceRequest must be Reader")

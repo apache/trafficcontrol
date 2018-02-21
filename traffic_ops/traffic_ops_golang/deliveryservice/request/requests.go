@@ -267,14 +267,14 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 	return nil, tc.NoError
 }
 
-// Insert implements the tc.Inserter interface
-//all implementations of Inserter should use transactions and return the proper errorType
+// Creator implements the tc.Creator interface
+//all implementations of Creator should use transactions and return the proper errorType
 //ParsePQUniqueConstraintError is used to determine if a request with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted request and have
 //to be added to the struct
-func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (req *TODeliveryServiceRequest) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	if req == nil {
 		return errors.New("nil deliveryservice_request"), tc.SystemError
 	}

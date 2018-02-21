@@ -32,8 +32,8 @@ func getInterface(req *TODeliveryService) interface{} {
 func TestInterfaces(t *testing.T) {
 	r := getInterface(&TODeliveryService{})
 
-	if _, ok := r.(api.Inserter); !ok {
-		t.Errorf("DeliveryService must be Inserter")
+	if _, ok := r.(api.Creator); !ok {
+		t.Errorf("DeliveryService must be Creator")
 	}
 	// TODO: uncomment when ds.Reader interface is implemented
 	/*if _, ok := r.(api.Reader); !ok {
