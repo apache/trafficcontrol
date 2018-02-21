@@ -2465,40 +2465,43 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 		if ( !defined($data) ) {
 			$data = $self->parent_ds_data($server_obj);
 		}
-		foreach my $ds ( sort @{ $data->{dslist} } ) {
-			my $text;
-			my $org = $ds->{org};
-			next if !defined $org || $org eq "";
-			next if $done{$org};
-			my $org_uri = URI->new($org);
-			if ( $ds->{type} eq "HTTP_NO_CACHE" || $ds->{type} eq "HTTP_LIVE" || $ds->{type} eq "DNS_LIVE" ) {
-				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
-			}
-			else {
-				# check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
-				# then edges will use the qstring handling value specified in the parameter for all profiles.
 
-				# If there is no defined parameter in the profile, then check the delivery service profile.
-				# If psel.qstring_handling exists in the DS profile, then we use that value for the specified DS only.
-				# This is used only if not overridden by a server profile qstring handling parameter.
-				my $ds_qsh = $qsh;
-				if (!defined($qsh)) {
-					$ds_qsh = $ds->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
+		if (defined($data->{dslist})) {
+			foreach my $ds ( sort @{ $data->{dslist} } ) {
+				my $text;
+				my $org = $ds->{org};
+				next if !defined $org || $org eq "";
+				next if $done{$org};
+				my $org_uri = URI->new($org);
+				if ( $ds->{type} eq "HTTP_NO_CACHE" || $ds->{type} eq "HTTP_LIVE" || $ds->{type} eq "DNS_LIVE" ) {
+					$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
 				}
-				my $parent_qstring = defined($ds_qsh) ? $ds_qsh : "ignore";
-
-				if ( $ds->{qstring_ignore} == 0 && !defined($ds_qsh) ) {
-					$parent_qstring = "consider";
+				else {
+					# check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
+					# then edges will use the qstring handling value specified in the parameter for all profiles.
+	
+					# If there is no defined parameter in the profile, then check the delivery service profile.
+					# If psel.qstring_handling exists in the DS profile, then we use that value for the specified DS only.
+					# This is used only if not overridden by a server profile qstring handling parameter.
+					my $ds_qsh = $qsh;
+					if (!defined($qsh)) {
+						$ds_qsh = $ds->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
+					}
+					my $parent_qstring = defined($ds_qsh) ? $ds_qsh : "ignore";
+	
+					if ( $ds->{qstring_ignore} == 0 && !defined($ds_qsh) ) {
+						$parent_qstring = "consider";
+					}
+					$text
+						.= "dest_domain="
+						. $org_uri->host
+						. " port="
+						. $org_uri->port
+						. " $parents $secparents $round_robin $go_direct qstring=$parent_qstring\n";
 				}
-				$text
-					.= "dest_domain="
-					. $org_uri->host
-					. " port="
-					. $org_uri->port
-					. " $parents $secparents $round_robin $go_direct qstring=$parent_qstring\n";
+				push @text_array, $text;
+				$done{$org} = 1;
 			}
-			push @text_array, $text;
-			$done{$org} = 1;
 		}
 
 		my $default_dest_text;
