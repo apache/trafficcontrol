@@ -16,7 +16,6 @@
 package api
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -34,18 +33,6 @@ func TestPhysLocations(t *testing.T) {
 
 func CreateTestPhysLocations(t *testing.T) {
 	for _, physLocation := range testData.PhysLocations {
-		fmt.Printf("physLocation ---> %v\n", physLocation)
-		fmt.Printf("physLocation.Address ---> %v\n", physLocation.Address)
-		fmt.Printf("physLocation.City ---> %v\n", physLocation.City)
-		fmt.Printf("physLocation.Comments ---> %v\n", physLocation.Comments)
-		fmt.Printf("physLocation.Email ---> %v\n", physLocation.Email)
-		fmt.Printf("physLocation.Name ---> %v\n", physLocation.Name)
-		fmt.Printf("physLocation.Phone ---> %v\n", physLocation.Phone)
-		fmt.Printf("physLocation.RegionName ---> %v\n", physLocation.RegionName)
-		fmt.Printf("physLocation.RegionId ---> %v\n", physLocation.RegionID)
-		fmt.Printf("physLocation.ShortName ---> %v\n", physLocation.ShortName)
-		fmt.Printf("physLocation.State ---> %v\n", physLocation.State)
-		fmt.Printf("physLocation.Zip ---> %v\n", physLocation.Zip)
 		resp, _, err := TOSession.CreatePhysLocation(physLocation)
 		log.Debugln("Response: ", resp)
 		if err != nil {
@@ -63,7 +50,7 @@ func UpdateTestPhysLocations(t *testing.T) {
 		t.Errorf("cannot GET PhysLocation by physLocation: %v - %v\n", firstPhysLocation.Name, err)
 	}
 	remotePhysLocation := resp[0]
-	expectedPhysLocation := "OFFLINE-TEST"
+	expectedPhysLocationName := "UPDATED"
 	remotePhysLocation.Name = expectedPhysLocation
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdatePhysLocationByID(remotePhysLocation.ID, remotePhysLocation)
@@ -95,6 +82,7 @@ func GetTestPhysLocations(t *testing.T) {
 func DeleteTestPhysLocations(t *testing.T) {
 
 	physLocation := testData.PhysLocations[1]
+
 	// Retrieve the PhysLocation by name so we can get the id
 	resp, _, err := TOSession.GetPhysLocationByName(physLocation.Name)
 	if err != nil {
