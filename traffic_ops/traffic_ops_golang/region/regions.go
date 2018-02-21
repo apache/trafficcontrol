@@ -43,8 +43,8 @@ func GetRefType() *TORegion {
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (region *TORegion) GetID() int {
-	return region.ID
+func (region *TORegion) GetID() (int, bool) {
+	return region.ID, true
 }
 
 func (region *TORegion) GetAuditName() string {
