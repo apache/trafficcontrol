@@ -21,6 +21,9 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
+
+	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
 // IDNoMod type is used to suppress JSON unmarshalling
@@ -117,7 +120,10 @@ func (r RequestStatus) MarshalJSON() ([]byte, error) {
 
 // Value implements driver.Valuer
 func (r *RequestStatus) Value() (driver.Value, error) {
-	return json.Marshal(r)
+	v, err := json.Marshal(r)
+	log.Debugf("value is %v; err is %v", v, err)
+	v = []byte(strings.Trim(string(v), `"`))
+	return v, err
 }
 
 // Scan implements sql.Scanner
