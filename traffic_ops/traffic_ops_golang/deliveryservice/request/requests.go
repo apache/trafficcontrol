@@ -302,7 +302,7 @@ func (req *TODeliveryServiceRequest) Insert(db *sqlx.DB, user auth.CurrentUser) 
 		return err, tc.SystemError
 	}
 	if active {
-		return errors.New("An active request exists for delivery service '" + XMLID), tc.DataConflictError
+		return errors.New(`An active request exists for delivery service '` + XMLID + `'`), tc.DataConflictError
 	}
 
 	rollbackTransaction := true
@@ -433,7 +433,7 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 // isActiveRequest returns true if a request using this XMLID is currently in an active state
 func isActiveRequest(db *sqlx.DB, XMLID string) (bool, error) {
 	q := `SELECT EXISTS(SELECT 1 FROM deliveryservice_request
-WHERE deliveryservice->>'xml_id' = '` + XMLID + `'
+WHERE deliveryservice->>'xmlId' = '` + XMLID + `'
 AND status IN ('draft', 'submitted', 'pending'))`
 	row := db.QueryRow(q)
 	var active bool

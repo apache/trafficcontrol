@@ -165,6 +165,15 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 	expected := []string{`deliveryservice_request was created.`}
 	utils.Compare(t, expected, alerts.ToStrings())
 
+	// Create a duplicate request -- should fail because xmlId is the same
+	alerts, _, err = TOSession.CreateDeliveryServiceRequest(src)
+	if err != nil {
+		t.Errorf("Error creating DeliveryServiceRequest %v", err)
+	}
+
+	expected = []string{`An active request exists for delivery service 'test-transitions'`}
+	utils.Compare(t, expected, alerts.ToStrings())
+
 	dsrs, _, err = TOSession.GetDeliveryServiceRequestByXMLID(`test-transitions`)
 	if len(dsrs) != 1 {
 		t.Errorf("Expected 1 deliveryServiceRequest -- got %d", len(dsrs))
