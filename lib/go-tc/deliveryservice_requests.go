@@ -147,7 +147,7 @@ func RequestStatusFromString(rs string) (RequestStatus, error) {
 func (r RequestStatus) ValidTransition(to RequestStatus) error {
 	if r == RequestStatusRejected || r == RequestStatusComplete {
 		// once rejected or completed,  no changes allowed
-		return fmt.Errorf(" %s cannot be changed", string(r))
+		return errors.New(string(r) + " request cannot be changed")
 	}
 
 	if r == to {
