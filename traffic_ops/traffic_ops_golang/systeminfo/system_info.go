@@ -1,4 +1,4 @@
-package main
+package systeminfo
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -30,7 +30,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func systemInfoHandler(db *sqlx.DB) http.HandlerFunc {
+func Handler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
