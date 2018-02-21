@@ -43,8 +43,7 @@ func getTestPhysLocations() []tc.PhysLocation {
 		Name:        "physLocation1",
 		Phone:       "303-210-0000",
 		POC:         "Dennis Thompson",
-		RegionId:    1,
-		Region:      "Central",
+		RegionID:    1,
 		ShortName:   "pl1",
 		State:       "CO",
 		Zip:         "80210",
@@ -83,8 +82,7 @@ func TestGetPhysLocations(t *testing.T) {
 			ts.Name,
 			ts.Phone,
 			ts.POC,
-			ts.RegionId,
-			ts.Region,
+			ts.RegionID,
 			ts.ShortName,
 			ts.State,
 			ts.Zip,
@@ -108,8 +106,8 @@ func TestInterfaces(t *testing.T) {
 	var i interface{}
 	i = &TOPhysLocation{}
 
-	if _, ok := i.(api.Inserter); !ok {
-		t.Errorf("PhysLocation must be Inserter")
+	if _, ok := i.(api.Creator); !ok {
+		t.Errorf("PhysLocation must be Creator")
 	}
 	if _, ok := i.(api.Reader); !ok {
 		t.Errorf("PhysLocation must be Reader")
