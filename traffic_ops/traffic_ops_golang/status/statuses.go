@@ -43,8 +43,8 @@ func GetRefType() *TOStatus {
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (status *TOStatus) GetID() int {
-	return status.ID
+func (status *TOStatus) GetID() (int, bool) {
+	return status.ID, true
 }
 
 func (status *TOStatus) GetAuditName() string {
