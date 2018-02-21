@@ -273,11 +273,6 @@
 			<version>2.1.7</version>
 		</dependency>
 		<dependency>
-			<groupId>jdnssec</groupId>
-			<artifactId>jdnssec-tools</artifactId>
-			<version>0.12</version>
-		</dependency>
-		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
 			<version>18.0</version>
