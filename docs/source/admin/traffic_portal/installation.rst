@@ -23,7 +23,7 @@ The following are requirements to ensure an accurate set up:
 
 **Installing Traffic Portal**
 
-	- Download the Traffic Portal RPM from `Apache Jenkins <https://builds.apache.org/view/S-Z/view/TrafficControl/job/incubator-trafficcontrol-master-build/>`_ or build from source (./pkg traffic_portal_build).
+	- Download the Traffic Portal RPM from `Apache Jenkins <https://builds.apache.org/view/S-Z/view/TrafficControl/job/incubator-trafficcontrol-master-build/>`_ or build the Traffic Portal RPM from source (./pkg -v traffic_portal_build).
 	- Copy the Traffic Portal RPM to your server
 	- curl --silent --location https://rpm.nodesource.com/setup_6.x | sudo bash -
 	- sudo yum install -y nodejs
