@@ -134,7 +134,7 @@ func TestDeliveryServiceRequestBad(t *testing.T) {
 		t.Errorf("Error creating DeliveryServiceRequest %v", err)
 	}
 	expected := []string{
-		`invalid initial request status pending.  Must be 'draft' or 'submitted'`,
+		`'status' invalid transition from draft to pending`,
 	}
 	utils.Compare(t, expected, alerts.ToStrings())
 }
