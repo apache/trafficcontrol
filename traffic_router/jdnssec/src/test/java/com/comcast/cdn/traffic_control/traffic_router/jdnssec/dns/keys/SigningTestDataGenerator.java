@@ -13,13 +13,18 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core.jdnssec.dns.keys;
+package com.comcast.cdn.traffic_control.traffic_router.jdnssec.dns.keys;
 
 import com.verisignlabs.dnssec.security.DnsKeyPair;
 import com.verisignlabs.dnssec.security.JCEDnsSecSigner;
 import org.junit.Before;
 import org.junit.Test;
-import org.xbill.DNS.*;
+import org.xbill.DNS.DClass;
+import org.xbill.DNS.DNSKEYRecord;
+import org.xbill.DNS.DSRecord;
+import org.xbill.DNS.Name;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.Section;
 import com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords;
 import sun.security.rsa.RSAPrivateCrtKeyImpl;
 

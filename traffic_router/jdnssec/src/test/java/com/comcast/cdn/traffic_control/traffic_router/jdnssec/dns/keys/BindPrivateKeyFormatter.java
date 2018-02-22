@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core.jdnssec.dns.keys;
+package com.comcast.cdn.traffic_control.traffic_router.jdnssec.dns.keys;
 
 import sun.security.rsa.RSAPrivateCrtKeyImpl;
 
