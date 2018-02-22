@@ -49,6 +49,8 @@ public class NetworkNode implements Comparable<NetworkNode> {
     private String loc;
     private CacheLocation cacheLocation = null;
     private Geolocation geolocation = null;
+    private List<String> backupCacheGroups = null;
+    private boolean useClosestOnBackupFailure = false;
     protected Map<NetworkNode,NetworkNode> children;
     private Set<String> deepCacheNames;
 
@@ -106,7 +108,11 @@ public class NetworkNode implements Comparable<NetworkNode> {
                 final String loc = czIter.next();
                 final JsonNode locData = JsonUtils.getJsonNode(coverageZones, loc);
                 final JsonNode coordinates = locData.get("coordinates");
+                final JsonNode backupConfigJson = locData.get("backupZones");
+                boolean useClosestOnBackupFailure = true;
+
                 Geolocation geolocation = null;
+                List<String> backupCacheGroups = null;
 
                 if (coordinates != null && coordinates.has("latitude") && coordinates.has("longitude")) {
                     final double latitude = coordinates.get("latitude").asDouble();
@@ -114,7 +120,17 @@ public class NetworkNode implements Comparable<NetworkNode> {
                     geolocation = new Geolocation(latitude, longitude);
                 }
 
-                if (!addNetworkNodesToRoot(root, loc, locData, geolocation, useDeep)) {
+                if (backupConfigJson != null) {
+                    if (backupConfigJson.has("list")) {
+                        backupCacheGroups = new ArrayList<>();
+                        for (final JsonNode cacheGroup : JsonUtils.getJsonNode(backupConfigJson, "list")) {
+                            backupCacheGroups.add(cacheGroup.asText());
+                        }
+                    }
+                    useClosestOnBackupFailure = JsonUtils.optBoolean(backupConfigJson, "fallbackToClosestGroup", false);
+                }
+
+                if (!addNetworkNodesToRoot(root, loc, locData, geolocation, backupCacheGroups, useDeep, useClosestOnBackupFailure)) {
                     return null;
                 }
             }
@@ -137,8 +153,10 @@ public class NetworkNode implements Comparable<NetworkNode> {
         return null;
     }
 
+
+    @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
     private static boolean addNetworkNodesToRoot(final SuperNode root, final String loc, final JsonNode locData,
-                                                 final Geolocation geolocation, final boolean useDeep) {
+                                                 final Geolocation geolocation, final List<String> backupCacheGroups, final boolean useDeep, final boolean useClosestOnBackupFailure) {
         final CacheLocation deepLoc = new CacheLocation( "deep." + loc, geolocation != null ? geolocation : new Geolocation(0.0, 0.0));  // TODO JvD
         final Set<String> cacheNames = parseDeepCacheNames(locData);
 
@@ -146,9 +164,8 @@ public class NetworkNode implements Comparable<NetworkNode> {
             try {
                 for (final JsonNode network : JsonUtils.getJsonNode(locData, key)) {
                     final String ip = network.asText();
-
                     try {
-                        final NetworkNode nn = new NetworkNode(ip, loc, geolocation);
+                        final NetworkNode nn = new NetworkNode(ip, loc, geolocation, backupCacheGroups, useClosestOnBackupFailure);
                         if (useDeep) {
                             // For a deep NetworkNode, we set the CacheLocation here without any Caches.
                             // The deep Caches will be lazily loaded in getCoverageZoneCacheLocation() where we have
@@ -198,12 +215,14 @@ public class NetworkNode implements Comparable<NetworkNode> {
     }
 
     public NetworkNode(final String str, final String loc) throws NetworkNodeException {
-        this(str, loc, null);
+        this(str, loc, null, null, false);
     }
 
-    public NetworkNode(final String str, final String loc, final Geolocation geolocation) throws NetworkNodeException {
+    public NetworkNode(final String str, final String loc, final Geolocation geolocation, final List<String> backupCacheGroups, final boolean useClosestOnBackupFailure) throws NetworkNodeException {
         this.loc = loc;
         this.geolocation = geolocation;
+        this.backupCacheGroups = backupCacheGroups;
+        this.useClosestOnBackupFailure = useClosestOnBackupFailure;
         cidrAddress = CidrAddress.fromString(str);
     }
 
@@ -279,6 +298,14 @@ public class NetworkNode implements Comparable<NetworkNode> {
 
     public Geolocation getGeolocation() {
         return geolocation;
+    }
+
+    public List<String> getBackupCacheGroups() {
+        return backupCacheGroups;
+    }
+
+    public boolean isUseClosest() {
+        return useClosestOnBackupFailure;
     }
 
     public CacheLocation getCacheLocation() {
