@@ -181,14 +181,14 @@ func (region *TORegion) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	return nil, tc.NoError
 }
 
-//The TORegion implementation of the Inserter interface
-//all implementations of Inserter should use transactions and return the proper errorType
+//The TORegion implementation of the Creator interface
+//all implementations of Creator should use transactions and return the proper errorType
 //ParsePQUniqueConstraintError is used to determine if a region with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted region and have
 //to be added to the struct
-func (region *TORegion) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (region *TORegion) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
