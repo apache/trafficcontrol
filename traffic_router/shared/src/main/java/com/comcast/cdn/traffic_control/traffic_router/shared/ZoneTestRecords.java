@@ -17,7 +17,17 @@ package com.comcast.cdn.traffic_control.traffic_router.shared;
 
 import com.comcast.cdn.traffic_control.traffic_router.secure.BindPrivateKey;
 import com.comcast.cdn.traffic_control.traffic_router.secure.Pkcs1KeySpecDecoder;
-import org.xbill.DNS.*;
+import org.xbill.DNS.AAAARecord;
+import org.xbill.DNS.ARecord;
+import org.xbill.DNS.CNAMERecord;
+import org.xbill.DNS.DClass;
+import org.xbill.DNS.DNSKEYRecord;
+import org.xbill.DNS.NSRecord;
+import org.xbill.DNS.Name;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.TXTRecord;
+import org.xbill.DNS.SOARecord;
+import org.xbill.DNS.DNSSEC;
 
 import java.net.Inet6Address;
 import java.net.InetAddress;
