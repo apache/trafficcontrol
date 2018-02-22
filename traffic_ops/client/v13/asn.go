@@ -13,7 +13,7 @@
    limitations under the License.
 */
 
-package client
+package v13
 
 import (
 	"encoding/json"
@@ -25,19 +25,19 @@ import (
 )
 
 const (
-	API_v13_Divisions = "/api/1.3/divisions"
+	API_v2_ASNs = "/api/1.3/asns"
 )
 
-// Create a Division
-func (to *Session) CreateDivision(division tc.Division) (tc.Alerts, ReqInf, error) {
+// Create a ASN
+func (to *Session) CreateASN(entity tc.ASN) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(division)
+	reqBody, err := json.Marshal(entity)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Divisions, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v2_ASNs, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -47,16 +47,16 @@ func (to *Session) CreateDivision(division tc.Division) (tc.Alerts, ReqInf, erro
 	return alerts, reqInf, nil
 }
 
-// Update a Division by ID
-func (to *Session) UpdateDivisionByID(id int, division tc.Division) (tc.Alerts, ReqInf, error) {
+// Update a ASN by ID
+func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(division)
+	reqBody, err := json.Marshal(entity)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v13_Divisions, id)
+	route := fmt.Sprintf("%s/%d", API_v2_ASNs, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -67,23 +67,23 @@ func (to *Session) UpdateDivisionByID(id int, division tc.Division) (tc.Alerts, 
 	return alerts, reqInf, nil
 }
 
-// Returns a list of Divisions
-func (to *Session) GetDivisions() ([]tc.Division, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_Divisions, nil)
+// Returns a list of ASNs
+func (to *Session) GetASNs() ([]tc.ASN, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_v2_ASNs, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data tc.DivisionsResponse
+	var data tc.ASNsResponse
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
 }
 
-// GET a Division by the Division id
-func (to *Session) GetDivisionByID(id int) ([]tc.Division, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_Divisions, id)
+// GET a ASN by the id
+func (to *Session) GetASNByID(id int) ([]tc.ASN, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v2_ASNs, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -91,7 +91,7 @@ func (to *Session) GetDivisionByID(id int) ([]tc.Division, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.DivisionsResponse
+	var data tc.ASNsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -99,9 +99,9 @@ func (to *Session) GetDivisionByID(id int) ([]tc.Division, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GET a Division by the Division name
-func (to *Session) GetDivisionByName(name string) ([]tc.Division, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_Divisions, name)
+// GET an ASN by the asn number
+func (to *Session) GetASNByASN(asn int) ([]tc.ASN, ReqInf, error) {
+	url := fmt.Sprintf("%s?asn=%d", API_v2_ASNs, asn)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -109,7 +109,7 @@ func (to *Session) GetDivisionByName(name string) ([]tc.Division, ReqInf, error)
 	}
 	defer resp.Body.Close()
 
-	var data tc.DivisionsResponse
+	var data tc.ASNsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -117,23 +117,9 @@ func (to *Session) GetDivisionByName(name string) ([]tc.Division, ReqInf, error)
 	return data.Response, reqInf, nil
 }
 
-// DELETE a Division by Division id
-func (to *Session) DeleteDivisionByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_Divisions, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
-	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
-}
-
-// DELETE a Division by Division name
-func (to *Session) DeleteDivisionByName(name string) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/name/%s", API_v13_Divisions, name)
+// DELETE an ASN by asn number
+func (to *Session) DeleteASNByASN(asn int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/asn/%d", API_v2_ASNs, asn)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

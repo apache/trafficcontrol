@@ -19,19 +19,20 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"net"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/client/v13"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/testing/api/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/testing/api/todb"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/testing/api/towrap"
 	_ "github.com/lib/pq"
 )
 
 var (
-	TOSession *to.Session
+	TOSession *v13.Session
 	cfg       config.Config
 	testData  TrafficControl
 )
@@ -84,7 +85,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	TOSession, _, err = towrap.SetupSession(cfg, cfg.TrafficOps.URL, cfg.TrafficOps.User, cfg.TrafficOps.UserPassword)
+	TOSession, _, err = SetupSession(cfg, cfg.TrafficOps.URL, cfg.TrafficOps.User, cfg.TrafficOps.UserPassword)
 	if err != nil {
 		fmt.Printf("\nError logging into TOURL: %s TOUser: %s/%s - %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, cfg.TrafficOps.UserPassword, err)
 		os.Exit(1)
@@ -94,4 +95,17 @@ func TestMain(m *testing.M) {
 	rc := m.Run()
 	os.Exit(rc)
 
+}
+
+func SetupSession(cfg config.Config, toURL string, toUser string, toPass string) (*v13.Session, net.Addr, error) {
+	var err error
+	var session *v13.Session
+	var netAddr net.Addr
+	toReqTimeout := time.Second * time.Duration(cfg.Default.Session.TimeoutInSecs)
+	session, netAddr, err = v13.LoginWithAgent(toURL, toUser, toPass, true, "to-api-v13-client-tests", true, toReqTimeout)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return session, netAddr, err
 }

@@ -13,7 +13,7 @@
    limitations under the License.
 */
 
-package client
+package v13
 
 import (
 	"encoding/json"
@@ -25,19 +25,19 @@ import (
 )
 
 const (
-	API_v2_ASNs = "/api/1.3/asns"
+	API_v13_CDNs = "/api/1.3/cdns"
 )
 
-// Create a ASN
-func (to *Session) CreateASN(entity tc.ASN) (tc.Alerts, ReqInf, error) {
+// Create a CDN
+func (to *Session) CreateCDN(cdn tc.CDN) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(entity)
+	reqBody, err := json.Marshal(cdn)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v2_ASNs, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_CDNs, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -47,16 +47,16 @@ func (to *Session) CreateASN(entity tc.ASN) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// Update a ASN by ID
-func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, ReqInf, error) {
+// Update a CDN by ID
+func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(entity)
+	reqBody, err := json.Marshal(cdn)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v2_ASNs, id)
+	route := fmt.Sprintf("%s/%d", API_v13_CDNs, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -67,23 +67,23 @@ func (to *Session) UpdateASNByID(id int, entity tc.ASN) (tc.Alerts, ReqInf, erro
 	return alerts, reqInf, nil
 }
 
-// Returns a list of ASNs
-func (to *Session) GetASNs() ([]tc.ASN, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v2_ASNs, nil)
+// Returns a list of CDNs
+func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_CDNs, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data tc.ASNsResponse
+	var data tc.CDNsResponse
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
 }
 
-// GET a ASN by the id
-func (to *Session) GetASNByID(id int) ([]tc.ASN, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v2_ASNs, id)
+// GET a CDN by the CDN ID
+func (to *Session) GetCDNByID(id int) ([]tc.CDN, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_CDNs, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -91,7 +91,7 @@ func (to *Session) GetASNByID(id int) ([]tc.ASN, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.ASNsResponse
+	var data tc.CDNsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -99,9 +99,9 @@ func (to *Session) GetASNByID(id int) ([]tc.ASN, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GET an ASN by the asn number
-func (to *Session) GetASNByASN(asn int) ([]tc.ASN, ReqInf, error) {
-	url := fmt.Sprintf("%s?asn=%d", API_v2_ASNs, asn)
+// GET a CDN by the CDN name
+func (to *Session) GetCDNByName(name string) ([]tc.CDN, ReqInf, error) {
+	url := fmt.Sprintf("%s/name/%s", API_v13_CDNs, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -109,7 +109,7 @@ func (to *Session) GetASNByASN(asn int) ([]tc.ASN, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.ASNsResponse
+	var data tc.CDNsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -117,9 +117,9 @@ func (to *Session) GetASNByASN(asn int) ([]tc.ASN, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// DELETE an ASN by asn number
-func (to *Session) DeleteASNByASN(asn int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/asn/%d", API_v2_ASNs, asn)
+// DELETE a CDN by ID
+func (to *Session) DeleteCDNByID(id int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_CDNs, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -129,4 +129,21 @@ func (to *Session) DeleteASNByASN(asn int) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
+	url := fmt.Sprintf("%s/name/%s/sslkeys", API_v13_CDNs, name)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.CDNSSLKeysResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
 }

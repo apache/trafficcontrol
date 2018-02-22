@@ -26,6 +26,7 @@ type CacheGroupsResponse struct {
 
 // CacheGroup contains information about a given Cachegroup in Traffic Ops.
 type CacheGroup struct {
+	ID          int     `json:"id"`
 	Name        string  `json:"name"`
 	ShortName   string  `json:"shortName"`
 	Latitude    float64 `json:"latitude"`
