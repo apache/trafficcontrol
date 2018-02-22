@@ -112,7 +112,7 @@ func (req *TODeliveryServiceRequest) Read(db *sqlx.DB, parameters map[string]str
 	}
 	defer rows.Close()
 
-	var deliveryServiceRequests []interface{}
+	deliveryServiceRequests := []interface{}{}
 	for rows.Next() {
 		var s TODeliveryServiceRequest
 		if err = rows.StructScan(&s); err != nil {
