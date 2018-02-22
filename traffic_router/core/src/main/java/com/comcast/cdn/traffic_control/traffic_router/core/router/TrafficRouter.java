@@ -87,7 +87,7 @@ public class TrafficRouter {
 	private final ConsistentHasher consistentHasher = new ConsistentHasher();
 	private SteeringRegistry steeringRegistry;
 
-	private final Map<String, Geolocation> defaultGeolocations = new HashMap<String, Geolocation>();
+	private final Map<String, Geolocation> defaultGeolocationsOverride = new HashMap<String, Geolocation>();
 
 	public TrafficRouter(final CacheRegister cr, 
 			final GeolocationService geolocationService, 
@@ -111,7 +111,7 @@ public class TrafficRouter {
 					final String countryCode = JsonUtils.optString(geolocation, "countryCode");
 					final double lat = JsonUtils.optDouble(geolocation, "lat");
 					final double longitude = JsonUtils.optDouble(geolocation, "long");
-					defaultGeolocations.put(countryCode, new Geolocation(lat, longitude));
+					defaultGeolocationsOverride.put(countryCode, new Geolocation(lat, longitude));
 				}
 			}
 		}
@@ -325,8 +325,8 @@ public class TrafficRouter {
 			}
 		}
 
-		if (clientLocation.isDefaultLocation() && defaultGeolocations.containsKey(clientLocation.getCountryCode())) {
-			clientLocation = defaultGeolocations.get(clientLocation.getCountryCode());
+		if (clientLocation.isDefaultLocation() && defaultGeolocationsOverride.containsKey(clientLocation.getCountryCode())) {
+			clientLocation = defaultGeolocationsOverride.get(clientLocation.getCountryCode());
 		}
 
 		final List<Cache> caches = getCachesByGeo(deliveryService, clientLocation, track);
