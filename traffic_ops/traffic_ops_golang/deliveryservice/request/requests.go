@@ -538,7 +538,7 @@ func (req *deliveryServiceRequestAssignment) Update(db *sqlx.DB, user auth.Curre
 	if req.AssigneeID != nil {
 		v = strconv.Itoa(*req.AssigneeID)
 	}
-	query := fmt.Sprintf(`UPDATE deliveryservice_request SET assignee_id = %s WHERE id=%d`, v, req.ID)
+	query := `UPDATE deliveryservice_request SET assignee_id = ` + v + ` WHERE id=` + strconv.Itoa(*req.ID)
 	_, err = tx.Exec(query)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -632,7 +632,7 @@ func (req *deliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUs
 	}
 
 	// LastEditedBy field should not change with status update
-	query := fmt.Sprintf(`UPDATE deliveryservice_request SET status = '%v' WHERE id=%d`, req.Status, req.ID)
+	query := `UPDATE deliveryservice_request SET status = '` + string(*req.Status) + `' WHERE id=` + strconv.Itoa(*req.ID)
 	_, err = tx.Exec(query)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
