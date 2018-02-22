@@ -30,6 +30,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.xbill.DNS.DSRecord;
 import org.xbill.DNS.Record;
+import com.comcast.cdn.traffic_control.traffic_router.shared.SigningData;
+import com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords;
 
 import java.util.ArrayList;
 import java.util.List;
