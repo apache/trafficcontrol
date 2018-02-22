@@ -179,18 +179,6 @@ func (cdn *TOCDN) Read(db *sqlx.DB, parameters map[string]string, user auth.Curr
 	return CDNs, []error{}, tc.NoError
 }
 
-func selectCDNsQuery() string {
-	query := `SELECT
-dnssec_enabled,
-domain_name,
-id,
-last_updated,
-name
-
-FROM cdn c`
-	return query
-}
-
 //The TOCDN implementation of the Updater interface
 //all implementations of Updater should use transactions and return the proper errorType
 //ParsePQUniqueConstraintError is used to determine if a cdn with conflicting values exists
@@ -299,6 +287,18 @@ func (cdn *TOCDN) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 	}
 	rollbackTransaction = false
 	return nil, tc.NoError
+}
+
+func selectCDNsQuery() string {
+	query := `SELECT
+dnssec_enabled,
+domain_name,
+id,
+last_updated,
+name
+
+FROM cdn c`
+	return query
 }
 
 func updateQuery() string {
