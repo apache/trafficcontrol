@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core.jdnssec.dns.keys;
+package com.comcast.cdn.traffic_control.traffic_router.shared;
 
 import org.xbill.DNS.Record;
 import org.xbill.DNS.Section;
@@ -25,17 +25,18 @@ import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 
+@SuppressWarnings("PMD")
 public class SigningData {
 	// If you want to update this data, change the contents of SigningTestDataGenerator.java,
 	// run its only test and then replace everything between here and the declaration of signedList
 	// All data below is based on PKCS#1 format, see https://tools.ietf.org/html/rfc3447#appendix-A.1.1
-	static String ksk1Public =
+	public static String ksk1Public =
 		"MIIBCgKCAQEAly/1SbKJpzYwOJF2Xie7W6eLyQ/W1Ar8hKss7ZbIkcg23bt8QQOFVLPlYG9luYzAULZgTWa4gFlrBkEzO410oy8V" +
 			"FZgB5x11/LioWGJmy9h+H6R1Fy0QFP3eFGKb9tLuAJGMaSRTcbRADJQYiDJ6uuWobTg2fNxlb7B1lz7wOVk/yTV795k+vb+lJx8x" +
 			"Zu9vNyIkUy2/LF4J0oXKCPUEee0hpBglEeFcnMSHjO+LtY5Y6E8+fp3d38+Tikmy/2Xu0R35MmCWXuwqYMO+1p7spNzsuUFkhTWt" +
 			"0yJKc8pC91V6e3gsD6iwMy3Q0EEEQ7q1z+M9vLIYtmC27mHmdDh1DQIDAQAB";
 
-	static String ksk1Private =
+	public static String ksk1Private =
 		"UHJpdmF0ZS1rZXktZm9ybWF0OiB2MS4yCkFsZ29yaXRobTogNSAoUlNBU0hBMSkKTW9kdWx1czog\nQUpjdjlVbXlpYWMyTURpUm" +
 			"RsNG51MXVuaThrUDF0UUsvSVNyTE8yV3lKSElOdDI3ZkVFRGhWU3o1\nV0J2WmJtTXdGQzJZRTFtdUlCWmF3WkJNenVOZEtNdkZS" +
 			"V1lBZWNkZGZ5NHFGaGlac3ZZZmgra2RS\nY3RFQlQ5M2hSaW0vYlM3Z0NSakdra1UzRzBRQXlVR0lneWVycmxxRzA0Tm56Y1pXK3" +
@@ -62,13 +63,13 @@ public class SigningData {
 			"RzQ1VNL1FFQk82QWZyS0NQZHkK";
 
 
-	static String ksk2Public =
+	public static String ksk2Public =
 		"MIIBCgKCAQEAqZz9euL/dovYWIF87eUDWObp9YodiCp88k/PhDCyIbpn7a/QZZYZgYJTjQH0wrMweHj6M74fn8zAFz4fCUq6XSdF" +
 			"UR0X/7MXzBYfuKYdYbYrF68C57ryEl3sW9rSMgxWtajvKFzyB67sYT2GcL3vjZPaYb2ZT2jgjEqeKAk7fzcibfR4UrTj3LI19U8W" +
 			"reZ29JZAmV2sknYA3ImM33CLYseRCw79r0Jws9RLmJixzDeavWYBls1KUqeXYqV++Hb+mQcR/C0/ch63msPWwgcOEfGFmagcYFvC" +
 			"6gOLYXH5WgC2UJlpAMQBZC+3UKwmHaomXeHh92zkQ/nV4bcEOzjZlQIDAQAB";
 
-	static String ksk2Private =
+	public static String ksk2Private =
 		"UHJpdmF0ZS1rZXktZm9ybWF0OiB2MS4yCkFsZ29yaXRobTogNSAoUlNBU0hBMSkKTW9kdWx1czog\nQUttYy9YcmkvM2FMMkZpQm" +
 			"ZPM2xBMWptNmZXS0hZZ3FmUEpQejRRd3NpRzZaKzJ2MEdXV0dZR0NV\nNDBCOU1Lek1IaDQrak8rSDUvTXdCYytId2xLdWwwblJW" +
 			"RWRGLyt6Rjh3V0g3aW1IV0cyS3hldkF1\nZTY4aEpkN0Z2YTBqSU1WcldvN3loYzhnZXU3R0U5aG5DOTc0MlQybUc5bVU5bzRJeE" +
@@ -95,13 +96,13 @@ public class SigningData {
 			"BSd0J0U1ZvSW9pTXpJbVZIMD0K";
 
 
-	static String zsk1Public =
+	public static String zsk1Public =
 		"MIIBCgKCAQEAymLTAjeDfcIYUKyGqKhUrl/khgBJA9TNqrzZOfMmNFarbONxDnsd6WoHnqi5xGrNBV6ZGIGwc4tebG/XWBOVvI7P" +
 			"b10ZHjm4muKnzA9Qt+TOwpukN/phOzDwFZx+QHHu18jePgmFstoSUJzb4baPSoLorCYbRKdIAHhSEALfL5LE8ByP/MwWCO6jD0wE" +
 			"ZlzGsnow5wxnuVWhBt8FMpRN9FgrJ3YkfTxKz8IZpSx2yjf9IIa/lGvKxcUoAyrdWam14l3fBTI6tfx2nWv56L846wXjqtcZvQeO" +
 			"0ewFdwNw2kWTT01kWeG6lXa1yo6CARkvVaF9zcrVNxWUm7CIvKibwQIDAQAB";
 
-	static String zsk1Private =
+	public static String zsk1Private =
 		"UHJpdmF0ZS1rZXktZm9ybWF0OiB2MS4yCkFsZ29yaXRobTogNSAoUlNBU0hBMSkKTW9kdWx1czog\nQU1waTB3STNnMzNDR0ZDc2" +
 			"hxaW9WSzVmNUlZQVNRUFV6YXE4MlRuekpqUldxMnpqY1E1N0hlbHFC\nNTZvdWNScXpRVmVtUmlCc0hPTFhteHYxMWdUbGJ5T3oy" +
 			"OWRHUjQ1dUpyaXA4d1BVTGZrenNLYnBE\nZjZZVHN3OEJXY2ZrQng3dGZJM2o0SmhiTGFFbENjMitHMmowcUM2S3dtRzBTblNBQj" +
@@ -128,13 +129,13 @@ public class SigningData {
 			"ZTRzFFZFBwWmd0dTQ5YnVpUT0K";
 
 
-	static String zsk2Public =
+	public static String zsk2Public =
 		"MIIBCgKCAQEAuCnKCdaJnVwi3Iu0zUYrciw05zZ3jXkZAKE+TOCT5/DlpGRNwzU8x0qc2niyt9Q+awSBpizFWAeAfgpoZXEjbIvw" +
 			"hhDYC/Ze12jvDh/c/xyzaScnt6C6rlM2y1q7j7q9uI/64l7lQITOno4pvPZP3txXqll5VNfUjMbE3HNXL4O+qGLAij1/2clnS8wG" +
 			"vokEITcYwOL6I0vBADqgu4pmu5sstMN+72Tz8FQ+ZAMQ8B7G2IlnPdTBypL0r0LjoFJ2SWZGnj/IRM7Am4iMiwlCSbbDzPibsMwl" +
 			"MAquEBA1UVoN4PC1Ah+Hb6tP2h92Nl1JVSu0478uItF90dGl0gDQuwIDAQAB";
 
-	static String zsk2Private =
+	public static String zsk2Private =
 		"UHJpdmF0ZS1rZXktZm9ybWF0OiB2MS4yCkFsZ29yaXRobTogNSAoUlNBU0hBMSkKTW9kdWx1czog\nQUxncHlnbldpWjFjSXR5TH" +
 			"RNMUdLM0lzTk9jMmQ0MTVHUUNoUGt6Z2srZnc1YVJrVGNNMVBNZEtu\nTnA0c3JmVVBtc0VnYVlzeFZnSGdINEthR1Z4STJ5TDhJ" +
 			"WVEyQXYyWHRkbzd3NGYzUDhjczJrbko3\nZWd1cTVUTnN0YXU0KzZ2YmlQK3VKZTVVQ0V6cDZPS2J6MlQ5N2NWNnBaZVZUWDFJek" +
@@ -549,7 +550,7 @@ public class SigningData {
 
 	// example.com.		31556952	IN	DNSKEY	256 3 5 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAymLTAjeDfcIYUKyGqKhUrl/khgBJA9TNqrzZOfMmNFarbONxDnsd6WoHnqi5xGrNBV6ZGIGwc4tebG/XWBOVvI7Pb10ZHjm4muKnzA9Qt+TOwpukN/phOzDwFZx+QHHu18jePgmFstoSUJzb4baPSoLorCYbRKdIAHhSEALfL5LE8ByP/MwWCO6jD0wEZlzGsnow5wxnuVWhBt8FMpRN9FgrJ3YkfTxKz8IZpSx2yjf9IIa/lGvKxcUoAyrdWam14l3fBTI6tfx2nWv56L846wXjqtcZvQeO0ewFdwNw2kWTT01kWeG6lXa1yo6CARkvVaF9zcrVNxWUm7CIvKibwQIDAQAB
 	// keytag 62715
-	static String zoneDnsKeyRecord =
+	public static String zoneDnsKeyRecord =
 		"ZXhhbXBsZS5jb20uCQkzMTU1Njk1MglJTglETlNLRVkJMjU2IDMgNSBNSUlCSWpBTkJna3Foa2lH\nOXcwQkFRRUZBQU9DQVE4QU" +
 			"1JSUJDZ0tDQVFFQXltTFRBamVEZmNJWVVLeUdxS2hVcmwva2hnQkpB\nOVROcXJ6Wk9mTW1ORmFyYk9OeERuc2Q2V29IbnFpNXhH" +
 			"ck5CVjZaR0lHd2M0dGViRy9YV0JPVnZJ\nN1BiMTBaSGptNG11S256QTlRdCtUT3dwdWtOL3BoT3pEd0ZaeCtRSEh1MThqZVBnbU" +
@@ -559,7 +560,7 @@ public class SigningData {
 
 	// example.com.		315569520	IN	DNSKEY	257 3 5 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAly/1SbKJpzYwOJF2Xie7W6eLyQ/W1Ar8hKss7ZbIkcg23bt8QQOFVLPlYG9luYzAULZgTWa4gFlrBkEzO410oy8VFZgB5x11/LioWGJmy9h+H6R1Fy0QFP3eFGKb9tLuAJGMaSRTcbRADJQYiDJ6uuWobTg2fNxlb7B1lz7wOVk/yTV795k+vb+lJx8xZu9vNyIkUy2/LF4J0oXKCPUEee0hpBglEeFcnMSHjO+LtY5Y6E8+fp3d38+Tikmy/2Xu0R35MmCWXuwqYMO+1p7spNzsuUFkhTWt0yJKc8pC91V6e3gsD6iwMy3Q0EEEQ7q1z+M9vLIYtmC27mHmdDh1DQIDAQAB
 	// keytag 62715
-	static String keyDnsKeyRecord =
+	public static String keyDnsKeyRecord =
 		"ZXhhbXBsZS5jb20uCQkzMTU1Njk1MjAJSU4JRE5TS0VZCTI1NyAzIDUgTUlJQklqQU5CZ2txaGtp\nRzl3MEJBUUVGQUFPQ0FROE" +
 			"FNSUlCQ2dLQ0FRRUFseS8xU2JLSnB6WXdPSkYyWGllN1c2ZUx5US9X\nMUFyOGhLc3M3WmJJa2NnMjNidDhRUU9GVkxQbFlHOWx1" +
 			"WXpBVUxaZ1RXYTRnRmxyQmtFek80MTBv\neThWRlpnQjV4MTEvTGlvV0dKbXk5aCtINlIxRnkwUUZQM2VGR0tiOXRMdUFKR01hU1" +
@@ -567,9 +568,9 @@ public class SigningData {
 			"hLQ1BVRWVlMGhwQmdsRWVGY25NU0hqTytMdFk1WTZFOCtmcDNkMzgrVGlrbXkvMlh1\nMFIzNU1tQ1dYdXdxWU1PKzFwN3NwTnpz" +
 			"dVVGa2hUV3QweUpLYzhwQzkxVjZlM2dzRDZpd015M1Ew\nRUVFUTdxMXorTTl2TElZdG1DMjdtSG1kRGgxRFFJREFRQUI=";
 
-	static List<Record> signedList;
-	static List<Record> postZoneList;
-	static List<Record> dsRecordList = new ArrayList<>();
+	public static List<Record> signedList;
+	public static List<Record> postZoneList;
+	public static List<Record> dsRecordList = new ArrayList<>();
 
 	public static List<String> getStringsNamedLike(String name, Class clazz) {
 		return Arrays.asList(clazz.getDeclaredFields()).stream()

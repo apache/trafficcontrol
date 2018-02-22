@@ -20,6 +20,7 @@ import com.verisignlabs.dnssec.security.JCEDnsSecSigner;
 import org.junit.Before;
 import org.junit.Test;
 import org.xbill.DNS.*;
+import com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords;
 import sun.security.rsa.RSAPrivateCrtKeyImpl;
 
 import java.io.IOException;
@@ -31,13 +32,13 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
-import static com.comcast.cdn.traffic_control.traffic_router.core.jdnssec.dns.keys.ZoneTestRecords.generateZoneRecords;
-import static com.comcast.cdn.traffic_control.traffic_router.core.jdnssec.dns.keys.ZoneTestRecords.keySigningKeyRecord;
-import static com.comcast.cdn.traffic_control.traffic_router.core.jdnssec.dns.keys.ZoneTestRecords.ksk1;
-import static com.comcast.cdn.traffic_control.traffic_router.core.jdnssec.dns.keys.ZoneTestRecords.ksk2;
-import static com.comcast.cdn.traffic_control.traffic_router.core.jdnssec.dns.keys.ZoneTestRecords.zoneSigningKeyRecord;
-import static com.comcast.cdn.traffic_control.traffic_router.core.jdnssec.dns.keys.ZoneTestRecords.zsk1;
-import static com.comcast.cdn.traffic_control.traffic_router.core.jdnssec.dns.keys.ZoneTestRecords.zsk2;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.generateZoneRecords;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.keySigningKeyRecord;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.ksk1;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.ksk2;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.zoneSigningKeyRecord;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.zsk1;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.zsk2;
 import static java.util.Base64.getEncoder;
 import static java.util.Base64.getMimeEncoder;
 import static java.util.stream.Collectors.toList;

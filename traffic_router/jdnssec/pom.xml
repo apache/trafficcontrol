@@ -38,6 +38,11 @@ under the License.
             <classifier>classes</classifier>
         </dependency>
         <dependency>
+            <groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
+            <artifactId>traffic_router_shared</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>jdnssec</groupId>
             <artifactId>jdnssec-tools</artifactId>
             <version>0.12</version>
