@@ -146,10 +146,9 @@ func (asn *TOASN) Read(db *sqlx.DB, parameters map[string]string, user auth.Curr
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"domainName":    dbhelpers.WhereColumnInfo{"domain_name", nil},
-		"dnssecEnabled": dbhelpers.WhereColumnInfo{"dnssec_enabled", nil},
-		"id":            dbhelpers.WhereColumnInfo{"id", api.IsInt},
-		"name":          dbhelpers.WhereColumnInfo{"name", nil},
+		"asn":        dbhelpers.WhereColumnInfo{"a.asn", nil},
+		"cachegroup": dbhelpers.WhereColumnInfo{"c.name", nil},
+		"id":         dbhelpers.WhereColumnInfo{"a.id", api.IsInt},
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
@@ -181,12 +180,13 @@ func (asn *TOASN) Read(db *sqlx.DB, parameters map[string]string, user auth.Curr
 
 func selectQuery() string {
 	query := `SELECT
-id,
-asn,
-last_updated,
-cachegroup
+a.id,
+a.asn,
+a.last_updated,
+a.cachegroup AS cachegroup_id,
+c.name AS cachegroup
 
-FROM asn a`
+FROM asn a JOIN cachegroup c ON a.cachegroup = c.id`
 	return query
 }
 
@@ -306,7 +306,10 @@ asn,
 cachegroup) 
 VALUES (
 :asn,
-:cachegroup) RETURNING id,last_updated`
+(SELECT id from cachegroup
+WHERE name=:cachegroup
+))
+RETURNING id,last_updated`
 	return query
 }
 
@@ -314,7 +317,9 @@ func updateQuery() string {
 	query := `UPDATE
 asn SET
 asn=:asn,
-cachegroup=:cachegroup
+cachegroup=(SELECT id from cachegroup
+WHERE name=:cachegroup
+)
 WHERE id=:id RETURNING last_updated`
 	return query
 }
