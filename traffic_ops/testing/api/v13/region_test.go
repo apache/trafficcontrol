@@ -1,3 +1,5 @@
+package v13
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,10 +15,7 @@
    limitations under the License.
 */
 
-package v13
-
 import (
-	"fmt"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -24,6 +23,8 @@ import (
 )
 
 func TestRegions(t *testing.T) {
+
+	CreateTestDivisions(t)
 
 	CreateTestRegions(t)
 	UpdateTestRegions(t)
@@ -33,8 +34,17 @@ func TestRegions(t *testing.T) {
 }
 
 func CreateTestRegions(t *testing.T) {
+
+	// Retrieve the Division by name so we can get the ID
+	division := testData.Divisions[0]
+	resp, _, err := TOSession.GetDivisionByName(division.Name)
+	if err != nil {
+		t.Errorf("cannot GET Division by name: %v - %v\n", division.Name, err)
+	}
+	respDivision := resp[0]
+
 	for _, region := range testData.Regions {
-		fmt.Printf("region ---> %v\n", region)
+		region.Division = respDivision.ID
 		resp, _, err := TOSession.CreateRegion(region)
 		log.Debugln("Response: ", resp)
 		if err != nil {

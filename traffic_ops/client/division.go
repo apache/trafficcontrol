@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	API_v2_Divisions = "/api/1.3/divisions"
+	API_v13_Divisions = "/api/1.3/divisions"
 )
 
 // Create a Division
@@ -37,7 +37,7 @@ func (to *Session) CreateDivision(division tc.Division) (tc.Alerts, ReqInf, erro
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v2_Divisions, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Divisions, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -56,7 +56,7 @@ func (to *Session) UpdateDivisionByID(id int, division tc.Division) (tc.Alerts, 
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v2_Divisions, id)
+	route := fmt.Sprintf("%s/%d", API_v13_Divisions, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -69,7 +69,7 @@ func (to *Session) UpdateDivisionByID(id int, division tc.Division) (tc.Alerts, 
 
 // Returns a list of Divisions
 func (to *Session) GetDivisions() ([]tc.Division, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v2_Divisions, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_Divisions, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -83,7 +83,7 @@ func (to *Session) GetDivisions() ([]tc.Division, ReqInf, error) {
 
 // GET a Division by the Division id
 func (to *Session) GetDivisionByID(id int) ([]tc.Division, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v2_Divisions, id)
+	route := fmt.Sprintf("%s/%d", API_v13_Divisions, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -101,7 +101,7 @@ func (to *Session) GetDivisionByID(id int) ([]tc.Division, ReqInf, error) {
 
 // GET a Division by the Division name
 func (to *Session) GetDivisionByName(name string) ([]tc.Division, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v2_Divisions, name)
+	url := fmt.Sprintf("%s?name=%s", API_v13_Divisions, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -117,9 +117,23 @@ func (to *Session) GetDivisionByName(name string) ([]tc.Division, ReqInf, error)
 	return data.Response, reqInf, nil
 }
 
+// DELETE a Division by Division id
+func (to *Session) DeleteDivisionByID(id int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_Divisions, id)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
+}
+
 // DELETE a Division by Division name
 func (to *Session) DeleteDivisionByName(name string) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/name/%s", API_v2_Divisions, name)
+	route := fmt.Sprintf("%s/name/%s", API_v13_Divisions, name)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
