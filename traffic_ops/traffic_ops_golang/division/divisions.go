@@ -50,6 +50,7 @@ func (division *TODivision) GetAuditName() string {
 func (division *TODivision) GetID() (int, bool) {
 	return division.ID, true
 }
+
 func (division *TODivision) SetID(i int) {
 	division.ID = i
 }
