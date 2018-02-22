@@ -156,7 +156,7 @@ func (cdn *TOCDN) Read(db *sqlx.DB, parameters map[string]string, user auth.Curr
 		return nil, errs, tc.DataConflictError
 	}
 
-	query := selectCDNsQuery() + where + orderBy
+	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
 	rows, err := db.NamedQuery(query, queryValues)
@@ -289,7 +289,7 @@ func (cdn *TOCDN) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 	return nil, tc.NoError
 }
 
-func selectCDNsQuery() string {
+func selectQuery() string {
 	query := `SELECT
 dnssec_enabled,
 domain_name,
