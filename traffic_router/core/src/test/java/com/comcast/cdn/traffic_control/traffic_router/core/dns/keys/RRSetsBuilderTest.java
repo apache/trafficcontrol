@@ -16,6 +16,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.dns.keys;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.RRSetsBuilder;
+import com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords;
 import org.junit.Before;
 import org.junit.Test;
 import org.xbill.DNS.RRset;

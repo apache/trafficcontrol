@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core;
+package com.comcast.cdn.traffic_control.traffic_router.shared;
 
 import org.hamcrest.Description;
 import org.hamcrest.Factory;
@@ -22,6 +22,7 @@ import org.hamcrest.core.IsEqual;
 
 import java.util.Collection;
 
+@SuppressWarnings("PMD")
 public class IsEqualCollection<T> extends IsEqual<T> {
 	private final Object expectedValue;
 

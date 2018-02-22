@@ -20,6 +20,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.dns.DnsSecKeyPair;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DnsSecKeyPairImpl;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.JDnsSecSigner;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneSignerImpl;
+import com.comcast.cdn.traffic_control.traffic_router.shared.IsEqualCollection;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.verisignlabs.dnssec.security.DnsKeyPair;
@@ -29,17 +30,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.xbill.DNS.DSRecord;
 import org.xbill.DNS.Record;
+import com.comcast.cdn.traffic_control.traffic_router.shared.SigningData;
+import com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static com.comcast.cdn.traffic_control.traffic_router.core.jdnssec.dns.keys.IsEqualCollection.equalTo;
-import static com.comcast.cdn.traffic_control.traffic_router.core.jdnssec.dns.keys.ZoneTestRecords.keySigningKeyRecord;
-import static com.comcast.cdn.traffic_control.traffic_router.core.jdnssec.dns.keys.ZoneTestRecords.origin;
-import static com.comcast.cdn.traffic_control.traffic_router.core.jdnssec.dns.keys.ZoneTestRecords.sep_1_2016;
-import static com.comcast.cdn.traffic_control.traffic_router.core.jdnssec.dns.keys.ZoneTestRecords.sep_1_2026;
-import static com.comcast.cdn.traffic_control.traffic_router.core.jdnssec.dns.keys.ZoneTestRecords.zoneSigningKeyRecord;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.IsEqualCollection.equalTo;
 import static java.util.Arrays.asList;
 import static java.util.Base64.getMimeDecoder;
 import static java.util.stream.Collectors.toList;
