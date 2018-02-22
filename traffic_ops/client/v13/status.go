@@ -13,7 +13,7 @@
    limitations under the License.
 */
 
-package client
+package v13
 
 import (
 	"encoding/json"
@@ -25,19 +25,19 @@ import (
 )
 
 const (
-	API_v12_CDNs = "/api/1.2/cdns"
+	API_v13_STATUSES = "/api/1.3/statuses"
 )
 
-// Create a CDN
-func (to *Session) CreateCDN(cdn tc.CDN) (tc.Alerts, ReqInf, error) {
+// Create a Status
+func (to *Session) CreateStatus(status tc.Status) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(cdn)
+	reqBody, err := json.Marshal(status)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v12_CDNs, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_STATUSES, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -47,16 +47,16 @@ func (to *Session) CreateCDN(cdn tc.CDN) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// Update a CDN by ID
-func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) {
+// Update a Status by ID
+func (to *Session) UpdateStatusByID(id int, status tc.Status) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(cdn)
+	reqBody, err := json.Marshal(status)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v12_CDNs, id)
+	route := fmt.Sprintf("%s/%d", API_v13_STATUSES, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -67,23 +67,23 @@ func (to *Session) UpdateCDNByID(id int, cdn tc.CDN) (tc.Alerts, ReqInf, error) 
 	return alerts, reqInf, nil
 }
 
-// Returns a list of CDNs
-func (to *Session) GetCDNs() ([]tc.CDN, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v12_CDNs, nil)
+// Returns a list of Statuses
+func (to *Session) GetStatuses() ([]tc.Status, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_STATUSES, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data tc.CDNsResponse
+	var data tc.StatusesResponse
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
 }
 
-// GET a CDN by the CDN id
-func (to *Session) GetCDNByID(id int) ([]tc.CDN, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v12_CDNs, id)
+// GET a Status by the Status id
+func (to *Session) GetStatusByID(id int) ([]tc.Status, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_STATUSES, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -91,7 +91,7 @@ func (to *Session) GetCDNByID(id int) ([]tc.CDN, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.CDNsResponse
+	var data tc.StatusesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -99,9 +99,9 @@ func (to *Session) GetCDNByID(id int) ([]tc.CDN, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GET a CDN by the CDN name
-func (to *Session) GetCDNByName(name string) ([]tc.CDN, ReqInf, error) {
-	url := fmt.Sprintf("%s/name/%s", API_v12_CDNs, name)
+// GET a Status by the Status name
+func (to *Session) GetStatusByName(name string) ([]tc.Status, ReqInf, error) {
+	url := fmt.Sprintf("%s?name=%s", API_v13_STATUSES, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -109,7 +109,7 @@ func (to *Session) GetCDNByName(name string) ([]tc.CDN, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.CDNsResponse
+	var data tc.StatusesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -117,9 +117,9 @@ func (to *Session) GetCDNByName(name string) ([]tc.CDN, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// DELETE a CDN by ID
-func (to *Session) DeleteCDNByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v12_CDNs, id)
+// DELETE a Status by id
+func (to *Session) DeleteStatusByID(id int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_STATUSES, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -129,47 +129,4 @@ func (to *Session) DeleteCDNByID(id int) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
-}
-
-func (to *Session) GetCDNSSLKeys(name string) ([]tc.CDNSSLKeys, ReqInf, error) {
-	url := fmt.Sprintf("%s/name/%s/sslkeys", API_v12_CDNs, name)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.CDNSSLKeysResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
-}
-
-// Deprecated: use GetCDNs.
-func (to *Session) CDNs() ([]tc.CDN, error) {
-	cdns, _, err := to.GetCDNs()
-	return cdns, err
-}
-
-// CDNName gets an array of CDNs
-// Deprecated: use GetCDNByName
-func (to *Session) CDNName(name string) ([]tc.CDN, error) {
-	n, _, err := to.GetCDNByName(name)
-	return n, err
-}
-
-// CDNName gets an array of CDNs
-// Deprecated: use GetCDNByName
-func (to *Session) GetCDNName(name string) ([]tc.CDN, error) {
-	n, _, err := to.GetCDNByName(name)
-	return n, err
-}
-
-// Deprecated: use GetCDNSSLKeys
-func (to *Session) CDNSSLKeys(name string) ([]tc.CDNSSLKeys, error) {
-	ks, _, err := to.GetCDNSSLKeys(name)
-	return ks, err
 }

@@ -21,7 +21,7 @@ import tcapi "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 type TrafficControl struct {
 	ASNs                    []tcapi.ASN                    `json:"asns"`
 	CDNs                    []tcapi.CDN                    `json:"cdns"`
-	Cachegroups             []tcapi.CacheGroup             `json:"cachegroups"`
+	CacheGroups             []tcapi.CacheGroup             `json:"cachegroups"`
 	DeliveryServiceRequests []tcapi.DeliveryServiceRequest `json:"deliveryServiceRequests"`
 	DeliveryServices        []tcapi.DeliveryService        `json:"deliveryservices"`
 	Divisions               []tcapi.Division               `json:"divisions"`

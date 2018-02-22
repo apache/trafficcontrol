@@ -13,7 +13,7 @@
    limitations under the License.
 */
 
-package client
+package v13
 
 import (
 	"encoding/json"
@@ -25,19 +25,19 @@ import (
 )
 
 const (
-	API_v13_REGIONS = "/api/1.3/regions"
+	API_v13_CacheGroups = "/api/1.3/cachegroups"
 )
 
-// Create a Region
-func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, ReqInf, error) {
+// Create a CacheGroup
+func (to *Session) CreateCacheGroup(cachegroup tc.CacheGroup) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(region)
+	reqBody, err := json.Marshal(cachegroup)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_REGIONS, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_CacheGroups, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -47,16 +47,16 @@ func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, ReqInf, error) {
 	return alerts, reqInf, nil
 }
 
-// Update a Region by ID
-func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf, error) {
+// Update a CacheGroup by ID
+func (to *Session) UpdateCacheGroupByID(id int, cachegroup tc.CacheGroup) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(region)
+	reqBody, err := json.Marshal(cachegroup)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v13_REGIONS, id)
+	route := fmt.Sprintf("%s/%d", API_v13_CacheGroups, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -67,23 +67,23 @@ func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf
 	return alerts, reqInf, nil
 }
 
-// Returns a list of regions
-func (to *Session) GetRegions() ([]tc.Region, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_REGIONS, nil)
+// Returns a list of CacheGroups
+func (to *Session) GetCacheGroups() ([]tc.CacheGroup, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_CacheGroups, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data tc.RegionsResponse
+	var data tc.CacheGroupsResponse
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
 }
 
-// GET a Region by the Region id
-func (to *Session) GetRegionByID(id int) ([]tc.Region, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_REGIONS, id)
+// GET a CacheGroup by the CacheGroup id
+func (to *Session) GetCacheGroupByID(id int) ([]tc.CacheGroup, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_CacheGroups, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -91,7 +91,7 @@ func (to *Session) GetRegionByID(id int) ([]tc.Region, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.RegionsResponse
+	var data tc.CacheGroupsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -99,9 +99,9 @@ func (to *Session) GetRegionByID(id int) ([]tc.Region, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GET a Region by the Region name
-func (to *Session) GetRegionByName(name string) ([]tc.Region, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_REGIONS, name)
+// GET a CacheGroup by the CacheGroup name
+func (to *Session) GetCacheGroupByName(name string) ([]tc.CacheGroup, ReqInf, error) {
+	url := fmt.Sprintf("%s/name/%s", API_v13_CacheGroups, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -109,7 +109,7 @@ func (to *Session) GetRegionByName(name string) ([]tc.Region, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.RegionsResponse
+	var data tc.CacheGroupsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -117,9 +117,9 @@ func (to *Session) GetRegionByName(name string) ([]tc.Region, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// DELETE a Region by ID
-func (to *Session) DeleteRegionByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_REGIONS, id)
+// DELETE a CacheGroup by ID
+func (to *Session) DeleteCacheGroupByID(id int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_CacheGroups, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

@@ -16,7 +16,6 @@ package v13
 */
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -34,7 +33,6 @@ func TestDivisions(t *testing.T) {
 
 func CreateTestDivisions(t *testing.T) {
 	for _, division := range testData.Divisions {
-		fmt.Printf("division ---> %v\n", division)
 		resp, _, err := TOSession.CreateDivision(division)
 		log.Debugln("Response: ", resp)
 		if err != nil {
