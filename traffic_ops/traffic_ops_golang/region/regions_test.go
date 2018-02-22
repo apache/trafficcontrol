@@ -90,8 +90,8 @@ func TestInterfaces(t *testing.T) {
 	var i interface{}
 	i = &TORegion{}
 
-	if _, ok := i.(api.Inserter); !ok {
-		t.Errorf("Region must be Inserter")
+	if _, ok := i.(api.Creator); !ok {
+		t.Errorf("Region must be Creator")
 	}
 	if _, ok := i.(api.Reader); !ok {
 		t.Errorf("Region must be Reader")
