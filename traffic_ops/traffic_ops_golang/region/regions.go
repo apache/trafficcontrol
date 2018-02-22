@@ -73,9 +73,9 @@ func (region *TORegion) Read(db *sqlx.DB, parameters map[string]string, user aut
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"name":     dbhelpers.WhereColumnInfo{"name", nil},
-		"division": dbhelpers.WhereColumnInfo{"division", nil},
-		"id":       dbhelpers.WhereColumnInfo{"id", api.IsInt},
+		"name":     dbhelpers.WhereColumnInfo{"r.name", nil},
+		"division": dbhelpers.WhereColumnInfo{"r.division", nil},
+		"id":       dbhelpers.WhereColumnInfo{"r.id", api.IsInt},
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
@@ -92,17 +92,17 @@ func (region *TORegion) Read(db *sqlx.DB, parameters map[string]string, user aut
 	}
 	defer rows.Close()
 
-	Regions := []interface{}{}
+	regions := []interface{}{}
 	for rows.Next() {
 		var s tc.Region
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorf("error parsing Region rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
-		Regions = append(Regions, s)
+		regions = append(regions, s)
 	}
 
-	return Regions, []error{}, tc.NoError
+	return regions, []error{}, tc.NoError
 }
 
 func selectQuery() string {
@@ -149,10 +149,9 @@ func (region *TORegion) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 				return errors.New("a region with " + err.Error()), eType
 			}
 			return err, eType
-		} else {
-			log.Errorf("received error: %++v from update execution", err)
-			return tc.DBError, tc.SystemError
 		}
+		log.Errorf("received error: %++v from update execution", err)
+		return tc.DBError, tc.SystemError
 	}
 	defer resultRows.Close()
 
@@ -170,9 +169,8 @@ func (region *TORegion) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
 			return errors.New("no region found with this id"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
+		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 	err = tx.Commit()
 	if err != nil {
@@ -215,10 +213,9 @@ func (region *TORegion) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 				return errors.New("a region with " + err.Error()), eType
 			}
 			return err, eType
-		} else {
-			log.Errorf("received non pq error: %++v from create execution", err)
-			return tc.DBError, tc.SystemError
 		}
+		log.Errorf("received non pq error: %++v from create execution", err)
+		return tc.DBError, tc.SystemError
 	}
 	defer resultRows.Close()
 
@@ -236,7 +233,8 @@ func (region *TORegion) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		err = errors.New("no region was inserted, no id was returned")
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
-	} else if rowsAffected > 1 {
+	}
+	if rowsAffected > 1 {
 		err = errors.New("too many ids returned from region insert")
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
@@ -281,13 +279,13 @@ func (region *TORegion) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	if err != nil {
 		return tc.DBError, tc.SystemError
 	}
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no region with that id found"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
-		}
+	if rowsAffected < 1 {
+		return errors.New("no region with that id found"), tc.DataMissingError
 	}
+	if rowsAffected > 1 {
+		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
