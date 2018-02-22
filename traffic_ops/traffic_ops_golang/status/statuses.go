@@ -182,14 +182,14 @@ func (status *TOStatus) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	return nil, tc.NoError
 }
 
-//The TOStatus implementation of the Inserter interface
-//all implementations of Inserter should use transactions and return the proper errorType
+//The TOStatus implementation of the Creator interface
+//all implementations of Creator should use transactions and return the proper errorType
 //ParsePQUniqueConstraintError is used to determine if a status with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted status and have
 //to be added to the struct
-func (status *TOStatus) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (status *TOStatus) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
