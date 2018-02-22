@@ -139,10 +139,6 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.2, http.MethodGet, `deliveryservices-wip/hostname/{hostName}/sslkeys$`, getDeliveryServiceSSLKeysByHostNameHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
 		{1.2, http.MethodPost, `deliveryservices-wip/hostname/{hostName}/sslkeys/add$`, addDeliveryServiceSSLKeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
 
-		//Statuses
-		{1.2, http.MethodGet, `statuses/?(\.json)?$`, statusesHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.2, http.MethodGet, `statuses/{id}$`, statusesHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-
 		//System
 		{1.2, http.MethodGet, `system/info/?(\.json)?$`, systeminfo.Handler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
