@@ -91,8 +91,8 @@ func TestInterfaces(t *testing.T) {
 	var i interface{}
 	i = &TOStatus{}
 
-	if _, ok := i.(api.Inserter); !ok {
-		t.Errorf("Status must be Inserter")
+	if _, ok := i.(api.Creator); !ok {
+		t.Errorf("Status must be Creator")
 	}
 	if _, ok := i.(api.Reader); !ok {
 		t.Errorf("Status must be Reader")
