@@ -1,4 +1,4 @@
-package stat
+package onrequest
 
 import (
 	"bufio"
@@ -13,49 +13,55 @@ import (
 	"unicode"
 
 	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
+	"github.com/apache/incubator-trafficcontrol/grove/stat"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
-type statHandler struct {
-	interfaceName string
-	stats         Stats
-	statRules     remapdata.RemapRulesStats
-	httpConns     *web.ConnMap
-	httpsConns    *web.ConnMap
+const StatsName = "stats_endpoint"
+
+func init() {
+	AddPlugin(10000, StatsName, stats, nil)
 }
 
-// NewStatHandler returns an HTTP handler
-func NewHandler(interfaceName string, remapRules []remapdata.RemapRule, stats Stats, statRules remapdata.RemapRulesStats, httpConns *web.ConnMap, httpsConns *web.ConnMap) http.Handler {
-	return statHandler{interfaceName: interfaceName, stats: stats, statRules: statRules, httpConns: httpConns, httpsConns: httpsConns}
-}
+const StatsEndpoint = "/_astats"
 
-func (h statHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func stats(icfg interface{}, d Data) bool {
+	if !strings.HasPrefix(d.R.URL.Path, StatsEndpoint) {
+		log.Debugf("plugin onrequest: " + StatsName + " returning, not in path '" + d.R.URL.Path + "'\n")
+		return false
+	}
+
+	log.Debugf("plugin onrequest " + StatsName + " calling\n")
+
+	w := d.W
+	req := d.R
+
 	// TODO access log? Stats byte count?
-	ip, err := web.GetIP(r)
+	ip, err := web.GetIP(req)
 	if err != nil {
 		code := http.StatusInternalServerError
 		w.WriteHeader(code)
 		w.Write([]byte(http.StatusText(code)))
 		log.Errorln("statHandler ServeHTTP failed to get IP: " + ip.String())
-		return
+		return true
 	}
-	if !h.Allowed(ip) {
+	if !Allowed(d.StatRules, ip) {
 		code := http.StatusForbidden
 		w.WriteHeader(code)
 		w.Write([]byte(http.StatusText(code)))
 		log.Debugln("statHandler.ServeHTTP IP " + ip.String() + " FORBIDDEN") // TODO event?
-		return
+		return true
 	}
 
 	// TODO gzip
-	system := h.LoadSystemStats() // TODO goroutine on a timer?
+	system := LoadSystemStats(d.Stats, d.InterfaceName) // TODO goroutine on a timer?
 	ats := map[string]interface{}{"server": "6.2.1"}
-	if r.URL.Query().Get("application") != "system" {
-		ats = h.LoadRemapStats()
+	if req.URL.Query().Get("application") != "system" {
+		ats = LoadRemapStats(d.Stats, d.HTTPConns, d.HTTPSConns)
 	}
-	stats := StatsJSON{System: system, ATS: ats}
+	stats := stat.StatsJSON{System: system, ATS: ats}
 
 	bytes, err := json.Marshal(stats)
 	if err != nil {
@@ -65,25 +71,26 @@ func (h statHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(bytes)
+	return true
 }
 
-func (h statHandler) LoadSystemStats() StatsSystemJSON {
-	s := StatsSystemJSON{}
-	s.InterfaceName = h.interfaceName
-	s.InterfaceSpeed = loadFileAndLogInt(fmt.Sprintf("/sys/class/net/%v/speed", h.interfaceName))
-	s.ProcNetDev = loadFileAndLogGrep("/proc/net/dev", h.interfaceName)
+func LoadSystemStats(stats stat.Stats, interfaceName string) stat.StatsSystemJSON {
+	s := stat.StatsSystemJSON{}
+	s.InterfaceName = interfaceName
+	s.InterfaceSpeed = loadFileAndLogInt(fmt.Sprintf("/sys/class/net/%v/speed", interfaceName))
+	s.ProcNetDev = loadFileAndLogGrep("/proc/net/dev", interfaceName)
 	s.ProcLoadAvg = loadFileAndLog("/proc/loadavg")
-	s.ConfigReloadRequests = h.stats.System().ConfigReloadRequests()
-	s.LastReloadRequest = h.stats.System().LastReloadRequest().Unix()
-	s.ConfigReloads = h.stats.System().ConfigReloads()
-	s.LastReload = h.stats.System().LastReload().Unix()
-	s.AstatsLoad = h.stats.System().AstatsLoad().Unix()
+	s.ConfigReloadRequests = stats.System().ConfigReloadRequests()
+	s.LastReloadRequest = stats.System().LastReloadRequest().Unix()
+	s.ConfigReloads = stats.System().ConfigReloads()
+	s.LastReload = stats.System().LastReload().Unix()
+	s.AstatsLoad = stats.System().AstatsLoad().Unix()
 	s.Something = "here" // emulate existing ATS Astats behavior
 	return s
 }
 
-func (h statHandler) LoadRemapStats() map[string]interface{} {
-	statsRemaps := h.stats.Remap()
+func LoadRemapStats(stats stat.Stats, httpConns *web.ConnMap, httpsConns *web.ConnMap) map[string]interface{} {
+	statsRemaps := stats.Remap()
 	rules := statsRemaps.Rules()
 	jsonStats := make(map[string]interface{}, len(rules)*8) // remap has 8 members: in, out, 2xx, 3xx, 4xx, 5xx, hits, misses
 	jsonStats["server"] = "6.2.1"
@@ -103,28 +110,28 @@ func (h statHandler) LoadRemapStats() map[string]interface{} {
 		jsonStats["plugin.remap_stats."+ruleName+".cache_misses"] = statsRemap.CacheMisses()
 	}
 
-	jsonStats["proxy.process.http.current_client_connections"] = h.httpConns.Len() + h.httpsConns.Len()
-	jsonStats["proxy.process.http.cache_hits"] = h.stats.CacheHits()
-	jsonStats["proxy.process.http.cache_misses"] = h.stats.CacheMisses()
-	jsonStats["proxy.process.http.cache_capacity_bytes"] = h.stats.CacheCapacity()
-	jsonStats["proxy.process.http.cache_size_bytes"] = h.stats.CacheSize()
+	jsonStats["proxy.process.http.current_client_connections"] = httpConns.Len() + httpsConns.Len()
+	jsonStats["proxy.process.http.cache_hits"] = stats.CacheHits()
+	jsonStats["proxy.process.http.cache_misses"] = stats.CacheMisses()
+	jsonStats["proxy.process.http.cache_capacity_bytes"] = stats.CacheCapacity()
+	jsonStats["proxy.process.http.cache_size_bytes"] = stats.CacheSize()
 
 	return jsonStats
 }
 
-func (h statHandler) Allowed(ip net.IP) bool {
+func Allowed(statRules remapdata.RemapRulesStats, ip net.IP) bool {
 	// TODO remove duplication
-	for _, network := range h.statRules.Deny {
+	for _, network := range statRules.Deny {
 		if network.Contains(ip) {
 			log.Debugf("deny contains ip\n")
 			return false
 		}
 	}
-	if len(h.statRules.Allow) == 0 {
+	if len(statRules.Allow) == 0 {
 		log.Debugf("Allowed len 0\n")
 		return true
 	}
-	for _, network := range h.statRules.Allow {
+	for _, network := range statRules.Allow {
 		if network.Contains(ip) {
 			log.Debugf("allow contains ip\n")
 			return true
