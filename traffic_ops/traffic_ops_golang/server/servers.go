@@ -29,28 +29,35 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
 
+	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
 //we need a type alias to define functions on
-type TOServer tc.Server
+type TOServer tc.ServerNullable
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOServer(tc.Server{})
+var refType = TOServer(tc.ServerNullable{})
 
 func GetRefType() *TOServer {
 	return &refType
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (server *TOServer) GetID() int {
-	return server.ID
+func (server *TOServer) GetID() (int, bool) {
+	return server.ID, true
 }
 
 func (server *TOServer) GetAuditName() string {
-	return server.DomainName
+	if server.DomainName != nil {
+		return *server.DomainName
+	}
+	id, _ := server.GetID()
+	return strconv.Itoa(id)
 }
 
 func (server *TOServer) GetType() string {
@@ -62,7 +69,71 @@ func (server *TOServer) SetID(i int) {
 }
 
 func (server *TOServer) Validate(db *sqlx.DB) []error {
-	return nil
+
+	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
+
+	validateErrs := validation.Errors{
+		"cachegroupId":   validation.Validate(server.CachegroupID, validation.NotNil),
+		"cdnId":          validation.Validate(server.CDNID, validation.NotNil),
+		"domainName":     validation.Validate(server.DomainName, validation.NotNil, noSpaces),
+		"hostName":       validation.Validate(server.HostName, validation.NotNil, noSpaces),
+		"httpsPort":      validation.Validate(server.HTTPSPort, validation.NotNil),
+		"interfaceMtu":   validation.Validate(server.InterfaceMtu, validation.NotNil),
+		"interfaceName":  validation.Validate(server.InterfaceName, validation.NotNil),
+		"ipAddress":      validation.Validate(server.IPAddress, validation.NotNil, is.IPv4),
+		"ipNetmask":      validation.Validate(server.IPNetmask, validation.NotNil),
+		"ipGateway":      validation.Validate(server.IPGateway, validation.NotNil),
+		"physLocationId": validation.Validate(server.PhysLocationID, validation.NotNil),
+		"profileId":      validation.Validate(server.ProfileID, validation.NotNil),
+		"statusId":       validation.Validate(server.StatusID, validation.NotNil),
+		"tcpPort":        validation.Validate(server.TCPPort, validation.NotNil),
+		"typeId":         validation.Validate(server.TypeID, validation.NotNil),
+		"updPending":     validation.Validate(server.UpdPending, validation.NotNil),
+	}
+	errs := tovalidate.ToErrors(validateErrs)
+	if len(errs) > 0 {
+		return errs
+	}
+
+	rows, err := db.Query("select use_in_table from type where id=$1", server.TypeID)
+	if err != nil {
+		log.Error.Printf("could not execute select use_in_table from type: %s\n", err)
+		errs = append(errs, tc.DBError)
+		return errs
+	}
+	defer rows.Close()
+	var useInTable string
+	for rows.Next() {
+		if err := rows.Scan(&useInTable); err != nil {
+			log.Error.Printf("could not scan use_in_table from type: %s\n", err)
+			errs = append(errs, tc.DBError)
+			return errs
+		}
+	}
+	if useInTable != "server" {
+		errs = append(errs, errors.New("invalid server type"))
+	}
+
+	rows, err = db.Query("select cdn from profile where id=$1", server.ProfileID)
+	if err != nil {
+		log.Error.Printf("could not execute select cdnID from profile: %s\n", err)
+		errs = append(errs, tc.DBError)
+		return errs
+	}
+	defer rows.Close()
+	var cdnID int
+	for rows.Next() {
+		if err := rows.Scan(&cdnID); err != nil {
+			log.Error.Printf("could not scan cdnID from profile: %s\n", err)
+			errs = append(errs, tc.DBError)
+			return errs
+		}
+	}
+	log.Infof("got cdn id: %d from profile and cdn id: %d from server", cdnID, *server.CDNID)
+	if cdnID != *server.CDNID {
+		errs = append(errs, errors.New("CDN of profile does not match Server CDN"))
+	}
+	return errs
 }
 
 func (server *TOServer) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
@@ -87,7 +158,7 @@ func (server *TOServer) Read(db *sqlx.DB, params map[string]string, user auth.Cu
 	return returnable, nil, tc.NoError
 }
 
-func getServers(params map[string]string, db *sqlx.DB, privLevel int) ([]tc.Server, []error, tc.ApiErrorType) {
+func getServers(params map[string]string, db *sqlx.DB, privLevel int) ([]tc.ServerNullable, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 	var err error
 
@@ -109,7 +180,7 @@ func getServers(params map[string]string, db *sqlx.DB, privLevel int) ([]tc.Serv
 		return nil, errs, tc.DataConflictError
 	}
 
-	query := selectServersQuery() + where + orderBy
+	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
 	rows, err = db.NamedQuery(query, queryValues)
@@ -118,25 +189,25 @@ func getServers(params map[string]string, db *sqlx.DB, privLevel int) ([]tc.Serv
 	}
 	defer rows.Close()
 
-	servers := []tc.Server{}
+	servers := []tc.ServerNullable{}
 
-	const HiddenField = "********"
+	HiddenField := "********"
 
 	for rows.Next() {
-		var s tc.Server
+		var s tc.ServerNullable
 		if err = rows.StructScan(&s); err != nil {
 			return nil, []error{fmt.Errorf("getting servers: %v", err)}, tc.SystemError
 		}
 		if privLevel < auth.PrivLevelAdmin {
-			s.ILOPassword = HiddenField
-			s.XMPPPasswd = HiddenField
+			s.ILOPassword = &HiddenField
+			s.XMPPPasswd = &HiddenField
 		}
 		servers = append(servers, s)
 	}
 	return servers, nil, tc.NoError
 }
 
-func selectServersQuery() string {
+func selectQuery() string {
 
 	const JumboFrameBPS = 9000
 
@@ -148,44 +219,44 @@ s.cachegroup as cachegroup_id,
 s.cdn_id,
 cdn.name as cdn_name,
 s.domain_name,
-COALESCE(s.guid, '') as guid,
+s.guid,
 s.host_name,
-COALESCE(s.https_port, 0) as https_port,
+s.https_port,
 s.id,
-COALESCE(s.ilo_ip_address, '') as ilo_ip_address,
-COALESCE(s.ilo_ip_gateway, '') as ilo_ip_gateway,
-COALESCE(s.ilo_ip_netmask, '') as ilo_ip_netmask,
-COALESCE(s.ilo_password, '') as ilo_password,
-COALESCE(s.ilo_username, '') as ilo_username,
+s.ilo_ip_address,
+s.ilo_ip_gateway,
+s.ilo_ip_netmask,
+s.ilo_password,
+s.ilo_username,
 COALESCE(s.interface_mtu, ` + strconv.Itoa(JumboFrameBPS) + `) as interface_mtu,
-COALESCE(s.interface_name, '') as interface_name,
-COALESCE(s.ip6_address, '') as ip6_address,
-COALESCE(s.ip6_gateway, '') as ip6_gateway,
+s.interface_name,
+s.ip6_address,
+s.ip6_gateway,
 s.ip_address,
 s.ip_gateway,
 s.ip_netmask,
 s.last_updated,
-COALESCE(s.mgmt_ip_address, '') as mgmt_ip_address,
-COALESCE(s.mgmt_ip_gateway, '') as mgmt_ip_gateway,
-COALESCE(s.mgmt_ip_netmask, '') as mgmt_ip_netmask,
-COALESCE(s.offline_reason, '') as offline_reason,
+s.mgmt_ip_address,
+s.mgmt_ip_gateway,
+s.mgmt_ip_netmask,
+s.offline_reason,
 pl.name as phys_location,
 s.phys_location as phys_location_id,
 p.name as profile,
 p.description as profile_desc,
 s.profile as profile_id,
-COALESCE(s.rack, '') as rack,
+s.rack,
 s.reval_pending,
-COALESCE(s.router_host_name, '') as router_host_name,
-COALESCE(s.router_port_name, '') as router_port_name,
+s.router_host_name,
+s.router_port_name,
 st.name as status,
 s.status as status_id,
-COALESCE(s.tcp_port, 0) as tcp_port,
+s.tcp_port,
 t.name as server_type,
 s.type as server_type_id,
 s.upd_pending as upd_pending,
-COALESCE(s.xmpp_id, '') as xmpp_id,
-COALESCE(s.xmpp_passwd, '') as xmpp_passwd
+s.xmpp_id,
+s.xmpp_passwd
 
 FROM server s
 
@@ -205,16 +276,16 @@ JOIN type t ON s.type = t.id`
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
-		if tx == nil {
+		if tx == nil || !rollbackTransaction {
 			return
 		}
+		err := tx.Rollback()
 		if err != nil {
-			tx.Rollback()
-			return
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
 		}
-		tx.Commit()
 	}()
 
 	if err != nil {
@@ -222,11 +293,11 @@ func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		return tc.DBError, tc.SystemError
 	}
 
-	log.Debugf("about to run exec query: %s with server: %++v", updateServerQuery(), server)
-	resultRows, err := tx.NamedQuery(updateServerQuery(), server)
+	log.Debugf("about to run exec query: %s with server: %++v", updateQuery(), server)
+	resultRows, err := tx.NamedQuery(updateQuery(), server)
 	if err != nil {
-		if pqerr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqerr)
+		if pqErr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
 			if eType == tc.DataConflictError {
 				return errors.New("a server with " + err.Error()), eType
 			}
@@ -236,6 +307,8 @@ func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 			return tc.DBError, tc.SystemError
 		}
 	}
+	defer resultRows.Close()
+
 	var lastUpdated tc.Time
 	rowsAffected := 0
 	for resultRows.Next() {
@@ -254,10 +327,16 @@ func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
-func updateServerQuery() string {
+func updateQuery() string {
 	query := `UPDATE
 server SET
 cachegroup=:cachegroup_id,
@@ -301,37 +380,42 @@ WHERE id=:id RETURNING last_updated`
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted server and have
 //to be added to the struct
-func (server *TOServer) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (server *TOServer) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
-		if tx == nil {
+		if tx == nil || !rollbackTransaction {
 			return
 		}
+		err := tx.Rollback()
 		if err != nil {
-			tx.Rollback()
-			return
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
 		}
-		tx.Commit()
 	}()
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
-	if server.XMPPID == "" {
+	if server.XMPPID == nil || *server.XMPPID == "" {
 		server.XMPPID = server.HostName
 	}
 
-	resultRows, err := tx.NamedQuery(insertServerQuery(), server)
+	resultRows, err := tx.NamedQuery(insertQuery(), server)
 	if err != nil {
-		if err, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(err)
-			return errors.New("a server with " + err.Error()), eType
+		if pqErr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
+			if eType == tc.DataConflictError {
+				return errors.New("a server with " + err.Error()), eType
+			}
+			return err, eType
 		} else {
 			log.Errorf("received non pq error: %++v from create execution", err)
 			return tc.DBError, tc.SystemError
 		}
 	}
+	defer resultRows.Close()
+
 	var id int
 	var lastUpdated tc.Time
 	rowsAffected := 0
@@ -353,10 +437,16 @@ func (server *TOServer) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	}
 	server.SetID(id)
 	server.LastUpdated = lastUpdated
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
-func insertServerQuery() string {
+func insertQuery() string {
 	query := `INSERT INTO server (
 cachegroup,
 cdn_id,
@@ -424,16 +514,16 @@ upd_pending) VALUES (
 //The Server implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
 func (server *TOServer) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
-		if tx == nil {
+		if tx == nil || !rollbackTransaction {
 			return
 		}
+		err := tx.Rollback()
 		if err != nil {
-			tx.Rollback()
-			return
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
 		}
-		tx.Commit()
 	}()
 
 	if err != nil {
@@ -457,6 +547,12 @@ func (server *TOServer) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
