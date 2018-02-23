@@ -22,6 +22,7 @@ package physlocation
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -51,7 +52,13 @@ func (pl *TOPhysLocation) GetID() (int, bool) {
 }
 
 func (pl *TOPhysLocation) GetAuditName() string {
-	return *pl.Name
+	if pl.Name != nil {
+		return *pl.Name
+	}
+	if pl.ID != nil {
+		return strconv.Itoa(*pl.ID)
+	}
+	return "unknown"
 }
 
 func (pl *TOPhysLocation) GetType() string {
@@ -122,7 +129,7 @@ pl.last_updated,
 pl.name,
 pl.phone,
 pl.poc,
-r.id as region_id,
+r.id as region,
 r.name as region_name,
 pl.short_name,
 pl.state,
