@@ -37,6 +37,10 @@ type ChangeLog struct {
 	LastUpdated tc.Time `json:"lastUpdated" db:"last_updated"`
 }
 
+type Logger interface {
+	ChangeLogMessage(action string, db *sqlx.DB) (string, error)
+}
+
 const (
 	ApiChange = "APICHANGE"
 	Updated   = "Updated"
@@ -45,10 +49,21 @@ const (
 )
 
 func CreateChangeLog(level string, action string, i Identifier, user auth.CurrentUser, db *sqlx.DB) error {
-	query := `INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`
 	id, _ := i.GetID()
 	message := action + " " + i.GetType() + ": " + i.GetAuditName() + " id: " + strconv.Itoa(id)
 	log.Debugf("about to exec ", query, " with ", message)
+	// if the object has its own log message generation, use it
+	if t, ok := i.(Logger); ok {
+		m, err := t.ChangeLogMessage(action, db)
+		if err != nil {
+			log.Errorf("error %++v creating log message for %++v", err, t)
+			// use the default message in this case
+		} else {
+			message = m
+		}
+	}
+
+	query := `INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`
 	_, err := db.Exec(query, level, message, user.ID)
 	if err != nil {
 		log.Errorf("received error: %++v from audit log insertion", err)
