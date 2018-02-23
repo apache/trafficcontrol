@@ -5,6 +5,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/grove/plugin/afterrespond"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin/beforerespond"
+	"github.com/apache/incubator-trafficcontrol/grove/plugin/onrequest"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin/startup"
 )
 
@@ -13,6 +14,7 @@ type Plugins struct {
 	Startup       startup.Startup
 	BeforeRespond beforerespond.Plugin
 	AfterRespond  afterrespond.Plugin
+	OnRequest     onrequest.Plugin
 }
 
 // Get gets all the plugins. This must not be called in an init function, since plugins use init for registration. This must be called after initialization, after main has started executing.
@@ -21,6 +23,7 @@ func Get() Plugins {
 		Startup:       startup.Get(),
 		BeforeRespond: beforerespond.Get(),
 		AfterRespond:  afterrespond.Get(),
+		OnRequest:     onrequest.Get(),
 	}
 }
 
@@ -36,6 +39,9 @@ func (p Plugins) LoadFuncs() map[string]PluginLoadF {
 		lf[name] = PluginLoadF(f)
 	}
 	for name, f := range p.AfterRespond.LoadFuncs() {
+		lf[name] = PluginLoadF(f)
+	}
+	for name, f := range p.OnRequest.LoadFuncs() {
 		lf[name] = PluginLoadF(f)
 	}
 	return lf

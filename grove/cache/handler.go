@@ -11,6 +11,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/grove/cachedata"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin/beforerespond"
+	"github.com/apache/incubator-trafficcontrol/grove/plugin/onrequest"
 	"github.com/apache/incubator-trafficcontrol/grove/remap"
 	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 	"github.com/apache/incubator-trafficcontrol/grove/stat"
@@ -52,6 +53,9 @@ type Handler struct {
 	connectionClose bool
 	transport       *http.Transport
 	plugins         plugin.Plugins
+	httpConns       *web.ConnMap
+	httpsConns      *web.ConnMap
+	interfaceName   string
 	// keyThrottlers     Throttlers
 	// nocacheThrottlers Throttlers
 }
@@ -94,6 +98,9 @@ func NewHandler(
 	reqMaxIdleConns int,
 	reqIdleConnTimeout time.Duration,
 	plugins plugin.Plugins,
+	httpConns *web.ConnMap,
+	httpsConns *web.ConnMap,
+	interfaceName string,
 ) *Handler {
 	transport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,
@@ -130,6 +137,9 @@ func NewHandler(
 		connectionClose: connectionClose,
 		transport:       transport,
 		plugins:         plugins,
+		httpConns:       httpConns,
+		httpsConns:      httpsConns,
+		interfaceName:   interfaceName,
 		// keyThrottlers:     NewThrottlers(keyLimit),
 		// nocacheThrottlers: NewThrottlers(nocacheLimit),
 	}
@@ -150,6 +160,11 @@ func makeRuleThrottlers(remapper remap.HTTPRequestRemapper, limit uint64) map[st
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reqTime := time.Now()
+
+	onReqData := onrequest.Data{W: w, R: r, Stats: h.stats, StatRules: h.remapper.StatRules(), HTTPConns: h.httpConns, HTTPSConns: h.httpsConns, InterfaceName: h.interfaceName}
+	if stop := h.plugins.OnRequest.Call(h.remapper.PluginCfg(), onReqData); stop == true {
+		return
+	}
 
 	conn := (*web.InterceptConn)(nil)
 	if realConn, ok := h.conns.Get(r.RemoteAddr); !ok {
