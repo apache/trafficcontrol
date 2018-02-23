@@ -19,6 +19,7 @@
 %define TRAFFIC_OPS_USER trafops
 %define TRAFFIC_OPS_GROUP trafops
 %define TRAFFIC_OPS_LOG_DIR /var/log/traffic_ops
+%define debug_package %{nil}
 
 Summary:          Traffic Ops UI
 Name:             traffic_ops
