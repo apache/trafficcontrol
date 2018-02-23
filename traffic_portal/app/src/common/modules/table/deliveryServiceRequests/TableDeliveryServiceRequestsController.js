@@ -35,15 +35,33 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 			}
 		});
 		modalInstance.result.then(function() {
-			var dsRequest = {
-				changeType: 'delete',
-				status: 'submitted',
-				deliveryService: deliveryService
+			params = {
+				title: 'Delete Delivery Service: ' + deliveryService.xmlId,
+				key: deliveryService.xmlId
 			};
-			deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, false).
-				then(function() {
-					$scope.refresh();
-				});
+			modalInstance = $uibModal.open({
+				templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+				controller: 'DialogDeleteController',
+				size: 'md',
+				resolve: {
+					params: function () {
+						return params;
+					}
+				}
+			});
+			modalInstance.result.then(function() {
+				var dsRequest = {
+					changeType: 'delete',
+					status: 'submitted',
+					deliveryService: deliveryService
+				};
+				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, false).
+					then(function() {
+						$scope.refresh();
+					});
+			}, function () {
+				// do nothing
+			});
 		}, function () {
 			// do nothing
 		});

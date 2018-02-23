@@ -103,7 +103,7 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 			createDeliveryServiceDeleteRequest(deliveryService);
 		} else {
 			var params = {
-				title: 'Delete Delivery Service: ' + deliveryService.displayName,
+				title: 'Delete Delivery Service: ' + deliveryService.xmlId,
 				key: deliveryService.xmlId
 			};
 			var modalInstance = $uibModal.open({
