@@ -18,6 +18,7 @@ package com.comcast.cdn.traffic_control.traffic_router.protocol;
 import com.comcast.cdn.traffic_control.traffic_router.secure.CertificateRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.secure.HandshakeData;
 import com.comcast.cdn.traffic_control.traffic_router.secure.KeyManager;
+import org.apache.log4j.Logger;
 import org.apache.tomcat.util.net.NioEndpoint;
 import org.apache.tomcat.util.net.SSLHostConfig;
 import org.apache.tomcat.util.net.SSLHostConfigCertificate;
@@ -25,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class RouterNioEndpoint extends NioEndpoint {
-    protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(LanguidProtocol.class);
+    private static final Logger LOGGER = Logger.getLogger(CertificateRegistry.class);
     // Grabs the aliases from our custom certificate registry, creates a sslHostConfig for them
     // and adds the newly created config to the list of sslHostConfigs.  We also remove the default config
     // since it won't be found in our registry.  This allows OpenSSL to start successfully and serve our
@@ -42,7 +43,6 @@ public class RouterNioEndpoint extends NioEndpoint {
 
             //Now let initialiseSsl do it's thing.
             super.initialiseSsl();
-            log.info("java.library.path = "+System.getProperty("java.library.path"));
             certificateRegistry.setEndPoint(this);
         }
     }
@@ -63,7 +63,7 @@ public class RouterNioEndpoint extends NioEndpoint {
             sslHostConfig.setProtocols("all");
             sslHostConfig.setConfigType(getSslConfigType());
             sslHostConfig.setCertificateVerification("optionalNoCA");
-            log.info("sslHostConfig: "+sslHostConfig.getHostName()+" "+sslHostConfig.getTruststoreAlgorithm());
+            LOGGER.info("sslHostConfig: "+sslHostConfig.getHostName()+" "+sslHostConfig.getTruststoreAlgorithm());
 
             if (!sslHostConfig.getHostName().equals(lastHostName)) {
                 addSslHostConfig(sslHostConfig, true);

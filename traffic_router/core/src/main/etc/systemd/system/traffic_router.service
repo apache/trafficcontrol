@@ -1,0 +1,26 @@
+# Systemd unit file for tomcat
+[Unit]
+Description=Traffic Router
+After=syslog.target network.target
+
+[Service]
+Type=forking
+
+Environment=JAVA_HOME=/usr/java/default
+Environment=CATALINA_PID=/opt/traffic_router/temp/tomcat.pid
+Environment=CATALINA_HOME=/opt/tomcat
+Environment=CATALINA_BASE=/opt/traffic_router
+Environment='CATALINA_OPTS=-Xms512M -Xmx8192m -Dlog4j.configuration=file://$CATALINA_BASE/conf/log4j.properties -Djava.library.path=/usr/lib64' 
+Environment='JAVA_OPTS=-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom'
+
+ExecStart=/opt/tomcat/bin/startup.sh
+ExecStop=/bin/kill -15 $MAINPID
+
+User=root
+Group=root
+UMask=0007
+RestartSec=10
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

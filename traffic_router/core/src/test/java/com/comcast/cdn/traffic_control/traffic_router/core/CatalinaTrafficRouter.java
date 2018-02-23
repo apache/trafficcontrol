@@ -75,6 +75,8 @@ public class CatalinaTrafficRouter {
 		defaultServlet.setLoadOnStartup(1);
 
 		rootContext.addChild(defaultServlet);
+		// set docBase to "" so we can start from the root '/' context
+		rootContext.setDocBase("");
 	}
 
 	public void start() {
