@@ -24,7 +24,7 @@ import (
 	"fmt"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tcapi "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -33,10 +33,10 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOPhysLocation tc.PhysLocationNullable
+type TOPhysLocation tcapi.PhysLocationNullable
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOPhysLocation(tc.PhysLocationNullable{})
+var refType = TOPhysLocation(tcapi.PhysLocationNullable{})
 
 func GetRefType() *TOPhysLocation {
 	return &refType
@@ -98,7 +98,7 @@ func (pl *TOPhysLocation) Read(db *sqlx.DB, parameters map[string]string, user a
 
 	physLocations := []interface{}{}
 	for rows.Next() {
-		var s tc.PhysLocation
+		var s tcapi.PhysLocationNullable
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorf("error parsing PhysLocation rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
