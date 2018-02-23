@@ -26,6 +26,7 @@ type HTTPRequestRemapper interface {
 	Rules() []remapdata.RemapRule
 	RemappingProducer(r *http.Request, scheme string) (*RemappingProducer, error)
 	StatRules() remapdata.RemapRulesStats
+	PluginCfg() map[string]interface{} // global plugins, outside the individual remap rules
 }
 
 type simpleHTTPRequestRemapper struct {
@@ -33,13 +34,9 @@ type simpleHTTPRequestRemapper struct {
 	stats    *remapdata.RemapRulesStats
 }
 
-func (hr simpleHTTPRequestRemapper) Rules() []remapdata.RemapRule {
-	return hr.remapper.Rules()
-}
-
-func (hr simpleHTTPRequestRemapper) StatRules() remapdata.RemapRulesStats {
-	return *hr.stats
-}
+func (hr simpleHTTPRequestRemapper) Rules() []remapdata.RemapRule         { return hr.remapper.Rules() }
+func (hr simpleHTTPRequestRemapper) StatRules() remapdata.RemapRulesStats { return *hr.stats }
+func (hr simpleHTTPRequestRemapper) PluginCfg() map[string]interface{}    { return hr.remapper.PluginCfg() }
 
 // getFQDN returns the FQDN. It tries to get the FQDN from a Remap Rule. Remap Rules should always begin with the scheme, e.g. `http://`. If the given rule does not begin with a valid scheme, behavior is undefined.
 // TODO test
@@ -170,8 +167,8 @@ func RemapperToHTTP(r Remapper, statRules *remapdata.RemapRulesStats) HTTPReques
 	return simpleHTTPRequestRemapper{remapper: r, stats: statRules}
 }
 
-func NewHTTPRequestRemapper(remap []remapdata.RemapRule, statRules *remapdata.RemapRulesStats) HTTPRequestRemapper {
-	return RemapperToHTTP(NewLiteralPrefixRemapper(remap), statRules)
+func NewHTTPRequestRemapper(remap []remapdata.RemapRule, plugins map[string]interface{}, statRules *remapdata.RemapRulesStats) HTTPRequestRemapper {
+	return RemapperToHTTP(NewLiteralPrefixRemapper(remap, plugins), statRules)
 }
 
 // Remapper provides a function which takes strings and maps them to other strings. This is designed for URL prefix remapping, for a reverse proxy.
@@ -180,12 +177,16 @@ type Remapper interface {
 	Remap(uri string) (remapdata.RemapRule, bool)
 	// Rules returns the unique names of every remap rule.
 	Rules() []remapdata.RemapRule
+	PluginCfg() map[string]interface{} // global plugins, outside the individual remap rules
 }
 
 // TODO change to use a prefix tree, for speed
 type literalPrefixRemapper struct {
-	remap []remapdata.RemapRule
+	remap   []remapdata.RemapRule
+	plugins map[string]interface{}
 }
+
+func (r literalPrefixRemapper) PluginCfg() map[string]interface{} { return r.plugins }
 
 // Remap returns the remapped string, the remap rule name, the remap rule's options, and whether a remap was found
 func (r literalPrefixRemapper) Remap(s string) (remapdata.RemapRule, bool) {
@@ -205,8 +206,8 @@ func (r literalPrefixRemapper) Rules() []remapdata.RemapRule {
 	return rules
 }
 
-func NewLiteralPrefixRemapper(remap []remapdata.RemapRule) Remapper {
-	return literalPrefixRemapper{remap: remap}
+func NewLiteralPrefixRemapper(remap []remapdata.RemapRule, plugins map[string]interface{}) Remapper {
+	return literalPrefixRemapper{remap: remap, plugins: plugins}
 }
 
 type RemapRulesStatsJSON struct {
@@ -262,20 +263,21 @@ type RemapRuleJSON struct {
 	Plugins         map[string]json.RawMessage `json:"plugins"`
 }
 
-func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.PluginLoadF, caches map[string]icache.Cache) ([]remapdata.RemapRule, *remapdata.RemapRulesStats, error) {
+// LoadRemapRules returns the loaded rules, the global plugins, the Stats remap rules, and any error
+func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.PluginLoadF, caches map[string]icache.Cache) ([]remapdata.RemapRule, map[string]interface{}, *remapdata.RemapRulesStats, error) {
 	fmt.Printf("Loading Remap Rules\n")
 	defer func() {
 		fmt.Printf("Loaded Remap Rules\n")
 	}()
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	defer file.Close()
 
 	remapRulesJSON := RemapRulesJSON{}
 	if err := json.NewDecoder(file).Decode(&remapRulesJSON); err != nil {
-		return nil, nil, fmt.Errorf("decoding JSON: %s", err)
+		return nil, nil, nil, fmt.Errorf("decoding JSON: %s", err)
 	}
 
 	remapRules := RemapRules{RemapRulesBase: remapRulesJSON.RemapRulesBase}
@@ -284,7 +286,7 @@ func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.PluginLoa
 		remapRules.RetryCodes = make(map[int]struct{}, len(*remapRulesJSON.RetryCodes))
 		for _, code := range *remapRulesJSON.RetryCodes {
 			if _, ok := ValidHTTPCodes[code]; !ok {
-				return nil, nil, fmt.Errorf("error parsing rules: retry code invalid: %v", code)
+				return nil, nil, nil, fmt.Errorf("error parsing rules: retry code invalid: %v", code)
 			}
 			remapRules.RetryCodes[code] = struct{}{}
 		}
@@ -292,23 +294,23 @@ func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.PluginLoa
 	if remapRulesJSON.TimeoutMS != nil {
 		t := time.Duration(*remapRulesJSON.TimeoutMS) * time.Millisecond
 		if remapRules.Timeout = &t; *remapRules.Timeout < 0 {
-			return nil, nil, fmt.Errorf("error parsing rules: timeout must be positive: %v", remapRules.Timeout)
+			return nil, nil, nil, fmt.Errorf("error parsing rules: timeout must be positive: %v", remapRules.Timeout)
 		}
 	}
 	if remapRulesJSON.ParentSelection != nil {
 		ps := remapdata.ParentSelectionTypeFromString(*remapRulesJSON.ParentSelection)
 		if remapRules.ParentSelection = &ps; *remapRules.ParentSelection == remapdata.ParentSelectionTypeInvalid {
-			return nil, nil, fmt.Errorf("error parsing rules: parent selection invalid: '%v'", remapRulesJSON.ParentSelection)
+			return nil, nil, nil, fmt.Errorf("error parsing rules: parent selection invalid: '%v'", remapRulesJSON.ParentSelection)
 		}
 	}
 	if remapRulesJSON.Stats.Allow != nil {
 		if remapRules.Stats.Allow, err = makeIPNets(remapRulesJSON.Stats.Allow); err != nil {
-			return nil, nil, fmt.Errorf("error parsing rules allows: %v", err)
+			return nil, nil, nil, fmt.Errorf("error parsing rules allows: %v", err)
 		}
 	}
 	if remapRulesJSON.Stats.Deny != nil {
 		if remapRules.Stats.Deny, err = makeIPNets(remapRulesJSON.Stats.Deny); err != nil {
-			return nil, nil, fmt.Errorf("error parsing rules denys: %v", err)
+			return nil, nil, nil, fmt.Errorf("error parsing rules denys: %v", err)
 		}
 	}
 
@@ -340,7 +342,7 @@ func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.PluginLoa
 			rule.RetryCodes = make(map[int]struct{}, len(*jsonRule.RetryCodes))
 			for _, code := range *jsonRule.RetryCodes {
 				if _, ok := ValidHTTPCodes[code]; !ok {
-					return nil, nil, fmt.Errorf("error parsing rule %v retry code invalid: %v", rule.Name, code)
+					return nil, nil, nil, fmt.Errorf("error parsing rule %v retry code invalid: %v", rule.Name, code)
 				}
 				rule.RetryCodes[code] = struct{}{}
 			}
@@ -351,7 +353,7 @@ func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.PluginLoa
 		if jsonRule.TimeoutMS != nil {
 			t := time.Duration(*jsonRule.TimeoutMS) * time.Millisecond
 			if rule.Timeout = &t; *rule.Timeout < 0 {
-				return nil, nil, fmt.Errorf("error parsing rule %v timeout must be positive: %v", rule.Name, rule.Timeout)
+				return nil, nil, nil, fmt.Errorf("error parsing rule %v timeout must be positive: %v", rule.Name, rule.Timeout)
 			}
 		} else {
 			rule.Timeout = remapRules.Timeout
@@ -367,33 +369,33 @@ func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.PluginLoa
 		}
 		ok := false
 		if rule.Cache, ok = caches[cacheName]; !ok {
-			return nil, nil, fmt.Errorf("error parsing rule %v: cache name %v not found", rule.Name, cacheName)
+			return nil, nil, nil, fmt.Errorf("error parsing rule %v: cache name %v not found", rule.Name, cacheName)
 		}
 
 		if rule.Allow, err = makeIPNets(jsonRule.Allow); err != nil {
-			return nil, nil, fmt.Errorf("error parsing rule %v allows: %v", rule.Name, err)
+			return nil, nil, nil, fmt.Errorf("error parsing rule %v allows: %v", rule.Name, err)
 		}
 		if rule.Deny, err = makeIPNets(jsonRule.Deny); err != nil {
-			return nil, nil, fmt.Errorf("error parsing rule %v denys: %v", rule.Name, err)
+			return nil, nil, nil, fmt.Errorf("error parsing rule %v denys: %v", rule.Name, err)
 		}
 		if rule.To, err = makeTo(jsonRule.To, rule); err != nil {
-			return nil, nil, fmt.Errorf("error parsing rule %v to: %v", rule.Name, err)
+			return nil, nil, nil, fmt.Errorf("error parsing rule %v to: %v", rule.Name, err)
 		}
 		if jsonRule.ParentSelection != nil {
 			ps := remapdata.ParentSelectionTypeFromString(*jsonRule.ParentSelection)
 			if rule.ParentSelection = &ps; *rule.ParentSelection == remapdata.ParentSelectionTypeInvalid {
-				return nil, nil, fmt.Errorf("error parsing rule %v parent selection invalid: '%v'", rule.Name, jsonRule.ParentSelection)
+				return nil, nil, nil, fmt.Errorf("error parsing rule %v parent selection invalid: '%v'", rule.Name, jsonRule.ParentSelection)
 			}
 		} else {
 			rule.ParentSelection = remapRules.ParentSelection
 		}
 
 		if rule.ParentSelection == nil {
-			return nil, nil, fmt.Errorf("error parsing rule %v - no parent_selection - must be set at rules or rule level", rule.Name)
+			return nil, nil, nil, fmt.Errorf("error parsing rule %v - no parent_selection - must be set at rules or rule level", rule.Name)
 		}
 
 		if len(rule.To) == 0 {
-			return nil, nil, fmt.Errorf("error parsing rule %v - no to - must have at least one parent", rule.Name)
+			return nil, nil, nil, fmt.Errorf("error parsing rule %v - no to - must have at least one parent", rule.Name)
 		}
 
 		if *rule.ParentSelection == remapdata.ParentSelectionTypeConsistentHash {
@@ -403,7 +405,7 @@ func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.PluginLoa
 		rules[i] = rule
 	}
 
-	return rules, &remapRules.Stats, nil
+	return rules, remapRules.Plugins, &remapRules.Stats, nil
 }
 
 const DefaultReplicas = 1024
@@ -496,11 +498,11 @@ func makeIPNet(cidr string) (*net.IPNet, error) {
 }
 
 func LoadRemapper(path string, pluginConfigLoaders map[string]plugin.PluginLoadF, caches map[string]icache.Cache) (HTTPRequestRemapper, error) {
-	rules, statRules, err := LoadRemapRules(path, pluginConfigLoaders, caches)
+	rules, plugins, statRules, err := LoadRemapRules(path, pluginConfigLoaders, caches)
 	if err != nil {
 		return nil, err
 	}
-	return NewHTTPRequestRemapper(rules, statRules), nil
+	return NewHTTPRequestRemapper(rules, plugins, statRules), nil
 }
 
 func RemapRulesToJSON(r RemapRules) RemapRulesJSON {
