@@ -37,7 +37,7 @@ type ChangeLog struct {
 	LastUpdated tc.Time `json:"lastUpdated" db:"last_updated"`
 }
 
-type Logger interface {
+type ChangeLogger interface {
 	ChangeLogMessage(action string, db *sqlx.DB) (string, error)
 }
 
@@ -52,7 +52,7 @@ func CreateChangeLog(level string, action string, i Identifier, user auth.Curren
 	id, _ := i.GetID()
 	message := action + " " + i.GetType() + ": " + i.GetAuditName() + " id: " + strconv.Itoa(id)
 	// if the object has its own log message generation, use it
-	if t, ok := i.(Logger); ok {
+	if t, ok := i.(ChangeLogger); ok {
 		m, err := t.ChangeLogMessage(action, db)
 		if err != nil {
 			log.Errorf("error %++v creating log message for %++v", err, t)
