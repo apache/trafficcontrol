@@ -51,7 +51,6 @@ const (
 func CreateChangeLog(level string, action string, i Identifier, user auth.CurrentUser, db *sqlx.DB) error {
 	id, _ := i.GetID()
 	message := action + " " + i.GetType() + ": " + i.GetAuditName() + " id: " + strconv.Itoa(id)
-	log.Debugf("about to exec ", query, " with ", message)
 	// if the object has its own log message generation, use it
 	if t, ok := i.(Logger); ok {
 		m, err := t.ChangeLogMessage(action, db)
@@ -64,6 +63,7 @@ func CreateChangeLog(level string, action string, i Identifier, user auth.Curren
 	}
 
 	query := `INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`
+	log.Debugf("about to exec ", query, " with ", message)
 	_, err := db.Exec(query, level, message, user.ID)
 	if err != nil {
 		log.Errorf("received error: %++v from audit log insertion", err)
