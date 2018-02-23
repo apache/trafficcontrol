@@ -89,14 +89,14 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			switch (action.id) {
 				case $scope.DRAFT:
 					dsRequest.status = 'draft';
-					deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest).
+					deliveryServiceRequestService.updateDeliveryServiceRequestStatus(dsRequest.id, 'draft').
 						then(function() {
 							$state.reload();
 						});
 					break;
 				case $scope.SUBMITTED:
 					dsRequest.status = 'submitted';
-					deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest).
+					deliveryServiceRequestService.updateDeliveryServiceRequestStatus(dsRequest.id, 'submitted').
 						then(function() {
 							$state.reload();
 						});
