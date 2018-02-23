@@ -52,7 +52,7 @@ func UpdateTestPhysLocations(t *testing.T) {
 		t.Errorf("cannot GET PhysLocation by name: %v - %v\n", firstPhysLocation.Name, err)
 	}
 	remotePhysLocation := resp[0]
-	expectedPhysLocationName := "testPhysLoc1"
+	expectedPhysLocationName := "UPDATED"
 	remotePhysLocation.Name = expectedPhysLocationName
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdatePhysLocationByID(remotePhysLocation.ID, remotePhysLocation)
