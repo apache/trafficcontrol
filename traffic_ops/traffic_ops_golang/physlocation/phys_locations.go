@@ -77,9 +77,9 @@ func (pl *TOPhysLocation) Read(db *sqlx.DB, parameters map[string]string, user a
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"name":     dbhelpers.WhereColumnInfo{"pl.name", nil},
-		"id":       dbhelpers.WhereColumnInfo{"pl.id", api.IsInt},
-		"regionId": dbhelpers.WhereColumnInfo{"r.id", api.IsInt},
+		"name":   dbhelpers.WhereColumnInfo{"pl.name", nil},
+		"id":     dbhelpers.WhereColumnInfo{"pl.id", api.IsInt},
+		"region": dbhelpers.WhereColumnInfo{"pl.region", api.IsInt},
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
@@ -96,17 +96,18 @@ func (pl *TOPhysLocation) Read(db *sqlx.DB, parameters map[string]string, user a
 	}
 	defer rows.Close()
 
-	PhysLocations := []interface{}{}
+	physLocations := []interface{}{}
 	for rows.Next() {
 		var s tc.PhysLocation
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorf("error parsing PhysLocation rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
-		PhysLocations = append(PhysLocations, s)
+		physLocations = append(physLocations, s)
 	}
 
-	return PhysLocations, []error{}, tc.NoError
+	return physLocations, []error{}, tc.NoError
+
 }
 
 func selectQuery() string {
@@ -163,10 +164,9 @@ func (pl *TOPhysLocation) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 				return errors.New("a phys_location with " + err.Error()), eType
 			}
 			return err, eType
-		} else {
-			log.Errorf("received error: %++v from update execution", err)
-			return tc.DBError, tc.SystemError
 		}
+		log.Errorf("received error: %++v from update execution", err)
+		return tc.DBError, tc.SystemError
 	}
 	defer resultRows.Close()
 
@@ -184,9 +184,8 @@ func (pl *TOPhysLocation) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
 			return errors.New("no phys_location found with this id"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
+		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 	err = tx.Commit()
 	if err != nil {
@@ -229,10 +228,9 @@ func (pl *TOPhysLocation) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 				return errors.New("a phys_location with " + err.Error()), eType
 			}
 			return err, eType
-		} else {
-			log.Errorf("received non pq error: %++v from create execution", err)
-			return tc.DBError, tc.SystemError
 		}
+		log.Errorf("received non pq error: %++v from create execution", err)
+		return tc.DBError, tc.SystemError
 	}
 	defer resultRows.Close()
 
@@ -250,11 +248,13 @@ func (pl *TOPhysLocation) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 		err = errors.New("no phys_location was inserted, no id was returned")
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
-	} else if rowsAffected > 1 {
+	}
+	if rowsAffected > 1 {
 		err = errors.New("too many ids returned from phys_location insert")
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
+
 	pl.SetID(id)
 	pl.LastUpdated = lastUpdated
 	err = tx.Commit()
@@ -295,13 +295,13 @@ func (pl *TOPhysLocation) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 	if err != nil {
 		return tc.DBError, tc.SystemError
 	}
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no phys_location with that id found"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
-		}
+	if rowsAffected < 1 {
+		return errors.New("no phys_location with that id found"), tc.DataMissingError
 	}
+	if rowsAffected > 1 {
+		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
