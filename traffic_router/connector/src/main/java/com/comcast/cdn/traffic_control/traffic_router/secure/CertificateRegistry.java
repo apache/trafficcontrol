@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 public class CertificateRegistry {
-	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(CertificateRegistry.class);
-
 	private CertificateDataConverter certificateDataConverter = new CertificateDataConverter();
 	volatile private Map<String, HandshakeData>	handshakeDataMap = new HashMap<>();
 	private RouterNioEndpoint sslEndpoint = null;
@@ -62,7 +60,6 @@ public class CertificateRegistry {
 	}
 
 	synchronized public void importCertificateDataList(final List<CertificateData> certificateDataList) {
-		log.info("CertificateRegistry.import" );
 		final Map<String, HandshakeData> changes = new HashMap<>();
 		final Map<String, HandshakeData> master = new HashMap<>();
 

@@ -49,7 +49,6 @@ public class RouterSslImplementationTest {
 
 	@Test
 	public void itReturnsSSLUtil() throws Exception {
-		//System.setProperty("java.library.path", "/usr/local/opt/tomcat-native/lib");
 		PowerMockito.whenNew(RouterSslUtil.class).withArguments(sslHostConfigCertificate).thenReturn(sslutil);
 		assertThat(new RouterSslImplementation().getSSLUtil(sslHostConfigCertificate), instanceOf(SSLUtil.class));
 	}

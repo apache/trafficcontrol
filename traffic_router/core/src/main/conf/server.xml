@@ -43,9 +43,8 @@
 				   mbeanPath="traffic-router:name=languidState" readyAttribute="Ready" portAttribute="SecurePort" sslImplementationName="com.comcast.cdn.traffic_control.traffic_router.protocol.RouterSslImplementation">
 		</Connector>
 		<Engine name="traffic_router_core" defaultHost="localhost">
-			<Host name="localhost" appBase="/opt/traffic_router/webapps/core/">
-				<!-- The Context setting docBase="" allows the project .war to server the root '/' context of the Tomcat server -->
-				<Context path="" docBase=""><JarScanner scanManifest="false" /></Context>
+			<Host name="localhost" appBase="webapps">
+				<Context path=""><JarScanner scanManifest="false" /></Context>
 			</Host>
 		</Engine>
 	</Service>

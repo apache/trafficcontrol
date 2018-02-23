@@ -1,4 +1,5 @@
-#!/bin/bash#
+#!/bin/bash
+#
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,22 +15,5 @@
 # limitations under the License.
 #
 
-if [[ -e /opt/tomcat ]]
-then
-  echo "/opt/tomcat installed"
-else
-  echo "Installing tomcat"
-  cd /tmp
-  wget http://archive.apache.org/dist/tomcat/tomcat-6/v6.0.33/bin/apache-tomcat-6.0.33.tar.gz
-  cd /opt
-  tar xfz /tmp/apache-tomcat-6.0.33.tar.gz
-  ln -s apache-tomcat-6.0.33 tomcat
-  ls -l /opt/tomcat/webapps/*
-fi      
 
-rm -rf /opt/traffic_router/webapps/*
-rm -rf /opt/tomcat/webapps/*
-rm -f /opt/tomcat/bin/*.bat
-chmod +x /opt/tomcat/bin/*.sh
-
-for brokenlink in $(find /opt/tomcat/lib -type l ! -exec test -e {} \; -print) ; do rm $brokenlink ; done
+#for brokenlink in $(find /opt/tomcat/lib -type l ! -exec test -e {} \; -print) ; do rm $brokenlink ; done

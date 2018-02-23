@@ -150,7 +150,19 @@
 									</sources>
 								</mapping>
 								<mapping>
-									<directory>${deploy.dir}/var/log</directory>
+									<directory>${deploy.dir}/logs</directory>
+									<filemode>755</filemode>
+									<username>root</username>
+									<groupname>root</groupname>
+								</mapping>
+								<mapping>
+									<directory>${deploy.dir}/temp</directory>
+									<filemode>755</filemode>
+									<username>root</username>
+									<groupname>root</groupname>
+								</mapping>
+								<mapping>
+									<directory>${deploy.dir}/work</directory>
 									<filemode>755</filemode>
 									<username>root</username>
 									<groupname>root</groupname>
@@ -175,14 +187,14 @@
 									</dependency>
 								</mapping>
 								<mapping>
-									<directory>/etc/init.d</directory>
+									<directory>/etc/systemd/system</directory>
 									<directoryIncluded>false</directoryIncluded>
 									<filemode>755</filemode>
 									<username>root</username>
 									<groupname>root</groupname>
 									<sources>
 										<source>
-											<location>../core/src/main/etc/init.d</location>
+											<location>../core/src/main/etc/systemd/system</location>
 										</source>
 									</sources>
 								</mapping>
@@ -199,30 +211,12 @@
 										</includes>
 									</dependency>
 								</mapping>
-								<mapping>
-									<directory>/opt/tomcat/conf</directory>
-									<directoryIncluded>false</directoryIncluded>
-									<configuration>true</configuration>
-									<filemode>755</filemode>
-									<username>root</username>
-									<groupname>root</groupname>
-									<sources>
-										<source>
-											<filter>true</filter>
-											<location>../core/src/main/opt/tomcat/conf</location>
-										</source>
-									</sources>
-								</mapping>
-								<mapping>
-									<directory>/var/run/tomcat</directory>
-									<filemode>755</filemode>
-									<username>root</username>
-									<groupname>root</groupname>
-								</mapping>
 							</mappings>
 							<requires>
-								<require>jdk1.8.0_92</require>
-								<require>wget</require>
+								<require>jdk</require>
+								<require>tomcat</require>
+								<require>apr</require>
+								<require>tomcat-native</require>
 								<require>tar</require>
 							</requires>
 

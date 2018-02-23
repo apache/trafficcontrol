@@ -13,22 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-chkconfig --add tomcat
-chkconfig tomcat on
 
-for JAR in traffic_router_connector.jar traffic_router_shared.jar jackson-core.jar jackson-annotations.jar jackson-databind.jar log4j.jar; do
-    if [ ! -e /opt/tomcat/lib/$JAR ]; then
-        echo "Creating symbolic link from /opt/traffic_router/lib/$JAR to /opt/tomcat/lib"
-        /bin/ln -s /opt/traffic_router/lib/$JAR /opt/tomcat/lib/$JAR
-    fi
-done
+#for JAR in traffic_router_connector.jar traffic_router_shared.jar jackson-core.jar jackson-annotations.jar jackson-databind.jar log4j.jar; do
+    #if [ ! -e /opt/tomcat/lib/$JAR ]; then
+        #echo "Creating symbolic link from /opt/traffic_router/lib/$JAR to /opt/tomcat/lib"
+        #/bin/ln -s /opt/traffic_router/lib/$JAR /opt/tomcat/lib/$JAR
+    #fi
+#done
 
-mkdir -p /opt/traffic_router/webapps/core
+#mkdir -p /opt/traffic_router/webapps/core
 
-#if [ ! -e /opt/traffic_router/webapps/core/ROOT.war ]; then
+if [ ! -e /opt/traffic_router/webapps/ROOT.war ]; then
     #echo "Symlinking /opt/traffic_router/webapps/traffic_router_core.war to /opt/traffic_router/webapps/core/ROOT.war"
     #/bin/ln -s /opt/traffic_router/webapps/traffic_router_core.war /opt/traffic_router/webapps/core/ROOT.war
-#fi
+    /bin/mv /opt/traffic_router/webapps/traffic_router_core.war /opt/traffic_router/webapps/ROOT.war
+fi
 
 if [ -f /opt/traffic_router/conf/*.crt ]; then
 	cd /opt/traffic_router/conf
@@ -44,3 +43,8 @@ if [ -f /opt/traffic_router/conf/*.crt ]; then
 		fi
 	done
 fi
+
+systemctl daemon-reload
+echo "Traffic Router installed successfully."
+echo ""
+echo "Start with 'sudo systemctl start traffic_router'"

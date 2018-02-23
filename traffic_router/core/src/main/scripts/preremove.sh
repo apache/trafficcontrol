@@ -13,10 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#
-
-# args for hooks: http://www.ibm.com/developerworks/library/l-rpm2/
-# if $1 = 0, this is an uninstallation, if $1 = 1, this is an upgrade (don't do anything)
-if [ "$1" = "0" ]; then
-	chkconfig --del tomcat
-fi
