@@ -40,7 +40,7 @@ type PhysLocation struct {
 	Zip         string `json:"zip" db:"zip"`
 }
 
-// PhysLocationNullable - a version of the deliveryservice that allows for all fields to be null
+// PhysLocationNullable - a struct version that allows for all fields to be null
 type PhysLocationNullable struct {
 	//
 	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
