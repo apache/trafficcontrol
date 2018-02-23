@@ -15,6 +15,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.jdnssec.dns.keys;
 
+import com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords;
 import com.verisignlabs.dnssec.security.DnsKeyPair;
 import com.verisignlabs.dnssec.security.JCEDnsSecSigner;
 import org.junit.Before;
@@ -25,7 +26,6 @@ import org.xbill.DNS.DSRecord;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.Section;
-import com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords;
 import sun.security.rsa.RSAPrivateCrtKeyImpl;
 
 import java.io.IOException;

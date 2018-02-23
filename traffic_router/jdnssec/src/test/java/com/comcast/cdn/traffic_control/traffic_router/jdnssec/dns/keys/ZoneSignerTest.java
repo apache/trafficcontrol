@@ -15,12 +15,14 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.jdnssec.dns.keys;
 
+import com.comcast.cdn.traffic_control.traffic_router.shared.IsEqualCollection;
 import com.comcast.cdn.traffic_control.traffic_router.jdnssec.dns.DNSKeyPairWrapper;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DnsSecKeyPair;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DnsSecKeyPairImpl;
 import com.comcast.cdn.traffic_control.traffic_router.jdnssec.dns.JDnsSecSigner;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneSignerImpl;
-import com.comcast.cdn.traffic_control.traffic_router.shared.IsEqualCollection;
+import com.comcast.cdn.traffic_control.traffic_router.shared.SigningData;
+import com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.verisignlabs.dnssec.security.DnsKeyPair;
@@ -30,14 +32,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.xbill.DNS.DSRecord;
 import org.xbill.DNS.Record;
-import com.comcast.cdn.traffic_control.traffic_router.shared.SigningData;
-import com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
 import static com.comcast.cdn.traffic_control.traffic_router.shared.IsEqualCollection.equalTo;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.keySigningKeyRecord;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.origin;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.sep_1_2016;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.sep_1_2026;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.zoneSigningKeyRecord;
 import static java.util.Arrays.asList;
 import static java.util.Base64.getMimeDecoder;
 import static java.util.stream.Collectors.toList;
@@ -66,10 +71,10 @@ public class ZoneSignerTest {
 
 		final ObjectMapper mapper = new ObjectMapper();
 
-		kskPair1 = new DnsKeyPair(ZoneTestRecords.keySigningKeyRecord, decodePrivateKeyString(SigningData.ksk1Private));
-		kskPair2 = new DnsKeyPair(ZoneTestRecords.keySigningKeyRecord, decodePrivateKeyString(SigningData.ksk2Private));
-		zskPair1 = new DnsKeyPair(ZoneTestRecords.zoneSigningKeyRecord, decodePrivateKeyString(SigningData.zsk1Private));
-		zskPair2 = new DnsKeyPair(ZoneTestRecords.zoneSigningKeyRecord, decodePrivateKeyString(SigningData.zsk2Private));
+		kskPair1 = new DnsKeyPair(keySigningKeyRecord, decodePrivateKeyString(SigningData.ksk1Private));
+		kskPair2 = new DnsKeyPair(keySigningKeyRecord, decodePrivateKeyString(SigningData.ksk2Private));
+		zskPair1 = new DnsKeyPair(zoneSigningKeyRecord, decodePrivateKeyString(SigningData.zsk1Private));
+		zskPair2 = new DnsKeyPair(zoneSigningKeyRecord, decodePrivateKeyString(SigningData.zsk2Private));
 
 		// Data like we would fetch from traffic ops api for dnsseckeys.json
 		String s = "{" +
@@ -124,11 +129,11 @@ public class ZoneSignerTest {
 
 		JCEDnsSecSigner signer = new JCEDnsSecSigner(false);
 
-		final List<Record> signedRecords = signer.signZone(ZoneTestRecords.origin, ZoneTestRecords.records,
-			kskPairs, zskPairs, ZoneTestRecords.sep_1_2016, ZoneTestRecords.sep_1_2026, true, SHA256_DIGEST_ID);
+		final List<Record> signedRecords = signer.signZone(origin, ZoneTestRecords.records,
+			kskPairs, zskPairs, sep_1_2016, sep_1_2026, true, SHA256_DIGEST_ID);
 
-		assertThat(signedRecords, IsEqualCollection.equalTo(SigningData.signedList));
-		assertThat(ZoneTestRecords.records, IsEqualCollection.equalTo(SigningData.postZoneList));
+		assertThat(signedRecords, equalTo(SigningData.signedList));
+		assertThat(ZoneTestRecords.records, equalTo(SigningData.postZoneList));
 	}
 
 	@Test
@@ -153,11 +158,11 @@ public class ZoneSignerTest {
 
 		List<DnsSecKeyPair> zskWrapperPairs = new ArrayList<>(asList(zsk1Wrapper, zsk2Wrapper));
 
-		final List<Record> signedRecords2 = new JDnsSecSigner().signZone(ZoneTestRecords.origin, ZoneTestRecords.records,
-			kskWrapperPairs, zskWrapperPairs, ZoneTestRecords.sep_1_2016, ZoneTestRecords.sep_1_2026, true, SHA256_DIGEST_ID);
+		final List<Record> signedRecords2 = new JDnsSecSigner().signZone(origin, ZoneTestRecords.records,
+			kskWrapperPairs, zskWrapperPairs, sep_1_2016, sep_1_2026, true, SHA256_DIGEST_ID);
 
-		assertThat(signedRecords2, IsEqualCollection.equalTo(SigningData.signedList));
-		assertThat(ZoneTestRecords.records, IsEqualCollection.equalTo(SigningData.postZoneList));
+		assertThat(signedRecords2, equalTo(SigningData.signedList));
+		assertThat(ZoneTestRecords.records, equalTo(SigningData.postZoneList));
 	}
 
 	@Test
@@ -170,11 +175,11 @@ public class ZoneSignerTest {
 		List<DnsSecKeyPair> kskPairs = new ArrayList<>(asList(kskPair1, kskPair2));
 		List<DnsSecKeyPair> zskPairs = new ArrayList<>(asList(zskPair1, zskPair2));
 
-		final List<Record> signedRecords = new ZoneSignerImpl().signZone(ZoneTestRecords.origin, ZoneTestRecords.records,
-			kskPairs, zskPairs, ZoneTestRecords.sep_1_2016, ZoneTestRecords.sep_1_2026, true, SHA256_DIGEST_ID);
+		final List<Record> signedRecords = new ZoneSignerImpl().signZone(origin, ZoneTestRecords.records,
+			kskPairs, zskPairs, sep_1_2016, sep_1_2026, true, SHA256_DIGEST_ID);
 
-		assertThat("Signed records not equal", signedRecords, IsEqualCollection.equalTo(SigningData.signedList));
-		assertThat("Post Zone Records not equal", ZoneTestRecords.records, IsEqualCollection.equalTo(SigningData.postZoneList));
+		assertThat("Signed records not equal", signedRecords, equalTo(SigningData.signedList));
+		assertThat("Post Zone Records not equal", ZoneTestRecords.records, equalTo(SigningData.postZoneList));
 	}
 
 	@Test
