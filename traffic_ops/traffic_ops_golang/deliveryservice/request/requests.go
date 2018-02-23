@@ -430,6 +430,20 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 	return nil, tc.NoError
 }
 
+// ChangeLogMessage implements the api.Logger interface for a custom log message
+func (req *TODeliveryServiceRequest) ChangeLogMessage(action string, db *sqlx.DB) (string, error) {
+	changeType := "unknown change type"
+	if req.ChangeType != nil {
+		changeType = *req.ChangeType
+	}
+	xmlID := "unknown"
+	if req.DeliveryService != nil && req.DeliveryService.XMLID != nil {
+		xmlID = *req.DeliveryService.XMLID
+	}
+	message := action + ` ` + req.GetType() + ` to ` + changeType + ` for delivery service ` + xmlID
+	return message, nil
+}
+
 // isActiveRequest returns true if a request using this XMLID is currently in an active state
 func isActiveRequest(db *sqlx.DB, XMLID string) (bool, error) {
 	q := `SELECT EXISTS(SELECT 1 FROM deliveryservice_request
