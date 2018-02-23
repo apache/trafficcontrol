@@ -33,9 +33,30 @@ type PhysLocation struct {
 	Name        string `json:"name" db:"name"`
 	Phone       string `json:"phone" db:"phone"`
 	POC         string `json:"poc" db:"poc"`
-	RegionID    int    `json:"regionId" db:"region"`
-	RegionName  string `json:"regionName"`
+	RegionID    int    `json:"regionId" db:"region_id"`
+	RegionName  string `json:"regionName" db:"region_name"`
 	ShortName   string `json:"shortName" db:"short_name"`
 	State       string `json:"state" db:"state"`
 	Zip         string `json:"zip" db:"zip"`
+}
+
+// PhysLocationNullable - a version of the deliveryservice that allows for all fields to be null
+type PhysLocationNullable struct {
+	//
+	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
+	//
+	Address     *string `json:"address" db:"address"`
+	City        *string `json:"city" db:"city"`
+	Comments    *string `json:"comments" db:"comments"`
+	Email       *string `json:"email" db:"email"`
+	ID          *int    `json:"id" db:"id"`
+	LastUpdated Time    `json:"lastUpdated" db:"last_updated"`
+	Name        *string `json:"name" db:"name"`
+	Phone       *string `json:"phone" db:"phone"`
+	POC         *string `json:"poc" db:"poc"`
+	RegionID    *int    `json:"regionId" db:"region_id"`
+	RegionName  *string `json:"regionName" db:"region_name"`
+	ShortName   *string `json:"shortName" db:"short_name"`
+	State       *string `json:"state" db:"state"`
+	Zip         *string `json:"zip" db:"zip"`
 }

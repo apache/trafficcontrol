@@ -33,10 +33,10 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOPhysLocation tc.PhysLocation
+type TOPhysLocation tc.PhysLocationNullable
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOPhysLocation(tc.PhysLocation{})
+var refType = TOPhysLocation(tc.PhysLocationNullable{})
 
 func GetRefType() *TOPhysLocation {
 	return &refType
@@ -44,11 +44,14 @@ func GetRefType() *TOPhysLocation {
 
 //Implementation of the Identifier, Validator interface functions
 func (pl *TOPhysLocation) GetID() (int, bool) {
-	return pl.ID, true
+	if pl.ID == nil {
+		return 0, false
+	}
+	return *pl.ID, true
 }
 
 func (pl *TOPhysLocation) GetAuditName() string {
-	return pl.Name
+	return *pl.Name
 }
 
 func (pl *TOPhysLocation) GetType() string {
@@ -56,12 +59,13 @@ func (pl *TOPhysLocation) GetType() string {
 }
 
 func (pl *TOPhysLocation) SetID(i int) {
-	pl.ID = i
+	pl.ID = &i
 }
 
 func (pl *TOPhysLocation) Validate(db *sqlx.DB) []error {
 	errs := []error{}
-	if len(pl.Name) < 1 {
+	name := pl.Name
+	if name != nil && len(*name) < 1 {
 		errs = append(errs, errors.New(`PhysLocation 'name' is required.`))
 	}
 	return errs
@@ -82,7 +86,7 @@ func (pl *TOPhysLocation) Read(db *sqlx.DB, parameters map[string]string, user a
 		return nil, errs, tc.DataConflictError
 	}
 
-	query := selectPhysLocationsQuery() + where + orderBy
+	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
 	rows, err := db.NamedQuery(query, queryValues)
@@ -105,7 +109,7 @@ func (pl *TOPhysLocation) Read(db *sqlx.DB, parameters map[string]string, user a
 	return PhysLocations, []error{}, tc.NoError
 }
 
-func selectPhysLocationsQuery() string {
+func selectQuery() string {
 
 	query := `SELECT
 pl.address,
@@ -117,8 +121,8 @@ pl.last_updated,
 pl.name,
 COALESCE(pl.phone, '') as phone,
 COALESCE(pl.poc, '') as poc,
-r.id as regionId,
-r.name as region,
+r.id as region_id,
+r.name as region_name,
 pl.short_name,
 pl.state,
 pl.zip
