@@ -105,9 +105,8 @@ func main() {
 	// TODO pass total size for all file groups?
 	stats := stat.New(remapper.Rules(), caches, uint64(cfg.CacheSizeBytes), httpConns, httpsConns)
 
-	buildHandler := func(scheme string, port string, conns *web.ConnMap, stats stat.Stats) (http.Handler, *cache.HandlerPointer) {
-		statHandler := stat.NewHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules(), httpConns, httpsConns)
-		cacheHandler := cache.NewHandler(
+	buildHandler := func(scheme string, port string, conns *web.ConnMap, stats stat.Stats) *cache.HandlerPointer {
+		return cache.NewHandlerPointer(cache.NewHandler(
 			remapper,
 			uint64(cfg.ConcurrentRuleRequests),
 			stats,
@@ -121,17 +120,14 @@ func main() {
 			cfg.ReqMaxIdleConns,
 			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
 			plugins,
-		)
-		cacheHandlerPointer := cache.NewHandlerPointer(cacheHandler)
-
-		handler := http.NewServeMux()
-		handler.Handle("/_astats", statHandler)
-		handler.Handle("/", cacheHandlerPointer)
-		return handler, cacheHandlerPointer
+			httpConns,
+			httpsConns,
+			cfg.InterfaceName,
+		))
 	}
 
-	httpHandler, httpHandlerPointer := buildHandler("http", strconv.Itoa(cfg.Port), httpConns, stats)
-	httpsHandler, httpsHandlerPointer := buildHandler("https", strconv.Itoa(cfg.HTTPSPort), httpsConns, stats)
+	httpHandler := buildHandler("http", strconv.Itoa(cfg.Port), httpConns, stats)
+	httpsHandler := buildHandler("https", strconv.Itoa(cfg.HTTPSPort), httpsConns, stats)
 
 	idleTimeout := time.Duration(cfg.ServerIdleTimeoutMS) * time.Millisecond
 	readTimeout := time.Duration(cfg.ServerReadTimeoutMS) * time.Millisecond
@@ -207,8 +203,11 @@ func main() {
 			cfg.ReqMaxIdleConns,
 			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
 			plugins,
+			httpConns,
+			httpsConns,
+			cfg.InterfaceName,
 		)
-		httpHandlerPointer.Set(httpCacheHandler)
+		httpHandler.Set(httpCacheHandler)
 
 		httpsCacheHandler := cache.NewHandler(
 			remapper,
@@ -224,15 +223,13 @@ func main() {
 			cfg.ReqMaxIdleConns,
 			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
 			plugins,
+			httpConns,
+			httpsConns,
+			cfg.InterfaceName,
 		)
-		httpsHandlerPointer.Set(httpsCacheHandler)
+		httpsHandler.Set(httpsCacheHandler)
 
 		if cfg.Port != oldCfg.Port {
-			statHandler := stat.NewHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules(), httpConns, httpsConns)
-			handler := http.NewServeMux()
-			handler.Handle("/_astats", statHandler)
-			handler.Handle("/", httpHandlerPointer)
-
 			ctx, cancel := context.WithTimeout(context.Background(), ShutdownTimeout)
 			defer cancel()
 			if err := httpServer.Shutdown(ctx); err != nil {
@@ -244,16 +241,10 @@ func main() {
 				}
 
 			}
-
-			httpServer = startServer(handler, httpListener, httpConnStateCallback, cfg.Port, idleTimeout, readTimeout, writeTimeout, "http")
+			httpServer = startServer(httpHandler, httpListener, httpConnStateCallback, cfg.Port, idleTimeout, readTimeout, writeTimeout, "http")
 		}
 
 		if (httpsServer == nil || cfg.HTTPSPort != oldCfg.HTTPSPort) && cfg.CertFile != "" && cfg.KeyFile != "" {
-			statHandler := stat.NewHandler(cfg.InterfaceName, remapper.Rules(), stats, remapper.StatRules(), httpConns, httpsConns)
-			handler := http.NewServeMux()
-			handler.Handle("/_astats", statHandler)
-			handler.Handle("/", httpsHandlerPointer)
-
 			if httpsServer != nil {
 				ctx, cancel := context.WithTimeout(context.Background(), ShutdownTimeout)
 				defer cancel()
@@ -267,7 +258,7 @@ func main() {
 				}
 			}
 
-			httpsServer = startServer(handler, httpsListener, httpsConnStateCallback, cfg.HTTPSPort, idleTimeout, readTimeout, writeTimeout, "https")
+			httpsServer = startServer(httpsHandler, httpsListener, httpsConnStateCallback, cfg.HTTPSPort, idleTimeout, readTimeout, writeTimeout, "https")
 		}
 	}
 
