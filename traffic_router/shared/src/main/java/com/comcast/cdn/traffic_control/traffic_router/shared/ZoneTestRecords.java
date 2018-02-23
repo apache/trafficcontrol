@@ -27,7 +27,6 @@ import org.xbill.DNS.Name;
 import org.xbill.DNS.Record;
 import org.xbill.DNS.TXTRecord;
 import org.xbill.DNS.SOARecord;
-import org.xbill.DNS.DNSSEC;
 
 import java.net.Inet6Address;
 import java.net.InetAddress;
@@ -44,6 +43,10 @@ import java.util.Date;
 import java.util.List;
 
 import static java.util.Base64.getMimeDecoder;
+import static org.xbill.DNS.DNSKEYRecord.Flags.SEP_KEY;
+import static org.xbill.DNS.DNSKEYRecord.Flags.ZONE_KEY;
+import static org.xbill.DNS.DNSKEYRecord.Protocol.DNSSEC;
+import static org.xbill.DNS.DNSSEC.Algorithm.RSASHA1;
 
 @SuppressWarnings("PMD")
 public class ZoneTestRecords {
@@ -136,10 +139,10 @@ public class ZoneTestRecords {
 		}
 
 		zoneSigningKeyRecord = new DNSKEYRecord(origin, DClass.IN, 31556952L,
-				DNSKEYRecord.Flags.ZONE_KEY, DNSKEYRecord.Protocol.DNSSEC, DNSSEC.Algorithm.RSASHA1, zsk1.getPublic().getEncoded());
+			ZONE_KEY, DNSSEC, RSASHA1, zsk1.getPublic().getEncoded());
 
 		keySigningKeyRecord = new DNSKEYRecord(origin, DClass.IN, 315569520L,
-				DNSKEYRecord.Flags.ZONE_KEY | DNSKEYRecord.Flags.SEP_KEY, DNSKEYRecord.Protocol.DNSSEC, DNSSEC.Algorithm.RSASHA1, ksk1.getPublic().getEncoded());
+			ZONE_KEY | SEP_KEY, DNSSEC, RSASHA1, ksk1.getPublic().getEncoded());
 		return records;
 	}
 }
