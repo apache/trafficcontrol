@@ -38,7 +38,7 @@ sub add {
 	my $cdn = $self->req->json->{cdn};
 	my $deliveryservice = $self->req->json->{deliveryservice};
 
-	if ( !&is_portal($self) ) {
+	if ( !&is_oper($self) ) {
 		return $self->forbidden();
 	}
 
@@ -92,7 +92,7 @@ sub generate {
 	my $deliveryservice = $self->req->json->{deliveryservice};
 	my $tmp_location = "/var/tmp";
 
-	if ( !&is_portal($self) ) {
+	if ( !&is_oper($self) ) {
 		return $self->forbidden();
 	}
 
@@ -145,10 +145,6 @@ sub view_by_xml_id {
 
 	if ( !$version ) {
 		$version = 'latest';
-	}
-
-	if ( !&is_portal($self) ) {
-		return $self->forbidden();
 	}
 
 	my $key = "$xml_id-$version";
@@ -262,7 +258,7 @@ sub delete {
 	my $response_container;
 	my $response;
 
-	if ( !&is_portal($self) ) {
+	if ( !&is_oper($self) ) {
 		return $self->forbidden();
 	}
 

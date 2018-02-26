@@ -62,7 +62,7 @@ ok $t->post_ok(
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 #get_object
-ok $t->get_ok("/api/1.1/deliveryservices/xmlId/$key/sslkeys.json")->status_is(403)
+ok $t->get_ok("/api/1.1/deliveryservices/xmlId/$key/sslkeys.json")->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # #delete
