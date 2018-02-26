@@ -105,15 +105,7 @@ The remap rules file is JSON of the following form:
                     "url": "http://bar.example.net",
                     "weight": 1
                 }
-            ],
-            "to_client_headers": {
-                "drop": [],
-                "set": [ { "name": "Accept-Ranges", "value": "None" } ]
-            },
-            "to_origin_headers": {
-                "drop": [ "Range" ],
-                "set": []
-            }
+            ]
         }
     ],
     "timeout_ms": 5000
@@ -144,8 +136,6 @@ The global object must also include a `rules` key, with an array of rule objects
 | `connection-close` | Whether to add a `Connection: Close` header to client responses for this rule. This is designed for maintenance, operations, or debugging. |
 | `query-string` | A JSON object with the boolean keys `remap` and `cache`. The `remap` key indicates whether to append request query strings to the parent request. The `cache` key incidates whether to cache requests with different query strings separately. |
 | `to` | The array of parents for the given rule. |
-|`to_client_headers`| JSON object of header manipulation rules for the response to the client. `set` is an array of headers to set, and `drop` is an array of headers to remove. |
-|`to_origin_headers`| JSON object of header manipulation rules for the request to the origin server. `set` is an array of headers to set, and `drop` is an array of headers to remove. |
 
 The objects in the `to` array of parents have the following fields:
 
@@ -198,3 +188,4 @@ Each file is a key-value database, which internally uses a B+tree (see https://g
 The application may be run manually via `./grove -cfg grove.cfg`, or if installed via the RPM, as a service via `service grove start` or `systemctl start grove`.
 
 If there are errors, they will be logged to the error location in the config file (`/etc/grove/grove.cfg` for the service), or if the errors are with the config file itself, to stdout.
+
