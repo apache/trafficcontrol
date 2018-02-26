@@ -16,10 +16,8 @@
 package com.comcast.cdn.traffic_control.traffic_router.jdnssec.dns.keys;
 
 import com.comcast.cdn.traffic_control.traffic_router.shared.IsEqualCollection;
-import com.comcast.cdn.traffic_control.traffic_router.jdnssec.dns.DNSKeyPairWrapper;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DnsSecKeyPair;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DnsSecKeyPairImpl;
-import com.comcast.cdn.traffic_control.traffic_router.jdnssec.dns.JDnsSecSigner;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneSignerImpl;
 import com.comcast.cdn.traffic_control.traffic_router.shared.SigningData;
 import com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords;
