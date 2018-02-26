@@ -141,7 +141,7 @@ func TestWrapAuth(t *testing.T) {
 		t.Fatalf("could not create priv statement: %v\n", err)
 	}
 
-	authBase := AuthBase{false, secret, sqlStatement, nil}
+	authBase := AuthBase{secret, sqlStatement, nil}
 
 	cookie := tocookie.New(userName, time.Now().Add(time.Minute), secret)
 
