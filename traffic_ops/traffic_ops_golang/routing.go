@@ -189,7 +189,7 @@ func RegisterRoutes(d ServerData) error {
 		return fmt.Errorf("Error preparing db priv level query: %s", err)
 	}
 
-	authBase := AuthBase{d.Insecure, d.Config.Secrets[0], userInfoStmt, nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
+	authBase := AuthBase{secret: d.Config.Secrets[0], getCurrentUserInfoStmt: userInfoStmt, override: nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
 	routes := CreateRouteMap(routeSlice, authBase)
 	compiledRoutes := CompileRoutes(routes)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
