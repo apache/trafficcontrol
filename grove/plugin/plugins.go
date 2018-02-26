@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/apache/incubator-trafficcontrol/grove/plugin/afterrespond"
+	"github.com/apache/incubator-trafficcontrol/grove/plugin/beforeparentrequest"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin/beforerespond"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin/onrequest"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin/startup"
@@ -11,19 +12,21 @@ import (
 
 // Plugins contains plugins functions. Plugins are sorted according to their registered priority, and should be called in the order they appear in the slice.
 type Plugins struct {
-	Startup       startup.Startup
-	BeforeRespond beforerespond.Plugin
-	AfterRespond  afterrespond.Plugin
-	OnRequest     onrequest.Plugin
+	Startup             startup.Startup
+	BeforeParentRequest beforeparentrequest.Plugin
+	BeforeRespond       beforerespond.Plugin
+	AfterRespond        afterrespond.Plugin
+	OnRequest           onrequest.Plugin
 }
 
 // Get gets all the plugins. This must not be called in an init function, since plugins use init for registration. This must be called after initialization, after main has started executing.
 func Get() Plugins {
 	return Plugins{
-		Startup:       startup.Get(),
-		BeforeRespond: beforerespond.Get(),
-		AfterRespond:  afterrespond.Get(),
-		OnRequest:     onrequest.Get(),
+		Startup:             startup.Get(),
+		BeforeParentRequest: beforeparentrequest.Get(),
+		BeforeRespond:       beforerespond.Get(),
+		AfterRespond:        afterrespond.Get(),
+		OnRequest:           onrequest.Get(),
 	}
 }
 
@@ -35,6 +38,9 @@ func Get() Plugins {
 //
 func (p Plugins) LoadFuncs() map[string]PluginLoadF {
 	lf := map[string]PluginLoadF{}
+	for name, f := range p.BeforeParentRequest.LoadFuncs() {
+		lf[name] = PluginLoadF(f)
+	}
 	for name, f := range p.BeforeRespond.LoadFuncs() {
 		lf[name] = PluginLoadF(f)
 	}

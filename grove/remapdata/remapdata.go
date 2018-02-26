@@ -4,14 +4,12 @@ package remapdata
 
 import (
 	"net"
-	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/grove/chash"
 	"github.com/apache/incubator-trafficcontrol/grove/icache"
-	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
@@ -70,11 +68,9 @@ type RemapRuleBase struct {
 	ConnectionClose    bool            `json:"connection-close"`
 	QueryString        QueryStringRule `json:"query-string"`
 	// ConcurrentRuleRequests is the number of concurrent requests permitted to a remap rule, that is, to an origin. If this is 0, the global config is used.
-	ConcurrentRuleRequests int     `json:"concurrent_rule_requests"`
-	RetryNum               *int    `json:"retry_num"`
-	DSCP                   int     `json:"dscp"`
-	ToOriginHeaders        ModHdrs `json:"to_origin_headers"`
-	ToClientHeaders        ModHdrs `json:"to_client_headers"`
+	ConcurrentRuleRequests int  `json:"concurrent_rule_requests"`
+	RetryNum               *int `json:"retry_num"`
+	DSCP                   int  `json:"dscp"`
 }
 
 type RemapRule struct {
@@ -195,25 +191,4 @@ type RemapRuleTo struct {
 type QueryStringRule struct {
 	Remap bool `json:"remap"`
 	Cache bool `json:"cache"`
-}
-
-type ModHdrs struct {
-	Set  []web.Hdr `json:"set"`
-	Drop []string  `json:"drop"`
-}
-
-// Mod drops and sets the headers in h according to its rules.
-func (mh *ModHdrs) Mod(h *http.Header) {
-	if h == nil || len(*h) == 0 { // this happens on a dial tcp timeout
-		log.Debugf("modHdrs: Header is  a nil map")
-		return
-	}
-	for _, hdr := range mh.Drop {
-		log.Debugf("modHdrs: Dropping header %s\n", hdr)
-		h.Del(hdr)
-	}
-	for _, hdr := range mh.Set {
-		log.Debugf("modHdrs: Setting header %s: %s \n", hdr.Name, hdr.Value)
-		h.Set(hdr.Name, hdr.Value)
-	}
 }
