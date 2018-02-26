@@ -51,12 +51,6 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, type, t
 
     $scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
 
-	$scope.manageKeys = {
-		sslKeys: deliveryService.protocol > 0,
-		urlSigKeys: deliveryService.signingAlgorithm == 'url_sig',
-		uriSigningKeys: deliveryService.signingAlgorithm == 'uri_signing'
-	};
-
 	$scope.edgeFQDNs = function(ds) {
         var urlString = '';
         if (_.isArray(ds.exampleURLs) && ds.exampleURLs.length > 0) {
