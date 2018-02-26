@@ -30,11 +30,6 @@ func CopyHeader(source http.Header) http.Header {
 	return dest
 }
 
-type Hdr struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
 // GetClientIPPort returns the client IP address of the given request, and the port. It returns the first x-forwarded-for IP if any, else the RemoteAddr.
 func GetClientIPPort(r *http.Request) (string, string) {
 	xForwardedFor := r.Header.Get("X-FORWARDED-FOR")

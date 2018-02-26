@@ -10,6 +10,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/grove/cachedata"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin"
+	"github.com/apache/incubator-trafficcontrol/grove/plugin/beforeparentrequest"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin/beforerespond"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin/onrequest"
 	"github.com/apache/incubator-trafficcontrol/grove/remap"
@@ -226,7 +227,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	cacheObj, ok := cache.Get(cacheKey)
 	if !ok {
 		log.Debugf("cache.Handler.ServeHTTP: '%v' not in cache\n", cacheKey)
-		remappingProducer.ToOriginHdrs().Mod(&r.Header)
+		beforeParentRequestData := beforeparentrequest.Data{r}
+		h.plugins.BeforeParentRequest.Call(remappingProducer.PluginCfg(), beforeParentRequestData)
 		cacheObj, err := retrier.Get(r, nil)
 		if err != nil {
 			log.Errorf("retrying get error (in uncached): %v\n", err)
@@ -250,6 +252,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	reqHeaders := r.Header
 	canReuseStored := remap.CanReuseStored(reqHeaders, cacheObj.RespHeaders, reqCacheControl, cacheObj.RespCacheControl, cacheObj.ReqHeaders, cacheObj.ReqRespTime, cacheObj.RespRespTime, h.strictRFC)
+
+	if canReuseStored != remapdata.ReuseCan { // run the BeforeParentRequest hook for revalidations / ReuseCannot
+		beforeParentRequestData := beforeparentrequest.Data{r}
+		h.plugins.BeforeParentRequest.Call(remappingProducer.PluginCfg(), beforeParentRequestData)
+	}
 
 	switch canReuseStored {
 	case remapdata.ReuseCan:

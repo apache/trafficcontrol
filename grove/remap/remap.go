@@ -82,8 +82,6 @@ func (p *RemappingProducer) CacheKey() string                  { return p.cacheK
 func (p *RemappingProducer) ConnectionClose() bool             { return p.rule.ConnectionClose }
 func (p *RemappingProducer) Name() string                      { return p.rule.Name }
 func (p *RemappingProducer) DSCP() int                         { return p.rule.DSCP }
-func (p *RemappingProducer) ToOriginHdrs() HdrModder           { return &p.rule.ToOriginHeaders }
-func (p *RemappingProducer) ToClientHdrs() HdrModder           { return &p.rule.ToClientHeaders }
 func (p *RemappingProducer) PluginCfg() map[string]interface{} { return p.rule.Plugins }
 func (p *RemappingProducer) Cache() icache.Cache               { return p.rule.Cache }
 func (p *RemappingProducer) ToFQDN() string {
