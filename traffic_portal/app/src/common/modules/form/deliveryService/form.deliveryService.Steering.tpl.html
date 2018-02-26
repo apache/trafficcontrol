@@ -38,14 +38,11 @@ under the License.
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                     <li role="menuitem"><a ng-click="clone(deliveryService)">Clone Delivery Service</a></li>
                     <li class="divider"></li>
-                    <li role="menuitem"><a ng-if="manageKeys.sslKeys" ng-click="manageSslKeys()">Manage SSL Keys</a></li>
-                    <li role="menuitem"><a ng-if="manageKeys.urlSigKeys" ng-click="manageUrlSigKeys()">Manage URL Sig Keys</a></li>
-                    <li role="menuitem"><a ng-if="manageKeys.uriSigningKeys" ng-click="manageUriSigningKeys()">Manage URI Signing Keys</a></li>
-                    <li class="divider" ng-if="manageKeys.sslKeys || manageKeys.urlSigKeys || manageKeys.uriSigningKeys"></li>
+                    <li role="menuitem"><a ng-click="manageSslKeys()">Manage SSL Keys</a></li>
+                    <li class="divider"></li>
                     <li role="menuitem"><a ng-click="viewTargets()">View Targets</a></li>
                     <li role="menuitem"><a ng-click="viewRegexes()">View Regexes</a></li>
                     <li role="menuitem"><a ng-click="viewJobs()">View Invalidate Content Jobs</a></li>
-                    <li role="menuitem"><a ng-click="viewStaticDnsEntries()">View Static DNS Entries</a></li>
                 </ul>
             </div>
         </div>
