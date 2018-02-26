@@ -25,6 +25,7 @@ import (
 	"time"
 )
 
+// Time wraps standard time.Time to allow indication of invalid times
 type Time struct {
 	time.Time
 	Valid bool
@@ -34,17 +35,17 @@ type Time struct {
 const TimeLayout = "2006-01-02 15:04:05-07"
 
 // Scan implements the database/sql Scanner interface.
-func (jt *Time) Scan(value interface{}) error {
-	jt.Time, jt.Valid = value.(time.Time)
+func (t *Time) Scan(value interface{}) error {
+	t.Time, t.Valid = value.(time.Time)
 	return nil
 }
 
 // Value implements the database/sql/driver Valuer interface.
-func (jt Time) Value() (driver.Value, error) {
-	if !jt.Valid {
+func (t Time) Value() (driver.Value, error) {
+	if !t.Valid {
 		return nil, nil
 	}
-	return jt.Time, nil
+	return t.Time, nil
 }
 
 // MarshalJSON implements the json.Marshaller interface
@@ -61,4 +62,31 @@ func (t *Time) UnmarshalJSON(b []byte) (err error) {
 	}
 	t.Time, err = time.Parse(TimeLayout, s)
 	return
+}
+
+// TimeNoMod supported JSON marshalling, but suppresses JSON unmarshalling
+type TimeNoMod Time
+
+// Scan implements the database/sql Scanner interface.
+func (t *TimeNoMod) Scan(value interface{}) error {
+	t.Time, t.Valid = value.(time.Time)
+	return nil
+}
+
+// Value implements the database/sql/driver Valuer interface.
+func (t TimeNoMod) Value() (driver.Value, error) {
+	if !t.Valid {
+		return nil, nil
+	}
+	return t.Time, nil
+}
+
+// MarshalJSON implements the json.Marshaller interface
+func (t TimeNoMod) MarshalJSON() ([]byte, error) {
+	return Time(t).MarshalJSON()
+}
+
+// UnmarshalJSON for TimeNoMod suppresses unmarshalling
+func (t *TimeNoMod) UnmarshalJSON([]byte) (err error) {
+	return nil
 }

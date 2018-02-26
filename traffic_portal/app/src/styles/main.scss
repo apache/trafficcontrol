@@ -30,6 +30,7 @@ $fa-font-path: "../assets/fonts";
 @import "../common/modules/dialog/import/dialog.import";
 @import "../common/modules/dialog/text/dialog.text";
 @import "../common/modules/header/header";
+@import "../common/modules/form/form";
 @import "../common/modules/message/message";
 @import "../common/modules/navigation/navigation";
 @import "../common/modules/table/table";
@@ -94,7 +95,14 @@ body.nav-sm .container.body .main-content {
 }
 
 .input-error {
+  display: block;
   color: #a94442;
+  font-weight: bold;
+}
+
+.input-diff {
+  display: block;
+  color: blue;
   font-weight: bold;
 }
 

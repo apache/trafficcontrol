@@ -21,55 +21,82 @@ package dbhelpers
 
 import (
 	"errors"
-	"net/url"
 	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+
 	"github.com/lib/pq"
 )
 
-func BuildQuery(v url.Values, selectStmt string, queryParamsToSQLCols map[string]string) (string, map[string]interface{}) {
-	var sqlQuery string
-	var criteria string
-	var queryValues map[string]interface{}
-	sqlQuery = selectStmt
-	criteria, queryValues = parseCriteriaAndQueryValues(queryParamsToSQLCols, v)
-
-	if len(queryValues) > 0 {
-		sqlQuery += "\nWHERE " + criteria
-	}
-
-	if orderby, ok := v["orderby"]; ok {
-		log.Debugln("orderby: ", orderby[0])
-		if col, ok := queryParamsToSQLCols[orderby[0]]; ok {
-			log.Debugln("orderby column ", col)
-			sqlQuery += "\nORDER BY " + col
-		} else {
-			log.Debugln("Incorrect name for orderby: ", orderby[0])
-		}
-	}
-	log.Debugln("\n--\n" + sqlQuery)
-	return sqlQuery, queryValues
+type WhereColumnInfo struct {
+	Column  string
+	Checker func(string) error
 }
 
-func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]string, v url.Values) (string, map[string]interface{}) {
+const baseWhere = "\nWHERE"
+const baseOrderBy = "\nORDER BY"
+
+func BuildWhereAndOrderBy(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, map[string]interface{}, []error) {
+	whereClause := baseWhere
+	orderBy := baseOrderBy
+	var criteria string
+	var queryValues map[string]interface{}
+	var errs []error
+	criteria, queryValues, errs = parseCriteriaAndQueryValues(queryParamsToSQLCols, parameters)
+
+	if len(queryValues) > 0 {
+		whereClause += " " + criteria
+	}
+	if len(errs) > 0 {
+		return "", "", queryValues, errs
+	}
+
+	if orderby, ok := parameters["orderby"]; ok {
+		log.Debugln("orderby: ", orderby)
+		if colInfo, ok := queryParamsToSQLCols[orderby]; ok {
+			log.Debugln("orderby column ", colInfo)
+			orderBy += " " + colInfo.Column
+		} else {
+			log.Debugln("Incorrect name for orderby: ", orderby)
+		}
+	}
+	if whereClause == baseWhere {
+		whereClause = ""
+	}
+	if orderBy == baseOrderBy {
+		orderBy = ""
+	}
+	log.Debugf("\n--\n Where: %s \n Order By: %s", whereClause, orderBy)
+	return whereClause, orderBy, queryValues, errs
+}
+
+func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo, parameters map[string]string) (string, map[string]interface{}, []error) {
 	m := make(map[string]interface{})
 	var criteria string
 
 	var criteriaArgs []string
+	errs := []error{}
 	queryValues := make(map[string]interface{})
-	for key, val := range queryParamsToSQLCols {
-		if urlValue, ok := v[key]; ok {
-			m[key] = urlValue[0]
-			criteria = val + "=:" + key
-			criteriaArgs = append(criteriaArgs, criteria)
-			queryValues[key] = urlValue[0]
+	for key, colInfo := range queryParamsToSQLCols {
+		if urlValue, ok := parameters[key]; ok {
+			var err error
+			if colInfo.Checker != nil {
+				err = colInfo.Checker(urlValue)
+			}
+			if err != nil {
+				errs = append(errs, errors.New(key+" "+err.Error()))
+			} else {
+				m[key] = urlValue
+				criteria = colInfo.Column + "=:" + key
+				criteriaArgs = append(criteriaArgs, criteria)
+				queryValues[key] = urlValue
+			}
 		}
 	}
 	criteria = strings.Join(criteriaArgs, " AND ")
 
-	return criteria, queryValues
+	return criteria, queryValues, errs
 }
 
 //parses pq errors for uniqueness constraint violations

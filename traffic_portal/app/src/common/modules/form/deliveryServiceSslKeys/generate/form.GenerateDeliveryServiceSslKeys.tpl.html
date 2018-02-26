@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
-            <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{deliveryService.displayName}}</a></li>
+            <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{deliveryService.xmlId}}</a></li>
             <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys')">SSL Keys</a></li>
             <li class="active">generate</li>
         </ol>
@@ -83,7 +83,7 @@ under the License.
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" ng-disabled="dsGenerateSslKeyForm.$pristine || dsGenerateSslKeyForm.$invalid" ng-click="confirmGenerate(sslRequest)">Generate</button>
+                <button type="button" class="btn btn-success" ng-disabled="dsGenerateSslKeyForm.$pristine || dsGenerateSslKeyForm.$invalid" ng-click="confirmGenerate(sslRequest)">Generate Keys</button>
             </div>
         </form>
     </div>

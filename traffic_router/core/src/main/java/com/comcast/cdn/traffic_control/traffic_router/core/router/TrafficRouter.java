@@ -22,11 +22,13 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.comcast.cdn.traffic_control.traffic_router.configuration.ConfigurationListener;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringTarget;
@@ -85,6 +87,8 @@ public class TrafficRouter {
 	private final ConsistentHasher consistentHasher = new ConsistentHasher();
 	private SteeringRegistry steeringRegistry;
 
+	private final Map<String, Geolocation> defaultGeolocationsOverride = new HashMap<String, Geolocation>();
+
 	public TrafficRouter(final CacheRegister cr, 
 			final GeolocationService geolocationService, 
 			final GeolocationService geolocationService6, 
@@ -98,6 +102,19 @@ public class TrafficRouter {
 		this.federationRegistry = federationRegistry;
 		this.consistentDNSRouting = JsonUtils.optBoolean(cr.getConfig(), "consistent.dns.routing");
 		this.zoneManager = new ZoneManager(this, statTracker, trafficOpsUtils, trafficRouterManager);
+
+		if (cr.getConfig() != null) {
+			// maxmindDefaultOverride: {countryCode: , lat: , long: }
+			final JsonNode geolocations = cr.getConfig().get("maxmindDefaultOverride");
+			if (geolocations != null) {
+				for (final JsonNode geolocation : geolocations) {
+					final String countryCode = JsonUtils.optString(geolocation, "countryCode");
+					final double lat = JsonUtils.optDouble(geolocation, "lat");
+					final double longitude = JsonUtils.optDouble(geolocation, "long");
+					defaultGeolocationsOverride.put(countryCode, new Geolocation(lat, longitude));
+				}
+			}
+		}
 	}
 
 	public ZoneManager getZoneManager() {
@@ -308,6 +325,10 @@ public class TrafficRouter {
 			}
 		}
 
+		if (clientLocation.isDefaultLocation() && defaultGeolocationsOverride.containsKey(clientLocation.getCountryCode())) {
+			clientLocation = defaultGeolocationsOverride.get(clientLocation.getCountryCode());
+		}
+
 		final List<Cache> caches = getCachesByGeo(deliveryService, clientLocation, track);
 
 		if (caches == null || caches.isEmpty()) {
@@ -487,6 +508,7 @@ public class TrafficRouter {
 			return null;
 		}
 
+		routeResult.setDeliveryService(entryDeliveryService);
 		for (final DeliveryService deliveryService : deliveryServices) {
 			if (deliveryService.isRegionalGeoEnabled()) {
 				LOGGER.error("Regional Geo Blocking is not supported with multi-route delivery services.. skipping " + entryDeliveryService.getId() + "/" + deliveryService.getId());
@@ -495,7 +517,6 @@ public class TrafficRouter {
 
 			if (deliveryService.isAvailable()) {
 				final List<Cache> caches = selectCaches(request, deliveryService, track);
-				routeResult.addDeliveryService(deliveryService);
 
 				if (caches != null && !caches.isEmpty()) {
 					final Cache cache = consistentHasher.selectHashable(caches, deliveryService.getDispersion(), request.getPath());
@@ -772,7 +793,7 @@ public class TrafficRouter {
 		for (final SteeringTarget steeringTarget : steeringTargets) {
 			final DeliveryService target = cacheRegister.getDeliveryService(steeringTarget.getDeliveryService());
 
-			if (target != null) {
+			if (target != null) { // target might not be in CRConfig yet
 				deliveryServices.add(target);
 			}
 		}
@@ -797,10 +818,17 @@ public class TrafficRouter {
 
 		final String bypassDeliveryServiceId = steering.getBypassDestination(requestPath);
 		if (bypassDeliveryServiceId != null && !bypassDeliveryServiceId.isEmpty()) {
-			return cacheRegister.getDeliveryService(bypassDeliveryServiceId);
+			final DeliveryService bypass = cacheRegister.getDeliveryService(bypassDeliveryServiceId);
+			if (bypass != null) { // bypass DS target might not be in CRConfig yet. Until then, try existing targets
+				return bypass;
+			}
 		}
 
-		final SteeringTarget steeringTarget = consistentHasher.selectHashable(steering.getTargets(), deliveryService.getDispersion(), requestPath);
+		// only select from targets in CRConfig
+		final List<SteeringTarget> availableTargets = steering.getTargets().stream()
+				.filter(target -> cacheRegister.getDeliveryService(target.getDeliveryService()) != null)
+				.collect(Collectors.toList());
+		final SteeringTarget steeringTarget = consistentHasher.selectHashable(availableTargets, deliveryService.getDispersion(), requestPath);
 		return cacheRegister.getDeliveryService(steeringTarget.getDeliveryService());
 	}
 

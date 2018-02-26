@@ -1,0 +1,240 @@
+{
+    "asns": [
+        {
+            "cachegroupName": "cachegroup1",
+            "name": "asn1"
+        },
+        {
+            "cachegroupName": "cachegroup2",
+            "name": "asn2"
+        }
+    ],
+    "cachegroups": [
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "parentCacheGroup",
+            "parentCacheGroupName": null
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "secondaryCacheGroup",
+            "parentCacheGroupName": null
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "cachegroup1",
+            "parentCacheGroupName": "parentCacheGroup",
+            "secondaryCacheGroupName": "parentCacheGroup",
+            "shortName": "cg1"
+        },
+        {
+            "latitude": 24.1234,
+            "longitude": -121.1234,
+            "name": "cachegroup2",
+            "parentCacheGroupName": "secondaryCacheGroup",
+            "secondaryCacheGroupName": "secondaryCacheGroup",
+            "shortName": "cg2"
+        }
+    ],
+    "cdns": [
+        {
+            "dnssecEnabled": true,
+            "domainName": "test.cdn1.net",
+            "name": "cdn1"
+        },
+        {
+            "dnssecEnabled": false,
+            "domainName": "test.cdn2.net",
+            "name": "cdn2"
+        },
+        {
+            "dnssecEnabled": true,
+            "domainName": "test.cdn3.net",
+            "name": "cdn3"
+        }
+    ],
+    "deliveryServiceRequests": [
+        {
+            "changeType": "create",
+            "deliveryService": {
+                "active": true,
+                "ccrDnsTtl": 30,
+                "cdnId": 1,
+                "deepCachingType": "NEVER",
+                "displayName": "Good Kabletown CDN",
+                "dscp": 1,
+                "geoLimit": 1,
+                "geoProvider": 1,
+                "initialDispersion": 1,
+                "logsEnabled": true,
+                "longDesc": "long desc",
+                "regionalGeoBlocking": true,
+                "routingName": "goodroute",
+                "tenantId": 2,
+                "typeId": 70,
+                "xmlId": "test-ds1"
+            },
+            "status": "draft"
+        },
+        {
+            "changeType": "create",
+            "deliveryService": {
+                "active": true,
+                "ccrDnsTtl": 30,
+                "cdnId": 1,
+                "deepCachingType": "NEVER",
+                "displayName": "Bad Tenant",
+                "dscp": 0,
+                "geoLimit": 0,
+                "geoProvider": 0,
+                "initialDispersion": 3,
+                "logsEnabled": false,
+                "longDesc": "long desc",
+                "regionalGeoBlocking": false,
+                "tenantId": 1,
+                "typeId": 70,
+                "xmlId": "test-ds1"
+            },
+            "status": "draft"
+        },
+        {
+            "changeType": "create",
+            "deliveryService": {
+                "ccrDnsTtl": 30,
+                "deepCachingType": "NEVER",
+                "displayName": "Bad Test Case CDN",
+                "dscp": 0,
+                "geoLimit": 0,
+                "geoProvider": 1,
+                "infoUrl": "xxx",
+                "initialDispersion": 1,
+                "logsEnabled": true,
+                "longDesc": "long desc",
+                "orgServerFqdn": "xxx",
+                "regionalGeoBlocking": true,
+                "routingName": "x routing",
+                "tenantId": 2,
+                "xmlId": "test ds1"
+            },
+            "status": "draft"
+        },
+        {
+            "changeType": "update",
+            "deliveryService": {
+                "active": false,
+                "ccrDnsTtl": 30,
+                "cdnId": 1,
+                "deepCachingType": "ALWAYS",
+                "displayName": "Testing transitions",
+                "dscp": 3,
+                "geoLimit": 1,
+                "geoProvider": 1,
+                "initialDispersion": 1,
+                "logsEnabled": true,
+                "longDesc": "long desc",
+                "regionalGeoBlocking": true,
+                "routingName": "goodroute",
+                "tenantId": 2,
+                "typeId": 70,
+                "xmlId": "test-transitions"
+            },
+            "status": "draft"
+        }
+    ],
+    "deliveryServices": [
+        {
+            "active": false,
+            "dscp": 40,
+            "tenantName": "tenant1",
+            "xmlId": "ds1"
+        },
+        {
+            "active": false,
+            "dscp": 40,
+            "tenantName": "tenant2",
+            "xmlId": "ds2"
+        }
+    ],
+    "divisions": [
+        {
+            "name": "division1"
+        },
+        {
+            "name": "division2"
+        }
+    ],
+    "physLocations": [
+        {
+            "address": "1234 mile high circle",
+            "city": "Denver",
+            "comments": null,
+            "email": null,
+            "last_updated": "2018-01-19T21:19:32.081465+00:00",
+            "name": "Denver",
+            "phone": "303-111-1111",
+            "poc": null,
+            "region": 100,
+            "short_name": "denver",
+            "state": "CO",
+            "zip": "80202"
+        },
+        {
+            "address": "1234 green way",
+            "city": "Boulder",
+            "comments": null,
+            "email": null,
+            "last_updated": "2018-01-19T21:19:32.086195+00:00",
+            "name": "Boulder",
+            "phone": "303-222-2222",
+            "poc": null,
+            "region": 100,
+            "short_name": "boulder",
+            "state": "CO",
+            "zip": "80301"
+        },
+        {
+            "address": "1234 southern way",
+            "city": "Atlanta",
+            "comments": null,
+            "email": null,
+            "last_updated": "2018-01-19T21:19:32.089538+00:00",
+            "name": "HotAtlanta",
+            "phone": "404-222-2222",
+            "poc": null,
+            "region": 100,
+            "short_name": "atlanta",
+            "state": "GA",
+            "zip": "30301"
+        }
+    ],
+    "regions": [
+        {
+            "divisionName": "division1",
+            "name": "region1"
+        },
+        {
+            "divisionName": "division2",
+            "name": "region2"
+        }
+    ],
+    "tenants": [
+        {
+            "active": true,
+            "name": "root",
+            "parentTenantName": null
+        },
+        {
+            "active": true,
+            "name": "tenant1",
+            "parentTenantName": "root"
+        },
+        {
+            "active": false,
+            "name": "tenant2",
+            "parentTenantName": "root"
+        }
+    ]
+}

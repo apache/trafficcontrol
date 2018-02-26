@@ -35,21 +35,55 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type PathParams map[string]string
-
 const PathParamsKey = "pathParams"
 
-func GetPathParams(ctx context.Context) (PathParams, error) {
+func GetPathParams(ctx context.Context) (map[string]string, error) {
 	val := ctx.Value(PathParamsKey)
 	if val != nil {
 		switch v := val.(type) {
-		case PathParams:
+		case map[string]string:
 			return v, nil
 		default:
-			return nil, fmt.Errorf("PathParams found with bad type: %T", v)
+			return nil, fmt.Errorf("path parameters found with bad type: %T", v)
 		}
 	}
 	return nil, errors.New("no PathParams found in Context")
+}
+
+func IsInt(s string) error {
+	_, err := strconv.Atoi(s)
+	if err != nil {
+		err = errors.New("cannot parse to integer")
+	}
+	return err
+}
+
+func IsBool(s string) error {
+	_, err := strconv.ParseBool(s)
+	if err != nil {
+		err = errors.New("cannot parse to boolean")
+	}
+	return err
+}
+
+func GetCombinedParams(r *http.Request) (map[string]string, error) {
+	combinedParams := make(map[string]string)
+	q := r.URL.Query()
+	for k, v := range q {
+		combinedParams[k] = v[0] //we take the first value and do not support multiple keys in query parameters
+	}
+
+	ctx := r.Context()
+	pathParams, err := GetPathParams(ctx)
+	if err != nil {
+		return combinedParams, fmt.Errorf("no path parameters: %s", err)
+	}
+	//path parameters will overwrite query parameters
+	for k, v := range pathParams {
+		combinedParams[k] = v
+	}
+
+	return combinedParams, nil
 }
 
 //decodes and validates a pointer to a struct implementing the Validator interface
@@ -63,6 +97,7 @@ func decodeAndValidateRequestBody(r *http.Request, v Validator, db *sqlx.DB) (in
 	}
 	payload := reflect.New(typ).Interface()
 	defer r.Body.Close()
+
 	if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
 		return nil, []error{err}
 	}
@@ -80,44 +115,24 @@ func ReadHandler(typeRef Reader, db *sqlx.DB) http.HandlerFunc {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
 		ctx := r.Context()
-		pathParams, err := GetPathParams(ctx)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
 
 		// Load the PathParams into the query parameters for pass through
-		q := r.URL.Query()
-		for k, v := range pathParams {
-			if k == `id` {
-				if _, err := strconv.Atoi(v); err != nil {
-					log.Errorf("Expected {id} to be an integer: %s", v)
-					handleErrs(http.StatusNotFound, errors.New("Resource not found.")) //matches perl response
-					return
-				}
-			}
-			q.Set(k, v)
+		params, err := GetCombinedParams(r)
+		if err != nil {
+			log.Errorf("unable to get parameters from request: %s", err)
+			handleErrs(http.StatusInternalServerError, err)
 		}
 
 		user, err := auth.GetCurrentUser(ctx)
 		if err != nil {
 			log.Errorf("unable to retrieve current user from context: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
+			return
 		}
 
-		results, err, errType := typeRef.Read(db, q, *user)
-		if err != nil {
-			switch errType {
-			case tc.SystemError:
-				handleErrs(http.StatusInternalServerError, err)
-			case tc.DataConflictError:
-				handleErrs(http.StatusBadRequest, err)
-			case tc.DataMissingError:
-				handleErrs(http.StatusNotFound, err)
-			default:
-				log.Errorf("received unknown ApiErrorType from read: %s\n", errType.String())
-				handleErrs(http.StatusInternalServerError, err)
-			}
+		results, errs, errType := typeRef.Read(db, params, *user)
+		if len(errs) > 0 {
+			tc.HandleErrorsWithType(errs, errType, handleErrs)
 			return
 		}
 		resp := struct {
@@ -170,6 +185,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 		if err != nil {
 			log.Errorf("unable to retrieve current user from context: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
+			return
 		}
 		id, err := strconv.Atoi(pathParams["id"])
 		if err != nil {
@@ -177,28 +193,34 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 			handleErrs(http.StatusBadRequest, errors.New("id from path not parseable as int"))
 			return
 		}
-		if id != u.GetID() {
+
+		iid, ok := u.GetID()
+		if !ok || iid != id {
 			handleErrs(http.StatusBadRequest, errors.New("id in body does not match id in path"))
 			return
 		}
+
+		// if the object has tenancy enabled, check that user is able to access the tenant
+		if t, ok := u.(Tenantable); ok {
+			authorized, err := t.IsTenantAuthorized(*user, db)
+			if err != nil {
+				handleErrs(http.StatusBadRequest, err)
+				return
+			}
+			if !authorized {
+				handleErrs(http.StatusForbidden, errors.New("not authorized on this tenant"))
+				return
+			}
+		}
+
 		//run the update and handle any error
 		err, errType := u.Update(db, *user)
 		if err != nil {
-			switch errType {
-			case tc.SystemError:
-				handleErrs(http.StatusInternalServerError, err)
-			case tc.DataConflictError:
-				handleErrs(http.StatusBadRequest, err)
-			case tc.DataMissingError:
-				handleErrs(http.StatusNotFound, err)
-			default:
-				log.Errorf("received unknown ApiErrorType from update: %s, updating: %s id: %d\n", errType.String(), u.GetType(), u.GetID())
-				handleErrs(http.StatusInternalServerError, err)
-			}
+			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
 			return
 		}
 		//auditing here
-		InsertChangeLog(ApiChange, Updated, u, *user, db)
+		CreateChangeLog(ApiChange, Updated, u, *user, db)
 		//form response to send across the wire
 		resp := struct {
 			Response interface{} `json:"response"`
@@ -239,6 +261,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 		if err != nil {
 			log.Errorf("unable to retrieve current user from context: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
+			return
 		}
 
 		id, err := strconv.Atoi(pathParams["id"])
@@ -247,24 +270,28 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 		d.SetID(id)
+
+		// if the object has tenancy enabled, check that user is able to access the tenant
+		if t, ok := d.(Tenantable); ok {
+			authorized, err := t.IsTenantAuthorized(*user, db)
+			if err != nil {
+				handleErrs(http.StatusBadRequest, err)
+				return
+			}
+			if !authorized {
+				handleErrs(http.StatusForbidden, errors.New("not authorized on this tenant"))
+				return
+			}
+		}
+
 		log.Debugf("calling delete on object: %++v", d) //should have id set now
 		err, errType := d.Delete(db, *user)
 		if err != nil {
-			switch errType {
-			case tc.SystemError:
-				handleErrs(http.StatusInternalServerError, err)
-			case tc.DataConflictError:
-				handleErrs(http.StatusBadRequest, err)
-			case tc.DataMissingError:
-				handleErrs(http.StatusNotFound, err)
-			default:
-				log.Errorf("received unknown ApiErrorType from delete: %s, deleting: %s id: %d\n", errType.String(), d.GetType(), d.GetID())
-				handleErrs(http.StatusInternalServerError, err)
-			}
+			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
 			return
 		}
 		//audit here
-		InsertChangeLog(ApiChange, Deleted, d, *user, db)
+		CreateChangeLog(ApiChange, Deleted, d, *user, db)
 		//
 		resp := struct {
 			tc.Alerts
@@ -281,7 +308,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-//this creates a handler function from the pointer to a struct implementing the Inserter interface
+//this creates a handler function from the pointer to a struct implementing the Creator interface
 //it must be immediately assigned to a local variable
 //   this generic handler encapsulates the logic for handling:
 //   *fetching the id from the path parameter
@@ -289,7 +316,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 //   *decoding and validating the struct
 //   *change log entry
 //   *forming and writing the body over the wire
-func CreateHandler(typeRef Inserter, db *sqlx.DB) http.HandlerFunc {
+func CreateHandler(typeRef Creator, db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
@@ -299,7 +326,7 @@ func CreateHandler(typeRef Inserter, db *sqlx.DB) http.HandlerFunc {
 			handleErrs(http.StatusBadRequest, errs...)
 			return
 		}
-		i := decoded.(Inserter)
+		i := decoded.(Creator)
 		log.Debugf("%++v", i)
 		//now we have a validated local object to insert
 
@@ -308,25 +335,29 @@ func CreateHandler(typeRef Inserter, db *sqlx.DB) http.HandlerFunc {
 		if err != nil {
 			log.Errorf("unable to retrieve current user from context: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
-		}
-
-		err, errType := i.Insert(db, *user)
-		if err != nil {
-			switch errType {
-			case tc.SystemError:
-				handleErrs(http.StatusInternalServerError, err)
-			case tc.DataConflictError:
-				handleErrs(http.StatusBadRequest, err)
-			case tc.DataMissingError:
-				handleErrs(http.StatusNotFound, err)
-			default:
-				log.Errorf("received unknown ApiErrorType from insert: %s, inserting: %s id: %d\n", errType.String(), i.GetType(), i.GetID())
-				handleErrs(http.StatusInternalServerError, err)
-			}
 			return
 		}
 
-		InsertChangeLog(ApiChange, Created, i, *user, db)
+		// if the object has tenancy enabled, check that user is able to access the tenant
+		if t, ok := i.(Tenantable); ok {
+			authorized, err := t.IsTenantAuthorized(*user, db)
+			if err != nil {
+				handleErrs(http.StatusBadRequest, err)
+				return
+			}
+			if !authorized {
+				handleErrs(http.StatusForbidden, errors.New("not authorized on this tenant"))
+				return
+			}
+		}
+
+		err, errType := i.Create(db, *user)
+		if err != nil {
+			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
+			return
+		}
+
+		CreateChangeLog(ApiChange, Created, i, *user, db)
 
 		resp := struct {
 			Response interface{} `json:"response"`

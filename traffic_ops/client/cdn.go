@@ -117,9 +117,9 @@ func (to *Session) GetCDNByName(name string) ([]tc.CDN, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// DELETE a CDN by CDN name
-func (to *Session) DeleteCDNByName(name string) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/name/%s", API_v2_CDNs, name)
+// DELETE a CDN by ID
+func (to *Session) DeleteCDNByID(id int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v2_CDNs, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

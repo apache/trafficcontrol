@@ -29,6 +29,7 @@ package tc
  */
 
 import (
+	"encoding/json"
 	"errors"
 	"strconv"
 	"strings"
@@ -189,9 +190,9 @@ func CacheStatusFromString(s string) CacheStatus {
 type DeepCachingType string
 
 const (
+	DeepCachingTypeNever   = DeepCachingType("") // default value
 	DeepCachingTypeAlways  = DeepCachingType("ALWAYS")
-	DeepCachingTypeNever   = DeepCachingType("NEVER")
-	DeepCachingTypeInvalid = DeepCachingType("")
+	DeepCachingTypeInvalid = DeepCachingType("INVALID")
 )
 
 // String returns a string representation of this deep caching type
@@ -200,7 +201,7 @@ func (t DeepCachingType) String() string {
 	case DeepCachingTypeAlways:
 		return string(t)
 	case DeepCachingTypeNever:
-		return string(t)
+		return "NEVER"
 	default:
 		return "INVALID"
 	}
@@ -212,6 +213,9 @@ func DeepCachingTypeFromString(s string) DeepCachingType {
 	case "always":
 		return DeepCachingTypeAlways
 	case "never":
+		return DeepCachingTypeNever
+	case "":
+		// default when omitted
 		return DeepCachingTypeNever
 	default:
 		return DeepCachingTypeInvalid
@@ -229,4 +233,9 @@ func (t *DeepCachingType) UnmarshalJSON(data []byte) error {
 		return errors.New(string(data) + " is not a DeepCachingType")
 	}
 	return nil
+}
+
+// MarshalJSON marshals into a JSON representation
+func (t DeepCachingType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.String())
 }

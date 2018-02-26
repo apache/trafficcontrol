@@ -40,12 +40,10 @@ func assignDeliveryServicesToServerHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
-		// p PathParams, username string, privLevel int
-		ctx := r.Context()
-		pathParams, err := api.GetPathParams(ctx)
+		params, err := api.GetCombinedParams(r)
 		if err != nil {
+			log.Errorf("unable to get parameters from request: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
-			return
 		}
 
 		var dsList []int
@@ -56,16 +54,14 @@ func assignDeliveryServicesToServerHandler(db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
-		q := r.URL.Query()
-
-		replaceQueryParameter := q["replace"][0]
+		replaceQueryParameter := params["replace"]
 		replace, err := strconv.ParseBool(replaceQueryParameter) //accepts 1, t, T, TRUE, true, True, 0, f, F, FALSE, false, False. for replace url parameter documentation
 		if err != nil {
 			handleErrs(http.StatusBadRequest, err)
 			return
 		}
 
-		serverPathParameter := pathParams["id"]
+		serverPathParameter := params["id"]
 		server, err := strconv.Atoi(serverPathParameter)
 		if err != nil {
 			handleErrs(http.StatusBadRequest, err)

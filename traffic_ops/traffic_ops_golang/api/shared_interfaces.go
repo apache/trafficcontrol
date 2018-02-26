@@ -20,8 +20,6 @@ package api
  */
 
 import (
-	"net/url"
-
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
@@ -34,13 +32,13 @@ type Updater interface {
 }
 
 type Identifier interface {
-	GetID() int
+	GetID() (int, bool)
 	GetType() string
 	GetAuditName() string
 }
 
-type Inserter interface {
-	Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType)
+type Creator interface {
+	Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType)
 	SetID(int)
 	Identifier
 	Validator
@@ -61,5 +59,5 @@ type Tenantable interface {
 }
 
 type Reader interface {
-	Read(db *sqlx.DB, v url.Values, user auth.CurrentUser) ([]interface{}, error, tc.ApiErrorType)
+	Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType)
 }

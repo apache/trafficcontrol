@@ -158,6 +158,10 @@ Many of the settings for the different servers in a Traffic Control CDN are cont
 +--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
 | geolocation6.polling.url | CRConfig.json | The location to get the IPv6 GeoLiteCity database from.                                                                               |
 +--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
+| maxmind.default.override | CRConfig.json | The destination geo coordinates to use for client location when maxmind returns a default location that matches the country code.     |
+|                          |               | This parameter can be specified multiple times with different values to support default overrides for multiple countries.             |
+|                          |               | Format: <CountryCode>;<Lat>,<Long>   Ex: US;37.751,-97.822                                                                            |
++--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
 
 These parameters should be set to reflect the local environment.
 

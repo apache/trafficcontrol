@@ -45,7 +45,6 @@ const ServerName = "traffic_ops_golang" + "/" + Version
 
 // AuthBase ...
 type AuthBase struct {
-	noAuth                 bool
 	secret                 string
 	getCurrentUserInfoStmt *sqlx.Stmt
 	override               Middleware
@@ -57,13 +56,6 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 		return a.override
 	}
 	return func(handlerFunc http.HandlerFunc) http.HandlerFunc {
-		if a.noAuth {
-			return func(w http.ResponseWriter, r *http.Request) {
-				ctx := r.Context()
-				ctx = context.WithValue(ctx, auth.CurrentUserKey, auth.CurrentUser{UserName: "-", ID: -1, PrivLevel: auth.PrivLevelInvalid})
-				handlerFunc(w, r.WithContext(ctx))
-			}
-		}
 		return func(w http.ResponseWriter, r *http.Request) {
 			// TODO remove, and make username available to wrapLogTime
 			start := time.Now()

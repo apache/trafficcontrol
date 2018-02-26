@@ -22,11 +22,11 @@ package cdn
 import (
 	"errors"
 	"fmt"
-	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
@@ -44,8 +44,8 @@ func GetRefType() *TOCDN {
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (cdn *TOCDN) GetID() int {
-	return cdn.ID
+func (cdn *TOCDN) GetID() (int, bool) {
+	return cdn.ID, true
 }
 
 func (cdn *TOCDN) GetAuditName() string {
@@ -71,144 +71,45 @@ func (cdn *TOCDN) Validate(db *sqlx.DB) []error {
 	return errs
 }
 
-func (cdn *TOCDN) Read(db *sqlx.DB, v url.Values, user auth.CurrentUser) ([]interface{}, error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
-	var err error
-
-	// Query Parameters to Database Query column mappings
-	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]string{
-		"domainName":    "domain_name",
-		"dnssecEnabled": "dnssec_enabled",
-		"id":            "id",
-		"name":          "name",
-	}
-
-	query, queryValues := dbhelpers.BuildQuery(v, selectCDNsQuery(), queryParamsToQueryCols)
-
-	rows, err = db.NamedQuery(query, queryValues)
-	if err != nil {
-		log.Errorf("Error querying CDNs: %v", err)
-		return nil, tc.DBError, tc.SystemError
-	}
-	defer rows.Close()
-
-	CDNs := []interface{}{}
-	for rows.Next() {
-		var s tc.CDN
-		if err = rows.StructScan(&s); err != nil {
-			log.Errorf("error parsing CDN rows: %v", err)
-			return nil, tc.DBError, tc.SystemError
-		}
-		CDNs = append(CDNs, s)
-	}
-
-	return CDNs, nil, tc.NoError
-}
-
-func selectCDNsQuery() string {
-	query := `SELECT
-dnssec_enabled,
-domain_name,
-id,
-last_updated,
-name
-
-FROM cdn c`
-	return query
-}
-
-//The TOCDN implementation of the Updater interface
-//all implementations of Updater should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a cdn with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil {
-			return
-		}
-		if err != nil {
-			tx.Rollback()
-			return
-		}
-		tx.Commit()
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	log.Debugf("about to run exec query: %s with cdn: %++v", updateCDNQuery(), cdn)
-	resultRows, err := tx.NamedQuery(updateCDNQuery(), cdn)
-	if err != nil {
-		if err, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(err)
-			if eType == tc.DataConflictError {
-				return errors.New("a cdn with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received error: %++v from update execution", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	var lastUpdated tc.Time
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	log.Debugf("lastUpdated: %++v", lastUpdated)
-	cdn.LastUpdated = lastUpdated
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no cdn found with this id"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
-		}
-	}
-	return nil, tc.NoError
-}
-
-//The TOCDN implementation of the Inserter interface
-//all implementations of Inserter should use transactions and return the proper errorType
+//The TOCDN implementation of the Creator interface
+//all implementations of Creator should use transactions and return the proper errorType
 //ParsePQUniqueConstraintError is used to determine if a cdn with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted cdn and have
 //to be added to the struct
-func (cdn *TOCDN) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (cdn *TOCDN) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
-		if tx == nil {
+		if tx == nil || !rollbackTransaction {
 			return
 		}
+		err := tx.Rollback()
 		if err != nil {
-			tx.Rollback()
-			return
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
 		}
-		tx.Commit()
 	}()
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
-	resultRows, err := tx.NamedQuery(insertCDNQuery(), cdn)
+	resultRows, err := tx.NamedQuery(insertQuery(), cdn)
 	if err != nil {
-		if err, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(err)
-			return errors.New("a cdn with " + err.Error()), eType
+		if pqErr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
+			if eType == tc.DataConflictError {
+				return errors.New("a cdn with " + err.Error()), eType
+			}
+			return err, eType
 		} else {
 			log.Errorf("received non pq error: %++v from create execution", err)
 			return tc.DBError, tc.SystemError
 		}
 	}
+	defer resultRows.Close()
+
 	var id int
 	var lastUpdated tc.Time
 	rowsAffected := 0
@@ -230,30 +131,140 @@ func (cdn *TOCDN) Insert(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 	}
 	cdn.SetID(id)
 	cdn.LastUpdated = lastUpdated
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
-//The CDN implementation of the Deleter interface
-//all implementations of Deleter should use transactions and return the proper errorType
-func (cdn *TOCDN) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (cdn *TOCDN) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+	var rows *sqlx.Rows
+
+	// Query Parameters to Database Query column mappings
+	// see the fields mapped in the SQL query
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"domainName":    dbhelpers.WhereColumnInfo{"domain_name", nil},
+		"dnssecEnabled": dbhelpers.WhereColumnInfo{"dnssec_enabled", nil},
+		"id":            dbhelpers.WhereColumnInfo{"id", api.IsInt},
+		"name":          dbhelpers.WhereColumnInfo{"name", nil},
+	}
+	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return nil, errs, tc.DataConflictError
+	}
+
+	query := selectQuery() + where + orderBy
+	log.Debugln("Query is ", query)
+
+	rows, err := db.NamedQuery(query, queryValues)
+	if err != nil {
+		log.Errorf("Error querying CDNs: %v", err)
+		return nil, []error{tc.DBError}, tc.SystemError
+	}
+	defer rows.Close()
+
+	CDNs := []interface{}{}
+	for rows.Next() {
+		var s tc.CDN
+		if err = rows.StructScan(&s); err != nil {
+			log.Errorf("error parsing CDN rows: %v", err)
+			return nil, []error{tc.DBError}, tc.SystemError
+		}
+		CDNs = append(CDNs, s)
+	}
+
+	return CDNs, []error{}, tc.NoError
+}
+
+//The TOCDN implementation of the Updater interface
+//all implementations of Updater should use transactions and return the proper errorType
+//ParsePQUniqueConstraintError is used to determine if a cdn with conflicting values exists
+//if so, it will return an errorType of DataConflict and the type should be appended to the
+//generic error message returned
+func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
-		if tx == nil {
+		if tx == nil || !rollbackTransaction {
 			return
 		}
+		err := tx.Rollback()
 		if err != nil {
-			tx.Rollback()
-			return
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
 		}
-		tx.Commit()
 	}()
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
-	log.Debugf("about to run exec query: %s with cdn: %++v", deleteCDNQuery(), cdn)
-	result, err := tx.NamedExec(deleteCDNQuery(), cdn)
+	log.Debugf("about to run exec query: %s with cdn: %++v", updateQuery(), cdn)
+	resultRows, err := tx.NamedQuery(updateQuery(), cdn)
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
+			if eType == tc.DataConflictError {
+				return errors.New("a cdn with " + err.Error()), eType
+			}
+			return err, eType
+		} else {
+			log.Errorf("received error: %++v from update execution", err)
+			return tc.DBError, tc.SystemError
+		}
+	}
+	defer resultRows.Close()
+
+	var lastUpdated tc.Time
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&lastUpdated); err != nil {
+			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
+			return tc.DBError, tc.SystemError
+		}
+	}
+	log.Debugf("lastUpdated: %++v", lastUpdated)
+	cdn.LastUpdated = lastUpdated
+	if rowsAffected != 1 {
+		if rowsAffected < 1 {
+			return errors.New("no cdn found with this id"), tc.DataMissingError
+		} else {
+			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
+	return nil, tc.NoError
+}
+
+//The CDN implementation of the Deleter interface
+//all implementations of Deleter should use transactions and return the proper errorType
+func (cdn *TOCDN) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
+	tx, err := db.Beginx()
+	defer func() {
+		if tx == nil || !rollbackTransaction {
+			return
+		}
+		err := tx.Rollback()
+		if err != nil {
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
+		}
+	}()
+
+	if err != nil {
+		log.Error.Printf("could not begin transaction: %v", err)
+		return tc.DBError, tc.SystemError
+	}
+	log.Debugf("about to run exec query: %s with cdn: %++v", deleteQuery(), cdn)
+	result, err := tx.NamedExec(deleteQuery(), cdn)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -269,10 +280,28 @@ func (cdn *TOCDN) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
-func updateCDNQuery() string {
+func selectQuery() string {
+	query := `SELECT
+dnssec_enabled,
+domain_name,
+id,
+last_updated,
+name
+
+FROM cdn c`
+	return query
+}
+
+func updateQuery() string {
 	query := `UPDATE
 cdn SET
 dnssec_enabled=:dnssec_enabled,
@@ -282,7 +311,7 @@ WHERE id=:id RETURNING last_updated`
 	return query
 }
 
-func insertCDNQuery() string {
+func insertQuery() string {
 	query := `INSERT INTO cdn (
 dnssec_enabled,
 domain_name,
@@ -293,7 +322,7 @@ name) VALUES (
 	return query
 }
 
-func deleteCDNQuery() string {
+func deleteQuery() string {
 	query := `DELETE FROM cdn
 WHERE id=:id`
 	return query

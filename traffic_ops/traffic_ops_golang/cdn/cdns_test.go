@@ -20,11 +20,11 @@ package cdn
  */
 
 import (
-	"net/url"
 	"testing"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
@@ -67,8 +67,6 @@ func TestReadCDNs(t *testing.T) {
 	cols := test.ColsFromStructByTag("db", tc.CDN{})
 	rows := sqlmock.NewRows(cols)
 
-	//TODO: drichardson - build helper to add these Rows from the struct values
-	//                    or by CSV if types get in the way
 	for _, ts := range testCDNs {
 		rows = rows.AddRow(
 			ts.DNSSECEnabled,
@@ -79,15 +77,35 @@ func TestReadCDNs(t *testing.T) {
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := url.Values{}
-	v.Set("dsId", "1")
+	v := map[string]string{"dsId": "1"}
 
-	servers, err, _ := refType.Read(db, v, auth.CurrentUser{})
-	if err != nil {
-		t.Errorf("cdn.Read expected: nil error, actual: %v", err)
+	servers, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+	if len(errs) > 0 {
+		t.Errorf("cdn.Read expected: no errors, actual: %v", errs)
 	}
 
 	if len(servers) != 2 {
 		t.Errorf("cdn.Read expected: len(servers) == 2, actual: %v", len(servers))
+	}
+}
+
+func TestInterfaces(t *testing.T) {
+	var i interface{}
+	i = &TOCDN{}
+
+	if _, ok := i.(api.Creator); !ok {
+		t.Errorf("cdn must be creator")
+	}
+	if _, ok := i.(api.Reader); !ok {
+		t.Errorf("cdn must be reader")
+	}
+	if _, ok := i.(api.Updater); !ok {
+		t.Errorf("cdn must be updater")
+	}
+	if _, ok := i.(api.Deleter); !ok {
+		t.Errorf("cdn must be deleter")
+	}
+	if _, ok := i.(api.Identifier); !ok {
+		t.Errorf("cdn must be Identifier")
 	}
 }

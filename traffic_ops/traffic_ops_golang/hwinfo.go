@@ -23,9 +23,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
 )
@@ -34,10 +35,15 @@ func hwInfoHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
-		q := r.URL.Query()
-		resp, err := getHWInfoResponse(q, db)
+		params, err := api.GetCombinedParams(r)
 		if err != nil {
+			log.Errorf("unable to get parameters from request: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
+		}
+
+		resp, errs, errType := getHWInfoResponse(params, db)
+		if len(errs) > 0 {
+			tc.HandleErrorsWithType(errs, errType, handleErrs)
 			return
 		}
 
@@ -52,38 +58,44 @@ func hwInfoHandler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func getHWInfoResponse(q url.Values, db *sqlx.DB) (*tc.HWInfoResponse, error) {
-	hwInfo, err := getHWInfo(q, db)
-	if err != nil {
-		return nil, fmt.Errorf("getting hwInfo response: %v", err)
+func getHWInfoResponse(params map[string]string, db *sqlx.DB) (*tc.HWInfoResponse, []error, tc.ApiErrorType) {
+	hwInfo, errs, errType := getHWInfo(params, db)
+	if len(errs) > 0 {
+		return nil, errs, errType
 	}
 
 	resp := tc.HWInfoResponse{
 		Response: hwInfo,
 	}
-	return &resp, nil
+	return &resp, nil, tc.NoError
 }
 
-func getHWInfo(v url.Values, db *sqlx.DB) ([]tc.HWInfo, error) {
+func getHWInfo(params map[string]string, db *sqlx.DB) ([]tc.HWInfo, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 	var err error
 
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
-	queryParamsToSQLCols := map[string]string{
-		"id":             "h.id",
-		"serverHostName": "s.serverHostName",
-		"serverId":       "s.serverid",
-		"description":    "h.description",
-		"val":            "h.val",
-		"lastUpdated":    "h.last_updated",
+	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
+		"id":             dbhelpers.WhereColumnInfo{"h.id", api.IsInt},
+		"serverHostName": dbhelpers.WhereColumnInfo{"s.host_name", nil},
+		"serverId":       dbhelpers.WhereColumnInfo{"s.id", api.IsInt}, // TODO: this can be either s.id or h.serverid not sure what makes the most sense
+		"description":    dbhelpers.WhereColumnInfo{"h.description", nil},
+		"val":            dbhelpers.WhereColumnInfo{"h.val", nil},
+		"lastUpdated":    dbhelpers.WhereColumnInfo{"h.last_updated", nil}, //TODO: this doesn't appear to work needs debugging
 	}
 
-	query, queryValues := dbhelpers.BuildQuery(v, selectHWInfoQuery(), queryParamsToSQLCols)
+	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
+	if len(errs) > 0 {
+		return nil, errs, tc.DataConflictError
+	}
+
+	query := selectHWInfoQuery() + where + orderBy
+	log.Debugln("Query is ", query)
 
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, err
+		return nil, []error{err}, tc.SystemError
 	}
 	defer rows.Close()
 
@@ -91,11 +103,11 @@ func getHWInfo(v url.Values, db *sqlx.DB) ([]tc.HWInfo, error) {
 	for rows.Next() {
 		var s tc.HWInfo
 		if err = rows.StructScan(&s); err != nil {
-			return nil, fmt.Errorf("getting hwInfo: %v", err)
+			return nil, []error{fmt.Errorf("getting hwInfo: %v", err)}, tc.SystemError
 		}
 		hwInfo = append(hwInfo, s)
 	}
-	return hwInfo, nil
+	return hwInfo, nil, tc.NoError
 }
 
 func selectHWInfoQuery() string {

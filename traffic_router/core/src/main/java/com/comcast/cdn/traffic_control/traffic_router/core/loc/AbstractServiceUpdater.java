@@ -125,9 +125,15 @@ public abstract class AbstractServiceUpdater {
 		File newDB = null;
 		boolean isModified = true;
 
+		final String databaseURL = getDataBaseURL();
+		if (databaseURL == null) {
+			LOGGER.warn("[" + getClass().getSimpleName() + "] Skipping download/update: database URL is null");
+			return false;
+		}
+
 		try {
 			try {
-				newDB = downloadDatabase(getDataBaseURL(), existingDB);
+				newDB = downloadDatabase(databaseURL, existingDB);
 				trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Check");
 
 				// if the remote db's timestamp is less than or equal to ours, the above returns existingDB

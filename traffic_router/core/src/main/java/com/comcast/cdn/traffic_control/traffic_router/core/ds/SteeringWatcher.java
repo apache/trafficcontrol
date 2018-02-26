@@ -15,17 +15,12 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.ds;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.AbstractResourceWatcher;
 import org.apache.log4j.Logger;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class SteeringWatcher extends AbstractResourceWatcher {
 	private static final Logger LOGGER = Logger.getLogger(SteeringWatcher.class);
 	private SteeringRegistry steeringRegistry;
-	private CacheRegister cacheRegister;
 
 	public static final String DEFAULT_STEERING_DATA_URL = "https://${toHostname}/internal/api/1.2/steering.json";
 
@@ -33,26 +28,13 @@ public class SteeringWatcher extends AbstractResourceWatcher {
 		setDatabaseUrl(DEFAULT_STEERING_DATA_URL);
 	}
 
-	public void setCacheRegister(final CacheRegister cacheRegister) {
-		this.cacheRegister = cacheRegister;
-	}
-
 	@Override
 	public boolean useData(final String data) {
 		try {
+			// NOTE: it is likely that the steering data will contain xml_ids for delivery services
+			// that haven't been added to the CRConfig yet. This is okay because the SteeringRegistry
+			// will only be queried for Delivery Service xml_ids that exist in CRConfig
 			steeringRegistry.update(data);
-			if (cacheRegister != null) {
-				final List<String> invalidOnes = new ArrayList<String>();
-
-				for (final Steering steering : steeringRegistry.getAll()) {
-					if (cacheRegister.getDeliveryService(steering.getDeliveryService()) == null) {
-						LOGGER.warn("Steering data from " + dataBaseURL + " contains delivery service id reference '" + steering.getDeliveryService() + "' that's not in cr-config");
-						invalidOnes.add(steering.getDeliveryService());
-					}
-				}
-
-				steeringRegistry.removeAll(invalidOnes);
-			}
 
 			return true;
 		} catch (Exception e) {

@@ -225,6 +225,32 @@ my %definition_for = (
 		},
 	},
 
+	read_only_root => {
+		new   => 'TmUser',
+		using => {
+			id                   => 1000,
+			username             => 'read-only-root',
+			tenant_id            => 10**9,
+			role                 => 2,
+			uid                  => '1',
+			gid                  => '1',
+			local_passwd         => $local_passwd,
+			confirm_local_passwd => $local_passwd,
+			full_name            => 'The Read Only User for the "root" tenant',
+			email                => 'read-only-root@kabletown.com',
+			new_user             => '1',
+			address_line1        => 'address_line3',
+			address_line2        => 'address_line4',
+			city                 => 'city',
+			state_or_province    => 'state_or_province',
+			phone_number         => '222-222-2222',
+			postal_code          => '80122',
+			country              => 'United States',
+			token                => '',
+			registration_sent    => '1999-01-01 00:00:00',
+		},
+	},
+
 );
 
 sub get_definition {

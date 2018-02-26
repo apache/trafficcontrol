@@ -45,19 +45,19 @@ func TestValidateErrors(t *testing.T) {
 
 	expected := []string{
 		"'active' is required",
-		"'cdnId' is required",
+		"'cdnId' cannot be blank",
+		"'displayName' the length must be between 1 and 48",
+		"'dscp' is required",
 		"'geoLimit' is required",
 		"'geoProvider' is required",
 		"'infoUrl' must be a valid URL",
 		"'initialDispersion' must be greater than zero",
 		"'logsEnabled' is required",
 		"'orgServerFqdn' must be a valid URL",
+		"'regionalGeoBlocking' is required",
 		"'routingName' cannot contain periods",
-		"'routingName' the length must be between 1 and 48",
-		"'typeId' is required",
+		"'typeId' cannot be blank",
 		"'xmlId' cannot contain spaces",
-		"'xmlId' is required",
-		"'xmlId' the length must be between 1 and 48",
 	}
 	sort.Strings(expected)
 	expectedFmt, _ := json.MarshalIndent(expected, "", "  ")
@@ -69,18 +69,6 @@ func TestValidateErrors(t *testing.T) {
 		}
 	}
 
-}
-
-func findNeedle(needle string, haystack []string) bool {
-	found := false
-	for _, s := range haystack {
-		if s == needle {
-			found = true
-			break
-		}
-		//fmt.Printf("(%t) Comparing [%v] with [%v]\n", found, exp, et)
-	}
-	return found
 }
 
 func errorTestCase() string {
@@ -101,7 +89,7 @@ func errorTestCase() string {
    "dnsBypassIp": "127.0.0.1",
    "dnsBypassIp6": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
    "dnsBypassTTL": 10,
-   "dscp": 0,
+   "dscp": null,
    "edgeHeaderRewrite": "cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-config proxy.config.http.transaction_active_timeout_in 10800 [L]",
    "geoLimitCountries": "Can,Mex",
    "geoRedirectURL": "http://localhost/redirect",
@@ -139,4 +127,15 @@ func errorTestCase() string {
  }
 `
 	return errorTestCase
+}
+
+func findNeedle(needle string, haystack []string) bool {
+	found := false
+	for _, s := range haystack {
+		if s == needle {
+			found = true
+			break
+		}
+	}
+	return found
 }
