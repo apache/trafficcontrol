@@ -38,7 +38,7 @@ type ChangeLog struct {
 }
 
 type ChangeLogger interface {
-	ChangeLogMessage(action string, db *sqlx.DB) (string, error)
+	ChangeLogMessage(action string) (string, error)
 }
 
 const (
@@ -53,7 +53,7 @@ func CreateChangeLog(level string, action string, i Identifier, user auth.Curren
 	message := action + " " + i.GetType() + ": " + i.GetAuditName() + " id: " + strconv.Itoa(id)
 	// if the object has its own log message generation, use it
 	if t, ok := i.(ChangeLogger); ok {
-		m, err := t.ChangeLogMessage(action, db)
+		m, err := t.ChangeLogMessage(action)
 		if err != nil {
 			log.Errorf("error %++v creating log message for %++v", err, t)
 			// use the default message in this case

@@ -431,7 +431,7 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 }
 
 // ChangeLogMessage implements the api.ChangeLogger interface for a custom log message
-func (req *TODeliveryServiceRequest) ChangeLogMessage(action string, db *sqlx.DB) (string, error) {
+func (req *TODeliveryServiceRequest) ChangeLogMessage(action string) (string, error) {
 	changeType := "unknown change type"
 	if req.ChangeType != nil {
 		changeType = *req.ChangeType
