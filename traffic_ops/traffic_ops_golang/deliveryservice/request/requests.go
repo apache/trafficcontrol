@@ -430,17 +430,23 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 	return nil, tc.NoError
 }
 
+func (req *TODeliveryServiceRequest) getXMLID() string {
+	if req.DeliveryService == nil || req.DeliveryService.XMLID == nil {
+		id, _ := req.GetID()
+		strconv.Itoa(id)
+	}
+	return *req.DeliveryService.XMLID
+}
+
 // ChangeLogMessage implements the api.ChangeLogger interface for a custom log message
-func (req *TODeliveryServiceRequest) ChangeLogMessage(action string) (string, error) {
+func (req TODeliveryServiceRequest) ChangeLogMessage(action string) (string, error) {
 	changeType := "unknown change type"
 	if req.ChangeType != nil {
 		changeType = *req.ChangeType
 	}
-	xmlID := "unknown"
-	if req.DeliveryService != nil && req.DeliveryService.XMLID != nil {
-		xmlID = *req.DeliveryService.XMLID
-	}
-	message := action + ` ` + req.GetType() + ` to '` + changeType + `' for deliveryservice '` + xmlID + `'`
+	// use ID in case don't have access to XMLID (e.g. on DELETE)
+	message := action + ` ` + req.GetType() + ` of type '` + changeType + `' for deliveryservice '` + req.getXMLID() + `'`
+
 	return message, nil
 }
 
@@ -496,7 +502,9 @@ WHERE id=:id`
 
 ////////////////////////////////////////////////////////////////
 // Assignment change
-type deliveryServiceRequestAssignment TODeliveryServiceRequest
+type deliveryServiceRequestAssignment struct {
+	TODeliveryServiceRequest
+}
 
 // GetAssignRefType is used to decode the JSON for deliveryservice_request assignment
 func GetAssignRefType() *deliveryServiceRequestAssignment {
@@ -527,7 +535,7 @@ func (req *deliveryServiceRequestAssignment) Update(db *sqlx.DB, user auth.Curre
 
 	// Only assigneeID changes -- nothing else
 	assigneeID := req.AssigneeID
-	*req = deliveryServiceRequestAssignment(current)
+	*req = deliveryServiceRequestAssignment{current}
 	req.AssigneeID = assigneeID
 
 	rollbackTransaction := true
@@ -571,31 +579,33 @@ func (req *deliveryServiceRequestAssignment) Update(db *sqlx.DB, user auth.Curre
 		log.Errorln("Could not commit transaction: ", err)
 		return tc.DBError, tc.SystemError
 	}
+
 	rollbackTransaction = false
 	return nil, tc.NoError
-}
-
-func (req *deliveryServiceRequestAssignment) GetID() (int, bool) {
-	return (*TODeliveryServiceRequest)(req).GetID()
-}
-
-func (req *deliveryServiceRequestAssignment) GetType() string {
-	return (*TODeliveryServiceRequest)(req).GetType()
-}
-
-func (req *deliveryServiceRequestAssignment) GetAuditName() string {
-	return (*TODeliveryServiceRequest)(req).GetAuditName()
 }
 
 func (req *deliveryServiceRequestAssignment) Validate(db *sqlx.DB) []error {
 	return nil
 }
 
+// ChangeLogMessage implements the api.ChangeLogger interface for a custom log message
+func (req deliveryServiceRequestAssignment) ChangeLogMessage(action string) (string, error) {
+	a := "NONE"
+	if req.Assignee != nil {
+		a = *req.Assignee
+	}
+	message := `Changed assignee of ‘` + req.getXMLID() + `’ ` + req.GetType() + ` to '` + a + `'`
+
+	return message, nil
+}
+
 ////////////////////////////////////////////////////////////////
 // Status change
 
 // deliveryServiceRequestStatus implements interfaces needed to update the request status only
-type deliveryServiceRequestStatus TODeliveryServiceRequest
+type deliveryServiceRequestStatus struct {
+	TODeliveryServiceRequest
+}
 
 // GetStatusRefType is used to decode the JSON for deliveryservice_request status change
 func GetStatusRefType() *deliveryServiceRequestStatus {
@@ -609,7 +619,7 @@ func (req *deliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUs
 	// for status transition
 
 	// get original
-	var current deliveryServiceRequestStatus
+	var current TODeliveryServiceRequest
 	if req.ID == nil {
 		log.Errorf("error updating DeliveryServiceRequestStatus: ID is nil")
 	}
@@ -625,7 +635,7 @@ func (req *deliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUs
 
 	// keep everything else the same -- only update status
 	st := req.Status
-	*req = current
+	*req = deliveryServiceRequestStatus{current}
 	req.Status = st
 
 	rollbackTransaction := true
@@ -665,26 +675,18 @@ func (req *deliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUs
 		log.Errorln("Could not commit transaction: ", err)
 		return tc.DBError, tc.SystemError
 	}
+
 	rollbackTransaction = false
 	return nil, tc.NoError
-}
-
-// GetID from base type
-func (req *deliveryServiceRequestStatus) GetID() (int, bool) {
-	return (*TODeliveryServiceRequest)(req).GetID()
-}
-
-// GetType from base type
-func (req *deliveryServiceRequestStatus) GetType() string {
-	return (*TODeliveryServiceRequest)(req).GetType()
-}
-
-// GetAuditName from base type
-func (req *deliveryServiceRequestStatus) GetAuditName() string {
-	return (*TODeliveryServiceRequest)(req).GetAuditName()
 }
 
 // Validate is not needed when only Status is updated
 func (req *deliveryServiceRequestStatus) Validate(db *sqlx.DB) []error {
 	return nil
+}
+
+// ChangeLogMessage implements the api.ChangeLogger interface for a custom log message
+func (req deliveryServiceRequestStatus) ChangeLogMessage(action string) (string, error) {
+	message := `Changed status of ‘` + req.getXMLID() + `’ ` + req.GetType() + ` to '` + string(*req.Status) + `'`
+	return message, nil
 }
