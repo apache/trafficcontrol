@@ -10,9 +10,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/grove/cachedata"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin"
-	"github.com/apache/incubator-trafficcontrol/grove/plugin/beforeparentrequest"
-	"github.com/apache/incubator-trafficcontrol/grove/plugin/beforerespond"
-	"github.com/apache/incubator-trafficcontrol/grove/plugin/onrequest"
+
 	"github.com/apache/incubator-trafficcontrol/grove/remap"
 	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 	"github.com/apache/incubator-trafficcontrol/grove/stat"
@@ -162,8 +160,8 @@ func makeRuleThrottlers(remapper remap.HTTPRequestRemapper, limit uint64) map[st
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reqTime := time.Now()
 
-	onReqData := onrequest.Data{W: w, R: r, Stats: h.stats, StatRules: h.remapper.StatRules(), HTTPConns: h.httpConns, HTTPSConns: h.httpsConns, InterfaceName: h.interfaceName}
-	if stop := h.plugins.OnRequest.Call(h.remapper.PluginCfg(), onReqData); stop == true {
+	onReqData := plugin.OnRequestData{W: w, R: r, Stats: h.stats, StatRules: h.remapper.StatRules(), HTTPConns: h.httpConns, HTTPSConns: h.httpsConns, InterfaceName: h.interfaceName}
+	if stop := h.plugins.OnRequest(h.remapper.PluginCfg(), onReqData); stop == true {
 		return
 	}
 
@@ -227,8 +225,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	cacheObj, ok := cache.Get(cacheKey)
 	if !ok {
 		log.Debugf("cache.Handler.ServeHTTP: '%v' not in cache\n", cacheKey)
-		beforeParentRequestData := beforeparentrequest.Data{r}
-		h.plugins.BeforeParentRequest.Call(remappingProducer.PluginCfg(), beforeParentRequestData)
+		beforeParentRequestData := plugin.BeforeParentRequestData{r}
+		h.plugins.OnBeforeParentRequest(remappingProducer.PluginCfg(), beforeParentRequestData)
 		cacheObj, err := retrier.Get(r, nil)
 		if err != nil {
 			log.Errorf("retrying get error (in uncached): %v\n", err)
@@ -244,8 +242,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		responder.SetResponse(&codePtr, &hdrsPtr, &bodyPtr, connectionClose)
 		responder.OriginReqSuccess = true
 		responder.ProxyStr = cacheObj.ProxyURL
-		beforeRespData := beforerespond.Data{r, cacheObj, &codePtr, &hdrsPtr, &bodyPtr}
-		h.plugins.BeforeRespond.Call(remappingProducer.PluginCfg(), beforeRespData)
+		beforeRespData := plugin.BeforeRespondData{r, cacheObj, &codePtr, &hdrsPtr, &bodyPtr}
+		h.plugins.OnBeforeRespond(remappingProducer.PluginCfg(), beforeRespData)
 		responder.Do()
 		return
 	}
@@ -254,8 +252,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	canReuseStored := remap.CanReuseStored(reqHeaders, cacheObj.RespHeaders, reqCacheControl, cacheObj.RespCacheControl, cacheObj.ReqHeaders, cacheObj.ReqRespTime, cacheObj.RespRespTime, h.strictRFC)
 
 	if canReuseStored != remapdata.ReuseCan { // run the BeforeParentRequest hook for revalidations / ReuseCannot
-		beforeParentRequestData := beforeparentrequest.Data{r}
-		h.plugins.BeforeParentRequest.Call(remappingProducer.PluginCfg(), beforeParentRequestData)
+		beforeParentRequestData := plugin.BeforeParentRequestData{r}
+		h.plugins.OnBeforeParentRequest(remappingProducer.PluginCfg(), beforeParentRequestData)
 	}
 
 	switch canReuseStored {
@@ -296,7 +294,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	responder.OriginCode = cacheObj.OriginCode
 	responder.OriginBytes = cacheObj.Size
 	responder.ProxyStr = cacheObj.ProxyURL
-	beforeRespData := beforerespond.Data{r, cacheObj, &codePtr, &hdrsPtr, &bodyPtr}
-	h.plugins.BeforeRespond.Call(remappingProducer.PluginCfg(), beforeRespData)
+	beforeRespData := plugin.BeforeRespondData{r, cacheObj, &codePtr, &hdrsPtr, &bodyPtr}
+	h.plugins.OnBeforeRespond(remappingProducer.PluginCfg(), beforeRespData)
 	responder.Do()
 }

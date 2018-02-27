@@ -1,4 +1,4 @@
-package onrequest
+package plugin
 
 import (
 	"bufio"
@@ -19,21 +19,19 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
-const StatsName = "stats_endpoint"
-
 func init() {
-	AddPlugin(10000, StatsName, stats, nil)
+	AddPlugin(10000, Funcs{onRequest: stats})
 }
 
 const StatsEndpoint = "/_astats"
 
-func stats(icfg interface{}, d Data) bool {
+func stats(icfg interface{}, d OnRequestData) bool {
 	if !strings.HasPrefix(d.R.URL.Path, StatsEndpoint) {
-		log.Debugf("plugin onrequest: " + StatsName + " returning, not in path '" + d.R.URL.Path + "'\n")
+		log.Debugf("plugin onrequest http_stats returning, not in path '" + d.R.URL.Path + "'\n")
 		return false
 	}
 
-	log.Debugf("plugin onrequest " + StatsName + " calling\n")
+	log.Debugf("plugin onrequest http_stats calling\n")
 
 	w := d.W
 	req := d.R
