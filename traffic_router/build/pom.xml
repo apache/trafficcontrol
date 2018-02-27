@@ -214,7 +214,7 @@
 							</mappings>
 							<requires>
 								<require>jdk</require>
-								<require>tomcat</require>
+								<require>tomcat-tr</require>
 								<require>apr</require>
 								<require>tomcat-native</require>
 								<require>tar</require>
