@@ -39,8 +39,6 @@ import org.xbill.DNS.Zone;
 import org.xbill.DNS.EDNSOption;
 import org.xbill.DNS.ClientSubnetOption;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 
 
@@ -52,6 +50,7 @@ public class NameServer {
 	private static final int FLAG_SIGONLY = 2;
 
 	private static final Logger LOGGER = Logger.getLogger(NameServer.class);
+	private boolean ecsEnable = false;
 	/**
 	 * 
 	 */
@@ -90,8 +89,6 @@ public class NameServer {
 			List<EDNSOption> list = Collections.EMPTY_LIST;
 			boolean dnssecRequest = false;
 			int qtype = question.getType();
-			final CacheRegister data = trafficRouterManager.getTrafficRouter().getCacheRegister();
-			final boolean ecsEnable = JsonUtils.optBoolean(data.getConfig(), "ecsEnable", false);
 			int flags = 0;
 
 			if ((qopt != null) && (qopt.getVersion() > MAX_SUPPORTED_EDNS_VERS)) {
@@ -121,7 +118,7 @@ public class NameServer {
 			}
 			InetAddress ipaddr = null;
 			int nmask = 0;
-			if (ecsEnable) {
+			if (isEcsEnable()) {
 				for (final EDNSOption option : list) {
 					assert (option instanceof ClientSubnetOption);
 					// If there are multiple ClientSubnetOptions in the Option RR, then
@@ -132,7 +129,7 @@ public class NameServer {
 					}
 				}
 			}
-			if ((ipaddr!= null) && (ecsEnable)) {
+			if ((ipaddr!= null) && (isEcsEnable())) {
 				LOGGER.debug("DNS: Using Client IP Address from ECS Option" + ipaddr.getHostAddress() + "/" 
 						+ nmask);
 				lookup(qname, qtype, ipaddr, response, flags, dnssecRequest, builder);
@@ -146,7 +143,7 @@ public class NameServer {
 			
 			// Check if we had incoming ClientSubnetOption in Option RR, then we need
 			// to return with the response, setting the scope subnet as well
-			if ((nmask != 0) && (ecsEnable)) {	
+			if ((nmask != 0) && (isEcsEnable())) {
 				final ClientSubnetOption cso = new ClientSubnetOption(nmask, nmask, ipaddr);
 				final List<ClientSubnetOption> csoList = new ArrayList<ClientSubnetOption>(1);
 				csoList.add(cso);	
@@ -419,4 +416,13 @@ public class NameServer {
 		 */
 		ZoneManager.destroy();
 	}
+
+	public boolean isEcsEnable() {
+		return ecsEnable;
+	}
+
+	public void setEcsEnable(final boolean ecsEnable) {
+		this.ecsEnable = ecsEnable;
+	}
+
 }

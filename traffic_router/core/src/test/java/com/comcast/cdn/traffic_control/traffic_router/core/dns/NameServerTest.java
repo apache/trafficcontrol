@@ -6,6 +6,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.JsonNode;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Header.class, NameServer.class, TrafficRouterManager.class, TrafficRouter.class, CacheRegister.class})
@@ -52,7 +54,7 @@ public class NameServerTest {
         trafficRouter = mock(TrafficRouter.class);
         CacheRegister cacheRegister = mock(CacheRegister.class);
         doReturn(cacheRegister).when(trafficRouter).getCacheRegister();
-        JsonNode js = JSONNodeFactory.instance.objectNode().put("ecsEnable", true);
+        JsonNode js = JsonNodeFactory.instance.objectNode().put("ecsEnable", true);
         when(cacheRegister.getConfig()).thenReturn(js);
         
         Name m_an, m_host, m_admin;
@@ -94,7 +96,8 @@ public class NameServerTest {
         DNSAccessRecord.Builder builder = new DNSAccessRecord.Builder(1L, client);
 
         nameServer.setTrafficRouterManager(trafficRouterManager);
-	
+        nameServer.setEcsEnable(JsonUtils.optBoolean(trafficRouter.getCacheRegister().getConfig(), "ecsEnable", false)); // this mimics what happens in ConfigHandler
+
         // Following is needed to mock this call: zone = trafficRouterManager.getTrafficRouter().getZone(qname, qtype, clientAddress, dnssecRequest, builder);
         when(trafficRouterManager.getTrafficRouter()).thenReturn(trafficRouter);
         when(trafficRouter.getZone(any(Name.class), any(int.class), eq(ipaddr), any(boolean.class), any(DNSAccessRecord.Builder.class))).thenReturn(zone);
@@ -112,6 +115,7 @@ public class NameServerTest {
         assertThat(nmask, equalTo(option.getSourceNetmask()));
         assertThat(nmask, equalTo(option.getScopeNetmask()));
         assertThat(ipaddr, equalTo(option.getAddress()));
+        nameServer.setEcsEnable(false);
     }
     
     @Test
@@ -146,6 +150,7 @@ public class NameServerTest {
         DNSAccessRecord.Builder builder = new DNSAccessRecord.Builder(1L, client);
 
         nameServer.setTrafficRouterManager(trafficRouterManager);
+        nameServer.setEcsEnable(JsonUtils.optBoolean(trafficRouter.getCacheRegister().getConfig(), "ecsEnable", false)); // this mimics what happens in ConfigHandler
 	
         // Following is needed to mock this call: zone = trafficRouterManager.getTrafficRouter().getZone(qname, qtype, clientAddress, dnssecRequest, builder);
         when(trafficRouterManager.getTrafficRouter()).thenReturn(trafficRouter);
@@ -165,6 +170,7 @@ public class NameServerTest {
         assertThat(nmask2, equalTo(option.getSourceNetmask()));
         assertThat(nmask2, equalTo(option.getScopeNetmask()));
         assertThat(ipaddr2, equalTo(option.getAddress()));
+        nameServer.setEcsEnable(false);
     }
    
 }
