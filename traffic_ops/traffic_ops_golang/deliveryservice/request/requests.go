@@ -49,7 +49,7 @@ func GetRefType() *TODeliveryServiceRequest {
 //Implementation of the Identifier, Validator interface functions
 
 // GetID is part of the tc.Identifier interface
-func (req *TODeliveryServiceRequest) GetID() (int, bool) {
+func (req TODeliveryServiceRequest) GetID() (int, bool) {
 	if req.ID == nil {
 		return 0, false
 	}
@@ -57,15 +57,12 @@ func (req *TODeliveryServiceRequest) GetID() (int, bool) {
 }
 
 // GetAuditName is part of the tc.Identifier interface
-func (req *TODeliveryServiceRequest) GetAuditName() string {
-	if req.ID == nil {
-		return "0"
-	}
-	return strconv.Itoa(*req.ID)
+func (req TODeliveryServiceRequest) GetAuditName() string {
+	return req.getXMLID()
 }
 
 // GetType is part of the tc.Identifier interface
-func (req *TODeliveryServiceRequest) GetType() string {
+func (req TODeliveryServiceRequest) GetType() string {
 	return "deliveryservice_request"
 }
 
@@ -160,7 +157,7 @@ LEFT OUTER JOIN tm_user e ON r.last_edited_by_id = e.id
 }
 
 // IsTenantAuthorized implements the Tenantable interface to ensure the user is authorized on the deliveryservice tenant
-func (req *TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error) {
+func (req TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error) {
 	ds := req.DeliveryService
 	if ds == nil {
 		// No deliveryservice applied yet -- wide open
@@ -375,6 +372,7 @@ func (req *TODeliveryServiceRequest) Create(db *sqlx.DB, user auth.CurrentUser) 
 // Delete removes the request from the db
 func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	var st tc.RequestStatus
+	log.Debugln("DELETING REQUEST WITH ID ", strconv.Itoa(*req.ID))
 	if req.ID == nil {
 		return errors.New("cannot delete deliveryservice_request -- ID is nil"), tc.SystemError
 	}
@@ -404,21 +402,26 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 		log.Error.Println("could not begin transaction: ", err.Error())
 		return tc.DBError, tc.SystemError
 	}
-	log.Debugf("about to run exec query: %s with ds request: %++v", deleteRequestQuery(), req)
-	result, err := tx.NamedExec(deleteRequestQuery(), req)
+	query := `DELETE FROM deliveryservice_request WHERE id=` + strconv.Itoa(*req.ID)
+	log.Debugf("about to run exec query: %s", query)
+
+	result, err := tx.Exec(query)
 	if err != nil {
 		log.Errorln("received error from delete execution: ", err.Error())
 		return tc.DBError, tc.SystemError
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
+		log.Errorln("error getting rows affected: ", err.Error())
 		return tc.DBError, tc.SystemError
 	}
 	if rowsAffected < 1 {
+		log.Errorln("no request with that id found")
 		return errors.New("no request with that id found"), tc.DataMissingError
 	}
 	if rowsAffected > 1 {
-		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
+		log.Errorln("the delete affected too many rows")
+		return fmt.Errorf("this delete affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 	err = tx.Commit()
 	if err != nil {
@@ -430,10 +433,10 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 	return nil, tc.NoError
 }
 
-func (req *TODeliveryServiceRequest) getXMLID() string {
+func (req TODeliveryServiceRequest) getXMLID() string {
 	if req.DeliveryService == nil || req.DeliveryService.XMLID == nil {
 		id, _ := req.GetID()
-		strconv.Itoa(id)
+		return strconv.Itoa(id)
 	}
 	return *req.DeliveryService.XMLID
 }
@@ -446,7 +449,6 @@ func (req TODeliveryServiceRequest) ChangeLogMessage(action string) (string, err
 	}
 	// use ID in case don't have access to XMLID (e.g. on DELETE)
 	message := action + ` ` + req.GetType() + ` of type '` + changeType + `' for deliveryservice '` + req.getXMLID() + `'`
-
 	return message, nil
 }
 
@@ -580,11 +582,18 @@ func (req *deliveryServiceRequestAssignment) Update(db *sqlx.DB, user auth.Curre
 		return tc.DBError, tc.SystemError
 	}
 
+	// update req with current info
+	err = db.QueryRowx(selectDeliveryServiceRequestsQuery() + ` WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(req)
+	if err != nil {
+		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
+		return err, tc.SystemError
+	}
+
 	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
-func (req *deliveryServiceRequestAssignment) Validate(db *sqlx.DB) []error {
+func (req deliveryServiceRequestAssignment) Validate(db *sqlx.DB) []error {
 	return nil
 }
 
@@ -676,12 +685,19 @@ func (req *deliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUs
 		return tc.DBError, tc.SystemError
 	}
 
+	// update req with current info
+	err = db.QueryRowx(selectDeliveryServiceRequestsQuery() + ` WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(req)
+	if err != nil {
+		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
+		return err, tc.SystemError
+	}
+
 	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
 // Validate is not needed when only Status is updated
-func (req *deliveryServiceRequestStatus) Validate(db *sqlx.DB) []error {
+func (req deliveryServiceRequestStatus) Validate(db *sqlx.DB) []error {
 	return nil
 }
 
