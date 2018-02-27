@@ -454,6 +454,11 @@ Users
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``deepCachingType``      | string | When to do Deep Caching for this Delivery Service:                                                                                   |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - NEVER (default)                                                                                                                    |
+  |                          |        | - ALWAYS                                                                                                                             |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``displayName``          | string | The display name of the delivery service.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``dnsBypassIp``          | string | The IPv4 IP to use for bypass on a DNS deliveryservice  - bypass starts when serving more than the                                   |
@@ -592,6 +597,7 @@ Users
             "cdnId": "2",
             "cdnName": "over-the-top",
             "checkPath": "",
+            "deepCachingType": "NEVER",
             "displayName": "My Cool Delivery Service",
             "dnsBypassCname": "",
             "dnsBypassIp": "",

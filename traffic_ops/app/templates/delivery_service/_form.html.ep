@@ -617,4 +617,16 @@
 			<% } %>
 		<% } %>
 	</div>
+	<div class="block form-row" id="deep_caching_type">
+		<% unless (field('ds.deep_caching_type')->valid) { %>
+			<span class="field-with-error"><%= field('ds.deep_caching_type')->error %></span>
+		<% } %>
+		%= label_for 'deep_caching_type' => '* Deep Caching', class => 'label'
+		<% if ($priv_level >= 20) { %>
+		%= field('ds.deep_caching_type')->select([["NEVER" => "NEVER"], ["ALWAYS" => "ALWAYS"]]);
+		<% } else { %>
+		%= field('ds.deep_caching_type')->text(class => 'field', readonly => 'readonly', value => $ds->deep_caching_type);
+
+		<% } %>
+	</div>
 </div>

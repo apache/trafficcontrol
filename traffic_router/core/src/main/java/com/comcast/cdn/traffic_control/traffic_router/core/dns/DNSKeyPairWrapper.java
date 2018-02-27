@@ -23,8 +23,9 @@ import java.util.Date;
 
 import javax.xml.bind.DatatypeConverter;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.xbill.DNS.DNSKEYRecord;
 import org.xbill.DNS.Master;
 import org.xbill.DNS.Name;
@@ -40,15 +41,15 @@ public class DNSKeyPairWrapper extends DnsKeyPair implements DnsSecKeyPair {
 	private Date expiration;
 	private String name;
 
-	public DNSKeyPairWrapper(final JSONObject keyPair, final long defaultTTL) throws JSONException, IOException {
-		this.inception = new Date(1000L * keyPair.getLong("inceptionDate"));
-		this.effective = new Date(1000L * keyPair.getLong("effectiveDate"));
-		this.expiration = new Date(1000L * keyPair.getLong("expirationDate"));
-		this.ttl = keyPair.optLong("ttl", defaultTTL);
-		this.name = keyPair.getString("name").toLowerCase();
+	public DNSKeyPairWrapper(final JsonNode keyPair, final long defaultTTL) throws JsonUtilsException, IOException {
+		this.inception = new Date(1000L * JsonUtils.getLong(keyPair, "inceptionDate"));
+		this.effective = new Date(1000L * JsonUtils.getLong(keyPair, "effectiveDate"));
+		this.expiration = new Date(1000L * JsonUtils.getLong(keyPair, "expirationDate"));
+		this.ttl = JsonUtils.optLong(keyPair, "ttl", defaultTTL);
+		this.name = JsonUtils.getString(keyPair, "name").toLowerCase();
 
-		final byte[] privateKey = DatatypeConverter.parseBase64Binary(keyPair.getString("private"));
-		final byte[] publicKey = DatatypeConverter.parseBase64Binary(keyPair.getString("public"));
+		final byte[] privateKey = DatatypeConverter.parseBase64Binary(JsonUtils.getString(keyPair, "private"));
+		final byte[] publicKey = DatatypeConverter.parseBase64Binary(JsonUtils.getString(keyPair, "public"));
 
 		try (InputStream in = new ByteArrayInputStream(publicKey)) {
 			final Master master = new Master(in, new Name(name), ttl);

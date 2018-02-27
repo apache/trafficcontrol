@@ -21,66 +21,55 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/jmoiron/sqlx"
 )
 
-// ServersPrivLevel - privileges for the /servers endpoint
-const ServersPrivLevel = 10
-
 func serversHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		handleErr := func(err error, status int) {
-			log.Errorf("%v %v\n", r.RemoteAddr, err)
-			w.WriteHeader(status)
-			fmt.Fprintf(w, http.StatusText(status))
-		}
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
 		// p PathParams, username string, privLevel int
 		ctx := r.Context()
-		privLevel, err := auth.GetPrivLevel(ctx)
+		user, err := auth.GetCurrentUser(ctx)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-		pathParams, err := getPathParams(ctx)
+		privLevel := user.PrivLevel
+
+		params, err := api.GetCombinedParams(r)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
-			return
+			log.Errorf("unable to get parameters from request: %s", err)
+			handleErrs(http.StatusInternalServerError, err)
 		}
 
-		q := r.URL.Query()
-		// TODO: move this checking to a common area so all endpoints can use it
-		for k, v := range pathParams {
-			if k == `id` {
-				if _, err := strconv.Atoi(v); err != nil {
-					log.Errorf("Expected {id} to be an integer: %s", v)
-					handleErr(err, http.StatusBadRequest)
+		resp, errs, errType := getServersResponse(params, db, privLevel)
+		if len(errs) > 0 {
+			for _, err := range errs {
+				if err.Error() == `id cannot parse to integer` {
+					handleErrs(http.StatusNotFound, errors.New("Resource not found.")) //matches perl response
 					return
 				}
 			}
-			q.Set(k, v)
-		}
-		resp, err := getServersResponse(q, db, privLevel)
-		if err != nil {
-			log.Errorln(err)
-			handleErr(err, http.StatusInternalServerError)
+			tc.HandleErrorsWithType(errs, errType, handleErrs)
 			return
 		}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
 			log.Errorln("marshaling response %v", err)
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -89,41 +78,47 @@ func serversHandler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func getServersResponse(v url.Values, db *sqlx.DB, privLevel int) (*tc.ServersResponse, error) {
-	servers, err := getServers(v, db, privLevel)
-	if err != nil {
-		return nil, fmt.Errorf("getting servers response: %v", err)
+func getServersResponse(params map[string]string, db *sqlx.DB, privLevel int) (*tc.ServersResponse, []error, tc.ApiErrorType) {
+	servers, errs, errType := getServers(params, db, privLevel)
+	if len(errs) > 0 {
+		return nil, errs, errType
 	}
 
 	resp := tc.ServersResponse{
 		Response: servers,
 	}
-	return &resp, nil
+	return &resp, nil, tc.NoError
 }
 
-func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Server, error) {
+func getServers(params map[string]string, db *sqlx.DB, privLevel int) ([]tc.Server, []error, tc.ApiErrorType) {
 
 	var rows *sqlx.Rows
 	var err error
 
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
-	queryParamsToSQLCols := map[string]string{
-		"cachegroup":   "s.cachegroup",
-		"cdn":          "s.cdn_id",
-		"id":           "s.id",
-		"hostName":     "s.host_name",
-		"physLocation": "s.phys_location",
-		"profileId":    "s.profile",
-		"status":       "st.name",
-		"type":         "t.name",
+	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
+		"cachegroup":   dbhelpers.WhereColumnInfo{"s.cachegroup", api.IsInt},
+		"cdn":          dbhelpers.WhereColumnInfo{"s.cdn_id", api.IsInt},
+		"id":           dbhelpers.WhereColumnInfo{"s.id", api.IsInt},
+		"hostName":     dbhelpers.WhereColumnInfo{"s.host_name", nil},
+		"physLocation": dbhelpers.WhereColumnInfo{"s.phys_location", api.IsInt},
+		"profileId":    dbhelpers.WhereColumnInfo{"s.profile", api.IsInt},
+		"status":       dbhelpers.WhereColumnInfo{"st.name", nil},
+		"type":         dbhelpers.WhereColumnInfo{"t.name", nil},
 	}
 
-	query, queryValues := BuildQuery(v, selectServersQuery(), queryParamsToSQLCols)
+	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
+	if len(errs) > 0 {
+		return nil, errs, tc.DataConflictError
+	}
+
+	query := selectServersQuery() + where + orderBy
+	log.Debugln("Query is ", query)
 
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, fmt.Errorf("querying: %v", err)
+		return nil, []error{fmt.Errorf("querying: %v", err)}, tc.SystemError
 	}
 	defer rows.Close()
 
@@ -134,7 +129,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Server, error) {
 	for rows.Next() {
 		var s tc.Server
 		if err = rows.StructScan(&s); err != nil {
-			return nil, fmt.Errorf("getting servers: %v", err)
+			return nil, []error{fmt.Errorf("getting servers: %v", err)}, tc.SystemError
 		}
 		if privLevel < auth.PrivLevelAdmin {
 			s.ILOPassword = HiddenField
@@ -142,7 +137,7 @@ func getServers(v url.Values, db *sqlx.DB, privLevel int) ([]tc.Server, error) {
 		}
 		servers = append(servers, s)
 	}
-	return servers, nil
+	return servers, nil, tc.NoError
 }
 
 func selectServersQuery() string {

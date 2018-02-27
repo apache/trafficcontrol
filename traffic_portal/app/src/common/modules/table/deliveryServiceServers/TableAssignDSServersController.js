@@ -45,7 +45,7 @@ var TableAssignDSServersController = function(deliveryService, servers, assigned
 
 	var updateSelectedCount = function() {
 		selectedServers = _.filter($scope.servers, function(server) { return server['selected'] == true; } );
-		$('div.selected-count').html('<b>' + selectedServers.length + ' selected</b>');
+		$('div.selected-count').html('<b>' + selectedServers.length + ' servers selected</b>');
 	};
 
 	$scope.deliveryService = deliveryService;

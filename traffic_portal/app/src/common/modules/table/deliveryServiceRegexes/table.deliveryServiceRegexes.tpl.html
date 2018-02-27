@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
-            <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{::deliveryService.displayName}}</a></li>
+            <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{::deliveryService.xmlId}}</a></li>
             <li class="active">Regexes</li>
         </ol>
         <div class="pull-right">
@@ -35,16 +35,16 @@ under the License.
         <table id="regexesTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>type</th>
-                <th>pattern</th>
-                <th>order</th>
+                <th>Type</th>
+                <th>Pattern</th>
+                <th>Order</th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editRegex(deliveryService.id, regex.id)" ng-repeat="regex in ::regexes | orderBy:['setNumber']">
-                <td>{{::regex.typeName}}</td>
-                <td>{{::regex.pattern}}</td>
-                <td>{{::regex.setNumber}}</td>
+            <tr ng-click="editRegex(deliveryService.id, r.id)" ng-repeat="r in ::regexes | orderBy:['setNumber']">
+                <td data-search="^{{::r.typeName}}$">{{::r.typeName}}</td>
+                <td data-search="^{{::r.pattern}}$">{{::r.pattern}}</td>
+                <td data-search="^{{::r.setNumber}}$">{{::r.setNumber}}</td>
             </tr>
             </tbody>
         </table>

@@ -24,23 +24,23 @@ under the License.
     <h3 class="modal-title">Link Profiles to {{::parameter.name}}</h3>
 </div>
 <div class="modal-body">
-    <table id="paramProfilesUnassignedTable" class="table responsive-utilities jambo_table" style="table-layout:fixed; width:100%;">
+    <table id="assignProfilesTable" class="table responsive-utilities jambo_table" style="table-layout:fixed; width:100%;">
         <thead>
         <tr class="headings">
             <th style="padding-left: 10px;"><input id="selectAllCB" type="checkbox" ng-click="selectAll($event)" ng-checked="allSelected()"></th>
-            <th>name</th>
-            <th>description</th>
-            <th>type</th>
-            <th>cdn</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Type</th>
+            <th>CDN</th>
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="profile in ::selectedProfiles">
-            <td><input type="checkbox" ng-click="updateProfiles($event, profile.id)" ng-checked="profile.selected"></td>
-            <td>{{::profile.name}}</td>
-            <td>{{::profile.description}}</td>
-            <td>{{::profile.type}}</td>
-            <td>{{::profile.cdnName}}</td>
+        <tr id="{{::p.id}}" class="profile-row" ng-repeat="p in ::selectedProfiles">
+            <td><input type="checkbox" ng-checked="p.selected" ng-model="p.selected" ng-change="onChange()"></td>
+            <td data-search="^{{::p.name}}$">{{::p.name}}</td>
+            <td data-search="^{{::p.description}}$">{{::p.description}}</td>
+            <td data-search="^{{::p.type}}$">{{::p.type}}</td>
+            <td data-search="^{{::p.cdnName}}$">{{::p.cdnName}}</td>
         </tr>
         </tbody>
     </table>

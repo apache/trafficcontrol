@@ -18,7 +18,7 @@ Traffic Ops
 
 Introduction
 ============
-Traffic Ops uses a MySql or Postgres database to store the configuration information, and the `Mojolicious framework <http://mojolicio.us/>`_ to generate the user interface and REST APIs. 
+Traffic Ops uses a Postgres database to store the configuration information, and the `Mojolicious framework <http://mojolicio.us/>`_ to generate the user interface and REST APIs. 
 
 Software Requirements
 =====================
@@ -29,16 +29,15 @@ To work on Traffic Ops you need a \*nix (MacOS and Linux are most commonly used)
   * cpan JSON
   * cpan JSON::PP
 
-* `Go 1.4 <http://golang.org/doc/install>`_
+* `Go 1.8.3 <http://golang.org/doc/install>`_
 * Perl 5.10.1
 * Git
-* MySQL 5.1.52
+* Postgres 9.6.6
 * `Goose <https://bitbucket.org/liamstask/goose/>`_
 
 Addionally, the installation of the following RPMs (or equivalent) is required:
 
 * All RPMs listed in :ref:`rl-ps`
-* mysql-test
 
 Traffic Ops Project Tree Overview
 =======================================
@@ -176,27 +175,9 @@ To install the Traffic Ops Developer environment:
    $ cd traffic_ops/app
    $ carton
 
-3. Set up a user in MySQL.
+3. Set up a role (user) in Postgres
 
-  Example: :: 
-
-    master $ mysql
-    Welcome to the MySQL monitor.  Commands end with ; or \g.
-    Your MySQL connection id is 305
-    Server version: 5.6.19 Homebrew
-
-    Copyright (c) 2000, 2014, Oracle and/or its affiliates. All rights reserved.
-
-    Oracle is a registered trademark of Oracle Corporation and/or its
-    affiliates. Other names may be trademarks of their respective
-    owners.
-
-    Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
-
-    mysql> create user 'to_user'@'localhost';
-    mysql> grant all on to_development.* to 'to_user'@'localhost' identified by 'twelve';
-    mysql> grant all on to_test.* to 'to_user'@'localhost' identified by 'twelve';
-    mysql> grant all on to_integration.* to 'to_user'@'localhost' identified by 'twelve';
+   See Postgres instructions on initdb https://wiki.postgresql.org/wiki/First_steps 
 
 
 4. Enter ``db/admin.pl --env=<enviroment name> setup`` to set up the traffic_ops database(s). 

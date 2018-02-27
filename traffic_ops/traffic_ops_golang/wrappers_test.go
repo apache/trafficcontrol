@@ -129,40 +129,31 @@ func TestWrapAuth(t *testing.T) {
 	defer db.Close()
 
 	userName := "user1"
+	id := 1
 	secret := "secret"
 
-	rows := sqlmock.NewRows([]string{"priv_level"})
-	rows.AddRow(30)
+	rows := sqlmock.NewRows([]string{"priv_level", "username", "id", "tenant_id"})
+	rows.AddRow(30, "user1", 1, 1)
 	mock.ExpectPrepare("SELECT").ExpectQuery().WithArgs(userName).WillReturnRows(rows)
 
-	sqlStatement, err := preparePrivLevelStmt(db)
+	sqlStatement, err := prepareUserInfoStmt(db)
 	if err != nil {
 		t.Fatalf("could not create priv statement: %v\n", err)
 	}
 
-	authBase := AuthBase{false, secret, sqlStatement, nil}
+	authBase := AuthBase{secret, sqlStatement, nil}
 
 	cookie := tocookie.New(userName, time.Now().Add(time.Minute), secret)
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		privLevel, err := auth.GetPrivLevel(ctx)
+		user, err := auth.GetCurrentUser(ctx)
 		if err != nil {
 			t.Fatalf("unable to get privLevel: %v", err)
 			return
 		}
-		userName, err := auth.GetUserName(ctx)
-		if err != nil {
-			t.Fatalf("unable to get userName: %v", err)
-			return
-		}
 
-		response := struct {
-			PrivLevel int
-			UserName  string
-		}{privLevel, userName}
-
-		respBts, err := json.Marshal(response)
+		respBts, err := json.Marshal(user)
 		if err != nil {
 			t.Fatalf("unable to marshal: %v", err)
 			return
@@ -184,10 +175,7 @@ func TestWrapAuth(t *testing.T) {
 
 	r.Header.Add("Cookie", tocookie.Name+"="+cookie)
 
-	expected := struct {
-		PrivLevel int
-		UserName  string
-	}{30, userName}
+	expected := auth.CurrentUser{UserName: userName, ID: id, PrivLevel: 30, TenantID: 1}
 
 	expectedBody, err := json.Marshal(expected)
 	if err != nil {
@@ -208,7 +196,7 @@ func TestWrapAuth(t *testing.T) {
 
 	f(w, r)
 
-	expectedError := "Unauthorized"
+	expectedError := `{"alerts":[{"text":"Unauthorized, please log in.","level":"error"}]}`
 
 	if *debugLogging {
 		fmt.Printf("received: %s\n expected: %s\n", w.Body.Bytes(), expectedError)

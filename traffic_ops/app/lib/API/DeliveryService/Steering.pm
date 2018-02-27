@@ -92,8 +92,6 @@ sub find_steering {
 
         my $targets = $steering_entry->{"targets"};
 
-        my $type = $self->get_type($row->type);
-
         if ( $row->type eq "STEERING_ORDER" ) {
             push(@{$targets},{
             'deliveryService' => $row->target_xml_id,

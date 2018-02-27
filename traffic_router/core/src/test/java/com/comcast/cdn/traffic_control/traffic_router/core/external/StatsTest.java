@@ -85,12 +85,12 @@ public class StatsTest {
 			Map<String, Object> dnsStats = (Map<String, Object>) statsData.get("dnsMap");
 			Map<String, Object> cacheDnsStats = (Map<String, Object>) dnsStats.values().iterator().next();
 			assertThat(cacheDnsStats.keySet(), containsInAnyOrder("czCount", "geoCount", "missCount", "dsrCount", "errCount",
-				"staticRouteCount", "fedCount", "regionalDeniedCount", "regionalAlternateCount"));
+					"deepCzCount", "staticRouteCount", "fedCount", "regionalDeniedCount", "regionalAlternateCount"));
 
 			Map<String, Object> httpStats = (Map<String, Object>) statsData.get("httpMap");
 			Map<String, Object> cacheHttpStats = (Map<String, Object>) httpStats.values().iterator().next();
 			assertThat(cacheHttpStats.keySet(), containsInAnyOrder("czCount", "geoCount", "missCount", "dsrCount", "errCount",
-				"staticRouteCount", "fedCount", "regionalDeniedCount", "regionalAlternateCount"));
+					"deepCzCount", "staticRouteCount", "fedCount", "regionalDeniedCount", "regionalAlternateCount"));
 
 			Map<String, Object> updateTracker = (Map<String, Object>) statsData.get("updateTracker");
 			Set<String> keys = updateTracker.keySet();

@@ -44,10 +44,10 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.new', []
                         resolve: {
                             deliveryService: function($stateParams, propertiesModel) {
                                 var type = $stateParams.type,
-                                    anyMapDefaults = propertiesModel.properties.defaults.deliveryservices.ANY_MAP,
-                                    dnsDefaults = propertiesModel.properties.defaults.deliveryservices.DNS,
-                                    httpDefaults = propertiesModel.properties.defaults.deliveryservices.HTTP,
-                                    steeringDefaults = propertiesModel.properties.defaults.deliveryservices.STEERING;
+                                    anyMapDefaults = angular.copy(propertiesModel.properties.defaults.deliveryservices.ANY_MAP),
+                                    dnsDefaults = angular.copy(propertiesModel.properties.defaults.deliveryservices.DNS),
+                                    httpDefaults = angular.copy(propertiesModel.properties.defaults.deliveryservices.HTTP),
+                                    steeringDefaults = angular.copy(propertiesModel.properties.defaults.deliveryservices.STEERING);
 
                                 if (type.indexOf('ANY_MAP') != -1) {
                                     return anyMapDefaults;

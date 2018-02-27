@@ -52,7 +52,7 @@ sub index {
 		if ( defined $cdn_id ) {
 			$criteria{'cdn'} = $cdn_id;
 		}
-		my $rs_data = $self->db->resultset("Profile")->search( \%criteria, { order_by => 'me.name' } );
+		my $rs_data = $self->db->resultset("Profile")->search( \%criteria, { prefetch => [ 'cdn' ], order_by => 'me.name' } );
 		while ( my $row = $rs_data->next ) {
 			push(
 				@data, {
@@ -90,25 +90,20 @@ sub get_profiles_by_paramId {
 	my $self    	= shift;
 	my $param_id	= $self->param('id');
 
-	my $param_profiles = $self->db->resultset('ProfileParameter')->search( { parameter => $param_id } );
-
-	my $profiles = $self->db->resultset('Profile')->search(
-		{ 'me.id' => { -in => $param_profiles->get_column('profile')->as_query } }
-	);
+	my $param_profiles = $self->db->resultset('ProfileParameter')->search( { parameter => $param_id }, { prefetch => [ 'profile' ] } );
 
 	my @data;
-	if ( defined($profiles) ) {
-		while ( my $row = $profiles->next ) {
-			push(
-				@data, {
-					"id"          => $row->id,
-					"name"        => $row->name,
-					"description" => $row->description,
-					"routingDisabled" => $row->routing_disabled,
-					"lastUpdated" => $row->last_updated
-				}
-			);
-		}
+	while ( my $row = $param_profiles->next ) {
+		push(
+			@data, {
+				"id"				=> $row->profile->id,
+				"name"				=> $row->profile->name,
+				"description"		=> $row->profile->description,
+				"type"				=> $row->profile->type,
+				"routingDisabled"	=> $row->profile->routing_disabled,
+				"lastUpdated"		=> $row->profile->last_updated
+			}
+		);
 	}
 
 	return $self->success( \@data );

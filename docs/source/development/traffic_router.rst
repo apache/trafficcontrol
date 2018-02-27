@@ -77,6 +77,7 @@ To install the Traffic Router Developer environment:
 3. Follow the instructions in "README.DNSSEC" for DNSSEC support.
 4. Set the environment variable TRAFFIC_MONITOR_HOSTS to be a semicolon delimited list of Traffic Monitors that can be accessed during integration tests
 5. Additional configuration is set using the below files:
+
   * core/src/test/conf/dns.properties              - copy from core/src/main/conf
   * core/src/test/conf/http.properties             - copy from core/src/main/conf
   * core/src/test/conf/log4j.properties            - copy from core/src/main/conf

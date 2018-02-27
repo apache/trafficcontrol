@@ -28,17 +28,17 @@ under the License.
         <thead>
         <tr class="headings">
             <th style="padding-left: 10px;"><input id="selectAllCB" type="checkbox" ng-click="selectAll($event)"></th>
-            <th>hostName</th>
-            <th>cachegroup</th>
-            <th>profile</th>
+            <th>Host</th>
+            <th>Cache Group</th>
+            <th>Profile</th>
         </tr>
         </thead>
         <tbody>
-        <tr id="{{server.id}}" class="server-row" ng-repeat="server in ::servers">
-            <td><input type="checkbox" ng-checked="server.selected" ng-model="server.selected" ng-change="onChange()"></td>
-            <td>{{::server.hostName}}</td>
-            <td>{{::server.cachegroup}}</td>
-            <td>{{::server.profile}}</td>
+        <tr id="{{::s.id}}" class="server-row" ng-repeat="s in ::servers">
+            <td><input type="checkbox" ng-checked="s.selected" ng-model="s.selected" ng-change="onChange()"></td>
+            <td data-search="^{{::s.hostName}}$">{{::s.hostName}}</td>
+            <td data-search="^{{::s.cachegroup}}$">{{::s.cachegroup}}</td>
+            <td data-search="^{{::s.profile}}$">{{::s.profile}}</td>
         </tr>
         </tbody>
     </table>

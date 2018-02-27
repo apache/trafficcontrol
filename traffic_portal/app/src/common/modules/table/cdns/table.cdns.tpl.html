@@ -33,16 +33,16 @@ under the License.
         <table id="cdnsTable" class="table responsive-utilities jambo_table">
             <thead>
                 <tr class="headings">
-                    <th>name</th>
-                    <th>domainName</th>
-                    <th>dnssecEnabled</th>
+                    <th>Name</th>
+                    <th>Domain</th>
+                    <th>DNSSEC Enabled</th>
                 </tr>
             </thead>
             <tbody>
                 <tr ng-click="editCDN(cdn.id)" ng-repeat="cdn in ::cdns">
-                    <td>{{::cdn.name}}</td>
-                    <td>{{::cdn.domainName}}</td>
-                    <td>{{::cdn.dnssecEnabled}}</td>
+                    <td data-search="^{{::cdn.name}}$">{{::cdn.name}}</td>
+                    <td data-search="^{{::cdn.domainName}}$">{{::cdn.domainName}}</td>
+                    <td data-search="^{{::cdn.dnssecEnabled}}$">{{::cdn.dnssecEnabled}}</td>
                 </tr>
             </tbody>
         </table>

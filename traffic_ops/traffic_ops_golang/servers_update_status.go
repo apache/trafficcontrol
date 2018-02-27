@@ -27,31 +27,30 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/jmoiron/sqlx"
 )
 
 func getServerUpdateStatusHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorFunc(w, r)
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
-		// p PathParams, username string, privLevel int
-		ctx := r.Context()
-		pathParams, err := getPathParams(ctx)
+		params, err := api.GetCombinedParams(r)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
-			return
+			log.Errorf("unable to get parameters from request: %s", err)
+			handleErrs(http.StatusInternalServerError, err)
 		}
-		hostName := pathParams["host_name"]
+		hostName := params["host_name"]
 
 		serverUpdateStatus, err := getServerUpdateStatus(hostName, db)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
 		respBts, err := json.Marshal(serverUpdateStatus)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -84,7 +83,7 @@ func getServerUpdateStatus(hostName string, db *sqlx.DB) ([]tc.ServerUpdateStatu
 			return nil, tc.DBError
 		}
 	} else {
-		rows, err = db.Query(baseSelectStatement + ` WHERE s.host_name = $1` + groupBy, hostName)
+		rows, err = db.Query(baseSelectStatement+` WHERE s.host_name = $1`+groupBy, hostName)
 		if err != nil {
 			log.Error.Printf("could not execute select server update status by hostname query: %s\n", err)
 			return nil, tc.DBError

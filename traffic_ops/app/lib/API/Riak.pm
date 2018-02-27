@@ -25,9 +25,8 @@ use Data::Dumper;
 sub stats {
 	my $self = shift;
 
-	#my $response = $self->riak_stats();
-	my $response = $self->riak_stats();
-	my $content  = $response->{_content};
+	my $response = $self->riak_stats()->{'response'};
+	my $content  = $response->content;
 	return $self->success( decode_json($content) );
 }
 

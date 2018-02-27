@@ -20,6 +20,7 @@ package tc
  */
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 )
@@ -28,14 +29,15 @@ var jsonTests = []struct {
 	time Time
 	json string
 }{
-	{Time{Time: time.Date(9999, 4, 12, 23, 20, 50, 520*1e6, time.UTC)}, `"9999-04-12 23:20:50+00"`},
+	{Time{Time: time.Date(9999, 4, 12, 23, 20, 50, 520*1e6, time.Local)}, `"9999-04-12 23:20:50-07"`},
 	{Time{Time: time.Date(1996, 12, 19, 16, 39, 57, 0, time.UTC)}, `"1996-12-19 16:39:57+00"`},
 }
 
 // TestJSON tests that we get format tc uses for lastUpdated fields
 func TestJSON(t *testing.T) {
 	for _, tm := range jsonTests {
-		got, err := tm.time.MarshalJSON()
+		got, err := json.Marshal(tm.time)
+
 		if err != nil {
 			t.Errorf("MarshalJSON error: %+v", err)
 		}

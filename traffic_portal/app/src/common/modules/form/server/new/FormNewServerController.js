@@ -17,10 +17,20 @@
  * under the License.
  */
 
-var FormNewServerController = function(server, $scope, $controller, serverService) {
+var FormNewServerController = function(server, $scope, $controller, serverService, statusService) {
 
     // extends the FormServerController to inherit common methods
     angular.extend(this, $controller('FormServerController', { server: server, $scope: $scope }));
+
+    var getStatuses = function() {
+        statusService.getStatuses()
+            .then(function(result) {
+                $scope.statuses = result;
+                // new servers are set to OFFLINE by default
+                var offlineStatus = _.find(result, function(status){ return status.name == 'OFFLINE' });
+                $scope.server.statusId = offlineStatus.id;
+            });
+    };
 
     $scope.serverName = 'New';
 
@@ -33,7 +43,12 @@ var FormNewServerController = function(server, $scope, $controller, serverServic
         serverService.createServer(server);
     };
 
+    var init = function () {
+        getStatuses();
+    };
+    init();
+
 };
 
-FormNewServerController.$inject = ['server', '$scope', '$controller', 'serverService'];
+FormNewServerController.$inject = ['server', '$scope', '$controller', 'serverService', 'statusService'];
 module.exports = FormNewServerController;

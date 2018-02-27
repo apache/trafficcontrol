@@ -255,6 +255,7 @@ sub read {
 				"initial_dispersion"          => $row->initial_dispersion,
 				"regional_geo_blocking"       => $row->regional_geo_blocking,
 				"logs_enabled"                => \$row->logs_enabled,
+				"deep_caching_type"           => $row->deep_caching_type,
 			}
 		);
 	}
@@ -835,6 +836,7 @@ sub update {
 			remap_text         => $self->paramAsScalar( 'ds.remap_text',         undef ),
 			initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 			logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
+			deep_caching_type  => $self->paramAsScalar('ds.deep_caching_type'),
 		);
 
 		my $typename = $self->typename();
@@ -1066,6 +1068,8 @@ sub create {
 				range_request_handling      => $self->paramAsScalar('ds.range_request_handling'),
 				edge_header_rewrite         => $self->paramAsScalar('ds.edge_header_rewrite'),
 				mid_header_rewrite          => $self->paramAsScalar( 'ds.mid_header_rewrite', undef ),
+				tr_response_headers         => $self->paramAsScalar('ds.tr_response_headers'),
+				tr_request_headers          => $self->paramAsScalar('ds.tr_request_headers'),
 				regex_remap        => $self->paramAsScalar( 'ds.regex_remap',        undef ),
 				origin_shield      => $self->paramAsScalar( 'ds.origin_shield',      undef ),
 				cacheurl           => $self->paramAsScalar( 'ds.cacheurl',           undef ),
@@ -1073,6 +1077,7 @@ sub create {
 				initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 				logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
 				tenant_id => $tenant_id,
+				deep_caching_type  => $self->paramAsScalar('ds.deep_caching_type'),
 		};
 
 		my $insert = $self->db->resultset('Deliveryservice')->create($new_ds);

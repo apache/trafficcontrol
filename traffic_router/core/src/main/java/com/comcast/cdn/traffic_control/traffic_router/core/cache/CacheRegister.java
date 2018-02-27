@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
@@ -31,13 +31,13 @@ import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
 @SuppressWarnings("PMD.LooseCoupling")
 public class CacheRegister implements CacheLocationManager {
 	private final Map<String, CacheLocation> configuredLocations;
-	private JSONObject trafficRouters;
+	private JsonNode trafficRouters;
 	private Map<String,Cache> allCaches;
 	private TreeSet<DeliveryServiceMatcher> dnsServiceMatchers;
 	private TreeSet<DeliveryServiceMatcher> httpServiceMatchers;
 	private Map<String, DeliveryService> dsMap;
-	private JSONObject config;
-	private JSONObject stats;
+	private JsonNode config;
+	private JsonNode stats;
 
 	public CacheRegister() {
 		configuredLocations = new HashMap<String, CacheLocation>();
@@ -139,17 +139,17 @@ public class CacheRegister implements CacheLocationManager {
 		this.dsMap = dsMap;
 	}
 
-	public JSONObject getTrafficRouters() {
+	public JsonNode getTrafficRouters() {
 		return trafficRouters;
 	}
-	public void setTrafficRouters(final JSONObject o) {
+	public void setTrafficRouters(final JsonNode o) {
 		trafficRouters = o;
 	}
 
-	public void setConfig(final JSONObject o) {
+	public void setConfig(final JsonNode o) {
 		config = o;
 	}
-	public JSONObject getConfig() {
+	public JsonNode getConfig() {
 		return config;
 	}
 
@@ -157,11 +157,11 @@ public class CacheRegister implements CacheLocationManager {
 		return this.dsMap;
 	}
 
-	public JSONObject getStats() {
+	public JsonNode getStats() {
 		return stats;
 	}
 
-	public void setStats(final JSONObject stats) {
+	public void setStats(final JsonNode stats) {
 		this.stats = stats;
 	}
 

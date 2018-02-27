@@ -18,7 +18,7 @@ Traffic Portal
 
 Introduction
 ============
-Traffic Portal is an `AngularJS 1.x <https://angularjs.org/>`_ client served from a `Node.js <https://nodejs.org/en/>`_ web server designed to consume the Traffic Ops 1.x API. Traffic Portal provides a set of functionality restricted to the delivery service(s) of the authenticated user. Functionality primarily includes a set of charts / graphs designed to provide insight into the performance of a user's delivery service(s).
+Traffic Portal is an `AngularJS 1.x <https://angularjs.org/>`_ client served from a `Node.js <https://nodejs.org/en/>`_ web server designed to consume the Traffic Ops 1.x API. The Traffic Portal replaces the Traffic Ops UI.
 
 Software Requirements
 =====================
@@ -40,15 +40,12 @@ Installing The Traffic Portal Developer Environment
 
 	- Clone the traffic_control repository
 	- Navigate to the traffic_control/traffic_portal of your cloned repository.
-	- Run ``npm install`` to install application dependencies. Only needs to be done the first time unless traffic_portal/package.json changes.
-	- Run ``bower install`` to install client-side dependencies. Only needs to be done the first time unless traffic_portal/bower.json changes.
-	- Run ``grunt`` to package the application into traffic_portal/app/dist, start a local http server (Express), and start a file watcher.
+	- Run ``npm install`` to install application dependencies into traffic_portal/node_modules. Only needs to be done the first time unless traffic_portal/package.json changes.
+	- Run ``bower install`` to install client-side dependencies into traffic_portal/app/bower_components. Only needs to be done the first time unless traffic_portal/bower.json changes.
+	- Run ``grunt`` to package the application into traffic_portal/app/dist, start a local https server (Express), and start a file watcher.
 	- Navigate to https://localhost:8443
 
 Notes
 =====
 
-- The Traffic Portal consumes the Traffic Ops API. By default, Traffic Portal assumes Traffic Ops is running on http://localhost:3000. Temporarily modify conf/config.js if you need to change the location of Traffic Ops.
-
-
-
+- The Traffic Portal consumes the Traffic Ops API. By default, Traffic Portal assumes Traffic Ops is running on https://localhost:8444. Temporarily modify traffic_portal/conf/config.js if you need to change the location of Traffic Ops.

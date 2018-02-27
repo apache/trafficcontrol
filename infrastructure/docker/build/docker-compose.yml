@@ -24,7 +24,7 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-source
       context: ../../..
     volumes:
-      - ../../..:/trafficcontrol
+      - ../../..:/trafficcontrol:z
 
   # NOTE: Disabled java traffic_monitor in favor of golang version.
   # The java version is to be renamed to traffic_monitor_legacy soon
@@ -35,7 +35,7 @@ services:
   #     dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor_legacy
   #     context: ../../..
   #   volumes:
-  #     - ../../..:/trafficcontrol
+  #     - ../../..:/trafficcontrol:z
 
   traffic_monitor_build:
     image: traffic_monitor_builder
@@ -43,7 +43,7 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_monitor
       context: ../../..
     volumes:
-      - ../../..:/trafficcontrol
+      - ../../..:/trafficcontrol:z
 
   traffic_ops_build:
     image: traffic_ops_builder
@@ -51,7 +51,7 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_ops
       context: ../../..
     volumes:
-      - ../../..:/trafficcontrol
+      - ../../..:/trafficcontrol:z
 
   traffic_portal_build:
     image: traffic_portal_builder
@@ -59,7 +59,7 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_portal
       context: ../../..
     volumes:
-      - ../../..:/trafficcontrol
+      - ../../..:/trafficcontrol:z
 
   traffic_router_build:
     image: traffic_router_builder
@@ -67,7 +67,7 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_router
       context: ../../..
     volumes:
-      - ../../..:/trafficcontrol
+      - ../../..:/trafficcontrol:z
 
   traffic_stats_build:
     image: traffic_stats_builder
@@ -75,4 +75,10 @@ services:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_stats
       context: ../../..
     volumes:
-      - ../../..:/trafficcontrol
+      - ../../..:/trafficcontrol:z
+
+  weasel:
+    image: licenseweasel/weasel:0.1
+    volumes:
+      - ../../..:/trafficcontrol:z
+    command: ['-f', '/trafficcontrol/dist/weasel.txt', '/trafficcontrol']

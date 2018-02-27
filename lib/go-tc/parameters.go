@@ -1,5 +1,7 @@
 package tc
 
+import "encoding/json"
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -26,10 +28,11 @@ type ParametersResponse struct {
 
 // Parameter ...
 type Parameter struct {
-	ConfigFile  string   `json:"configFile" db:"config_file"`
-	ID          int      `json:"id" db:"id"`
-	LastUpdated Time `json:"lastUpdated" db:"last_updated"`
-	Name        string   `json:"name" db:"name"`
-	Secure      bool     `json:"secure" db:"secure"`
-	Value       string   `json:"value" db:"value"`
+	ConfigFile  string          `json:"configFile" db:"config_file"`
+	ID          int             `json:"id" db:"id"`
+	LastUpdated Time            `json:"lastUpdated" db:"last_updated"`
+	Name        string          `json:"name" db:"name"`
+	Profiles    json.RawMessage `json:"profiles" db:"profiles"`
+	Secure      bool            `json:"secure" db:"secure"`
+	Value       string          `json:"value" db:"value"`
 }

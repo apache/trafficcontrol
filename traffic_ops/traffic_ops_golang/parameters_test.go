@@ -20,7 +20,6 @@ package main
  */
 
 import (
-	"net/url"
 	"testing"
 	"time"
 
@@ -28,6 +27,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
+
+	"encoding/json"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -39,6 +40,7 @@ func getTestParameters() []tc.Parameter {
 		ID:          1,
 		LastUpdated: tc.Time{Time: time.Now()},
 		Name:        "paramname1",
+		Profiles:    json.RawMessage(`["foo","bar"]`),
 		Secure:      false,
 		Value:       "val1",
 	}
@@ -48,6 +50,7 @@ func getTestParameters() []tc.Parameter {
 	testParameter2.Name = "paramname2"
 	testParameter2.Value = "val2"
 	testParameter2.ConfigFile = "some.config"
+	testParameter2.Profiles = json.RawMessage(`["foo","baz"]`)
 	parameters = append(parameters, testParameter2)
 
 	return parameters
@@ -75,17 +78,17 @@ func TestGetParameters(t *testing.T) {
 			ts.ID,
 			ts.LastUpdated,
 			ts.Name,
+			ts.Profiles,
 			ts.Secure,
 			ts.Value,
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := url.Values{}
-	v.Set("dsId", "1")
+	v := map[string]string{"dsId": "1"}
 
-	parameters, err := getParameters(v, db, auth.PrivLevelAdmin)
-	if err != nil {
-		t.Errorf("getParameters expected: nil error, actual: %v", err)
+	parameters, errs, errType := getParameters(v, db, auth.PrivLevelAdmin)
+	if len(errs) > 0 {
+		t.Errorf("getParameters expected: no errors, actual: %v with error type: %s", errs, errType.String())
 	}
 
 	if len(parameters) != 2 {

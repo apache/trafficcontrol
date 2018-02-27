@@ -82,6 +82,7 @@ $t->get_ok('/api/1.2/deliveryservices/100/servers/eligible')->status_is(200)->$c
 ok $t->get_ok("/api/1.2/deliveryservices")->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content} } )
 		->json_is( "/response/0/xmlId", "steering-ds1" )
 		->json_is( "/response/0/routingName", "foo" )
+		->json_is( "/response/0/deepCachingType", "NEVER" )
 		->json_is( "/response/0/logsEnabled", 0 )
 		->json_is( "/response/0/ipv6RoutingEnabled", 1 )
 		->json_is( "/response/1/xmlId", "steering-ds2" );
@@ -147,7 +148,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 				"dscp" => 0,
 				"geoLimit" => 0,
 				"geoProvider" => 0,
-				"initialDispersion" => 0,
+				"initialDispersion" => 1,
 				"ipv6RoutingEnabled" => 0,
 				"logsEnabled" => 0,
 				"missLat" => 45,
@@ -176,8 +177,36 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 		, 'Is the HTTP delivery service created?';
 
 	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
+				"active" => \0,
+				"cdnId" => 100,
+				"displayName" => "ds_http_display_name",
+				"dscp" => 0,
+				"geoLimit" => 0,
+				"geoProvider" => 0,
+				"initialDispersion" => 0,
+				"ipv6RoutingEnabled" => 1,
+				"logsEnabled" => 0,
+				"missLat" => 45,
+				"missLong" => 45,
+				"multiSiteOrigin" => 0,
+				"orgServerFqdn" => "http://10.75.168.91",
+				"protocol" => 1,
+				"qstringIgnore" => 0,
+				"rangeRequestHandling" => 0,
+				"regionalGeoBlocking" => 0,
+				"routingName" => "foo",
+				"typeId" => 36,
+				"tenantId" => $tenant_id,
+				"xmlId" => "ds_http_2",
+			})
+			->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+			->json_is( "/alerts/0/text" => "initialDispersion invalid. Must be 1 or greater.")
+		, 'Does the HTTP deliveryservice create fail when initial dispersion is set to 0?';
+
+	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
 			"active" => \0,
 			"cdnId" => 100,
+			"deepCachingType" => "NEVER",
 			"displayName" => "ds_displayname_1",
 			"dscp" => 0,
 			"geoLimit" => 0,
@@ -201,6 +230,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
         ->json_is( "/response/0/tenantId" => $tenant_id)
         ->json_is( "/response/0/cdnName" => "cdn1")
 		->json_is( "/response/0/routingName" => "foo")
+		->json_is( "/response/0/deepCachingType" => "NEVER")
 		->json_is( "/response/0/displayName" => "ds_displayname_1")
 		->json_is( "/response/0/xmlId" => "ds_1")
 		->json_is( "/response/0/multiSiteOrigin" => 0)
@@ -213,6 +243,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 	ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/json'} => json => {
 			"active" => \1,
 			"cdnId" => 100,
+			"deepCachingType" => "NEVER",
             "displayName" => "ds_displayname_11",
 			"dscp" => 1,
 			"geoLimit" => 1,
@@ -238,6 +269,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 		->json_is( "/response/0/displayName" => "ds_displayname_11")
 		->json_is( "/response/0/xmlId" => "ds_1")
 		->json_is( "/response/0/routingName" => "bar")
+		->json_is( "/response/0/deepCachingType" => "NEVER")
 		->json_is( "/response/0/multiSiteOrigin" => 0)
 		->json_is( "/response/0/orgServerFqdn" => "http://10.75.168.91")
 		->json_is( "/response/0/protocol" => 2)
@@ -250,9 +282,11 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 				"displayName" => "ds_displayname_11",
 				"dscp" => 1,
 				"routingName" => "baz",
+				"deepCachingType" => "NEVER",
 				"geoLimit" => 1,
 				"geoProvider" => 1,
 				"ipv6RoutingEnabled" => 1,
+				"initialDispersion" => 0,
 				"logsEnabled" => 1,
 				"missLat" => 45,
 				"missLong" => 45,
@@ -278,6 +312,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 				"displayName" => "ds_displayname_11",
 				"dscp" => 1,
 				"routingName" => "foo",
+				"deepCachingType" => "NEVER",
 				"geoLimit" => 1,
 				"geoProvider" => 1,
 				"initialDispersion" => 2,

@@ -26,10 +26,11 @@ import java.util.Map;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.DefaultHashable;
 import com.comcast.cdn.traffic_control.traffic_router.core.hash.Hashable;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
-import org.json.JSONObject;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.config.ParseException;
 
@@ -81,11 +82,12 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 		return id;
 	}
 
-	public List<InetRecord> getIpAddresses(final JSONObject ttls, final Resolver resolver) {
+	public List<InetRecord> getIpAddresses(final JsonNode ttls, final Resolver resolver) {
 		return getIpAddresses(ttls, resolver, true);
 	}
 
-	public List<InetRecord> getIpAddresses(final JSONObject ttls, final Resolver resolver, final boolean ip6RoutingEnabled) {
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
+	public List<InetRecord> getIpAddresses(final JsonNode ttls, final Resolver resolver, final boolean ip6RoutingEnabled) {
 		if(ipAddresses == null || ipAddresses.isEmpty()) {
 			ipAddresses = resolver.resolve(this.getFqdn()+".");
 		}
@@ -101,9 +103,10 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 			if(ttls == null) {
 				ttl = -1;
 			} else if(ir.isInet6()) {
-				ttl = ttls.optLong("AAAA");
+				ttl = JsonUtils.optLong(ttls, "AAAA");
 			} else {
-				ttl = ttls.optLong("A");
+				ttl = JsonUtils.optLong(ttls, "A");
+
 			}
 
 			ret.add(new InetRecord(ir.getAddress(), ttl));
@@ -214,11 +217,8 @@ public class Cache implements Comparable<Cache>, Hashable<Cache> {
 		return ip6;
 	}
 
-	public void setState(final JSONObject state) {
-		boolean isAvailable = true;
-		if(state != null && state.has("isAvailable")) {
-			isAvailable = state.optBoolean("isAvailable");
-		}
+	public void setState(final JsonNode state) {
+		final boolean isAvailable = JsonUtils.optBoolean(state, "isAvailable", true);
 		this.setIsAvailable(isAvailable);
 	}
 

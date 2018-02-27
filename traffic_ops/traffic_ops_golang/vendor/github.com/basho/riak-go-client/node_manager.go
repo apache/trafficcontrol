@@ -67,6 +67,17 @@ func (nm *defaultNodeManager) ExecuteOnNode(nodes []*Node, command Command, prev
 			break
 		}
 
+		// Ran into a problem here when no node could sucessfully execute the command
+		// without error.  Got into an infinite loop here due to using self signed certs
+		// on all the nodes without properly setting up TLS to accept in-secure certs.
+		//
+		// returning the error here to the cluster allows to it requeue this command and track
+		// the number of execution attempts.  Once the configured 'ExecutionAttempts' has been
+		// exceeded. The cluster then returns the error to the client.
+		if err != nil {
+			return executed, err
+		}
+
 		nm.RLock()
 		if startingIndex == nm.nodeIndex {
 			nm.RUnlock()

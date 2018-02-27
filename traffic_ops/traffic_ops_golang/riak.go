@@ -22,12 +22,13 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
 	"github.com/lestrrat/go-jwx/jwk"
-	"strings"
-	"time"
 )
 
 // RiakPort is the port RIAK is listening on.
@@ -36,30 +37,38 @@ const RiakPort = 8087
 // CDNURIKeysBucket is the namespace or bucket used for CDN URI signing keys.
 const CDNURIKeysBucket = "cdn_uri_sig_keys"
 
-// SSLKeysBucket
+// SSLKeysBucket ...
 const SSLKeysBucket = "ssl"
 
 // 5 second timeout
 const timeOut = time.Second * 5
 
+// MaxCommandExecutionAttempts ...
+const MaxCommandExecutionAttempts = 5
+
+// StorageCluster ...
 type StorageCluster interface {
 	Start() error
 	Stop() error
 	Execute(riak.Command) error
 }
 
+// RiakStorageCluster ...
 type RiakStorageCluster struct {
 	Cluster *riak.Cluster
 }
 
+// Stop ...
 func (ri RiakStorageCluster) Stop() error {
 	return ri.Cluster.Stop()
 }
 
+// Start ...
 func (ri RiakStorageCluster) Start() error {
 	return ri.Cluster.Start()
 }
 
+// Execute ...
 func (ri RiakStorageCluster) Execute(command riak.Command) error {
 	return ri.Cluster.Execute(command)
 }
@@ -85,7 +94,10 @@ func deleteObject(key string, bucket string, cluster StorageCluster) error {
 	if err != nil {
 		return err
 	}
-	if err := cluster.Execute(cmd); err != nil {
+
+	err = cluster.Execute(cmd)
+
+	if err != nil {
 		return err
 	}
 
@@ -136,7 +148,8 @@ func saveObject(obj *riak.Object, bucket string, cluster StorageCluster) error {
 	if err != nil {
 		return err
 	}
-	if err := cluster.Execute(cmd); err != nil {
+	err = cluster.Execute(cmd)
+	if err != nil {
 		return err
 	}
 
@@ -187,7 +200,8 @@ func getRiakCluster(db *sqlx.DB, cfg Config) (StorageCluster, error) {
 	}
 
 	opts := &riak.ClusterOptions{
-		Nodes: nodes,
+		Nodes:             nodes,
+		ExecutionAttempts: MaxCommandExecutionAttempts,
 	}
 
 	cluster, err := riak.NewCluster(opts)

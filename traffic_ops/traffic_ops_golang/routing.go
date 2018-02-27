@@ -21,8 +21,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"net/http"
 	"regexp"
 	"sort"
@@ -33,13 +31,17 @@ import (
 
 	"fmt"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/jmoiron/sqlx"
 )
 
+// RoutePrefix ...
 const RoutePrefix = "api" // TODO config?
 
+// Middleware ...
 type Middleware func(handlerFunc http.HandlerFunc) http.HandlerFunc
 
+// Route ...
 type Route struct {
 	// Order matters! Do not reorder this! Routes() uses positional construction for readability.
 	Version           float64
@@ -55,28 +57,13 @@ func getDefaultMiddleware() []Middleware {
 	return []Middleware{wrapHeaders}
 }
 
+// ServerData ...
 type ServerData struct {
 	Config
 	DB *sqlx.DB
 }
 
-type PathParams map[string]string
-
-const PathParamsKey = "pathParams"
-
-func getPathParams(ctx context.Context) (PathParams, error) {
-	val := ctx.Value(PathParamsKey)
-	if val != nil {
-		switch v := val.(type) {
-		case PathParams:
-			return v, nil
-		default:
-			return nil, fmt.Errorf("PathParams found with bad type: %T", v)
-		}
-	}
-	return nil, errors.New("no PathParams found in Context")
-}
-
+// CompiledRoute ...
 type CompiledRoute struct {
 	Handler http.HandlerFunc
 	Regex   *regexp.Regexp
@@ -96,6 +83,7 @@ func getSortedRouteVersions(rs []Route) []float64 {
 	return versions
 }
 
+// PathHandler ...
 type PathHandler struct {
 	Path    string
 	Handler http.HandlerFunc
@@ -134,7 +122,7 @@ func CreateRouteMap(rs []Route, authBase AuthBase) map[string][]PathHandler {
 	return m
 }
 
-// CompiledRoutes takes a map of methods to paths and handlers, and returns a map of methods to CompiledRoutes.
+// CompileRoutes - takes a map of methods to paths and handlers, and returns a map of methods to CompiledRoutes
 func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 	compiledRoutes := map[string][]CompiledRoute{}
 	for method, mRoutes := range routes {
@@ -159,6 +147,7 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 	return compiledRoutes
 }
 
+// Handler - generic handler func used by the Handlers hooking into the routes
 func Handler(routes map[string][]CompiledRoute, catchall http.Handler, w http.ResponseWriter, r *http.Request) {
 	requested := r.URL.Path[1:]
 
@@ -176,30 +165,31 @@ func Handler(routes map[string][]CompiledRoute, catchall http.Handler, w http.Re
 
 		ctx := r.Context()
 
-		params := PathParams{}
+		params := map[string]string{}
 		for i, v := range compiledRoute.Params {
 			params[v] = match[i+1]
 		}
 
-		ctx = context.WithValue(ctx, PathParamsKey, params)
+		ctx = context.WithValue(ctx, api.PathParamsKey, params)
 		compiledRoute.Handler(w, r.WithContext(ctx))
 		return
 	}
 	catchall.ServeHTTP(w, r)
 }
 
+// RegisterRoutes - parses the routes and registers the handlers with the Go Router
 func RegisterRoutes(d ServerData) error {
 	routeSlice, catchall, err := Routes(d)
 	if err != nil {
 		return err
 	}
 
-	privLevelStmt, err := preparePrivLevelStmt(d.DB)
+	userInfoStmt, err := prepareUserInfoStmt(d.DB)
 	if err != nil {
 		return fmt.Errorf("Error preparing db priv level query: %s", err)
 	}
 
-	authBase := AuthBase{d.Insecure, d.Config.Secrets[0], privLevelStmt, nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
+	authBase := AuthBase{secret: d.Config.Secrets[0], getCurrentUserInfoStmt: userInfoStmt, override: nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
 	routes := CreateRouteMap(routeSlice, authBase)
 	compiledRoutes := CompileRoutes(routes)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -208,8 +198,8 @@ func RegisterRoutes(d ServerData) error {
 	return nil
 }
 
-func preparePrivLevelStmt(db *sqlx.DB) (*sql.Stmt, error) {
-	return db.Prepare("SELECT r.priv_level FROM tm_user AS u JOIN role AS r ON u.role = r.id WHERE u.username = $1")
+func prepareUserInfoStmt(db *sqlx.DB) (*sqlx.Stmt, error) {
+	return db.Preparex("SELECT r.priv_level, u.id, u.username, COALESCE(u.tenant_id, -1) AS tenant_id FROM tm_user AS u JOIN role AS r ON u.role = r.id WHERE u.username = $1")
 }
 
 func use(h http.HandlerFunc, middlewares []Middleware) http.HandlerFunc {

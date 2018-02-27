@@ -29,6 +29,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -37,43 +38,39 @@ import (
 func assignDeliveryServicesToServerHandler(db *sqlx.DB) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorFunc(w, r)
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
-		// p PathParams, username string, privLevel int
-		ctx := r.Context()
-		pathParams, err := getPathParams(ctx)
+		params, err := api.GetCombinedParams(r)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
-			return
+			log.Errorf("unable to get parameters from request: %s", err)
+			handleErrs(http.StatusInternalServerError, err)
 		}
 
 		var dsList []int
 
 		err = json.NewDecoder(r.Body).Decode(&dsList)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
-		q := r.URL.Query()
-
-		replaceQueryParameter := q["replace"][0]
+		replaceQueryParameter := params["replace"]
 		replace, err := strconv.ParseBool(replaceQueryParameter) //accepts 1, t, T, TRUE, true, True, 0, f, F, FALSE, false, False. for replace url parameter documentation
 		if err != nil {
-			handleErr(err, http.StatusBadRequest)
+			handleErrs(http.StatusBadRequest, err)
 			return
 		}
 
-		serverPathParameter := pathParams["id"]
+		serverPathParameter := params["id"]
 		server, err := strconv.Atoi(serverPathParameter)
 		if err != nil {
-			handleErr(err, http.StatusBadRequest)
+			handleErrs(http.StatusBadRequest, err)
 			return
 		}
 
 		assignedDSes, err := assignDeliveryServicesToServer(server, dsList, replace, db)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -91,7 +88,7 @@ func assignDeliveryServicesToServerHandler(db *sqlx.DB) http.HandlerFunc {
 		}{assignResp, tc.CreateAlerts(tc.SuccessLevel, "successfully assigned dses to server")}
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 

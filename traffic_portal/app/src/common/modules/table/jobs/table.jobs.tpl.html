@@ -33,20 +33,20 @@ under the License.
         <table id="jobsTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>deliveryService</th>
-                <th>assetUrl</th>
-                <th>parameters</th>
-                <th>start</th>
-                <th>createdBy</th>
+                <th>Delivery Service</th>
+                <th>Asset URL</th>
+                <th>Parameters</th>
+                <th>Start</th>
+                <th>Created By</th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="job in ::jobs">
-                <td>{{::job.deliveryService}}</td>
-                <td>{{::job.assetUrl}}</td>
-                <td>{{::job.parameters}}</td>
-                <td>{{::job.startTime}}</td>
-                <td>{{::job.createdBy}}</td>
+            <tr ng-repeat="j in ::jobs">
+                <td data-search="^{{::j.deliveryService}}$">{{::j.deliveryService}}</td>
+                <td data-search="^{{::j.assetUrl}}$">{{::j.assetUrl}}</td>
+                <td data-search="^{{::j.parameters}}$">{{::j.parameters}}</td>
+                <td data-search="^{{::j.startTime}}$">{{::j.startTime}}</td>
+                <td data-search="^{{::j.createdBy}}$">{{::j.createdBy}}</td>
             </tr>
             </tbody>
         </table>

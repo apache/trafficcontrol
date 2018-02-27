@@ -66,9 +66,9 @@ sub run_ut {
 		->json_is( "/alerts/0/text", "User profile was successfully updated" );
 
 	$t->post_ok( '/api/1.2/user/current/update',
-		json => { user => { username => $login_user, fullName => 'tom sawyer', email => 'testportal1@kabletown.com', address_line1 => 'newaddress', tenantId => $tenant_id, role => 2 } } )
+		json => { user => { username => $login_user, fullName => 'tom sawyer', email => 'testportal1@kabletown.com', address_line1 => 'newaddress', tenantId => $tenant_id, role => 3 } } )
 		->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
-		->json_is( "/alerts/0/text", "role cannot exceed current user's privilege level (2)" );
+		->json_is( "/alerts/0/text", "role cannot exceed current user's privilege level (15)" );
 
 	#verify tenancy	
 	$t->get_ok('/api/1.2/user/current.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )

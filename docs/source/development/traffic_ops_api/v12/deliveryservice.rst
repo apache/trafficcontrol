@@ -66,6 +66,11 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``deepCachingType``      | string | When to do Deep Caching for this Delivery Service:                                                                                   |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - NEVER (default)                                                                                                                    |
+  |                          |        | - ALWAYS                                                                                                                             |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``displayName``          | string | The display name of the delivery service.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``dnsBypassCname``       | string |                                                                                                                                      |
@@ -206,6 +211,7 @@ Delivery Service
             "cdnId": "2",
             "cdnName": "over-the-top",
             "checkPath": "",
+            "deepCachingType": "NEVER",
             "displayName": "My Cool Delivery Service",
             "dnsBypassCname": "",
             "dnsBypassIp": "",
@@ -300,6 +306,11 @@ Delivery Service
   | ``cdnName``              | string | Name of the CDN to which the delivery service belongs to.                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``deepCachingType``      | string | When to do Deep Caching for this Delivery Service:                                                                                   |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - NEVER (default)                                                                                                                    |
+  |                          |        | - ALWAYS                                                                                                                             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``displayName``          | string | The display name of the delivery service.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -449,6 +460,7 @@ Delivery Service
             "cdnId": "2",
             "cdnName": "over-the-top",
             "checkPath": "",
+            "deepCachingType": "NEVER",
             "displayName": "My Cool Delivery Service",
             "dnsBypassCname": "",
             "dnsBypassIp": "",
@@ -1445,7 +1457,7 @@ SSL Keys
 
   Authentication Required: Yes
 
-  Role(s) Required: Admin
+  Role(s) Required: None
 
   **Request Route Parameters**
 
@@ -1603,7 +1615,7 @@ SSL Keys
 
   Authentication Required: Yes
 
-  Role Required: Admin
+  Role Required: Operations
 
   **Request Route Parameters**
 
@@ -1643,7 +1655,7 @@ SSL Keys
 
   Authentication Required: Yes
 
-  Role(s) Required: Admin
+  Role(s) Required: Operations
 
   **Request Properties**
 
@@ -1717,7 +1729,7 @@ SSL Keys
 
   Authentication Required: Yes
 
-  Role(s) Required:  Admin
+  Role(s) Required: Operations
 
   **Request Properties**
 
@@ -1833,7 +1845,7 @@ URL Sig Keys
 
   Authentication Required: Yes
 
-  Role(s) Required: Admin OR assigned DS
+  Role(s) Required: Operations
 
   **Request Route Parameters**
 
@@ -1869,7 +1881,7 @@ URL Sig Keys
 
   Authentication Required: Yes
 
-  Role(s) Required:  Admin or assigned DS
+  Role(s) Required: Operations
 
 **Request Route Parameters**
 
@@ -1917,6 +1929,11 @@ URL Sig Keys
   | ``details``                            | hash   | yes      | Parameters for the delivery service request.                                                |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>customer``                          | string | yes      | Name of the customer to associated with the delivery service.                               |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>deepCachingType``                   | string | no       | When to do Deep Caching for this Delivery Service:                                          |
+  |                                        |        |          |                                                                                             |
+  |                                        |        |          | - NEVER (default)                                                                           |
+  |                                        |        |          | - ALWAYS                                                                                    |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>deliveryProtocol``                  | string | yes      | Eg. http or http/https                                                                      |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
@@ -1978,6 +1995,7 @@ URL Sig Keys
        "details": {
           "customer": "XYZ Corporation",
           "contentType": "video-on-demand",
+          "deepCachingType": "NEVER",
           "deliveryProtocol": "http",
           "routingType": "dns",
           "routingName": "foo",
@@ -2061,6 +2079,11 @@ URL Sig Keys
   | cdnId                  | yes      | cdn id                                                                                                  |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | checkPath              | no       | The path portion of the URL to check this deliveryservice for health.                                   |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | deepCachingType        | no       | When to do Deep Caching for this Delivery Service:                                                      |
+  |                        |          |                                                                                                         |
+  |                        |          | - NEVER (default)                                                                                       |
+  |                        |          | - ALWAYS                                                                                                |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | displayName            | yes      | Display name                                                                                            |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -2232,6 +2255,11 @@ URL Sig Keys
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``deepCachingType``      | string | When to do Deep Caching for this Delivery Service:                                                                                   |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - NEVER (default)                                                                                                                    |
+  |                          |        | - ALWAYS                                                                                                                             |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``displayName``          | string | The display name of the delivery service.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``dnsBypassCname``       | string |                                                                                                                                      |
@@ -2376,6 +2404,7 @@ URL Sig Keys
             "cdnId": "2",
             "cdnName": "over-the-top",
             "checkPath": "",
+            "deepCachingType": "NEVER",
             "displayName": "My Cool Delivery Service",
             "dnsBypassCname": "",
             "dnsBypassIp": "",
@@ -2471,6 +2500,11 @@ URL Sig Keys
   | cdnId                  | yes      | cdn id                                                                                                  |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | checkPath              | no       | The path portion of the URL to check this deliveryservice for health.                                   |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | deepCachingType        | no       | When to do Deep Caching for this Delivery Service:                                                      |
+  |                        |          |                                                                                                         |
+  |                        |          | - NEVER (default)                                                                                       |
+  |                        |          | - ALWAYS                                                                                                |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | displayName            | yes      | Display name                                                                                            |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -2602,7 +2636,7 @@ URL Sig Keys
     {
         "xmlId": "my_ds_1",
         "displayName": "my_ds_displayname_1",
-	"tenantId": 1,
+        "tenantId": 1,
         "protocol": 1,
         "orgServerFqdn": "http://10.75.168.91",
         "cdnId": 2,
@@ -2641,6 +2675,11 @@ URL Sig Keys
   | ``cdnName``              | string | Name of the CDN to which the delivery service belongs to.                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``deepCachingType``      | string | When to do Deep Caching for this Delivery Service:                                                                                   |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - NEVER (default)                                                                                                                    |
+  |                          |        | - ALWAYS                                                                                                                             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``displayName``          | string | The display name of the delivery service.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -2786,6 +2825,7 @@ URL Sig Keys
             "cdnId": "2",
             "cdnName": "over-the-top",
             "checkPath": "",
+            "deepCachingType": "NEVER",
             "displayName": "My Cool Delivery Service",
             "dnsBypassCname": "",
             "dnsBypassIp": "",
@@ -2911,6 +2951,11 @@ URL Sig Keys
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``deepCachingType``      | string | When to do Deep Caching for this Delivery Service:                                                                                   |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - NEVER (default)                                                                                                                    |
+  |                          |        | - ALWAYS                                                                                                                             |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``displayName``          | string | The display name of the delivery service.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``dnsBypassCname``       | string |                                                                                                                                      |
@@ -3055,6 +3100,7 @@ URL Sig Keys
             "cdnId": "2",
             "cdnName": "over-the-top",
             "checkPath": "",
+            "deepCachingType": "NEVER",
             "displayName": "My Cool Delivery Service",
             "dnsBypassCname": "",
             "dnsBypassIp": "",

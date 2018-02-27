@@ -28,7 +28,8 @@ public class ConsistentHasher {
 	final private MD5HashFunction hashFunction = new MD5HashFunction();
 
 	public <T extends Hashable> T selectHashable(final List<T> hashables, final Dispersion dispersion, final String s) {
-		return selectHashables(hashables, dispersion, s).get(0);
+		final List<T> selectedHashables = selectHashables(hashables, dispersion, s);
+		return !selectedHashables.isEmpty() ? selectedHashables.get(0) : null;
 	}
 
 	public <T extends Hashable> List<T> selectHashables(final List<T> hashables, final String s) {

@@ -24,9 +24,6 @@ import (
 	"fmt"
 	"io"
 	"net/url"
-	"regexp"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -38,10 +35,8 @@ import (
 
 // Handler is a cache handler, which fulfills the common/handler `Handler` interface.
 type Handler struct {
-	resultChan         chan Result
-	Notify             int
-	ToData             *todata.TODataThreadsafe
-	MultipleSpaceRegex *regexp.Regexp
+	resultChan chan Result
+	ToData     *todata.TODataThreadsafe
 }
 
 func (h Handler) ResultChan() <-chan Result {
@@ -50,12 +45,12 @@ func (h Handler) ResultChan() <-chan Result {
 
 // NewHandler returns a new cache handler. Note this handler does NOT precomputes stat data before calling ResultChan, and Result.Precomputed will be nil
 func NewHandler() Handler {
-	return Handler{resultChan: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +")}
+	return Handler{resultChan: make(chan Result)}
 }
 
 // NewPrecomputeHandler constructs a new cache Handler, which precomputes stat data and populates result.Precomputed before passing to ResultChan.
 func NewPrecomputeHandler(toData todata.TODataThreadsafe) Handler {
-	return Handler{resultChan: make(chan Result), MultipleSpaceRegex: regexp.MustCompile(" +"), ToData: &toData}
+	return Handler{resultChan: make(chan Result), ToData: &toData}
 }
 
 // Precompute returns whether this handler precomputes data before passing the result to the ResultChan
@@ -277,8 +272,8 @@ func StatsMarshall(statResultHistory ResultStatHistory, statInfo ResultInfoHisto
 }
 
 // Handle handles results fetched from a cache, parsing the raw Reader data and passing it along to a chan for further processing.
-func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, pollFinished chan<- uint64) {
-	log.Debugf("poll %v %v handle start\n", pollID, time.Now())
+func (handler Handler) Handle(id string, r io.Reader, format string, reqTime time.Duration, reqEnd time.Time, reqErr error, pollID uint64, pollFinished chan<- uint64) {
+	log.Debugf("poll %v %v (format '%v') handle start\n", pollID, time.Now(), format)
 	result := Result{
 		ID:           tc.CacheName(id),
 		Time:         reqEnd,
@@ -301,260 +296,36 @@ func (handler Handler) Handle(id string, r io.Reader, reqTime time.Duration, req
 		return
 	}
 
-	result.PrecomputedData.Reporting = true
-	result.PrecomputedData.Time = result.Time
+	statDecoder, ok := StatsTypeDecoders[format]
+	if !ok {
+		log.Errorf("Handler cache '%s' stat type '%s' not found! Returning handle error for this cache poll.\n", id, format)
+		result.Error = fmt.Errorf("handler stat type %s missing")
+		handler.resultChan <- result
+		return
+	}
 
-	if decodeErr := json.NewDecoder(r).Decode(&result.Astats); decodeErr != nil {
-		log.Warnf("%s procnetdev decode error '%v'\n", id, decodeErr)
+	decodeErr := error(nil)
+	if decodeErr, result.Astats.Ats, result.Astats.System = statDecoder.Parse(result.ID, r); decodeErr != nil {
+		log.Warnf("%s decode error '%v'\n", id, decodeErr)
 		result.Error = decodeErr
 		handler.resultChan <- result
 		return
 	}
 
 	if result.Astats.System.ProcNetDev == "" {
-		log.Warnf("addkbps %s procnetdev empty\n", id)
+		log.Warnf("Handler cache %s procnetdev empty\n", id)
 	}
-
 	if result.Astats.System.InfSpeed == 0 {
-		log.Warnf("addkbps %s inf.speed empty\n", id)
+		log.Warnf("Handler cache %s inf.speed empty\n", id)
 	}
 
-	if reqErr != nil {
-		result.Error = reqErr
-		log.Errorf("addkbps handle %s error '%v'\n", id, reqErr)
-	} else {
-		result.Available = true
-	}
+	result.Available = true
 
 	if handler.Precompute() {
-		result = handler.precompute(result)
+		result.PrecomputedData = statDecoder.Precompute(result.ID, handler.ToData.Get(), result.Astats.Ats, result.Astats.System)
 	}
+	result.PrecomputedData.Reporting = true
+	result.PrecomputedData.Time = result.Time
 
 	handler.resultChan <- result
-}
-
-// outBytes takes the proc.net.dev string, and the interface name, and returns the bytes field
-func outBytes(procNetDev, iface string, multipleSpaceRegex *regexp.Regexp) (int64, error) {
-	if procNetDev == "" {
-		return 0, fmt.Errorf("procNetDev empty")
-	}
-	if iface == "" {
-		return 0, fmt.Errorf("iface empty")
-	}
-	ifacePos := strings.Index(procNetDev, iface)
-	if ifacePos == -1 {
-		return 0, fmt.Errorf("interface '%s' not found in proc.net.dev '%s'", iface, procNetDev)
-	}
-
-	procNetDevIfaceBytes := procNetDev[ifacePos+len(iface)+1:]
-	procNetDevIfaceBytes = strings.TrimLeft(procNetDevIfaceBytes, " ")
-	procNetDevIfaceBytes = multipleSpaceRegex.ReplaceAllLiteralString(procNetDevIfaceBytes, " ")
-	procNetDevIfaceBytesArr := strings.Split(procNetDevIfaceBytes, " ") // this could be made faster with a custom function (DFA?) that splits and ignores duplicate spaces at the same time
-	if len(procNetDevIfaceBytesArr) < 10 {
-		return 0, fmt.Errorf("proc.net.dev iface '%v' unknown format '%s'", iface, procNetDev)
-	}
-	procNetDevIfaceBytes = procNetDevIfaceBytesArr[8]
-
-	return strconv.ParseInt(procNetDevIfaceBytes, 10, 64)
-}
-
-// precompute does the calculations which are possible with only this one cache result.
-// TODO precompute ResultStatVal
-func (handler Handler) precompute(result Result) Result {
-	todata := handler.ToData.Get()
-	stats := map[tc.DeliveryServiceName]dsdata.Stat{}
-
-	var err error
-	if result.PrecomputedData.OutBytes, err = outBytes(result.Astats.System.ProcNetDev, result.Astats.System.InfName, handler.MultipleSpaceRegex); err != nil {
-		result.PrecomputedData.OutBytes = 0
-		log.Errorf("addkbps %s handle precomputing outbytes '%v'\n", result.ID, err)
-	}
-
-	kbpsInMbps := int64(1000)
-	result.PrecomputedData.MaxKbps = int64(result.Astats.System.InfSpeed) * kbpsInMbps
-
-	for stat, value := range result.Astats.Ats {
-		var err error
-		stats, err = processStat(result.ID, stats, todata, stat, value, result.Time)
-		if err != nil && err != dsdata.ErrNotProcessedStat {
-			log.Infof("precomputing cache %v stat %v value %v error %v", result.ID, stat, value, err)
-			result.PrecomputedData.Errors = append(result.PrecomputedData.Errors, err)
-		}
-	}
-	result.PrecomputedData.DeliveryServiceStats = stats
-	return result
-}
-
-// processStat and its subsidiary functions act as a State Machine, flowing the stat thru states for each "." component of the stat name
-func processStat(server tc.CacheName, stats map[tc.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, value interface{}, timeReceived time.Time) (map[tc.DeliveryServiceName]dsdata.Stat, error) {
-	parts := strings.Split(stat, ".")
-	if len(parts) < 1 {
-		return stats, fmt.Errorf("stat has no initial part")
-	}
-
-	switch parts[0] {
-	case "plugin":
-		return processStatPlugin(server, stats, toData, stat, parts[1:], value, timeReceived)
-	case "proxy":
-		return stats, dsdata.ErrNotProcessedStat
-	case "server":
-		return stats, dsdata.ErrNotProcessedStat
-	default:
-		return stats, fmt.Errorf("stat '%s' has unknown initial part '%s'", stat, parts[0])
-	}
-}
-
-func processStatPlugin(server tc.CacheName, stats map[tc.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}, timeReceived time.Time) (map[tc.DeliveryServiceName]dsdata.Stat, error) {
-	if len(statParts) < 1 {
-		return stats, fmt.Errorf("stat has no plugin part")
-	}
-	switch statParts[0] {
-	case "remap_stats":
-		return processStatPluginRemapStats(server, stats, toData, stat, statParts[1:], value, timeReceived)
-	default:
-		return stats, fmt.Errorf("stat has unknown plugin part '%s'", statParts[0])
-	}
-}
-
-func processStatPluginRemapStats(server tc.CacheName, stats map[tc.DeliveryServiceName]dsdata.Stat, toData todata.TOData, stat string, statParts []string, value interface{}, timeReceived time.Time) (map[tc.DeliveryServiceName]dsdata.Stat, error) {
-	if len(statParts) < 3 {
-		return stats, fmt.Errorf("stat has no remap_stats deliveryservice and name parts")
-	}
-
-	// the FQDN is `subsubdomain`.`subdomain`.`domain`. For a HTTP delivery service, `subsubdomain` will be the cache hostname; for a DNS delivery service, it will be `edge`. Then, `subdomain` is the delivery service regex.
-	subsubdomain := statParts[0]
-	subdomain := statParts[1]
-	domain := strings.Join(statParts[2:len(statParts)-1], ".")
-
-	ds, ok := toData.DeliveryServiceRegexes.DeliveryService(domain, subdomain, subsubdomain)
-	if !ok {
-		fqdn := fmt.Sprintf("%s.%s.%s", subsubdomain, subdomain, domain)
-		return stats, fmt.Errorf("ERROR no delivery service match for fqdn '%v' stat '%v'\n", fqdn, strings.Join(statParts, "."))
-	}
-	if ds == "" {
-		fqdn := fmt.Sprintf("%s.%s.%s", subsubdomain, subdomain, domain)
-		return stats, fmt.Errorf("ERROR EMPTY delivery service fqdn %v stat %v\n", fqdn, strings.Join(statParts, "."))
-	}
-
-	statName := statParts[len(statParts)-1]
-
-	dsStat, ok := stats[ds]
-	if !ok {
-		newStat := dsdata.NewStat()
-		dsStat = *newStat
-	}
-
-	if err := addCacheStat(&dsStat.TotalStats, statName, value); err != nil {
-		return stats, err
-	}
-
-	cachegroup, ok := toData.ServerCachegroups[server]
-	if !ok {
-		return stats, fmt.Errorf("server missing from TOData.ServerCachegroups")
-	}
-	dsStat.CacheGroups[cachegroup] = dsStat.TotalStats
-
-	cacheType, ok := toData.ServerTypes[server]
-	if !ok {
-		return stats, fmt.Errorf("server missing from TOData.ServerTypes")
-	}
-	dsStat.Types[cacheType] = dsStat.TotalStats
-
-	dsStat.Caches[server] = dsStat.TotalStats
-
-	dsStat.CachesTimeReceived[server] = timeReceived
-	stats[ds] = dsStat
-	return stats, nil
-}
-
-// addCacheStat adds the given stat to the existing stat. Note this adds, it doesn't overwrite. Numbers are summed, strings are concatenated.
-// TODO make this less duplicate code somehow.
-func addCacheStat(stat *dsdata.StatCacheStats, name string, val interface{}) error {
-	switch name {
-	case "status_2xx":
-		v, ok := val.(float64)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Status2xx.Value += int64(v)
-	case "status_3xx":
-		v, ok := val.(float64)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Status3xx.Value += int64(v)
-	case "status_4xx":
-		v, ok := val.(float64)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Status4xx.Value += int64(v)
-	case "status_5xx":
-		v, ok := val.(float64)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Status5xx.Value += int64(v)
-	case "out_bytes":
-		v, ok := val.(float64)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.OutBytes.Value += int64(v)
-	case "is_available":
-		v, ok := val.(bool)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected bool actual '%v' type %T", name, val, val)
-		}
-		if v {
-			stat.IsAvailable.Value = true
-		}
-	case "in_bytes":
-		v, ok := val.(float64)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.InBytes.Value += v
-	case "tps_2xx":
-		v, ok := val.(int64)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Tps2xx.Value += float64(v)
-	case "tps_3xx":
-		v, ok := val.(int64)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Tps3xx.Value += float64(v)
-	case "tps_4xx":
-		v, ok := val.(int64)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Tps4xx.Value += float64(v)
-	case "tps_5xx":
-		v, ok := val.(int64)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.Tps5xx.Value += float64(v)
-	case "error_string":
-		v, ok := val.(string)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected string actual '%v' type %T", name, val, val)
-		}
-		stat.ErrorString.Value += v + ", "
-	case "tps_total":
-		v, ok := val.(float64)
-		if !ok {
-			return fmt.Errorf("stat '%s' value expected int actual '%v' type %T", name, val, val)
-		}
-		stat.TpsTotal.Value += v
-	case "status_unknown":
-		return dsdata.ErrNotProcessedStat
-	default:
-		return fmt.Errorf("unknown stat '%s'", name)
-	}
-	return nil
 }

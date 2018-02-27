@@ -25,6 +25,7 @@ import org.xbill.DNS.DNSKEYRecord;
 import org.xbill.DNS.NSRecord;
 import org.xbill.DNS.Name;
 import org.xbill.DNS.Record;
+import org.xbill.DNS.TXTRecord;
 import org.xbill.DNS.SOARecord;
 
 import java.net.Inet6Address;
@@ -103,6 +104,8 @@ public class ZoneTestRecords {
 		Name webMirror = new Name("mirror.www.example.com.");
 		Name ftpMirror = new Name("mirror.ftp.example.com.");
 
+		String txtRecord = new String("dead0123456789");
+
 		records = new ArrayList<>(Arrays.asList(
 			new AAAARecord(webServer, DClass.IN, threeDays.getSeconds(), Inet6Address.getByName("2001:db8::5:6:7:8")),
 			new AAAARecord(ftpServer, DClass.IN, threeDays.getSeconds(), Inet6Address.getByName("2001:db8::12:34:56:78")),
@@ -117,7 +120,8 @@ public class ZoneTestRecords {
 				adminEmail, 2016091400L, oneDay.getSeconds(), oneHour, threeWeeks.getSeconds(), threeDays.getSeconds()),
 			new AAAARecord(ftpServer, DClass.IN, threeDays.getSeconds(), Inet6Address.getByName("2001:db8::21:43:65:87")),
 			new CNAMERecord(webMirror, DClass.IN, tenYears.getSeconds(), webServer),
-			new CNAMERecord(ftpMirror, DClass.IN, tenYears.getSeconds(), ftpServer)
+			new CNAMERecord(ftpMirror, DClass.IN, tenYears.getSeconds(), ftpServer),
+			new TXTRecord(webServer, DClass.IN, tenYears.getSeconds(), txtRecord)
 		));
 
 		if (makeNewKeyPairs) {

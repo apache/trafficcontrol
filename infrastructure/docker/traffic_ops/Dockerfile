@@ -14,8 +14,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+
 ############################################################
-# Dockerfile to build Traffic Ops 1.6.0 container images
+# Dockerfile to build Traffic Ops container images
 # Based on CentOS 7.2
 ############################################################
 
@@ -27,26 +28,34 @@
 #
 # docker run --name my-traffic-ops --hostname my-traffic-ops --net cdnet --publish 443:443 --env MYSQL_IP=my-traffic-ops-mysql --env MYSQL_PORT=3306 --env MYSQL_ROOT_PASS=secretrootpass --env MYSQL_TRAFFIC_OPS_PASS=supersecretpassword --env ADMIN_USER=superroot --env ADMIN_PASS=supersecreterpassward --env CERT_COUNTRY=US --env CERT_STATE=Colorado --env CERT_CITY=Denver --env CERT_COMPANY=NotComcast --env TRAFFIC_VAULT_PASS=marginallylesssecret --env DOMAIN=cdnet --detach traffic_ops:1.5.1
 
-FROM centos:7
+FROM centos/systemd
 MAINTAINER Dan Kirkwood
 
+RUN yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm
+RUN yum install -y initscripts # needed for service command
+RUN yum install -y epel-release # needed for perl-Crypt-ScryptKDF
+RUN yum install -y perl-Crypt-ScryptKDF
 RUN yum install -y perl cpanminus perl-Test-CPAN-Meta
 RUN cpanm Carton
+RUN yum install -y perl-DBIx-Connector
 
 # Override RPM arg to use a different one using --build-arg RPM=...  Can be local file or http://...
-ARG RPM=http://traffic-control-cdn.net/downloads/1.7.0/RELEASE-1.7.0/traffic_ops-1.7.0-3908.5b77f60f.x86_64.rpm
+ARG RPM=traffic_ops.rpm
 ADD $RPM /
 RUN yum install -y /$(basename $RPM)
 
 # once installed, remove rpm to lower image size
 RUN rm /$(basename $RPM)
 
-RUN cd /opt/traffic_ops/app && carton
+RUN POSTGRES_HOME=/usr/pgsql-9.6 cd /opt/traffic_ops/app && carton
 
-RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/install/lib/ \
-	&& export TERM=xterm \
-	&& export USER=root \
-	&& yes | /opt/traffic_ops/install/bin/build_trafficops_perl_library -i
+RUN /opt/traffic_ops/install/bin/install_go.sh
+RUN /opt/traffic_ops/install/bin/install_goose.sh
+
+# RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/install/lib/ \
+# 	&& export TERM=xterm \
+# 	&& export USER=root \
+# 	&& yes | /opt/traffic_ops/install/bin/build_trafficops_perl_library -i
 
 RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/install/lib/ \
 	&& export TERM=xterm \
@@ -54,10 +63,12 @@ RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/insta
 	&& /opt/traffic_ops/install/bin/download_web_deps -i
 
 # \todo add Drive Letters to postinstall input
-RUN sed -i -- 's/"value": "b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"/"value": "0"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_edge.traffic_ops
-RUN sed -i -- 's/"value": "b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"/"value": "0"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_mid.traffic_ops
+# RUN sed -i -- 's/"value": "b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"/"value": "0"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_edge.traffic_ops
+# RUN sed -i -- 's/"value": "b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"/"value": "0"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_mid.traffic_ops
 
 RUN echo "{\"user\": \"riakuser\",\"password\": \"$TRAFFIC_VAULT_PASS\"}" > /opt/traffic_ops/app/conf/production/riak.conf
+
+RUN cp /opt/traffic_ops/app/bin/traffic_ops_golang{,.new} && mv /opt/traffic_ops/app/bin/traffic_ops_golang{.new,} # fixes an 'Invalid Argument' bug; TODO diagnose, fix, & remove
 
 EXPOSE 443
 WORKDIR /opt/traffic_ops/app

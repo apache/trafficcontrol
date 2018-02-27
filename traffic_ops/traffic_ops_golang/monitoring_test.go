@@ -615,9 +615,9 @@ func TestGetMonitoringJSON(t *testing.T) {
 		resp.Response.Config = config
 	}
 
-	sqlResp, err := getMonitoringJSON(cdn, db)
+	sqlResp, err, errType := getMonitoringJSON(cdn, db)
 	if err != nil {
-		t.Errorf("getMonitoringJSON expected: nil error, actual: %v", err)
+		t.Errorf("getMonitoringJSON expected: nil error, actual: %v with error type: %s", err, errType.String())
 	}
 
 	resp.Response.TrafficServers = sortCaches(resp.Response.TrafficServers)

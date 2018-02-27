@@ -51,12 +51,12 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editProfile(profile.id)" ng-repeat="profile in ::profiles">
-                <td>{{::profile.name}}</td>
-                <td>{{::profile.type}}</td>
-                <td>{{::profile.routingDisabled}}</td>
-                <td>{{::profile.description}}</td>
-                <td>{{::profile.cdnName}}</td>
+            <tr ng-click="editProfile(p.id)" ng-repeat="p in ::profiles">
+                <td data-search="^{{::p.name}}$">{{::p.name}}</td>
+                <td data-search="^{{::p.type}}$">{{::p.type}}</td>
+                <td data-search="^{{::p.routingDisabled}}$">{{::p.routingDisabled}}</td>
+                <td data-search="^{{::p.description}}$">{{::p.description}}</td>
+                <td data-search="^{{::p.cdnName}}$">{{::p.cdnName}}</td>
             </tr>
             </tbody>
         </table>

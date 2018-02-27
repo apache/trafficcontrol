@@ -109,6 +109,7 @@
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 		<property name="geolocationDatabaseUpdater" ref="geolocationDatabaseUpdater" />
 		<property name="networkUpdater" ref="networkUpdater" />
+		<property name="deepNetworkUpdater" ref="deepNetworkUpdater" />
 		<property name="regionalGeoUpdater" ref="regionalGeoUpdater" />
 		<property name="statTracker" ref="statTracker" />
 		<property name="configDir" value="/opt/traffic_router/conf" />
@@ -141,6 +142,14 @@
 		<property name="databasesDirectory" ref="databasesDir" />
 		<property name="databaseName" value="$[cache.czmap.database:czmap.json]" />
 		<property name="pollingInterval" value="$[cache.czmap.database.refresh.period:10800000]" />
+		<property name="trafficRouterManager" ref="trafficRouterManager" />
+	</bean>
+
+	<bean id="deepNetworkUpdater" class="com.comcast.cdn.traffic_control.traffic_router.core.loc.DeepNetworkUpdater" init-method="init">
+		<property name="executorService" ref="ScheduledExecutorService" />
+		<property name="databasesDirectory" ref="databasesDir" />
+		<property name="databaseName" value="$[cache.dczmap.database:dczmap.json]" />
+		<property name="pollingInterval" value="$[cache.dczmap.database.refresh.period:10800000]" />
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 	</bean>
 
@@ -182,7 +191,7 @@
 	</bean>
 
 	<bean id="languidState" class="com.comcast.cdn.traffic_control.traffic_router.core.util.LanguidState" init-method="init"
-		depends-on="geolocationDatabaseUpdater, networkUpdater, regionalGeoUpdater, MonitorWatcher, trafficRouterManager, ConfigHandler">
+		depends-on="geolocationDatabaseUpdater, networkUpdater, deepNetworkUpdater, regionalGeoUpdater, MonitorWatcher, trafficRouterManager, ConfigHandler">
 		<!-- todo: add bean refs that can be validated inside the method called -->
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
 	</bean>

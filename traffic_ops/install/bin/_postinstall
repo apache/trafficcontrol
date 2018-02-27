@@ -220,6 +220,11 @@ sub generateCdnConf {
     if (exists $cdnConfiguration{base_url}) {
         $cdnConf->{to}{base_url} = $cdnConfiguration{base_url};
     }
+    if (exists $cdnConfiguration{port}) {
+        $cdnConf->{"traffic_ops_golang"}{port} = $cdnConfiguration{port};
+    }
+    $cdnConf->{"traffic_ops_golang"}{"log_location_error"} = "/var/log/traffic_ops/error.log";
+    $cdnConf->{"traffic_ops_golang"}{"log_location_event"} = "/var/log/traffic_ops/access.log";
 
     $cdnConf->{hypnotoad}{workers} = $cdnConfiguration{workers};
     #InstallUtils::logger("cdnConf: " . Dumper($cdnConf), "info" );
@@ -453,6 +458,10 @@ sub getDefaults {
                 "config_var"                 => "keepSecrets"
             },
             {
+                "Port to serve on?"          => "443",
+                "config_var"                 => "port"
+            },
+            {
                 "Number of workers?" => "12",
                 "config_var"         => "workers"
             },
@@ -585,6 +594,7 @@ QUERY
     }
     invoke_db_admin_pl("migrate");
     invoke_db_admin_pl("seed");
+    invoke_db_admin_pl("patch");
 
     # Skip the insert if the admin 'username' is already there.
     my $hashed_passwd = hash_pass( $adminconf->{"password"} );

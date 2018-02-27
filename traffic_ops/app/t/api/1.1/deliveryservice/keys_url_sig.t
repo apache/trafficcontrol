@@ -64,14 +64,6 @@ my $version = "1.1";
 ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::PORTAL_USER, p => Test::TestHelper::PORTAL_USER_PASSWORD } )->status_is(200),
 	'Log into the portal user?';
 
-ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys/generate')->status_is(200)
-	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
-	'Can an assigned DeliveryService url keys for the portal user be regenerated?';
-
-ok $t->post_ok('/api/1.1/deliveryservices/xmlId/XXX/urlkeys/generate')->status_is(400)
-	->json_is( "/alerts/0/text/", "Delivery Service 'XXX' does not exist." )->or( sub { diag $t->tx->res->content->asset->{content}; } ),
-	'Can a non existent DeliveryService url keys for the portal user be regenerated?';
-
 ok $t->get_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys.json')->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Can assigned DeliveryService url keys can be viewed?';
 
@@ -83,6 +75,11 @@ ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->a
 # Admin User checks
 ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::ADMIN_USER, p => Test::TestHelper::ADMIN_USER_PASSWORD } )->status_is(200),
 	'Log into the admin user?';
+
+ok $t->post_ok('/api/1.1/deliveryservices/xmlId/XXX/urlkeys/generate')->status_is(400)
+		->json_is( "/alerts/0/text/", "Delivery Service 'XXX' does not exist." )->or( sub { diag $t->tx->res->content->asset->{content}; } ),
+	'Can a non existent DeliveryService url keys for the portal user be regenerated?';
+
 ok $t->post_ok('/api/1.1/deliveryservices/xmlId/test-ds1/urlkeys/generate')->status_is(200)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } ),
 	'Can an assigned DeliveryService url keys for the portal user be regenerated?';

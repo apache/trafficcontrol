@@ -223,12 +223,11 @@ func (a StatCacheStats) Sum(b StatCacheStats) StatCacheStats {
 
 // Stat represents a complete delivery service stat, for a given poll, or at the time requested.
 type Stat struct {
-	CommonStats        StatCommon
-	CacheGroups        map[tc.CacheGroupName]StatCacheStats
-	Types              map[tc.CacheType]StatCacheStats
-	Caches             map[tc.CacheName]StatCacheStats
-	CachesTimeReceived map[tc.CacheName]time.Time
-	TotalStats         StatCacheStats
+	CommonStats StatCommon
+	CacheGroups map[tc.CacheGroupName]StatCacheStats
+	Types       map[tc.CacheType]StatCacheStats
+	Caches      map[tc.CacheName]StatCacheStats
+	TotalStats  StatCacheStats
 }
 
 // ErrNotProcessedStat indicates a stat received is not used by Traffic Monitor, nor returned by any API endpoint. Receiving this error indicates the stat has been discarded.
@@ -237,23 +236,21 @@ var ErrNotProcessedStat = errors.New("This stat is not used.")
 // NewStat returns a new delivery service Stat, initializing pointer members.
 func NewStat() *Stat {
 	return &Stat{
-		CacheGroups:        map[tc.CacheGroupName]StatCacheStats{},
-		Types:              map[tc.CacheType]StatCacheStats{},
-		CommonStats:        StatCommon{CachesReporting: map[tc.CacheName]bool{}},
-		Caches:             map[tc.CacheName]StatCacheStats{},
-		CachesTimeReceived: map[tc.CacheName]time.Time{},
+		CacheGroups: map[tc.CacheGroupName]StatCacheStats{},
+		Types:       map[tc.CacheType]StatCacheStats{},
+		CommonStats: StatCommon{CachesReporting: map[tc.CacheName]bool{}},
+		Caches:      map[tc.CacheName]StatCacheStats{},
 	}
 }
 
 // Copy performs a deep copy of this Stat. It does not modify, and is thus safe for multiple goroutines.
 func (a Stat) Copy() Stat {
 	b := Stat{
-		CommonStats:        a.CommonStats.Copy(),
-		TotalStats:         a.TotalStats,
-		CacheGroups:        map[tc.CacheGroupName]StatCacheStats{},
-		Types:              map[tc.CacheType]StatCacheStats{},
-		Caches:             map[tc.CacheName]StatCacheStats{},
-		CachesTimeReceived: map[tc.CacheName]time.Time{},
+		CommonStats: a.CommonStats.Copy(),
+		TotalStats:  a.TotalStats,
+		CacheGroups: map[tc.CacheGroupName]StatCacheStats{},
+		Types:       map[tc.CacheType]StatCacheStats{},
+		Caches:      map[tc.CacheName]StatCacheStats{},
 	}
 	for k, v := range a.CacheGroups {
 		b.CacheGroups[k] = v
@@ -263,9 +260,6 @@ func (a Stat) Copy() Stat {
 	}
 	for k, v := range a.Caches {
 		b.Caches[k] = v
-	}
-	for k, v := range a.CachesTimeReceived {
-		b.CachesTimeReceived[k] = v
 	}
 	return b
 }

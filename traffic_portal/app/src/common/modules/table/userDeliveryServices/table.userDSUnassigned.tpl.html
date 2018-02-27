@@ -28,15 +28,15 @@ under the License.
         <thead>
         <tr class="headings">
             <th style="padding-left: 10px;"><input id="selectAllCB" type="checkbox" ng-click="selectAll($event)" ng-checked="allSelected()"></th>
-            <th>xmlId</th>
-            <th>displayName</th>
+            <th>Key (XML ID)</th>
+            <th>Display Name</th>
         </tr>
         </thead>
         <tbody>
         <tr ng-repeat="ds in ::selectedDSs">
             <td><input type="checkbox" ng-click="updateDeliveryServices($event, ds.id)" ng-checked="ds.selected"></td>
-            <td>{{::ds.xmlId}}</td>
-            <td>{{::ds.displayName}}</td>
+            <td data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
+            <td data-search="^{{::ds.displayName}}$">{{::ds.displayName}}</td>
         </tr>
         </tbody>
     </table>

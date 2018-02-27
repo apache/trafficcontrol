@@ -15,7 +15,6 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
-import org.apache.wicket.ajax.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -79,6 +78,7 @@ public class AbstractServiceUpdaterTest {
 	public void itUsesETag() throws Exception {
 		Updater updater = new Updater();
 		updater.setDatabasesDirectory(databasesDirectory);
+		updater.dataBaseURL = "http://www.example.com";
 		updater.updateDatabase();
 
 		verify(connection, times(0)).setRequestProperty(eq("If-None-Match"), anyString());
@@ -91,12 +91,12 @@ public class AbstractServiceUpdaterTest {
 
 	class Updater extends AbstractServiceUpdater {
 		@Override
-		public boolean verifyDatabase(File dbFile) throws IOException, JSONException {
+		public boolean verifyDatabase(File dbFile) throws IOException {
 			return false;
 		}
 
 		@Override
-		public boolean loadDatabase() throws IOException, JSONException {
+		public boolean loadDatabase() throws IOException {
 			return false;
 		}
 

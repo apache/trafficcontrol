@@ -23,6 +23,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"runtime"
 	"sync/atomic"
 	"time"
 
@@ -49,6 +50,7 @@ type PollConfig struct {
 	Host    string
 	Timeout time.Duration
 	Handler handler.Handler
+	Format  string
 }
 
 type HttpPollerConfig struct {
@@ -134,6 +136,7 @@ func (p MonitorConfigPoller) Poll() {
 		} else {
 			log.Errorf("MonitorConfigPoller failed without panic\n")
 		}
+		log.Errorf("%s\n", stacktrace())
 		os.Exit(1) // The Monitor can't run without a MonitorConfigPoller
 	}()
 	for {
@@ -177,11 +180,8 @@ var debugPollNum uint64
 type HTTPPollInfo struct {
 	NoKeepAlive bool
 	Interval    time.Duration
-	Timeout     time.Duration
 	ID          string
-	URL         string
-	Host        string
-	Handler     handler.Handler
+	PollConfig
 }
 
 func (p HttpPoller) Poll() {
@@ -219,7 +219,7 @@ func (p HttpPoller) Poll() {
 					}
 				}
 			}
-			go poller(info.Interval, info.ID, info.URL, info.Host, fetcher, kill)
+			go poller(info.Interval, info.ID, info.URL, info.Host, info.Format, fetcher, kill)
 		}
 		p.Config = newConfig
 	}
@@ -235,7 +235,7 @@ func mustDie(die <-chan struct{}) bool {
 }
 
 // TODO iterationCount and/or p.TickChan?
-func poller(interval time.Duration, id string, url string, host string, fetcher fetcher.Fetcher, die <-chan struct{}) {
+func poller(interval time.Duration, id string, url string, host string, format string, fetcher fetcher.Fetcher, die <-chan struct{}) {
 	pollSpread := time.Duration(rand.Float64()*float64(interval/time.Nanosecond)) * time.Nanosecond
 	time.Sleep(pollSpread)
 	tick := time.NewTicker(interval)
@@ -252,7 +252,7 @@ func poller(interval time.Duration, id string, url string, host string, fetcher 
 			pollId := atomic.AddUint64(&debugPollNum, 1)
 			pollFinishedChan := make(chan uint64)
 			log.Debugf("poll %v %v start\n", pollId, time.Now())
-			go fetcher.Fetch(id, url, host, pollId, pollFinishedChan) // TODO persist fetcher, with its own die chan?
+			go fetcher.Fetch(id, url, host, format, pollId, pollFinishedChan) // TODO persist fetcher, with its own die chan?
 			<-pollFinishedChan
 		case <-die:
 			tick.Stop()
@@ -275,9 +275,7 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 				Interval:    new.Interval,
 				NoKeepAlive: new.NoKeepAlive,
 				ID:          id,
-				URL:         pollCfg.URL,
-				Host:        pollCfg.Host,
-				Timeout:     pollCfg.Timeout,
+				PollConfig:  pollCfg,
 			})
 		}
 		return deletions, additions
@@ -293,9 +291,7 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 				Interval:    new.Interval,
 				NoKeepAlive: new.NoKeepAlive,
 				ID:          id,
-				URL:         newPollCfg.URL,
-				Host:        newPollCfg.Host,
-				Timeout:     newPollCfg.Timeout,
+				PollConfig:  newPollCfg,
 			})
 		}
 	}
@@ -307,12 +303,22 @@ func diffConfigs(old HttpPollerConfig, new HttpPollerConfig) ([]string, []HTTPPo
 				Interval:    new.Interval,
 				NoKeepAlive: new.NoKeepAlive,
 				ID:          id,
-				URL:         newPollCfg.URL,
-				Host:        newPollCfg.Host,
-				Timeout:     newPollCfg.Timeout,
+				PollConfig:  newPollCfg,
 			})
 		}
 	}
 
 	return deletions, additions
+}
+
+func stacktrace() []byte {
+	initialBufSize := 1024
+	buf := make([]byte, initialBufSize)
+	for {
+		n := runtime.Stack(buf, true)
+		if n < len(buf) {
+			return buf[:n]
+		}
+		buf = make([]byte, len(buf)*2)
+	}
 }

@@ -125,9 +125,9 @@ sub update {
 		return $self->alert("Root tenant cannot be in-active.");
 	}
 
-	if ($params->{parentId} != $tenant->parent) {
+	if ($params->{parentId} != $tenant->parent_id) {
 		#parent replacement
-		if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $tenant->parent)) {
+		if (!$tenant_utils->is_tenant_resource_accessible($tenants_data, $tenant->parent_id)) {
 			#Current owning tenant is not under user's tenancy
 			return $self>alert("Invalid parent tenant change. The current tenant parent is not avaialble for you to edit");
 		}

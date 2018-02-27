@@ -21,17 +21,39 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
-            <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{deliveryService.displayName}}</a></li>
+            <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{deliveryService.xmlId}}</a></li>
             <li class="active">SSL keys</li>
         </ol>
-        <ol class="breadcrumb pull-right">
-        <li><button type="button" class="btn btn-success" ng-click="generateKeys()">Generate New Keys</button></li>
-        </ol>
+        <div class="pull-right" role="group">
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li><a ng-click="generateKeys()">Generate SSL Keys</a></li>
+                </ul>
+            </div>
+        </div>
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
         <br>
         <form name="dsSslKeyForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Version</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="version" type="text" class="form-control" ng-model="sslKeys.version" readonly>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(dsSslKeyForm.hostname), 'has-feedback': hasError(dsSslKeyForm.hostname)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Common Name *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="hostname" type="text" class="form-control" ng-model="sslKeys.hostname" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(dsSslKeyForm.hostname, 'required')">Required</small>
+                    <span ng-show="hasError(dsSslKeyForm.hostname)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
             <div class="form-group" ng-class="{'has-error': hasError(dsSslKeyForm.privateKey), 'has-feedback': hasError(dsSslKeyForm.privateKey)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Private Key *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
@@ -57,7 +79,7 @@ under the License.
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" ng-disabled="dsSslKeyForm.$pristine || dsSslKeyForm.$invalid" ng-click="save()">Save</button>
+                <button type="button" class="btn btn-success" ng-disabled="dsSslKeyForm.$pristine || dsSslKeyForm.$invalid" ng-click="save()">Update Keys</button>
             </div>
         </form>
     </div>

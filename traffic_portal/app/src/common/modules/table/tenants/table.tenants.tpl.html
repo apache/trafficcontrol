@@ -33,16 +33,16 @@ under the License.
         <table id="tenantsTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>name</th>
-                <th>active</th>
-                <th>parent</th>
+                <th>Name</th>
+                <th>Active</th>
+                <th>Parent</th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editTenant(tenant.id)" ng-repeat="tenant in ::tenants">
-                <td>{{::tenant.name}}</td>
-                <td>{{::tenant.active}}</td>
-                <td>{{::tenant.parentName}}</td>
+            <tr ng-click="editTenant(t.id)" ng-repeat="t in ::tenants">
+                <td data-search="^{{::t.name}}$">{{::t.name}}</td>
+                <td data-search="^{{::t.active}}$">{{::t.active}}</td>
+                <td data-search="^{{::t.parentName}}$">{{::t.parentName}}</td>
             </tr>
             </tbody>
         </table>

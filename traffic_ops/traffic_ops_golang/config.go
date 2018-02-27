@@ -155,7 +155,7 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string) (Con
 	return cfg, err
 }
 
-// CertPath extracts path to cert .cert file
+// GetCertPath - extracts path to cert .cert file
 func (c Config) GetCertPath() string {
 	v, ok := c.URL.Query()["cert"]
 	if ok {
@@ -164,7 +164,7 @@ func (c Config) GetCertPath() string {
 	return ""
 }
 
-// KeyPath extracts path to cert .key file
+// GetKeyPath - extracts path to cert .key file
 func (c Config) GetKeyPath() string {
 	v, ok := c.URL.Query()["key"]
 	if ok {
@@ -181,6 +181,7 @@ func getRiakAuthOptions(s string) (*riak.AuthOptions, error) {
 }
 
 const (
+	// MojoliciousConcurrentConnectionsDefault  ...
 	MojoliciousConcurrentConnectionsDefault = 12
 )
 

@@ -34,6 +34,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// Version ...
 const Version = "0.1"
 
 func main() {
@@ -119,7 +120,6 @@ func main() {
 		IdleTimeout:       time.Duration(cfg.IdleTimeout) * time.Second,
 	}
 
-	log.Debugf("our server struct: %++v \n", server)
 	if err := server.ListenAndServeTLS(cfg.CertPath, cfg.KeyPath); err != nil {
 		log.Errorf("stopping server: %v\n", err)
 		return

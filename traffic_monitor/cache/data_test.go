@@ -164,12 +164,11 @@ func randDsStat() dsdata.Stat {
 	}
 
 	return dsdata.Stat{
-		CommonStats:        randStatCommon(),
-		CacheGroups:        cacheGroups,
-		Types:              types,
-		Caches:             caches,
-		CachesTimeReceived: cachesTime,
-		TotalStats:         randStatCacheStats(),
+		CommonStats: randStatCommon(),
+		CacheGroups: cacheGroups,
+		Types:       types,
+		Caches:      caches,
+		TotalStats:  randStatCacheStats(),
 	}
 }
 
