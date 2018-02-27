@@ -1,4 +1,4 @@
-package afterrespond
+package plugin
 
 import (
 	"strconv"
@@ -12,13 +12,11 @@ import (
 
 const NSPerSec = 1000000000
 
-const ATSLogName = "record_stats"
-
 func init() {
-	AddPlugin(20000, ATSLogName, atsLog, nil)
+	AddPlugin(20000, Funcs{afterRespond: atsLog})
 }
 
-func atsLog(icfg interface{}, d Data) {
+func atsLog(icfg interface{}, d AfterRespondData) {
 	now := time.Now()
 	bytesSent := web.TryGetBytesWritten(d.W, d.Conn, d.BytesWritten)
 

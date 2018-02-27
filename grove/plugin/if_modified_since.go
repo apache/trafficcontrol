@@ -1,4 +1,4 @@
-package beforerespond
+package plugin
 
 import (
 	"net/http"
@@ -6,13 +6,11 @@ import (
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 )
 
-const IfModifiedSinceName = "if_modified_since"
-
 func init() {
-	AddPlugin(5000, IfModifiedSinceName, ifModifiedSince, nil)
+	AddPlugin(5000, Funcs{beforeRespond: ifModifiedSince})
 }
 
-func ifModifiedSince(icfg interface{}, d Data) {
+func ifModifiedSince(icfg interface{}, d BeforeRespondData) {
 	if d.CacheObj == nil {
 		return // if we don't have a cacheobj from the origin, there's no object to have been modified.
 	}

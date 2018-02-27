@@ -6,7 +6,6 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/grove/cachedata"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin"
-	"github.com/apache/incubator-trafficcontrol/grove/plugin/afterrespond"
 	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 	"github.com/apache/incubator-trafficcontrol/grove/stat"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
@@ -80,8 +79,8 @@ func (r *Responder) Do() {
 
 	respSuccess := err != nil
 	respData := cachedata.RespData{*r.ResponseCode, bytesSent, respSuccess, isCacheHit(r.Reuse, r.OriginCode)}
-	arData := afterrespond.Data{r.W, r.Stats, r.ReqData, r.SrvrData, r.ParentRespData, respData}
-	r.Plugins.AfterRespond.Call(r.PluginCfg, arData)
+	arData := plugin.AfterRespondData{r.W, r.Stats, r.ReqData, r.SrvrData, r.ParentRespData, respData}
+	r.Plugins.OnAfterRespond(r.PluginCfg, arData)
 }
 
 func isCacheHit(reuse remapdata.Reuse, originCode int) bool {
