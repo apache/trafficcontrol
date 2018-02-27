@@ -39,7 +39,8 @@ type Funcs struct {
 }
 
 type StartupData struct {
-	Config config.Config
+	Config  config.Config
+	Context *interface{}
 }
 
 type OnRequestData struct {
@@ -50,10 +51,12 @@ type OnRequestData struct {
 	StatRules     remapdata.RemapRulesStats
 	HTTPConns     *web.ConnMap
 	HTTPSConns    *web.ConnMap
+	Context       *interface{}
 }
 
 type BeforeParentRequestData struct {
-	Req *http.Request
+	Req     *http.Request
+	Context *interface{}
 }
 
 // BeforeRespondData holds the data passed to plugins. The objects pointed to MAY NOT be modified, however, the location pointed to may be changed for the Code, Hdr, and Body. That iss, `*d.Hdr = myHdr` is ok, but `d.Hdr.Add("a", "b") is not.
@@ -65,6 +68,7 @@ type BeforeRespondData struct {
 	Code     *int
 	Hdr      *http.Header
 	Body     *[]byte
+	Context  *interface{}
 }
 
 type AfterRespondData struct {
@@ -75,6 +79,7 @@ type AfterRespondData struct {
 	cachedata.SrvrData
 	cachedata.ParentRespData
 	cachedata.RespData
+	Context *interface{}
 }
 
 type LoadFunc func(json.RawMessage) interface{}
@@ -105,78 +110,77 @@ func Get() Plugins {
 
 type Plugins interface {
 	LoadFuncs() map[string]LoadFunc
-	OnStartup(cfgs map[string]interface{}, d StartupData)
-	OnRequest(cfgs map[string]interface{}, d OnRequestData) bool
-	OnBeforeParentRequest(cfgs map[string]interface{}, d BeforeParentRequestData)
-	OnBeforeRespond(cfgs map[string]interface{}, d BeforeRespondData)
-	OnAfterRespond(cfgs map[string]interface{}, d AfterRespondData)
+	OnStartup(cfgs map[string]interface{}, context map[string]*interface{}, d StartupData)
+	OnRequest(cfgs map[string]interface{}, context map[string]*interface{}, d OnRequestData) bool
+	OnBeforeParentRequest(cfgs map[string]interface{}, context map[string]*interface{}, d BeforeParentRequestData)
+	OnBeforeRespond(cfgs map[string]interface{}, context map[string]*interface{}, d BeforeRespondData)
+	OnAfterRespond(cfgs map[string]interface{}, context map[string]*interface{}, d AfterRespondData)
 }
 
 func (plugins pluginsSlice) LoadFuncs() map[string]LoadFunc {
 	lf := map[string]LoadFunc{}
 	for _, plugin := range plugins {
-		if plugin.funcs.load != nil {
-			lf[plugin.name] = LoadFunc(plugin.funcs.load)
+		if plugin.funcs.load == nil {
+			continue
 		}
+		lf[plugin.name] = LoadFunc(plugin.funcs.load)
 	}
 	return lf
 }
 
-func (ps pluginsSlice) OnStartup(cfgs map[string]interface{}, d StartupData) {
-	if cfgs == nil {
-		cfgs = map[string]interface{}{}
-	}
+func (ps pluginsSlice) OnStartup(cfgs map[string]interface{}, context map[string]*interface{}, d StartupData) {
 	for _, p := range ps {
-		if p.funcs.startup != nil {
-			p.funcs.startup(cfgs[p.name], d)
+		ictx := interface{}(nil)
+		context[p.name] = &ictx
+
+		if p.funcs.startup == nil {
+			continue
 		}
+		d.Context = context[p.name]
+		p.funcs.startup(cfgs[p.name], d)
 	}
 }
 
-func (ps pluginsSlice) OnRequest(cfgs map[string]interface{}, d OnRequestData) bool {
-	if cfgs == nil {
-		cfgs = map[string]interface{}{}
-	}
-	stop := false
+// OnRequest returns a boolean whether to immediately stop processing the request. If a plugin returns true, this is immediately returned with no further plugins processed.
+func (ps pluginsSlice) OnRequest(cfgs map[string]interface{}, context map[string]*interface{}, d OnRequestData) bool {
 	for _, p := range ps {
-		if p.funcs.onRequest != nil {
-			if stopHandler := p.funcs.onRequest(cfgs[p.name], d); stopHandler {
-				stop = true
-			}
+		if p.funcs.onRequest == nil {
+			continue
+		}
+		d.Context = context[p.name]
+		if stop := p.funcs.onRequest(cfgs[p.name], d); stop {
+			return true
 		}
 	}
-	return stop
+	return false
 }
 
-func (ps pluginsSlice) OnBeforeParentRequest(cfgs map[string]interface{}, d BeforeParentRequestData) {
-	if cfgs == nil {
-		cfgs = map[string]interface{}{}
-	}
+func (ps pluginsSlice) OnBeforeParentRequest(cfgs map[string]interface{}, context map[string]*interface{}, d BeforeParentRequestData) {
 	for _, p := range ps {
-		if p.funcs.beforeParentRequest != nil {
-			p.funcs.beforeParentRequest(cfgs[p.name], d)
+		if p.funcs.beforeParentRequest == nil {
+			continue
 		}
-	}
-}
-
-func (ps pluginsSlice) OnBeforeRespond(cfgs map[string]interface{}, d BeforeRespondData) {
-	if cfgs == nil {
-		cfgs = map[string]interface{}{}
-	}
-	for _, p := range ps {
-		if p.funcs.beforeRespond != nil {
-			p.funcs.beforeRespond(cfgs[p.name], d)
-		}
+		d.Context = context[p.name]
+		p.funcs.beforeParentRequest(cfgs[p.name], d)
 	}
 }
 
-func (ps pluginsSlice) OnAfterRespond(cfgs map[string]interface{}, d AfterRespondData) {
-	if cfgs == nil {
-		cfgs = map[string]interface{}{}
-	}
+func (ps pluginsSlice) OnBeforeRespond(cfgs map[string]interface{}, context map[string]*interface{}, d BeforeRespondData) {
 	for _, p := range ps {
-		if p.funcs.afterRespond != nil {
-			p.funcs.afterRespond(cfgs[p.name], d)
+		if p.funcs.beforeRespond == nil {
+			continue
 		}
+		d.Context = context[p.name]
+		p.funcs.beforeRespond(cfgs[p.name], d)
+	}
+}
+
+func (ps pluginsSlice) OnAfterRespond(cfgs map[string]interface{}, context map[string]*interface{}, d AfterRespondData) {
+	for _, p := range ps {
+		if p.funcs.afterRespond == nil {
+			continue
+		}
+		d.Context = context[p.name]
+		p.funcs.afterRespond(cfgs[p.name], d)
 	}
 }

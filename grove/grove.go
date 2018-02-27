@@ -105,7 +105,7 @@ func main() {
 	// TODO pass total size for all file groups?
 	stats := stat.New(remapper.Rules(), caches, uint64(cfg.CacheSizeBytes), httpConns, httpsConns)
 
-	buildHandler := func(scheme string, port string, conns *web.ConnMap, stats stat.Stats) *cache.HandlerPointer {
+	buildHandler := func(scheme string, port string, conns *web.ConnMap, stats stat.Stats, pluginContext map[string]*interface{}) *cache.HandlerPointer {
 		return cache.NewHandlerPointer(cache.NewHandler(
 			remapper,
 			uint64(cfg.ConcurrentRuleRequests),
@@ -120,20 +120,23 @@ func main() {
 			cfg.ReqMaxIdleConns,
 			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
 			plugins,
+			pluginContext,
 			httpConns,
 			httpsConns,
 			cfg.InterfaceName,
 		))
 	}
 
-	httpHandler := buildHandler("http", strconv.Itoa(cfg.Port), httpConns, stats)
-	httpsHandler := buildHandler("https", strconv.Itoa(cfg.HTTPSPort), httpsConns, stats)
+	pluginContext := map[string]*interface{}{}
+
+	httpHandler := buildHandler("http", strconv.Itoa(cfg.Port), httpConns, stats, pluginContext)
+	httpsHandler := buildHandler("https", strconv.Itoa(cfg.HTTPSPort), httpsConns, stats, pluginContext)
 
 	idleTimeout := time.Duration(cfg.ServerIdleTimeoutMS) * time.Millisecond
 	readTimeout := time.Duration(cfg.ServerReadTimeoutMS) * time.Millisecond
 	writeTimeout := time.Duration(cfg.ServerWriteTimeoutMS) * time.Millisecond
 
-	plugins.OnStartup(remapper.PluginCfg(), plugin.StartupData{Config: cfg})
+	plugins.OnStartup(remapper.PluginCfg(), pluginContext, plugin.StartupData{Config: cfg})
 
 	// TODO add config to not serve HTTP (only HTTPS). If port is not set?
 	httpServer := startServer(httpHandler, httpListener, httpConnStateCallback, cfg.Port, idleTimeout, readTimeout, writeTimeout, "http")
@@ -203,6 +206,7 @@ func main() {
 			cfg.ReqMaxIdleConns,
 			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
 			plugins,
+			pluginContext,
 			httpConns,
 			httpsConns,
 			cfg.InterfaceName,
@@ -223,6 +227,7 @@ func main() {
 			cfg.ReqMaxIdleConns,
 			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
 			plugins,
+			pluginContext,
 			httpConns,
 			httpsConns,
 			cfg.InterfaceName,

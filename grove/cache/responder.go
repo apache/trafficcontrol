@@ -15,12 +15,13 @@ import (
 
 // Responder is an object encapsulating the cache's response to the client. It holds all the data necessary to respond, log the response, and add the stats.
 type Responder struct {
-	W            http.ResponseWriter
-	PluginCfg    map[string]interface{}
-	Plugins      plugin.Plugins
-	Stats        stat.Stats
-	F            RespondFunc
-	ResponseCode *int
+	W             http.ResponseWriter
+	PluginCfg     map[string]interface{}
+	Plugins       plugin.Plugins
+	PluginContext map[string]*interface{}
+	Stats         stat.Stats
+	F             RespondFunc
+	ResponseCode  *int
 	cachedata.ParentRespData
 	cachedata.SrvrData
 	cachedata.ReqData
@@ -45,11 +46,12 @@ func DefaultRespCode() *int {
 type RespondFunc func() (uint64, error)
 
 // NewResponder creates a Responder, which defaults to a generic error response.
-func NewResponder(w http.ResponseWriter, pluginCfg map[string]interface{}, srvrData cachedata.SrvrData, reqData cachedata.ReqData, plugins plugin.Plugins, stats stat.Stats) *Responder {
+func NewResponder(w http.ResponseWriter, pluginCfg map[string]interface{}, pluginContext map[string]*interface{}, srvrData cachedata.SrvrData, reqData cachedata.ReqData, plugins plugin.Plugins, stats stat.Stats) *Responder {
 	responder := &Responder{
 		W:              w,
 		PluginCfg:      pluginCfg,
 		Plugins:        plugins,
+		PluginContext:  pluginContext,
 		Stats:          stats,
 		ResponseCode:   DefaultRespCode(),
 		ParentRespData: DefaultParentRespData(),
@@ -79,8 +81,8 @@ func (r *Responder) Do() {
 
 	respSuccess := err != nil
 	respData := cachedata.RespData{*r.ResponseCode, bytesSent, respSuccess, isCacheHit(r.Reuse, r.OriginCode)}
-	arData := plugin.AfterRespondData{r.W, r.Stats, r.ReqData, r.SrvrData, r.ParentRespData, respData}
-	r.Plugins.OnAfterRespond(r.PluginCfg, arData)
+	arData := plugin.AfterRespondData{W: r.W, Stats: r.Stats, ReqData: r.ReqData, SrvrData: r.SrvrData, ParentRespData: r.ParentRespData, RespData: respData}
+	r.Plugins.OnAfterRespond(r.PluginCfg, r.PluginContext, arData)
 }
 
 func isCacheHit(reuse remapdata.Reuse, originCode int) bool {
