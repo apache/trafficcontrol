@@ -47,6 +47,21 @@ public class ConsistentHashController {
 		return ResponseEntity.ok(cache);
 	}
 
+	@RequestMapping(value = "/cache/deep/coveragezone")
+	public @ResponseBody
+	ResponseEntity hashCoverageZoneDeepCache(@RequestParam(name="ip") final String ip,
+										 @RequestParam(name = "deliveryServiceId") final String deliveryServiceId,
+										 @RequestParam(name = "requestPath") final String requestPath) {
+
+		final Cache cache = trafficRouterManager.getTrafficRouter().consistentHashForCoverageZone(ip, deliveryServiceId, requestPath, true);
+
+		if (cache == null) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{}");
+		}
+
+		return ResponseEntity.ok(cache);
+	}
+
 	@RequestMapping(value = "/cache/geolocation")
 	public @ResponseBody
 	ResponseEntity hashGeolocatedCache(@RequestParam(name="ip") final String ip,

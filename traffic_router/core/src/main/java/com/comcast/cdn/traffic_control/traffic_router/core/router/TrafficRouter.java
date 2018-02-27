@@ -713,13 +713,17 @@ public class TrafficRouter {
 	}
 
 	public Cache consistentHashForCoverageZone(final String ip, final String deliveryServiceId, final String requestPath) {
+		return consistentHashForCoverageZone(ip, deliveryServiceId, requestPath, false);
+	}
+
+	public Cache consistentHashForCoverageZone(final String ip, final String deliveryServiceId, final String requestPath, final boolean useDeep) {
 		final DeliveryService deliveryService = cacheRegister.getDeliveryService(deliveryServiceId);
 		if (deliveryService == null) {
 			LOGGER.error("Failed getting delivery service from cache register for id '" + deliveryServiceId + "'");
 			return null;
 		}
 
-		final CacheLocation coverageZoneCacheLocation = getCoverageZoneCacheLocation(ip, deliveryService);
+		final CacheLocation coverageZoneCacheLocation = getCoverageZoneCacheLocation(ip, deliveryService, useDeep);
 		final List<Cache> caches = selectCachesByCZ(deliveryService, coverageZoneCacheLocation);
 
 		if (caches == null || caches.isEmpty()) {
