@@ -63,7 +63,7 @@ func CreateChangeLog(level string, action string, i Identifier, user auth.Curren
 	}
 
 	query := `INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`
-	log.Debugf("about to exec ", query, " with ", message)
+	log.Debugf("about to exec %s with %s", query, message)
 	_, err := db.Exec(query, level, message, user.ID)
 	if err != nil {
 		log.Errorf("received error: %++v from audit log insertion", err)
