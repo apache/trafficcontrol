@@ -37,7 +37,7 @@ type AvailableTuple struct {
 	IPv6 bool
 }
 
-func (a AvailableTuple) SetAvailability(usingIPv4 bool, isAvailable bool) {
+func (a *AvailableTuple) SetAvailability(usingIPv4 bool, isAvailable bool) {
 	if usingIPv4 {
 		a.IPv4 = isAvailable
 	} else {
