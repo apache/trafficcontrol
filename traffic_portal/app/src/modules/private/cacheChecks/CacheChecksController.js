@@ -58,8 +58,7 @@ var CacheChecksController = function(cacheChecks, showReval, $scope, $state, $in
 	angular.element(document).ready(function () {
 		$('#cacheChecksTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": -1,
-			"stateSave": false
+			"iDisplayLength": -1
 		});
 	});
 

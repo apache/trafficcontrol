@@ -922,17 +922,17 @@ sub gen_traffic_router_config {
 				&& $row->http_bypass_fqdn ne "" )
 			{
 				my $full = $row->http_bypass_fqdn;
-				my $port;
 				my $fqdn;
 				if ( $full =~ m/\:/ ) {
+					my $port;
 					( $fqdn, $port ) = split( /\:/, $full );
+					# Specify port number only if explicitly set by the DS 'Bypass FQDN' field - issue 1493
+					$bypass_destination->{'port'} = int($port);
 				}
 				else {
 					$fqdn = $full;
-					$port = 80;
 				}
 				$bypass_destination->{'fqdn'} = $fqdn;
-				$bypass_destination->{'port'} = int($port);
 			}
 		}
 		$delivery_service->{'bypassDestination'} = $bypass_destination;
@@ -1205,10 +1205,14 @@ sub refresh_keys {
 
 			#get DeliveryServices for CDN
 			my %search = ( cdn_id => $row->id );
-			my @ds_rs = $self->db->resultset('Deliveryservice')->search( \%search );
+			my @ds_rs = $self->db->resultset('Deliveryservice')->search( \%search, { prefetch => ['type'] });
+
 			foreach my $ds (@ds_rs) {
-				if (   $ds->type->name !~ m/^HTTP/
-					&& $ds->type->name !~ m/^DNS/ )
+				my $type = $ds->type->name;
+				if (   $type !~ m/^HTTP/
+					&& $type !~ m/^CLIENT_STEERING$/
+					&& $type !~ m/^STEERING$/
+					&& $type !~ m/^DNS/ )
 				{
 					next;
 				}

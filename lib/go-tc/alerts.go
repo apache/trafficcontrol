@@ -20,6 +20,7 @@ package tc
  */
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -54,18 +55,47 @@ func CreateAlerts(level AlertLevel, messages ...string) Alerts {
 	return Alerts{alerts}
 }
 
-func GetHandleErrorFunc(w http.ResponseWriter, r *http.Request) func(err error, status int) {
-	return func(err error, status int) {
-		log.Errorf("%v %v\n", r.RemoteAddr, err)
-		errBytes, jsonErr := json.Marshal(CreateErrorAlerts(err))
+func GetHandleErrorsFunc(w http.ResponseWriter, r *http.Request) func(status int, errs ...error) {
+	return func(status int, errs ...error) {
+		log.Errorf("%v %v\n", r.RemoteAddr, errs)
+		errBytes, jsonErr := json.Marshal(CreateErrorAlerts(errs...))
 		if jsonErr != nil {
 			log.Errorf("failed to marshal error: %s\n", jsonErr)
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, http.StatusText(http.StatusInternalServerError))
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(status)
+		w.Header().Set(ContentType, ApplicationJson)
+
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, StatusKey, status)
+		*r = *r.WithContext(ctx)
+
 		fmt.Fprintf(w, "%s", errBytes)
 	}
 }
+
+func HandleErrorsWithType(errs []error, errType ApiErrorType, handleErrs func(status int, errs ...error)) {
+	switch errType {
+	case SystemError:
+		handleErrs(http.StatusInternalServerError, errs...)
+	case DataConflictError:
+		handleErrs(http.StatusBadRequest, errs...)
+	case DataMissingError:
+		handleErrs(http.StatusNotFound, errs...)
+	default:
+		log.Errorf("received unknown ApiErrorType from read: %s\n", errType.String())
+		handleErrs(http.StatusInternalServerError, errs...)
+	}
+}
+
+func (alerts *Alerts) ToStrings() []string {
+	alertStrs := []string{}
+	for _, alrt := range alerts.Alerts {
+		at := alrt.Text
+		alertStrs = append(alertStrs, at)
+	}
+	return alertStrs
+}
+
+var StatusKey = "status"

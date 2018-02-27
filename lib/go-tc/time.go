@@ -21,42 +21,39 @@ package tc
 
 import (
 	"database/sql/driver"
-	"fmt"
 	"strings"
 	"time"
 )
 
+// Time wraps standard time.Time to allow indication of invalid times
 type Time struct {
 	time.Time
 	Valid bool
 }
 
 // TimeLayout is the format used in lastUpdated fields in Traffic Ops
-const TimeLayout = "2006-01-02 15:04:05+00"
+const TimeLayout = "2006-01-02 15:04:05-07"
 
 // Scan implements the database/sql Scanner interface.
-func (jt *Time) Scan(value interface{}) error {
-	jt.Time, jt.Valid = value.(time.Time)
+func (t *Time) Scan(value interface{}) error {
+	t.Time, t.Valid = value.(time.Time)
 	return nil
 }
 
 // Value implements the database/sql/driver Valuer interface.
-func (jt Time) Value() (driver.Value, error) {
-	if !jt.Valid {
+func (t Time) Value() (driver.Value, error) {
+	if !t.Valid {
 		return nil, nil
 	}
-	return jt.Time, nil
+	return t.Time, nil
 }
 
-// MarshalJSON formats the Time field as Traffic Control expects it.
-func (t *Time) MarshalJSON() ([]byte, error) {
-	if t.Time.IsZero() {
-		return []byte("null"), nil
-	}
-	return []byte(fmt.Sprintf("\"%s\"", t.Time.Format(TimeLayout))), nil
+// MarshalJSON implements the json.Marshaller interface
+func (t Time) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + t.Time.Format(TimeLayout) + `"`), nil
 }
 
-// UnmarshalJSON reads time from JSON into Time var
+// UnmarshalJSON implements the json.Unmarshaller interface
 func (t *Time) UnmarshalJSON(b []byte) (err error) {
 	s := strings.Trim(string(b), "\"")
 	if s == "null" {
@@ -65,4 +62,31 @@ func (t *Time) UnmarshalJSON(b []byte) (err error) {
 	}
 	t.Time, err = time.Parse(TimeLayout, s)
 	return
+}
+
+// TimeNoMod supported JSON marshalling, but suppresses JSON unmarshalling
+type TimeNoMod Time
+
+// Scan implements the database/sql Scanner interface.
+func (t *TimeNoMod) Scan(value interface{}) error {
+	t.Time, t.Valid = value.(time.Time)
+	return nil
+}
+
+// Value implements the database/sql/driver Valuer interface.
+func (t TimeNoMod) Value() (driver.Value, error) {
+	if !t.Valid {
+		return nil, nil
+	}
+	return t.Time, nil
+}
+
+// MarshalJSON implements the json.Marshaller interface
+func (t TimeNoMod) MarshalJSON() ([]byte, error) {
+	return Time(t).MarshalJSON()
+}
+
+// UnmarshalJSON for TimeNoMod suppresses unmarshalling
+func (t *TimeNoMod) UnmarshalJSON([]byte) (err error) {
+	return nil
 }

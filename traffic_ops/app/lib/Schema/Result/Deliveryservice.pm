@@ -49,7 +49,6 @@ __PACKAGE__->table("deliveryservice");
 =head2 signing_algorithm
 
   data_type: 'deliveryservice_signature_type'
-  default_value: null
   is_nullable: 1
 
 =head2 qstring_ignore
@@ -297,8 +296,15 @@ __PACKAGE__->table("deliveryservice");
 =head2 routing_name
 
   data_type: 'text'
-  default_value: 'ds'
+  default_value: 'cdn'
   is_nullable: 0
+
+=head2 deep_caching_type
+
+  data_type: 'enum'
+  default_value: 'NEVER'
+  extra: {custom_type_name => "deep_caching_type",list => ["NEVER","ALWAYS"]}
+  is_nullable: 1
 
 =cut
 
@@ -317,11 +323,7 @@ __PACKAGE__->add_columns(
   "dscp",
   { data_type => "bigint", is_nullable => 0 },
   "signing_algorithm",
-  {
-    data_type     => "deliveryservice_signature_type",
-    default_value => \"null",
-    is_nullable   => 1,
-  },
+  { data_type => "deliveryservice_signature_type", is_nullable => 1 },
   "qstring_ignore",
   { data_type => "smallint", is_nullable => 1 },
   "geo_limit",
@@ -418,7 +420,17 @@ __PACKAGE__->add_columns(
   "tenant_id",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
   "routing_name",
-  { data_type => "text", default_value => "ds", is_nullable => 0 },
+  { data_type => "text", default_value => "cdn", is_nullable => 0 },
+  "deep_caching_type",
+  {
+    data_type => "enum",
+    default_value => "NEVER",
+    extra => {
+      custom_type_name => "deep_caching_type",
+      list => ["NEVER", "ALWAYS"],
+    },
+    is_nullable => 1,
+  },
 );
 
 =head1 PRIMARY KEY
@@ -603,7 +615,7 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
-=head2 steering_target_deliveryservices_2s
+=head2 steering_target_targets
 
 Type: has_many
 
@@ -612,9 +624,9 @@ Related object: L<Schema::Result::SteeringTarget>
 =cut
 
 __PACKAGE__->has_many(
-  "steering_target_deliveryservices_2s",
+  "steering_target_targets",
   "Schema::Result::SteeringTarget",
-  { "foreign.deliveryservice" => "self.id" },
+  { "foreign.target" => "self.id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
@@ -654,8 +666,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2017-08-09 15:16:31
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:FXNj6wNNq+jajg/rVqOSBw
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2017-11-09 14:44:59
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:IA1IQ3w/BEYermjf9PoVtA
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #

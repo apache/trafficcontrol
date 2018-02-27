@@ -37,6 +37,10 @@
         "context": 1000
       }
     },
+    "dsRequests": {
+      "_comments": "Should all delivery service changes go through the delivery service review process?",
+      "enabled": false
+    },
     "cacheChecks": {
       "_comments": "These are configurable properties for the cache checks view. The data for the cache checks view is derived from TO extensions.",
       "show": true,
@@ -52,6 +56,14 @@
         "ORT": "Number of configuration differences as determined by ORT found between Traffic Ops and the cache",
         "RVL": "Content invalidation request(s) are pending for the EDGE or MID",
         "UPD": "Configuration file updates have been applied or are pending for the EDGE or MID"
+      }
+    },
+    "deliveryServices": {
+      "_comment": "Delivery service settings",
+      "charts": {
+        "_comment": "Do you want to show a charts button for each ds? If so, where can the charts be found? xml id will be appended to the provided url.",
+        "show": false,
+        "baseUrl": "https://trafficstats.domain.com/dashboard/script/traffic_ops_deliveryservice.js?which="
       }
     },
     "defaults": {
@@ -83,13 +95,14 @@
         },
         "HTTP": {
           "routingName": "cdn",
+          "deepCachingType": "NEVER",
           "dscp": 0,
           "ipv6RoutingEnabled": false,
           "rangeRequestHandling": 0,
           "qstringIgnore": 0,
           "multiSiteOrigin": false,
           "logsEnabled": false,
-          "initialDispersion": 0,
+          "initialDispersion": 1,
           "regionalGeoBlocking": false,
           "geoProvider": 0,
           "geoLimit": 0,
@@ -107,6 +120,201 @@
           "geoLimit": 0,
           "regionalGeoBlocking": false,
           "ccrDnsTtl": 30
+        },
+        "descriptions": {
+          "_comments": "This is the text used to configure delivery service field titles/descriptions",
+          "active": {
+            "title": "Active",
+            "desc": "When this is set to false Traffic Router will not serve DNS or HTTP responses for this delivery service."
+          },
+          "cacheurl": {
+            "title": "Cache URL expression",
+            "desc": "Cache URL rule to apply to this delivery service.<br><br>See <a href=\"https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/cacheurl.en.html\" target=\"_blank\">ATS documentation on cacheurl...</a>"
+          },
+          "ccrDnsTtl": {
+            "title": "Delivery Service DNS TTL",
+            "desc": "The Time To Live on the DNS record for the Traffic Router A and AAAA records."
+          },
+          "cdnId": {
+            "title": "CDN",
+            "desc": "The CDN in which the delivery service belongs to."
+          },
+          "checkPath": {
+            "title": "Check Path",
+            "desc": "A path (ex: /crossdomain.xml) to verify the connection to the origin server with. This can be used by Check Extension scripts to do periodic health checks against the delivery service."
+          },
+          "deepCachingType": {
+            "title": "Deep Caching",
+            "desc": "When to do deep caching for this delivery service.<br><br>See <a href=\"http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#rl-deep-cache\" target=\"_blank\">Deep Caching</a> for more details..."
+          },
+          "displayName": {
+            "title": "Display Name",
+            "desc": "A human-readable name for the delivery service."
+          },
+          "dnsBypassCname": {
+            "title": "DNS Bypass CNAME",
+            "desc": "Description required"
+          },
+          "dnsBypassIp": {
+            "title": "DNS Bypass IP",
+            "desc": "This is the address to respond to A requests with when the max Bps or Max Tps for this delivery service are exceeded."
+          },
+          "dnsBypassIp6": {
+            "title": "DNS Bypass IPv6",
+            "desc": "This is the address to respond to AAAA requests with when the max Bps or Max Tps for this delivery service are exceeded."
+          },
+          "dnsBypassTtl": {
+            "title": "DNS Bypass TTL",
+            "desc": "Description required"
+          },
+          "dscp": {
+            "title": "DSCP",
+            "desc": "The DSCP value to mark IP packets to the client with."
+          },
+          "edgeHeaderRewrite": {
+            "title": "Edge Header Rewrite Rules",
+            "desc": "Header Rewrite rules to apply for this delivery service at the EDGE tier.<br><br>See <a href=\"http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#rl-header-rewrite\" target=\"_blank\">Header Rewrite Options and DSCP...</a>"
+          },
+          "geoLimitRedirectURL": {
+            "title": "Geo Limit Redirect URL",
+            "desc": "This is the URL Traffic Router will redirect to when Geo Limit Failure.<br><br>See <a href=\"http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#rl-tr-ngb\" target=\"_blank\">GeoLimit Failure Redirect</a> feature..."
+          },
+          "geoLimit": {
+            "title": "Geo Limit",
+            "desc": "Some services are intended to be limited by geography.<br><br><a href=\"http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#delivery-service\" target=\"_blank\">See more...</a>"
+          },
+          "geoLimitCountries": {
+            "title": "Geo Limit Countries",
+            "desc": "Description required"
+          },
+          "geoProvider": {
+            "title": "Geolocation Provider",
+            "desc": "Description required"
+          },
+          "globalMaxMbps": {
+            "title": "Global Max Mbps",
+            "desc": "The maximum bits per second this delivery service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS delivery service, the Bypass Ipv4 or Ipv6 will be used (depending on whether this was a A or AAAA request), and for HTTP delivery services the Bypass FQDN will be used."
+          },
+          "globalMaxTps": {
+            "title": "Global Max TPS",
+            "desc": "The maximum transactions this delivery service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS delivery service, the Bypass Ipv4 or Ipv6 will be used (depending on whether this was a A or AAAA request), and for HTTP delivery services the Bypass FQDN will be used."
+          },
+          "httpBypassFqdn": {
+            "title": "HTTP Bypass FQDN",
+            "desc": "This is the FQDN Traffic Router will redirect to (with the same path) when the max Bps or Max Tps for this delivery service are exceeded."
+          },
+          "infoUrl": {
+            "title": "Info URL",
+            "desc": "Info URL for this delivery service."
+          },
+          "initialDispersion": {
+            "title": "Initial Dispersion",
+            "desc": "Description required"
+          },
+          "ipv6RoutingEnabled": {
+            "title": "IPv6 Routing Enabled",
+            "desc": "When set to true, the Traffic Router will respond to AAAA DNS requests for the routed name of this delivery service. Otherwise, only A records will be served."
+          },
+          "logsEnabled": {
+            "title": "Logs Enabled",
+            "desc": "Description required"
+          },
+          "longDesc": {
+            "title": "Long Description",
+            "desc": "Long description for this delivery service."
+          },
+          "longDesc1": {
+            "title": "Long Description 2",
+            "desc": "Long description 2 for this delivery service."
+          },
+          "longDesc2": {
+            "title": "Long Description 3",
+            "desc": "Long description 3 for this delivery service."
+          },
+          "maxDnsAnswers": {
+            "title": "Max DNS Answers",
+            "desc": "Description required"
+          },
+          "midHeaderRewrite": {
+            "title": "Mid Header Rewrite Rules",
+            "desc": "Header Rewrite rules to apply for this delivery service at the EDGE tier.<br><br>See <a href=\"http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#rl-header-rewrite\" target=\"_blank\">Header Rewrite Options and DSCP...</a>"
+          },
+          "missLat": {
+            "title": "Geo Miss Default Latitude",
+            "desc": "Default Latitude for this delivery service. When client localization fails for both Coverage Zone and Geo Lookup, the client will be routed as if it was at this lat."
+          },
+          "missLong": {
+            "title": "Geo Miss Default Longitude",
+            "desc": "Default Longitude for this delivery service. When client localization fails for both Coverage Zone and Geo Lookup, the client will be routed as if it was at this long."
+          },
+          "multiSiteOrigin": {
+            "title": "Use Multi Site Origin Feature",
+            "desc": "Enable the Multi Site Origin feature for this delivery service.<br><br><a href=\"http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#rl-multi-site-origin\" target=\"_blank\">See Multi Site Origin...</a>"
+          },
+          "orgServerFqdn": {
+            "title": "Origin Server Base URL",
+            "desc": "The Origin Server’s base URL. This includes the protocol (http or https). Example: http://movies.origin.com"
+          },
+          "originShield": {
+            "title": "Origin Shield (Pipe Delimited String)",
+            "desc": "Description required"
+          },
+          "profileId": {
+            "title": "Delivery Service Profile",
+            "desc": "Description required"
+          },
+          "protocol": {
+            "title": "Protocol",
+            "desc": "The protocol to serve this delivery service to the clients with.<br><br><a href=\"http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#delivery-service\" target=\"_blank\">See more...</a>"
+          },
+          "qstringIgnore": {
+            "title": "Query String Handling",
+            "desc": "How to treat query strings.<br><br><a href=\"http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#delivery-service\" target=\"_blank\">See more...</a>"
+          },
+          "rangeRequestHandling": {
+            "title": "Range Request Handling",
+            "desc": "How to treat range requests.<br><br><a href=\"http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#delivery-service\" target=\"_blank\">See more...</a>"
+          },
+          "regexRemap": {
+            "title": "Regex remap expression",
+            "desc": "Regex Remap rule to apply to this delivery service at the Edge tier.<br><br><a href=\"http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#delivery-service\" target=\"_blank\">See more...</a>"
+          },
+          "regionalGeoBlocking": {
+            "title": "Regional Geoblocking",
+            "desc": "Description required"
+          },
+          "remapText": {
+            "title": "Raw remap text",
+            "desc": "For HTTP and DNS delivery services, this will get added to the end of the remap line on the cache verbatim. For ANY_MAP delivery services this is the remap line."
+          },
+          "routingName": {
+            "title": "Routing Name",
+            "desc": "The routing name to use for the delivery FQDN, i.e. routing-name.deliveryservice.cdn-domain. It must be a valid hostname without periods."
+          },
+          "signingAlgorithm": {
+            "title": "Signing Algorithm",
+            "desc": "Description required"
+          },
+          "tenantId": {
+            "title": "Tenant",
+            "desc": "By selecting a tenant for the delivery service, you restrict access of that delivery service to only those users that belong to the same tenant or a parent tenant."
+          },
+          "trRequestHeaders": {
+            "title": "Traffic Router Log Request Headers",
+            "desc": "Description required"
+          },
+          "trResponseHeaders": {
+            "title": "Traffic Router Additional Response Headers",
+            "desc": "Description required"
+          },
+          "typeId": {
+            "title": "Content Routing Type",
+            "desc": "The type of content routing this delivery service will use.<br><br><a href=\"http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#rl-ds-types\" target=\"_blank\">See Delivery Service Types....</a>"
+          },
+          "xmlId": {
+            "title": "Key (XML ID)",
+            "desc": "A unique string that identifies this delivery service."
+          }
         }
       }
     },

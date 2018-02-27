@@ -1,0 +1,18 @@
+{
+  "port": 80,
+  "traffic_ops_uri": "https://trafficops.example.net",
+  "traffic_ops_user": "bill",
+  "traffic_ops_pass": "thelizard",
+  "traffic_ops_insecure": false,
+  "cdn": "my-cdn",
+  "coverage_zone_file": "/etc/traffic_router/coveragezone.json",
+  "monitors": ["http://localhost:9042","http://localhost:8043"],
+  "crconfig_poll_interval_ms": 2000,
+  "crstates_poll_interval_ms": 1000,
+	"request_timeout_ms": 3000,
+  "log_location_error": "stdout",
+  "log_location_warning": "stdout",
+  "log_location_info": "stdout",
+  "log_location_debug": "stdout",
+  "log_location_event": "stdout"
+}

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -34,7 +34,7 @@ var FormPhysLocationController = function(physLocation, $scope, $location, formU
         { name: 'address', type: 'text', required: true, maxLength: 128 },
         { name: 'city', type: 'text', required: true, maxLength: 128 },
         { name: 'state', type: 'text', required: true, maxLength: 2 },
-        { name: 'zip', type: 'text', required: true, maxLength: 5 },
+        { name: 'zip', type: 'text', required: true, maxLength: 11 },
         { name: 'poc', type: 'text', required: false, maxLength: 128 },
         { name: 'phone', type: 'text', required: false, maxLength: 45 },
         { name: 'email', type: 'email', required: false, maxLength: 128 }

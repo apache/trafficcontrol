@@ -62,6 +62,7 @@ func init() {
 	testDs.CDNID = cdn.ID
 	testDs.CacheURL = "cacheURL"
 	testDs.CheckPath = "CheckPath"
+	testDs.DeepCachingType = "NEVER"
 	testDs.DNSBypassCname = "DNSBypassCNAME"
 	testDs.DNSBypassIP = "10.10.10.10"
 	testDs.DNSBypassIP6 = "FF01:0:0:0:0:0:0:FB"
@@ -94,6 +95,7 @@ func init() {
 	testDs.RangeRequestHandling = 0
 	testDs.RegexRemap = "regexRemap"
 	testDs.RemapText = "remapText"
+	testDs.RoutingName = "edge"
 	testDs.Signed = false
 	testDs.TRResponseHeaders = "TRResponseHeaders"
 	testDs.Type = dsType.Name

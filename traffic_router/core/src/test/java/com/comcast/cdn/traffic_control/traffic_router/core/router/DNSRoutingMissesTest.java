@@ -26,7 +26,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -102,8 +102,8 @@ public class DNSRoutingMissesTest {
 
         doReturn(deliveryService).when(trafficRouter).selectDeliveryService(request, false);
 
-        JSONObject bypassDestination = mock(JSONObject.class);
-        when(bypassDestination.optJSONObject("DNS")).thenReturn(null);
+        JsonNode bypassDestination = mock(JsonNode.class);
+        when(bypassDestination.get("DNS")).thenReturn(null);
 
         setInternalState(deliveryService, "bypassDestination", bypassDestination);
 

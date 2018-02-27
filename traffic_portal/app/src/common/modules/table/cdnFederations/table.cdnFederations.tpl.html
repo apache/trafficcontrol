@@ -43,10 +43,10 @@ under the License.
             </thead>
             <tbody>
             <tr ng-click="editFederation(fed)" ng-repeat="fed in ::federations">
-                <td>{{::fed.cname}}</td>
-                <td>{{::fed.ttl}}</td>
-                <td>{{::fed.description}}</td>
-                <td>{{::fed.deliveryService.xmlId}}</td>
+                <td data-search="^{{::fed.cname}}$">{{::fed.cname}}</td>
+                <td data-search="^{{::fed.ttl}}$">{{::fed.ttl}}</td>
+                <td data-search="^{{::fed.description}}$">{{::fed.description}}</td>
+                <td data-search="^{{::fed.deliveryService.xmlId}}$">{{::fed.deliveryService.xmlId}}</td>
             </tr>
             </tbody>
         </table>

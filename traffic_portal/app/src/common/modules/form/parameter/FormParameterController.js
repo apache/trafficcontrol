@@ -17,17 +17,9 @@
  * under the License.
  */
 
-var FormParameterController = function(parameter, $scope, $location, formUtils, stringUtils, locationUtils) {
+var FormParameterController = function(parameter, $scope, $location, formUtils, locationUtils) {
 
     $scope.parameter = parameter;
-
-    $scope.props = [
-        { name: 'name', type: 'text', required: true, maxLength: 1024 },
-        { name: 'configFile', type: 'text', required: true, maxLength: 45 },
-        { name: 'value', type: 'text', required: true, maxLength: 1024 }
-    ];
-
-    $scope.labelize = stringUtils.labelize;
 
     $scope.falseTrue = [
         { value: true, label: 'true' },
@@ -50,5 +42,5 @@ var FormParameterController = function(parameter, $scope, $location, formUtils, 
 
 };
 
-FormParameterController.$inject = ['parameter', '$scope', '$location', 'formUtils', 'stringUtils', 'locationUtils'];
+FormParameterController.$inject = ['parameter', '$scope', '$location', 'formUtils', 'locationUtils'];
 module.exports = FormParameterController;

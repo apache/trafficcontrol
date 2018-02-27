@@ -22,7 +22,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"testing"
 	"time"
 
@@ -82,12 +81,11 @@ func TestGetHWInfo(t *testing.T) {
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := url.Values{}
-	v.Set("ServerId", "1")
+	v := map[string]string{"ServerId": "1"}
 
-	hwinfos, err := getHWInfo(v, db)
-	if err != nil {
-		t.Errorf("getHWInfo expected: nil error, actual: %v", err)
+	hwinfos, errs, errType := getHWInfo(v, db)
+	if len(errs) > 0 {
+		t.Errorf("getHWInfo expected: no errors, actual: %v with error type: %s", errs, errType.String())
 	}
 
 	if len(hwinfos) != 2 {

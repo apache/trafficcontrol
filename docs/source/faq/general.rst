@@ -31,6 +31,9 @@ Who is using Traffic Control?
 
 	`Augere Pakistan / QUBEE <http://www.qubee.com.pk>`_
 
+	`Qwilt <https://www.qwilt.com/>`_
+		Qwilt has a product called `Open Edge CDN <https://qwilt.com/solutions/edge-cloud-cdn/>`_ that is based on Traffic Control.
+
 How do I get help with Traffic Control?
 =======================================
 	Hop on to our Slack Channel by filling out `this form <https://goo.gl/Suzakj>`_, or send a question to our mailing list `here <mailto:users@trafficcontrol.incubator.apache.org>`_.

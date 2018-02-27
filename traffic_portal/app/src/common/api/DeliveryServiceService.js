@@ -27,11 +27,11 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
         return Restangular.one("deliveryservices", id).get();
     };
 
-    this.createDeliveryService = function(deliveryService) {
-        return Restangular.service('deliveryservices').post(deliveryService)
+    this.createDeliveryService = function(ds) {
+        return Restangular.service('deliveryservices').post(ds)
             .then(
                 function(response) {
-                    messageModel.setMessages([ { level: 'success', text: 'DeliveryService created' } ], true);
+                    messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + ds.xmlId + ' ] created' } ], true);
                     locationUtils.navigateToPath('/delivery-services/' + response.id + '?type=' + response.type);
                 },
                 function(fault) {
@@ -40,23 +40,29 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
             );
     };
 
-    this.updateDeliveryService = function(deliveryService) {
-        return deliveryService.put()
+    this.updateDeliveryService = function(ds, delay) {
+        var request = $q.defer();
+
+        $http.put(ENV.api['root'] + "deliveryservices/" + ds.id, ds)
             .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Delivery service updated' } ], false);
+                function(response) {
+                    var response2 = response.data.response[0];
+                    messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + ds.xmlId + ' ] updated' } ], delay);
+                    locationUtils.navigateToPath('/delivery-services/' + response2.id + '?type=' + response2.type);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
                 }
             );
+
+        return request.promise;
     };
 
-    this.deleteDeliveryService = function(id) {
-        return Restangular.one("deliveryservices", id).remove()
+    this.deleteDeliveryService = function(ds, delay) {
+        return Restangular.one("deliveryservices", ds.id).remove()
             .then(
                 function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Delivery service deleted' } ], true);
+                    messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + ds.xmlId + ' ] deleted' } ], delay);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, true);

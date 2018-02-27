@@ -17,8 +17,8 @@ package com.comcast.cdn.traffic_control.traffic_router.core.util;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.config.WatcherConfig;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.AbstractServiceUpdater;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileReader;
@@ -36,7 +36,7 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 	private int timeout = 15000;
 
 	@SuppressWarnings("PMD")
-	public void configure(final JSONObject config) {
+	public void configure(final JsonNode config) {
 		URL authUrl;
 		String credentials;
 
@@ -89,7 +89,7 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 	abstract protected boolean verifyData(final String data);
 
 	@Override
-	public boolean loadDatabase() throws IOException, org.apache.wicket.ajax.json.JSONException {
+	public boolean loadDatabase() throws IOException {
 		final File existingDB = databasesDirectory.resolve(databaseName).toFile();
 
 		if (!existingDB.exists() || !existingDB.canRead()) {

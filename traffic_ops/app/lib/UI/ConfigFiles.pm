@@ -29,6 +29,7 @@ use URI;
 
 my $dispatch_table ||= {
 	"logs_xml.config"         => sub { logs_xml_dot_config(@_) },
+	"logging.config"		  => sub { logging_dot_config(@_) },
 	"cacheurl.config"         => sub { cacheurl_dot_config(@_) },
 	"records.config"          => sub { generic_config(@_) },
 	"plugin.config"           => sub { generic_config(@_) },
@@ -220,9 +221,9 @@ sub ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname = $ds_type =~ /^DNS/ ? $row->routing_name : "ccr";
+				my $hname = $ds_type =~ /^DNS/ ? $row->routing_name : "__http__";
 				my $portstr = "";
-				if ( $hname eq "ccr" && $server->tcp_port > 0 && $server->tcp_port != 80 ) {
+				if ( $hname eq "__http__" && $server->tcp_port > 0 && $server->tcp_port != 80 ) {
 					$portstr = ":" . $server->tcp_port;
 				}
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
@@ -642,6 +643,57 @@ sub facts {
 	return $text;
 }
 
+sub logging_dot_config {
+	my $self     = shift;
+	my $id       = shift;
+	my $filename = shift;
+
+	my $server = $self->server_data($id);
+	my $data   = $self->param_data( $server, $filename );
+
+	my $text   = "-- Generated for " . $server->host_name . " by " . &name_version_string($self) . " - Do not edit!! --\n";
+
+	my $max_log_objects = 10;
+	for ( my $i = 0; $i < $max_log_objects; $i = $i + 1 ) {
+		my $log_format_field = "LogFormat";
+		my $log_object_field = "LogObject";
+		if ( $i > 0 ) {
+			$log_format_field = $log_format_field . "$i";
+			$log_object_field = $log_object_field . "$i";
+		}
+
+		my $log_format_name = $data->{$log_format_field . ".Name"} || "";
+		if ( length($log_format_name) > 0 ) {
+			my $format = $data->{$log_format_field . ".Format"};
+			$format =~ s/"/\\\"/g;
+			$text .= $log_format_name . " = format {\n";
+			$text .= "	Format = '" . $format . " '\n";
+			$text .= "}\n";
+		}
+
+		my $log_object_filename = $data->{$log_object_field . ".Filename"} || "";
+		if ( length($log_object_filename) > 0 ) {
+			my $log_object_format               = $data->{$log_object_field . ".Format"}             || "";
+			my $log_object_rolling_enabled      = $data->{$log_object_field . ".RollingEnabled"}     || "";
+			my $log_object_rolling_interval_sec = $data->{$log_object_field . ".RollingIntervalSec"} || "";
+			my $log_object_rolling_offset_hr    = $data->{$log_object_field . ".RollingOffsetHr"}    || "";
+			my $log_object_rolling_size_mb      = $data->{$log_object_field . ".RollingSizeMb"}      || "";
+			my $log_object_header               = $data->{$log_object_field . ".Header"}             || "";
+
+			$text .= "\nlog.ascii {\n";
+			$text .= "  Format = " . $log_format_name . ",\n";
+			$text .= "  Filename = '" . $log_object_filename . "',\n";
+			$text .= "  RollingEnabled = " . $log_object_rolling_enabled . ",\n" unless defined();
+			$text .= "  RollingIntervalSec = " . $log_object_rolling_interval_sec . ",\n";
+			$text .= "  RollingOffsetHr = " . $log_object_rolling_offset_hr . ",\n";
+			$text .= "  RollingSizeMb = " . $log_object_rolling_size_mb . "\n";
+			$text .= "}\n";
+		}
+	}
+
+	return $text;
+}
+
 sub logs_xml_dot_config {
 	my $self     = shift;
 	my $id       = shift;
@@ -1041,7 +1093,7 @@ sub build_remap_line {
 	my $host_name = $data->{host_name};
 	my $dscp      = $remap->{dscp};
 
-	$map_from =~ s/ccr/$host_name/;
+	$map_from =~ s/__http__/$host_name/;
 
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
 		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=dscp_remap.so \@pparam=" . $dscp;

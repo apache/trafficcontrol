@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.log4j.Logger;
 
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 
@@ -30,6 +31,8 @@ import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
  * A physical location that has caches.
  */
 public class CacheLocation {
+
+	public static final Logger LOGGER = Logger.getLogger(CacheLocation.class);
 
 	private final String id;
 	private final Geolocation geolocation;
@@ -57,7 +60,29 @@ public class CacheLocation {
 	 *            the cache to add
 	 */
 	public void addCache(final Cache cache) {
+	    synchronized (caches) {
 			caches.put(cache.getId(), cache);
+		}
+	}
+
+	public void clearCaches() {
+		synchronized (caches) {
+			caches.clear();
+		}
+	}
+
+	public void loadDeepCaches(final Set<String> deepCacheNames, final CacheRegister cacheRegister) {
+	    synchronized (caches) {
+			if (caches.isEmpty() && deepCacheNames != null) {
+				for (final String deepCacheName : deepCacheNames) {
+					final Cache deepCache = cacheRegister.getCacheMap().get(deepCacheName);
+					if (deepCache != null) {
+						LOGGER.debug("DDC: Adding " + deepCacheName + " to " + getId());
+						caches.put(deepCache.getId(), deepCache);
+					}
+				}
+			}
+		}
 	}
 
 	@Override

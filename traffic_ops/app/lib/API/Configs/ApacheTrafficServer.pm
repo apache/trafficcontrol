@@ -267,6 +267,7 @@ sub get_profile_config {
 	elsif ( $filename eq "cache.config" ) { $file_contents = $self->profile_cache_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "drop_qstring.config" ) { $file_contents = $self->drop_qstring_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "logs_xml.config" ) { $file_contents = $self->logs_xml_dot_config( $profile_obj, $filename ); }
+	elsif ( $filename eq "logging.config" ) { $file_contents = $self->logging_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "plugin.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "records.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "storage.config" ) { $file_contents = $self->storage_dot_config( $profile_obj, $filename ); }
@@ -323,6 +324,7 @@ sub get_scope {
 	elsif ( $fname eq "cache.config" )                         { $scope = 'profiles' }
 	elsif ( $fname eq "drop_qstring.config" )                  { $scope = 'profiles' }
 	elsif ( $fname eq "logs_xml.config" )                      { $scope = 'profiles' }
+	elsif ( $fname eq "logging.config" )                       { $scope = 'profiles' }
 	elsif ( $fname eq "plugin.config" )                        { $scope = 'profiles' }
 	elsif ( $fname eq "records.config" )                       { $scope = 'profiles' }
 	elsif ( $fname eq "storage.config" )                       { $scope = 'profiles' }
@@ -658,7 +660,7 @@ sub profile_ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname    = $ds_type =~ /^DNS/ ? $row->{'routing_name'} : "ccr";
+				my $hname    = $ds_type =~ /^DNS/ ? $row->{'routing_name'} : "__http__";
 				my $portstr  = ":" . "__SERVER_TCP_PORT__";
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
 				if ( $protocol == HTTP ) {
@@ -782,7 +784,7 @@ sub cdn_ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname    = $ds_type =~ /^DNS/ ? $row->routing_name : "ccr";
+				my $hname    = $ds_type =~ /^DNS/ ? $row->routing_name : "__http__";
 				my $portstr  = ":" . "SERVER_TCP_PORT";
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
 				if ( $protocol == HTTP ) {
@@ -913,9 +915,9 @@ sub ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "ccr";
+				my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "__http__";
 				my $portstr = "";
-				if ( $hname eq "ccr" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
+				if ( $hname eq "__http__" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
 					$portstr = ":" . $server_obj->tcp_port;
 				}
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
@@ -1146,9 +1148,9 @@ sub remap_ds_data {
 					my $re = $host_re;
 					$re =~ s/\\//g;
 					$re =~ s/\.\*//g;
-					my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "ccr";
+					my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "__http__";
 					my $portstr = "";
-					if ( $hname eq "ccr" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
+					if ( $hname eq "__http__" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
 						$portstr = ":" . $server_obj->tcp_port;
 					}
 					my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
@@ -1368,6 +1370,60 @@ sub drop_qstring_dot_config {
 	}
 	else {
 		$text .= "/([^?]+) \$s://\$t/\$1\n";
+	}
+
+	return $text;
+}
+
+sub logging_dot_config {
+	my $self        = shift;
+	my $profile_obj = shift;
+	my $filename    = shift;
+
+	my $data = $self->profile_param_data( $profile_obj->id, "logging.config" );
+
+	# This is an LUA file, so we need to massage the header a bit for LUA commenting.
+	my $text = "-- " . $self->header_comment( $profile_obj->name );
+	$text =~ s/# //;
+	$text =~ s/\n//;
+	$text .= " --\n";
+
+	my $max_log_objects = 10;
+	for ( my $i = 0; $i < $max_log_objects; $i = $i + 1 ) {
+		my $log_format_field = "LogFormat";
+		my $log_object_field = "LogObject";
+		if ( $i > 0 ) {
+			$log_format_field = $log_format_field . "$i";
+			$log_object_field = $log_object_field . "$i";
+		}
+
+		my $log_format_name = $data->{$log_format_field . ".Name"} || "";
+		if ( length($log_format_name) > 0 ) {
+			my $format = $data->{$log_format_field . ".Format"};
+			$format =~ s/"/\\\"/g;
+			$text .= $log_format_name . " = format {\n";
+			$text .= "	Format = '" . $format . " '\n";
+			$text .= "}\n";
+		}
+
+		my $log_object_filename = $data->{$log_object_field . ".Filename"} || "";
+		if ( length($log_object_filename) > 0 ) {
+			my $log_object_format               = $data->{$log_object_field . ".Format"}             || "";
+			my $log_object_rolling_enabled      = $data->{$log_object_field . ".RollingEnabled"}     || "";
+			my $log_object_rolling_interval_sec = $data->{$log_object_field . ".RollingIntervalSec"} || "";
+			my $log_object_rolling_offset_hr    = $data->{$log_object_field . ".RollingOffsetHr"}    || "";
+			my $log_object_rolling_size_mb      = $data->{$log_object_field . ".RollingSizeMb"}      || "";
+			my $log_object_header               = $data->{$log_object_field . ".Header"}             || "";
+
+			$text .= "\nlog.ascii {\n";
+			$text .= "  Format = " . $log_format_name . ",\n";
+			$text .= "  Filename = '" . $log_object_filename . "',\n";
+			$text .= "  RollingEnabled = " . $log_object_rolling_enabled . ",\n" unless defined();
+			$text .= "  RollingIntervalSec = " . $log_object_rolling_interval_sec . ",\n";
+			$text .= "  RollingOffsetHr = " . $log_object_rolling_offset_hr . ",\n";
+			$text .= "  RollingSizeMb = " . $log_object_rolling_size_mb . "\n";
+			$text .= "}\n";
+		}
 	}
 
 	return $text;
@@ -1979,7 +2035,7 @@ sub ip_allow_data {
 		my $rtype = &type_id( $self, 'RASCAL' );
 		push( @types, $rtype );
 		my $rs_allowed = $self->db->resultset('Server')->search( { 'me.type' => { -in => \@types } }, { prefetch => [ 'type', 'cachegroup' ] } );
-		
+
 		while ( my $allow_row = $rs_allowed->next ) {
 			if ( $allow_row->type->id == $rtype
 				|| ( defined( $allow_locs{ $allow_row->cachegroup->id } ) && $allow_locs{ $allow_row->cachegroup->id } == 1 ) )
@@ -2142,6 +2198,7 @@ sub cachegroup_profiles {
 				port           => $self->profile_param_value( $pid, 'parent.config', 'port', undef ),
 				use_ip_address => $self->profile_param_value( $pid, 'parent.config', 'use_ip_address', 0 ),
 				rank           => $self->profile_param_value( $pid, 'parent.config', 'rank', 1 ),
+				not_a_parent   => $self->profile_param_value( $pid, 'parent.config', 'not_a_parent', 'false' ),
 			};
 		}
 	}
@@ -2179,6 +2236,9 @@ sub parent_data {
 	foreach my $prefix ( keys %deliveryservices ) {
 		foreach my $row ( @{ $deliveryservices{$prefix} } ) {
 			my $pid              = $row->profile->id;
+			if ( $profile_cache{$pid}->{not_a_parent} ne 'false' ) {
+				next;
+			}
 			my $ds_domain        = $profile_cache{$pid}->{domain_name};
 			my $weight           = $profile_cache{$pid}->{weight};
 			my $port             = $profile_cache{$pid}->{port};
@@ -2303,7 +2363,7 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 						push @null_parent_info, format_parent_info($parent);
 					}
 				}
-				
+
 				# If we don't find any parents in the primary parent, then use the secondary parents list as primary and clear the secondary list.
 				# Once we do that, null parent will be used in the secondary_parent category due to the join of the two arrays.
 				# This prevents blank parent entries.
@@ -2342,7 +2402,7 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 
 				if ( $ats_major_version >= 6 && $parent_retry ne "" ) {
 					if ( $unavailable_server_retry_responses ne "" && $unavailable_server_retry_responses =~ /^"(?:\d{3},)+\d{3}"\s*$/) {
-						$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";	
+						$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";
 					} else {
 						$text .= " parent_retry=$parent_retry";
 					}
@@ -2397,7 +2457,7 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 		}
 		else {
 			$parents = 'parent="' . join( '', sort @parent_info ) . join( '', sort @secondary_parent_info ) . '"';
-		}	
+		}
 
 		my $round_robin = 'round_robin=consistent_hash';
 		my $go_direct   = 'go_direct=false';
@@ -2405,40 +2465,43 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 		if ( !defined($data) ) {
 			$data = $self->parent_ds_data($server_obj);
 		}
-		foreach my $ds ( sort @{ $data->{dslist} } ) {
-			my $text;
-			my $org = $ds->{org};
-			next if !defined $org || $org eq "";
-			next if $done{$org};
-			my $org_uri = URI->new($org);
-			if ( $ds->{type} eq "HTTP_NO_CACHE" || $ds->{type} eq "HTTP_LIVE" || $ds->{type} eq "DNS_LIVE" ) {
-				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
-			}
-			else {
-				# check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
-				# then edges will use the qstring handling value specified in the parameter for all profiles.
 
-				# If there is no defined parameter in the profile, then check the delivery service profile.
-				# If psel.qstring_handling exists in the DS profile, then we use that value for the specified DS only.
-				# This is used only if not overridden by a server profile qstring handling parameter.
-				my $ds_qsh = $qsh;
-				if (!defined($qsh)) {
-					$ds_qsh = $ds->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
+		if (defined($data->{dslist})) {
+			foreach my $ds ( sort @{ $data->{dslist} } ) {
+				my $text;
+				my $org = $ds->{org};
+				next if !defined $org || $org eq "";
+				next if $done{$org};
+				my $org_uri = URI->new($org);
+				if ( $ds->{type} eq "HTTP_NO_CACHE" || $ds->{type} eq "HTTP_LIVE" || $ds->{type} eq "DNS_LIVE" ) {
+					$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
 				}
-				my $parent_qstring = defined($ds_qsh) ? $ds_qsh : "ignore";
-
-				if ( $ds->{qstring_ignore} == 0 && !defined($ds_qsh) ) {
-					$parent_qstring = "consider";
+				else {
+					# check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
+					# then edges will use the qstring handling value specified in the parameter for all profiles.
+	
+					# If there is no defined parameter in the profile, then check the delivery service profile.
+					# If psel.qstring_handling exists in the DS profile, then we use that value for the specified DS only.
+					# This is used only if not overridden by a server profile qstring handling parameter.
+					my $ds_qsh = $qsh;
+					if (!defined($qsh)) {
+						$ds_qsh = $ds->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
+					}
+					my $parent_qstring = defined($ds_qsh) ? $ds_qsh : "ignore";
+	
+					if ( $ds->{qstring_ignore} == 0 && !defined($ds_qsh) ) {
+						$parent_qstring = "consider";
+					}
+					$text
+						.= "dest_domain="
+						. $org_uri->host
+						. " port="
+						. $org_uri->port
+						. " $parents $secparents $round_robin $go_direct qstring=$parent_qstring\n";
 				}
-				$text
-					.= "dest_domain="
-					. $org_uri->host
-					. " port="
-					. $org_uri->port
-					. " $parents $secparents $round_robin $go_direct qstring=$parent_qstring\n";
+				push @text_array, $text;
+				$done{$org} = 1;
 			}
-			push @text_array, $text;
-			$done{$org} = 1;
 		}
 
 		my $default_dest_text;
@@ -2562,8 +2625,8 @@ sub build_remap_line {
 
 	my $dscp      = $remap->{dscp};
 	my $hostname  = $server_obj->host_name;
-	
-	$map_from =~ s/ccr/$hostname/;
+
+	$map_from =~ s/__http__/$hostname/;
 
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
 		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=dscp_remap.so \@pparam=" . $dscp;

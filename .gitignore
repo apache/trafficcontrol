@@ -34,3 +34,4 @@ traffic_router/*.log
 /dist
 *.pyc
 Jenkinsfile
+bin/docker-compose

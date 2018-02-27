@@ -153,6 +153,19 @@ sub gen_crconfig_json {
             }
             $data_obj->{'config'}->{'requestHeaders'} = $headers;
         }
+        elsif ( $param eq 'maxmind.default.override' ) {
+            ( my $country_code, my $coordinates ) = split( /\;/, $row->parameter->value );
+            ( my $lat, my $long ) = split( /\,/, $coordinates );
+            my $geolocation = {
+                'countryCode' => "$country_code",
+                'lat' => $lat + 0,
+                'long' => $long + 0
+            };
+            if ( !$data_obj->{'config'}->{'maxmindDefaultOverride'} ) {
+                @{ $data_obj->{'config'}->{'maxmindDefaultOverride'} } = ();
+            }
+            push ( @{ $data_obj->{'config'}->{'maxmindDefaultOverride'} }, $geolocation );
+        }
         elsif ( !exists $requested_param_names{$param} ) {
             $data_obj->{'config'}->{$param} = $row->parameter->value;
         }
@@ -264,7 +277,7 @@ sub gen_crconfig_json {
             $data_obj->{'contentServers'}->{ $row->host_name }->{'ip6'}           = ( $row->ip6_address || "" );
             $data_obj->{'contentServers'}->{ $row->host_name }->{'profile'}       = $row->profile->name;
             $data_obj->{'contentServers'}->{ $row->host_name }->{'type'}          = $row->type->name;
-            $data_obj->{'contentServers'}->{ $row->host_name }->{'hashId'}        = $row->xmpp_id;
+            $data_obj->{'contentServers'}->{ $row->host_name }->{'hashId'}        = $row->xmpp_id ? $row->xmpp_id : $row->host_name;
             $data_obj->{'contentServers'}->{ $row->host_name }->{'hashCount'}     = int( $weight * $weight_multiplier );
             $data_obj->{'contentServers'}->{ $row->host_name }->{'routingDisabled'} = $row->profile->routing_disabled;
         }
@@ -273,7 +286,8 @@ sub gen_crconfig_json {
     my $rs_ds = $self->db->resultset('Deliveryservice')->search(
         {
 			'me.cdn_id' => $cdn_id,
-            'active'     => 1
+            'active'     => 1,
+            'type.name' => { '!=', [ 'ANY_MAP' ] }
         },
         { prefetch => [ 'deliveryservice_servers', 'deliveryservice_regexes', 'type' ] }
     );
@@ -398,6 +412,8 @@ sub gen_crconfig_json {
             $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoEnabled'} = $geoEnabled;
         }
 
+        $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'deepCachingType'} = $row->deep_caching_type;
+
         # Default to 'http only'
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'sslEnabled'} = 'false';
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'protocol'}->{'acceptHttps'} = 'false';
@@ -463,17 +479,17 @@ sub gen_crconfig_json {
                 && $row->http_bypass_fqdn ne "" )
             {
                 my $full = $row->http_bypass_fqdn;
-                my $port;
                 my $fqdn;
                 if ( $full =~ m/\:/ ) {
+                    my $port;
                     ( $fqdn, $port ) = split( /\:/, $full );
+                    # Specify port number only if explicitly set by the DS 'Bypass FQDN' field - issue 1493
+                    $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'bypassDestination'}->{'HTTP'}->{'port'} = $port;
                 }
                 else {
                     $fqdn = $full;
-                    $port = '80';
                 }
                 $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'bypassDestination'}->{'HTTP'}->{'fqdn'} = $fqdn;
-                $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'bypassDestination'}->{'HTTP'}->{'port'} = $port;
             }
 
             $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'regionalGeoBlocking'} = $row->regional_geo_blocking ? 'true' : 'false';
@@ -665,11 +681,21 @@ sub crconfig_strings {
             foreach my $key ( sort keys %{ $config_json->{'config'}->{$cfg} } ) {
                 $string .= "|$key:" . $config_json->{'config'}->{$cfg}->{$key};
             }
+            push( @config_strings, $string );
+        }
+        elsif ( $cfg eq 'maxmindDefaultOverride' ) {
+            foreach my $element ( @{ $config_json->{'config'}->{$cfg} } ) {
+                $string = "|param:$cfg";
+                foreach my $key ( sort keys %{ $element } ) {
+                    $string .= "|$key:" . $element->{$key};
+                }
+                push( @config_strings, $string );
+            }
         }
         else {
             $string = "|param:$cfg|value:" . $config_json->{'config'}->{$cfg} . "|";
+            push( @config_strings, $string );
         }
-        push( @config_strings, $string );
     }
     foreach my $rascal ( sort keys %{ $config_json->{'monitors'} } ) {
         my $return = &stringify_rascal( $config_json->{'monitors'}->{$rascal} );
@@ -703,6 +729,9 @@ sub stringify_ds {
     }
     if ( defined( $ds->{'missLocation'} ) ) {
         $string .= "|GeoMiss: " . $ds->{'missLocation'}->{'lat'} . "," . $ds->{'missLocation'}->{'long'};
+    }
+    if (defined( $ds->{'deepCachingType'} ) ) {
+        $string .= "|deepCachingType: " . $ds->{'deepCachingType'};
     }
     if ( defined( $ds->{'bypassDestination'} ) ) {
         $string .= "<br>|BypassDest:";

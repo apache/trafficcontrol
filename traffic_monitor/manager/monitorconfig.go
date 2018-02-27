@@ -28,6 +28,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/config"
+	"github.com/apache/incubator-trafficcontrol/traffic_monitor/cache"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/peer"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/poller"
 	"github.com/apache/incubator-trafficcontrol/traffic_monitor/threadsafe"
@@ -214,7 +215,9 @@ func monitorConfigListen(
 		monitorConfig := pollerMonitorCfg.Cfg
 		cdn := pollerMonitorCfg.CDN
 		monitorConfigTS.Set(monitorConfig)
-		toData.Update(toSession, cdn)
+		if err := toData.Update(toSession, cdn); err != nil {
+			log.Errorln("Updating Traffic Ops Data: " + err.Error())
+		}
 
 		healthURLs := map[string]poller.PollConfig{}
 		statURLs := map[string]poller.PollConfig{}
@@ -251,6 +254,13 @@ func monitorConfigListen(
 				log.Errorf("monitor config server %v profile %v has no polling URL; can't poll", srv.HostName, srv.Profile)
 				continue
 			}
+
+			format := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingFormat
+			if format == "" {
+				format = cache.DefaultStatsType
+				log.Infof("health.polling.format for '%v' is empty, using default '%v'", srv.HostName, format)
+			}
+
 			r := strings.NewReplacer(
 				"${hostname}", srv.IP,
 				"${interface_name}", srv.InterfaceName,
@@ -265,10 +275,10 @@ func monitorConfigListen(
 				log.Warnln("profile " + srv.Profile + " health.connection.timeout Parameter is missing or zero, using default " + DefaultHealthConnectionTimeout.String())
 			}
 
-			healthURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN, Timeout: connTimeout}
+			healthURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN, Timeout: connTimeout, Format: format}
 			r = strings.NewReplacer("application=system", "application=")
 			statURL := r.Replace(url)
-			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Host: srv.FQDN, Timeout: connTimeout}
+			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Host: srv.FQDN, Timeout: connTimeout, Format: format}
 		}
 
 		peerSet := map[tc.TrafficMonitorName]struct{}{}

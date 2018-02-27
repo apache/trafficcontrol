@@ -345,7 +345,6 @@ sub is_valid {
 	$self->field('location.address')->is_required->is_like( qr/^[a-zA-Z0-9\ \.\-]+/, "Use alphanumeric characters, '.','-', or space." );
 	$self->field('location.city')->is_required->is_like( qr/^[a-zA-Z0-9\ \.\-]+/, "Use alphanumeric characters, '.','-', or space." );
 	$self->field('location.state')->is_required->is_like( qr/^[A-Z]{2}/, "Uppercase 2 char. state abbreviation." );
-	$self->field('location.zip')->is_required->is_like( qr/^[0-9]{5,5}$/, "Enter a valid 5 digit zipcode." );
 	$self->field('location.phone')->is_like( qr/^$|[0-9]{3}\-[0-9]{3}\-[0-9]{4}/, "Phone number format is: ###-###-####" );
 	$self->field('location.email')->check( sub {
 			my ( $value, $params ) = @_;

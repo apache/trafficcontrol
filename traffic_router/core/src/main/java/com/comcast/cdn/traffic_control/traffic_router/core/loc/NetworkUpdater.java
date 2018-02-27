@@ -18,7 +18,6 @@ package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.wicket.ajax.json.JSONException;
 
 public class NetworkUpdater extends AbstractServiceUpdater {
 
@@ -29,23 +28,27 @@ public class NetworkUpdater extends AbstractServiceUpdater {
 	}
 
 	@Override
-	public boolean loadDatabase() throws IOException, JSONException {
+	public boolean loadDatabase() throws IOException {
 		final File existingDB = databasesDirectory.resolve(databaseName).toFile();
 
 		if (!existingDB.exists() || !existingDB.canRead()) {
 			return false;
 		}
 
-		return NetworkNode.generateTree(existingDB, false) != null;
+		return generateTree(existingDB, false) != null;
 	}
 
 	@Override
-	public boolean verifyDatabase(final File dbFile) throws IOException, JSONException {
+	public boolean verifyDatabase(final File dbFile) throws IOException {
 		if (!dbFile.exists() || !dbFile.canRead()) {
 			return false;
 		}
 
-		return NetworkNode.generateTree(dbFile, true) != null;
+		return generateTree(dbFile, true) != null;
+	}
+
+	public NetworkNode generateTree(final File dbFile, final boolean verifyOnly) throws IOException {
+		return NetworkNode.generateTree(dbFile, verifyOnly);
 	}
 
 }

@@ -24,7 +24,7 @@ type RegionsResponse struct {
 }
 
 type Region struct {
-	DivisionName string `json:"divisionName" db:"divisionname"`
+	DivisionName string `json:"divisionName"`
 	Division     int    `json:"division" db:"division"`
 	ID           int    `json:"id" db:"id"`
 	LastUpdated  Time   `json:"lastUpdated" db:"last_updated"`

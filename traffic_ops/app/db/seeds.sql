@@ -74,9 +74,9 @@ insert into role (name, description, priv_level) values ('admin', 'super-user', 
 insert into role (name, description, priv_level) values ('operations', 'Operations user', 20) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('federation', 'Role for Secondary CZF', 15) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('steering', 'Role for Steering Delivery Services', 15) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('portal', 'Portal User', 15) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('ort', 'ORT User', 11) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('read-only', 'Read-Only user', 10) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('portal', 'Portal User', 2) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('disallowed', 'Block all access', 0) ON CONFLICT (name) DO NOTHING;
 
 -- tenants
@@ -396,13 +396,14 @@ insert into type (name, description, use_in_table) values ('RESOLVE6', 'federati
 insert into type (name, description, use_in_table) values ('A_RECORD', 'Static DNS A entry', 'staticdnsentry') ON CONFLICT (name) DO NOTHING;
 insert into type (name, description, use_in_table) values ('AAAA_RECORD', 'Static DNS AAAA entry', 'staticdnsentry') ON CONFLICT (name) DO NOTHING;
 insert into type (name, description, use_in_table) values ('CNAME_RECORD', 'Static DNS CNAME entry', 'staticdnsentry') ON CONFLICT (name) DO NOTHING;
+insert into type (name, description, use_in_table) values ('TXT_RECORD', 'Static DNS TXT entry', 'staticdnsentry') ON CONFLICT (name) DO NOTHING;
 
 --steering_target types
 insert into type (name, description, use_in_table) values ('STEERING_WEIGHT', 'Weighted steering target', 'steering_target') ON CONFLICT (name) DO NOTHING;
 insert into type (name, description, use_in_table) values ('STEERING_ORDER', 'Ordered steering target', 'steering_target') ON CONFLICT (name) DO NOTHING;
 
 -- users
-insert into tm_user (username, role, full_name, token) values ('extension', 3, 'Extension User, DO NOT DELETE', '91504CE6-8E4A-46B2-9F9F-FE7C15228498') ON CONFLICT DO NOTHING;
+insert into tm_user (username, role, full_name, token) values ('extension', (select id from role where name = 'operations'), 'Extension User, DO NOT DELETE', '91504CE6-8E4A-46B2-9F9F-FE7C15228498') ON CONFLICT DO NOTHING;
 
 -- to extensions
 -- some of the old ones do not get a new place, and there will be 'gaps' in the column usage.... New to_extension add will have to take care of that.

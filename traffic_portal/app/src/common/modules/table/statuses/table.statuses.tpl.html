@@ -33,14 +33,14 @@ under the License.
         <table id="statusesTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>name</th>
-                <th>description</th>
+                <th>Name</th>
+                <th>Description</th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editStatus(status.id)" ng-repeat="status in ::statuses">
-                <td>{{::status.name}}</td>
-                <td>{{::status.description}}</td>
+            <tr ng-click="editStatus(s.id)" ng-repeat="s in ::statuses">
+                <td data-search="^{{::s.name}}$">{{::s.name}}</td>
+                <td data-search="^{{::s.description}}$">{{::s.description}}</td>
             </tr>
             </tbody>
         </table>

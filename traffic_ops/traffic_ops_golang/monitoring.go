@@ -31,19 +31,32 @@ import (
 	"github.com/lib/pq"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
-const MonitoringPrivLevel = auth.PrivLevelReadOnly
-
+// CacheMonitorConfigFile ...
 const CacheMonitorConfigFile = "rascal.properties"
+
+// MonitorType ...
 const MonitorType = "RASCAL"
+
+// RouterType ...
 const RouterType = "CCR"
+
+// MonitorProfilePrefix ...
 const MonitorProfilePrefix = "RASCAL"
+
+// MonitorConfigFile ...
 const MonitorConfigFile = "rascal-config.txt"
+
+// KilobitsPerMegabit ...
 const KilobitsPerMegabit = 1000
+
+// DeliveryServiceStatus ...
 const DeliveryServiceStatus = "REPORTED"
 
+// BasicServer ...
 type BasicServer struct {
 	Profile    string `json:"profile"`
 	Status     string `json:"status"`
@@ -55,10 +68,12 @@ type BasicServer struct {
 	FQDN       string `json:"fqdn"`
 }
 
+// Monitor ...
 type Monitor struct {
 	BasicServer
 }
 
+// Cache ...
 type Cache struct {
 	BasicServer
 	InterfaceName string `json:"interfacename"`
@@ -66,22 +81,26 @@ type Cache struct {
 	HashID        string `json:"hashid"`
 }
 
+// Cachegroup ...
 type Cachegroup struct {
 	Name        string      `json:"name"`
 	Coordinates Coordinates `json:"coordinates"`
 }
 
+// Coordinates ...
 type Coordinates struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 }
 
+// Profile ...
 type Profile struct {
 	Name       string                 `json:"name"`
 	Type       string                 `json:"type"`
 	Parameters map[string]interface{} `json:"parameters"`
 }
 
+// Monitoring ...
 type Monitoring struct {
 	TrafficServers   []Cache                `json:"trafficServers"`
 	TrafficMonitors  []Monitor              `json:"trafficMonitors"`
@@ -91,15 +110,18 @@ type Monitoring struct {
 	Config           map[string]interface{} `json:"config"`
 }
 
+// MonitoringResponse ...
 type MonitoringResponse struct {
 	Response Monitoring `json:"response"`
 }
 
+// Router ...
 type Router struct {
 	Type    string
 	Profile string
 }
 
+// DeliveryService ...
 type DeliveryService struct {
 	XMLID              string  `json:"xmlId"`
 	TotalTPSThreshold  float64 `json:"totalTpsThreshold"`
@@ -110,29 +132,25 @@ type DeliveryService struct {
 // TODO change to use the PathParams, instead of parsing the URL
 func monitoringHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := func(err error, status int) {
-			log.Errorf("%v %v\n", r.RemoteAddr, err)
-			w.WriteHeader(status)
-			fmt.Fprintf(w, http.StatusText(status))
-		}
-		ctx := r.Context()
-		pathParams, err := getPathParams(ctx)
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
+
+		params, err := api.GetCombinedParams(r)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
-			return
+			log.Errorf("unable to get parameters from request: %s", err)
+			handleErrs(http.StatusInternalServerError, err)
 		}
 
-		cdnName := pathParams["name"]
+		cdnName := params["name"]
 
-		resp, err := getMonitoringJSON(cdnName, db)
+		resp, err, errType := getMonitoringJSON(cdnName, db)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
 			return
 		}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
-			handleErr(err, http.StatusInternalServerError)
+			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -398,30 +416,30 @@ WHERE pr.config_file = '%s'
 	return cfg, nil
 }
 
-func getMonitoringJSON(cdnName string, db *sqlx.DB) (*MonitoringResponse, error) {
+func getMonitoringJSON(cdnName string, db *sqlx.DB) (*MonitoringResponse, error, tc.ApiErrorType) {
 	monitors, caches, routers, err := getMonitoringServers(db, cdnName)
 	if err != nil {
-		return nil, fmt.Errorf("error getting servers: %v", err)
+		return nil, fmt.Errorf("error getting servers: %v", err), tc.SystemError
 	}
 
 	cachegroups, err := getCachegroups(db, cdnName)
 	if err != nil {
-		return nil, fmt.Errorf("error getting cachegroups: %v", err)
+		return nil, fmt.Errorf("error getting cachegroups: %v", err), tc.SystemError
 	}
 
 	profiles, err := getProfiles(db, caches, routers)
 	if err != nil {
-		return nil, fmt.Errorf("error getting profiles: %v", err)
+		return nil, fmt.Errorf("error getting profiles: %v", err), tc.SystemError
 	}
 
 	deliveryServices, err := getDeliveryServices(db, routers)
 	if err != nil {
-		return nil, fmt.Errorf("error getting deliveryservices: %v", err)
+		return nil, fmt.Errorf("error getting deliveryservices: %v", err), tc.SystemError
 	}
 
 	config, err := getConfig(db)
 	if err != nil {
-		return nil, fmt.Errorf("error getting config: %v", err)
+		return nil, fmt.Errorf("error getting config: %v", err), tc.SystemError
 	}
 
 	resp := MonitoringResponse{
@@ -434,5 +452,5 @@ func getMonitoringJSON(cdnName string, db *sqlx.DB) (*MonitoringResponse, error)
 			Config:           config,
 		},
 	}
-	return &resp, nil
+	return &resp, nil, tc.NoError
 }

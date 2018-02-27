@@ -15,13 +15,15 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
-import org.apache.wicket.ajax.json.JSONObject;
-import org.apache.wicket.ajax.json.JSONTokener;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -87,6 +89,31 @@ public class NetworkNodeUnitTest {
     }
 
     @Test
+    public void itSupportsDeepCaches() throws Exception {
+        String czmapString = "{" +
+                "\"revision\": \"Mon Dec 21 15:04:01 2015\"," +
+                "\"customerName\": \"Kabletown\"," +
+                "\"deepCoverageZones\": {" +
+                "\"us-co-denver\": {" +
+                "\"network\": [\"192.168.55.0/24\",\"192.168.6.0/24\",\"192.168.0.0/16\"]," +
+                "\"network6\": [\"1234:5678::/64\",\"1234:5679::/64\"]," +
+                "\"caches\": [\"host1\",\"host2\"]" +
+                "}" +
+                "}" +
+                "}";
+
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree(czmapString);
+        NetworkNode networkNode = NetworkNode.generateTree(json, false, true);
+        NetworkNode foundNetworkNode = networkNode.getNetwork("192.168.55.100");
+
+        Set<String> expected = new HashSet<String>();
+        expected.add("host1");
+        expected.add("host2");
+        assertThat(foundNetworkNode.getDeepCacheNames(), equalTo(expected));
+    }
+
+    @Test
     public void itDoesIpV6() throws Exception {
         String czmapString = "{" +
             "\"revision\": \"Mon Dec 21 15:04:01 2015\"," +
@@ -99,8 +126,8 @@ public class NetworkNodeUnitTest {
             "}" +
             "}";
 
-        JSONTokener jsonTokener = new JSONTokener(czmapString);
-        final JSONObject json = new JSONObject(jsonTokener);
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree(czmapString);
         NetworkNode networkNode = NetworkNode.generateTree(json, false);
         NetworkNode foundNetworkNode = networkNode.getNetwork("1234:5678::1");
 
@@ -146,8 +173,8 @@ public class NetworkNodeUnitTest {
             "}" +
             "}";
 
-        JSONTokener jsonTokener = new JSONTokener(czmapString);
-        final JSONObject json = new JSONObject(jsonTokener);
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree(czmapString);
         NetworkNode networkNode = NetworkNode.generateTree(json, false);
         NetworkNode foundNetworkNode = networkNode.getNetwork("192.168.55.2");
 
@@ -167,8 +194,8 @@ public class NetworkNodeUnitTest {
             "}" +
             "}";
 
-        JSONTokener jsonTokener = new JSONTokener(czmapString);
-        final JSONObject json = new JSONObject(jsonTokener);
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree(czmapString);
         assertThat(NetworkNode.generateTree(json, false), equalTo(null));
     }
 
@@ -185,8 +212,8 @@ public class NetworkNodeUnitTest {
             "}" +
             "}";
 
-        JSONTokener jsonTokener = new JSONTokener(czmapString);
-        final JSONObject json = new JSONObject(jsonTokener);
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode json = mapper.readTree(czmapString);
         assertThat(NetworkNode.generateTree(json, false), equalTo(null));
     }
 }

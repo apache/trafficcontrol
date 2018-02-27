@@ -851,7 +851,7 @@ SSL Keys
 
   Authentication Required: Yes
 
-  Role(s) Required: Admin
+  Role(s) Required: None
 
   **Request Route Parameters**
 
@@ -989,7 +989,7 @@ SSL Keys
 
   Authentication Required: Yes
 
-  Role Required: Admin
+  Role Required: Operations
 
   **Request Route Parameters**
 
@@ -1029,7 +1029,7 @@ SSL Keys
 
   Authentication Required: Yes
 
-  Role(s) Required: Admin
+  Role(s) Required: Operations
 
   **Request Properties**
 
@@ -1097,7 +1097,7 @@ SSL Keys
 
   Authentication Required: Yes
 
-  Role(s) Required:  Admin
+  Role(s) Required: Operations
 
   **Request Properties**
 

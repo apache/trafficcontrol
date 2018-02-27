@@ -28,12 +28,18 @@ import (
 	"bytes"
 	"context"
 	"net/http/httptest"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
+type key int
+
+const AuthWasCalled key = iota
+
 func TestCreateRouteMap(t *testing.T) {
-	authBase := AuthBase{false, "secret", nil, func(handlerFunc http.HandlerFunc) http.HandlerFunc {
+	authBase := AuthBase{"secret", nil, func(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			ctx := context.WithValue(r.Context(), "authWasCalled", "true")
+			ctx := context.WithValue(r.Context(), AuthWasCalled, "true")
 			handlerFunc(w, r.WithContext(ctx))
 		}
 	}}
@@ -57,7 +63,7 @@ func TestCreateRouteMap(t *testing.T) {
 	}
 
 	routes := []Route{
-		{1.2, http.MethodGet, `path1`, PathOneHandler, ServersPrivLevel, true, nil},
+		{1.2, http.MethodGet, `path1`, PathOneHandler, auth.PrivLevelReadOnly, true, nil},
 		{1.2, http.MethodGet, `path2`, PathTwoHandler, 0, false, nil},
 		{1.2, http.MethodGet, `path3`, PathThreeHandler, 0, false, []Middleware{}},
 	}
@@ -104,7 +110,7 @@ func TestCreateRouteMap(t *testing.T) {
 }
 
 func getAuthWasCalled(ctx context.Context) string {
-	val := ctx.Value("authWasCalled")
+	val := ctx.Value(AuthWasCalled)
 	if val != nil {
 		return val.(string)
 	}

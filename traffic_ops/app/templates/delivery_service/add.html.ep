@@ -115,6 +115,7 @@
             $('#range_request_handlingi_row').show(speed);
             $('#dns_bypass_ip_row').hide(speed);
             $('#dns_bypass_ip6_row').hide(speed);
+            $('#deep_caching_type').show(speed);
             $('#regional_geo_blocking_row').show(speed);
             $('#dns_bypass_cname_row').hide(speed);
             $('#dns_bypass_ttl_row').show(speed);
@@ -157,6 +158,7 @@
             $('#range_request_handlingi_row').show(speed);
             $('#dns_bypass_ip_row').show(speed);
             $('#dns_bypass_ip6_row').show(speed);
+            $('#deep_caching_type').hide(speed);
 			$('#regional_geo_blocking_row').hide(speed);
 	    	$('#dns_bypass_cname_row').show(speed);
             $('#dns_bypass_ttl_row').show(speed);
@@ -195,6 +197,7 @@
             $('#dns_bypass_ip_row').hide(speed);
             $('#dns_bypass_ip6_row').hide(speed);
             $('#dns_bypass_cname_row').hide(speed);
+            $('#deep_caching_type').hide(speed);
             $('#regional_geo_blocking_row').show(speed);
             $('#dns_bypass_ttl_row').hide(speed);
             $('#max_dns_answers_row').hide(speed);
@@ -232,6 +235,7 @@
             $('#range_request_handlingi_row').hide(speed);
             $('#dns_bypass_ip_row').hide(speed);
             $('#dns_bypass_ip6_row').hide(speed);
+            $('#deep_caching_type').hide(speed);
 			$('#regional_geo_blocking_row').show(speed);
 	    	$('#dns_bypass_cname_row').hide(speed);
             $('#dns_bypass_ttl_row').hide(speed);
@@ -249,7 +253,11 @@
             $('#origin_shield_row').hide(speed);
             $('#active_row').show(speed);
             $('#ds_regexp_table').show(speed);
-            $('#tr_response_headers').hide(speed);
+            if (type_selected.match(/CLIENT_STEERING$/)) {
+                $('#tr_response_headers').show(speed);
+            } else {
+                $('#tr_response_headers').hide(speed);
+            }
             $('#multi_site_origin_row').hide(speed);
             $('#multi_site_origin_algorithm_row').hide(speed);
             $('#initial_dispersion_row').hide(speed);

@@ -81,6 +81,7 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 %attr(755,root,root) /etc/init.d/traffic_portal
 %attr(755,root,root) %{traffic_portal_home}/node_modules/forever/bin/*
 %config(noreplace)/etc/traffic_portal/conf/config.js
+%config(noreplace)%{traffic_portal_home}/public/traffic_portal_properties.json
 %dir /var/log/traffic_portal
 %{traffic_portal_home}/*
 /etc/logrotate.d/traffic_portal

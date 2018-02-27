@@ -33,9 +33,9 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.apache.wicket.ajax.json.JSONException;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 
@@ -125,9 +125,15 @@ public abstract class AbstractServiceUpdater {
 		File newDB = null;
 		boolean isModified = true;
 
+		final String databaseURL = getDataBaseURL();
+		if (databaseURL == null) {
+			LOGGER.warn("[" + getClass().getSimpleName() + "] Skipping download/update: database URL is null");
+			return false;
+		}
+
 		try {
 			try {
-				newDB = downloadDatabase(getDataBaseURL(), existingDB);
+				newDB = downloadDatabase(databaseURL, existingDB);
 				trafficRouterManager.trackEvent("last" + getClass().getSimpleName() + "Check");
 
 				// if the remote db's timestamp is less than or equal to ours, the above returns existingDB
@@ -174,8 +180,8 @@ public abstract class AbstractServiceUpdater {
 		return true;
 	}
 
-	abstract public boolean verifyDatabase(final File dbFile) throws IOException, JSONException;
-	abstract public boolean loadDatabase() throws IOException, JSONException;
+	abstract public boolean verifyDatabase(final File dbFile) throws IOException, JsonUtilsException;
+	abstract public boolean loadDatabase() throws IOException, JsonUtilsException;
 
 	public void setDatabaseName(final String databaseName) {
 		this.databaseName = databaseName;

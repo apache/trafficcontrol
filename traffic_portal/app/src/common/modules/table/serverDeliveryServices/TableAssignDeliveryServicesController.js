@@ -19,33 +19,33 @@
 
 var TableAssignDeliveryServicesController = function(server, deliveryServices, assignedDeliveryServices, $scope, $uibModalInstance) {
 
-	var selectedDsIds = [];
-
-	var addDS = function(dsId) {
-		if (_.indexOf(selectedDsIds, dsId) == -1) {
-			selectedDsIds.push(dsId);
-		}
-	};
-
-	var removeDS = function(dsId) {
-		selectedDsIds = _.without(selectedDsIds, dsId);
-	};
+	var selectedDeliveryServices = [];
 
 	var addAll = function() {
-		markDeliveryServices(true);
-		selectedDsIds = _.pluck(deliveryServices, 'id');
+		markVisibleDeliveryServices(true);
 	};
 
 	var removeAll = function() {
-		markDeliveryServices(false);
-		selectedDsIds = [];
+		markVisibleDeliveryServices(false);
 	};
 
-	var markDeliveryServices = function(selected) {
+	var markVisibleDeliveryServices = function(selected) {
+		var visibleDSIds = $('#assignDSTable tr.ds-row').map(
+			function() {
+				return parseInt($(this).attr('id'));
+			}).get();
 		$scope.selectedDeliveryServices = _.map(deliveryServices, function(ds) {
-			ds['selected'] = selected;
+			if (visibleDSIds.includes(ds.id)) {
+				ds['selected'] = selected;
+			}
 			return ds;
 		});
+		updateSelectedCount();
+	};
+
+	var updateSelectedCount = function() {
+		selectedDeliveryServices = _.filter($scope.selectedDeliveryServices, function(ds) { return ds['selected'] == true; } );
+		$('div.selected-count').html('<b>' + selectedDeliveryServices.length + ' delivery services selected</b>');
 	};
 
 	$scope.server = server;
@@ -53,15 +53,10 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 	$scope.selectedDeliveryServices = _.map(deliveryServices, function(ds) {
 		var isAssigned = _.find(assignedDeliveryServices, function(assignedDS) { return assignedDS.id == ds.id });
 		if (isAssigned) {
-			ds['selected'] = true; // so the checkbox will be checked
-			selectedDsIds.push(ds.id); // so the ds is added to selected dsIds
+			ds['selected'] = true;
 		}
 		return ds;
 	});
-
-	$scope.allSelected = function() {
-		return deliveryServices.length == selectedDsIds.length;
-	};
 
 	$scope.selectAll = function($event) {
 		var checkbox = $event.target;
@@ -72,17 +67,13 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 		}
 	};
 
-	$scope.updateDeliveryServices = function($event, dsId) {
-		var checkbox = $event.target;
-		if (checkbox.checked) {
-			addDS(dsId);
-		} else {
-			removeDS(dsId);
-		}
+	$scope.onChange = function() {
+		updateSelectedCount();
 	};
 
 	$scope.submit = function() {
-		$uibModalInstance.close(selectedDsIds);
+		var selectedDSIds = _.pluck(selectedDeliveryServices, 'id');
+		$uibModalInstance.close(selectedDSIds);
 	};
 
 	$scope.cancel = function () {
@@ -90,24 +81,21 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 	};
 
 	angular.element(document).ready(function () {
-		var assignDeliveryServicesTable = $('#assignDeliveryServicesTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
+		var assignDSTable = $('#assignDSTable').dataTable({
+			"scrollY": "60vh",
+			"paging": false,
 			"order": [[ 1, 'asc' ]],
+			"dom": '<"selected-count">frtip',
 			"columnDefs": [
 				{ 'orderable': false, 'targets': 0 },
 				{ "width": "5%", "targets": 0 }
 			],
 			"stateSave": false
 		});
-		assignDeliveryServicesTable.on( 'search.dt', function () {
-			var search = $('#assignDeliveryServicesTable_filter input').val();
-			if (search.length > 0) {
-				$("#selectAllCB").attr("disabled", true);
-			} else {
-				$("#selectAllCB").removeAttr("disabled");
-			}
+		assignDSTable.on( 'search.dt', function () {
+			$("#selectAllCB").removeAttr("checked"); // uncheck the all box when filtering
 		} );
+		updateSelectedCount();
 	});
 
 };

@@ -48,7 +48,7 @@ my $hostname = "foober.com";
 
 # PORTAL
 #NEGATIVE TESTING -- No Privs
-ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::PORTAL_USER, p => Test::TestHelper::PORTAL_USER_PASSWORD } )->status_is(200),
+ok $t->post_ok( '/api/1.1/user/login', json => { u => Test::TestHelper::READ_ONLY_ROOT_USER, p => Test::TestHelper::READ_ONLY_ROOT_USER_PASSWORD } )->status_is(200),
 	'Log into the portal user?';
 
 #create
@@ -58,16 +58,16 @@ ok $t->post_ok(
 		key     => $key,
 		version => $version,
 	}
-	)->status_is(400)->json_has("Error - You do not have permissions to perform this operation!")
+	)->status_is(403)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 #get_object
-ok $t->get_ok("/api/1.1/deliveryservices/xmlId/$key/sslkeys.json")->status_is(400)
-	->json_has("Error - You do not have permissions to perform this operation!")->or( sub { diag $t->tx->res->content->asset->{content}; } );
+ok $t->get_ok("/api/1.1/deliveryservices/xmlId/$key/sslkeys.json")->status_is(200)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # #delete
-ok $t->get_ok("/api/1.1/deliveryservices/xmlId/$key/sslkeys/delete.json")->status_is(400)
-	->json_has("Error - You do not have permissions to perform this operation!")->or( sub { diag $t->tx->res->content->asset->{content}; } );
+ok $t->get_ok("/api/1.1/deliveryservices/xmlId/$key/sslkeys/delete.json")->status_is(403)
+	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # # logout
 ok $t->get_ok('/logout')->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
@@ -210,7 +210,7 @@ ok $t->get_ok("/api/1.1/deliveryservices/xmlId/$key/sslkeys.json")
 my $fake_get_404 = HTTP::Response->new( 404, undef, HTTP::Headers->new, "Not found" );
 $fake_lwp->mock( 'get', sub { return $fake_get_404 } );
 
-ok $t->get_ok("/api/1.1/deliveryservices/xmlId/foo/sslkeys.json")->status_is(400)->json_has("A record for ssl key foo could not be found")
+ok $t->get_ok("/api/1.1/deliveryservices/xmlId/foo/sslkeys.json")->status_is(404)->json_has("A record for ssl key foo could not be found")
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 # TODO: Implement functionality to satisfy this test?

@@ -22,46 +22,53 @@ import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.config.ParseException;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.TreeSet;
 
 public class CacheRegisterBuilder {
 
-    public static void parseCacheConfig(final JSONObject contentServers, final CacheRegister cacheRegister) throws JSONException, ParseException {
+    public static void parseCacheConfig(final JsonNode contentServers, final CacheRegister cacheRegister) throws JsonUtilsException, ParseException {
         final Map<String,Cache> map = new HashMap<String,Cache>();
         final Map<String, List<String>> statMap = new HashMap<String, List<String>>();
-        for (final String node : JSONObject.getNames(contentServers)) {
-            final JSONObject jo = contentServers.getJSONObject(node);
-            final CacheLocation loc = cacheRegister.getCacheLocation(jo.getString("locationId"));
+
+        final Iterator<String> contentServersIter = contentServers.fieldNames();
+        while (contentServersIter.hasNext()) {
+            final String node = contentServersIter.next();
+            final JsonNode jo = JsonUtils.getJsonNode(contentServers, node);
+            final CacheLocation loc = cacheRegister.getCacheLocation(JsonUtils.getString(jo, "locationId"));
             if (loc != null) {
                 String hashId = node;
                 if(jo.has("hashId")) {
-                    hashId = jo.optString("hashId");
+                    hashId = jo.get("hashId").asText();
                 }
-                final Cache cache = new Cache(node, hashId, jo.optInt("hashCount"));
-                cache.setFqdn(jo.getString("fqdn"));
-                cache.setPort(jo.getInt("port"));
-                final String ip = jo.getString("ip");
-                final String ip6 = jo.optString("ip6");
+                final int hashCount = JsonUtils.optInt(jo, "hashCount");
+                final Cache cache = new Cache(node, hashId, hashCount);
+                cache.setFqdn(JsonUtils.getString(jo, "fqdn"));
+                cache.setPort(JsonUtils.getInt(jo, "port"));
+                final String ip = JsonUtils.getString(jo, "ip");
+                final String ip6 = JsonUtils.optString(jo, "ip6");
                 try {
                     cache.setIpAddress(ip, ip6, 0);
                 } catch (UnknownHostException e) {
                     System.out.println(e + ": " + ip);
                 }
 
-                if(jo.has("deliveryServices")) {
+                if (jo.has("deliveryServices")) {
                     final List<Cache.DeliveryServiceReference> references = new ArrayList<Cache.DeliveryServiceReference>();
-                    final JSONObject dsJos = jo.optJSONObject("deliveryServices");
-                    for(String ds : JSONObject.getNames(dsJos)) {
-                        final Object dso = dsJos.get(ds);
+                    final JsonNode dsJos = jo.get("deliveryServices");
+                    final Iterator<String> dsIter = dsJos.fieldNames();
+                    while (dsIter.hasNext()) {
+                        final String ds = dsIter.next();
+                        final JsonNode dso = dsJos.get(ds);
 
                         List<String> dsNames = statMap.get(ds);
 
@@ -69,31 +76,29 @@ public class CacheRegisterBuilder {
                             dsNames = new ArrayList<String>();
                         }
 
-                        if (dso instanceof JSONArray) {
-                            final JSONArray fqdnList = (JSONArray) dso;
+                        if (dso.isArray()) {
+                            int i = 0;
+                            for (JsonNode fqdn : dso) {
+                                final String name = fqdn.asText().toLowerCase();
 
-                            if (fqdnList != null && fqdnList.length() > 0) {
-                                for (int i = 0; i < fqdnList.length(); i++) {
-                                    final String name = fqdnList.getString(i).toLowerCase();
+                                if (i == 0) {
+                                    references.add(new Cache.DeliveryServiceReference(ds, name));
+                                }
 
-                                    if (i == 0) {
-                                        references.add(new Cache.DeliveryServiceReference(ds, name));
+                                final String tld = JsonUtils.optString(cacheRegister.getConfig(), "domain_name").toLowerCase();
+
+                                if (name.contains(tld)) {
+                                    final String reName = name.replaceAll("^.*?\\.", "");
+
+                                    if (!dsNames.contains(reName)) {
+                                        dsNames.add(reName);
                                     }
-
-                                    final String tld = cacheRegister.getConfig().optString("domain_name").toLowerCase();
-
-                                    if (name.contains(tld)) {
-                                        final String reName = name.replaceAll("^.*?\\.", "");
-
-                                        if (!dsNames.contains(reName)) {
-                                            dsNames.add(reName);
-                                        }
-                                    } else {
-                                        if (!dsNames.contains(name)) {
-                                            dsNames.add(name);
-                                        }
+                                } else {
+                                    if (!dsNames.contains(name)) {
+                                        dsNames.add(name);
                                     }
                                 }
+                                i++;
                             }
                         } else {
                             references.add(new Cache.DeliveryServiceReference(ds, dso.toString()));
@@ -102,13 +107,10 @@ public class CacheRegisterBuilder {
                                 dsNames.add(dso.toString());
                             }
                         }
-
                         statMap.put(ds, dsNames);
                     }
                     cache.setDeliveryServices(references);
                 }
-
-
                 loc.addCache(cache);
                 map.put(cache.getId(), cache);
             }
@@ -116,22 +118,23 @@ public class CacheRegisterBuilder {
         cacheRegister.setCacheMap(map);
     }
 
-    public static void parseDeliveryServiceConfig(final JSONObject deliveryServices, final CacheRegister cacheRegister) throws JSONException {
+    public static void parseDeliveryServiceConfig(final JsonNode deliveryServices, final CacheRegister cacheRegister) throws JsonUtilsException {
         final TreeSet<DeliveryServiceMatcher> dnsServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
         final TreeSet<DeliveryServiceMatcher> httpServiceMatchers = new TreeSet<DeliveryServiceMatcher>();
         final Map<String,DeliveryService> dsMap = new HashMap<String,DeliveryService>();
 
-        for(String dsId : JSONObject.getNames(deliveryServices)) {
-            final JSONObject dsJo = deliveryServices.getJSONObject(dsId);
-            final JSONArray matchsets = dsJo.getJSONArray("matchsets");
+        final Iterator<String> keyIter = deliveryServices.fieldNames();
+        while (keyIter.hasNext()) {
+            final String dsId = keyIter.next();
+            final JsonNode dsJo = JsonUtils.getJsonNode(deliveryServices, dsId);
+            final JsonNode matchsets = JsonUtils.getJsonNode(dsJo, "machsets");
             final DeliveryService ds = new DeliveryService(dsId, dsJo);
             boolean isDns = false;
 
             dsMap.put(dsId, ds);
 
-            for (int i = 0; i < matchsets.length(); i++) {
-                final JSONObject matchset = matchsets.getJSONObject(i);
-                final String protocol = matchset.getString("protocol");
+            for (final JsonNode matchset : matchsets) {
+                final String protocol = JsonUtils.getString(matchset, "protocol");
 
                 if ("DNS".equals(protocol)) {
                     isDns = true;
@@ -145,15 +148,12 @@ public class CacheRegisterBuilder {
                     dnsServiceMatchers.add(m);
                 }
 
-                final JSONArray list = matchset.getJSONArray("matchlist");
-                for (int j = 0; j < list.length(); j++) {
-                    final JSONObject matcherJo = list.getJSONObject(j);
-                    final DeliveryServiceMatcher.Type type = DeliveryServiceMatcher.Type.valueOf(matcherJo.getString("match-type"));
-                    final String target = matcherJo.optString("target");
-                    m.addMatch(type, matcherJo.getString("regex"), target);
+                for (JsonNode matchlist : matchset.get("matchlist")) {
+                    final DeliveryServiceMatcher.Type type = DeliveryServiceMatcher.Type.valueOf(JsonUtils.getString(matchlist, "match-type"));
+                    final String target = JsonUtils.optString(matchlist, "target");
+                    m.addMatch(type, JsonUtils.getString(matchlist, "regex"), target);
                 }
             }
-
             ds.setDns(isDns);
         }
 

@@ -33,20 +33,20 @@ under the License.
         <table id="cacheGroupsTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>name</th>
-                <th>shortName</th>
-                <th>type</th>
-                <th>latitude</th>
-                <th>longitude</th>
+                <th>Name</th>
+                <th>Short Name</th>
+                <th>Type</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editCacheGroup(cacheGroup.id)" ng-repeat="cacheGroup in ::cacheGroups">
-                <td>{{::cacheGroup.name}}</td>
-                <td>{{::cacheGroup.shortName}}</td>
-                <td>{{::cacheGroup.typeName}}</td>
-                <td>{{::cacheGroup.latitude}}</td>
-                <td>{{::cacheGroup.longitude}}</td>
+            <tr ng-click="editCacheGroup(cg.id)" ng-repeat="cg in ::cacheGroups">
+                <td data-search="^{{::cg.name}}$">{{::cg.name}}</td>
+                <td data-search="^{{::cg.shortName}}$">{{::cg.shortName}}</td>
+                <td data-search="^{{::cg.typeName}}$">{{::cg.typeName}}</td>
+                <td data-search="^{{::cg.latitude}}$">{{::cg.latitude}}</td>
+                <td data-search="^{{::cg.longitude}}$">{{::cg.longitude}}</td>
             </tr>
             </tbody>
         </table>

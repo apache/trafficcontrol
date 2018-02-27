@@ -106,6 +106,7 @@ sub index {
 				"cdnId"                => $row->cdn->id,
 				"cdnName"              => $row->cdn->name,
 				"checkPath"            => $row->check_path,
+				"deepCachingType"      => $row->deep_caching_type,
 				"displayName"          => $row->display_name,
 				"dnsBypassCname"       => $row->dns_bypass_cname,
 				"dnsBypassIp"          => $row->dns_bypass_ip,
@@ -226,6 +227,7 @@ sub show {
 				"cdnId"                => $row->cdn->id,
 				"cdnName"              => $row->cdn->name,
 				"checkPath"            => $row->check_path,
+				"deepCachingType"      => $row->deep_caching_type,
 				"displayName"          => $row->display_name,
 				"dnsBypassCname"       => $row->dns_bypass_cname,
 				"dnsBypassIp"          => $row->dns_bypass_ip,
@@ -332,6 +334,7 @@ sub update {
 		ccr_dns_ttl            => $params->{ccrDnsTtl},
 		cdn_id                 => $params->{cdnId},
 		check_path             => $params->{checkPath},
+		deep_caching_type      => $params->{deepCachingType},
 		display_name           => $params->{displayName},
 		dns_bypass_cname       => $params->{dnsBypassCname},
 		dns_bypass_ip          => $params->{dnsBypassIp},
@@ -429,6 +432,7 @@ sub update {
 				"cdnId"                    => $rs->cdn->id,
 				"cdnName"                  => $rs->cdn->name,
 				"checkPath"                => $rs->check_path,
+				"deepCachingType"          => $rs->deep_caching_type,
 				"displayName"              => $rs->display_name,
 				"dnsBypassCname"           => $rs->dns_bypass_cname,
 				"dnsBypassIp"              => $rs->dns_bypass_ip,
@@ -560,6 +564,7 @@ sub safe_update {
 				"cdnId"                    => $rs->cdn->id,
 				"cdnName"                  => $rs->cdn->name,
 				"checkPath"                => $rs->check_path,
+				"deepCachingType"          => $rs->deep_caching_type,
 				"displayName"              => $rs->display_name,
 				"dnsBypassCname"           => $rs->dns_bypass_cname,
 				"dnsBypassIp"              => $rs->dns_bypass_ip,
@@ -666,6 +671,7 @@ sub create {
 		ccr_dns_ttl            => $params->{ccrDnsTtl},
 		cdn_id                 => $params->{cdnId},
 		check_path             => $params->{checkPath},
+		deep_caching_type      => $params->{deepCachingType},
 		display_name           => $params->{displayName},
 		dns_bypass_cname       => $params->{dnsBypassCname},
 		dns_bypass_ip          => $params->{dnsBypassIp},
@@ -774,6 +780,7 @@ sub create {
 				"cdnId"                    => $insert->cdn->id,
 				"cdnName"                  => $insert->cdn->name,
 				"checkPath"                => $insert->check_path,
+				"deepCachingType"          => $insert->deep_caching_type,
 				"displayName"              => $insert->display_name,
 				"dnsBypassCname"           => $insert->dns_bypass_cname,
 				"dnsBypassIp"              => $insert->dns_bypass_ip,
@@ -966,6 +973,7 @@ sub get_deliveryservices_by_serverId {
 					"cdnId"                => $row->cdn->id,
 					"cdnName"              => $row->cdn->name,
 					"checkPath"            => $row->check_path,
+					"deepCachingType"      => $row->deep_caching_type,
 					"displayName"          => $row->display_name,
 					"dnsBypassCname"       => $row->dns_bypass_cname,
 					"dnsBypassIp"          => $row->dns_bypass_ip,
@@ -1064,6 +1072,7 @@ sub get_deliveryservices_by_userId {
 					"cdnId"                => $row->cdn->id,
 					"cdnName"              => $row->cdn->name,
 					"checkPath"            => $row->check_path,
+					"deepCachingType"      => $row->deep_caching_type,
 					"displayName"          => $row->display_name,
 					"dnsBypassCname"       => $row->dns_bypass_cname,
 					"dnsBypassIp"          => $row->dns_bypass_ip,
@@ -1335,7 +1344,7 @@ sub is_deliveryservice_request_valid {
 
 	my $rules = {
 		fields => [
-			qw/customer contentType deliveryProtocol routingType routingName serviceDesc peakBPSEstimate peakTPSEstimate maxLibrarySizeEstimate originURL hasOriginDynamicRemap originTestFile hasOriginACLWhitelist originHeaders otherOriginSecurity queryStringHandling rangeRequestHandling hasSignedURLs hasNegativeCachingCustomization negativeCachingCustomizationNote serviceAliases rateLimitingGBPS rateLimitingTPS overflowService headerRewriteEdge headerRewriteMid headerRewriteRedirectRouter notes/
+			qw/customer contentType deepCachingType deliveryProtocol routingType routingName serviceDesc peakBPSEstimate peakTPSEstimate maxLibrarySizeEstimate originURL hasOriginDynamicRemap originTestFile hasOriginACLWhitelist originHeaders otherOriginSecurity queryStringHandling rangeRequestHandling hasSignedURLs hasNegativeCachingCustomization negativeCachingCustomizationNote serviceAliases rateLimitingGBPS rateLimitingTPS overflowService headerRewriteEdge headerRewriteMid headerRewriteRedirectRouter notes/
 		],
 
 		# Validation checks to perform
@@ -1370,7 +1379,7 @@ sub is_deliveryservice_valid {
 
 	my $rules = {
 		fields => [
-			qw/active cacheurl ccrDnsTtl cdnId checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText routingName signed signingAlgorithm sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
+			qw/active cacheurl ccrDnsTtl cdnId checkPath deepCachingType displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText routingName signed signingAlgorithm sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
 		],
 
 		# validation checks to perform for ALL delivery services
@@ -1378,6 +1387,7 @@ sub is_deliveryservice_valid {
 			active				=> [ is_required("is required") ],
 			cdnId				=> [ is_required("is required"), \&is_valid_int_or_undef ],
 			ccrDnsTtl			=> [ \&is_valid_int_or_undef ],
+			deepCachingType			=> [ is_like( qr/^(NEVER|ALWAYS)$/, "must be NEVER or ALWAYS" ) ],
 			dnsBypassTtl			=> [ \&is_valid_int_or_undef ],
 			dscp				=> [ is_required("is required"), \&is_valid_int_or_undef ],
 			displayName			=> [ is_required("is required"), is_long_at_most( 48, 'too long' ) ],
@@ -1422,7 +1432,7 @@ sub is_deliveryservice_valid {
 
 	# additional validation checks to perform for HTTP* delivery services
 	if ( $type_name =~ /^HTTP.*$/ ) {
-		push @{$rules->{checks}}, initialDispersion    => [ is_required("is required") ];
+		push @{$rules->{checks}}, initialDispersion    => [ is_required("is required"), \&is_valid_initial_dispersion ];
 		push @{$rules->{checks}}, ipv6RoutingEnabled   => [ is_required("is required") ];
 		push @{$rules->{checks}}, missLat              => [ is_required("is required"), \&is_valid_lat ];
 		push @{$rules->{checks}}, missLong             => [ is_required("is required"), \&is_valid_long ];
@@ -1516,6 +1526,16 @@ sub is_valid_lat {
 
 	if ( abs $value > 90 ) {
 		return "invalid. May not exceed +- 90.0.";
+	}
+
+	return undef;
+}
+
+sub is_valid_initial_dispersion {
+	my ( $value, $params ) = @_;
+
+	if ( $value < 1 ) {
+		return "invalid. Must be 1 or greater.";
 	}
 
 	return undef;
