@@ -27,7 +27,7 @@ OPTIND=1
 #cd ${ABSPATH}/../..
 
 # Use apache-rat-0.13 which has support for .go files
-ratver=apache-rat-0.13-20171021.191031-67.jar
+ratver=$(curl https://repository.apache.org/content/repositories/snapshots/org/apache/rat/apache-rat/0.13-SNAPSHOT/ -sN | grep jar | grep -ve md5 -e sha1 | awk -F "\"" '{print $2}' | sort -r | head -n 1 | cut -d '/' -f 12)
 ratdestname=apache-rat-0.13.SNAPSHOT.jar
 ratdir=$(mktemp -ud)
 targetdir=$(pwd)
@@ -78,7 +78,7 @@ ratjar="$ratdir/$ratdestname"
 
 set -exu
 # Check if NOTICE file year is current
-grep "Copyright $(date +"%Y") The Apache Software Foundation" "${targetdir}/NOTICE"
+grep "Copyright 2016-$(date +"%Y") The Apache Software Foundation" "${targetdir}/NOTICE"
 set +x
 
 badfile_extentions="class jar tar tgz zip"
@@ -108,10 +108,9 @@ fi
 
 set -x
 
-curl -L -o $ratjar \
-  https://repository.apache.org/content/repositories/snapshots/org/apache/rat/apache-rat/0.13-SNAPSHOT/${ratver}
-curl -L -o $ratjar.sha1 \
-  https://repository.apache.org/content/repositories/snapshots/org/apache/rat/apache-rat/0.13-SNAPSHOT/${ratver}.sha1
+mkdir -p $(dirname $ratjar)
+curl -L https://repository.apache.org/content/repositories/snapshots/org/apache/rat/apache-rat/0.13-SNAPSHOT/${ratver} > $ratjar
+curl -L https://repository.apache.org/content/repositories/snapshots/org/apache/rat/apache-rat/0.13-SNAPSHOT/${ratver}.sha1 > $ratjar.sha1
 
 # Check sha1 on downloaded .jar
 [[ $(sha1sum "${ratjar}" | awk '{print $1}') == $(cat "${ratjar}.sha1") ]] || \

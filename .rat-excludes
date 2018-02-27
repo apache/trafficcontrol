@@ -61,6 +61,7 @@ riak-go-client(?:                    Apache 2.0. Properly documented in LICENSE 
 protobuf(?:                          Go BSD. Properly documented in LICENSE ){0}
 go-jwx(?:                            `MIT. Properly documented in LICENSE ){0}
 crypto(?:                            Go BSD. Properly documented in LICENSE ){0}
+.*\.sha1(?:                          checksum data files can't handle comments ){0}
 kelseyhightower(?:                   MIT. Properly documented in LICENSE ){0}
 asaskevich(?:                        MIT. Properly documented in LICENSE ){0}
 go-ozzo(?:                           MIT. Properly documented in LICENSE ){0}
