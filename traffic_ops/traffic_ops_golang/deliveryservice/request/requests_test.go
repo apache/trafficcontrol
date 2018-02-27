@@ -89,8 +89,8 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 		t.Errorf("expected ID to be %d,  not %d", 10, id)
 	}
 	exp := "10"
-	if r.GetAuditName() != exp {
-		t.Errorf("expected AuditName to be %s,  not %s", exp, r.GetAuditName())
+	if s != r.GetAuditName() {
+		t.Errorf("expected AuditName to be '%s',  not '%s'", s, r.GetAuditName())
 	}
 	exp = "deliveryservice_request"
 	if r.GetType() != "deliveryservice_request" {

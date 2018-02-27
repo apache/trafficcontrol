@@ -287,10 +287,12 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 		log.Debugf("calling delete on object: %++v", d) //should have id set now
 		err, errType := d.Delete(db, *user)
 		if err != nil {
+			log.Errorf("error deleting: %++v", err)
 			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
 			return
 		}
 		//audit here
+		log.Debugf("changelog for delete on object")
 		CreateChangeLog(ApiChange, Deleted, d, *user, db)
 		//
 		resp := struct {
