@@ -1,4 +1,4 @@
-package main
+package parameter
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,9 +20,7 @@ package main
  */
 
 import (
-	"encoding/json"
-	"fmt"
-	"net/http"
+	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -33,61 +31,48 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func parametersHandler(db *sqlx.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
+//we need a type alias to define functions on
+type TOParameter tc.ParameterNullable
 
-		ctx := r.Context()
-		user, err := auth.GetCurrentUser(ctx)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-		privLevel := user.PrivLevel
+//the refType is passed into the handlers where a copy of its type is used to decode the json.
+var refType = TOParameter(tc.ParameterNullable{})
 
-		params, err := api.GetCombinedParams(r)
-		if err != nil {
-			log.Errorf("unable to get parameters from request: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-		}
-
-		resp, errs, errType := getParametersResponse(params, db, privLevel)
-		if len(errs) > 0 {
-			tc.HandleErrorsWithType(errs, errType, handleErrs)
-			return
-		}
-
-		respBts, err := json.Marshal(resp)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", respBts)
-	}
+func GetRefType() *TOParameter {
+	return &refType
 }
 
-func getParametersResponse(params map[string]string, db *sqlx.DB, privLevel int) (*tc.ParametersResponse, []error, tc.ApiErrorType) {
-	parameters, errs, errType := getParameters(params, db, privLevel)
-	if len(errs) > 0 {
-		return nil, errs, errType
+//Implementation of the Identifier, Validator interface functions
+func (parameter *TOParameter) GetID() (int, bool) {
+	if parameter.ID == nil {
+		return 0, false
 	}
-
-	resp := tc.ParametersResponse{
-		Response: parameters,
-	}
-	return &resp, nil, tc.NoError
+	return *parameter.ID, true
 }
 
-func getParameters(params map[string]string, db *sqlx.DB, privLevel int) ([]tc.Parameter, []error, tc.ApiErrorType) {
+func (parameter *TOParameter) GetAuditName() string {
+	if parameter.Name != nil {
+		return *parameter.Name
+	}
+	if parameter.ID != nil {
+		return strconv.Itoa(*parameter.ID)
+	}
+	return "unknown"
+}
 
+func (parameter *TOParameter) GetType() string {
+	return "parameter"
+}
+
+func (parameter *TOParameter) SetID(i int) {
+	parameter.ID = &i
+}
+
+func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
-	var err error
 
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
-	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"config_file":  dbhelpers.WhereColumnInfo{"p.config_file", nil},
 		"id":           dbhelpers.WhereColumnInfo{"p.id", api.IsInt},
 		"last_updated": dbhelpers.WhereColumnInfo{"p.last_updated", nil},
@@ -95,36 +80,36 @@ func getParameters(params map[string]string, db *sqlx.DB, privLevel int) ([]tc.P
 		"secure":       dbhelpers.WhereColumnInfo{"p.secure", api.IsBool},
 	}
 
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
+	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		return nil, errs, tc.DataConflictError
 	}
 
-	query := selectParametersQuery() + where + ParametersGroupBy() + orderBy
+	query := selectQuery() + where + ParametersGroupBy() + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err = db.NamedQuery(query, queryValues)
+	rows, err := db.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, []error{fmt.Errorf("querying: %v", err)}, tc.SystemError
+		log.Errorf("Error querying Parameters: %v", err)
+		return nil, []error{tc.DBError}, tc.SystemError
 	}
 	defer rows.Close()
 
-	parameters := []tc.Parameter{}
+	params := []interface{}{}
 	for rows.Next() {
-		var s tc.Parameter
+		var s tc.ParameterNullable
 		if err = rows.StructScan(&s); err != nil {
-			return nil, []error{fmt.Errorf("getting parameters: %v", err)}, tc.SystemError
+			log.Errorf("error parsing Parameter rows: %v", err)
+			return nil, []error{tc.DBError}, tc.SystemError
 		}
-		if s.Secure && privLevel < auth.PrivLevelAdmin {
-			// Secure params only visible to admin
-			continue
-		}
-		parameters = append(parameters, s)
+		params = append(params, s)
 	}
-	return parameters, nil, tc.NoError
+
+	return params, []error{}, tc.NoError
+
 }
 
-func selectParametersQuery() string {
+func selectQuery() string {
 
 	query := `SELECT
 p.config_file,

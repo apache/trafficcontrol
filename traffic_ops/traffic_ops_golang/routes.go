@@ -35,6 +35,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/cdn"
 	dsrequest "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/division"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/physlocation"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/ping"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/region"
@@ -148,7 +149,8 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.3, http.MethodDelete, `regions/{id}$`, api.DeleteHandler(region.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//Parameters
-		{1.3, http.MethodGet, `parameters/?(\.json)?$`, parametersHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodGet, `parameters/?(\.json)?$`, api.ReadHandler(parameter.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodGet, `parameters/{id}$`, api.ReadHandler(parameter.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Ping
 		{1.2, http.MethodGet, `ping$`, ping.PingHandler(), auth.PrivLevelReadOnly, Authenticated, nil},
