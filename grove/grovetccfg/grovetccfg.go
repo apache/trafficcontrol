@@ -21,6 +21,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/grove/config"
 	"github.com/apache/incubator-trafficcontrol/grove/remap"
+	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 )
 
 const Version = "0.1"
@@ -308,7 +309,7 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (remap.Rema
 // 		os.Exit(1)
 // 	}
 
-// 	rules := []remap.RemapRule{}
+// 	rules := []remapdata.RemapRule{}
 
 // 	allowedIPs, err := makeAllowIP(cacheCfg.AllowIP)
 // 	if err != nil {
@@ -366,7 +367,7 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (remap.Rema
 
 // 		for _, protocolStr := range protocolStrs {
 // 			for _, dsRegex := range ds.Regexes {
-// 				rule := remap.RemapRule{}
+// 				rule := remapdata.RemapRule{}
 // 				pattern, patternLiteralRegex := trimLiteralRegex(dsRegex)
 // 				rule.Name = fmt.Sprintf("%s.%s.%s.%s", ds.XMLID, protocolStr.From, protocolStr.To, pattern)
 // 				rule.From = buildFrom(protocolStr.From, pattern, patternLiteralRegex, host, dsType, cacheCfg.Domain)
@@ -384,8 +385,8 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (remap.Rema
 // 						return remap.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v parent %v proxy_url: %v", ds.XMLID, parent.Host, proxyURLStr)
 // 					}
 
-// 					ruleTo := remap.RemapRuleTo{
-// 						RemapRuleToBase: remap.RemapRuleToBase{
+// 					ruleTo := remapdata.RemapRuleTo{
+// 						RemapRuleToBase: remapdata.RemapRuleToBase{
 // 							URL:      to,
 // 							Weight:   &weight,
 // 							RetryNum: &retryNum,
@@ -600,16 +601,16 @@ const DeliveryServiceQueryStringCacheAndRemap = 0
 const DeliveryServiceQueryStringNoCacheRemap = 1
 const DeliveryServiceQueryStringNoCacheNoRemap = 2
 
-func getQueryStringRule(dsQstringIgnore int) (remap.QueryStringRule, error) {
+func getQueryStringRule(dsQstringIgnore int) (remapdata.QueryStringRule, error) {
 	switch dsQstringIgnore {
 	case DeliveryServiceQueryStringCacheAndRemap:
-		return remap.QueryStringRule{Remap: true, Cache: true}, nil
+		return remapdata.QueryStringRule{Remap: true, Cache: true}, nil
 	case DeliveryServiceQueryStringNoCacheRemap:
-		return remap.QueryStringRule{Remap: true, Cache: true}, nil
+		return remapdata.QueryStringRule{Remap: true, Cache: true}, nil
 	case DeliveryServiceQueryStringNoCacheNoRemap:
-		return remap.QueryStringRule{Remap: false, Cache: false}, nil
+		return remapdata.QueryStringRule{Remap: false, Cache: false}, nil
 	default:
-		return remap.QueryStringRule{}, fmt.Errorf("unknown delivery service qstringIgnore value '%v'", dsQstringIgnore)
+		return remapdata.QueryStringRule{}, fmt.Errorf("unknown delivery service qstringIgnore value '%v'", dsQstringIgnore)
 	}
 }
 
@@ -621,7 +622,7 @@ const DefaultRuleWeight = 1.0
 const DefaultRetryNum = 5
 const DefaultTimeout = time.Millisecond * 5000
 const DefaultRuleConnectionClose = false
-const DefaultRuleParentSelection = remap.ParentSelectionTypeConsistentHash
+const DefaultRuleParentSelection = remapdata.ParentSelectionTypeConsistentHash
 
 func getAllowIP(params []tc.Parameter) ([]*net.IPNet, error) {
 	ips := []string{}
@@ -663,7 +664,7 @@ func createRulesOld(
 	dsCerts map[string]tc.CDNSSLKeys,
 	certDir string,
 ) (remap.RemapRules, error) {
-	rules := []remap.RemapRule{}
+	rules := []remapdata.RemapRule{}
 	allowedIPs, err := getAllowIP(hostParams)
 	if err != nil {
 		return remap.RemapRules{}, fmt.Errorf("getting allowed IPs: %v", err)
@@ -722,7 +723,7 @@ func createRulesOld(
 			}
 
 			for _, dsRegex := range regexes {
-				rule := remap.RemapRule{}
+				rule := remapdata.RemapRule{}
 				pattern, patternLiteralRegex := trimLiteralRegex(dsRegex.Pattern)
 				rule.Name = fmt.Sprintf("%s.%s.%s.%s", ds.XMLID, protocolStr.From, protocolStr.To, pattern)
 				rule.From = buildFrom(protocolStr.From, pattern, patternLiteralRegex, hostname, dsType, cdn.DomainName)
@@ -740,8 +741,8 @@ func createRulesOld(
 						return remap.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v parent %v proxy_url: %v", ds.XMLID, parent.HostName, proxyURLStr)
 					}
 
-					ruleTo := remap.RemapRuleTo{
-						RemapRuleToBase: remap.RemapRuleToBase{
+					ruleTo := remapdata.RemapRuleTo{
+						RemapRuleToBase: remapdata.RemapRuleToBase{
 							URL:      to,
 							Weight:   &weight,
 							RetryNum: &retryNum,
@@ -773,7 +774,7 @@ func createRulesOld(
 		RetryCodes:      DefaultRetryCodes(),
 		Timeout:         &timeout,
 		ParentSelection: &parentSelection,
-		Stats:           remap.RemapRulesStats{Allow: allowedIPs},
+		Stats:           remapdata.RemapRulesStats{Allow: allowedIPs},
 	}
 
 	return remapRules, nil
