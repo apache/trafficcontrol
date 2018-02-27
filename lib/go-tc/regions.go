@@ -19,10 +19,12 @@ package tc
  * under the License.
  */
 
+// RegionsResponse ...
 type RegionsResponse struct {
 	Response []Region `json:"response"`
 }
 
+// Region ...
 type Region struct {
 	DivisionName string    `json:"divisionName"`
 	Division     int       `json:"division" db:"division"`
