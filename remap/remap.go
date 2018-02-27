@@ -262,7 +262,7 @@ type RemapRuleJSON struct {
 }
 
 // LoadRemapRules returns the loaded rules, the global plugins, the Stats remap rules, and any error
-func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.PluginLoadF, caches map[string]icache.Cache) ([]remapdata.RemapRule, map[string]interface{}, *remapdata.RemapRulesStats, error) {
+func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.LoadFunc, caches map[string]icache.Cache) ([]remapdata.RemapRule, map[string]interface{}, *remapdata.RemapRulesStats, error) {
 	fmt.Printf("Loading Remap Rules\n")
 	defer func() {
 		fmt.Printf("Loaded Remap Rules\n")
@@ -495,7 +495,7 @@ func makeIPNet(cidr string) (*net.IPNet, error) {
 	return cidrnet, nil
 }
 
-func LoadRemapper(path string, pluginConfigLoaders map[string]plugin.PluginLoadF, caches map[string]icache.Cache) (HTTPRequestRemapper, error) {
+func LoadRemapper(path string, pluginConfigLoaders map[string]plugin.LoadFunc, caches map[string]icache.Cache) (HTTPRequestRemapper, error) {
 	rules, plugins, statRules, err := LoadRemapRules(path, pluginConfigLoaders, caches)
 	if err != nil {
 		return nil, err
