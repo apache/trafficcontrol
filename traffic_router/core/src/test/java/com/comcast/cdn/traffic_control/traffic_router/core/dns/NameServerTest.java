@@ -52,7 +52,7 @@ public class NameServerTest {
         trafficRouter = mock(TrafficRouter.class);
         CacheRegister cacheRegister = mock(CacheRegister.class);
         doReturn(cacheRegister).when(trafficRouter).getCacheRegister();
-        JSONNode js = JSONNodeFactory.instance.objectNode().put("ecsEnable", true);
+        JsonNode js = JSONNodeFactory.instance.objectNode().put("ecsEnable", true);
         when(cacheRegister.getConfig()).thenReturn(js);
         
         Name m_an, m_host, m_admin;
