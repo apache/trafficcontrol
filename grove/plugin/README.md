@@ -6,11 +6,13 @@ The filename, sans `.go`, is the name of your plugin, and will be the key used f
 
 Plugins are registered via calls to `AddPlugin` inside an `init` function in the plugin's file.
 
-The `Funcs` object contains functions for each hook, as well as a load function for loading configuration from the remap file. The current hooks are startup, onRequest, beforeRespond, and afterRespond. If your plugin does not use a hook, it may be nil.
+The `Funcs` object contains functions for each hook, as well as a load function for loading configuration from the remap file. The current hooks are `startup`, `onRequest`, `beforeParentRequest`, `beforeRespond`, and `afterRespond`. If your plugin does not use a hook, it may be nil.
 
 * `startup` is called when the application starts. Examples are set global data, or start a global goroutine needed by the plugin.
 
 * `onRequest` is called immediately when a request is received. It returns a boolean indicating whether to stop processing. Examples are IP blocking, or serving custom endpoints for statistics or to invalidate a cache entry.
+
+* `beforeParentRequest` is called immediately before making a request to a parent. It may manipulate the request being made to the parent. Examples are removing headers in the client request such as `Range`.
 
 * `beforeRespond` is called immediately before responding to a client. It may manipulate the code, headers, and body being returned. Examples are header modifications, or handling if-modified-since requests.
 
