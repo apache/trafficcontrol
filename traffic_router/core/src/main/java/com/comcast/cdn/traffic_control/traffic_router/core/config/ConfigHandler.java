@@ -208,6 +208,7 @@ public class ConfigHandler {
 				federationsWatcher.configure(config);
 				steeringWatcher.configure(config);
 				trafficRouterManager.setCacheRegister(cacheRegister);
+				trafficRouterManager.getNameServer().setEcsEnable(JsonUtils.optBoolean(config, "ecsEnable", false));
 				trafficRouterManager.getTrafficRouter().setRequestHeaders(parseRequestHeaders(config.get("requestHeaders")));
 				trafficRouterManager.getTrafficRouter().configurationChanged();
 
