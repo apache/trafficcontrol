@@ -22,19 +22,11 @@ import (
 	"github.com/apache/incubator-trafficcontrol/grove/config"
 	"github.com/apache/incubator-trafficcontrol/grove/remap"
 	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
+	"github.com/apache/incubator-trafficcontrol/grove/web"
 )
 
 // Duplicating Hdr and ModHdrs here for now...
 // Seems cleaner than dragging it up from some arbitrary place in plugins
-type Hdr struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
-type ModHdrs struct {
-	Set  []Hdr    `json:"set"`
-	Drop []string `json:"drop"`
-}
 
 const Version = "0.1"
 const UserAgent = "grove-tc-cfg/" + Version
@@ -44,8 +36,8 @@ const GroveConfigPath = "/etc/grove/grove.cfg"
 
 func AvailableStatuses() map[string]struct{} {
 	return map[string]struct{}{
-		"reported": struct{}{},
-		"online":   struct{}{},
+		"reported": {},
+		"online":   {},
 	}
 }
 
@@ -196,7 +188,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	jsonRules := remap.RemapRulesToJSON(rules)
+	jsonRules, err := remap.RemapRulesToJSON(rules)
+	if err != nil {
+		fmt.Println("Error creating JSON Remap Rules: " + err.Error())
+		os.Exit(1)
+	}
+
 	bts := []byte{}
 	if *pretty {
 		bts, err = json.MarshalIndent(jsonRules, "", "  ")
@@ -780,32 +777,23 @@ func createRulesOld(
 					rule.RetryCodes = DefaultRetryCodes()
 					rule.QueryString = queryStringRule
 					rule.DSCP = ds.DSCP
-					if err != nil {
-						return remap.RemapRules{}, err
-					}
 					rule.ConnectionClose = DefaultRuleConnectionClose
 					rule.ParentSelection = &parentSelection
-					if acl != nil {
-						rule.Allow = acl
-					}
-					rule.Plugins = make(map[string]interface{})
-					if toClientHeaders.Set != nil || toClientHeaders.Drop != nil {
-						rule.Plugins["modify_headers"] = toClientHeaders
-					}
-					if toOriginHeaders.Set != nil || toOriginHeaders.Drop != nil {
-						rule.Plugins["modify_parent_request_headers"] = toOriginHeaders
-					}
+					rule.Allow = acl
+					rule.Plugins = map[string]interface{}{}
+					rule.Plugins["modify_headers"] = toClientHeaders
+					rule.Plugins["modify_parent_request_headers"] = toOriginHeaders
 				}
 				rules = append(rules, rule)
 			}
 		}
 	}
 
-	globalPlugins := make(map[string]interface{})
-	serverHeader := Hdr{Name: "Server", Value: "Grove/0.33"}
-	setHeaders := make([]Hdr, 0)
+	globalPlugins := map[string]interface{}{}
+	serverHeader := web.Hdr{Name: "Server", Value: "Grove/0.33"}
+	setHeaders := []web.Hdr{}
 	setHeaders = append(setHeaders, serverHeader)
-	globalHeaders := ModHdrs{Set: setHeaders, Drop: nil}
+	globalHeaders := web.ModHdrs{Set: setHeaders}
 	globalPlugins["modify_response_headers_global"] = globalHeaders
 	remapRules := remap.RemapRules{
 		Rules:           rules,
@@ -851,18 +839,25 @@ func createCertificateFiles(cert tc.CDNSSLKeys, dir string) error {
 // makeACL is a hack to take the very ATS/TrafficControl remap_text field ACLs, and turn them into grove ACLs
 // note that the astats ACL input already has CIDR notation, but the DS ACL input is IP ranges.
 func makeACL(remapTxt string) ([]*net.IPNet, error) {
-	var allow []*net.IPNet
+	allow := []*net.IPNet{}
 	remapTxt = strings.Join(strings.Fields(remapTxt), " ")
 	// We only have @action=allow not @action=deny, and only @scr_ip= not @in_op=
 	// so only worrying about that here.
 	if strings.HasPrefix(remapTxt, "@action=allow") {
-		for _, allowStr := range strings.Split(remapTxt, " ")[1:] {
+		remaps := strings.Split(remapTxt, " ")
+		if len(remaps) < 2 {
+			return nil, errors.New("malformed remapTxt '" + remapTxt + "'")
+		}
+		for _, allowStr := range remaps[1:] {
 			allBits := 32
 			if strings.Contains(allowStr, ":") {
 				allBits = 128 // not sure if v6 works, only tested with our v4 ACLs.
 			}
 			if strings.Contains(allowStr, "-") {
 				a := strings.Split(strings.TrimPrefix(allowStr, "@src_ip="), "-")
+				if len(a) < 2 {
+					return nil, errors.New("malformed remapTxt '" + remapTxt + "'")
+				}
 				startAddrStr := a[0]
 				endAddrStr := a[1]
 				start := net.ParseIP(startAddrStr)
@@ -894,24 +889,28 @@ func makeACL(remapTxt string) ([]*net.IPNet, error) {
 	return allow, nil
 }
 
-// makeModHdrs is a pretty nasty hack to take the very ATS/TrafficControl specific config stuff from Traffic Ops and turn it into header manipulation rules for grove
-func makeModHdrs(edgeHRW string, remapTXT string) (ModHdrs, ModHdrs, error) {
+// makeModHdrs is a pretty nasty hack to take the very ATS/TrafficControl specific config stuff from Traffic Ops and turn it into header manipulation rules for grove.
+// Returns the client header modifications, the origin header modifications, and any error.
+func makeModHdrs(edgeHRW string, remapTXT string) (web.ModHdrs, web.ModHdrs, error) {
 
 	if edgeHRW == "" && remapTXT == "" {
-		return ModHdrs{}, ModHdrs{}, nil
+		return web.ModHdrs{}, web.ModHdrs{}, nil
 	}
 
 	// Normalize the whitespaces to just a single " "
 	edgeHRW = strings.Join(strings.Fields(edgeHRW), " ")
 	remapTXT = strings.Join(strings.Fields(remapTXT), " ")
 
-	var toClientList ModHdrs
-	var toOriginList ModHdrs
+	toClientList := web.ModHdrs{}
+	toOriginList := web.ModHdrs{}
 	if strings.Contains(edgeHRW, "-header") {
 		toOrigin := true
 		for _, line := range strings.Split(edgeHRW, "__RETURN__") {
 			line = strings.TrimSuffix(line, "[L]")
 			parts := strings.Fields(line)
+			if len(parts) < 2 {
+				return web.ModHdrs{}, web.ModHdrs{}, errors.New("malformed line '" + line + "'")
+			}
 			switch {
 			case parts[0] == "cond":
 				if parts[1] == "%{SEND_RESPONSE_HDR_HOOK}" {
@@ -921,23 +920,28 @@ func makeModHdrs(edgeHRW string, remapTXT string) (ModHdrs, ModHdrs, error) {
 					toOrigin = true
 				}
 			case parts[0] == "set-header" || parts[0] == "add-header": // Technically these are different
+				if len(parts) < 3 {
+					return web.ModHdrs{}, web.ModHdrs{}, errors.New("malformed line '" + line + "'")
+				}
+				hdr := web.Hdr{Name: parts[1], Value: strings.Join(parts[2:], " ")}
 				if toOrigin {
-					toOriginList.Set = append(toOriginList.Set, Hdr{Name: parts[1], Value: strings.Join(parts[2:], " ")})
+					toOriginList.Set = append(toOriginList.Set, hdr)
 				} else {
-					toClientList.Set = append(toOriginList.Set, Hdr{Name: parts[1], Value: strings.Join(parts[2:], " ")})
+					toClientList.Set = append(toClientList.Set, hdr)
 				}
 			case parts[0] == "rm-header":
 				if toOrigin {
 					toOriginList.Drop = append(toOriginList.Drop, parts[1])
 				} else {
-					toClientList.Drop = append(toOriginList.Drop, parts[1])
+					toClientList.Drop = append(toClientList.Drop, parts[1])
 				}
 			}
 		}
 	}
 	// When we have a Lua plugin to drop the Range Requests, do that, but with headers.
+	// TODO move to plugin
 	if strings.Contains(remapTXT, "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/range_request_") {
-		toClientList.Set = append(toClientList.Set, Hdr{Name: "Accept-Ranges", Value: "None"})
+		toClientList.Set = append(toClientList.Set, web.Hdr{Name: "Accept-Ranges", Value: "None"})
 		toOriginList.Drop = append(toOriginList.Drop, "Range")
 	}
 	return toClientList, toOriginList, nil
