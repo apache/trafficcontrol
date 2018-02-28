@@ -37,7 +37,7 @@ type TOParameter tc.ParameterNullable
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
 var refType = TOParameter(tc.ParameterNullable{})
 
-func GetRefType() *TOParameterNullable {
+func GetRefType() *TOParameter {
 	return &refType
 }
 
