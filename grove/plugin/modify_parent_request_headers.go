@@ -3,6 +3,8 @@ package plugin
 import (
 	"encoding/json"
 
+	"github.com/apache/incubator-trafficcontrol/grove/web"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
@@ -11,7 +13,7 @@ func init() {
 }
 
 func modOrgReqHdrLoad(b json.RawMessage) interface{} {
-	cfg := ModHdrs{}
+	cfg := web.ModHdrs{}
 	err := json.Unmarshal(b, &cfg)
 	if err != nil {
 		log.Errorln("modify_parent_request_headers loading config, unmarshalling JSON: " + err.Error())
@@ -27,7 +29,7 @@ func modOrgReqHdr(icfg interface{}, d BeforeParentRequestData) {
 		log.Debugln("modify_parent_request_headers has no config, returning.")
 		return
 	}
-	cfg, ok := icfg.(*ModHdrs)
+	cfg, ok := icfg.(*web.ModHdrs)
 	if !ok {
 		// should never happen
 		log.Errorf("modify_parent_request_headers config '%v' type '%T' expected *ModHdrs\n", icfg, icfg)

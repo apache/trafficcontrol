@@ -12,6 +12,37 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
+type Hdr struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+type ModHdrs struct {
+	Set  []Hdr    `json:"set"`
+	Drop []string `json:"drop"`
+}
+
+// Any returns whether any header modifications exist
+func (mh *ModHdrs) Any() bool {
+	return len(mh.Set) > 0 || len(mh.Drop) > 0
+}
+
+// Mod drops and sets the headers in h according to its rules.
+func (mh *ModHdrs) Mod(h http.Header) {
+	if len(h) == 0 { // this happens on a dial tcp timeout
+		log.Debugf("modifyheaders: Header is  a nil map")
+		return
+	}
+	for _, hdr := range mh.Drop {
+		log.Debugf("modifyheaders: Dropping header %s\n", hdr)
+		h.Del(hdr)
+	}
+	for _, hdr := range mh.Set {
+		log.Debugf("modifyheaders: Setting header %s: %s \n", hdr.Name, hdr.Value)
+		h.Set(hdr.Name, hdr.Value)
+	}
+}
+
 func CopyHeaderTo(source http.Header, dest *http.Header) {
 	for n, v := range source {
 		for _, vv := range v {

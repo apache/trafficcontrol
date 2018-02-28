@@ -503,7 +503,7 @@ func LoadRemapper(path string, pluginConfigLoaders map[string]plugin.LoadFunc, c
 	return NewHTTPRequestRemapper(rules, plugins, statRules), nil
 }
 
-func RemapRulesToJSON(r RemapRules) RemapRulesJSON {
+func RemapRulesToJSON(r RemapRules) (RemapRulesJSON, error) {
 	j := RemapRulesJSON{RemapRulesBase: r.RemapRulesBase}
 	if r.Timeout != nil {
 		i := int(0)
@@ -534,10 +534,13 @@ func RemapRulesToJSON(r RemapRules) RemapRulesJSON {
 	}
 	j.Plugins = make(map[string]json.RawMessage)
 	for name, plugin := range r.Plugins {
-		clientHeadersJSONBytes, _ := json.Marshal(plugin)
-		j.Plugins[name] = clientHeadersJSONBytes
+		bts, err := json.Marshal(plugin)
+		if err != nil {
+			return RemapRulesJSON{}, errors.New("error marshalling plugin '" + name + "': " + err.Error())
+		}
+		j.Plugins[name] = bts
 	}
-	return j
+	return j, nil
 }
 
 func buildRemapRuleToJSON(r remapdata.RemapRule) RemapRuleJSON {
