@@ -22,13 +22,16 @@ package cdn
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
+	"github.com/asaskevich/govalidator"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -44,15 +47,15 @@ func GetRefType() *TOCDN {
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (cdn *TOCDN) GetID() (int, bool) {
+func (cdn TOCDN) GetID() (int, bool) {
 	return cdn.ID, true
 }
 
-func (cdn *TOCDN) GetAuditName() string {
+func (cdn TOCDN) GetAuditName() string {
 	return cdn.Name
 }
 
-func (cdn *TOCDN) GetType() string {
+func (cdn TOCDN) GetType() string {
 	return "cdn"
 }
 
@@ -60,15 +63,37 @@ func (cdn *TOCDN) SetID(i int) {
 	cdn.ID = i
 }
 
-func (cdn *TOCDN) Validate(db *sqlx.DB) []error {
-	errs := []error{}
-	if len(cdn.Name) < 1 {
-		errs = append(errs, errors.New(`CDN 'name' is required.`))
+func isValidCDNchar(r rune) bool {
+	if r >= 'a' && r <= 'z' {
+		return true
 	}
-	if len(cdn.DomainName) < 1 {
-		errs = append(errs, errors.New("Domain Name is required."))
+	if r >= 'A' && r <= 'Z' {
+		return true
 	}
-	return errs
+	if r == '.' || r == '_' {
+		return true
+	}
+	return false
+}
+
+// IsValidCDNName returns true if the name contains only characters valid for a CDN name
+func IsValidCDNName(str string) bool {
+	i := strings.IndexFunc(str, func(r rune) bool { return !isValidCDNchar(r) })
+	return i == -1
+}
+
+// Validate fulfills the api.Validator interface
+func (cdn TOCDN) Validate(db *sqlx.DB) []error {
+	validName := validation.NewStringRule(IsValidCDNName, "invalid characters found")
+	validDomainName := validation.NewStringRule(govalidator.IsDNSName, "not a valid domain name")
+	errs := validation.Errors{
+		"name":       validation.Validate(cdn.Name, validation.Required, validName),
+		"domainName": validation.Validate(cdn.DomainName, validation.Required, validDomainName),
+	}
+	if errs != nil {
+		return tovalidate.ToErrors(errs)
+	}
+	return nil
 }
 
 //The TOCDN implementation of the Creator interface
