@@ -47,15 +47,15 @@ func GetRefType() *TOASN {
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (asn *TOASN) GetID() (int, bool) {
+func (asn TOASN) GetID() (int, bool) {
 	return asn.ID, true
 }
 
-func (asn *TOASN) GetAuditName() string {
+func (asn TOASN) GetAuditName() string {
 	return strconv.Itoa(asn.ASN)
 }
 
-func (asn *TOASN) GetType() string {
+func (asn TOASN) GetType() string {
 	return "asn"
 }
 
@@ -63,10 +63,13 @@ func (asn *TOASN) SetID(i int) {
 	asn.ID = i
 }
 
-func (asn *TOASN) Validate(db *sqlx.DB) []error {
+func (asn TOASN) Validate(db *sqlx.DB) []error {
 	errs := []error{}
-	if asn.ASN < 1 {
-		errs = append(errs, errors.New(`ASN 'asn' is required.`))
+	if asn.ASN < 0 {
+		errs = append(errs, errors.New(`asn must be a positive integer`))
+	}
+	if asn.CachegroupID < 0 {
+		errs = append(errs, errors.New(`cachegroupId must be a positive integer`))
 	}
 	return errs
 }
