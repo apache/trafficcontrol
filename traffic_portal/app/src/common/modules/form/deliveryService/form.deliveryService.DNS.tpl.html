@@ -410,7 +410,7 @@ under the License.
 
                 <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.maxDnsAnswers), 'has-feedback': hasError(deliveryServiceForm.maxDnsAnswers)}">
                     <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                        <span uib-popover-html="label('maxDnsAnswers', 'desc')" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('dnsBypassTtl', 'title')}}</span>
+                        <span uib-popover-html="label('maxDnsAnswers', 'desc')" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('maxDnsAnswers', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
                         <input name="maxDnsAnswers" type="number" class="form-control" placeholder="Max number of IP addresses in DNS answer (0 means all)" ng-model="deliveryService.maxDnsAnswers" ng-pattern="/^\d+$/" autofocus>
