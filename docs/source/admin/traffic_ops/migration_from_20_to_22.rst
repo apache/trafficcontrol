@@ -23,6 +23,7 @@ Before this release, DNS Delivery Services were hardcoded to use the name "edge"
 Pre-2.2 the HTTP Routing Name is configurable via the http.routing.name option in in the Traffic Router http.properties config file. If your CDN uses that option to change the name from "tr" to something else, then you will need to perform the following steps for each CDN affected:
 
 1. In Traffic Ops, create the following profile parameter (double-check for typos, trailing spaces, etc):
+
   * **name**: upgrade_http_routing_name
   * **config file**: temp
   * **value**: whatever value is used for the affected CDN's http.routing.name
@@ -113,3 +114,9 @@ Also note the ``s?`` used here so that both http and https requests will end up 
 .. _ApacheTrafficServerDocs: https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/cachekey.en.html
 
 Further documentation on the cachekey plugin can be found at `ApacheTrafficServerDocs`_
+
+Apache Traffic Server 7.x (Logging)
+-------------------------------------------
+Trafficserver v7 has changed the logging format.  Previously this was an xml file and now it is a lua file. Traffic Control compensates for this
+automatically depending upon the filename used for the logging parameters.  Previously the file used was ``logs_xml.config``, for ATS 7 it is now
+``logging.config``.  The same parameters will work this new file, ``LogFormat.Format``, ``LogFormat.Name``, ``LogObject.Format`` etc.
