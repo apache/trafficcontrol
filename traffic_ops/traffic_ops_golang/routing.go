@@ -32,7 +32,6 @@ import (
 	"fmt"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -60,7 +59,7 @@ func getDefaultMiddleware() []Middleware {
 
 // ServerData ...
 type ServerData struct {
-	config.Config
+	Config
 	DB *sqlx.DB
 }
 

@@ -35,7 +35,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
@@ -96,7 +95,7 @@ func getXMLID(cdnID sql.NullInt64, hostRegex string, db *sqlx.DB) (sql.NullStrin
 	return xmlID, nil
 }
 
-func getDeliveryServiceSSLKeysByXMLID(xmlID string, version string, db *sqlx.DB, cfg config.Config) ([]byte, error) {
+func getDeliveryServiceSSLKeysByXMLID(xmlID string, version string, db *sqlx.DB, cfg Config) ([]byte, error) {
 	var respBytes []byte
 	// create and start a cluster
 	cluster, err := getRiakCluster(db, cfg)
@@ -238,7 +237,7 @@ func verifyAndEncodeCertificate(certificate string, rootCA string) (string, erro
 	return base64EncodedStr, nil
 }
 
-func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
+func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorsFunc(w, r)
 		var keysObj tc.DeliveryServiceSSLKeys
@@ -335,7 +334,7 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg config.Config) http.Handl
 }
 
 // fetch the ssl keys for a deliveryservice specified by the fully qualified hostname
-func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
+func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorsFunc(w, r)
 		var respBytes []byte
@@ -439,7 +438,7 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg config.Config) 
 }
 
 // fetch the deliveryservice ssl keys by the specified xmlID.
-func getDeliveryServiceSSLKeysByXMLIDHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
+func getDeliveryServiceSSLKeysByXMLIDHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorsFunc(w, r)
 		var respBytes []byte
@@ -495,7 +494,7 @@ func getDeliveryServiceSSLKeysByXMLIDHandler(db *sqlx.DB, cfg config.Config) htt
 // Delivery Services: URI Sign Keys.
 
 // Http POST or PUT handler used to store urisigning keys to a delivery service.
-func saveDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
+func saveDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorsFunc(w, r)
 
@@ -571,7 +570,7 @@ func saveDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.Hand
 }
 
 // endpoint handler for fetching uri signing keys from riak
-func getURIsignkeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
+func getURIsignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorsFunc(w, r)
 
@@ -631,7 +630,7 @@ func getURIsignkeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 }
 
 // Http DELETE handler used to remove urisigning keys assigned to a delivery service.
-func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
+func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorsFunc(w, r)
 
