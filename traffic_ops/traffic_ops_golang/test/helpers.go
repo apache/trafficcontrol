@@ -21,6 +21,7 @@ package test
 
 import (
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -39,4 +40,23 @@ func ColsFromStructByTag(tagName string, thing interface{}) []string {
 		}
 	}
 	return cols
+}
+
+// sortableErrors provides ordering a list of errors for easier comparison with an expected list
+type sortableErrors []error
+
+func (s sortableErrors) Len() int {
+	return len(s)
+}
+func (s sortableErrors) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s sortableErrors) Less(i, j int) bool {
+	return s[i].Error() < s[j].Error()
+}
+
+// SortErrors sorts the list of errors lexically
+func SortErrors(p []error) []error {
+	sort.Sort(sortableErrors(p))
+	return p
 }
