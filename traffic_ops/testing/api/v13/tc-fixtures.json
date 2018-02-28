@@ -1,12 +1,12 @@
 {
     "asns": [
         {
-            "cachegroupName": "mid-northeast-group",
-            "asn": 8888
+            "asn": 8888,
+            "cachegroupName": "mid-northeast-group"
         },
         {
-            "cachegroupName": "edge_cg4",
-            "asn": 9999
+            "asn": 9999,
+            "cachegroupName": "edge_cg4"
         }
     ],
     "cachegroups": [
@@ -170,6 +170,504 @@
             "name": "division2"
         }
     ],
+    "parameters": [
+        {
+            "config_file": "rascal.properties",
+            "id": 4,
+            "last_updated": "2018-01-19T19:01:21.455131+00:00",
+            "name": "health.threshold.loadavg",
+            "secure": false,
+            "value": "25.0"
+        },
+        {
+            "config_file": "rascal.properties",
+            "id": 5,
+            "last_updated": "2018-01-19T19:01:21.472279+00:00",
+            "name": "health.threshold.availableBandwidthInKbps",
+            "secure": false,
+            "value": ">1750000"
+        },
+        {
+            "config_file": "rascal.properties",
+            "id": 6,
+            "last_updated": "2018-01-19T19:01:21.489534+00:00",
+            "name": "history.count",
+            "secure": false,
+            "value": "30"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 7,
+            "last_updated": "2018-01-19T19:01:21.503311+00:00",
+            "name": "key0",
+            "secure": false,
+            "value": "HOOJ3Ghq1x4gChp3iQkqVTcPlOj8UCi3"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 8,
+            "last_updated": "2018-01-19T19:01:21.505157+00:00",
+            "name": "key1",
+            "secure": false,
+            "value": "_9LZYkRnfCS0rCBF7fTQzM9Scwlp2FhO"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 9,
+            "last_updated": "2018-01-19T19:01:21.508548+00:00",
+            "name": "key2",
+            "secure": false,
+            "value": "AFpkxfc4oTiyFSqtY6_ohjt3V80aAIxS"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 10,
+            "last_updated": "2018-01-19T19:01:21.401781+00:00",
+            "name": "key3",
+            "secure": false,
+            "value": "AL9kzs_SXaRZjPWH8G5e2m4ByTTzkzlc"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 11,
+            "last_updated": "2018-01-19T19:01:21.406601+00:00",
+            "name": "key4",
+            "secure": false,
+            "value": "poP3n3szbD1U4vx1xQXV65BvkVgWzfN8"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 12,
+            "last_updated": "2018-01-19T19:01:21.408784+00:00",
+            "name": "key5",
+            "secure": false,
+            "value": "1ir32ng4C4w137p5oq72kd2wqmIZUrya"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 13,
+            "last_updated": "2018-01-19T19:01:21.410854+00:00",
+            "name": "key6",
+            "secure": false,
+            "value": "B1qLptn2T1b_iXeTCWDcVuYvANtH139f"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 14,
+            "last_updated": "2018-01-19T19:01:21.412716+00:00",
+            "name": "key7",
+            "secure": false,
+            "value": "PiCV_5OODMzBbsNFMWsBxcQ8v1sK0TYE"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 15,
+            "last_updated": "2018-01-19T19:01:21.414638+00:00",
+            "name": "key8",
+            "secure": false,
+            "value": "Ggpv6DqXDvt2s1CETPBpNKwaLk4fTM9l"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 16,
+            "last_updated": "2018-01-19T19:01:21.416551+00:00",
+            "name": "key9",
+            "secure": false,
+            "value": "qPlVT_s6kL37aqb6hipDm4Bt55S72mI7"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 17,
+            "last_updated": "2018-01-19T19:01:21.418689+00:00",
+            "name": "key10",
+            "secure": false,
+            "value": "BsI5A9EmWrobIS1FeuOs1z9fm2t2WSBe"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 18,
+            "last_updated": "2018-01-19T19:01:21.420467+00:00",
+            "name": "key11",
+            "secure": false,
+            "value": "A54y66NCIj897GjS4yA9RrsSPtCUnQXP"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 19,
+            "last_updated": "2018-01-19T19:01:21.422414+00:00",
+            "name": "key12",
+            "secure": false,
+            "value": "2jZH0NDPSJttIr4c2KP510f47EKqTQAu"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 20,
+            "last_updated": "2018-01-19T19:01:21.424435+00:00",
+            "name": "key13",
+            "secure": false,
+            "value": "XduT2FBjBmmVID5JRB5LEf9oR5QDtBgC"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 21,
+            "last_updated": "2018-01-19T19:01:21.426125+00:00",
+            "name": "key14",
+            "secure": false,
+            "value": "D9nH0SvK_0kP5w8QNd1UFJ28ulFkFKPn"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 22,
+            "last_updated": "2018-01-19T19:01:21.427797+00:00",
+            "name": "key15",
+            "secure": false,
+            "value": "udKXWYNwbXXweaaLzaKDGl57OixnIIcm"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 23,
+            "last_updated": "2018-01-19T19:01:21.429365+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/trafficserver/etc/trafficserver"
+        },
+        {
+            "config_file": "url_sig_cdl-c2.config",
+            "id": 24,
+            "last_updated": "2018-01-19T19:01:21.431062+00:00",
+            "name": "error_url",
+            "secure": false,
+            "value": "403"
+        },
+        {
+            "config_file": "records.config",
+            "id": 25,
+            "last_updated": "2018-01-19T19:01:21.432692+00:00",
+            "name": "CONFIG proxy.config.allocator.debug_filter",
+            "secure": false,
+            "value": "INT 0"
+        },
+        {
+            "config_file": "records.config",
+            "id": 26,
+            "last_updated": "2018-01-19T19:01:21.434425+00:00",
+            "name": "CONFIG proxy.config.allocator.enable_reclaim",
+            "secure": false,
+            "value": "INT 0"
+        },
+        {
+            "config_file": "records.config",
+            "id": 27,
+            "last_updated": "2018-01-19T19:01:21.435957+00:00",
+            "name": "CONFIG proxy.config.allocator.max_overage",
+            "secure": false,
+            "value": "INT 3"
+        },
+        {
+            "config_file": "records.config",
+            "id": 28,
+            "last_updated": "2018-01-19T19:01:21.437496+00:00",
+            "name": "CONFIG proxy.config.diags.show_location",
+            "secure": false,
+            "value": "INT 0"
+        },
+        {
+            "config_file": "records.config",
+            "id": 29,
+            "last_updated": "2018-01-19T19:01:21.439033+00:00",
+            "name": "CONFIG proxy.config.http.cache.allow_empty_doc",
+            "secure": false,
+            "value": "INT 0"
+        },
+        {
+            "config_file": "records.config",
+            "id": 30,
+            "last_updated": "2018-01-19T19:01:21.440502+00:00",
+            "name": "LOCAL proxy.config.cache.interim.storage",
+            "secure": false,
+            "value": "STRING NULL"
+        },
+        {
+            "config_file": "records.config",
+            "id": 31,
+            "last_updated": "2018-01-19T19:01:21.441933+00:00",
+            "name": "CONFIG proxy.config.http.parent_proxy.file",
+            "secure": false,
+            "value": "STRING parent.config"
+        },
+        {
+            "config_file": "12M_facts",
+            "id": 32,
+            "last_updated": "2018-01-19T19:01:21.443436+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/ort"
+        },
+        {
+            "config_file": "cacheurl.config",
+            "id": 33,
+            "last_updated": "2018-01-19T19:01:21.444898+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+            "config_file": "ip_allow.config",
+            "id": 34,
+            "last_updated": "2018-01-19T19:01:21.446396+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/trafficserver/etc/trafficserver"
+        },
+        {
+            "config_file": "plugin.config",
+            "id": 35,
+            "last_updated": "2018-01-19T19:01:21.447837+00:00",
+            "name": "astats_over_http.so",
+            "secure": false,
+            "value": "_astats 33.101.99.100,172.39.19.39,172.39.19.49,172.39.19.49,172.39.29.49"
+        },
+        {
+            "config_file": "crontab_root",
+            "id": 36,
+            "last_updated": "2018-01-19T19:01:21.449259+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/var/spool/cron"
+        },
+        {
+            "config_file": "hdr_rw_cdl-c2.config",
+            "id": 37,
+            "last_updated": "2018-01-19T19:01:21.450778+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/trafficserver/etc/trafficserver"
+        },
+        {
+            "config_file": "50-ats.rules",
+            "id": 38,
+            "last_updated": "2018-01-19T19:01:21.452196+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/etc/udev/rules.d/"
+        },
+        {
+            "config_file": "parent.config",
+            "id": 39,
+            "last_updated": "2018-01-19T19:01:21.453716+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+            "config_file": "remap.config",
+            "id": 40,
+            "last_updated": "2018-01-19T19:01:21.456753+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+            "config_file": "drop_qstring.config",
+            "id": 41,
+            "last_updated": "2018-01-19T19:01:21.45835+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/trafficserver/etc/trafficserver"
+        },
+        {
+            "config_file": "logs_xml.config",
+            "id": 43,
+            "last_updated": "2018-01-19T19:01:21.461206+00:00",
+            "name": "LogFormat.Name",
+            "secure": false,
+            "value": "custom_ats_2"
+        },
+        {
+            "config_file": "logs_xml.config",
+            "id": 44,
+            "last_updated": "2018-01-19T19:01:21.462772+00:00",
+            "name": "LogObject.Format",
+            "secure": false,
+            "value": "custom_ats_2"
+        },
+        {
+            "config_file": "logs_xml.config",
+            "id": 45,
+            "last_updated": "2018-01-19T19:01:21.464259+00:00",
+            "name": "LogObject.Filename",
+            "secure": false,
+            "value": "custom_ats_2"
+        },
+        {
+            "config_file": "cache.config",
+            "id": 46,
+            "last_updated": "2018-01-19T19:01:21.465717+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+            "config_file": "records.config",
+            "id": 47,
+            "last_updated": "2018-01-19T19:01:21.467349+00:00",
+            "name": "CONFIG proxy.config.cache.control.filename",
+            "secure": false,
+            "value": "STRING cache.config"
+        },
+        {
+            "config_file": "plugin.config",
+            "id": 48,
+            "last_updated": "2018-01-19T19:01:21.469075+00:00",
+            "name": "regex_revalidate.so",
+            "secure": false,
+            "value": "--config regex_revalidate.config"
+        },
+        {
+            "config_file": "regex_revalidate.config",
+            "id": 49,
+            "last_updated": "2018-01-19T19:01:21.470677+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/trafficserver/etc/trafficserver"
+        },
+        {
+            "config_file": "hosting.config",
+            "id": 50,
+            "last_updated": "2018-01-19T19:01:21.474023+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+            "config_file": "volume.config",
+            "id": 51,
+            "last_updated": "2018-01-19T19:01:21.475515+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+            "config_file": "astats.config",
+            "id": 52,
+            "last_updated": "2018-01-19T19:01:21.477074+00:00",
+            "name": "allow_ip",
+            "secure": false,
+            "value": "127.0.0.1,172.39.0.0/16,33.101.99.0/24"
+        },
+        {
+            "config_file": "astats.config",
+            "id": 53,
+            "last_updated": "2018-01-19T19:01:21.478516+00:00",
+            "name": "allow_ip6",
+            "secure": false,
+            "value": "::1,2033:D011:3300::336/64,2033:D011:3300::335/64,2033:D021:3300::333/64,2033:D021:3300::334/64"
+        },
+        {
+            "config_file": "astats.config",
+            "id": 54,
+            "last_updated": "2018-01-19T19:01:21.480143+00:00",
+            "name": "record_types",
+            "secure": false,
+            "value": "144"
+        },
+        {
+            "config_file": "astats.config",
+            "id": 55,
+            "last_updated": "2018-01-19T19:01:21.481582+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/trafficserver/etc/trafficserver"
+        },
+        {
+            "config_file": "astats.config",
+            "id": 56,
+            "last_updated": "2018-01-19T19:01:21.482959+00:00",
+            "name": "path",
+            "secure": false,
+            "value": "_astats"
+        },
+        {
+            "config_file": "storage.config",
+            "id": 57,
+            "last_updated": "2018-01-19T19:01:21.484501+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+            "config_file": "storage.config",
+            "id": 58,
+            "last_updated": "2018-01-19T19:01:21.48625+00:00",
+            "name": "Drive_Prefix",
+            "secure": false,
+            "value": "/dev/sd"
+        },
+        {
+            "config_file": "storage.config",
+            "id": 59,
+            "last_updated": "2018-01-19T19:01:21.487958+00:00",
+            "name": "Drive_Letters",
+            "secure": false,
+            "value": "b,c,d,e,f,g,h,i,j,k,l,m,n,o"
+        },
+        {
+            "config_file": "storage.config",
+            "id": 60,
+            "last_updated": "2018-01-19T19:01:21.491181+00:00",
+            "name": "Disk_Volume",
+            "secure": false,
+            "value": "1"
+        },
+        {
+            "config_file": "records.config",
+            "id": 61,
+            "last_updated": "2018-01-19T19:01:21.49285+00:00",
+            "name": "CONFIG proxy.config.hostdb.storage_size",
+            "secure": false,
+            "value": "INT 33554432"
+        },
+        {
+            "config_file": "regex_revalidate.config",
+            "id": 63,
+            "last_updated": "2018-01-19T19:01:21.494468+00:00",
+            "name": "maxRevalDurationDays",
+            "secure": false,
+            "value": "3"
+        },
+        {
+            "config_file": "regex_revalidate.config",
+            "id": 64,
+            "last_updated": "2018-01-19T19:01:21.496195+00:00",
+            "name": "maxRevalDurationDays",
+            "secure": false,
+            "value": "90"
+        },
+        {
+            "config_file": "whaterver.config",
+            "id": 65,
+            "last_updated": "2018-01-19T19:01:21.497838+00:00",
+            "name": "unassigned_parameter_1",
+            "secure": false,
+            "value": "852"
+        },
+        {
+            "config_file": "package",
+            "id": 66,
+            "last_updated": "2018-01-19T19:01:21.499423+00:00",
+            "name": "trafficserver",
+            "secure": false,
+            "value": "5.3.2-765.f4354b9.el7.centos.x86_64"
+        },
+        {
+            "config_file": "global",
+            "id": 67,
+            "last_updated": "2018-01-19T19:01:21.501151+00:00",
+            "name": "use_tenancy",
+            "secure": false,
+            "value": "1"
+        }
+    ],
     "physLocations": [
         {
             "address": "1234 mile high circle",
@@ -180,7 +678,7 @@
             "name": "Denver",
             "phone": "303-111-1111",
             "poc": null,
-            "region": 100,
+            "regionId": 100,
             "short_name": "denver",
             "state": "CO",
             "zip": "80202"
@@ -194,7 +692,7 @@
             "name": "Boulder",
             "phone": "303-222-2222",
             "poc": null,
-            "region": 100,
+            "regionId": 100,
             "short_name": "boulder",
             "state": "CO",
             "zip": "80301"
@@ -208,7 +706,7 @@
             "name": "HotAtlanta",
             "phone": "404-222-2222",
             "poc": null,
-            "region": 100,
+            "regionId": 100,
             "short_name": "atlanta",
             "state": "GA",
             "zip": "30301"
@@ -226,28 +724,28 @@
     ],
     "statuses": [
         {
-            "name": "OFFLINE",
-            "description": "Edge: Puts server in CCR config file in this state, but CCR will never route traffic to it. Mid: Server will not be included in parent.config files for its edge caches"
+            "description": "Edge: Puts server in CCR config file in this state, but CCR will never route traffic to it. Mid: Server will not be included in parent.config files for its edge caches",
+            "name": "OFFLINE"
         },
         {
-            "name": "ONLINE",
-            "description": "Edge: Puts server in CCR config file in this state, and CCR will always route traffic to it. Mid: Server will be included in parent.config files for its edges"
+            "description": "Edge: Puts server in CCR config file in this state, and CCR will always route traffic to it. Mid: Server will be included in parent.config files for its edges",
+            "name": "ONLINE"
         },
         {
-            "name": "REPORTED",
-            "description": "Edge: Puts server in CCR config file in this state, and CCR will adhere to the health protocol. Mid: N/A for now"
+            "description": "Edge: Puts server in CCR config file in this state, and CCR will adhere to the health protocol. Mid: N/A for now",
+            "name": "REPORTED"
         },
         {
-            "name": "ADMIN_DOWN",
-            "description": "Temporary down. Edge: XMPP client will send status OFFLINE to CCR, otherwise similar to REPORTED. Mid: Server will not be included in parent.config files for its edge caches"
+            "description": "Temporary down. Edge: XMPP client will send status OFFLINE to CCR, otherwise similar to REPORTED. Mid: Server will not be included in parent.config files for its edge caches",
+            "name": "ADMIN_DOWN"
         },
         {
-            "name": "CCR_IGNORE",
-            "description": "Edge: 12M will not include caches in this state in CCR config files. Mid: N/A for now"
+            "description": "Edge: 12M will not include caches in this state in CCR config files. Mid: N/A for now",
+            "name": "CCR_IGNORE"
         },
         {
-            "name": "PRE_PROD",
-            "description": "Pre Production. Not active in any configuration."
+            "description": "Pre Production. Not active in any configuration.",
+            "name": "PRE_PROD"
         }
     ],
     "tenants": [
