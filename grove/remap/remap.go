@@ -532,6 +532,11 @@ func RemapRulesToJSON(r RemapRules) RemapRulesJSON {
 	for _, rule := range r.Rules {
 		j.Rules = append(j.Rules, buildRemapRuleToJSON(rule))
 	}
+	j.Plugins = make(map[string]json.RawMessage)
+	for name, plugin := range r.Plugins {
+		clientHeadersJSONBytes, _ := json.Marshal(plugin)
+		j.Plugins[name] = clientHeadersJSONBytes
+	}
 	return j
 }
 
@@ -562,6 +567,11 @@ func buildRemapRuleToJSON(r remapdata.RemapRule) RemapRuleJSON {
 		for retryCode := range r.RetryCodes {
 			*j.RetryCodes = append(*j.RetryCodes, retryCode)
 		}
+	}
+	j.Plugins = make(map[string]json.RawMessage)
+	for name, plugin := range r.Plugins {
+		clientHeadersJSONBytes, _ := json.Marshal(plugin)
+		j.Plugins[name] = clientHeadersJSONBytes
 	}
 	return j
 }
