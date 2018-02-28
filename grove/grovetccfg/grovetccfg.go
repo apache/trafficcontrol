@@ -24,6 +24,18 @@ import (
 	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 )
 
+// Duplicating Hdr and ModHdrs here for now...
+// Seems cleaner than dragging it up from some arbitrary place in plugins
+type Hdr struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+type ModHdrs struct {
+	Set  []Hdr    `json:"set"`
+	Drop []string `json:"drop"`
+}
+
 const Version = "0.1"
 const UserAgent = "grove-tc-cfg/" + Version
 const TrafficOpsTimeout = time.Second * 90
@@ -185,6 +197,7 @@ func main() {
 	}
 
 	jsonRules := remap.RemapRulesToJSON(rules)
+	// fmt.Println(">>>> %v", jsonRules)
 	bts := []byte{}
 	if *pretty {
 		bts, err = json.MarshalIndent(jsonRules, "", "  ")
@@ -716,6 +729,16 @@ func createRulesOld(
 			continue
 		}
 
+		toClientHeaders, toOriginHeaders, err := makeModHdrs(ds.EdgeHeaderRewrite, ds.RemapText)
+		if err != nil {
+			return remap.RemapRules{}, err
+		}
+		acl, err := makeACL(ds.RemapText)
+		if err != nil {
+			fmt.Printf("createRules skipping deliveryservice %v - unsupported ACL %v\n", ds.XMLID, ds.RemapText)
+			continue
+		}
+
 		for _, protocolStr := range protocolStrs {
 			regexes, ok := dsRegexes[ds.XMLID]
 			if !ok {
@@ -763,18 +786,35 @@ func createRulesOld(
 					}
 					rule.ConnectionClose = DefaultRuleConnectionClose
 					rule.ParentSelection = &parentSelection
+					if acl != nil {
+						rule.Allow = acl
+					}
+					rule.Plugins = make(map[string]interface{})
+					if toClientHeaders.Set != nil || toClientHeaders.Drop != nil {
+						rule.Plugins["mod_response_headers"] = toClientHeaders
+					}
+					if toOriginHeaders.Set != nil || toOriginHeaders.Drop != nil {
+						rule.Plugins["mod_org_request_headers"] = toOriginHeaders
+					}
 				}
 				rules = append(rules, rule)
 			}
 		}
 	}
 
+	globalPlugins := make(map[string]interface{})
+	serverHeader := Hdr{Name: "Server", Value: "Grove/0.33"}
+	setHeaders := make([]Hdr, 0)
+	setHeaders = append(setHeaders, serverHeader)
+	globalHeaders := ModHdrs{Set: setHeaders, Drop: nil}
+	globalPlugins["mod_response_headers_global"] = globalHeaders
 	remapRules := remap.RemapRules{
 		Rules:           rules,
 		RetryCodes:      DefaultRetryCodes(),
 		Timeout:         &timeout,
 		ParentSelection: &parentSelection,
 		Stats:           remapdata.RemapRulesStats{Allow: allowedIPs},
+		Plugins:         globalPlugins,
 	}
 
 	return remapRules, nil
@@ -807,4 +847,99 @@ func createCertificateFiles(cert tc.CDNSSLKeys, dir string) error {
 		return errors.New("writing certificate key file " + keyFileName + ": " + err.Error())
 	}
 	return nil
+}
+
+// makeACL is a hack to take the very ATS/TrafficControl remap_text field ACLs, and turn them into grove ACLs
+// note that the astats ACL input already has CIDR notation, but the DS ACL input is IP ranges.
+func makeACL(remapTxt string) ([]*net.IPNet, error) {
+	var allow []*net.IPNet
+	remapTxt = strings.Join(strings.Fields(remapTxt), " ")
+	// We only have @action=allow not @action=deny, and only @scr_ip= not @in_op=
+	// so only worrying about that here.
+	if strings.HasPrefix(remapTxt, "@action=allow") {
+		for _, allowStr := range strings.Split(remapTxt, " ")[1:] {
+			allBits := 32
+			if strings.Contains(allowStr, ":") {
+				allBits = 128 // not sure if v6 works, only tested with our v4 ACLs.
+			}
+			if strings.Contains(allowStr, "-") {
+				a := strings.Split(strings.TrimPrefix(allowStr, "@src_ip="), "-")
+				startAddrStr := a[0]
+				endAddrStr := a[1]
+				start := net.ParseIP(startAddrStr)
+				end := net.ParseIP(endAddrStr)
+				if start == nil || end == nil {
+					// This error catches all unexpected (but valid) options.
+					return nil, fmt.Errorf("error parsing allow string: %v, %v", allowStr, remapTxt)
+				}
+				maskBits := allBits
+				mask := net.CIDRMask(maskBits, allBits)
+				for !start.Mask(mask).Equal(end.Mask(mask)) {
+					maskBits--
+					mask = net.CIDRMask(maskBits, allBits)
+				}
+				fmt.Println("base: ", startAddrStr, " end:", endAddrStr, " maskBits:", maskBits)
+				allow = append(allow, &net.IPNet{IP: start.Mask(mask), Mask: mask})
+			} else {
+				addrStr := strings.Trim(allowStr, "@src_ip=")
+				addr := net.ParseIP(addrStr)
+				if addr == nil {
+					// This error catches all unexpected (but valid) options.
+					return nil, fmt.Errorf("error parsing allow string: %v, %v", allowStr, remapTxt)
+				}
+				mask := net.CIDRMask(allBits, allBits)
+				allow = append(allow, &net.IPNet{IP: addr.Mask(mask), Mask: mask})
+			}
+		}
+	}
+	return allow, nil
+}
+
+// makeModHdrs is a pretty nasty hack to take the very ATS/TrafficControl specific config stuff from Traffic Ops and turn it into header manipulation rules for grove
+func makeModHdrs(edgeHRW string, remapTXT string) (ModHdrs, ModHdrs, error) {
+
+	if edgeHRW == "" && remapTXT == "" {
+		return ModHdrs{}, ModHdrs{}, nil
+	}
+
+	// Normalize the whitespaces to just a single " "
+	edgeHRW = strings.Join(strings.Fields(edgeHRW), " ")
+	remapTXT = strings.Join(strings.Fields(remapTXT), " ")
+
+	var toClientList ModHdrs
+	var toOriginList ModHdrs
+	if strings.Contains(edgeHRW, "-header") {
+		toOrigin := true
+		for _, line := range strings.Split(edgeHRW, "__RETURN__") {
+			line = strings.TrimSuffix(line, "[L]")
+			parts := strings.Fields(line)
+			switch {
+			case parts[0] == "cond":
+				if parts[1] == "%{SEND_RESPONSE_HDR_HOOK}" {
+					toOrigin = false
+				}
+				if parts[1] == "%{SEND_REQUEST_HDR_HOOK}" {
+					toOrigin = true
+				}
+			case parts[0] == "set-header" || parts[0] == "add-header": // Technically these are different
+				if toOrigin {
+					toOriginList.Set = append(toOriginList.Set, Hdr{Name: parts[1], Value: strings.Join(parts[2:], " ")})
+				} else {
+					toClientList.Set = append(toOriginList.Set, Hdr{Name: parts[1], Value: strings.Join(parts[2:], " ")})
+				}
+			case parts[0] == "rm-header":
+				if toOrigin {
+					toOriginList.Drop = append(toOriginList.Drop, parts[1])
+				} else {
+					toClientList.Drop = append(toOriginList.Drop, parts[1])
+				}
+			}
+		}
+	}
+	// When we have a Lua plugin to drop the Range Requests, do that, but with headers.
+	if strings.Contains(remapTXT, "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/range_request_") {
+		toClientList.Set = append(toClientList.Set, Hdr{Name: "Accept-Ranges", Value: "None"})
+		toOriginList.Drop = append(toOriginList.Drop, "Range")
+	}
+	return toClientList, toOriginList, nil
 }
