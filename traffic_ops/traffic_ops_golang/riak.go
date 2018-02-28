@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
 	"github.com/lestrrat/go-jwx/jwk"
@@ -158,7 +157,7 @@ func saveObject(obj *riak.Object, bucket string, cluster StorageCluster) error {
 }
 
 // returns a riak cluster of online riak nodes.
-func getRiakCluster(db *sqlx.DB, cfg config.Config) (StorageCluster, error) {
+func getRiakCluster(db *sqlx.DB, cfg Config) (StorageCluster, error) {
 	riakServerQuery := `
 		SELECT s.host_name, s.domain_name FROM server s 
 		INNER JOIN type t on s.type = t.id 
