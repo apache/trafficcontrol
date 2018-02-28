@@ -20,6 +20,8 @@ package physlocation
  */
 
 import (
+	"errors"
+	"reflect"
 	"testing"
 	"time"
 
@@ -39,7 +41,7 @@ func getTestPhysLocations() []tc.PhysLocation {
 		City:        "Denver",
 		Email:       "d.t@gmail.com",
 		ID:          1,
-		LastUpdated: tc.Time{Time: time.Now()},
+		LastUpdated: tc.TimeNoMod{Time: time.Now()},
 		Name:        "physLocation1",
 		Phone:       "303-210-0000",
 		POC:         "Dennis Thompson",
@@ -122,5 +124,23 @@ func TestInterfaces(t *testing.T) {
 	}
 	if _, ok := i.(api.Identifier); !ok {
 		t.Errorf("PhysLocation must be Identifier")
+	}
+}
+
+func TestValidate(t *testing.T) {
+	p := TOPhysLocation{}
+	errs := test.SortErrors(p.Validate(nil))
+	expected := test.SortErrors([]error{
+		errors.New("'state' cannot be blank"),
+		errors.New("'zip' cannot be blank"),
+		errors.New("'address' cannot be blank"),
+		errors.New("'city' cannot be blank"),
+		errors.New("'name' cannot be blank"),
+		errors.New("'regionId' cannot be blank"),
+		errors.New("'shortName' cannot be blank"),
+	})
+
+	if !reflect.DeepEqual(expected, errs) {
+		t.Errorf("expected %++v,  got %++v", expected, errs)
 	}
 }

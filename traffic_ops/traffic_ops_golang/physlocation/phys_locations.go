@@ -29,6 +29,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -70,12 +72,19 @@ func (pl *TOPhysLocation) SetID(i int) {
 }
 
 func (pl *TOPhysLocation) Validate(db *sqlx.DB) []error {
-	errs := []error{}
-	name := pl.Name
-	if name != nil && len(*name) < 1 {
-		errs = append(errs, errors.New(`PhysLocation 'name' is required.`))
+	errs := validation.Errors{
+		"address":   validation.Validate(pl.Address, validation.Required),
+		"city":      validation.Validate(pl.City, validation.Required),
+		"name":      validation.Validate(pl.Name, validation.Required),
+		"regionId":  validation.Validate(pl.RegionID, validation.Required, validation.Min(0)),
+		"shortName": validation.Validate(pl.ShortName, validation.Required),
+		"state":     validation.Validate(pl.State, validation.Required),
+		"zip":       validation.Validate(pl.Zip, validation.Required),
 	}
-	return errs
+	if errs != nil {
+		return tovalidate.ToErrors(errs)
+	}
+	return nil
 }
 
 func (pl *TOPhysLocation) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
@@ -177,7 +186,7 @@ func (pl *TOPhysLocation) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 	}
 	defer resultRows.Close()
 
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
@@ -242,7 +251,7 @@ func (pl *TOPhysLocation) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 	defer resultRows.Close()
 
 	var id int
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
