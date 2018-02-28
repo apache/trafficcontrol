@@ -28,34 +28,49 @@ import (
 	"encoding/json"
 
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 )
 
-var sysInfoParameters = []tc.Parameter{
-	tc.Parameter{
-		ConfigFile:  "global",
-		ID:          1,
-		LastUpdated: tc.TimeNoMod{Time: time.Now()},
-		Name:        "paramname1",
-		Profiles:    json.RawMessage(`["foo","bar"]`),
-		Secure:      false,
-		Value:       "val1",
-	},
-
-	tc.Parameter{
-		ConfigFile:  "global",
-		ID:          2,
-		LastUpdated: tc.TimeNoMod{Time: time.Now()},
-		Name:        "paramname2",
-		Profiles:    json.RawMessage(`["foo","bar"]`),
-		Secure:      false,
-		Value:       "val2",
-	},
-}
-
 func TestGetSystemInfo(t *testing.T) {
+
+	lastUpdated := tc.TimeNoMod{}
+	lastUpdated.Scan(time.Now())
+	configFile := "global"
+	secureFlag := false
+	firstID := 1
+	firstParam := "paramname1"
+	firstVal := "val1"
+
+	secondID := 1
+	secondParam := "paramname2"
+	secondVal := "val2"
+
+	var sysInfoParameters = []tc.ParameterNullable{
+
+		tc.ParameterNullable{
+			ConfigFile:  &configFile,
+			ID:          &firstID,
+			LastUpdated: &lastUpdated,
+			Name:        &firstParam,
+			Profiles:    json.RawMessage(`["foo","bar"]`),
+			Secure:      &secureFlag,
+			Value:       &firstVal,
+		},
+
+		tc.ParameterNullable{
+			ConfigFile:  &configFile,
+			ID:          &secondID,
+			LastUpdated: &lastUpdated,
+			Name:        &secondParam,
+			Profiles:    json.RawMessage(`["foo","bar"]`),
+			Secure:      &secureFlag,
+			Value:       &secondVal,
+		},
+	}
+
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -65,11 +80,9 @@ func TestGetSystemInfo(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	cols := test.ColsFromStructByTag("db", tc.Parameter{})
+	cols := test.ColsFromStructByTag("db", tc.ParameterNullable{})
 	rows := sqlmock.NewRows(cols)
 
-	//TODO: drichardson - build helper to add these Rows from the struct values
-	//                    or by CSV if types get in the way
 	for _, ts := range sysInfoParameters {
 		rows = rows.AddRow(
 			ts.ConfigFile,
@@ -83,12 +96,23 @@ func TestGetSystemInfo(t *testing.T) {
 	}
 
 	mock.ExpectQuery("SELECT.*WHERE p.config_file='global'").WillReturnRows(rows)
-	sysinfo, err := getSystemInfo(db, auth.PrivLevelReadOnly)
-	if err != nil {
-		t.Errorf("getSystemInfo expected: nil error, actual: %v", err)
+	refType := GetRefType()
+	v := map[string]string{"id": "1"}
+	parameters, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+	if len(errs) > 0 {
+		t.Errorf("parameter.Read expected: no errors, actual: %v", errs)
 	}
 
-	if len(sysinfo) != 2 {
-		t.Errorf("getSystemInfo expected: len(sysinfo) == 2, actual: %v", len(sysinfo))
+	if len(parameters) != 2 {
+		t.Errorf("parameter.Read expected: len(parameters) == 2, actual: %v", len(parameters))
+	}
+}
+
+func TestInterfaces(t *testing.T) {
+	var i interface{}
+	i = &TOParameter{}
+
+	if _, ok := i.(api.Reader); !ok {
+		t.Errorf("cdn must be reader")
 	}
 }
