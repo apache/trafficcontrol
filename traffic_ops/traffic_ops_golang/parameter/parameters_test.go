@@ -34,23 +34,31 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestParameters() []tc.Parameter {
-	parameters := []tc.Parameter{}
-	testParameter := tc.Parameter{
-		ConfigFile:  "global",
-		ID:          1,
-		LastUpdated: tc.TimeNoMod{Time: time.Now()},
-		Name:        "paramname1",
+func getTestParameters() []tc.ParameterNullable {
+	parameters := []tc.ParameterNullable{}
+	lastUpdated := tc.TimeNoMod{}
+	lastUpdated.Scan(time.Now())
+	configFile := "global"
+	secureFlag := false
+	ID := 1
+	param := "paramname1"
+	val := "val1"
+
+	testParameter := tc.ParameterNullable{
+		ConfigFile:  &configFile,
+		ID:          &ID,
+		LastUpdated: &lastUpdated,
+		Name:        &param,
 		Profiles:    json.RawMessage(`["foo","bar"]`),
-		Secure:      false,
-		Value:       "val1",
+		Secure:      &secureFlag,
+		Value:       &val,
 	}
 	parameters = append(parameters, testParameter)
 
 	testParameter2 := testParameter
-	testParameter2.Name = "paramname2"
-	testParameter2.Value = "val2"
-	testParameter2.ConfigFile = "some.config"
+	testParameter2.Name = &param
+	testParameter2.Value = &val
+	testParameter2.ConfigFile = &configFile
 	testParameter2.Profiles = json.RawMessage(`["foo","baz"]`)
 	parameters = append(parameters, testParameter2)
 
@@ -68,7 +76,7 @@ func TestGetParameters(t *testing.T) {
 	defer db.Close()
 
 	testParameters := getTestParameters()
-	cols := test.ColsFromStructByTag("db", tc.Parameter{})
+	cols := test.ColsFromStructByTag("db", tc.ParameterNullable{})
 	rows := sqlmock.NewRows(cols)
 
 	for _, ts := range testParameters {

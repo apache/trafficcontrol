@@ -20,7 +20,9 @@ package systeminfo
  */
 
 import (
-	"tmp/prometheus/common/log"
+	"encoding/json"
+	"fmt"
+	"net/http"
 
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -28,53 +30,80 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-//we need a type alias to define functions on
-type TOParameter tc.ParameterNullable
+func Handler(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOParameter(tc.ParameterNullable{})
-
-func GetRefType() *TOParameter {
-	return &refType
-}
-
-func (pl *TOParameter) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
-
-	query := selectQuery()
-	log.Debugln("Query is ", query)
-
-	rows, err := db.Queryx(query)
-	if err != nil {
-		log.Errorf("Error querying Parameter: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
-	}
-	defer rows.Close()
-
-	params := []interface{}{}
-	for rows.Next() {
-		var s tc.ParameterNullable
-		if err = rows.StructScan(&s); err != nil {
-			log.Errorf("error parsing Parameter rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
+		ctx := r.Context()
+		user, err := auth.GetCurrentUser(ctx)
+		if err != nil {
+			handleErrs(http.StatusInternalServerError, err)
+			return
 		}
-		params = append(params, s)
+		privLevel := user.PrivLevel
+
+		resp, err := getSystemInfoResponse(db, privLevel)
+		if err != nil {
+			handleErrs(http.StatusInternalServerError, err)
+			return
+		}
+
+		respBts, err := json.Marshal(resp)
+		if err != nil {
+			handleErrs(http.StatusInternalServerError, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, "%s", respBts)
+	}
+}
+func getSystemInfoResponse(db *sqlx.DB, privLevel int) (*tc.SystemInfoResponse, error) {
+	info, err := getSystemInfo(db, privLevel)
+	if err != nil {
+		return nil, fmt.Errorf("getting SystemInfo: %v", err)
 	}
 
-	return params, []error{}, tc.NoError
-
+	resp := tc.SystemInfoResponse{}
+	resp.Response.ParametersNullable = info
+	return &resp, nil
 }
 
-func selectQuery() string {
-
+func getSystemInfo(db *sqlx.DB, privLevel int) (map[string]string, error) {
 	// system info returns all global parameters
 	query := `SELECT
-p.config_file,
 p.name,
 p.secure,
+p.last_updated,
 p.value
 FROM parameter p
 WHERE p.config_file='global'`
 
-	return query
+	rows, err := db.Queryx(query)
+
+	if err != nil {
+		return nil, fmt.Errorf("querying: %v", err)
+	}
+	defer rows.Close()
+
+	info := make(map[string]string)
+	for rows.Next() {
+		p := tc.ParameterNullable{}
+		if err = rows.StructScan(&p); err != nil {
+			return nil, fmt.Errorf("getting system_info: %v", err)
+		}
+		isSecure := *p.Secure
+		name := p.Name
+		value := p.Value
+		if isSecure && privLevel < auth.PrivLevelAdmin {
+			// Secure params only visible to admin
+			continue
+		}
+		info[*name] = *value
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return info, nil
 }

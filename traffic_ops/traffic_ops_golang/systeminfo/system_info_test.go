@@ -28,49 +28,12 @@ import (
 	"encoding/json"
 
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 )
 
 func TestGetSystemInfo(t *testing.T) {
-
-	lastUpdated := tc.TimeNoMod{}
-	lastUpdated.Scan(time.Now())
-	configFile := "global"
-	secureFlag := false
-	firstID := 1
-	firstParam := "paramname1"
-	firstVal := "val1"
-
-	secondID := 1
-	secondParam := "paramname2"
-	secondVal := "val2"
-
-	var sysInfoParameters = []tc.ParameterNullable{
-
-		tc.ParameterNullable{
-			ConfigFile:  &configFile,
-			ID:          &firstID,
-			LastUpdated: &lastUpdated,
-			Name:        &firstParam,
-			Profiles:    json.RawMessage(`["foo","bar"]`),
-			Secure:      &secureFlag,
-			Value:       &firstVal,
-		},
-
-		tc.ParameterNullable{
-			ConfigFile:  &configFile,
-			ID:          &secondID,
-			LastUpdated: &lastUpdated,
-			Name:        &secondParam,
-			Profiles:    json.RawMessage(`["foo","bar"]`),
-			Secure:      &secureFlag,
-			Value:       &secondVal,
-		},
-	}
-
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -82,6 +45,40 @@ func TestGetSystemInfo(t *testing.T) {
 
 	cols := test.ColsFromStructByTag("db", tc.ParameterNullable{})
 	rows := sqlmock.NewRows(cols)
+
+	lastUpdated := tc.TimeNoMod{Time: time.Now()}
+	configFile := "global"
+	secure := false
+
+	firstID := 1
+	firstName := "paramname1"
+	firstVal := "val1"
+
+	secondID := 2
+	secondName := "paramname2"
+	secondVal := "val2"
+
+	var sysInfoParameters = []tc.ParameterNullable{
+		tc.ParameterNullable{
+			ConfigFile:  &configFile,
+			ID:          &firstID,
+			LastUpdated: &lastUpdated,
+			Name:        &firstName,
+			Profiles:    json.RawMessage(`["foo","bar"]`),
+			Secure:      &secure,
+			Value:       &firstVal,
+		},
+
+		tc.ParameterNullable{
+			ConfigFile:  &configFile,
+			ID:          &secondID,
+			LastUpdated: &lastUpdated,
+			Name:        &secondName,
+			Profiles:    json.RawMessage(`["foo","bar"]`),
+			Secure:      &secure,
+			Value:       &secondVal,
+		},
+	}
 
 	for _, ts := range sysInfoParameters {
 		rows = rows.AddRow(
@@ -96,23 +93,12 @@ func TestGetSystemInfo(t *testing.T) {
 	}
 
 	mock.ExpectQuery("SELECT.*WHERE p.config_file='global'").WillReturnRows(rows)
-	refType := GetRefType()
-	v := map[string]string{"id": "1"}
-	parameters, errs, _ := refType.Read(db, v, auth.CurrentUser{})
-	if len(errs) > 0 {
-		t.Errorf("parameter.Read expected: no errors, actual: %v", errs)
+	sysinfo, err := getSystemInfo(db, auth.PrivLevelReadOnly)
+	if err != nil {
+		t.Errorf("getSystemInfo expected: nil error, actual: %v", err)
 	}
 
-	if len(parameters) != 2 {
-		t.Errorf("parameter.Read expected: len(parameters) == 2, actual: %v", len(parameters))
-	}
-}
-
-func TestInterfaces(t *testing.T) {
-	var i interface{}
-	i = &TOParameter{}
-
-	if _, ok := i.(api.Reader); !ok {
-		t.Errorf("cdn must be reader")
+	if len(sysinfo) != 2 {
+		t.Errorf("getSystemInfo expected: len(sysinfo) == 2, actual: %v", len(sysinfo))
 	}
 }
