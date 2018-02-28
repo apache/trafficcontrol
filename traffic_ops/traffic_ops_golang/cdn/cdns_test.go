@@ -20,6 +20,9 @@ package cdn
  */
 
 import (
+	"errors"
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -89,6 +92,21 @@ func TestReadCDNs(t *testing.T) {
 	}
 }
 
+func TestFuncs(t *testing.T) {
+	if strings.Index(selectQuery(), "SELECT") != 0 {
+		t.Errorf("expected selectQuery to start with SELECT")
+	}
+	if strings.Index(insertQuery(), "INSERT") != 0 {
+		t.Errorf("expected insertQuery to start with INSERT")
+	}
+	if strings.Index(updateQuery(), "UPDATE") != 0 {
+		t.Errorf("expected updateQuery to start with UPDATE")
+	}
+	if strings.Index(deleteQuery(), "DELETE") != 0 {
+		t.Errorf("expected deleteQuery to start with DELETE")
+	}
+
+}
 func TestInterfaces(t *testing.T) {
 	var i interface{}
 	i = &TOCDN{}
@@ -108,4 +126,20 @@ func TestInterfaces(t *testing.T) {
 	if _, ok := i.(api.Identifier); !ok {
 		t.Errorf("cdn must be Identifier")
 	}
+}
+
+func TestValidate(t *testing.T) {
+	c := TOCDN{Name: "not-a-valid-cdn"}
+	errs := c.Validate(nil)
+
+	expectedErrs := []error{
+		errors.New(`'name' invalid characters found`),
+		errors.New(`'domainName' cannot be blank`),
+	}
+
+	if !reflect.DeepEqual(expectedErrs, errs) {
+		t.Errorf("expected %s, got %s", expectedErrs, errs)
+	}
+	c.Name = "This.is.2.a_Valid___CDNNAME."
+	c.DomainName = `awesome-cdn.example.net`
 }
