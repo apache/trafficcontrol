@@ -5,7 +5,7 @@ import (
 )
 
 func init() {
-	AddPlugin(10000, Funcs{startup: hello})
+	// AddPlugin(10000, Funcs{startup: hello})
 }
 
 func hello(icfg interface{}, d StartupData) {
