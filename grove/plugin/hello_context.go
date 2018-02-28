@@ -5,7 +5,7 @@ import (
 )
 
 func init() {
-	AddPlugin(10000, Funcs{startup: helloCtxStart, afterRespond: helloCtxAfterResp})
+	// AddPlugin(10000, Funcs{startup: helloCtxStart, afterRespond: helloCtxAfterResp})
 }
 
 func helloCtxStart(icfg interface{}, d StartupData) {
