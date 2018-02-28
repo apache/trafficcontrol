@@ -197,7 +197,6 @@ func main() {
 	}
 
 	jsonRules := remap.RemapRulesToJSON(rules)
-	// fmt.Println(">>>> %v", jsonRules)
 	bts := []byte{}
 	if *pretty {
 		bts, err = json.MarshalIndent(jsonRules, "", "  ")
