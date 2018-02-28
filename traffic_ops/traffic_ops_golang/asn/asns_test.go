@@ -20,6 +20,8 @@ package asn
  */
 
 import (
+	"errors"
+	"reflect"
 	"testing"
 	"time"
 
@@ -105,5 +107,24 @@ func TestInterfaces(t *testing.T) {
 	}
 	if _, ok := i.(api.Identifier); !ok {
 		t.Errorf("asn must be Identifier")
+	}
+}
+
+func TestValidate(t *testing.T) {
+	asn := TOASN{ASN: -99, CachegroupID: -99}
+	/*
+		ASN          int    `json:"asn" db:"asn"`
+		Cachegroup   string `json:"cachegroup" db:"cachegroup"`
+		CachegroupID int    `json:"cachegroupId" db:"cachegroup_id"`
+		ID           int    `json:"id" db:"id"`
+		LastUpdated  Time   `json:"lastUpdated" db:"last_updated"`
+	*/
+	errs := asn.Validate(nil)
+	expected := []error{
+		errors.New(`asn must be a positive integer`),
+		errors.New(`cachegroupId must be a positive integer`),
+	}
+	if !reflect.DeepEqual(expected, errs) {
+		t.Errorf(`expected %v,  got %v`, expected, errs)
 	}
 }
