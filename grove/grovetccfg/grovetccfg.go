@@ -791,10 +791,10 @@ func createRulesOld(
 					}
 					rule.Plugins = make(map[string]interface{})
 					if toClientHeaders.Set != nil || toClientHeaders.Drop != nil {
-						rule.Plugins["mod_response_headers"] = toClientHeaders
+						rule.Plugins["modify_headers"] = toClientHeaders
 					}
 					if toOriginHeaders.Set != nil || toOriginHeaders.Drop != nil {
-						rule.Plugins["mod_org_request_headers"] = toOriginHeaders
+						rule.Plugins["modify_parent_request_headers"] = toOriginHeaders
 					}
 				}
 				rules = append(rules, rule)
@@ -807,7 +807,7 @@ func createRulesOld(
 	setHeaders := make([]Hdr, 0)
 	setHeaders = append(setHeaders, serverHeader)
 	globalHeaders := ModHdrs{Set: setHeaders, Drop: nil}
-	globalPlugins["mod_response_headers_global"] = globalHeaders
+	globalPlugins["modify_response_headers_global"] = globalHeaders
 	remapRules := remap.RemapRules{
 		Rules:           rules,
 		RetryCodes:      DefaultRetryCodes(),
