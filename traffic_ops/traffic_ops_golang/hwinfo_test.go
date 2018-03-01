@@ -40,7 +40,7 @@ func getTestHWInfo() []tc.HWInfo {
 		ServerHostName: "testserver1",
 		Description:    "Description",
 		Val:            "Val",
-		LastUpdated:    tc.Time{Time: time.Now()},
+		LastUpdated:    tc.TimeNoMod{Time: time.Now()},
 	}
 	hwinfo = append(hwinfo, testHWInfo)
 

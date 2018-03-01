@@ -38,7 +38,7 @@ func getTestRegions() []tc.Region {
 		DivisionName: "west",
 		ID:           1,
 		Name:         "region1",
-		LastUpdated:  tc.Time{Time: time.Now()},
+		LastUpdated:  tc.TimeNoMod{Time: time.Now()},
 	}
 	regions = append(regions, testCase)
 

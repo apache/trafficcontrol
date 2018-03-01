@@ -37,7 +37,7 @@ var sysInfoParameters = []tc.Parameter{
 	tc.Parameter{
 		ConfigFile:  "global",
 		ID:          1,
-		LastUpdated: tc.Time{Time: time.Now()},
+		LastUpdated: tc.TimeNoMod{Time: time.Now()},
 		Name:        "paramname1",
 		Profiles:    json.RawMessage(`["foo","bar"]`),
 		Secure:      false,
@@ -47,7 +47,7 @@ var sysInfoParameters = []tc.Parameter{
 	tc.Parameter{
 		ConfigFile:  "global",
 		ID:          2,
-		LastUpdated: tc.Time{Time: time.Now()},
+		LastUpdated: tc.TimeNoMod{Time: time.Now()},
 		Name:        "paramname2",
 		Profiles:    json.RawMessage(`["foo","bar"]`),
 		Secure:      false,
