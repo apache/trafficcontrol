@@ -24,11 +24,19 @@ type CDNsResponse struct {
 }
 
 type CDN struct {
-	DNSSECEnabled bool   `json:"dnssecEnabled" db:"dnssec_enabled"`
-	DomainName    string `json:"domainName" db:"domain_name"`
-	ID            int    `json:"id" db:"id"`
-	LastUpdated   Time   `json:"lastUpdated" db:"last_updated"`
-	Name          string `json:"name" db:"name"`
+	DNSSECEnabled bool      `json:"dnssecEnabled" db:"dnssec_enabled"`
+	DomainName    string    `json:"domainName" db:"domain_name"`
+	ID            int       `json:"id" db:"id"`
+	LastUpdated   TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name          string    `json:"name" db:"name"`
+}
+
+type CDNNullable struct {
+	DNSSECEnabled *bool      `json:"dnssecEnabled" db:"dnssec_enabled"`
+	DomainName    *string    `json:"domainName" db:"domain_name"`
+	ID            *int       `json:"id" db:"id"`
+	LastUpdated   *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name          *string    `json:"name" db:"name"`
 }
 
 // CDNSSLKeysResponse ...
