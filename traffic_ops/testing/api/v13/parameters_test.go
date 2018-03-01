@@ -16,7 +16,6 @@
 package v13
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -47,10 +46,8 @@ func CreateTestParameters(t *testing.T) {
 func UpdateTestParameters(t *testing.T) {
 
 	firstParameter := testData.Parameters[0]
-	fmt.Printf("firstParameter ---> %v\n", firstParameter)
 	// Retrieve the Parameter by name so we can get the id for the Update
 	resp, _, err := TOSession.GetParameterByName(firstParameter.Name)
-	fmt.Printf("resp ---> %v\n", resp)
 	if err != nil {
 		t.Errorf("cannot GET Parameter by name: %v - %v\n", firstParameter.Name, err)
 	}
