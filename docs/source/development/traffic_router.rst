@@ -34,6 +34,10 @@ To work on Traffic Router you need a \*nix (MacOS and Linux are most commonly us
 * Eclipse >= Kepler SR2 (or another Java IDE)
 * Maven >= 3.3.1
 * JDK >= 8.0
+* OpenSSL >= 1.0.2
+* APR (Apache Portable Runtime) >= 1.4.8-3
+* Tomcat Native >= 1.2.16
+* Not Tomcat - You do not need a Tomcat installation for development. An embedded version is launched for development testing instead.
 
 Traffic Router Project Tree Overview
 ====================================
@@ -47,10 +51,9 @@ Traffic Router Project Tree Overview
 
 		* ``src/main`` - Main source directory for Traffic Router Core
 
-			* ``etc/init.d`` - Init script for Tomcat
-			* ``conf/`` - Minimum required configuration files
+			* ``etc/systemd/system/traffic_router.service`` - Unit script for launching the application with Tomcat
+			* ``conf/`` - All of the required configuration files for running the traffic_router web application, including those needed for Tomcat
 			* ``java/`` - Java source code for Traffic Router Core
-			* ``opt/tomcat/conf`` - Contains Tomcat configuration file(s) pulled in during an RPM build
 			* ``resources/`` - Resources pulled in during an RPM build
 			* ``scripts/`` - Scripts used by the RPM build process
 			* ``webapp/`` - Java webapp resources
@@ -75,14 +78,14 @@ To install the Traffic Router Developer environment:
 1. Clone the traffic_control repository using Git.
 2. Change directories into ``traffic_control/traffic_router``.
 3. Follow the instructions in "README.DNSSEC" for DNSSEC support.
-4. Set the environment variable TRAFFIC_MONITOR_HOSTS to be a semicolon delimited list of Traffic Monitors that can be accessed during integration tests
+4. Set the environment variable TRAFFIC_MONITOR_HOSTS to be a semicolon delimited list of Traffic Monitors that can be accessed during integration tests OR install the traffic_monitor.properties file as described below.
 5. Additional configuration is set using the below files:
 
   * core/src/test/conf/dns.properties              - copy from core/src/main/conf
   * core/src/test/conf/http.properties             - copy from core/src/main/conf
   * core/src/test/conf/log4j.properties            - copy from core/src/main/conf
-  * core/src/test/conf/traffic_monitor.properties  - copy from core/src/main/conf
-  * core/src/test/conf/traffic_ops.properties file holds the credentials for accessing Traffic Ops.              - copy from core/src/main/conf
+  * core/src/test/conf/traffic_monitor.properties  - copy from core/src/main/conf and then edit the 'traffic_monitor.bootstrap.hosts' property.
+  * core/src/test/conf/traffic_ops.properties file holds the credentials for accessing Traffic Ops.              - copy from core/src/main/conf and then edit the credentials as approriate for the Traffic Ops instance you will be using.
   * Default configuration values now reside in core/src/main/webapp/WEB-INF/applicationContext.xml
   * The above values may be overridden by creating and/or modifying the property files listed in core/src/main/resources/applicationProperties.xml
   * Pre-existing properties files are still honored by Traffic Router. For example traffic_monitor.properties:
@@ -94,7 +97,7 @@ To install the Traffic Router Developer environment:
 	  +-------------------------------------+------------------------------------------------------------------------------------------------------------------+
 
 
-6. Import the existing git repo into Eclipse:
+6. Import the existing git repo as projects into your IDE (Eclipse):
 
 	a. File -> Import -> Git -> Projects from Git; Next
 	b. Existing local repository; Next
@@ -104,7 +107,7 @@ To install the Traffic Router Developer environment:
 	f. Ensure ``traffic_router_api``, ``traffic_router_connector``, and ``traffic_router_core`` are checked; Finish (this step can take several minutes to complete)
 	g. Ensure ``traffic_router_api``, ``traffic_router_connector``, and ``traffic_router_core`` have been opened by Eclipse after importing
 
-7. From the terminal, run ``mvn clean verify`` from the ``traffic_router`` directory
+7. From the terminal or your IDE, run ``mvn clean verify`` from the ``traffic_router`` directory. This will run a series of integration tests and will temporarily start and embeded version of Traffic Router and a 'fake' simulated instance of Traffic Monitor.
 
 8. Start the embedded Tomcat instance for Core from within your IDE by following these steps:
 
@@ -122,7 +125,11 @@ Manual Testing
 ==============
 Look up the URL for your test 'http' Delivery Service in Traffic Ops and then:
 
-curl -vs -H “Host: <Delivery Service URL>” http://localhost:8888/x
+curl -vs -H [Delivery Service FQDN] http://localhost:8888/x
+
+or to test an 'https' enabled service:
+
+curl -vs -k --resolve [Delivery Serice FQDN]:8443:127.0.0.1 https://[Delivery Service FQDN]:8443/x
 
 Test Cases
 ==========
@@ -131,7 +138,7 @@ Test Cases
 
 RPM Packaging
 =============
-Running ``mvn package`` on a Linux based distribution will trigger the build process to create the Traffic Router rpm.
+Running ``mvn package`` on a Linux based distribution will trigger the build process to create the Traffic Router rpm and the Traffic Router .war file, but will not run the integration tests.
 
 API
 ===

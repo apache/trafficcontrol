@@ -24,7 +24,7 @@ Installing Traffic Router
 ==========================
 The following are requirements to ensure an accurate set up:
 
-* CentOS 6
+* CentOS 7
 * 4 vCPUs
 * 8GB RAM
 * Successful install of Traffic Ops
@@ -46,8 +46,8 @@ The following are requirements to ensure an accurate set up:
 	# traffic_monitor.properties.reload.period=60000
 
 
-6. Start Tomcat: ``sudo service tomcat start``, and test lookups with dig and curl against that server.
-	To restart, ``sudo service tomcat stop``, kill the traffic router process, and ``sudo service tomcat start``
+6. Start Traffic Router: ``sudo systemctl start traffic_router``, and test lookups with dig and curl against that server.
+	To restart, ``sudo systemctl stop traffic_router``, kill the traffic router process, and ``sudo systemctl restart traffic_router``
 	Also, crconfig previously recieved will be cached, and needs to be removed manually to actually be reloaded /opt/traffic_router/db/cr-config.json
 7. Snapshot CRConfig; See :ref:`rl-snapshot-crconfig`
 
@@ -58,6 +58,7 @@ The following are requirements to ensure an accurate set up:
 Configuring Traffic Router
 ==========================
 
+.. Note:: Traffic Router 2.3 has been converted to a formal Tomcat instance, meaning that is now installed separately from the Tomcat servlet engine, and the installation package contains all of the Traffic Router specific software, configuration and startup scripts including some additional configuration files needed for Tomcat. These new configuration files can all be found in the ``/opt/traffic_router/conf`` directory and generally serve to override Tomcat's default settings.
 .. Note:: Starting with Traffic Router 1.5, many of the configuration files under ``/opt/traffic_router/conf`` are only needed to override the default configuration values for Traffic Router. Most of the given default values will work well for any CDN. Critical values that must be changed are hostnames and credentials for communicating with other Traffic Control components such as Traffic Ops and Traffic Monitor.
 
 .. Note:: Pre-existing installations having configuration files in ``/opt/traffic_router/conf`` will still be used and honored for Traffic Router 1.5 and onward.
@@ -116,6 +117,10 @@ Configuration files
 +----------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
 | log4j.properties           | various parameters                        | Configuration of log4j is documented on their site; adjust as necessary based on needs              | N/A                                               |
 +----------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
+| server.xml                 | various parameters                        | Traffic Router specific configuration for Apache Tomcat. See Apache Tomcat documentation.           | N/A                                               |
++----------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
+| web.xml                    | various parameters                        | Default settings for all Web Applications running in the Traffic Router instance of Tomcat.         | N/A                                               |
++----------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
 
 .. _rl-tr-dnssec:
 
@@ -146,7 +151,7 @@ Traffic Router currently follows the zone signing key pre-publishing operational
 
 Troubleshooting and log files
 =============================
-Traffic Router log files are in ``/opt/traffic_router/var/log``, and Tomcat log files are in ``/opt/tomcat/logs``. Application related logging is in ``/opt/traffic_router/var/log/traffic_router.log``, while access logs are written to ``/opt/traffic_router/var/log/access.log``.
+Traffic Router log files are in ``/opt/traffic_router/logs``. Initialization and shutdown logs are in ``/opt/traffic_router/logs/catalina.out``. Application related logging is in ``/opt/traffic_router/var/log/traffic_router.log``, while access logs are written to ``/opt/traffic_router/var/log/access.log``.
 
 Event Log File Format
 =====================
@@ -154,7 +159,7 @@ Event Log File Format
 Summary
 -------
 
-All access events to Traffic Router are logged to the file ``/opt/traffic_router/var/log/access.log``
+All access events to Traffic Router are logged to the file ``/opt/traffic_router/logs/access.log``
 This file grows up to 200Mb and gets rolled into older log files, 10 log files total are kept (total of up to 2Gb of logged events per traffic router)
 
 Traffic Router logs access events in a format that largely following `ATS event logging format
@@ -370,7 +375,7 @@ To enable the NGB feature, the DS must be configured with the proper redirect ur
 
 The URL has 3 kinds of formats, which have different meanings:
 
-1. URL with no domain. If no domain is in the URL (like 'vod/dance.mp4'), the router will try to find a proper cache server within the delivery service and return the redirect url with the format like 'http://<cache server name>.<delivery service's FQDN>/<configured relative path>'
+1. URL with no domain. If no domain is in the URL (like 'vod/dance.mp4'), the router will try to find a proper cache server within the delivery service and return the redirect url with the format like 'http://[cache server name].[delivery service's FQDN]/[configured relative path]'
 
 2. URL with domain that matches with the delivery service. For this URL, the router will also try to find a proper cache server within the delivery service and return the same format url as point 1.
 
@@ -471,10 +476,11 @@ HTTPS for Http Type Delivery Services
 
 Starting with version 1.7 Traffic Router added the ability to allow https traffic between itself and clients on a per http type delivery service basis.
 
-.. Warning::
-  The establishing of an HTTPS connection is much more computationally demanding than an HTTP connection.
-  Since each client will in turn get redirected to ATS, Traffic Router is most always creating a new HTTPS connection for all HTTPS traffic.
-  It is likely to mean that an existing Traffic Router will have some decrease in performance depending on the amount of https traffic you want to support
+.. Note::
+  As of version 2.3 Traffic Router has been integrated with native OpenSSL. This makes establishing HTTPS connections to Traffic Router much less expensive
+  than previous versions. However establishing an HTTPS connection is more computationally demanding than an HTTP connection. Since each client will in turn
+  get redirected to ATS, Traffic Router is most always creating a new HTTPS connection for all HTTPS traffic.
+  It is likely to mean that an existing Traffic Router may have some decrease in performance if you wish to support a lot of HTTPS traffic.
   As noted for DNSSEC, you may need to plan to scale Traffic Router vertically and/or horizontally to handle the new load
 
 The summary for setting up https is to:
@@ -535,7 +541,7 @@ The ordering of certificates within the certificate bundle matters. It must be:
 
 .. Warning::
   If something is wrong with the certificate chain (e.g. the order of the certificates is backwards or for the wrong domain) the
-  client will get an SSL handshake.  Inspection of /opt/tomcat/logs/catalina.out is likely to yield information to reveal this.
+  client will get an SSL handshake.  Inspection of /opt/traffic_router/logs/catalina.out is likely to yield information to reveal this.
 
 To see the ordering of certificates you may have to manually split up your certificate chain and use openssl on each individual certificate
 
@@ -571,13 +577,13 @@ While it is running it is suggested that you monitor your Traffic Router nodes f
 Tuning Recommendations
 ======================
 
-The following is an example of /opt/tomcat/bin/setenv.sh that has been tested on a multi core server running under HTTPS load test requests.
+The following is an example of /opt/traffic_router/bin/setenv.sh that has been tested on a multi core server running under HTTPS load test requests.
 This is following the general recommendation to use the G1 garbage collector for JVM applications running on multi core machines.
 In addition to using the G1 garbage collector the InitiatingHeapOccupancyPercent was lowered to run garbage collection more frequently which
 improved overall throughput for Traffic Router and reduced 'Stop the World' garbage collection. Note that setting the min and max heap settings
-in setenv.sh will override init scripts in /etc/init.d/tomcat.
+in setenv.sh will override init scripts in /etc/systemd/system/traffic_router.service.
 
-  /opt/tomcat/bin/setenv.sh::
+  /opt/traffic_router/bin/setenv.sh::
 
 
       #! /bin/sh
