@@ -29,6 +29,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -37,10 +39,10 @@ import (
 const ASNsPrivLevel = 10
 
 //we need a type alias to define functions on
-type TOASN tc.ASN
+type TOASN tc.ASNNullable
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOASN(tc.ASN{})
+var refType = TOASN(tc.ASNNullable{})
 
 func GetRefType() *TOASN {
 	return &refType
@@ -48,11 +50,18 @@ func GetRefType() *TOASN {
 
 //Implementation of the Identifier, Validator interface functions
 func (asn TOASN) GetID() (int, bool) {
-	return asn.ID, true
+	if asn.ID == nil {
+		return 0, false
+	}
+	return *asn.ID, true
 }
 
 func (asn TOASN) GetAuditName() string {
-	return strconv.Itoa(asn.ASN)
+	if asn.ASN == nil {
+		id, _ := asn.GetID()
+		return strconv.Itoa(id)
+	}
+	return strconv.Itoa(*asn.ASN)
 }
 
 func (asn TOASN) GetType() string {
@@ -60,18 +69,15 @@ func (asn TOASN) GetType() string {
 }
 
 func (asn *TOASN) SetID(i int) {
-	asn.ID = i
+	asn.ID = &i
 }
 
 func (asn TOASN) Validate(db *sqlx.DB) []error {
-	errs := []error{}
-	if asn.ASN < 0 {
-		errs = append(errs, errors.New(`asn must be a positive integer`))
+	errs := validation.Errors{
+		"asn":          validation.Validate(asn.ASN, validation.NotNil, validation.Min(0)),
+		"cachegroupId": validation.Validate(asn.CachegroupID, validation.NotNil, validation.Min(0)),
 	}
-	if asn.CachegroupID < 0 {
-		errs = append(errs, errors.New(`cachegroupId must be a positive integer`))
-	}
-	return errs
+	return tovalidate.ToErrors(errs)
 }
 
 //The TOASN implementation of the Creator interface
@@ -114,7 +120,7 @@ func (asn *TOASN) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 	defer resultRows.Close()
 
 	var id int
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
@@ -133,7 +139,7 @@ func (asn *TOASN) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 		return tc.DBError, tc.SystemError
 	}
 	asn.SetID(id)
-	asn.LastUpdated = lastUpdated
+	asn.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
@@ -231,7 +237,7 @@ func (asn *TOASN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 	}
 	defer resultRows.Close()
 
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
@@ -241,7 +247,7 @@ func (asn *TOASN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 		}
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
-	asn.LastUpdated = lastUpdated
+	asn.LastUpdated = &lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
 			return errors.New("no asn found with this id"), tc.DataMissingError
