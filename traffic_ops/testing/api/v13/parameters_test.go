@@ -25,7 +25,7 @@ import (
 func TestParameters(t *testing.T) {
 
 	CreateTestParameters(t)
-	UpdateTestParameters(t)
+	//UpdateTestParameters(t)
 	GetTestParameters(t)
 	DeleteTestParameters(t)
 
