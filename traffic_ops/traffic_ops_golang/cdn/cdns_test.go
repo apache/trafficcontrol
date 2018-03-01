@@ -132,11 +132,11 @@ func TestValidate(t *testing.T) {
 	// invalid name, empty domainname
 	n := "not_a_valid_cdn"
 	c := TOCDN{Name: &n}
-	errs := c.Validate(nil)
+	errs := test.SortErrors(c.Validate(nil))
 
 	expectedErrs := []error{
-		errors.New(`'name' invalid characters found - Use alphanumeric . or - .`),
 		errors.New(`'domainName' cannot be blank`),
+		errors.New(`'name' invalid characters found - Use alphanumeric . or - .`),
 	}
 
 	if !reflect.DeepEqual(expectedErrs, errs) {

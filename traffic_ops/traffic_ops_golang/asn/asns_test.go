@@ -114,7 +114,7 @@ func TestValidate(t *testing.T) {
 	i := -99
 	asn := TOASN{ASN: &i, CachegroupID: &i}
 
-	errs := asn.Validate(nil)
+	errs := test.SortErrors(asn.Validate(nil))
 	expected := []error{
 		errors.New(`'asn' must be no less than 0`),
 		errors.New(`'cachegroupId' must be no less than 0`),
