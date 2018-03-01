@@ -40,7 +40,7 @@ func getTestASNs() []tc.ASN {
 		ASN:         1,
 		Cachegroup:  "Yukon",
 		ID:          1,
-		LastUpdated: tc.Time{Time: time.Now()},
+		LastUpdated: tc.TimeNoMod{Time: time.Now()},
 	}
 	ASNs = append(ASNs, testCase)
 
@@ -111,18 +111,13 @@ func TestInterfaces(t *testing.T) {
 }
 
 func TestValidate(t *testing.T) {
-	asn := TOASN{ASN: -99, CachegroupID: -99}
-	/*
-		ASN          int    `json:"asn" db:"asn"`
-		Cachegroup   string `json:"cachegroup" db:"cachegroup"`
-		CachegroupID int    `json:"cachegroupId" db:"cachegroup_id"`
-		ID           int    `json:"id" db:"id"`
-		LastUpdated  Time   `json:"lastUpdated" db:"last_updated"`
-	*/
+	i := -99
+	asn := TOASN{ASN: &i, CachegroupID: &i}
+
 	errs := asn.Validate(nil)
 	expected := []error{
-		errors.New(`asn must be a positive integer`),
-		errors.New(`cachegroupId must be a positive integer`),
+		errors.New(`'asn' must be no less than 0`),
+		errors.New(`'cachegroupId' must be no less than 0`),
 	}
 	if !reflect.DeepEqual(expected, errs) {
 		t.Errorf(`expected %v,  got %v`, expected, errs)
