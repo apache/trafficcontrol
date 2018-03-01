@@ -106,6 +106,8 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 }
 
 func TestDeliveryServiceRequestTypeFields(t *testing.T) {
+	CreateTestParameters(t)
+
 	dsr := testData.DeliveryServiceRequests[dsrBadTenant]
 	alerts, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
 	if err != nil {
@@ -118,6 +120,7 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 	}
 
 	utils.Compare(t, expected, alerts.ToStrings())
+	DeleteTestParameters(t)
 
 }
 

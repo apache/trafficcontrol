@@ -118,10 +118,46 @@ func (to *Session) GetParameterByName(name string) ([]tc.Parameter, ReqInf, erro
 	return data.Response, reqInf, nil
 }
 
+// GET a Parameter by the Parameter ConfigFile
+func (to *Session) GetParameterByConfigFile(configFile string) ([]tc.Parameter, ReqInf, error) {
+	URI := API_v13_Parameters + "?configFile=" + url.QueryEscape(configFile)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.ParametersResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// GET a Parameter by the Parameter Name and ConfigFile
+func (to *Session) GetParameterByNameAndConfigFile(name string, configFile string) ([]tc.Parameter, ReqInf, error) {
+	URI := fmt.Sprintf("%s?name=%s&configFile=%s", API_v13_Parameters, url.QueryEscape(name), url.QueryEscape(configFile))
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.ParametersResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
 // DELETE a Parameter by ID
 func (to *Session) DeleteParameterByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_Parameters, id)
-	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	URI := fmt.Sprintf("%s/%d", API_v13_Parameters, id)
+	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
