@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
@@ -101,9 +102,8 @@ func (to *Session) GetParameterByID(id int) ([]tc.Parameter, ReqInf, error) {
 
 // GET a Parameter by the Parameter name
 func (to *Session) GetParameterByName(name string) ([]tc.Parameter, ReqInf, error) {
-	url := API_v13_Parameters + "?name=" + name
-	fmt.Printf("url ---> %v\n", url)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	URI := API_v13_Parameters + "?name=" + url.QueryEscape(name)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
