@@ -22,6 +22,7 @@ package cdn
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -37,10 +38,10 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOCDN tc.CDN
+type TOCDN tc.CDNNullable
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOCDN(tc.CDN{})
+var refType = TOCDN{}
 
 func GetRefType() *TOCDN {
 	return &refType
@@ -48,11 +49,18 @@ func GetRefType() *TOCDN {
 
 //Implementation of the Identifier, Validator interface functions
 func (cdn TOCDN) GetID() (int, bool) {
-	return cdn.ID, true
+	if cdn.ID == nil {
+		return 0, false
+	}
+	return *cdn.ID, true
 }
 
 func (cdn TOCDN) GetAuditName() string {
-	return cdn.Name
+	if cdn.Name != nil {
+		return *cdn.Name
+	}
+	id, _ := cdn.GetID()
+	return strconv.Itoa(id)
 }
 
 func (cdn TOCDN) GetType() string {
@@ -60,7 +68,7 @@ func (cdn TOCDN) GetType() string {
 }
 
 func (cdn *TOCDN) SetID(i int) {
-	cdn.ID = i
+	cdn.ID = &i
 }
 
 func isValidCDNchar(r rune) bool {
@@ -70,7 +78,10 @@ func isValidCDNchar(r rune) bool {
 	if r >= 'A' && r <= 'Z' {
 		return true
 	}
-	if r == '.' || r == '_' {
+	if r >= '0' && r <= '9' {
+		return true
+	}
+	if r == '.' || r == '-' {
 		return true
 	}
 	return false
@@ -84,16 +95,13 @@ func IsValidCDNName(str string) bool {
 
 // Validate fulfills the api.Validator interface
 func (cdn TOCDN) Validate(db *sqlx.DB) []error {
-	validName := validation.NewStringRule(IsValidCDNName, "invalid characters found")
+	validName := validation.NewStringRule(IsValidCDNName, "invalid characters found - Use alphanumeric . or - .")
 	validDomainName := validation.NewStringRule(govalidator.IsDNSName, "not a valid domain name")
 	errs := validation.Errors{
 		"name":       validation.Validate(cdn.Name, validation.Required, validName),
 		"domainName": validation.Validate(cdn.DomainName, validation.Required, validDomainName),
 	}
-	if errs != nil {
-		return tovalidate.ToErrors(errs)
-	}
-	return nil
+	return tovalidate.ToErrors(errs)
 }
 
 //The TOCDN implementation of the Creator interface
@@ -136,7 +144,7 @@ func (cdn *TOCDN) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 	defer resultRows.Close()
 
 	var id int
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
@@ -155,7 +163,7 @@ func (cdn *TOCDN) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 		return tc.DBError, tc.SystemError
 	}
 	cdn.SetID(id)
-	cdn.LastUpdated = lastUpdated
+	cdn.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
@@ -242,7 +250,7 @@ func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 	}
 	defer resultRows.Close()
 
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
@@ -252,7 +260,7 @@ func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 		}
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
-	cdn.LastUpdated = lastUpdated
+	cdn.LastUpdated = &lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
 			return errors.New("no cdn found with this id"), tc.DataMissingError

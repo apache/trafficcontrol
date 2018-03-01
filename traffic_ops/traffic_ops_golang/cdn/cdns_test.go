@@ -42,7 +42,7 @@ func getTestCDNs() []tc.CDN {
 		DomainName:    "domainName",
 		ID:            1,
 		Name:          "cdn1",
-		LastUpdated:   tc.Time{Time: time.Now()},
+		LastUpdated:   tc.TimeNoMod{Time: time.Now()},
 	}
 	cdns = append(cdns, testCDN)
 
@@ -129,17 +129,28 @@ func TestInterfaces(t *testing.T) {
 }
 
 func TestValidate(t *testing.T) {
-	c := TOCDN{Name: "not-a-valid-cdn"}
+	// invalid name, empty domainname
+	n := "not_a_valid_cdn"
+	c := TOCDN{Name: &n}
 	errs := c.Validate(nil)
 
 	expectedErrs := []error{
-		errors.New(`'name' invalid characters found`),
+		errors.New(`'name' invalid characters found - Use alphanumeric . or - .`),
 		errors.New(`'domainName' cannot be blank`),
 	}
 
 	if !reflect.DeepEqual(expectedErrs, errs) {
 		t.Errorf("expected %s, got %s", expectedErrs, errs)
 	}
-	c.Name = "This.is.2.a_Valid___CDNNAME."
-	c.DomainName = `awesome-cdn.example.net`
+
+	//  name,  domainname both valid
+	n = "This.is.2.a-Valid---CDNNAME."
+	d := `awesome-cdn.example.net`
+	c = TOCDN{Name: &n, DomainName: &d}
+	expectedErrs = []error{}
+	errs = c.Validate(nil)
+	if !reflect.DeepEqual(expectedErrs, errs) {
+		t.Errorf("expected %s, got %s", expectedErrs, errs)
+	}
+
 }
