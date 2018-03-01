@@ -30,7 +30,7 @@ type ParametersResponse struct {
 type Parameter struct {
 	ConfigFile  string          `json:"configFile" db:"config_file"`
 	ID          int             `json:"id" db:"id"`
-	LastUpdated Time            `json:"lastUpdated" db:"last_updated"`
+	LastUpdated TimeNoMod       `json:"lastUpdated" db:"last_updated"`
 	Name        string          `json:"name" db:"name"`
 	Profiles    json.RawMessage `json:"profiles" db:"profiles"`
 	Secure      bool            `json:"secure" db:"secure"`
