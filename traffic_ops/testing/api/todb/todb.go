@@ -80,32 +80,9 @@ func SetupTestData(cfg *config.Config, db *sql.DB) error {
 		os.Exit(1)
 	}
 
-	err = SetupParameters(cfg, db)
-	if err != nil {
-		fmt.Printf("\nError setting up parameter %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
-		os.Exit(1)
-	}
-
-	err = SetupProfiles(cfg, db)
-	if err != nil {
-		fmt.Printf("\nError setting up profile %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
-		os.Exit(1)
-	}
-
-	err = SetupProfileParameters(cfg, db)
-	if err != nil {
-		fmt.Printf("\nError setting up parameter %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
-		os.Exit(1)
-	}
 	err = SetupTypes(cfg, db)
 	if err != nil {
 		fmt.Printf("\nError setting up type %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
-		os.Exit(1)
-	}
-
-	err = SetupCacheGroups(cfg, db)
-	if err != nil {
-		fmt.Printf("\nError setting up cachegroup %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
 		os.Exit(1)
 	}
 
@@ -121,71 +98,98 @@ func SetupTestData(cfg *config.Config, db *sql.DB) error {
 		os.Exit(1)
 	}
 
-	err = SetupPhysLocations(cfg, db)
-	if err != nil {
-		fmt.Printf("\nError setting up phys_location %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
-		os.Exit(1)
-	}
+	/*
+		err = SetupParameters(cfg, db)
+		if err != nil {
+			fmt.Printf("\nError setting up parameter %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+			os.Exit(1)
+		}
 
-	err = SetupServers(cfg, db)
-	if err != nil {
-		fmt.Printf("\nError setting up server %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
-		os.Exit(1)
-	}
+		err = SetupProfiles(cfg, db)
+		if err != nil {
+			fmt.Printf("\nError setting up profile %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+			os.Exit(1)
+		}
 
-	err = SetupAsns(cfg, db)
-	if err != nil {
-		fmt.Printf("\nError setting up asn %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
-		os.Exit(1)
-	}
+		err = SetupProfileParameters(cfg, db)
+		if err != nil {
+			fmt.Printf("\nError setting up parameter %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+			os.Exit(1)
+		}
 
-	err = SetupDeliveryServices(cfg, db)
-	if err != nil {
-		fmt.Printf("\nError setting up deliveryservice %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
-		os.Exit(1)
-	}
+		err = SetupCacheGroups(cfg, db)
+		if err != nil {
+			fmt.Printf("\nError setting up cachegroup %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+			os.Exit(1)
+		}
 
-	err = SetupRegexes(cfg, db)
-	if err != nil {
-		fmt.Printf("\nError setting up regex %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
-		os.Exit(1)
-	}
 
-	err = SetupDeliveryServiceRegexes(cfg, db)
-	if err != nil {
-		fmt.Printf("\nError setting up deliveryservice_regex %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
-		os.Exit(1)
-	}
+		err = SetupPhysLocations(cfg, db)
+		if err != nil {
+			fmt.Printf("\nError setting up phys_location %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+			os.Exit(1)
+		}
 
-	err = SetupDeliveryServiceTmUsers(cfg, db)
-	if err != nil {
-		fmt.Printf("\nError setting up deliveryservice_tmuser %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
-		os.Exit(1)
-	}
+		err = SetupServers(cfg, db)
+		if err != nil {
+			fmt.Printf("\nError setting up server %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+			os.Exit(1)
+		}
 
-	err = SetupDeliveryServiceServers(cfg, db)
-	if err != nil {
-		fmt.Printf("\nError setting up deliveryservice_server %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
-		os.Exit(1)
-	}
+		err = SetupAsns(cfg, db)
+		if err != nil {
+			fmt.Printf("\nError setting up asn %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+			os.Exit(1)
+		}
 
-	err = SetupJobStatuses(cfg, db)
-	if err != nil {
-		fmt.Printf("\nError setting up job_status %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
-		os.Exit(1)
-	}
+		err = SetupDeliveryServices(cfg, db)
+		if err != nil {
+			fmt.Printf("\nError setting up deliveryservice %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+			os.Exit(1)
+		}
 
-	err = SetupJobAgents(cfg, db)
-	if err != nil {
-		fmt.Printf("\nError setting up job_agent %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
-		os.Exit(1)
-	}
+		err = SetupRegexes(cfg, db)
+		if err != nil {
+			fmt.Printf("\nError setting up regex %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+			os.Exit(1)
+		}
 
-	err = SetupJobs(cfg, db)
-	if err != nil {
-		fmt.Printf("\nError setting up job %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
-		os.Exit(1)
-	}
+		err = SetupDeliveryServiceRegexes(cfg, db)
+		if err != nil {
+			fmt.Printf("\nError setting up deliveryservice_regex %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+			os.Exit(1)
+		}
+
+		err = SetupDeliveryServiceTmUsers(cfg, db)
+		if err != nil {
+			fmt.Printf("\nError setting up deliveryservice_tmuser %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+			os.Exit(1)
+		}
+
+		err = SetupDeliveryServiceServers(cfg, db)
+		if err != nil {
+			fmt.Printf("\nError setting up deliveryservice_server %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+			os.Exit(1)
+		}
+
+		err = SetupJobStatuses(cfg, db)
+		if err != nil {
+			fmt.Printf("\nError setting up job_status %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+			os.Exit(1)
+		}
+
+		err = SetupJobAgents(cfg, db)
+		if err != nil {
+			fmt.Printf("\nError setting up job_agent %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+			os.Exit(1)
+		}
+
+		err = SetupJobs(cfg, db)
+		if err != nil {
+			fmt.Printf("\nError setting up job %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+			os.Exit(1)
+		}
+	*/
 
 	return err
 }
