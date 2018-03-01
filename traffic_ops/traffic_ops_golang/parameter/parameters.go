@@ -20,6 +20,7 @@ package parameter
  */
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -29,6 +30,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 //we need a type alias to define functions on
@@ -65,6 +67,98 @@ func (parameter *TOParameter) GetType() string {
 
 func (parameter *TOParameter) SetID(i int) {
 	parameter.ID = &i
+}
+
+func (pl *TOParameter) Validate(db *sqlx.DB) []error {
+	errs := []error{}
+	name := pl.Name
+	if name != nil && len(*name) < 1 {
+		errs = append(errs, errors.New(`Parameter 'name' is required.`))
+	}
+	return errs
+}
+
+//The TOParameter implementation of the Creator interface
+//all implementations of Creator should use transactions and return the proper errorType
+//ParsePQUniqueConstraintError is used to determine if a parameter with conflicting values exists
+//if so, it will return an errorType of DataConflict and the type should be appended to the
+//generic error message returned
+//The insert sql returns the id and lastUpdated values of the newly inserted parameter and have
+//to be added to the struct
+func (pl *TOParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
+	tx, err := db.Beginx()
+	defer func() {
+		if tx == nil || !rollbackTransaction {
+			return
+		}
+		err := tx.Rollback()
+		if err != nil {
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
+		}
+	}()
+
+	if err != nil {
+		log.Error.Printf("could not begin transaction: %v", err)
+		return tc.DBError, tc.SystemError
+	}
+	resultRows, err := tx.NamedQuery(insertQuery(), pl)
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
+			if eType == tc.DataConflictError {
+				return errors.New("a parameter with " + err.Error()), eType
+			}
+			return err, eType
+		}
+		log.Errorf("received non pq error: %++v from create execution", err)
+		return tc.DBError, tc.SystemError
+	}
+	defer resultRows.Close()
+
+	var id int
+	var lastUpdated tc.TimeNoMod
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
+			log.Error.Printf("could not scan id from insert: %s\n", err)
+			return tc.DBError, tc.SystemError
+		}
+	}
+	if rowsAffected == 0 {
+		err = errors.New("no parameter was inserted, no id was returned")
+		log.Errorln(err)
+		return tc.DBError, tc.SystemError
+	}
+	if rowsAffected > 1 {
+		err = errors.New("too many ids returned from parameter insert")
+		log.Errorln(err)
+		return tc.DBError, tc.SystemError
+	}
+
+	pl.SetID(id)
+	pl.LastUpdated = &lastUpdated
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
+	return nil, tc.NoError
+}
+
+func insertQuery() string {
+	query := `INSERT INTO parameter (
+name,
+config_file,
+value,
+secure) VALUES (
+:name,
+:config_file,
+:value,
+:secure) RETURNING id,last_updated`
+	return query
 }
 
 func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
