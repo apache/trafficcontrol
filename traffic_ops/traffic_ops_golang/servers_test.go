@@ -56,7 +56,7 @@ func getTestServers() []tc.Server {
 		IPAddress:      "ipAddress",
 		IPGateway:      "ipGateway",
 		IPNetmask:      "ipNetmask",
-		LastUpdated:    tc.Time{Time: time.Now()},
+		LastUpdated:    tc.TimeNoMod{Time: time.Now()},
 		MgmtIPAddress:  "mgmtIpAddress",
 		MgmtIPGateway:  "mgmtIpGateway",
 		MgmtIPNetmask:  "mgmtIpNetmask",

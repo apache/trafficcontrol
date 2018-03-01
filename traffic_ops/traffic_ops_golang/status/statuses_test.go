@@ -38,7 +38,7 @@ func getTestStatuses() []tc.Status {
 		Description: "description",
 		ID:          1,
 		Name:        "cdn1",
-		LastUpdated: tc.Time{Time: time.Now()},
+		LastUpdated: tc.TimeNoMod{Time: time.Now()},
 	}
 	cdns = append(cdns, testStatus)
 

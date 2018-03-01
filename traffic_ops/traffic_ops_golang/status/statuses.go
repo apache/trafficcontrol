@@ -155,7 +155,7 @@ func (status *TOStatus) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	}
 	defer resultRows.Close()
 
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
@@ -222,7 +222,7 @@ func (status *TOStatus) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	defer resultRows.Close()
 
 	var id int
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++

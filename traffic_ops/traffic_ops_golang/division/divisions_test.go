@@ -36,7 +36,7 @@ func getTestDivisions() []tc.Division {
 	testCase := tc.Division{
 		ID:          1,
 		Name:        "division1",
-		LastUpdated: tc.Time{Time: time.Now()},
+		LastUpdated: tc.TimeNoMod{Time: time.Now()},
 	}
 	regions = append(regions, testCase)
 

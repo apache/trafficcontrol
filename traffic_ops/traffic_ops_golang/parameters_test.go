@@ -38,7 +38,7 @@ func getTestParameters() []tc.Parameter {
 	testParameter := tc.Parameter{
 		ConfigFile:  "global",
 		ID:          1,
-		LastUpdated: tc.Time{Time: time.Now()},
+		LastUpdated: tc.TimeNoMod{Time: time.Now()},
 		Name:        "paramname1",
 		Profiles:    json.RawMessage(`["foo","bar"]`),
 		Secure:      false,
