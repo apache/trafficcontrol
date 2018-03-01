@@ -306,13 +306,6 @@
         },
         {
             "configFile": "url_sig_cdl-c2.config",
-            "lastUpdated": "2018-01-19T19:01:21.429365+00:00",
-            "name": "location",
-            "secure": false,
-            "value": "/opt/trafficserver/etc/trafficserver"
-        },
-        {
-            "configFile": "url_sig_cdl-c2.config",
             "lastUpdated": "2018-01-19T19:01:21.431062+00:00",
             "name": "error_url",
             "secure": false,
@@ -368,74 +361,11 @@
             "value": "STRING parent.config"
         },
         {
-            "configFile": "12M_facts",
-            "lastUpdated": "2018-01-19T19:01:21.443436+00:00",
-            "name": "location",
-            "secure": false,
-            "value": "/opt/ort"
-        },
-        {
-            "configFile": "cacheurl.config",
-            "lastUpdated": "2018-01-19T19:01:21.444898+00:00",
-            "name": "location",
-            "secure": false,
-            "value": "/opt/trafficserver/etc/trafficserver/"
-        },
-        {
-            "configFile": "ip_allow.config",
-            "lastUpdated": "2018-01-19T19:01:21.446396+00:00",
-            "name": "location",
-            "secure": false,
-            "value": "/opt/trafficserver/etc/trafficserver"
-        },
-        {
             "configFile": "plugin.config",
             "lastUpdated": "2018-01-19T19:01:21.447837+00:00",
             "name": "astats_over_http.so",
             "secure": false,
             "value": "_astats 33.101.99.100,172.39.19.39,172.39.19.49,172.39.19.49,172.39.29.49"
-        },
-        {
-            "configFile": "crontab_root",
-            "lastUpdated": "2018-01-19T19:01:21.449259+00:00",
-            "name": "location",
-            "secure": false,
-            "value": "/var/spool/cron"
-        },
-        {
-            "configFile": "hdr_rw_cdl-c2.config",
-            "lastUpdated": "2018-01-19T19:01:21.450778+00:00",
-            "name": "location",
-            "secure": false,
-            "value": "/opt/trafficserver/etc/trafficserver"
-        },
-        {
-            "configFile": "50-ats.rules",
-            "lastUpdated": "2018-01-19T19:01:21.452196+00:00",
-            "name": "location",
-            "secure": false,
-            "value": "/etc/udev/rules.d/"
-        },
-        {
-            "configFile": "parent.config",
-            "lastUpdated": "2018-01-19T19:01:21.453716+00:00",
-            "name": "location",
-            "secure": false,
-            "value": "/opt/trafficserver/etc/trafficserver/"
-        },
-        {
-            "configFile": "remap.config",
-            "lastUpdated": "2018-01-19T19:01:21.456753+00:00",
-            "name": "location",
-            "secure": false,
-            "value": "/opt/trafficserver/etc/trafficserver/"
-        },
-        {
-            "configFile": "drop_qstring.config",
-            "lastUpdated": "2018-01-19T19:01:21.45835+00:00",
-            "name": "location",
-            "secure": false,
-            "value": "/opt/trafficserver/etc/trafficserver"
         },
         {
             "configFile": "logs_xml.config",
@@ -459,13 +389,6 @@
             "value": "custom_ats_2"
         },
         {
-            "configFile": "cache.config",
-            "lastUpdated": "2018-01-19T19:01:21.465717+00:00",
-            "name": "location",
-            "secure": false,
-            "value": "/opt/trafficserver/etc/trafficserver/"
-        },
-        {
             "configFile": "records.config",
             "lastUpdated": "2018-01-19T19:01:21.467349+00:00",
             "name": "CONFIG proxy.config.cache.control.filename",
@@ -480,34 +403,6 @@
             "value": "--config regex_revalidate.config"
         },
         {
-            "configFile": "regex_revalidate.config",
-            "lastUpdated": "2018-01-19T19:01:21.470677+00:00",
-            "name": "location",
-            "secure": false,
-            "value": "/opt/trafficserver/etc/trafficserver"
-        },
-        {
-            "configFile": "hosting.config",
-            "lastUpdated": "2018-01-19T19:01:21.474023+00:00",
-            "name": "location",
-            "secure": false,
-            "value": "/opt/trafficserver/etc/trafficserver/"
-        },
-        {
-            "configFile": "volume.config",
-            "lastUpdated": "2018-01-19T19:01:21.475515+00:00",
-            "name": "location",
-            "secure": false,
-            "value": "/opt/trafficserver/etc/trafficserver/"
-        },
-        {
-            "configFile": "astats.config",
-            "lastUpdated": "2018-01-19T19:01:21.477074+00:00",
-            "name": "allow_ip",
-            "secure": false,
-            "value": "127.0.0.1,172.39.0.0/16,33.101.99.0/24"
-        },
-        {
             "configFile": "astats.config",
             "lastUpdated": "2018-01-19T19:01:21.478516+00:00",
             "name": "allow_ip6",
@@ -520,13 +415,6 @@
             "name": "record_types",
             "secure": false,
             "value": "144"
-        },
-        {
-            "configFile": "astats.config",
-            "lastUpdated": "2018-01-19T19:01:21.481582+00:00",
-            "name": "location",
-            "secure": false,
-            "value": "/opt/trafficserver/etc/trafficserver"
         },
         {
             "configFile": "astats.config",
@@ -569,13 +457,6 @@
             "name": "CONFIG proxy.config.hostdb.storage_size",
             "secure": false,
             "value": "INT 33554432"
-        },
-        {
-            "configFile": "regex_revalidate.config",
-            "lastUpdated": "2018-01-19T19:01:21.494468+00:00",
-            "name": "maxRevalDurationDays",
-            "secure": false,
-            "value": "3"
         },
         {
             "configFile": "regex_revalidate.config",

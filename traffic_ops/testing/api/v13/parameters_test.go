@@ -16,6 +16,7 @@
 package v13
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -26,7 +27,7 @@ func TestParameters(t *testing.T) {
 
 	CreateTestParameters(t)
 	//UpdateTestParameters(t)
-	//GetTestParameters(t)
+	GetTestParameters(t)
 	DeleteTestParameters(t)
 
 }
@@ -97,6 +98,7 @@ func DeleteTestParameters(t *testing.T) {
 			if err != nil {
 				t.Errorf("cannot DELETE Parameter by name: %v - %v\n", err, delResp)
 			}
+			//time.Sleep(1 * time.Second)
 
 			// Retrieve the Parameter to see if it got deleted
 			pls, _, err := TOSession.GetParameterByNameAndConfigFile(pl.Name, pl.ConfigFile)
@@ -106,6 +108,8 @@ func DeleteTestParameters(t *testing.T) {
 			if len(pls) > 0 {
 				t.Errorf("expected Parameter Name: %s and ConfigFile: %s to be deleted\n", pl.Name, pl.ConfigFile)
 			}
+		} else {
+			fmt.Printf("no resp ---> %v\n", resp)
 		}
 	}
 }
