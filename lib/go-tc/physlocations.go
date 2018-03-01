@@ -19,6 +19,10 @@ package tc
  * under the License.
  */
 
+type PhysLocationsResponse struct {
+	Response []PhysLocation `json:"response"`
+}
+
 type PhysLocation struct {
 	Address     string    `json:"address" db:"address"`
 	City        string    `json:"city" db:"city"`
