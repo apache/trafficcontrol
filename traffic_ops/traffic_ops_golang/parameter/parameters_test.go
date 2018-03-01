@@ -108,7 +108,19 @@ func TestInterfaces(t *testing.T) {
 	var i interface{}
 	i = &TOParameter{}
 
+	if _, ok := i.(api.Creator); !ok {
+		t.Errorf("Parameter must be Creator")
+	}
 	if _, ok := i.(api.Reader); !ok {
-		t.Errorf("PhysLocation must be Reader")
+		t.Errorf("Parameter must be Reader")
+	}
+	//if _, ok := i.(api.Updater); !ok {
+	//t.Errorf("Parameter must be Updater")
+	//}
+	if _, ok := i.(api.Deleter); !ok {
+		t.Errorf("Parameter must be Deleter")
+	}
+	if _, ok := i.(api.Identifier); !ok {
+		t.Errorf("Parameter must be Identifier")
 	}
 }

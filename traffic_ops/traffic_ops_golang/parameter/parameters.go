@@ -21,6 +21,7 @@ package parameter
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -203,6 +204,51 @@ func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, us
 
 }
 
+//The Parameter implementation of the Deleter interface
+//all implementations of Deleter should use transactions and return the proper errorType
+func (pl *TOParameter) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
+	tx, err := db.Beginx()
+	defer func() {
+		if tx == nil || !rollbackTransaction {
+			return
+		}
+		err := tx.Rollback()
+		if err != nil {
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
+		}
+	}()
+
+	if err != nil {
+		log.Error.Printf("could not begin transaction: %v", err)
+		return tc.DBError, tc.SystemError
+	}
+	log.Debugf("about to run exec query: %s with parameter: %++v", deleteQuery(), pl)
+	result, err := tx.NamedExec(deleteQuery(), pl)
+	if err != nil {
+		log.Errorf("received error: %++v from delete execution", err)
+		return tc.DBError, tc.SystemError
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return tc.DBError, tc.SystemError
+	}
+	if rowsAffected < 1 {
+		return errors.New("no parameter with that id found"), tc.DataMissingError
+	}
+	if rowsAffected > 1 {
+		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
+	return nil, tc.NoError
+}
+
 func selectQuery() string {
 
 	query := `SELECT
@@ -223,4 +269,10 @@ LEFT JOIN profile pr ON pp.profile = pr.id`
 func ParametersGroupBy() string {
 	groupBy := ` GROUP BY p.config_file, p.id, p.last_updated, p.name, p.value, p.secure`
 	return groupBy
+}
+
+func deleteQuery() string {
+	query := `DELETE FROM parameter
+WHERE id=:id`
+	return query
 }
