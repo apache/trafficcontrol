@@ -24,9 +24,17 @@ type ASNsResponse struct {
 }
 
 type ASN struct {
-	ASN          int    `json:"asn" db:"asn"`
-	Cachegroup   string `json:"cachegroup" db:"cachegroup"`
-	CachegroupID int    `json:"cachegroupId" db:"cachegroup_id"`
-	ID           int    `json:"id" db:"id"`
-	LastUpdated  Time   `json:"lastUpdated" db:"last_updated"`
+	ASN          int       `json:"asn" db:"asn"`
+	Cachegroup   string    `json:"cachegroup" db:"cachegroup"`
+	CachegroupID int       `json:"cachegroupId" db:"cachegroup_id"`
+	ID           int       `json:"id" db:"id"`
+	LastUpdated  TimeNoMod `json:"lastUpdated" db:"last_updated"`
+}
+
+type ASNNullable struct {
+	ASN          *int       `json:"asn" db:"asn"`
+	Cachegroup   *string    `json:"cachegroup" db:"cachegroup"`
+	CachegroupID *int       `json:"cachegroupId" db:"cachegroup_id"`
+	ID           *int       `json:"id" db:"id"`
+	LastUpdated  *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
