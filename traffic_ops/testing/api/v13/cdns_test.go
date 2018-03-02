@@ -84,25 +84,28 @@ func GetTestCDNs(t *testing.T) {
 
 func DeleteTestCDNs(t *testing.T) {
 
-	cdn := testData.CDNs[1]
-	// Retrieve the CDN by name so we can get the id for the Update
-	resp, _, err := TOSession.GetCDNByName(cdn.Name)
-	if err != nil {
-		t.Errorf("cannot GET CDN by name: %v - %v\n", cdn.Name, err)
-	}
-	respCDN := resp[0]
+	for _, cdn := range testData.CDNs {
+		// Retrieve the CDN by name so we can get the id for the Update
+		resp, _, err := TOSession.GetCDNByName(cdn.Name)
+		if err != nil {
+			t.Errorf("cannot GET CDN by name: %v - %v\n", cdn.Name, err)
+		}
+		if len(resp) > 0 {
+			respCDN := resp[0]
 
-	delResp, _, err := TOSession.DeleteCDNByID(respCDN.ID)
-	if err != nil {
-		t.Errorf("cannot DELETE CDN by name: %v - %v\n", err, delResp)
-	}
+			delResp, _, err := TOSession.DeleteCDNByID(respCDN.ID)
+			if err != nil {
+				t.Errorf("cannot DELETE CDN by name: %v - %v\n", err, delResp)
+			}
 
-	// Retrieve the CDN to see if it got deleted
-	cdns, _, err := TOSession.GetCDNByName(cdn.Name)
-	if err != nil {
-		t.Errorf("error deleting CDN name: %s\n", err.Error())
-	}
-	if len(cdns) > 0 {
-		t.Errorf("expected CDN name: %s to be deleted\n", cdn.Name)
+			// Retrieve the CDN to see if it got deleted
+			cdns, _, err := TOSession.GetCDNByName(cdn.Name)
+			if err != nil {
+				t.Errorf("error deleting CDN name: %s\n", err.Error())
+			}
+			if len(cdns) > 0 {
+				t.Errorf("expected CDN name: %s to be deleted\n", cdn.Name)
+			}
+		}
 	}
 }
