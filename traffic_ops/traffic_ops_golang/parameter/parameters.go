@@ -204,6 +204,70 @@ func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, us
 
 }
 
+//The TOParameter implementation of the Updater interface
+//all implementations of Updater should use transactions and return the proper errorType
+//ParsePQUniqueConstraintError is used to determine if a parameter with conflicting values exists
+//if so, it will return an errorType of DataConflict and the type should be appended to the
+//generic error message returned
+func (pl *TOParameter) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	rollbackTransaction := true
+	tx, err := db.Beginx()
+	defer func() {
+		if tx == nil || !rollbackTransaction {
+			return
+		}
+		err := tx.Rollback()
+		if err != nil {
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
+		}
+	}()
+
+	if err != nil {
+		log.Error.Printf("could not begin transaction: %v", err)
+		return tc.DBError, tc.SystemError
+	}
+	log.Debugf("about to run exec query: %s with parameter: %++v", updateQuery(), pl)
+	resultRows, err := tx.NamedQuery(updateQuery(), pl)
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
+			if eType == tc.DataConflictError {
+				return errors.New("a parameter with " + err.Error()), eType
+			}
+			return err, eType
+		}
+		log.Errorf("received error: %++v from update execution", err)
+		return tc.DBError, tc.SystemError
+	}
+	defer resultRows.Close()
+
+	// get LastUpdated field -- updated by trigger in the db
+	var lastUpdated tc.TimeNoMod
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&lastUpdated); err != nil {
+			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
+			return tc.DBError, tc.SystemError
+		}
+	}
+	log.Debugf("lastUpdated: %++v", lastUpdated)
+	pl.LastUpdated = &lastUpdated
+	if rowsAffected != 1 {
+		if rowsAffected < 1 {
+			return errors.New("no parameter found with this id"), tc.DataMissingError
+		}
+		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
+	}
+	err = tx.Commit()
+	if err != nil {
+		log.Errorln("Could not commit transaction: ", err)
+		return tc.DBError, tc.SystemError
+	}
+	rollbackTransaction = false
+	return nil, tc.NoError
+}
+
 //The Parameter implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
 func (pl *TOParameter) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
@@ -262,6 +326,18 @@ COALESCE(array_to_json(array_agg(pr.name) FILTER (WHERE pr.name IS NOT NULL)), '
 FROM parameter p
 LEFT JOIN profile_parameter pp ON p.id = pp.parameter
 LEFT JOIN profile pr ON pp.profile = pr.id`
+	return query
+}
+
+func updateQuery() string {
+	query := `UPDATE
+parameter SET
+config_file=:config_file,
+id=:id,
+name=:name,
+value=:value,
+secure=:secure
+WHERE id=:id RETURNING last_updated`
 	return query
 }
 
