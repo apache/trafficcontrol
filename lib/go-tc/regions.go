@@ -30,3 +30,11 @@ type Region struct {
 	LastUpdated  TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Name         string    `json:"name" db:"name"`
 }
+
+type RegionNullable struct {
+	DivisionName *string    `json:"divisionName"`
+	Division     *int       `json:"division" db:"division"`
+	ID           *int       `json:"id" db:"id"`
+	LastUpdated  *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name         *string    `json:"name" db:"name"`
+}

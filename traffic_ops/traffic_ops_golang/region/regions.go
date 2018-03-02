@@ -22,49 +22,59 @@ package region
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
 //we need a type alias to define functions on
-type TORegion tc.Region
+type TORegion tc.RegionNullable
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TORegion(tc.Region{})
+var refType = TORegion(tc.RegionNullable{})
 
 func GetRefType() *TORegion {
 	return &refType
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (region *TORegion) GetID() (int, bool) {
-	return region.ID, true
+func (region TORegion) GetID() (int, bool) {
+	if region.ID == nil {
+		return 0, false
+	}
+	return *region.ID, true
 }
 
-func (region *TORegion) GetAuditName() string {
-	return region.Name
+func (region TORegion) GetAuditName() string {
+	if region.Name == nil {
+		id, _ := region.GetID()
+		return strconv.Itoa(id)
+	}
+	return *region.Name
 }
 
-func (region *TORegion) GetType() string {
+func (region TORegion) GetType() string {
 	return "region"
 }
 
 func (region *TORegion) SetID(i int) {
-	region.ID = i
+	region.ID = &i
 }
 
-func (region *TORegion) Validate(db *sqlx.DB) []error {
-	errs := []error{}
-	if len(region.Name) < 1 {
-		errs = append(errs, errors.New(`Region 'name' is required.`))
+func (region TORegion) Validate(db *sqlx.DB) []error {
+	errs := validation.Errors{
+		"name":       validation.Validate(region.Name, validation.Required),
+		"divisionId": validation.Validate(region.Division, validation.NotNil, validation.Min(0)),
 	}
-	return errs
+	return tovalidate.ToErrors(errs)
 }
 
 func (region *TORegion) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
@@ -94,7 +104,7 @@ func (region *TORegion) Read(db *sqlx.DB, parameters map[string]string, user aut
 
 	regions := []interface{}{}
 	for rows.Next() {
-		var s tc.Region
+		var s TORegion
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorf("error parsing Region rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
@@ -165,7 +175,7 @@ func (region *TORegion) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		}
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
-	region.LastUpdated = lastUpdated
+	region.LastUpdated = &lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
 			return errors.New("no region found with this id"), tc.DataMissingError
@@ -240,7 +250,7 @@ func (region *TORegion) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		return tc.DBError, tc.SystemError
 	}
 	region.SetID(id)
-	region.LastUpdated = lastUpdated
+	region.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)

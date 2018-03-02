@@ -20,6 +20,8 @@ package region
  */
 
 import (
+	"errors"
+	"reflect"
 	"testing"
 	"time"
 
@@ -104,5 +106,27 @@ func TestInterfaces(t *testing.T) {
 	}
 	if _, ok := i.(api.Identifier); !ok {
 		t.Errorf("Region must be Identifier")
+	}
+}
+
+func TestValidate(t *testing.T) {
+	region := TORegion{}
+
+	errs := test.SortErrors(region.Validate(nil))
+	expected := []error{
+		errors.New(`'divisionId' is required`),
+		errors.New(`'name' cannot be blank`),
+	}
+	if !reflect.DeepEqual(expected, errs) {
+		t.Errorf(`expected %v,  got %v`, expected, errs)
+	}
+
+	i := 99
+	name := "just another cdn region"
+	region = TORegion{Name: &name, Division: &i}
+	errs = test.SortErrors(region.Validate(nil))
+	expected = []error{}
+	if !reflect.DeepEqual(expected, errs) {
+		t.Errorf(`expected %v,  got %v`, expected, errs)
 	}
 }
