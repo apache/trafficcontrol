@@ -124,7 +124,9 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		//Divisions
 		{1.3, http.MethodGet, `divisions/?(\.json)?$`, api.ReadHandler(division.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.3, http.MethodGet, `divisions/{id}$`, api.ReadHandler(division.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodPut, `divisions/{id}$`, api.UpdateHandler(division.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.3, http.MethodPost, `divisions/?$`, api.CreateHandler(division.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.3, http.MethodDelete, `divisions/{id}$`, api.DeleteHandler(division.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//HwInfo
 		{1.2, http.MethodGet, `hwinfo-wip/?(\.json)?$`, hwInfoHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
