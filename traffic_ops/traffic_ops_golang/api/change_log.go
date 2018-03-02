@@ -29,12 +29,12 @@ import (
 )
 
 type ChangeLog struct {
-	ID          int     `json:"id" db:"id"`
-	Level       string  `json:"level" db:"level"`
-	Message     string  `json:"message" db:"message"`
-	TMUser      int     `json:"tmUser" db:"tm_user"`
-	TicketNum   string  `json:"ticketNum" db:"ticketnum"`
-	LastUpdated tc.Time `json:"lastUpdated" db:"last_updated"`
+	ID          int          `json:"id" db:"id"`
+	Level       string       `json:"level" db:"level"`
+	Message     string       `json:"message" db:"message"`
+	TMUser      int          `json:"tmUser" db:"tm_user"`
+	TicketNum   string       `json:"ticketNum" db:"ticketnum"`
+	LastUpdated tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
 type ChangeLogger interface {

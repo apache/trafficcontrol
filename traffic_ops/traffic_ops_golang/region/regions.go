@@ -155,7 +155,7 @@ func (region *TORegion) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	}
 	defer resultRows.Close()
 
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
@@ -220,7 +220,7 @@ func (region *TORegion) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	defer resultRows.Close()
 
 	var id int
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++

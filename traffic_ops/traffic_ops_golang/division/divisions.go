@@ -106,7 +106,7 @@ func (division *TODivision) Create(db *sqlx.DB, user auth.CurrentUser) (error, t
 	defer resultRows.Close()
 
 	var id int
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
@@ -208,7 +208,7 @@ func (division *TODivision) Update(db *sqlx.DB, user auth.CurrentUser) (error, t
 	}
 	defer resultRows.Close()
 
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
