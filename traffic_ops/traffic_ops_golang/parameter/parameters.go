@@ -29,6 +29,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
+	validation "github.com/go-ozzo/ozzo-validation"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -70,13 +72,20 @@ func (parameter *TOParameter) SetID(i int) {
 	parameter.ID = &i
 }
 
-func (pl *TOParameter) Validate(db *sqlx.DB) []error {
-	errs := []error{}
-	name := pl.Name
-	if name != nil && len(*name) < 1 {
-		errs = append(errs, errors.New(`Parameter 'name' is required.`))
+// Validate fulfills the api.Validator interface
+func (parameter TOParameter) Validate(db *sqlx.DB) []error {
+
+	// Test
+	// - Secure Flag is always set to either 1/0
+	// - Admin rights only
+	// - Do not allow duplicate parameters by name+config_file+value
+	errs := validation.Errors{
+		"name":       validation.Validate(parameter.Name, validation.Required),
+		"configFile": validation.Validate(parameter.ConfigFile, validation.Required),
+		"value":      validation.Validate(parameter.Value, validation.Required),
 	}
-	return errs
+
+	return tovalidate.ToErrors(errs)
 }
 
 //The TOParameter implementation of the Creator interface
