@@ -30,4 +30,5 @@ type TrafficControl struct {
 	Regions                 []tcapi.Region                 `json:"regions"`
 	Statuses                []tcapi.Status                 `json:"statuses"`
 	Tenants                 []tcapi.Tenant                 `json:"tenants"`
+	Types                   []tcapi.Type                   `json:"types"`
 }
