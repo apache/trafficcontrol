@@ -80,18 +80,18 @@ type Server struct {
 }
 
 type ServerNullable struct {
-	Cachegroup       string              `json:"cachegroup" db:"cachegroup"`
+	Cachegroup       *string              `json:"cachegroup" db:"cachegroup"`
 	CachegroupID     *int                 `json:"cachegroupId" db:"cachegroup_id"`
 	CDNID            *int                 `json:"cdnId" db:"cdn_id"`
-	CDNName          string              `json:"cdnName" db:"cdn_name"`
-	DeliveryServices map[string][]string `json:"deliveryServices,omitempty"`
+	CDNName          *string              `json:"cdnName" db:"cdn_name"`
+	DeliveryServices *map[string][]string `json:"deliveryServices,omitempty"`
 	DomainName       *string              `json:"domainName" db:"domain_name"`
 	FQDN             *string             `json:"fqdn,omitempty"`
 	FqdnTime         time.Time           `json:"-"`
 	GUID             *string              `json:"guid" db:"guid"`
 	HostName         *string              `json:"hostName" db:"host_name"`
 	HTTPSPort        *int                 `json:"httpsPort" db:"https_port"`
-	ID               int                 `json:"id" db:"id"`
+	ID               *int                 `json:"id" db:"id"`
 	ILOIPAddress     *string              `json:"iloIpAddress" db:"ilo_ip_address"`
 	ILOIPGateway     *string              `json:"iloIpGateway" db:"ilo_ip_gateway"`
 	ILOIPNetmask     *string              `json:"iloIpNetmask" db:"ilo_ip_netmask"`
@@ -104,21 +104,21 @@ type ServerNullable struct {
 	IPAddress        *string              `json:"ipAddress" db:"ip_address"`
 	IPGateway        *string              `json:"ipGateway" db:"ip_gateway"`
 	IPNetmask        *string              `json:"ipNetmask" db:"ip_netmask"`
-	LastUpdated      Time            `json:"lastUpdated" db:"last_updated"`
+	LastUpdated      TimeNoMod            `json:"lastUpdated" db:"last_updated"`
 	MgmtIPAddress    *string              `json:"mgmtIpAddress" db:"mgmt_ip_address"`
 	MgmtIPGateway    *string              `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
 	MgmtIPNetmask    *string              `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
 	OfflineReason    *string              `json:"offlineReason" db:"offline_reason"`
-	PhysLocation     string              `json:"physLocation" db:"phys_location"`
+	PhysLocation     *string              `json:"physLocation" db:"phys_location"`
 	PhysLocationID   *int                 `json:"physLocationId" db:"phys_location_id"`
-	Profile          string              `json:"profile" db:"profile"`
-	ProfileDesc      string              `json:"profileDesc" db:"profile_desc"`
+	Profile          *string              `json:"profile" db:"profile"`
+	ProfileDesc      *string              `json:"profileDesc" db:"profile_desc"`
 	ProfileID        *int                 `json:"profileId" db:"profile_id"`
 	Rack             *string              `json:"rack" db:"rack"`
-	RevalPending     bool                `json:"revalPending" db:"reval_pending"`
+	RevalPending     *bool                `json:"revalPending" db:"reval_pending"`
 	RouterHostName   *string              `json:"routerHostName" db:"router_host_name"`
 	RouterPortName   *string              `json:"routerPortName" db:"router_port_name"`
-	Status           string              `json:"status" db:"status"`
+	Status           *string              `json:"status" db:"status"`
 	StatusID         *int                 `json:"statusId" db:"status_id"`
 	TCPPort          *int                 `json:"tcpPort" db:"tcp_port"`
 	Type             string              `json:"type" db:"server_type"`
