@@ -80,11 +80,11 @@ func SetupTestData(cfg *config.Config, db *sql.DB) error {
 		os.Exit(1)
 	}
 
-	err = SetupTypes(cfg, db)
-	if err != nil {
-		fmt.Printf("\nError setting up type %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
-		os.Exit(1)
-	}
+	//err = SetupTypes(cfg, db)
+	//if err != nil {
+	//fmt.Printf("\nError setting up type %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+	//os.Exit(1)
+	//}
 
 	err = SetupDivisions(cfg, db)
 	if err != nil {
