@@ -31,7 +31,19 @@ type Profile struct {
 	Name        string    `json:"name" db:"name"`
 	Description string    `json:"description" db:"description"`
 	CDNName     string    `json:"cdnName"`
-	CDNID       int       `json:"cdnId"`
-	Type        string    `json:"type"`
-	TypeID      int       `json:"typeId"`
+	CDNID       int       `json:"cdn"`
+	TypeName    string    `json:"typeName"`
+	TypeID      int       `json:"type"`
+}
+
+// ProfileNullable ...
+type ProfileNullable struct {
+	ID          *int       `json:"id" db:"id"`
+	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name        *string    `json:"name" db:"name"`
+	Description *string    `json:"description" db:"description"`
+	CDNName     *string    `json:"cdnName"`
+	CDNID       *int       `json:"cdn"`
+	TypeName    *string    `json:"typeName"`
+	TypeID      *int       `json:"type"`
 }
