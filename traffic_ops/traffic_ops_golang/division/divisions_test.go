@@ -20,6 +20,7 @@ package division
  */
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -100,5 +101,15 @@ func TestInterfaces(t *testing.T) {
 	}
 	if _, ok := i.(api.Identifier); !ok {
 		t.Errorf("division must be Identifier")
+	}
+}
+
+func TestValidation(t *testing.T) {
+	div := TODivision{}
+	errs := test.SortErrors(div.Validate(nil))
+	expected := []error{}
+
+	if reflect.DeepEqual(expected, errs) {
+		t.Errorf(`expected %v,  got %v`, expected, errs)
 	}
 }
