@@ -22,48 +22,58 @@ package division
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
 //we need a type alias to define functions on
-type TODivision tc.Division
+type TODivision tc.DivisionNullable
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TODivision(tc.Division{})
+var refType = TODivision(tc.DivisionNullable{})
 
 func GetRefType() *TODivision {
 	return &refType
 }
 
-func (division *TODivision) GetAuditName() string {
-	return division.Name
+func (division TODivision) GetAuditName() string {
+	if division.Name == nil {
+		id, _ := division.GetID()
+		return strconv.Itoa(id)
+	}
+	return *division.Name
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (division *TODivision) GetID() (int, bool) {
-	return division.ID, true
+func (division TODivision) GetID() (int, bool) {
+	if division.ID == nil {
+		return 0, false
+	}
+	return *division.ID, true
 }
 
 func (division *TODivision) SetID(i int) {
-	division.ID = i
+	division.ID = &i
 }
-func (division *TODivision) GetType() string {
+
+func (division TODivision) GetType() string {
 	return "division"
 }
 
-func (division *TODivision) Validate(db *sqlx.DB) []error {
-	errs := []error{}
-	if len(division.Name) < 1 {
-		errs = append(errs, errors.New(`Division 'name' is required.`))
+func (division TODivision) Validate(db *sqlx.DB) []error {
+	errs := validation.Errors{
+		"name": validation.Validate(division.Name, validation.NotNil, validation.Required),
 	}
-	return errs
+	return tovalidate.ToErrors(errs)
 }
 
 //The TODivision implementation of the Creator interface
@@ -125,7 +135,7 @@ func (division *TODivision) Create(db *sqlx.DB, user auth.CurrentUser) (error, t
 		return tc.DBError, tc.SystemError
 	}
 	division.SetID(id)
-	division.LastUpdated = lastUpdated
+	division.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
@@ -218,7 +228,7 @@ func (division *TODivision) Update(db *sqlx.DB, user auth.CurrentUser) (error, t
 		}
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
-	division.LastUpdated = lastUpdated
+	division.LastUpdated = &lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
 			return errors.New("no division found with this id"), tc.DataMissingError
