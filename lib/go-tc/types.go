@@ -19,15 +19,25 @@ package tc
  * under the License.
  */
 
-// TypeResponse ...
-type TypeResponse struct {
+// TypesResponse ...
+type TypesResponse struct {
 	Response []Type `json:"response"`
 }
 
 // Type contains information about a given Type in Traffic Ops.
 type Type struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
-	UseInTable  string `json:"useInTable,omitempty"`
+	ID          int       `json:"id"`
+	LastUpdated TimeNoMod `json:"lastUpdated"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	UseInTable  string    `json:"useInTable"`
+}
+
+// TypeNullable contains information about a given Type in Traffic Ops.
+type TypeNullable struct {
+	ID          *int       `json:"id"`
+	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name        *string    `json:"name" db:"name"`
+	Description *string    `json:"description" db:"description"`
+	UseInTable  *string    `json:"useInTable" db:"use_in_table"`
 }
