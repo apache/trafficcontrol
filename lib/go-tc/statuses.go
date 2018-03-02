@@ -29,3 +29,10 @@ type Status struct {
 	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Name        string    `json:"name" db:"name"`
 }
+
+type StatusNullable struct {
+	Description *string    `json:"description" db:"description"`
+	ID          *int       `json:"id" db:"id"`
+	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name        *string    `json:"name" db:"name"`
+}
