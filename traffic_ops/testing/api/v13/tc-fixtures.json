@@ -583,5 +583,187 @@
             "name": "tenant2",
             "parentTenantName": "root"
         }
+    ],
+    "types": [
+        {
+            "description": "Host header regular expression",
+            "lastUpdated": "2018-03-02T19:13:46.788583+00:00",
+            "name": "HOST_REGEXP",
+            "useInTable": "regex"
+        },
+        {
+            "description": "DNS Content routing, RAM cache, National",
+            "lastUpdated": "2018-03-02T19:13:46.792319+00:00",
+            "name": "DNS_LIVE_NATNL",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "Other CDN (CDS-IS, Akamai, etc)",
+            "lastUpdated": "2018-03-02T19:13:46.793921+00:00",
+            "name": "OTHER_CDN",
+            "useInTable": "server"
+        },
+        {
+            "description": "Client-Controlled Steering Delivery Service",
+            "lastUpdated": "2018-03-02T19:13:46.795291+00:00",
+            "name": "CLIENT_STEERING",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "influxdb type",
+            "lastUpdated": "2018-03-02T19:13:46.796707+00:00",
+            "name": "INFLUXDB",
+            "useInTable": "server"
+        },
+        {
+            "description": "riak type",
+            "lastUpdated": "2018-03-02T19:13:46.798008+00:00",
+            "name": "RIAK",
+            "useInTable": "server"
+        },
+        {
+            "description": "Origin",
+            "lastUpdated": "2018-03-02T19:13:46.799404+00:00",
+            "name": "ORG",
+            "useInTable": "server"
+        },
+        {
+            "description": "HTTP Content routing cache in RAM ",
+            "lastUpdated": "2018-03-02T19:13:46.800738+00:00",
+            "name": "HTTP_LIVE",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "Active Directory User",
+            "lastUpdated": "2018-03-02T19:13:46.802044+00:00",
+            "name": "ACTIVE_DIRECTORY",
+            "useInTable": "tm_user"
+        },
+        {
+            "description": "federation type resolve4",
+            "lastUpdated": "2018-03-02T19:13:46.803471+00:00",
+            "name": "RESOLVE4",
+            "useInTable": "federation"
+        },
+        {
+            "description": "Static DNS A entry",
+            "lastUpdated": "2018-03-02T19:13:46.804776+00:00",
+            "name": "A_RECORD",
+            "useInTable": "staticdnsentry"
+        },
+        {
+            "description": "Local User",
+            "lastUpdated": "2018-03-02T19:13:46.806035+00:00",
+            "name": "LOCAL",
+            "useInTable": "tm_user"
+        },
+        {
+            "description": "Weighted steering target",
+            "lastUpdated": "2018-03-02T19:13:46.80748+00:00",
+            "name": "STEERING_WEIGHT",
+            "useInTable": "steering_target"
+        },
+        {
+            "description": "HTTP Content routing, RAM cache, National",
+            "lastUpdated": "2018-03-02T19:13:46.808911+00:00",
+            "name": "HTTP_LIVE_NATNL",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "Ops hosts for management",
+            "lastUpdated": "2018-03-02T19:13:46.810576+00:00",
+            "name": "TOOLS_SERVER",
+            "useInTable": "server"
+        },
+        {
+            "description": "Path regular expression",
+            "lastUpdated": "2018-03-02T19:13:46.812049+00:00",
+            "name": "PATH_REGEXP",
+            "useInTable": "regex"
+        },
+        {
+            "description": "Static DNS CNAME entry",
+            "lastUpdated": "2018-03-02T19:13:46.813461+00:00",
+            "name": "CNAME_RECORD",
+            "useInTable": "staticdnsentry"
+        },
+        {
+            "description": "Kabletown Content Router",
+            "lastUpdated": "2018-03-02T19:13:46.814833+00:00",
+            "name": "CCR",
+            "useInTable": "server"
+        },
+        {
+            "description": "Mid Cachegroup",
+            "lastUpdated": "2018-03-02T19:13:46.816199+00:00",
+            "name": "MID_LOC",
+            "useInTable": "cachegroup"
+        },
+        {
+            "description": "Edge Cache",
+            "lastUpdated": "2018-03-02T19:13:46.817689+00:00",
+            "name": "EDGE",
+            "useInTable": "server"
+        },
+        {
+            "description": "Ordered steering target",
+            "lastUpdated": "2018-03-02T19:13:46.81913+00:00",
+            "name": "STEERING_ORDER",
+            "useInTable": "steering_target"
+        },
+        {
+            "description": "DNS Content Routing",
+            "lastUpdated": "2018-03-02T19:13:46.820528+00:00",
+            "name": "DNS",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "federation type resolve6",
+            "lastUpdated": "2018-03-02T19:13:46.822161+00:00",
+            "name": "RESOLVE6",
+            "useInTable": "federation"
+        },
+        {
+            "description": "Static DNS AAAA entry",
+            "lastUpdated": "2018-03-02T19:13:46.823506+00:00",
+            "name": "AAAA_RECORD",
+            "useInTable": "staticdnsentry"
+        },
+        {
+            "description": "HTTP Content Routing, no caching",
+            "lastUpdated": "2018-03-02T19:13:46.824798+00:00",
+            "name": "HTTP_NO_CACHE",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "any_map type",
+            "lastUpdated": "2018-03-02T19:13:46.826411+00:00",
+            "name": "ANY_MAP",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "Steering Delivery Service",
+            "lastUpdated": "2018-03-02T19:13:46.827779+00:00",
+            "name": "STEERING",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "Edge Cachegroup",
+            "lastUpdated": "2018-03-02T19:13:46.829249+00:00",
+            "name": "EDGE_LOC",
+            "useInTable": "cachegroup"
+        },
+        {
+            "description": "HTTP Content routing cache ",
+            "lastUpdated": "2018-03-02T19:13:46.830862+00:00",
+            "name": "HTTP",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "Mid Tier Cache",
+            "lastUpdated": "2018-03-02T19:13:46.832327+00:00",
+            "name": "MID",
+            "useInTable": "server"
+        }
     ]
 }
