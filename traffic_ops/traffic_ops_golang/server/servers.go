@@ -49,7 +49,10 @@ func GetRefType() *TOServer {
 
 //Implementation of the Identifier, Validator interface functions
 func (server *TOServer) GetID() (int, bool) {
-	return server.ID, true
+	if server.ID == nil {
+		return 0, false
+	}
+	return *server.ID, true
 }
 
 func (server *TOServer) GetAuditName() string {
@@ -65,7 +68,7 @@ func (server *TOServer) GetType() string {
 }
 
 func (server *TOServer) SetID(i int) {
-	server.ID = i
+	server.ID = &i
 }
 
 func (server *TOServer) Validate(db *sqlx.DB) []error {
@@ -309,7 +312,7 @@ func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	}
 	defer resultRows.Close()
 
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
@@ -417,7 +420,7 @@ func (server *TOServer) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	defer resultRows.Close()
 
 	var id int
-	var lastUpdated tc.Time
+	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
