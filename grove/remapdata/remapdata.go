@@ -60,6 +60,26 @@ type RemapRulesStats struct {
 	Deny  []*net.IPNet
 }
 
+func (statRules RemapRulesStats) Allowed(ip net.IP) bool {
+	for _, network := range statRules.Deny {
+		if network.Contains(ip) {
+			log.Debugf("deny contains ip\n")
+			return false
+		}
+	}
+	if len(statRules.Allow) == 0 {
+		log.Debugf("Allowed len 0\n")
+		return true
+	}
+	for _, network := range statRules.Allow {
+		if network.Contains(ip) {
+			log.Debugf("allow contains ip\n")
+			return true
+		}
+	}
+	return false
+}
+
 type RemapRuleBase struct {
 	Name               string          `json:"name"`
 	From               string          `json:"from"`
