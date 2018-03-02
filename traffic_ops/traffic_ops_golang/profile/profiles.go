@@ -76,7 +76,7 @@ func (prof *TOProfile) Validate(db *sqlx.DB) []error {
 		"name":        validation.Validate(prof.Name, validation.Required),
 		"description": validation.Validate(prof.Description, validation.Required),
 		"cdn":         validation.Validate(prof.CDNID, validation.Required),
-		"type":        validation.Validate(prof.Type, validation.Required),
+		"type":        validation.Validate(prof.TypeID, validation.Required),
 	}
 	if errs != nil {
 		return tovalidate.ToErrors(errs)
