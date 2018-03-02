@@ -538,7 +538,7 @@
             "last_updated": "2018-03-02T17:27:11.796899+00:00",
             "name": "EDGE1",
             "routing_disabled": false,
-            "type": "ATS_PROFILE"
+            "typeName": "ATS_PROFILE"
         },
         {
             "cdnName": "cdn1",
@@ -546,7 +546,7 @@
             "last_updated": "2018-03-02T17:27:11.80173+00:00",
             "name": "MID1",
             "routing_disabled": false,
-            "type": "ATS_PROFILE"
+            "typeName": "ATS_PROFILE"
         },
         {
             "cdnName": "cdn1",
@@ -554,7 +554,7 @@
             "last_updated": "2018-03-02T17:27:11.80452+00:00",
             "name": "CCR1",
             "routing_disabled": false,
-            "type": "TR_PROFILE"
+            "typeName": "TR_PROFILE"
         },
         {
             "cdnName": "cdn2",
@@ -562,7 +562,7 @@
             "last_updated": "2018-03-02T17:27:11.807948+00:00",
             "name": "CCR2",
             "routing_disabled": false,
-            "type": "TR_PROFILE"
+            "typeName": "TR_PROFILE"
         },
         {
             "cdnName": "cdn1",
@@ -570,7 +570,7 @@
             "last_updated": "2018-03-02T17:27:11.810426+00:00",
             "name": "RIAK1",
             "routing_disabled": false,
-            "type": "RIAK_PROFILE"
+            "typeName": "RIAK_PROFILE"
         },
         {
             "cdnName": "cdn1",
@@ -578,7 +578,7 @@
             "last_updated": "2018-03-02T17:27:11.813052+00:00",
             "name": "RASCAL1",
             "routing_disabled": false,
-            "type": "TM_PROFILE"
+            "typeName": "TM_PROFILE"
         },
         {
             "cdn": 200,
@@ -586,7 +586,7 @@
             "last_updated": "2018-03-02T17:27:11.815405+00:00",
             "name": "RASCAL2",
             "routing_disabled": false,
-            "type": "TM_PROFILE"
+            "typeName": "TM_PROFILE"
         },
         {
             "cdn": null,
@@ -594,7 +594,7 @@
             "last_updated": "2018-03-02T17:27:11.816949+00:00",
             "name": "MISC",
             "routing_disabled": false,
-            "type": "UNK_PROFILE"
+            "typeName": "UNK_PROFILE"
         },
         {
             "cdnName": "cdn2",
@@ -602,7 +602,7 @@
             "last_updated": "2018-03-02T17:27:11.818418+00:00",
             "name": "EDGE2",
             "routing_disabled": false,
-            "type": "ATS_PROFILE"
+            "typeName": "ATS_PROFILE"
         }
     ],
     "regions": [
