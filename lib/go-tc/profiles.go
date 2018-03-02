@@ -19,15 +19,19 @@ package tc
  * under the License.
  */
 
-// ProfileResponse ...
+// ProfilesResponse ...
 type ProfilesResponse struct {
 	Response []Profile `json:"response"`
 }
 
 // Profile ...
 type Profile struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	LastUpdated string `json:"lastUpdated"`
+	ID          int       `json:"id" db:"id"`
+	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name        string    `json:"name" db:"name"`
+	Description string    `json:"description" db:"description"`
+	CDNName     string    `json:"cdnName"`
+	CDNID       int       `json:"cdnId"`
+	Type        string    `json:"type"`
+	TypeID      int       `json:"typeId"`
 }

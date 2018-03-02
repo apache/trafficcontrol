@@ -25,6 +25,7 @@ type TrafficControl struct {
 	DeliveryServiceRequests []tcapi.DeliveryServiceRequest `json:"deliveryServiceRequests"`
 	DeliveryServices        []tcapi.DeliveryService        `json:"deliveryservices"`
 	Divisions               []tcapi.Division               `json:"divisions"`
+	Profiles                []tcapi.Profile                `json:"profiles"`
 	Parameters              []tcapi.Parameter              `json:"parameters"`
 	PhysLocations           []tcapi.PhysLocation           `json:"physLocations"`
 	Regions                 []tcapi.Region                 `json:"regions"`
