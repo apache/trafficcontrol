@@ -22,49 +22,58 @@ package status
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
 //we need a type alias to define functions on
-type TOStatus tc.Status
+type TOStatus tc.StatusNullable
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOStatus(tc.Status{})
+var refType = TOStatus(tc.StatusNullable{})
 
 func GetRefType() *TOStatus {
 	return &refType
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (status *TOStatus) GetID() (int, bool) {
-	return status.ID, true
+func (status TOStatus) GetID() (int, bool) {
+	if status.ID == nil {
+		return 0, false
+	}
+	return *status.ID, true
 }
 
-func (status *TOStatus) GetAuditName() string {
-	return status.Name
+func (status TOStatus) GetAuditName() string {
+	if status.Name == nil {
+		id, _ := status.GetID()
+		return strconv.Itoa(id)
+	}
+	return *status.Name
 }
 
-func (status *TOStatus) GetType() string {
+func (status TOStatus) GetType() string {
 	return "status"
 }
 
 func (status *TOStatus) SetID(i int) {
-	status.ID = i
+	status.ID = &i
 }
 
-func (status *TOStatus) Validate(db *sqlx.DB) []error {
-	errs := []error{}
-	if len(status.Name) < 1 {
-		errs = append(errs, errors.New(`Status 'name' is required.`))
+func (status TOStatus) Validate(db *sqlx.DB) []error {
+	errs := validation.Errors{
+		"name": validation.Validate(status.Name, validation.NotNil, validation.Required),
 	}
-	return errs
+	return tovalidate.ToErrors(errs)
 }
 
 func (status *TOStatus) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
@@ -165,7 +174,7 @@ func (status *TOStatus) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		}
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
-	status.LastUpdated = lastUpdated
+	status.LastUpdated = &lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
 			return errors.New("no status found with this id"), tc.DataMissingError
@@ -241,7 +250,7 @@ func (status *TOStatus) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		return tc.DBError, tc.SystemError
 	}
 	status.SetID(id)
-	status.LastUpdated = lastUpdated
+	status.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
