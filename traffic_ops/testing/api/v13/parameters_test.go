@@ -16,7 +16,6 @@
 package v13
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -26,7 +25,7 @@ import (
 func TestParameters(t *testing.T) {
 
 	CreateTestParameters(t)
-	//UpdateTestParameters(t)
+	UpdateTestParameters(t)
 	GetTestParameters(t)
 	DeleteTestParameters(t)
 
@@ -108,8 +107,6 @@ func DeleteTestParameters(t *testing.T) {
 			if len(pls) > 0 {
 				t.Errorf("expected Parameter Name: %s and ConfigFile: %s to be deleted\n", pl.Name, pl.ConfigFile)
 			}
-		} else {
-			fmt.Printf("no resp ---> %v\n", resp)
 		}
 	}
 }
