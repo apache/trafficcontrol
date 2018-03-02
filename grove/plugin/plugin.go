@@ -52,6 +52,7 @@ type OnRequestData struct {
 	HTTPConns     *web.ConnMap
 	HTTPSConns    *web.ConnMap
 	Context       *interface{}
+	cachedata.SrvrData
 }
 
 type BeforeParentRequestData struct {
