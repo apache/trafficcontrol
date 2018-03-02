@@ -217,10 +217,11 @@ fi
 
 %files
 %defattr(644,root,root,755)
-%attr(755,root,root) %{PACKAGEDIR}/app/bin/*
-%attr(755,root,root) %{PACKAGEDIR}/app/script/*
-%attr(755,root,root) %{PACKAGEDIR}/app/db/*.pl
-%config(noreplace)/opt/traffic_ops/app/conf/*
+%attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/bin/*
+%attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/script/*
+%attr(755,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/app/db/*.pl
+%config(noreplace) %attr(750,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) /opt/traffic_ops/app/conf
+%config(noreplace) %attr(750,%{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) /opt/traffic_ops/app/db/dbconf.yml
 %config(noreplace)/var/www/files/osversions.cfg
 %{PACKAGEDIR}/app/cpanfile
 %{PACKAGEDIR}/app/db
