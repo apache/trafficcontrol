@@ -5,14 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"unicode"
 
-	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 	"github.com/apache/incubator-trafficcontrol/grove/stat"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
@@ -45,7 +43,7 @@ func stats(icfg interface{}, d OnRequestData) bool {
 		log.Errorln("statHandler ServeHTTP failed to get IP: " + ip.String())
 		return true
 	}
-	if !Allowed(d.StatRules, ip) {
+	if !d.StatRules.Allowed(ip) {
 		code := http.StatusForbidden
 		w.WriteHeader(code)
 		w.Write([]byte(http.StatusText(code)))
@@ -115,27 +113,6 @@ func LoadRemapStats(stats stat.Stats, httpConns *web.ConnMap, httpsConns *web.Co
 	jsonStats["proxy.process.http.cache_size_bytes"] = stats.CacheSize()
 
 	return jsonStats
-}
-
-func Allowed(statRules remapdata.RemapRulesStats, ip net.IP) bool {
-	// TODO remove duplication
-	for _, network := range statRules.Deny {
-		if network.Contains(ip) {
-			log.Debugf("deny contains ip\n")
-			return false
-		}
-	}
-	if len(statRules.Allow) == 0 {
-		log.Debugf("Allowed len 0\n")
-		return true
-	}
-	for _, network := range statRules.Allow {
-		if network.Contains(ip) {
-			log.Debugf("allow contains ip\n")
-			return true
-		}
-	}
-	return false
 }
 
 func loadFileAndLog(filename string) string {
