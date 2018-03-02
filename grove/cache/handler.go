@@ -172,7 +172,8 @@ func copyPluginContext(context map[string]*interface{}) map[string]*interface{} 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reqTime := time.Now()
 	pluginContext := copyPluginContext(h.pluginContext) // must give each request a copy, because they can modify in parallel
-	onReqData := plugin.OnRequestData{W: w, R: r, Stats: h.stats, StatRules: h.remapper.StatRules(), HTTPConns: h.httpConns, HTTPSConns: h.httpsConns, InterfaceName: h.interfaceName}
+	srvrData := cachedata.SrvrData{h.hostname, h.port, h.scheme}
+	onReqData := plugin.OnRequestData{W: w, R: r, Stats: h.stats, StatRules: h.remapper.StatRules(), HTTPConns: h.httpConns, HTTPSConns: h.httpsConns, InterfaceName: h.interfaceName, SrvrData: srvrData}
 	stop := h.plugins.OnRequest(h.remapper.PluginCfg(), pluginContext, onReqData)
 	if stop {
 		return
@@ -206,7 +207,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqData := cachedata.ReqData{r, conn, clientIP, reqTime, toFQDN}
-	srvrData := cachedata.SrvrData{h.hostname, h.port, h.scheme}
 
 	responder := NewResponder(w, pluginCfg, pluginContext, srvrData, reqData, h.plugins, h.stats)
 
