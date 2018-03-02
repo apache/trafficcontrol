@@ -99,7 +99,10 @@ WHERE p.config_file='global'`
 			// Secure params only visible to admin
 			continue
 		}
-		info[*name] = *value
+
+		if name != nil && value != nil {
+			info[*name] = *value
+		}
 	}
 	if err != nil {
 		return nil, err
