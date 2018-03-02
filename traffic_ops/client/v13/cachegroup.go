@@ -101,7 +101,7 @@ func (to *Session) GetCacheGroupByID(id int) ([]tc.CacheGroup, ReqInf, error) {
 
 // GET a CacheGroup by the CacheGroup name
 func (to *Session) GetCacheGroupByName(name string) ([]tc.CacheGroup, ReqInf, error) {
-	url := fmt.Sprintf("%s/name/%s", API_v13_CacheGroups, name)
+	url := fmt.Sprintf("%s?name=%s", API_v13_CacheGroups, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
