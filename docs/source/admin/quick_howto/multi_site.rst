@@ -51,11 +51,12 @@ Configure Multi Site Origin
 	:align: center
 
 .. Note:: “Origin Server Base URL” uniqueness: In order to enable MID caches to distinguish delivery services by different MSO algorithms while performing parent failover, it requires that “Origin Server Base URL” (OFQDN) for each MSO enabled delivery service is unique unless the exceptions listed afterwards. This means that the OFQDN of a MSO enabled delivery service should be different with the OFQDNs of any other delivery service, regardless of whether they are MSO enabled or not. The exceptions are: 
-       1) If there are multiple CDNs created on the same Traffic Ops, delivery services across different CDNs may have the same OFQDN configured.
-       2) If several delivery services in the same CDN have the same MSO algorithm configured, they may share the same OFQDN.
-       3) If delivery services are assigned with different MID cache groups respectively, they can share the same OFQDN.
-       4) This OFQDN must be valid - ATS will perform a DNS lookup on this FQDN even if IPs, not DNS, are used in the parent.config.
-       5) The OFQDN entered as the "Origin Server Base URL" will be sent to the origins as a host header.  All origins must be configured to respond to this host.
+
+   1. If there are multiple CDNs created on the same Traffic Ops, delivery services across different CDNs may have the same OFQDN configured.
+   2. If several delivery services in the same CDN have the same MSO algorithm configured, they may share the same OFQDN.
+   3. If delivery services are assigned with different MID cache groups respectively, they can share the same OFQDN.
+   4. This OFQDN must be valid - ATS will perform a DNS lookup on this FQDN even if IPs, not DNS, are used in the parent.config.
+   5. The OFQDN entered as the "Origin Server Base URL" will be sent to the origins as a host header.  All origins must be configured to respond to this host.
 
 
 6) For ATS 5.x, configure the mid hdr_rewrite on the delivery service, example: ::
@@ -64,41 +65,41 @@ Configure Multi Site Origin
 
 7) Create a delivery service profile. This must be done to set the MSO algorithm.  Also, as of ATS 6.x, multi-site options must be set as parameters within the parent.config.  Header rewrite parameters will be ignored.  See `ATS parent.config <https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/files/parent.config.en.html>` for more details.  These parameters are now handled by the creation of a delivery service profile.
 
-a) Create a profile of the type DS_PROFILE for the delivery service in question.
+   a) Create a profile of the type DS_PROFILE for the delivery service in question.
 
-.. image:: ds-profile.png
-	:scale: 50%
-	:align: center
+      .. image:: ds-profile.png
+         :scale: 50%
+         :align: center
 
-b) Click "Show profile parameters" to bring up the parameters screen for the profile.  Create parameters for the following:
+   b) Click "Show profile parameters" to bring up the parameters screen for the profile.  Create parameters for the following:
 
-+----------------------------------------+------------------+--------------------------+-------------------------+
-| Parameter Name                         | Config File Name | Value                    | ATS parent.config value |
-+========================================+==================+==========================+=========================+
-| mso.algorithm                          | parent.config    | true, false, strict,     | round_robin             |
-|                                        |                  | consistent_hash          |                         |
-+----------------------------------------+------------------+--------------------------+-------------------------+
-| mso.parent_retry                       | parent.config    | simple_retry, both,      | parent_retry            |
-|                                        |                  | unavailable_server_retry |                         |
-+----------------------------------------+------------------+--------------------------+-------------------------+
-| mso.unavailable_server_retry_responses | parent.config    | list of server response  | defaults to the value   |
-|                                        |                  | codes, eg "500,502,503"  | in records.config       |
-|                                        |                  |                          | when unused.            |
-+----------------------------------------+------------------+--------------------------+-------------------------+
-| mso.max_simple_retries                 | parent.config    | Nubmer of retries made   | defaults to the value   |
-|                                        |                  | after a 4xx error        | in records.config       |
-|                                        |                  |                          | when unused.            |
-+----------------------------------------+------------------+--------------------------+-------------------------+
-| mso.max_unavailable_server_retries     | parent.config    | Nubmer of retries made   | defaults to the value   |
-|                                        |                  | after a 5xx error        | in records.config       |
-|                                        |                  |                          | when unused.            |
-+----------------------------------------+------------------+--------------------------+-------------------------+
+      +----------------------------------------+------------------+--------------------------+-------------------------+
+      | Parameter Name                         | Config File Name | Value                    | ATS parent.config value |
+      +========================================+==================+==========================+=========================+
+      | mso.algorithm                          | parent.config    | true, false, strict,     | round_robin             |
+      |                                        |                  | consistent_hash          |                         |
+      +----------------------------------------+------------------+--------------------------+-------------------------+
+      | mso.parent_retry                       | parent.config    | simple_retry, both,      | parent_retry            |
+      |                                        |                  | unavailable_server_retry |                         |
+      +----------------------------------------+------------------+--------------------------+-------------------------+
+      | mso.unavailable_server_retry_responses | parent.config    | list of server response  | defaults to the value   |
+      |                                        |                  | codes, eg "500,502,503"  | in records.config       |
+      |                                        |                  |                          | when unused.            |
+      +----------------------------------------+------------------+--------------------------+-------------------------+
+      | mso.max_simple_retries                 | parent.config    | Nubmer of retries made   | defaults to the value   |
+      |                                        |                  | after a 4xx error        | in records.config       |
+      |                                        |                  |                          | when unused.            |
+      +----------------------------------------+------------------+--------------------------+-------------------------+
+      | mso.max_unavailable_server_retries     | parent.config    | Nubmer of retries made   | defaults to the value   |
+      |                                        |                  | after a 5xx error        | in records.config       |
+      |                                        |                  |                          | when unused.            |
+      +----------------------------------------+------------------+--------------------------+-------------------------+
 
 
-.. image:: ds_profile_parameters.png
-	:scale: 100%
-	:align: center
+      .. image:: ds_profile_parameters.png
+         :scale: 100%
+         :align: center
 
-c) In the delivery service page, select the newly created DS_PROFILE and save the delivery service.
+   c) In the delivery service page, select the newly created DS_PROFILE and save the delivery service.
 
-11) Turn on parent_proxy_routing in the MID profile.
+8) Turn on parent_proxy_routing in the MID profile.
