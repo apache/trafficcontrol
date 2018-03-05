@@ -41,6 +41,7 @@ func TestMain(m *testing.M) {
 
 	if Config, err = config.LoadConfig(*configFileName); err != nil {
 		fmt.Printf("Error Loading Config %v %v\n", Config, err)
+		return
 	}
 
 	if err = log.InitCfg(Config); err != nil {
