@@ -39,17 +39,36 @@ type TrafficOps struct {
 	// URL - The point to the Traffic Ops instance being tested
 	URL string `json:"URL" envconfig:"TO_URL" default:"https://localhost:8443"`
 
-	// User - The Traffic Ops test user hitting the API
-	AdminUser string `json:"adminUser" envconfig:"TO_ADMIN_USER"`
-
 	// UserPassword - The Traffic Ops test user password hitting the API
 	UserPassword string `json:"password" envconfig:"TO_USER_PASSWORD"`
 
-	// User - The Traffic Ops Portal user hitting the API
-	PortalUser string `json:"portalUser" envconfig:"TO_PORTAL_USER"`
+	// UserPassword - The Traffic Ops Users
+	Users Users `json:"users"`
 
 	// Insecure - ignores insecure ssls certs that were self-generated
 	Insecure bool `json:"sslInsecure" envconfig:"SSL_INSECURE"`
+}
+
+// Users "users" section of the test-to-api.conf file
+type Users struct {
+
+	// DisallowedUser - The Traffic Ops Disallowed user
+	Disallowed string `json:"disallowed" envconfig:"TO_USER_DISALLOWED"`
+
+	// ReadOnly - The Traffic Ops Read Only user
+	ReadOnly string `json:"readOnly" envconfig:"TO_USER_READ_ONLY"`
+
+	// Operations - The Traffic Ops Operations user
+	Operations string `json:"operations" envconfig:"TO_USER_OPERATIONS"`
+
+	// AdminUser - The Traffic Ops Admin user
+	Admin string `json:"admin" envconfig:"TO_USER_ADMIN"`
+
+	// PortalUser - The Traffic Ops Portal user
+	Portal string `json:"portal" envconfig:"TO_USER_PORTAL"`
+
+	// FederationUser - The Traffic Ops Federation user
+	Federation string `json:"federation" envconfig:"TO_USER_FEDERATION"`
 }
 
 // TrafficOpsDB - config section
@@ -137,36 +156,72 @@ func validate(confPath string, config Config) []error {
 
 	errs := []error{}
 
-	var fieldName string
-	fieldName = "TrafficOps"
-	toTag, ok := getStructTag(config, fieldName)
+	var f string
+	f = "TrafficOps"
+	toTag, ok := getStructTag(config, f)
 	if !ok {
 		errs = append(errs, fmt.Errorf("'%s' must be configured in %s", toTag, confPath))
 	}
 
 	if config.TrafficOps.URL == "" {
-		fieldName = "URL"
-		tag, ok := getStructTag(config.TrafficOps, fieldName)
+		f = "URL"
+		tag, ok := getStructTag(config.TrafficOps, f)
 		if !ok {
-			errs = append(errs, fmt.Errorf("cannot lookup structTag: %s", fieldName))
+			errs = append(errs, fmt.Errorf("cannot lookup structTag: %s", f))
 		}
 		errs = append(errs, fmt.Errorf("'%s.%s' must be configured in %s", toTag, tag, confPath))
 	}
 
-	if config.TrafficOps.AdminUser == "" {
-		fieldName = "AdminUser"
-		tag, ok := getStructTag(config.TrafficOps, fieldName)
+	if config.TrafficOps.Users.Disallowed == "" {
+		f = "Disallowed"
+		tag, ok := getStructTag(config.TrafficOps.Users, f)
 		if !ok {
-			errs = append(errs, fmt.Errorf("cannot lookup structTag: %s", fieldName))
+			errs = append(errs, fmt.Errorf("cannot lookup structTag: %s", f))
 		}
 		errs = append(errs, fmt.Errorf("'%s.%s' must be configured in %s", toTag, tag, confPath))
 	}
 
-	if config.TrafficOps.PortalUser == "" {
-		fieldName = "PortalUser"
-		tag, ok := getStructTag(config.TrafficOps, fieldName)
+	if config.TrafficOps.Users.ReadOnly == "" {
+		f = "ReadOnly"
+		tag, ok := getStructTag(config.TrafficOps.Users, f)
 		if !ok {
-			errs = append(errs, fmt.Errorf("cannot lookup structTag: %s", fieldName))
+			errs = append(errs, fmt.Errorf("cannot lookup structTag: %s", f))
+		}
+		errs = append(errs, fmt.Errorf("'%s.%s' must be configured in %s", toTag, tag, confPath))
+	}
+
+	if config.TrafficOps.Users.Operations == "" {
+		f = "Operations"
+		tag, ok := getStructTag(config.TrafficOps.Users, f)
+		if !ok {
+			errs = append(errs, fmt.Errorf("cannot lookup structTag: %s", f))
+		}
+		errs = append(errs, fmt.Errorf("'%s.%s' must be configured in %s", toTag, tag, confPath))
+	}
+
+	if config.TrafficOps.Users.Admin == "" {
+		f = "Admin"
+		tag, ok := getStructTag(config.TrafficOps.Users, f)
+		if !ok {
+			errs = append(errs, fmt.Errorf("cannot lookup structTag: %s", f))
+		}
+		errs = append(errs, fmt.Errorf("'%s.%s' must be configured in %s", toTag, tag, confPath))
+	}
+
+	if config.TrafficOps.Users.Portal == "" {
+		f = "Portal"
+		tag, ok := getStructTag(config.TrafficOps.Users, f)
+		if !ok {
+			errs = append(errs, fmt.Errorf("cannot lookup structTag: %s", f))
+		}
+		errs = append(errs, fmt.Errorf("'%s.%s' must be configured in %s", toTag, tag, confPath))
+	}
+
+	if config.TrafficOps.Users.Federation == "" {
+		f = "Federation"
+		tag, ok := getStructTag(config.TrafficOps.Users, f)
+		if !ok {
+			errs = append(errs, fmt.Errorf("cannot lookup structTag: %s", f))
 		}
 		errs = append(errs, fmt.Errorf("'%s.%s' must be configured in %s", toTag, tag, confPath))
 	}
