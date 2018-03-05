@@ -22,9 +22,7 @@ package main
 import (
 	"crypto/x509"
 	"encoding/base64"
-	"encoding/json"
 	"encoding/pem"
-	"fmt"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"strings"
 	"testing"
@@ -244,7 +242,7 @@ func TestVerifyAndEncodeCertificate(t *testing.T) {
 	}
 }
 
-// tests the generateDeliveryServiceSSLKeysCertificate() function.
+// tests the generateSSLCertificate() function.
 // verifys the proper creation of a CSR and private key and that
 // both are encoded properly.
 func TestGenerateDeliveryServiceSSLKeysCertificate(t *testing.T) {
@@ -273,15 +271,10 @@ func TestGenerateDeliveryServiceSSLKeysCertificate(t *testing.T) {
 	}
 
 	// test generating a certificate request and privte key
-	err := generateDeliveryServiceSSLKeysCertificate(&dsSslKeys)
+	err := generateSSLCertificate(&dsSslKeys)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
-	respBts, err := json.MarshalIndent(dsSslKeys, "", " ")
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	fmt.Println(string(respBts))
 
 	// The Crt should be base64 encoded, test that it can be decoded.
 	crtPem := make([]byte, base64.StdEncoding.EncodedLen(len(dsSslKeys.Certificate.Crt)))

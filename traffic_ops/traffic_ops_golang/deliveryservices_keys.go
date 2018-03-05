@@ -61,7 +61,7 @@ func publicKey(priv interface{}) interface{} {
 }
 
 // generates an unencrypted private key and a signing request, CSR
-func generateDeliveryServiceSSLKeysCertificate(sslKeys *tc.DeliveryServiceSSLKeys) error {
+func generateSSLCertificate(sslKeys *tc.DeliveryServiceSSLKeys) error {
 	// generate the private key.
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 
@@ -465,6 +465,8 @@ func deleteDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorsFunc(w, r)
 
+		log.Errorf("deleteDeliveryServiceSSLKeysHandler()")
+
 		if cfg.RiakEnabled == false {
 			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
 			return
@@ -554,15 +556,30 @@ func deleteDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 	}
 }
 
-/*
 func generateDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorsFunc(w, r)
+		var keysObj tc.DeliveryServiceSSLKeys
 
 		if cfg.RiakEnabled == false {
 			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
 			return
 		}
+
+		defer r.Body.Close()
+
+		data, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			handleErr(http.StatusInternalServerError, err)
+			return
+		}
+		// unmarshal the request
+		if err := json.Unmarshal(data, &keysObj); err != nil {
+			log.Errorf("ERROR: could not unmarshal the request, %v\n", err)
+			handleErr(http.StatusBadRequest, err)
+			return
+		}
+		xmlID := keysObj.DeliveryService
 
 		ctx := r.Context()
 		user, err := auth.GetCurrentUser(ctx)
@@ -570,14 +587,30 @@ func generateDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg Config) http.Handler
 			handleErr(http.StatusInternalServerError, err)
 			return
 		}
-		pathParams, err := api.GetPathParams(ctx)
+
+		// check user tenancy access to this resource.
+		hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlID, db)
+		if !hasAccess {
+			switch apiStatus {
+			case tc.SystemError:
+				handleErr(http.StatusInternalServerError, err)
+				return
+			case tc.DataMissingError:
+				handleErr(http.StatusNotFound, err)
+				return
+			case tc.ForbiddenError:
+				handleErr(http.StatusForbidden, err)
+				return
+			}
+		}
+
+		err = generateSSLCertificate(&keysObj)
 		if err != nil {
 			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 	}
 }
-*/
 
 // fetch the ssl keys for a deliveryservice specified by the fully qualified hostname
 func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
@@ -587,6 +620,8 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg Config) http.Ha
 		var domainName string
 		var hostName string
 		var hostRegex string
+
+		log.Errorf("getDeliveryServiceSSLKeysByHostNameHandler()")
 
 		if cfg.RiakEnabled == false {
 			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
