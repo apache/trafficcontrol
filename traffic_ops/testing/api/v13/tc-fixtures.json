@@ -193,122 +193,122 @@
             "value": "30"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.503311+00:00",
             "name": "key0",
-            "secure": false,
+            "secure": true,
             "value": "HOOJ3Ghq1x4gChp3iQkqVTcPlOj8UCi3"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.505157+00:00",
             "name": "key1",
-            "secure": false,
+            "secure": true,
             "value": "_9LZYkRnfCS0rCBF7fTQzM9Scwlp2FhO"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.508548+00:00",
             "name": "key2",
-            "secure": false,
+            "secure": true,
             "value": "AFpkxfc4oTiyFSqtY6_ohjt3V80aAIxS"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.401781+00:00",
             "name": "key3",
-            "secure": false,
+            "secure": true,
             "value": "AL9kzs_SXaRZjPWH8G5e2m4ByTTzkzlc"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.406601+00:00",
             "name": "key4",
-            "secure": false,
+            "secure": true,
             "value": "poP3n3szbD1U4vx1xQXV65BvkVgWzfN8"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.408784+00:00",
             "name": "key5",
-            "secure": false,
+            "secure": true,
             "value": "1ir32ng4C4w137p5oq72kd2wqmIZUrya"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.410854+00:00",
             "name": "key6",
-            "secure": false,
+            "secure": true,
             "value": "B1qLptn2T1b_iXeTCWDcVuYvANtH139f"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.412716+00:00",
             "name": "key7",
-            "secure": false,
+            "secure": true,
             "value": "PiCV_5OODMzBbsNFMWsBxcQ8v1sK0TYE"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.414638+00:00",
             "name": "key8",
-            "secure": false,
+            "secure": true,
             "value": "Ggpv6DqXDvt2s1CETPBpNKwaLk4fTM9l"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.416551+00:00",
             "name": "key9",
-            "secure": false,
+            "secure": true,
             "value": "qPlVT_s6kL37aqb6hipDm4Bt55S72mI7"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.418689+00:00",
             "name": "key10",
-            "secure": false,
+            "secure": true,
             "value": "BsI5A9EmWrobIS1FeuOs1z9fm2t2WSBe"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.420467+00:00",
             "name": "key11",
-            "secure": false,
+            "secure": true,
             "value": "A54y66NCIj897GjS4yA9RrsSPtCUnQXP"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.422414+00:00",
             "name": "key12",
-            "secure": false,
+            "secure": true,
             "value": "2jZH0NDPSJttIr4c2KP510f47EKqTQAu"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.424435+00:00",
             "name": "key13",
-            "secure": false,
+            "secure": true,
             "value": "XduT2FBjBmmVID5JRB5LEf9oR5QDtBgC"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.426125+00:00",
             "name": "key14",
-            "secure": false,
+            "secure": true,
             "value": "D9nH0SvK_0kP5w8QNd1UFJ28ulFkFKPn"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.427797+00:00",
             "name": "key15",
-            "secure": false,
+            "secure": true,
             "value": "udKXWYNwbXXweaaLzaKDGl57OixnIIcm"
         },
         {
-            "configFile": "url_sig_cdl-c2.config",
+            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.431062+00:00",
             "name": "error_url",
-            "secure": false,
+            "secure": true,
             "value": "403"
         },
         {
