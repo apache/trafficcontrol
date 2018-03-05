@@ -92,7 +92,12 @@ WHERE p.config_file='global'`
 		if err = rows.StructScan(&p); err != nil {
 			return nil, fmt.Errorf("getting system_info: %v", err)
 		}
-		isSecure := *p.Secure
+
+		var isSecure bool
+		if p.Secure != nil {
+			isSecure = *p.Secure
+		}
+
 		name := p.Name
 		value := p.Value
 		if isSecure && privLevel < auth.PrivLevelAdmin {
