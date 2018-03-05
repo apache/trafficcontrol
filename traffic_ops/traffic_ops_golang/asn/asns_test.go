@@ -34,18 +34,21 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestASNs() []tc.ASN {
-	ASNs := []tc.ASN{}
-	testCase := tc.ASN{
-		ASN:         1,
-		Cachegroup:  "Yukon",
-		ID:          1,
-		LastUpdated: tc.TimeNoMod{Time: time.Now()},
+func getTestASNs() []TOASN {
+	ASNs := []TOASN{}
+	i := 1
+	c := "Yukon"
+	testCase := TOASN{
+		ASN:          &i,
+		Cachegroup:   &c,
+		CachegroupID: &i,
+		ID:           &i,
+		LastUpdated:  &tc.TimeNoMod{Time: time.Now()},
 	}
 	ASNs = append(ASNs, testCase)
 
 	testCase2 := testCase
-	testCase2.ASN = 2
+	*testCase2.ASN = 2
 	ASNs = append(ASNs, testCase2)
 
 	return ASNs
@@ -62,16 +65,15 @@ func TestGetASNs(t *testing.T) {
 	defer db.Close()
 
 	testCase := getTestASNs()
-	cols := test.ColsFromStructByTag("db", tc.ASN{})
+	cols := test.ColsFromStructByTag("db", TOASN{})
 	rows := sqlmock.NewRows(cols)
 
 	for _, ts := range testCase {
 		rows = rows.AddRow(
-			ts.ASN,
-			ts.Cachegroup,
-			ts.CachegroupID,
-			ts.ID,
-			ts.LastUpdated,
+			*ts.ASN,
+			*ts.CachegroupID,
+			*ts.ID,
+			*ts.LastUpdated,
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
