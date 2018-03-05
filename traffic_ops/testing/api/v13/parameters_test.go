@@ -24,19 +24,10 @@ import (
 
 func TestParameters(t *testing.T) {
 
-	//toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	//TOSession, _, err = SetupSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.User, Config.TrafficOps.UserPassword)
-	//if err != nil {
-	//t.Errorf("could not CREATE session: %v\n", err)
-	//}
-	//TeardownSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
-	//SetupSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Portal, Config.TrafficOps.UserPassword)
-	//SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Portal, Config.TrafficOps.UserPassword)
-
 	CreateTestParameters(t)
 	UpdateTestParameters(t)
 	GetTestParameters(t)
-	//DeleteTestParameters(t)
+	DeleteTestParameters(t)
 
 }
 
@@ -46,7 +37,7 @@ func CreateTestParameters(t *testing.T) {
 		resp, _, err := TOSession.CreateParameter(pl)
 		log.Debugln("Response: ", resp)
 		if err != nil {
-			t.Errorf("could not CREATE phys_locations: %v\n", err)
+			t.Errorf("could not CREATE parameters: %v\n", err)
 		}
 	}
 
@@ -106,7 +97,6 @@ func DeleteTestParameters(t *testing.T) {
 			if err != nil {
 				t.Errorf("cannot DELETE Parameter by name: %v - %v\n", err, delResp)
 			}
-			//time.Sleep(1 * time.Second)
 
 			// Retrieve the Parameter to see if it got deleted
 			pls, _, err := TOSession.GetParameterByNameAndConfigFile(pl.Name, pl.ConfigFile)
