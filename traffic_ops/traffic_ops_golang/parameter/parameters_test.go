@@ -114,9 +114,9 @@ func TestInterfaces(t *testing.T) {
 	if _, ok := i.(api.Reader); !ok {
 		t.Errorf("Parameter must be Reader")
 	}
-	//if _, ok := i.(api.Updater); !ok {
-	//t.Errorf("Parameter must be Updater")
-	//}
+	if _, ok := i.(api.Updater); !ok {
+		t.Errorf("Parameter must be Updater")
+	}
 	if _, ok := i.(api.Deleter); !ok {
 		t.Errorf("Parameter must be Deleter")
 	}
