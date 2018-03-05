@@ -155,9 +155,10 @@ func (asn *TOASN) Read(db *sqlx.DB, parameters map[string]string, user auth.Curr
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"asn":        dbhelpers.WhereColumnInfo{"a.asn", nil},
-		"cachegroup": dbhelpers.WhereColumnInfo{"c.name", nil},
-		"id":         dbhelpers.WhereColumnInfo{"a.id", api.IsInt},
+		"asn":            dbhelpers.WhereColumnInfo{"a.asn", nil},
+		"cachegroup":     dbhelpers.WhereColumnInfo{"c.id", nil},
+		"id":             dbhelpers.WhereColumnInfo{"a.id", api.IsInt},
+		"cachegroupName": dbhelpers.WhereColumnInfo{"c.name", nil},
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
@@ -170,16 +171,16 @@ func (asn *TOASN) Read(db *sqlx.DB, parameters map[string]string, user auth.Curr
 	rows, err := db.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying ASNs: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
+		return nil, []error{err}, tc.SystemError
 	}
 	defer rows.Close()
 
 	ASNs := []interface{}{}
 	for rows.Next() {
-		var s tc.ASN
+		var s TOASN
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorf("error parsing ASN rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
+			return nil, []error{err}, tc.SystemError
 		}
 		ASNs = append(ASNs, s)
 	}
@@ -315,9 +316,8 @@ asn,
 cachegroup) 
 VALUES (
 :asn,
-(SELECT id from cachegroup
-WHERE name=:cachegroup
-))
+:cachegroup_id
+)
 RETURNING id,last_updated`
 	return query
 }
@@ -326,9 +326,7 @@ func updateQuery() string {
 	query := `UPDATE
 asn SET
 asn=:asn,
-cachegroup=(SELECT id from cachegroup
-WHERE name=:cachegroup
-)
+cachegroup=:cachegroup_id
 WHERE id=:id RETURNING last_updated`
 	return query
 }
