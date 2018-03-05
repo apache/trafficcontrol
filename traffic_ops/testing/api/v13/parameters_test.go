@@ -16,7 +16,9 @@
 package v13
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -24,10 +26,18 @@ import (
 
 func TestParameters(t *testing.T) {
 
+	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
+	//TOSession, _, err = SetupSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.User, Config.TrafficOps.UserPassword)
+	//if err != nil {
+	//t.Errorf("could not CREATE session: %v\n", err)
+	//}
+	TeardownSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.AdminUser, Config.TrafficOps.UserPassword)
+	SetupSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.PortalUser, Config.TrafficOps.UserPassword)
+
 	CreateTestParameters(t)
 	UpdateTestParameters(t)
 	GetTestParameters(t)
-	DeleteTestParameters(t)
+	//DeleteTestParameters(t)
 
 }
 
@@ -76,6 +86,7 @@ func GetTestParameters(t *testing.T) {
 
 	for _, pl := range testData.Parameters {
 		resp, _, err := TOSession.GetParameterByName(pl.Name)
+		fmt.Printf("resp ---> %v\n", resp)
 		if err != nil {
 			t.Errorf("cannot GET Parameter by name: %v - %v\n", err, resp)
 		}
