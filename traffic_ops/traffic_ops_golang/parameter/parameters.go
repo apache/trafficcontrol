@@ -174,6 +174,8 @@ secure) VALUES (
 func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
+	privLevel := user.PrivLevel
+
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
@@ -200,13 +202,22 @@ func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, us
 	defer rows.Close()
 
 	params := []interface{}{}
+	hiddenField := "********"
 	for rows.Next() {
-		var s tc.ParameterNullable
-		if err = rows.StructScan(&s); err != nil {
+		var p tc.ParameterNullable
+		if err = rows.StructScan(&p); err != nil {
 			log.Errorf("error parsing Parameter rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
-		params = append(params, s)
+		var isSecure bool
+		if p.Secure != nil {
+			isSecure = *p.Secure
+		}
+
+		if isSecure && (privLevel < auth.PrivLevelAdmin) {
+			p.Value = &hiddenField
+		}
+		params = append(params, p)
 	}
 
 	return params, []error{}, tc.NoError
