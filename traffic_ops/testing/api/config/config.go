@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 
 	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/kelseyhightower/envconfig"
@@ -114,13 +115,76 @@ func LoadConfig(confPath string) (Config, error) {
 			return Config{}, fmt.Errorf("unmarshalling '%s': %v", confPath, err)
 		}
 	}
+	errs := validate(confPath, cfg)
+	if len(errs) > 0 {
+		fmt.Printf("configuration error:\n")
+		for _, e := range errs {
+			fmt.Printf("%v\n", e)
+		}
+		os.Exit(0)
+	}
 	err := envconfig.Process("traffic-ops-client-tests", &cfg)
 	if err != nil {
-		fmt.Printf("Cannot parse config: %v\n", err)
+		fmt.Errorf("cannot parse config: %v\n", err)
 		os.Exit(0)
 	}
 
 	return cfg, err
+}
+
+// validate all required fields in the config.
+func validate(confPath string, config Config) []error {
+
+	errs := []error{}
+
+	var fieldName string
+	fieldName = "TrafficOps"
+	toTag, ok := getStructTag(config, fieldName)
+	if !ok {
+		errs = append(errs, fmt.Errorf("'%s' must be configured in %s", toTag, confPath))
+	}
+
+	if config.TrafficOps.URL == "" {
+		fieldName = "URL"
+		tag, ok := getStructTag(config.TrafficOps, fieldName)
+		if !ok {
+			errs = append(errs, fmt.Errorf("cannot lookup structTag: %s", fieldName))
+		}
+		errs = append(errs, fmt.Errorf("'%s.%s' must be configured in %s", toTag, tag, confPath))
+	}
+
+	if config.TrafficOps.AdminUser == "" {
+		fieldName = "AdminUser"
+		tag, ok := getStructTag(config.TrafficOps, fieldName)
+		if !ok {
+			errs = append(errs, fmt.Errorf("cannot lookup structTag: %s", fieldName))
+		}
+		errs = append(errs, fmt.Errorf("'%s.%s' must be configured in %s", toTag, tag, confPath))
+	}
+
+	if config.TrafficOps.PortalUser == "" {
+		fieldName = "PortalUser"
+		tag, ok := getStructTag(config.TrafficOps, fieldName)
+		if !ok {
+			errs = append(errs, fmt.Errorf("cannot lookup structTag: %s", fieldName))
+		}
+		errs = append(errs, fmt.Errorf("'%s.%s' must be configured in %s", toTag, tag, confPath))
+	}
+
+	return errs
+}
+
+func getStructTag(thing interface{}, fieldName string) (string, bool) {
+	var tag string
+	var ok bool
+	t := reflect.TypeOf(thing)
+	if t != nil {
+		if f, ok := t.FieldByName(fieldName); ok {
+			tag = f.Tag.Get("json")
+			return tag, ok
+		}
+	}
+	return tag, ok
 }
 
 // ErrorLog - critical messages
