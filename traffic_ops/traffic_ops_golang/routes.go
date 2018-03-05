@@ -141,6 +141,10 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		//Parameters
 		{1.3, http.MethodGet, `parameters/?(\.json)?$`, parametersHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
+		//Ping
+		{1.2, http.MethodGet, `ping$`, pingHandler(), auth.PrivLevelReadOnly, Authenticated, nil},
+
+		//Servers
 		{1.2, http.MethodGet, `servers/?(\.json)?$`, serversHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.2, http.MethodGet, `servers/{id}$`, serversHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.2, http.MethodPost, `servers/{id}/deliveryservices$`, assignDeliveryServicesToServerHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},
