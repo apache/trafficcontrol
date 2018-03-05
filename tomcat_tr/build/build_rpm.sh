@@ -56,8 +56,8 @@ function initBuildArea() {
 
         wget http://archive.apache.org/dist/tomcat/tomcat-8/v$VERSION.$RELEASE/bin/apache-tomcat-$VERSION.$RELEASE.tar.gz -O "$RPMBUILD"/SOURCES/apache-tomcat-$VERSION.$RELEASE.tar.gz
 
-        cp "$(pwd)/tomcat."{logrotate,service} "$RPMBUILD/SOURCES/"
-        cp "$(pwd)/tomcat_tr.spec" "$RPMBUILD/SPECS/" || { echo "Could not copy spec files: $?"; exit 1; }
+        cp "$TR_DIR/build/tomcat."{logrotate,service} "$RPMBUILD/SOURCES/"
+        cp "$TR_DIR/build/tomcat_tr.spec" "$RPMBUILD/SPECS/" || { echo "Could not copy spec files: $?"; exit 1; }
 
         echo "The build area has been initialized."
 }

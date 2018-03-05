@@ -31,8 +31,10 @@ RUN	yum -y install \
 
 ### traffic_router specific requirements
 RUN	yum -y install \
-		which && \
+		which  \
+                wget && \
 	yum -y clean all
+
 
 WORKDIR /opt
 RUN curl -L -b "oraclelicense=a" http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz | tar xzf - && \
@@ -46,9 +48,12 @@ RUN alternatives --install /usr/bin/java java /opt/java/bin/java 2 && \
     alternatives --set jar /opt/java/bin/jar && \
     alternatives --set javac /opt/java/bin/javac && \
     alternatives --install /usr/bin/mvn mvn /opt/maven/bin/mvn 1
+
 ###
 
 ADD infrastructure/docker/build/clean_build.sh /
+CMD /clean_build.sh tomcat_tr
 CMD /clean_build.sh traffic_router
+
 
 # vi:syntax=Dockerfile
