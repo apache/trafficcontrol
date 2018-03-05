@@ -51,141 +51,141 @@ func SetupTestData(*sql.DB) error {
 
 	err = SetupTenants(db)
 	if err != nil {
-		fmt.Printf("\nError setting up tenants %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+		fmt.Printf("\nError setting up tenants %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 		os.Exit(1)
 	}
 
 	err = SetupCDNs(db)
 	if err != nil {
-		fmt.Printf("\nError setting up cdns %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+		fmt.Printf("\nError setting up cdns %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 		os.Exit(1)
 	}
 
 	err = SetupRoles(db)
 	if err != nil {
-		fmt.Printf("\nError setting up roles %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+		fmt.Printf("\nError setting up roles %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 		os.Exit(1)
 	}
 
 	err = SetupTmusers(db)
 	if err != nil {
-		fmt.Printf("\nError setting up tm_user %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+		fmt.Printf("\nError setting up tm_user %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 		os.Exit(1)
 	}
 
 	err = SetupStatuses(db)
 	if err != nil {
-		fmt.Printf("\nError setting up status %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+		fmt.Printf("\nError setting up status %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 		os.Exit(1)
 	}
 
 	err = SetupTypes(db)
 	if err != nil {
-		fmt.Printf("\nError setting up type %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+		fmt.Printf("\nError setting up type %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 		os.Exit(1)
 	}
 
 	err = SetupDivisions(db)
 	if err != nil {
-		fmt.Printf("\nError setting up division %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+		fmt.Printf("\nError setting up division %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 		os.Exit(1)
 	}
 
 	err = SetupRegions(db)
 	if err != nil {
-		fmt.Printf("\nError setting up region %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+		fmt.Printf("\nError setting up region %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 		os.Exit(1)
 	}
 
 	/*
 		err = SetupParameters(db)
 		if err != nil {
-			fmt.Printf("\nError setting up parameter %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+			fmt.Printf("\nError setting up parameter %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 			os.Exit(1)
 		}
 
 		err = SetupProfiles(db)
 		if err != nil {
-			fmt.Printf("\nError setting up profile %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+			fmt.Printf("\nError setting up profile %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 			os.Exit(1)
 		}
 
 		err = SetupProfileParameters(db)
 		if err != nil {
-			fmt.Printf("\nError setting up parameter %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+			fmt.Printf("\nError setting up parameter %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 			os.Exit(1)
 		}
 
 		err = SetupCacheGroups(db)
 		if err != nil {
-			fmt.Printf("\nError setting up cachegroup %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+			fmt.Printf("\nError setting up cachegroup %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 			os.Exit(1)
 		}
 
 
 		err = SetupPhysLocations(db)
 		if err != nil {
-			fmt.Printf("\nError setting up phys_location %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+			fmt.Printf("\nError setting up phys_location %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 			os.Exit(1)
 		}
 
 		err = SetupServers(db)
 		if err != nil {
-			fmt.Printf("\nError setting up server %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+			fmt.Printf("\nError setting up server %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 			os.Exit(1)
 		}
 
 		err = SetupAsns(db)
 		if err != nil {
-			fmt.Printf("\nError setting up asn %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+			fmt.Printf("\nError setting up asn %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 			os.Exit(1)
 		}
 
 		err = SetupDeliveryServices(db)
 		if err != nil {
-			fmt.Printf("\nError setting up deliveryservice %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+			fmt.Printf("\nError setting up deliveryservice %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 			os.Exit(1)
 		}
 
 		err = SetupRegexes(db)
 		if err != nil {
-			fmt.Printf("\nError setting up regex %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+			fmt.Printf("\nError setting up regex %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 			os.Exit(1)
 		}
 
 		err = SetupDeliveryServiceRegexes(db)
 		if err != nil {
-			fmt.Printf("\nError setting up deliveryservice_regex %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+			fmt.Printf("\nError setting up deliveryservice_regex %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 			os.Exit(1)
 		}
 
 		err = SetupDeliveryServiceTmUsers(db)
 		if err != nil {
-			fmt.Printf("\nError setting up deliveryservice_tmuser %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+			fmt.Printf("\nError setting up deliveryservice_tmuser %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 			os.Exit(1)
 		}
 
 		err = SetupDeliveryServiceServers(db)
 		if err != nil {
-			fmt.Printf("\nError setting up deliveryservice_server %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+			fmt.Printf("\nError setting up deliveryservice_server %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 			os.Exit(1)
 		}
 
 		err = SetupJobStatuses(db)
 		if err != nil {
-			fmt.Printf("\nError setting up job_status %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+			fmt.Printf("\nError setting up job_status %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 			os.Exit(1)
 		}
 
 		err = SetupJobAgents(db)
 		if err != nil {
-			fmt.Printf("\nError setting up job_agent %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+			fmt.Printf("\nError setting up job_agent %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 			os.Exit(1)
 		}
 
 		err = SetupJobs(db)
 		if err != nil {
-			fmt.Printf("\nError setting up job %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+			fmt.Printf("\nError setting up job %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 			os.Exit(1)
 		}
 	*/
@@ -222,10 +222,13 @@ func SetupTmusers(db *sql.DB) error {
 
 	// Creates users in different tenants
 	sqlStmt := `
-INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.AdminUser + `','` + encryptedPassword + `','` + encryptedPassword + `', 4, 2);
-INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.PortalUser + `','` + encryptedPassword + `','` + encryptedPassword + `', 3, 3);
+INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Disallowed + `','` + encryptedPassword + `','` + encryptedPassword + `', 1, 3);
+INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.ReadOnly + `','` + encryptedPassword + `','` + encryptedPassword + `', 2, 3);
+INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Operations + `','` + encryptedPassword + `','` + encryptedPassword + `', 3, 3);
+INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Admin + `','` + encryptedPassword + `','` + encryptedPassword + `', 4, 2);
+INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Portal + `','` + encryptedPassword + `','` + encryptedPassword + `', 5, 3);
+INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Federation + `','` + encryptedPassword + `','` + encryptedPassword + `', 7, 3);
 `
-	fmt.Printf("sqlStmt ---> %v\n", sqlStmt)
 	err = execSQL(db, sqlStmt, "tm_user")
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)

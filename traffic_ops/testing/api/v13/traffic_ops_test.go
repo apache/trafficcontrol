@@ -65,25 +65,25 @@ func TestMain(m *testing.M) {
 	var db *sql.DB
 	db, err = OpenConnection()
 	if err != nil {
-		fmt.Printf("\nError opening connection to %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+		fmt.Printf("\nError opening connection to %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOpsDB.User, err)
 		os.Exit(1)
 	}
 	defer db.Close()
 
 	err = Teardown(db)
 	if err != nil {
-		fmt.Printf("\nError tearingdown data %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+		fmt.Printf("\nError tearingdown data %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOpsDB.User, err)
 		os.Exit(1)
 	}
 
 	err = SetupTestData(db)
 	if err != nil {
-		fmt.Printf("\nError setting up data %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.AdminUser, err)
+		fmt.Printf("\nError setting up data %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOpsDB.User, err)
 		os.Exit(1)
 	}
 
 	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	SetupSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.AdminUser, Config.TrafficOps.UserPassword)
+	SetupSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 
 	// Now run the test case
 	rc := m.Run()
