@@ -16,6 +16,7 @@ package v13
 */
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/client/v13"
@@ -31,9 +32,6 @@ func SetupSession(toReqTimeout time.Duration, toURL string, toUser string, toPas
 
 	toReqTimeout = time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
 	TOSession, _, err = v13.LoginWithAgent(toURL, toUser, toPass, true, "to-api-v13-client-tests", true, toReqTimeout)
-	if err != nil {
-		return err
-	}
 	return err
 }
 
@@ -41,21 +39,17 @@ func TeardownSession(toReqTimeout time.Duration, toURL string, toUser string, to
 	var err error
 	toReqTimeout = time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
 	TOSession, _, err = v13.LogoutWithAgent(toURL, toUser, toPass, true, "to-api-v13-client-tests", true, toReqTimeout)
-	if err != nil {
-		return err
-	}
 
 	return err
 }
 
 func SwitchSession(toReqTimeout time.Duration, toURL string, toOldUser string, toOldPass string, toNewUser string, toNewPass string) error {
 	err := TeardownSession(toReqTimeout, toURL, toOldUser, toOldPass)
+	fmt.Printf("err ---> %v\n", err)
 	if err != nil {
 		return err
 	}
+
 	err = SetupSession(toReqTimeout, toURL, toNewUser, toNewPass)
-	if err != nil {
-		return err
-	}
 	return err
 }
