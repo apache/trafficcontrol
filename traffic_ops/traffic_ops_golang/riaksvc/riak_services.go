@@ -1,4 +1,4 @@
-package main
+package riaksvc
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,31 +20,28 @@ package main
  */
 
 import (
+	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
+	"io/ioutil"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
-	"github.com/lestrrat/go-jwx/jwk"
 )
 
 // RiakPort is the port RIAK is listening on.
 const RiakPort = 8087
-
-// CDNURIKeysBucket is the namespace or bucket used for CDN URI signing keys.
-const CDNURIKeysBucket = "cdn_uri_sig_keys"
-
-// SSLKeysBucket ...
-const SSLKeysBucket = "ssl"
 
 // 5 second timeout
 const timeOut = time.Second * 5
 
 // MaxCommandExecutionAttempts ...
 const MaxCommandExecutionAttempts = 5
+
+type AuthOptions riak.AuthOptions
 
 // StorageCluster ...
 type StorageCluster interface {
@@ -73,14 +70,24 @@ func (ri RiakStorageCluster) Execute(command riak.Command) error {
 	return ri.Cluster.Execute(command)
 }
 
-// URISignerKeyset is the container for the CDN URI signing keys
-type URISignerKeyset struct {
-	RenewalKid *string               `json:"renewal_kid"`
-	Keys       []jwk.EssentialHeader `json:"keys"`
+func GetRiakConfig(riakConfigFile string) (bool, *riak.AuthOptions, error) {
+	riakConfBytes, err := ioutil.ReadFile(riakConfigFile)
+	if err != nil {
+		return false, nil, fmt.Errorf("reading riak conf '%v': %v", riakConfigFile, err)
+	}
+
+	rconf := &riak.AuthOptions{}
+	rconf.TlsConfig = &tls.Config{}
+	err = json.Unmarshal([]byte(riakConfBytes), &rconf)
+	if err != nil {
+		return false, nil, fmt.Errorf("Unmarshalling riak conf '%v': %v", riakConfigFile, err)
+	}
+
+	return true, rconf, nil
 }
 
 // deletes an object from riak storage
-func deleteObject(key string, bucket string, cluster StorageCluster) error {
+func DeleteObject(key string, bucket string, cluster StorageCluster) error {
 	if cluster == nil {
 		return errors.New("ERROR: No valid cluster on which to execute a command")
 	}
@@ -105,7 +112,7 @@ func deleteObject(key string, bucket string, cluster StorageCluster) error {
 }
 
 // fetch an object from riak storage
-func fetchObjectValues(key string, bucket string, cluster StorageCluster) ([]*riak.Object, error) {
+func FetchObjectValues(key string, bucket string, cluster StorageCluster) ([]*riak.Object, error) {
 	if cluster == nil {
 		return nil, errors.New("ERROR: No valid cluster on which to execute a command")
 	}
@@ -132,7 +139,7 @@ func fetchObjectValues(key string, bucket string, cluster StorageCluster) ([]*ri
 }
 
 // saves an object to riak storage
-func saveObject(obj *riak.Object, bucket string, cluster StorageCluster) error {
+func SaveObject(obj *riak.Object, bucket string, cluster StorageCluster) error {
 	if cluster == nil {
 		return errors.New("ERROR: No valid cluster on which to execute a command")
 	}
@@ -157,15 +164,15 @@ func saveObject(obj *riak.Object, bucket string, cluster StorageCluster) error {
 }
 
 // returns a riak cluster of online riak nodes.
-func getRiakCluster(db *sqlx.DB, cfg Config) (StorageCluster, error) {
+func GetRiakCluster(db *sqlx.DB, authOptions *riak.AuthOptions) (StorageCluster, error) {
 	riakServerQuery := `
-		SELECT s.host_name, s.domain_name FROM server s 
-		INNER JOIN type t on s.type = t.id 
-		INNER JOIN status st on s.status = st.id 
+		SELECT s.host_name, s.domain_name FROM server s
+		INNER JOIN type t on s.type = t.id
+		INNER JOIN status st on s.status = st.id
 		WHERE t.name = 'RIAK' AND st.name = 'ONLINE'
 		`
 
-	if cfg.RiakAuthOptions == nil {
+	if authOptions == nil {
 		return nil, errors.New("ERROR: no riak auth information from riak.conf, cannot authenticate to any riak servers")
 	}
 
@@ -185,7 +192,7 @@ func getRiakCluster(db *sqlx.DB, cfg Config) (StorageCluster, error) {
 		addr := fmt.Sprintf("%s.%s:%d", s.HostName, s.DomainName, RiakPort)
 		nodeOpts := &riak.NodeOptions{
 			RemoteAddress: addr,
-			AuthOptions:   cfg.RiakAuthOptions,
+			AuthOptions:   authOptions,
 		}
 		nodeOpts.AuthOptions.TlsConfig.ServerName = fmt.Sprintf("%s.%s", s.HostName, s.DomainName)
 		n, err := riak.NewNode(nodeOpts)
@@ -207,51 +214,4 @@ func getRiakCluster(db *sqlx.DB, cfg Config) (StorageCluster, error) {
 	cluster, err := riak.NewCluster(opts)
 
 	return RiakStorageCluster{Cluster: cluster}, err
-}
-
-// validates URISigingKeyset json.
-func validateURIKeyset(msg map[string]URISignerKeyset) error {
-	var renewalKidFound int
-	var renewalKidMatched = false
-
-	for key, value := range msg {
-		issuer := key
-		renewalKid := value.RenewalKid
-		if issuer == "" {
-			return errors.New("JSON Keyset has no issuer")
-		}
-
-		if renewalKid != nil {
-			renewalKidFound++
-		}
-
-		for _, skey := range value.Keys {
-			if skey.Algorithm == "" {
-				return errors.New("A Key has no algorithm, alg, specified")
-			}
-			if skey.KeyID == "" {
-				return errors.New("A Key has no key id, kid, specified")
-			}
-			if renewalKid != nil && strings.Compare(*renewalKid, skey.KeyID) == 0 {
-				renewalKidMatched = true
-			}
-		}
-	}
-
-	// should only have one renewal_kid
-	switch renewalKidFound {
-	case 0:
-		return errors.New("No renewal_kid was found in any keyset")
-	case 1: // okay, this is what we want
-		break
-	default:
-		return errors.New("More than one renewal_kid was found in the keysets")
-	}
-
-	// the renewal_kid should match the kid of one key
-	if !renewalKidMatched {
-		return errors.New("No key was found with a kid that matches the renewal kid")
-	}
-
-	return nil
 }
