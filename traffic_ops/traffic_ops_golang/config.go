@@ -25,9 +25,8 @@ import (
 	"io/ioutil"
 	"net/url"
 
-	"crypto/tls"
-
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/basho/riak-go-client"
 )
 
@@ -136,20 +135,10 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string) (Con
 	}
 
 	if riakConfPath != "" {
-		riakConfBytes, err := ioutil.ReadFile(riakConfPath)
+		cfg.RiakEnabled, cfg.RiakAuthOptions, err = riaksvc.GetRiakConfig(riakConfPath)
 		if err != nil {
-			cfg.RiakAuthOptions = nil
-			return cfg, fmt.Errorf("reading riak conf '%v': %v", riakConfPath, err)
+			return Config{}, fmt.Errorf("parsing config '%s': %v", riakConfPath, err)
 		}
-		riakconf, err := getRiakAuthOptions(string(riakConfBytes))
-		if err != nil {
-			cfg.RiakAuthOptions = nil
-			return cfg, fmt.Errorf("parsing riak conf '%v': %v", riakConfBytes, err)
-		}
-		cfg.RiakAuthOptions = riakconf
-		cfg.RiakEnabled = true
-	} else {
-		cfg.RiakEnabled = false
 	}
 
 	return cfg, err
@@ -171,13 +160,6 @@ func (c Config) GetKeyPath() string {
 		return v[0]
 	}
 	return ""
-}
-
-func getRiakAuthOptions(s string) (*riak.AuthOptions, error) {
-	rconf := &riak.AuthOptions{}
-	rconf.TlsConfig = &tls.Config{}
-	err := json.Unmarshal([]byte(s), &rconf)
-	return rconf, err
 }
 
 const (
