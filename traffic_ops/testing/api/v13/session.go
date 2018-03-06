@@ -16,7 +16,6 @@ package v13
 */
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/client/v13"
@@ -45,10 +44,8 @@ func TeardownSession(toReqTimeout time.Duration, toURL string, toUser string, to
 
 func SwitchSession(toReqTimeout time.Duration, toURL string, toOldUser string, toOldPass string, toNewUser string, toNewPass string) error {
 	err := TeardownSession(toReqTimeout, toURL, toOldUser, toOldPass)
-	fmt.Printf("err ---> %v\n", err)
-	if err != nil {
-		return err
-	}
+
+	// intentially skip errors so that we can continue with setup in the event of a 403
 
 	err = SetupSession(toReqTimeout, toURL, toNewUser, toNewPass)
 	return err
