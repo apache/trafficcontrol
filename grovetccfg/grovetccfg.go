@@ -753,6 +753,7 @@ func createRulesOld(
 					// fmt.Fprintf(os.Stderr, "HTTPS delivery service: "+ds.XMLID+" certificate %+v\n", cert)
 				}
 
+				rule.PluginsShared = map[string]json.RawMessage{}
 				for _, parent := range parents {
 					to, proxyURLStr := buildTo(parent, protocolStr.To, ds.OrgServerFQDN, dsType)
 					proxyURL, err := url.Parse(proxyURLStr)
@@ -783,6 +784,11 @@ func createRulesOld(
 					rule.Plugins = map[string]interface{}{}
 					rule.Plugins["modify_headers"] = toClientHeaders
 					rule.Plugins["modify_parent_request_headers"] = toOriginHeaders
+					remapTextJSON, err := json.Marshal(ds.RemapText)
+					if err != nil {
+						return remap.RemapRules{}, fmt.Errorf("parsing deliveryservice '%v' remap text '%v' marshalling JSON: %v", ds.XMLID, ds.RemapText, err)
+					}
+					rule.PluginsShared[web.RemapTextKey] = remapTextJSON
 				}
 				rules = append(rules, rule)
 			}
@@ -938,11 +944,6 @@ func makeModHdrs(edgeHRW string, remapTXT string) (web.ModHdrs, web.ModHdrs, err
 			}
 		}
 	}
-	// When we have a Lua plugin to drop the Range Requests, do that, but with headers.
-	// TODO move to plugin
-	if strings.Contains(remapTXT, "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/range_request_") {
-		toClientList.Set = append(toClientList.Set, web.Hdr{Name: "Accept-Ranges", Value: "None"})
-		toOriginList.Drop = append(toOriginList.Drop, "Range")
-	}
+
 	return toClientList, toOriginList, nil
 }

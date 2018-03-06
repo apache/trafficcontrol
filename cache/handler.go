@@ -238,7 +238,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	cacheObj, ok := cache.Get(cacheKey)
 	if !ok {
 		log.Debugf("cache.Handler.ServeHTTP: '%v' not in cache\n", cacheKey)
-		beforeParentRequestData := plugin.BeforeParentRequestData{Req: r}
+		beforeParentRequestData := plugin.BeforeParentRequestData{Req: r, RemapRule: remappingProducer.Name()}
 		h.plugins.OnBeforeParentRequest(remappingProducer.PluginCfg(), pluginContext, beforeParentRequestData)
 		cacheObj, err := retrier.Get(r, nil)
 		if err != nil {
@@ -255,7 +255,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		responder.SetResponse(&codePtr, &hdrsPtr, &bodyPtr, connectionClose)
 		responder.OriginReqSuccess = true
 		responder.ProxyStr = cacheObj.ProxyURL
-		beforeRespData := plugin.BeforeRespondData{Req: r, CacheObj: cacheObj, Code: &codePtr, Hdr: &hdrsPtr, Body: &bodyPtr}
+		beforeRespData := plugin.BeforeRespondData{Req: r, CacheObj: cacheObj, Code: &codePtr, Hdr: &hdrsPtr, Body: &bodyPtr, RemapRule: remappingProducer.Name()}
 		h.plugins.OnBeforeRespond(remappingProducer.PluginCfg(), pluginContext, beforeRespData)
 		responder.Do()
 		return
@@ -265,7 +265,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	canReuseStored := remap.CanReuseStored(reqHeaders, cacheObj.RespHeaders, reqCacheControl, cacheObj.RespCacheControl, cacheObj.ReqHeaders, cacheObj.ReqRespTime, cacheObj.RespRespTime, h.strictRFC)
 
 	if canReuseStored != remapdata.ReuseCan { // run the BeforeParentRequest hook for revalidations / ReuseCannot
-		beforeParentRequestData := plugin.BeforeParentRequestData{Req: r}
+		beforeParentRequestData := plugin.BeforeParentRequestData{Req: r, RemapRule: remappingProducer.Name()}
 		h.plugins.OnBeforeParentRequest(remappingProducer.PluginCfg(), pluginContext, beforeParentRequestData)
 	}
 
@@ -307,7 +307,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	responder.OriginCode = cacheObj.OriginCode
 	responder.OriginBytes = cacheObj.Size
 	responder.ProxyStr = cacheObj.ProxyURL
-	beforeRespData := plugin.BeforeRespondData{Req: r, CacheObj: cacheObj, Code: &codePtr, Hdr: &hdrsPtr, Body: &bodyPtr}
+	beforeRespData := plugin.BeforeRespondData{Req: r, CacheObj: cacheObj, Code: &codePtr, Hdr: &hdrsPtr, Body: &bodyPtr, RemapRule: remappingProducer.Name()}
 	h.plugins.OnBeforeRespond(remappingProducer.PluginCfg(), pluginContext, beforeRespData)
 	responder.Do()
 }

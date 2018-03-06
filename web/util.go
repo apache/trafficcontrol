@@ -185,3 +185,6 @@ func ParseHTTPDate(d string) (time.Time, bool) {
 	return time.Time{}, false
 
 }
+
+// RemapTextKey is the plugin shared data key inserted by grovetccfg for the Remap Line of the Delivery Service in Traffic Control, Traffic Ops.
+const RemapTextKey = "remap_text"

@@ -136,7 +136,7 @@ func main() {
 	readTimeout := time.Duration(cfg.ServerReadTimeoutMS) * time.Millisecond
 	writeTimeout := time.Duration(cfg.ServerWriteTimeoutMS) * time.Millisecond
 
-	plugins.OnStartup(remapper.PluginCfg(), pluginContext, plugin.StartupData{Config: cfg})
+	plugins.OnStartup(remapper.PluginCfg(), pluginContext, plugin.StartupData{Config: cfg, Shared: remapper.PluginSharedCfg()})
 
 	// TODO add config to not serve HTTP (only HTTPS). If port is not set?
 	httpServer := startServer(httpHandler, httpListener, httpConnStateCallback, cfg.Port, idleTimeout, readTimeout, writeTimeout, "http")
