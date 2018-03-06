@@ -1890,10 +1890,11 @@ sub server_cache_dot_config {
 		if ( $ds->{type} eq "HTTP_NO_CACHE" ) {
 			my $org_fqdn = $ds->{org};
 			$org_fqdn =~ s/https?:\/\///;
-			$org_fqdn =~ m/.*?:(\d+).*/;
-			my $org_port = $1;
+			$org_fqdn =~ m/(.*?):(\d+).*/;
+			my $org_port = $2;
 
 			if (defined($org_port)) {
+				$org_fqdn = $1;
 				$text .= "dest_domain=" . $org_fqdn . " port=" . $org_port . " scheme=http action=never-cache\n";
 			} else {
 				$text .= "dest_domain=" . $org_fqdn . " scheme=http action=never-cache\n";
@@ -1925,10 +1926,11 @@ sub profile_cache_dot_config {
 		if ( $ds->{type} eq "HTTP_NO_CACHE" ) {
 			my $org_fqdn = $ds->{org};
 			$org_fqdn =~ s/https?:\/\///;
-			$org_fqdn =~ m/.*?:(\d+).*/;
-			my $org_port = $1;
+			$org_fqdn =~ m/(.*?):(\d+).*/;
+			my $org_port = $2;
 			
 			if (defined($org_port)) {
+				$org_fqdn = $1;
 				$text .= "dest_domain=" . $org_fqdn . " port=" . $org_port . " scheme=http action=never-cache\n";
 			} else {
 				$text .= "dest_domain=" . $org_fqdn . " scheme=http action=never-cache\n";
