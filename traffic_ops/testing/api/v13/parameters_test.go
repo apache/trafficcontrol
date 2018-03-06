@@ -16,6 +16,7 @@
 package v13
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -23,6 +24,9 @@ import (
 )
 
 func TestParameters(t *testing.T) {
+
+	//toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
+	//SwitchSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword, Config.TrafficOps.Users.Portal, Config.TrafficOps.UserPassword)
 
 	CreateTestParameters(t)
 	UpdateTestParameters(t)
@@ -82,30 +86,50 @@ func GetTestParameters(t *testing.T) {
 	}
 }
 
+func DeleteTestParametersParallel(t *testing.T) {
+
+	var wg sync.WaitGroup
+	for _, pl := range testData.Parameters {
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			DeleteTestParameter(t, pl)
+		}()
+
+	}
+	wg.Wait()
+}
+
 func DeleteTestParameters(t *testing.T) {
 
 	for _, pl := range testData.Parameters {
-		// Retrieve the Parameter by name so we can get the id for the Update
-		resp, _, err := TOSession.GetParameterByNameAndConfigFile(pl.Name, pl.ConfigFile)
+		DeleteTestParameter(t, pl)
+	}
+}
+
+func DeleteTestParameter(t *testing.T, pl tc.Parameter) {
+
+	// Retrieve the Parameter by name so we can get the id for the Update
+	resp, _, err := TOSession.GetParameterByNameAndConfigFile(pl.Name, pl.ConfigFile)
+	if err != nil {
+		t.Errorf("cannot GET Parameter by name: %v - %v\n", pl.Name, err)
+	}
+	if len(resp) > 0 {
+		respParameter := resp[0]
+
+		delResp, _, err := TOSession.DeleteParameterByID(respParameter.ID)
 		if err != nil {
-			t.Errorf("cannot GET Parameter by name: %v - %v\n", pl.Name, err)
+			t.Errorf("cannot DELETE Parameter by name: %v - %v\n", err, delResp)
 		}
-		if len(resp) > 0 {
-			respParameter := resp[0]
 
-			delResp, _, err := TOSession.DeleteParameterByID(respParameter.ID)
-			if err != nil {
-				t.Errorf("cannot DELETE Parameter by name: %v - %v\n", err, delResp)
-			}
-
-			// Retrieve the Parameter to see if it got deleted
-			pls, _, err := TOSession.GetParameterByNameAndConfigFile(pl.Name, pl.ConfigFile)
-			if err != nil {
-				t.Errorf("error deleting Parameter name: %s\n", err.Error())
-			}
-			if len(pls) > 0 {
-				t.Errorf("expected Parameter Name: %s and ConfigFile: %s to be deleted\n", pl.Name, pl.ConfigFile)
-			}
+		// Retrieve the Parameter to see if it got deleted
+		pls, _, err := TOSession.GetParameterByNameAndConfigFile(pl.Name, pl.ConfigFile)
+		if err != nil {
+			t.Errorf("error deleting Parameter name: %s\n", err.Error())
+		}
+		if len(pls) > 0 {
+			t.Errorf("expected Parameter Name: %s and ConfigFile: %s to be deleted\n", pl.Name, pl.ConfigFile)
 		}
 	}
 }
