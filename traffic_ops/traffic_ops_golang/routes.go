@@ -36,6 +36,7 @@ import (
 	dsrequest "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/division"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/physlocation"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/ping"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/region"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/status"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/systeminfo"
@@ -142,7 +143,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.3, http.MethodGet, `parameters/?(\.json)?$`, parametersHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Ping
-		{1.2, http.MethodGet, `ping$`, pingHandler(), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.2, http.MethodGet, `ping$`, ping.PingHandler(), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Servers
 		{1.2, http.MethodGet, `servers/?(\.json)?$`, serversHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},

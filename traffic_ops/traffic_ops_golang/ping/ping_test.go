@@ -1,4 +1,4 @@
-package main
+package ping
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,15 +20,25 @@ package main
  */
 
 import (
-	"encoding/json"
 	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 // pingHandler simply returns a canned response to show that the server is responding
-func pingHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		m := map[string]string{"ping": "pong"}
-		enc := json.NewEncoder(w)
-		enc.Encode(m)
+func TestPingHandler(t *testing.T) {
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("GET", "ping", nil)
+	if err != nil {
+		t.Error("Error creating new request")
+	}
+
+	PingHandler()(w, r)
+
+	// note the newline...
+	expected := `{"ping":"pong"}
+`
+	if w.Body.String() != expected {
+		t.Error("Expected body", expected, "got", w.Body.String())
 	}
 }
