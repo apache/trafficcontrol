@@ -41,6 +41,8 @@ type Funcs struct {
 type StartupData struct {
 	Config  config.Config
 	Context *interface{}
+	// Shared is the "plugins_shared" data for all rules. This is a `map[ruleName][key]value`. Keys and values are arbitrary data. This allows plugins to do pre-processing on the config, and store computed data in the context, to save processing during requests.
+	Shared map[string]map[string]json.RawMessage
 }
 
 type OnRequestData struct {
@@ -56,8 +58,9 @@ type OnRequestData struct {
 }
 
 type BeforeParentRequestData struct {
-	Req     *http.Request
-	Context *interface{}
+	Req       *http.Request
+	RemapRule string
+	Context   *interface{}
 }
 
 // BeforeRespondData holds the data passed to plugins. The objects pointed to MAY NOT be modified, however, the location pointed to may be changed for the Code, Hdr, and Body. That iss, `*d.Hdr = myHdr` is ok, but `d.Hdr.Add("a", "b") is not.
@@ -65,11 +68,12 @@ type BeforeParentRequestData struct {
 type BeforeRespondData struct {
 	Req *http.Request
 	// CacheObj is the object to be cached, containing information about the origin request. The code, headers, and body should not be considered authoritative. Look at Code, Hdr, and Body instead, as the actual values about to be sent. Note CacheObj may be nil, if an error occurred (e.g. the Origin failed to respond).
-	CacheObj *cacheobj.CacheObj
-	Code     *int
-	Hdr      *http.Header
-	Body     *[]byte
-	Context  *interface{}
+	CacheObj  *cacheobj.CacheObj
+	Code      *int
+	Hdr       *http.Header
+	Body      *[]byte
+	RemapRule string
+	Context   *interface{}
 }
 
 type AfterRespondData struct {

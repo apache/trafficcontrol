@@ -3,6 +3,7 @@ package remapdata
 // remapdata exists as a package to avoid import cycles, for packages that need remap objects and are also included by remap.
 
 import (
+	"encoding/json"
 	"net"
 	"net/url"
 	"strings"
@@ -88,9 +89,10 @@ type RemapRuleBase struct {
 	ConnectionClose    bool            `json:"connection-close"`
 	QueryString        QueryStringRule `json:"query-string"`
 	// ConcurrentRuleRequests is the number of concurrent requests permitted to a remap rule, that is, to an origin. If this is 0, the global config is used.
-	ConcurrentRuleRequests int  `json:"concurrent_rule_requests"`
-	RetryNum               *int `json:"retry_num"`
-	DSCP                   int  `json:"dscp"`
+	ConcurrentRuleRequests int                        `json:"concurrent_rule_requests"`
+	RetryNum               *int                       `json:"retry_num"`
+	DSCP                   int                        `json:"dscp"`
+	PluginsShared          map[string]json.RawMessage `json:"plugins_shared"`
 }
 
 type RemapRule struct {
