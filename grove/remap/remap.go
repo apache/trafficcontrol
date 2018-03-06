@@ -27,6 +27,8 @@ type HTTPRequestRemapper interface {
 	RemappingProducer(r *http.Request, scheme string) (*RemappingProducer, error)
 	StatRules() remapdata.RemapRulesStats
 	PluginCfg() map[string]interface{} // global plugins, outside the individual remap rules
+	// PluginSharedCfg returns the plugins_shared, for every remap rule. This gives plugins a chance on startup to precompute data for each remap rule, store it in the Context, and save computation during requests.
+	PluginSharedCfg() map[string]map[string]json.RawMessage
 }
 
 type simpleHTTPRequestRemapper struct {
@@ -37,6 +39,9 @@ type simpleHTTPRequestRemapper struct {
 func (hr simpleHTTPRequestRemapper) Rules() []remapdata.RemapRule         { return hr.remapper.Rules() }
 func (hr simpleHTTPRequestRemapper) StatRules() remapdata.RemapRulesStats { return *hr.stats }
 func (hr simpleHTTPRequestRemapper) PluginCfg() map[string]interface{}    { return hr.remapper.PluginCfg() }
+func (hr simpleHTTPRequestRemapper) PluginSharedCfg() map[string]map[string]json.RawMessage {
+	return hr.remapper.PluginSharedCfg()
+}
 
 // getFQDN returns the FQDN. It tries to get the FQDN from a Remap Rule. Remap Rules should always begin with the scheme, e.g. `http://`. If the given rule does not begin with a valid scheme, behavior is undefined.
 // TODO test
@@ -175,7 +180,9 @@ type Remapper interface {
 	Remap(uri string) (remapdata.RemapRule, bool)
 	// Rules returns the unique names of every remap rule.
 	Rules() []remapdata.RemapRule
-	PluginCfg() map[string]interface{} // global plugins, outside the individual remap rules
+	// PluginCfg returns the global plugins, outside the individual remap rules
+	PluginCfg() map[string]interface{}
+	PluginSharedCfg() map[string]map[string]json.RawMessage
 }
 
 // TODO change to use a prefix tree, for speed
@@ -185,6 +192,17 @@ type literalPrefixRemapper struct {
 }
 
 func (r literalPrefixRemapper) PluginCfg() map[string]interface{} { return r.plugins }
+
+// PluginSharedCfg returns a map of remap rule names, to a map of keys to arbitrary JSON values.
+// For example, if a JSON rule object with the name "foo" contains the key and value `"plugins_shared": {"bar": "baz"}`, the returned map will contain m["foo"]["bar"]"baz". The value may be any JSON type.
+func (r literalPrefixRemapper) PluginSharedCfg() map[string]map[string]json.RawMessage {
+	rules := r.Rules()
+	cfg := make(map[string]map[string]json.RawMessage, len(rules))
+	for _, rule := range rules {
+		cfg[rule.Name] = rule.PluginsShared
+	}
+	return cfg
+}
 
 // Remap returns the remapped string, the remap rule name, the remap rule's options, and whether a remap was found
 func (r literalPrefixRemapper) Remap(s string) (remapdata.RemapRule, bool) {
@@ -214,7 +232,8 @@ type RemapRulesStatsJSON struct {
 }
 
 type RemapRulesBase struct {
-	RetryNum *int `json:"retry_num"`
+	RetryNum      *int                       `json:"retry_num"`
+	PluginsShared map[string]json.RawMessage `json:"plugins_shared"`
 }
 
 type RemapRulesJSON struct {
@@ -359,6 +378,10 @@ func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.LoadFunc,
 
 		if rule.RetryNum == nil {
 			rule.RetryNum = remapRules.RetryNum
+		}
+
+		if rule.PluginsShared == nil {
+			rule.PluginsShared = remapRules.PluginsShared
 		}
 
 		cacheName := "" // default string is the default cache
