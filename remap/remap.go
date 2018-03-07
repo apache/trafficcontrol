@@ -62,6 +62,24 @@ func getFQDN(rule string) string {
 	return rule
 }
 
+func NewRemappingTransport(reqTimeout time.Duration, reqKeepAlive time.Duration, reqMaxIdleConns int, reqIdleConnTimeout time.Duration) *http.Transport {
+	return &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   reqTimeout,
+			KeepAlive: reqKeepAlive,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          reqMaxIdleConns,
+		IdleConnTimeout:       reqIdleConnTimeout,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		Dial: func(network, address string) (net.Conn, error) {
+			d := net.Dialer{DualStack: true, FallbackDelay: time.Millisecond * 50}
+			return d.Dial(network, address)
+		},
+	}
+}
+
 type Remapping struct {
 	Request         *http.Request
 	ProxyURL        *url.URL
@@ -72,6 +90,7 @@ type Remapping struct {
 	RetryNum        int
 	RetryCodes      map[int]struct{}
 	Cache           icache.Cache
+	Transport       *http.Transport
 }
 
 // RemappingProducer takes an HTTP Request and returns a Remapping to be used for that request.
@@ -138,7 +157,7 @@ func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
 		return Remapping{}, false, ErrNoMoreRetries
 	}
 
-	newURI, proxyURL := p.rule.URI(p.oldURI, r.URL.Path, r.URL.RawQuery, p.failures)
+	newURI, proxyURL, transport := p.rule.URI(p.oldURI, r.URL.Path, r.URL.RawQuery, p.failures)
 	p.failures++
 	newReq, err := http.NewRequest(r.Method, newURI, nil)
 	if err != nil {
@@ -163,6 +182,7 @@ func (p *RemappingProducer) GetNext(r *http.Request) (Remapping, bool, error) {
 		RetryNum:        *p.rule.RetryNum,
 		RetryCodes:      p.rule.RetryCodes,
 		Cache:           p.rule.Cache,
+		Transport:       transport,
 	}, retryAllowed, nil
 }
 
@@ -281,7 +301,7 @@ type RemapRuleJSON struct {
 }
 
 // LoadRemapRules returns the loaded rules, the global plugins, the Stats remap rules, and any error
-func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.LoadFunc, caches map[string]icache.Cache) ([]remapdata.RemapRule, map[string]interface{}, *remapdata.RemapRulesStats, error) {
+func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.LoadFunc, caches map[string]icache.Cache, baseTransport *http.Transport) ([]remapdata.RemapRule, map[string]interface{}, *remapdata.RemapRulesStats, error) {
 	fmt.Printf("Loading Remap Rules\n")
 	defer func() {
 		fmt.Printf("Loaded Remap Rules\n")
@@ -399,7 +419,7 @@ func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.LoadFunc,
 		if rule.Deny, err = makeIPNets(jsonRule.Deny); err != nil {
 			return nil, nil, nil, fmt.Errorf("error parsing rule %v denys: %v", rule.Name, err)
 		}
-		if rule.To, err = makeTo(jsonRule.To, rule); err != nil {
+		if rule.To, err = makeTo(jsonRule.To, rule, baseTransport); err != nil {
 			return nil, nil, nil, fmt.Errorf("error parsing rule %v to: %v", rule.Name, err)
 		}
 		if jsonRule.ParentSelection != nil {
@@ -434,7 +454,7 @@ const DefaultReplicas = 1024
 func makeRuleHash(rule remapdata.RemapRule) chash.ATSConsistentHash {
 	h := chash.NewSimpleATSConsistentHash(DefaultReplicas)
 	for _, to := range rule.To {
-		h.Insert(&chash.ATSConsistentHashNode{Name: to.URL, ProxyURL: to.ProxyURL}, *to.Weight)
+		h.Insert(&chash.ATSConsistentHashNode{Name: to.URL, ProxyURL: to.ProxyURL, Transport: to.Transport}, *to.Weight)
 	}
 	if h.First() == nil {
 		fmt.Printf("DEBUGLL makeRuleHash %v NodeMap empty!\n", rule.Name)
@@ -445,7 +465,7 @@ func makeRuleHash(rule remapdata.RemapRule) chash.ATSConsistentHash {
 	return h
 }
 
-func makeTo(tosJSON []RemapRuleToJSON, rule remapdata.RemapRule) ([]remapdata.RemapRuleTo, error) {
+func makeTo(tosJSON []RemapRuleToJSON, rule remapdata.RemapRule, baseTransport *http.Transport) ([]remapdata.RemapRuleTo, error) {
 	tos := make([]remapdata.RemapRuleTo, len(tosJSON))
 	for i, toJSON := range tosJSON {
 		if toJSON.Weight == nil {
@@ -453,13 +473,21 @@ func makeTo(tosJSON []RemapRuleToJSON, rule remapdata.RemapRule) ([]remapdata.Re
 			toJSON.Weight = &w
 		}
 		to := remapdata.RemapRuleTo{RemapRuleToBase: toJSON.RemapRuleToBase}
+
+		to.Transport = baseTransport
 		if toJSON.ProxyURL != nil {
 			proxyURL, err := url.Parse(*toJSON.ProxyURL)
 			if err != nil {
 				return nil, fmt.Errorf("error parsing to %v proxy_url: %v", to.URL, toJSON.ProxyURL)
 			}
 			to.ProxyURL = proxyURL
+			newTransport := *baseTransport
+			if proxyURL != nil && proxyURL.Host != "" {
+				newTransport.Proxy = http.ProxyURL(proxyURL)
+			}
+			to.Transport = &newTransport
 		}
+
 		if toJSON.TimeoutMS != nil {
 			t := time.Duration(*toJSON.TimeoutMS) * time.Millisecond
 			if to.Timeout = &t; *to.Timeout < 0 {
@@ -518,8 +546,8 @@ func makeIPNet(cidr string) (*net.IPNet, error) {
 	return cidrnet, nil
 }
 
-func LoadRemapper(path string, pluginConfigLoaders map[string]plugin.LoadFunc, caches map[string]icache.Cache) (HTTPRequestRemapper, error) {
-	rules, plugins, statRules, err := LoadRemapRules(path, pluginConfigLoaders, caches)
+func LoadRemapper(path string, pluginConfigLoaders map[string]plugin.LoadFunc, caches map[string]icache.Cache, baseTransport *http.Transport) (HTTPRequestRemapper, error) {
+	rules, plugins, statRules, err := LoadRemapRules(path, pluginConfigLoaders, caches, baseTransport)
 	if err != nil {
 		return nil, err
 	}
