@@ -5,6 +5,7 @@ package remapdata
 import (
 	"encoding/json"
 	"net"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -129,40 +130,40 @@ func (r *RemapRule) Allowed(ip net.IP) bool {
 }
 
 // URI takes a request URI and maps it to the real URI to proxy-and-cache. The `failures` parameter indicates how many parents have tried and failed, indicating to skip to the nth hashed parent. Returns the URI to request, and the proxy URL (if any)
-func (r RemapRule) URI(fromURI string, path string, query string, failures int) (string, *url.URL) {
+func (r RemapRule) URI(fromURI string, path string, query string, failures int) (string, *url.URL, *http.Transport) {
 	fromHash := path
 	if r.QueryString.Remap && query != "" {
 		fromHash += "?" + query
 	}
 
 	// fmt.Println("RemapRule.URI fromURI " + fromHash)
-	to, proxyURI := r.uriGetTo(fromHash, failures)
+	to, proxyURI, transport := r.uriGetTo(fromHash, failures)
 	uri := to + fromURI[len(r.From):]
 	if !r.QueryString.Remap {
 		if i := strings.Index(uri, "?"); i != -1 {
 			uri = uri[:i]
 		}
 	}
-	return uri, proxyURI
+	return uri, proxyURI, transport
 }
 
 // uriGetTo is a helper func for URI. It returns the To URL, based on the Parent Selection type. In the event of failure, it logs the error and returns the first parent. Also returns the URL's Proxy URI (if any).
-func (r RemapRule) uriGetTo(fromURI string, failures int) (string, *url.URL) {
+func (r RemapRule) uriGetTo(fromURI string, failures int) (string, *url.URL, *http.Transport) {
 	switch *r.ParentSelection {
 	case ParentSelectionTypeConsistentHash:
 		return r.uriGetToConsistentHash(fromURI, failures)
 	default:
 		log.Errorf("RemapRule.URI: Rule '%v': Unknown Parent Selection type %v - using first URI in rule\n", r.Name, r.ParentSelection)
-		return r.To[0].URL, r.To[0].ProxyURL
+		return r.To[0].URL, r.To[0].ProxyURL, r.To[0].Transport
 	}
 }
 
 // uriGetToConsistentHash is a helper func for URI, uriGetTo. It returns the To URL using Consistent Hashing. In the event of failure, it logs the error and returns the first parent. Also returns the Proxy URI (if any).
-func (r RemapRule) uriGetToConsistentHash(fromURI string, failures int) (string, *url.URL) {
+func (r RemapRule) uriGetToConsistentHash(fromURI string, failures int) (string, *url.URL, *http.Transport) {
 	// fmt.Printf("DEBUGL uriGetToConsistentHash RemapRule %+v\n", r)
 	if r.ConsistentHash == nil {
 		log.Errorf("RemapRule.URI: Rule '%v': Parent Selection Type ConsistentHash, but rule.ConsistentHash is nil! Using first parent\n", r.Name)
-		return r.To[0].URL, r.To[0].ProxyURL
+		return r.To[0].URL, r.To[0].ProxyURL, r.To[0].Transport
 	}
 
 	// fmt.Printf("DEBUGL uriGetToConsistentHash\n")
@@ -173,14 +174,14 @@ func (r RemapRule) uriGetToConsistentHash(fromURI string, failures int) (string,
 		// }
 		// fmt.Printf("DEBUGL uriGetToConsistentHash fromURI '%v' err %v returning '%v'\n", fromURI, err, r.To[0].URL)
 		log.Errorf("RemapRule.URI: Rule '%v': Error looking up Consistent Hash! Using first parent\n", r.Name)
-		return r.To[0].URL, r.To[0].ProxyURL
+		return r.To[0].URL, r.To[0].ProxyURL, r.To[0].Transport
 	}
 
 	for i := 0; i < failures; i++ {
 		iter = iter.NextWrap()
 	}
 
-	return iter.Val().Name, iter.Val().ProxyURL
+	return iter.Val().Name, iter.Val().ProxyURL, iter.Val().Transport
 }
 
 func (r RemapRule) CacheKey(method string, fromURI string) string {
@@ -208,6 +209,7 @@ type RemapRuleTo struct {
 	ProxyURL   *url.URL
 	Timeout    *time.Duration
 	RetryCodes map[int]struct{}
+	Transport  *http.Transport
 }
 
 type QueryStringRule struct {

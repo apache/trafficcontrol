@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
@@ -95,13 +94,10 @@ func TryFlush(w http.ResponseWriter) {
 }
 
 // request makes the given request and returns its response code, headers, body, the request time, response time, and any error.
-func Request(transport *http.Transport, r *http.Request, proxyURL *url.URL) (int, http.Header, []byte, time.Time, time.Time, error) {
+func Request(transport *http.Transport, r *http.Request) (int, http.Header, []byte, time.Time, time.Time, error) {
 	log.Debugf("request requesting %v headers %v\n", r.RequestURI, r.Header)
 	rr := r
 
-	if proxyURL != nil && proxyURL.Host != "" {
-		transport.Proxy = http.ProxyURL(proxyURL)
-	}
 	reqTime := time.Now()
 	resp, err := transport.RoundTrip(rr)
 	respTime := time.Now()

@@ -66,8 +66,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	reqTimeout := time.Duration(cfg.ReqTimeoutMS) * time.Millisecond
+	reqKeepAlive := time.Duration(cfg.ReqKeepAliveMS) * time.Millisecond
+	reqMaxIdleConns := cfg.ReqMaxIdleConns
+	reqIdleConnTimeout := time.Duration(cfg.ReqIdleConnTimeoutMS) * time.Millisecond
+	baseTransport := remap.NewRemappingTransport(reqTimeout, reqKeepAlive, reqMaxIdleConns, reqIdleConnTimeout)
+
 	plugins := plugin.Get()
-	remapper, err := remap.LoadRemapper(cfg.RemapRulesFile, plugins.LoadFuncs(), caches)
+	remapper, err := remap.LoadRemapper(cfg.RemapRulesFile, plugins.LoadFuncs(), caches, baseTransport)
 	if err != nil {
 		log.Errorf("starting service: loading remap rules: %v\n", err)
 		os.Exit(1)
@@ -115,10 +121,6 @@ func main() {
 			conns,
 			cfg.RFCCompliant,
 			cfg.ConnectionClose,
-			time.Duration(cfg.ReqTimeoutMS)*time.Millisecond,
-			time.Duration(cfg.ReqKeepAliveMS)*time.Millisecond,
-			cfg.ReqMaxIdleConns,
-			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
 			plugins,
 			pluginContext,
 			httpConns,
@@ -167,7 +169,7 @@ func main() {
 			log.Warnln("reloading config: caches changed in new config! Dynamic cache reloading is not supported! Old cache files and sizes will be used, and new cache config will NOT be loaded! Restart service to apply cache changes!")
 		}
 
-		remapper, err = remap.LoadRemapper(cfg.RemapRulesFile, plugins.LoadFuncs(), caches)
+		remapper, err = remap.LoadRemapper(cfg.RemapRulesFile, plugins.LoadFuncs(), caches, baseTransport)
 		if err != nil {
 			log.Errorf("starting service: loading remap rules: %v\n", err)
 			os.Exit(1)
@@ -201,10 +203,6 @@ func main() {
 			httpConns,
 			cfg.RFCCompliant,
 			cfg.ConnectionClose,
-			time.Duration(cfg.ReqTimeoutMS)*time.Millisecond,
-			time.Duration(cfg.ReqKeepAliveMS)*time.Millisecond,
-			cfg.ReqMaxIdleConns,
-			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
 			plugins,
 			pluginContext,
 			httpConns,
@@ -222,10 +220,6 @@ func main() {
 			httpsConns,
 			cfg.RFCCompliant,
 			cfg.ConnectionClose,
-			time.Duration(cfg.ReqTimeoutMS)*time.Millisecond,
-			time.Duration(cfg.ReqKeepAliveMS)*time.Millisecond,
-			cfg.ReqMaxIdleConns,
-			time.Duration(cfg.ReqIdleConnTimeoutMS)*time.Millisecond,
 			plugins,
 			pluginContext,
 			httpConns,
