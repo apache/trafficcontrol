@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"net"
 	"net/http"
 	"os"
 	"sync/atomic"
@@ -50,7 +49,6 @@ type Handler struct {
 	stats           stat.Stats
 	conns           *web.ConnMap
 	connectionClose bool
-	transport       *http.Transport
 	plugins         plugin.Plugins
 	pluginContext   map[string]*interface{}
 	httpConns       *web.ConnMap
@@ -93,33 +91,12 @@ func NewHandler(
 	conns *web.ConnMap,
 	strictRFC bool,
 	connectionClose bool,
-	reqTimeout time.Duration,
-	reqKeepAlive time.Duration,
-	reqMaxIdleConns int,
-	reqIdleConnTimeout time.Duration,
 	plugins plugin.Plugins,
 	pluginContext map[string]*interface{},
 	httpConns *web.ConnMap,
 	httpsConns *web.ConnMap,
 	interfaceName string,
 ) *Handler {
-	transport := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   reqTimeout,
-			KeepAlive: reqKeepAlive,
-			DualStack: true,
-		}).DialContext,
-		MaxIdleConns:          reqMaxIdleConns,
-		IdleConnTimeout:       reqIdleConnTimeout,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-	}
-	transport.Dial = func(network, address string) (net.Conn, error) {
-		d := net.Dialer{DualStack: true, FallbackDelay: time.Millisecond * 50}
-		return d.Dial(network, address)
-	}
-
 	hostname, err := os.Hostname()
 	if err != nil {
 		log.Errorf("getting  hostname: %v\n", err)
@@ -136,7 +113,6 @@ func NewHandler(
 		stats:           stats,
 		conns:           conns,
 		connectionClose: connectionClose,
-		transport:       transport,
 		plugins:         plugins,
 		pluginContext:   pluginContext,
 		httpConns:       httpConns,

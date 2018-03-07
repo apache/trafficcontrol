@@ -43,7 +43,7 @@ func (r *Retrier) Get(req *http.Request, obj *cacheobj.CacheObj) (*cacheobj.Cach
 			return remap.CanReuse(r.ReqHdr, r.ReqCacheControl, cacheObj, r.H.strictRFC, true)
 		}
 		getAndCache := func() *cacheobj.CacheObj {
-			return GetAndCache(remapping.Request, remapping.ProxyURL, remapping.CacheKey, remapping.Name, remapping.Request.Header, r.ReqTime, r.H.strictRFC, remapping.Cache, r.H.ruleThrottlers[remapping.Name], obj, remapping.Timeout, retryFailures, remapping.RetryNum, remapping.RetryCodes, r.H.transport)
+			return GetAndCache(remapping.Request, remapping.ProxyURL, remapping.CacheKey, remapping.Name, remapping.Request.Header, r.ReqTime, r.H.strictRFC, remapping.Cache, r.H.ruleThrottlers[remapping.Name], obj, remapping.Timeout, retryFailures, remapping.RetryNum, remapping.RetryCodes, remapping.Transport)
 		}
 		return r.H.getter.Get(r.CacheKey, getAndCache, canReuse)
 	}
@@ -112,7 +112,7 @@ func GetAndCache(
 		} else {
 			req.Header.Del(ModifiedSinceHdr)
 		}
-		respCode, respHeader, respBody, reqTime, reqRespTime, err := web.Request(transport, req, proxyURL)
+		respCode, respHeader, respBody, reqTime, reqRespTime, err := web.Request(transport, req)
 		if err != nil {
 			log.Errorf("Parent error for URI %v %v %v cacheKey %v rule %v parent %v error %v\n", req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), cacheKey, remapName, proxyURLStr, err)
 			code := CodeConnectFailure
