@@ -34,33 +34,31 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestPhysLocations() []tc.PhysLocation {
-	physLocations := []tc.PhysLocation{}
-	testCase := tc.PhysLocation{
-		Address:     "1118 S. Grant St.",
-		City:        "Denver",
-		Email:       "d.t@gmail.com",
-		ID:          1,
-		LastUpdated: tc.TimeNoMod{Time: time.Now()},
-		Name:        "physLocation1",
-		Phone:       "303-210-0000",
-		POC:         "Dennis Thompson",
-		RegionID:    1,
-		RegionName:  "region1",
-		ShortName:   "pl1",
-		State:       "CO",
-		Zip:         "80210",
+func getTestTypes() []tc.TypeNullable {
+	types := []tc.TypeNullable{}
+	ID := 1
+	name := "name1"
+	description := "desc"
+	useInTable := "use_in_table1"
+	lastUpdated := tc.TimeNoMod{Time: time.Now()}
+	testCase := tc.TypeNullable{
+		ID:          &ID,
+		LastUpdated: &lastUpdated,
+		Name:        &name,
+		Description: &description,
+		UseInTable:  &useInTable,
 	}
-	physLocations = append(physLocations, testCase)
+	types = append(types, testCase)
 
 	testCase2 := testCase
-	testCase2.Name = "physLocation2"
-	physLocations = append(physLocations, testCase2)
+	name = "name2"
+	testCase2.Name = &name
+	types = append(types, testCase2)
 
-	return physLocations
+	return types
 }
 
-func TestGetPhysLocations(t *testing.T) {
+func TestGetType(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -70,74 +68,61 @@ func TestGetPhysLocations(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	testCase := getTestPhysLocations()
-	cols := test.ColsFromStructByTag("db", tc.PhysLocation{})
+	testCase := getTestTypes()
+	cols := test.ColsFromStructByTag("db", tc.TypeNullable{})
 	rows := sqlmock.NewRows(cols)
 
 	for _, ts := range testCase {
 		rows = rows.AddRow(
-			ts.Address,
-			ts.City,
-			ts.Comments,
-			ts.Email,
 			ts.ID,
 			ts.LastUpdated,
 			ts.Name,
-			ts.Phone,
-			ts.POC,
-			ts.RegionID,
-			ts.RegionName,
-			ts.ShortName,
-			ts.State,
-			ts.Zip,
+			ts.Description,
+			ts.UseInTable,
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	v := map[string]string{"dsId": "1"}
 
-	physLocations, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+	types, errs, _ := refType.Read(db, v, auth.CurrentUser{})
 	if len(errs) > 0 {
-		t.Errorf("physLocation.Read expected: no errors, actual: %v", errs)
+		t.Errorf("type.Read expected: no errors, actual: %v", errs)
 	}
 
-	if len(physLocations) != 2 {
-		t.Errorf("physLocation.Read expected: len(physLocations) == 2, actual: %v", len(physLocations))
+	if len(types) != 2 {
+		t.Errorf("type.Read expected: len(types) == 2, actual: %v", len(types))
 	}
 
 }
 
 func TestInterfaces(t *testing.T) {
 	var i interface{}
-	i = &TOPhysLocation{}
+	i = &TOType{}
 
 	if _, ok := i.(api.Creator); !ok {
-		t.Errorf("PhysLocation must be Creator")
+		t.Errorf("Type must be Creator")
 	}
 	if _, ok := i.(api.Reader); !ok {
-		t.Errorf("PhysLocation must be Reader")
+		t.Errorf("Type must be Reader")
 	}
 	if _, ok := i.(api.Updater); !ok {
-		t.Errorf("PhysLocation must be Updater")
+		t.Errorf("Type must be Updater")
 	}
 	if _, ok := i.(api.Deleter); !ok {
-		t.Errorf("PhysLocation must be Deleter")
+		t.Errorf("Type must be Deleter")
 	}
 	if _, ok := i.(api.Identifier); !ok {
-		t.Errorf("PhysLocation must be Identifier")
+		t.Errorf("Type must be Identifier")
 	}
 }
 
 func TestValidate(t *testing.T) {
-	p := TOPhysLocation{}
+	p := TOType{}
 	errs := test.SortErrors(p.Validate(nil))
 	expected := test.SortErrors([]error{
-		errors.New("'state' cannot be blank"),
-		errors.New("'zip' cannot be blank"),
-		errors.New("'address' cannot be blank"),
-		errors.New("'city' cannot be blank"),
 		errors.New("'name' cannot be blank"),
-		errors.New("'regionId' cannot be blank"),
-		errors.New("'shortName' cannot be blank"),
+		errors.New("'description' cannot be blank"),
+		errors.New("'use_in_table' cannot be blank"),
 	})
 
 	if !reflect.DeepEqual(expected, errs) {
