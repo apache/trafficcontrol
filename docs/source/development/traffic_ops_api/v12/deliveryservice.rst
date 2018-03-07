@@ -191,9 +191,9 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``tenantId``             | int    | Owning tenant ID                                                                                                                     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trRequestHeaders``     | string |                                                                                                                                      |
+  | ``trRequestHeaders``     | string | List of header keys separated by ``__RETURN__``. Listed headers will be included in TR access log entries under the "rh=" token.     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trResponseHeaders``    | string |                                                                                                                                      |
+  | ``trResponseHeaders``    | string | List of header ``name:value`` pairs separated by ``__RETURN__``. Listed pairs will be included in all TR HTTP responses.             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``typeId``               |  int   | The type of this deliveryservice (one of :ref:to-api-v11-types use_in_table='deliveryservice').                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -440,9 +440,9 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``tenantId``             | int    | Owning tenant ID                                                                                                                     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trRequestHeaders``     | string |                                                                                                                                      |
+  | ``trRequestHeaders``     | string | List of header keys separated by ``__RETURN__``. Listed headers will be included in TR access log entries under the "rh=" token.     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trResponseHeaders``    | string |                                                                                                                                      |
+  | ``trResponseHeaders``    | string | List of header ``name:value`` pairs separated by ``__RETURN__``. Listed pairs will be included in all TR HTTP responses.             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``typeId``               |  int   | The type of this deliveryservice (one of :ref:to-api-v11-types use_in_table='deliveryservice').                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -2200,9 +2200,11 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | tenantId               | No       | Owning tenant ID                                                                                        |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | trRequestHeaders       | no       | Traffic router log request headers                                                                      |
+  | trRequestHeaders       | no       | List of header keys separated by ``__RETURN__``. Listed headers will be included in TR access log       | 
+  |                        |          | entries under the "rh=" token.                                                                          |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | trResponseHeaders      | no       | Traffic router additional response headers                                                              |
+  | trResponseHeaders      | no       | List of header ``name:value`` pairs separated by ``__RETURN__``. Listed pairs will be included in all   |
+  |                        |          | TR HTTP responses.                                                                                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | typeId                 | yes      | The type of this deliveryservice (one of :ref:to-api-v12-types use_in_table='deliveryservice').         |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -2384,9 +2386,9 @@ URL Sig Keys
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``sslKeyVersion``        |  int   |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trRequestHeaders``     | string |                                                                                                                                      |
+  | ``trRequestHeaders``     | string | List of header keys separated by ``__RETURN__``. Listed headers will be included in TR access log entries under the "rh=" token.     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trResponseHeaders``    | string |                                                                                                                                      |
+  | ``trResponseHeaders``    | string | List of header ``name:value`` pairs separated by ``__RETURN__``. Listed pairs will be included in all TR HTTP responses.             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``typeId``               |  int   | The type of this deliveryservice (one of :ref:to-api-v11-types use_in_table='deliveryservice').                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -2621,9 +2623,11 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | tenantId               | No       | Owning tenant ID                                                                                        |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | trRequestHeaders       | no       | Traffic router log request headers                                                                      |
+  | trRequestHeaders       | no       | List of header keys separated by ``__RETURN__``. Listed headers will be included in TR access log       | 
+  |                        |          | entries under the "rh=" token.                                                                          |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | trResponseHeaders      | no       | Traffic router additional response headers                                                              |
+  | trResponseHeaders      | no       | List of header ``name:value`` pairs separated by ``__RETURN__``. Listed pairs will be included in all   |
+  |                        |          | TR HTTP responses.                                                                                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | typeId                 | yes      | The type of this deliveryservice (one of :ref:to-api-v12-types use_in_table='deliveryservice').         |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -2805,9 +2809,9 @@ URL Sig Keys
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``sslKeyVersion``        |  int   |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trRequestHeaders``     | string |                                                                                                                                      |
+  | ``trRequestHeaders``     | string | List of header keys separated by ``__RETURN__``. Listed headers will be included in TR access log entries under the "rh=" token.     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trResponseHeaders``    | string |                                                                                                                                      |
+  | ``trResponseHeaders``    | string | List of header ``name:value`` pairs separated by ``__RETURN__``. Listed pairs will be included in all TR HTTP responses.             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``typeId``               |  int   | The type of this deliveryservice (one of :ref:to-api-v11-types use_in_table='deliveryservice').                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -3080,9 +3084,9 @@ URL Sig Keys
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``sslKeyVersion``        |  int   |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trRequestHeaders``     | string |                                                                                                                                      |
+  | ``trRequestHeaders``     | string | List of header keys separated by ``__RETURN__``. Listed headers will be included in TR access log entries under the "rh=" token.     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trResponseHeaders``    | string |                                                                                                                                      |
+  | ``trResponseHeaders``    | string | List of header ``name:value`` pairs separated by ``__RETURN__``. Listed pairs will be included in all TR HTTP responses.             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``typeId``               |  int   | The type of this deliveryservice (one of :ref:to-api-v11-types use_in_table='deliveryservice').                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
