@@ -35,7 +35,7 @@ type Type struct {
 
 // TypeNullable contains information about a given Type in Traffic Ops.
 type TypeNullable struct {
-	ID          *int       `json:"id"`
+	ID          *int       `json:"id" db:"id"`
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Name        *string    `json:"name" db:"name"`
 	Description *string    `json:"description" db:"description"`
