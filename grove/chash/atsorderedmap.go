@@ -2,6 +2,7 @@ package chash
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"sort"
 	"strconv"
@@ -30,6 +31,7 @@ type ATSConsistentHashNode struct {
 	Available bool
 	Name      string
 	ProxyURL  *url.URL
+	Transport *http.Transport
 	// pRecord fields (ParentSelection.h)
 	Hostname  string
 	Port      int
