@@ -1,6 +1,7 @@
 package main
 
 import (
+	"compress/gzip"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -12,6 +13,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -49,8 +51,8 @@ func GetRemapPath() (string, error) {
 	return cfg.RemapRulesFile, nil
 }
 
-// CopyFile copies the src file to dst, a la `cp`.
-func CopyFile(src, dst string) error {
+// CopyAndGzipFile reads the src file, gzips the contents, and writes the result to dst.
+func CopyAndGzipFile(src, dst string) error {
 	srcF, err := os.Open(src)
 	if err != nil {
 		return errors.New("opening source file: " + err.Error())
@@ -61,27 +63,35 @@ func CopyFile(src, dst string) error {
 		return errors.New("creating destination file: " + err.Error())
 	}
 	defer dstF.Close()
-	_, err = io.Copy(dstF, srcF)
-	if err != nil {
+
+	dstFGzip := gzip.NewWriter(dstF)
+
+	if _, err = io.Copy(dstFGzip, srcF); err != nil {
 		return errors.New("copying source to destination: " + err.Error())
 	}
-
+	if err := dstFGzip.Close(); err != nil {
+		return errors.New("closing destination gzip writer: " + err.Error())
+	}
 	if err := dstF.Sync(); err != nil {
 		return errors.New("flushing copy to destination: " + err.Error())
 	}
 	return nil
 }
 
-// BackupFile copies the given file to a new file in the same directory, with the name suffixed by the current timestamp. Returns nil if the given file doesn't exist (nothing to back up).
+// BackupFile copies the given file to a new file in the subdirectory "/remap_history", with the name suffixed by the current timestamp. Returns nil if the given file doesn't exist (nothing to back up).
 func BackupFile(path string) error {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return nil
 	}
 
 	fileTimeFormat := "2006-01-02T15_04_05_999999999Z07_00" // this is time.RFC3339Nano with : replaced by _
-	backupPath := path + "." + time.Now().Format(fileTimeFormat)
+	backupDir := filepath.Join(filepath.Dir(path), "remap_history")
+	backupFile := filepath.Base(path) + "." + time.Now().Format(fileTimeFormat) + ".gz"
+	backupPath := filepath.Join(backupDir, backupFile)
 
-	if err := CopyFile(path, backupPath); err != nil {
+	os.MkdirAll(backupDir, os.ModePerm)
+
+	if err := CopyAndGzipFile(path, backupPath); err != nil {
 		return errors.New("backuping up remap file: " + err.Error())
 	}
 	return nil
