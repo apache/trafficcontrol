@@ -55,12 +55,6 @@ func SetupTestData(*sql.DB) error {
 		os.Exit(1)
 	}
 
-	err = SetupCDNs(db)
-	if err != nil {
-		fmt.Printf("\nError setting up cdns %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
-		os.Exit(1)
-	}
-
 	err = SetupRoles(db)
 	if err != nil {
 		fmt.Printf("\nError setting up roles %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
@@ -92,12 +86,6 @@ func SetupTestData(*sql.DB) error {
 	}
 
 	/*
-		err = SetupProfiles(db)
-		if err != nil {
-			fmt.Printf("\nError setting up profile %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
-			os.Exit(1)
-		}
-
 		err = SetupProfileParameters(db)
 		if err != nil {
 			fmt.Printf("\nError setting up parameter %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
@@ -240,21 +228,6 @@ INSERT INTO tenant (id, name, active, parent_id, last_updated) VALUES (4, 'child
 	return nil
 }
 
-// SetupCDNs ...
-func SetupCDNs(db *sql.DB) error {
-
-	sqlStmt := `
-INSERT INTO cdn (id, name, last_updated, dnssec_enabled, domain_name) VALUES (100, 'cdn5', '2018-01-19 21:19:31.588795', false, 'cdn1.kabletown.net');
-INSERT INTO cdn (id, name, last_updated, dnssec_enabled, domain_name) VALUES (200, 'cdn6', '2018-01-19 21:19:31.591457', false, 'cdn2.kabletown.net');
-INSERT INTO cdn (id, name, last_updated, dnssec_enabled, domain_name) VALUES (300, 'cdn7', '2018-01-19 21:19:31.592700', false, 'cdn3.kabletown.net');
-`
-	err := execSQL(db, sqlStmt, "cdn")
-	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
-	}
-	return nil
-}
-
 // SetupStatuses ...
 func SetupStatuses(db *sql.DB) error {
 
@@ -328,27 +301,6 @@ INSERT INTO server (id, host_name, domain_name, tcp_port, xmpp_id, xmpp_passwd, 
 INSERT INTO server (id, host_name, domain_name, tcp_port, xmpp_id, xmpp_passwd, interface_name, ip_address, ip_netmask, ip_gateway, ip6_address, ip6_gateway, interface_mtu, phys_location, rack, cachegroup, type, status, offline_reason, upd_pending, profile, cdn_id, mgmt_ip_address, mgmt_ip_netmask, mgmt_ip_gateway, ilo_ip_address, ilo_ip_netmask, ilo_ip_gateway, ilo_username, ilo_password, router_host_name, router_port_name, guid, last_updated, https_port, reval_pending) VALUES (900, 'influxdb01', 'kabletown.net', 8086, '', '', 'eth1', '127.0.0.10', '255.255.252.0', '127.0.0.10', '127.0.0.10', '127.0.0.10', 1500, 300, 'RR 119.02', 100, 32, 2, null, false, 500, 100, '', '', '', '', '', '', '', '', '', '', null, '2018-01-19 21:19:32.197808', null, false);
 `
 	err := execSQL(db, sqlStmt, "servers")
-	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
-	}
-	return nil
-}
-
-// SetupProfiles ...
-func SetupProfiles(db *sql.DB) error {
-
-	sqlStmt := `
-INSERT INTO profile (id, name, description, last_updated, type, cdn, routing_disabled) VALUES (100, 'EDGE1', 'edge description', '2018-01-19 19:01:21.512005', 'ATS_PROFILE', 100, false);
-INSERT INTO profile (id, name, description, last_updated, type, cdn, routing_disabled) VALUES (200, 'MID1', 'mid description', '2018-01-19 19:01:21.517781', 'ATS_PROFILE', 100, false);
-INSERT INTO profile (id, name, description, last_updated, type, cdn, routing_disabled) VALUES (300, 'CCR1', 'ccr description', '2018-01-19 19:01:21.521121', 'TR_PROFILE', 100, false);
-INSERT INTO profile (id, name, description, last_updated, type, cdn, routing_disabled) VALUES (301, 'CCR2', 'ccr description', '2018-01-19 19:01:21.524584', 'TR_PROFILE', 200, false);
-INSERT INTO profile (id, name, description, last_updated, type, cdn, routing_disabled) VALUES (500, 'RIAK1', 'riak description', '2018-01-19 19:01:21.528911', 'RIAK_PROFILE', 100, false);
-INSERT INTO profile (id, name, description, last_updated, type, cdn, routing_disabled) VALUES (600, 'RASCAL1', 'rascal description', '2018-01-19 19:01:21.532539', 'TM_PROFILE', 100, false);
-INSERT INTO profile (id, name, description, last_updated, type, cdn, routing_disabled) VALUES (700, 'RASCAL2', 'rascal2 description', '2018-01-19 19:01:21.536447', 'TM_PROFILE', 200, false);
-INSERT INTO profile (id, name, description, last_updated, type, cdn, routing_disabled) VALUES (8, 'MISC', 'misc profile description', '2018-01-19 19:01:21.539022', 'UNK_PROFILE', null, false);
-INSERT INTO profile (id, name, description, last_updated, type, cdn, routing_disabled) VALUES (900, 'EDGE2', 'edge description', '2018-01-19 19:01:21.541300', 'ATS_PROFILE', 200, false);
-`
-	err := execSQL(db, sqlStmt, "profile")
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}

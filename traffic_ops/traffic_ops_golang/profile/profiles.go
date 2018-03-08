@@ -76,7 +76,7 @@ func (prof *TOProfile) Validate(db *sqlx.DB) []error {
 		"name":        validation.Validate(prof.Name, validation.Required),
 		"description": validation.Validate(prof.Description, validation.Required),
 		"cdn":         validation.Validate(prof.CDNID, validation.Required),
-		"type":        validation.Validate(prof.TypeID, validation.Required),
+		"type":        validation.Validate(prof.Type, validation.Required),
 	}
 	if errs != nil {
 		return tovalidate.ToErrors(errs)
@@ -125,22 +125,16 @@ func (prof *TOProfile) Read(db *sqlx.DB, parameters map[string]string, user auth
 func selectQuery() string {
 
 	query := `SELECT
-prof.address,
-prof.city,
-prof.comments,
-prof.email,
+prof.description,
 prof.id,
 prof.last_updated,
 prof.name,
-prof.phone,
-prof.poc,
-r.id as region,
-r.name as region_name,
-prof.short_name,
-prof.state,
-prof.zip
+prof.routing_disabled,
+prof.type,
+c.id as cdn,
+c.name as cdn_name
 FROM profile prof
-JOIN region r ON prof.region = r.id`
+JOIN cdn c ON prof.cdn = c.id`
 
 	return query
 }
