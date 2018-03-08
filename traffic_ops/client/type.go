@@ -43,7 +43,7 @@ func (to *Session) GetTypes(useInTable ...string) ([]tc.Type, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.TypeResponse
+	var data tc.TypesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
