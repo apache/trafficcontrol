@@ -297,7 +297,7 @@ public class TrafficRouter {
 				track.setResultDetails(ResultDetails.DS_CZ_ONLY);
 			}
 		} else if (track.isUseNextClosest()) {
-			//Even with Geo limit none, TR wont do geo look-up, if fallback is diabled via backupZones configuration
+			//Even with Geo limit none, TR wont do geo look-up, if fallback is disabled via backupZones configuration
 			caches = selectCachesByGeo(request.getClientIP(), ds, cacheLocation, track);
 		}
 
