@@ -537,7 +537,7 @@
             "description": "edge description",
             "last_updated": "2018-03-02T17:27:11.796899+00:00",
             "name": "EDGE1",
-            "routing_disabled": false,
+            "routing_disabled": true,
             "type": "ATS_PROFILE"
         },
         {
