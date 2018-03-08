@@ -320,6 +320,7 @@ func (prof *TOProfile) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 func updateQuery() string {
 	query := `UPDATE
 profile SET
+cdn=:cdn,
 description=:description,
 name=:name,
 routing_disabled=:routing_disabled,
@@ -330,6 +331,7 @@ WHERE id=:id RETURNING last_updated`
 
 func insertQuery() string {
 	query := `INSERT INTO profile (
+:cdn,
 :description,
 :name,
 :routing_disabled,
