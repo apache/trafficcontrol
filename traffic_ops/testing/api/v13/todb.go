@@ -79,12 +79,6 @@ func SetupTestData(*sql.DB) error {
 		os.Exit(1)
 	}
 
-	err = SetupTypes(db)
-	if err != nil {
-		fmt.Printf("\nError setting up type %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
-		os.Exit(1)
-	}
-
 	err = SetupDivisions(db)
 	if err != nil {
 		fmt.Printf("\nError setting up division %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
@@ -98,12 +92,6 @@ func SetupTestData(*sql.DB) error {
 	}
 
 	/*
-		err = SetupParameters(db)
-		if err != nil {
-			fmt.Printf("\nError setting up parameter %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
-			os.Exit(1)
-		}
-
 		err = SetupProfiles(db)
 		if err != nil {
 			fmt.Printf("\nError setting up profile %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
@@ -343,126 +331,6 @@ INSERT INTO server (id, host_name, domain_name, tcp_port, xmpp_id, xmpp_passwd, 
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
-	return nil
-}
-
-// SetupTypes ...
-func SetupTypes(db *sql.DB) error {
-
-	sqlStmt := `
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (1, 'EDGE', 'Edge Cache', 'server', '2018-01-19 19:01:21.815104');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (2, 'MID', 'Mid Tier Cache', 'server', '2018-01-19 19:01:21.794365');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (3, 'ORG', 'Origin', 'server', '2018-01-19 19:01:21.779521');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (4, 'CCR', 'Kabletown Content Router', 'server', '2018-01-19 19:01:21.801776');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (5, 'EDGE_LOC', 'Edge Cachegroup', 'cachegroup', '2018-01-19 19:01:21.817872');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (6, 'MID_LOC', 'Mid Cachegroup', 'cachegroup', '2018-01-19 19:01:21.789240');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (7, 'DNS', 'DNS Content Routing', 'deliveryservice', '2018-01-19 19:01:21.805605');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (8, 'OTHER_CDN', 'Other CDN (CDS-IS, Akamai, etc)', 'server', '2018-01-19 19:01:21.807236');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (9, 'HTTP_NO_CACHE', 'HTTP Content Routing, no caching', 'deliveryservice', '2018-01-19 19:01:21.787978');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (12, 'HTTP_LIVE', 'HTTP Content routing cache in RAM ', 'deliveryservice', '2018-01-19 19:01:21.774250');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (14, 'RASCAL', 'Rascal health polling & reporting', 'server', '2018-01-19 19:01:21.786631');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (19, 'HOST_REGEXP', 'Host header regular expression', 'regex', '2018-01-19 19:01:21.804297');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (20, 'PATH_REGEXP', 'Path regular expression', 'regex', '2018-01-19 19:01:21.816413');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (21, 'A_RECORD', 'Static DNS A entry', 'staticdnsentry', '2018-01-19 19:01:21.791667');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (22, 'AAAA_RECORD', 'Static DNS AAAA entry', 'staticdnsentry', '2018-01-19 19:01:21.783942');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (23, 'CNAME_RECORD', 'Static DNS CNAME entry', 'staticdnsentry', '2018-01-19 19:01:21.795551');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (24, 'HTTP_LIVE_NATNL', 'HTTP Content routing, RAM cache, National', 'deliveryservice', '2018-01-19 19:01:21.796784');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (27, 'DNS_LIVE_NATNL', 'DNS Content routing, RAM cache, National', 'deliveryservice', '2018-01-19 19:01:21.790471');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (28, 'LOCAL', 'Local User', 'tm_user', '2018-01-19 19:01:21.808970');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (29, 'ACTIVE_DIRECTORY', 'Active Directory User', 'tm_user', '2018-01-19 19:01:21.799178');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (30, 'TOOLS_SERVER', 'Ops hosts for management', 'server', '2018-01-19 19:01:21.797996');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (31, 'RIAK', 'riak type', 'server', '2018-01-19 19:01:21.819171');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (32, 'INFLUXDB', 'influxdb type', 'server', '2018-01-19 19:01:21.803064');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (33, 'RESOLVE4', 'federation type resolve4', 'federation', '2018-01-19 19:01:21.800497');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (34, 'RESOLVE6', 'federation type resolve6', 'federation', '2018-01-19 19:01:21.792993');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (35, 'ANY_MAP', 'any_map type', 'deliveryservice', '2018-01-19 19:01:21.780894');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (36, 'HTTP', 'HTTP Content routing cache ', 'deliveryservice', '2018-01-19 19:01:21.813811');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (37, 'STEERING', 'Steering Delivery Service', 'deliveryservice', '2018-01-19 19:01:21.785303');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (38, 'CLIENT_STEERING', 'Client-Controlled Steering Delivery Service', 'deliveryservice', '2018-01-19 19:01:21.782467');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (39, 'STEERING_WEIGHT', 'Weighted steering target', 'steering_target', '2018-01-19 19:01:21.812447');
-INSERT INTO type (id, name, description, use_in_table, last_updated) VALUES (40, 'STEERING_ORDER', 'Ordered steering target', 'steering_target', '2018-01-19 19:01:21.810875');
-`
-	err := execSQL(db, sqlStmt, "type")
-	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
-	}
-
-	return nil
-}
-
-// SetupParameters ...
-func SetupParameters(db *sql.DB) error {
-
-	sqlStmt := `
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (4, 'health.threshold.loadavg', 'rascal.properties', '25.0', '2018-01-19 19:01:21.455131', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (5, 'health.threshold.availableBandwidthInKbps', 'rascal.properties', '>1750000', '2018-01-19 19:01:21.472279', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (6, 'history.count', 'rascal.properties', '30', '2018-01-19 19:01:21.489534', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (7, 'key0', 'url_sig_cdl-c2.config', 'HOOJ3Ghq1x4gChp3iQkqVTcPlOj8UCi3', '2018-01-19 19:01:21.503311', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (8, 'key1', 'url_sig_cdl-c2.config', '_9LZYkRnfCS0rCBF7fTQzM9Scwlp2FhO', '2018-01-19 19:01:21.505157', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (9, 'key2', 'url_sig_cdl-c2.config', 'AFpkxfc4oTiyFSqtY6_ohjt3V80aAIxS', '2018-01-19 19:01:21.508548', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (10, 'key3', 'url_sig_cdl-c2.config', 'AL9kzs_SXaRZjPWH8G5e2m4ByTTzkzlc', '2018-01-19 19:01:21.401781', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (11, 'key4', 'url_sig_cdl-c2.config', 'poP3n3szbD1U4vx1xQXV65BvkVgWzfN8', '2018-01-19 19:01:21.406601', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (12, 'key5', 'url_sig_cdl-c2.config', '1ir32ng4C4w137p5oq72kd2wqmIZUrya', '2018-01-19 19:01:21.408784', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (13, 'key6', 'url_sig_cdl-c2.config', 'B1qLptn2T1b_iXeTCWDcVuYvANtH139f', '2018-01-19 19:01:21.410854', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (14, 'key7', 'url_sig_cdl-c2.config', 'PiCV_5OODMzBbsNFMWsBxcQ8v1sK0TYE', '2018-01-19 19:01:21.412716', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (15, 'key8', 'url_sig_cdl-c2.config', 'Ggpv6DqXDvt2s1CETPBpNKwaLk4fTM9l', '2018-01-19 19:01:21.414638', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (16, 'key9', 'url_sig_cdl-c2.config', 'qPlVT_s6kL37aqb6hipDm4Bt55S72mI7', '2018-01-19 19:01:21.416551', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (17, 'key10', 'url_sig_cdl-c2.config', 'BsI5A9EmWrobIS1FeuOs1z9fm2t2WSBe', '2018-01-19 19:01:21.418689', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (18, 'key11', 'url_sig_cdl-c2.config', 'A54y66NCIj897GjS4yA9RrsSPtCUnQXP', '2018-01-19 19:01:21.420467', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (19, 'key12', 'url_sig_cdl-c2.config', '2jZH0NDPSJttIr4c2KP510f47EKqTQAu', '2018-01-19 19:01:21.422414', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (20, 'key13', 'url_sig_cdl-c2.config', 'XduT2FBjBmmVID5JRB5LEf9oR5QDtBgC', '2018-01-19 19:01:21.424435', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (21, 'key14', 'url_sig_cdl-c2.config', 'D9nH0SvK_0kP5w8QNd1UFJ28ulFkFKPn', '2018-01-19 19:01:21.426125', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (22, 'key15', 'url_sig_cdl-c2.config', 'udKXWYNwbXXweaaLzaKDGl57OixnIIcm', '2018-01-19 19:01:21.427797', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (23, 'location', 'url_sig_cdl-c2.config', '/opt/trafficserver/etc/trafficserver', '2018-01-19 19:01:21.429365', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (24, 'error_url', 'url_sig_cdl-c2.config', '403', '2018-01-19 19:01:21.431062', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (25, 'CONFIG proxy.config.allocator.debug_filter', 'records.config', 'INT 0', '2018-01-19 19:01:21.432692', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (26, 'CONFIG proxy.config.allocator.enable_reclaim', 'records.config', 'INT 0', '2018-01-19 19:01:21.434425', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (27, 'CONFIG proxy.config.allocator.max_overage', 'records.config', 'INT 3', '2018-01-19 19:01:21.435957', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (28, 'CONFIG proxy.config.diags.show_location', 'records.config', 'INT 0', '2018-01-19 19:01:21.437496', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (29, 'CONFIG proxy.config.http.cache.allow_empty_doc', 'records.config', 'INT 0', '2018-01-19 19:01:21.439033', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (30, 'LOCAL proxy.config.cache.interim.storage', 'records.config', 'STRING NULL', '2018-01-19 19:01:21.440502', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (31, 'CONFIG proxy.config.http.parent_proxy.file', 'records.config', 'STRING parent.config', '2018-01-19 19:01:21.441933', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (32, 'location', '12M_facts', '/opt/ort', '2018-01-19 19:01:21.443436', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (33, 'location', 'cacheurl.config', '/opt/trafficserver/etc/trafficserver/', '2018-01-19 19:01:21.444898', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (34, 'location', 'ip_allow.config', '/opt/trafficserver/etc/trafficserver', '2018-01-19 19:01:21.446396', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (35, 'astats_over_http.so', 'plugin.config', '_astats 33.101.99.100,172.39.19.39,172.39.19.49,172.39.19.49,172.39.29.49', '2018-01-19 19:01:21.447837', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (36, 'location', 'crontab_root', '/var/spool/cron', '2018-01-19 19:01:21.449259', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (37, 'location', 'hdr_rw_cdl-c2.config', '/opt/trafficserver/etc/trafficserver', '2018-01-19 19:01:21.450778', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (38, 'location', '50-ats.rules', '/etc/udev/rules.d/', '2018-01-19 19:01:21.452196', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (39, 'location', 'parent.config', '/opt/trafficserver/etc/trafficserver/', '2018-01-19 19:01:21.453716', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (40, 'location', 'remap.config', '/opt/trafficserver/etc/trafficserver/', '2018-01-19 19:01:21.456753', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (41, 'location', 'drop_qstring.config', '/opt/trafficserver/etc/trafficserver', '2018-01-19 19:01:21.458350', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (42, 'LogFormat.Format', 'logs_xml.config', '%<cqtq> chi=%<chi> phn=%<phn> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqhv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> uas="%<{User-Agent}cqh>"', '2018-01-19 19:01:21.459788', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (43, 'LogFormat.Name', 'logs_xml.config', 'custom_ats_2', '2018-01-19 19:01:21.461206', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (44, 'LogObject.Format', 'logs_xml.config', 'custom_ats_2', '2018-01-19 19:01:21.462772', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (45, 'LogObject.Filename', 'logs_xml.config', 'custom_ats_2', '2018-01-19 19:01:21.464259', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (46, 'location', 'cache.config', '/opt/trafficserver/etc/trafficserver/', '2018-01-19 19:01:21.465717', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (47, 'CONFIG proxy.config.cache.control.filename', 'records.config', 'STRING cache.config', '2018-01-19 19:01:21.467349', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (48, 'regex_revalidate.so', 'plugin.config', '--config regex_revalidate.config', '2018-01-19 19:01:21.469075', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (49, 'location', 'regex_revalidate.config', '/opt/trafficserver/etc/trafficserver', '2018-01-19 19:01:21.470677', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (50, 'location', 'hosting.config', '/opt/trafficserver/etc/trafficserver/', '2018-01-19 19:01:21.474023', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (51, 'location', 'volume.config', '/opt/trafficserver/etc/trafficserver/', '2018-01-19 19:01:21.475515', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (52, 'allow_ip', 'astats.config', '127.0.0.1,172.39.0.0/16,33.101.99.0/24', '2018-01-19 19:01:21.477074', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (53, 'allow_ip6', 'astats.config', '::1,2033:D011:3300::336/64,2033:D011:3300::335/64,2033:D021:3300::333/64,2033:D021:3300::334/64', '2018-01-19 19:01:21.478516', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (54, 'record_types', 'astats.config', '144', '2018-01-19 19:01:21.480143', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (55, 'location', 'astats.config', '/opt/trafficserver/etc/trafficserver', '2018-01-19 19:01:21.481582', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (56, 'path', 'astats.config', '_astats', '2018-01-19 19:01:21.482959', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (57, 'location', 'storage.config', '/opt/trafficserver/etc/trafficserver/', '2018-01-19 19:01:21.484501', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (58, 'Drive_Prefix', 'storage.config', '/dev/sd', '2018-01-19 19:01:21.486250', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (59, 'Drive_Letters', 'storage.config', 'b,c,d,e,f,g,h,i,j,k,l,m,n,o', '2018-01-19 19:01:21.487958', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (60, 'Disk_Volume', 'storage.config', '1', '2018-01-19 19:01:21.491181', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (61, 'CONFIG proxy.config.hostdb.storage_size', 'records.config', 'INT 33554432', '2018-01-19 19:01:21.492850', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (63, 'maxRevalDurationDays', 'regex_revalidate.config', '3', '2018-01-19 19:01:21.494468', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (64, 'maxRevalDurationDays', 'regex_revalidate.config', '90', '2018-01-19 19:01:21.496195', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (65, 'unassigned_parameter_1', 'whaterver.config', '852', '2018-01-19 19:01:21.497838', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (66, 'trafficserver', 'package', '5.3.2-765.f4354b9.el7.centos.x86_64', '2018-01-19 19:01:21.499423', false);
-INSERT INTO parameter (id, name, config_file, value, last_updated, secure) VALUES (67, 'use_tenancy', 'global', '1', '2018-01-19 19:01:21.501151', false);
-`
-	err := execSQL(db, sqlStmt, "parameter")
-	if err != nil {
-		return fmt.Errorf("exec failed %v", err)
-	}
-
 	return nil
 }
 
