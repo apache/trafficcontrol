@@ -16,7 +16,6 @@
 package v13
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -62,8 +61,8 @@ func UpdateTestProfiles(t *testing.T) {
 		t.Errorf("cannot GET Profile by name: %v - %v\n", firstProfile.Name, err)
 	}
 	remoteProfile := resp[0]
-	expectedProfileName := "UPDATED"
-	remoteProfile.Name = expectedProfileName
+	expectedProfileDesc := "UPDATED"
+	remoteProfile.Description = expectedProfileDesc
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateProfileByID(remoteProfile.ID, remoteProfile)
 	if err != nil {
@@ -76,8 +75,8 @@ func UpdateTestProfiles(t *testing.T) {
 		t.Errorf("cannot GET Profile by name: %v - %v\n", firstProfile.Name, err)
 	}
 	respProfile := resp[0]
-	if respProfile.Name != expectedProfileName {
-		t.Errorf("results do not match actual: %s, expected: %s\n", respProfile.Name, expectedProfileName)
+	if respProfile.Description != expectedProfileDesc {
+		t.Errorf("results do not match actual: %s, expected: %s\n", respProfile.Description, expectedProfileDesc)
 	}
 
 }
@@ -117,8 +116,6 @@ func DeleteTestProfiles(t *testing.T) {
 			if len(prs) > 0 {
 				t.Errorf("expected Profile Name: %s to be deleted\n", pr.Name)
 			}
-		} else {
-			fmt.Printf("no resp ---> %v\n", resp)
 		}
 	}
 }
