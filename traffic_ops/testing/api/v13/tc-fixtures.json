@@ -538,7 +538,7 @@
             "last_updated": "2018-03-02T17:27:11.796899+00:00",
             "name": "EDGE1",
             "routing_disabled": false,
-            "typeName": "ATS_PROFILE"
+            "type": "ATS_PROFILE"
         },
         {
             "cdnName": "cdn1",
@@ -546,31 +546,23 @@
             "last_updated": "2018-03-02T17:27:11.80173+00:00",
             "name": "MID1",
             "routing_disabled": false,
-            "typeName": "ATS_PROFILE"
+            "type": "ATS_PROFILE"
         },
         {
             "cdnName": "cdn1",
-            "description": "ccr description",
+            "description": "cdn1 description",
             "last_updated": "2018-03-02T17:27:11.80452+00:00",
             "name": "CCR1",
             "routing_disabled": false,
-            "typeName": "TR_PROFILE"
+            "type": "TR_PROFILE"
         },
         {
             "cdnName": "cdn2",
-            "description": "ccr description",
+            "description": "cdn2 description",
             "last_updated": "2018-03-02T17:27:11.807948+00:00",
             "name": "CCR2",
             "routing_disabled": false,
-            "typeName": "TR_PROFILE"
-        },
-        {
-            "cdnName": "cdn1",
-            "description": "riak description",
-            "last_updated": "2018-03-02T17:27:11.810426+00:00",
-            "name": "RIAK1",
-            "routing_disabled": false,
-            "typeName": "RIAK_PROFILE"
+            "type": "TR_PROFILE"
         },
         {
             "cdnName": "cdn1",
@@ -578,31 +570,15 @@
             "last_updated": "2018-03-02T17:27:11.813052+00:00",
             "name": "RASCAL1",
             "routing_disabled": false,
-            "typeName": "TM_PROFILE"
-        },
-        {
-            "cdn": 200,
-            "description": "rascal2 description",
-            "last_updated": "2018-03-02T17:27:11.815405+00:00",
-            "name": "RASCAL2",
-            "routing_disabled": false,
-            "typeName": "TM_PROFILE"
-        },
-        {
-            "cdn": null,
-            "description": "misc profile description",
-            "last_updated": "2018-03-02T17:27:11.816949+00:00",
-            "name": "MISC",
-            "routing_disabled": false,
-            "typeName": "UNK_PROFILE"
+            "type": "TM_PROFILE"
         },
         {
             "cdnName": "cdn2",
-            "description": "edge description",
+            "description": "edge2 description",
             "last_updated": "2018-03-02T17:27:11.818418+00:00",
             "name": "EDGE2",
             "routing_disabled": false,
-            "typeName": "ATS_PROFILE"
+            "type": "ATS_PROFILE"
         }
     ],
     "regions": [

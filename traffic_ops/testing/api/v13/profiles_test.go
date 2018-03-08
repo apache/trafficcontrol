@@ -26,10 +26,12 @@ import (
 func TestProfiles(t *testing.T) {
 
 	CreateTestCDNs(t)
+	CreateTestTypes(t)
 	CreateTestProfiles(t)
 	UpdateTestProfiles(t)
 	GetTestProfiles(t)
 	DeleteTestProfiles(t)
+	DeleteTestTypes(t)
 	DeleteTestCDNs(t)
 
 }
@@ -38,14 +40,14 @@ func CreateTestProfiles(t *testing.T) {
 
 	for _, pr := range testData.Profiles {
 		cdns, _, err := TOSession.GetCDNByName(pr.CDNName)
-		fmt.Printf("cdns ---> %v\n", cdns)
 		respCDN := cdns[0]
-		pr.CDNName = respCDN.Name
+		pr.CDNID = respCDN.ID
 
 		resp, _, err := TOSession.CreateProfile(pr)
+
 		log.Debugln("Response: ", resp)
 		if err != nil {
-			t.Errorf("could not CREATE phys_locations: %v\n", err)
+			t.Errorf("could not CREATE profiles with name: %s %v\n", pr.Name, err)
 		}
 	}
 
