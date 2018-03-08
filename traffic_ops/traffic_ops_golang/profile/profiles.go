@@ -320,45 +320,20 @@ func (prof *TOProfile) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 func updateQuery() string {
 	query := `UPDATE
 profile SET
-address=:address,
-city=:city,
-comments=:comments,
-email=:email,
+description=:description,
 name=:name,
-phone=:phone,
-poc=:poc,
-region=:region,
-short_name=:short_name,
-state=:state,
-zip=:zip
+routing_disabled=:routing_disabled,
+type=:type
 WHERE id=:id RETURNING last_updated`
 	return query
 }
 
 func insertQuery() string {
 	query := `INSERT INTO profile (
-address,
-city,
-comments,
-email,
-name,
-phone,
-poc,
-region,
-short_name,
-state,
-zip) VALUES (
-:address,
-:city,
-:comments,
-:email,
+:description,
 :name,
-:phone,
-:poc,
-:region,
-:short_name,
-:state,
-:zip) RETURNING id,last_updated`
+:routing_disabled,
+:type) RETURNING id,last_updated`
 	return query
 }
 
