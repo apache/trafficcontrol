@@ -49,11 +49,11 @@ func UpdateTestCDNs(t *testing.T) {
 	// Retrieve the CDN by name so we can get the id for the Update
 	resp, _, err := TOSession.GetCDNByName(firstCDN.Name)
 	if err != nil {
-		t.Errorf("cannot GET CDN by name: %v - %v\n", firstCDN.Name, err)
+		t.Errorf("cannot GET CDN by name: '%s' %v - %v\n", firstCDN.Name, err)
 	}
 	remoteCDN := resp[0]
-	expectedCDNName := "testCdn1"
-	remoteCDN.Name = expectedCDNName
+	expectedCDNDomain := "domain2"
+	remoteCDN.DomainName = expectedCDNDomain
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN)
 	if err != nil {
@@ -63,11 +63,11 @@ func UpdateTestCDNs(t *testing.T) {
 	// Retrieve the CDN to check CDN name got updated
 	resp, _, err = TOSession.GetCDNByID(remoteCDN.ID)
 	if err != nil {
-		t.Errorf("cannot GET CDN by name: %v - %v\n", firstCDN.Name, err)
+		t.Errorf("cannot GET CDN by name: '$%s' %v - %v\n", firstCDN.Name, err)
 	}
 	respCDN := resp[0]
-	if respCDN.Name != expectedCDNName {
-		t.Errorf("results do not match actual: %s, expected: %s\n", respCDN.Name, expectedCDNName)
+	if respCDN.DomainName != expectedCDNDomain {
+		t.Errorf("results do not match actual: %s, expected: %s\n", respCDN.DomainName, expectedCDNDomain)
 	}
 
 }
@@ -93,9 +93,9 @@ func DeleteTestCDNs(t *testing.T) {
 		if len(resp) > 0 {
 			respCDN := resp[0]
 
-			delResp, _, err := TOSession.DeleteCDNByID(respCDN.ID)
+			_, _, err := TOSession.DeleteCDNByID(respCDN.ID)
 			if err != nil {
-				t.Errorf("cannot DELETE CDN by name: %v - %v\n", err, delResp)
+				t.Errorf("cannot DELETE CDN by name: '%s' %v\n", respCDN.Name, err)
 			}
 
 			// Retrieve the CDN to see if it got deleted
