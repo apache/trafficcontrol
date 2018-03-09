@@ -44,6 +44,7 @@ func getTestProfiles() []tc.ProfileNullable {
 	description := "desc1"
 	pt := "TR_PROFILE"
 	cdnID := 1
+	cdnName := "cdn1"
 	rd := true
 
 	testCase := tc.ProfileNullable{
@@ -51,6 +52,7 @@ func getTestProfiles() []tc.ProfileNullable {
 		LastUpdated:     &lastUpdated,
 		Name:            &name,
 		Description:     &description,
+		CDNName:         &cdnName,
 		CDNID:           &cdnID,
 		RoutingDisabled: &rd,
 		Type:            &pt,
@@ -85,6 +87,7 @@ func TestGetProfiles(t *testing.T) {
 			ts.LastUpdated,
 			ts.Name,
 			ts.Description,
+			ts.CDNName,
 			ts.CDNID,
 			ts.RoutingDisabled,
 			ts.Type,
