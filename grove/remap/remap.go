@@ -302,9 +302,9 @@ type RemapRuleJSON struct {
 
 // LoadRemapRules returns the loaded rules, the global plugins, the Stats remap rules, and any error
 func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.LoadFunc, caches map[string]icache.Cache, baseTransport *http.Transport) ([]remapdata.RemapRule, map[string]interface{}, *remapdata.RemapRulesStats, error) {
-	fmt.Printf("Loading Remap Rules\n")
+	fmt.Println(time.Now().Format(time.RFC3339Nano) + " Loading Remap Rules")
 	defer func() {
-		fmt.Printf("Loaded Remap Rules\n")
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Loaded Remap Rules")
 	}()
 	file, err := os.Open(path)
 	if err != nil {
@@ -360,7 +360,7 @@ func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.LoadFunc,
 
 	rules := make([]remapdata.RemapRule, len(remapRulesJSON.Rules))
 	for i, jsonRule := range remapRulesJSON.Rules {
-		fmt.Printf("Creating Remap Rule %v\n", jsonRule.Name)
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Creating Remap Rule " + jsonRule.Name)
 		rule := remapdata.RemapRule{RemapRuleBase: jsonRule.RemapRuleBase}
 
 		rule.Plugins = make(map[string]interface{}, len(jsonRule.Plugins))
@@ -457,10 +457,8 @@ func makeRuleHash(rule remapdata.RemapRule) chash.ATSConsistentHash {
 		h.Insert(&chash.ATSConsistentHashNode{Name: to.URL, ProxyURL: to.ProxyURL, Transport: to.Transport}, *to.Weight)
 	}
 	if h.First() == nil {
-		fmt.Printf("DEBUGLL makeRuleHash %v NodeMap empty!\n", rule.Name)
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " ERROR  makeRuleHash " + rule.Name + " NodeMap empty!")
 	}
-
-	// fmt.Println("makeRuleHash " + rule.Name + ":\n" + h.String())
 
 	return h
 }
