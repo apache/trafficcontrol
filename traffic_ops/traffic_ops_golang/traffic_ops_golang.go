@@ -29,20 +29,30 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/utils"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
 
-// Version ...
-const Version = "0.1"
+// set the version at build time: `go build -X "main.version=..."`
+var version = "development"
+
+func init() {
+	utils.SetVersion(version)
+}
 
 func main() {
+	showVersion := flag.Bool("version", false, "Show version and exit")
 	configFileName := flag.String("cfg", "", "The config file path")
 	dbConfigFileName := flag.String("dbcfg", "", "The db config file path")
 	riakConfigFileName := flag.String("riakcfg", "", "The riak config file path")
 	flag.Parse()
 
+	if *showVersion {
+		fmt.Println(utils.Version)
+		os.Exit(0)
+	}
 	if len(os.Args) < 2 {
 		flag.Usage()
 		os.Exit(1)
