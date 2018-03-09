@@ -226,6 +226,8 @@ func (prof *TOProfile) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
+	q := insertQuery()
+	fmt.Printf("q ---> %v\n", q)
 	resultRows, err := tx.NamedQuery(insertQuery(), prof)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -331,6 +333,11 @@ WHERE id=:id RETURNING last_updated`
 
 func insertQuery() string {
 	query := `INSERT INTO profile (
+cdn,
+description,
+name,
+routing_disabled,
+type) VALUES (
 :cdn,
 :description,
 :name,
