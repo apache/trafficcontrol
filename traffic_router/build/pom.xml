@@ -44,7 +44,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
-			<artifactId>traffic_router_core</artifactId>
+			<artifactId>ROOT</artifactId>
 			<version>${project.parent.version}</version>
 			<type>war</type>
 		</dependency>
@@ -207,7 +207,7 @@
 									<dependency>
 										<stripVersion>true</stripVersion>
 										<includes>
-											<include>com.comcast.cdn.traffic_control.traffic_router:traffic_router_core</include>
+											<include>com.comcast.cdn.traffic_control.traffic_router:ROOT</include>
 										</includes>
 									</dependency>
 								</mapping>

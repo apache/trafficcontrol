@@ -21,7 +21,7 @@
 		<version>2.3.0</version>
 	</parent>
 
-	<artifactId>traffic_router_core</artifactId>
+	<artifactId>ROOT</artifactId>
 	<packaging>war</packaging>
 
 	<scm>
@@ -41,7 +41,7 @@
 	</repositories>
 
 	<build>
-		<finalName>traffic_router_core</finalName>
+		<finalName>ROOT</finalName>
 		<resources>
 			<resource>
 				<filtering>false</filtering>
