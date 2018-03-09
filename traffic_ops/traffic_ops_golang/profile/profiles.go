@@ -64,7 +64,7 @@ func (prof *TOProfile) GetAuditName() string {
 }
 
 func (prof *TOProfile) GetType() string {
-	return "physLocation"
+	return "profile"
 }
 
 func (prof *TOProfile) SetID(i int) {
@@ -108,17 +108,17 @@ func (prof *TOProfile) Read(db *sqlx.DB, parameters map[string]string, user auth
 	}
 	defer rows.Close()
 
-	physLocations := []interface{}{}
+	profiles := []interface{}{}
 	for rows.Next() {
-		var s tc.ProfileNullable
-		if err = rows.StructScan(&s); err != nil {
+		var p tc.ProfileNullable
+		if err = rows.StructScan(&p); err != nil {
 			log.Errorf("error parsing Profile rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
-		physLocations = append(physLocations, s)
+		profiles = append(profiles, p)
 	}
 
-	return physLocations, []error{}, tc.NoError
+	return profiles, []error{}, tc.NoError
 
 }
 

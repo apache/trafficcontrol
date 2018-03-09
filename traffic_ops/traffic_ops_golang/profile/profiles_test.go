@@ -34,33 +34,38 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestPhysLocations() []tc.PhysLocation {
-	physLocations := []tc.PhysLocation{}
-	testCase := tc.PhysLocation{
-		Address:     "1118 S. Grant St.",
-		City:        "Denver",
-		Email:       "d.t@gmail.com",
-		ID:          1,
-		LastUpdated: tc.TimeNoMod{Time: time.Now()},
-		Name:        "physLocation1",
-		Phone:       "303-210-0000",
-		POC:         "Dennis Thompson",
-		RegionID:    1,
-		RegionName:  "region1",
-		ShortName:   "pl1",
-		State:       "CO",
-		Zip:         "80210",
+func getTestProfiles() []tc.ProfileNullable {
+	profiles := []tc.ProfileNullable{}
+
+	lastUpdated := tc.TimeNoMod{}
+	lastUpdated.Scan(time.Now())
+	ID := 1
+	name := "profile1"
+	description := "desc1"
+	pt := "TR_PROFILE"
+	cdnID := 1
+	rd := true
+
+	testCase := tc.ProfileNullable{
+		ID:              &ID,
+		LastUpdated:     &lastUpdated,
+		Name:            &name,
+		Description:     &description,
+		CDNID:           &cdnID,
+		RoutingDisabled: &rd,
+		Type:            &pt,
 	}
-	physLocations = append(physLocations, testCase)
+	profiles = append(profiles, testCase)
 
 	testCase2 := testCase
-	testCase2.Name = "physLocation2"
-	physLocations = append(physLocations, testCase2)
+	name = "profile2"
+	testCase2.Name = &name
+	profiles = append(profiles, testCase2)
 
-	return physLocations
+	return profiles
 }
 
-func TestGetPhysLocations(t *testing.T) {
+func TestGetProfiles(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -70,74 +75,64 @@ func TestGetPhysLocations(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	testCase := getTestPhysLocations()
-	cols := test.ColsFromStructByTag("db", tc.PhysLocation{})
+	testCase := getTestProfiles()
+	cols := test.ColsFromStructByTag("db", tc.ProfileNullable{})
 	rows := sqlmock.NewRows(cols)
 
 	for _, ts := range testCase {
 		rows = rows.AddRow(
-			ts.Address,
-			ts.City,
-			ts.Comments,
-			ts.Email,
 			ts.ID,
 			ts.LastUpdated,
 			ts.Name,
-			ts.Phone,
-			ts.POC,
-			ts.RegionID,
-			ts.RegionName,
-			ts.ShortName,
-			ts.State,
-			ts.Zip,
+			ts.Description,
+			ts.CDNID,
+			ts.RoutingDisabled,
+			ts.Type,
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := map[string]string{"dsId": "1"}
+	v := map[string]string{"name": "1"}
 
-	physLocations, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+	profiles, errs, _ := refType.Read(db, v, auth.CurrentUser{})
 	if len(errs) > 0 {
-		t.Errorf("physLocation.Read expected: no errors, actual: %v", errs)
+		t.Errorf("profile.Read expected: no errors, actual: %v", errs)
 	}
 
-	if len(physLocations) != 2 {
-		t.Errorf("physLocation.Read expected: len(physLocations) == 2, actual: %v", len(physLocations))
+	if len(profiles) != 2 {
+		t.Errorf("profile.Read expected: len(profiles) == 2, actual: %v", len(profiles))
 	}
 
 }
 
 func TestInterfaces(t *testing.T) {
 	var i interface{}
-	i = &TOPhysLocation{}
+	i = &TOProfile{}
 
 	if _, ok := i.(api.Creator); !ok {
-		t.Errorf("PhysLocation must be Creator")
+		t.Errorf("Profile must be Creator")
 	}
 	if _, ok := i.(api.Reader); !ok {
-		t.Errorf("PhysLocation must be Reader")
+		t.Errorf("Profile must be Reader")
 	}
 	if _, ok := i.(api.Updater); !ok {
-		t.Errorf("PhysLocation must be Updater")
+		t.Errorf("Profile must be Updater")
 	}
 	if _, ok := i.(api.Deleter); !ok {
-		t.Errorf("PhysLocation must be Deleter")
+		t.Errorf("Profile must be Deleter")
 	}
 	if _, ok := i.(api.Identifier); !ok {
-		t.Errorf("PhysLocation must be Identifier")
+		t.Errorf("Profile must be Identifier")
 	}
 }
 
 func TestValidate(t *testing.T) {
-	p := TOPhysLocation{}
+	p := TOProfile{}
 	errs := test.SortErrors(p.Validate(nil))
 	expected := test.SortErrors([]error{
-		errors.New("'state' cannot be blank"),
-		errors.New("'zip' cannot be blank"),
-		errors.New("'address' cannot be blank"),
-		errors.New("'city' cannot be blank"),
+		errors.New("'cdn' cannot be blank"),
+		errors.New("'description' cannot be blank"),
 		errors.New("'name' cannot be blank"),
-		errors.New("'regionId' cannot be blank"),
-		errors.New("'shortName' cannot be blank"),
+		errors.New("'type' cannot be blank"),
 	})
 
 	if !reflect.DeepEqual(expected, errs) {
