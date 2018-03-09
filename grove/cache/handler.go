@@ -3,6 +3,7 @@ package cache
 import (
 	"net/http"
 	"os"
+	"strconv"
 	"sync/atomic"
 	"time"
 	"unsafe"
@@ -54,6 +55,7 @@ type Handler struct {
 	httpConns       *web.ConnMap
 	httpsConns      *web.ConnMap
 	interfaceName   string
+	requestID       uint64 // Atomic - DO NOT access or modify without atomic operations
 	// keyThrottlers     Throttlers
 	// nocacheThrottlers Throttlers
 }
@@ -147,9 +149,10 @@ func copyPluginContext(context map[string]*interface{}) map[string]*interface{} 
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reqTime := time.Now()
+	reqID := atomic.AddUint64(&h.requestID, 1)
 	pluginContext := copyPluginContext(h.pluginContext) // must give each request a copy, because they can modify in parallel
 	srvrData := cachedata.SrvrData{h.hostname, h.port, h.scheme}
-	onReqData := plugin.OnRequestData{W: w, R: r, Stats: h.stats, StatRules: h.remapper.StatRules(), HTTPConns: h.httpConns, HTTPSConns: h.httpsConns, InterfaceName: h.interfaceName, SrvrData: srvrData}
+	onReqData := plugin.OnRequestData{W: w, R: r, Stats: h.stats, StatRules: h.remapper.StatRules(), HTTPConns: h.httpConns, HTTPSConns: h.httpsConns, InterfaceName: h.interfaceName, SrvrData: srvrData, RequestID: reqID}
 	stop := h.plugins.OnRequest(h.remapper.PluginCfg(), pluginContext, onReqData)
 	if stop {
 		return
@@ -157,10 +160,10 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	conn := (*web.InterceptConn)(nil)
 	if realConn, ok := h.conns.Get(r.RemoteAddr); !ok {
-		log.Errorf("RemoteAddr '%v' not in Conns\n", r.RemoteAddr)
+		log.Errorf("RemoteAddr '%v' not in Conns (reqid %v)\n", r.RemoteAddr, reqID)
 	} else {
 		if conn, ok = realConn.(*web.InterceptConn); !ok {
-			log.Errorf("Could not get Conn info: Conn is not an InterceptConn: %T\n", realConn)
+			log.Errorf("Could not get Conn info: Conn is not an InterceptConn: %T (reqid %v)\n", realConn, reqID)
 		}
 	}
 
@@ -168,7 +171,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err == nil { // if we failed to get a remapping, there's no DSCP to set.
 		if err := conn.SetDSCP(remappingProducer.DSCP()); err != nil {
-			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": could not set DSCP: " + err.Error())
+			log.Errorln(time.Now().Format(time.RFC3339Nano) + " " + r.RemoteAddr + " " + r.Method + " " + r.RequestURI + ": could not set DSCP: " + err.Error() + " (reqid " + strconv.FormatUint(reqID, 10) + ")")
 		}
 	}
 
@@ -183,19 +186,18 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqData := cachedata.ReqData{r, conn, clientIP, reqTime, toFQDN}
-
-	responder := NewResponder(w, pluginCfg, pluginContext, srvrData, reqData, h.plugins, h.stats)
+	responder := NewResponder(w, pluginCfg, pluginContext, srvrData, reqData, h.plugins, h.stats, reqID)
 
 	if err != nil {
 		switch err {
 		case remap.ErrRuleNotFound:
-			log.Debugf("rule not found for %v\n", r.RequestURI)
+			log.Debugf("rule not found for %v (reqid %v)\n", r.RequestURI, reqID)
 			*responder.ResponseCode = http.StatusNotFound
 		case remap.ErrIPNotAllowed:
-			log.Debugf("IP %v not allowed\n", r.RemoteAddr)
+			log.Debugf("IP %v not allowed (reqid %v)\n", r.RemoteAddr, reqID)
 			*responder.ResponseCode = http.StatusForbidden
 		default:
-			log.Debugf("request error: %v\n", err)
+			log.Debugf("request error: %v (reqid %v)\n", err, reqID)
 		}
 		responder.OriginConnectFailed = true
 		responder.Do()
@@ -203,22 +205,22 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	reqCacheControl := web.ParseCacheControl(reqHeader)
-	log.Debugf("Serve got Cache-Control %+v\n", reqCacheControl)
+	log.Debugf("Serve got Cache-Control %+v (reqid %v)\n", reqCacheControl, reqID)
 
 	connectionClose := h.connectionClose || remappingProducer.ConnectionClose()
 	cacheKey := remappingProducer.CacheKey()
-	retrier := NewRetrier(h, reqHeader, reqTime, reqCacheControl, cacheKey, remappingProducer)
+	retrier := NewRetrier(h, reqHeader, reqTime, reqCacheControl, cacheKey, remappingProducer, reqID)
 
 	cache := remappingProducer.Cache()
 
 	cacheObj, ok := cache.Get(cacheKey)
 	if !ok {
-		log.Debugf("cache.Handler.ServeHTTP: '%v' not in cache\n", cacheKey)
+		log.Debugf("cache.Handler.ServeHTTP: '%v' not in cache (reqid %v)\n", cacheKey, reqID)
 		beforeParentRequestData := plugin.BeforeParentRequestData{Req: r, RemapRule: remappingProducer.Name()}
 		h.plugins.OnBeforeParentRequest(remappingProducer.PluginCfg(), pluginContext, beforeParentRequestData)
 		cacheObj, err := retrier.Get(r, nil)
 		if err != nil {
-			log.Errorf("retrying get error (in uncached): %v\n", err)
+			log.Errorf("retrying get error (in uncached): %v (reqid %v)\n", err, reqID)
 			responder.OriginConnectFailed = true
 			responder.ProxyStr = cacheObj.ProxyURL
 			responder.Do()
@@ -247,33 +249,33 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch canReuseStored {
 	case remapdata.ReuseCan:
-		log.Debugf("cache.Handler.ServeHTTP: '%v' cache hit!\n", cacheKey)
+		log.Debugf("cache.Handler.ServeHTTP: '%v' cache hit! (reqid %v)\n", cacheKey, reqID)
 	case remapdata.ReuseCannot:
-		log.Debugf("cache.Handler.ServeHTTP: '%v' can't reuse\n", cacheKey)
+		log.Debugf("cache.Handler.ServeHTTP: '%v' can't reuse (reqid %v)\n", cacheKey, reqID)
 		cacheObj, err = retrier.Get(r, nil)
 		if err != nil {
-			log.Errorf("retrying get error (in reuse-cannot): %v\n", err)
+			log.Errorf("retrying get error (in reuse-cannot): %v (reqid %v)\n", err, reqID)
 			responder.Do()
 			return
 		}
 	case remapdata.ReuseMustRevalidate:
-		log.Debugf("cache.Handler.ServeHTTP: '%v' must revalidate\n", cacheKey)
+		log.Debugf("cache.Handler.ServeHTTP: '%v' must revalidate (reqid %v)\n", cacheKey, reqID)
 		cacheObj, err = retrier.Get(r, cacheObj)
 		if err != nil {
-			log.Errorf("retrying get error: %v\n", err)
+			log.Errorf("retrying get error: %v (reqid %v)\n", err, reqID)
 			responder.Do()
 			return
 		}
 	case remapdata.ReuseMustRevalidateCanStale:
-		log.Debugf("cache.Handler.ServeHTTP: '%v' must revalidate (but allowed stale)\n", cacheKey)
+		log.Debugf("cache.Handler.ServeHTTP: '%v' must revalidate (but allowed stale) (reqid %v)\n", cacheKey, reqID)
 		oldCacheObj := cacheObj
 		cacheObj, err = retrier.Get(r, cacheObj)
 		if err != nil {
-			log.Errorf("retrying get error - serving stale as allowed: %v\n", err)
+			log.Errorf("retrying get error - serving stale as allowed: %v (reqid %v)\n", err, reqID)
 			cacheObj = oldCacheObj
 		}
 	}
-	log.Debugf("cache.Handler.ServeHTTP: '%v' responding with %v\n", cacheKey, cacheObj.Code)
+	log.Debugf("cache.Handler.ServeHTTP: '%v' responding with %v (reqid %v)\n", cacheKey, cacheObj.Code, reqID)
 
 	// create new pointers, so plugins don't modify the cacheObj
 	codePtr, hdrsPtr, bodyPtr := cacheObj.Code, cacheObj.RespHeaders, cacheObj.Body
