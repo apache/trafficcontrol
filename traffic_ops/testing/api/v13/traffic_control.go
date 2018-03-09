@@ -31,6 +31,7 @@ type TrafficControl struct {
 	Divisions                      []tcapi.Division                      `json:"divisions"`
 	Profiles                       []tcapi.Profile                       `json:"profiles"`
 	Parameters                     []tcapi.Parameter                     `json:"parameters"`
+	ProfileParameters              []tcapi.ProfileParameter              `json:"profileParameters"`
 	PhysLocations                  []tcapi.PhysLocation                  `json:"physLocations"`
 	Regions                        []tcapi.Region                        `json:"regions"`
 	Servers                        []v13.Server                          `json:"servers"`
