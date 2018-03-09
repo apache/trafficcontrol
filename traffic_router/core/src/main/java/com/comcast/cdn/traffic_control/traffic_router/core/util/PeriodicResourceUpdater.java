@@ -62,6 +62,8 @@ public class PeriodicResourceUpdater {
 	protected ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 	protected long pollingInterval;
 
+	private static final String GZIP_ENCODING_STRING = "gzip";
+
 	protected ScheduledFuture<?> scheduledService;
 
 	public PeriodicResourceUpdater(final AbstractUpdatable listener, final ResourceUrl urls, final String location, final int interval, final boolean pauseTilLoaded) {
@@ -136,7 +138,7 @@ public class PeriodicResourceUpdater {
 			if (!hasBeenLoaded || needsUpdating(existingDB)) {
 				final Request request = getRequest(urls.nextUrl());
 				if (request != null) {
-					request.getHeaders().add("Accept-Encoding", "gzip");
+					request.getHeaders().add("Accept-Encoding", GZIP_ENCODING_STRING);
 					asyncHttpClient.executeRequest(request, new UpdateHandler(request)); // AsyncHandlers are NOT thread safe; one instance per request
 					return true;
 				}
@@ -261,7 +263,7 @@ public class PeriodicResourceUpdater {
 			}
 
 			final String responseBody;
-			if ("gzip".equals(response.getHeader("Content-Encoding"))) {
+			if (GZIP_ENCODING_STRING.equals(response.getHeader("Content-Encoding"))) {
 				final StringBuilder stringBuilder = new StringBuilder();
 				final GZIPInputStream zippedInputStream =  new GZIPInputStream(response.getResponseBodyAsStream());
 				final BufferedReader r = new BufferedReader(new InputStreamReader(zippedInputStream));
@@ -270,8 +272,7 @@ public class PeriodicResourceUpdater {
 					stringBuilder.append(line);
 				}
 				responseBody = stringBuilder.toString();
-			}
-			else {
+			} else {
 				responseBody = response.getResponseBody();
 			}
 

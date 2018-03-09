@@ -46,6 +46,7 @@ public class Fetcher {
 	protected static final String POST_STR = "POST";
 	protected static final String UTF8_STR = "UTF-8";
 	protected static final int DEFAULT_TIMEOUT = 10000;
+	private static final String GZIP_ENCODING_STRING = "gzip";
 	protected int timeout = DEFAULT_TIMEOUT; // override if you want something different
 	protected final Map<String, String> requestProps = new HashMap<String, String>();
 
@@ -103,7 +104,7 @@ public class Fetcher {
 		http.setInstanceFollowRedirects(false);
 		http.setRequestMethod(method);
 		http.setAllowUserInteraction(true);
-		http.addRequestProperty("Accept-Encoding", "gzip");
+		http.addRequestProperty("Accept-Encoding", GZIP_ENCODING_STRING);
 
 		for (final String key : requestProps.keySet()) {
 			http.addRequestProperty(key, requestProps.get(key));
@@ -201,15 +202,14 @@ public class Fetcher {
 	}
 
 	public void createStringBuilderFromResponse (final StringBuilder sb, final HttpURLConnection connection) throws IOException {
-		if ("gzip".equals(connection.getContentEncoding())) {
+		if (GZIP_ENCODING_STRING.equals(connection.getContentEncoding())) {
 			final GZIPInputStream zippedInputStream =  new GZIPInputStream(connection.getInputStream());
 			final BufferedReader r = new BufferedReader(new InputStreamReader(zippedInputStream));
 			String input;
 			while((input = r.readLine()) != null) {
 				sb.append(input);
 			}
-		}
-		else {
+		} else {
 			try (final BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
 				String input;
 
