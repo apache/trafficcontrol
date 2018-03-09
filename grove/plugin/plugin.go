@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/apache/incubator-trafficcontrol/grove/cachedata"
 	"github.com/apache/incubator-trafficcontrol/grove/cacheobj"
@@ -21,11 +22,10 @@ import (
 func AddPlugin(priority uint64, funcs Funcs) {
 	_, filename, _, ok := runtime.Caller(1)
 	if !ok {
-		fmt.Println("plugin.AddPlugin: runtime.Caller failed") // print, because this is called in init, loggers don't exist yet
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error plugin.AddPlugin: runtime.Caller failed, can't get plugin names") // print, because this is called in init, loggers don't exist yet
 		os.Exit(1)
 	}
 	pluginName := strings.TrimSuffix(path.Base(filename), ".go")
-	fmt.Println("DEBUGp plugin.AddPlugin: " + pluginName)
 	plugins = append(plugins, pluginObj{funcs: funcs, priority: priority, name: pluginName})
 }
 
