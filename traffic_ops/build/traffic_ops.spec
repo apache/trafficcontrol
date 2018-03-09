@@ -104,7 +104,7 @@ Built: %(date) by %{getenv: USER}
       #echo "go getting at $(pwd)" && \
       #go get -d -v && \
       echo "go building at $(pwd)" && \
-      go build -ldflags "-B 0x`git rev-parse HEAD`" \
+      go build -ldflags "-X main.version=%{version}-%{release} -B 0x`git rev-parse HEAD`" \
     ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
 %install

@@ -37,11 +37,12 @@ import (
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/utils"
 	"github.com/jmoiron/sqlx"
 )
 
 // ServerName - the server identifier
-const ServerName = "traffic_ops_golang" + "/" + Version
+var ServerName = "traffic_ops_golang" + "/" + utils.Version
 
 // AuthBase ...
 type AuthBase struct {
