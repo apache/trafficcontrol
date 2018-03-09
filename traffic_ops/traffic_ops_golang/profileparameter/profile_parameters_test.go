@@ -1,4 +1,4 @@
-package region
+package profileparameter
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -32,24 +32,29 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestRegions() []tc.Region {
-	regions := []tc.Region{}
-	testCase := tc.Region{
-		DivisionName: "west",
-		ID:           1,
-		Name:         "region1",
-		LastUpdated:  tc.TimeNoMod{Time: time.Now()},
+func getTestProfileParameters() []tc.ProfileParameterNullable {
+	pps := []tc.ProfileParameterNullable{}
+	lastUpdated := tc.TimeNoMod{}
+	lastUpdated.Scan(time.Now())
+	profile := 1
+	parameter := 1
+
+	pp := tc.ProfileParameterNullable{
+		LastUpdated: &lastUpdated,
+		Profile:     &profile,
+		Parameter:   &parameter,
 	}
-	regions = append(regions, testCase)
+	pps = append(pps, pp)
 
-	testCase2 := testCase
-	testCase2.Name = "region2"
-	regions = append(regions, testCase2)
+	pp2 := pp
+	pp2.Profile = &profile
+	pp2.Parameter = &parameter
+	pps = append(pps, pp2)
 
-	return regions
+	return pps
 }
 
-func TestReadRegions(t *testing.T) {
+func TestGetProfileParameters(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -59,50 +64,48 @@ func TestReadRegions(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	refType := GetRefType()
-
-	testRegions := getTestRegions()
-	cols := test.ColsFromStructByTag("db", tc.Region{})
+	testPPs := getTestProfileParameters()
+	cols := test.ColsFromStructByTag("db", tc.ProfileParameterNullable{})
 	rows := sqlmock.NewRows(cols)
 
-	for _, ts := range testRegions {
+	for _, ts := range testPPs {
 		rows = rows.AddRow(
-			ts.Division,
-			ts.ID,
 			ts.LastUpdated,
-			ts.Name,
+			ts.Profile,
+			ts.Parameter,
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := map[string]string{"id": "1"}
+	v := map[string]string{"profile": "1"}
 
-	regions, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+	pps, errs, _ := refType.Read(db, v, auth.CurrentUser{})
 	if len(errs) > 0 {
-		t.Errorf("region.Read expected: no errors, actual: %v", errs)
+		t.Errorf("profileparameter.Read expected: no errors, actual: %v", errs)
 	}
 
-	if len(regions) != 2 {
-		t.Errorf("region.Read expected: len(regions) == 2, actual: %v", len(regions))
+	if len(pps) != 2 {
+		t.Errorf("profileparameter.Read expected: len(pps) == 2, actual: %v", len(pps))
 	}
+
 }
 
 func TestInterfaces(t *testing.T) {
 	var i interface{}
-	i = &TORegion{}
+	i = &TOProfileParameter{}
 
 	if _, ok := i.(api.Creator); !ok {
-		t.Errorf("Region must be Creator")
+		t.Errorf("ProfileParameter must be Creator")
 	}
 	if _, ok := i.(api.Reader); !ok {
-		t.Errorf("Region must be Reader")
+		t.Errorf("ProfileParameter must be Reader")
 	}
 	if _, ok := i.(api.Updater); !ok {
-		t.Errorf("Region must be Updater")
+		t.Errorf("ProfileParameter must be Updater")
 	}
 	if _, ok := i.(api.Deleter); !ok {
-		t.Errorf("Region must be Deleter")
+		t.Errorf("ProfileParameter must be Deleter")
 	}
 	if _, ok := i.(api.Identifier); !ok {
-		t.Errorf("Region must be Identifier")
+		t.Errorf("ProfileParameter must be Identifier")
 	}
 }

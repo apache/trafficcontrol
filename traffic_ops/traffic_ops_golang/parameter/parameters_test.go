@@ -91,15 +91,15 @@ func TestGetParameters(t *testing.T) {
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := map[string]string{"dsId": "1"}
+	v := map[string]string{"name": "1"}
 
-	parameters, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+	pps, errs, _ := refType.Read(db, v, auth.CurrentUser{})
 	if len(errs) > 0 {
 		t.Errorf("parameter.Read expected: no errors, actual: %v", errs)
 	}
 
-	if len(parameters) != 2 {
-		t.Errorf("parameter.Read expected: len(parameters) == 2, actual: %v", len(parameters))
+	if len(pps) != 2 {
+		t.Errorf("parameter.Read expected: len(pps) == 2, actual: %v", len(pps))
 	}
 
 }
