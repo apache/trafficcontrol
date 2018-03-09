@@ -54,7 +54,7 @@ func callgc(icfg interface{}, d OnRequestData) bool {
 
 	now := time.Now()
 	// log, so we know if someone is hitting this endpoint when they shouldn't be. GC is expensive, this could become an accidental DDOS.
-	log.EventRaw(atsEventLogStr(now, clientIP, d.Hostname, req.Host, d.Port, "-", d.Scheme, req.URL.String(), req.Method, req.Proto, respCode, now.Sub(reqTime), 0, 0, 0, true, true, getCacheHitStr(true, false), "-", "-", req.UserAgent(), req.Header.Get("X-Money-Trace")))
+	log.EventRaw(atsEventLogStr(now, clientIP, d.Hostname, req.Host, d.Port, "-", d.Scheme, req.URL.String(), req.Method, req.Proto, respCode, now.Sub(reqTime), 0, 0, 0, true, true, getCacheHitStr(true, false), "-", "-", req.UserAgent(), req.Header.Get("X-Money-Trace"), d.RequestID))
 
 	return true
 }

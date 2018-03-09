@@ -45,6 +45,7 @@ func atsLog(icfg interface{}, d AfterRespondData) {
 		proxyNameStr,
 		d.Req.UserAgent(),
 		d.Req.Header.Get("X-Money-Trace"),
+		d.RequestID,
 	))
 }
 
@@ -98,6 +99,7 @@ func atsEventLogStr(
 	thisProxyName string, // pqsn
 	clientUserAgent string, // client user agent
 	xmt string, // moneytrace header
+	requestID uint64, // Grove tracing ID - not part of real ATS log format
 ) string {
 	unixNano := timestamp.UnixNano()
 	unixSec := unixNano / NSPerSec
@@ -123,5 +125,5 @@ func atsEventLogStr(
 		xmt = `"` + xmt + `"`
 	}
 
-	return strconv.FormatInt(unixSec, 10) + "." + unixFracStr + " chi=" + clientIP + " phn=" + selfHostname + " php=" + reqPort + " shn=" + originHost + " url=" + scheme + "://" + reqHost + url + " cqhn=" + method + " cqhv=" + protocol + " pssc=" + strconv.FormatInt(int64(respCode), 10) + " ttms=" + strconv.FormatInt(int64(timeToServe/time.Millisecond), 10) + " b=" + strconv.FormatInt(int64(bytesSent), 10) + " sssc=" + strconv.FormatInt(int64(originStatus), 10) + " sscl=" + strconv.FormatInt(int64(originBytes), 10) + " cfsc=" + cfsc + " pfsc=" + pfsc + " crc=" + cacheHit + " phr=" + proxyUsed + " psqn=" + thisProxyName + " uas=" + clientUserAgent + " xmt=" + xmt + "\n"
+	return strconv.FormatInt(unixSec, 10) + "." + unixFracStr + " chi=" + clientIP + " phn=" + selfHostname + " php=" + reqPort + " shn=" + originHost + " url=" + scheme + "://" + reqHost + url + " cqhn=" + method + " cqhv=" + protocol + " pssc=" + strconv.FormatInt(int64(respCode), 10) + " ttms=" + strconv.FormatInt(int64(timeToServe/time.Millisecond), 10) + " b=" + strconv.FormatInt(int64(bytesSent), 10) + " sssc=" + strconv.FormatInt(int64(originStatus), 10) + " sscl=" + strconv.FormatInt(int64(originBytes), 10) + " cfsc=" + cfsc + " pfsc=" + pfsc + " crc=" + cacheHit + " phr=" + proxyUsed + " psqn=" + thisProxyName + " uas=" + clientUserAgent + " xmt=" + xmt + " reqid=" + strconv.FormatUint(requestID, 10) + "\n"
 }

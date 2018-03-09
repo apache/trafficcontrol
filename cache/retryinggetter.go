@@ -24,14 +24,16 @@ type Retrier struct {
 	ReqCacheControl   web.CacheControl
 	CacheKey          string
 	RemappingProducer *remap.RemappingProducer
+	ReqID             uint64
 }
 
-func NewRetrier(h *Handler, reqHdr http.Header, reqTime time.Time, reqCacheControl web.CacheControl, cacheKey string, remappingProducer *remap.RemappingProducer) *Retrier {
+func NewRetrier(h *Handler, reqHdr http.Header, reqTime time.Time, reqCacheControl web.CacheControl, cacheKey string, remappingProducer *remap.RemappingProducer, reqID uint64) *Retrier {
 	return &Retrier{
 		H:                 h,
 		ReqHdr:            reqHdr,
 		ReqCacheControl:   reqCacheControl,
 		RemappingProducer: remappingProducer,
+		ReqID:             reqID,
 	}
 }
 
@@ -43,7 +45,7 @@ func (r *Retrier) Get(req *http.Request, obj *cacheobj.CacheObj) (*cacheobj.Cach
 			return remap.CanReuse(r.ReqHdr, r.ReqCacheControl, cacheObj, r.H.strictRFC, true)
 		}
 		getAndCache := func() *cacheobj.CacheObj {
-			return GetAndCache(remapping.Request, remapping.ProxyURL, remapping.CacheKey, remapping.Name, remapping.Request.Header, r.ReqTime, r.H.strictRFC, remapping.Cache, r.H.ruleThrottlers[remapping.Name], obj, remapping.Timeout, retryFailures, remapping.RetryNum, remapping.RetryCodes, remapping.Transport)
+			return GetAndCache(remapping.Request, remapping.ProxyURL, remapping.CacheKey, remapping.Name, remapping.Request.Header, r.ReqTime, r.H.strictRFC, remapping.Cache, r.H.ruleThrottlers[remapping.Name], obj, remapping.Timeout, retryFailures, remapping.RetryNum, remapping.RetryCodes, remapping.Transport, r.ReqID)
 		}
 		return r.H.getter.Get(r.CacheKey, getAndCache, canReuse)
 	}
@@ -97,11 +99,12 @@ func GetAndCache(
 	retryNum int,
 	retryCodes map[int]struct{},
 	transport *http.Transport,
+	reqID uint64,
 ) *cacheobj.CacheObj {
 	// TODO this is awkward, with 'revalidateObj' indicating whether the request is a Revalidate. Should Getting and Caching be split up? How?
 	get := func() *cacheobj.CacheObj {
 		// TODO figure out why respReqTime isn't used by rules
-		log.Debugf("GetAndCache calling request %v %v %v %v %v\n", req.Method, req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), req.Header)
+		log.Debugf("GetAndCache calling request %v %v %v %v %v (reqid %v)\n", req.Method, req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), req.Header, reqID)
 		// TODO Verify overriding the passed reqTime is the right thing to do
 		proxyURLStr := ""
 		if proxyURL != nil {
@@ -114,7 +117,7 @@ func GetAndCache(
 		}
 		respCode, respHeader, respBody, reqTime, reqRespTime, err := web.Request(transport, req)
 		if err != nil {
-			log.Errorf("Parent error for URI %v %v %v cacheKey %v rule %v parent %v error %v\n", req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), cacheKey, remapName, proxyURLStr, err)
+			log.Errorf("Parent error for URI %v %v %v cacheKey %v rule %v parent %v error %v (reqid %v)\n", req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), cacheKey, remapName, proxyURLStr, err, reqID)
 			code := CodeConnectFailure
 			body := []byte(http.StatusText(code))
 			return cacheobj.New(reqHeader, body, code, code, proxyURLStr, respHeader, reqTime, reqRespTime, reqRespTime, time.Time{})
@@ -123,10 +126,10 @@ func GetAndCache(
 			return cacheobj.New(reqHeader, respBody, respCode, respCode, proxyURLStr, respHeader, reqTime, reqRespTime, reqRespTime, time.Time{})
 		}
 
-		log.Debugf("GetAndCache request returned %v headers %+v\n", respCode, respHeader)
+		log.Debugf("GetAndCache request returned %v headers %+v (reqid %v)\n", respCode, respHeader, reqID)
 		respRespTime, ok := web.GetHTTPDate(respHeader, "Date")
 		if !ok {
-			log.Errorf("request %v returned no Date header - RFC Violation! Using local response timestamp.\n", req.RequestURI)
+			log.Errorf("request %v returned no Date header - RFC Violation! Using local response timestamp (reqid %v)\n", req.RequestURI, reqID)
 			respRespTime = reqRespTime // if no Date was returned using the client response time simulates latency 0
 		}
 
@@ -136,16 +139,16 @@ func GetAndCache(
 		}
 
 		obj := (*cacheobj.CacheObj)(nil)
-		log.Debugf("h.cache.Add %v\n", cacheKey)
-		log.Debugf("GetAndCache respCode %v\n", respCode)
+		log.Debugf("h.cache.Add %v (reqid %v)\n", cacheKey, reqID)
+		log.Debugf("GetAndCache respCode %v (reqid %v)\n", respCode, reqID)
 		if revalidateObj == nil || respCode != http.StatusNotModified {
-			log.Debugf("GetAndCache new %v\n", cacheKey)
+			log.Debugf("GetAndCache new %v (reqid %v)\n", cacheKey, reqID)
 			obj = cacheobj.New(reqHeader, respBody, respCode, respCode, proxyURLStr, respHeader, reqTime, reqRespTime, respRespTime, lastModified)
 			if !remap.CanCache(reqHeader, respCode, respHeader, strictRFC) {
 				return obj // return without caching
 			}
 		} else {
-			log.Debugf("GetAndCache revalidating %v\n", cacheKey)
+			log.Debugf("GetAndCache revalidating %v (reqid %v)\n", cacheKey, reqID)
 			// must copy, because this cache object may be concurrently read by other goroutines
 			newRespHeader := web.CopyHeader(revalidateObj.RespHeaders)
 			newRespHeader.Set("Date", respHeader.Get("Date"))
@@ -170,7 +173,7 @@ func GetAndCache(
 
 	c := (*cacheobj.CacheObj)(nil)
 	if ruleThrottler == nil {
-		log.Errorf("rule %v not in ruleThrottlers map. Requesting with no origin limit!\n", remapName)
+		log.Errorf("rule %v not in ruleThrottlers map. Requesting with no origin limit! (reqid %v)\n", remapName, reqID)
 		ruleThrottler = thread.NewNoThrottler()
 	}
 	ruleThrottler.Throttle(func() { c = get() })

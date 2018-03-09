@@ -16,6 +16,7 @@ import (
 // Responder is an object encapsulating the cache's response to the client. It holds all the data necessary to respond, log the response, and add the stats.
 type Responder struct {
 	W             http.ResponseWriter
+	RequestID     uint64
 	PluginCfg     map[string]interface{}
 	Plugins       plugin.Plugins
 	PluginContext map[string]*interface{}
@@ -46,9 +47,10 @@ func DefaultRespCode() *int {
 type RespondFunc func() (uint64, error)
 
 // NewResponder creates a Responder, which defaults to a generic error response.
-func NewResponder(w http.ResponseWriter, pluginCfg map[string]interface{}, pluginContext map[string]*interface{}, srvrData cachedata.SrvrData, reqData cachedata.ReqData, plugins plugin.Plugins, stats stat.Stats) *Responder {
+func NewResponder(w http.ResponseWriter, pluginCfg map[string]interface{}, pluginContext map[string]*interface{}, srvrData cachedata.SrvrData, reqData cachedata.ReqData, plugins plugin.Plugins, stats stat.Stats, reqID uint64) *Responder {
 	responder := &Responder{
 		W:              w,
+		RequestID:      reqID,
 		PluginCfg:      pluginCfg,
 		Plugins:        plugins,
 		PluginContext:  pluginContext,
@@ -81,7 +83,7 @@ func (r *Responder) Do() {
 
 	respSuccess := err != nil
 	respData := cachedata.RespData{*r.ResponseCode, bytesSent, respSuccess, isCacheHit(r.Reuse, r.OriginCode)}
-	arData := plugin.AfterRespondData{W: r.W, Stats: r.Stats, ReqData: r.ReqData, SrvrData: r.SrvrData, ParentRespData: r.ParentRespData, RespData: respData}
+	arData := plugin.AfterRespondData{W: r.W, Stats: r.Stats, ReqData: r.ReqData, SrvrData: r.SrvrData, ParentRespData: r.ParentRespData, RespData: respData, RequestID: r.RequestID}
 	r.Plugins.OnAfterRespond(r.PluginCfg, r.PluginContext, arData)
 }
 

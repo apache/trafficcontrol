@@ -53,6 +53,7 @@ type OnRequestData struct {
 	StatRules     remapdata.RemapRulesStats
 	HTTPConns     *web.ConnMap
 	HTTPSConns    *web.ConnMap
+	RequestID     uint64
 	Context       *interface{}
 	cachedata.SrvrData
 }
@@ -77,9 +78,9 @@ type BeforeRespondData struct {
 }
 
 type AfterRespondData struct {
-	W     http.ResponseWriter
-	Stats stat.Stats
-
+	W         http.ResponseWriter
+	Stats     stat.Stats
+	RequestID uint64
 	cachedata.ReqData
 	cachedata.SrvrData
 	cachedata.ParentRespData
