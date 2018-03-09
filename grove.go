@@ -43,19 +43,19 @@ func main() {
 	flag.Parse()
 
 	if *configFileName == "" {
-		fmt.Printf("Error starting service: The -cfg argument is required\n")
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error starting service: The -cfg argument is required")
 		os.Exit(1)
 	}
 
 	cfg, err := config.LoadConfig(*configFileName)
 	if err != nil {
-		fmt.Printf("Error starting service: loading config: %v\n", err)
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error starting service: loading config: " + err.Error())
 		os.Exit(1)
 	}
 
 	eventW, errW, warnW, infoW, debugW, err := log.GetLogWriters(cfg)
 	if err != nil {
-		fmt.Printf("Error starting service: failed to create log writers: %v\n", err)
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error starting service: failed to create log writers: " + err.Error())
 		os.Exit(1)
 	}
 	log.Init(eventW, errW, warnW, infoW, debugW)
