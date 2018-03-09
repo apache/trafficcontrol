@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, deliveryService, type, types, $scope, $state, $stateParams, $controller, $uibModal, $anchorScroll, $q, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
+var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, deliveryService, type, types, $scope, $state, $stateParams, $controller, $uibModal, $anchorScroll, $q, $location, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
 
 	var dsRequest = deliveryServiceRequest[0];
 		
@@ -60,58 +60,35 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 		return item.label;
 	};
 
-	$scope.editStatus = function() {
+	$scope.viewComments = function() {
+		$location.path($location.path() + '/comments');
+	};
+
+	$scope.editStatus = function(status) {
 		var params = {
-			title: "Edit Delivery Service Request Status",
-			message: 'Please select the appropriate status for this request.'
+			title: 'Change Delivery Service Request Status',
+			message: "Are you sure you want to change the status of the delivery service request to '" + status + "'?"
 		};
 		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-			controller: 'DialogSelectController',
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
 			size: 'md',
 			resolve: {
 				params: function () {
 					return params;
-				},
-				collection: function() {
-					var statuses = [];
-					if (dsRequest.status == 'draft' || dsRequest.status == 'submitted') {
-						statuses.push({ id: $scope.DRAFT, name: 'Save as Draft' });
-						statuses.push({ id: $scope.SUBMITTED, name: 'Submit for Review / Deployment' });
-					} else if (dsRequest.status == 'pending') {
-						statuses.push({ id: $scope.COMPLETE, name: 'Complete' });
-					}
-					return statuses;
 				}
 			}
 		});
-		modalInstance.result.then(function(action) {
-			switch (action.id) {
-				case $scope.DRAFT:
-					dsRequest.status = 'draft';
-					deliveryServiceRequestService.updateDeliveryServiceRequestStatus(dsRequest.id, 'draft').
-						then(function() {
-							$state.reload();
-						});
-					break;
-				case $scope.SUBMITTED:
-					dsRequest.status = 'submitted';
-					deliveryServiceRequestService.updateDeliveryServiceRequestStatus(dsRequest.id, 'submitted').
-						then(function() {
-							$state.reload();
-						});
-					break;
-				case $scope.COMPLETE:
-					if (dsRequest.assigneeId != userModel.user.id) {
-						messageModel.setMessages([ { level: 'error', text: 'Only the assignee can mark a delivery service request as complete' } ], false);
-						$anchorScroll(); // scrolls window to top
-						return;
-					}
-					deliveryServiceRequestService.updateDeliveryServiceRequestStatus(dsRequest.id, 'complete').
-						then(function() {
-							$state.reload();
-						});
+		modalInstance.result.then(function() {
+			if (status == 'complete' && dsRequest.assigneeId != userModel.user.id) {
+				messageModel.setMessages([ { level: 'error', text: 'Only the Assignee can mark a delivery service request as complete' } ], false);
+				$anchorScroll(); // scrolls window to top
+				return;
 			}
+			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(dsRequest.id, status).
+				then(function() {
+					$state.reload();
+				});
 		}, function () {
 			// do nothing
 		});
@@ -146,33 +123,26 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			}
 		});
 		modalInstance.result.then(function() {
+			// update the ds request if the ds request actually changed
+			if ($scope.deliveryServiceForm.$dirty) {
+				promises.push(deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest));
+			}
+			// make sure the ds request is assigned to the user that is fulfilling the request
+			promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(dsRequest.id, userModel.user.id));
+			// set the status to 'pending'
+			promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(dsRequest.id, 'pending'));
+
 			// create, update or delete the ds per the ds request
 			if ($scope.changeType == 'create') {
 				deliveryServiceService.createDeliveryService(ds).
-					then(
-						function(result) {
-							updateDeliveryServiceRequest(); // after a successful create, update the ds request, assignee and status
-							messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + ds.xmlId + ' ] created' } ], true);
-							locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?type=' + result.data.response[0].type);
-						},
-						function(fault) {
-							$anchorScroll(); // scrolls window to top
-							messageModel.setMessages(fault.data.alerts, false);
-						}
-				);
+					then(function() {
+						$q.all(promises); // after a successful create, update the ds request, assignee and status
+					});
 			} else if ($scope.changeType == 'update') {
-				deliveryServiceService.updateDeliveryService(ds).
-					then(
-						function(result) {
-							updateDeliveryServiceRequest(); // after a successful update, update the ds request, assignee and status
-							messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + ds.xmlId + ' ] updated' } ], true);
-							locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?type=' + result.data.response[0].type);
-						},
-						function(fault) {
-							$anchorScroll(); // scrolls window to top
-							messageModel.setMessages(fault.data.alerts, false);
-						}
-					);
+				deliveryServiceService.updateDeliveryService(ds, true).
+					then(function() {
+						$q.all(promises); // after a successful update, update the ds request, assignee and status
+					});
 			} else if ($scope.changeType == 'delete') {
 				// and we're going to ask even again if they really want to delete but this time they need to enter the ds name to confirm the delete
 				params = {
@@ -213,12 +183,13 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 
 	$scope.save = function(deliveryService) {
 		var params = {
-			title: 'Delivery Service Request Status',
-			message: 'Please select the status of your delivery service request.'
+			title: 'Update Delivery Service Request',
+			statusMessage: 'Please select the status of your delivery service request.',
+			commentMessage: 'Why is this request being changed?'
 		};
 		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-			controller: 'DialogSelectController',
+			templateUrl: 'common/modules/dialog/deliveryServiceRequest/dialog.deliveryServiceRequest.tpl.html',
+			controller: 'DialogDeliveryServiceRequestController',
 			size: 'md',
 			resolve: {
 				params: function () {
@@ -270,5 +241,5 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 
 };
 
-FormEditDeliveryServiceRequestController.$inject = ['deliveryServiceRequest', 'deliveryService', 'type', 'types', '$scope', '$state', '$stateParams', '$controller', '$uibModal', '$anchorScroll', '$q', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'userModel'];
+FormEditDeliveryServiceRequestController.$inject = ['deliveryServiceRequest', 'deliveryService', 'type', 'types', '$scope', '$state', '$stateParams', '$controller', '$uibModal', '$anchorScroll', '$q', '$location', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'userModel'];
 module.exports = FormEditDeliveryServiceRequestController;
