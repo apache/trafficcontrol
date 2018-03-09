@@ -22,11 +22,22 @@ under the License.
         <ol class="breadcrumb pull-left">
             <li ng-if="!settings.isRequest"><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
             <li ng-if="settings.isRequest"><a ng-click="navigateToPath('/delivery-service-requests')">Delivery Service Requests</a></li>
-            <li ng-if="settings.isRequest" class="active">{{changeType}}</li>
+            <li ng-if="settings.isRequest" class="active">{{dsRequest.changeType}}</li>
             <li class="active">{{deliveryServiceName}}</li>
         </ol>
         <div class="pull-right" role="group" ng-if="settings.isRequest">
-            <button class="btn btn-link request-status" title="Edit Status" ng-disabled="!open()" ng-click="editStatus()">[ {{requestStatus}} ]</button>
+            <div class="btn-group" role="group" uib-dropdown is-open="status.isopen">
+                <button type="button" class="btn btn-link dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    {{dsRequest.status | uppercase }}&nbsp;
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-if="dsRequest.status == 'submitted'" ng-click="editStatus('draft')">DRAFT</a></li>
+                    <li role="menuitem"><a ng-if="dsRequest.status == 'draft'" ng-click="editStatus('submitted')">SUBMITTED</a></li>
+                    <li role="menuitem"><a ng-if="dsRequest.status == 'pending'" ng-click="editStatus('complete')">COMPLETE</a></li>
+                </ul>
+            </div>
+            <button class="btn btn-primary" title="View Comments" ng-click="viewComments()">View Comments</button>
         </div>
         <div class="pull-right" role="group" ng-show="!settings.isRequest && !settings.isNew">
             <button type="button" class="btn btn-primary" title="Delivery Service Charts" ng-if="showChartsButton" ng-click="openCharts(deliveryService)"><i class="fa fa-bar-chart fa-fw"></i></button>

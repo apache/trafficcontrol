@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $state, $uibModal, $anchorScroll, $q, dateUtils, locationUtils, typeService, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
+var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $state, $uibModal, $anchorScroll, $q, $location, dateUtils, locationUtils, typeService, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
 
 	var createDeliveryServiceDeleteRequest = function(deliveryService) {
 		var params = {
@@ -159,6 +159,11 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 		}, function () {
 			// do nothing
 		});
+	};
+
+	$scope.viewComments = function(request, $event) {
+		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		$location.path($location.path() + '/' + request.id + '/comments');
 	};
 
 	$scope.rejectRequest = function(request, $event) {
@@ -398,7 +403,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 			"paging": false,
 			"dom": '<"filter-checkbox">frtip',
 			"columnDefs": [
-				{ 'orderable': false, 'targets': 7 }
+				{ 'orderable': false, 'targets': 8 }
 			],
 			"aaSorting": []
 		});
@@ -420,5 +425,5 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 
 };
 
-TableDeliveryServicesRequestsController.$inject = ['dsRequests', '$scope', '$state', '$uibModal', '$anchorScroll', '$q', 'dateUtils', 'locationUtils', 'typeService', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'userModel'];
+TableDeliveryServicesRequestsController.$inject = ['dsRequests', '$scope', '$state', '$uibModal', '$anchorScroll', '$q', '$location', 'dateUtils', 'locationUtils', 'typeService', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'userModel'];
 module.exports = TableDeliveryServicesRequestsController;
