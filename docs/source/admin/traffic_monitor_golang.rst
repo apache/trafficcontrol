@@ -36,7 +36,7 @@ The following are requirements to ensure an accurate set up:
 1. Enter the Traffic Monitor server into Traffic Ops
 2. Make sure the FQDN of the Traffic Monitor is resolvable in DNS.
 3. Install Traffic Monitor: ``sudo yum -y install traffic_monitor``
-4. Configure Traffic Monitor. See :ref:`rl-tm-configure`
+4. Configure Traffic Monitor. See :ref:`here <rl-tm-configure>`
 5. Start the service: ``sudo service traffic_monitor start`` ::
 
     Starting traffic_monitor:

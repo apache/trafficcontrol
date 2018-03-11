@@ -20,6 +20,7 @@ package main
  */
 
 import (
+	"context"
 	"net/http"
 	"regexp"
 	"sort"
@@ -28,30 +29,43 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 
+	"fmt"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/jmoiron/sqlx"
 )
 
+// RoutePrefix ...
 const RoutePrefix = "api" // TODO config?
 
+// Middleware ...
+type Middleware func(handlerFunc http.HandlerFunc) http.HandlerFunc
+
+// Route ...
 type Route struct {
 	// Order matters! Do not reorder this! Routes() uses positional construction for readability.
-	Version float64
-	Method  string
-	Path    string
-	Handler RegexHandlerFunc
+	Version           float64
+	Method            string
+	Path              string
+	Handler           http.HandlerFunc
+	RequiredPrivLevel int
+	Authenticated     bool
+	Middlewares       []Middleware
 }
 
+func getDefaultMiddleware() []Middleware {
+	return []Middleware{wrapHeaders}
+}
+
+// ServerData ...
 type ServerData struct {
 	Config
 	DB *sqlx.DB
 }
 
-type PathParams map[string]string
-
-type RegexHandlerFunc func(w http.ResponseWriter, r *http.Request, params PathParams)
-
+// CompiledRoute ...
 type CompiledRoute struct {
-	Handler RegexHandlerFunc
+	Handler http.HandlerFunc
 	Regex   *regexp.Regexp
 	Params  []string
 }
@@ -62,20 +76,21 @@ func getSortedRouteVersions(rs []Route) []float64 {
 		m[r.Version] = struct{}{}
 	}
 	versions := []float64{}
-	for v, _ := range m {
+	for v := range m {
 		versions = append(versions, v)
 	}
 	sort.Float64s(versions)
 	return versions
 }
 
+// PathHandler ...
 type PathHandler struct {
 	Path    string
-	Handler RegexHandlerFunc
+	Handler http.HandlerFunc
 }
 
-// CreateRouteMap returns a map of methods to a slice of paths and handlers. Uses Semantic Versioning: routes are added to every subsequent minor version, but not subsequent major versions. For example, a 1.2 route is added to 1.3 but not 2.1. Also truncates '2.0' to '2', creating succinct major versions.
-func CreateRouteMap(rs []Route) map[string][]PathHandler {
+// CreateRouteMap returns a map of methods to a slice of paths and handlers; wrapping the handlers in the appropriate middleware. Uses Semantic Versioning: routes are added to every subsequent minor version, but not subsequent major versions. For example, a 1.2 route is added to 1.3 but not 2.1. Also truncates '2.0' to '2', creating succinct major versions.
+func CreateRouteMap(rs []Route, authBase AuthBase) map[string][]PathHandler {
 	// TODO strong types for method, path
 	versions := getSortedRouteVersions(rs)
 	m := map[string][]PathHandler{}
@@ -88,14 +103,26 @@ func CreateRouteMap(rs []Route) map[string][]PathHandler {
 			}
 			vstr := strconv.FormatFloat(version, 'f', -1, 64)
 			path := RoutePrefix + "/" + vstr + "/" + r.Path
-			m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: r.Handler})
+
+			middlewares := r.Middlewares
+
+			if middlewares == nil {
+				middlewares = getDefaultMiddleware()
+			}
+			if r.Authenticated { //a privLevel of zero is an unauthenticated endpoint.
+				authWrapper := authBase.GetWrapper(r.RequiredPrivLevel)
+				middlewares = append([]Middleware{authWrapper}, middlewares...)
+			}
+
+			m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: use(r.Handler, middlewares)})
+
 			log.Infof("adding route %v %v\n", r.Method, path)
 		}
 	}
 	return m
 }
 
-// CompiledRoutes takes a map of methods to paths and handlers, and returns a map of methods to CompiledRoutes.
+// CompileRoutes - takes a map of methods to paths and handlers, and returns a map of methods to CompiledRoutes
 func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 	compiledRoutes := map[string][]CompiledRoute{}
 	for method, mRoutes := range routes {
@@ -111,7 +138,7 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 				param := route[open+1 : close]
 
 				params = append(params, param)
-				route = route[:open] + `(.+)` + route[close+1:]
+				route = route[:open] + `([^/]+)` + route[close+1:]
 			}
 			regex := regexp.MustCompile(route)
 			compiledRoutes[method] = append(compiledRoutes[method], CompiledRoute{Handler: handler, Regex: regex, Params: params})
@@ -120,6 +147,7 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 	return compiledRoutes
 }
 
+// Handler - generic handler func used by the Handlers hooking into the routes
 func Handler(routes map[string][]CompiledRoute, catchall http.Handler, w http.ResponseWriter, r *http.Request) {
 	requested := r.URL.Path[1:]
 
@@ -135,25 +163,48 @@ func Handler(routes map[string][]CompiledRoute, catchall http.Handler, w http.Re
 			continue
 		}
 
+		ctx := r.Context()
+
 		params := map[string]string{}
 		for i, v := range compiledRoute.Params {
 			params[v] = match[i+1]
 		}
-		compiledRoute.Handler(w, r, params)
+
+		ctx = context.WithValue(ctx, api.PathParamsKey, params)
+		compiledRoute.Handler(w, r.WithContext(ctx))
 		return
 	}
 	catchall.ServeHTTP(w, r)
 }
 
+// RegisterRoutes - parses the routes and registers the handlers with the Go Router
 func RegisterRoutes(d ServerData) error {
 	routeSlice, catchall, err := Routes(d)
 	if err != nil {
 		return err
 	}
-	routes := CreateRouteMap(routeSlice)
+
+	userInfoStmt, err := prepareUserInfoStmt(d.DB)
+	if err != nil {
+		return fmt.Errorf("Error preparing db priv level query: %s", err)
+	}
+
+	authBase := AuthBase{secret: d.Config.Secrets[0], getCurrentUserInfoStmt: userInfoStmt, override: nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
+	routes := CreateRouteMap(routeSlice, authBase)
 	compiledRoutes := CompileRoutes(routes)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		Handler(compiledRoutes, catchall, w, r)
 	})
 	return nil
+}
+
+func prepareUserInfoStmt(db *sqlx.DB) (*sqlx.Stmt, error) {
+	return db.Preparex("SELECT r.priv_level, u.id, u.username, COALESCE(u.tenant_id, -1) AS tenant_id FROM tm_user AS u JOIN role AS r ON u.role = r.id WHERE u.username = $1")
+}
+
+func use(h http.HandlerFunc, middlewares []Middleware) http.HandlerFunc {
+	for i := len(middlewares) - 1; i >= 0; i-- { //apply them in reverse order so they are used in a natural order.
+		h = middlewares[i](h)
+	}
+	return h
 }

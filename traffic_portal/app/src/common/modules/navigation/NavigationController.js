@@ -23,6 +23,10 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
 
     $scope.customMenu = propertiesModel.properties.customMenu;
 
+    $scope.showCacheChecks = propertiesModel.properties.cacheChecks.show;
+
+    $scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
+
     $scope.userLoaded = userModel.loaded;
 
     $scope.user = userModel.user;
@@ -65,7 +69,7 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
                     controller: 'ReleaseController',
                     size: 'sm',
                     resolve: {
-                        params: function () {
+                        releaseParams: function () {
                             return result.data;
                         }
                     }
@@ -73,15 +77,18 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
             });
     };
 
-    $scope.openCustomItem = function(url, embed) {
-        if (embed) {
-            $location.url('/custom').search({ url: encodeURIComponent(url) });
+    $scope.customURL = function(item) {
+        var url;
+        if (item.embed) {
+            url = '/#!/custom?url=' + encodeURIComponent(item.url);
         } else {
-            $window.open(
-                url,
-                '_blank'
-            );
+            url = item.url;
         }
+        return url;
+    };
+
+    $scope.customTarget = function(item) {
+        return (item.embed) ? '_self' : '_blank';
     };
 
     var explodeMenu = function() {

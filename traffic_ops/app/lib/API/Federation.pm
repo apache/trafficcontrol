@@ -18,6 +18,7 @@ package API::Federation;
 
 # JvD Note: you always want to put Utils as the first use. Sh*t don't work if it's after the Mojo lines.
 use UI::Utils;
+use Utils::Tenant;
 
 use Mojo::Base 'Mojolicious::Controller';
 use Data::Dumper;
@@ -29,7 +30,7 @@ use Data::Validate::IP qw(is_ipv4 is_ipv6);
 use constant SUCCESS => 0;
 use constant ERROR   => 1;
 
-sub index {
+sub get_all_federation_resolver_mappings {
 	my $self     = shift;
 	my $cdn_name = $self->param('cdnName');
 	my $data     = [];
@@ -174,10 +175,14 @@ sub update_delivery_service {
 	push( @{ $ds->{'mappings'} }, $m );
 }
 
-sub external_index {
+sub get_current_user_federation_resolver_mappings {
 	my $self             = shift;
 	my $data             = [];
 	my $current_username = $self->current_user()->{username};
+
+	if ( !&is_federation($self) ) {
+		return $self->forbidden();
+	}
 
 	my $rs_data;
 	my ( $rc, $response, @federation_ids ) = $self->find_federation_tmuser($current_username);
@@ -246,22 +251,20 @@ sub find_tmuser {
 	my $current_username = shift;
 
 	my $tm_user =
-		$self->db->resultset('TmUser')->search( { username => $current_username, 'role.name' => 'federation' }, { prefetch => 'role' } )->single();
+		$self->db->resultset('TmUser')->search( { username => $current_username } )->single();
 
 	my $response;
-	if ( defined $tm_user ) {
-		return ( SUCCESS, $response, $tm_user );
-	}
-	else {
-		$response = "You must be an Federation user to perform this operation!";
-		return ( ERROR, $response, $tm_user );
-	}
+	return ( SUCCESS, $response, $tm_user );
 }
 
-sub add {
+sub add_federation_resolver_mappings_for_current_user {
 	my $self = shift;
-
 	my $current_username = $self->current_user()->{username};
+
+	if ( !&is_federation($self) ) {
+		return $self->forbidden();
+	}
+
 	my ( $rc, $response, $user ) = $self->find_tmuser($current_username);
 	if ( $rc == ERROR ) {
 		return $self->alert($response);
@@ -425,9 +428,13 @@ sub add_federation_resolver {
 	return ( SUCCESS, $response, @resolver_ips );
 }
 
-sub delete {
+sub delete_federation_resolver_mappings_for_current_user {
 	my $self             = shift;
 	my $current_username = $self->current_user()->{username};
+
+	if ( !&is_federation($self) ) {
+		return $self->forbidden();
+	}
 
 	my ( $rc, $response, $user ) = $self->find_tmuser($current_username);
 	if ( $rc == ERROR ) {
@@ -477,11 +484,242 @@ sub delete_federation_resolver {
 	}
 }
 
-sub update {
+sub update_federation_resolver_mappings_for_current_user {
 	my $self             = shift;
 	my $current_username = $self->current_user()->{username};
 
-	$self->delete();
-	$self->add();
+	if ( !&is_federation($self) ) {
+		return $self->forbidden();
+	}
+
+	$self->delete_federation_resolver_mappings_for_current_user();
+	$self->add_federation_resolver_mappings_for_current_user();
 }
+
+sub get_cdn_federations {
+	my $self		= shift;
+	my $cdn_name	= $self->param('name');
+
+	my $cdn = $self->db->resultset('Cdn')->find( { name => $cdn_name } );
+	if ( !defined($cdn) ) {
+		return $self->not_found();
+	}
+
+	my @ds_ids = $self->db->resultset('Deliveryservice')->search( { 'cdn.name' => $cdn_name }, { prefetch => 'cdn' } )->get_column('id')->all();
+	my $ds_ids_list = join(',', @ds_ids);
+
+	my $dbh = $self->db->storage->dbh;
+	my $sth = $dbh->prepare("
+			SELECT f.id AS id,
+				f.cname AS cname,
+				f.description AS description,
+				f.ttl AS ttl,
+				ds.id AS deliveryservice_id,
+				ds.xml_id AS deliveryservice_xml_id,
+				ds.tenant_id AS ds_tenant_id
+			FROM federation f
+				LEFT JOIN federation_deliveryservice fd ON fd.federation = f.id
+				LEFT JOIN deliveryservice ds ON fd.deliveryservice = ds.id
+			WHERE fd.deliveryservice IN ($ds_ids_list)
+			ORDER BY f.cname");
+	$sth->execute();
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
+	my @data;
+	while ( my $federation = $sth->fetchrow_hashref ) {
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $federation->{ds_tenant_id})) {
+			next; # skip if delivery service is outside the user's tenancy
+		}
+		push(
+			@data, {
+				"id"                => $federation->{id},
+				"cname"             => $federation->{cname},
+				"description"       => $federation->{description},
+				"ttl"               => $federation->{ttl},
+				"deliveryService"   => {
+					"id"        => $federation->{deliveryservice_id},
+					"xmlId"     => $federation->{deliveryservice_xml_id}
+				},
+			}
+		);
+	}
+
+	$self->success( \@data );
+}
+
+sub get_cdn_federation {
+	my $self  		= shift;
+	my $fed_id 		= $self->param('fedId');
+
+	my $fed = $self->db->resultset('Federation')->find( { id => $fed_id } );
+	if ( !defined($fed) ) {
+		return $self->not_found();
+	}
+
+	my $dbh = $self->db->storage->dbh;
+	my $sth = $dbh->prepare("
+			SELECT f.id AS id,
+				f.cname AS cname,
+				f.description AS description,
+				f.ttl AS ttl,
+				ds.tenant_id AS ds_tenant_id
+			FROM federation f
+				LEFT JOIN federation_deliveryservice fd ON fd.federation = f.id
+				LEFT JOIN deliveryservice ds ON fd.deliveryservice = ds.id
+			WHERE f.id = $fed_id");
+	$sth->execute();
+
+	my $tenant_utils = Utils::Tenant->new($self);
+	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
+
+	my @data;
+	while ( my $federation = $sth->fetchrow_hashref ) {
+		if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $federation->{ds_tenant_id})) {
+			return $self->forbidden(); # return 403 if federation's delivery service is outside the user's tenancy
+		}
+		push(
+			@data, {
+				"id"            => $federation->{id},
+				"cname"         => $federation->{cname},
+				"description"   => $federation->{description},
+				"ttl"           => $federation->{ttl},
+			}
+		);
+	}
+
+	$self->success( \@data );
+}
+
+sub create_cdn_federation {
+	my $self        = shift;
+	my $params      = $self->req->json;
+
+	if ( !&is_admin($self) ) {
+		return $self->forbidden();
+	}
+
+	my ( $is_valid, $result ) = $self->is_federation_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+
+	my $values = {
+		cname    	=> $params->{cname},
+		ttl       	=> $params->{ttl},
+		description	=> $params->{description},
+	};
+
+	my $insert = $self->db->resultset('Federation')->create($values);
+	my $rs = $insert->insert();
+	if ($rs) {
+		my $response;
+		$response->{id}             = $rs->id;
+		$response->{cname}          = $rs->cname;
+		$response->{ttl}            = $rs->ttl;
+		$response->{description}    = $rs->description;
+
+		my $msg = "Federation created [ cname = " . $rs->cname . " ] with id: " . $rs->id;
+		&log( $self, $msg, "APICHANGE" );
+		return $self->success( $response, $msg );
+	} else {
+		return $self->alert("Federation creation failed");
+	}
+}
+
+sub update_cdn_federation {
+	my $self	= shift;
+	my $fed_id	= $self->param('fedId');
+	my $params	= $self->req->json;
+
+	if ( !&is_admin($self) ) {
+		return $self->forbidden();
+	}
+
+	my ( $is_valid, $result ) = $self->is_federation_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+
+	my $fed = $self->db->resultset('Federation')->find( { id => $fed_id } );
+	if ( !defined($fed) ) {
+		return $self->not_found();
+	}
+
+	my $values = {
+		cname    	=> $params->{cname},
+		ttl       	=> $params->{ttl},
+		description	=> $params->{description},
+	};
+
+	my $rs = $fed->update($values);
+	if ($rs) {
+		my $response;
+		$response->{cname}          = $rs->cname;
+		$response->{ttl}            = $rs->ttl;
+		$response->{description}    = $rs->description;
+
+		my $msg = "Federation updated [ cname = " . $rs->cname . " ] with id: " . $rs->id;
+		&log( $self, $msg, "APICHANGE" );
+		return $self->success( $response, $msg );
+	}
+	else {
+		return $self->alert("Federation update failed.");
+	}
+}
+
+sub delete_cdn_federation {
+	my $self	= shift;
+	my $fed_id	= $self->param('fedId');
+
+	if ( !&is_admin($self) ) {
+		return $self->forbidden();
+	}
+
+	my $fed = $self->db->resultset('Federation')->find( { id => $fed_id } );
+	if ( !defined($fed) ) {
+		return $self->not_found();
+	}
+
+	my $rs = $fed->delete();
+	if ($rs) {
+		my $msg = "Federation deleted [ cname = " . $rs->cname . " ] with id: " . $rs->id;
+		&log( $self, $msg, "APICHANGE" );
+		return $self->success_message($msg);
+	} else {
+		return $self->alert( "Federation delete failed." );
+	}
+}
+
+sub is_federation_valid {
+    my $self   = shift;
+    my $params = shift;
+
+    my $rules = {
+        fields => [
+            qw/cname ttl description/
+        ],
+
+        # Validation checks to perform
+        checks => [
+            cname   => [ is_required("is required"), is_like( qr/^\S*\.$/, "must contain no spaces and end with a dot" ) ],
+            ttl     => [ is_required("is required"), is_like( qr/^\d+$/, "must be a number" ) ],
+        ]
+    };
+
+    # Validate the input against the rules
+    my $result = validate( $params, $rules );
+
+    if ( $result->{success} ) {
+        return ( 1, $result->{data} );
+    }
+    else {
+        return ( 0, $result->{error} );
+    }
+}
+
+
 1;

@@ -17,19 +17,19 @@
     under the License.
 -->
 
-Build: [![Build Status](https://builds.apache.org/buildStatus/icon?job=incubator-trafficcontrol-master-build)](https://builds.apache.org/view/Incubator%20Projects/job/incubator-trafficcontrol-master-build/)
+[![Build Status](https://builds.apache.org/buildStatus/icon?job=incubator-trafficcontrol-master-build)](https://builds.apache.org/view/Incubator%20Projects/job/incubator-trafficcontrol-master-build/) [![Documentation Status](https://readthedocs.org/projects/traffic-control-cdn/badge/?version=latest)](http://traffic-control-cdn.readthedocs.io/en/latest/?badge=latest)
 
 Apache Traffic Control (incubating) is an Open Source implementation of a Content Delivery Network.
 
 #### Documentation
-* [Intro](http://trafficcontrol.apache.org/docs/latest/index.html)
-* [CDN Basics](http://trafficcontrol.apache.org/docs/latest/basics/index.html)
-* [Traffic Control Overview](http://trafficcontrol.apache.org/docs/latest/overview/index.html)
-* [Administrator's Guide](http://trafficcontrol.apache.org/docs/latest/admin/index.html)
-* [Developer's Guide](http://trafficcontrol.apache.org/docs/latest/development/index.html)
+* [Intro](http://traffic-control-cdn.readthedocs.io/en/latest/index.html)
+* [CDN Basics](http://traffic-control-cdn.readthedocs.io/en/latest/basics/index.html)
+* [Traffic Control Overview](http://traffic-control-cdn.readthedocs.io/en/latest/overview/index.html)
+* [Administrator's Guide](http://traffic-control-cdn.readthedocs.io/en/latest/admin/index.html)
+* [Developer's Guide](http://traffic-control-cdn.readthedocs.io/en/latest/development/index.html)
 
-####Questions, Comments, Bugs and More
-* [Frequently Asked Questions](http://trafficcontrol.apache.org/docs/latest/faq/index.html)
+####  Questions, Comments, Bugs and More
+* [Frequently Asked Questions](http://traffic-control-cdn.readthedocs.io/en/latest/faq/index.html)
 * [Found a bug or file a feature request](https://github.com/apache/incubator-trafficcontrol/issues)
 * [Subscribe to our users list](mailto:users-subscribe@trafficcontrol.incubator.apache.org)
 * [Subscribe to our dev list](mailto:dev-subscribe@trafficcontrol.incubator.apache.org)

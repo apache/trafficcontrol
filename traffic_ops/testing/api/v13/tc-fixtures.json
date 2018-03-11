@@ -1,0 +1,819 @@
+{
+    "asns": [
+        {
+            "asn": 8888,
+            "cachegroupName": "mid-northeast-group"
+        },
+        {
+            "asn": 9999,
+            "cachegroupName": "edge_cg4"
+        }
+    ],
+    "cachegroups": [
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "parentCacheGroup",
+            "parentCacheGroupName": null,
+            "type": "EDGE"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "secondaryCacheGroup",
+            "parentCacheGroupName": null,
+            "type": "EDGE"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
+            "name": "cachegroup1",
+            "parentCacheGroupName": "parentCacheGroup",
+            "secondaryCacheGroupName": "parentCacheGroup",
+            "shortName": "cg1",
+            "type": "MID"
+        },
+        {
+            "latitude": 24.1234,
+            "longitude": -121.1234,
+            "name": "cachegroup2",
+            "parentCacheGroupName": "secondaryCacheGroup",
+            "secondaryCacheGroupName": "secondaryCacheGroup",
+            "shortName": "cg2",
+            "type": "MID"
+        }
+    ],
+    "cdns": [
+        {
+            "dnssecEnabled": true,
+            "domainName": "test.cdn1.net",
+            "name": "cdn1"
+        },
+        {
+            "dnssecEnabled": false,
+            "domainName": "test.cdn2.net",
+            "name": "cdn2"
+        },
+        {
+            "dnssecEnabled": true,
+            "domainName": "test.cdn3.net",
+            "name": "cdn3"
+        }
+    ],
+    "deliveryServiceRequests": [
+        {
+            "changeType": "create",
+            "deliveryService": {
+                "active": true,
+                "ccrDnsTtl": 30,
+                "cdnId": 1,
+                "deepCachingType": "NEVER",
+                "displayName": "Good Kabletown CDN",
+                "dscp": 1,
+                "geoLimit": 1,
+                "geoProvider": 1,
+                "initialDispersion": 1,
+                "logsEnabled": true,
+                "longDesc": "long desc",
+                "regionalGeoBlocking": true,
+                "routingName": "goodroute",
+                "tenantId": 2,
+                "typeId": 70,
+                "xmlId": "test-ds1"
+            },
+            "status": "draft"
+        },
+        {
+            "changeType": "create",
+            "deliveryService": {
+                "active": true,
+                "ccrDnsTtl": 30,
+                "cdnId": 1,
+                "deepCachingType": "NEVER",
+                "displayName": "Bad Tenant",
+                "dscp": 0,
+                "geoLimit": 0,
+                "geoProvider": 0,
+                "initialDispersion": 3,
+                "logsEnabled": false,
+                "longDesc": "long desc",
+                "regionalGeoBlocking": false,
+                "tenantId": 1,
+                "typeId": 70,
+                "xmlId": "test-ds1"
+            },
+            "status": "draft"
+        },
+        {
+            "changeType": "create",
+            "deliveryService": {
+                "ccrDnsTtl": 30,
+                "deepCachingType": "NEVER",
+                "displayName": "Bad Test Case CDN",
+                "dscp": 0,
+                "geoLimit": 0,
+                "geoProvider": 1,
+                "infoUrl": "xxx",
+                "initialDispersion": 1,
+                "logsEnabled": true,
+                "longDesc": "long desc",
+                "orgServerFqdn": "xxx",
+                "regionalGeoBlocking": true,
+                "routingName": "x routing",
+                "tenantId": 2,
+                "xmlId": "test ds1"
+            },
+            "status": "draft"
+        },
+        {
+            "changeType": "update",
+            "deliveryService": {
+                "active": false,
+                "ccrDnsTtl": 30,
+                "cdnId": 1,
+                "deepCachingType": "ALWAYS",
+                "displayName": "Testing transitions",
+                "dscp": 3,
+                "geoLimit": 1,
+                "geoProvider": 1,
+                "initialDispersion": 1,
+                "logsEnabled": true,
+                "longDesc": "long desc",
+                "regionalGeoBlocking": true,
+                "routingName": "goodroute",
+                "tenantId": 2,
+                "typeId": 70,
+                "xmlId": "test-transitions"
+            },
+            "status": "draft"
+        }
+    ],
+    "deliveryServices": [
+        {
+            "active": false,
+            "dscp": 40,
+            "tenantName": "tenant1",
+            "xmlId": "ds1"
+        },
+        {
+            "active": false,
+            "dscp": 40,
+            "tenantName": "tenant2",
+            "xmlId": "ds2"
+        }
+    ],
+    "divisions": [
+        {
+            "name": "division1"
+        },
+        {
+            "name": "division2"
+        }
+    ],
+    "parameters": [
+        {
+            "configFile": "rascal.properties",
+            "lastUpdated": "2018-01-19T19:01:21.455131+00:00",
+            "name": "health.threshold.loadavg",
+            "secure": false,
+            "value": "25.0"
+        },
+        {
+            "configFile": "rascal.properties",
+            "lastUpdated": "2018-01-19T19:01:21.472279+00:00",
+            "name": "health.threshold.availableBandwidthInKbps",
+            "secure": false,
+            "value": ">1750000"
+        },
+        {
+            "configFile": "rascal.properties",
+            "lastUpdated": "2018-01-19T19:01:21.489534+00:00",
+            "name": "history.count",
+            "secure": false,
+            "value": "30"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.503311+00:00",
+            "name": "key0",
+            "secure": true,
+            "value": "HOOJ3Ghq1x4gChp3iQkqVTcPlOj8UCi3"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.505157+00:00",
+            "name": "key1",
+            "secure": true,
+            "value": "_9LZYkRnfCS0rCBF7fTQzM9Scwlp2FhO"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.508548+00:00",
+            "name": "key2",
+            "secure": true,
+            "value": "AFpkxfc4oTiyFSqtY6_ohjt3V80aAIxS"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.401781+00:00",
+            "name": "key3",
+            "secure": true,
+            "value": "AL9kzs_SXaRZjPWH8G5e2m4ByTTzkzlc"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.406601+00:00",
+            "name": "key4",
+            "secure": true,
+            "value": "poP3n3szbD1U4vx1xQXV65BvkVgWzfN8"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.408784+00:00",
+            "name": "key5",
+            "secure": true,
+            "value": "1ir32ng4C4w137p5oq72kd2wqmIZUrya"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.410854+00:00",
+            "name": "key6",
+            "secure": true,
+            "value": "B1qLptn2T1b_iXeTCWDcVuYvANtH139f"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.412716+00:00",
+            "name": "key7",
+            "secure": true,
+            "value": "PiCV_5OODMzBbsNFMWsBxcQ8v1sK0TYE"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.414638+00:00",
+            "name": "key8",
+            "secure": true,
+            "value": "Ggpv6DqXDvt2s1CETPBpNKwaLk4fTM9l"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.416551+00:00",
+            "name": "key9",
+            "secure": true,
+            "value": "qPlVT_s6kL37aqb6hipDm4Bt55S72mI7"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.418689+00:00",
+            "name": "key10",
+            "secure": true,
+            "value": "BsI5A9EmWrobIS1FeuOs1z9fm2t2WSBe"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.420467+00:00",
+            "name": "key11",
+            "secure": true,
+            "value": "A54y66NCIj897GjS4yA9RrsSPtCUnQXP"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.422414+00:00",
+            "name": "key12",
+            "secure": true,
+            "value": "2jZH0NDPSJttIr4c2KP510f47EKqTQAu"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.424435+00:00",
+            "name": "key13",
+            "secure": true,
+            "value": "XduT2FBjBmmVID5JRB5LEf9oR5QDtBgC"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.426125+00:00",
+            "name": "key14",
+            "secure": true,
+            "value": "D9nH0SvK_0kP5w8QNd1UFJ28ulFkFKPn"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.427797+00:00",
+            "name": "key15",
+            "secure": true,
+            "value": "udKXWYNwbXXweaaLzaKDGl57OixnIIcm"
+        },
+        {
+            "configFile": "url_sig.config",
+            "lastUpdated": "2018-01-19T19:01:21.431062+00:00",
+            "name": "error_url",
+            "secure": true,
+            "value": "403"
+        },
+        {
+            "configFile": "records.config",
+            "lastUpdated": "2018-01-19T19:01:21.432692+00:00",
+            "name": "CONFIG proxy.config.allocator.debug_filter",
+            "secure": false,
+            "value": "INT 0"
+        },
+        {
+            "configFile": "records.config",
+            "lastUpdated": "2018-01-19T19:01:21.434425+00:00",
+            "name": "CONFIG proxy.config.allocator.enable_reclaim",
+            "secure": false,
+            "value": "INT 0"
+        },
+        {
+            "configFile": "records.config",
+            "lastUpdated": "2018-01-19T19:01:21.435957+00:00",
+            "name": "CONFIG proxy.config.allocator.max_overage",
+            "secure": false,
+            "value": "INT 3"
+        },
+        {
+            "configFile": "records.config",
+            "lastUpdated": "2018-01-19T19:01:21.437496+00:00",
+            "name": "CONFIG proxy.config.diags.show_location",
+            "secure": false,
+            "value": "INT 0"
+        },
+        {
+            "configFile": "records.config",
+            "lastUpdated": "2018-01-19T19:01:21.439033+00:00",
+            "name": "CONFIG proxy.config.http.cache.allow_empty_doc",
+            "secure": false,
+            "value": "INT 0"
+        },
+        {
+            "configFile": "records.config",
+            "lastUpdated": "2018-01-19T19:01:21.440502+00:00",
+            "name": "LOCAL proxy.config.cache.interim.storage",
+            "secure": false,
+            "value": "STRING NULL"
+        },
+        {
+            "configFile": "records.config",
+            "lastUpdated": "2018-01-19T19:01:21.441933+00:00",
+            "name": "CONFIG proxy.config.http.parent_proxy.file",
+            "secure": false,
+            "value": "STRING parent.config"
+        },
+        {
+            "configFile": "plugin.config",
+            "lastUpdated": "2018-01-19T19:01:21.447837+00:00",
+            "name": "astats_over_http.so",
+            "secure": false,
+            "value": "_astats 33.101.99.100,172.39.19.39,172.39.19.49,172.39.19.49,172.39.29.49"
+        },
+        {
+            "configFile": "logs_xml.config",
+            "lastUpdated": "2018-01-19T19:01:21.461206+00:00",
+            "name": "LogFormat.Name",
+            "secure": false,
+            "value": "custom_ats_2"
+        },
+        {
+            "configFile": "logs_xml.config",
+            "lastUpdated": "2018-01-19T19:01:21.462772+00:00",
+            "name": "LogObject.Format",
+            "secure": false,
+            "value": "custom_ats_2"
+        },
+        {
+            "configFile": "logs_xml.config",
+            "lastUpdated": "2018-01-19T19:01:21.464259+00:00",
+            "name": "LogObject.Filename",
+            "secure": false,
+            "value": "custom_ats_2"
+        },
+        {
+            "configFile": "records.config",
+            "lastUpdated": "2018-01-19T19:01:21.467349+00:00",
+            "name": "CONFIG proxy.config.cache.control.filename",
+            "secure": false,
+            "value": "STRING cache.config"
+        },
+        {
+            "configFile": "plugin.config",
+            "lastUpdated": "2018-01-19T19:01:21.469075+00:00",
+            "name": "regex_revalidate.so",
+            "secure": false,
+            "value": "--config regex_revalidate.config"
+        },
+        {
+            "configFile": "astats.config",
+            "lastUpdated": "2018-01-19T19:01:21.478516+00:00",
+            "name": "allow_ip6",
+            "secure": false,
+            "value": "::1,2033:D011:3300::336/64,2033:D011:3300::335/64,2033:D021:3300::333/64,2033:D021:3300::334/64"
+        },
+        {
+            "configFile": "astats.config",
+            "lastUpdated": "2018-01-19T19:01:21.480143+00:00",
+            "name": "record_types",
+            "secure": false,
+            "value": "144"
+        },
+        {
+            "configFile": "astats.config",
+            "lastUpdated": "2018-01-19T19:01:21.482959+00:00",
+            "name": "path",
+            "secure": false,
+            "value": "_astats"
+        },
+        {
+            "configFile": "storage.config",
+            "lastUpdated": "2018-01-19T19:01:21.484501+00:00",
+            "name": "location",
+            "secure": false,
+            "value": "/opt/trafficserver/etc/trafficserver/"
+        },
+        {
+            "configFile": "storage.config",
+            "lastUpdated": "2018-01-19T19:01:21.48625+00:00",
+            "name": "Drive_Prefix",
+            "secure": false,
+            "value": "/dev/sd"
+        },
+        {
+            "configFile": "storage.config",
+            "lastUpdated": "2018-01-19T19:01:21.487958+00:00",
+            "name": "Drive_Letters",
+            "secure": false,
+            "value": "b,c,d,e,f,g,h,i,j,k,l,m,n,o"
+        },
+        {
+            "configFile": "storage.config",
+            "lastUpdated": "2018-01-19T19:01:21.491181+00:00",
+            "name": "Disk_Volume",
+            "secure": false,
+            "value": "1"
+        },
+        {
+            "configFile": "records.config",
+            "lastUpdated": "2018-01-19T19:01:21.49285+00:00",
+            "name": "CONFIG proxy.config.hostdb.storage_size",
+            "secure": false,
+            "value": "INT 33554432"
+        },
+        {
+            "configFile": "regex_revalidate.config",
+            "lastUpdated": "2018-01-19T19:01:21.496195+00:00",
+            "name": "maxRevalDurationDays",
+            "secure": false,
+            "value": "90"
+        },
+        {
+            "configFile": "whaterver.config",
+            "lastUpdated": "2018-01-19T19:01:21.497838+00:00",
+            "name": "unassigned_parameter_1",
+            "secure": false,
+            "value": "852"
+        },
+        {
+            "configFile": "package",
+            "lastUpdated": "2018-01-19T19:01:21.499423+00:00",
+            "name": "trafficserver",
+            "secure": false,
+            "value": "5.3.2-765.f4354b9.el7.centos.x86_64"
+        },
+        {
+            "configFile": "global",
+            "lastUpdated": "2018-01-19T19:01:21.501151+00:00",
+            "name": "use_tenancy",
+            "secure": false,
+            "value": "1"
+        }
+    ],
+    "physLocations": [
+        {
+            "address": "1234 mile high circle",
+            "city": "Denver",
+            "comments": null,
+            "email": null,
+            "lastUpdated": "2018-01-19T21:19:32.081465+00:00",
+            "name": "Denver",
+            "phone": "303-111-1111",
+            "poc": null,
+            "regionId": 100,
+            "shortName": "denver",
+            "state": "CO",
+            "zip": "80202"
+        },
+        {
+            "address": "1234 green way",
+            "city": "Boulder",
+            "comments": null,
+            "email": null,
+            "lastUpdated": "2018-01-19T21:19:32.086195+00:00",
+            "name": "Boulder",
+            "phone": "303-222-2222",
+            "poc": null,
+            "regionId": 100,
+            "shortName": "boulder",
+            "state": "CO",
+            "zip": "80301"
+        },
+        {
+            "address": "1234 southern way",
+            "city": "Atlanta",
+            "comments": null,
+            "email": null,
+            "lastUpdated": "2018-01-19T21:19:32.089538+00:00",
+            "name": "HotAtlanta",
+            "phone": "404-222-2222",
+            "poc": null,
+            "regionId": 100,
+            "shortName": "atlanta",
+            "state": "GA",
+            "zip": "30301"
+        }
+    ],
+    "profiles": [
+        {
+            "cdnName": "cdn1",
+            "description": "edge description",
+            "last_updated": "2018-03-02T17:27:11.796899+00:00",
+            "name": "EDGE1",
+            "routing_disabled": true,
+            "type": "ATS_PROFILE"
+        },
+        {
+            "cdnName": "cdn1",
+            "description": "mid description",
+            "last_updated": "2018-03-02T17:27:11.80173+00:00",
+            "name": "MID1",
+            "routing_disabled": false,
+            "type": "ATS_PROFILE"
+        },
+        {
+            "cdnName": "cdn1",
+            "description": "cdn1 description",
+            "last_updated": "2018-03-02T17:27:11.80452+00:00",
+            "name": "CCR1",
+            "routing_disabled": false,
+            "type": "TR_PROFILE"
+        },
+        {
+            "cdnName": "cdn2",
+            "description": "cdn2 description",
+            "last_updated": "2018-03-02T17:27:11.807948+00:00",
+            "name": "CCR2",
+            "routing_disabled": false,
+            "type": "TR_PROFILE"
+        },
+        {
+            "cdnName": "cdn1",
+            "description": "rascal description",
+            "last_updated": "2018-03-02T17:27:11.813052+00:00",
+            "name": "RASCAL1",
+            "routing_disabled": false,
+            "type": "TM_PROFILE"
+        },
+        {
+            "cdnName": "cdn2",
+            "description": "edge2 description",
+            "last_updated": "2018-03-02T17:27:11.818418+00:00",
+            "name": "EDGE2",
+            "routing_disabled": false,
+            "type": "ATS_PROFILE"
+        }
+    ],
+    "regions": [
+        {
+            "divisionName": "division1",
+            "name": "region1"
+        },
+        {
+            "divisionName": "division2",
+            "name": "region2"
+        }
+    ],
+    "statuses": [
+        {
+            "description": "Edge: Puts server in CCR config file in this state, but CCR will never route traffic to it. Mid: Server will not be included in parent.config files for its edge caches",
+            "name": "OFFLINE"
+        },
+        {
+            "description": "Edge: Puts server in CCR config file in this state, and CCR will always route traffic to it. Mid: Server will be included in parent.config files for its edges",
+            "name": "ONLINE"
+        },
+        {
+            "description": "Edge: Puts server in CCR config file in this state, and CCR will adhere to the health protocol. Mid: N/A for now",
+            "name": "REPORTED"
+        },
+        {
+            "description": "Temporary down. Edge: XMPP client will send status OFFLINE to CCR, otherwise similar to REPORTED. Mid: Server will not be included in parent.config files for its edge caches",
+            "name": "ADMIN_DOWN"
+        },
+        {
+            "description": "Edge: 12M will not include caches in this state in CCR config files. Mid: N/A for now",
+            "name": "CCR_IGNORE"
+        },
+        {
+            "description": "Pre Production. Not active in any configuration.",
+            "name": "PRE_PROD"
+        }
+    ],
+    "tenants": [
+        {
+            "active": true,
+            "name": "root",
+            "parentTenantName": null
+        },
+        {
+            "active": true,
+            "name": "tenant1",
+            "parentTenantName": "root"
+        },
+        {
+            "active": false,
+            "name": "tenant2",
+            "parentTenantName": "root"
+        }
+    ],
+    "types": [
+        {
+            "description": "Host header regular expression",
+            "lastUpdated": "2018-03-02T19:13:46.788583+00:00",
+            "name": "HOST_REGEXP",
+            "useInTable": "regex"
+        },
+        {
+            "description": "DNS Content routing, RAM cache, National",
+            "lastUpdated": "2018-03-02T19:13:46.792319+00:00",
+            "name": "DNS_LIVE_NATNL",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "Other CDN (CDS-IS, Akamai, etc)",
+            "lastUpdated": "2018-03-02T19:13:46.793921+00:00",
+            "name": "OTHER_CDN",
+            "useInTable": "server"
+        },
+        {
+            "description": "Client-Controlled Steering Delivery Service",
+            "lastUpdated": "2018-03-02T19:13:46.795291+00:00",
+            "name": "CLIENT_STEERING",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "influxdb type",
+            "lastUpdated": "2018-03-02T19:13:46.796707+00:00",
+            "name": "INFLUXDB",
+            "useInTable": "server"
+        },
+        {
+            "description": "riak type",
+            "lastUpdated": "2018-03-02T19:13:46.798008+00:00",
+            "name": "RIAK",
+            "useInTable": "server"
+        },
+        {
+            "description": "Origin",
+            "lastUpdated": "2018-03-02T19:13:46.799404+00:00",
+            "name": "ORG",
+            "useInTable": "server"
+        },
+        {
+            "description": "HTTP Content routing cache in RAM ",
+            "lastUpdated": "2018-03-02T19:13:46.800738+00:00",
+            "name": "HTTP_LIVE",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "Active Directory User",
+            "lastUpdated": "2018-03-02T19:13:46.802044+00:00",
+            "name": "ACTIVE_DIRECTORY",
+            "useInTable": "tm_user"
+        },
+        {
+            "description": "federation type resolve4",
+            "lastUpdated": "2018-03-02T19:13:46.803471+00:00",
+            "name": "RESOLVE4",
+            "useInTable": "federation"
+        },
+        {
+            "description": "Static DNS A entry",
+            "lastUpdated": "2018-03-02T19:13:46.804776+00:00",
+            "name": "A_RECORD",
+            "useInTable": "staticdnsentry"
+        },
+        {
+            "description": "Local User",
+            "lastUpdated": "2018-03-02T19:13:46.806035+00:00",
+            "name": "LOCAL",
+            "useInTable": "tm_user"
+        },
+        {
+            "description": "Weighted steering target",
+            "lastUpdated": "2018-03-02T19:13:46.80748+00:00",
+            "name": "STEERING_WEIGHT",
+            "useInTable": "steering_target"
+        },
+        {
+            "description": "HTTP Content routing, RAM cache, National",
+            "lastUpdated": "2018-03-02T19:13:46.808911+00:00",
+            "name": "HTTP_LIVE_NATNL",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "Ops hosts for management",
+            "lastUpdated": "2018-03-02T19:13:46.810576+00:00",
+            "name": "TOOLS_SERVER",
+            "useInTable": "server"
+        },
+        {
+            "description": "Path regular expression",
+            "lastUpdated": "2018-03-02T19:13:46.812049+00:00",
+            "name": "PATH_REGEXP",
+            "useInTable": "regex"
+        },
+        {
+            "description": "Static DNS CNAME entry",
+            "lastUpdated": "2018-03-02T19:13:46.813461+00:00",
+            "name": "CNAME_RECORD",
+            "useInTable": "staticdnsentry"
+        },
+        {
+            "description": "Kabletown Content Router",
+            "lastUpdated": "2018-03-02T19:13:46.814833+00:00",
+            "name": "CCR",
+            "useInTable": "server"
+        },
+        {
+            "description": "Mid Cachegroup",
+            "lastUpdated": "2018-03-02T19:13:46.816199+00:00",
+            "name": "MID_LOC",
+            "useInTable": "cachegroup"
+        },
+        {
+            "description": "Edge Cache",
+            "lastUpdated": "2018-03-02T19:13:46.817689+00:00",
+            "name": "EDGE",
+            "useInTable": "server"
+        },
+        {
+            "description": "Ordered steering target",
+            "lastUpdated": "2018-03-02T19:13:46.81913+00:00",
+            "name": "STEERING_ORDER",
+            "useInTable": "steering_target"
+        },
+        {
+            "description": "DNS Content Routing",
+            "lastUpdated": "2018-03-02T19:13:46.820528+00:00",
+            "name": "DNS",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "federation type resolve6",
+            "lastUpdated": "2018-03-02T19:13:46.822161+00:00",
+            "name": "RESOLVE6",
+            "useInTable": "federation"
+        },
+        {
+            "description": "Static DNS AAAA entry",
+            "lastUpdated": "2018-03-02T19:13:46.823506+00:00",
+            "name": "AAAA_RECORD",
+            "useInTable": "staticdnsentry"
+        },
+        {
+            "description": "HTTP Content Routing, no caching",
+            "lastUpdated": "2018-03-02T19:13:46.824798+00:00",
+            "name": "HTTP_NO_CACHE",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "any_map type",
+            "lastUpdated": "2018-03-02T19:13:46.826411+00:00",
+            "name": "ANY_MAP",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "Steering Delivery Service",
+            "lastUpdated": "2018-03-02T19:13:46.827779+00:00",
+            "name": "STEERING",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "Edge Cachegroup",
+            "lastUpdated": "2018-03-02T19:13:46.829249+00:00",
+            "name": "EDGE_LOC",
+            "useInTable": "cachegroup"
+        },
+        {
+            "description": "HTTP Content routing cache ",
+            "lastUpdated": "2018-03-02T19:13:46.830862+00:00",
+            "name": "HTTP",
+            "useInTable": "deliveryservice"
+        },
+        {
+            "description": "Mid Tier Cache",
+            "lastUpdated": "2018-03-02T19:13:46.832327+00:00",
+            "name": "MID",
+            "useInTable": "server"
+        }
+    ]
+}

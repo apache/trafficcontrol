@@ -1,17 +1,17 @@
-.. 
-.. 
+..
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
 
 .. _to-api-v12-ds:
@@ -65,6 +65,11 @@ Delivery Service
   | ``cdnName``              | string | Name of the CDN to which the delivery service belongs to.                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``deepCachingType``      | string | When to do Deep Caching for this Delivery Service:                                                                                   |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - NEVER (default)                                                                                                                    |
+  |                          |        | - ALWAYS                                                                                                                             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``displayName``          | string | The display name of the delivery service.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -176,15 +181,19 @@ Delivery Service
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``signingAlgorithm``     | string | - null: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                        |
+  |                          |        | - "url_sig": URL Sign token based auth is enabled for this deliveryservice.                                                          |
+  |                          |        | - "uri_signing": URI Signing token based auth is enabled for this deliveryservice.                                                   |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``sslKeyVersion``        |  int   |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``tenant``               | string | Owning tenant name                                                                                                                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``tenantId``             | int    | Owning tenant ID                                                                                                                     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trRequestHeaders``     | string |                                                                                                                                      |
+  | ``trRequestHeaders``     | string | List of header keys separated by ``__RETURN__``. Listed headers will be included in TR access log entries under the "rh=" token.     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trResponseHeaders``    | string |                                                                                                                                      |
+  | ``trResponseHeaders``    | string | List of header ``name:value`` pairs separated by ``__RETURN__``. Listed pairs will be included in all TR HTTP responses.             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``typeId``               |  int   | The type of this deliveryservice (one of :ref:to-api-v11-types use_in_table='deliveryservice').                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -202,6 +211,7 @@ Delivery Service
             "cdnId": "2",
             "cdnName": "over-the-top",
             "checkPath": "",
+            "deepCachingType": "NEVER",
             "displayName": "My Cool Delivery Service",
             "dnsBypassCname": "",
             "dnsBypassIp": "",
@@ -246,6 +256,7 @@ Delivery Service
             "remapText": null,
             "routingName": "foo",
             "signed": false,
+            "signingAlgorithm": null,
             "sslKeyVersion": "0",
             "tenant": "root",
             "tenantId": 1,
@@ -295,6 +306,11 @@ Delivery Service
   | ``cdnName``              | string | Name of the CDN to which the delivery service belongs to.                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``deepCachingType``      | string | When to do Deep Caching for this Delivery Service:                                                                                   |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - NEVER (default)                                                                                                                    |
+  |                          |        | - ALWAYS                                                                                                                             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``displayName``          | string | The display name of the delivery service.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -414,15 +430,19 @@ Delivery Service
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``signingAlgorithm``     | string | - null: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                        |
+  |                          |        | - "url_sig": URL Sign token based auth is enabled for this deliveryservice.                                                          |
+  |                          |        | - "uri_signing": URI Signing token based auth is enabled for this deliveryservice.                                                   |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``sslKeyVersion``        |  int   |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``tenant``               | string | Owning tenant name                                                                                                                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``tenantId``             | int    | Owning tenant ID                                                                                                                     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trRequestHeaders``     | string |                                                                                                                                      |
+  | ``trRequestHeaders``     | string | List of header keys separated by ``__RETURN__``. Listed headers will be included in TR access log entries under the "rh=" token.     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trResponseHeaders``    | string |                                                                                                                                      |
+  | ``trResponseHeaders``    | string | List of header ``name:value`` pairs separated by ``__RETURN__``. Listed pairs will be included in all TR HTTP responses.             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``typeId``               |  int   | The type of this deliveryservice (one of :ref:to-api-v11-types use_in_table='deliveryservice').                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -440,6 +460,7 @@ Delivery Service
             "cdnId": "2",
             "cdnName": "over-the-top",
             "checkPath": "",
+            "deepCachingType": "NEVER",
             "displayName": "My Cool Delivery Service",
             "dnsBypassCname": "",
             "dnsBypassIp": "",
@@ -491,6 +512,7 @@ Delivery Service
             "remapText": null,
             "routingName": "foo",
             "signed": false,
+            "signingAlgorithm": null,
             "sslKeyVersion": "0",
             "tenant": "root",
             "tenantId": 1,
@@ -1435,7 +1457,7 @@ SSL Keys
 
   Authentication Required: Yes
 
-  Role(s) Required: Admin
+  Role(s) Required: None
 
   **Request Route Parameters**
 
@@ -1489,7 +1511,7 @@ SSL Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": {
         "certificate": {
           "crt": "crt",
@@ -1568,7 +1590,7 @@ SSL Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": {
         "certificate": {
           "crt": "crt",
@@ -1593,7 +1615,7 @@ SSL Keys
 
   Authentication Required: Yes
 
-  Role Required: Admin
+  Role Required: Operations
 
   **Request Route Parameters**
 
@@ -1621,41 +1643,45 @@ SSL Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": "Successfully deleted ssl keys for <xml_id>"
     }
 
 |
-  
+
 **POST /api/1.2/deliveryservices/sslkeys/generate**
 
   Generates SSL crt, csr, and private key for a delivery service
 
   Authentication Required: Yes
 
-  Role(s) Required: Admin
+  Role(s) Required: Operations
 
   **Request Properties**
 
-  +--------------+---------+-------------------------------------------------+
-  |  Parameter   |   Type  |                   Description                   |
-  +==============+=========+=================================================+
-  | ``key``      | string  | xml_id of the delivery service                  |
-  +--------------+---------+-------------------------------------------------+
-  | ``version``  | string  | version of the keys being generated             |
-  +--------------+---------+-------------------------------------------------+
-  | ``hostname`` | string  | the *pristine hostname* of the delivery service |
-  +--------------+---------+-------------------------------------------------+
-  | ``country``  | string  |                                                 |
-  +--------------+---------+-------------------------------------------------+
-  | ``state``    | string  |                                                 |
-  +--------------+---------+-------------------------------------------------+
-  | ``city``     | string  |                                                 |
-  +--------------+---------+-------------------------------------------------+
-  | ``org``      | string  |                                                 |
-  +--------------+---------+-------------------------------------------------+
-  | ``unit``     | boolean |                                                 |
-  +--------------+---------+-------------------------------------------------+
+  +---------------------+---------+-----------------------------------------------------------------+
+  |      Parameter      |   Type  |                           Description                           |
+  +=====================+=========+=================================================================+
+  | ``key``             | string  | xml_id of the delivery service                                  |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``version``         | string  | version of the keys being generated                             |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``hostname``        | string  | the *pristine hostname* of the delivery service                 |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``country``         | string  | Country                                                         |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``state``           | string  | State                                                           |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``city``            | string  | City                                                            |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``org``             | string  | Organization                                                    |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``unit``            | boolean | Business Unit                                                   |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``deliveryservice`` | string  | The deliveryservice xml-id for which you want to generate certs |
+  +---------------------+---------+-----------------------------------------------------------------+
+  | ``cdn``             | string  | The name of the CDN for which the deliveryservice belongs       |
+  +---------------------+---------+-----------------------------------------------------------------+
 
   **Request Example** ::
 
@@ -1672,7 +1698,9 @@ SSL Keys
       "country": "US",
       "organization": "Kabletown",
       "city": "Denver",
-      "state": "Colorado"
+      "state": "Colorado",
+      "deliveryservice" : "ds-01",
+      "cdn": "cdn1"
     }
 
 |
@@ -1689,35 +1717,41 @@ SSL Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": "Successfully created ssl keys for ds-01"
     }
 
 |
-  
+
 **POST /api/1.2/deliveryservices/sslkeys/add**
 
   Allows user to add SSL crt, csr, and private key for a delivery service.
 
   Authentication Required: Yes
 
-  Role(s) Required:  Admin
+  Role(s) Required: Operations
 
   **Request Properties**
 
-  +-------------+--------+-------------------------------------+
-  |  Parameter  |  Type  |             Description             |
-  +=============+========+=====================================+
-  | ``key``     | string | xml_id of the delivery service      |
-  +-------------+--------+-------------------------------------+
-  | ``version`` | string | version of the keys being generated |
-  +-------------+--------+-------------------------------------+
-  | ``csr``     | string |                                     |
-  +-------------+--------+-------------------------------------+
-  | ``crt``     | string |                                     |
-  +-------------+--------+-------------------------------------+
-  | ``key``     | string |                                     |
-  +-------------+--------+-------------------------------------+
+  +---------------------+--------+-----------------------------------------------------------------+
+  |      Parameter      |  Type  |                           Description                           |
+  +=====================+========+=================================================================+
+  | ``key``             | string | xml_id of the delivery service                                  |
+  +---------------------+--------+-----------------------------------------------------------------+
+  | ``version``         | string | version of the keys being generated                             |
+  +---------------------+--------+-----------------------------------------------------------------+
+  | ``csr``             | string |                                                                 |
+  +---------------------+--------+-----------------------------------------------------------------+
+  | ``crt``             | string |                                                                 |
+  +---------------------+--------+-----------------------------------------------------------------+
+  | ``key``             | string |                                                                 |
+  +---------------------+--------+-----------------------------------------------------------------+
+  | ``deliveryservice`` | string | The deliveryservice xml-id for which you want to generate certs |
+  +---------------------+--------+-----------------------------------------------------------------+
+  | ``cdn``             | string | The name of the CDN for which the deliveryservice belongs       |
+  +---------------------+--------+-----------------------------------------------------------------+
+  | ``hostname``        | string | the *pristine hostname* of the delivery service                 |
+  +---------------------+--------+-----------------------------------------------------------------+
 
   **Request Example** ::
 
@@ -1745,7 +1779,7 @@ SSL Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": "Successfully added ssl keys for ds-01"
     }
 
@@ -1782,7 +1816,7 @@ URL Sig Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": {
         key9":"ZvVQNYpPVQWQV8tjQnUl6osm4y7xK4zD",
         "key6":"JhGdpw5X9o8TqHfgezCm0bqb9SQPASWL",
@@ -1804,14 +1838,14 @@ URL Sig Keys
     }
 
 |
-  
+
 **POST /api/1.2/deliveryservices/xmlId/:xmlid/urlkeys/generate**
 
   Generates Url sig keys for a delivery service
 
   Authentication Required: Yes
 
-  Role(s) Required: Admin OR assigned DS
+  Role(s) Required: Operations
 
   **Request Route Parameters**
 
@@ -1835,19 +1869,19 @@ URL Sig Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": "Successfully generated and stored keys"
     }
 
 |
-  
+
 **POST /api/1.2/deliveryservices/xmlId/:xmlid/urlkeys/copyFromXmlId/:copyFromXmlId**
 
   Allows user to copy url sig keys from a specified delivery service to a delivery service.
 
   Authentication Required: Yes
 
-  Role(s) Required:  Admin or assigned DS
+  Role(s) Required: Operations
 
 **Request Route Parameters**
 
@@ -1873,7 +1907,7 @@ URL Sig Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": "Successfully copied and stored keys"
     }
 
@@ -1895,6 +1929,11 @@ URL Sig Keys
   | ``details``                            | hash   | yes      | Parameters for the delivery service request.                                                |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>customer``                          | string | yes      | Name of the customer to associated with the delivery service.                               |
+  +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
+  | ``>deepCachingType``                   | string | no       | When to do Deep Caching for this Delivery Service:                                          |
+  |                                        |        |          |                                                                                             |
+  |                                        |        |          | - NEVER (default)                                                                           |
+  |                                        |        |          | - ALWAYS                                                                                    |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
   | ``>deliveryProtocol``                  | string | yes      | Eg. http or http/https                                                                      |
   +----------------------------------------+--------+----------+---------------------------------------------------------------------------------------------+
@@ -1956,6 +1995,7 @@ URL Sig Keys
        "details": {
           "customer": "XYZ Corporation",
           "contentType": "video-on-demand",
+          "deepCachingType": "NEVER",
           "deliveryProtocol": "http",
           "routingType": "dns",
           "routingName": "foo",
@@ -2023,7 +2063,7 @@ URL Sig Keys
 
   Authentication Required: Yes
 
-  Role(s) Required:  admin or oper
+  Role(s) Required:  Admin or Operations
 
   **Request Properties**
 
@@ -2032,8 +2072,6 @@ URL Sig Keys
   +========================+==========+=========================================================================================================+
   | active                 | yes      | true if active, false if inactive.                                                                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | tenantId               | No       | Owning tenant ID                                                                                        |
-  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | cacheurl               | no       | Cache URL rule to apply to this delivery service.                                                       |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | ccrDnsTtl              | no       | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr.host.             |
@@ -2041,6 +2079,11 @@ URL Sig Keys
   | cdnId                  | yes      | cdn id                                                                                                  |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | checkPath              | no       | The path portion of the URL to check this deliveryservice for health.                                   |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | deepCachingType        | no       | When to do Deep Caching for this Delivery Service:                                                      |
+  |                        |          |                                                                                                         |
+  |                        |          | - NEVER (default)                                                                                       |
+  |                        |          | - ALWAYS                                                                                                |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | displayName            | yes      | Display name                                                                                            |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -2084,9 +2127,10 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | infoUrl                | no       | Use this to add a URL that points to more information about that deliveryservice.                       |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | initialDispersion      | yes      | Initial dispersion                                                                                      |
+  | initialDispersion      | yes|no   | Initial dispersion. Required for HTTP* delivery services.                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | ipv6RoutingEnabled     | yes      | false: send IPv4 address of Traffic Router to client on HTTP type del.                                  |
+  | ipv6RoutingEnabled     | yes|no   | false: send IPv4 address of Traffic Router to client on HTTP type del.                                  |
+  |                        |          | Required for DNS*, HTTP* and STEERING* delivery services.                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | logsEnabled            | yes      | - false: No                                                                                             |
   |                        |          | - true: Yes                                                                                             |
@@ -2102,33 +2146,35 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | midHeaderRewrite       | no       | The MID header rewrite actions to perform.                                                              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | missLat                | no       | The latitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.    |
-  |                        |          |                                                                                                         |
-  |                        |          | - e.g. 39.7391500 or null                                                                               |
+  | missLat                | yes|no   | The latitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.    |
+  |                        |          | e.g. 39.7391500 or null. Required for DNS* and HTTP* delivery services.                                 |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | missLong               | no       | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.   |
-  |                        |          |                                                                                                         |
-  |                        |          | - e.g. -104.9847000 or null                                                                             |
+  | missLong               | yes|no   | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.   |
+  |                        |          | e.g. -104.9847000 or null. Required for DNS* and HTTP* delivery services.                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | multiSiteOrigin        | yes      | 1 if enabled, 0 if disabled.                                                                            |
+  | multiSiteOrigin        | yes|no   | true if enabled, false if disabled. Required for DNS* and HTTP* delivery services.                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | orgServerFqdn          | yes|no   | The origin server base URL (FQDN when used in this instance, includes the                               |
   |                        |          | protocol (http:// or https://) for use in retrieving content from the origin server. This field is      |
-  |                        |          | NOT required if type is ANY_MAP, STEERING OR CLIENT_STEERING.                                           |
+  |                        |          | required if type is DNS* or HTTP*.                                                                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | originShield           | no       | Origin shield                                                                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | profileId              | no       | DS profile ID                                                                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | protocol               | yes      | - 0: serve with http:// at EDGE                                                                         |
+  | protocol               | yes|no   | - 0: serve with http:// at EDGE                                                                         |
   |                        |          | - 1: serve with https:// at EDGE                                                                        |
   |                        |          | - 2: serve with both http:// and https:// at EDGE                                                       |
+  |                        |          |                                                                                                         |
+  |                        |          | Required for DNS*, HTTP* or *STEERING* delivery services.                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | qstringIgnore          | yes      | - 0: no special query string handling; it is for use in the cache-key and pass up to origin.            |
+  | qstringIgnore          | yes|no   | - 0: no special query string handling; it is for use in the cache-key and pass up to origin.            |
   |                        |          | - 1: ignore query string in cache-key, but pass it up to parent and or origin.                          |
   |                        |          | - 2: drop query string at edge, and do not use it in the cache-key.                                     |
+  |                        |          |                                                                                                         |
+  |                        |          | Required for DNS* and HTTP* delivery services.                                                          |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | rangeRequestHandling   | yes      | How to treat range requests:                                                                            |
+  | rangeRequestHandling   | yes|no   | How to treat range requests (required for DNS* and HTTP* delivery services):                            |
   |                        |          |                                                                                                         |
   |                        |          | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will   |
   |                        |          |   be a HIT)                                                                                             |
@@ -2137,20 +2183,28 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | regexRemap             | no       | Regex Remap rule to apply to this delivery service at the Edge tier.                                    |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | regionalGeoBlocking    | no       | Is the Regional Geo Blocking feature enabled for this delivery service.                                 |
+  | regionalGeoBlocking    | yes      | Is the Regional Geo Blocking feature enabled.                                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | remapText              | no       | Additional raw remap line text.                                                                         |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | routingName            | no       | The routing name of this deliveryservice, e.g. <routingName>.<xmlId>.cdn.com.                           |
+  | routingName            | yes      | The routing name of this deliveryservice, e.g. <routingName>.<xmlId>.cdn.com.                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | signed                 | no       | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.          |
   |                        |          | - true: token based auth is enabled for this deliveryservice.                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | signingAlgorithm       | no       | - null: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.           |
+  |                        |          | - "url_sig": URL Sign token based auth is enabled for this deliveryservice.                             |
+  |                        |          | - "uri_signing": URI Signing token based auth is enabled for this deliveryservice.                      |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | sslKeyVersion          | no       | SSL key version                                                                                         |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | trRequestHeaders       | no       | Traffic router log request headers                                                                      |
+  | tenantId               | No       | Owning tenant ID                                                                                        |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | trResponseHeaders      | no       | Traffic router additional response headers                                                              |
+  | trRequestHeaders       | no       | List of header keys separated by ``__RETURN__``. Listed headers will be included in TR access log       | 
+  |                        |          | entries under the "rh=" token.                                                                          |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | trResponseHeaders      | no       | List of header ``name:value`` pairs separated by ``__RETURN__``. Listed pairs will be included in all   |
+  |                        |          | TR HTTP responses.                                                                                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | typeId                 | yes      | The type of this deliveryservice (one of :ref:to-api-v12-types use_in_table='deliveryservice').         |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -2181,7 +2235,8 @@ URL Sig Keys
         "qstringIgnore": 0,
         "rangeRequestHandling": 0,
         "regionalGeoBlocking": false,
-        "signed": false
+        "signed": false,
+        "signingAlgorithm": null
     }
 
 
@@ -2201,6 +2256,11 @@ URL Sig Keys
   | ``cdnName``              | string | Name of the CDN to which the delivery service belongs to.                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``deepCachingType``      | string | When to do Deep Caching for this Delivery Service:                                                                                   |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - NEVER (default)                                                                                                                    |
+  |                          |        | - ALWAYS                                                                                                                             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``displayName``          | string | The display name of the delivery service.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -2320,11 +2380,15 @@ URL Sig Keys
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``signingAlgorithm``     | string | - null: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                        |
+  |                          |        | - "url_sig": URL Sign token based auth is enabled for this deliveryservice.                                                          |
+  |                          |        | - "uri_signing": URI Signing token based auth is enabled for this deliveryservice.                                                   |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``sslKeyVersion``        |  int   |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trRequestHeaders``     | string |                                                                                                                                      |
+  | ``trRequestHeaders``     | string | List of header keys separated by ``__RETURN__``. Listed headers will be included in TR access log entries under the "rh=" token.     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trResponseHeaders``    | string |                                                                                                                                      |
+  | ``trResponseHeaders``    | string | List of header ``name:value`` pairs separated by ``__RETURN__``. Listed pairs will be included in all TR HTTP responses.             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``typeId``               |  int   | The type of this deliveryservice (one of :ref:to-api-v11-types use_in_table='deliveryservice').                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -2342,6 +2406,7 @@ URL Sig Keys
             "cdnId": "2",
             "cdnName": "over-the-top",
             "checkPath": "",
+            "deepCachingType": "NEVER",
             "displayName": "My Cool Delivery Service",
             "dnsBypassCname": "",
             "dnsBypassIp": "",
@@ -2393,6 +2458,7 @@ URL Sig Keys
             "remapText": null,
             "routingName": "foo",
             "signed": false,
+            "signingAlgorithm": null,
             "sslKeyVersion": "0",
             "tenantId": 1,
             "trRequestHeaders": null,
@@ -2429,8 +2495,6 @@ URL Sig Keys
   +========================+==========+=========================================================================================================+
   | active                 | yes      | true if active, false if inactive.                                                                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | tenantId               | no       | Owning tenant ID                                                                                        |
-  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | cacheurl               | no       | Cache URL rule to apply to this delivery service.                                                       |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | ccrDnsTtl              | no       | The TTL of the DNS response for A or AAAA queries requesting the IP address of the tr.host.             |
@@ -2438,6 +2502,11 @@ URL Sig Keys
   | cdnId                  | yes      | cdn id                                                                                                  |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | checkPath              | no       | The path portion of the URL to check this deliveryservice for health.                                   |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | deepCachingType        | no       | When to do Deep Caching for this Delivery Service:                                                      |
+  |                        |          |                                                                                                         |
+  |                        |          | - NEVER (default)                                                                                       |
+  |                        |          | - ALWAYS                                                                                                |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | displayName            | yes      | Display name                                                                                            |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -2481,9 +2550,10 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | infoUrl                | no       | Use this to add a URL that points to more information about that deliveryservice.                       |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | initialDispersion      | yes      | Initial dispersion                                                                                      |
+  | initialDispersion      | yes|no   | Initial dispersion. Required for HTTP* delivery services.                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | ipv6RoutingEnabled     | yes      | false: send IPv4 address of Traffic Router to client on HTTP type del.                                  |
+  | ipv6RoutingEnabled     | yes|no   | false: send IPv4 address of Traffic Router to client on HTTP type del.                                  |
+  |                        |          | Required for DNS*, HTTP* and STEERING* delivery services.                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | logsEnabled            | yes      | - false: No                                                                                             |
   |                        |          | - true: Yes                                                                                             |
@@ -2499,32 +2569,35 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | midHeaderRewrite       | no       | The MID header rewrite actions to perform.                                                              |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | missLat                | no       | The latitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.    |
-  |                        |          |                                                                                                         |
-  |                        |          | - e.g. 39.7391500 or null                                                                               |
+  | missLat                | yes|no   | The latitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.    |
+  |                        |          | e.g. 39.7391500 or null. Required for DNS* and HTTP* delivery services.                                 |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | missLong               | no       | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.   |
-  |                        |          |                                                                                                         |
-  |                        |          | - e.g. -104.9847000 or null                                                                             |
+  | missLong               | yes|no   | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.   |
+  |                        |          | e.g. -104.9847000 or null. Required for DNS* and HTTP* delivery services.                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | multiSiteOrigin        | yes      | 1 if enabled, 0 if disabled.                                                                            |
+  | multiSiteOrigin        | yes|no   | true if enabled, false if disabled. Required for DNS* and HTTP* delivery services.                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | orgServerFqdn          | yes      | The origin server base URL (FQDN when used in this instance, includes the                               |
-  |                        |          | protocol (http:// or https://) for use in retrieving content from the origin server.                    |
+  | orgServerFqdn          | yes|no   | The origin server base URL (FQDN when used in this instance, includes the                               |
+  |                        |          | protocol (http:// or https://) for use in retrieving content from the origin server. This field is      |
+  |                        |          | required if type is DNS* or HTTP*.                                                                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | originShield           | no       | Origin shield                                                                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | profileId              | no       | DS profile ID                                                                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | protocol               | yes      | - 0: serve with http:// at EDGE                                                                         |
+  | protocol               | yes|no   | - 0: serve with http:// at EDGE                                                                         |
   |                        |          | - 1: serve with https:// at EDGE                                                                        |
   |                        |          | - 2: serve with both http:// and https:// at EDGE                                                       |
+  |                        |          |                                                                                                         |
+  |                        |          | Required for DNS*, HTTP* or *STEERING* delivery services.                                               |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | qstringIgnore          | yes      | - 0: no special query string handling; it is for use in the cache-key and pass up to origin.            |
+  | qstringIgnore          | yes|no   | - 0: no special query string handling; it is for use in the cache-key and pass up to origin.            |
   |                        |          | - 1: ignore query string in cache-key, but pass it up to parent and or origin.                          |
   |                        |          | - 2: drop query string at edge, and do not use it in the cache-key.                                     |
+  |                        |          |                                                                                                         |
+  |                        |          | Required for DNS* and HTTP* delivery services.                                                          |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | rangeRequestHandling   | yes      | How to treat range requests:                                                                            |
+  | rangeRequestHandling   | yes|no   | How to treat range requests (required for DNS* and HTTP* delivery services):                            |
   |                        |          |                                                                                                         |
   |                        |          | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will   |
   |                        |          |   be a HIT)                                                                                             |
@@ -2533,20 +2606,28 @@ URL Sig Keys
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | regexRemap             | no       | Regex Remap rule to apply to this delivery service at the Edge tier.                                    |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | regionalGeoBlocking    | no       | Is the Regional Geo Blocking feature enabled for this delivery service.                                 |
+  | regionalGeoBlocking    | yes      | Is the Regional Geo Blocking feature enabled.                                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | remapText              | no       | Additional raw remap line text.                                                                         |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | routingName            | no       | The routing name of this deliveryservice, e.g. <routingName>.<xmlId>.cdn.com.                           |
+  | routingName            | yes      | The routing name of this deliveryservice, e.g. <routingName>.<xmlId>.cdn.com.                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | signed                 | no       | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.          |
   |                        |          | - true: token based auth is enabled for this deliveryservice.                                           |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | signingAlgorithm       | no       | - null: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.           |
+  |                        |          | - "url_sig": URL Sign token based auth is enabled for this deliveryservice.                             |
+  |                        |          | - "uri_signing": URI Signing token based auth is enabled for this deliveryservice.                      |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | sslKeyVersion          | no       | SSL key version                                                                                         |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | trRequestHeaders       | no       | Traffic router log request headers                                                                      |
+  | tenantId               | No       | Owning tenant ID                                                                                        |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
-  | trResponseHeaders      | no       | Traffic router additional response headers                                                              |
+  | trRequestHeaders       | no       | List of header keys separated by ``__RETURN__``. Listed headers will be included in TR access log       | 
+  |                        |          | entries under the "rh=" token.                                                                          |
+  +------------------------+----------+---------------------------------------------------------------------------------------------------------+
+  | trResponseHeaders      | no       | List of header ``name:value`` pairs separated by ``__RETURN__``. Listed pairs will be included in all   |
+  |                        |          | TR HTTP responses.                                                                                      |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
   | typeId                 | yes      | The type of this deliveryservice (one of :ref:to-api-v12-types use_in_table='deliveryservice').         |
   +------------------------+----------+---------------------------------------------------------------------------------------------------------+
@@ -2559,7 +2640,7 @@ URL Sig Keys
     {
         "xmlId": "my_ds_1",
         "displayName": "my_ds_displayname_1",
-	"tenantId": 1,
+        "tenantId": 1,
         "protocol": 1,
         "orgServerFqdn": "http://10.75.168.91",
         "cdnId": 2,
@@ -2577,7 +2658,8 @@ URL Sig Keys
         "qstringIgnore": 0,
         "rangeRequestHandling": 0,
         "regionalGeoBlocking": false,
-        "signed": false
+        "signed": false,
+        "signingAlgorithm": null
     }
 
 
@@ -2597,6 +2679,11 @@ URL Sig Keys
   | ``cdnName``              | string | Name of the CDN to which the delivery service belongs to.                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``deepCachingType``      | string | When to do Deep Caching for this Delivery Service:                                                                                   |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - NEVER (default)                                                                                                                    |
+  |                          |        | - ALWAYS                                                                                                                             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``displayName``          | string | The display name of the delivery service.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -2716,11 +2803,15 @@ URL Sig Keys
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``signingAlgorithm``     | string | - null: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                        |
+  |                          |        | - "url_sig": URL Sign token based auth is enabled for this deliveryservice.                                                          |
+  |                          |        | - "uri_signing": URI Signing token based auth is enabled for this deliveryservice.                                                   |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``sslKeyVersion``        |  int   |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trRequestHeaders``     | string |                                                                                                                                      |
+  | ``trRequestHeaders``     | string | List of header keys separated by ``__RETURN__``. Listed headers will be included in TR access log entries under the "rh=" token.     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trResponseHeaders``    | string |                                                                                                                                      |
+  | ``trResponseHeaders``    | string | List of header ``name:value`` pairs separated by ``__RETURN__``. Listed pairs will be included in all TR HTTP responses.             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``typeId``               |  int   | The type of this deliveryservice (one of :ref:to-api-v11-types use_in_table='deliveryservice').                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -2738,6 +2829,7 @@ URL Sig Keys
             "cdnId": "2",
             "cdnName": "over-the-top",
             "checkPath": "",
+            "deepCachingType": "NEVER",
             "displayName": "My Cool Delivery Service",
             "dnsBypassCname": "",
             "dnsBypassIp": "",
@@ -2789,6 +2881,7 @@ URL Sig Keys
             "remapText": null,
             "routingName": "foo",
             "signed": false,
+            "signingAlgorithm": null,
             "sslKeyVersion": "0",
             "tenantId": 1,
             "trRequestHeaders": null,
@@ -2808,7 +2901,7 @@ URL Sig Keys
 
   Authentication Required: Yes
 
-  Role(s) Required:  users with the delivery service assigned or ops and above 
+  Role(s) Required:  users with the delivery service assigned or ops and above
 
   **Request Route Parameters**
 
@@ -2862,6 +2955,11 @@ URL Sig Keys
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``deepCachingType``      | string | When to do Deep Caching for this Delivery Service:                                                                                   |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - NEVER (default)                                                                                                                    |
+  |                          |        | - ALWAYS                                                                                                                             |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``displayName``          | string | The display name of the delivery service.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``dnsBypassCname``       | string |                                                                                                                                      |
@@ -2980,11 +3078,15 @@ URL Sig Keys
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``signingAlgorithm``     | string | - null: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                        |
+  |                          |        | - "url_sig": URL Sign token based auth is enabled for this deliveryservice.                                                          |
+  |                          |        | - "uri_signing": URI Signing token based auth is enabled for this deliveryservice.                                                   |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``sslKeyVersion``        |  int   |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trRequestHeaders``     | string |                                                                                                                                      |
+  | ``trRequestHeaders``     | string | List of header keys separated by ``__RETURN__``. Listed headers will be included in TR access log entries under the "rh=" token.     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trResponseHeaders``    | string |                                                                                                                                      |
+  | ``trResponseHeaders``    | string | List of header ``name:value`` pairs separated by ``__RETURN__``. Listed pairs will be included in all TR HTTP responses.             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``typeId``               |  int   | The type of this deliveryservice (one of :ref:to-api-v11-types use_in_table='deliveryservice').                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -3002,6 +3104,7 @@ URL Sig Keys
             "cdnId": "2",
             "cdnName": "over-the-top",
             "checkPath": "",
+            "deepCachingType": "NEVER",
             "displayName": "My Cool Delivery Service",
             "dnsBypassCname": "",
             "dnsBypassIp": "",
@@ -3053,6 +3156,7 @@ URL Sig Keys
             "remapText": null,
             "routingName": "foo",
             "signed": false,
+            "signingAlgorithm": null,
             "sslKeyVersion": "0",
             "tenantId": 1,
             "trRequestHeaders": null,
@@ -3147,6 +3251,202 @@ URL Sig Keys
             ],
             "xmlId":"my_ds_1"
         }
+    }
+
+|
+
+URI Signing Keys
+++++++++++++++++
+
+**DELETE /api/1.2/deliveryservices/:xml_id/urisignkeys**
+
+  Deletes URISigning objects for a delivery service.
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin
+
+  **Request Route Parameters**
+
+  +-----------+----------+----------------------------------------+
+  |    Name   | Required |              Description               |
+  +===========+==========+========================================+
+  | xml_id    | yes      | xml_id of the desired delivery service |
+  +-----------+----------+----------------------------------------+
+
+**GET /api/1.2/deliveryservices/:xml_id/urisignkeys**
+
+  Retrieves one or more URISigning objects for a delivery service.
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin
+
+  **Request Route Parameters**
+
+  +-----------+----------+----------------------------------------+
+  |    Name   | Required |              Description               |
+  +===========+==========+========================================+
+  | xml_id    | yes      | xml_id of the desired delivery service |
+  +-----------+----------+----------------------------------------+
+
+  **Response Properties**
+
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  |    Parameter        |  Type  |                                                               Description                                                               |
+  +=====================+========+=========================================================================================================================================+
+  | ``Issuer``          | string | a string describing the issuer of the URI signing object. Multiple URISigning objects may be returned in a response, see example        |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``renewal_kid``     | string | a string naming the jwt key used for renewals.                                                                                          |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``keys``            | string | json array of jwt symmetric keys                                                             .                                          |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``alg``             | string | this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, RFC 7518.         |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``kid``             | string | this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in RFC 7516.                    |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``kty``             | string | this parameter repeats for each jwt key in the array and specifies the key type as defined in RFC 7516.                                 |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``k``               | string | this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see RFC 7516.                       |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+
+  **Response Example** ::
+
+    {
+      "Kabletown URI Authority": {
+        "renewal_kid": "Second Key",
+        "keys": [
+          {
+            "alg": "HS256",
+            "kid": "First Key",
+            "kty": "oct",
+            "k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
+          },
+          {
+            "alg": "HS256",
+            "kid": "Second Key",
+            "kty": "oct",
+            "k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
+          }
+        ]
+      }
+    }
+
+
+**POST /api/1.2/deliveryservices/:xml_id/urisignkeys**
+
+  Assigns URISigning objects to a delivery service.
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin
+
+  **Request Route Parameters**
+
+  +-----------+----------+----------------------------------------+
+  |    Name   | Required |              Description               |
+  +===========+==========+========================================+
+  |   xml_id  | yes      | xml_id of the desired delivery service |
+  +-----------+----------+----------------------------------------+
+
+  **Request Properties**
+
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  |    Parameter        |  Type  |                                                               Description                                                               |
+  +=====================+========+=========================================================================================================================================+
+  | ``Issuer``          | string | a string describing the issuer of the URI signing object. Multiple URISigning objects may be returned in a response, see example        |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``renewal_kid``     | string | a string naming the jwt key used for renewals.                                                                                          |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``keys``            | string | json array of jwt symmetric keys                                                             .                                          |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``alg``             | string | this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, RFC 7518.         |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``kid``             | string | this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in RFC 7516.                    |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``kty``             | string | this parameter repeats for each jwt key in the array and specifies the key type as defined in RFC 7516.                                 |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``k``               | string | this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see RFC 7516.                       |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+      "Kabletown URI Authority": {
+        "renewal_kid": "Second Key",
+        "keys": [
+          {
+            "alg": "HS256",
+            "kid": "First Key",
+            "kty": "oct",
+            "k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
+          },
+          {
+            "alg": "HS256",
+            "kid": "Second Key",
+            "kty": "oct",
+            "k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
+          }
+        ]
+      }
+    }
+
+**PUT /api/1.2/deliveryservices/:xml_id/urisignkeys**
+
+  updates URISigning objects on a delivery service.
+
+  Authentication Required: Yes
+
+  Role(s) Required: admin
+
+  **Request Route Parameters**
+
+  +-----------+----------+----------------------------------------+
+  |    Name   | Required |              Description               |
+  +===========+==========+========================================+
+  |  xml_id   | yes      | xml_id of the desired delivery service |
+  +-----------+----------+----------------------------------------+
+
+  **Request Properties**
+
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  |    Parameter        |  Type  |                                                               Description                                                               |
+  +=====================+========+=========================================================================================================================================+
+  | ``Issuer``          | string | a string describing the issuer of the URI signing object. Multiple URISigning objects may be returned in a response, see example        |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``renewal_kid``     | string | a string naming the jwt key used for renewals.                                                                                          |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``keys``            | string | json array of jwt symmetric keys                                                             .                                          |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``alg``             | string | this parameter repeats for each jwt key in the array and specifies the jwa encryption algorithm to use with this key, RFC 7518.         |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``kid``             | string | this parameter repeats for each jwt key in the array and specifies the unique id for the key as defined in RFC 7516.                    |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``kty``             | string | this parameter repeats for each jwt key in the array and specifies the key type as defined in RFC 7516.                                 |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+  | ``k``               | string | this parameter repeats for each jwt key in the array and specifies the base64 encoded symmetric key see RFC 7516.                       |
+  +---------------------+--------+-----------------------------------------------------------------------------------------------------------------------------------------+
+
+  **Request Example** ::
+
+    {
+      "Kabletown URI Authority": {
+        "renewal_kid": "Second Key",
+        "keys": [
+          {
+            "alg": "HS256",
+            "kid": "First Key",
+            "kty": "oct",
+            "k": "Kh_RkUMj-fzbD37qBnDf_3e_RvQ3RP9PaSmVEpE24AM"
+          },
+          {
+            "alg": "HS256",
+            "kid": "Second Key",
+            "kty": "oct",
+            "k": "fZBpDBNbk2GqhwoB_DGBAsBxqQZVix04rIoLJ7p_RlE"
+          }
+        ]
+      }
     }
 
 |

@@ -31,17 +31,15 @@ under the License.
         <br>
         <form name="dsTargetForm" class="form-horizontal form-label-left" novalidate>
             <div class="form-group" ng-class="{'has-error': hasError(dsTargetForm.deliveryServiceId), 'has-feedback': hasError(dsTargetForm.deliveryServiceId)}">
-                <label class="control-label col-md-2 col-sm-2 col-xs-12">Steering Delivery Service *</label>
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Steering Delivery Service</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="deliveryServiceId" name="deliveryServiceId" class="form-control" ng-model="target.deliveryServiceId" ng-disabled="true" ng-options="ds.id as ds.xmlId for ds in deliveryServices">
-                        <option value="">Select...</option>
-                    </select>
+                    <select name="deliveryServiceId" class="form-control" ng-model="target.deliveryServiceId" ng-disabled="true" ng-options="ds.id as ds.xmlId for ds in deliveryServices"></select>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(dsTargetForm.targetId), 'has-feedback': hasError(dsTargetForm.targetId)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Steering Target *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="targetId" name="targetId" class="form-control" ng-model="target.targetId" ng-disabled="!settings.isNew" ng-options="ds.id as ds.xmlId for ds in deliveryServices" required>
+                    <select name="targetId" class="form-control" ng-model="target.targetId" ng-disabled="!settings.isNew" ng-options="ds.id as ds.xmlId for ds in deliveryServices" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(dsTargetForm.targetId, 'required')">Required</small>
@@ -50,7 +48,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(dsTargetForm.typeId), 'has-feedback': hasError(dsTargetForm.typeId)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Type *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="typeId" name="typeId" class="form-control" ng-model="target.typeId" ng-options="type.id as type.name for type in types" required>
+                    <select name="typeId" class="form-control" ng-model="target.typeId" ng-options="type.id as type.name for type in types" required>
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(dsTargetForm.typeId, 'required')">Required</small>
@@ -59,7 +57,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(dsTargetForm.value), 'has-feedback': hasError(dsTargetForm.value)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Value *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="value" name="value" type="text" class="form-control" ng-model="target.value" ng-required="true" ng-maxlength="3" ng-pattern="/^\d+$/" autofocus>
+                    <input name="value" type="text" class="form-control" ng-model="target.value" ng-maxlength="3" ng-pattern="/^\d+$/" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(dsTargetForm.value, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(dsTargetForm.value, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(dsTargetForm.value, 'pattern')">Number</small>

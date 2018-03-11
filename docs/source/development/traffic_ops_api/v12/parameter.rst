@@ -44,7 +44,7 @@ Parameter
   +------------------+---------+--------------------------------------------------------------------------------+
   |    Parameter     |  Type   |                    Description                                                 |
   +==================+=========+================================================================================+
-  | ``last_updated`` | string  | The Time / Date this server entry was last updated                             |
+  | ``lastUpdated``  | string  | The Time / Date this server entry was last updated                             |
   +------------------+---------+--------------------------------------------------------------------------------+
   | ``secure``       | boolean | When true, the parameter is accessible only by admin users. Defaults to false. |
   +------------------+---------+--------------------------------------------------------------------------------+
@@ -52,7 +52,9 @@ Parameter
   +------------------+---------+--------------------------------------------------------------------------------+
   | ``name``         | string  | The parameter name                                                             |
   +------------------+---------+--------------------------------------------------------------------------------+
-  | ``config_file``  | string  | The parameter config_file                                                      |
+  | ``configFile``   | string  | The parameter config_file                                                      |
+  +------------------+---------+--------------------------------------------------------------------------------+
+  | ``profiles``     | array   | An array of profiles attached to this parameter.                               |
   +------------------+---------+--------------------------------------------------------------------------------+
 
   **Response Example** ::
@@ -60,25 +62,29 @@ Parameter
     {
      "response": [
         {
-           "last_updated": "2012-09-17 21:41:22",
+           "lastUpdated": "2012-09-17 21:41:22",
            "secure": false,
            "value": "foo.bar.net",
            "name": "domain_name",
-           "config_file": "FooConfig.xml"
+           "configFile": "FooConfig.xml",
+           "profiles": [ "EDGE-FOO, MID-FOO" ]
         },
         {
-           "last_updated": "2012-09-17 21:41:22",
+           "lastUpdated": "2012-09-17 21:41:22",
            "secure": false,
            "value": "0,1,2,3,4,5,6",
            "name": "Drive_Letters",
-           "config_file": "storage.config"
+           "configFile": "storage.config",
+           "profiles": [ "EDGE-FOO, MID-FOO" ]
+
         },
         {
-           "last_updated": "2012-09-17 21:41:22",
+           "lastUpdated": "2012-09-17 21:41:22",
            "secure": true,
            "value": "STRING __HOSTNAME__",
            "name": "CONFIG proxy.config.proxy_name",
-           "config_file": "records.config"
+           "configFile": "records.config"
+           "profiles": [ ]
         }
      ],
     }
@@ -145,13 +151,15 @@ Parameter
 	+-----------------+--------+----------------------------------------------------+
 	|    Parameter    |  Type  |                    Description                     |
 	+=================+========+====================================================+
-	| ``lastUpdated`` | array  | The Time / Date this server entry was last updated |
+	| ``lastUpdated`` | string | The Time / Date this server entry was last updated |
 	+-----------------+--------+----------------------------------------------------+
 	| ``name``        | string | The name for the profile                           |
 	+-----------------+--------+----------------------------------------------------+
 	| ``id``          | string | Primary key                                        |
 	+-----------------+--------+----------------------------------------------------+
 	| ``description`` | string | The description for the profile                    |
+	+-----------------+--------+----------------------------------------------------+
+	| ``type``        | string | The type for the profile                           |
 	+-----------------+--------+----------------------------------------------------+
 
   **Response Example** ::
@@ -162,7 +170,8 @@ Parameter
             "lastUpdated": "2012-10-08 19:34:45",
             "name": "CCR_TOP",
             "id": "8",
-            "description": "Content Router for top.foobar.net"
+            "description": "Content Router for top.foobar.net",
+            "type": "ATS_PROFILE"
         }
      ]
     }

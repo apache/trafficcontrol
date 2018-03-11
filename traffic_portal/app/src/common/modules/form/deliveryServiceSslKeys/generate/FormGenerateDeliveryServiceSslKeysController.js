@@ -18,9 +18,26 @@
  */
 
 var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, sslKeys, sslRequest, $scope, $uibModal, locationUtils, deliveryServiceSslKeysService, formUtils) {
+
+	var setSSLRequest = function(sslRequest) {
+		if (!sslRequest.hostname) {
+			console.log('setting default hostname');
+			var url = deliveryService.exampleURLs[0],
+				defaultHostName = url.split("://")[1];
+			if (deliveryService.type.indexOf('HTTP') != -1) {
+				var parts = defaultHostName.split(".");
+				parts[0] = "*";
+				defaultHostName = parts.join(".");
+			}
+			sslRequest.hostname = defaultHostName;
+		}
+		return sslRequest;
+	};
+
 	$scope.hasError = formUtils.hasError;
 	$scope.hasPropertyError = formUtils.hasPropertyError;
-	$scope.sslRequest = sslRequest;
+	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.sslRequest = setSSLRequest(sslRequest);
 
 	$scope.deliveryService = deliveryService;
 	$scope.countries = [

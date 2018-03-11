@@ -331,7 +331,16 @@ class TOSession(restapi.RestApiSession):
         :rtype: Tuple[Dict[Text, Any], requests.Response]
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
-
+    @restapi.api_request(u'get', u'servers/hostname/{name}/details', (u'1.1', u'1.2',))
+    def get_server_details(self, name=None):
+        """
+        #GET /api/1.2/servers/hostname/:name/details
+        Get server details from trafficOps
+        https://trafficcontrol.incubator.apache.org/docs/latest/development/traffic_ops_api/v12/server.html
+        :param hostname: Server hostname
+        :rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+        :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+        """
     @restapi.api_request(u'post', u'deliveryservices', (u'1.1', u'1.2',))
     def create_deliveryservice(self, data=None):
         """
@@ -578,6 +587,16 @@ class TOSession(restapi.RestApiSession):
         :type server_id: int
         :param data: The parameter data to edit
         :type data: Dict[Text, Any]
+        :rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
+        :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+        """
+    @restapi.api_request(u'put', u'servers/{server_id:d}/status', (u'1.1', u'1.2',))
+    def update_server_status_by_id(self, server_id=None, data=None):
+        """
+        Update server_status by Id.
+        :param server_id: The server Id
+        :type server_id: int
+        :status: https://trafficcontrol.incubator.apache.org/docs/latest/development/traffic_ops_api/v12/server.html   
         :rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """
@@ -833,6 +852,31 @@ class TOSession(restapi.RestApiSession):
         Retrieve the pending CR Snapshot
         :param cdn_name: The CDN name
         :type cdn_name: Text
+        :rtype: Tuple[Dict[Text, Any], requests.Response]
+        :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+        """
+
+    @restapi.api_request(u'get', u'logs', (u'1.2',))
+    def get_change_logs(self):
+        """
+        Retrieve all change logs from traffic ops
+        :rtype: Tuple[Dict[Text, Any], requests.Response]
+        :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+        """
+
+    @restapi.api_request(u'get', u'logs/{days:d}/days', (u'1.2',))
+    def get_change_logs_for_days(self, days=None):
+        """
+        Retrieve all change logs from Traffic Ops
+        :param days: The number of days to retrieve change logs
+        :rtype: Tuple[Dict[Text, Any], requests.Response]
+        :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
+        """
+
+    @restapi.api_request(u'get', u'logs/newcount', (u'1.2',))
+    def get_change_logs_newcount(self):
+        """
+        Get amount of new logs from traffic ops
         :rtype: Tuple[Dict[Text, Any], requests.Response]
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """

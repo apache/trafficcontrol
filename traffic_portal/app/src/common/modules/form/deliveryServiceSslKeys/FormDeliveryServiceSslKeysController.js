@@ -18,15 +18,31 @@
  */
 
 var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $scope, locationUtils, deliveryServiceSslKeysService, $uibModal, $anchorScroll, formUtils) {
+
+	var setSSLKeys = function(sslKeys) {
+		if (!sslKeys.hostname) {
+			var url = deliveryService.exampleURLs[0],
+				defaultHostName = url.split("://")[1];
+			if (deliveryService.type.indexOf('HTTP') != -1) {
+				var parts = defaultHostName.split(".");
+				parts[0] = "*";
+				defaultHostName = parts.join(".");
+			}
+			sslKeys.hostname = defaultHostName;
+		}
+		return sslKeys;
+	};
+
 	$scope.deliveryService = deliveryService;
-	$scope.sslKeys = sslKeys;
+	$scope.sslKeys = setSSLKeys(sslKeys);
 
 	$scope.hasError = formUtils.hasError;
 	$scope.hasPropertyError = formUtils.hasPropertyError;
+	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	$scope.generateKeys = function() {
 		locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys/generate');
-	}
+	};
 
 	$scope.save = function() {
 		var params = {
@@ -52,6 +68,7 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 			// do nothing
 		});
 	};
+
 };
 
 FormDeliveryServiceSslKeysController.$inject = ['deliveryService', 'sslKeys', '$scope', 'locationUtils', 'deliveryServiceSslKeysService', '$uibModal', '$anchorScroll', 'formUtils'];

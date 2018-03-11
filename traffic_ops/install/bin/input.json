@@ -28,7 +28,7 @@
   ],
   "/opt/traffic_ops/app/db/dbconf.yml":[
     {
-      "Database server root (admin) username":"root",
+      "Database server root (admin) user":"root",
       "config_var":"dbAdminUser"
     },
     {
@@ -49,6 +49,10 @@
     {
       "Number of secrets to keep?":"10",
       "config_var":"keepSecrets"
+    },
+    {
+      "Port to serve on?":"443",
+      "config_var":"port"
     }
   ],
   "/opt/traffic_ops/app/conf/ldap.conf":[

@@ -43,7 +43,7 @@ my %definition_for = (
 			id          => 7,
 			name        => 'federation',
 			description => 'Role for Secondary CZF',
-			priv_level  => 11,
+			priv_level  => 15,
 		},
 	},
 	operations => {
@@ -70,7 +70,7 @@ my %definition_for = (
 			id          => 6,
 			name        => 'portal',
 			description => 'Portal User',
-			priv_level  => 2,
+			priv_level  => 15,
 		},
 	},
 	steering => {

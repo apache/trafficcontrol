@@ -35,18 +35,18 @@ under the License.
         <table id="targetsTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>deliveryService</th>
-                <th>target</th>
-                <th>type</th>
-                <th>value</th>
+                <th>Delivery Service</th>
+                <th>Target</th>
+                <th>Type</th>
+                <th>Value</th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-click="editTarget(deliveryService.id, target.targetId)" ng-repeat="target in ::targets">
-                <td>{{::target.deliveryService}}</td>
-                <td>{{::target.target}}</td>
-                <td>{{::target.type}}</td>
-                <td>{{::target.value}}</td>
+            <tr ng-click="editTarget(deliveryService.id, t.targetId)" ng-repeat="t in ::targets">
+                <td data-search="^{{::t.deliveryService}}$">{{::t.deliveryService}}</td>
+                <td data-search="^{{::t.target}}$">{{::t.target}}</td>
+                <td data-search="^{{::t.type}}$">{{::t.type}}</td>
+                <td data-search="^{{::t.value}}$">{{::t.value}}</td>
             </tr>
             </tbody>
         </table>

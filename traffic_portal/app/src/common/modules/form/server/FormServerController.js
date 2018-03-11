@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormServerController = function(server, $scope, $location, $state, $uibModal, formUtils, locationUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, statusService, typeService, messageModel) {
+var FormServerController = function(server, $scope, $location, $state, $uibModal, formUtils, locationUtils, serverUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, typeService, messageModel) {
 
     var getPhysLocations = function() {
         physLocationService.getPhysLocations()
@@ -47,18 +47,11 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
             });
     };
 
-    var getStatuses = function() {
-        statusService.getStatuses()
-            .then(function(result) {
-                $scope.statuses = result;
-            });
-    };
-
-    var getProfiles = function() {
-        profileService.getProfiles({ orderby: 'name' })
+    var getProfiles = function(cdnId) {
+        profileService.getProfiles({ orderby: 'name', cdn: cdnId })
             .then(function(result) {
                 $scope.profiles = _.filter(result, function(profile) {
-                    return profile.type != 'DS_PROFILE';
+                    return profile.type != 'DS_PROFILE'; // DS profiles are not intended for servers
                 });
             });
     };
@@ -90,9 +83,18 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     $scope.server = server;
 
     $scope.falseTrue = [
-        { value: false, label: 'false' },
-        { value: true, label: 'true' }
+        { value: true, label: 'true' },
+        { value: false, label: 'false' }
     ];
+
+    $scope.isCache = serverUtils.isCache;
+
+    $scope.isEdge = serverUtils.isEdge;
+
+    $scope.onCDNChange = function() {
+        $scope.server.profileId = null; // the cdn of the server changed, so we need to blank out the selected server profile (if any)
+        getProfiles($scope.server.cdnId); // and get a new list of profiles (for the selected cdn)
+    };
 
     $scope.queueServerUpdates = function(server) {
         serverService.queueServerUpdates(server.id)
@@ -133,7 +135,6 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         });
     };
 
-
     $scope.viewConfigFiles = function() {
         $location.path($location.path() + '/config-files');
     };
@@ -153,12 +154,11 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         getCacheGroups();
         getTypes();
         getCDNs();
-        getStatuses();
-        getProfiles();
+        getProfiles(($scope.server.cdnId) ? $scope.server.cdnId : 0); // hacky but does the job. only when a cdn is selected can we fetch the appropriate profiles. otherwise, show no profiles.
     };
     init();
 
 };
 
-FormServerController.$inject = ['server', '$scope', '$location', '$state', '$uibModal', 'formUtils', 'locationUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'statusService', 'typeService', 'messageModel'];
+FormServerController.$inject = ['server', '$scope', '$location', '$state', '$uibModal', 'formUtils', 'locationUtils', 'serverUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'typeService', 'messageModel'];
 module.exports = FormServerController;

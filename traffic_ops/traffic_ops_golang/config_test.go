@@ -20,11 +20,16 @@ package main
  */
 
 import (
+	"crypto/tls"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/basho/riak-go-client"
 )
 
 const (
@@ -34,6 +39,8 @@ const (
 	logDebug   = "/var/log/traffic_ops/debug.log"
 	logEvent   = "/var/log/traffic_ops/event.log"
 )
+
+var debugLogging = flag.Bool("debug", false, "enable debug logging in test")
 
 var cfg = Config{
 	URL:             nil,
@@ -145,6 +152,16 @@ const (
 	"type": "Pg"
 }
 `
+
+	goodRiakConfig = `
+	   {
+	       "user": "riakuser",
+	       "password": "password",
+	       "tlsConfig": {
+	           "insecureSkipVerify": true
+	       }
+	   }
+	   	`
 )
 
 func TestLoadConfig(t *testing.T) {
@@ -154,53 +171,78 @@ func TestLoadConfig(t *testing.T) {
 	// set up config paths
 	badPath := "/invalid-path/no-file-exists-here"
 	badCfg, err := tempFileWith([]byte("no way this is valid json..."))
+	if err != nil {
+		t.Errorf("cannot create temp file: %v", err)
+	}
 	defer os.Remove(badCfg) // clean up
 
 	goodCfg, err := tempFileWith([]byte(goodConfig))
+	if err != nil {
+		t.Errorf("cannot create temp file: %v", err)
+	}
 	defer os.Remove(goodCfg) // clean up
 
 	goodDbCfg, err := tempFileWith([]byte(goodDbConfig))
+	if err != nil {
+		t.Errorf("cannot create temp file: %v", err)
+	}
 	defer os.Remove(goodDbCfg) // clean up
 
+	goodRiakCfg, err := tempFileWith([]byte(goodRiakConfig))
+	if err != nil {
+		t.Errorf("cannot create temp file: %v", err)
+	}
+	defer os.Remove(goodRiakCfg) // clean up
+
 	// test bad paths
-	_, err = LoadConfig(badPath, badPath)
+	_, err = LoadConfig(badPath, badPath, badPath)
 	exp = fmt.Sprintf("reading CDN conf '%s'", badPath)
 	if !strings.HasPrefix(err.Error(), exp) {
 		t.Error("expected", exp, "got", err)
 	}
 
 	// bad json in cdn.conf
-	_, err = LoadConfig(badCfg, badCfg)
+	_, err = LoadConfig(badCfg, badCfg, badPath)
 	exp = fmt.Sprintf("unmarshalling '%s'", badCfg)
 	if !strings.HasPrefix(err.Error(), exp) {
 		t.Error("expected", exp, "got", err)
 	}
 
 	// good cdn.conf, bad db conf
-	_, err = LoadConfig(goodCfg, badPath)
+	_, err = LoadConfig(goodCfg, badPath, badPath)
 	exp = fmt.Sprintf("reading db conf '%s'", badPath)
 	if !strings.HasPrefix(err.Error(), exp) {
 		t.Error("expected", exp, "got", err)
 	}
 
 	// good cdn.conf,  bad json in database.conf
-	_, err = LoadConfig(goodCfg, badCfg)
+	_, err = LoadConfig(goodCfg, badCfg, badPath)
 	exp = fmt.Sprintf("unmarshalling '%s'", badCfg)
 	if !strings.HasPrefix(err.Error(), exp) {
 		t.Error("expected", exp, "got", err)
 	}
 
 	// good cdn.conf,  good database.conf
-	cfg, err = LoadConfig(goodCfg, goodDbCfg)
+	cfg, err = LoadConfig(goodCfg, goodDbCfg, goodRiakCfg)
 	if err != nil {
 		t.Error("Good config -- unexpected error ", err)
 	}
 
-	if cfg.CertPath() != "/etc/pki/tls/certs/localhost.crt" {
+	expectedRiak := riak.AuthOptions{User: "riakuser", Password: "password", TlsConfig: &tls.Config{InsecureSkipVerify: true}}
+
+	if cfg.RiakAuthOptions.User != expectedRiak.User || cfg.RiakAuthOptions.Password != expectedRiak.Password || !reflect.DeepEqual(cfg.RiakAuthOptions.TlsConfig, expectedRiak.TlsConfig) {
+		t.Error(fmt.Printf("Error parsing riak conf expected: %++v but got: %++v\n", expectedRiak, cfg.RiakAuthOptions))
+	}
+
+	if *debugLogging {
+		fmt.Printf("Cfg: %+v\n", cfg)
+	}
+
+	if cfg.CertPath != "/etc/pki/tls/certs/localhost.crt" {
 		t.Error("Expected KeyPath() == /etc/pki/tls/private/localhost.key")
 	}
 
-	if cfg.KeyPath() != "/etc/pki/tls/private/localhost.key" {
+	if cfg.KeyPath != "/etc/pki/tls/private/localhost.key" {
 		t.Error("Expected KeyPath() == /etc/pki/tls/private/localhost.key")
 	}
 }

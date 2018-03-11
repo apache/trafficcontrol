@@ -26,16 +26,22 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
+	"github.com/basho/riak-go-client"
 )
 
 // Config reflects the structure of the cdn.conf file
 type Config struct {
 	URL                    *url.URL `json:"-"`
+	CertPath               string   `json:"-"`
+	KeyPath                string   `json:"-"`
 	ConfigHypnotoad        `json:"hypnotoad"`
 	ConfigTrafficOpsGolang `json:"traffic_ops_golang"`
 	DB                     ConfigDatabase `json:"db"`
 	Secrets                []string       `json:"secrets"`
 	// NOTE: don't care about any other fields for now..
+	RiakAuthOptions *riak.AuthOptions
+	RiakEnabled     bool
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
@@ -46,22 +52,23 @@ type ConfigHypnotoad struct {
 
 // ConfigTrafficOpsGolang carries settings specific to traffic_ops_golang server
 type ConfigTrafficOpsGolang struct {
-	Port                   string `json:"port"`
-	ProxyTimeout           int    `json:"proxy_timeout"`
-	ProxyKeepAlive         int    `json:"proxy_keep_alive"`
-	ProxyTLSTimeout        int    `json:"proxy_tls_timeout"`
-	ProxyReadHeaderTimeout int    `json:"proxy_read_header_timeout"`
-	ReadTimeout            int    `json:"read_timeout"`
-	ReadHeaderTimeout      int    `json:"read_header_timeout"`
-	WriteTimeout           int    `json:"write_timeout"`
-	IdleTimeout            int    `json:"idle_timeout"`
-	LogLocationError       string `json:"log_location_error"`
-	LogLocationWarning     string `json:"log_location_warning"`
-	LogLocationInfo        string `json:"log_location_info"`
-	LogLocationDebug       string `json:"log_location_debug"`
-	LogLocationEvent       string `json:"log_location_event"`
-	Insecure               bool   `json:"insecure"`
-	MaxDBConnections       int    `json:"max_db_connections"`
+	Port                   string         `json:"port"`
+	ProxyTimeout           int            `json:"proxy_timeout"`
+	ProxyKeepAlive         int            `json:"proxy_keep_alive"`
+	ProxyTLSTimeout        int            `json:"proxy_tls_timeout"`
+	ProxyReadHeaderTimeout int            `json:"proxy_read_header_timeout"`
+	ReadTimeout            int            `json:"read_timeout"`
+	ReadHeaderTimeout      int            `json:"read_header_timeout"`
+	WriteTimeout           int            `json:"write_timeout"`
+	IdleTimeout            int            `json:"idle_timeout"`
+	LogLocationError       string         `json:"log_location_error"`
+	LogLocationWarning     string         `json:"log_location_warning"`
+	LogLocationInfo        string         `json:"log_location_info"`
+	LogLocationDebug       string         `json:"log_location_debug"`
+	LogLocationEvent       string         `json:"log_location_event"`
+	Insecure               bool           `json:"insecure"`
+	MaxDBConnections       int            `json:"max_db_connections"`
+	BackendMaxConnections  map[string]int `json:"backend_max_connections"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file
@@ -100,7 +107,7 @@ func (c Config) EventLog() log.LogLocation {
 }
 
 // LoadConfig - reads the config file into the Config struct
-func LoadConfig(cdnConfPath string, dbConfPath string) (Config, error) {
+func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string) (Config, error) {
 	// load json from cdn.conf
 	confBytes, err := ioutil.ReadFile(cdnConfPath)
 	if err != nil {
@@ -123,11 +130,22 @@ func LoadConfig(cdnConfPath string, dbConfPath string) (Config, error) {
 		return Config{}, fmt.Errorf("unmarshalling '%s': %v", dbConfPath, err)
 	}
 	cfg, err = ParseConfig(cfg)
+	if err != nil {
+		return Config{}, fmt.Errorf("parsing config '%s': %v", dbConfPath, err)
+	}
+
+	if riakConfPath != "" {
+		cfg.RiakEnabled, cfg.RiakAuthOptions, err = riaksvc.GetRiakConfig(riakConfPath)
+		if err != nil {
+			return Config{}, fmt.Errorf("parsing config '%s': %v", riakConfPath, err)
+		}
+	}
+
 	return cfg, err
 }
 
-// CertPath extracts path to cert .cert file
-func (c Config) CertPath() string {
+// GetCertPath - extracts path to cert .cert file
+func (c Config) GetCertPath() string {
 	v, ok := c.URL.Query()["cert"]
 	if ok {
 		return v[0]
@@ -135,14 +153,19 @@ func (c Config) CertPath() string {
 	return ""
 }
 
-// KeyPath extracts path to cert .key file
-func (c Config) KeyPath() string {
+// GetKeyPath - extracts path to cert .key file
+func (c Config) GetKeyPath() string {
 	v, ok := c.URL.Query()["key"]
 	if ok {
 		return v[0]
 	}
 	return ""
 }
+
+const (
+	// MojoliciousConcurrentConnectionsDefault  ...
+	MojoliciousConcurrentConnectionsDefault = 12
+)
 
 // ParseConfig validates required fields, and parses non-JSON types
 func ParseConfig(cfg Config) (Config, error) {
@@ -168,6 +191,12 @@ func ParseConfig(cfg Config) (Config, error) {
 	if cfg.LogLocationEvent == "" {
 		cfg.LogLocationEvent = log.LogLocationNull
 	}
+	if cfg.BackendMaxConnections == nil {
+		cfg.BackendMaxConnections = make(map[string]int)
+	}
+	if cfg.BackendMaxConnections["mojolicious"] == 0 {
+		cfg.BackendMaxConnections["mojolicious"] = MojoliciousConcurrentConnectionsDefault
+	}
 
 	invalidTOURLStr := ""
 	var err error
@@ -175,6 +204,11 @@ func ParseConfig(cfg Config) (Config, error) {
 	if cfg.URL, err = url.Parse(listen); err != nil {
 		invalidTOURLStr = fmt.Sprintf("invalid Traffic Ops URL '%s': %v", listen, err)
 	}
+	cfg.KeyPath = cfg.GetKeyPath()
+	cfg.CertPath = cfg.GetCertPath()
+
+	newURL := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
+	cfg.URL = &newURL
 
 	if len(missings) > 0 {
 		missings = "missing fields: " + missings[:len(missings)-2] // strip final `, `

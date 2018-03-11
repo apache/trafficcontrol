@@ -123,8 +123,8 @@ public class RouterFilter extends OncePerRequestFilter {
 	}
 
 	private void setMultiResponse(final HTTPRouteResult routeResult, final HttpServletRequest httpServletRequest, final HttpServletResponse response, final HTTPAccessRecord.Builder httpAccessRecordBuilder) throws IOException {
-		for (final DeliveryService deliveryService : routeResult.getDeliveryServices()) {
-			final Map<String, String> responseHeaders = deliveryService.getResponseHeaders();
+		if (routeResult.getDeliveryService() != null) {
+			final Map<String, String> responseHeaders = routeResult.getDeliveryService().getResponseHeaders();
 
 			for (final String key : responseHeaders.keySet()) {
 				// if two DSs append the same header, the last one wins; no way around it unless we enforce unique response headers between subordinate DSs

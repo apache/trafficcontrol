@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
-            <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{deliveryService.displayName}}</a></li>
+            <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{deliveryService.xmlId}}</a></li>
             <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys')">SSL Keys</a></li>
             <li class="active">generate</li>
         </ol>
@@ -33,7 +33,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(dsGenerateSslKeyForm.country), 'has-feedback': hasError(dsGenerateSslKeyForm.country)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Country *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="country" name="country" type="text" class="form-control" ng-model="sslRequest.country" ng-required="true" ng-maxlength="2" ng-options="country.code as country.name for country in countries" required>
+                    <select name="country" type="text" class="form-control" ng-model="sslRequest.country" ng-required="true" ng-maxlength="2" ng-options="country.code as country.name for country in countries" required>
                         <option value="">Select...</option>
                     </select>
                      <small class="input-error" ng-show="hasPropertyError(dsGenerateSslKeyForm.country, 'required')">Required</small>
@@ -49,7 +49,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(dsGenerateSslKeyForm.city), 'has-feedback': hasError(dsGenerateSslKeyForm.city)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">City *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="city" type="text" class="form-control" ng-model="sslRequest.city" ng-required="true" ng-maxlength="256" autofocus>
+                    <input name="city" type="text" class="form-control" ng-model="sslRequest.city" ng-maxlength="256" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(dsGenerateSslKeyForm.city, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(dsGenerateSslKeyForm.city, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(dsGenerateSslKeyForm.city)" class="form-control-feedback"><i class="fa fa-times"></i></span>
@@ -58,7 +58,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(dsGenerateSslKeyForm.organization), 'has-feedback': hasError(dsGenerateSslKeyForm.organization)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Organization Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="organization" type="text" class="form-control" ng-model="sslRequest.organization" ng-required="true" ng-maxlength="256" autofocus>
+                    <input name="organization" type="text" class="form-control" ng-model="sslRequest.organization" ng-maxlength="256" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(dsGenerateSslKeyForm.organization, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(dsGenerateSslKeyForm.organization, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(dsGenerateSslKeyForm.organization)" class="form-control-feedback"><i class="fa fa-times"></i></span>
@@ -67,7 +67,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(dsGenerateSslKeyForm.organizationUnit), 'has-feedback': hasError(dsGenerateSslKeyForm.organizationUnit)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Organization Unit Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="organizationUnit" type="text" class="form-control" ng-model="sslRequest.businessUnit" ng-required="true" ng-maxlength="256" autofocus>
+                    <input name="organizationUnit" type="text" class="form-control" ng-model="sslRequest.businessUnit" ng-maxlength="256" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(dsGenerateSslKeyForm.organizationUnit, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(dsGenerateSslKeyForm.organizationUnit, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(dsGenerateSslKeyForm.organizationUnit)" class="form-control-feedback"><i class="fa fa-times"></i></span>
@@ -76,14 +76,14 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(dsGenerateSslKeyForm.commonName), 'has-feedback': hasError(dsGenerateSslKeyForm.commonName)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Common Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="commonName" type="text" class="form-control" ng-model="sslRequest.hostname" ng-required="true" ng-maxlength="256" readonly autofocus>
+                    <input name="commonName" type="text" class="form-control" ng-model="sslRequest.hostname" ng-required="true" ng-maxlength="256" autofocus>
                     <small class="input-error" ng-show="hasPropertyError(dsGenerateSslKeyForm.commonName, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(dsGenerateSslKeyForm.commonName, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(dsGenerateSslKeyForm.commonName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" ng-disabled="dsGenerateSslKeyForm.$pristine || dsGenerateSslKeyForm.$invalid" ng-click="confirmGenerate(sslRequest)">Generate</button>
+                <button type="button" class="btn btn-success" ng-disabled="dsGenerateSslKeyForm.$pristine || dsGenerateSslKeyForm.$invalid" ng-click="confirmGenerate(sslRequest)">Generate Keys</button>
             </div>
         </form>
     </div>

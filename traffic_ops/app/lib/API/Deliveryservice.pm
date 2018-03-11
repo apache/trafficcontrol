@@ -28,18 +28,19 @@ use Data::Dumper;
 use JSON;
 use MojoPlugins::Response;
 use UI::DeliveryService;
+use Scalar::Util qw(looks_like_number);
 use Validate::Tiny ':all';
 
 sub index {
-	my $self         = shift;
-	my $orderby      = $self->param('orderby') || "xml_id";
-	my $cdn_id       = $self->param('cdn');
-	my $profile_id   = $self->param('profile');
-	my $type_id      = $self->param('type');
-	my $logs_enabled = $self->param('logsEnabled');
-	my $tenant_id	 = $self->param('tenant');
-	my $signed       = $self->param('signed');
-	my $current_user = $self->current_user()->{username};
+	my $self              = shift;
+	my $orderby           = $self->param('orderby') || "xml_id";
+	my $cdn_id            = $self->param('cdn');
+	my $profile_id        = $self->param('profile');
+	my $type_id           = $self->param('type');
+	my $logs_enabled      = $self->param('logsEnabled');
+	my $tenant_id	      = $self->param('tenant');
+	my $signing_algorithm = $self->param('signingAlgorithm');
+	my $current_user      = $self->current_user()->{username};
 	my @data;
 
 	my %criteria;
@@ -58,8 +59,8 @@ sub index {
 	if ( defined $tenant_id ) {
 		$criteria{'me.tenant_id'} = $tenant_id;
 	}
-	if ( defined $signed ) {
-		$criteria{'me.signed'} = $signed ? 1 : 0;    # converts bool to 0|1
+	if ( defined $signing_algorithm ) {
+		$criteria{'me.signing_algorithm'} = $signing_algorithm;
 	}
 
 	my $tenant_utils = Utils::Tenant->new($self);
@@ -105,6 +106,7 @@ sub index {
 				"cdnId"                => $row->cdn->id,
 				"cdnName"              => $row->cdn->name,
 				"checkPath"            => $row->check_path,
+				"deepCachingType"      => $row->deep_caching_type,
 				"displayName"          => $row->display_name,
 				"dnsBypassCname"       => $row->dns_bypass_cname,
 				"dnsBypassIp"          => $row->dns_bypass_ip,
@@ -146,9 +148,10 @@ sub index {
 				"regionalGeoBlocking"  => \$row->regional_geo_blocking,
 				"remapText"            => $row->remap_text,
 				"routingName"          => $row->routing_name,
-				"signed"               => \$row->signed,
+				"signed"               => defined( $row->signing_algorithm ) ? ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ) : \0,
+				"signingAlgorithm"     => $row->signing_algorithm,
 				"sslKeyVersion"        => $row->ssl_key_version,
-				"tenantId"		       => $row->tenant_id,
+				"tenantId"             => $row->tenant_id,
 				"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
 				"trRequestHeaders"     => $row->tr_request_headers,
 				"trResponseHeaders"    => $row->tr_response_headers,
@@ -224,6 +227,7 @@ sub show {
 				"cdnId"                => $row->cdn->id,
 				"cdnName"              => $row->cdn->name,
 				"checkPath"            => $row->check_path,
+				"deepCachingType"      => $row->deep_caching_type,
 				"displayName"          => $row->display_name,
 				"dnsBypassCname"       => $row->dns_bypass_cname,
 				"dnsBypassIp"          => $row->dns_bypass_ip,
@@ -266,7 +270,8 @@ sub show {
 				"regionalGeoBlocking"  => \$row->regional_geo_blocking,
 				"routingName"          => $row->routing_name,
 				"remapText"            => $row->remap_text,
-				"signed"               => \$row->signed,
+				"signed"               => defined( $row->signing_algorithm ) ? ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ) : \0,
+				"signingAlgorithm"     => $row->signing_algorithm,
 				"sslKeyVersion"        => $row->ssl_key_version,
 				"tenantId"             => $row->tenant_id,
 				"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
@@ -310,8 +315,8 @@ sub update {
     if ( $new_xml_id ne $ds->xml_id ) {
         return $self->alert( "A deliveryservice xmlId is immutable." );
     }
-	
-	#setting tenant_id to undef if tenant is not set. 
+
+	#setting tenant_id to undef if tenant is not set.
 	my $tenant_id = exists($params->{tenantId}) ? $params->{tenantId} :  undef;
 	if ($tenant_utils->use_tenancy() and !defined($tenant_id) and defined($ds->tenant_id)) {
 		return $self->alert("Invalid tenant. Cannot clear the delivery-service tenancy.");
@@ -329,6 +334,7 @@ sub update {
 		ccr_dns_ttl            => $params->{ccrDnsTtl},
 		cdn_id                 => $params->{cdnId},
 		check_path             => $params->{checkPath},
+		deep_caching_type      => $params->{deepCachingType},
 		display_name           => $params->{displayName},
 		dns_bypass_cname       => $params->{dnsBypassCname},
 		dns_bypass_ip          => $params->{dnsBypassIp},
@@ -365,7 +371,6 @@ sub update {
 		regional_geo_blocking  => $params->{regionalGeoBlocking},
 		remap_text             => $params->{remapText},
 		routing_name           => UI::DeliveryService::sanitize_routing_name( $params->{routingName}, $ds ),
-		signed                 => $params->{signed},
 		ssl_key_version        => $params->{sslKeyVersion},
 		tenant_id              => $tenant_id,
 		tr_request_headers     => $params->{trRequestHeaders},
@@ -373,6 +378,22 @@ sub update {
 		type                   => $params->{typeId},
 		xml_id                 => $params->{xmlId},
 	};
+
+	# Did they send us the 'signingAlgorithm' param?
+	if ( exists($params->{signingAlgorithm}) ) {
+		# If so, just use that
+		$values->{signing_algorithm} = $params->{signingAlgorithm};
+	# Else if they sent 'signed' param
+	} elsif (exists($params->{signed})) {
+		# and it's true
+		if ($params->{signed}) {
+			# Then we want url_sig
+			$values->{signing_algorithm} = "url_sig";
+		} else {
+			# Otherwise we are disabled
+			$values->{signing_algorithm} = undef;
+		}
+	}
 
 	my $rs = $ds->update($values);
 	if ($rs) {
@@ -411,6 +432,7 @@ sub update {
 				"cdnId"                    => $rs->cdn->id,
 				"cdnName"                  => $rs->cdn->name,
 				"checkPath"                => $rs->check_path,
+				"deepCachingType"          => $rs->deep_caching_type,
 				"displayName"              => $rs->display_name,
 				"dnsBypassCname"           => $rs->dns_bypass_cname,
 				"dnsBypassIp"              => $rs->dns_bypass_ip,
@@ -453,7 +475,8 @@ sub update {
 				"regionalGeoBlocking"      => $rs->regional_geo_blocking,
 				"remapText"                => $rs->remap_text,
 				"routingName"              => $rs->routing_name,
-				"signed"                   => $rs->signed,
+				"signed"                   => defined( $rs->signing_algorithm ) ? ( $rs->signing_algorithm eq "url_sig" ) : \0,
+				"signingAlgorithm"         => $rs->signing_algorithm,
 				"sslKeyVersion"            => $rs->ssl_key_version,
 				"tenantId"                 => $rs->tenant_id,
 				"trRequestHeaders"         => $rs->tr_request_headers,
@@ -541,6 +564,7 @@ sub safe_update {
 				"cdnId"                    => $rs->cdn->id,
 				"cdnName"                  => $rs->cdn->name,
 				"checkPath"                => $rs->check_path,
+				"deepCachingType"          => $rs->deep_caching_type,
 				"displayName"              => $rs->display_name,
 				"dnsBypassCname"           => $rs->dns_bypass_cname,
 				"dnsBypassIp"              => $rs->dns_bypass_ip,
@@ -583,7 +607,8 @@ sub safe_update {
 				"regionalGeoBlocking"      => $rs->regional_geo_blocking,
 				"remapText"                => $rs->remap_text,
 				"routingName"              => $rs->routing_name,
-				"signed"                   => $rs->signed,
+				"signed"                   => defined( $rs->signing_algorithm ) ? ( $rs->signing_algorithm eq "url_sig" ) : \0,
+				"signingAlgorithm"         => $rs->signing_algorithm,
 				"sslKeyVersion"            => $rs->ssl_key_version,
 				"trRequestHeaders"         => $rs->tr_request_headers,
 				"trResponseHeaders"        => $rs->tr_response_headers,
@@ -646,6 +671,7 @@ sub create {
 		ccr_dns_ttl            => $params->{ccrDnsTtl},
 		cdn_id                 => $params->{cdnId},
 		check_path             => $params->{checkPath},
+		deep_caching_type      => $params->{deepCachingType},
 		display_name           => $params->{displayName},
 		dns_bypass_cname       => $params->{dnsBypassCname},
 		dns_bypass_ip          => $params->{dnsBypassIp},
@@ -682,7 +708,6 @@ sub create {
 		regional_geo_blocking  => $params->{regionalGeoBlocking},
 		remap_text             => $params->{remapText},
 		routing_name           => UI::DeliveryService::sanitize_routing_name( $params->{routingName} ),
-		signed                 => $params->{signed},
 		ssl_key_version        => $params->{sslKeyVersion},
 		tenant_id              => $tenant_id,
 		tr_request_headers     => $params->{trRequestHeaders},
@@ -690,6 +715,20 @@ sub create {
 		type                   => $params->{typeId},
 		xml_id                 => $params->{xmlId},
 	};
+
+
+	# Did they send us the 'signingAlgorithm' param?
+	if ( exists($params->{signingAlgorithm}) ) {
+		# If so, just use that
+		$values->{signing_algorithm} = $params->{signingAlgorithm};
+	# Else if they sent 'signed' param and it's true
+	} elsif ($params->{signed}) {
+	# Then we want url_sig
+		$values->{signing_algorithm} = "url_sig";
+	} else {
+		# Otherwise we are disabled
+		$values->{signing_algorithm} = undef;
+	}
 
 	my $insert = $self->db->resultset('Deliveryservice')->create($values)->insert();
 	if ($insert) {
@@ -741,6 +780,7 @@ sub create {
 				"cdnId"                    => $insert->cdn->id,
 				"cdnName"                  => $insert->cdn->name,
 				"checkPath"                => $insert->check_path,
+				"deepCachingType"          => $insert->deep_caching_type,
 				"displayName"              => $insert->display_name,
 				"dnsBypassCname"           => $insert->dns_bypass_cname,
 				"dnsBypassIp"              => $insert->dns_bypass_ip,
@@ -783,7 +823,8 @@ sub create {
 				"regionalGeoBlocking"      => $insert->regional_geo_blocking,
 				"remapText"                => $insert->remap_text,
 				"routingName"              => $insert->routing_name,
-				"signed"                   => $insert->signed,
+				"signed"                   => defined( $insert->signing_algorithm ) ? ( $insert->signing_algorithm eq "url_sig" ) : \0,
+				"signingAlgorithm"         => $insert->signing_algorithm,
 				"sslKeyVersion"            => $insert->ssl_key_version,
 				"tenantId"                 => $insert->tenant_id,
 				"trRequestHeaders"         => $insert->tr_request_headers,
@@ -932,6 +973,7 @@ sub get_deliveryservices_by_serverId {
 					"cdnId"                => $row->cdn->id,
 					"cdnName"              => $row->cdn->name,
 					"checkPath"            => $row->check_path,
+					"deepCachingType"      => $row->deep_caching_type,
 					"displayName"          => $row->display_name,
 					"dnsBypassCname"       => $row->dns_bypass_cname,
 					"dnsBypassIp"          => $row->dns_bypass_ip,
@@ -972,7 +1014,8 @@ sub get_deliveryservices_by_serverId {
 					"regionalGeoBlocking"  => \$row->regional_geo_blocking,
 					"remapText"            => $row->remap_text,
 					"routingName"          => $row->routing_name,
-					"signed"               => \$row->signed,
+					"signed"               => defined( $row->signing_algorithm ) ? ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ) : \0,
+					"signingAlgorithm"     => $row->signing_algorithm,
 					"sslKeyVersion"        => $row->ssl_key_version,
 					"tenantId"             => $row->tenant_id,
 					"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
@@ -1029,6 +1072,7 @@ sub get_deliveryservices_by_userId {
 					"cdnId"                => $row->cdn->id,
 					"cdnName"              => $row->cdn->name,
 					"checkPath"            => $row->check_path,
+					"deepCachingType"      => $row->deep_caching_type,
 					"displayName"          => $row->display_name,
 					"dnsBypassCname"       => $row->dns_bypass_cname,
 					"dnsBypassIp"          => $row->dns_bypass_ip,
@@ -1069,7 +1113,8 @@ sub get_deliveryservices_by_userId {
 					"regionalGeoBlocking"  => \$row->regional_geo_blocking,
 					"remapText"            => $row->remap_text,
 					"routingName"          => $row->routing_name,
-					"signed"               => \$row->signed,
+					"signed"               => defined( $row->signing_algorithm ) ? ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ) : \0,
+					"signingAlgorithm"     => $row->signing_algorithm,
 					"sslKeyVersion"        => $row->ssl_key_version,
 					"tenantId"             => $row->tenant_id,
 					"tenant"               => defined( $row->tenant ) ? $row->tenant->name : undef,
@@ -1299,7 +1344,7 @@ sub is_deliveryservice_request_valid {
 
 	my $rules = {
 		fields => [
-			qw/customer contentType deliveryProtocol routingType routingName serviceDesc peakBPSEstimate peakTPSEstimate maxLibrarySizeEstimate originURL hasOriginDynamicRemap originTestFile hasOriginACLWhitelist originHeaders otherOriginSecurity queryStringHandling rangeRequestHandling hasSignedURLs hasNegativeCachingCustomization negativeCachingCustomizationNote serviceAliases rateLimitingGBPS rateLimitingTPS overflowService headerRewriteEdge headerRewriteMid headerRewriteRedirectRouter notes/
+			qw/customer contentType deepCachingType deliveryProtocol routingType routingName serviceDesc peakBPSEstimate peakTPSEstimate maxLibrarySizeEstimate originURL hasOriginDynamicRemap originTestFile hasOriginACLWhitelist originHeaders otherOriginSecurity queryStringHandling rangeRequestHandling hasSignedURLs hasNegativeCachingCustomization negativeCachingCustomizationNote serviceAliases rateLimitingGBPS rateLimitingTPS overflowService headerRewriteEdge headerRewriteMid headerRewriteRedirectRouter notes/
 		],
 
 		# Validation checks to perform
@@ -1334,34 +1379,75 @@ sub is_deliveryservice_valid {
 
 	my $rules = {
 		fields => [
-			qw/active cacheurl ccrDnsTtl cdnId checkPath displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText routingName signed sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
+			qw/active cacheurl ccrDnsTtl cdnId checkPath deepCachingType displayName dnsBypassCname dnsBypassIp dnsBypassIp6 dnsBypassTtl dscp edgeHeaderRewrite geoLimitRedirectURL geoLimit geoLimitCountries geoProvider globalMaxMbps globalMaxTps httpBypassFqdn infoUrl initialDispersion ipv6RoutingEnabled logsEnabled longDesc longDesc1 longDesc2 maxDnsAnswers midHeaderRewrite missLat missLong multiSiteOrigin multiSiteOriginAlgorithm orgServerFqdn originShield profileId protocol qstringIgnore rangeRequestHandling regexRemap regionalGeoBlocking remapText routingName signed signingAlgorithm sslKeyVersion tenantId trRequestHeaders trResponseHeaders typeId xmlId/
 		],
 
-		# Validation checks to perform
+		# validation checks to perform for ALL delivery services
 		checks => [
-			xmlId                => [ is_required("is required"), is_like( qr/^\S*$/, "no spaces" ), is_long_at_most( 48, 'too long' ) ],
-			typeId               => [ is_required("is required") ],
-			cdnId                => [ is_required("is required") ],
-			active               => [ is_required("is required") ],
-			displayName          => [ is_required("is required"), is_long_at_most( 48, 'too long' ) ],
-			dscp                 => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
-			geoLimit             => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
-			geoProvider          => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
-			initialDispersion    => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
-			ipv6RoutingEnabled   => [ is_required("is required") ],
-			logsEnabled          => [ is_required("is required") ],
-			missLat              => [ \&is_valid_lat ],
-			missLong             => [ \&is_valid_long ],
-			multiSiteOrigin      => [ is_required("is required") ],
-			orgServerFqdn        => [ sub { is_valid_org_server_fqdn($self, @_) } ],
-			protocol             => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
-			qstringIgnore        => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
-			rangeRequestHandling => [ is_required("is required"), is_like( qr/^\d+$/, "digits only" ) ],
-			regionalGeoBlocking  => [ is_required("is required") ],
-			routingName          => [ \&is_valid_routing_name, is_long_at_most( 48, 'too long' ) ],
-			signed               => [ is_required("is required") ],
-		]
+			active				=> [ is_required("is required") ],
+			cdnId				=> [ is_required("is required"), \&is_valid_int_or_undef ],
+			ccrDnsTtl			=> [ \&is_valid_int_or_undef ],
+			deepCachingType			=> [ is_like( qr/^(NEVER|ALWAYS)$/, "must be NEVER or ALWAYS" ) ],
+			dnsBypassTtl			=> [ \&is_valid_int_or_undef ],
+			dscp				=> [ is_required("is required"), \&is_valid_int_or_undef ],
+			displayName			=> [ is_required("is required"), is_long_at_most( 48, 'too long' ) ],
+			geoLimit			=> [ is_required("is required"), \&is_valid_int_or_undef ],
+			geoProvider			=> [ is_required("is required"), \&is_valid_int_or_undef ],
+			globalMaxMbps			=> [ \&is_valid_int_or_undef ],
+			globalMaxTps			=> [ \&is_valid_int_or_undef ],
+			initialDispersion		=> [ \&is_valid_int_or_undef ],
+			logsEnabled			=> [ is_required("is required") ],
+			maxDnsAnswers			=> [ \&is_valid_int_or_undef ],
+			missLat				=> [ \&is_valid_number_or_undef ],
+			missLong			=> [ \&is_valid_number_or_undef ],
+			profileId			=> [ \&is_valid_int_or_undef ],
+			protocol			=> [ \&is_valid_int_or_undef ],
+			qstringIgnore			=> [ \&is_valid_int_or_undef ],
+			rangeRequestHandling		=> [ \&is_valid_int_or_undef ],
+			sslKeyVersion			=> [ \&is_valid_int_or_undef ],
+			tenantId			=> [ \&is_valid_int_or_undef ],
+			regionalGeoBlocking		=> [ is_required("is required") ],
+			routingName			=> [ \&is_valid_routing_name, is_long_at_most( 48, 'too long' ) ],
+			typeId				=> [ is_required("is required"), \&is_valid_int_or_undef ],
+			xmlId				=> [ is_required("is required"), is_like( qr/^\S*$/, "no spaces" ), is_long_at_most( 48, 'too long' ) ],
+		],
 	};
+
+	my $type_name = $self->db->resultset("Type")->find( { id => $params->{typeId} } )->get_column('name');
+
+	# additional validation checks to perform for ANY_MAP delivery services
+    # no additional checks
+
+	# additional validation checks to perform for DNS* delivery services
+	if ( $type_name =~ /^DNS.*$/ ) {
+		push @{$rules->{checks}}, ipv6RoutingEnabled   => [ is_required("is required") ];
+		push @{$rules->{checks}}, missLat              => [ is_required("is required"), \&is_valid_lat ];
+		push @{$rules->{checks}}, missLong             => [ is_required("is required"), \&is_valid_long ];
+		push @{$rules->{checks}}, multiSiteOrigin      => [ is_required("is required") ];
+		push @{$rules->{checks}}, orgServerFqdn        => [ is_required("is required"), sub { is_valid_org_server_fqdn($self, @_) } ];
+		push @{$rules->{checks}}, protocol             => [ is_required("is required") ];
+		push @{$rules->{checks}}, qstringIgnore        => [ is_required("is required") ];
+		push @{$rules->{checks}}, rangeRequestHandling => [ is_required("is required") ];
+	}
+
+	# additional validation checks to perform for HTTP* delivery services
+	if ( $type_name =~ /^HTTP.*$/ ) {
+		push @{$rules->{checks}}, initialDispersion    => [ is_required("is required"), \&is_valid_initial_dispersion ];
+		push @{$rules->{checks}}, ipv6RoutingEnabled   => [ is_required("is required") ];
+		push @{$rules->{checks}}, missLat              => [ is_required("is required"), \&is_valid_lat ];
+		push @{$rules->{checks}}, missLong             => [ is_required("is required"), \&is_valid_long ];
+		push @{$rules->{checks}}, multiSiteOrigin      => [ is_required("is required") ];
+		push @{$rules->{checks}}, orgServerFqdn        => [ is_required("is required"), sub { is_valid_org_server_fqdn($self, @_) } ];
+		push @{$rules->{checks}}, protocol             => [ is_required("is required") ];
+		push @{$rules->{checks}}, qstringIgnore        => [ is_required("is required") ];
+		push @{$rules->{checks}}, rangeRequestHandling => [ is_required("is required") ];
+	}
+
+	# additional validation checks to perform for STEERING* delivery services
+	if ( $type_name =~ /^.*STEERING.*$/ ) {
+		push @{$rules->{checks}}, ipv6RoutingEnabled   => [ is_required("is required") ];
+		push @{$rules->{checks}}, protocol             => [ is_required("is required") ];
+	}
 
 	# Validate the input against the rules
 	my $result = validate( $params, $rules );
@@ -1392,6 +1478,34 @@ sub is_valid_routing_name {
 	return undef;
 }
 
+sub is_valid_int_or_undef {
+	my ( $value, $params ) = @_;
+
+	if ( !defined $value ) {
+		return undef;
+	}
+
+	if ( !( $value =~ /^\d+$/ ) ) {
+		return "invalid. Must be a whole number or null.";
+	}
+
+	return undef;
+}
+
+sub is_valid_number_or_undef {
+	my ( $value, $params ) = @_;
+
+	if ( !defined $value ) {
+		return undef;
+	}
+
+	if ( !looks_like_number($value) ) {
+		return "invalid. Must be a number or null.";
+	}
+
+	return undef;
+}
+
 sub is_valid_deliveryservice_type {
 	my $self    = shift;
 	my $type_id = shift;
@@ -1406,10 +1520,6 @@ sub is_valid_deliveryservice_type {
 sub is_valid_lat {
 	my ( $value, $params ) = @_;
 
-	if ( !defined $value or $value eq '' ) {
-		return undef;
-	}
-
 	if ( !( $value =~ /^[-]*[0-9]+[.]*[0-9]*/ ) ) {
 		return "invalid. Must be a float number.";
 	}
@@ -1421,12 +1531,18 @@ sub is_valid_lat {
 	return undef;
 }
 
-sub is_valid_long {
+sub is_valid_initial_dispersion {
 	my ( $value, $params ) = @_;
 
-	if ( !defined $value or $value eq '' ) {
-		return undef;
+	if ( $value < 1 ) {
+		return "invalid. Must be 1 or greater.";
 	}
+
+	return undef;
+}
+
+sub is_valid_long {
+	my ( $value, $params ) = @_;
 
 	if ( !( $value =~ /^[-]*[0-9]+[.]*[0-9]*/ ) ) {
 		return "invalid. Must be a float number.";
@@ -1442,13 +1558,6 @@ sub is_valid_long {
 sub is_valid_org_server_fqdn {
 	my $self    = shift;
 	my ( $value, $params ) = @_;
-
-	if ( (!defined $value or $value eq '') ) {
-		my $type_name = $self->db->resultset("Type")->find( { id => $params->{typeId} } )->get_column('name') // undef;
-		if ( defined($type_name) && ( $type_name =~ /(^ANY_MAP$|^.*STEERING.*$)/ ) ) {
-			return undef;
-		}
-	}
 
 	if ( !( $value =~ /^(https?:\/\/)/ ) ) {
 		return "invalid. Must start with http:// or https://.";

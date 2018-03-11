@@ -52,7 +52,7 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, $state,
     $scope.selectDSType = function() {
         var params = {
             title: 'Create Delivery Service',
-            message: "Please select a content routing type"
+            message: "Please select a content routing category"
         };
         var modalInstance = $uibModal.open({
             templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
@@ -62,8 +62,15 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, $state,
                 params: function () {
                     return params;
                 },
-                collection: function(typeService) {
-                    return typeService.getTypes( { useInTable: 'deliveryservice'} );
+                collection: function() {
+                    // the following represent the 4 categories of delivery services
+                    // the ids are arbitrary but the dialog.select dropdown needs them
+                    return [
+                        { id: 1, name: 'ANY_MAP' },
+                        { id: 2, name: 'DNS' },
+                        { id: 3, name: 'HTTP' },
+                        { id: 4, name: 'STEERING' }
+                    ];
                 }
             }
         });

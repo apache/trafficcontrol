@@ -19,33 +19,33 @@
 
 var TableParamProfilesUnassignedController = function(parameter, allProfiles, assignedProfiles, $scope, $uibModalInstance) {
 
-	var selectedProfileIds = [];
-
-	var addProfile = function(profileId) {
-		if (_.indexOf(selectedProfileIds, profileId) == -1) {
-			selectedProfileIds.push(profileId);
-		}
-	};
-
-	var removeProfile = function(profileId) {
-		selectedProfileIds = _.without(selectedProfileIds, profileId);
-	};
+	var selectedProfiles = [];
 
 	var addAll = function() {
-		markProfiles(true);
-		selectedProfileIds = _.pluck(allProfiles, 'id');
+		markVisibleProfiles(true);
 	};
 
 	var removeAll = function() {
-		markProfiles(false);
-		selectedProfileIds = [];
+		markVisibleProfiles(false);
 	};
 
-	var markProfiles = function(selected) {
+	var markVisibleProfiles = function(selected) {
+		var visibleProfileIds = $('#assignProfilesTable tr.profile-row').map(
+			function() {
+				return parseInt($(this).attr('id'));
+			}).get();
 		$scope.selectedProfiles = _.map(allProfiles, function(profile) {
-			profile['selected'] = selected;
+			if (visibleProfileIds.includes(profile.id)) {
+				profile['selected'] = selected;
+			}
 			return profile;
 		});
+		updateSelectedCount();
+	};
+
+	var updateSelectedCount = function() {
+		selectedProfiles = _.filter($scope.selectedProfiles, function(profile) { return profile['selected'] == true; } );
+		$('div.selected-count').html('<b>' + selectedProfiles.length + ' profiles selected</b>');
 	};
 
 	$scope.parameter = parameter;
@@ -53,15 +53,10 @@ var TableParamProfilesUnassignedController = function(parameter, allProfiles, as
 	$scope.selectedProfiles = _.map(allProfiles, function(profile) {
 		var isAssigned = _.find(assignedProfiles, function(assignedProfile) { return assignedProfile.id == profile.id });
 		if (isAssigned) {
-			profile['selected'] = true; // so the checkbox will be checked
-			selectedProfileIds.push(profile.id); // so the profile is added to selected profiles
+			profile['selected'] = true;
 		}
 		return profile;
 	});
-
-	$scope.allSelected = function() {
-		return allProfiles.length == selectedProfileIds.length;
-	};
 
 	$scope.selectAll = function($event) {
 		var checkbox = $event.target;
@@ -72,16 +67,12 @@ var TableParamProfilesUnassignedController = function(parameter, allProfiles, as
 		}
 	};
 
-	$scope.updateProfiles = function($event, profileId) {
-		var checkbox = $event.target;
-		if (checkbox.checked) {
-			addProfile(profileId);
-		} else {
-			removeProfile(profileId);
-		}
+	$scope.onChange = function() {
+		updateSelectedCount();
 	};
 
 	$scope.submit = function() {
+		var selectedProfileIds = _.pluck(selectedProfiles, 'id');
 		$uibModalInstance.close(selectedProfileIds);
 	};
 
@@ -90,23 +81,21 @@ var TableParamProfilesUnassignedController = function(parameter, allProfiles, as
 	};
 
 	angular.element(document).ready(function () {
-		var paramProfilesUnassignedTable = $('#paramProfilesUnassignedTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
+		var assignProfilesTable = $('#assignProfilesTable').dataTable({
+			"scrollY": "60vh",
+			"paging": false,
 			"order": [[ 1, 'asc' ]],
+			"dom": '<"selected-count">frtip',
 			"columnDefs": [
+				{ 'orderable': false, 'targets': 0 },
 				{ "width": "5%", "targets": 0 }
 			],
 			"stateSave": false
 		});
-		paramProfilesUnassignedTable.on( 'search.dt', function () {
-			var search = $('#paramProfilesUnassignedTable_filter input').val();
-			if (search.length > 0) {
-				$("#selectAllCB").attr("disabled", true);
-			} else {
-				$("#selectAllCB").removeAttr("disabled");
-			}
+		assignProfilesTable.on( 'search.dt', function () {
+			$("#selectAllCB").removeAttr("checked"); // uncheck the all box when filtering
 		} );
+		updateSelectedCount();
 	});
 
 };

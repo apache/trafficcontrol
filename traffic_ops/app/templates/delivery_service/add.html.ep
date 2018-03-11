@@ -108,7 +108,6 @@
 			$('#protocoli_row').show(speed);
 			$('#dscp_row').show(speed);
 			$('#routing_name_row').show(speed);
-            $('#signed_row').show(speed);
             $('#qstring_ignore_row').show(speed);
             $('#geo_limit_row').show(speed);
             $('#http_bypass_fqdn_row').show(speed);
@@ -116,6 +115,7 @@
             $('#range_request_handlingi_row').show(speed);
             $('#dns_bypass_ip_row').hide(speed);
             $('#dns_bypass_ip6_row').hide(speed);
+            $('#deep_caching_type').show(speed);
             $('#regional_geo_blocking_row').show(speed);
             $('#dns_bypass_cname_row').hide(speed);
             $('#dns_bypass_ttl_row').show(speed);
@@ -151,7 +151,6 @@
 			$('#protocoli_row').show(speed);
             $('#dscp_row').show(speed);
             $('#routing_name_row').show(speed);
-            $('#signed_row').show(speed);
             $('#qstring_ignore_row').show(speed);
             $('#geo_limit_row').show(speed);
             $('#http_bypass_fqdn_row').hide(speed);
@@ -159,6 +158,7 @@
             $('#range_request_handlingi_row').show(speed);
             $('#dns_bypass_ip_row').show(speed);
             $('#dns_bypass_ip6_row').show(speed);
+            $('#deep_caching_type').hide(speed);
 			$('#regional_geo_blocking_row').hide(speed);
 	    	$('#dns_bypass_cname_row').show(speed);
             $('#dns_bypass_ttl_row').show(speed);
@@ -189,7 +189,6 @@
             $('#protocoli_row').hide(speed);
             $('#dscp_row').hide(speed);
             $('#routing_name_row').hide(speed);
-            $('#signed_row').hide(speed);
             $('#qstring_ignore_row').hide(speed);
             $('#geo_limit_row').hide(speed);
             $('#http_bypass_fqdn_row').hide(speed);
@@ -198,6 +197,7 @@
             $('#dns_bypass_ip_row').hide(speed);
             $('#dns_bypass_ip6_row').hide(speed);
             $('#dns_bypass_cname_row').hide(speed);
+            $('#deep_caching_type').hide(speed);
             $('#regional_geo_blocking_row').show(speed);
             $('#dns_bypass_ttl_row').hide(speed);
             $('#max_dns_answers_row').hide(speed);
@@ -228,14 +228,14 @@
             $('#protocoli_row').show(speed);
             $('#dscp_row').hide(speed);
             $('#routing_name_row').show(speed);
-            $('#signed_row').hide(speed);
             $('#qstring_ignore_row').hide(speed);
-            $('#geo_limit_row').hide(speed);
+            $('#geo_limit_row').show(speed);
             $('#http_bypass_fqdn_row').hide(speed);
             $('#ipv6_routing_enabled_row').show(speed);
             $('#range_request_handlingi_row').hide(speed);
             $('#dns_bypass_ip_row').hide(speed);
             $('#dns_bypass_ip6_row').hide(speed);
+            $('#deep_caching_type').hide(speed);
 			$('#regional_geo_blocking_row').show(speed);
 	    	$('#dns_bypass_cname_row').hide(speed);
             $('#dns_bypass_ttl_row').hide(speed);
@@ -244,8 +244,8 @@
             $('#org_server_fqdn_row').hide(speed);
             $('#global_max_mbps_row').hide(speed);
             $('#global_max_tps_row').hide(speed);
-            $('#miss_lat_row').hide(speed);
-            $('#miss_long_row').hide(speed);
+            $('#miss_lat_row').show(speed);
+            $('#miss_long_row').show(speed);
             $('#edge_header_rewrite_row').hide(speed);
             $('#mid_header_rewrite_row').hide(speed);
             $('#regex_remap_row').hide(speed);
@@ -253,7 +253,11 @@
             $('#origin_shield_row').hide(speed);
             $('#active_row').show(speed);
             $('#ds_regexp_table').show(speed);
-            $('#tr_response_headers').hide(speed);
+            if (type_selected.match(/CLIENT_STEERING$/)) {
+                $('#tr_response_headers').show(speed);
+            } else {
+                $('#tr_response_headers').hide(speed);
+            }
             $('#multi_site_origin_row').hide(speed);
             $('#multi_site_origin_algorithm_row').hide(speed);
             $('#initial_dispersion_row').hide(speed);
@@ -262,7 +266,7 @@
             $('#remap_text_row').hide(speed);
             $('#regional_geo_blocking_row').hide(speed);
             $('#regexp_add').hide(speed);
-            $('#geo_limit_countries_row').hide(speed);
+            $('#geo_limit_countries_row').show(speed);
             check_geolimit_redirect_url_row_showhide(0, speed);
 		}
 		//

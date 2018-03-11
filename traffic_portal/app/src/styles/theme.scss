@@ -2157,7 +2157,6 @@ legend {
   margin-left: 0
 }
 .form-control-feedback {
-  margin-top: 8px;
   height: 23px;
   color: #bbb;
   line-height: 24px;
@@ -3181,7 +3180,7 @@ ul.project_files li a i {
 .view-first:hover p {
   transition-delay: 0.1s
 }
-.form-group.has-feedback span {
+.form-group.has-feedback span.form-control-feedback {
   display: block !important;
 }
 .form-group .btn {

@@ -205,7 +205,7 @@ The Graph View shows a live view of the last 24 hours of bits per seconds served
 
 Server Checks
 +++++++++++++
-The server checks page is inteded to give an overview of the Servers managed by Traffic Control as well as their status. This data comes from `Traffic Ops extensions <traffic_ops_extensions.html>`_.
+The server checks page is intended to give an overview of the Servers managed by Traffic Control as well as their status. This data comes from `Traffic Ops extensions <traffic_ops_extensions.html>`_.
 
 +------+-----------------------------------------------------------------------+
 | Name |                 Description                                           |
@@ -239,7 +239,7 @@ The server checks page is inteded to give an overview of the Servers managed by 
 
 Daily Summary
 +++++++++++++
-Displays daily max gbps and bytes served for all CDNs.  In order for the graphs to appear, the 'daily_bw_url' and 'daily_served_url' parameters need to be be created, assigned to the global profile, and have a value of a grafana graph.  For more information on configuring grafana, see the `Traffic Stats <traffic_stats.html>`_  section.
+Displays daily max gbps and bytes served for all CDNs.  In order for the graphs to appear, the 'daily_bw_url' and 'daily_served_url' parameters need to be be created, assigned to the global profile, and have a value of a grafana graph.  For more information on configuring grafana, see the `Traffic Stats <../traffic_stats.html>`_  section.
 
 .. _rl-server:
 
@@ -291,26 +291,47 @@ Delivery Service
 ================
 The fields in the Delivery Service view are:
 
-.. Sorry for the width of this table, don't know how to make the bullet lists work otherwise. Just set your monitor to 2560*1600, and put on your glasses.
-
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                       Name                       |                                                                                                     Description                                                                                                     |
 +==================================================+=====================================================================================================================================================================================================================+
-| XML ID                                           | A unique string that identifies this delivery service.                                                                                                                                                              |
+| Active                                           | When this is set to no Traffic Router will not serve DNS or HTTP responses for this delivery service.                                                                                                               |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Content Routing Type                             | The type of content routing this delivery service will use. See :ref:`rl-ds-types`.                                                                                                                                 |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Key(XML ID)                                      | A unique string that identifies this delivery service.                                                                                                                                                              |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Display Name                                     | Delivery Service Name.                                                                                                                                                                                              |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Tenant                                           | Dropdown to choose the appropriate tenant for your delivery service.                                                                                                                                                |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| CDN                                              | Dropdown to choose the CDN that the delivery service will use.                                                                                                                                                      |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Origin Server Base URL                           | The Origin Server's base URL. This includes the protocol (http or https). Example: ``http://movies.origin.com``                                                                                                     |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Protocol                                         | The protocol to serve this delivery service to the clients with:                                                                                                                                                    |
 |                                                  |                                                                                                                                                                                                                     |
 |                                                  | -  0 http                                                                                                                                                                                                           |
 |                                                  | -  1 https                                                                                                                                                                                                          |
 |                                                  | -  2 both http and https                                                                                                                                                                                            |
+|                                                  | -  3 http to https                                                                                                                                                                                                  |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DSCP Tag                                         | The DSCP value to mark IP packets to the client with.                                                                                                                                                               |
+| Long Description                                 | Long description for this delivery service. To be consumed from the APIs by downstream tools (Portal).                                                                                                              |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Delivery Service URLs                            | List of URLs derived from Protocol + Routing Name + XML ID + CDN Domain                                                                                                                                             |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Advanced**                                     |                                                                                                                                                                                                                     |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Routing Name                                     | The routing name to use for the delivery FQDN, i.e. ``<routing-name>.<deliveryservice>.<cdn-domain>``. It must be a valid hostname without periods. [2]_                                                            |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Signed URLs                                      | Use Signed URLs? See :ref:`rl-signed-urls`.                                                                                                                                                                         |
+| DSCP Tag                                         | The DSCP value to mark IP packets to the client with.                                                                                                                                                               |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IPv6 Routing Enabled?                            | When set to yes, the Traffic Router will respond to AAAA DNS requests for the routed name of this delivery service. Otherwise, only A records will be served.                                                       |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Range Request Handling                           | (experimental)  How to treat range requests:                                                                                                                                                                        |
+|                                                  |                                                                                                                                                                                                                     |
+|                                                  | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will be a HIT)                                                                                                     |
+|                                                  | - 1 Use the `background_fetch <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/background_fetch.en.html>`_ plugin.                                                                              |
+|                                                  | - 2 Use the cache_range_requests plugin.                                                                                                                                                                            |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Query String Handling                            | How to treat query strings:                                                                                                                                                                                         |
 |                                                  |                                                                                                                                                                                                                     |
@@ -321,49 +342,60 @@ The fields in the Delivery Service view are:
 |                                                  | **Note:** Choosing to drop query strings at the edge will preclude the use of a Regex Remap Expression. See :ref:`rl-regex-remap`.                                                                                  |
 |                                                  | To set the qstring without the use of regex remap, or for further options, see :ref:`rl-qstring-handling`.                                                                                                          |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Use Multi Site Origin Feature                    | Enable the Multi Site Origin feature for this delivery service. See :ref:`rl-multi-site-origin`                                                                                                                     |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Logs Enabled                                     |                                                                                                                                                                                                                     |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Geo Provider                                     | ip geolocation provider                                                                                                                                                                                             |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Geo Miss Default Latitude                        | Default Latitude for this delivery service. When client localization fails for both Coverage Zone and Geo Lookup, this the client will be routed as if it was at this lat.                                          |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Geo Miss Default Longitude                       | Default Longitude for this delivery service. When client localization fails for bot Coverage Zone and Geo Lookup, this the client will be routed as if it was at this long.                                         |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Geo Limit?                                       | Some services are intended to be limited by geography. The possible settings are are:                                                                                                                               |
 |                                                  |                                                                                                                                                                                                                     |
 |                                                  | - None - Do not limit by geography.                                                                                                                                                                                 |
 |                                                  | - CZF only - If the requesting IP is not in the Coverage Zone File, do not serve the request.                                                                                                                       |
 |                                                  | - CZF + US - If the requesting IP is not in the Coverage Zone File or not in the United States, do not serve the request.                                                                                           |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Geo Limit Countries                              | (for HTTP routed delivery services only) Do not serve the request to specific countries.                                                                                                                            |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Geo Limit Redirect URL                           | (for HTTP routed delivery services only) This is the URL Traffic Router will redirect to when Geo Limit Failure. See :ref:`rl-tr-ngb`                                                                               |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Bypass FQDN                                      | (for HTTP routed delivery services only) This is the FQDN Traffic Router will redirect to (with the same path) when the max Bps or Max Tps for this deliveryservice are exceeded.                                   |
+| Signing Algorithm                                | See :ref:`rl-signed-urls`.                                                                                                                                                                                          |
+|                                                  | None                                                                                                                                                                                                                |
+|                                                  | URL Signature Keys                                                                                                                                                                                                  |
+|                                                  | URI Signing Keys                                                                                                                                                                                                    |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Bypass Ipv4                                      | (For DNS routed delivery services only) This is the address to respond to A requests with when the the max Bps or Max Tps for this delivery service are exceeded.                                                   |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Bypass IPv6                                      | (For DNS routed delivery services only) This is the address to respond to AAAA requests with when the the max Bps or Max Tps for this delivery service are exceeded.                                                |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IPv6 Routing Enabled?                            | When set to yes, the Traffic Router will respond to AAAA DNS requests for the routed name of this delivery service. Otherwise, only A records will be served.                                                       |
+| DNS Bypass Cname                                 |                                                                                                                                                                                                                     |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Range Request Handling                           | (experimental)  How to treat range requests:                                                                                                                                                                        |
-|                                                  |                                                                                                                                                                                                                     |
-|                                                  | - 0 Do not cache (ranges requested from files taht are already cached due to a non range request will be a HIT)                                                                                                     |
-|                                                  | - 1 Use the `background_fetch <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/background_fetch.en.html>`_ plugin.                                                                              |
-|                                                  | - 2 Use the cache_range_requests plugin.                                                                                                                                                                            |
+| DNS Bypass TTL                                   |                                                                                                                                                                                                                     |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Max DNS Answers                                  |                                                                                                                                                                                                                     |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Delivery Service DNS TTL                         | The Time To Live on the DNS record for the Traffic Router A and AAAA records (``<routing-name>.<deliveryservice>.<cdn-domain>``).                                                                                   |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Origin Server Base URL                           | The Origin Server's base URL. This includes the protocol (http or https). Example: ``http://movies.origin.com``                                                                                                     |
+| Delivery Service Profile                         | The profile for this delivery service.                                                                                                                                                                              |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Use Multi Site Origin Feature                    | Enable the Multi Site Origin feature for this delivery service. See :ref:`rl-multi-site-origin`                                                                                                                     |
-+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Profile                                          | The profile for this delivery service.                                                                                                                                                                              |
-+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Maximum Bits per Second allowed globally         | The maximum bits per second this delivery service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS delivery service, the Bypass Ipv4 or Ipv6  will be used     |
+| Global Max Mbps                                  | The maximum bits per second this delivery service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS delivery service, the Bypass Ipv4 or Ipv6  will be used     |
 |                                                  | (depending on whether this was a A or AAAA request), and for HTTP delivery services the Bypass FQDN will be used.                                                                                                   |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Maximum Transactions per Second allowed globally | The maximum transactions per se this delivery service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS delivery service, the Bypass Ipv4 or Ipv6  will be used |
+| Global Max TPS                                   | The maximum transactions per se this delivery service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS delivery service, the Bypass Ipv4 or Ipv6  will be used |
 |                                                  | (depending on whether this was a A or AAAA request), and for HTTP delivery services the Bypass FQDN will be used.                                                                                                   |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Geo Miss Default Latitude                        | Default Latitude for this delivery service. When client localization fails for both Coverage Zone and Geo Lookup, this the client will be routed as if it was at this lat.                                          |
-+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Geo Miss Default Longitude                       | Default Longitude for this delivery service. When client localization fails for bot Coverage Zone and Geo Lookup, this the client will be routed as if it was at this long.                                         |
+| Signed URLs                                      | Use Signed URLs? See :ref:`rl-signed-urls`.                                                                                                                                                                         |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Edge Header Rewrite Rules                        | Header Rewrite rules to apply for this delivery service at the EDGE tier. See :ref:`rl-header-rewrite`. [1]_                                                                                                        |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Mid Header Rewrite Rules                         | Header Rewrite rules to apply for this delivery service at the MID tier. See :ref:`rl-header-rewrite`. [1]_                                                                                                         |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Traffic Router Additional Response Headers       |                                                                                                                                                                                                                     |
++--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Traffic Router Log Request Headers               |                                                                                                                                                                                                                     |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Regex Remap Expression                           | Regex Remap rule to apply to this delivery service at the Edge tier. See `ATS documentation on regex_remap <https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html>`_. [1]_        |
 |                                                  |                                                                                                                                                                                                                     |
@@ -373,29 +405,15 @@ The fields in the Delivery Service view are:
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Raw remap text                                   | For HTTP and DNS deliveryservices, this will get added to the end of the remap line on the cache verbatim. For ANY_MAP deliveryservices this is the remap line. [1]_                                                |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Long Description                                 | Long description for this delivery service. To be consumed from the APIs by downstream tools (Portal).                                                                                                              |
+| Long Description 2                               | Customer description for this delivery service. To be consumed from the APIs by downstream tools (Portal).                                                                                                          |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Customer                                         | Customer description for this delivery service. To be consumed from the APIs by downstream tools (Portal).                                                                                                          |
-+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Service                                          | Service description for this delivery service. To be consumed from the APIs by downstream tools (Portal).                                                                                                           |
+| Long Description 3                               | Service description for this delivery service. To be consumed from the APIs by downstream tools (Portal).                                                                                                           |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Info URL                                         | Info URL  for this delivery service. To be consumed from the APIs by downstream tools (Portal).                                                                                                                     |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Check Path                                       | A path (ex: /crossdomain.xml) to verify the connection to the origin server with. This can be used by Check Extension scripts to do periodic health checks against the delivery service.                            |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Origin Shield (Pipe Delimited String)            | Experimental. Origin Shield string.                                                                                                                                                                                 |
-+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Active                                           | When this is set to no Traffic Router will not serve DNS or HTTP responses for this delivery service.                                                                                                               |
-+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Last Updated                                     | (Read Only) The last time this delivery service was updated.                                                                                                                                                        |
-+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Number of edges assigned                         | (Read Only - change by clicking the **Server Assignments** button at the bottom) The number of EDGE caches assigned to this delivery service. See :ref:`rl-assign-edges`.                                           |
-+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Number of static DNS entries                     | (Read Only - change by clicking the **Static DNS** button at the bottom) The number of static DNS entries for this delivery service. See :ref:`rl-static-dns`.                                                      |
-+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Example delivery URL                             | (Read Only) An example of how the delivery URL may start. This could be multiple rows if multiple HOST_REGEXP entries have been entered.                                                                            |
-+--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Regular expressions for this delivery service    | A subtable of the regular expressions to use when routing traffic for this delivery service. See :ref:`rl-ds-regexp`.                                                                                               |
 +--------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 .. [1] These fields are not validated by Traffic Ops to be correct syntactically, and can cause Traffic Server to not start if invalid. Please use with caution.
@@ -411,35 +429,36 @@ Delivery Service Types
 ++++++++++++++++++++++
 One of the most important settings when creating the delivery service is the selection of the delivery service *type*. This type determines the routing method and the primary storage for the delivery service.
 
-+-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|       Name      |                                                                                                                                                         Description                                                                                                                                                          |
-+=================+==============================================================================================================================================================================================================================================================================================================================+
-| HTTP            | HTTP Content Routing  - The Traffic Router DNS auth server returns its own IP address on DNS queries, and the client gets redirected to a specific cache                                                                                                                                                                     |
-|                 | in the nearest cache group using HTTP 302.  Use this for long sessions like HLS/HDS/Smooth live streaming, where a longer setup time is not a.                                                                                                                                                                               |
-|                 | problem.                                                                                                                                                                                                                                                                                                                     |
-+-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS             | DNS Content Routing - The Traffic Router DNS auth server returns an edge cache IP address to the client right away. The client will find the cache quickly                                                                                                                                                                   |
-|                 | but the Traffic Router can not route to a cache that already has this content in the cache group. Use this for smaller objects like web page images / objects.                                                                                                                                                               |
-+-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| HTTP_NO_CACHE   | HTTP Content Routing, but the caches will not actually cache the content, they act as just proxies. The MID tier is bypassed.                                                                                                                                                                                                |
-+-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| HTTP_LIVE       | HTTP Content routing, but where for "standard" HTTP content routing the objects are stored on disk, for this delivery service type the objects are stored                                                                                                                                                                    |
-|                 | on the RAM disks. Use this for linear TV. The MID tier is bypassed for this type.                                                                                                                                                                                                                                            |
-+-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| HTTP_LIVE_NATNL | HTTP Content routing, same as HTTP_LIVE, but the MID tier is NOT bypassed.                                                                                                                                                                                                                                                   |
-+-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS_LIVE_NATNL  | DNS Content routing, but where for "standard" DNS content routing the objects are stored on disk, for this delivery service type the objects are stored                                                                                                                                                                      |
-|                 | on the RAM disks. Use this for linear TV. The MID tier is NOT bypassed for this type.                                                                                                                                                                                                                                        |
-+-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| DNS_LIVE        | DNS Content routing, same as DNS_LIVE_NATNL, but the MID tier is bypassed.                                                                                                                                                                                                                                                   |
-+-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ANY_MAP         | ANY_MAP is not known to Traffic Router. For this deliveryservice, the "Raw remap text" field in the input form will be used as the remap line on the cache.                                                                                                                                                                  |
-+-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| STEERING        | The Delivery Service will be used to route to other delivery services. The target delivery services and the routing weights for those delivery services will be defined by an admin or steering user. For more information see the `steering feature <../traffic_router.html#steering-feature>`_ documentation               |
-+-----------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|       Name      |                                                                                                                                                          Description                                                                                                                                                           |
++=================+================================================================================================================================================================================================================================================================================================================================+
+| HTTP            | HTTP Content Routing  - The Traffic Router DNS auth server returns its own IP address on DNS queries, and the client gets redirected to a specific cache                                                                                                                                                                       |
+|                 | in the nearest cache group using HTTP 302.  Use this for long sessions like HLS/HDS/Smooth live streaming, where a longer setup time is not a.                                                                                                                                                                                 |
+|                 | problem.                                                                                                                                                                                                                                                                                                                       |
++-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| DNS             | DNS Content Routing - The Traffic Router DNS auth server returns an edge cache IP address to the client right away. The client will find the cache quickly                                                                                                                                                                     |
+|                 | but the Traffic Router can not route to a cache that already has this content in the cache group. Use this for smaller objects like web page images / objects.                                                                                                                                                                 |
++-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| HTTP_NO_CACHE   | HTTP Content Routing, but the caches will not actually cache the content, they act as just proxies. The MID tier is bypassed.                                                                                                                                                                                                  |
++-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| HTTP_LIVE       | HTTP Content routing, but where for "standard" HTTP content routing the objects are stored on disk, for this delivery service type the objects are stored                                                                                                                                                                      |
+|                 | on the RAM disks. Use this for linear TV. The MID tier is bypassed for this type.                                                                                                                                                                                                                                              |
++-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| HTTP_LIVE_NATNL | HTTP Content routing, same as HTTP_LIVE, but the MID tier is NOT bypassed.                                                                                                                                                                                                                                                     |
++-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| DNS_LIVE_NATNL  | DNS Content routing, but where for "standard" DNS content routing the objects are stored on disk, for this delivery service type the objects are stored                                                                                                                                                                        |
+|                 | on the RAM disks. Use this for linear TV. The MID tier is NOT bypassed for this type.                                                                                                                                                                                                                                          |
++-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| DNS_LIVE        | DNS Content routing, same as DNS_LIVE_NATNL, but the MID tier is bypassed.                                                                                                                                                                                                                                                     |
++-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ANY_MAP         | ANY_MAP is not known to Traffic Router. For this deliveryservice, the "Raw remap text" field in the input form will be used as the remap line on the cache.                                                                                                                                                                    |
++-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| STEERING        | The Delivery Service will be used to route to other delivery services. The target delivery services and the routing weights for those delivery services will be defined by an admin or steering user. For more information see the `steering feature <../traffic_router.html#steering-feature>`_ documentation                 |
++-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| CLIENT_STEERING | Simliar to STEERING except that a client can send a request to Traffic Router with a query param of `trred=false` and Traffic Router will return a HTTP 200 reponse with a body that contians a list of Delivery Service URLs that the client connect to.  Therefore the client is doing the steering, not the Traffic Router. |
++-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-
-.. Note:: Once created, the Traffic Ops user interface does not allow you to change the delivery service type; the drop down is greyed out. There are many things that can go wrong when changing the type, and it is safer to delete the delivery service, and recreate it.
+.. _rl-federations:
 
 Federations
 +++++++++++
@@ -617,7 +636,7 @@ Delivery services have a Query String Handling option that, when set to ignore, 
 Multi Site Origin
 +++++++++++++++++
 
-.. Note:: The configuration of this feature changed significantly between ATS version 5 and >= 6. Some configuration in Traffic Control is different as well. This documentation assumes ATS 6 or higher. See :ref:`rl-multi-site-origin-qht-ats5` for the ATS version 5.x configuration details.
+.. Note:: The configuration of this feature changed significantly between ATS version 5 and >= 6. Some configuration in Traffic Control is different as well. This documentation assumes ATS 6 or higher. See :ref:`rl-multi-site-origin-qht` for more details.
 
 Normally, the mid servers are not aware of any redundancy at the origin layer. With Multi Site Origin enabled this changes - Traffic Server (and Traffic Ops) are now made aware of the fact there are multiple origins, and can be configured to do more advanced failover and loadbalancing actions. A prerequisite for MSO to work is that the multiple origin sites serve identical content with identical paths, and both are configured to serve the same origin hostname as is configured in the deliveryservice `Origin Server Base URL` field. See the `Apache Traffic Server docs <https://docs.trafficserver.apache.org/en/latest/admin-guide/files/parent.config.en.html>`_ for more information on that cache's implementation.
 
@@ -688,7 +707,11 @@ Traffic Router Profile
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | coveragezone.polling.interval           | CRConfig.json          | How often to refresh the coverage zone map in ms                                                                                                                                                          |
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| coveragezone.polling.url                | CRConfig.json          | The location (URL) to retrieve the coverage zone map file in XML format from.                                                                                                                             |
+| coveragezone.polling.url                | CRConfig.json          | The location (URL) to retrieve the coverage zone map file in JSON format from.                                                                                                                            |
++-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| deepcoveragezone.polling.interval       | CRConfig.json          | How often to refresh the deep coverage zone map in ms                                                                                                                                                     |
++-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| deepcoveragezone.polling.url            | CRConfig.json          | The location (URL) to retrieve the deep coverage zone map file in JSON format from.                                                                                                                       |
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | tld.soa.expire                          | CRConfig.json          | The value for the expire field the Traffic Router DNS Server will respond with on Start of Authority (SOA) records.                                                                                       |
 +-----------------------------------------+------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -824,23 +847,31 @@ The Coverage Zone File (CZF) should contain a cachegroup name to network prefix 
   {
     "coverageZones": {
       "cache-group-01": {
+        "coordinates": {
+          "latitude":  1.1,
+          "longitude": 2.2
+        },
         "network6": [
-          "1234:5678::\/64",
-          "1234:5679::\/64"
+          "1234:5678::/64",
+          "1234:5679::/64"
         ],
         "network": [
-          "192.168.8.0\/24",
-          "192.168.9.0\/24"
+          "192.168.8.0/24",
+          "192.168.9.0/24"
         ]
-      }
+      },
       "cache-group-02": {
+        "coordinates": {
+          "latitude":  3.3,
+          "longitude": 4.4
+        },
         "network6": [
-          "1234:567a::\/64",
-          "1234:567b::\/64"
+          "1234:567a::/64",
+          "1234:567b::/64"
         ],
         "network": [
-          "192.168.4.0\/24",
-          "192.168.5.0\/24"
+          "192.168.4.0/24",
+          "192.168.5.0/24"
         ]
       }
     }
@@ -849,6 +880,62 @@ The Coverage Zone File (CZF) should contain a cachegroup name to network prefix 
 The CZF is an input to the Traffic Control CDN, and as such does not get generated by Traffic Ops, but rather, it gets consumed by Traffic Router. Some popular IP management systems output a very similar file to the CZF but in stead of a cachegroup an ASN will be listed. Traffic Ops has the "Networks (ASNs)" view to aid with the conversion of files like that to a Traffic Control CZF file; this table is not used anywhere in Traffic Ops, but can be used to script the conversion using the API.
 
 The script that generates the CZF file is not part of Traffic Control, since it is different for each situation.
+
+.. note:: The ``"coordinates"`` section is optional and may be used by Traffic Router for localization in the case of a CZF "hit" where the zone name does not map to a Cache Group name in Traffic Ops (i.e. Traffic Router will route to the closest Cache Group(s) geographically).
+
+.. _rl-deep-czf:
+
+The Deep Coverage Zone File
++++++++++++++++++++++++++++
+The Deep Coverage Zone File (DCZF) format is similar to the CZF format but adds a ``caches`` list under each ``deepCoverageZone``: ::
+
+  {
+    "deepCoverageZones": {
+      "location-01": {
+        "coordinates": {
+          "latitude":  5.5,
+          "longitude": 6.6
+        },
+        "network6": [
+          "1234:5678::/64",
+          "1234:5679::/64"
+        ],
+        "network": [
+          "192.168.8.0/24",
+          "192.168.9.0/24"
+        ],
+        "caches": [
+          "edge-01",
+          "edge-02"
+        ]
+      },
+      "location-02": {
+        "coordinates": {
+          "latitude":  7.7,
+          "longitude": 8.8
+        },
+        "network6": [
+          "1234:567a::/64",
+          "1234:567b::/64"
+        ],
+        "network": [
+          "192.168.4.0/24",
+          "192.168.5.0/24"
+        ],
+        "caches": [
+          "edge-02",
+          "edge-03"
+        ]
+      }
+    }
+  }
+
+Each entry in the ``caches`` list is the hostname of an edge cache registered in Traffic Ops which will be used for "deep" caching in that Deep Coverage Zone. Unlike a regular CZF, coverage zones in the DCZF do not map to a Cache Group in Traffic Ops, so currently the deep coverage zone name only needs to be unique.
+
+If the Traffic Router gets a DCZF "hit" for a requested Delivery Service that has Deep Caching enabled, the client will be routed to an available "deep" cache from that zone's ``caches`` list.
+
+.. note:: The ``"coordinates"`` section is optional.
+
 
 .. _rl-working-with-profiles:
 

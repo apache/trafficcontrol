@@ -29,6 +29,7 @@ use URI;
 
 my $dispatch_table ||= {
 	"logs_xml.config"         => sub { logs_xml_dot_config(@_) },
+	"logging.config"		  => sub { logging_dot_config(@_) },
 	"cacheurl.config"         => sub { cacheurl_dot_config(@_) },
 	"records.config"          => sub { generic_config(@_) },
 	"plugin.config"           => sub { generic_config(@_) },
@@ -197,7 +198,8 @@ sub ds_data {
 		my $dscp                        = $row->dscp;
 		my $re_type                     = $row->re_type;
 		my $ds_type                     = $row->ds_type;
-		my $signed                      = $row->signed;
+		my $signed                      = defined( $row->signing_algorithm ) ? ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ) : \0;
+		my $signing_algorithm           = $row->signing_algorithm;
 		my $qstring_ignore              = $row->qstring_ignore;
 		my $ds_xml_id                   = $row->xml_id;
 		my $ds_domain                   = $row->domain_name;
@@ -219,9 +221,9 @@ sub ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname = $ds_type =~ /^DNS/ ? $row->routing_name : "ccr";
+				my $hname = $ds_type =~ /^DNS/ ? $row->routing_name : "__http__";
 				my $portstr = "";
-				if ( $hname eq "ccr" && $server->tcp_port > 0 && $server->tcp_port != 80 ) {
+				if ( $hname eq "__http__" && $server->tcp_port > 0 && $server->tcp_port != 80 ) {
 					$portstr = ":" . $server->tcp_port;
 				}
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
@@ -267,6 +269,7 @@ sub ds_data {
 		$dsinfo->{dslist}->[$j]->{"type"}                        = $ds_type;
 		$dsinfo->{dslist}->[$j]->{"domain"}                      = $ds_domain;
 		$dsinfo->{dslist}->[$j]->{"signed"}                      = $signed;
+		$dsinfo->{dslist}->[$j]->{"signing_algorithm"}           = $signing_algorithm;
 		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
 		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
 		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
@@ -387,6 +390,9 @@ sub parent_data {
 	foreach my $prefix ( keys %deliveryservices ) {
 		foreach my $row ( @{ $deliveryservices{$prefix} } ) {
 			my $pid              = $row->profile->id;
+                        if ( $profile_cache{$pid}->{not_a_parent} ne 'false' ) {
+                            next;
+                        }
 			my $ds_domain        = $profile_cache{$pid}->{domain_name};
 			my $weight           = $profile_cache{$pid}->{weight};
 			my $port             = $profile_cache{$pid}->{port};
@@ -459,6 +465,7 @@ sub cachegroup_profiles {
 				port           => $self->profile_param_value( $pid, 'parent.config', 'port', undef ),
 				use_ip_address => $self->profile_param_value( $pid, 'parent.config', 'use_ip_address', 0 ),
 				rank           => $self->profile_param_value( $pid, 'parent.config', 'rank', 1 ),
+				not_a_parent   => $self->profile_param_value( $pid, 'parent.config', 'not_a_parent', 'false' ),
 			};
 		}
 	}
@@ -636,6 +643,57 @@ sub facts {
 	return $text;
 }
 
+sub logging_dot_config {
+	my $self     = shift;
+	my $id       = shift;
+	my $filename = shift;
+
+	my $server = $self->server_data($id);
+	my $data   = $self->param_data( $server, $filename );
+
+	my $text   = "-- Generated for " . $server->host_name . " by " . &name_version_string($self) . " - Do not edit!! --\n";
+
+	my $max_log_objects = 10;
+	for ( my $i = 0; $i < $max_log_objects; $i = $i + 1 ) {
+		my $log_format_field = "LogFormat";
+		my $log_object_field = "LogObject";
+		if ( $i > 0 ) {
+			$log_format_field = $log_format_field . "$i";
+			$log_object_field = $log_object_field . "$i";
+		}
+
+		my $log_format_name = $data->{$log_format_field . ".Name"} || "";
+		if ( length($log_format_name) > 0 ) {
+			my $format = $data->{$log_format_field . ".Format"};
+			$format =~ s/"/\\\"/g;
+			$text .= $log_format_name . " = format {\n";
+			$text .= "	Format = '" . $format . " '\n";
+			$text .= "}\n";
+		}
+
+		my $log_object_filename = $data->{$log_object_field . ".Filename"} || "";
+		if ( length($log_object_filename) > 0 ) {
+			my $log_object_format               = $data->{$log_object_field . ".Format"}             || "";
+			my $log_object_rolling_enabled      = $data->{$log_object_field . ".RollingEnabled"}     || "";
+			my $log_object_rolling_interval_sec = $data->{$log_object_field . ".RollingIntervalSec"} || "";
+			my $log_object_rolling_offset_hr    = $data->{$log_object_field . ".RollingOffsetHr"}    || "";
+			my $log_object_rolling_size_mb      = $data->{$log_object_field . ".RollingSizeMb"}      || "";
+			my $log_object_header               = $data->{$log_object_field . ".Header"}             || "";
+
+			$text .= "\nlog.ascii {\n";
+			$text .= "  Format = " . $log_format_name . ",\n";
+			$text .= "  Filename = '" . $log_object_filename . "',\n";
+			$text .= "  RollingEnabled = " . $log_object_rolling_enabled . ",\n" unless defined();
+			$text .= "  RollingIntervalSec = " . $log_object_rolling_interval_sec . ",\n";
+			$text .= "  RollingOffsetHr = " . $log_object_rolling_offset_hr . ",\n";
+			$text .= "  RollingSizeMb = " . $log_object_rolling_size_mb . "\n";
+			$text .= "}\n";
+		}
+	}
+
+	return $text;
+}
+
 sub logs_xml_dot_config {
 	my $self     = shift;
 	my $id       = shift;
@@ -645,27 +703,45 @@ sub logs_xml_dot_config {
 	my $data   = $self->param_data( $server, $filename );
 	my $text   = "<!-- Generated for " . $server->host_name . " by " . &name_version_string($self) . " - Do not edit!! -->\n";
 
-	my $log_format_name                 = $data->{"LogFormat.Name"}               || "";
-	my $log_object_filename             = $data->{"LogObject.Filename"}           || "";
-	my $log_object_format               = $data->{"LogObject.Format"}             || "";
-	my $log_object_rolling_enabled      = $data->{"LogObject.RollingEnabled"}     || "";
-	my $log_object_rolling_interval_sec = $data->{"LogObject.RollingIntervalSec"} || "";
-	my $log_object_rolling_offset_hr    = $data->{"LogObject.RollingOffsetHr"}    || "";
-	my $log_object_rolling_size_mb      = $data->{"LogObject.RollingSizeMb"}      || "";
-	my $format                          = $data->{"LogFormat.Format"};
-	$format =~ s/"/\\\"/g;
-	$text .= "<LogFormat>\n";
-	$text .= "  <Name = \"" . $log_format_name . "\"/>\n";
-	$text .= "  <Format = \"" . $format . "\"/>\n";
-	$text .= "</LogFormat>\n";
-	$text .= "<LogObject>\n";
-	$text .= "  <Format = \"" . $log_object_format . "\"/>\n";
-	$text .= "  <Filename = \"" . $log_object_filename . "\"/>\n";
-	$text .= "  <RollingEnabled = " . $log_object_rolling_enabled . "/>\n" unless defined();
-	$text .= "  <RollingIntervalSec = " . $log_object_rolling_interval_sec . "/>\n";
-	$text .= "  <RollingOffsetHr = " . $log_object_rolling_offset_hr . "/>\n";
-	$text .= "  <RollingSizeMb = " . $log_object_rolling_size_mb . "/>\n";
-	$text .= "</LogObject>\n";
+	my $max_log_objects = 10;
+	for ( my $i = 0; $i < $max_log_objects; $i = $i + 1 ) {
+		my $log_format_field = "LogFormat";
+		my $log_object_field = "LogObject";
+		if ( $i > 0 ) {
+			$log_format_field = $log_format_field . "$i";
+			$log_object_field = $log_object_field . "$i";
+		}
+
+		my $log_format_name = $data->{$log_format_field . ".Name"} || "";
+		if ( length($log_format_name) > 0 ) {
+			my $format = $data->{$log_format_field . ".Format"};
+			$format =~ s/"/\\\"/g;
+			$text .= "<LogFormat>\n";
+			$text .= "  <Name = \"" . $log_format_name . "\"/>\n";
+			$text .= "  <Format = \"" . $format . "\"/>\n";
+			$text .= "</LogFormat>\n";
+		}
+
+		my $log_object_filename = $data->{$log_object_field . ".Filename"} || "";
+		if ( length($log_object_filename) > 0 ) {
+			my $log_object_format               = $data->{$log_object_field . ".Format"}             || "";
+			my $log_object_rolling_enabled      = $data->{$log_object_field . ".RollingEnabled"}     || "";
+			my $log_object_rolling_interval_sec = $data->{$log_object_field . ".RollingIntervalSec"} || "";
+			my $log_object_rolling_offset_hr    = $data->{$log_object_field . ".RollingOffsetHr"}    || "";
+			my $log_object_rolling_size_mb      = $data->{$log_object_field . ".RollingSizeMb"}      || "";
+			my $log_object_header               = $data->{$log_object_field . ".Header"}             || "";
+
+			$text .= "<LogObject>\n";
+			$text .= "  <Format = \"" . $log_object_format . "\"/>\n";
+			$text .= "  <Filename = \"" . $log_object_filename . "\"/>\n";
+			$text .= "  <RollingEnabled = " . $log_object_rolling_enabled . "/>\n" unless defined();
+			$text .= "  <RollingIntervalSec = " . $log_object_rolling_interval_sec . "/>\n";
+			$text .= "  <RollingOffsetHr = " . $log_object_rolling_offset_hr . "/>\n";
+			$text .= "  <RollingSizeMb = " . $log_object_rolling_size_mb . "/>\n";
+			$text .= "  <Header = \"" . $log_object_header . "\"/>\n" if ( length($log_object_header) > 0 );
+			$text .= "</LogObject>\n";
+		}
+	}
 
 	return $text;
 }
@@ -937,7 +1013,15 @@ sub cache_dot_config {
 		if ( $remap->{type} eq "HTTP_NO_CACHE" ) {
 			my $org_fqdn = $remap->{org};
 			$org_fqdn =~ s/https?:\/\///;
-			$text .= "dest_domain=" . $org_fqdn . " scheme=http action=never-cache\n";
+			$org_fqdn =~ m/(.*?):(\d+).*/;
+			my $org_port = $2;
+
+			if (defined($org_port)) {
+				$org_fqdn = $1;
+				$text .= "dest_domain=" . $org_fqdn . " port=" . $org_port . " scheme=http action=never-cache\n";
+			} else { 
+				$text .= "dest_domain=" . $org_fqdn . " scheme=http action=never-cache\n";
+			}
 		}
 	}
 	return $text;
@@ -970,7 +1054,7 @@ sub remap_dot_config {
 				$mid_remap{ $remap->{org} } .= " \@plugin=header_rewrite.so \@pparam=" . $remap->{mid_hdr_rw_file};
 			}
 			if ( $remap->{qstring_ignore} == 1 ) {
-				$mid_remap{ $remap->{org} } .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
+				$mid_remap{ $remap->{org} } .= UI::DeliveryService::get_qstring_ignore_remap(UI::DeliveryService::get_ats_major_version($self, $server));
 			}
 			if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {
 				$mid_remap{ $remap->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $remap->{cacheurl_file};
@@ -1017,7 +1101,7 @@ sub build_remap_line {
 	my $host_name = $data->{host_name};
 	my $dscp      = $remap->{dscp};
 
-	$map_from =~ s/ccr/$host_name/;
+	$map_from =~ s/__http__/$host_name/;
 
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
 		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=dscp_remap.so \@pparam=" . $dscp;
@@ -1028,8 +1112,13 @@ sub build_remap_line {
 	if ( defined( $remap->{edge_header_rewrite} ) ) {
 		$text .= " \@plugin=header_rewrite.so \@pparam=" . $remap->{hdr_rw_file};
 	}
-	if ( $remap->{signed} == 1 ) {
-		$text .= " \@plugin=url_sig.so \@pparam=url_sig_" . $remap->{ds_xml_id} . ".config";
+	if ( defined($remap->{signing_algorithm})) {
+		if ( $remap->{signing_algorithm} eq "url_sig" ) {
+			$text .= " \@plugin=url_sig.so \@pparam=url_sig_" . $remap->{ds_xml_id} . ".config";
+		}
+		elsif ( $remap->{signing_algorithm} eq "uri_signing" ) {
+			$text .= " \@plugin=uri_signing.so \@pparam=uri_signing_" . $remap->{ds_xml_id} . ".config";
+		}
 	}
 	if ( $remap->{qstring_ignore} == 2 ) {
 		my $dqs_file = "drop_qstring.config";
@@ -1043,7 +1132,8 @@ sub build_remap_line {
 			);
 		}
 		else {
-			$text .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
+			#If we are on ats 6 and later we want to use the cachekey plugin, otherwise we have to use cacheurl
+			$text .= UI::DeliveryService::get_qstring_ignore_remap(UI::DeliveryService::get_ats_major_version($self, $server));
 		}
 	}
 	if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {

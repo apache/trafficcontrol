@@ -158,6 +158,10 @@ Many of the settings for the different servers in a Traffic Control CDN are cont
 +--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
 | geolocation6.polling.url | CRConfig.json | The location to get the IPv6 GeoLiteCity database from.                                                                               |
 +--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
+| maxmind.default.override | CRConfig.json | The destination geo coordinates to use for client location when maxmind returns a default location that matches the country code.     |
+|                          |               | This parameter can be specified multiple times with different values to support default overrides for multiple countries.             |
+|                          |               | Format: <CountryCode>;<Lat>,<Long>   Ex: US;37.751,-97.822                                                                            |
++--------------------------+---------------+---------------------------------------------------------------------------------------------------------------------------------------+
 
 These parameters should be set to reflect the local environment.
 
@@ -226,6 +230,21 @@ Below is a list of Traffic Server plugins that need to be configured in the para
 | remap_stats      | plugin.config | The config to be used for remap_stats.               | `remap_stats <https://github.com/apache/trafficserver/tree/master/plugins/experimental/remap_stats>`_      |
 |                  |               | Value is left blank.                                 |                                                                                                            |
 +------------------+---------------+------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+
+Below is a list of cache parameters for special configuration, which are unlikely to need changes, but may be useful in particular circumstances:
+
++--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
+|           Name           |    Config file    |                                                       Description                                                       |
++==========================+===================+=========================================================================================================================+
+| not_a_parent             | parent.config     | This is a boolean flag and is considered true if it exists and has any value except 'false'.                            |
+|                          |                   | This prevents servers with this parameter in their profile from being inserted into the parent.config generated for     |
+|                          |                   | servers with this server's cachegroup as a parent of their cachegroup. This is primarily useful for when edge caches    |
+|                          |                   | are configured to have a cachegroup of other edge caches as parents (a highly unusual configuration), and it is         |
+|                          |                   | necessary to exclude some, but not all, edges in the parent cachegroup from the parent.config (for example, because they|
+|                          |                   | lack necessary capabilities), but still have all edges in the same cachegroup in order to take traffic from ordinary    |
+|                          |                   | delivery services at that cachegroup's geo location. Once again, this is a highly unusual scenario, and under ordinary  |
+|                          |                   | circumstances this parameter should not exist.                                                                          |
++--------------------------+-------------------+-------------------------------------------------------------------------------------------------------------------------+
 
 
 Regions, Locations and Cache Groups

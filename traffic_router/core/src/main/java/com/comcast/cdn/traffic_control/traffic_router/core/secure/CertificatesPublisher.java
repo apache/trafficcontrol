@@ -25,9 +25,9 @@ import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import com.comcast.cdn.traffic_control.traffic_router.shared.DeliveryServiceCertificatesMBean;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
-import org.json.JSONObject;
 
 import javax.management.Attribute;
 import javax.management.ObjectName;
@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 public class CertificatesPublisher {
 	private final static Logger LOGGER = Logger.getLogger(CertificatesPublisher.class);
-	private JSONObject deliveryServicesJson;
+	private JsonNode deliveryServicesJson;
 	private List<DeliveryService> deliveryServices = new ArrayList<>();
 	private boolean running = true;
 	final Thread worker;
@@ -90,11 +90,11 @@ public class CertificatesPublisher {
 		}
 	}
 
-	public JSONObject getDeliveryServicesJson() {
+	public JsonNode getDeliveryServicesJson() {
 		return deliveryServicesJson;
 	}
 
-	public void setDeliveryServicesJson(final JSONObject deliveryServicesJson) {
+	public void setDeliveryServicesJson(final JsonNode deliveryServicesJson) {
 		this.deliveryServicesJson = deliveryServicesJson;
 	}
 

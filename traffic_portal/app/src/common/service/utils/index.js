@@ -20,6 +20,7 @@
 module.exports = angular.module('trafficPortal.utils', [])
     .service('dateUtils', require('./DateUtils'))
     .service('deliveryServiceUtils', require('./DeliveryServiceUtils'))
+    .service('fileUtils', require('./FileUtils'))
     .service('formUtils', require('./FormUtils'))
     .service('locationUtils', require('./LocationUtils'))
     .service('numberUtils', require('./NumberUtils'))

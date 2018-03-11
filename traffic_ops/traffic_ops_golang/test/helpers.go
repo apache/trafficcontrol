@@ -19,7 +19,11 @@ package test
  * under the License.
  */
 
-import "reflect"
+import (
+	"reflect"
+	"sort"
+	"strings"
+)
 
 // Extract the tag annotations from a struct into a string array
 func ColsFromStructByTag(tagName string, thing interface{}) []string {
@@ -27,9 +31,32 @@ func ColsFromStructByTag(tagName string, thing interface{}) []string {
 	t := reflect.TypeOf(thing)
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		// Get the field tag value
-		tag := field.Tag.Get(tagName)
-		cols = append(cols, tag)
+		if (strings.Compare(tagName, "db") == 0) && (tagName != "") {
+			// Get the field tag value
+			tag := field.Tag.Get(tagName)
+			if tag != "" {
+				cols = append(cols, tag)
+			}
+		}
 	}
 	return cols
+}
+
+// sortableErrors provides ordering a list of errors for easier comparison with an expected list
+type sortableErrors []error
+
+func (s sortableErrors) Len() int {
+	return len(s)
+}
+func (s sortableErrors) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s sortableErrors) Less(i, j int) bool {
+	return s[i].Error() < s[j].Error()
+}
+
+// SortErrors sorts the list of errors lexically
+func SortErrors(p []error) []error {
+	sort.Sort(sortableErrors(p))
+	return p
 }

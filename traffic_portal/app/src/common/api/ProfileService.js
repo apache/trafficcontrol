@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var ProfileService = function(Restangular, $http, locationUtils, messageModel, ENV) {
+var ProfileService = function(Restangular, $http, $q, locationUtils, messageModel, ENV) {
 
     this.getProfiles = function(queryParams) {
         return Restangular.all('profiles').getList(queryParams);
@@ -85,7 +85,36 @@ var ProfileService = function(Restangular, $http, locationUtils, messageModel, E
             );
     };
 
+    this.exportProfile = function(id) {
+        var deferred = $q.defer();
+
+        $http.get(ENV.api['root'] + "profiles/" + id + "/export")
+            .then(
+                function(result) {
+                    deferred.resolve(result.data);
+                },
+                function(fault) {
+                    deferred.reject(fault);
+                }
+            );
+
+        return deferred.promise;
+    };
+
+    this.importProfile = function(importJSON) {
+        return $http.post(ENV.api['root'] + "profiles/import", importJSON)
+            .then(
+                function(result) {
+                    messageModel.setMessages(result.data.alerts, true);
+                    locationUtils.navigateToPath('/profiles/' + result.data.response.id);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
+
 };
 
-ProfileService.$inject = ['Restangular', '$http', 'locationUtils', 'messageModel', 'ENV'];
+ProfileService.$inject = ['Restangular', '$http', '$q', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = ProfileService;

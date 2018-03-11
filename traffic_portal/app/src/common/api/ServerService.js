@@ -96,6 +96,18 @@ var ServerService = function($http, $q, Restangular, locationUtils, messageModel
         return Restangular.one('deliveryservices', dsId).getList('servers/eligible');
     };
 
+    this.assignDeliveryServices = function(server, dsIds, replace, delay) {
+        return Restangular.service('servers/' + server.id + '/deliveryservices?replace=' + replace).post( dsIds )
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: dsIds.length + ' delivery services assigned to ' + server.hostName + '.' + server.domainName } ], delay);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
+
     this.queueServerUpdates = function(id) {
         return Restangular.one("servers", id).customPOST( { action: "queue"}, "queue_update" )
             .then(
@@ -124,6 +136,38 @@ var ServerService = function($http, $q, Restangular, locationUtils, messageModel
         var request = $q.defer();
 
         $http.get(ENV.api['root'] + "servers/status?type=EDGE")
+            .then(
+                function(result) {
+                    request.resolve(result.data.response);
+                },
+                function() {
+                    request.reject();
+                }
+            );
+
+        return request.promise;
+    };
+
+    this.getCacheStats = function() {
+        var request = $q.defer();
+
+        $http.get(ENV.api['root'] + "caches/stats")
+            .then(
+                function(result) {
+                    request.resolve(result.data.response);
+                },
+                function() {
+                    request.reject();
+                }
+            );
+
+        return request.promise;
+    };
+
+    this.getCacheChecks = function() {
+        var request = $q.defer();
+
+        $http.get(ENV.api['root'] + "servers/checks")
             .then(
                 function(result) {
                     request.resolve(result.data.response);

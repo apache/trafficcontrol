@@ -267,11 +267,13 @@ sub get_profile_config {
 	elsif ( $filename eq "cache.config" ) { $file_contents = $self->profile_cache_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "drop_qstring.config" ) { $file_contents = $self->drop_qstring_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "logs_xml.config" ) { $file_contents = $self->logs_xml_dot_config( $profile_obj, $filename ); }
+	elsif ( $filename eq "logging.config" ) { $file_contents = $self->logging_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "plugin.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "records.config" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "storage.config" ) { $file_contents = $self->storage_dot_config( $profile_obj, $filename ); }
 	elsif ( $filename eq "sysctl.conf" ) { $file_contents = $self->generic_profile_config( $profile_obj, $filename ); }
 	elsif ( $filename =~ /url_sig_.*\.config/ ) { $file_contents = $self->url_sig_dot_config( $profile_obj, $filename ); }
+	elsif ( $filename =~ /uri_signing_.*\.config/ ) { $file_contents = $self->uri_signing_dot_config( $filename ); }
 	elsif ( $filename eq "volume.config" ) { $file_contents = $self->volume_dot_config( $profile_obj, $filename ); }
 	else {
 		my $file_param = $self->db->resultset('Parameter')->search( [ config_file => $filename ] )->first;
@@ -322,11 +324,13 @@ sub get_scope {
 	elsif ( $fname eq "cache.config" )                         { $scope = 'profiles' }
 	elsif ( $fname eq "drop_qstring.config" )                  { $scope = 'profiles' }
 	elsif ( $fname eq "logs_xml.config" )                      { $scope = 'profiles' }
+	elsif ( $fname eq "logging.config" )                       { $scope = 'profiles' }
 	elsif ( $fname eq "plugin.config" )                        { $scope = 'profiles' }
 	elsif ( $fname eq "records.config" )                       { $scope = 'profiles' }
 	elsif ( $fname eq "storage.config" )                       { $scope = 'profiles' }
 	elsif ( $fname eq "sysctl.conf" )                          { $scope = 'profiles' }
 	elsif ( $fname =~ /url_sig_.*\.config/ )                   { $scope = 'profiles' }
+	elsif ( $fname =~ /uri_signing_.*\.config/ )               { $scope = 'profiles' }
 	elsif ( $fname eq "volume.config" )                        { $scope = 'profiles' }
 	elsif ( $fname eq "bg_fetch.config" )                      { $scope = 'cdns' }
 	elsif ( $fname =~ /cacheurl.*\.config/ )                   { $scope = 'cdns' }
@@ -489,7 +493,7 @@ sub delivery_service_data_by_profile {
 		deliveryservice.xml_id,
 		deliveryservice.dscp,
 		deliveryservice.routing_name,
-		deliveryservice.signed,
+		deliveryservice.signing_algorithm,
 		deliveryservice.qstring_ignore,
 		deliveryservice.org_server_fqdn,
 		deliveryservice.origin_shield,
@@ -534,7 +538,7 @@ sub delivery_service_data_by_profile {
 	my $deliveryservice_xml_id;
 	my $deliveryservice_dscp;
 	my $deliveryservice_routing_name;
-	my $deliveryservice_signed;
+	my $deliveryservice_signing_algorithm;
 	my $deliveryservice_qstring_ignore;
 	my $deliveryservice_org_server_fqdn;
 	my $deliveryservice_origin_shield;
@@ -559,7 +563,7 @@ sub delivery_service_data_by_profile {
 		\$deliveryservice_xml_id,
 		\$deliveryservice_dscp,
 		\$deliveryservice_routing_name,
-		\$deliveryservice_signed,
+		\$deliveryservice_signing_algorithm,
 		\$deliveryservice_qstring_ignore,
 		\$deliveryservice_org_server_fqdn,
 		\$deliveryservice_origin_shield,
@@ -587,7 +591,8 @@ sub delivery_service_data_by_profile {
 					"xml_id" => $deliveryservice_xml_id,
 					"dscp" => $deliveryservice_dscp,
 					"routing_name" => $deliveryservice_routing_name,
-					"signed" => $deliveryservice_signed,
+					"signed" => ( $deliveryservice_signing_algorithm eq "url_sig" ),
+					"signing_algorithm" => $deliveryservice_signing_algorithm,
 					"qstring_ignore" => $deliveryservice_qstring_ignore,
 					"org_server_fqdn" => $deliveryservice_org_server_fqdn,
 					"origin_shield" => $deliveryservice_origin_shield,
@@ -630,6 +635,7 @@ sub profile_ds_data {
 		my $re_type                     = $row->{'re_type'};
 		my $ds_type                     = $row->{'ds_type'};
 		my $signed                      = $row->{'signed'};
+		my $signing_algorithm           = $row->{'signing_algorithm'};
 		my $qstring_ignore              = $row->{'qstring_ignore'};
 		my $ds_xml_id                   = $row->{'xml_id'};
 		my $ds_domain                   = $row->{'domain_name'};
@@ -654,7 +660,7 @@ sub profile_ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname    = $ds_type =~ /^DNS/ ? $row->{'routing_name'} : "ccr";
+				my $hname    = $ds_type =~ /^DNS/ ? $row->{'routing_name'} : "__http__";
 				my $portstr  = ":" . "__SERVER_TCP_PORT__";
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
 				if ( $protocol == HTTP ) {
@@ -700,6 +706,7 @@ sub profile_ds_data {
 		$dsinfo->{dslist}->[$j]->{"type"}                        = $ds_type;
 		$dsinfo->{dslist}->[$j]->{"domain"}                      = $ds_domain;
 		$dsinfo->{dslist}->[$j]->{"signed"}                      = $signed;
+		$dsinfo->{dslist}->[$j]->{"signing_algorithm"}           = $signing_algorithm;
 		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
 		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
 		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
@@ -751,7 +758,8 @@ sub cdn_ds_data {
 		my $dscp                        = $row->dscp;
 		my $re_type                     = $row->re_type;
 		my $ds_type                     = $row->ds_type;
-		my $signed                      = $row->signed;
+		my $signed                      = defined( $row->signing_algorithm ) ? ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ) : \0;
+		my $signing_algorithm           = $row->signing_algorithm;
 		my $qstring_ignore              = $row->qstring_ignore;
 		my $ds_xml_id                   = $row->xml_id;
 		my $ds_domain                   = $row->domain_name;
@@ -776,7 +784,7 @@ sub cdn_ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname    = $ds_type =~ /^DNS/ ? $row->routing_name : "ccr";
+				my $hname    = $ds_type =~ /^DNS/ ? $row->routing_name : "__http__";
 				my $portstr  = ":" . "SERVER_TCP_PORT";
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
 				if ( $protocol == HTTP ) {
@@ -822,6 +830,7 @@ sub cdn_ds_data {
 		$dsinfo->{dslist}->[$j]->{"type"}                        = $ds_type;
 		$dsinfo->{dslist}->[$j]->{"domain"}                      = $ds_domain;
 		$dsinfo->{dslist}->[$j]->{"signed"}                      = $signed;
+		$dsinfo->{dslist}->[$j]->{"signing_algorithm"}           = $signing_algorithm;
 		$dsinfo->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
 		$dsinfo->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
 		$dsinfo->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
@@ -883,7 +892,8 @@ sub ds_data {
 		my $dscp                        = $dsinfo->dscp;
 		my $re_type                     = $dsinfo->re_type;
 		my $ds_type                     = $dsinfo->ds_type;
-		my $signed                      = $dsinfo->signed;
+		my $signed                      = defined( $dsinfo->signing_algorithm ) ? ( $dsinfo->signing_algorithm eq "url_sig" ? \1 : \0 ) : \0;
+		my $signing_algorithm           = $dsinfo->signing_algorithm;
 		my $qstring_ignore              = $dsinfo->qstring_ignore;
 		my $ds_xml_id                   = $dsinfo->xml_id;
 		my $ds_domain                   = $dsinfo->domain_name;
@@ -905,9 +915,9 @@ sub ds_data {
 				my $re = $host_re;
 				$re =~ s/\\//g;
 				$re =~ s/\.\*//g;
-				my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "ccr";
+				my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "__http__";
 				my $portstr = "";
-				if ( $hname eq "ccr" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
+				if ( $hname eq "__http__" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
 					$portstr = ":" . $server_obj->tcp_port;
 				}
 				my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
@@ -953,6 +963,7 @@ sub ds_data {
 		$response_obj->{dslist}->[$j]->{"type"}                        = $ds_type;
 		$response_obj->{dslist}->[$j]->{"domain"}                      = $ds_domain;
 		$response_obj->{dslist}->[$j]->{"signed"}                      = $signed;
+		$response_obj->{dslist}->[$j]->{"signing_algorithm"}           = $signing_algorithm;
 		$response_obj->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
 		$response_obj->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
 		$response_obj->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
@@ -1118,7 +1129,8 @@ sub remap_ds_data {
 			my $dscp                        = $dsinfo->dscp;
 			my $re_type                     = $dsinfo->re_type;
 			my $ds_type                     = $dsinfo->ds_type;
-			my $signed                      = $dsinfo->signed;
+			my $signed                      = defined( $dsinfo->signing_algorithm ) ? ( $dsinfo->signing_algorithm eq "url_sig" ? \1 : \0 ) : \0;
+			my $signing_algorithm           = $dsinfo->signing_algorithm;
 			my $qstring_ignore              = $dsinfo->qstring_ignore;
 			my $ds_xml_id                   = $dsinfo->xml_id;
 			my $ds_domain                   = $dsinfo->domain_name;
@@ -1136,9 +1148,9 @@ sub remap_ds_data {
 					my $re = $host_re;
 					$re =~ s/\\//g;
 					$re =~ s/\.\*//g;
-					my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "ccr";
+					my $hname = $ds_type =~ /^DNS/ ? $dsinfo->routing_name : "__http__";
 					my $portstr = "";
-					if ( $hname eq "ccr" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
+					if ( $hname eq "__http__" && $server_obj->tcp_port > 0 && $server_obj->tcp_port != 80 ) {
 						$portstr = ":" . $server_obj->tcp_port;
 					}
 					my $map_from = "http://" . $hname . $re . $ds_domain . $portstr . "/";
@@ -1183,6 +1195,7 @@ sub remap_ds_data {
 			$response_obj->{dslist}->[$j]->{"org"}                         = $org_fqdn;
 			$response_obj->{dslist}->[$j]->{"type"}                        = $ds_type;
 			$response_obj->{dslist}->[$j]->{"signed"}                      = $signed;
+			$response_obj->{dslist}->[$j]->{"signing_algorithm"}           = $signing_algorithm;
 			$response_obj->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
 			$response_obj->{dslist}->[$j]->{"ds_xml_id"}                   = $ds_xml_id;
 			$response_obj->{dslist}->[$j]->{"edge_header_rewrite"}         = $edge_header_rewrite;
@@ -1198,6 +1211,12 @@ sub remap_ds_data {
 			if ( defined($cacheurl) ) {
 				my $fname = "cacheurl_" . $ds_xml_id . ".config";
 				$response_obj->{dslist}->[$j]->{"cacheurl_file"} = $fname;
+			}
+			if ( defined( $dsinfo->profile ) ) {
+				my $dsparamrs = $self->db->resultset('ProfileParameter')->search( { profile => $dsinfo->profile }, { prefetch => [ 'profile', 'parameter' ] } );
+				while ( my $prow = $dsparamrs->next ) {
+					$response_obj->{dslist}->[$j]->{'param'}->{ $prow->parameter->config_file }->{ $prow->parameter->name } = $prow->parameter->value;
+				}
 			}
 
 			$j++;
@@ -1356,6 +1375,60 @@ sub drop_qstring_dot_config {
 	return $text;
 }
 
+sub logging_dot_config {
+	my $self        = shift;
+	my $profile_obj = shift;
+	my $filename    = shift;
+
+	my $data = $self->profile_param_data( $profile_obj->id, "logging.config" );
+
+	# This is an LUA file, so we need to massage the header a bit for LUA commenting.
+	my $text = "-- " . $self->header_comment( $profile_obj->name );
+	$text =~ s/# //;
+	$text =~ s/\n//;
+	$text .= " --\n";
+
+	my $max_log_objects = 10;
+	for ( my $i = 0; $i < $max_log_objects; $i = $i + 1 ) {
+		my $log_format_field = "LogFormat";
+		my $log_object_field = "LogObject";
+		if ( $i > 0 ) {
+			$log_format_field = $log_format_field . "$i";
+			$log_object_field = $log_object_field . "$i";
+		}
+
+		my $log_format_name = $data->{$log_format_field . ".Name"} || "";
+		if ( length($log_format_name) > 0 ) {
+			my $format = $data->{$log_format_field . ".Format"};
+			$format =~ s/"/\\\"/g;
+			$text .= $log_format_name . " = format {\n";
+			$text .= "	Format = '" . $format . " '\n";
+			$text .= "}\n";
+		}
+
+		my $log_object_filename = $data->{$log_object_field . ".Filename"} || "";
+		if ( length($log_object_filename) > 0 ) {
+			my $log_object_format               = $data->{$log_object_field . ".Format"}             || "";
+			my $log_object_rolling_enabled      = $data->{$log_object_field . ".RollingEnabled"}     || "";
+			my $log_object_rolling_interval_sec = $data->{$log_object_field . ".RollingIntervalSec"} || "";
+			my $log_object_rolling_offset_hr    = $data->{$log_object_field . ".RollingOffsetHr"}    || "";
+			my $log_object_rolling_size_mb      = $data->{$log_object_field . ".RollingSizeMb"}      || "";
+			my $log_object_header               = $data->{$log_object_field . ".Header"}             || "";
+
+			$text .= "\nlog.ascii {\n";
+			$text .= "  Format = " . $log_format_name . ",\n";
+			$text .= "  Filename = '" . $log_object_filename . "',\n";
+			$text .= "  RollingEnabled = " . $log_object_rolling_enabled . ",\n" unless defined();
+			$text .= "  RollingIntervalSec = " . $log_object_rolling_interval_sec . ",\n";
+			$text .= "  RollingOffsetHr = " . $log_object_rolling_offset_hr . ",\n";
+			$text .= "  RollingSizeMb = " . $log_object_rolling_size_mb . "\n";
+			$text .= "}\n";
+		}
+	}
+
+	return $text;
+}
+
 sub logs_xml_dot_config {
 	my $self        = shift;
 	my $profile_obj = shift;
@@ -1369,27 +1442,45 @@ sub logs_xml_dot_config {
 	$text =~ s/\n//;
 	$text .= " -->\n";
 
-	my $log_format_name                 = $data->{"LogFormat.Name"}               || "";
-	my $log_object_filename             = $data->{"LogObject.Filename"}           || "";
-	my $log_object_format               = $data->{"LogObject.Format"}             || "";
-	my $log_object_rolling_enabled      = $data->{"LogObject.RollingEnabled"}     || "";
-	my $log_object_rolling_interval_sec = $data->{"LogObject.RollingIntervalSec"} || "";
-	my $log_object_rolling_offset_hr    = $data->{"LogObject.RollingOffsetHr"}    || "";
-	my $log_object_rolling_size_mb      = $data->{"LogObject.RollingSizeMb"}      || "";
-	my $format                          = $data->{"LogFormat.Format"};
-	$format =~ s/"/\\\"/g;
-	$text .= "<LogFormat>\n";
-	$text .= "  <Name = \"" . $log_format_name . "\"/>\n";
-	$text .= "  <Format = \"" . $format . "\"/>\n";
-	$text .= "</LogFormat>\n";
-	$text .= "<LogObject>\n";
-	$text .= "  <Format = \"" . $log_object_format . "\"/>\n";
-	$text .= "  <Filename = \"" . $log_object_filename . "\"/>\n";
-	$text .= "  <RollingEnabled = " . $log_object_rolling_enabled . "/>\n" unless defined();
-	$text .= "  <RollingIntervalSec = " . $log_object_rolling_interval_sec . "/>\n";
-	$text .= "  <RollingOffsetHr = " . $log_object_rolling_offset_hr . "/>\n";
-	$text .= "  <RollingSizeMb = " . $log_object_rolling_size_mb . "/>\n";
-	$text .= "</LogObject>\n";
+	my $max_log_objects = 10;
+	for ( my $i = 0; $i < $max_log_objects; $i = $i + 1 ) {
+		my $log_format_field = "LogFormat";
+		my $log_object_field = "LogObject";
+		if ( $i > 0 ) {
+			$log_format_field = $log_format_field . "$i";
+			$log_object_field = $log_object_field . "$i";
+		}
+
+		my $log_format_name = $data->{$log_format_field . ".Name"} || "";
+		if ( length($log_format_name) > 0 ) {
+			my $format = $data->{$log_format_field . ".Format"};
+			$format =~ s/"/\\\"/g;
+			$text .= "<LogFormat>\n";
+			$text .= "  <Name = \"" . $log_format_name . "\"/>\n";
+			$text .= "  <Format = \"" . $format . "\"/>\n";
+			$text .= "</LogFormat>\n";
+		}
+
+		my $log_object_filename = $data->{$log_object_field . ".Filename"} || "";
+		if ( length($log_object_filename) > 0 ) {
+			my $log_object_format               = $data->{$log_object_field . ".Format"}             || "";
+			my $log_object_rolling_enabled      = $data->{$log_object_field . ".RollingEnabled"}     || "";
+			my $log_object_rolling_interval_sec = $data->{$log_object_field . ".RollingIntervalSec"} || "";
+			my $log_object_rolling_offset_hr    = $data->{$log_object_field . ".RollingOffsetHr"}    || "";
+			my $log_object_rolling_size_mb      = $data->{$log_object_field . ".RollingSizeMb"}      || "";
+			my $log_object_header               = $data->{$log_object_field . ".Header"}             || "";
+
+			$text .= "<LogObject>\n";
+			$text .= "  <Format = \"" . $log_object_format . "\"/>\n";
+			$text .= "  <Filename = \"" . $log_object_filename . "\"/>\n";
+			$text .= "  <RollingEnabled = " . $log_object_rolling_enabled . "/>\n" unless defined();
+			$text .= "  <RollingIntervalSec = " . $log_object_rolling_interval_sec . "/>\n";
+			$text .= "  <RollingOffsetHr = " . $log_object_rolling_offset_hr . "/>\n";
+			$text .= "  <RollingSizeMb = " . $log_object_rolling_size_mb . "/>\n";
+			$text .= "  <Header = \"" . $log_object_header . "\"/>\n" if ( length($log_object_header) > 0 );
+			$text .= "</LogObject>\n";
+		}
+	}
 
 	return $text;
 }
@@ -1767,6 +1858,25 @@ sub url_sig_dot_config {
 	}
 }
 
+sub uri_signing_dot_config {
+	my $self        = shift;
+	my $filename    = shift;
+
+	my $bucket = "cdn_uri_sig_keys";
+
+	my ($key) = $filename =~ /uri_signing_(.*)\.config/;
+
+	my $response_container = $self->riak_get( $bucket, $key );
+	my $response = $response_container->{response};
+
+	if ( $response->is_success() ) {
+		return $response->content;
+	}
+	else {
+		return;
+	}
+}
+
 sub server_cache_dot_config {
 	my $self       = shift;
 	my $server_obj = shift;
@@ -1780,7 +1890,15 @@ sub server_cache_dot_config {
 		if ( $ds->{type} eq "HTTP_NO_CACHE" ) {
 			my $org_fqdn = $ds->{org};
 			$org_fqdn =~ s/https?:\/\///;
-			$text .= "dest_domain=" . $org_fqdn . " scheme=http action=never-cache\n";
+			$org_fqdn =~ m/(.*?):(\d+).*/;
+			my $org_port = $2;
+
+			if (defined($org_port)) {
+				$org_fqdn = $1;
+				$text .= "dest_domain=" . $org_fqdn . " port=" . $org_port . " scheme=http action=never-cache\n";
+			} else {
+				$text .= "dest_domain=" . $org_fqdn . " scheme=http action=never-cache\n";
+			}
 		}
 	}
 
@@ -1808,7 +1926,15 @@ sub profile_cache_dot_config {
 		if ( $ds->{type} eq "HTTP_NO_CACHE" ) {
 			my $org_fqdn = $ds->{org};
 			$org_fqdn =~ s/https?:\/\///;
-			$text .= "dest_domain=" . $org_fqdn . " scheme=http action=never-cache\n";
+			$org_fqdn =~ m/(.*?):(\d+).*/;
+			my $org_port = $2;
+			
+			if (defined($org_port)) {
+				$org_fqdn = $1;
+				$text .= "dest_domain=" . $org_fqdn . " port=" . $org_port . " scheme=http action=never-cache\n";
+			} else {
+				$text .= "dest_domain=" . $org_fqdn . " scheme=http action=never-cache\n";
+			}
 		}
 	}
 
@@ -1911,7 +2037,7 @@ sub ip_allow_data {
 
 
 	if ( $server_obj->type->name =~ m/^MID/ ) {
-		my @edge_locs = $self->db->resultset('Cachegroup')->search( { parent_cachegroup_id => $server_obj->cachegroup->id } )->get_column('id')->all();
+		my @edge_locs = $self->db->resultset('Cachegroup')->search( { -or => [ parent_cachegroup_id => $server_obj->cachegroup->id, secondary_parent_cachegroup_id => $server_obj->cachegroup->id ] } )->get_column('id')->all();
 		my %allow_locs;
 		foreach my $loc (@edge_locs) {
 			$allow_locs{$loc} = 1;
@@ -2088,6 +2214,7 @@ sub cachegroup_profiles {
 				port           => $self->profile_param_value( $pid, 'parent.config', 'port', undef ),
 				use_ip_address => $self->profile_param_value( $pid, 'parent.config', 'use_ip_address', 0 ),
 				rank           => $self->profile_param_value( $pid, 'parent.config', 'rank', 1 ),
+				not_a_parent   => $self->profile_param_value( $pid, 'parent.config', 'not_a_parent', 'false' ),
 			};
 		}
 	}
@@ -2125,6 +2252,9 @@ sub parent_data {
 	foreach my $prefix ( keys %deliveryservices ) {
 		foreach my $row ( @{ $deliveryservices{$prefix} } ) {
 			my $pid              = $row->profile->id;
+			if ( $profile_cache{$pid}->{not_a_parent} ne 'false' ) {
+				next;
+			}
 			my $ds_domain        = $profile_cache{$pid}->{domain_name};
 			my $weight           = $profile_cache{$pid}->{weight};
 			my $port             = $profile_cache{$pid}->{port};
@@ -2249,6 +2379,21 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 						push @null_parent_info, format_parent_info($parent);
 					}
 				}
+
+				# If we don't find any parents in the primary parent, then use the secondary parents list as primary and clear the secondary list.
+				# Once we do that, null parent will be used in the secondary_parent category due to the join of the two arrays.
+				# This prevents blank parent entries.
+				if ( scalar @parent_info == 0  ) {
+					# If no parents are found in the secondary parent either, then set the null parent list (parents in neither secondary or primary)
+					# as the secondary parent list and clear the null parent list.
+					if ( scalar @secondary_parent_info == 0  ) {
+						@secondary_parent_info = @null_parent_info;
+						@null_parent_info = ();
+					}
+					@parent_info = @secondary_parent_info;
+					@secondary_parent_info = ();
+				}
+
 				my %seen;
 				@parent_info = grep { !$seen{$_}++ } @parent_info;
 
@@ -2260,14 +2405,20 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 					my %seen;
 					@null_parent_info = grep { !$seen{$_}++ } @null_parent_info;
 				}
-
-				my $parents = 'parent="' . join( '', @parent_info ) . '' . join( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
-
+				#If the ats version supports it and the algorithm is consistent hash, put secondary and non-primary parents into secondary parent group.
+				#This will ensure that secondary and tertiary parents will be unused unless all hosts in the primary group are unavailable.
+				my $parents= '';
+				if ( $ats_major_version >= 6 && $mso_algorithm eq "consistent_hash" && ( scalar @secondary_parent_info > 0 || scalar @null_parent_info > 0 ) ) {
+					$parents = 'parent="' . join( '', @parent_info ) . '" secondary_parent="' . join( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
+				}
+				else {
+					$parents = 'parent="' . join( '', @parent_info ) . '' . join( '', @secondary_parent_info ) . '' . join( '', @null_parent_info ) . '"';
+				}
 				$text .= "$parents round_robin=$mso_algorithm qstring=$parent_qstring go_direct=false parent_is_proxy=false";
 
 				if ( $ats_major_version >= 6 && $parent_retry ne "" ) {
 					if ( $unavailable_server_retry_responses ne "" && $unavailable_server_retry_responses =~ /^"(?:\d{3},)+\d{3}"\s*$/) {
-						$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";	
+						$text .= " parent_retry=$parent_retry unavailable_server_retry_responses=$unavailable_server_retry_responses";
 					} else {
 						$text .= " parent_retry=$parent_retry";
 					}
@@ -2308,77 +2459,77 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 		}
 		my %seen;
 		@parent_info = grep { !$seen{$_}++ } @parent_info;
-		my $parents = 'parent="' . join( '', sort @parent_info ) . '"';
-		my $secparents = '';
 		if ( scalar @secondary_parent_info > 0 ) {
 			my %seen;
 			@secondary_parent_info = grep { !$seen{$_}++ } @secondary_parent_info;
-			$secparents = 'secondary_parent="' . join( '', sort @secondary_parent_info ) . '"';
 		}
+		#If the ats version supports it, put secondary parents into secondary parent group.
+		#This will ensure that secondary parents will be unused unless all hosts in the primary group are unavailable.
+		my $parents = '';
+		my $secparents = '';
+		if ( $ats_major_version >= 6 && @secondary_parent_info > 0 ) {
+			$parents = 'parent="' . join( '', sort @parent_info ) . '"';
+			$secparents = ' secondary_parent="' . join( '', sort @secondary_parent_info ) . '"';
+		}
+		else {
+			$parents = 'parent="' . join( '', sort @parent_info ) . join( '', sort @secondary_parent_info ) . '"';
+		}
+
 		my $round_robin = 'round_robin=consistent_hash';
 		my $go_direct   = 'go_direct=false';
 
 		if ( !defined($data) ) {
 			$data = $self->parent_ds_data($server_obj);
 		}
-		foreach my $ds ( sort @{ $data->{dslist} } ) {
-			my $text;
-			my $org = $ds->{org};
-			next if !defined $org || $org eq "";
-			next if $done{$org};
-			my $org_uri = URI->new($org);
-			if ( $ds->{type} eq "HTTP_NO_CACHE" || $ds->{type} eq "HTTP_LIVE" || $ds->{type} eq "DNS_LIVE" ) {
-				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
-			}
-			else {
-				# check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
-				# then edges will use the qstring handling value specified in the parameter for all profiles.
 
-				# If there is no defined parameter in the profile, then check the delivery service profile.
-				# If psel.qstring_handling exists in the DS profile, then we use that value for the specified DS only.
-				# This is used only if not overridden by a server profile qstring handling parameter.
-				my $ds_qsh = $qsh;
-				if (!defined($qsh)) {
-					$ds_qsh = $ds->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
+		if (defined($data->{dslist})) {
+			foreach my $ds ( sort @{ $data->{dslist} } ) {
+				my $text;
+				my $org = $ds->{org};
+				next if !defined $org || $org eq "";
+				next if $done{$org};
+				my $org_uri = URI->new($org);
+				if ( $ds->{type} eq "HTTP_NO_CACHE" || $ds->{type} eq "HTTP_LIVE" || $ds->{type} eq "DNS_LIVE" ) {
+					$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
 				}
-				my $parent_qstring = defined($ds_qsh) ? $ds_qsh : "ignore";
-
-				if ( $ds->{qstring_ignore} == 0 && !defined($ds_qsh) ) {
-					$parent_qstring = "consider";
+				else {
+					# check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
+					# then edges will use the qstring handling value specified in the parameter for all profiles.
+	
+					# If there is no defined parameter in the profile, then check the delivery service profile.
+					# If psel.qstring_handling exists in the DS profile, then we use that value for the specified DS only.
+					# This is used only if not overridden by a server profile qstring handling parameter.
+					my $ds_qsh = $qsh;
+					if (!defined($qsh)) {
+						$ds_qsh = $ds->{'param'}->{'parent.config'}->{'psel.qstring_handling'};
+					}
+					my $parent_qstring = defined($ds_qsh) ? $ds_qsh : "ignore";
+	
+					if ( $ds->{qstring_ignore} == 0 && !defined($ds_qsh) ) {
+						$parent_qstring = "consider";
+					}
+					$text
+						.= "dest_domain="
+						. $org_uri->host
+						. " port="
+						. $org_uri->port
+						. " $parents $secparents $round_robin $go_direct qstring=$parent_qstring\n";
 				}
-				$text
-					.= "dest_domain="
-					. $org_uri->host
-					. " port="
-					. $org_uri->port
-					. " $parents $secparents $round_robin $go_direct qstring=$parent_qstring\n";
+				push @text_array, $text;
+				$done{$org} = 1;
 			}
-			push @text_array, $text;
-			$done{$org} = 1;
 		}
 
 		my $default_dest_text;
 		my $parent_select_alg = $self->profile_param_value( $server_obj->profile->id, 'parent.config', 'algorithm', undef );
 		if ( defined($parent_select_alg) && $parent_select_alg eq 'consistent_hash' ) {
-			my @parent_info;
-			foreach my $parent ( @{ $parent_info->{"all_parents"} } ) {
-				push @parent_info, $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . "|" . $parent->{"weight"} . ";";
-			}
-			my %seen;
-			@parent_info = grep { !$seen{$_}++ } @parent_info;
-			$default_dest_text .= "dest_domain=.";
-			$default_dest_text .= " parent=\"" . join( '', sort @parent_info ) . "\"";
+			$default_dest_text .= "dest_domain=. ";
+			$default_dest_text .= $parents . $secparents;
 			$default_dest_text .= " round_robin=consistent_hash go_direct=false";
 		}
 		else {    # default to old situation.
-			$default_dest_text .= "dest_domain=.";
-			my @parent_info;
-			foreach my $parent ( @{ $parent_info->{"all_parents"} } ) {
-				push @parent_info, $parent->{"host_name"} . "." . $parent->{"domain_name"} . ":" . $parent->{"port"} . ";";
-			}
-			my %seen;
-			@parent_info = grep { !$seen{$_}++ } @parent_info;
-			$default_dest_text .= " parent=\"" . join( '', sort @parent_info ) . "\"";
+			$default_dest_text .= "dest_domain=. ";
+			$default_dest_text .= $parents;
 			$default_dest_text .= " round_robin=urlhash go_direct=false";
 		}
 
@@ -2425,10 +2576,16 @@ sub remap_dot_config {
 				$mid_remap{ $ds->{org} } .= " \@plugin=header_rewrite.so \@pparam=" . $ds->{mid_hdr_rw_file};
 			}
 			if ( $ds->{qstring_ignore} == 1 ) {
-				$mid_remap{ $ds->{org} } .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
+				$mid_remap{ $ds->{org} } .= UI::DeliveryService::get_qstring_ignore_remap(UI::DeliveryService::get_ats_major_version( $self, $server_obj ));
 			}
 			if ( defined( $ds->{cacheurl} ) && $ds->{cacheurl} ne "" ) {
 				$mid_remap{ $ds->{org} } .= " \@plugin=cacheurl.so \@pparam=" . $ds->{cacheurl_file};
+			}
+			if ( defined( $ds->{'param'}->{'cachekey.config'} ) ) {
+				$mid_remap{ $ds->{org} } .= " \@plugin=cachekey.so";
+				foreach my $ck_entry ( keys %{ $ds->{'param'}->{'cachekey.config'} } ) {
+					$mid_remap{ $ds->{org} } .= " \@pparam=--" . $ck_entry . "=" . $ds->{'param'}->{'cachekey.config'}->{$ck_entry};
+				}
 			}
 			if ( $ds->{range_request_handling} == RRH_CACHE_RANGE_REQUEST ) {
 				$mid_remap{ $ds->{org} } .= " \@plugin=cache_range_requests.so";
@@ -2485,7 +2642,7 @@ sub build_remap_line {
 	my $dscp      = $remap->{dscp};
 	my $hostname  = $server_obj->host_name;
 
-	$map_from =~ s/ccr/$hostname/;
+	$map_from =~ s/__http__/$hostname/;
 
 	if ( defined( $pdata->{'dscp_remap'} ) ) {
 		$text .= "map	" . $map_from . "     " . $map_to . " \@plugin=dscp_remap.so \@pparam=" . $dscp;
@@ -2496,8 +2653,13 @@ sub build_remap_line {
 	if ( defined( $remap->{edge_header_rewrite} ) ) {
 		$text .= " \@plugin=header_rewrite.so \@pparam=" . $remap->{hdr_rw_file};
 	}
-	if ( $remap->{signed} == 1 ) {
-		$text .= " \@plugin=url_sig.so \@pparam=url_sig_" . $remap->{ds_xml_id} . ".config";
+	if ( defined( $remap->{signing_algorithm})) {
+		if ( $remap->{signing_algorithm} eq "url_sig" ) {
+			$text .= " \@plugin=url_sig.so \@pparam=url_sig_" . $remap->{ds_xml_id} . ".config";
+		}
+		elsif ( $remap->{signing_algorithm} eq "uri_signing" ) {
+			$text .= " \@plugin=uri_signing.so \@pparam=uri_signing_" . $remap->{ds_xml_id} . ".config";
+		}
 	}
 	if ( $remap->{qstring_ignore} == 2 ) {
 		my $dqs_file = "drop_qstring.config";
@@ -2511,7 +2673,8 @@ sub build_remap_line {
 			);
 		}
 		else {
-			$text .= " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
+			#If we are on ats 6 and later we want to use the cachekey plugin, otherwise we have to use cacheurl
+			$text .= UI::DeliveryService::get_qstring_ignore_remap(UI::DeliveryService::get_ats_major_version($self, $server_obj ));
 		}
 	}
 	if ( defined( $remap->{cacheurl} ) && $remap->{cacheurl} ne "" ) {

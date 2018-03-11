@@ -41,6 +41,11 @@ TO_EXT_PRIVATE_LIB="/opt/traffic_ops_extensions/private/lib"; export TO_PRIVATE_
 PERL5LIB=$TO_EXT_PRIVATE_LIB:$TO_DIR/lib:$TO_DIR/local/lib/perl5:$PERL5LIB; export PERL5LIB
 
 PIDFILE="/var/run/traffic_ops.pid"
+
+# uncomment this for riak client debug logging to the defined info log location.
+# logs to stdout if the info log location is not defined in the cdn.conf
+#RIAK_GO_CLIENT_DEBUG="true"; export RIAK_GO_CLIENT_DEBUG
+
 # source function library
 . /etc/rc.d/init.d/functions
 
@@ -61,7 +66,8 @@ start ()
 {
 	stop
 	echo -e "Starting Traffic Ops\n"
-	cd $TO_DIR && $TO_DIR/bin/traffic_ops_golang -cfg $TO_DIR/conf/cdn.conf -dbcfg $TO_DIR/conf/production/database.conf &
+	ulimit -n 200000 || echo "Setting ulimit max files failed for traffic_ops_golang"
+	cd $TO_DIR && $TO_DIR/bin/traffic_ops_golang -cfg $TO_DIR/conf/cdn.conf -dbcfg $TO_DIR/conf/production/database.conf -riakcfg $TO_DIR/conf/production/riak.conf &
 	cd $TO_DIR && $TO_DIR/local/bin/hypnotoad script/cdn
 }
 

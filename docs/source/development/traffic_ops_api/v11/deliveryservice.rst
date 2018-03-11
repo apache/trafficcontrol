@@ -157,6 +157,10 @@ Delivery Service
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``signingAlgorithm``     | string | - null: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                        |
+  |                          |        | - "url_sig": URL Sign token based auth is enabled for this deliveryservice.                                                          |
+  |                          |        | - "uri_signing": URI Signing token based auth is enabled for this deliveryservice.                                                   |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``sslKeyVersion``        | string |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``trRequestHeaders``     | string |                                                                                                                                      |
@@ -232,6 +236,7 @@ Delivery Service
             "regionalGeoBlocking": false,
             "remapText": null,
             "signed": false,
+            "signingAlgorithm": null,
             "sslKeyVersion": "0",
             "trRequestHeaders": null,
             "trResponseHeaders": "Access-Control-Allow-Origin: *",
@@ -384,6 +389,10 @@ Delivery Service
   | ``signed``               |  bool  | - false: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                       |
   |                          |        | - true: token based auth is enabled for this deliveryservice.                                                                        |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``signingAlgorithm``     | string | - null: token based auth (see :ref:token-based-auth) is not enabled for this deliveryservice.                                        |
+  |                          |        | - "url_sig": URL Sign token based auth is enabled for this deliveryservice.                                                          |
+  |                          |        | - "uri_signing": URI Signing token based auth is enabled for this deliveryservice.                                                   |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``sslKeyVersion``        | string |                                                                                                                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``trRequestHeaders``     | string |                                                                                                                                      |
@@ -459,6 +468,7 @@ Delivery Service
             "regionalGeoBlocking": false,
             "remapText": null,
             "signed": false,
+            "signingAlgorithm": null,
             "sslKeyVersion": "0",
             "trRequestHeaders": null,
             "trResponseHeaders": "Access-Control-Allow-Origin: *",
@@ -841,7 +851,7 @@ SSL Keys
 
   Authentication Required: Yes
 
-  Role(s) Required: Admin
+  Role(s) Required: None
 
   **Request Route Parameters**
 
@@ -979,7 +989,7 @@ SSL Keys
 
   Authentication Required: Yes
 
-  Role Required: Admin
+  Role Required: Operations
 
   **Request Route Parameters**
 
@@ -1019,7 +1029,7 @@ SSL Keys
 
   Authentication Required: Yes
 
-  Role(s) Required: Admin
+  Role(s) Required: Operations
 
   **Request Properties**
 
@@ -1087,7 +1097,7 @@ SSL Keys
 
   Authentication Required: Yes
 
-  Role(s) Required:  Admin
+  Role(s) Required: Operations
 
   **Request Properties**
 

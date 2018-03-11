@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
-            <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{::deliveryService.displayName}}</a></li>
+            <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{::deliveryService.xmlId}}</a></li>
             <li class="active">Static DNS Entries</li>
         </ol>
         <div class="pull-right">
@@ -34,22 +34,22 @@ under the License.
         <table id="staticDnsEntriesTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>host</th>
-                <th>address</th>
-                <th>type</th>
-                <th>ttl</th>
-                <th>deliveryservice</th>
-                <th>cachegroup</th>
+                <th>Host</th>
+                <th>Address</th>
+                <th>Type</th>
+                <th>TTL</th>
+                <th>Delivery Service</th>
+                <th>Cache Group</th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="staticDnsEntry in ::staticDnsEntries">
-                <td>{{::staticDnsEntry.host}}</td>
-                <td>{{::staticDnsEntry.address}}</td>
-                <td>{{::staticDnsEntry.type}}</td>
-                <td>{{::staticDnsEntry.ttl}}</td>
-                <td>{{::staticDnsEntry.deliveryservice}}</td>
-                <td>{{::staticDnsEntry.cachegroup}}</td>
+            <tr ng-repeat="s in ::staticDnsEntries">
+                <td data-search="^{{::s.host}}$">{{::s.host}}</td>
+                <td data-search="^{{::s.address}}$">{{::s.address}}</td>
+                <td data-search="^{{::s.type}}$">{{::s.type}}</td>
+                <td data-search="^{{::s.ttl}}$">{{::s.ttl}}</td>
+                <td data-search="^{{::s.deliveryservice}}$">{{::s.deliveryservice}}</td>
+                <td data-search="^{{::s.cachegroup}}$">{{::s.cachegroup}}</td>
             </tr>
             </tbody>
         </table>

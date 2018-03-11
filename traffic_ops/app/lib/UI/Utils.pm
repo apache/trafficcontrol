@@ -36,12 +36,13 @@ our @ISA = qw(Exporter);
 
 use constant READ       => 10;
 use constant FEDERATION => 15;
+use constant PORTAL		=> 15;
 use constant OPER       => 20;
 use constant ADMIN      => 30;
 
 our %EXPORT_TAGS = (
 	'all' => [
-		qw(trim_whitespace is_admin is_oper is_ldap is_privileged log is_ipaddress is_ip6address is_netmask in_same_net is_hostname admin_status_id type_id type_ids
+		qw(trim_whitespace is_admin is_oper is_federation is_portal is_ldap is_privileged log is_ipaddress is_ip6address is_netmask in_same_net is_hostname admin_status_id type_id type_ids
 			profile_id profile_ids tm_version tm_url name_version_string is_regexp stash_role navbarpage rascal_hosts_by_cdn is_steering defined_or_default)
 	]
 );
@@ -234,7 +235,7 @@ sub is_oper() {
 	return &has_priv( $self, OPER );
 }
 
-# returns true if the user in $self has operations privs
+# returns true if the user in $self has federation privs
 sub is_federation() {
 	my $self = shift;
 
@@ -251,6 +252,12 @@ sub is_admin() {
 	my $self = shift;
 
 	return &has_priv( $self, ADMIN );
+}
+
+sub is_portal() {
+	my $self = shift;
+
+	return &has_priv( $self, PORTAL );
 }
 
 # returns true if the user is logged in via LDAP.

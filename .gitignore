@@ -32,3 +32,5 @@ traffic_router/*/*.log
 traffic_router/*.log
 .dbInfo
 /dist
+*.pyc
+bin/docker-compose

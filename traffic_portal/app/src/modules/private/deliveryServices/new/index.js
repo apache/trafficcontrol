@@ -36,31 +36,30 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.new', []
                                 template = 'common/modules/form/deliveryService/form.deliveryService.HTTP.tpl.html'
                             } else if (type.indexOf('STEERING') != -1) {
                                 template = 'common/modules/form/deliveryService/form.deliveryService.Steering.tpl.html'
-                            } else {
-
                             }
 
                             return template;
                         },
                         controller: 'FormNewDeliveryServiceController',
                         resolve: {
-                            deliveryService: function() {
-                                return {
-                                    active: false,
-                                    dscp: 0,
-                                    geoLimit: 0,
-                                    geoProvider: 0,
-                                    initialDispersion: 1,
-                                    ipv6RoutingEnabled: false,
-                                    logsEnabled: false,
-                                    multiSiteOrigin: false,
-                                    protocol: 0,
-                                    qstringIgnore: 0,
-                                    rangeRequestHandling: 0,
-                                    regionalGeoBlocking: false,
-                                    signed: false,
-                                    routingName: 'cdn'
-                                };
+                            deliveryService: function($stateParams, propertiesModel) {
+                                var type = $stateParams.type,
+                                    anyMapDefaults = angular.copy(propertiesModel.properties.defaults.deliveryservices.ANY_MAP),
+                                    dnsDefaults = angular.copy(propertiesModel.properties.defaults.deliveryservices.DNS),
+                                    httpDefaults = angular.copy(propertiesModel.properties.defaults.deliveryservices.HTTP),
+                                    steeringDefaults = angular.copy(propertiesModel.properties.defaults.deliveryservices.STEERING);
+
+                                if (type.indexOf('ANY_MAP') != -1) {
+                                    return anyMapDefaults;
+                                } else if (type.indexOf('DNS') != -1) {
+                                    return dnsDefaults;
+                                } else if (type.indexOf('HTTP') != -1) {
+                                    return httpDefaults;
+                                } else if (type.indexOf('STEERING') != -1) {
+                                    return steeringDefaults;
+                                } else {
+                                    return {};
+                                }
                             },
                             type: function($stateParams) {
                                 return $stateParams.type;

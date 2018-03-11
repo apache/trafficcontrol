@@ -110,6 +110,8 @@ Login to one of the riak servers in the cluster as root (any will do)
 
 		``riak-admin security grant riak_kv.get,riak_kv.put,riak_kv.delete on default url_sig_keys to keysusers``
 
+		``riak-admin security grant riak_kv.get,riak_kv.put,riak_kv.delete on default cdn_uri_sig_keys  to keysusers``
+
 .. seealso:: For more information on security in Riak, see the `Riak Security documentation <http://docs.basho.com/riak/2.0.4/ops/advanced/security/>`_.
 .. seealso:: For more information on authentication and authorization in Riak, see the `Riak Authentication and Authorization documentation <http://docs.basho.com/riak/2.0.4/ops/running/authz/>`_.
 
@@ -120,12 +122,7 @@ Traffic Ops Configuration
 There are a couple configurations that are necessary in Traffic Ops.
 
 1. Database Updates
-	* A new profile for Riak needs to be added to the profile table
-	* A new type of Riak needs to be added to the type table
-	* The servers in the Riak cluster need to be added to the server table
-
-	 .. Note:: profile and type data should be pre-loaded by seeds sql script.
-	 ..
+	* The servers in the Riak cluster need to be added to the server table (TCP Port = 8088, type = RIAK, profile = RIAK_ALL)
 
 2. Configuration updates
 	* /opt/traffic_ops/app/conf/<environment>/riak.conf needs to be updated to reflect the correct username and password for accessing riak.

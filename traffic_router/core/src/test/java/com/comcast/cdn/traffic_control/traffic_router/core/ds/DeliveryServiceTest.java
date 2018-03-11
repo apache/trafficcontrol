@@ -15,11 +15,9 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.ds;
 
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
-
-import java.util.HashSet;
-import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -29,26 +27,18 @@ public class DeliveryServiceTest {
 
     @Test
     public void itHandlesLackOfRequestHeaderNamesInJSON() throws Exception {
-        JSONObject jsonConfiguration = new JSONObject();
-        jsonConfiguration.put("coverageZoneOnly", false);
-        jsonConfiguration.put("routingName", "edge");
+        final ObjectMapper mapper = new ObjectMapper();
+        final String jsonStr = "{\"routingName\":\"edge\",\"coverageZoneOnly\":false}";
+        final JsonNode jsonConfiguration = mapper.readTree(jsonStr);
         DeliveryService deliveryService = new DeliveryService("a-delivery-service", jsonConfiguration);
         assertThat(deliveryService.getRequestHeaders().size(), equalTo(0));
     }
 
     @Test
     public void itConfiguresRequestHeadersFromJSON() throws Exception {
-        JSONObject jsonConfiguration = new JSONObject();
-        jsonConfiguration.put("coverageZoneOnly", false);
-        jsonConfiguration.put("routingName", "edge");
-
-        Set<String> requestHeaderNames = new HashSet<String>();
-        requestHeaderNames.add("Cache-Control");
-        requestHeaderNames.add("Cookie");
-        requestHeaderNames.add("Content-Type");
-        requestHeaderNames.add("If-Modified-Since");
-
-        jsonConfiguration.put("requestHeaders", requestHeaderNames);
+        final ObjectMapper mapper = new ObjectMapper();
+        final String jsonStr = "{\"routingName\":\"edge\",\"requestHeaders\":[\"Cookie\",\"Cache-Control\",\"If-Modified-Since\",\"Content-Type\"],\"coverageZoneOnly\":false}";
+        final JsonNode jsonConfiguration = mapper.readTree(jsonStr);
 
         DeliveryService deliveryService = new DeliveryService("a-delivery-service", jsonConfiguration);
 

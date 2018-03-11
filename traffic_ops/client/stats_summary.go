@@ -16,33 +16,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
-// StatsSummaryResponse ...
-type StatsSummaryResponse struct {
-	Response []StatsSummary `json:"response"`
-}
-
-// StatsSummary ...
-type StatsSummary struct {
-	CDNName         string `json:"cdnName"`
-	DeliveryService string `json:"deliveryServiceName"`
-	StatName        string `json:"statName"`
-	StatValue       string `json:"statValue"`
-	SummaryTime     string `json:"summaryTime"`
-	StatDate        string `json:"statDate"`
-}
-
-// LastUpdated ...
-type LastUpdated struct {
-	Version  string `json:"version"`
-	Response struct {
-		SummaryTime string `json:"summaryTime"`
-	} `json:"response"`
-}
-
 // SummaryStats ...
-func (to *Session) SummaryStats(cdn string, deliveryService string, statName string) ([]StatsSummary, error) {
+// Deprecated: use GetSummaryStats
+func (to *Session) SummaryStats(cdn string, deliveryService string, statName string) ([]tc.StatsSummary, error) {
+	ss, _, err := to.GetSummaryStats(cdn, deliveryService, statName)
+	return ss, err
+}
+
+func (to *Session) GetSummaryStats(cdn string, deliveryService string, statName string) ([]tc.StatsSummary, ReqInf, error) {
 	var queryParams []string
 	if len(cdn) > 0 {
 		queryParams = append(queryParams, fmt.Sprintf("cdnName=%s", cdn))
@@ -66,61 +51,75 @@ func (to *Session) SummaryStats(cdn string, deliveryService string, statName str
 		queryURL += queryParamString
 	}
 
-	resp, err := to.request("GET", queryURL, nil)
+	resp, remoteAddr, err := to.request("GET", queryURL, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data StatsSummaryResponse
+	var data tc.StatsSummaryResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, err
+		return nil, reqInf, err
 	}
 
-	return data.Response, nil
+	return data.Response, reqInf, nil
 }
 
 // SummaryStatsLastUpdated ...
+// Deprecated: use GetSummaryStatsLastUpdated
 func (to *Session) SummaryStatsLastUpdated(statName string) (string, error) {
+	s, _, err := to.GetSummaryStatsLastUpdated(statName)
+	return s, err
+}
+
+func (to *Session) GetSummaryStatsLastUpdated(statName string) (string, ReqInf, error) {
 	queryURL := "/api/1.2/stats_summary.json?lastSummaryDate=true"
 	if len(statName) > 0 {
 		queryURL += fmt.Sprintf("?statName=%s", statName)
 	}
 
-	resp, err := to.request("GET", queryURL, nil)
+	resp, remoteAddr, err := to.request("GET", queryURL, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return "", err
+		return "", reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data LastUpdated
+	var data tc.LastUpdated
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return "", err
+		return "", reqInf, err
 	}
 
 	if len(data.Response.SummaryTime) > 0 {
-		return data.Response.SummaryTime, nil
+		return data.Response.SummaryTime, reqInf, nil
 	}
 	t := "1970-01-01 00:00:00"
-	return t, nil
+	return t, reqInf, nil
 }
 
 // AddSummaryStats ...
-func (to *Session) AddSummaryStats(statsSummary StatsSummary) error {
+// Deprecated: use DoAddSummaryStats
+func (to *Session) AddSummaryStats(statsSummary tc.StatsSummary) error {
+	_, err := to.DoAddSummaryStats(statsSummary)
+	return err
+}
+func (to *Session) DoAddSummaryStats(statsSummary tc.StatsSummary) (ReqInf, error) {
 	reqBody, err := json.Marshal(statsSummary)
 	if err != nil {
-		return err
+		return ReqInf{}, err
 	}
 
 	url := "/api/1.2/stats_summary/create"
-	resp, err := to.request("POST", url, reqBody)
+	resp, remoteAddr, err := to.request("POST", url, reqBody)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return err
+		return reqInf, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		err := fmt.Errorf("Response code = %s and Status = %s", strconv.Itoa(resp.StatusCode), resp.Status)
-		return err
+		return reqInf, err
 	}
-	return nil
+	return reqInf, nil
 }

@@ -42,6 +42,7 @@ under the License.
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                     <li role="menuitem"><a ng-click="manageDNSSEC()">Manage DNSSEC Keys</a></li>
+                    <li role="menuitem"><a ng-click="manageFederations()">Manage Federations</a></li>
                     <li class="divider"></li>
                     <li role="menuitem"><a ng-click="viewDeliveryServices()">View Delivery Services</a></li>
                     <li role="menuitem"><a ng-click="viewProfiles()">View Profiles</a></li>
@@ -57,7 +58,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(cdnForm.name), 'has-feedback': hasError(cdnForm.name)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="name" name="name" type="text" class="form-control" ng-model="cdn.name" ng-required="true" ng-maxlength="45" autofocus>
+                    <input name="name" type="text" class="form-control" ng-model="cdn.name" ng-maxlength="45" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(cdnForm.name, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(cdnForm.name, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(cdnForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
@@ -66,7 +67,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(cdnForm.domainName), 'has-feedback': hasError(cdnForm.domainName)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Domain *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="domainName" name="domainName" type="text" class="form-control" ng-model="cdn.domainName" ng-required="true" ng-maxlength="255" autofocus>
+                    <input name="domainName" type="text" class="form-control" ng-model="cdn.domainName" ng-maxlength="255" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(cdnForm.domainName, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(cdnForm.domainName, 'maxlength')">Too Long</small>
                     <span ng-show="hasError(cdnForm.domainName)" class="form-control-feedback"><i class="fa fa-times"></i></span>
@@ -75,7 +76,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(cdnForm.dnssecEnabled), 'has-feedback': hasError(cdnForm.dnssecEnabled)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">DNSSEC Enabled *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <select id="dnssecEnabled" name="dnssecEnabled" class="form-control" ng-model="cdn.dnssecEnabled" ng-options="x.value as x.label for x in falseTrue" required></select>
+                    <select name="dnssecEnabled" class="form-control" ng-model="cdn.dnssecEnabled" ng-options="x.value as x.label for x in falseTrue" required></select>
                     <small class="input-error" ng-show="hasPropertyError(cdnForm.dnssecEnabled, 'required')">Required</small>
                 </div>
             </div>

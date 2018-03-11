@@ -150,6 +150,10 @@ public class MaxmindGeolocationService implements GeolocationService {
 			geolocation.setCountryName(response.getCountry().getName());
 		}
 
+		if (geolocation.getCity() == null && geolocation.getPostalCode() == null && response.getSubdivisions().isEmpty()) {
+			geolocation.setDefaultLocation(true);
+		}
+
 		return geolocation;
 	}
 }

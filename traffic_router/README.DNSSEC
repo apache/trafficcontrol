@@ -1,5 +1,0 @@
-This release includes initial support for DNSSEC using David Blacka's jdnssec-tools package, currently version 0.12. Download the binary distribution and install the jar into your local Maven repository.
-
-	http://www.verisignlabs.com/jdnssec-tools/
-
-	mvn install:install-file -Dfile=jdnssec-tools.jar -DgroupId=jdnssec -DartifactId=jdnssec-tools -Dversion=0.12 -Dpackaging=jar

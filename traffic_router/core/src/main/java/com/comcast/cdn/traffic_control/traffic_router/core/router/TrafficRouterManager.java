@@ -22,9 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
@@ -39,7 +38,7 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 
 	public static final int DEFAULT_API_PORT = 3333;
 
-	private JSONObject state;
+	private JsonNode state;
 	private TrafficRouter trafficRouter;
 	private GeolocationService geolocationService;
 	private GeolocationService geolocationService6;
@@ -68,7 +67,7 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 		this.nameServer = nameServer;
 	}
 
-	public boolean setState(final JSONObject jsonObject) throws UnknownHostException {
+	public boolean setState(final JsonNode jsonObject) throws UnknownHostException {
 		trackEvent("lastCacheStateCheck");
 
 		if (jsonObject == null) {
@@ -92,7 +91,7 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 		return trafficRouter;
 	}
 
-	public void setCacheRegister(final CacheRegister cacheRegister) throws IOException, JSONException {
+	public void setCacheRegister(final CacheRegister cacheRegister) throws IOException {
 		trackEvent("lastConfigCheck");
 
 		if (cacheRegister == null) {

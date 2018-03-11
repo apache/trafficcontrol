@@ -211,7 +211,8 @@ sub read {
 				"display_name"                => $row->display_name,
 				"dscp"                        => $row->dscp,
 				"routing_name"                => $row->routing_name,
-				"signed"                      => \$row->signed,
+				"signed"                      => ( $row->signing_algorithm eq "url_sig" ? \1 : \0 ),
+				"signing_algorithm"           => $row->signing_algorithm,
 				"qstring_ignore"              => $row->qstring_ignore,
 				"geo_limit"                   => $row->geo_limit,
 				"geo_limit_countries"         => $row->geo_limit_countries,
@@ -254,6 +255,7 @@ sub read {
 				"initial_dispersion"          => $row->initial_dispersion,
 				"regional_geo_blocking"       => $row->regional_geo_blocking,
 				"logs_enabled"                => \$row->logs_enabled,
+				"deep_caching_type"           => $row->deep_caching_type,
 			}
 		);
 	}
@@ -725,13 +727,13 @@ sub cacheurl {
 }
 
 sub url_sig {
-	my $self       = shift;
-	my $ds_id      = shift;
-	my $ds_profile = shift;
-	my $ds_name    = shift;
-	my $signed    = shift;
+	my $self              = shift;
+	my $ds_id             = shift;
+	my $ds_profile        = shift;
+	my $ds_name           = shift;
+	my $signing_algorithm = shift;
 
-	if ( defined($signed) && $signed == 1 ) {
+	if ( $signing_algorithm eq "url_sig" ) {
 		my $fname = "url_sig_" . $ds_name . ".config";
 		my $ats_cfg_loc =
 			$self->db->resultset('Parameter')->search( { -and => [ name => 'location', config_file => 'remap.config' ] } )->get_column('value')->single();
@@ -791,20 +793,14 @@ sub update {
 		my $referer = $self->req->headers->header('referer');
 		return $self->redirect_to($referer);
 	}
-#	foreach my $f ($self->param) {
-#		print $f . " => " . $self->param($f) . "\n";
-#	}
 
 	if ( $self->check_deliveryservice_input( $self->param('ds.cdn_id'), $id ) ) {
-
-		#print "global_max_mbps = " . $self->param('ds.global_max_mbps') . "\n";
 		# if error check passes
 		my %hash = (
 			xml_id                      => $self->paramAsScalar('ds.xml_id'),
 			display_name                => $self->paramAsScalar('ds.display_name'),
 			dscp                        => $self->paramAsScalar('ds.dscp'),
 			routing_name                => sanitize_routing_name( $self->paramAsScalar('ds.routing_name') ),
-			signed                      => $self->paramAsScalar('ds.signed'),
 			qstring_ignore              => $self->paramAsScalar('ds.qstring_ignore'),
 			geo_limit                   => $self->paramAsScalar('ds.geo_limit'),
 			geo_limit_countries         => sanitize_geo_limit_countries( $self->paramAsScalar('ds.geo_limit_countries') ),
@@ -840,6 +836,7 @@ sub update {
 			remap_text         => $self->paramAsScalar( 'ds.remap_text',         undef ),
 			initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 			logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
+			deep_caching_type  => $self->paramAsScalar('ds.deep_caching_type'),
 		);
 
 		my $typename = $self->typename();
@@ -956,7 +953,7 @@ sub update {
 
 		$self->regex_remap( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.regex_remap') );
 		$self->cacheurl( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.cacheurl') );
-		$self->url_sig( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $self->param('ds.signed') );
+		$self->url_sig( $self->param('id'), $self->param('ds.profile'), $self->param('ds.xml_id'), $hash{signing_algorithm} );
 
 		$self->flash( message => "Delivery service updated!" );
 		return $self->redirect_to( '/ds/' . $id );
@@ -1033,13 +1030,11 @@ sub create {
 	if ( $self->check_deliveryservice_input($cdn_id) ) {
 		my $tenant_utils = Utils::Tenant->new($self);
 		my $tenant_id = $tenant_utils->current_user_tenant();
-		my $insert = $self->db->resultset('Deliveryservice')->create(
-			{
+		my $new_ds = {
 				xml_id                      => $self->paramAsScalar('ds.xml_id'),
 				display_name                => $self->paramAsScalar('ds.display_name'),
 				dscp                        => $self->paramAsScalar( 'ds.dscp', 0 ),
 				routing_name                => sanitize_routing_name( $self->paramAsScalar('ds.routing_name') ),
-				signed                      => $self->paramAsScalar('ds.signed'),
 				qstring_ignore              => $self->paramAsScalar('ds.qstring_ignore'),
 				geo_limit                   => $self->paramAsScalar('ds.geo_limit'),
 				geo_limit_countries         => sanitize_geo_limit_countries( $self->paramAsScalar('ds.geo_limit_countries') ),
@@ -1073,6 +1068,8 @@ sub create {
 				range_request_handling      => $self->paramAsScalar('ds.range_request_handling'),
 				edge_header_rewrite         => $self->paramAsScalar('ds.edge_header_rewrite'),
 				mid_header_rewrite          => $self->paramAsScalar( 'ds.mid_header_rewrite', undef ),
+				tr_response_headers         => $self->paramAsScalar('ds.tr_response_headers'),
+				tr_request_headers          => $self->paramAsScalar('ds.tr_request_headers'),
 				regex_remap        => $self->paramAsScalar( 'ds.regex_remap',        undef ),
 				origin_shield      => $self->paramAsScalar( 'ds.origin_shield',      undef ),
 				cacheurl           => $self->paramAsScalar( 'ds.cacheurl',           undef ),
@@ -1080,8 +1077,10 @@ sub create {
 				initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 				logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
 				tenant_id => $tenant_id,
-			}
-		);
+				deep_caching_type  => $self->paramAsScalar('ds.deep_caching_type'),
+		};
+
+		my $insert = $self->db->resultset('Deliveryservice')->create($new_ds);
 		$insert->insert();
 		$new_id = $insert->id;
 		&log( $self, "Create deliveryservice with xml_id:" . $self->param('ds.xml_id'), "UICHANGE" );
@@ -1325,6 +1324,37 @@ sub add {
 	my @params = $self->param;
 	foreach my $field (@params) {
 		$self->stash( $field => $self->param($field) );
+	}
+}
+
+
+sub get_ats_major_version {
+	my $ui_config 	 = shift;
+	my $server   = shift;
+
+	my $ats_ver = $ui_config->db->resultset('ProfileParameter')
+		->search( { 'parameter.name' => 'trafficserver', 'parameter.config_file' => 'package', 'profile.id' => $server->profile->id },
+		{ prefetch => [ 'profile', 'parameter' ] } )->get_column('parameter.value')->single();
+
+	if (!defined $ats_ver) {
+	        $ats_ver = "5";
+            $ui_config->app->log->error("Parameter package.trafficserver missing for profile . Assuming version $ats_ver");
+        }
+
+	my @ats_fields = split /\./, $ats_ver, 2;
+	my $ats_major_version = $ats_fields[0];
+
+	return $ats_major_version;
+}
+
+sub get_qstring_ignore_remap {
+	my $ats_major_version = shift;
+
+	if ($ats_major_version >= 6) {
+		return " \@plugin=cachekey.so \@pparam=--separator= \@pparam=--remove-all-params=true \@pparam=--remove-path=true \@pparam=--capture-prefix-uri=/http:\\/\\/([^?]*)/http:\\/\\/\$1/";
+	}
+	else {
+		return " \@plugin=cacheurl.so \@pparam=cacheurl_qstring.config";
 	}
 }
 

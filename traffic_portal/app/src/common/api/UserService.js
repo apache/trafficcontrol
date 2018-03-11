@@ -62,7 +62,7 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
         return Restangular.service('users').post(user)
             .then(
                 function(result) {
-                    messageModel.setMessages(result.data.alerts, true);
+                    messageModel.setMessages([ { level: 'success', text: 'User created' } ], true);
                     locationUtils.navigateToPath('/users');
                 },
                 function(fault) {
@@ -96,18 +96,6 @@ var UserService = function(Restangular, $http, $location, $q, authService, httpS
                 },
                 function() {
                     messageModel.setMessages([ { level: 'error', text: 'Current user updated failed' } ], false);
-                }
-            );
-    };
-
-    this.deleteUser = function(id) {
-        return Restangular.one("users", id).remove()
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'User deleted' } ], true);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
                 }
             );
     };

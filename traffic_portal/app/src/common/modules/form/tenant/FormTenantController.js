@@ -30,8 +30,8 @@ var FormTenantController = function(tenant, $scope, $location, formUtils, tenant
     $scope.tenant = tenant;
 
     $scope.falseTrue = [
-        { value: false, label: 'false' },
-        { value: true, label: 'true' }
+        { value: true, label: 'true' },
+        { value: false, label: 'false' }
     ];
 
     $scope.tenantLabel = function(tenant) {

@@ -20,24 +20,27 @@ package main
  */
 
 import (
-	"net/url"
+	"encoding/json"
+	"fmt"
 	"testing"
+	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tostructs"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestHWInfo() []tostructs.HWInfo {
-	hwinfo := []tostructs.HWInfo{}
-	testHWInfo := tostructs.HWInfo{
-		ID:          1,
-		ServerID:    1,
-		Description: "Description",
-		Val:         "Val",
-		LastUpdated: "LastUpdated",
+func getTestHWInfo() []tc.HWInfo {
+	hwinfo := []tc.HWInfo{}
+	testHWInfo := tc.HWInfo{
+		ID:             1,
+		ServerID:       1,
+		ServerHostName: "testserver1",
+		Description:    "Description",
+		Val:            "Val",
+		LastUpdated:    tc.TimeNoMod{Time: time.Now()},
 	}
 	hwinfo = append(hwinfo, testHWInfo)
 
@@ -45,6 +48,7 @@ func getTestHWInfo() []tostructs.HWInfo {
 	testHWInfo2.Description = "hwinfo2"
 	testHWInfo2.Val = "val2"
 	testHWInfo2.ServerID = 2
+	testHWInfo2.ServerHostName = "testserver2"
 	hwinfo = append(hwinfo, testHWInfo2)
 
 	return hwinfo
@@ -52,15 +56,16 @@ func getTestHWInfo() []tostructs.HWInfo {
 
 func TestGetHWInfo(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
-	defer mockDB.Close()
-	db := sqlx.NewDb(mockDB, "sqlmock")
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
 	testHWInfo := getTestHWInfo()
-	cols := test.ColsFromStructByTag("db", tostructs.HWInfo{})
+	cols := test.ColsFromStructByTag("db", tc.HWInfo{})
 	rows := sqlmock.NewRows(cols)
 
 	//TODO: drichardson - build helper to add these Rows from the struct values
@@ -70,17 +75,17 @@ func TestGetHWInfo(t *testing.T) {
 			ts.Description,
 			ts.ID,
 			ts.LastUpdated,
+			ts.ServerHostName,
 			ts.ServerID,
 			ts.Val,
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := url.Values{}
-	v.Set("ServerId", "1")
+	v := map[string]string{"ServerId": "1"}
 
-	hwinfos, err := getHWInfo(v, db, PrivLevelAdmin)
-	if err != nil {
-		t.Errorf("getHWInfo expected: nil error, actual: %v", err)
+	hwinfos, errs, errType := getHWInfo(v, db)
+	if len(errs) > 0 {
+		t.Errorf("getHWInfo expected: no errors, actual: %v with error type: %s", errs, errType.String())
 	}
 
 	if len(hwinfos) != 2 {
@@ -88,7 +93,18 @@ func TestGetHWInfo(t *testing.T) {
 	}
 }
 
-type SortableHWInfo []tostructs.HWInfo
+func TestJSON(t *testing.T) {
+	testHWInfo := getTestHWInfo()
+	txt, err := json.Marshal(testHWInfo)
+	if *debugLogging {
+		fmt.Printf("%v, %s\n", err, txt)
+	}
+	if err != nil {
+		t.Errorf("Json.Marshal failed: %s\n", err)
+	}
+}
+
+type SortableHWInfo []tc.HWInfo
 
 func (s SortableHWInfo) Len() int {
 	return len(s)

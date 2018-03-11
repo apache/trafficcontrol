@@ -542,7 +542,7 @@
       "deliveryServices": {
         "http-only-test": ["edge-cache-902.http-only-test.thecdn.example.com"]
       }
-    },
+    }
   },
   "contentRouters": {
     "testing-tr-02": {

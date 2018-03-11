@@ -51,7 +51,7 @@ var ChangeLogModel = function($rootScope, $interval, changeLogService, userModel
 		createChangeLogInterval();
 	});
 
-	$rootScope.$on('authService::logout', function() {
+	$rootScope.$on('trafficPortal::exit', function() {
 		killChangeLogInterval();
 	});
 

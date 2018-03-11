@@ -22,9 +22,11 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/sha512"
-	"database/sql"
 	"encoding/base64"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -32,23 +34,97 @@ import (
 	"unicode"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/tocookie"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
+	"github.com/jmoiron/sqlx"
 )
 
+// ServerName - the server identifier
 const ServerName = "traffic_ops_golang" + "/" + Version
 
-type AuthRegexHandlerFunc func(w http.ResponseWriter, r *http.Request, params PathParams, user string, privLevel int)
+// AuthBase ...
+type AuthBase struct {
+	secret                 string
+	getCurrentUserInfoStmt *sqlx.Stmt
+	override               Middleware
+}
 
-func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
+// GetWrapper ...
+func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
+	if a.override != nil {
+		return a.override
+	}
+	return func(handlerFunc http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			// TODO remove, and make username available to wrapLogTime
+			start := time.Now()
+			iw := &Interceptor{w: w}
+			w = iw
+			username := "-"
+			defer func() {
+				log.EventfRaw(`%s - %s [%s] "%v %v HTTP/1.1" %v %v %v "%v"`, r.RemoteAddr, username, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, iw.code, iw.byteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent())
+			}()
+
+			handleErr := func(status int, err error) {
+				errBytes, jsonErr := json.Marshal(tc.CreateErrorAlerts(err))
+				if jsonErr != nil {
+					log.Errorf("failed to marshal error: %s\n", jsonErr)
+					w.WriteHeader(http.StatusInternalServerError)
+					fmt.Fprintf(w, http.StatusText(http.StatusInternalServerError))
+					return
+				}
+				w.Header().Set(tc.ContentType, tc.ApplicationJson)
+				w.WriteHeader(status)
+				fmt.Fprintf(w, "%s", errBytes)
+			}
+
+			cookie, err := r.Cookie(tocookie.Name)
+			if err != nil {
+				log.Errorf("error getting cookie: %s", err)
+				handleErr(http.StatusUnauthorized, errors.New("Unauthorized, please log in."))
+				return
+			}
+
+			if cookie == nil {
+				handleErr(http.StatusUnauthorized, errors.New("Unauthorized, please log in."))
+				return
+			}
+
+			oldCookie, err := tocookie.Parse(a.secret, cookie.Value)
+			if err != nil {
+				log.Errorf("error parsing cookie: %s", err)
+				handleErr(http.StatusUnauthorized, errors.New("Unauthorized, please log in."))
+				return
+			}
+
+			username = oldCookie.AuthData
+			currentUserInfo := auth.GetCurrentUserFromDB(a.getCurrentUserInfoStmt, username)
+			if currentUserInfo.PrivLevel < privLevelRequired {
+				handleErr(http.StatusForbidden, errors.New("Forbidden."))
+				return
+			}
+
+			newCookieVal := tocookie.Refresh(oldCookie, a.secret)
+			http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
+
+			ctx := r.Context()
+			ctx = context.WithValue(ctx, auth.CurrentUserKey, currentUserInfo)
+
+			handlerFunc(w, r.WithContext(ctx))
+		}
+	}
+}
+
+func wrapHeaders(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
 		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie")
 		w.Header().Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("X-Server-Name", ServerName)
 		iw := &BodyInterceptor{w: w}
-		h(iw, r, p)
+		h(iw, r)
 
 		sha := sha512.Sum512(iw.Body())
 		w.Header().Set("Whole-Content-SHA512", base64.StdEncoding.EncodeToString(sha[:]))
@@ -58,68 +134,7 @@ func wrapHeaders(h RegexHandlerFunc) RegexHandlerFunc {
 	}
 }
 
-func handlerToAuthHandler(h RegexHandlerFunc) AuthRegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams, user string, privLevel int) { h(w, r, p) }
-}
-
-func wrapAuth(h RegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
-	return wrapAuthWithData(handlerToAuthHandler(h), noAuth, secret, privLevelStmt, privLevelRequired)
-}
-
-func wrapAuthWithData(h AuthRegexHandlerFunc, noAuth bool, secret string, privLevelStmt *sql.Stmt, privLevelRequired int) RegexHandlerFunc {
-	if noAuth {
-		return func(w http.ResponseWriter, r *http.Request, p PathParams) {
-			h(w, r, p, "", PrivLevelInvalid)
-		}
-	}
-	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
-		// TODO remove, and make username available to wrapLogTime
-		start := time.Now()
-		iw := &Interceptor{w: w}
-		w = iw
-		username := "-"
-		defer func() {
-			log.EventfRaw(`%s - %s [%s] "%v %v HTTP/1.1" %v %v %v "%v"`, r.RemoteAddr, username, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, iw.code, iw.byteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent())
-		}()
-
-		handleUnauthorized := func(reason string) {
-			status := http.StatusUnauthorized
-			w.WriteHeader(status)
-			fmt.Fprintf(w, http.StatusText(status))
-			log.Infof("%v %v %v %v returned unauthorized: %v\n", r.RemoteAddr, r.Method, r.URL.Path, username, reason)
-		}
-
-		cookie, err := r.Cookie(tocookie.Name)
-		if err != nil {
-			handleUnauthorized("error getting cookie: " + err.Error())
-			return
-		}
-
-		if cookie == nil {
-			handleUnauthorized("no auth cookie")
-			return
-		}
-
-		oldCookie, err := tocookie.Parse(secret, cookie.Value)
-		if err != nil {
-			handleUnauthorized("cookie error: " + err.Error())
-			return
-		}
-
-		username = oldCookie.AuthData
-		privLevel := PrivLevel(privLevelStmt, username)
-		if privLevel < privLevelRequired {
-			handleUnauthorized("insufficient privileges")
-			return
-		}
-
-		newCookieVal := tocookie.Refresh(oldCookie, secret)
-		http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
-
-		h(w, r, p, username, privLevel)
-	}
-}
-
+// AccessLogTimeFormat ...
 const AccessLogTimeFormat = "02/Jan/2006:15:04:05 -0700"
 
 func wrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
@@ -154,29 +169,14 @@ func gzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
 		}
 		return
 	}
+	ctx := r.Context()
+	val := ctx.Value(tc.StatusKey)
+	status, ok := val.(int)
+	if ok { //if not we assume it is a 200
+		w.WriteHeader(status)
+	}
 
 	w.Write(bytes)
-}
-
-// wrapBytes takes a function which cannot error and returns only bytes, and wraps it as a http.HandlerFunc. The errContext is logged if the write fails, and should be enough information to trace the problem (function name, endpoint, request parameters, etc).
-//TODO: drichardson - refactor these to a generic area
-func wrapBytes(f func() []byte, contentType string) RegexHandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, p PathParams) {
-		bytes := f()
-		bytes, err := gzipIfAccepts(r, w, bytes)
-		if err != nil {
-			log.Errorf("gzipping request '%v': %v\n", r.URL.EscapedPath(), err)
-			code := http.StatusInternalServerError
-			w.WriteHeader(code)
-			if _, err := w.Write([]byte(http.StatusText(code))); err != nil {
-				log.Warnf("received error writing data request %v: %v\n", r.URL.EscapedPath(), err)
-			}
-			return
-		}
-
-		w.Header().Set(api.ContentType, contentType)
-		log.Write(w, bytes, r.URL.EscapedPath())
-	}
 }
 
 // gzipIfAccepts gzips the given bytes, writes a `Content-Encoding: gzip` header to the given writer, and returns the gzipped bytes, if the Request supports GZip (has an Accept-Encoding header). Else, returns the bytes unmodified. Note the given bytes are NOT written to the given writer. It is assumed the bytes may need to pass thru other middleware before being written.
@@ -186,17 +186,17 @@ func gzipIfAccepts(r *http.Request, w http.ResponseWriter, b []byte) ([]byte, er
 	if len(b) == 0 || !acceptsGzip(r) {
 		return b, nil
 	}
-	w.Header().Set(api.ContentEncoding, api.Gzip)
+	w.Header().Set(tc.ContentEncoding, tc.Gzip)
 
 	buf := bytes.Buffer{}
 	zw := gzip.NewWriter(&buf)
 
 	if _, err := zw.Write(b); err != nil {
-		return nil, fmt.Errorf("gzipping bytes: %v")
+		return nil, fmt.Errorf("gzipping bytes: %v", err)
 	}
 
 	if err := zw.Close(); err != nil {
-		return nil, fmt.Errorf("closing gzip writer: %v")
+		return nil, fmt.Errorf("closing gzip writer: %v", err)
 	}
 
 	return buf.Bytes(), nil
@@ -208,7 +208,7 @@ func acceptsGzip(r *http.Request) bool {
 		encodingHeader = stripAllWhitespace(encodingHeader)
 		encodings := strings.Split(encodingHeader, ",")
 		for _, encoding := range encodings {
-			if strings.ToLower(encoding) == api.Gzip { // encoding is case-insensitive, per the RFC
+			if strings.ToLower(encoding) == tc.Gzip { // encoding is case-insensitive, per the RFC
 				return true
 			}
 		}
@@ -225,17 +225,20 @@ func stripAllWhitespace(s string) string {
 	}, s)
 }
 
+// Interceptor ...
 type Interceptor struct {
 	w         http.ResponseWriter
 	code      int
 	byteCount int
 }
 
+// WriteHeader ...
 func (i *Interceptor) WriteHeader(rc int) {
 	i.w.WriteHeader(rc)
 	i.code = rc
 }
 
+// Write ...
 func (i *Interceptor) Write(b []byte) (int, error) {
 	wi, werr := i.w.Write(b)
 	i.byteCount += wi
@@ -245,6 +248,7 @@ func (i *Interceptor) Write(b []byte) (int, error) {
 	return wi, werr
 }
 
+// Header ...
 func (i *Interceptor) Header() http.Header {
 	return i.w.Header()
 }
@@ -255,20 +259,29 @@ type BodyInterceptor struct {
 	body []byte
 }
 
+// WriteHeader ...
 func (i *BodyInterceptor) WriteHeader(rc int) {
 	i.w.WriteHeader(rc)
 }
+
+// Write ...
 func (i *BodyInterceptor) Write(b []byte) (int, error) {
 	i.body = append(i.body, b...)
 	return len(b), nil
 }
+
+// Header ...
 func (i *BodyInterceptor) Header() http.Header {
 	return i.w.Header()
 }
+
+// RealWrite ...
 func (i *BodyInterceptor) RealWrite(b []byte) (int, error) {
 	wi, werr := i.w.Write(i.body)
 	return wi, werr
 }
+
+// Body ...
 func (i *BodyInterceptor) Body() []byte {
 	return i.body
 }

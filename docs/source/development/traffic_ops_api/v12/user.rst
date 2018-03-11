@@ -454,6 +454,11 @@ Users
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``checkPath``            | string | The path portion of the URL to check this deliveryservice for health.                                                                |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
+  | ``deepCachingType``      | string | When to do Deep Caching for this Delivery Service:                                                                                   |
+  |                          |        |                                                                                                                                      |
+  |                          |        | - NEVER (default)                                                                                                                    |
+  |                          |        | - ALWAYS                                                                                                                             |
+  +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``displayName``          | string | The display name of the delivery service.                                                                                            |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``dnsBypassIp``          | string | The IPv4 IP to use for bypass on a DNS deliveryservice  - bypass starts when serving more than the                                   |
@@ -570,9 +575,9 @@ Users
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``tenantId``             | int    | Owning tenant ID.                                                                                                                    |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trRequestHeaders``     | string |                                                                                                                                      |
+  | ``trRequestHeaders``     | string | List of header keys separated by ``__RETURN__``. Listed headers will be included in TR access log entries under the "rh=" token.     |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``trResponseHeaders``    | string |                                                                                                                                      |
+  | ``trResponseHeaders``    | string | List of header ``name:value`` pairs separated by ``__RETURN__``. Listed pairs will be included in all TR HTTP responses.             |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``type``                 | string | The type of this deliveryservice (one of :ref:to-api-v11-types use_in_table='deliveryservice').                                      |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
@@ -592,6 +597,7 @@ Users
             "cdnId": "2",
             "cdnName": "over-the-top",
             "checkPath": "",
+            "deepCachingType": "NEVER",
             "displayName": "My Cool Delivery Service",
             "dnsBypassCname": "",
             "dnsBypassIp": "",

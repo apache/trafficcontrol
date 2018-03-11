@@ -30,10 +30,10 @@ public class FederationMappingBuilderTest {
         FederationMappingBuilder federationMappingBuilder = new FederationMappingBuilder();
 
         String json = "{ " +
-            "'cname' : 'cname1', " +
-            "'ttl' : '86400', " +
-            "'resolve4' : [ '192.168.56.78/24', '192.168.45.67/24' ], " +
-            "'resolve6' : [ 'fdfe:dcba:9876:5::/64', 'fd12:3456:789a:1::/64' ] " +
+            "\"cname\" : \"cname1\", " +
+            "\"ttl\" : \"86400\", " +
+            "\"resolve4\" : [ \"192.168.56.78/24\", \"192.168.45.67/24\" ], " +
+            "\"resolve6\" : [ \"fdfe:dcba:9876:5::/64\", \"fd12:3456:789a:1::/64\" ] " +
         "}";
 
         FederationMapping federationMapping = federationMappingBuilder.fromJSON(json);
@@ -53,8 +53,8 @@ public class FederationMappingBuilderTest {
         FederationMappingBuilder federationMappingBuilder = new FederationMappingBuilder();
 
         String json = "{ " +
-                "'cname' : 'cname1', " +
-                "'ttl' : '86400' " +
+                "\"cname\" : \"cname1\", " +
+                "\"ttl\" : \"86400\" " +
                 "}";
 
         FederationMapping federationMapping = federationMappingBuilder.fromJSON(json);

@@ -33,7 +33,6 @@
 	<properties>
 		<deploy.dir>/opt/traffic_router</deploy.dir>
 		<spring.version>4.2.5.RELEASE</spring.version>
-		<wicket.version>6.0.0</wicket.version>
 		<log4j.version>1.2.17</log4j.version>
 		<junit.version>4.12</junit.version>
 		<hamcrest.version>1.3</hamcrest.version>
@@ -124,6 +123,18 @@
 			<modules>
 				<module>neustar</module>
 			</modules>
+		</profile>
+		<profile>
+			<id>jdnssec</id>
+			<modules>
+				<module>jdnssec</module>
+			</modules>
+			<activation>
+				<property>
+					<name>useJdnssec</name>
+					<value>true</value>
+				</property>
+			</activation>
 		</profile>
 	</profiles>
 </project>

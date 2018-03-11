@@ -65,9 +65,9 @@ my $root_tenant_id = &get_tenant_id('root');
 
 #setting with no "active" field which is optional
 ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
-        "name" => "tenantA", "parentId" => $root_tenant_id })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
+        "name" => "tenantA", "active" => 1, "parentId" => $root_tenant_id })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 	->json_is( "/response/name" => "tenantA" )
-	->json_is( "/response/active" =>  0)
+	->json_is( "/response/active" =>  1)
 	->json_is( "/response/parentId" =>  $root_tenant_id)
             , 'Does the tenant details return?';
 
@@ -85,7 +85,7 @@ ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
 
 #now getting it excepted
 ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
-        "name" => "tenant", "parentId" => $root_tenant_id })->status_is(200);
+        "name" => "tenant", "active" => 1, "parentId" => $root_tenant_id })->status_is(200);
 
 my $tenantA_id = &get_tenant_id('tenantA');
 my $tenantB_id = &get_tenant_id('tenant');
@@ -128,25 +128,25 @@ ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json
 #cannot change tenant parent to undef
 ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json'} => json => {
 			"name" => "tenantC", "active" => 1})
-			->json_is( "/alerts/0/text" => "Parent Id is required.")
+			->json_is( "/alerts/0/text" => "parentId is required")
 			->status_is(400);
 
 #cannot skip "active" field on "put"
 ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json'} => json => {
 			"name" => "tenantC", "parentId" => $root_tenant_id})
-			->json_is( "/alerts/0/text" => "Active field is required.")
+			->json_is( "/alerts/0/text" => "active is required")
 			->status_is(400);
 
 #cannot skip "name" field on "put"
 ok $t->put_ok('/api/1.2/tenants/' . $tenantA_id  => {Accept => 'application/json'} => json => {
 			"active" => 1, "parentId" => $root_tenant_id})
-			->json_is( "/alerts/0/text" => "Tenant name is required.")
+			->json_is( "/alerts/0/text" => "name is required")
 			->status_is(400);
 
 #cannot change root-tenant to inactive
 ok $t->put_ok('/api/1.2/tenants/' . $root_tenant_id  => {Accept => 'application/json'} => json => {
 			"name" => "root", "active" => 0, "parentId" => undef})
-			->json_is( "/alerts/0/text" => "Root tenant cannot be updated.")
+			->json_is( "/alerts/0/text" => "parentId is required")
 			->status_is(400);
 
 #adding a child tenant
@@ -348,7 +348,7 @@ ok $t->delete_ok('/api/1.2/tenants/' . $tenantA_id)->status_is(200)->or( sub { d
 
 #testing the tenant cascade delete
 ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
-			"name" => "tenant-b1", "parentId" => $tenantB_id })->status_is(200);
+			"name" => "tenant-b1", "active" => 1, "parentId" => $tenantB_id })->status_is(200);
 my $num_of_tenants_before_cascade_delete = $t->get_ok('/api/1.2/tenants')->status_is(200)->$responses_counter();
 my $tenant_utils_of_root_for_cascade_delete = Utils::Tenant->new(undef, $root_tenant_id, $schema);
 my $tenants_data_for_cascade_delete = $tenant_utils_of_root_for_cascade_delete->create_tenants_data_from_db();
@@ -376,10 +376,6 @@ ok $t->post_ok( '/login', => form => { u => Test::TestHelper::ADMIN_USER, p => T
 
 ok $t->post_ok('/api/1.2/tenants' => {Accept => 'application/json'} => json => {
         "name" => "tenantA", "parentId" => $root_tenant_id })->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-        
-ok $t->put_ok('/api/1.2/tenants/' . $root_tenant_id  => {Accept => 'application/json'} => json => {
-			"name" => "rooty", "active" => 1, "parentId" => undef})
-		->status_is(403)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 
 #no tenants in the list
 ok $t->get_ok("/api/1.2/tenants")->status_is(200)
