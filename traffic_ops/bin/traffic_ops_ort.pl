@@ -239,7 +239,6 @@ else {
 }
 
 
-
 #### First time
 &process_config_files();
 
@@ -400,6 +399,16 @@ sub process_cfg_file {
 		$cfg_file_tracker->{$cfg_file}->{'change_needed'} = 0;
 		( $log_level >> $TRACE ) && print "TRACE Setting change not needed for $cfg_file.\n";
 		$return_code = $CFG_FILE_UNCHANGED;
+	}
+
+	# submit the line_missing to the traffic ops Config Diff API
+	if ( $script_mode != $REVALIDATE ) {
+		my $db_lines_missing_json = encode_json(\@db_lines_missing);
+		my $disk_lines_missing_json = encode_json(\@disk_lines_missing);
+		my $datetime = gmtime();
+		my $json_text = "{ \"dbLinesMissing\": $db_lines_missing_json, \"diskLinesMissing\": $disk_lines_missing_json, \"timestamp\": \"$datetime\" }";
+		$result = &lwp_put("/api/1.2/servers/$domainname/$hostname_short/$cfg_file", $json_text);
+		# If this fails in any significant way, it will be caught by the lwp_put method
 	}
 
 	if ( $cfg_file eq "50-ats.rules" ) {
@@ -1462,6 +1471,73 @@ sub lwp_get {
 		}
 		# https://github.com/Comcast/traffic_control/issues/1168
 		elsif ( ( $uri =~ m/url\_sig\_(.*)\.config$/ || $uri =~ m/uri\_signing\_(.*)\.config$/ ) && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
+			( $log_level >> $FATAL ) && print "FATAL result for $uri is: ..." . $response->content . "...\n";
+			exit 1;
+		}
+		else {
+			( $log_level >> $DEBUG ) && print "DEBUG result for $uri is: ..." . $response->content . "...\n";
+			last;
+		}
+
+	}
+
+	( &check_lwp_response_code($response, $FATAL) || &check_lwp_response_message_integrity($response, $FATAL) ) if ( $retry_counter == 0 );
+
+	&eval_json($response) if ( $uri =~ m/\.json$/ );
+
+	return $response_content;
+
+}
+
+sub lwp_put {
+	my $uri           = shift;
+	my $body 		  = shift;
+	my $retry_counter = $retries;
+
+	( $log_level >> $DEBUG ) && print "DEBUG Total connections in LWP cache: " . $lwp_conn->conn_cache->get_connections("https") . "\n";
+	my %headers = ( 'Cookie' => $cookie );
+
+	my $response;
+	my $response_content;
+
+	while( $retry_counter > 0 ) {
+
+		( $log_level >> $INFO ) && print "INFO Traffic Ops host: " . $traffic_ops_host . "\n";
+		( $log_level >> $DEBUG ) && print "DEBUG lwp_get called with $uri\n";
+		my $request = $traffic_ops_host . $uri;
+		if ( $uri =~ m/^http/ ) {
+			$request = $uri;
+			( $log_level >> $DEBUG ) && print "DEBUG Complete URL found. Downloading from external source $request.\n";
+		}
+		if ( ($uri =~ m/sslkeys/ || $uri =~ m/url\_sig/) && $rev_proxy_in_use == 1 ) {
+			$request = $to_url . $uri;
+			( $log_level >> $INFO ) && print "INFO Secure data request - bypassing reverse proxy and using $to_url.\n";
+		}
+		
+	    # TODO: is there a way to generalize this for most verbs?
+		my $httpRequest = HTTP::Request->new( 'PUT', $request );
+		$httpRequest->header( 'Cookie' => $cookie );
+		$httpRequest->header( 'Content-Type' => 'application/json' );
+		$httpRequest->content( $body );
+
+		$response = $lwp_conn->request($httpRequest);
+		$response_content = $response->content;
+
+		if ( &check_lwp_response_code($response, $ERROR) || &check_lwp_response_message_integrity($response, $ERROR) ) {
+			( $log_level >> $ERROR ) && print "ERROR result for $request is: ..." . $response->content . "...\n";
+			if ( $uri =~ m/configfiles\/ats/ && $response->code == 404) {
+					return $response->code;
+			}
+			if ( $rev_proxy_in_use == 1 ) {
+				( $log_level >> $ERROR ) && print "ERROR There appears to be an issue with the Traffic Ops Reverse Proxy.  Reverting to primary Traffic Ops host.\n";
+				$traffic_ops_host = $to_url;
+				$rev_proxy_in_use = 0;
+			}
+			sleep 2**( $retries - $retry_counter );
+			$retry_counter--;
+		}
+		# https://github.com/Comcast/traffic_control/issues/1168
+		elsif ( $uri =~ m/url\_sig\_(.*)\.config$/ && $response->content =~ m/No RIAK servers are set to ONLINE/ ) {
 			( $log_level >> $FATAL ) && print "FATAL result for $uri is: ..." . $response->content . "...\n";
 			exit 1;
 		}
