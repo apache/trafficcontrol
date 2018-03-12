@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.3/parameters (R)
   - /api/1.3/phys_locations (R)
   - /api/1.3/ping
+  - /api/1.3/profiles (R)
   - /api/1.3/regions (R)
   - /api/1.3/servers (R)
   - /api/1.3/servers/checks
