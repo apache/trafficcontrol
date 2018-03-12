@@ -170,6 +170,10 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 
 		{1.2, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.2, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+    
+		//Config Differences
+		{1.2, http.MethodGet, "servers/{host-name}/config_diffs.json$", getCfgDiffsHandler(d.DB), CfgDiffsPrivLevel, Authenticated, nil},
+		{1.2, http.MethodPut, "servers/{host-name}/{cfg-file-name}$", putCfgDiffsHandler(d.DB), CfgDiffsWritePrivLevel, Authenticated, nil},
 
 		//Profiles
 		{1.3, http.MethodGet, `profiles/?(\.json)?$`, api.ReadHandler(profile.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
