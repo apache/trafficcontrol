@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core.dns;
+package com.comcast.cdn.traffic_control.traffic_router.jdnssec.dns.keys;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -23,6 +23,7 @@ import java.util.Date;
 
 import javax.xml.bind.DatatypeConverter;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.dns.DnsSecKeyPair;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;

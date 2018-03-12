@@ -13,12 +13,11 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core.dns.keys;
+package com.comcast.cdn.traffic_control.traffic_router.jdnssec.dns.keys;
 
 import sun.security.rsa.RSAPrivateCrtKeyImpl;
 
 import java.math.BigInteger;
-import java.security.interfaces.RSAMultiPrimePrivateCrtKey;
 import java.security.spec.RSAMultiPrimePrivateCrtKeySpec;
 
 import static java.util.Base64.getEncoder;

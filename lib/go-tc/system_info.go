@@ -21,6 +21,6 @@ package tc
 
 type SystemInfoResponse struct {
 	Response struct {
-		Parameters map[string]string `json:"parameters"`
+		ParametersNullable map[string]string `json:"parameters"`
 	} `json:"response"`
 }

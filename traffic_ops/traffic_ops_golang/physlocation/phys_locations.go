@@ -186,6 +186,7 @@ func (pl *TOPhysLocation) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 	}
 	defer resultRows.Close()
 
+	// get LastUpdated field -- updated by trigger in the db
 	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
@@ -196,7 +197,7 @@ func (pl *TOPhysLocation) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 		}
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
-	pl.LastUpdated = lastUpdated
+	pl.LastUpdated = &lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
 			return errors.New("no phys_location found with this id"), tc.DataMissingError
@@ -272,7 +273,7 @@ func (pl *TOPhysLocation) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 	}
 
 	pl.SetID(id)
-	pl.LastUpdated = lastUpdated
+	pl.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)

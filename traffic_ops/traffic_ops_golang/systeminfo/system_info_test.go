@@ -33,28 +33,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-var sysInfoParameters = []tc.Parameter{
-	tc.Parameter{
-		ConfigFile:  "global",
-		ID:          1,
-		LastUpdated: tc.TimeNoMod{Time: time.Now()},
-		Name:        "paramname1",
-		Profiles:    json.RawMessage(`["foo","bar"]`),
-		Secure:      false,
-		Value:       "val1",
-	},
-
-	tc.Parameter{
-		ConfigFile:  "global",
-		ID:          2,
-		LastUpdated: tc.TimeNoMod{Time: time.Now()},
-		Name:        "paramname2",
-		Profiles:    json.RawMessage(`["foo","bar"]`),
-		Secure:      false,
-		Value:       "val2",
-	},
-}
-
 func TestGetSystemInfo(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
@@ -65,11 +43,43 @@ func TestGetSystemInfo(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	cols := test.ColsFromStructByTag("db", tc.Parameter{})
+	cols := test.ColsFromStructByTag("db", tc.ParameterNullable{})
 	rows := sqlmock.NewRows(cols)
 
-	//TODO: drichardson - build helper to add these Rows from the struct values
-	//                    or by CSV if types get in the way
+	lastUpdated := tc.TimeNoMod{Time: time.Now()}
+	configFile := "global"
+	secure := false
+
+	firstID := 1
+	firstName := "paramname1"
+	firstVal := "val1"
+
+	secondID := 2
+	secondName := "paramname2"
+	secondVal := "val2"
+
+	var sysInfoParameters = []tc.ParameterNullable{
+		tc.ParameterNullable{
+			ConfigFile:  &configFile,
+			ID:          &firstID,
+			LastUpdated: &lastUpdated,
+			Name:        &firstName,
+			Profiles:    json.RawMessage(`["foo","bar"]`),
+			Secure:      &secure,
+			Value:       &firstVal,
+		},
+
+		tc.ParameterNullable{
+			ConfigFile:  &configFile,
+			ID:          &secondID,
+			LastUpdated: &lastUpdated,
+			Name:        &secondName,
+			Profiles:    json.RawMessage(`["foo","bar"]`),
+			Secure:      &secure,
+			Value:       &secondVal,
+		},
+	}
+
 	for _, ts := range sysInfoParameters {
 		rows = rows.AddRow(
 			ts.ConfigFile,

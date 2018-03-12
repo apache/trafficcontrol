@@ -1,4 +1,4 @@
-package main
+package parameter
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
@@ -33,23 +34,31 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestParameters() []tc.Parameter {
-	parameters := []tc.Parameter{}
-	testParameter := tc.Parameter{
-		ConfigFile:  "global",
-		ID:          1,
-		LastUpdated: tc.TimeNoMod{Time: time.Now()},
-		Name:        "paramname1",
+func getTestParameters() []tc.ParameterNullable {
+	parameters := []tc.ParameterNullable{}
+	lastUpdated := tc.TimeNoMod{}
+	lastUpdated.Scan(time.Now())
+	configFile := "global"
+	secureFlag := false
+	ID := 1
+	param := "paramname1"
+	val := "val1"
+
+	testParameter := tc.ParameterNullable{
+		ConfigFile:  &configFile,
+		ID:          &ID,
+		LastUpdated: &lastUpdated,
+		Name:        &param,
 		Profiles:    json.RawMessage(`["foo","bar"]`),
-		Secure:      false,
-		Value:       "val1",
+		Secure:      &secureFlag,
+		Value:       &val,
 	}
 	parameters = append(parameters, testParameter)
 
 	testParameter2 := testParameter
-	testParameter2.Name = "paramname2"
-	testParameter2.Value = "val2"
-	testParameter2.ConfigFile = "some.config"
+	testParameter2.Name = &param
+	testParameter2.Value = &val
+	testParameter2.ConfigFile = &configFile
 	testParameter2.Profiles = json.RawMessage(`["foo","baz"]`)
 	parameters = append(parameters, testParameter2)
 
@@ -67,11 +76,9 @@ func TestGetParameters(t *testing.T) {
 	defer db.Close()
 
 	testParameters := getTestParameters()
-	cols := test.ColsFromStructByTag("db", tc.Parameter{})
+	cols := test.ColsFromStructByTag("db", tc.ParameterNullable{})
 	rows := sqlmock.NewRows(cols)
 
-	//TODO: drichardson - build helper to add these Rows from the struct values
-	//                    or by CSV if types get in the way
 	for _, ts := range testParameters {
 		rows = rows.AddRow(
 			ts.ConfigFile,
@@ -86,25 +93,34 @@ func TestGetParameters(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	v := map[string]string{"dsId": "1"}
 
-	parameters, errs, errType := getParameters(v, db, auth.PrivLevelAdmin)
+	parameters, errs, _ := refType.Read(db, v, auth.CurrentUser{})
 	if len(errs) > 0 {
-		t.Errorf("getParameters expected: no errors, actual: %v with error type: %s", errs, errType.String())
+		t.Errorf("parameter.Read expected: no errors, actual: %v", errs)
 	}
 
 	if len(parameters) != 2 {
-		t.Errorf("getParameters expected: len(parameters) == 1, actual: %v", len(parameters))
+		t.Errorf("parameter.Read expected: len(parameters) == 2, actual: %v", len(parameters))
 	}
 
 }
 
-type SortableParameters []tc.Parameter
+func TestInterfaces(t *testing.T) {
+	var i interface{}
+	i = &TOParameter{}
 
-func (s SortableParameters) Len() int {
-	return len(s)
-}
-func (s SortableParameters) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-func (s SortableParameters) Less(i, j int) bool {
-	return s[i].Name < s[j].Name
+	if _, ok := i.(api.Creator); !ok {
+		t.Errorf("Parameter must be Creator")
+	}
+	if _, ok := i.(api.Reader); !ok {
+		t.Errorf("Parameter must be Reader")
+	}
+	if _, ok := i.(api.Updater); !ok {
+		t.Errorf("Parameter must be Updater")
+	}
+	if _, ok := i.(api.Deleter); !ok {
+		t.Errorf("Parameter must be Deleter")
+	}
+	if _, ok := i.(api.Identifier); !ok {
+		t.Errorf("Parameter must be Identifier")
+	}
 }

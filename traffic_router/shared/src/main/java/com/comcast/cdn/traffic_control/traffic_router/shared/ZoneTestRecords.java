@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core.dns.keys;
+package com.comcast.cdn.traffic_control.traffic_router.shared;
 
 import com.comcast.cdn.traffic_control.traffic_router.secure.BindPrivateKey;
 import com.comcast.cdn.traffic_control.traffic_router.secure.Pkcs1KeySpecDecoder;
@@ -48,21 +48,22 @@ import static org.xbill.DNS.DNSKEYRecord.Flags.ZONE_KEY;
 import static org.xbill.DNS.DNSKEYRecord.Protocol.DNSSEC;
 import static org.xbill.DNS.DNSSEC.Algorithm.RSASHA1;
 
+@SuppressWarnings("PMD")
 public class ZoneTestRecords {
-	static List<Record> records;
+	public static List<Record> records;
 
-	static Date start;
-	static Date expiration;
-	static Name origin;
-	static Date sep_1_2016 = new Date(1472688000000L);
-	static Date sep_1_2026 = new Date(1788220800000L);
-	static DNSKEYRecord zoneSigningKeyRecord;
-	static DNSKEYRecord keySigningKeyRecord;
+	public static Date start;
+	public static Date expiration;
+	public static Name origin;
+	public static Date sep_1_2016 = new Date(1472688000000L);
+	public static Date sep_1_2026 = new Date(1788220800000L);
+	public static DNSKEYRecord zoneSigningKeyRecord;
+	public static DNSKEYRecord keySigningKeyRecord;
 
-	static KeyPair ksk1;
-	static KeyPair zsk1;
-	static KeyPair ksk2;
-	static KeyPair zsk2;
+	public static KeyPair ksk1;
+	public static KeyPair zsk1;
+	public static KeyPair ksk2;
+	public static KeyPair zsk2;
 
 	static List<KeyPair> generateKeyPairs() throws Exception {
 		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
@@ -81,7 +82,7 @@ public class ZoneTestRecords {
 		return new KeyPair(publicKeyCopy, privateKeyCopy);
 	}
 
-	static List<Record> generateZoneRecords(boolean makeNewKeyPairs) throws Exception {
+	public static List<Record> generateZoneRecords(boolean makeNewKeyPairs) throws Exception {
 		start = new Date(System.currentTimeMillis() - (24 * 3600 * 1000));
 		expiration = new Date(System.currentTimeMillis() + (7 * 24 * 3600 * 1000));
 

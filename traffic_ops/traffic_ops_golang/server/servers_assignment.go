@@ -1,4 +1,4 @@
-package main
+package server
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -35,7 +35,7 @@ import (
 	"github.com/lib/pq"
 )
 
-func assignDeliveryServicesToServerHandler(db *sqlx.DB) http.HandlerFunc {
+func AssignDeliveryServicesToServerHandler(db *sqlx.DB) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)

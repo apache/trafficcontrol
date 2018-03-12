@@ -19,22 +19,18 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"net"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/client/v13"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/testing/api/config"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/testing/api/todb"
 	_ "github.com/lib/pq"
 )
 
 var (
-	TOSession *v13.Session
-	cfg       config.Config
-	testData  TrafficControl
+	Config   config.Config
+	testData TrafficControl
 )
 
 func TestMain(m *testing.M) {
@@ -43,11 +39,12 @@ func TestMain(m *testing.M) {
 	tcFixturesFileName := flag.String("fixtures", "tc-fixtures.json", "The test fixtures for the API test tool")
 	flag.Parse()
 
-	if cfg, err = config.LoadConfig(*configFileName); err != nil {
-		fmt.Printf("Error Loading Config %v %v\n", cfg, err)
+	if Config, err = config.LoadConfig(*configFileName); err != nil {
+		fmt.Printf("Error Loading Config %v %v\n", Config, err)
+		return
 	}
 
-	if err = log.InitCfg(cfg); err != nil {
+	if err = log.InitCfg(Config); err != nil {
 		fmt.Printf("Error initializing loggers: %v\n", err)
 		return
 	}
@@ -60,34 +57,35 @@ func TestMain(m *testing.M) {
 			   DB Server:            %s
 			   DB User:              %s
 			   DB Name:              %s
-			   DB Ssl:               %t`, *configFileName, *tcFixturesFileName, cfg.TrafficOps.URL, cfg.Default.Session.TimeoutInSecs, cfg.TrafficOpsDB.Hostname, cfg.TrafficOpsDB.User, cfg.TrafficOpsDB.Name, cfg.TrafficOpsDB.SSL)
+			   DB Ssl:               %t`, *configFileName, *tcFixturesFileName, Config.TrafficOps.URL, Config.Default.Session.TimeoutInSecs, Config.TrafficOpsDB.Hostname, Config.TrafficOpsDB.User, Config.TrafficOpsDB.Name, Config.TrafficOpsDB.SSL)
 
 	//Load the test data
 	LoadFixtures(*tcFixturesFileName)
 
 	var db *sql.DB
-	db, err = todb.OpenConnection(&cfg)
+	db, err = OpenConnection()
 	if err != nil {
-		fmt.Printf("\nError opening connection to %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+		fmt.Printf("\nError opening connection to %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOpsDB.User, err)
 		os.Exit(1)
 	}
 	defer db.Close()
 
-	err = todb.Teardown(&cfg, db)
+	err = Teardown(db)
 	if err != nil {
-		fmt.Printf("\nError tearingdown data %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+		fmt.Printf("\nError tearingdown data %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOpsDB.User, err)
 		os.Exit(1)
 	}
 
-	err = todb.SetupTestData(&cfg, db)
+	err = SetupTestData(db)
 	if err != nil {
-		fmt.Printf("\nError setting up data %s - %s, %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, err)
+		fmt.Printf("\nError setting up data %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOpsDB.User, err)
 		os.Exit(1)
 	}
 
-	TOSession, _, err = SetupSession(cfg, cfg.TrafficOps.URL, cfg.TrafficOps.User, cfg.TrafficOps.UserPassword)
+	toReqTimeout := time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
+	err = SetupSession(toReqTimeout, Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, Config.TrafficOps.UserPassword)
 	if err != nil {
-		fmt.Printf("\nError logging into TOURL: %s TOUser: %s/%s - %v\n", cfg.TrafficOps.URL, cfg.TrafficOps.User, cfg.TrafficOps.UserPassword, err)
+		fmt.Printf("\nError creating session to %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOpsDB.User, err)
 		os.Exit(1)
 	}
 
@@ -95,17 +93,4 @@ func TestMain(m *testing.M) {
 	rc := m.Run()
 	os.Exit(rc)
 
-}
-
-func SetupSession(cfg config.Config, toURL string, toUser string, toPass string) (*v13.Session, net.Addr, error) {
-	var err error
-	var session *v13.Session
-	var netAddr net.Addr
-	toReqTimeout := time.Second * time.Duration(cfg.Default.Session.TimeoutInSecs)
-	session, netAddr, err = v13.LoginWithAgent(toURL, toUser, toPass, true, "to-api-v13-client-tests", true, toReqTimeout)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return session, netAddr, err
 }

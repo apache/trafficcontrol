@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core.dns;
+package com.comcast.cdn.traffic_control.traffic_router.jdnssec.dns.keys;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.dns.DnsSecKeyPair;
+import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneSigner;
 import com.verisignlabs.dnssec.security.DnsKeyPair;
 import com.verisignlabs.dnssec.security.JCEDnsSecSigner;
 import com.verisignlabs.dnssec.security.SignUtils;

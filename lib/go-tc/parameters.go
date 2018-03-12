@@ -36,3 +36,17 @@ type Parameter struct {
 	Secure      bool            `json:"secure" db:"secure"`
 	Value       string          `json:"value" db:"value"`
 }
+
+// ParameterNullable - a struct version that allows for all fields to be null, mostly used by the API side
+type ParameterNullable struct {
+	//
+	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
+	//
+	ConfigFile  *string         `json:"configFile" db:"config_file"`
+	ID          *int            `json:"id" db:"id"`
+	LastUpdated *TimeNoMod      `json:"lastUpdated" db:"last_updated"`
+	Name        *string         `json:"name" db:"name"`
+	Profiles    json.RawMessage `json:"profiles" db:"profiles"`
+	Secure      *bool           `json:"secure" db:"secure"`
+	Value       *string         `json:"value" db:"value"`
+}

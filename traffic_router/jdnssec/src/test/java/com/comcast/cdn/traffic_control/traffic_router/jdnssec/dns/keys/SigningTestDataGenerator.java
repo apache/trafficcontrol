@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core.dns.keys;
+package com.comcast.cdn.traffic_control.traffic_router.jdnssec.dns.keys;
 
+import com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords;
 import com.verisignlabs.dnssec.security.DnsKeyPair;
 import com.verisignlabs.dnssec.security.JCEDnsSecSigner;
 import org.junit.Before;
@@ -36,13 +37,13 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
-import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.generateZoneRecords;
-import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.keySigningKeyRecord;
-import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.ksk1;
-import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.ksk2;
-import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.zoneSigningKeyRecord;
-import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.zsk1;
-import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.zsk2;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.generateZoneRecords;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.keySigningKeyRecord;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.ksk1;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.ksk2;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.zoneSigningKeyRecord;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.zsk1;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.zsk2;
 import static java.util.Base64.getEncoder;
 import static java.util.Base64.getMimeEncoder;
 import static java.util.stream.Collectors.toList;

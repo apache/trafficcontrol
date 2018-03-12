@@ -65,7 +65,7 @@ func getSystemInfoResponse(db *sqlx.DB, privLevel int) (*tc.SystemInfoResponse, 
 	}
 
 	resp := tc.SystemInfoResponse{}
-	resp.Response.Parameters = info
+	resp.Response.ParametersNullable = info
 	return &resp, nil
 }
 
@@ -74,6 +74,7 @@ func getSystemInfo(db *sqlx.DB, privLevel int) (map[string]string, error) {
 	query := `SELECT
 p.name,
 p.secure,
+p.last_updated,
 p.value
 FROM parameter p
 WHERE p.config_file='global'`
@@ -87,15 +88,26 @@ WHERE p.config_file='global'`
 
 	info := make(map[string]string)
 	for rows.Next() {
-		p := tc.Parameter{}
+		p := tc.ParameterNullable{}
 		if err = rows.StructScan(&p); err != nil {
 			return nil, fmt.Errorf("getting system_info: %v", err)
 		}
-		if p.Secure && privLevel < auth.PrivLevelAdmin {
+
+		var isSecure bool
+		if p.Secure != nil {
+			isSecure = *p.Secure
+		}
+
+		name := p.Name
+		value := p.Value
+		if isSecure && privLevel < auth.PrivLevelAdmin {
 			// Secure params only visible to admin
 			continue
 		}
-		info[p.Name] = p.Value
+
+		if name != nil && value != nil {
+			info[*name] = *value
+		}
 	}
 	if err != nil {
 		return nil, err

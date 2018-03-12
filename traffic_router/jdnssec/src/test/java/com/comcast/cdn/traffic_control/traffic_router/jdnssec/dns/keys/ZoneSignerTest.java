@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core.dns.keys;
+package com.comcast.cdn.traffic_control.traffic_router.jdnssec.dns.keys;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.IsEqualCollection;
-import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSKeyPairWrapper;
+import com.comcast.cdn.traffic_control.traffic_router.shared.IsEqualCollection;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DnsSecKeyPair;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.DnsSecKeyPairImpl;
-import com.comcast.cdn.traffic_control.traffic_router.core.dns.JDnsSecSigner;
 import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneSignerImpl;
+import com.comcast.cdn.traffic_control.traffic_router.shared.SigningData;
+import com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.verisignlabs.dnssec.security.DnsKeyPair;
@@ -35,12 +35,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static com.comcast.cdn.traffic_control.traffic_router.core.IsEqualCollection.equalTo;
-import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.keySigningKeyRecord;
-import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.origin;
-import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.sep_1_2016;
-import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.sep_1_2026;
-import static com.comcast.cdn.traffic_control.traffic_router.core.dns.keys.ZoneTestRecords.zoneSigningKeyRecord;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.IsEqualCollection.equalTo;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.keySigningKeyRecord;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.origin;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.sep_1_2016;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.sep_1_2026;
+import static com.comcast.cdn.traffic_control.traffic_router.shared.ZoneTestRecords.zoneSigningKeyRecord;
 import static java.util.Arrays.asList;
 import static java.util.Base64.getMimeDecoder;
 import static java.util.stream.Collectors.toList;
