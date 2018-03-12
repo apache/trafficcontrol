@@ -20,8 +20,6 @@ package hwinfo
  */
 
 import (
-	"encoding/json"
-	"fmt"
 	"testing"
 	"time"
 
@@ -68,8 +66,6 @@ func TestGetHWInfo(t *testing.T) {
 	cols := test.ColsFromStructByTag("db", tc.HWInfo{})
 	rows := sqlmock.NewRows(cols)
 
-	//TODO: drichardson - build helper to add these Rows from the struct values
-	//                    or by CSV if types get in the way
 	for _, ts := range testHWInfo {
 		rows = rows.AddRow(
 			ts.Description,
@@ -90,17 +86,6 @@ func TestGetHWInfo(t *testing.T) {
 
 	if len(hwinfos) != 2 {
 		t.Errorf("getHWInfo expected: len(hwinfos) == 1, actual: %v", len(hwinfos))
-	}
-}
-
-func TestJSON(t *testing.T) {
-	testHWInfo := getTestHWInfo()
-	txt, err := json.Marshal(testHWInfo)
-	if *debugLogging {
-		fmt.Printf("%v, %s\n", err, txt)
-	}
-	if err != nil {
-		t.Errorf("Json.Marshal failed: %s\n", err)
 	}
 }
 
