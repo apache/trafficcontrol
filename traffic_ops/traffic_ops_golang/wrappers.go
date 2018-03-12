@@ -42,7 +42,7 @@ import (
 )
 
 // ServerName - the server identifier
-var ServerName = "traffic_ops_golang" + "/" + utils.Version
+var ServerName = "traffic_ops_golang" + "/" + utils.About.TrafficOpsVersion
 
 // AuthBase ...
 type AuthBase struct {
