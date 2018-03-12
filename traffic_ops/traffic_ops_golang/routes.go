@@ -67,6 +67,9 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 	proxyHandler := rootHandler(d)
 
 	routes := []Route{
+		//About
+		{1.3, http.MethodGet, `about/?(\.json)?$`, utils.AboutHandler(), auth.PrivLevelReadOnly, Authenticated, nil},
+
 		// Proxied routes
 		//CDNs
 		// explicitly passed to legacy system until fully implemented.  Auth handled by legacy system.
@@ -187,9 +190,6 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 
 		//System
 		{1.2, http.MethodGet, `system/info/?(\.json)?$`, systeminfo.Handler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-
-		//Version
-		{1.3, http.MethodGet, `version$`, utils.VersionHandler(), auth.PrivLevelReadOnly, Authenticated, nil},
 	}
 	return routes, proxyHandler, nil
 }
