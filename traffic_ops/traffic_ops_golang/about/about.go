@@ -28,52 +28,54 @@ import (
 
 // about allows access to the version info identified at build time
 type about struct {
-	CommitHash           string `json:"commitHash,omitempty"`
-	Commits              string `json:"commits,omitempty"`
-	GoVersion            string `json:"goVersion,omitempty"`
-	TrafficOpsName       string `json:"name,omitempty"`
-	TrafficOpsRPMVersion string `json:"trafficOpsRPMVersion,omitempty"`
-	TrafficOpsVersion    string `json:"trafficOpsVersion,omitempty"`
+	CommitHash string `json:"commitHash,omitempty"`
+	Commits    string `json:"commits,omitempty"`
+	GoVersion  string `json:"goVersion,omitempty"`
+	Release    string `json:"release"`
+	Name       string `json:"name,omitempty"`
+	RPMVersion string `json:"RPMVersion,omitempty"`
+	Version    string `json:"Version,omitempty"`
 }
 
 // About contains version info to be exposed by `api/.../about.json` endpoint
 var About about
 
-func splitRPMVersion(v string) (string, string, string, string) {
+func splitRPMVersion(v string) (string, string, string, string, string) {
 
 	if v == "" {
-		return "UnknownVersion", "", "", ""
+		return "UnknownVersion", "", "", "", ""
 	}
-	// RPM version is something like traffic_ops-2.3.0-8765.a0b1c3d4
-	//  -- if not of that form, Name, Version, Commits, CommitHash may be missing
+	// RPM version is something like traffic_ops-2.3.0-8765.a0b1c3d4.el7
+	//  -- if not of that form, Name, Version, Commits, CommitHash, Release may be missing
 	s := strings.SplitN(v, "-", 3)
 	if len(s) >= 3 {
 		// 3rd field is commits.hash
-		t := strings.SplitN(s[2], ".", 2)
+		t := strings.SplitN(s[2], ".", 3)
 		s = append(s[0:2], t...)
 	}
-	for cap(s) < 4 {
+	for len(s) < 5 {
 		s = append(s, "")
 	}
-	return s[0], s[1], s[2], s[3]
+	return s[0], s[1], s[2], s[3], s[4]
 }
 
-func init() {
-	// name, version, commits, hash -- parts of rpm version string
-	n, v, c, h := splitRPMVersion(About.TrafficOpsRPMVersion)
+// SetAbout is called by main.main to store the static info for the .../about endpoint
+func SetAbout(s string) {
+	// name, version, commits, hash, Release -- parts of rpm version string
+	n, v, c, h, r := splitRPMVersion(s)
 	About = about{
-		GoVersion:            runtime.Version(),
-		TrafficOpsRPMVersion: About.TrafficOpsRPMVersion,
-		TrafficOpsName:       n,
-		TrafficOpsVersion:    v,
-		Commits:              c,
-		CommitHash:           h,
+		CommitHash: h,
+		Commits:    c,
+		GoVersion:  runtime.Version(),
+		Release:    r,
+		Name:       n,
+		RPMVersion: s,
+		Version:    v,
 	}
-
 }
 
-// AboutHandler returns info about running Traffic Ops
-func AboutHandler() http.HandlerFunc {
+// Handler returns info about running Traffic Ops
+func Handler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
