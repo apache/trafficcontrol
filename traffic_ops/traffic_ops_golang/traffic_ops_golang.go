@@ -30,6 +30,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/about"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/config"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -58,10 +59,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	var cfg Config
+	var cfg config.Config
 	var err error
 	var errorToLog error
-	if cfg, err = LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName); err != nil {
+	if cfg, err = config.LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName); err != nil {
 		if !strings.Contains(err.Error(), "riak conf") {
 			fmt.Println("Error loading config: " + err.Error())
 			return
