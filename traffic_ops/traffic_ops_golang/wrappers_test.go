@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"flag"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -37,6 +38,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
+
+var debugLogging = flag.Bool("debug", false, "enable debug logging in test")
 
 // TestWrapHeaders checks that appropriate default headers are added to a request
 func TestWrapHeaders(t *testing.T) {

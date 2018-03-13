@@ -31,6 +31,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/basho/riak-go-client"
@@ -48,7 +49,7 @@ type URISignerKeyset struct {
 }
 
 // endpoint handler for fetching uri signing keys from riak
-func getURIsignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
+func getURIsignkeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorsFunc(w, r)
 
@@ -130,7 +131,7 @@ func getURIsignkeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
 }
 
 // Http DELETE handler used to remove urisigning keys assigned to a delivery service.
-func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
+func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorsFunc(w, r)
 
@@ -218,7 +219,7 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFu
 }
 
 // Http POST or PUT handler used to store urisigning keys to a delivery service.
-func saveDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg Config) http.HandlerFunc {
+func saveDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorsFunc(w, r)
 
