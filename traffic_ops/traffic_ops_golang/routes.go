@@ -46,6 +46,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/status"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/systeminfo"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/types"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/utils"
 
 	"github.com/basho/riak-go-client"
 )
@@ -68,7 +69,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 
 	routes := []Route{
 		//About
-		{1.3, http.MethodGet, `about/?(\.json)?$`, about.AboutHandler(), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodGet, `about/?(\.json)?$`, about.Handler(), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		// Proxied routes
 		//CDNs
@@ -190,6 +191,9 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 
 		//System
 		{1.2, http.MethodGet, `system/info/?(\.json)?$`, systeminfo.Handler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+
+		//Version
+		{1.3, http.MethodGet, `version$`, utils.VersionHandler(), auth.PrivLevelReadOnly, Authenticated, nil},
 	}
 	return routes, proxyHandler, nil
 }

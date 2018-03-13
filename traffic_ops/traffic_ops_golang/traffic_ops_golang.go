@@ -40,7 +40,7 @@ import (
 var version = "development"
 
 func init() {
-	about.About.TrafficOpsRPMVersion = version
+	about.SetAbout(version)
 }
 
 func main() {
@@ -51,7 +51,7 @@ func main() {
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Println(about.About.TrafficOpsRPMVersion)
+		fmt.Println(about.About.RPMVersion)
 		os.Exit(0)
 	}
 	if len(os.Args) < 2 {

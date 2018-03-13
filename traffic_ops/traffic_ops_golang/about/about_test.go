@@ -23,16 +23,17 @@ import (
 	"testing"
 )
 
-var testSet = map[string][]string{
-	"test0-0.1.0-1234.01ab23cd": []string{"test0", "0.1.0", "1234", "01ab23cd"},
-	"test1-0.2.0":               []string{"test1", "0.2.0", "", ""},
-	"test2":                     []string{"test2", "", "", ""},
+var testSet = map[string][5]string{
+	"traffic_ops-2.3.0-8095.fd4fc11a.el7": [5]string{"traffic_ops", "2.3.0", "8095", "fd4fc11a", "el7"},
+	"test0-0.1.0-1234.01ab23cd.el7":       [5]string{"test0", "0.1.0", "1234", "01ab23cd", "el7"},
+	"test1-0.2.0":                         [5]string{"test1", "0.2.0", "", ""},
+	"test2":                               [5]string{"test2", "", "", ""},
 }
 
 func TestSplitRPMVersion(t *testing.T) {
 	for s, e := range testSet {
 		t.Logf("Testing %s %v", s, e)
-		n, v, c, h := splitRPMVersion(s)
+		n, v, c, h, a := splitRPMVersion(s)
 
 		if n != e[0] {
 			t.Errorf("expected name '%s', got '%s'", n, e[0])
@@ -45,6 +46,9 @@ func TestSplitRPMVersion(t *testing.T) {
 		}
 		if h != e[3] {
 			t.Errorf("expected commitHash '%s', got '%s'", h, e[3])
+		}
+		if a != e[4] {
+			t.Errorf("expected commitHash '%s', got '%s'", h, e[4])
 		}
 	}
 }
