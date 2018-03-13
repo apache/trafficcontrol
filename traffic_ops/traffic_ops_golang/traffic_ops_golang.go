@@ -48,6 +48,7 @@ func main() {
 	configFileName := flag.String("cfg", "", "The config file path")
 	dbConfigFileName := flag.String("dbcfg", "", "The db config file path")
 	riakConfigFileName := flag.String("riakcfg", "", "The riak config file path")
+	ldapConfigFileName := flag.String("ldapcfg", "", "the ldap config file path")
 	flag.Parse()
 
 	if *showVersion {
@@ -63,7 +64,7 @@ func main() {
 	var err error
 	var errorToLog error
 
-	if cfg, err = config.LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName, version); err != nil {
+	if cfg, err = config.LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName, *ldapConfigFileName, version); err != nil {
 		if !strings.Contains(err.Error(), "riak conf") {
 			fmt.Println("Error loading config: " + err.Error())
 			return
