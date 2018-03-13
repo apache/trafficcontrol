@@ -1,5 +1,3 @@
-
-#
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#if [ ! -e /opt/traffic_router/webapps/ROOT.war ]; then
-    #echo "Symlinking /opt/traffic_router/webapps/traffic_router_core.war to /opt/traffic_router/webapps/core/ROOT.war"
-    #/bin/ln -s /opt/traffic_router/webapps/traffic_router_core.war /opt/traffic_router/webapps/core/ROOT.war
-    #/bin/mv /opt/traffic_router/webapps/traffic_router_core.war /opt/traffic_router/webapps/ROOT.war
-#fi
-
 if [ -f /opt/traffic_router/conf/*.crt ]; then
 	cd /opt/traffic_router/conf
 	for file in *.crt; do

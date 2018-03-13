@@ -15,8 +15,7 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.secure;
 
-import org.apache.juli.logging.LogFactory;
-import org.apache.juli.logging.Log;
+import org.apache.log4j.Logger;
 
 import javax.net.ssl.ExtendedSSLSession;
 import javax.net.ssl.SNIServerName;
@@ -36,7 +35,7 @@ import java.util.Optional;
 // once the JVM loads the default classes.
 public class KeyManager extends X509ExtendedKeyManager implements X509KeyManager {
 	private final CertificateRegistry certificateRegistry = CertificateRegistry.getInstance();
-	private static final Log log = LogFactory.getLog(KeyManager.class);
+	private static final Logger log = Logger.getLogger(KeyManager.class);
 	// To date this method is not getting exercised while running the router
 	@Override
 	public String chooseClientAlias(final String[] strings, final Principal[] principals, final Socket socket) {

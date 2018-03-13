@@ -15,12 +15,14 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.protocol;
 
+import org.apache.log4j.Logger;
+
 import java.lang.management.ManagementFactory;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 public class LanguidPoller extends Thread {
-	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(LanguidPoller.class);
+	private static final Logger log = Logger.getLogger(LanguidPoller.class);
 	final private RouterProtocolHandler protocolHandler;
 
 	public LanguidPoller(final RouterProtocolHandler protocolHandler) {
