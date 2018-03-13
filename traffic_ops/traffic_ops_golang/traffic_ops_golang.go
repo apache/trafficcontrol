@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/utils"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/about"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -39,7 +39,7 @@ import (
 var version = "development"
 
 func init() {
-	utils.About.TrafficOpsRPMVersion = version
+	about.About.TrafficOpsRPMVersion = version
 }
 
 func main() {
@@ -50,7 +50,7 @@ func main() {
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Println(utils.About.TrafficOpsRPMVersion)
+		fmt.Println(about.About.TrafficOpsRPMVersion)
 		os.Exit(0)
 	}
 	if len(os.Args) < 2 {
