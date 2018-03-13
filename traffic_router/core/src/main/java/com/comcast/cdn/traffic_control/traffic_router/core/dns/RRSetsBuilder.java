@@ -52,6 +52,10 @@ public class RRSetsBuilder {
 			return -1;
 		}
 
+		if (rrSet2.getType() == Type.SOA) {
+			return 1;
+		}
+
 		return rrSet1.getType() - rrSet2.getType();
 	};
 
