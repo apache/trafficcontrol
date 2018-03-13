@@ -76,7 +76,7 @@ public class CoverageZoneTest {
 		cacheGroups.add(eastCacheGroup);
 		cacheGroups.add(westCacheGroup);
 
-		NetworkNode eastNetworkNode = new NetworkNode("12.23.34.0/24", "east-cache-group", testLocation);
+		NetworkNode eastNetworkNode = new NetworkNode("12.23.34.0/24", "east-cache-group", testLocation, null, true);
 
 		CacheRegister cacheRegister = mock(CacheRegister.class);
 
@@ -88,7 +88,7 @@ public class CoverageZoneTest {
 		trafficRouter = PowerMockito.mock(TrafficRouter.class);
 		Whitebox.setInternalState(trafficRouter, "cacheRegister", cacheRegister);
 		when(trafficRouter.getCoverageZoneCacheLocation("12.23.34.45", "delivery-service-1")).thenCallRealMethod();
-		when(trafficRouter.getCoverageZoneCacheLocation("12.23.34.45", "delivery-service-1", false)).thenCallRealMethod();
+		when(trafficRouter.getCoverageZoneCacheLocation("12.23.34.45", "delivery-service-1", null, false)).thenCallRealMethod();
 		when(trafficRouter.getCacheRegister()).thenReturn(cacheRegister);
 		when(trafficRouter.orderCacheLocations(cacheGroups,testLocation)).thenCallRealMethod();
 		when(trafficRouter.getSupportingCaches(anyListOf(Cache.class), eq(deliveryService))).thenCallRealMethod();

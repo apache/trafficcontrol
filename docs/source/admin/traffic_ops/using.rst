@@ -873,6 +873,24 @@ The Coverage Zone File (CZF) should contain a cachegroup name to network prefix 
           "192.168.4.0/24",
           "192.168.5.0/24"
         ]
+      },
+      "cache-group-03": {
+        "backupZones":{
+          "list": ["cache-group-02"],
+          "fallbackToClosestGroup": true
+        },
+        "coordinates": {
+          "latitude":  3.3,
+          "longitude": 4.4
+        },
+        "network6": [
+          "1234:566a::/64",
+          "1234:566b::/64"
+        ],
+        "network": [
+          "192.168.2.0/24",
+          "192.168.3.0/24"
+        ]
       }
     }
   }
@@ -881,7 +899,7 @@ The CZF is an input to the Traffic Control CDN, and as such does not get generat
 
 The script that generates the CZF file is not part of Traffic Control, since it is different for each situation.
 
-.. note:: The ``"coordinates"`` section is optional and may be used by Traffic Router for localization in the case of a CZF "hit" where the zone name does not map to a Cache Group name in Traffic Ops (i.e. Traffic Router will route to the closest Cache Group(s) geographically).
+.. note:: The ``"coordinates"`` section is optional and may be used by Traffic Router for localization in the case of a CZF "hit" where the zone name does not map to a Cache Group name in Traffic Ops (i.e. Traffic Router will route to the closest Cache Group(s) geographically). The ``"backupZones"`` section is optional and is used by Traffic Router for localization in the case of a CZF "hit" when there are no caches available for that DS in the matched cache group.  This backup "list" contains an ordered list of backup cache groups to choose from if the matched cache group has no caches available for a requested DS. If an available cache cannot be found in any of the backup groups either, the "fallbackToClosestGroup" flag determines the Traffic Router's following behavior. If true, Traffic Router will find the next closest cache group with available caches. If false (the default), Traffic Router will bypass the request (if configured) or reject it.
 
 .. _rl-deep-czf:
 

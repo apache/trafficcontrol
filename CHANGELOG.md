@@ -32,8 +32,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.3/statuses (R)
   - /api/1.3/system/info
   - /api/1.3/types (R)
+- Backup Edge Cache group: Backup Edge group for a particular cache group can be configured using coverage zone files. With this, users will be able control traffic within portions of their network, thereby avoiding choosing fallback cache groups using geo coordinates(getClosestAvailableCachegroup). This can be controlled using "backupZones" which contains configuration for backup cache groups parsed from the Coverage Zone File as explained [here](http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#the-coverage-zone-file-and-asn-table)
 
 ### Changed
 - Reformatted this CHANGELOG file to the keep-a-changelog format
 
-[Unreleased]: https://github.com/apache/incubator-trafficcontrol/compare/RELEASE-2.1.0...HEAD
+[Unreleased]: https://github.com/apache/incubator-trafficcontrol/compare/RELEASE-2.1.0...HEAD 
+

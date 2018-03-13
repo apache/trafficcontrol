@@ -265,8 +265,9 @@ public class TrafficRouter {
 	protected List<Cache> selectCaches(final HTTPRequest request, final DeliveryService ds, final Track track) throws GeolocationException {
 		CacheLocation cacheLocation;
 		ResultType result = ResultType.CZ;
+		final boolean useDeep = (ds.getDeepCache() == DeliveryService.DeepCachingType.ALWAYS);
 
-		if (ds.getDeepCache() == DeliveryService.DeepCachingType.ALWAYS) {
+		if (useDeep) {
 			// Deep caching is enabled. See if there are deep caches available
 			cacheLocation = getDeepCoverageZoneCacheLocation(request.getClientIP(), ds);
 			if (cacheLocation != null && cacheLocation.getCaches().size() != 0) {
@@ -278,7 +279,7 @@ public class TrafficRouter {
 			}
 		} else {
 			// Deep caching not enabled for this Delivery Service; use the regular CZ
-			cacheLocation = getCoverageZoneCacheLocation(request.getClientIP(), ds);
+			cacheLocation = getCoverageZoneCacheLocation(request.getClientIP(), ds, track, useDeep);
 		}
 
 		List<Cache>caches = selectCachesByCZ(ds, cacheLocation, track, result);
@@ -295,7 +296,8 @@ public class TrafficRouter {
 				track.setResult(ResultType.MISS);
 				track.setResultDetails(ResultDetails.DS_CZ_ONLY);
 			}
-		} else {
+		} else if (track.isUseNextClosest()) {
+			//Even with Geo limit none, TR wont do geo look-up, if fallback is disabled via backupZones configuration
 			caches = selectCachesByGeo(request.getClientIP(), ds, cacheLocation, track);
 		}
 
@@ -303,7 +305,6 @@ public class TrafficRouter {
 	}
 
 	public List<Cache> selectCachesByGeo(final String clientIp, final DeliveryService deliveryService, final CacheLocation cacheLocation, final Track track) throws GeolocationException {
-
 		Geolocation clientLocation = null;
 
 		try {
@@ -365,7 +366,7 @@ public class TrafficRouter {
 			return result;
 		}
 
-		final CacheLocation cacheLocation = getCoverageZoneCacheLocation(request.getClientIP(), ds);
+		final CacheLocation cacheLocation = getCoverageZoneCacheLocation(request.getClientIP(), ds, track, false);
 		List<Cache> caches = selectCachesByCZ(ds, cacheLocation, track);
 
 		if (caches != null) {
@@ -394,7 +395,9 @@ public class TrafficRouter {
 			LOGGER.error("Bad client address: '" + request.getClientIP() + "'");
 		}
 
-		caches = selectCachesByGeo(request.getClientIP(), ds, cacheLocation, track);
+		if (track.isUseNextClosest()) {
+			caches = selectCachesByGeo(request.getClientIP(), ds, cacheLocation, track);
+		}
 
 		if (caches != null) {
 			track.setResult(ResultType.GEO);
@@ -486,6 +489,9 @@ public class TrafficRouter {
 
 		if (caches != null && track != null) {
 			track.setResult(result);
+			if (track.isFromBackupCzGroup()) {
+				track.setResultDetails(ResultDetails.DS_CZ_BACKUP_CG);
+			}
 			track.setResultLocation(cacheLocation.getGeolocation());
 		}
 
@@ -655,11 +661,11 @@ public class TrafficRouter {
 	}
 
 	public CacheLocation getCoverageZoneCacheLocation(final String ip, final String deliveryServiceId) {
-		return getCoverageZoneCacheLocation(ip, deliveryServiceId, false); // default is not deep
+		return getCoverageZoneCacheLocation(ip, deliveryServiceId, null, false); // default is not deep
 	}
 
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
-	public CacheLocation getCoverageZoneCacheLocation(final String ip, final String deliveryServiceId, final boolean useDeep) {
+	public CacheLocation getCoverageZoneCacheLocation(final String ip, final String deliveryServiceId, final Track track, final boolean useDeep) {
 		final NetworkNode networkNode = useDeep ? getDeepNetworkNode(ip) : getNetworkNode(ip);
 
 		if (networkNode == null) {
@@ -695,17 +701,48 @@ public class TrafficRouter {
 			return cacheLocation;
 		}
 
-		// We had a hit in the CZF but the name does not match a known cache location.
-		// Check whether the CZF entry has a geolocation and use it if so.
-		return getClosestCacheLocation(cacheRegister.filterAvailableLocations(deliveryServiceId), networkNode.getGeolocation(), cacheRegister.getDeliveryService(deliveryServiceId));
+		if (networkNode.getBackupCacheGroups() != null) {
+			for (final String cacheGroup : networkNode.getBackupCacheGroups()) {
+				final CacheLocation bkCacheLocation = getCacheRegister().getCacheLocationById(cacheGroup);
+				if (bkCacheLocation != null && !getSupportingCaches(bkCacheLocation.getCaches(), deliveryService).isEmpty()) {
+					LOGGER.debug("Got backup CZ cache group " + bkCacheLocation.getId() + " for " + ip + ", ds " + deliveryServiceId);
+					if (track != null) {
+						track.setFromBackupCzGroup(true);
+					}
+					return bkCacheLocation;
+				}
+			}
+		} 
+
+		CacheLocation closestCacheLocation = null;
+
+		if (networkNode.isUseClosest()) {
+			// We had a hit in the CZF but the name does not match a known cache location.
+			// Check whether the CZF entry has a geolocation and use it if so.
+			closestCacheLocation = getClosestCacheLocation(cacheRegister.filterAvailableLocations(deliveryServiceId), networkNode.getGeolocation(), cacheRegister.getDeliveryService(deliveryServiceId));
+			if (closestCacheLocation != null) {
+				LOGGER.debug("Got closest CZ cache group " + closestCacheLocation.getId() + " for " + ip + ", ds " + deliveryServiceId);
+				if (track != null) {
+					track.setFromBackupCzGroup(true);
+
+				}
+				return closestCacheLocation;
+			}  
+		} else {
+			if (track != null) {
+				track.setUseNextClosest(false);
+			}
+		} 
+
+		return closestCacheLocation;
 	}
 
 	public CacheLocation getDeepCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService) {
-		return getCoverageZoneCacheLocation(ip, deliveryService, true);
+		return getCoverageZoneCacheLocation(ip, deliveryService, null, true);
 	}
 
-	protected CacheLocation getCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService, final boolean useDeep) {
-		return getCoverageZoneCacheLocation(ip, deliveryService.getId(), useDeep);
+	protected CacheLocation getCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService, final Track track, final boolean useDeep) {
+		return getCoverageZoneCacheLocation(ip, deliveryService.getId(), track, useDeep);
 	}
 
 	protected CacheLocation getCoverageZoneCacheLocation(final String ip, final DeliveryService deliveryService) {
