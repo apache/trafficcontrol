@@ -15,6 +15,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.secure;
 
+import org.apache.log4j.Logger;
+
 import java.io.ByteArrayInputStream;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -23,7 +25,7 @@ import java.util.Base64;
 import java.util.List;
 
 public class CertificateDecoder {
-	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(CertificateDecoder.class);
+	private static final Logger log = Logger.getLogger(CertificateDecoder.class);
 
 	private static final String CRT_HEADER = "-----BEGIN CERTIFICATE-----";
 	private static final String CRT_FOOTER = "-----END CERTIFICATE-----";

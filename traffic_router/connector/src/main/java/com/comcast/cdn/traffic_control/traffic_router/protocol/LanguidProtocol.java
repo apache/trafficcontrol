@@ -17,9 +17,10 @@ package com.comcast.cdn.traffic_control.traffic_router.protocol;
 
 
 import org.apache.coyote.http11.Http11NioProtocol;
+import org.apache.log4j.Logger;
 
 public class LanguidProtocol extends Http11NioProtocol implements RouterProtocolHandler {
-	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(LanguidProtocol.class);
+	private static final Logger log = Logger.getLogger(LanguidProtocol.class);
 	private boolean ready = false;
 	private boolean initialized = false;
 	private String mbeanPath;

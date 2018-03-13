@@ -21,8 +21,6 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class HandshakeData {
-	protected static org.apache.juli.logging.Log log = org.apache.juli.logging.LogFactory.getLog(HandshakeData.class);
-
 	private final String deliveryService;
 	private final String hostname;
 	private final X509Certificate[] certificateChain;

@@ -21,13 +21,13 @@ import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import java.io.IOException;
 
 public class FederationMappingBuilder {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FederationMappingBuilder.class);
+    private final static Logger LOGGER = Logger.getLogger(FederationMapping.class);
+
 
     public FederationMapping fromJSON(final String json) throws JsonUtilsException, IOException {
         final ObjectMapper mapper = new ObjectMapper();
