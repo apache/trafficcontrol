@@ -4,18 +4,17 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
-
-	"github.com/jmoiron/sqlx"
-
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
-	"github.com/pkg/errors"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type passwordForm struct {

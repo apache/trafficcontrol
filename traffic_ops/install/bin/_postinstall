@@ -262,7 +262,7 @@ sub generateLdapConf {
         }
     }
 
-    my @requiredKeys = qw{ host admin_dn admin_pass search_base };
+    my @requiredKeys = qw{ host admin_dn admin_pass search_base search_query insecure ldap_timeout_secs };
     for my $k (@requiredKeys) {
         if (! exists $ldapConf{$k} ) {
             errorOut("$k is a required key in $fileName");

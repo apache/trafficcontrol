@@ -44,6 +44,7 @@ type Config struct {
 	RiakEnabled     bool
 	ConfigLDAP      *ConfigLDAP
 	LDAPEnabled     bool
+	LDAPConfPath    string `json:"ldap_conf_location"`
 	Version         string
 }
 
@@ -120,7 +121,8 @@ func (c Config) EventLog() log.LogLocation {
 }
 
 // LoadConfig - reads the config file into the Config struct
-func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, ldapConfPath string, appVersion string) (Config, error) {
+
+func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appVersion string) (Config, error) {
 	// load json from cdn.conf
 	confBytes, err := ioutil.ReadFile(cdnConfPath)
 	if err != nil {
@@ -154,11 +156,11 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, ldap
 		}
 	}
 
-	if ldapConfPath != "" {
-		cfg.LDAPEnabled, cfg.ConfigLDAP, err = GetLDAPConfig(ldapConfPath)
+	if cfg.LDAPConfPath != "" {
+		cfg.LDAPEnabled, cfg.ConfigLDAP, err = GetLDAPConfig(cfg.LDAPConfPath)
 		if err != nil {
 			cfg.LDAPEnabled = false // probably unnecessary
-			return cfg, fmt.Errorf("parsing ldap config '%s': %v", ldapConfPath, err)
+			return cfg, fmt.Errorf("parsing ldap config '%s': %v", cfg.LDAPConfPath, err)
 		}
 	} else {
 		cfg.LDAPEnabled = false
