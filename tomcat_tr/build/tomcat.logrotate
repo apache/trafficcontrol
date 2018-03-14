@@ -1,8 +1,0 @@
-/var/log/tomcat/catalina.out {
-  daily
-  copytruncate
-  missingok
-  compress
-  maxage 30
-  dateext 
-}

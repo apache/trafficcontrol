@@ -214,7 +214,7 @@
 							</mappings>
 							<requires>
 								<require>jdk &gt;= 1.8</require>
-								<require>tomcat_tr</require>
+								<require>tomcat &gt;= 8.5.28</require>
 								<require>apr &gt;= 1.4.8</require>
 								<require>tomcat-native &gt;= 1.2.16</require>
 							</requires>
