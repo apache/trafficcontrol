@@ -22,12 +22,11 @@ type Retrier struct {
 	ReqHdr            http.Header
 	ReqTime           time.Time
 	ReqCacheControl   web.CacheControl
-	CacheKey          string
 	RemappingProducer *remap.RemappingProducer
 	ReqID             uint64
 }
 
-func NewRetrier(h *Handler, reqHdr http.Header, reqTime time.Time, reqCacheControl web.CacheControl, cacheKey string, remappingProducer *remap.RemappingProducer, reqID uint64) *Retrier {
+func NewRetrier(h *Handler, reqHdr http.Header, reqTime time.Time, reqCacheControl web.CacheControl, remappingProducer *remap.RemappingProducer, reqID uint64) *Retrier {
 	return &Retrier{
 		H:                 h,
 		ReqHdr:            reqHdr,
@@ -47,7 +46,12 @@ func (r *Retrier) Get(req *http.Request, obj *cacheobj.CacheObj) (*cacheobj.Cach
 		getAndCache := func() *cacheobj.CacheObj {
 			return GetAndCache(remapping.Request, remapping.ProxyURL, remapping.CacheKey, remapping.Name, remapping.Request.Header, r.ReqTime, r.H.strictRFC, remapping.Cache, r.H.ruleThrottlers[remapping.Name], obj, remapping.Timeout, retryFailures, remapping.RetryNum, remapping.RetryCodes, remapping.Transport, r.ReqID)
 		}
-		return r.H.getter.Get(r.CacheKey, getAndCache, canReuse)
+		gotObj, getReqID := r.H.getter.Get(remapping.CacheKey, getAndCache, canReuse, r.ReqID)
+
+		req := remapping.Request
+		log.Debugf("Retrier.Get Y URI %v %v %v remapping.CacheKey %v rule %v parent %v code %v headers %+v len(body) %v getterid %v (reqid %v)\n", req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), remapping.CacheKey, remapping.Name, remapping.ProxyURL, gotObj.Code, gotObj.RespHeaders, len(gotObj.Body), getReqID, r.ReqID)
+
+		return gotObj
 	}
 
 	return retryingGet(retryGetFunc, req, r.RemappingProducer, obj)
@@ -116,6 +120,8 @@ func GetAndCache(
 			req.Header.Del(ModifiedSinceHdr)
 		}
 		respCode, respHeader, respBody, reqTime, reqRespTime, err := web.Request(transport, req)
+		log.Debugf("GetAndCache web.Request URI %v %v %v cacheKey %v rule %v parent %v error %v reval %v code %v len(body) %v (reqid %v)\n", req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), cacheKey, remapName, proxyURLStr, err, revalidateObj != nil, respCode, len(respBody), reqID)
+
 		if err != nil {
 			log.Errorf("Parent error for URI %v %v %v cacheKey %v rule %v parent %v error %v (reqid %v)\n", req.URL.Scheme, req.URL.Host, req.URL.EscapedPath(), cacheKey, remapName, proxyURLStr, err, reqID)
 			code := CodeConnectFailure
@@ -148,7 +154,7 @@ func GetAndCache(
 				return obj // return without caching
 			}
 		} else {
-			log.Debugf("GetAndCache revalidating %v (reqid %v)\n", cacheKey, reqID)
+			log.Debugf("GetAndCache revalidating %v len(revalidateObj.Body) %v (reqid %v)\n", cacheKey, len(revalidateObj.Body), reqID)
 			// must copy, because this cache object may be concurrently read by other goroutines
 			newRespHeader := web.CopyHeader(revalidateObj.RespHeaders)
 			newRespHeader.Set("Date", respHeader.Get("Date"))

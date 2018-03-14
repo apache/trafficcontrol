@@ -7,80 +7,67 @@ import (
 )
 
 type Getter interface {
-	Get(key string, actualGet func() *cacheobj.CacheObj, canUse func(*cacheobj.CacheObj) bool) *cacheobj.CacheObj
+	Get(key string, actualGet func() *cacheobj.CacheObj, canUse func(*cacheobj.CacheObj) bool, reqID uint64) (*cacheobj.CacheObj, uint64)
 }
 
-type CanUseCachedFunc func(obj *cacheobj.CacheObj) bool
-
-type getter struct {
-	objs map[string][]GetterObj
-	m    sync.Mutex
-}
-
-type GetterObj struct {
-	c      chan *cacheobj.CacheObj
-	canUse CanUseCachedFunc
+type GetterResp struct {
+	CacheObj *cacheobj.CacheObj
+	GetReqID uint64
 }
 
 func NewGetter() Getter {
-	return &getter{objs: map[string][]GetterObj{}}
+	return &getter{waiters: map[string][]chan GetterResp{}}
 }
 
-func (g *getter) Get(key string, actualGet func() *cacheobj.CacheObj, canUse func(*cacheobj.CacheObj) bool) *cacheobj.CacheObj {
-	getChan := g.atomicGetOrCreateGetter(key, actualGet, canUse)
-	return <-getChan
+// getter implements Getter, and does a fan-in so only one real request is made to the parent at any given time, and then that object is given to all concurrent requesters.
+//
+// When a request for a key with no-one currently processing it comes in, that requestor becomes the Author. Subsequent requests become Waiters.
+// The initial Author inserts a new constructed (but empty) slice into the waiters map.
+// Then, when other requests come in, they see that waiters[key] exists, and add themselves to it, and block reading from their chan.
+// Then, when the Author gets its response, it iterates over the Waiters and sends the response to all of them, at the same time (with the same lock, atomically) clearing the waiters for the next request that comes in.
+//
+// If the Author response can't be used, all Waiters make their own requests.
+// Note this assumes an uncacheable response for one request is likely uncacheable for all, and it's faster and less load on the origin if so.
+// If it's likely the author request is uncacheable, but a different waiter is cacheable for all other waiters, this will be more network, more origin load, and more work. If that's the case for you, consider creating another type that fulfills the Getter interface, and making the Getter configurable.
+type getter struct {
+	// waiters is a map of cache keys to chans for getters.
+	waiters  map[string][]chan GetterResp
+	waitersM sync.Mutex
 }
 
-// GetterBuffer is the size of the getter chan. This is buffered for the getter, not for clients. We don't want the getter to block, wait for a client to read, write another, and block again. We want to write a batch of objects for clients to process, to reduce the back-and-forth stutter between goroutines.
-// TODO test increase. Make configurable?
-const GetterBuffer = 10
+func (g *getter) Get(key string, actualGet func() *cacheobj.CacheObj, canUse func(*cacheobj.CacheObj) bool, reqID uint64) (*cacheobj.CacheObj, uint64) {
+	isAuthor := false
+	// Buffered for performance, so the author can iterate over all wait chans without blocking.
+	// Note this is unused if isAuthor becomes true.
+	getChan := make(chan GetterResp, 1)
 
-func (g *getter) atomicGetOrCreateGetter(key string, actualGet func() *cacheobj.CacheObj, canUse func(*cacheobj.CacheObj) bool) <-chan *cacheobj.CacheObj {
-	g.m.Lock()
-	defer g.m.Unlock()
-	getterObjs, ok := g.objs[key]
-	if !ok {
-		getterObjs = make([]GetterObj, 0, 1)
-		go gogetter(g, key, actualGet, canUse)
+	g.waitersM.Lock()
+	if _, ok := g.waiters[key]; !ok {
+		isAuthor = true
+		g.waiters[key] = []chan GetterResp{}
+	} else {
+		g.waiters[key] = append(g.waiters[key], getChan)
 	}
-	c := make(chan *cacheobj.CacheObj, GetterBuffer)
-	getterObj := GetterObj{c: c, canUse: canUse}
-	getterObjs = append(getterObjs, getterObj)
-	g.objs[key] = getterObjs
-	return c
-}
+	g.waitersM.Unlock()
 
-// atomicPopGetter atomically gets a GetterObj and returns it, and whether it's the last one, i.e. whether the gogetter should exit. This MUST NOT be called by the same gogetter goroutine after returning true.
-func (g *getter) atomicPopGetter(key string) (GetterObj, bool) {
-	g.m.Lock()
-	defer g.m.Unlock()
-	objs := g.objs[key]
-	if len(objs) == 1 {
-		delete(g.objs, key)
-		return objs[0], true
-	}
-	g.objs[key] = objs[1:] // if this panics, you called this function after it returned true and there were no more getters
-	return objs[0], false
-}
-
-func gogetter(g *getter, key string, actualGet func() *cacheobj.CacheObj, canReuse func(*cacheobj.CacheObj) bool) {
-	getter, noRemainingGetters := g.atomicPopGetter(key)
-	for {
+	if isAuthor {
 		obj := actualGet()
-		// don't need to check if the first can use, since the object isn't 'cached' i.e. given to anyone else yet.
-		getter.c <- obj
+		waitResp := GetterResp{CacheObj: obj, GetReqID: reqID}
 
-		// TODO process all getters, and create a list of "getters who couldn't use", and re-queue them? That would optimize for some requests being cachable and some not, for the same key. The current routine is optimized for an uncacheable key being uncacheable for all requestors.
-		for {
-			if noRemainingGetters {
-				return
-			}
-			getter, noRemainingGetters = g.atomicPopGetter(key)
-			if getter.canUse(obj) {
-				getter.c <- obj
-			} else {
-				break
-			}
+		g.waitersM.Lock()
+		for _, waitChan := range g.waiters[key] {
+			waitChan <- waitResp
 		}
+		delete(g.waiters, key)
+		g.waitersM.Unlock()
+
+		return obj, reqID
 	}
+
+	if waitResp := <-getChan; canUse(waitResp.CacheObj) {
+		return waitResp.CacheObj, waitResp.GetReqID
+	}
+
+	// if the Author response can't be used, all Waiters make their own requests
+	return actualGet(), reqID
 }
