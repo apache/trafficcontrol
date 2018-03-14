@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormEditDeliveryServiceController = function(deliveryService, type, types, $scope, $state, $controller, $uibModal, locationUtils, deliveryServiceService, deliveryServiceRequestService) {
+var FormEditDeliveryServiceController = function(deliveryService, type, types, $scope, $state, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel) {
 
 	// extends the FormDeliveryServiceController to inherit common methods
 	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, dsCurrent: deliveryService, type: type, types: types, $scope: $scope }));
@@ -91,10 +91,17 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 				// do nothing
 			});
 		} else {
-			deliveryServiceService.updateDeliveryService(deliveryService, false).
-				then(function() {
-					$state.reload(); // reloads all the resolves for the view
-				});
+			deliveryServiceService.updateDeliveryService(deliveryService).
+				then(
+					function() {
+						$state.reload(); // reloads all the resolves for the view
+						messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] updated' } ], false);
+					},
+					function(fault) {
+						$anchorScroll(); // scrolls window to top
+						messageModel.setMessages(fault.data.alerts, false);
+					}
+				);
 		}
 	};
 
@@ -117,10 +124,17 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 				}
 			});
 			modalInstance.result.then(function() {
-				deliveryServiceService.deleteDeliveryService(deliveryService, true)
-					.then(function() {
-						locationUtils.navigateToPath('/delivery-services');
-					});
+				deliveryServiceService.deleteDeliveryService(deliveryService)
+					.then(
+						function() {
+							messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + deliveryService.xmlId + ' ] deleted' } ], true);
+							locationUtils.navigateToPath('/delivery-services');
+						},
+						function(fault) {
+							$anchorScroll(); // scrolls window to top
+							messageModel.setMessages(fault.data.alerts, false);
+						}
+					);
 			}, function () {
 				// do nothing
 			});
@@ -130,5 +144,5 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 
 };
 
-FormEditDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$state', '$controller', '$uibModal', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService'];
+FormEditDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$state', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel'];
 module.exports = FormEditDeliveryServiceController;
