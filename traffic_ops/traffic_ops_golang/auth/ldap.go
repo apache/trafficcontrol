@@ -4,17 +4,56 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/config"
 
+	"strings"
+
 	"gopkg.in/ldap.v2"
 )
 
+var defaultSet bool
+
+func setLdapTimeoutDefault(duration time.Duration) {
+	if !defaultSet {
+		ldap.DefaultTimeout = duration
+		defaultSet = true
+	}
+}
+
+const (
+	LDAPWithTLS = "ldaps://"
+	LDAPNoTLS   = "ldap://"
+)
+
+func ConnectToLDAP(cfg *config.ConfigLDAP) (*ldap.Conn, error) {
+	setLdapTimeoutDefault(time.Duration(cfg.LDAPTimeoutSecs) * time.Second)
+	host := strings.ToLower(cfg.Host)
+	var l *ldap.Conn
+	var err error
+	if strings.HasPrefix(host, LDAPWithTLS) {
+		host = strings.TrimPrefix(host, LDAPWithTLS)
+		l, err = ldap.DialTLS("tcp", host, &tls.Config{InsecureSkipVerify: cfg.Insecure, ServerName: strings.Split(host, ":")[0]})
+		if err != nil {
+			log.Errorln("error dialing tls")
+			return nil, err
+		}
+	} else if strings.HasPrefix(host, LDAPNoTLS) {
+		host = strings.TrimPrefix(host, LDAPNoTLS)
+		l, err = ldap.Dial("tcp", host)
+		if err != nil {
+			log.Errorln("error dialing")
+			return nil, err
+		}
+	}
+	return l, nil
+}
+
 func LookupUserDN(username string, cfg *config.ConfigLDAP) (string, bool, error) {
-	l, err := ldap.DialTLS("tcp", cfg.Host, &tls.Config{InsecureSkipVerify: true})
+	l, err := ConnectToLDAP(cfg)
 	if err != nil {
-		log.Errorln("error dialing tls")
 		return "", false, err
 	}
 	defer l.Close()
@@ -29,7 +68,7 @@ func LookupUserDN(username string, cfg *config.ConfigLDAP) (string, bool, error)
 	searchRequest := ldap.NewSearchRequest(
 		cfg.SearchBase,
 		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
-		fmt.Sprintf("(&(objectCategory=person)(objectClass=user)(sAMAccountName=%s))", username),
+		fmt.Sprintf(cfg.SearchQuery, username),
 		[]string{"dn"},
 		nil,
 	)
@@ -48,9 +87,8 @@ func LookupUserDN(username string, cfg *config.ConfigLDAP) (string, bool, error)
 }
 
 func AuthenticateUserDN(userDN string, password string, cfg *config.ConfigLDAP) (bool, error) {
-	l, err := ldap.DialTLS("tcp", cfg.Host, &tls.Config{InsecureSkipVerify: true})
+	l, err := ConnectToLDAP(cfg)
 	if err != nil {
-		log.Errorln("error dialing tls")
 		return false, err
 	}
 	defer l.Close()
