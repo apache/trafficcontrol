@@ -191,9 +191,6 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 
 		//System
 		{1.2, http.MethodGet, `system/info/?(\.json)?$`, systeminfo.Handler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-
-		//Version
-		{1.3, http.MethodGet, `version$`, utils.VersionHandler(), auth.PrivLevelReadOnly, Authenticated, nil},
 	}
 	return routes, proxyHandler, nil
 }
