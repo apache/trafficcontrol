@@ -87,10 +87,13 @@ type ConfigDatabase struct {
 }
 
 type ConfigLDAP struct {
-	AdminPass  string `json:"admin_pass"`
-	SearchBase string `json:"search_base"`
-	AdminDN    string `json:"admin_dn"`
-	Host       string `json:"host"`
+	AdminPass       string `json:"admin_pass"`
+	SearchBase      string `json:"search_base"`
+	AdminDN         string `json:"admin_dn"`
+	Host            string `json:"host"`
+	SearchQuery     string `json:"search_query"`
+	Insecure        bool   `json:"insecure"`
+	LDAPTimeoutSecs int    `json:"ldap_timeout_secs"`
 }
 
 // ErrorLog - critical messages
