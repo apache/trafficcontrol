@@ -52,7 +52,6 @@ RUN alternatives --install /usr/bin/java java /opt/java/bin/java 2 && \
 ###
 
 ADD infrastructure/docker/build/clean_build.sh /
-CMD /clean_build.sh tomcat_tr
 CMD /clean_build.sh traffic_router
 
 

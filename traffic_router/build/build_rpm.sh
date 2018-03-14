@@ -126,9 +126,18 @@ function initBuildArea() {
 	echo "The build area has been initialized."
 }
 
+#----------------------------------------
+function buildRpmTomcat () {
+	echo "Building the rpm for Tomcat."
+
+	cd "$TR_DIR"/tomcat-rpm || { echo "Could not cd to $TR_DIR/tomcat-rpm: $?"; exit 1; }
+        ./build_rpm.sh
+}
+
 # ---------------------------------------
 
 importFunctions
 checkEnvironment
 initBuildArea
 buildRpmTrafficRouter
+buildRpmTomcat
