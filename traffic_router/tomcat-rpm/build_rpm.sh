@@ -39,7 +39,7 @@ function checkEnvironment() {
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
 	export RPMBUILD="$WORKSPACE/rpmbuild"
 	export DIST="$WORKSPACE/dist"
-	export RPM="${PACKAGE}-${TOMCAT_VERSION}.${TOMCAT_RELEASE}-${BUILD_NUMBER}.x86_64.rpm"
+	export RPM="${PACKAGE}-${TOMCAT_VERSION}.${TOMCAT_RELEASE}-${BUILD_NUMBER}.${RHEL_VERSION}.x86_64.rpm"
 
 	echo "=================================================="
 	echo "WORKSPACE: $WORKSPACE"
@@ -71,7 +71,7 @@ function buildRpmTomcat () {
 
         cd $RPMBUILD
         rpmbuild --define "_topdir $(pwd)" \
-                 --define "build_number $BUILD_NUMBER" \
+                 --define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
                  --define "tomcat_version $TOMCAT_VERSION.$TOMCAT_RELEASE" \
                  -ba SPECS/tomcat.spec || \
                  { echo "RPM BUILD FAILED: $?"; exit 1; }
