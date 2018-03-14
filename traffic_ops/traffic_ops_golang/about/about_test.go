@@ -32,7 +32,6 @@ var testSet = map[string][5]string{
 
 func TestSplitRPMVersion(t *testing.T) {
 	for s, e := range testSet {
-		t.Logf("Testing %s %v", s, e)
 		n, v, c, h, a := splitRPMVersion(s)
 
 		if n != e[0] {
