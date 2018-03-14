@@ -34,6 +34,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.3/system/info
   - /api/1.3/types (R)
 - Fair Queuing Pacing: Using the FQ Pacing Rate parameter in Delivery Services allows operators to limit the rate of individual sessions to the edge cache. This feature requires a Trafficserver RPM containing the fq_pacing experimental plugin AND setting 'fq' as the default Linux qdisc in sysctl. 
+- Traffic Ops rpm changed to remove world-read permission from configuration files.
 
 ### Changed
 - Reformatted this CHANGELOG file to the keep-a-changelog format
