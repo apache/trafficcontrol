@@ -103,7 +103,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 					break;
 				case $scope.COMPLETE:
 					if (dsRequest.assigneeId != userModel.user.id) {
-						messageModel.setMessages([ { level: 'error', text: 'Only the Assignee can mark a delivery service request as complete' } ], false);
+						messageModel.setMessages([ { level: 'error', text: 'Only the assignee can mark a delivery service request as complete' } ], false);
 						$anchorScroll(); // scrolls window to top
 						return;
 					}
@@ -117,8 +117,19 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 		});
 	};
 
-	$scope.fulfillRequest = function(ds) {
+	var updateDeliveryServiceRequest = function() {
 		var promises = [];
+		// update the ds request if the ds request actually changed
+		if ($scope.deliveryServiceForm.$dirty) {
+			promises.push(deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest));
+		}
+		// make sure the ds request is assigned to the user that is fulfilling the request
+		promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(dsRequest.id, userModel.user.id));
+		// set the status to 'pending'
+		promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(dsRequest.id, 'pending'));
+	};
+
+	$scope.fulfillRequest = function(ds) {
 		var params = {
 			title: 'Delivery Service ' + $scope.changeType + ': ' + ds.xmlId,
 			message: 'Are you sure you want to fulfill this delivery service request and ' + $scope.changeType + ' the ' + ds.xmlId + ' delivery service'
@@ -135,26 +146,33 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			}
 		});
 		modalInstance.result.then(function() {
-			// update the ds request if the ds request actually changed
-			if ($scope.deliveryServiceForm.$dirty) {
-				promises.push(deliveryServiceRequestService.updateDeliveryServiceRequest(dsRequest.id, dsRequest));
-			}
-			// make sure the ds request is assigned to the user that is fulfilling the request
-			promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(dsRequest.id, userModel.user.id));
-			// set the status to 'pending'
-			promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(dsRequest.id, 'pending'));
-
 			// create, update or delete the ds per the ds request
 			if ($scope.changeType == 'create') {
 				deliveryServiceService.createDeliveryService(ds).
-					then(function() {
-						$q.all(promises); // after a successful create, update the ds request, assignee and status
-					});
+					then(
+						function(result) {
+							updateDeliveryServiceRequest(); // after a successful create, update the ds request, assignee and status
+							messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + ds.xmlId + ' ] created' } ], true);
+							locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?type=' + result.data.response[0].type);
+						},
+						function(fault) {
+							$anchorScroll(); // scrolls window to top
+							messageModel.setMessages(fault.data.alerts, false);
+						}
+				);
 			} else if ($scope.changeType == 'update') {
-				deliveryServiceService.updateDeliveryService(ds, true).
-					then(function() {
-						$q.all(promises); // after a successful update, update the ds request, assignee and status
-					});
+				deliveryServiceService.updateDeliveryService(ds).
+					then(
+						function(result) {
+							updateDeliveryServiceRequest(); // after a successful update, update the ds request, assignee and status
+							messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + ds.xmlId + ' ] updated' } ], true);
+							locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?type=' + result.data.response[0].type);
+						},
+						function(fault) {
+							$anchorScroll(); // scrolls window to top
+							messageModel.setMessages(fault.data.alerts, false);
+						}
+					);
 			} else if ($scope.changeType == 'delete') {
 				// and we're going to ask even again if they really want to delete but this time they need to enter the ds name to confirm the delete
 				params = {
@@ -172,13 +190,18 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 					}
 				});
 				modalInstance.result.then(function() {
-					deliveryServiceService.deleteDeliveryService(ds, true).
-					then(function() {
-						$q.all(promises) // after a successful delete, update the ds request, assignee and status and navigate to ds requests page
-							.then(function() {
+					deliveryServiceService.deleteDeliveryService(ds).
+						then(
+							function() {
+								updateDeliveryServiceRequest(); // after a successful delete, update the ds request, assignee and status and navigate to ds requests page
+								messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + ds.xmlId + ' ] deleted' } ], true);
 								locationUtils.navigateToPath('/delivery-service-requests');
-							});
-					});
+							},
+							function(fault) {
+								$anchorScroll(); // scrolls window to top
+								messageModel.setMessages(fault.data.alerts, false);
+							}
+						);
 				}, function () {
 					// do nothing
 				});

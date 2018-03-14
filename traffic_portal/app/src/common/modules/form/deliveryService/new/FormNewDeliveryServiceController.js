@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormNewDeliveryServiceController = function(deliveryService, type, types, $scope, $controller, $uibModal, deliveryServiceService, deliveryServiceRequestService) {
+var FormNewDeliveryServiceController = function(deliveryService, type, types, $scope, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel) {
 
 	// extends the FormDeliveryServiceController to inherit common methods
 	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, dsCurrent: deliveryService, type: type, types: types, $scope: $scope }));
@@ -63,11 +63,21 @@ var FormNewDeliveryServiceController = function(deliveryService, type, types, $s
 				// do nothing
 			});
 		} else {
-			deliveryServiceService.createDeliveryService(deliveryService);
+			deliveryServiceService.createDeliveryService(deliveryService).
+				then(
+					function(result) {
+						messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] created' } ], true);
+						locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?type=' + result.data.response[0].type);
+					},
+					function(fault) {
+						$anchorScroll(); // scrolls window to top
+						messageModel.setMessages(fault.data.alerts, false);
+					}
+			);
 		}
 	};
 
 };
 
-FormNewDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$controller', '$uibModal', 'deliveryServiceService', 'deliveryServiceRequestService'];
+FormNewDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel'];
 module.exports = FormNewDeliveryServiceController;

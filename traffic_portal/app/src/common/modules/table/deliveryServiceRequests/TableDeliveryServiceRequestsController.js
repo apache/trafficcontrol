@@ -163,6 +163,13 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 
 	$scope.rejectRequest = function(request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+
+		if (request.assigneeId != userModel.user.id) {
+			messageModel.setMessages([ { level: 'error', text: 'Only the assignee can mark a delivery service request as rejected' } ], false);
+			$anchorScroll(); // scrolls window to top
+			return;
+		}
+
 		var params = {
 			title: 'Reject Delivery Service Request',
 			message: 'Are you sure you want to reject this delivery service request?'
@@ -178,12 +185,8 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 			}
 		});
 		modalInstance.result.then(function() {
-			var promises = [];
-			promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(request.id, userModel.user.id));
-			promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, 'rejected'));
-
-			$q.all(promises)
-				.then(
+			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, 'rejected').
+				then(
 					function() {
 						$scope.refresh();
 					});
@@ -196,7 +199,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 
 		if (request.assigneeId != userModel.user.id) {
-			messageModel.setMessages([ { level: 'error', text: 'Only the Assignee can mark a delivery service request as complete' } ], false);
+			messageModel.setMessages([ { level: 'error', text: 'Only the assignee can mark a delivery service request as complete' } ], false);
 			$anchorScroll(); // scrolls window to top
 			return;
 		}

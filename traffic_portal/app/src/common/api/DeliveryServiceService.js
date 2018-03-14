@@ -28,46 +28,51 @@ var DeliveryServiceService = function(Restangular, $http, $q, locationUtils, htt
     };
 
     this.createDeliveryService = function(ds) {
-        return Restangular.service('deliveryservices').post(ds)
-            .then(
-                function(response) {
-                    messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + ds.xmlId + ' ] created' } ], true);
-                    locationUtils.navigateToPath('/delivery-services/' + response.id + '?type=' + response.type);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
-                }
-            );
-    };
-
-    this.updateDeliveryService = function(ds, delay) {
         var request = $q.defer();
 
-        $http.put(ENV.api['root'] + "deliveryservices/" + ds.id, ds)
+        $http.post(ENV.api['root'] + "deliveryservices", ds)
             .then(
                 function(response) {
-                    var response2 = response.data.response[0];
-                    messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + ds.xmlId + ' ] updated' } ], delay);
-                    locationUtils.navigateToPath('/delivery-services/' + response2.id + '?type=' + response2.type);
+                    request.resolve(response);
                 },
                 function(fault) {
-                    messageModel.setMessages(fault.data.alerts, false);
+                    request.reject(fault);
                 }
             );
 
         return request.promise;
     };
 
-    this.deleteDeliveryService = function(ds, delay) {
-        return Restangular.one("deliveryservices", ds.id).remove()
+    this.updateDeliveryService = function(ds) {
+        var request = $q.defer();
+
+        $http.put(ENV.api['root'] + "deliveryservices/" + ds.id, ds)
             .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + ds.xmlId + ' ] deleted' } ], delay);
+                function(response) {
+                    request.resolve(response);
                 },
                 function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
+                    request.reject(fault);
                 }
             );
+
+        return request.promise;
+    };
+
+    this.deleteDeliveryService = function(ds) {
+        var deferred = $q.defer();
+
+        $http.delete(ENV.api['root'] + "deliveryservices/" + ds.id)
+            .then(
+                function(response) {
+                    deferred.resolve(response);
+                },
+                function(fault) {
+                    deferred.reject(fault);
+                }
+            );
+
+        return deferred.promise;
     };
 
     this.getServerDeliveryServices = function(serverId) {
