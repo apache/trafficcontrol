@@ -209,7 +209,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	connectionClose := h.connectionClose || remappingProducer.ConnectionClose()
 	cacheKey := remappingProducer.CacheKey()
-	retrier := NewRetrier(h, reqHeader, reqTime, reqCacheControl, cacheKey, remappingProducer, reqID)
+	retrier := NewRetrier(h, reqHeader, reqTime, reqCacheControl, remappingProducer, reqID)
 
 	cache := remappingProducer.Cache()
 
