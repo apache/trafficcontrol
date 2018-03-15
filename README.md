@@ -37,4 +37,7 @@ Apache Traffic Control (incubating) is an Open Source implementation of a Conten
 * [Check out the wiki](https://github.com/Comcast/traffic_control/wiki) for less formal documentation, design docs and roadmap discussions 
 
 ##### Releases
+* [https://github.com/apache/incubator-trafficcontrol/releases](https://github.com/apache/incubator-trafficcontrol/releases)
+ 
+##### Downloads
 * [http://trafficcontrol.incubator.apache.org/downloads/index.html](http://trafficcontrol.incubator.apache.org/downloads/index.html)
