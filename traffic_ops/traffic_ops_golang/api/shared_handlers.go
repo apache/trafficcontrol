@@ -29,7 +29,7 @@ import (
 	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/jmoiron/sqlx"
@@ -112,7 +112,7 @@ func decodeAndValidateRequestBody(r *http.Request, v Validator, db *sqlx.DB) (in
 func ReadHandler(typeRef Reader, db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//create error function with ResponseWriter and Request
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
+		handleErrs := common.GetHandleErrorsFunc(w, r)
 
 		ctx := r.Context()
 
@@ -132,7 +132,7 @@ func ReadHandler(typeRef Reader, db *sqlx.DB) http.HandlerFunc {
 
 		results, errs, errType := typeRef.Read(db, params, *user)
 		if len(errs) > 0 {
-			tc.HandleErrorsWithType(errs, errType, handleErrs)
+			common.HandleErrorsWithType(errs, errType, handleErrs)
 			return
 		}
 		resp := struct {
@@ -161,7 +161,7 @@ func ReadHandler(typeRef Reader, db *sqlx.DB) http.HandlerFunc {
 func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//create error function with ResponseWriter and Request
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
+		handleErrs := common.GetHandleErrorsFunc(w, r)
 		//create local instance of the shared typeRef pointer
 		//no operations should be made on the typeRef
 		//decode the body and validate the request struct
@@ -216,7 +216,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 		//run the update and handle any error
 		err, errType := u.Update(db, *user)
 		if err != nil {
-			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
+			common.HandleErrorsWithType([]error{err}, errType, handleErrs)
 			return
 		}
 		//auditing here
@@ -224,8 +224,8 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 		//form response to send across the wire
 		resp := struct {
 			Response interface{} `json:"response"`
-			tc.Alerts
-		}{u, tc.CreateAlerts(tc.SuccessLevel, u.GetType()+" was updated.")}
+			common.Alerts
+		}{u, common.CreateAlerts(common.SuccessLevel, u.GetType()+" was updated.")}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
@@ -233,7 +233,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(common.ContentType, common.ApplicationJson)
 		fmt.Fprintf(w, "%s", respBts)
 	}
 }
@@ -247,7 +247,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 //   *forming and writing the body over the wire
 func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
+		handleErrs := common.GetHandleErrorsFunc(w, r)
 
 		d := typeRef
 
@@ -288,7 +288,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 		err, errType := d.Delete(db, *user)
 		if err != nil {
 			log.Errorf("error deleting: %++v", err)
-			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
+			common.HandleErrorsWithType([]error{err}, errType, handleErrs)
 			return
 		}
 		//audit here
@@ -296,8 +296,8 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 		CreateChangeLog(ApiChange, Deleted, d, *user, db)
 		//
 		resp := struct {
-			tc.Alerts
-		}{tc.CreateAlerts(tc.SuccessLevel, d.GetType()+" was deleted.")}
+			common.Alerts
+		}{common.CreateAlerts(common.SuccessLevel, d.GetType()+" was deleted.")}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
@@ -305,7 +305,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(common.ContentType, common.ApplicationJson)
 		fmt.Fprintf(w, "%s", respBts)
 	}
 }
@@ -320,7 +320,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 //   *forming and writing the body over the wire
 func CreateHandler(typeRef Creator, db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
+		handleErrs := common.GetHandleErrorsFunc(w, r)
 
 		//decode the body and validate the request struct
 		decoded, errs := decodeAndValidateRequestBody(r, typeRef, db)
@@ -355,7 +355,7 @@ func CreateHandler(typeRef Creator, db *sqlx.DB) http.HandlerFunc {
 
 		err, errType := i.Create(db, *user)
 		if err != nil {
-			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
+			common.HandleErrorsWithType([]error{err}, errType, handleErrs)
 			return
 		}
 
@@ -363,8 +363,8 @@ func CreateHandler(typeRef Creator, db *sqlx.DB) http.HandlerFunc {
 
 		resp := struct {
 			Response interface{} `json:"response"`
-			tc.Alerts
-		}{i, tc.CreateAlerts(tc.SuccessLevel, i.GetType()+" was created.")}
+			common.Alerts
+		}{i, common.CreateAlerts(common.SuccessLevel, i.GetType()+" was created.")}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
@@ -372,7 +372,7 @@ func CreateHandler(typeRef Creator, db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(common.ContentType, common.ApplicationJson)
 		fmt.Fprintf(w, "%s", respBts)
 	}
 }

@@ -19,6 +19,8 @@ package tc
  * under the License.
  */
 
+import "github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
+
 // TypesResponse ...
 type TypesResponse struct {
 	Response []Type `json:"response"`
@@ -26,18 +28,18 @@ type TypesResponse struct {
 
 // Type contains information about a given Type in Traffic Ops.
 type Type struct {
-	ID          int       `json:"id"`
-	LastUpdated TimeNoMod `json:"lastUpdated"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	UseInTable  string    `json:"useInTable"`
+	ID          int              `json:"id"`
+	LastUpdated common.TimeNoMod `json:"lastUpdated"`
+	Name        string           `json:"name"`
+	Description string           `json:"description"`
+	UseInTable  string           `json:"useInTable"`
 }
 
 // TypeNullable contains information about a given Type in Traffic Ops.
 type TypeNullable struct {
-	ID          *int       `json:"id" db:"id"`
-	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	Name        *string    `json:"name" db:"name"`
-	Description *string    `json:"description" db:"description"`
-	UseInTable  *string    `json:"useInTable" db:"use_in_table"`
+	ID          *int              `json:"id" db:"id"`
+	LastUpdated *common.TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name        *string           `json:"name" db:"name"`
+	Description *string           `json:"description" db:"description"`
+	UseInTable  *string           `json:"useInTable" db:"use_in_table"`
 }

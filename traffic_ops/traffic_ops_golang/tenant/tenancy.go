@@ -25,7 +25,8 @@ import (
 	"fmt"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
 )
@@ -65,23 +66,23 @@ func GetDeliveryServiceTenantInfo(xmlId string, db *sqlx.DB) (*DeliveryServiceTe
 }
 
 // tenancy check wrapper for deliveryservice
-func HasTenant(user auth.CurrentUser, XMLID string, db *sqlx.DB) (bool, error, tc.ApiErrorType) {
+func HasTenant(user auth.CurrentUser, XMLID string, db *sqlx.DB) (bool, error, common.ApiErrorType) {
 	dsInfo, err := GetDeliveryServiceTenantInfo(XMLID, db)
 	if err != nil {
 		if dsInfo == nil {
-			return false, fmt.Errorf("deliveryservice lookup failure: %v", err), tc.SystemError
+			return false, fmt.Errorf("deliveryservice lookup failure: %v", err), common.SystemError
 		} else {
-			return false, fmt.Errorf("no such deliveryservice: '%s'", XMLID), tc.DataMissingError
+			return false, fmt.Errorf("no such deliveryservice: '%s'", XMLID), common.DataMissingError
 		}
 	}
 	hasAccess, err := dsInfo.IsTenantAuthorized(user, db)
 	if err != nil {
-		return false, fmt.Errorf("user tenancy check failure: %v", err), tc.SystemError
+		return false, fmt.Errorf("user tenancy check failure: %v", err), common.SystemError
 	}
 	if !hasAccess {
-		return false, fmt.Errorf("Access to this resource is not authorized"), tc.ForbiddenError
+		return false, fmt.Errorf("Access to this resource is not authorized"), common.ForbiddenError
 	}
-	return true, nil, tc.NoError
+	return true, nil, common.NoError
 }
 
 // returns a Tenant list that the specified user has access too.

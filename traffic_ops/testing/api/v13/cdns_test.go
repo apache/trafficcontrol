@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 )
 
 func TestCDNs(t *testing.T) {
@@ -54,7 +54,7 @@ func UpdateTestCDNs(t *testing.T) {
 	remoteCDN := resp[0]
 	expectedCDNDomain := "domain2"
 	remoteCDN.DomainName = expectedCDNDomain
-	var alert tc.Alerts
+	var alert common.Alerts
 	alert, _, err = TOSession.UpdateCDNByID(remoteCDN.ID, remoteCDN)
 	if err != nil {
 		t.Errorf("cannot UPDATE CDN by id: %v - %v\n", err, alert)

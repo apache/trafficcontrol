@@ -26,7 +26,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
@@ -35,20 +35,28 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestCDNs() []tc.CDN {
-	cdns := []tc.CDN{}
-	testCDN := tc.CDN{
-		DNSSECEnabled: false,
-		DomainName:    "domainName",
-		ID:            1,
-		Name:          "cdn1",
-		LastUpdated:   tc.TimeNoMod{Time: time.Now()},
+func getTestCDNs() []TOCDN {
+	cdns := []TOCDN{}
+
+	DNSSECEnabled := false
+	domainName := "domainName"
+	ID := 1
+	name := "cdn1"
+
+	testCDN := TOCDN{
+		DNSSECEnabled: &DNSSECEnabled,
+		DomainName:    &domainName,
+		ID:            &ID,
+		Name:          &name,
+		LastUpdated:   &common.TimeNoMod{Time: time.Now()},
 	}
 	cdns = append(cdns, testCDN)
 
 	testCDN2 := testCDN
-	testCDN2.Name = "cdn2"
-	testCDN2.DomainName = "domain.net"
+	name = "cdn2"
+	domainName = "domain.net"
+	testCDN2.Name = &name
+	testCDN2.DomainName = &domainName
 	cdns = append(cdns, testCDN2)
 
 	return cdns
@@ -67,7 +75,7 @@ func TestReadCDNs(t *testing.T) {
 	refType := GetRefType()
 
 	testCDNs := getTestCDNs()
-	cols := test.ColsFromStructByTag("db", tc.CDN{})
+	cols := test.ColsFromStructByTag("db", TOCDN{})
 	rows := sqlmock.NewRows(cols)
 
 	for _, ts := range testCDNs {

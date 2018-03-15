@@ -19,15 +19,17 @@ package tc
  * under the License.
  */
 
+import "github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
+
 type HWInfoResponse struct {
 	Response []HWInfo `json:"response"`
 }
 
 type HWInfo struct {
-	Description    string    `json:"description" db:"description"`
-	ID             int       `json:"-" db:"id"`
-	LastUpdated    TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	ServerHostName string    `json:"serverHostName" db:"serverhostname"`
-	ServerID       int       `json:"serverId" db:"serverid"`
-	Val            string    `json:"val" db:"val"`
+	Description    string           `json:"description" db:"description"`
+	ID             int              `json:"-" db:"id"`
+	LastUpdated    common.TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	ServerHostName string           `json:"serverHostName" db:"serverhostname"`
+	ServerID       int              `json:"serverId" db:"serverid"`
+	Val            string           `json:"val" db:"val"`
 }

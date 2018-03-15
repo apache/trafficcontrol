@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 )
 
 func TestTypes(t *testing.T) {
@@ -54,7 +54,7 @@ func UpdateTestTypes(t *testing.T) {
 	remoteType := resp[0]
 	expectedTypeName := "testType1"
 	remoteType.Name = expectedTypeName
-	var alert tc.Alerts
+	var alert common.Alerts
 	alert, _, err = TOSession.UpdateTypeByID(remoteType.ID, remoteType)
 	if err != nil {
 		t.Errorf("cannot UPDATE Type by id: %v - %v\n", err, alert)

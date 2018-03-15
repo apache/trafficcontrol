@@ -18,23 +18,24 @@ package tc
  * specific language governing permissions and limitations
  * under the License.
  */
+import "github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 
 type ASNsResponse struct {
 	Response []ASN `json:"response"`
 }
 
 type ASN struct {
-	ASN          int       `json:"asn" db:"asn"`
-	Cachegroup   string    `json:"cachegroup"`
-	CachegroupID int       `json:"cachegroupId" db:"cachegroup_id"`
-	ID           int       `json:"id" db:"id"`
-	LastUpdated  TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	ASN          int              `json:"asn" db:"asn"`
+	Cachegroup   string           `json:"cachegroup"`
+	CachegroupID int              `json:"cachegroupId" db:"cachegroup_id"`
+	ID           int              `json:"id" db:"id"`
+	LastUpdated  common.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
 type ASNNullable struct {
-	ASN          *int       `json:"asn" db:"asn"`
-	Cachegroup   *string    `json:"cachegroup"`
-	CachegroupID *int       `json:"cachegroupId" db:"cachegroup_id"`
-	ID           *int       `json:"id" db:"id"`
-	LastUpdated  *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	ASN          *int              `json:"asn" db:"asn"`
+	Cachegroup   *string           `json:"cachegroup"`
+	CachegroupID *int              `json:"cachegroupId" db:"cachegroup_id"`
+	ID           *int              `json:"id" db:"id"`
+	LastUpdated  *common.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }

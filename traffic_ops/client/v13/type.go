@@ -22,6 +22,7 @@ import (
 	"net/http"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 )
 
 const (
@@ -29,40 +30,40 @@ const (
 )
 
 // Create a Type
-func (to *Session) CreateType(typ tc.Type) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateType(typ tc.Type) (common.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(typ)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return common.Alerts{}, reqInf, err
 	}
 	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Types, reqBody)
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return common.Alerts{}, reqInf, err
 	}
 	defer resp.Body.Close()
-	var alerts tc.Alerts
+	var alerts common.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
 
 // Update a Type by ID
-func (to *Session) UpdateTypeByID(id int, typ tc.Type) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateTypeByID(id int, typ tc.Type) (common.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(typ)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return common.Alerts{}, reqInf, err
 	}
 	route := fmt.Sprintf("%s/%d", API_v13_Types, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return common.Alerts{}, reqInf, err
 	}
 	defer resp.Body.Close()
-	var alerts tc.Alerts
+	var alerts common.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
@@ -118,15 +119,15 @@ func (to *Session) GetTypeByName(name string) ([]tc.Type, ReqInf, error) {
 }
 
 // DELETE a Type by ID
-func (to *Session) DeleteTypeByID(id int) (tc.Alerts, ReqInf, error) {
+func (to *Session) DeleteTypeByID(id int) (common.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_v13_Types, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return common.Alerts{}, reqInf, err
 	}
 	defer resp.Body.Close()
-	var alerts tc.Alerts
+	var alerts common.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }

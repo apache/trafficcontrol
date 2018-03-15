@@ -26,6 +26,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -84,7 +85,7 @@ func (prof *TOProfile) Validate(db *sqlx.DB) []error {
 	return nil
 }
 
-func (prof *TOProfile) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (prof *TOProfile) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, common.ApiErrorType) {
 	var rows *sqlx.Rows
 
 	// Query Parameters to Database Query column mappings
@@ -95,7 +96,7 @@ func (prof *TOProfile) Read(db *sqlx.DB, parameters map[string]string, user auth
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
+		return nil, errs, common.DataConflictError
 	}
 
 	query := selectQuery() + where + orderBy
@@ -104,21 +105,21 @@ func (prof *TOProfile) Read(db *sqlx.DB, parameters map[string]string, user auth
 	rows, err := db.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Profile: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
+		return nil, []error{common.DBError}, common.SystemError
 	}
 	defer rows.Close()
 
 	profiles := []interface{}{}
 	for rows.Next() {
-		var p tc.ProfileNullable
+		var p TOProfile
 		if err = rows.StructScan(&p); err != nil {
 			log.Errorf("error parsing Profile rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
+			return nil, []error{common.DBError}, common.SystemError
 		}
 		profiles = append(profiles, p)
 	}
 
-	return profiles, []error{}, tc.NoError
+	return profiles, []error{}, common.NoError
 
 }
 
@@ -144,7 +145,7 @@ JOIN cdn c ON prof.cdn = c.id`
 //ParsePQUniqueConstraintError is used to determine if a profile with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (prof *TOProfile) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (prof *TOProfile) Update(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -159,47 +160,47 @@ func (prof *TOProfile) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	log.Debugf("about to run exec query: %s with profile: %++v", updateQuery(), prof)
 	resultRows, err := tx.NamedQuery(updateQuery(), prof)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
+			if eType == common.DataConflictError {
 				return errors.New("a profile with " + err.Error()), eType
 			}
 			return err, eType
 		}
 		log.Errorf("received error: %++v from update execution", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	defer resultRows.Close()
 
-	var lastUpdated tc.TimeNoMod
+	var lastUpdated common.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&lastUpdated); err != nil {
 			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
+			return common.DBError, common.SystemError
 		}
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
 	prof.LastUpdated = &lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return errors.New("no profile found with this id"), tc.DataMissingError
+			return errors.New("no profile found with this id"), common.DataMissingError
 		}
-		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
+		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), common.SystemError
 	}
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rollbackTransaction = false
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 //The TOProfile implementation of the Creator interface
@@ -209,7 +210,7 @@ func (prof *TOProfile) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted profile and have
 //to be added to the struct
-func (prof *TOProfile) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (prof *TOProfile) Create(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -224,7 +225,7 @@ func (prof *TOProfile) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	q := insertQuery()
 	fmt.Printf("q ---> %v\n", q)
@@ -232,35 +233,35 @@ func (prof *TOProfile) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
+			if eType == common.DataConflictError {
 				return errors.New("a profile with " + err.Error()), eType
 			}
 			return err, eType
 		}
 		log.Errorf("received non pq error: %++v from create execution", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	defer resultRows.Close()
 
 	var id int
-	var lastUpdated tc.TimeNoMod
+	var lastUpdated common.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
 			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
+			return common.DBError, common.SystemError
 		}
 	}
 	if rowsAffected == 0 {
 		err = errors.New("no profile was inserted, no id was returned")
 		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	if rowsAffected > 1 {
 		err = errors.New("too many ids returned from profile insert")
 		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 
 	prof.SetID(id)
@@ -268,15 +269,15 @@ func (prof *TOProfile) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rollbackTransaction = false
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 //The Profile implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (prof *TOProfile) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (prof *TOProfile) Delete(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -291,32 +292,32 @@ func (prof *TOProfile) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	log.Debugf("about to run exec query: %s with profile: %++v", deleteQuery(), prof)
 	result, err := tx.NamedExec(deleteQuery(), prof)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	if rowsAffected < 1 {
-		return errors.New("no profile with that id found"), tc.DataMissingError
+		return errors.New("no profile with that id found"), common.DataMissingError
 	}
 	if rowsAffected > 1 {
-		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
+		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), common.SystemError
 	}
 
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rollbackTransaction = false
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 func updateQuery() string {

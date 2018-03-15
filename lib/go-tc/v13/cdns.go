@@ -1,4 +1,4 @@
-package tc
+package v13
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -18,7 +18,6 @@ package tc
  * specific language governing permissions and limitations
  * under the License.
  */
-
 import "github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 
 type CDNsResponse struct {

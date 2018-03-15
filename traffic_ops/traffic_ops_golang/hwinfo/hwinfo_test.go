@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -38,7 +39,7 @@ func getTestHWInfo() []tc.HWInfo {
 		ServerHostName: "testserver1",
 		Description:    "Description",
 		Val:            "Val",
-		LastUpdated:    tc.TimeNoMod{Time: time.Now()},
+		LastUpdated:    common.TimeNoMod{Time: time.Now()},
 	}
 	hwinfo = append(hwinfo, testHWInfo)
 

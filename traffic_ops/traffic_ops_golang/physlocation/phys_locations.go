@@ -25,7 +25,8 @@ import (
 	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -87,7 +88,7 @@ func (pl *TOPhysLocation) Validate(db *sqlx.DB) []error {
 	return nil
 }
 
-func (pl *TOPhysLocation) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (pl *TOPhysLocation) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, common.ApiErrorType) {
 	var rows *sqlx.Rows
 
 	// Query Parameters to Database Query column mappings
@@ -99,7 +100,7 @@ func (pl *TOPhysLocation) Read(db *sqlx.DB, parameters map[string]string, user a
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
+		return nil, errs, common.DataConflictError
 	}
 
 	query := selectQuery() + where + orderBy
@@ -108,21 +109,21 @@ func (pl *TOPhysLocation) Read(db *sqlx.DB, parameters map[string]string, user a
 	rows, err := db.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying PhysLocations: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
+		return nil, []error{common.DBError}, common.SystemError
 	}
 	defer rows.Close()
 
 	physLocations := []interface{}{}
 	for rows.Next() {
-		var s tc.PhysLocationNullable
+		var s TOPhysLocation
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorf("error parsing PhysLocation rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
+			return nil, []error{common.DBError}, common.SystemError
 		}
 		physLocations = append(physLocations, s)
 	}
 
-	return physLocations, []error{}, tc.NoError
+	return physLocations, []error{}, common.NoError
 
 }
 
@@ -154,7 +155,7 @@ JOIN region r ON pl.region = r.id`
 //ParsePQUniqueConstraintError is used to determine if a phys_location with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (pl *TOPhysLocation) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (pl *TOPhysLocation) Update(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -169,48 +170,48 @@ func (pl *TOPhysLocation) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	log.Debugf("about to run exec query: %s with phys_location: %++v", updateQuery(), pl)
 	resultRows, err := tx.NamedQuery(updateQuery(), pl)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
+			if eType == common.DataConflictError {
 				return errors.New("a phys_location with " + err.Error()), eType
 			}
 			return err, eType
 		}
 		log.Errorf("received error: %++v from update execution", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	defer resultRows.Close()
 
 	// get LastUpdated field -- updated by trigger in the db
-	var lastUpdated tc.TimeNoMod
+	var lastUpdated common.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&lastUpdated); err != nil {
 			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
+			return common.DBError, common.SystemError
 		}
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
 	pl.LastUpdated = &lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return errors.New("no phys_location found with this id"), tc.DataMissingError
+			return errors.New("no phys_location found with this id"), common.DataMissingError
 		}
-		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
+		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), common.SystemError
 	}
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rollbackTransaction = false
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 //The TOPhysLocation implementation of the Creator interface
@@ -220,7 +221,7 @@ func (pl *TOPhysLocation) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted phys_location and have
 //to be added to the struct
-func (pl *TOPhysLocation) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (pl *TOPhysLocation) Create(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -235,41 +236,41 @@ func (pl *TOPhysLocation) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	resultRows, err := tx.NamedQuery(insertQuery(), pl)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
+			if eType == common.DataConflictError {
 				return errors.New("a phys_location with " + err.Error()), eType
 			}
 			return err, eType
 		}
 		log.Errorf("received non pq error: %++v from create execution", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	defer resultRows.Close()
 
 	var id int
-	var lastUpdated tc.TimeNoMod
+	var lastUpdated common.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
 			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
+			return common.DBError, common.SystemError
 		}
 	}
 	if rowsAffected == 0 {
 		err = errors.New("no phys_location was inserted, no id was returned")
 		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	if rowsAffected > 1 {
 		err = errors.New("too many ids returned from phys_location insert")
 		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 
 	pl.SetID(id)
@@ -277,15 +278,15 @@ func (pl *TOPhysLocation) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rollbackTransaction = false
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 //The PhysLocation implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (pl *TOPhysLocation) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (pl *TOPhysLocation) Delete(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -300,32 +301,32 @@ func (pl *TOPhysLocation) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	log.Debugf("about to run exec query: %s with phys_location: %++v", deleteQuery(), pl)
 	result, err := tx.NamedExec(deleteQuery(), pl)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	if rowsAffected < 1 {
-		return errors.New("no phys_location with that id found"), tc.DataMissingError
+		return errors.New("no phys_location with that id found"), common.DataMissingError
 	}
 	if rowsAffected > 1 {
-		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
+		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), common.SystemError
 	}
 
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rollbackTransaction = false
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 func updateQuery() string {

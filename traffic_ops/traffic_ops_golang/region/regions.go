@@ -25,6 +25,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -67,7 +68,7 @@ func (region *TORegion) Validate(db *sqlx.DB) []error {
 	return errs
 }
 
-func (region *TORegion) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (region *TORegion) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, common.ApiErrorType) {
 	var rows *sqlx.Rows
 
 	// Query Parameters to Database Query column mappings
@@ -79,7 +80,7 @@ func (region *TORegion) Read(db *sqlx.DB, parameters map[string]string, user aut
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
+		return nil, errs, common.DataConflictError
 	}
 
 	query := selectQuery() + where + orderBy
@@ -88,21 +89,21 @@ func (region *TORegion) Read(db *sqlx.DB, parameters map[string]string, user aut
 	rows, err := db.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Regions: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
+		return nil, []error{common.DBError}, common.SystemError
 	}
 	defer rows.Close()
 
 	regions := []interface{}{}
 	for rows.Next() {
-		var s tc.Region
+		var s TORegion
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorf("error parsing Region rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
+			return nil, []error{common.DBError}, common.SystemError
 		}
 		regions = append(regions, s)
 	}
 
-	return regions, []error{}, tc.NoError
+	return regions, []error{}, common.NoError
 }
 
 func selectQuery() string {
@@ -123,7 +124,7 @@ JOIN division d ON r.division = d.id`
 //ParsePQUniqueConstraintError is used to determine if a region with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (region *TORegion) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (region *TORegion) Update(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -138,47 +139,47 @@ func (region *TORegion) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	log.Debugf("about to run exec query: %s with region: %++v", updateQuery(), region)
 	resultRows, err := tx.NamedQuery(updateQuery(), region)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
+			if eType == common.DataConflictError {
 				return errors.New("a region with " + err.Error()), eType
 			}
 			return err, eType
 		}
 		log.Errorf("received error: %++v from update execution", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	defer resultRows.Close()
 
-	var lastUpdated tc.TimeNoMod
+	var lastUpdated common.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&lastUpdated); err != nil {
 			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
+			return common.DBError, common.SystemError
 		}
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
 	region.LastUpdated = lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return errors.New("no region found with this id"), tc.DataMissingError
+			return errors.New("no region found with this id"), common.DataMissingError
 		}
-		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
+		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), common.SystemError
 	}
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rollbackTransaction = false
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 //The TORegion implementation of the Creator interface
@@ -188,7 +189,7 @@ func (region *TORegion) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted region and have
 //to be added to the struct
-func (region *TORegion) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (region *TORegion) Create(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -203,56 +204,56 @@ func (region *TORegion) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	resultRows, err := tx.NamedQuery(insertQuery(), region)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
+			if eType == common.DataConflictError {
 				return errors.New("a region with " + err.Error()), eType
 			}
 			return err, eType
 		}
 		log.Errorf("received non pq error: %++v from create execution", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	defer resultRows.Close()
 
 	var id int
-	var lastUpdated tc.TimeNoMod
+	var lastUpdated common.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
 			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
+			return common.DBError, common.SystemError
 		}
 	}
 	if rowsAffected == 0 {
 		err = errors.New("no region was inserted, no id was returned")
 		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	if rowsAffected > 1 {
 		err = errors.New("too many ids returned from region insert")
 		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	region.SetID(id)
 	region.LastUpdated = lastUpdated
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rollbackTransaction = false
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 //The Region implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (region *TORegion) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (region *TORegion) Delete(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -267,32 +268,32 @@ func (region *TORegion) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	log.Debugf("about to run exec query: %s with region: %++v", deleteQuery(), region)
 	result, err := tx.NamedExec(deleteQuery(), region)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	if rowsAffected < 1 {
-		return errors.New("no region with that id found"), tc.DataMissingError
+		return errors.New("no region with that id found"), common.DataMissingError
 	}
 	if rowsAffected > 1 {
-		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
+		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), common.SystemError
 	}
 
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rollbackTransaction = false
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 func updateQuery() string {

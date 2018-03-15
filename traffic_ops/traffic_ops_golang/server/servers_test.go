@@ -25,6 +25,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
@@ -56,7 +57,7 @@ func getTestServers() []tc.Server {
 		IPAddress:      "ipAddress",
 		IPGateway:      "ipGateway",
 		IPNetmask:      "ipNetmask",
-		LastUpdated:    tc.TimeNoMod{Time: time.Now()},
+		LastUpdated:    common.TimeNoMod{Time: time.Now()},
 		MgmtIPAddress:  "mgmtIpAddress",
 		MgmtIPGateway:  "mgmtIpGateway",
 		MgmtIPNetmask:  "mgmtIpNetmask",

@@ -21,6 +21,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 )
 
 func TestParameters(t *testing.T) {
@@ -58,7 +59,7 @@ func UpdateTestParameters(t *testing.T) {
 	remoteParameter := resp[0]
 	expectedParameterName := "UPDATED"
 	remoteParameter.Name = expectedParameterName
-	var alert tc.Alerts
+	var alert common.Alerts
 	alert, _, err = TOSession.UpdateParameterByID(remoteParameter.ID, remoteParameter)
 	if err != nil {
 		t.Errorf("cannot UPDATE Parameter by id: %v - %v\n", err, alert)

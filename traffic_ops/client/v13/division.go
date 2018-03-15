@@ -22,6 +22,7 @@ import (
 	"net/http"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 )
 
 const (
@@ -29,40 +30,40 @@ const (
 )
 
 // Create a Division
-func (to *Session) CreateDivision(division tc.Division) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateDivision(division tc.Division) (common.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(division)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return common.Alerts{}, reqInf, err
 	}
 	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Divisions, reqBody)
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return common.Alerts{}, reqInf, err
 	}
 	defer resp.Body.Close()
-	var alerts tc.Alerts
+	var alerts common.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
 
 // Update a Division by ID
-func (to *Session) UpdateDivisionByID(id int, division tc.Division) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateDivisionByID(id int, division tc.Division) (common.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(division)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return common.Alerts{}, reqInf, err
 	}
 	route := fmt.Sprintf("%s/%d", API_v13_Divisions, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return common.Alerts{}, reqInf, err
 	}
 	defer resp.Body.Close()
-	var alerts tc.Alerts
+	var alerts common.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
@@ -118,29 +119,29 @@ func (to *Session) GetDivisionByName(name string) ([]tc.Division, ReqInf, error)
 }
 
 // DELETE a Division by Division id
-func (to *Session) DeleteDivisionByID(id int) (tc.Alerts, ReqInf, error) {
+func (to *Session) DeleteDivisionByID(id int) (common.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_v13_Divisions, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return common.Alerts{}, reqInf, err
 	}
 	defer resp.Body.Close()
-	var alerts tc.Alerts
+	var alerts common.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
 
 // DELETE a Division by Division name
-func (to *Session) DeleteDivisionByName(name string) (tc.Alerts, ReqInf, error) {
+func (to *Session) DeleteDivisionByName(name string) (common.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/name/%s", API_v13_Divisions, name)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return common.Alerts{}, reqInf, err
 	}
 	defer resp.Body.Close()
-	var alerts tc.Alerts
+	var alerts common.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }

@@ -24,7 +24,7 @@ import (
 	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 
 	"github.com/lib/pq"
 )
@@ -100,7 +100,7 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo
 }
 
 //parses pq errors for uniqueness constraint violations
-func ParsePQUniqueConstraintError(err *pq.Error) (error, tc.ApiErrorType) {
+func ParsePQUniqueConstraintError(err *pq.Error) (error, common.ApiErrorType) {
 	if len(err.Constraint) > 0 && len(err.Detail) > 0 { //we only want to continue parsing if it is a constraint error with details
 		detail := err.Detail
 		if strings.HasPrefix(detail, "Key ") && strings.HasSuffix(detail, " already exists.") { //we only want to continue parsing if it is a uniqueness constraint error
@@ -111,10 +111,10 @@ func ParsePQUniqueConstraintError(err *pq.Error) (error, tc.ApiErrorType) {
 			if len(details) == 2 {
 				column := strings.Trim(details[0], "()")
 				dupValue := strings.Trim(details[1], "()")
-				return errors.New(column + " " + dupValue + " already exists."), tc.DataConflictError
+				return errors.New(column + " " + dupValue + " already exists."), common.DataConflictError
 			}
 		}
 	}
 	log.Error.Printf("failed to parse unique constraint from pq error: %v", err)
-	return tc.DBError, tc.SystemError
+	return common.DBError, common.SystemError
 }

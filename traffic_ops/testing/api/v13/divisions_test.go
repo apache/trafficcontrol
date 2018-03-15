@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 )
 
 func TestDivisions(t *testing.T) {
@@ -52,7 +52,7 @@ func UpdateTestDivisions(t *testing.T) {
 	remoteDivision := resp[0]
 	expectedDivision := "division-test"
 	remoteDivision.Name = expectedDivision
-	var alert tc.Alerts
+	var alert common.Alerts
 	alert, _, err = TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision)
 	if err != nil {
 		t.Errorf("cannot UPDATE Division by id: %v - %v\n", err, alert)

@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
@@ -38,7 +39,7 @@ func getTestRegions() []tc.Region {
 		DivisionName: "west",
 		ID:           1,
 		Name:         "region1",
-		LastUpdated:  tc.TimeNoMod{Time: time.Now()},
+		LastUpdated:  common.TimeNoMod{Time: time.Now()},
 	}
 	regions = append(regions, testCase)
 

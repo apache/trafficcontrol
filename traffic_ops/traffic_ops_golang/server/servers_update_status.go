@@ -26,14 +26,15 @@ import (
 	"net/http"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/jmoiron/sqlx"
 )
 
 func GetServerUpdateStatusHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
+		handleErrs := common.GetHandleErrorsFunc(w, r)
 
 		params, err := api.GetCombinedParams(r)
 		if err != nil {
@@ -54,7 +55,7 @@ func GetServerUpdateStatusHandler(db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(common.ContentType, common.ApplicationJson)
 		fmt.Fprintf(w, "%s", respBts)
 	}
 }
@@ -80,13 +81,13 @@ func getServerUpdateStatus(hostName string, db *sqlx.DB) ([]tc.ServerUpdateStatu
 		rows, err = db.Query(baseSelectStatement + groupBy)
 		if err != nil {
 			log.Error.Printf("could not execute select server update status query: %s\n", err)
-			return nil, tc.DBError
+			return nil, common.DBError
 		}
 	} else {
 		rows, err = db.Query(baseSelectStatement+` WHERE s.host_name = $1`+groupBy, hostName)
 		if err != nil {
 			log.Error.Printf("could not execute select server update status by hostname query: %s\n", err)
-			return nil, tc.DBError
+			return nil, common.DBError
 		}
 	}
 	defer rows.Close()
@@ -96,7 +97,7 @@ func getServerUpdateStatus(hostName string, db *sqlx.DB) ([]tc.ServerUpdateStatu
 		var serverType string
 		if err := rows.Scan(&serverUpdateStatus.HostId, &serverUpdateStatus.HostName, &serverType, &serverUpdateStatus.RevalPending, &serverUpdateStatus.UpdatePending, &serverUpdateStatus.Status, &serverUpdateStatus.ParentPending, &serverUpdateStatus.ParentRevalPending); err != nil {
 			log.Error.Printf("could not scan server update status: %s\n", err)
-			return nil, tc.DBError
+			return nil, common.DBError
 		}
 		if hostName == "all" { //if we want to return the parent data for servers when all is used remove this block
 			serverUpdateStatus.ParentRevalPending = false

@@ -25,7 +25,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
@@ -43,7 +43,7 @@ func getTestASNs() []TOASN {
 		Cachegroup:   &c,
 		CachegroupID: &i,
 		ID:           &i,
-		LastUpdated:  &tc.TimeNoMod{Time: time.Now()},
+		LastUpdated:  &common.TimeNoMod{Time: time.Now()},
 	}
 	ASNs = append(ASNs, testCase)
 

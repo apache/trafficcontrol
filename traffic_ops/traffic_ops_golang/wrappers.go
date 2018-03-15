@@ -34,7 +34,7 @@ import (
 	"unicode"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/about"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
@@ -68,14 +68,14 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 			}()
 
 			handleErr := func(status int, err error) {
-				errBytes, jsonErr := json.Marshal(tc.CreateErrorAlerts(err))
+				errBytes, jsonErr := json.Marshal(common.CreateErrorAlerts(err))
 				if jsonErr != nil {
 					log.Errorf("failed to marshal error: %s\n", jsonErr)
 					w.WriteHeader(http.StatusInternalServerError)
 					fmt.Fprintf(w, http.StatusText(http.StatusInternalServerError))
 					return
 				}
-				w.Header().Set(tc.ContentType, tc.ApplicationJson)
+				w.Header().Set(common.ContentType, common.ApplicationJson)
 				w.WriteHeader(status)
 				fmt.Fprintf(w, "%s", errBytes)
 			}
@@ -171,7 +171,7 @@ func gzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
 		return
 	}
 	ctx := r.Context()
-	val := ctx.Value(tc.StatusKey)
+	val := ctx.Value(common.StatusKey)
 	status, ok := val.(int)
 	if ok { //if not we assume it is a 200
 		w.WriteHeader(status)
@@ -187,7 +187,7 @@ func gzipIfAccepts(r *http.Request, w http.ResponseWriter, b []byte) ([]byte, er
 	if len(b) == 0 || !acceptsGzip(r) {
 		return b, nil
 	}
-	w.Header().Set(tc.ContentEncoding, tc.Gzip)
+	w.Header().Set(common.ContentEncoding, common.Gzip)
 
 	buf := bytes.Buffer{}
 	zw := gzip.NewWriter(&buf)
@@ -209,7 +209,7 @@ func acceptsGzip(r *http.Request) bool {
 		encodingHeader = stripAllWhitespace(encodingHeader)
 		encodings := strings.Split(encodingHeader, ",")
 		for _, encoding := range encodings {
-			if strings.ToLower(encoding) == tc.Gzip { // encoding is case-insensitive, per the RFC
+			if strings.ToLower(encoding) == common.Gzip { // encoding is case-insensitive, per the RFC
 				return true
 			}
 		}

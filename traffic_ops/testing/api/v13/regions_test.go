@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 )
 
 func TestRegions(t *testing.T) {
@@ -64,7 +64,7 @@ func UpdateTestRegions(t *testing.T) {
 	remoteRegion := resp[0]
 	expectedRegion := "OFFLINE-TEST"
 	remoteRegion.Name = expectedRegion
-	var alert tc.Alerts
+	var alert common.Alerts
 	alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion)
 	if err != nil {
 		t.Errorf("cannot UPDATE Region by id: %v - %v\n", err, alert)

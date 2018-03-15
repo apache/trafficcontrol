@@ -20,13 +20,13 @@ package api
  */
 
 import (
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
 )
 
 type Updater interface {
-	Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType)
+	Update(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType)
 	Identifier
 	Validator
 }
@@ -38,14 +38,14 @@ type Identifier interface {
 }
 
 type Creator interface {
-	Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType)
+	Create(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType)
 	SetID(int)
 	Identifier
 	Validator
 }
 
 type Deleter interface {
-	Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType)
+	Delete(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType)
 	SetID(int)
 	Identifier
 }
@@ -59,5 +59,5 @@ type Tenantable interface {
 }
 
 type Reader interface {
-	Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType)
+	Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, common.ApiErrorType)
 }
