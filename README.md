@@ -28,6 +28,12 @@ Apache Traffic Control (incubating) is an Open Source implementation of a Conten
 * [Administrator's Guide](http://traffic-control-cdn.readthedocs.io/en/latest/admin/index.html)
 * [Developer's Guide](http://traffic-control-cdn.readthedocs.io/en/latest/development/index.html)
 
+##### Releases
+* [https://github.com/apache/incubator-trafficcontrol/releases](https://github.com/apache/incubator-trafficcontrol/releases)
+ 
+##### Downloads
+* [http://trafficcontrol.incubator.apache.org/downloads/index.html](http://trafficcontrol.incubator.apache.org/downloads/index.html)
+ 
 ####  Questions, Comments, Bugs and More
 * [Frequently Asked Questions](http://traffic-control-cdn.readthedocs.io/en/latest/faq/index.html)
 * [Found a bug or file a feature request](https://github.com/apache/incubator-trafficcontrol/issues)
@@ -36,8 +42,3 @@ Apache Traffic Control (incubating) is an Open Source implementation of a Conten
 * [Search the email archives](https://lists.apache.org/list.html?dev@trafficcontrol.apache.org)
 * [Check out the wiki](https://github.com/Comcast/traffic_control/wiki) for less formal documentation, design docs and roadmap discussions 
 
-##### Releases
-* [https://github.com/apache/incubator-trafficcontrol/releases](https://github.com/apache/incubator-trafficcontrol/releases)
- 
-##### Downloads
-* [http://trafficcontrol.incubator.apache.org/downloads/index.html](http://trafficcontrol.incubator.apache.org/downloads/index.html)
