@@ -25,7 +25,8 @@ import (
 	"net/http"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
@@ -35,7 +36,7 @@ const DeliveryServicsPrivLevel = 10
 
 func Handler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
+		handleErrs := common.GetHandleErrorsFunc(w, r)
 
 		// Load the the query and path params with path params overriding query params
 		params, err := api.GetCombinedParams(r)
@@ -45,7 +46,7 @@ func Handler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		resp, errs, errType := getDeliveryServicesResponse(params, db)
-		tc.HandleErrorsWithType(errs, errType, handleErrs)
+		common.HandleErrorsWithType(errs, errType, handleErrs)
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
@@ -58,7 +59,7 @@ func Handler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func getDeliveryServicesResponse(parameters map[string]string, db *sqlx.DB) (*tc.DeliveryServicesResponse, []error, tc.ApiErrorType) {
+func getDeliveryServicesResponse(parameters map[string]string, db *sqlx.DB) (*tc.DeliveryServicesResponse, []error, common.ApiErrorType) {
 	dses, errs, errType := getDeliveryServices(parameters, db)
 	if len(errs) > 0 {
 		return nil, errs, errType
@@ -67,10 +68,10 @@ func getDeliveryServicesResponse(parameters map[string]string, db *sqlx.DB) (*tc
 	resp := tc.DeliveryServicesResponse{
 		Response: dses,
 	}
-	return &resp, nil, tc.NoError
+	return &resp, nil, common.NoError
 }
 
-func getDeliveryServices(parameters map[string]string, db *sqlx.DB) ([]tc.DeliveryService, []error, tc.ApiErrorType) {
+func getDeliveryServices(parameters map[string]string, db *sqlx.DB) ([]tc.DeliveryService, []error, common.ApiErrorType) {
 	var rows *sqlx.Rows
 	var err error
 
@@ -82,7 +83,7 @@ func getDeliveryServices(parameters map[string]string, db *sqlx.DB) ([]tc.Delive
 
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
+		return nil, errs, common.DataConflictError
 	}
 	query := selectDSesQuery() + where + orderBy
 
@@ -90,7 +91,7 @@ func getDeliveryServices(parameters map[string]string, db *sqlx.DB) ([]tc.Delive
 	fmt.Printf("rows ---> %v\n", rows)
 	fmt.Printf("err ---> %v\n", err)
 	if err != nil {
-		return nil, []error{err}, tc.SystemError
+		return nil, []error{err}, common.SystemError
 	}
 	defer rows.Close()
 
@@ -98,11 +99,11 @@ func getDeliveryServices(parameters map[string]string, db *sqlx.DB) ([]tc.Delive
 	for rows.Next() {
 		var s tc.DeliveryService
 		if err = rows.StructScan(&s); err != nil {
-			return nil, []error{fmt.Errorf("getting Delivery Services: %v", err)}, tc.SystemError
+			return nil, []error{fmt.Errorf("getting Delivery Services: %v", err)}, common.SystemError
 		}
 		dses = append(dses, s)
 	}
-	return dses, nil, tc.NoError
+	return dses, nil, common.NoError
 }
 
 func selectDSesQuery() string {

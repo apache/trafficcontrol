@@ -26,6 +26,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -101,7 +102,7 @@ func (server *TOServer) Validate(db *sqlx.DB) []error {
 	rows, err := db.Query("select use_in_table from type where id=$1", server.TypeID)
 	if err != nil {
 		log.Error.Printf("could not execute select use_in_table from type: %s\n", err)
-		errs = append(errs, tc.DBError)
+		errs = append(errs, common.DBError)
 		return errs
 	}
 	defer rows.Close()
@@ -109,7 +110,7 @@ func (server *TOServer) Validate(db *sqlx.DB) []error {
 	for rows.Next() {
 		if err := rows.Scan(&useInTable); err != nil {
 			log.Error.Printf("could not scan use_in_table from type: %s\n", err)
-			errs = append(errs, tc.DBError)
+			errs = append(errs, common.DBError)
 			return errs
 		}
 	}
@@ -120,7 +121,7 @@ func (server *TOServer) Validate(db *sqlx.DB) []error {
 	rows, err = db.Query("select cdn from profile where id=$1", server.ProfileID)
 	if err != nil {
 		log.Error.Printf("could not execute select cdnID from profile: %s\n", err)
-		errs = append(errs, tc.DBError)
+		errs = append(errs, common.DBError)
 		return errs
 	}
 	defer rows.Close()
@@ -128,7 +129,7 @@ func (server *TOServer) Validate(db *sqlx.DB) []error {
 	for rows.Next() {
 		if err := rows.Scan(&cdnID); err != nil {
 			log.Error.Printf("could not scan cdnID from profile: %s\n", err)
-			errs = append(errs, tc.DBError)
+			errs = append(errs, common.DBError)
 			return errs
 		}
 	}
@@ -139,7 +140,7 @@ func (server *TOServer) Validate(db *sqlx.DB) []error {
 	return errs
 }
 
-func (server *TOServer) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (server *TOServer) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, common.ApiErrorType) {
 	returnable := []interface{}{}
 
 	privLevel := user.PrivLevel
@@ -148,7 +149,7 @@ func (server *TOServer) Read(db *sqlx.DB, params map[string]string, user auth.Cu
 	if len(errs) > 0 {
 		for _, err := range errs {
 			if err.Error() == `id cannot parse to integer` {
-				return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError //matches perl response
+				return nil, []error{errors.New("Resource not found.")}, common.DataMissingError //matches perl response
 			}
 		}
 		return nil, errs, errType
@@ -158,10 +159,10 @@ func (server *TOServer) Read(db *sqlx.DB, params map[string]string, user auth.Cu
 		returnable = append(returnable, server)
 	}
 
-	return returnable, nil, tc.NoError
+	return returnable, nil, common.NoError
 }
 
-func getServers(params map[string]string, db *sqlx.DB, privLevel int) ([]tc.ServerNullable, []error, tc.ApiErrorType) {
+func getServers(params map[string]string, db *sqlx.DB, privLevel int) ([]TOServer, []error, common.ApiErrorType) {
 	var rows *sqlx.Rows
 	var err error
 
@@ -180,7 +181,7 @@ func getServers(params map[string]string, db *sqlx.DB, privLevel int) ([]tc.Serv
 
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
+		return nil, errs, common.DataConflictError
 	}
 
 	query := selectQuery() + where + orderBy
@@ -188,18 +189,18 @@ func getServers(params map[string]string, db *sqlx.DB, privLevel int) ([]tc.Serv
 
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, []error{fmt.Errorf("querying: %v", err)}, tc.SystemError
+		return nil, []error{fmt.Errorf("querying: %v", err)}, common.SystemError
 	}
 	defer rows.Close()
 
-	servers := []tc.ServerNullable{}
+	servers := []TOServer{}
 
 	HiddenField := "********"
 
 	for rows.Next() {
-		var s tc.ServerNullable
+		var s TOServer
 		if err = rows.StructScan(&s); err != nil {
-			return nil, []error{fmt.Errorf("getting servers: %v", err)}, tc.SystemError
+			return nil, []error{fmt.Errorf("getting servers: %v", err)}, common.SystemError
 		}
 		if privLevel < auth.PrivLevelAdmin {
 			s.ILOPassword = &HiddenField
@@ -207,7 +208,7 @@ func getServers(params map[string]string, db *sqlx.DB, privLevel int) ([]tc.Serv
 		}
 		servers = append(servers, s)
 	}
-	return servers, nil, tc.NoError
+	return servers, nil, common.NoError
 }
 
 func selectQuery() string {
@@ -278,7 +279,7 @@ JOIN type t ON s.type = t.id`
 //ParsePQUniqueConstraintError is used to determine if a cdn with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -293,7 +294,7 @@ func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 
 	log.Debugf("about to run exec query: %s with server: %++v", updateQuery(), server)
@@ -301,42 +302,42 @@ func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
+			if eType == common.DataConflictError {
 				return errors.New("a server with " + err.Error()), eType
 			}
 			return err, eType
 		} else {
 			log.Errorf("received error: %++v from update execution", err)
-			return tc.DBError, tc.SystemError
+			return common.DBError, common.SystemError
 		}
 	}
 	defer resultRows.Close()
 
-	var lastUpdated tc.TimeNoMod
+	var lastUpdated common.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&lastUpdated); err != nil {
 			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
+			return common.DBError, common.SystemError
 		}
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
 	server.LastUpdated = lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return errors.New("no cdn found with this id"), tc.DataMissingError
+			return errors.New("no cdn found with this id"), common.DataMissingError
 		} else {
-			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
+			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), common.SystemError
 		}
 	}
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rollbackTransaction = false
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 func updateQuery() string {
@@ -383,7 +384,7 @@ WHERE id=:id RETURNING last_updated`
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted server and have
 //to be added to the struct
-func (server *TOServer) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (server *TOServer) Create(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -398,7 +399,7 @@ func (server *TOServer) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	if server.XMPPID == nil || *server.XMPPID == "" {
 		server.XMPPID = server.HostName
@@ -408,45 +409,45 @@ func (server *TOServer) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
+			if eType == common.DataConflictError {
 				return errors.New("a server with " + err.Error()), eType
 			}
 			return err, eType
 		} else {
 			log.Errorf("received non pq error: %++v from create execution", err)
-			return tc.DBError, tc.SystemError
+			return common.DBError, common.SystemError
 		}
 	}
 	defer resultRows.Close()
 
 	var id int
-	var lastUpdated tc.TimeNoMod
+	var lastUpdated common.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
 			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
+			return common.DBError, common.SystemError
 		}
 	}
 	if rowsAffected == 0 {
 		err = errors.New("no server was inserted, no id was returned")
 		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	} else if rowsAffected > 1 {
 		err = errors.New("too many ids returned from server insert")
 		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	server.SetID(id)
 	server.LastUpdated = lastUpdated
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rollbackTransaction = false
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 func insertQuery() string {
@@ -516,7 +517,7 @@ upd_pending) VALUES (
 
 //The Server implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (server *TOServer) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (server *TOServer) Delete(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -531,32 +532,32 @@ func (server *TOServer) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	log.Debugf("about to run exec query: %s with server: %++v", deleteServerQuery(), server)
 	result, err := tx.NamedExec(deleteServerQuery(), server)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return errors.New("no server with that id found"), tc.DataMissingError
+			return errors.New("no server with that id found"), common.DataMissingError
 		} else {
-			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
+			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), common.SystemError
 		}
 	}
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rollbackTransaction = false
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 func deleteServerQuery() string {

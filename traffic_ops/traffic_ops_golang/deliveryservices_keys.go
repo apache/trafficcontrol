@@ -32,7 +32,8 @@ import (
 	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/config"
@@ -130,7 +131,7 @@ func getDeliveryServiceSSLKeysByXMLID(xmlID string, version string, db *sqlx.DB,
 
 	// no keys we're found
 	if ro == nil {
-		alert := tc.CreateAlerts(tc.InfoLevel, "no object found for the specified key")
+		alert := common.CreateAlerts(common.InfoLevel, "no object found for the specified key")
 		respBytes, err = json.Marshal(alert)
 		if err != nil {
 			log.Errorf("failed to marshal an alert response: %s\n", err)
@@ -244,7 +245,7 @@ func verifyAndEncodeCertificate(certificate string, rootCA string) (string, erro
 
 func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorsFunc(w, r)
+		handleErr := common.GetHandleErrorsFunc(w, r)
 		var keysObj tc.DeliveryServiceSSLKeys
 
 		defer r.Body.Close()
@@ -273,13 +274,13 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg config.Config) http.Handl
 		hasAccess, err, apiStatus := tenant.HasTenant(*user, keysObj.DeliveryService, db)
 		if !hasAccess {
 			switch apiStatus {
-			case tc.SystemError:
+			case common.SystemError:
 				handleErr(http.StatusInternalServerError, err)
 				return
-			case tc.DataMissingError:
+			case common.DataMissingError:
 				handleErr(http.StatusBadRequest, err)
 				return
-			case tc.ForbiddenError:
+			case common.ForbiddenError:
 				handleErr(http.StatusForbidden, err)
 				return
 			}
@@ -341,7 +342,7 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg config.Config) http.Handl
 // fetch the ssl keys for a deliveryservice specified by the fully qualified hostname
 func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorsFunc(w, r)
+		handleErr := common.GetHandleErrorsFunc(w, r)
 		var respBytes []byte
 		var domainName string
 		var hostName string
@@ -388,7 +389,7 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg config.Config) 
 
 		// verify that a valid cdnID was returned.
 		if !cdnID.Valid {
-			alert := tc.CreateAlerts(tc.InfoLevel, fmt.Sprintf(" - a cdn does not exist for the domain: %s parsed from hostname: %s",
+			alert := common.CreateAlerts(common.InfoLevel, fmt.Sprintf(" - a cdn does not exist for the domain: %s parsed from hostname: %s",
 				domainName, hostName))
 			respBytes, err = json.Marshal(alert)
 			if err != nil {
@@ -405,7 +406,7 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg config.Config) 
 
 			// verify that the xmlIDStr returned is valid, ie not nil
 			if !xmlIDStr.Valid {
-				alert := tc.CreateAlerts(tc.InfoLevel, fmt.Sprintf("  - a delivery service does not exist for a host with hostname of %s",
+				alert := common.CreateAlerts(common.InfoLevel, fmt.Sprintf("  - a delivery service does not exist for a host with hostname of %s",
 					hostName))
 				respBytes, err = json.Marshal(alert)
 				if err != nil {
@@ -419,13 +420,13 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg config.Config) 
 				hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlID, db)
 				if !hasAccess {
 					switch apiStatus {
-					case tc.SystemError:
+					case common.SystemError:
 						handleErr(http.StatusInternalServerError, err)
 						return
-					case tc.DataMissingError:
+					case common.DataMissingError:
 						handleErr(http.StatusBadRequest, err)
 						return
-					case tc.ForbiddenError:
+					case common.ForbiddenError:
 						handleErr(http.StatusForbidden, err)
 						return
 					}
@@ -445,7 +446,7 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg config.Config) 
 // fetch the deliveryservice ssl keys by the specified xmlID.
 func getDeliveryServiceSSLKeysByXMLIDHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorsFunc(w, r)
+		handleErr := common.GetHandleErrorsFunc(w, r)
 		var respBytes []byte
 
 		if cfg.RiakEnabled == false {
@@ -473,13 +474,13 @@ func getDeliveryServiceSSLKeysByXMLIDHandler(db *sqlx.DB, cfg config.Config) htt
 		hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlID, db)
 		if !hasAccess {
 			switch apiStatus {
-			case tc.SystemError:
+			case common.SystemError:
 				handleErr(http.StatusInternalServerError, err)
 				return
-			case tc.DataMissingError:
+			case common.DataMissingError:
 				handleErr(http.StatusBadRequest, err)
 				return
-			case tc.ForbiddenError:
+			case common.ForbiddenError:
 				handleErr(http.StatusForbidden, err)
 				return
 			}

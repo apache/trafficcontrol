@@ -29,13 +29,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 	"github.com/jmoiron/sqlx"
 
 	"fmt"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
@@ -162,7 +162,7 @@ func TestWrapAuth(t *testing.T) {
 			return
 		}
 
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(common.ContentType, common.ApplicationJson)
 		fmt.Fprintf(w, "%s", respBts)
 	}
 

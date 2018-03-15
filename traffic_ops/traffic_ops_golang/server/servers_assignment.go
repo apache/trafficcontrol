@@ -28,7 +28,7 @@ import (
 	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/ats"
 	"github.com/jmoiron/sqlx"
@@ -38,7 +38,7 @@ import (
 func AssignDeliveryServicesToServerHandler(db *sqlx.DB) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
+		handleErrs := common.GetHandleErrorsFunc(w, r)
 
 		params, err := api.GetCombinedParams(r)
 		if err != nil {
@@ -84,15 +84,15 @@ func AssignDeliveryServicesToServerHandler(db *sqlx.DB) http.HandlerFunc {
 
 		resp := struct {
 			Response AssignedDsResponse `json:"response"`
-			tc.Alerts
-		}{assignResp, tc.CreateAlerts(tc.SuccessLevel, "successfully assigned dses to server")}
+			common.Alerts
+		}{assignResp, common.CreateAlerts(common.SuccessLevel, "successfully assigned dses to server")}
 		respBts, err := json.Marshal(resp)
 		if err != nil {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		w.Header().Set(common.ContentType, common.ApplicationJson)
 		fmt.Fprintf(w, "%s", respBts)
 	}
 }
@@ -113,7 +113,7 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v\n", err)
-		return nil, tc.DBError
+		return nil, common.DBError
 	}
 
 	if replace {
@@ -121,12 +121,12 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 		deleteCurrent, err := tx.Prepare("DELETE FROM deliveryservice_server WHERE server = $1")
 		if err != nil {
 			log.Error.Printf("could not prepare deliveryservice_server delete statement: %s\n", err)
-			return nil, tc.DBError
+			return nil, common.DBError
 		}
 		_, err = deleteCurrent.Exec(server)
 		if err != nil {
 			log.Error.Printf("could not delete old deliveryservice_server associations for server: %s\n", err)
-			return nil, tc.DBError
+			return nil, common.DBError
 		}
 	}
 
@@ -149,12 +149,12 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 	SELECT * FROM q1,q2 ON CONFLICT DO NOTHING`)
 	if err != nil {
 		log.Error.Printf("could not prepare deliveryservice_server bulk insert: %s\n", err)
-		return nil, tc.DBError
+		return nil, common.DBError
 	}
 	_, err = bulkInsert.Exec(dsPqArray, server)
 	if err != nil {
 		log.Error.Printf("could not execute deliveryservice_server bulk insert: %s\n", err)
-		return nil, tc.DBError
+		return nil, common.DBError
 	}
 
 	//need remap config location
@@ -169,12 +169,12 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 	selectDsFieldsQuery, err := tx.Prepare("SELECT xml_id, edge_header_rewrite, regex_remap, cacheurl FROM deliveryservice WHERE id = ANY($1::bigint[])")
 	if err != nil {
 		log.Error.Printf("could not prepare ds fields query: %s\n", err)
-		return nil, tc.DBError
+		return nil, common.DBError
 	}
 	rows, err := selectDsFieldsQuery.Query(dsPqArray)
 	if err != nil {
 		log.Error.Printf("could not execute ds fields select query: %s\n", err)
-		return nil, tc.DBError
+		return nil, common.DBError
 	}
 	defer rows.Close()
 
@@ -194,7 +194,7 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 
 		if err := rows.Scan(&xmlID, &edgeHeaderRewrite, &regexRemap, &cacheURL); err != nil {
 			log.Error.Printf("could not scan ds fields row: %s\n", err)
-			return nil, tc.DBError
+			return nil, common.DBError
 		}
 		if xmlID.Valid && len(xmlID.String) > 0 {
 			//param := "hdr_rw_" + xmlID.String + ".config"
@@ -229,24 +229,24 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 	 SELECT * FROM q1,q2,q3 ON CONFLICT DO NOTHING`)
 	if err != nil {
 		log.Error.Printf("could not prepare parameter bulk insert query: %s\n", err)
-		return nil, tc.DBError
+		return nil, common.DBError
 	}
 	fileNamePqArray := pq.Array(insert)
 	if _, err = insertParams.Exec(fileNamePqArray, "location", atsConfigLocation); err != nil {
 		log.Error.Printf("could not execute parameter bulk insert: %s\n", err)
-		return nil, tc.DBError
+		return nil, common.DBError
 	}
 
 	//select the ids associated with the parameters we created above (may be able to get them from insert above to optimize)
 	selectParameterIds, err := tx.Prepare("SELECT id FROM parameter WHERE name = 'location' AND config_file IN ($1)")
 	if err != nil {
 		log.Error.Printf("could not prepare parameter id select query: %s\n", err)
-		return nil, tc.DBError
+		return nil, common.DBError
 	}
 	rows, err = selectParameterIds.Query(fileNamePqArray)
 	if err != nil {
 		log.Error.Printf("could not execute parameter id select query: %s\n", err)
-		return nil, tc.DBError
+		return nil, common.DBError
 	}
 	defer rows.Close()
 
@@ -255,7 +255,7 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 		var ID int64
 		if err := rows.Scan(&ID); err != nil {
 			log.Error.Printf("could not scan parameter ID: %s\n", err)
-			return nil, tc.DBError
+			return nil, common.DBError
 		}
 		parameterIds = append(parameterIds, ID)
 	}
@@ -269,22 +269,22 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 	ON CONFLICT DO NOTHING`)
 	if err != nil {
 		log.Error.Printf("could not prepare profile_parameter bulk insert: %s\n", err)
-		return nil, tc.DBError
+		return nil, common.DBError
 	}
 	if _, err = insertProfileParams.Exec(dsPqArray, pq.Array(parameterIds)); err != nil {
 		log.Error.Printf("could not execute profile_parameter bulk insert: %s\n", err)
-		return nil, tc.DBError
+		return nil, common.DBError
 	}
 
 	//process delete list
 	deleteTx, err := tx.Prepare(`DELETE FROM parameter WHERE name = 'location' AND config_file = ANY($1)`)
 	if err != nil {
 		log.Error.Printf("could not prepare parameter delete query: %s\n", err)
-		return nil, tc.DBError
+		return nil, common.DBError
 	}
 	if _, err = deleteTx.Exec(pq.Array(delete)); err != nil {
 		log.Error.Printf("could not execute parameter delete query: %s\n", err)
-		return nil, tc.DBError
+		return nil, common.DBError
 	}
 
 	return dses, nil

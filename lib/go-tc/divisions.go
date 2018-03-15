@@ -19,18 +19,20 @@ package tc
  * under the License.
  */
 
+import "github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
+
 type DivisionsResponse struct {
 	Response []Division `json:"response"`
 }
 
 type Division struct {
-	ID          int       `json:"id" db:"id"`
-	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	Name        string    `json:"name" db:"name"`
+	ID          int              `json:"id" db:"id"`
+	LastUpdated common.TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name        string           `json:"name" db:"name"`
 }
 
 type DivisionNullable struct {
-	ID          *int       `json:"id" db:"id"`
-	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	Name        *string    `json:"name" db:"name"`
+	ID          *int              `json:"id" db:"id"`
+	LastUpdated *common.TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name        *string           `json:"name" db:"name"`
 }

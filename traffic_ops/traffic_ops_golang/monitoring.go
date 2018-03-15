@@ -31,7 +31,7 @@ import (
 	"github.com/lib/pq"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
@@ -132,7 +132,7 @@ type DeliveryService struct {
 // TODO change to use the PathParams, instead of parsing the URL
 func monitoringHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
+		handleErrs := common.GetHandleErrorsFunc(w, r)
 
 		params, err := api.GetCombinedParams(r)
 		if err != nil {
@@ -144,7 +144,7 @@ func monitoringHandler(db *sqlx.DB) http.HandlerFunc {
 
 		resp, err, errType := getMonitoringJSON(cdnName, db)
 		if err != nil {
-			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
+			common.HandleErrorsWithType([]error{err}, errType, handleErrs)
 			return
 		}
 
@@ -416,30 +416,30 @@ WHERE pr.config_file = '%s'
 	return cfg, nil
 }
 
-func getMonitoringJSON(cdnName string, db *sqlx.DB) (*MonitoringResponse, error, tc.ApiErrorType) {
+func getMonitoringJSON(cdnName string, db *sqlx.DB) (*MonitoringResponse, error, common.ApiErrorType) {
 	monitors, caches, routers, err := getMonitoringServers(db, cdnName)
 	if err != nil {
-		return nil, fmt.Errorf("error getting servers: %v", err), tc.SystemError
+		return nil, fmt.Errorf("error getting servers: %v", err), common.SystemError
 	}
 
 	cachegroups, err := getCachegroups(db, cdnName)
 	if err != nil {
-		return nil, fmt.Errorf("error getting cachegroups: %v", err), tc.SystemError
+		return nil, fmt.Errorf("error getting cachegroups: %v", err), common.SystemError
 	}
 
 	profiles, err := getProfiles(db, caches, routers)
 	if err != nil {
-		return nil, fmt.Errorf("error getting profiles: %v", err), tc.SystemError
+		return nil, fmt.Errorf("error getting profiles: %v", err), common.SystemError
 	}
 
 	deliveryServices, err := getDeliveryServices(db, routers)
 	if err != nil {
-		return nil, fmt.Errorf("error getting deliveryservices: %v", err), tc.SystemError
+		return nil, fmt.Errorf("error getting deliveryservices: %v", err), common.SystemError
 	}
 
 	config, err := getConfig(db)
 	if err != nil {
-		return nil, fmt.Errorf("error getting config: %v", err), tc.SystemError
+		return nil, fmt.Errorf("error getting config: %v", err), common.SystemError
 	}
 
 	resp := MonitoringResponse{
@@ -452,5 +452,5 @@ func getMonitoringJSON(cdnName string, db *sqlx.DB) (*MonitoringResponse, error,
 			Config:           config,
 		},
 	}
-	return &resp, nil, tc.NoError
+	return &resp, nil, common.NoError
 }

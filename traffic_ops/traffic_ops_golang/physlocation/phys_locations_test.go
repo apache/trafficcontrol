@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
@@ -41,7 +42,7 @@ func getTestPhysLocations() []tc.PhysLocation {
 		City:        "Denver",
 		Email:       "d.t@gmail.com",
 		ID:          1,
-		LastUpdated: tc.TimeNoMod{Time: time.Now()},
+		LastUpdated: common.TimeNoMod{Time: time.Now()},
 		Name:        "physLocation1",
 		Phone:       "303-210-0000",
 		POC:         "Dennis Thompson",

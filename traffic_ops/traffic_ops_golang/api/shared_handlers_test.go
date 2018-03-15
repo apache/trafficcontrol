@@ -28,7 +28,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
 
@@ -37,8 +37,8 @@ import (
 
 type tester struct {
 	ID        int
-	error     error           //only for testing
-	errorType tc.ApiErrorType //only for testing
+	error     error               //only for testing
+	errorType common.ApiErrorType //only for testing
 }
 
 type emptyTester tester
@@ -65,7 +65,7 @@ func (v *tester) Validate(db *sqlx.DB) []error {
 }
 
 //Creator interface functions
-func (i *tester) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (i *tester) Create(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	return i.error, i.errorType
 }
 
@@ -74,27 +74,27 @@ func (i *tester) SetID(newID int) {
 }
 
 //Reader interface functions
-func (i *tester) Read(db *sqlx.DB, v map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
-	return []interface{}{tester{ID: 1}}, nil, tc.NoError
+func (i *tester) Read(db *sqlx.DB, v map[string]string, user auth.CurrentUser) ([]interface{}, []error, common.ApiErrorType) {
+	return []interface{}{tester{ID: 1}}, nil, common.NoError
 }
 
 //Reader interface functions
-func (i *emptyTester) Read(db *sqlx.DB, v map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
-	return []interface{}{}, nil, tc.NoError
+func (i *emptyTester) Read(db *sqlx.DB, v map[string]string, user auth.CurrentUser) ([]interface{}, []error, common.ApiErrorType) {
+	return []interface{}{}, nil, common.NoError
 }
 
 //Updater interface functions
-func (i *tester) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (i *tester) Update(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	return i.error, i.errorType
 }
 
 //Deleter interface functions
-func (i *tester) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (i *tester) Delete(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	return i.error, i.errorType
 }
 
 //used for testing purposes only
-func (t *tester) SetError(newError error, newErrorType tc.ApiErrorType) {
+func (t *tester) SetError(newError error, newErrorType common.ApiErrorType) {
 	t.error = newError
 	t.errorType = newErrorType
 }

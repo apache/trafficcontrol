@@ -26,6 +26,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -95,7 +96,7 @@ func (parameter TOParameter) Validate(db *sqlx.DB) []error {
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted parameter and have
 //to be added to the struct
-func (pl *TOParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (pl *TOParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -110,41 +111,41 @@ func (pl *TOParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	resultRows, err := tx.NamedQuery(insertQuery(), pl)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
+			if eType == common.DataConflictError {
 				return errors.New("a parameter with " + err.Error()), eType
 			}
 			return err, eType
 		}
 		log.Errorf("received non pq error: %++v from create execution", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	defer resultRows.Close()
 
 	var id int
-	var lastUpdated tc.TimeNoMod
+	var lastUpdated common.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
 			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
+			return common.DBError, common.SystemError
 		}
 	}
 	if rowsAffected == 0 {
 		err = errors.New("no parameter was inserted, no id was returned")
 		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	if rowsAffected > 1 {
 		err = errors.New("too many ids returned from parameter insert")
 		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 
 	pl.SetID(id)
@@ -152,10 +153,10 @@ func (pl *TOParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rollbackTransaction = false
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 func insertQuery() string {
@@ -171,7 +172,7 @@ secure) VALUES (
 	return query
 }
 
-func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, common.ApiErrorType) {
 	var rows *sqlx.Rows
 
 	privLevel := user.PrivLevel
@@ -188,7 +189,7 @@ func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, us
 
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
+		return nil, errs, common.DataConflictError
 	}
 
 	query := selectQuery() + where + ParametersGroupBy() + orderBy
@@ -197,17 +198,17 @@ func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, us
 	rows, err := db.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Parameters: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
+		return nil, []error{common.DBError}, common.SystemError
 	}
 	defer rows.Close()
 
 	params := []interface{}{}
 	hiddenField := "********"
 	for rows.Next() {
-		var p tc.ParameterNullable
+		var p TOParameter
 		if err = rows.StructScan(&p); err != nil {
 			log.Errorf("error parsing Parameter rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
+			return nil, []error{common.DBError}, common.SystemError
 		}
 		var isSecure bool
 		if p.Secure != nil {
@@ -220,7 +221,7 @@ func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, us
 		params = append(params, p)
 	}
 
-	return params, []error{}, tc.NoError
+	return params, []error{}, common.NoError
 
 }
 
@@ -229,7 +230,7 @@ func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, us
 //ParsePQUniqueConstraintError is used to determine if a parameter with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (pl *TOParameter) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (pl *TOParameter) Update(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -244,53 +245,53 @@ func (pl *TOParameter) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	log.Debugf("about to run exec query: %s with parameter: %++v", updateQuery(), pl)
 	resultRows, err := tx.NamedQuery(updateQuery(), pl)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
+			if eType == common.DataConflictError {
 				return errors.New("a parameter with " + err.Error()), eType
 			}
 			return err, eType
 		}
 		log.Errorf("received error: %++v from update execution", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	defer resultRows.Close()
 
 	// get LastUpdated field -- updated by trigger in the db
-	var lastUpdated tc.TimeNoMod
+	var lastUpdated common.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&lastUpdated); err != nil {
 			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
+			return common.DBError, common.SystemError
 		}
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
 	pl.LastUpdated = &lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return errors.New("no parameter found with this id"), tc.DataMissingError
+			return errors.New("no parameter found with this id"), common.DataMissingError
 		}
-		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
+		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), common.SystemError
 	}
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rollbackTransaction = false
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 //The Parameter implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (pl *TOParameter) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (pl *TOParameter) Delete(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -305,32 +306,32 @@ func (pl *TOParameter) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	log.Debugf("about to run exec query: %s with parameter: %++v", deleteQuery(), pl)
 	result, err := tx.NamedExec(deleteQuery(), pl)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	if rowsAffected < 1 {
-		return errors.New("no parameter with that id found"), tc.DataMissingError
+		return errors.New("no parameter with that id found"), common.DataMissingError
 	}
 	if rowsAffected > 1 {
-		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
+		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), common.SystemError
 	}
 
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rollbackTransaction = false
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 func selectQuery() string {

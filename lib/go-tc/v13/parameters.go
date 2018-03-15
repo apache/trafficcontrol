@@ -1,4 +1,6 @@
-package tc
+package v13
+
+import "encoding/json"
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -18,22 +20,35 @@ package tc
  * specific language governing permissions and limitations
  * under the License.
  */
+
 import "github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 
-type StatusesResponse struct {
-	Response []Status `json:"response"`
+// ParametersResponse ...
+type ParametersResponse struct {
+	Response []Parameter `json:"response"`
 }
 
-type Status struct {
-	Description string           `json:"description" db:"description"`
+// Parameter ...
+type Parameter struct {
+	ConfigFile  string           `json:"configFile" db:"config_file"`
 	ID          int              `json:"id" db:"id"`
 	LastUpdated common.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Name        string           `json:"name" db:"name"`
+	Profiles    json.RawMessage  `json:"profiles" db:"profiles"`
+	Secure      bool             `json:"secure" db:"secure"`
+	Value       string           `json:"value" db:"value"`
 }
 
-type StatusNullable struct {
-	Description *string           `json:"description" db:"description"`
+// ParameterNullable - a struct version that allows for all fields to be null, mostly used by the API side
+type ParameterNullable struct {
+	//
+	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
+	//
+	ConfigFile  *string           `json:"configFile" db:"config_file"`
 	ID          *int              `json:"id" db:"id"`
 	LastUpdated *common.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Name        *string           `json:"name" db:"name"`
+	Profiles    json.RawMessage   `json:"profiles" db:"profiles"`
+	Secure      *bool             `json:"secure" db:"secure"`
+	Value       *string           `json:"value" db:"value"`
 }

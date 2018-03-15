@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
@@ -37,7 +38,7 @@ import (
 func getTestProfiles() []tc.ProfileNullable {
 	profiles := []tc.ProfileNullable{}
 
-	lastUpdated := tc.TimeNoMod{}
+	lastUpdated := common.TimeNoMod{}
 	lastUpdated.Scan(time.Now())
 	ID := 1
 	name := "profile1"

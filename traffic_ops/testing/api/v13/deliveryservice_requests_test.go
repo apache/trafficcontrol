@@ -21,6 +21,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/testing/api/utils"
 )
 
@@ -198,7 +199,7 @@ func TestDeliveryServiceRequestWorkflow(t *testing.T) {
 
 }
 
-func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequest, newstate string) (tc.Alerts, tc.DeliveryServiceRequest) {
+func updateDeliveryServiceRequestStatus(t *testing.T, dsr tc.DeliveryServiceRequest, newstate string) (common.Alerts, tc.DeliveryServiceRequest) {
 	ID := dsr.ID
 	dsr.Status = tc.RequestStatus("submitted")
 
@@ -242,7 +243,7 @@ func UpdateTestDeliveryServiceRequests(t *testing.T) {
 	respDSR := resp[0]
 	expDisplayName := "new display name"
 	respDSR.DeliveryService.DisplayName = expDisplayName
-	var alert tc.Alerts
+	var alert common.Alerts
 	alert, _, err = TOSession.UpdateDeliveryServiceRequestByID(respDSR.ID, respDSR)
 	log.Debugln("Response: ", alert)
 	if err != nil {

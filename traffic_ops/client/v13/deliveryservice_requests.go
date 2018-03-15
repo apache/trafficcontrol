@@ -23,6 +23,7 @@ import (
 	"net/http"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 )
 
 const (
@@ -30,9 +31,9 @@ const (
 )
 
 // Create a Delivery Service Request
-func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequest) (common.Alerts, ReqInf, error) {
 
-	var alerts tc.Alerts
+	var alerts common.Alerts
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(dsr)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -117,7 +118,7 @@ func (to *Session) GetDeliveryServiceRequestByID(id int) ([]tc.DeliveryServiceRe
 }
 
 // Update a DeliveryServiceRequest by ID
-func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServiceRequest) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServiceRequest) (common.Alerts, ReqInf, error) {
 
 	route := fmt.Sprintf("%s/%d", API_DS_REQUESTS, id)
 
@@ -125,28 +126,28 @@ func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServi
 	reqBody, err := json.Marshal(dsr)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return common.Alerts{}, reqInf, err
 	}
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return common.Alerts{}, reqInf, err
 	}
 	defer resp.Body.Close()
-	var alerts tc.Alerts
+	var alerts common.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
 
 // DELETE a DeliveryServiceRequest by DeliveryServiceRequest assignee
-func (to *Session) DeleteDeliveryServiceRequestByID(id int) (tc.Alerts, ReqInf, error) {
+func (to *Session) DeleteDeliveryServiceRequestByID(id int) (common.Alerts, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_DS_REQUESTS, id)
 	resp, remoteAddr, err := to.rawRequest(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return common.Alerts{}, reqInf, err
 	}
 	defer resp.Body.Close()
-	var alerts tc.Alerts
+	var alerts common.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }

@@ -25,7 +25,8 @@ import (
 	"net/http"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
@@ -33,7 +34,7 @@ import (
 
 func HWInfoHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
+		handleErrs := common.GetHandleErrorsFunc(w, r)
 
 		params, err := api.GetCombinedParams(r)
 		if err != nil {
@@ -43,7 +44,7 @@ func HWInfoHandler(db *sqlx.DB) http.HandlerFunc {
 
 		resp, errs, errType := getHWInfoResponse(params, db)
 		if len(errs) > 0 {
-			tc.HandleErrorsWithType(errs, errType, handleErrs)
+			common.HandleErrorsWithType(errs, errType, handleErrs)
 			return
 		}
 
@@ -58,7 +59,7 @@ func HWInfoHandler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func getHWInfoResponse(params map[string]string, db *sqlx.DB) (*tc.HWInfoResponse, []error, tc.ApiErrorType) {
+func getHWInfoResponse(params map[string]string, db *sqlx.DB) (*tc.HWInfoResponse, []error, common.ApiErrorType) {
 	hwInfo, errs, errType := getHWInfo(params, db)
 	if len(errs) > 0 {
 		return nil, errs, errType
@@ -67,10 +68,10 @@ func getHWInfoResponse(params map[string]string, db *sqlx.DB) (*tc.HWInfoRespons
 	resp := tc.HWInfoResponse{
 		Response: hwInfo,
 	}
-	return &resp, nil, tc.NoError
+	return &resp, nil, common.NoError
 }
 
-func getHWInfo(params map[string]string, db *sqlx.DB) ([]tc.HWInfo, []error, tc.ApiErrorType) {
+func getHWInfo(params map[string]string, db *sqlx.DB) ([]tc.HWInfo, []error, common.ApiErrorType) {
 	var rows *sqlx.Rows
 	var err error
 
@@ -87,7 +88,7 @@ func getHWInfo(params map[string]string, db *sqlx.DB) ([]tc.HWInfo, []error, tc.
 
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
+		return nil, errs, common.DataConflictError
 	}
 
 	query := selectHWInfoQuery() + where + orderBy
@@ -95,7 +96,7 @@ func getHWInfo(params map[string]string, db *sqlx.DB) ([]tc.HWInfo, []error, tc.
 
 	rows, err = db.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, []error{err}, tc.SystemError
+		return nil, []error{err}, common.SystemError
 	}
 	defer rows.Close()
 
@@ -103,11 +104,11 @@ func getHWInfo(params map[string]string, db *sqlx.DB) ([]tc.HWInfo, []error, tc.
 	for rows.Next() {
 		var s tc.HWInfo
 		if err = rows.StructScan(&s); err != nil {
-			return nil, []error{fmt.Errorf("getting hwInfo: %v", err)}, tc.SystemError
+			return nil, []error{fmt.Errorf("getting hwInfo: %v", err)}, common.SystemError
 		}
 		hwInfo = append(hwInfo, s)
 	}
-	return hwInfo, nil, tc.NoError
+	return hwInfo, nil, common.NoError
 }
 
 func selectHWInfoQuery() string {

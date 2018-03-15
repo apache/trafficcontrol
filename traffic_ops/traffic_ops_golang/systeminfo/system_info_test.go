@@ -28,6 +28,7 @@ import (
 	"encoding/json"
 
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
@@ -46,7 +47,7 @@ func TestGetSystemInfo(t *testing.T) {
 	cols := test.ColsFromStructByTag("db", tc.ParameterNullable{})
 	rows := sqlmock.NewRows(cols)
 
-	lastUpdated := tc.TimeNoMod{Time: time.Now()}
+	lastUpdated := common.TimeNoMod{Time: time.Now()}
 	configFile := "global"
 	secure := false
 

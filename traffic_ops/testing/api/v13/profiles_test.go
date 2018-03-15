@@ -19,7 +19,7 @@ import (
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 )
 
 func TestProfiles(t *testing.T) {
@@ -63,7 +63,7 @@ func UpdateTestProfiles(t *testing.T) {
 	remoteProfile := resp[0]
 	expectedProfileDesc := "UPDATED"
 	remoteProfile.Description = expectedProfileDesc
-	var alert tc.Alerts
+	var alert common.Alerts
 	alert, _, err = TOSession.UpdateProfileByID(remoteProfile.ID, remoteProfile)
 	if err != nil {
 		t.Errorf("cannot UPDATE Profile by id: %v - %v\n", err, alert)

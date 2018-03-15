@@ -23,18 +23,18 @@ import (
 	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
 )
 
 type ChangeLog struct {
-	ID          int          `json:"id" db:"id"`
-	Level       string       `json:"level" db:"level"`
-	Message     string       `json:"message" db:"message"`
-	TMUser      int          `json:"tmUser" db:"tm_user"`
-	TicketNum   string       `json:"ticketNum" db:"ticketnum"`
-	LastUpdated tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	ID          int              `json:"id" db:"id"`
+	Level       string           `json:"level" db:"level"`
+	Message     string           `json:"message" db:"message"`
+	TMUser      int              `json:"tmUser" db:"tm_user"`
+	TicketNum   string           `json:"ticketNum" db:"ticketnum"`
+	LastUpdated common.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
 type ChangeLogger interface {

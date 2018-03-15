@@ -26,7 +26,8 @@ import (
 	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/asaskevich/govalidator"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
@@ -182,7 +183,6 @@ func requiredIfMatchesTypeName(patterns []string, typeName string) func(interfac
 	}
 }
 
-// TODO: drichardson - refactor to the types.go once implemented.
 func getTypeName(db *sqlx.DB, typeID int) (string, error) {
 
 	query := `SELECT name from type where id=$1`
@@ -214,7 +214,7 @@ func getTypeName(db *sqlx.DB, typeID int) (string, error) {
 //ParsePQUniqueConstraintError is used to determine if a delivery service with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (ds *TODeliveryService) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (ds *TODeliveryService) Update(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
@@ -229,39 +229,39 @@ func (ds *TODeliveryService) Update(db *sqlx.DB, user auth.CurrentUser) (error, 
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	log.Debugf("about to run exec query: %s with ds: %++v", updateDSQuery(), ds)
 	resultRows, err := tx.NamedQuery(updateDSQuery(), ds)
 	if err != nil {
 		if err, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(err)
-			if eType == tc.DataConflictError {
+			if eType == common.DataConflictError {
 				return errors.New("a delivery service with " + err.Error()), eType
 			}
 			return err, eType
 		}
 		log.Errorf("received error: %++v from update execution", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
-	var lastUpdated tc.TimeNoMod
+	var lastUpdated common.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&lastUpdated); err != nil {
 			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
+			return common.DBError, common.SystemError
 		}
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
 	ds.LastUpdated = &lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return errors.New("no delivery service found with this id"), tc.DataMissingError
+			return errors.New("no delivery service found with this id"), common.DataMissingError
 		}
-		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
+		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), common.SystemError
 	}
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 // Create implements the Creator interface.
@@ -271,7 +271,7 @@ func (ds *TODeliveryService) Update(db *sqlx.DB, user auth.CurrentUser) (error, 
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted ds and have
 //to be added to the struct
-func (ds *TODeliveryService) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (ds *TODeliveryService) Create(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
@@ -286,7 +286,7 @@ func (ds *TODeliveryService) Create(db *sqlx.DB, user auth.CurrentUser) (error, 
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	fmt.Printf("ds ---> %v\n", ds)
 	resultRows, err := tx.NamedQuery(insertDSQuery(), ds)
@@ -296,35 +296,35 @@ func (ds *TODeliveryService) Create(db *sqlx.DB, user auth.CurrentUser) (error, 
 			return errors.New("a delivery service with " + err.Error()), eType
 		}
 		log.Errorf("received non pq error: %++v from create execution", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	var id int
-	var lastUpdated tc.TimeNoMod
+	var lastUpdated common.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
 			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
+			return common.DBError, common.SystemError
 		}
 	}
 	if rowsAffected == 0 {
 		err = errors.New("no delivery service was inserted, no id was returned")
 		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	} else if rowsAffected > 1 {
 		err = errors.New("too many ids returned from delivery service insert")
 		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	ds.SetID(id)
 	ds.LastUpdated = &lastUpdated
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 //The DeliveryService implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (ds *TODeliveryService) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (ds *TODeliveryService) Delete(db *sqlx.DB, user auth.CurrentUser) (error, common.ApiErrorType) {
 	tx, err := db.Beginx()
 	defer func() {
 		if tx == nil {
@@ -339,25 +339,25 @@ func (ds *TODeliveryService) Delete(db *sqlx.DB, user auth.CurrentUser) (error, 
 
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	log.Debugf("about to run exec query: %s with Delivery Service: %++v", deleteDSQuery(), ds)
 	result, err := tx.NamedExec(deleteDSQuery(), ds)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return tc.DBError, tc.SystemError
+		return common.DBError, common.SystemError
 	}
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return errors.New("no delivery service with that id found"), tc.DataMissingError
+			return errors.New("no delivery service with that id found"), common.DataMissingError
 		}
-		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
+		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), common.SystemError
 	}
-	return nil, tc.NoError
+	return nil, common.NoError
 }
 
 // IsTenantAuthorized implements the Tenantable interface to ensure the user is authorized on the deliveryservice tenant

@@ -28,7 +28,7 @@ import (
 	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/config"
@@ -51,7 +51,7 @@ type URISignerKeyset struct {
 // endpoint handler for fetching uri signing keys from riak
 func getURIsignkeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorsFunc(w, r)
+		handleErr := common.GetHandleErrorsFunc(w, r)
 
 		if cfg.RiakEnabled == false {
 			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
@@ -77,13 +77,13 @@ func getURIsignkeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlID, db)
 		if !hasAccess {
 			switch apiStatus {
-			case tc.SystemError:
+			case common.SystemError:
 				handleErr(http.StatusInternalServerError, err)
 				return
-			case tc.DataMissingError:
+			case common.DataMissingError:
 				handleErr(http.StatusBadRequest, err)
 				return
-			case tc.ForbiddenError:
+			case common.ForbiddenError:
 				handleErr(http.StatusForbidden, err)
 				return
 			}
@@ -133,7 +133,7 @@ func getURIsignkeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 // Http DELETE handler used to remove urisigning keys assigned to a delivery service.
 func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorsFunc(w, r)
+		handleErr := common.GetHandleErrorsFunc(w, r)
 
 		if cfg.RiakEnabled == false {
 			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
@@ -159,13 +159,13 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.Ha
 		hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlID, db)
 		if !hasAccess {
 			switch apiStatus {
-			case tc.SystemError:
+			case common.SystemError:
 				handleErr(http.StatusInternalServerError, err)
 				return
-			case tc.DataMissingError:
+			case common.DataMissingError:
 				handleErr(http.StatusBadRequest, err)
 				return
-			case tc.ForbiddenError:
+			case common.ForbiddenError:
 				handleErr(http.StatusForbidden, err)
 				return
 			}
@@ -194,15 +194,15 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.Ha
 		}
 
 		// fetch the object and delete it if it exists.
-		var alert tc.Alerts
+		var alert common.Alerts
 
 		if ro == nil || ro[0].Value == nil {
-			alert = tc.CreateAlerts(tc.InfoLevel, "not deleted, no object found to delete")
+			alert = common.CreateAlerts(common.InfoLevel, "not deleted, no object found to delete")
 		} else if err := riaksvc.DeleteObject(xmlID, CDNURIKeysBucket, cluster); err != nil {
 			handleErr(http.StatusInternalServerError, err)
 			return
 		} else { // object successfully deleted
-			alert = tc.CreateAlerts(tc.SuccessLevel, "object deleted")
+			alert = common.CreateAlerts(common.SuccessLevel, "object deleted")
 		}
 
 		// send response
@@ -221,7 +221,7 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.Ha
 // Http POST or PUT handler used to store urisigning keys to a delivery service.
 func saveDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorsFunc(w, r)
+		handleErr := common.GetHandleErrorsFunc(w, r)
 
 		defer r.Body.Close()
 
@@ -249,13 +249,13 @@ func saveDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.Hand
 		hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlID, db)
 		if !hasAccess {
 			switch apiStatus {
-			case tc.SystemError:
+			case common.SystemError:
 				handleErr(http.StatusInternalServerError, err)
 				return
-			case tc.DataMissingError:
+			case common.DataMissingError:
 				handleErr(http.StatusBadRequest, err)
 				return
-			case tc.ForbiddenError:
+			case common.ForbiddenError:
 				handleErr(http.StatusForbidden, err)
 				return
 			}

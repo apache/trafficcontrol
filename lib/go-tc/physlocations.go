@@ -19,25 +19,27 @@ package tc
  * under the License.
  */
 
+import "github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
+
 type PhysLocationsResponse struct {
 	Response []PhysLocation `json:"response"`
 }
 
 type PhysLocation struct {
-	Address     string    `json:"address" db:"address"`
-	City        string    `json:"city" db:"city"`
-	Comments    string    `json:"comments" db:"comments"`
-	Email       string    `json:"email" db:"email"`
-	ID          int       `json:"id" db:"id"`
-	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	Name        string    `json:"name" db:"name"`
-	Phone       string    `json:"phone" db:"phone"`
-	POC         string    `json:"poc" db:"poc"`
-	RegionID    int       `json:"regionId" db:"region"`
-	RegionName  string    `json:"region" db:"region_name"`
-	ShortName   string    `json:"shortName" db:"short_name"`
-	State       string    `json:"state" db:"state"`
-	Zip         string    `json:"zip" db:"zip"`
+	Address     string           `json:"address" db:"address"`
+	City        string           `json:"city" db:"city"`
+	Comments    string           `json:"comments" db:"comments"`
+	Email       string           `json:"email" db:"email"`
+	ID          int              `json:"id" db:"id"`
+	LastUpdated common.TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name        string           `json:"name" db:"name"`
+	Phone       string           `json:"phone" db:"phone"`
+	POC         string           `json:"poc" db:"poc"`
+	RegionID    int              `json:"regionId" db:"region"`
+	RegionName  string           `json:"region" db:"region_name"`
+	ShortName   string           `json:"shortName" db:"short_name"`
+	State       string           `json:"state" db:"state"`
+	Zip         string           `json:"zip" db:"zip"`
 }
 
 // PhysLocationNullable - a struct version that allows for all fields to be null
@@ -45,18 +47,18 @@ type PhysLocationNullable struct {
 	//
 	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
 	//
-	Address     *string    `json:"address" db:"address"`
-	City        *string    `json:"city" db:"city"`
-	Comments    *string    `json:"comments" db:"comments"`
-	Email       *string    `json:"email" db:"email"`
-	ID          *int       `json:"id" db:"id"`
-	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	Name        *string    `json:"name" db:"name"`
-	Phone       *string    `json:"phone" db:"phone"`
-	POC         *string    `json:"poc" db:"poc"`
-	RegionID    *int       `json:"regionId" db:"region"`
-	RegionName  *string    `json:"region" db:"region_name"`
-	ShortName   *string    `json:"shortName" db:"short_name"`
-	State       *string    `json:"state" db:"state"`
-	Zip         *string    `json:"zip" db:"zip"`
+	Address     *string           `json:"address" db:"address"`
+	City        *string           `json:"city" db:"city"`
+	Comments    *string           `json:"comments" db:"comments"`
+	Email       *string           `json:"email" db:"email"`
+	ID          *int              `json:"id" db:"id"`
+	LastUpdated *common.TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name        *string           `json:"name" db:"name"`
+	Phone       *string           `json:"phone" db:"phone"`
+	POC         *string           `json:"poc" db:"poc"`
+	RegionID    *int              `json:"regionId" db:"region"`
+	RegionName  *string           `json:"region" db:"region_name"`
+	ShortName   *string           `json:"shortName" db:"short_name"`
+	State       *string           `json:"state" db:"state"`
+	Zip         *string           `json:"zip" db:"zip"`
 }

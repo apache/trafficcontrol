@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
@@ -40,7 +41,7 @@ func getTestTypes() []tc.TypeNullable {
 	name := "name1"
 	description := "desc"
 	useInTable := "use_in_table1"
-	lastUpdated := tc.TimeNoMod{Time: time.Now()}
+	lastUpdated := common.TimeNoMod{Time: time.Now()}
 	testCase := tc.TypeNullable{
 		ID:          &ID,
 		LastUpdated: &lastUpdated,

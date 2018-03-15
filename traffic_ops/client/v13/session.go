@@ -32,6 +32,7 @@ import (
 	"time"
 
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 
 	"golang.org/x/net/publicsuffix"
 )
@@ -122,7 +123,7 @@ func (to *Session) login() (net.Addr, error) {
 	}
 	defer resp.Body.Close()
 
-	var alerts tc.Alerts
+	var alerts common.Alerts
 	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
 		return remoteAddr, errors.New("decoding response JSON: " + err.Error())
 	}
@@ -157,7 +158,7 @@ func (to *Session) logout() (net.Addr, error) {
 	}
 	defer resp.Body.Close()
 
-	var alerts tc.Alerts
+	var alerts common.Alerts
 	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
 		return remoteAddr, errors.New("decoding response JSON: " + err.Error())
 	}

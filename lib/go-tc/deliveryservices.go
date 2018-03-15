@@ -4,6 +4,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 )
 
 /*
@@ -91,7 +93,7 @@ type DeliveryService struct {
 	MissLat              float64                `json:"missLat"`
 	MissLong             float64                `json:"missLong"`
 	CheckPath            string                 `json:"checkPath"`
-	LastUpdated          *TimeNoMod             `json:"lastUpdated" db:"last_updated"`
+	LastUpdated          *common.TimeNoMod      `json:"lastUpdated" db:"last_updated"`
 	Protocol             int                    `json:"protocol"`
 	IPV6RoutingEnabled   bool                   `json:"ipv6RoutingEnabled"`
 	RangeRequestHandling int                    `json:"rangeRequestHandling"`
@@ -140,7 +142,7 @@ type DeliveryServiceNullable struct {
 	InfoURL                  *string                 `json:"infoUrl" db:"info_url"`
 	InitialDispersion        *int                    `json:"initialDispersion" db:"initial_dispersion"`
 	IPV6RoutingEnabled       *bool                   `json:"ipv6RoutingEnabled" db:"ipv6_routing_enabled"`
-	LastUpdated              *TimeNoMod              `json:"lastUpdated" db:"last_updated"`
+	LastUpdated              *common.TimeNoMod       `json:"lastUpdated" db:"last_updated"`
 	LogsEnabled              *bool                   `json:"logsEnabled" db:"logs_enabled"`
 	LongDesc                 *string                 `json:"longDesc" db:"long_desc"`
 	LongDesc1                *string                 `json:"longDesc1" db:"long_desc_1"`

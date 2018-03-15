@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
@@ -37,7 +38,7 @@ func getTestDivisions() []tc.Division {
 	testCase := tc.Division{
 		ID:          1,
 		Name:        "division1",
-		LastUpdated: tc.TimeNoMod{Time: time.Now()},
+		LastUpdated: common.TimeNoMod{Time: time.Now()},
 	}
 	regions = append(regions, testCase)
 

@@ -24,6 +24,8 @@ import (
 	"strings"
 
 	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
+
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/common"
 )
 
 // IDNoMod type is used to suppress JSON unmarshalling
@@ -32,19 +34,19 @@ type IDNoMod int
 // DeliveryServiceRequest is used as part of the workflow to create,
 // modify, or delete a delivery service.
 type DeliveryServiceRequest struct {
-	AssigneeID      int             `json:"assigneeId,omitempty"`
-	Assignee        string          `json:"assignee,omitempty"`
-	AuthorID        IDNoMod         `json:"authorId"`
-	Author          string          `json:"author"`
-	ChangeType      string          `json:"changeType"`
-	CreatedAt       *TimeNoMod      `json:"createdAt"`
-	ID              int             `json:"id"`
-	LastEditedBy    string          `json:"lastEditedBy,omitempty"`
-	LastEditedByID  IDNoMod         `json:"lastEditedById,omitempty"`
-	LastUpdated     *TimeNoMod      `json:"lastUpdated"`
-	DeliveryService DeliveryService `json:"deliveryService"`
-	Status          RequestStatus   `json:"status"`
-	XMLID           string          `json:"-" db:"xml_id"`
+	AssigneeID      int               `json:"assigneeId,omitempty"`
+	Assignee        string            `json:"assignee,omitempty"`
+	AuthorID        IDNoMod           `json:"authorId"`
+	Author          string            `json:"author"`
+	ChangeType      string            `json:"changeType"`
+	CreatedAt       *common.TimeNoMod `json:"createdAt"`
+	ID              int               `json:"id"`
+	LastEditedBy    string            `json:"lastEditedBy,omitempty"`
+	LastEditedByID  IDNoMod           `json:"lastEditedById,omitempty"`
+	LastUpdated     *common.TimeNoMod `json:"lastUpdated"`
+	DeliveryService DeliveryService   `json:"deliveryService"`
+	Status          RequestStatus     `json:"status"`
+	XMLID           string            `json:"-" db:"xml_id"`
 }
 
 // DeliveryServiceRequestNullable is used as part of the workflow to create,
@@ -55,11 +57,11 @@ type DeliveryServiceRequestNullable struct {
 	AuthorID        *IDNoMod                 `json:"authorId" db:"author_id"`
 	Author          *string                  `json:"author"`
 	ChangeType      *string                  `json:"changeType" db:"change_type"`
-	CreatedAt       *TimeNoMod               `json:"createdAt" db:"created_at"`
+	CreatedAt       *common.TimeNoMod        `json:"createdAt" db:"created_at"`
 	ID              *int                     `json:"id" db:"id"`
 	LastEditedBy    *string                  `json:"lastEditedBy"`
 	LastEditedByID  *IDNoMod                 `json:"lastEditedById" db:"last_edited_by_id"`
-	LastUpdated     *TimeNoMod               `json:"lastUpdated" db:"last_updated"`
+	LastUpdated     *common.TimeNoMod        `json:"lastUpdated" db:"last_updated"`
 	DeliveryService *DeliveryServiceNullable `json:"deliveryService" db:"deliveryservice"`
 	Status          *RequestStatus           `json:"status" db:"status"`
 	XMLID           *string                  `json:"-" db:"xml_id"`
