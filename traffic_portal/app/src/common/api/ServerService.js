@@ -30,9 +30,9 @@ var ServerService = function($http, $q, Restangular, locationUtils, messageModel
     this.createServer = function(server) {
         return Restangular.service('servers').post(server)
             .then(
-                function(response) {
+                function() {
                     messageModel.setMessages([ { level: 'success', text: 'Server created' } ], true);
-                    locationUtils.navigateToPath('/servers/' + response.id);
+                    locationUtils.navigateToPath('/servers');
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
