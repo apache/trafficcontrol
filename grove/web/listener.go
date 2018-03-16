@@ -52,18 +52,21 @@ func InterceptListen(network, laddr string) (net.Listener, *ConnMap, func(net.Co
 	return &InterceptListener{realListener: l, connMap: connMap}, connMap, getConnStateCallback(connMap), nil
 }
 
-// InterceptListenTLS is like InterceptListen but for serving HTTPS.
-func InterceptListenTLS(network string, laddr string, certs []tls.Certificate) (net.Listener, *ConnMap, func(net.Conn, http.ConnState), error) {
-	config := &tls.Config{NextProtos: []string{"h2"}}
+// InterceptListenTLS is like InterceptListen but for serving HTTPS. It returns the tls.Config, which must be set on the http.Server using this listener for HTTP/2 to be set up.
+func InterceptListenTLS(network string, laddr string, certs []tls.Certificate) (net.Listener, *ConnMap, func(net.Conn, http.ConnState), *tls.Config, error) {
+	config := &tls.Config{}
+	config.NextProtos = []string{"h2"}
 	config.Certificates = certs
 	config.BuildNameToCertificate()
 	l, err := net.Listen(network, laddr)
 	if err != nil {
-		return l, nil, nil, err
+		return l, nil, nil, nil, err
 	}
 	connMap := NewConnMap()
-	tlsListener := tls.NewListener(l, config)
-	return &InterceptListener{realListener: tlsListener, connMap: connMap}, connMap, getConnStateCallback(connMap), nil
+
+	interceptListener := &InterceptListener{realListener: l, connMap: connMap}
+	tlsListener := tls.NewListener(interceptListener, config)
+	return tlsListener, connMap, getConnStateCallback(connMap), config, nil
 }
 
 func (l *InterceptListener) Accept() (net.Conn, error) {
