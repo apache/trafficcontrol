@@ -41,7 +41,13 @@ func main() {
 	runtime.GOMAXPROCS(32) // DEBUG
 	configFileName := flag.String("cfg", "", "The config file path")
 	pprof := flag.Bool("pprof", false, "Whether to profile")
+	showVersion := flag.Bool("version", false, "Print the application version")
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Println(Version)
+		os.Exit(0)
+	}
 
 	if *configFileName == "" {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error starting service: The -cfg argument is required")
@@ -111,7 +117,7 @@ func main() {
 	}
 
 	// TODO pass total size for all file groups?
-	stats := stat.New(remapper.Rules(), caches, uint64(cfg.CacheSizeBytes), httpConns, httpsConns)
+	stats := stat.New(remapper.Rules(), caches, uint64(cfg.CacheSizeBytes), httpConns, httpsConns, Version)
 
 	buildHandler := func(scheme string, port string, conns *web.ConnMap, stats stat.Stats, pluginContext map[string]*interface{}) *cache.HandlerPointer {
 		return cache.NewHandlerPointer(cache.NewHandler(
@@ -194,7 +200,7 @@ func main() {
 			}
 		}
 
-		stats = stat.New(remapper.Rules(), caches, uint64(cfg.CacheSizeBytes), httpConns, httpsConns) // TODO copy stats from old stats object?
+		stats = stat.New(remapper.Rules(), caches, uint64(cfg.CacheSizeBytes), httpConns, httpsConns, Version) // TODO copy stats from old stats object?
 
 		httpCacheHandler := cache.NewHandler(
 			remapper,
