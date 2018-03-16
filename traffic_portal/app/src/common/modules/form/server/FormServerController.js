@@ -61,7 +61,7 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
             .then(
                 function(result) {
                     messageModel.setMessages(result.data.alerts, false);
-                    refresh();
+                    $scope.refresh();
                 },
 	            function(fault) {
 		            messageModel.setMessages(fault.data.alerts, false);
@@ -69,7 +69,7 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
             );
     };
     
-    var refresh = function() {
+    $scope.refresh = function() {
         $state.reload(); // reloads all the resolves for the view
     };
 
@@ -100,7 +100,7 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         serverService.queueServerUpdates(server.id)
             .then(
                 function() {
-                    refresh();
+                    $scope.refresh();
                 }
             );
     };
@@ -109,7 +109,7 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         serverService.clearServerUpdates(server.id)
             .then(
                 function() {
-                    refresh();
+                    $scope.refresh();
                 }
             );
     };
