@@ -80,7 +80,6 @@ func (server *TOServer) Validate(db *sqlx.DB) []error {
 		"cdnId":          validation.Validate(server.CDNID, validation.NotNil),
 		"domainName":     validation.Validate(server.DomainName, validation.NotNil, noSpaces),
 		"hostName":       validation.Validate(server.HostName, validation.NotNil, noSpaces),
-		"httpsPort":      validation.Validate(server.HTTPSPort, validation.NotNil),
 		"interfaceMtu":   validation.Validate(server.InterfaceMtu, validation.NotNil),
 		"interfaceName":  validation.Validate(server.InterfaceName, validation.NotNil),
 		"ipAddress":      validation.Validate(server.IPAddress, validation.NotNil, is.IPv4),
@@ -89,7 +88,6 @@ func (server *TOServer) Validate(db *sqlx.DB) []error {
 		"physLocationId": validation.Validate(server.PhysLocationID, validation.NotNil),
 		"profileId":      validation.Validate(server.ProfileID, validation.NotNil),
 		"statusId":       validation.Validate(server.StatusID, validation.NotNil),
-		"tcpPort":        validation.Validate(server.TCPPort, validation.NotNil),
 		"typeId":         validation.Validate(server.TypeID, validation.NotNil),
 		"updPending":     validation.Validate(server.UpdPending, validation.NotNil),
 	}
