@@ -25,6 +25,7 @@ type StatsSystem interface {
 	ConfigReloads() uint64
 	LastReload() time.Time
 	AstatsLoad() time.Time
+	Version() string
 }
 
 type Stats interface {
@@ -45,11 +46,11 @@ type Stats interface {
 	Write(w http.ResponseWriter, conn *web.InterceptConn, reqFQDN string, remoteAddr string, code int, bytesWritten uint64, cacheHit bool) uint64
 }
 
-func New(remapRules []remapdata.RemapRule, caches map[string]icache.Cache, cacheCapacityBytes uint64, httpConns *web.ConnMap, httpsConns *web.ConnMap) Stats {
+func New(remapRules []remapdata.RemapRule, caches map[string]icache.Cache, cacheCapacityBytes uint64, httpConns *web.ConnMap, httpsConns *web.ConnMap, version string) Stats {
 	cacheHits := uint64(0)
 	cacheMisses := uint64(0)
 	return &stats{
-		system:             NewStatsSystem(),
+		system:             NewStatsSystem(version),
 		remap:              NewStatsRemaps(remapRules),
 		cacheHits:          &cacheHits,
 		cacheMisses:        &cacheMisses,
@@ -243,8 +244,8 @@ func (r *statsRemap) AddCacheHit()      { atomic.AddUint64(&r.cacheHits, 1) }
 func (r *statsRemap) CacheMisses() uint64 { return atomic.LoadUint64(&r.cacheMisses) }
 func (r *statsRemap) AddCacheMiss()       { atomic.AddUint64(&r.cacheMisses, 1) }
 
-func NewStatsSystem() StatsSystem {
-	return &statsSystem{}
+func NewStatsSystem(version string) StatsSystem {
+	return &statsSystem{version: version}
 }
 
 type statsSystem struct {
@@ -253,6 +254,7 @@ type statsSystem struct {
 	configReloads             uint64
 	lastReloadUnixNano        int64
 	astatsLoadUnixNano        int64
+	version                   string
 }
 
 func (s *statsSystem) ConfigReloadRequests() uint64 {
@@ -285,6 +287,9 @@ func (s *statsSystem) AstatsLoad() time.Time {
 func (s *statsSystem) SetAstatsLoad(t time.Time) {
 	atomic.StoreInt64(&s.astatsLoadUnixNano, t.UnixNano())
 }
+func (s *statsSystem) Version() string {
+	return s.version
+}
 
 const ATSVersion = "5.3.2" // of course, we're not really ATS. We're terrible liars.
 
@@ -304,6 +309,7 @@ type StatsSystemJSON struct {
 	LastReload           int64  `json:"lastReload"`
 	AstatsLoad           int64  `json:"astatsLoad"`
 	Something            string `json:"something"`
+	Version              string `json:"application_version"`
 }
 
 type StatsJSON struct {

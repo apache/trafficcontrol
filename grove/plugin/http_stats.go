@@ -82,6 +82,7 @@ func LoadSystemStats(stats stat.Stats, interfaceName string) stat.StatsSystemJSO
 	s.LastReload = stats.System().LastReload().Unix()
 	s.AstatsLoad = stats.System().AstatsLoad().Unix()
 	s.Something = "here" // emulate existing ATS Astats behavior
+	s.Version = stats.System().Version()
 	return s
 }
 
@@ -89,7 +90,7 @@ func LoadRemapStats(stats stat.Stats, httpConns *web.ConnMap, httpsConns *web.Co
 	statsRemaps := stats.Remap()
 	rules := statsRemaps.Rules()
 	jsonStats := make(map[string]interface{}, len(rules)*8) // remap has 8 members: in, out, 2xx, 3xx, 4xx, 5xx, hits, misses
-	jsonStats["server"] = "6.2.1"
+	jsonStats["server"] = "6.2.1"                           // emulate a good ATS version
 	for _, rule := range rules {
 		ruleName := rule
 		statsRemap, ok := statsRemaps.Stats(ruleName)

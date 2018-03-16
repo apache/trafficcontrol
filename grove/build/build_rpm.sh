@@ -9,7 +9,7 @@ mkdir -p $BUILDDIR/{BUILD,RPMS,SOURCES}
 echo "$BUILDDIR" > ~/.rpmmacros
 
 # build
-go build -v
+go build -v -ldflags "-X main.Version=$VERSION"
 
 # tar
 tar -cvzf $BUILDDIR/SOURCES/grove-${VERSION}.tgz grove conf/grove.cfg build/grove.init
