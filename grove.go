@@ -156,19 +156,21 @@ func main() {
 	}
 
 	reloadConfig := func() {
-		log.Infof("reloading config\n")
+		log.Infoln("reloading config")
 		err := error(nil)
 		oldCfg := cfg
 		cfg, err = config.LoadConfig(*configFileName)
 		if err != nil {
-			log.Errorf("reloading config: loading config file: %v\n", err)
+			log.Errorln("reloading config: failed to load config file, keeping existing config: " + err.Error())
+			cfg = oldCfg
 			return
 		}
 		eventW, errW, warnW, infoW, debugW, err := log.GetLogWriters(cfg)
 		if err != nil {
-			log.Errorf("reloading config: getting log writers '%v': %v", *configFileName, err)
+			log.Errorln("reloading config: failed to get log writers from '" + *configFileName + "', keeping existing log locations: " + err.Error())
+		} else {
+			log.Init(eventW, errW, warnW, infoW, debugW)
 		}
-		log.Init(eventW, errW, warnW, infoW, debugW)
 
 		// TODO add cache file reloading
 		// The problem is, the disk db needs file locks, so there's no way to close and create new files without making all requests cache miss in the meantime.
@@ -177,10 +179,12 @@ func main() {
 			log.Warnln("reloading config: caches changed in new config! Dynamic cache reloading is not supported! Old cache files and sizes will be used, and new cache config will NOT be loaded! Restart service to apply cache changes!")
 		}
 
+		oldRemapper := remapper
 		remapper, err = remap.LoadRemapper(cfg.RemapRulesFile, plugins.LoadFuncs(), caches, baseTransport)
 		if err != nil {
-			log.Errorf("starting service: loading remap rules: %v\n", err)
-			os.Exit(1)
+			log.Errorln("reloading config: failed to load remap rules, keeping existing rules: " + err.Error())
+			remapper = oldRemapper
+			return
 		}
 
 		if cfg.Port != oldCfg.Port {
@@ -191,7 +195,7 @@ func main() {
 		}
 
 		if (cfg.CertFile != oldCfg.CertFile || cfg.KeyFile != oldCfg.KeyFile) && cfg.HTTPSPort != oldCfg.HTTPSPort {
-			log.Warnf("config certificate changed, but port did not. Cannot recreate listener on same port without stopping the service. Restart the service to load the new certificate.\n")
+			log.Warnln("config certificate changed, but port did not. Cannot recreate listener on same port without stopping the service. Restart the service to load the new certificate.")
 		}
 
 		if cfg.HTTPSPort != oldCfg.HTTPSPort {
