@@ -27,6 +27,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -38,7 +39,7 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOCDN tc.CDNNullable
+type TOCDN v13.CDNNullable
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
 var refType = TOCDN{}
@@ -201,7 +202,7 @@ func (cdn *TOCDN) Read(db *sqlx.DB, parameters map[string]string, user auth.Curr
 
 	CDNs := []interface{}{}
 	for rows.Next() {
-		var s tc.CDN
+		var s TOCDN
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorf("error parsing CDN rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError

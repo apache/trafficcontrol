@@ -15,12 +15,15 @@
 
 package v13
 
-import tcapi "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+import (
+	tcapi "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
+)
 
 // TrafficControl - maps to the tc-fixtures.json file
 type TrafficControl struct {
 	ASNs                    []tcapi.ASN                    `json:"asns"`
-	CDNs                    []tcapi.CDN                    `json:"cdns"`
+	CDNs                    []v13.CDN                      `json:"cdns"`
 	CacheGroups             []tcapi.CacheGroup             `json:"cachegroups"`
 	DeliveryServiceRequests []tcapi.DeliveryServiceRequest `json:"deliveryServiceRequests"`
 	DeliveryServices        []tcapi.DeliveryService        `json:"deliveryservices"`
