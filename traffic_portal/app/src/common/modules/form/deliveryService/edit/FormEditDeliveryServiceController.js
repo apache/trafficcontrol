@@ -24,26 +24,38 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 
 	var createDeliveryServiceDeleteRequest = function(deliveryService) {
 		var params = {
-			title: 'Delete Delivery Service: ' + deliveryService.xmlId,
-			key: deliveryService.xmlId
+			title: "Delivery Service Delete Request",
+			message: 'All delivery service deletions must be reviewed.'
 		};
 		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
-			controller: 'DialogDeleteController',
+			templateUrl: 'common/modules/dialog/deliveryServiceRequest/dialog.deliveryServiceRequest.tpl.html',
+			controller: 'DialogDeliveryServiceRequestController',
 			size: 'md',
 			resolve: {
 				params: function () {
 					return params;
+				},
+				statuses: function() {
+					return [
+						{ id: $scope.DRAFT, name: 'Save as Draft' },
+						{ id: $scope.SUBMITTED, name: 'Submit for Review and Deployment' }
+					];
 				}
 			}
 		});
-		modalInstance.result.then(function() {
+		modalInstance.result.then(function(options) {
 			var dsRequest = {
 				changeType: 'delete',
-				status: 'submitted',
+				status: (options.status.id == $scope.SUBMITTED) ? 'submitted' : 'draft',
 				deliveryService: deliveryService
 			};
-			deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, true);
+			deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, true).
+				then(
+					function() {
+						console.log(options.comment);
+						// todo: make a call to POST /api/deliveryservice_requests/id/comments with options.comment
+					}
+				);
 		}, function () {
 			// do nothing
 		});
@@ -62,17 +74,17 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 		if ($scope.dsRequestsEnabled) {
 			var params = {
 				title: "Delivery Service Update Request",
-				message: 'All delivery service updates must be reviewed for completeness and accuracy before deployment.<br><br>Please select the status of your delivery service update request.'
+				message: 'All delivery service updates must be reviewed for completeness and accuracy before deployment.'
 			};
 			var modalInstance = $uibModal.open({
-				templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-				controller: 'DialogSelectController',
+				templateUrl: 'common/modules/dialog/deliveryServiceRequest/dialog.deliveryServiceRequest.tpl.html',
+				controller: 'DialogDeliveryServiceRequestController',
 				size: 'md',
 				resolve: {
 					params: function () {
 						return params;
 					},
-					collection: function() {
+					statuses: function() {
 						return [
 							{ id: $scope.DRAFT, name: 'Save as Draft' },
 							{ id: $scope.SUBMITTED, name: 'Submit for Review and Deployment' }
@@ -80,13 +92,20 @@ var FormEditDeliveryServiceController = function(deliveryService, type, types, $
 					}
 				}
 			});
-			modalInstance.result.then(function(action) {
+			modalInstance.result.then(function(options) {
 				var dsRequest = {
 					changeType: 'update',
-					status: (action.id == $scope.SUBMITTED) ? 'submitted' : 'draft',
+					status: (options.status.id == $scope.SUBMITTED) ? 'submitted' : 'draft',
 					deliveryService: deliveryService
 				};
-				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, true);
+				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, true).
+					then(
+						function() {
+							console.log(options.comment);
+							// todo: make a call to POST /api/deliveryservice_requests/id/comments with options.comment
+						}
+					);
+
 			}, function () {
 				// do nothing
 			});

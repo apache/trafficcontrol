@@ -195,6 +195,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/dialog/select').name,
         require('./common/modules/dialog/select/status').name,
         require('./common/modules/dialog/text').name,
+        require('./common/modules/dialog/textarea').name,
         require('./common/modules/header').name,
         require('./common/modules/message').name,
         require('./common/modules/navigation').name,

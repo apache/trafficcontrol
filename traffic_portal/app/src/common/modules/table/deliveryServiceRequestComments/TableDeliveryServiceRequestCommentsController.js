@@ -17,14 +17,64 @@
  * under the License.
  */
 
-var TableDeliveryServicesRequestsController = function(request, comments, $scope, $state, locationUtils) {
+var TableDeliveryServicesRequestsController = function(request, comments, $scope, $state, $stateParams, $uibModal, locationUtils) {
 
 	$scope.request = request[0];
 
 	$scope.comments = comments;
 
+	$scope.type = $stateParams.type;
+
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
+	};
+
+	$scope.createComment = function() {
+		var params = {
+			title: 'Add Comment',
+			placeholder: "Enter comment...",
+			text: null
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/textarea/dialog.textarea.tpl.html',
+			controller: 'DialogTextareaController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function(comment) {
+			// todo: make a call to POST /api/deliveryservice_requests/:id/comments and then refresh page on success
+			$scope.refresh();
+		}, function () {
+			// do nothing
+		});
+	};
+
+	$scope.editComment = function(comment) {
+		var params = {
+			title: 'Edit Comment',
+			text: comment.comment
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/textarea/dialog.textarea.tpl.html',
+			controller: 'DialogTextareaController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function(comment) {
+			// todo: make a call to PUT /api/deliveryservice_requests/:id/comments/:id and then refresh page on success
+			console.log(comment);
+			$scope.refresh();
+		}, function () {
+			// do nothing
+		});
 	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
@@ -40,5 +90,5 @@ var TableDeliveryServicesRequestsController = function(request, comments, $scope
 
 };
 
-TableDeliveryServicesRequestsController.$inject = ['request', 'comments', '$scope', '$state', 'locationUtils'];
+TableDeliveryServicesRequestsController.$inject = ['request', 'comments', '$scope', '$state', '$stateParams', '$uibModal', 'locationUtils'];
 module.exports = TableDeliveryServicesRequestsController;

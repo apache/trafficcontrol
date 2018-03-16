@@ -22,46 +22,38 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 	var createDeliveryServiceDeleteRequest = function(deliveryService) {
 		var params = {
 			title: "Delivery Service Delete Request",
-			message: 'All delivery service deletions must be reviewed.<br><br>Are you sure you want to submit a request to delete the ' + deliveryService.xmlId + ' delivery service?'
+			message: 'All delivery service deletions must be reviewed.'
 		};
 		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-			controller: 'DialogConfirmController',
+			templateUrl: 'common/modules/dialog/deliveryServiceRequest/dialog.deliveryServiceRequest.tpl.html',
+			controller: 'DialogDeliveryServiceRequestController',
 			size: 'md',
 			resolve: {
 				params: function () {
 					return params;
+				},
+				statuses: function() {
+					return [
+						{ id: $scope.DRAFT, name: 'Save as Draft' },
+						{ id: $scope.SUBMITTED, name: 'Submit for Review and Deployment' }
+					];
 				}
 			}
 		});
-		modalInstance.result.then(function() {
-			params = {
-				title: 'Delete Delivery Service: ' + deliveryService.xmlId,
-				key: deliveryService.xmlId
+		modalInstance.result.then(function(options) {
+			var dsRequest = {
+				changeType: 'delete',
+				status: (options.status.id == $scope.SUBMITTED) ? 'submitted' : 'draft',
+				deliveryService: deliveryService
 			};
-			modalInstance = $uibModal.open({
-				templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
-				controller: 'DialogDeleteController',
-				size: 'md',
-				resolve: {
-					params: function () {
-						return params;
-					}
-				}
-			});
-			modalInstance.result.then(function() {
-				var dsRequest = {
-					changeType: 'delete',
-					status: 'submitted',
-					deliveryService: deliveryService
-				};
-				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, false).
-					then(function() {
+			deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, false).
+				then(
+					function() {
 						$scope.refresh();
-					});
-			}, function () {
-				// do nothing
-			});
+						console.log(options.comment);
+						// todo: make a call to POST /api/deliveryservice_requests/id/comments with options.comment
+					}
+				);
 		}, function () {
 			// do nothing
 		});
@@ -403,7 +395,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 			"paging": false,
 			"dom": '<"filter-checkbox">frtip',
 			"columnDefs": [
-				{ 'orderable': false, 'targets': 8 }
+				{ 'orderable': false, 'targets': 7 }
 			],
 			"aaSorting": []
 		});

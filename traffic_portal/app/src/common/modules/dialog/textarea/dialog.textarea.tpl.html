@@ -22,15 +22,12 @@ under the License.
     <h4 class="modal-title">{{::params.title}}</h4>
 </div>
 <div class="modal-body">
-    <form name="dsRequestForm" novalidate>
-        <p ng-bind-html="params.message"></p>
-        <select class="form-control" ng-model="selectedStatusId" ng-options="status.id as status.name for status in statuses" required>
-            <option value="">Select request status...</option>
-        </select>
-        <textarea name="comment" rows="5" cols="17" style="margin-top: 10px;" placeholder="Enter request comment..." class="form-control" ng-model="comment" required></textarea>
+    <p ng-bind-html="params.message"></p>
+    <form name="inputForm" novalidate>
+        <textarea name="text" rows="5" cols="17" style="margin-top: 10px;" placeholder="{{::params.placeholder}}" class="form-control" ng-model="text" required></textarea>
     </form>
 </div>
 <div class="modal-footer">
     <button class="btn btn-link" ng-click="cancel()">Cancel</button>
-    <button class="btn btn-primary" ng-disabled="dsRequestForm.$invalid" ng-click="select()">Submit</button>
+    <button class="btn btn-primary" ng-disabled="inputForm.$invalid" ng-click="select()">Submit</button>
 </div>

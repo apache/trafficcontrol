@@ -27,7 +27,7 @@ under the License.
         <div class="row">
             <div class="col-sm-12 col-md-12">
                 <div class="form-group" ng-class="{'has-error': hasError(statusForm.status), 'has-feedback': hasError(statusForm.status)}">
-                    <label class="control-label" for="status">Status *
+                    <label class="control-label" for="status"><a href="foo">Status</a> *
                         <small class="input-error" ng-show="hasPropertyError(statusForm.status, 'required')">Required</small>
                     </label>
                     <select id="status" name="status" class="form-control" ng-model="selectedStatusId" ng-options="status.id as status.name for status in statuses" required>

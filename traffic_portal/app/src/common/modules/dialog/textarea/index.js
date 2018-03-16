@@ -17,26 +17,5 @@
  * under the License.
  */
 
-var DialogDeliveryServiceRequestController = function(params, statuses, $scope, $uibModalInstance) {
-
-	$scope.params = params;
-
-	$scope.statuses = statuses;
-
-	$scope.selectedStatusId = null;
-
-	$scope.comment = null;
-
-	$scope.select = function() {
-		var selectedStatus = _.find(statuses, function(status){ return parseInt(status.id) == parseInt($scope.selectedStatusId) });
-		$uibModalInstance.close({ status: selectedStatus, comment: $scope.comment });
-	};
-
-	$scope.cancel = function () {
-		$uibModalInstance.dismiss('cancel');
-	};
-
-};
-
-DialogDeliveryServiceRequestController.$inject = ['params', 'statuses', '$scope', '$uibModalInstance'];
-module.exports = DialogDeliveryServiceRequestController;
+module.exports = angular.module('trafficPortal.dialog.textarea', [])
+	.controller('DialogTextareaController', require('./DialogTextareaController'));

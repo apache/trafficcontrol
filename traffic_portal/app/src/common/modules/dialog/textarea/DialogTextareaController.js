@@ -17,19 +17,14 @@
  * under the License.
  */
 
-var DialogDeliveryServiceRequestController = function(params, statuses, $scope, $uibModalInstance) {
+var DialogTextareaController = function(params, $scope, $uibModalInstance) {
 
 	$scope.params = params;
 
-	$scope.statuses = statuses;
-
-	$scope.selectedStatusId = null;
-
-	$scope.comment = null;
+	$scope.text = params.text;
 
 	$scope.select = function() {
-		var selectedStatus = _.find(statuses, function(status){ return parseInt(status.id) == parseInt($scope.selectedStatusId) });
-		$uibModalInstance.close({ status: selectedStatus, comment: $scope.comment });
+		$uibModalInstance.close($scope.text);
 	};
 
 	$scope.cancel = function () {
@@ -38,5 +33,5 @@ var DialogDeliveryServiceRequestController = function(params, statuses, $scope, 
 
 };
 
-DialogDeliveryServiceRequestController.$inject = ['params', 'statuses', '$scope', '$uibModalInstance'];
-module.exports = DialogDeliveryServiceRequestController;
+DialogTextareaController.$inject = ['params', '$scope', '$uibModalInstance'];
+module.exports = DialogTextareaController;

@@ -34,17 +34,17 @@ var FormNewDeliveryServiceController = function(deliveryService, type, types, $s
 		if ($scope.dsRequestsEnabled) {
 			var params = {
 				title: "Delivery Service Create Request",
-				message: 'All new delivery services must be reviewed for completeness and accuracy before deployment.<br><br>Please select the status of your delivery service create request.'
+				message: 'All new delivery services must be reviewed for completeness and accuracy before deployment.'
 			};
 			var modalInstance = $uibModal.open({
-				templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-				controller: 'DialogSelectController',
+				templateUrl: 'common/modules/dialog/deliveryServiceRequest/dialog.deliveryServiceRequest.tpl.html',
+				controller: 'DialogDeliveryServiceRequestController',
 				size: 'md',
 				resolve: {
 					params: function () {
 						return params;
 					},
-					collection: function() {
+					statuses: function() {
 						return [
 							{ id: $scope.DRAFT, name: 'Save as Draft' },
 							{ id: $scope.SUBMITTED, name: 'Submit for Review and Deployment' }
@@ -52,13 +52,20 @@ var FormNewDeliveryServiceController = function(deliveryService, type, types, $s
 					}
 				}
 			});
-			modalInstance.result.then(function(action) {
+			modalInstance.result.then(function(options) {
 				var dsRequest = {
 					changeType: 'create',
-					status: (action.id == $scope.SUBMITTED) ? 'submitted' : 'draft',
+					status: (options.status.id == $scope.SUBMITTED) ? 'submitted' : 'draft',
 					deliveryService: deliveryService
 				};
-				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, true);
+				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, true).
+					then(
+						function() {
+							console.log(options.comment);
+							// todo: make a call to POST /api/deliveryservice_requests/id/comments with options.comment
+						}
+					);
+
 			}, function () {
 				// do nothing
 			});
