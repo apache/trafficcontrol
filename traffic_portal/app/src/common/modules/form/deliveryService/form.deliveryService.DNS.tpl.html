@@ -32,9 +32,10 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-if="dsRequest.status == 'submitted'" ng-click="editStatus('draft')">DRAFT</a></li>
-                    <li role="menuitem"><a ng-if="dsRequest.status == 'draft'" ng-click="editStatus('submitted')">SUBMITTED</a></li>
-                    <li role="menuitem"><a ng-if="dsRequest.status == 'pending'" ng-click="editStatus('complete')">COMPLETE</a></li>
+                    <li role="menuitem"><a ng-if="dsRequest.status == 'submitted'" ng-click="editStatus('draft')">Change status to: DRAFT</a></li>
+                    <li role="menuitem"><a ng-if="dsRequest.status == 'draft'" ng-click="editStatus('submitted')">Change status to: SUBMITTED</a></li>
+                    <li role="menuitem"><a ng-if="dsRequest.status == 'pending'" ng-click="editStatus('complete')">Change status to: COMPLETE</a></li>
+                    <li role="menuitem"><a ng-if="dsRequest.status == 'complete'">COMPLETE</a></li>
                 </ul>
             </div>
             <button class="btn btn-primary" title="View Comments" ng-click="viewComments()">View Comments</button>

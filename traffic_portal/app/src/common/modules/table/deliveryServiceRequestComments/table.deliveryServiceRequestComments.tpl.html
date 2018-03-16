@@ -21,7 +21,7 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/delivery-service-requests')">Delivery Service Requests</a></li>
-            <li><a ng-click="navigateToPath('/delivery-service-requests/' + request.id + '?type=DNS_LIVE')">{{::request.deliveryService.xmlId}}</a></li>
+            <li><a ng-click="navigateToPath('/delivery-service-requests/' + request.id + '?type=' + type)">{{::request.deliveryService.xmlId}}</a></li>
             <li class="active">Comments</li>
         </ol>
         <div class="pull-right" role="group">
@@ -40,7 +40,7 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="c in ::comments">
+            <tr ng-click="editComment(c)" ng-repeat="c in ::comments">
                 <td data-search="^{{::c.author}}$">{{::c.author}}</td>
                 <td data-search="^{{::c.comment}}$">{{::c.comment}}</td>
             </tr>
