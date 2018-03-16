@@ -1,0 +1,332 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "description": "The following REST APIs are used by the Traffic Portal UI along with several Traffic Control backend component and services.\n\nThis documentation is fully compliant with the Swagger 2.0 specification",
+    "title": "TrafficOps API",
+    "contact": {
+      "name": "Traffic Control Dev List",
+      "url": "http://traffic-control-cdn.readthedocs.io/en/latest/index.html",
+      "email": "dev@trafficcontrol.incubator.apache.org"
+    },
+    "license": {
+      "name": "Apache 2",
+      "url": "https://github.com/apache/incubator-trafficcontrol/blob/master/LICENSE"
+    },
+    "version": "1.3"
+  },
+  "host": "localhost:8443",
+  "basePath": "/api/1.3",
+  "paths": {
+    "/cdns": {
+      "get": {
+        "description": "Retrieve a list of CDNs",
+        "tags": [
+          "CDN"
+        ],
+        "operationId": "GetCDNs",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "DNSSecEnabled",
+            "description": "Enables Domain Name System Security Extensions (DNSSEC) for the CDN",
+            "name": "dnssecEnabled",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "DomainName",
+            "description": "The domain name for the CDN",
+            "name": "domainName",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "Unique identifier for the CDN",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "description": "The CDN name for the CDN",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Orderby",
+            "name": "orderby",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/CDNs"
+          },
+          "400": {
+            "$ref": "#/responses/Alerts"
+          }
+        }
+      },
+      "post": {
+        "description": "Create a CDN",
+        "tags": [
+          "CDN"
+        ],
+        "operationId": "PostCDN",
+        "parameters": [
+          {
+            "description": "CDN Request Body",
+            "name": "CDN",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CDN"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Alerts"
+          }
+        }
+      }
+    },
+    "/cdns/{id}": {
+      "get": {
+        "description": "Retrieve a specific CDN",
+        "tags": [
+          "CDN"
+        ],
+        "operationId": "GetCDNById",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "ID",
+            "description": "Id associated to the CDN",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/CDNs"
+          },
+          "400": {
+            "$ref": "#/responses/Alerts"
+          }
+        }
+      },
+      "put": {
+        "description": "Update a CDN",
+        "tags": [
+          "CDN"
+        ],
+        "operationId": "PutCDN",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "ID",
+            "description": "ID",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "CDN Request Body",
+            "name": "CDN",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CDN"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/CDN"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete a CDN",
+        "tags": [
+          "CDN"
+        ],
+        "operationId": "DeleteCDN",
+        "parameters": [
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "ID",
+            "description": "Id associated to the CDN",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Alerts"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Alert": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "x-go-name": "Level"
+        },
+        "text": {
+          "type": "string",
+          "x-go-name": "Text"
+        }
+      },
+      "x-go-package": "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+    },
+    "CDN": {
+      "type": "object",
+      "title": "CDN ...",
+      "required": [
+        "dnssecEnabled",
+        "domainName",
+        "id",
+        "name"
+      ],
+      "properties": {
+        "dnssecEnabled": {
+          "description": "The CDN to retrieve\n\nenables Domain Name Security Extensions on the specified CDN",
+          "type": "boolean",
+          "x-go-name": "DNSSECEnabled"
+        },
+        "domainName": {
+          "description": "DomainName of the CDN",
+          "type": "string",
+          "x-go-name": "DomainName"
+        },
+        "id": {
+          "description": "ID of the CDN",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "lastUpdated": {
+          "$ref": "#/definitions/TimeNoMod"
+        },
+        "name": {
+          "description": "Name of the CDN",
+          "type": "string",
+          "x-go-name": "Name"
+        }
+      },
+      "x-go-package": "github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
+    },
+    "CDNResponse": {
+      "description": "A Single CDN Response for Update and Create to depict what changed",
+      "type": "object",
+      "properties": {
+        "response": {
+          "$ref": "#/definitions/CDN"
+        }
+      },
+      "x-go-package": "github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
+    },
+    "CDNsResponse": {
+      "description": "A List of CDNs Response",
+      "type": "object",
+      "properties": {
+        "response": {
+          "description": "in: body",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CDN"
+          },
+          "x-go-name": "Response"
+        }
+      },
+      "x-go-package": "github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
+    },
+    "Time": {
+      "description": "Time wraps standard time.Time to allow indication of invalid times",
+      "type": "object",
+      "properties": {
+        "Valid": {
+          "type": "boolean"
+        }
+      },
+      "x-go-package": "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+    },
+    "TimeNoMod": {
+      "description": "TimeNoMod supported JSON marshalling, but suppresses JSON unmarshalling",
+      "$ref": "#/definitions/Time"
+    }
+  },
+  "responses": {
+    "Alerts": {
+      "description": "Alerts - informs the client of server side messages",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Alert"
+        }
+      }
+    },
+    "CDN": {
+      "description": "CDN -  CDNResponse to get the \"response\" top level key",
+      "schema": {
+        "$ref": "#/definitions/CDNResponse"
+      }
+    },
+    "CDNResponse": {
+      "description": "A Single CDN Response for Update and Create to depict what changed",
+      "schema": {
+        "$ref": "#/definitions/CDN"
+      }
+    },
+    "CDNs": {
+      "description": "CDNs -  CDNsResponse to get the \"response\" top level key",
+      "schema": {
+        "$ref": "#/definitions/CDNsResponse"
+      }
+    },
+    "CDNsResponse": {
+      "description": "A List of CDNs Response",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/CDN"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "Cookie": {
+      "type": "apiKey",
+      "name": "cookie",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "Cookie": []
+    }
+  ]
+}
