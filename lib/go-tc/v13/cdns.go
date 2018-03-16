@@ -1,4 +1,4 @@
-package tc
+package v13
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -18,25 +18,26 @@ package tc
  * specific language governing permissions and limitations
  * under the License.
  */
+import "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
 type CDNsResponse struct {
 	Response []CDN `json:"response"`
 }
 
 type CDN struct {
-	DNSSECEnabled bool      `json:"dnssecEnabled" db:"dnssec_enabled"`
-	DomainName    string    `json:"domainName" db:"domain_name"`
-	ID            int       `json:"id" db:"id"`
-	LastUpdated   TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	Name          string    `json:"name" db:"name"`
+	DNSSECEnabled bool         `json:"dnssecEnabled" db:"dnssec_enabled"`
+	DomainName    string       `json:"domainName" db:"domain_name"`
+	ID            int          `json:"id" db:"id"`
+	LastUpdated   tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name          string       `json:"name" db:"name"`
 }
 
 type CDNNullable struct {
-	DNSSECEnabled *bool      `json:"dnssecEnabled" db:"dnssec_enabled"`
-	DomainName    *string    `json:"domainName" db:"domain_name"`
-	ID            *int       `json:"id" db:"id"`
-	LastUpdated   *TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	Name          *string    `json:"name" db:"name"`
+	DNSSECEnabled *bool         `json:"dnssecEnabled" db:"dnssec_enabled"`
+	DomainName    *string       `json:"domainName" db:"domain_name"`
+	ID            *int          `json:"id" db:"id"`
+	LastUpdated   *tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name          *string       `json:"name" db:"name"`
 }
 
 // CDNSSLKeysResponse ...

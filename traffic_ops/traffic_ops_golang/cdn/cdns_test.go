@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
@@ -35,9 +36,9 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestCDNs() []tc.CDN {
-	cdns := []tc.CDN{}
-	testCDN := tc.CDN{
+func getTestCDNs() []v13.CDN {
+	cdns := []v13.CDN{}
+	testCDN := v13.CDN{
 		DNSSECEnabled: false,
 		DomainName:    "domainName",
 		ID:            1,
@@ -67,7 +68,7 @@ func TestReadCDNs(t *testing.T) {
 	refType := GetRefType()
 
 	testCDNs := getTestCDNs()
-	cols := test.ColsFromStructByTag("db", tc.CDN{})
+	cols := test.ColsFromStructByTag("db", v13.CDN{})
 	rows := sqlmock.NewRows(cols)
 
 	for _, ts := range testCDNs {
