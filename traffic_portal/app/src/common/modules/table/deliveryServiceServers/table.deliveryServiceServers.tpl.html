@@ -68,7 +68,7 @@ under the License.
                 <td data-search="^{{::s.cdnName}}$">{{::s.cdnName}}</td>
                 <td data-search="^{{::s.cachegroup}}$">{{::s.cachegroup}}</td>
                 <td data-search="^{{::s.iloIpAddress}}$"><a ng-click="ssh(s.iloIpAddress, $event)">{{::s.iloIpAddress}}</a></td>
-                <td><button type="button" class="btn btn-link" title="Unlink Server from Delivery Service" ng-click="confirmRemoveServer(server)"><i class="fa fa-chain-broken"></i></button></td>
+                <td><button type="button" class="btn btn-link" title="Unlink Server from Delivery Service" ng-click="confirmRemoveServer(s)"><i class="fa fa-chain-broken"></i></button></td>
             </tr>
             </tbody>
         </table>
