@@ -22,6 +22,7 @@ import (
 	"net/http"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 )
 
 const (
@@ -29,7 +30,7 @@ const (
 )
 
 // Create a CacheGroup
-func (to *Session) CreateCacheGroup(cachegroup tc.CacheGroup) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateCacheGroup(cachegroup v13.CacheGroup) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(cachegroup)
@@ -48,7 +49,7 @@ func (to *Session) CreateCacheGroup(cachegroup tc.CacheGroup) (tc.Alerts, ReqInf
 }
 
 // Update a CacheGroup by ID
-func (to *Session) UpdateCacheGroupByID(id int, cachegroup tc.CacheGroup) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateCacheGroupByID(id int, cachegroup v13.CacheGroup) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(cachegroup)
@@ -68,7 +69,7 @@ func (to *Session) UpdateCacheGroupByID(id int, cachegroup tc.CacheGroup) (tc.Al
 }
 
 // Returns a list of CacheGroups
-func (to *Session) GetCacheGroups() ([]tc.CacheGroup, ReqInf, error) {
+func (to *Session) GetCacheGroups() ([]v13.CacheGroup, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_CacheGroups, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -76,13 +77,13 @@ func (to *Session) GetCacheGroups() ([]tc.CacheGroup, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.CacheGroupsResponse
+	var data v13.CacheGroupsResponse
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
 }
 
 // GET a CacheGroup by the CacheGroup id
-func (to *Session) GetCacheGroupByID(id int) ([]tc.CacheGroup, ReqInf, error) {
+func (to *Session) GetCacheGroupByID(id int) ([]v13.CacheGroup, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_v13_CacheGroups, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -91,7 +92,7 @@ func (to *Session) GetCacheGroupByID(id int) ([]tc.CacheGroup, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.CacheGroupsResponse
+	var data v13.CacheGroupsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -100,7 +101,7 @@ func (to *Session) GetCacheGroupByID(id int) ([]tc.CacheGroup, ReqInf, error) {
 }
 
 // GET a CacheGroup by the CacheGroup name
-func (to *Session) GetCacheGroupByName(name string) ([]tc.CacheGroup, ReqInf, error) {
+func (to *Session) GetCacheGroupByName(name string) ([]v13.CacheGroup, ReqInf, error) {
 	url := fmt.Sprintf("%s?name=%s", API_v13_CacheGroups, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -109,7 +110,7 @@ func (to *Session) GetCacheGroupByName(name string) ([]tc.CacheGroup, ReqInf, er
 	}
 	defer resp.Body.Close()
 
-	var data tc.CacheGroupsResponse
+	var data v13.CacheGroupsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
