@@ -26,12 +26,31 @@ type CacheGroupsResponse struct {
 
 // CacheGroup contains information about a given Cachegroup in Traffic Ops.
 type CacheGroup struct {
-	ID          int     `json:"id"`
-	Name        string  `json:"name"`
-	ShortName   string  `json:"shortName"`
-	Latitude    float64 `json:"latitude"`
-	Longitude   float64 `json:"longitude"`
-	ParentName  string  `json:"parentCachegroupName,omitempty"`
-	Type        string  `json:"typeName,omitempty"`
-	LastUpdated string  `json:"lastUpdated,omitempty"`
+	ID                          int           `json:"id" db:"id"`
+	Name                        string        `json:"name" db:"name"`
+	ShortName                   string        `json:"shortName" db:"short_name"`
+	Latitude                    float64       `json:"latitude" db:"latitude"`
+	Longitude                   float64       `json:"longitude" db:"longitude"`
+	ParentName                  string        `json:"parentCachegroupName,omitempty"`
+	ParentCacheGroupID          int           `json:"parentCachegroupId,omitempty" db:"parent_cachegroup_id"`
+	SecondaryParentName         string        `json:"secondaryParentCachegroupName,omitempty"`
+	SecondaryParentCacheGroupID int           `json:"secondaryParentCacheGroupId,omitempty" db:"secondary_parent_cachegroup_id"`
+	Type                        string        `json:"typeName,omitempty"`
+	TypeID                      int           `json:"typeId,omitempty" db:"type"`
+	LastUpdated                 TimeNoMod     `json:"lastUpdated,omitempty" db:"last_updated"`
+}
+
+type CacheGroupNullable struct {
+	ID                          *int            `json:"id" db:"id"`
+	Name                        *string         `json:"name" db:"name"`
+	ShortName                   *string         `json:"shortName" db:"short_name"`
+	Latitude                    *float64        `json:"latitude" db:"latitude"`
+	Longitude                   *float64        `json:"longitude"db:"longitude"`
+	ParentName                  *string         `json:"parentCachegroupName,omitempty"`
+	ParentCacheGroupID          *int            `json:"parentCachegroupId,omitempty" db:"parent_cachegroup_id"`
+	SecondaryParentName         *string         `json:"secondaryParentCachegroupName,omitempty"`
+	SecondaryParentCacheGroupID *int            `json:"secondaryParentCacheGroupId,omitempty" db:"secondary_parent_cachegroup_id"`
+	Type                        *string         `json:"typeName,omitempty"`
+	TypeID                      *int            `json:"typeId,omitempty" db:"type"`
+	LastUpdated                 *TimeNoMod      `json:"lastUpdated,omitempty" db:"last_updated"`
 }
