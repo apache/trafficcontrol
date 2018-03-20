@@ -617,6 +617,7 @@ public class TrafficRouter {
 		return routeResult;
 	}
 
+	@SuppressWarnings({"PMD.NPathComplexity"})
 	private List<SteeringResult> getSteeringResults(final HTTPRequest request, final Track track, final DeliveryService entryDeliveryService) {
 
 		if (isTlsMismatch(request, entryDeliveryService)) {
@@ -633,7 +634,7 @@ public class TrafficRouter {
 			return null;
 		}
 
-		List<SteeringResult> toBeRemoved = new ArrayList<>();
+		final List<SteeringResult> toBeRemoved = new ArrayList<>();
 		for (final SteeringResult steeringResult : steeringResults) {
 			final DeliveryService ds = steeringResult.getDeliveryService();
 			if (isTlsMismatch(request, ds)) {
@@ -851,7 +852,7 @@ public class TrafficRouter {
 		return steeringRegistry.get(deliveryService.getId()).isClientSteering();
 	}
 
-	private Geolocation getClientLocationByCoverageZoneOrGeo(final String clientIP, final DeliveryService deliveryService) {
+	protected Geolocation getClientLocationByCoverageZoneOrGeo(final String clientIP, final DeliveryService deliveryService) {
 		Geolocation clientLocation;
 		final NetworkNode networkNode = getNetworkNode(clientIP);
 		if (networkNode != null && networkNode.getGeolocation() != null) {
@@ -866,8 +867,7 @@ public class TrafficRouter {
 		return deliveryService.supportLocation(clientLocation);
 	}
 
-	// TODO: add unit test for this method
-	private void geoSortSteeringResults(final List<SteeringResult> steeringResults, final String clientIP, final DeliveryService deliveryService) {
+	protected void geoSortSteeringResults(final List<SteeringResult> steeringResults, final String clientIP, final DeliveryService deliveryService) {
 		if (clientIP == null || clientIP.isEmpty()
 				|| steeringResults.stream().allMatch(t -> t.getSteeringTarget().getGeolocation() == null)) {
 			return;
