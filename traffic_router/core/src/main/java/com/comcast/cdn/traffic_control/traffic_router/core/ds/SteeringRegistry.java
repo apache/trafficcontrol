@@ -33,6 +33,7 @@ public class SteeringRegistry {
 	private final Map<String, Steering> registry = new HashMap<String, Steering>();
 	private final ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
+	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.AvoidDuplicateLiterals"})
 	public void update(final String json) {
 		Map<String, List<Steering>> m;
 		try {

@@ -102,6 +102,10 @@ public class SteeringTarget extends DefaultHashable {
 		return geolocation;
 	}
 
+	public void setGeolocation(final Geolocation geolocation) {
+		this.geolocation = geolocation;
+	}
+
 	@Override
 	@SuppressWarnings("PMD")
 	public boolean equals(Object o) {

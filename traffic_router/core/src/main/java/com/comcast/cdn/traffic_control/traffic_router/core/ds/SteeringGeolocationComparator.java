@@ -19,7 +19,6 @@ import java.util.Comparator;
 
 import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
 
-// TODO: add unit tests for this class
 public class SteeringGeolocationComparator implements Comparator<SteeringResult> {
 
     private final Geolocation clientLocation;
@@ -29,6 +28,7 @@ public class SteeringGeolocationComparator implements Comparator<SteeringResult>
     }
 
     @Override
+    @SuppressWarnings({"PMD.CyclomaticComplexity"})
     public int compare(final SteeringResult result1, final SteeringResult result2) {
         final Geolocation originGeo1 = result1.getSteeringTarget().getGeolocation();
         final Geolocation originGeo2 = result2.getSteeringTarget().getGeolocation();
@@ -63,7 +63,7 @@ public class SteeringGeolocationComparator implements Comparator<SteeringResult>
 
         // different cache and origin locations, prefer shortest total distance
         if (totalDistance1 != totalDistance2) {
-            // TODO: if the difference is smaller than a certain threshold, still prefer the closer edge even though distance is greater?
+            // TODO: if the difference is smaller than a certain threshold/ratio, still prefer the closer edge even though distance is greater?
             return Double.compare(totalDistance1, totalDistance2);
         }
 
