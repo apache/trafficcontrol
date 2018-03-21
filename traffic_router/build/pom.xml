@@ -42,12 +42,12 @@
 			<artifactId>traffic_router_shared</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
-		<!--dependency>
+		<dependency>
 			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 			<artifactId>ROOT</artifactId>
 			<version>${project.parent.version}</version>
 			<type>war</type>
-		</dependency-->
+		</dependency>
 	</dependencies>
 
 	<build>
