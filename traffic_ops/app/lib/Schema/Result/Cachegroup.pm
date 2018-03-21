@@ -75,6 +75,12 @@ __PACKAGE__->table("cachegroup");
   is_nullable: 1
   original: {default_value => \"now()"}
 
+=head2 fallback_to_closest
+
+  data_type: 'boolean'
+  default_value: true
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -106,6 +112,8 @@ __PACKAGE__->add_columns(
     is_nullable   => 1,
     original      => { default_value => \"now()" },
   },
+  "fallback_to_closest",
+  { data_type => "boolean", default_value => \"true", is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -174,6 +182,36 @@ __PACKAGE__->has_many(
   "asns",
   "Schema::Result::Asn",
   { "foreign.cachegroup" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
+=head2 cachegroup_fallbacks_backup_cgs
+
+Type: has_many
+
+Related object: L<Schema::Result::CachegroupFallback>
+
+=cut
+
+__PACKAGE__->has_many(
+  "cachegroup_fallbacks_backup_cgs",
+  "Schema::Result::CachegroupFallback",
+  { "foreign.backup_cg" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
+=head2 cachegroup_fallbacks_primary_cgs
+
+Type: has_many
+
+Related object: L<Schema::Result::CachegroupFallback>
+
+=cut
+
+__PACKAGE__->has_many(
+  "cachegroup_fallbacks_primary_cgs",
+  "Schema::Result::CachegroupFallback",
+  { "foreign.primary_cg" => "self.id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
 

@@ -57,6 +57,7 @@ sub index {
 				"lastUpdated"                   => $row->last_updated,
 				"parentCachegroupId"            => $row->parent_cachegroup_id,
 				"parentCachegroupName"          => ( defined $row->parent_cachegroup_id ) ? $idnames{ $row->parent_cachegroup_id } : undef,
+				"fallbackToClosest"           => \$row->fallback_to_closest,
 				"secondaryParentCachegroupId"   => $row->secondary_parent_cachegroup_id,
 				"secondaryParentCachegroupName" => ( defined $row->secondary_parent_cachegroup_id )
 				? $idnames{ $row->secondary_parent_cachegroup_id }
@@ -110,6 +111,7 @@ sub show {
 				"lastUpdated"                   => $row->last_updated,
 				"parentCachegroupId"            => $row->parent_cachegroup_id,
 				"parentCachegroupName"          => ( defined $row->parent_cachegroup_id ) ? $idnames{ $row->parent_cachegroup_id } : undef,
+				"fallbackToClosest"           => \$row->fallback_to_closest,
 				"secondaryParentCachegroupId"   => $row->secondary_parent_cachegroup_id,
 				"secondaryParentCachegroupName" => ( defined $row->secondary_parent_cachegroup_id )
 				? $idnames{ $row->secondary_parent_cachegroup_id }
@@ -158,12 +160,18 @@ sub update {
 		}
 	}
 
+	my $fallback_to_closest = $params->{fallbackToClosest};
+	if ( !defined ($fallback_to_closest) ) {
+		$fallback_to_closest = $cachegroup->fallback_to_closest;
+	}
+
 	my $values = {
 		name                           => $params->{name},
 		short_name                     => $params->{shortName},
 		latitude                       => $params->{latitude},
 		longitude                      => $params->{longitude},
 		parent_cachegroup_id           => $params->{parentCachegroupId},
+		fallback_to_closest            => $fallback_to_closest,
 		secondary_parent_cachegroup_id => $params->{secondaryParentCachegroupId},
 		type                           => $params->{typeId}
 	};
@@ -189,6 +197,7 @@ sub update {
 			( defined $rs->parent_cachegroup_id )
 			? $idnames{ $rs->parent_cachegroup_id }
 			: undef;
+		$response->{fallbackToClosest} = $rs->fallback_to_closest;
 		$response->{secondaryParentCachegroupId} = $rs->secondary_parent_cachegroup_id;
 		$response->{secondaryParentCachegroupName} =
 			( defined $rs->secondary_parent_cachegroup_id )
@@ -239,6 +248,7 @@ sub create {
 		latitude                       => $params->{latitude},
 		longitude                      => $params->{longitude},
 		parent_cachegroup_id           => $params->{parentCachegroupId},
+		fallback_to_closest            => exists ($params->{fallbackToClosest}) ? $params->{fallbackToClosest} : 1,# defaults to true
 		secondary_parent_cachegroup_id => $params->{secondaryParentCachegroupId},
 		type                           => $params->{typeId}
 	};
@@ -265,6 +275,7 @@ sub create {
 			( defined $rs->parent_cachegroup_id )
 			? $idnames{ $rs->parent_cachegroup_id }
 			: undef;
+		$response->{fallbackToClosest} = $rs->fallback_to_closest;
 		$response->{secondaryParentCachegroupId} = $rs->secondary_parent_cachegroup_id;
 		$response->{secondaryParentCachegroupName} =
 			( defined $rs->secondary_parent_cachegroup_id )

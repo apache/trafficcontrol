@@ -38,6 +38,8 @@ public class CacheLocation {
 	private final Geolocation geolocation;
 
 	private final Map<String, Cache> caches;
+	private List<String> backupCacheGroups = null;
+	private boolean useClosestGeoOnBackupFailure = true;
 
 	/**
 	 * Creates a CacheLocation with the specified ID at the specified location.
@@ -48,8 +50,28 @@ public class CacheLocation {
 	 *            the coordinates of this location
 	 */
 	public CacheLocation(final String id, final Geolocation geolocation) {
+		this(id, geolocation, null, true);
+	}
+
+	/**
+	 * Creates a CacheLocation with the specified ID at the specified location.
+	 * 
+	 * @param id
+	 *            the id of the location
+	 * @param geolocation
+	 *            the coordinates of this location
+	 *
+	 * @param backupCacheGroups
+	 *            the backup cache groups for this id
+	 *
+	 * @param useClosestGeoOnBackupFailure
+	 *            the backup fallback setting for this id
+	 */
+	public CacheLocation(final String id, final Geolocation geolocation, final List<String> backupCacheGroups, final boolean useClosestGeoOnBackupFailure) {
 		this.id = id;
 		this.geolocation = geolocation;
+		this.backupCacheGroups = backupCacheGroups;
+		this.useClosestGeoOnBackupFailure = useClosestGeoOnBackupFailure;
 		caches = new HashMap<String, Cache>();
 	}
 
@@ -126,6 +148,24 @@ public class CacheLocation {
 	 */
 	public Geolocation getGeolocation() {
 		return geolocation;
+	}
+
+	/**
+	 * Gets backupCacheGroups.
+	 * 
+	 * @return the backupCacheGroups
+	 */
+	public List<String> getBackupCacheGroups() {
+		return backupCacheGroups;
+	}
+
+	/**
+	 * Tests useClosestGeoOnBackupFailure.
+	 * 
+	 * @return useClosestGeoOnBackupFailure
+	 */
+	public boolean isUseClosestGeoLoc() {
+		return useClosestGeoOnBackupFailure;
 	}
 
 	/**
