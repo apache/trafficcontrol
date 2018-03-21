@@ -419,6 +419,13 @@ sub api_routes {
 	$r->put("/api/$version/cachegroups/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#update', namespace => $namespace );
 	$r->delete("/api/$version/cachegroups/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#delete', namespace => $namespace );
 
+
+	# -- CACHEGROUP-Fallbacks: CRUD
+	$r->get("/api/$version/cachegroup_fallbacks")->over( authenticated => 1, not_ldap => 1 )->to( 'CachegroupFallback#show', namespace => $namespace );
+	$r->post("/api/$version/cachegroup_fallbacks")->over( authenticated => 1, not_ldap => 1 )->to( 'CachegroupFallback#create', namespace => $namespace );
+	$r->put("/api/$version/cachegroup_fallbacks")->over( authenticated => 1, not_ldap => 1 )->to( 'CachegroupFallback#update', namespace => $namespace );
+	$r->delete("/api/$version/cachegroup_fallbacks")->over( authenticated => 1, not_ldap => 1 )->to( 'CachegroupFallback#delete', namespace => $namespace );
+
 	# -- CACHEGROUPS: ASSIGN DELIVERYSERVICES
 	$r->post("/api/$version/cachegroups/:id/deliveryservices" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )
 		->to( 'DeliveryServiceServer#assign_ds_to_cachegroup', namespace => $namespace );

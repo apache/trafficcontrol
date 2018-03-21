@@ -250,6 +250,15 @@ sub gen_crconfig_json {
             if ( $row->type->name =~ m/^EDGE/ ) {
                 $data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'latitude'}  = $row->cachegroup->latitude + 0;
                 $data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'longitude'} = $row->cachegroup->longitude + 0;
+                $data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'backupLocations'}->{'fallbackToClosest'} = $row->cachegroup->fallback_to_closest ? "true" : "false";
+
+                my $rs_backups = $self->db->resultset('CachegroupFallback')->search({ primary_cg => $row->cachegroup->id}, {order_by => 'set_order'});
+                my $backup_cnt = 0;
+
+                while ( my $backup_row = $rs_backups->next ) {
+                    $data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'backupLocations'}->{'list'}[$backup_cnt] = $backup_row->backup_cg->name; 
+                    $backup_cnt++;
+                }
             }
 
             if ( !exists $cache_tracker{ $row->id } ) {

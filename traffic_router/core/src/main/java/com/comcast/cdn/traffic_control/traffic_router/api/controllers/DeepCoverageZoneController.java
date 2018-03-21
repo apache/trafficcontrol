@@ -35,7 +35,7 @@ public class DeepCoverageZoneController {
     public @ResponseBody
     ResponseEntity<CacheLocation> getCacheLocationForIp(@RequestParam(name = "ip") final String ip,
                                                         @RequestParam(name = "deliveryServiceId") final String deliveryServiceId) {
-        final CacheLocation cacheLocation = trafficRouterManager.getTrafficRouter().getCoverageZoneCacheLocation(ip, deliveryServiceId, true);
+        final CacheLocation cacheLocation = trafficRouterManager.getTrafficRouter().getCoverageZoneCacheLocation(ip, deliveryServiceId, true, null);
         if (cacheLocation == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }

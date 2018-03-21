@@ -672,8 +672,22 @@ public class ConfigHandler {
 		while (locIter.hasNext()) {
 			final String loc = locIter.next();
 			final JsonNode jo = JsonUtils.getJsonNode(locationsJo, loc);
+			List<String> backupCacheGroups = null;
+			boolean useClosestOnBackupFailure = true;
+
+			if (jo != null && jo.has("backupLocations")) {
+				final JsonNode backupConfigJson = JsonUtils.getJsonNode(jo, "backupLocations");
+				backupCacheGroups = new ArrayList<>();
+				if (backupConfigJson.has("list")) {
+					for (final JsonNode cacheGroup : JsonUtils.getJsonNode(backupConfigJson, "list"))  {
+						backupCacheGroups.add(cacheGroup.asText());
+					}
+					useClosestOnBackupFailure = JsonUtils.optBoolean(backupConfigJson, "fallbackToClosest", false);
+				}
+
+			}
 			try {
-				locations.add(new CacheLocation(loc, new Geolocation(JsonUtils.getDouble(jo, "latitude"), JsonUtils.getDouble(jo, "longitude"))));
+				locations.add(new CacheLocation(loc, new Geolocation(JsonUtils.getDouble(jo, "latitude"), JsonUtils.getDouble(jo, "longitude")), backupCacheGroups, useClosestOnBackupFailure));
 			} catch (JsonUtilsException e) {
 				LOGGER.warn(e,e);
 			}
