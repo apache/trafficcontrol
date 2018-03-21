@@ -12,3 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+if [[ -e /opt/traffic_router/webapps/core ]]; then
+  echo "Deleting previous version of TR webapp"
+  rm -rf /opt/traffic_router/webapps/core
+fi
+
+rm -rf /opt/traffic_router/webapps/*
+

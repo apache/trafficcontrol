@@ -518,9 +518,7 @@ public class RouterTest {
 		httpGet.addHeader("Host", "tr." + "https-additional" + ".bar");
 
 		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
-			int code = response.getStatusLine().getStatusCode();
-			assertThat("Expected to get an ssl handshake error! But got: "+code,
-					code, equalTo(525));
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
 	    } catch (SSLHandshakeException e) {
 		// Expected, this means we're doing the right thing
 	    }

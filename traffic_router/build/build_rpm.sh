@@ -51,9 +51,21 @@ function installDnsSec {
 
 #----------------------------------------
 function buildRpmTrafficRouter () {
-	echo "Building the rpm."
-
 	installDnsSec
+
+    export STARTUP_SCRIPT_DIR="/etc/systemd/system"
+    export STARTUP_SCRIPT_LOC="../core/src/main/etc/systemd/system"
+	buildRpmFor_el 7
+	export RHEL_VERSION=el6
+    export STARTUP_SCRIPT_DIR="/etc/init.d"
+    export STARTUP_SCRIPT_LOC="../core/src/main/etc/init.d"
+	buildRpmFor_el 6
+	export RHEL_VERSION=el7
+}
+
+function buildRpmFor_el () {
+    vers = $1
+	echo "Building the rpm for CentOS "+ $vers
 
 	cd "$TR_DIR" || { echo "Could not cd to $TR_DIR: $?"; exit 1; }
 	export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
@@ -72,6 +84,7 @@ function buildRpmTrafficRouter () {
 	mkdir -p "$DIST" || { echo "Could not create $DIST: $?"; exit 1; }
 
 	cp "$rpm" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; exit 1; }
+
 }
 
 

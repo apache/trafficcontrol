@@ -44,6 +44,13 @@ install    -m 755 %_sourcedir/tomcat.service ${RPM_BUILD_ROOT}/%{_sysconfdir}/sy
 rm -rf ${RPM_BUILD_ROOT}
 
 %pre
+chkconfig tomcat off
+
+if [[ -e /opt/apache-tomcat-* ]]; then
+  echo "Deleting unmanaged Tomcat install from < 2.3 version of Traffic Router"
+  rm -rf /opt/apache-tomcat-*
+  rm -rf /opt/tomcat
+fi
 
 %files
 %defattr(-,root,root)
