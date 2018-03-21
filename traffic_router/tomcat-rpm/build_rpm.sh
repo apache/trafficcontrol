@@ -32,8 +32,8 @@ function checkEnvironment() {
 	# 
 	# get traffic_control src path -- relative to build_rpm.sh script
 	export PACKAGE="tomcat"
-        export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
-        export TC_VERSION=$(getVersion "$TC_DIR")
+    export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
+    export TC_VERSION=$(getVersion "$TC_DIR")
 	export TOMCAT_VERSION=8.5
 	export TOMCAT_RELEASE=29
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
@@ -45,7 +45,7 @@ function checkEnvironment() {
 	echo "WORKSPACE: $WORKSPACE"
 	echo "TOMCAT_RELEASE: $TOMCAT_RELEASE"
 	echo "TOMCAT_VERSION: $TOMCAT_VERSION"
-        echo "BUILD_NUMBER: $BUILD_NUMBER"
+	echo "BUILD_NUMBER: $BUILD_NUMBER"
 	echo "RPM: $RPM"
 	echo "--------------------------------------------------"
 }
@@ -60,6 +60,7 @@ function initBuildArea() {
         wget http://archive.apache.org/dist/tomcat/tomcat-8/v$VERSION.$RELEASE/bin/apache-tomcat-$VERSION.$RELEASE.tar.gz -O "$RPMBUILD"/SOURCES/apache-tomcat-$VERSION.$RELEASE.tar.gz
 
         cp "$TR_DIR/tomcat-rpm/tomcat.service" "$RPMBUILD/SOURCES/" || { echo "Could not copy source files: $?"; exit 1; }
+        cp "$TR_DIR/tomcat-rpm/tomcat.inc" "$RPMBUILD/SOURCES/" || { echo "Could not copy source files: $?"; exit 1; }
         cp "$TR_DIR/tomcat-rpm/tomcat.spec" "$RPMBUILD/SPECS/" || { echo "Could not copy spec files: $?"; exit 1; }
 
         echo "The build area has been initialized."
@@ -67,13 +68,18 @@ function initBuildArea() {
 
 #----------------------------------------
 function buildRpmTomcat () {
-        echo "Building the rpm."
+	export SPEC_FILE_NAME=tomcat.spec
+	buildRpmForEl 7
+}
+
+function buildRpmForEl () {
+        echo "Building the rpm for "$RHEL_VERSION"."
 
         cd $RPMBUILD
         rpmbuild --define "_topdir $(pwd)" \
                  --define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
                  --define "tomcat_version $TOMCAT_VERSION.$TOMCAT_RELEASE" \
-                 -ba SPECS/tomcat.spec || \
+                 -ba SPECS/$SPEC_FILE_NAME || \
                  { echo "RPM BUILD FAILED: $?"; exit 1; }
         local rpm=$(find ./RPMS -name $RPM)
         if [[ -z $rpm ]]; then
