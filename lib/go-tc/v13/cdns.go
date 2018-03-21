@@ -1,5 +1,7 @@
 package v13
 
+import tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,26 +20,81 @@ package v13
  * specific language governing permissions and limitations
  * under the License.
  */
-import "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
+// A List of CDNs Response
+// swagger:response CDNsResponse
+// in: body
 type CDNsResponse struct {
+	// in: body
 	Response []CDN `json:"response"`
 }
 
-type CDN struct {
-	DNSSECEnabled bool         `json:"dnssecEnabled" db:"dnssec_enabled"`
-	DomainName    string       `json:"domainName" db:"domain_name"`
-	ID            int          `json:"id" db:"id"`
-	LastUpdated   tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	Name          string       `json:"name" db:"name"`
+// A Single CDN Response for Update and Create to depict what changed
+// swagger:response CDNResponse
+// in: body
+type CDNResponse struct {
+	// in: body
+	Response CDN `json:"response"`
 }
 
+// CDN ...
+type CDN struct {
+
+	// The CDN to retrieve
+	//
+	// enables Domain Name Security Extensions on the specified CDN
+	//
+	// required: true
+	DNSSECEnabled bool `json:"dnssecEnabled" db:"dnssec_enabled"`
+
+	// DomainName of the CDN
+	//
+	// required: true
+	DomainName string `json:"domainName" db:"domain_name"`
+
+	// ID of the CDN
+	//
+	// required: true
+	ID int `json:"id" db:"id"`
+
+	// LastUpdated
+	//
+	LastUpdated tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
+
+	// Name of the CDN
+	//
+	// required: true
+	Name string `json:"name" db:"name"`
+}
+
+// CDNNullable ...
 type CDNNullable struct {
-	DNSSECEnabled *bool         `json:"dnssecEnabled" db:"dnssec_enabled"`
-	DomainName    *string       `json:"domainName" db:"domain_name"`
-	ID            *int          `json:"id" db:"id"`
-	LastUpdated   *tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	Name          *string       `json:"name" db:"name"`
+
+	// The CDN to retrieve
+	//
+	// enables Domain Name Security Extensions on the specified CDN
+	//
+	// required: true
+	DNSSECEnabled bool `json:"dnssecEnabled" db:"dnssec_enabled"`
+
+	// DomainName of the CDN
+	//
+	// required: true
+	DomainName string `json:"domainName" db:"domain_name"`
+
+	// ID of the CDN
+	//
+	// required: true
+	ID int `json:"id" db:"id"`
+
+	// LastUpdated
+	//
+	LastUpdated tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
+
+	// Name of the CDN
+	//
+	// required: true
+	Name string `json:"name" db:"name"`
 }
 
 // CDNSSLKeysResponse ...
