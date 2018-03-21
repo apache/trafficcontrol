@@ -46,6 +46,7 @@ Once everything is installed, you will need to configure the servers to talk to 
   traffic_monitor.rst
   traffic_monitor_golang.rst
   traffic_router.rst
+  traffic_router/migrationto2-3.rst
   traffic_stats.rst
   traffic_server.rst
   traffic_vault.rst

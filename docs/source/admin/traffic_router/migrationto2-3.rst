@@ -24,8 +24,8 @@ Release Notes v2.3
 ==========================
 * Replaced custom Java SNI implementation with a native implementation using tomcat-native, apr (Apache Portable Runtime) and OpenSSL
   This should significantly improve the performance of routing 'https' delivery services.
-* Upgraded to Tomcat 8.5.28
-* Separated the Traffic Router installation from the Tomcat deployment and created a new 'tomcat-tr' package for installing Tomcat.
+* Upgraded to Tomcat 8.5.30
+* Separated the Traffic Router installation from the Tomcat deployment and created a new 'tomcat' package for installing Tomcat.
   Traffic Router and Tomcat can now be upgraded independently
 * Converted Traffic Router to a 'systemd' service
 * Modified the development test and dev deployment processes to be more consistent with production
@@ -37,18 +37,18 @@ System Requirements
 * JDK >= 8.0 installed or available in Yum repository
 * APR (Apache Portable Runtime) >= 1.4.8-3 installed or available in Yum repository
 * Tomcat Native >= 1.2.16 installed or available in Yum repository
-* tomcat_tr >= 8.5-28 installed or available in Yum repository (This package is created automatically by the Traffic Router build process)
+* tomcat >= 8.5-28 installed or available in Yum repository (This package is created automatically by the Traffic Router build process)
 
 Upgrade Procedure
 ==========================
-* upload tomcat_tr to a Yum repository
+* upload tomcat.rpm to a Yum repository
 * uninstall previous version of Traffic Router
 * install Traffic Router package
 * restore property files
 
-Upload tomcat_tr
-----------------
-The 'tomcat_tr' package gets created when you built Traffic Router. You must either add it to the yum repo where you keep all of the Traffic Control packages, or manually copy it to the servers where you will be installing Traffic Router and run ```yum install [path to package]```
+Upload tomcat.rpm
+-----------------
+The 'tomcat' package gets created when you build Traffic Router. You must either add it to the yum repo where you keep all of the Traffic Control packages, or manually copy it to the servers where you will be installing Traffic Router and run ```yum install [path to package]```
 
 Uninstall Previous Traffic Router
 ---------------------------------
