@@ -26,7 +26,17 @@ if [ -f /opt/traffic_router/conf/*.crt ]; then
 	done
 fi
 
-systemctl daemon-reload
+
+#eval $(grep VERSION_ID /etc/os-release)
+$VERSION_ID = %{centos_ver}
+
+if [[ -n "$VERSION_ID" && "$VERSION_ID" == "7" ]]; then
+    systemctl daemon-reload
+else
+    chkconfig --add traffic_router
+    chkconfig traffic_router on
+fi
+
 echo "Traffic Router installed successfully."
 echo ""
 echo "Start with 'sudo systemctl start traffic_router'"

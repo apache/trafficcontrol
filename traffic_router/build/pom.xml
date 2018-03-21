@@ -42,12 +42,12 @@
 			<artifactId>traffic_router_shared</artifactId>
 			<version>${project.parent.version}</version>
 		</dependency>
-		<dependency>
+		<!--dependency>
 			<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 			<artifactId>ROOT</artifactId>
 			<version>${project.parent.version}</version>
 			<type>war</type>
-		</dependency>
+		</dependency-->
 	</dependencies>
 
 	<build>
@@ -89,6 +89,8 @@
 								<requireEnvironmentVariable>
 									<variableName>BUILD_NUMBER</variableName>
 									<variableName>RHEL_VERSION</variableName>
+									<variableName>STARTUP_SCRIPT_DIR</variableName>
+									<variableName>STARTUP_SCRIPT_LOC</variableName>
 								</requireEnvironmentVariable>
 							</rules>
 							<fail>true</fail>
@@ -150,7 +152,7 @@
 									</sources>
 								</mapping>
 								<mapping>
-									<directory>${deploy.dir}/logs</directory>
+									<directory>${deploy.dir}/var/log</directory>
 									<filemode>755</filemode>
 									<username>root</username>
 									<groupname>root</groupname>
@@ -187,14 +189,14 @@
 									</dependency>
 								</mapping>
 								<mapping>
-									<directory>/etc/systemd/system</directory>
+									<directory>${env.STARTUP_SCRIPT_DIR}</directory>
 									<directoryIncluded>false</directoryIncluded>
 									<filemode>755</filemode>
 									<username>root</username>
 									<groupname>root</groupname>
 									<sources>
 										<source>
-											<location>../core/src/main/etc/systemd/system</location>
+											<location>${env.STARTUP_SCRIPT_LOC}</location>
 										</source>
 									</sources>
 								</mapping>
