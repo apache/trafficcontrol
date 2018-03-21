@@ -154,7 +154,7 @@ Traffic Router currently follows the zone signing key pre-publishing operational
 
 Troubleshooting and log files
 =============================
-Traffic Router log files are in ``/opt/traffic_router/logs``. Initialization and shutdown logs are in ``/opt/traffic_router/logs/catalina.out``. Application related logging is in ``/opt/traffic_router/var/log/traffic_router.log``, while access logs are written to ``/opt/traffic_router/var/log/access.log``.
+Traffic Router log files are in ``/opt/traffic_router/var/log``. Initialization and shutdown logs are in ``/opt/tomcat/logs/catalina[date].out``. Application related logging is in ``/opt/traffic_router/var/log/traffic_router.log``, while access logs are written to ``/opt/traffic_router/var/log/access.log``.
 
 Event Log File Format
 =====================
@@ -162,7 +162,7 @@ Event Log File Format
 Summary
 -------
 
-All access events to Traffic Router are logged to the file ``/opt/traffic_router/logs/access.log``
+All access events to Traffic Router are logged to the file ``/opt/traffic_router/var/log/access.log``
 This file grows up to 200Mb and gets rolled into older log files, 10 log files total are kept (total of up to 2Gb of logged events per traffic router)
 
 Traffic Router logs access events in a format that largely following `ATS event logging format
