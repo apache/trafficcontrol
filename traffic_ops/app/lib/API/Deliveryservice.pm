@@ -288,6 +288,15 @@ sub show {
 	$self->success( \@data );
 }
 
+sub undef_if_empty {
+    my $in = shift;
+    if (defined $in && $in !~ /\S/) {
+        # does not contain any non-blank characters
+        return undef;
+    }
+    return $in;
+}
+
 sub update {
 	my $self   = shift;
 	my $id     = $self->param('id');
@@ -343,7 +352,7 @@ sub update {
 		dns_bypass_ip6         => $params->{dnsBypassIp6},
 		dns_bypass_ttl         => $params->{dnsBypassTtl},
 		dscp                   => $params->{dscp},
-		edge_header_rewrite    => $params->{edgeHeaderRewrite},
+		edge_header_rewrite    => undef_if_empty($params->{edgeHeaderRewrite}),
 		geolimit_redirect_url  => $params->{geoLimitRedirectURL},
 		geo_limit              => $params->{geoLimit},
 		geo_limit_countries    => sanitize_geo_limit_countries( $params->{geoLimitCountries} ),
@@ -360,7 +369,7 @@ sub update {
 		long_desc_1            => $params->{longDesc1},
 		long_desc_2            => $params->{longDesc2},
 		max_dns_answers        => $params->{maxDnsAnswers},
-		mid_header_rewrite     => $params->{midHeaderRewrite},
+		mid_header_rewrite     => undef_if_empty($params->{midHeaderRewrite}),
 		miss_lat               => $params->{missLat},
 		miss_long              => $params->{missLong},
 		multi_site_origin      => $params->{multiSiteOrigin},
@@ -402,10 +411,10 @@ sub update {
 	if ($rs) {
 
 		# create location parameters for header_rewrite*, regex_remap* and cacheurl* config files if necessary
-		&UI::DeliveryService::header_rewrite( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{edgeHeaderRewrite}, "edge" );
-		&UI::DeliveryService::header_rewrite( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{midHeaderRewrite},  "mid" );
-		&UI::DeliveryService::regex_remap( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{regexRemap} );
-		&UI::DeliveryService::cacheurl( $self, $rs->id, $params->{profileId}, $params->{xmlId}, $params->{cacheurl} );
+		&UI::DeliveryService::header_rewrite( $self, $rs->id, $values->{profileId}, $values->{xmlId}, $values->{edgeHeaderRewrite}, "edge" );
+		&UI::DeliveryService::header_rewrite( $self, $rs->id, $values->{profileId}, $values->{xmlId}, $values->{midHeaderRewrite},  "mid" );
+		&UI::DeliveryService::regex_remap( $self, $rs->id, $values->{profileId}, $values->{xmlId}, $values->{regexRemap} );
+		&UI::DeliveryService::cacheurl( $self, $rs->id, $values->{profileId}, $values->{xmlId}, $values->{cacheurl} );
 
 		# build example urls
 		my @example_urls  = ();
@@ -495,7 +504,7 @@ sub update {
 
 		my $new_hostname = UI::SslKeys::get_hostname($self, $id, $ds);
 		$upd_ssl = 1 if $old_hostname ne $new_hostname;
-		UI::SslKeys::update_sslkey($self, $params->{xmlId}, $new_hostname) if $upd_ssl;
+		UI::SslKeys::update_sslkey($self, $values->{xmlId}, $new_hostname) if $upd_ssl;
 
 		return $self->success( \@response, "Deliveryservice update was successful." );
 	}
@@ -683,7 +692,7 @@ sub create {
 		dns_bypass_ip6         => $params->{dnsBypassIp6},
 		dns_bypass_ttl         => $params->{dnsBypassTtl},
 		dscp                   => $params->{dscp},
-		edge_header_rewrite    => $params->{edgeHeaderRewrite},
+		edge_header_rewrite    => undef_if_empty($params->{edgeHeaderRewrite}),
 		geolimit_redirect_url  => $params->{geoLimitRedirectURL},
 		geo_limit              => $params->{geoLimit},
 		geo_limit_countries    => sanitize_geo_limit_countries( $params->{geoLimitCountries} ),
@@ -700,7 +709,7 @@ sub create {
 		long_desc_1            => $params->{longDesc1},
 		long_desc_2            => $params->{longDesc2},
 		max_dns_answers        => $params->{maxDnsAnswers},
-		mid_header_rewrite     => $params->{midHeaderRewrite},
+		mid_header_rewrite     => undef_if_empty($params->{midHeaderRewrite}),
 		miss_lat               => $params->{missLat},
 		miss_long              => $params->{missLong},
 		multi_site_origin      => $params->{multiSiteOrigin},
@@ -742,19 +751,19 @@ sub create {
 		&log( $self, "Created delivery service [ '" . $insert->xml_id . "' ] with id: " . $insert->id, "APICHANGE" );
 
 		# create location parameters for header_rewrite*, regex_remap* and cacheurl* config files if necessary
-		&UI::DeliveryService::header_rewrite( $self, $insert->id, $params->{profileId}, $params->{xmlId}, $params->{edgeHeaderRewrite}, "edge" );
-		&UI::DeliveryService::header_rewrite( $self, $insert->id, $params->{profileId}, $params->{xmlId}, $params->{midHeaderRewrite},  "mid" );
-		&UI::DeliveryService::regex_remap( $self, $insert->id, $params->{profileId}, $params->{xmlId}, $params->{regexRemap} );
-		&UI::DeliveryService::cacheurl( $self, $insert->id, $params->{profileId}, $params->{xmlId}, $params->{cacheurl} );
+		&UI::DeliveryService::header_rewrite( $self, $insert->id, $values->{profileId}, $values->{xmlId}, $values->{edgeHeaderRewrite}, "edge" );
+		&UI::DeliveryService::header_rewrite( $self, $insert->id, $values->{profileId}, $values->{xmlId}, $values->{midHeaderRewrite},  "mid" );
+		&UI::DeliveryService::regex_remap( $self, $insert->id, $values->{profileId}, $values->{xmlId}, $values->{regexRemap} );
+		&UI::DeliveryService::cacheurl( $self, $insert->id, $values->{profileId}, $values->{xmlId}, $values->{cacheurl} );
 
 		# create a default deliveryservice_regex in the format .*\.xml-id\..*
 		$self->create_default_ds_regex( $insert->id, '.*\.' . $insert->xml_id . '\..*' );
 
 		# create dnssec keys if necessary
-		my $cdn = $self->db->resultset('Cdn')->search( { id => $params->{cdnId} } )->single();
+		my $cdn = $self->db->resultset('Cdn')->search( { id => $values->{cdnId} } )->single();
 		my $dnssec_enabled = $cdn->dnssec_enabled;
 		if ($dnssec_enabled) {
-			&UI::DeliveryService::create_dnssec_keys( $self, $cdn->name, $params->{xmlId}, $insert->id, $cdn->domain_name );
+			&UI::DeliveryService::create_dnssec_keys( $self, $cdn->name, $values->{xmlId}, $insert->id, $cdn->domain_name );
 			&log( $self, "Created delivery service dnssec keys for [ '" . $insert->xml_id . "' ]", "APICHANGE" );
 		}
 
