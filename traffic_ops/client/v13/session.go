@@ -114,7 +114,7 @@ func (to *Session) login() (net.Addr, error) {
 		return nil, errors.New("creating login credentials: " + err.Error())
 	}
 
-	path := "/api/1.2/user/login"
+	path := "/api/1.3/user/login"
 	resp, remoteAddr, err := to.rawRequest("POST", path, credentials)
 	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
 	if err != nil {
