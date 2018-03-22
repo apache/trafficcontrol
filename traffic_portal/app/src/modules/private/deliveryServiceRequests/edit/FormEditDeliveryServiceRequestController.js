@@ -80,11 +80,6 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			}
 		});
 		modalInstance.result.then(function() {
-			if (status == 'complete' && $scope.dsRequest.assigneeId != userModel.user.id) {
-				messageModel.setMessages([ { level: 'error', text: 'Only the Assignee can mark a delivery service request as complete' } ], false);
-				$anchorScroll(); // scrolls window to top
-				return;
-			}
 			deliveryServiceRequestService.updateDeliveryServiceRequestStatus($scope.dsRequest.id, status).
 				then(function() {
 					$state.reload();
@@ -202,7 +197,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 				params: function () {
 					return params;
 				},
-				collection: function() {
+				statuses: function() {
 					return [
 						{ id: $scope.DRAFT, name: 'Save as Draft' },
 						{ id: $scope.SUBMITTED, name: 'Submit for Review / Deployment' }
@@ -210,15 +205,27 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 				}
 			}
 		});
-		modalInstance.result.then(function(action) {
-			$scope.dsRequest.status = (action.id == $scope.SUBMITTED) ? 'submitted' : 'draft';
+		modalInstance.result.then(function(options) {
+			$scope.dsRequest.status = (options.status.id == $scope.SUBMITTED) ? 'submitted' : 'draft';
 			$scope.dsRequest.deliveryService = deliveryService;
+
 			deliveryServiceRequestService.updateDeliveryServiceRequest($scope.dsRequest.id, $scope.dsRequest).
-				then(function() {
-					messageModel.setMessages([ { level: 'success', text: 'Updated delivery service request for ' + $scope.dsRequest.deliveryService.xmlId + ' and set status to ' + $scope.dsRequest.status } ], false);
-					$anchorScroll(); // scrolls window to top
-					$state.reload();
-				});
+				then(
+					function() {
+						var comment = {
+							deliveryServiceRequestId: $scope.dsRequest.id,
+							value: options.comment
+						};
+						deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
+							then(
+								function() {
+									messageModel.setMessages([ { level: 'success', text: 'Updated delivery service request for ' + $scope.dsRequest.deliveryService.xmlId + ' and set status to ' + $scope.dsRequest.status } ], false);
+									$anchorScroll(); // scrolls window to top
+									$state.reload();
+								}
+							);
+					}
+				);
 		}, function () {
 			// do nothing
 		});

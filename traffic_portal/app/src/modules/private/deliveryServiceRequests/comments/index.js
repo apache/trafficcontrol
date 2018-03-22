@@ -30,12 +30,8 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.c
 							request: function($stateParams, deliveryServiceRequestService) {
 								return deliveryServiceRequestService.getDeliveryServiceRequests({ id: $stateParams.deliveryServiceRequestId });
 							},
-							comments: function() {
-								// todo: make a call to GET /api/deliveryservice_requests/:id/comments
-								return [
-									{ author: 'bob', comment: 'fake comment 1'},
-									{ author: 'phil', comment: 'fake comment 2'}
-								]
+							comments: function($stateParams, deliveryServiceRequestService) {
+								return deliveryServiceRequestService.getDeliveryServiceRequestComments({ deliveryServiceRequestId: $stateParams.deliveryServiceRequestId, orderby: 'id' });
 							}
 						}
 					}

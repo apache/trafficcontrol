@@ -23,17 +23,21 @@ var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUti
 		return Restangular.all('deliveryservice_requests').getList(queryParams);
 	};
 
-	this.createDeliveryServiceRequest = function(dsRequest, delay) {
-		return Restangular.service('deliveryservice_requests').post(dsRequest)
+	this.createDeliveryServiceRequest = function(dsRequest) {
+		var request = $q.defer();
+
+		$http.post(ENV.api['root'] + "deliveryservice_requests", dsRequest)
 			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + dsRequest.deliveryService.xmlId + ' delivery service' } ], delay);
-					locationUtils.navigateToPath('/delivery-service-requests');
+				function(result) {
+					request.resolve(result.data.response);
 				},
 				function(fault) {
 					messageModel.setMessages(fault.data.alerts, false);
+					request.reject(fault);
 				}
 			);
+
+		return request.promise;
 	};
 
 	this.updateDeliveryServiceRequest = function(id, dsRequest) {
@@ -98,6 +102,60 @@ var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUti
 			);
 
 		return request.promise;
+	};
+
+	this.getDeliveryServiceRequestComments = function(queryParams) {
+		return Restangular.all('deliveryservice_request_comments').getList(queryParams);
+	};
+
+	this.createDeliveryServiceRequestComment = function(comment) {
+		var request = $q.defer();
+
+		$http.post(ENV.api['root'] + "deliveryservice_request_comments", comment)
+			.then(
+				function(response) {
+					request.resolve(response);
+				},
+				function(fault) {
+					request.reject(fault);
+				}
+			);
+
+		return request.promise;
+	};
+
+	this.updateDeliveryServiceRequestComment = function(comment) {
+		var request = $q.defer();
+
+		$http.put(ENV.api['root'] + "deliveryservice_request_comments/" + comment.id, comment)
+			.then(
+				function() {
+					request.resolve();
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
+					request.reject();
+				}
+			);
+
+		return request.promise;
+	};
+
+	this.deleteDeliveryServiceRequestComment = function(comment) {
+		var deferred = $q.defer();
+
+		$http.delete(ENV.api['root'] + "deliveryservice_request_comments/" + comment.id)
+			.then(
+				function(response) {
+					deferred.resolve(response);
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
+					deferred.reject(fault);
+				}
+			);
+
+		return deferred.promise;
 	};
 
 };

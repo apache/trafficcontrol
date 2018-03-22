@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServicesRequestsController = function(request, comments, $scope, $state, $stateParams, $uibModal, locationUtils) {
+var TableDeliveryServicesRequestsController = function(request, comments, $scope, $state, $stateParams, $uibModal, dateUtils, locationUtils, deliveryServiceRequestService, messageModel) {
 
 	$scope.request = request[0];
 
@@ -45,9 +45,18 @@ var TableDeliveryServicesRequestsController = function(request, comments, $scope
 				}
 			}
 		});
-		modalInstance.result.then(function(comment) {
-			// todo: make a call to POST /api/deliveryservice_requests/:id/comments and then refresh page on success
-			$scope.refresh();
+		modalInstance.result.then(function(commentValue) {
+			var comment = {
+				deliveryServiceRequestId: $scope.request.id,
+				value: commentValue
+			};
+			deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
+				then(
+					function() {
+						messageModel.setMessages([ { level: 'success', text: 'Delivery service request comment created' } ], false);
+						$scope.refresh();
+					}
+			);
 		}, function () {
 			// do nothing
 		});
@@ -56,7 +65,7 @@ var TableDeliveryServicesRequestsController = function(request, comments, $scope
 	$scope.editComment = function(comment) {
 		var params = {
 			title: 'Edit Comment',
-			text: comment.comment
+			text: comment.value
 		};
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/textarea/dialog.textarea.tpl.html',
@@ -68,27 +77,69 @@ var TableDeliveryServicesRequestsController = function(request, comments, $scope
 				}
 			}
 		});
-		modalInstance.result.then(function(comment) {
-			// todo: make a call to PUT /api/deliveryservice_requests/:id/comments/:id and then refresh page on success
-			console.log(comment);
-			$scope.refresh();
+		modalInstance.result.then(function(newValue) {
+			var editedComment = {
+				id: comment.id,
+				deliveryServiceRequestId: comment.deliveryServiceRequestId,
+				value: newValue
+			};
+			deliveryServiceRequestService.updateDeliveryServiceRequestComment(editedComment).
+				then(
+					function() {
+						messageModel.setMessages([ { level: 'success', text: 'Delivery service request comment updated' } ], false);
+						$scope.refresh();
+					}
+				);
 		}, function () {
 			// do nothing
 		});
 	};
+
+	$scope.deleteComment = function(comment, $event) {
+		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		var params = {
+			title: 'Delete Comment',
+			message: 'Are you sure you want to delete this comment?'
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			deliveryServiceRequestService.deleteDeliveryServiceRequestComment(comment).
+				then(
+					function() {
+						messageModel.setMessages([ { level: 'success', text: 'Delivery service request comment deleted' } ], false);
+						$scope.refresh();
+					}
+				);
+		}, function () {
+			// do nothing
+		});
+	};
+
+	$scope.getRelativeTime = dateUtils.getRelativeTime;
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
 		$('#dsRequestCommentsTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
+			"iDisplayLength": -1,
+			"ordering": false,
+			"columnDefs": [
+				{ "width": "3%", "targets": 3 }
+			]
 		});
 	});
 
-
 };
 
-TableDeliveryServicesRequestsController.$inject = ['request', 'comments', '$scope', '$state', '$stateParams', '$uibModal', 'locationUtils'];
+TableDeliveryServicesRequestsController.$inject = ['request', 'comments', '$scope', '$state', '$stateParams', '$uibModal', 'dateUtils', 'locationUtils', 'deliveryServiceRequestService', 'messageModel'];
 module.exports = TableDeliveryServicesRequestsController;
