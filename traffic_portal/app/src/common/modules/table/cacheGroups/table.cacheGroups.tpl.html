@@ -36,6 +36,8 @@ under the License.
                 <th>Name</th>
                 <th>Short Name</th>
                 <th>Type</th>
+                <th>Parent</th>
+                <th>2nd Parent</th>
                 <th>Latitude</th>
                 <th>Longitude</th>
             </tr>
@@ -45,6 +47,8 @@ under the License.
                 <td data-search="^{{::cg.name}}$">{{::cg.name}}</td>
                 <td data-search="^{{::cg.shortName}}$">{{::cg.shortName}}</td>
                 <td data-search="^{{::cg.typeName}}$">{{::cg.typeName}}</td>
+                <td data-search="^{{::cg.parentCachegroupName}}$">{{::cg.parentCachegroupName}}</td>
+                <td data-search="^{{::cg.secondaryParentCachegroupName}}$">{{::cg.secondaryParentCachegroupName}}</td>
                 <td data-search="^{{::cg.latitude}}$">{{::cg.latitude}}</td>
                 <td data-search="^{{::cg.longitude}}$">{{::cg.longitude}}</td>
             </tr>
