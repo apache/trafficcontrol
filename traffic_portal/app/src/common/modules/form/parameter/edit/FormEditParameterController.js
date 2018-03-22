@@ -72,29 +72,54 @@ var FormEditParameterController = function(parameter, $scope, $controller, $uibM
                 // do nothing
             });
         });
-
     };
 
     $scope.confirmDelete = function(parameter) {
-        var params = {
-            title: 'Delete Parameter: ' + parameter.name,
-            key: parameter.name
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
-            controller: 'DialogDeleteController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
+        profileService.getParameterProfiles(parameter.id).
+            then(function(result) {
+                var params = {
+                    title: 'Delete Parameter?',
+                    message: result.length + ' profiles use this parameter.<br><br>'
+                };
+                if (result.length > 0) {
+                    params.message += _.pluck(result, 'name').join('<br>') + '<br><br>';
                 }
-            }
-        });
-        modalInstance.result.then(function() {
-            deleteParameter(parameter);
-        }, function () {
-            // do nothing
-        });
+                params.message += 'Are you sure you want to delete the parameter?';
+
+                var modalInstance = $uibModal.open({
+                    templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+                    controller: 'DialogConfirmController',
+                    size: 'md',
+                    resolve: {
+                        params: function () {
+                            return params;
+                        }
+                    }
+                });
+                modalInstance.result.then(function() {
+                    params = {
+                        title: 'Delete Parameter: ' + parameter.name,
+                        key: parameter.name
+                    };
+                    modalInstance = $uibModal.open({
+                        templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+                        controller: 'DialogDeleteController',
+                        size: 'md',
+                        resolve: {
+                            params: function () {
+                                return params;
+                            }
+                        }
+                    });
+                    modalInstance.result.then(function() {
+                        deleteParameter(parameter);
+                    }, function () {
+                        // do nothing
+                    });
+                }, function () {
+                    // do nothing
+                });
+            });
     };
 
 };
