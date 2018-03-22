@@ -37,12 +37,16 @@ under the License.
             <tr class="headings">
                 <th>Author</th>
                 <th>Comment</th>
+                <th>Updated</th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
             <tr ng-click="editComment(c)" ng-repeat="c in ::comments">
                 <td data-search="^{{::c.author}}$">{{::c.author}}</td>
-                <td data-search="^{{::c.comment}}$">{{::c.comment}}</td>
+                <td data-search="^{{::c.comment}}$">{{::c.value}}</td>
+                <td data-search="^{{::getRelativeTime(c.lastUpdated)}}$" data-order="{{::c.lastUpdated}}">{{::getRelativeTime(c.lastUpdated)}}</td>
+                <td><button type="button" class="btn btn-link" title="Delete Comment" ng-click="deleteComment(c, $event)"><i class="fa fa-trash-o"></i></button></td>
             </tr>
             </tbody>
         </table>

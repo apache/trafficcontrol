@@ -58,14 +58,22 @@ var FormNewDeliveryServiceController = function(deliveryService, type, types, $s
 					status: (options.status.id == $scope.SUBMITTED) ? 'submitted' : 'draft',
 					deliveryService: deliveryService
 				};
-				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, true).
+				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest).
 					then(
-						function() {
-							console.log(options.comment);
-							// todo: make a call to POST /api/deliveryservice_requests/id/comments with options.comment
+						function(response) {
+							var comment = {
+								deliveryServiceRequestId: response.id,
+								value: options.comment
+							};
+							deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
+							then(
+								function() {
+									messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + dsRequest.deliveryService.xmlId + ' delivery service' } ], true);
+									locationUtils.navigateToPath('/delivery-service-requests');
+								}
+							);
 						}
 					);
-
 			}, function () {
 				// do nothing
 			});

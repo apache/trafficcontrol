@@ -46,14 +46,49 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 				status: (options.status.id == $scope.SUBMITTED) ? 'submitted' : 'draft',
 				deliveryService: deliveryService
 			};
-			deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest, false).
+			deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest).
 				then(
-					function() {
-						$scope.refresh();
-						console.log(options.comment);
-						// todo: make a call to POST /api/deliveryservice_requests/id/comments with options.comment
+					function(response) {
+						var comment = {
+							deliveryServiceRequestId: response.id,
+							value: options.comment
+						};
+						deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
+							then(
+								function() {
+									messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + dsRequest.deliveryService.xmlId + ' delivery service' } ], false);
+									$scope.refresh();
+								}
+							);
 					}
 				);
+		}, function () {
+			// do nothing
+		});
+	};
+
+	var createComment = function(request, placeholder) {
+		var params = {
+			title: 'Add Comment',
+			placeholder: placeholder,
+			text: null
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/textarea/dialog.textarea.tpl.html',
+			controller: 'DialogTextareaController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function(commentValue) {
+			var comment = {
+				deliveryServiceRequestId: request.id,
+				value: commentValue
+			};
+			deliveryServiceRequestService.createDeliveryServiceRequestComment(comment);
 		}, function () {
 			// do nothing
 		});
@@ -186,6 +221,7 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 				then(
 					function() {
 						$scope.refresh();
+						createComment(request, 'Enter rejection reason...');
 					});
 		}, function () {
 			// do nothing
@@ -219,7 +255,8 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 			deliveryServiceRequestService.updateDeliveryServiceRequestStatus(request.id, 'complete').
 				then(function() {
 					$scope.refresh();
-				});
+					createComment(request, 'Enter comment...');
+			});
 		}, function () {
 			// do nothing
 		});
