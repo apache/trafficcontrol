@@ -54,7 +54,7 @@ type DivisionQueryParams struct {
 	//
 	ID string `json:"id"`
 
-	//
+	// The field in the response to sort the response by
 	//
 	Orderby string `json:"orderby"`
 }
@@ -80,6 +80,8 @@ type DivisionPathParams struct {
 //
 // Create a Division
 //
+// A Division is a group of regions
+//
 // Responses:
 //          200: Alerts
 func PostDivision(entity DivisionPostParam) (Division, Alerts) {
@@ -89,6 +91,8 @@ func PostDivision(entity DivisionPostParam) (Division, Alerts) {
 // GetDivisions swagger:route GET /divisions Division GetDivisions
 //
 // Retrieve a list of Divisions
+//
+// List of Divisions
 //
 // Responses:
 //          200: Divisions
@@ -113,7 +117,9 @@ type DivisionPutParam struct {
 
 // PutDivision swagger:route PUT /divisions/{id} Division PutDivision
 //
-// Update a Division
+// Update a Division by Id
+//
+// Update a single Division
 //
 // Responses:
 //          200: Division
@@ -123,7 +129,9 @@ func PutDivision(entity DivisionPutParam) (Division, Alerts) {
 
 // GetDivisionById swagger:route GET /divisions/{id} Division GetDivisionById
 //
-// Retrieve a specific Division
+// Retrieve a specific Division by Id
+//
+// Retrieve a single division
 //
 // Responses:
 //          200: Divisions
@@ -134,7 +142,9 @@ func GetDivisionById() (Divisions, Alerts) {
 
 // DeleteDivision swagger:route DELETE /divisions/{id} Division DeleteDivision
 //
-// Delete a Division
+// Delete a Division by Id
+//
+// Delete a single Division
 //
 // Responses:
 //          200: Alerts
