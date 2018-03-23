@@ -41,7 +41,7 @@ rm -rf ${RPM_BUILD_ROOT}
 %pre
 chkconfig tomcat off
 
-if [[ -e /opt/apache-tomcat-* ]]; then
+if [ -d /opt/apache-tomcat-* ]; then
   echo "Deleting unmanaged Tomcat install from < 2.3 version of Traffic Router"
   rm -rf /opt/apache-tomcat-*
   rm -rf /opt/tomcat
