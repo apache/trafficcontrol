@@ -98,6 +98,37 @@ sub get_config_metadata {
 				$config_file_obj->{ $param->config_file }->{'url'} = $param->value;
 			}
 		}
+
+		# Synthesize file entries for uri_signing delivery services.
+		if ( defined $config_file_obj->{'remap.config'} && defined $config_file_obj->{'remap.config'}->{'location'} ) {
+			# Use the location of the remap.config for these files.
+			my $config_location = $config_file_obj->{'remap.config'}->{'location'};
+
+			# Query the xml_ids of all the delivery services to which this server is assigned
+			# that use uri_signing.
+			my $rs_uri_signing = $self->db->resultset('Deliveryservice')->search(
+				{
+					'server.host_name' => $host_name,
+					'me.signing_algorithm' => 'uri_signing'
+				},
+				{
+					join => {'deliveryservice_servers' => 'server'},
+					columns => ['me.xml_id']
+				}
+			);
+
+			while (my $us = $rs_uri_signing->next) {
+				# If there's already a parameter for it, don't clobber it. The user
+				# may wish to override the location.
+
+				my $cfg_name = 'uri_signing_'.$us->xml_id.'.config';
+				if (! defined $config_file_obj->{$cfg_name}) {
+					$config_file_obj->{$cfg_name}->{'fnameOnDisk'} = $cfg_name;
+					$config_file_obj->{$cfg_name}->{'location'} = $config_location;
+				}
+			}
+		}
+
 	}
 
 
