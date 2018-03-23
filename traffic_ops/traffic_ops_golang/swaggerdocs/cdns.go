@@ -88,6 +88,8 @@ type CDNPathParams struct {
 //
 // Create a CDN
 //
+// A CDN is a collection of Delivery Services
+//
 // Responses:
 //          200: Alerts
 func PostCDN(entity CDNPostParam) (CDN, Alerts) {
@@ -97,6 +99,8 @@ func PostCDN(entity CDNPostParam) (CDN, Alerts) {
 // GetCDNs swagger:route GET /cdns CDN GetCDNs
 //
 // Retrieve a list of CDNs
+//
+// List of CDNs
 //
 // Responses:
 //          200: CDNs
@@ -121,6 +125,8 @@ type CDNPutParam struct {
 
 // PutCDN swagger:route PUT /cdns/{id} CDN PutCDN
 //
+// Update a CDN by Id
+//
 // Update a CDN
 //
 // Responses:
@@ -130,6 +136,8 @@ func PutCDN(entity CDNPutParam) (CDN, Alerts) {
 }
 
 // GetCDNById swagger:route GET /cdns/{id} CDN GetCDNById
+//
+// Retrieve a specific CDN by Id
 //
 // Retrieve a specific CDN
 //
@@ -141,6 +149,8 @@ func GetCDNById() (CDNs, Alerts) {
 }
 
 // DeleteCDN swagger:route DELETE /cdns/{id} CDN DeleteCDN
+//
+// Delete a CDN by Id
 //
 // Delete a CDN
 //
