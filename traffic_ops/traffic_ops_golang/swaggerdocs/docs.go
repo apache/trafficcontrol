@@ -1,5 +1,5 @@
 /*
- Package docs TrafficOps API
+ Package docs Traffic Ops API v1.3
 
  The following REST APIs are used by the Traffic Portal UI along with several Traffic Control backend component and services.
 
