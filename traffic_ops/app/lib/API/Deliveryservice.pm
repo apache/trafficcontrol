@@ -751,19 +751,19 @@ sub create {
 		&log( $self, "Created delivery service [ '" . $insert->xml_id . "' ] with id: " . $insert->id, "APICHANGE" );
 
 		# create location parameters for header_rewrite*, regex_remap* and cacheurl* config files if necessary
-		&UI::DeliveryService::header_rewrite( $self, $insert->id, $values->{profileId}, $values->{xmlId}, $values->{edgeHeaderRewrite}, "edge" );
-		&UI::DeliveryService::header_rewrite( $self, $insert->id, $values->{profileId}, $values->{xmlId}, $values->{midHeaderRewrite},  "mid" );
-		&UI::DeliveryService::regex_remap( $self, $insert->id, $values->{profileId}, $values->{xmlId}, $values->{regexRemap} );
-		&UI::DeliveryService::cacheurl( $self, $insert->id, $values->{profileId}, $values->{xmlId}, $values->{cacheurl} );
+		&UI::DeliveryService::header_rewrite( $self, $insert->id, $values->{id}, $values->{xml_id}, $values->{edge_header_rewrite}, "edge" );
+		&UI::DeliveryService::header_rewrite( $self, $insert->id, $values->{profile_id}, $values->{xml_id}, $values->{mid_header_rewrite},  "mid" );
+		&UI::DeliveryService::regex_remap( $self, $insert->id, $values->{profile_id}, $values->{xml_id}, $values->{regex_remap} );
+		&UI::DeliveryService::cacheurl( $self, $insert->id, $values->{profile_id}, $values->{xml_id}, $values->{cacheurl} );
 
 		# create a default deliveryservice_regex in the format .*\.xml-id\..*
 		$self->create_default_ds_regex( $insert->id, '.*\.' . $insert->xml_id . '\..*' );
 
 		# create dnssec keys if necessary
-		my $cdn = $self->db->resultset('Cdn')->search( { id => $values->{cdnId} } )->single();
+		my $cdn = $self->db->resultset('Cdn')->search( { id => $values->{cdn_id} } )->single();
 		my $dnssec_enabled = $cdn->dnssec_enabled;
 		if ($dnssec_enabled) {
-			&UI::DeliveryService::create_dnssec_keys( $self, $cdn->name, $values->{xmlId}, $insert->id, $cdn->domain_name );
+			&UI::DeliveryService::create_dnssec_keys( $self, $cdn->name, $values->{xml_id}, $insert->id, $cdn->domain_name );
 			&log( $self, "Created delivery service dnssec keys for [ '" . $insert->xml_id . "' ]", "APICHANGE" );
 		}
 
