@@ -30,7 +30,7 @@
 
  swagger:meta
 */
-package swaggerdocs
+package v13
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
