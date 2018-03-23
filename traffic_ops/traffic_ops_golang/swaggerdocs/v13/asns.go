@@ -137,7 +137,9 @@ func PutASN(entity ASNPutParam) (ASN, Alerts) {
 
 // GetASNById swagger:route GET /asns/{id} ASN GetASNById
 //
-// Retrieve a specific ASN
+// Retrieve a specific ASN by Id
+//
+// Retrieve an ASN
 //
 // Responses:
 //          200: ASNs
