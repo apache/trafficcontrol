@@ -39,7 +39,7 @@ The following are requirements to ensure an accurate set up:
 3. Ensure the FQDN of the Traffic Router is resolvable in DNS. This FQDN must be resolvable by the clients expected to use this CDN.
 4. Install a traffic router: ``sudo yum install traffic_router``.
 
-.. Note:: As of Traffic Control version 2.3, traffic router depends upon a package called 'tomcat_tr'. This package should have been created when you built Traffic Control. If you get an error while installing the 'traffic_router' package make sure that the 'tomcat_tr' package is in your package repository.
+.. Note:: As of Traffic Control version 2.3, traffic router depends upon a package called 'tomcat'. This package should have been created when you built Traffic Router. If you get an error while installing the 'traffic_router' package make sure that the 'tomcat' package is in your package repository.
 
 5. Edit ``/opt/traffic_router/conf/traffic_monitor.properties`` and specify the correct online Traffic Monitor(s) for your CDN. See :ref:`rl-tr-config-files`
 	# traffic_monitor.properties: url that should normally point to this file
@@ -544,7 +544,7 @@ The ordering of certificates within the certificate bundle matters. It must be:
 
 .. Warning::
   If something is wrong with the certificate chain (e.g. the order of the certificates is backwards or for the wrong domain) the
-  client will get an SSL handshake.  Inspection of /opt/traffic_router/logs/catalina.out is likely to yield information to reveal this.
+  client will get an SSL handshake.  Inspection of /opt/tomcat/logs/catalina.log is likely to yield information to reveal this.
 
 To see the ordering of certificates you may have to manually split up your certificate chain and use openssl on each individual certificate
 

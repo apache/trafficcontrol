@@ -42,33 +42,28 @@ System Requirements
 Upgrade Procedure
 ==========================
 * upload tomcat.rpm to a Yum repository
-* uninstall previous version of Traffic Router
-* install Traffic Router package
+* update the traffic_router package
 * restore property files
 
 Upload tomcat.rpm
 -----------------
 The 'tomcat' package gets created when you build Traffic Router. You must either add it to the yum repo where you keep all of the Traffic Control packages, or manually copy it to the servers where you will be installing Traffic Router and run ```yum install [path to package]```
+It is preferable that you add it to your Yum repository because then it will be installed automatically when you perform the Traffic Router update.
 
-Uninstall Previous Traffic Router
----------------------------------
-* ``` yum remove traffic_router ```
-* Copy the traffic_router properties files you want to keep to a safe place: ``` cp /opt/traffic_router/conf/*.properties ~ ```
-* delete whatever remains: ``` rm -rf /opt/traffic_router; rm -rf /opt/tomcat; rm -f /etc/init.d/tomcat ```
-
-Install Traffic Router Package
+Update the traffic_router Package
 ------------------------------
-If openssl, apr, tomcat-native, jdk and tomcat_tr packages are all in an available repository then you just need to run: ``` yum install traffic_router ```.
+If openssl, apr, tomcat-native, jdk and tomcat_tr packages are all in an available repository then you just need to run: ``` yum update traffic_router ```.
+This will first cause the apr, tomcat-native, jdk and tomcat packages to be installed. When the 'tomcat' package runs, it will cause any older versions of traffic_router or tomcat to be uninstalled. This is because the previous versions of the traffic_router package included an untracked installation of tomcat. 
 
 
 Restore Property Files
 ------------------------------
-Replace the Traffic Router properties files with the correct ones  you saved earlier: ``` cp ~/.properties /opt/traffic_router/conf ```
+Replace the Traffic Router properties files with the correct ones for the CDN. The properties files from the previous install can be found at: /opt/traffic_router/conf/traffic_ops.properties.rpmsaved & traffic_monitor.properties.rpmsaved.
 
 Development Environment Upgrade
 ===============================
 
-If you already have a development environment set up for the previous version of Traffic Router, then you will need to need to get and install these libraries on your workstation: openssl, apr and tomcat-native.
+If you already have a development environment set up for the previous version of Traffic Router, then you will need to get and install these libraries on your workstation: openssl, apr and tomcat-native.
 Also, whenever you run either 'mvn clean verify' or 'TrafficRouterStart' you will need to pass a command line parameter telling Java where to look for the 'tomcat-native' libraries:
 ``` mvn clean verify -Djava.library.path=[tomcat native library path on your box] ```
 ``` java -Djava.library.path=[tomcat native library path on your box] TrafficRouterStart ```
