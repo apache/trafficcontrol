@@ -75,26 +75,26 @@ type CDNNullable struct {
 	// enables Domain Name Security Extensions on the specified CDN
 	//
 	// required: true
-	DNSSECEnabled bool `json:"dnssecEnabled" db:"dnssec_enabled"`
+	DNSSECEnabled *bool `json:"dnssecEnabled" db:"dnssec_enabled"`
 
 	// DomainName of the CDN
 	//
 	// required: true
-	DomainName string `json:"domainName" db:"domain_name"`
+	DomainName *string `json:"domainName" db:"domain_name"`
 
 	// ID of the CDN
 	//
 	// required: true
-	ID int `json:"id" db:"id"`
+	ID *int `json:"id" db:"id"`
 
 	// LastUpdated
 	//
-	LastUpdated tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	LastUpdated *tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 
 	// Name of the CDN
 	//
 	// required: true
-	Name string `json:"name" db:"name"`
+	Name *string `json:"name" db:"name"`
 }
 
 // CDNSSLKeysResponse ...
