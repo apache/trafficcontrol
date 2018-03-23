@@ -51,12 +51,13 @@ Traffic Router Project Tree Overview
 
 		* ``src/main`` - Main source directory for Traffic Router Core
 
-			* ``etc/systemd/system/traffic_router.service`` - Unit script for launching the application with Tomcat
+			* ``etc/systemd/system/traffic_router.service`` - Unit script for launching the Traffic Router with Tomcat
 			* ``conf/`` - All of the required configuration files for running the traffic_router web application, including those needed for Tomcat
 			* ``java/`` - Java source code for Traffic Router Core
 			* ``resources/`` - Resources pulled in during an RPM build
 			* ``scripts/`` - Scripts used by the RPM build process
 			* ``webapp/`` - Java webapp resources
+                        * ``var/log/`` - location of all the Traffic Router runtime logs
 
 		* ``src/test`` - Test source directory for Traffic Router Core
 
