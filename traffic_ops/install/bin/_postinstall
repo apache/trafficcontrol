@@ -269,6 +269,8 @@ sub generateLdapConf {
         }
     }
 
+    delete $ldapConf{setupLdap}
+
     # do a very loose check of form -- 'host' must be hostname:port
     if ( $ldapConf{ host } !~ /^\S+:\d+$/ ) {
         errorOut("host in $fileName must be of form 'hostname:port'");
@@ -469,6 +471,10 @@ sub getDefaults {
                 "Traffic Ops url?"   => "http://localhost:3000",
                 "config_var"         => "base_url"
             },
+            {
+                "ldap.conf location? (default is /opt/traffic_ops/app/conf/ldap.conf)" => "",
+                "config_var"         => "ldap_conf_location"
+            }
         ],
         $ldapConfFile => [
             {
@@ -491,6 +497,18 @@ sub getDefaults {
             {
                 "LDAP Search Base" => "",
                 "config_var"       => "search_base"
+            },
+            {
+                "LDAP Search Query" => "",
+                "config_var"       => "search_query"
+            },
+            {
+                "LDAP Skip TLS verify" => "",
+                "config_var"       => "insecure"
+            },
+            {
+                "LDAP Timeout Seconds" => "",
+                "config_var"       => "ldap_timeout_secs"
             }
         ],
         $usersConfFile => [
