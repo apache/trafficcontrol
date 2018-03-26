@@ -22,17 +22,18 @@ import (
 
 // TrafficControl - maps to the tc-fixtures.json file
 type TrafficControl struct {
-	ASNs                    []tcapi.ASN                    `json:"asns"`
-	CDNs                    []v13.CDN                      `json:"cdns"`
-	CacheGroups             []tcapi.CacheGroup             `json:"cachegroups"`
-	DeliveryServiceRequests []tcapi.DeliveryServiceRequest `json:"deliveryServiceRequests"`
-	DeliveryServices        []tcapi.DeliveryService        `json:"deliveryservices"`
-	Divisions               []tcapi.Division               `json:"divisions"`
-	Profiles                []tcapi.Profile                `json:"profiles"`
-	Parameters              []tcapi.Parameter              `json:"parameters"`
-	PhysLocations           []tcapi.PhysLocation           `json:"physLocations"`
-	Regions                 []tcapi.Region                 `json:"regions"`
-	Statuses                []tcapi.Status                 `json:"statuses"`
-	Tenants                 []tcapi.Tenant                 `json:"tenants"`
-	Types                   []tcapi.Type                   `json:"types"`
+	ASNs                           []tcapi.ASN                           `json:"asns"`
+	CDNs                           []v13.CDN                             `json:"cdns"`
+	CacheGroups                    []tcapi.CacheGroup                    `json:"cachegroups"`
+	DeliveryServiceRequests        []tcapi.DeliveryServiceRequest        `json:"deliveryServiceRequests"`
+	DeliveryServiceRequestComments []tcapi.DeliveryServiceRequestComment `json:"deliveryServiceRequestComments"`
+	DeliveryServices               []tcapi.DeliveryService               `json:"deliveryservices"`
+	Divisions                      []tcapi.Division                      `json:"divisions"`
+	Profiles                       []tcapi.Profile                       `json:"profiles"`
+	Parameters                     []tcapi.Parameter                     `json:"parameters"`
+	PhysLocations                  []tcapi.PhysLocation                  `json:"physLocations"`
+	Regions                        []tcapi.Region                        `json:"regions"`
+	Statuses                       []tcapi.Status                        `json:"statuses"`
+	Tenants                        []tcapi.Tenant                        `json:"tenants"`
+	Types                          []tcapi.Type                          `json:"types"`
 }
