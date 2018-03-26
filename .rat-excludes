@@ -65,3 +65,5 @@ crypto(?:                            Go BSD. Properly documented in LICENSE ){0}
 kelseyhightower(?:                   MIT. Properly documented in LICENSE ){0}
 asaskevich(?:                        MIT. Properly documented in LICENSE ){0}
 go-ozzo(?:                           MIT. Properly documented in LICENSE ){0}
+ldap.v2(?:                           MIT. Properly documented in LICENSE ){0}
+asn1-ber.v1(?:                       MIT. Properly documented in LICENSE ){0}
