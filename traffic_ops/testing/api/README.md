@@ -28,7 +28,9 @@ In order to run the tests you will need the following:
 2. An instance of Postgres running with a `to_test` database that has empty tables.
 
     To get your to_test database setup do the following:
+    
     `$ cd incubator-trafficcontrol/traffic_ops/app`
+    
     `$ db/admin.pl --env=test reset` 
 
     NOTE on passwords:
@@ -43,9 +45,19 @@ In order to run the tests you will need the following:
 3. A running Traffic Ops instance running with the `secure` (https) and is pointing to the `to_test` 
    database by running in `MOJO_MODE=test` which will point to your `to_test` database.
     To get your to_test database setup do the following:
-    `$ export MOJO_MODE=test`
-    `$ cd incubator-trafficcontrol/traffic_ops/app`
+    
+   	`$ export MOJO_MODE=test`  
+   	
+   	`$ cd incubator-trafficcontrol/traffic_ops/app`
+   	
     `$ bin/start.pl --secure`
+
+4. A running Traffic Ops Golang proxy pointing to the to_test database.
+	`$ cd incubator-trafficcontrol/traffic_ops/traffic_ops_golang`
+	`$ cp ../app/conf/cdn.conf $HOME/cdn.conf`
+	change `traffic_ops_golang->port` to 8443
+
+    `$ go build && ./traffic_ops_golang -cfg $HOME/cdn.conf -dbcfg ../app/conf/test/database.conf`
 
 ## Running the API Tests
 The integration tests are run using `go test`, however, there are some flags that need to be provided in order for the tests to work.  
