@@ -148,6 +148,20 @@
             "status": "draft"
         }
     ],
+    "deliveryServiceRequestComments": [
+        {
+            "value": "this is comment one"
+        },
+        {
+            "value": "this is comment two"
+        },
+        {
+            "value": "this is comment three"
+        },
+        {
+            "value": "this is comment four"
+        }
+    ],
     "deliveryServices": [
         {
             "active": false,

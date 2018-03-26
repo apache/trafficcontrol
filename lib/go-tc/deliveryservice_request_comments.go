@@ -24,13 +24,13 @@ type DeliveryServiceRequestCommentsResponse struct {
 }
 
 type DeliveryServiceRequestComment struct {
-	AuthorID                 *IDNoMod   `json:"authorId" db:"author_id"`
-	Author                   string     `json:"author"`
-	DeliveryServiceRequestID *int       `json:"deliveryServiceRequestId" db:"deliveryservice_request_id"`
-	ID                       *int       `json:"id" db:"id"`
-	LastUpdated              *TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	Value                    *string    `json:"value" db:"value"`
-	XMLID                    string     `json:"xmlId" db:"xml_id"`
+	AuthorID                 IDNoMod   `json:"authorId" db:"author_id"`
+	Author                   string    `json:"author"`
+	DeliveryServiceRequestID int       `json:"deliveryServiceRequestId" db:"deliveryservice_request_id"`
+	ID                       int       `json:"id" db:"id"`
+	LastUpdated              TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Value                    string    `json:"value" db:"value"`
+	XMLID                    string    `json:"xmlId" db:"xml_id"`
 }
 
 type DeliveryServiceRequestCommentNullable struct {
