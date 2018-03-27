@@ -33,9 +33,23 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/jmoiron/sqlx"
+	"strings"
 )
 
 const PathParamsKey = "pathParams"
+
+type KeyFieldInfo struct{
+	Field string
+	Func func(string)(interface{},error)
+}
+
+func GetIntKey(s string)(interface{},error){
+	return strconv.Atoi(s)
+}
+
+func GetStringKey(s string)(interface{},error){
+	return s, nil
+}
 
 func GetPathParams(ctx context.Context) (map[string]string, error) {
 	val := ctx.Value(PathParamsKey)
@@ -175,7 +189,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 
 		//collect path parameters and user from context
 		ctx := r.Context()
-		pathParams, err := GetPathParams(ctx)
+		params, err := GetCombinedParams(r)
 		if err != nil {
 			log.Errorf("received error trying to get path parameters: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
@@ -187,17 +201,30 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-		id, err := strconv.Atoi(pathParams["id"])
-		if err != nil {
-			log.Errorf("received error trying to convert id path parameter: %s", err)
-			handleErrs(http.StatusBadRequest, errors.New("id from path not parseable as int"))
-			return
-		}
 
-		iid, ok := u.GetID()
-		if !ok || iid != id {
-			handleErrs(http.StatusBadRequest, errors.New("id in body does not match id in path"))
-			return
+		keyFields := u.GetKeyFieldsInfo() //expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a {}interface of the right type. in most that will be [{Field:"id",Func: func(s string)({}interface,error){return strconv.Atoi(s)}}]
+		keys, ok := u.GetKeys() // a map of keyField to keyValue where keyValue is an {}interface
+		if !ok {
+
+		}
+		for _,keyFieldInfo := range keyFields {
+			paramKey := params[keyFieldInfo.Field]
+			if paramKey == "" {
+				log.Errorf("missing key: %s", keyFieldInfo.Field)
+				handleErrs(http.StatusBadRequest, errors.New("missing key: " + keyFieldInfo.Field))
+				return
+			}
+
+			paramValue, err := keyFieldInfo.Func(paramKey)
+			if err != nil {
+				log.Errorf("failed to parse key %s: %s", keyFieldInfo.Field, err)
+				handleErrs(http.StatusBadRequest, errors.New("failed to parse key: " + keyFieldInfo.Field))
+			}
+
+			if paramValue != keys[keyFieldInfo.Field] {
+				handleErrs(http.StatusBadRequest, errors.New("key in body does not match key in params"))
+				return
+			}
 		}
 
 		// if the object has tenancy enabled, check that user is able to access the tenant
@@ -252,7 +279,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 		d := typeRef
 
 		ctx := r.Context()
-		pathParams, err := GetPathParams(ctx)
+		params, err := GetCombinedParams(r)
 		if err != nil {
 			handleErrs(http.StatusInternalServerError, err)
 			return
@@ -264,12 +291,24 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
-		id, err := strconv.Atoi(pathParams["id"])
-		if err != nil {
-			handleErrs(http.StatusBadRequest, errors.New("id from path not parseable as int"))
-			return
+		keyFields := d.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
+		keys := make(map[string]interface{})
+		for _,keyFieldInfo := range keyFields {
+			paramKey := params[keyFieldInfo.Field]
+			if paramKey == "" {
+				log.Errorf("missing key: %s", keyFieldInfo.Field)
+				handleErrs(http.StatusBadRequest, errors.New("missing key: "+keyFieldInfo.Field))
+				return
+			}
+
+			paramValue, err := keyFieldInfo.Func(paramKey)
+			if err != nil {
+				log.Errorf("failed to parse key %s: %s", keyFieldInfo.Field, err)
+				handleErrs(http.StatusBadRequest, errors.New("failed to parse key: "+keyFieldInfo.Field))
+			}
+			keys[keyFieldInfo.Field] = paramValue
 		}
-		d.SetID(id)
+		d.SetKeys(keys)// if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
 
 		// if the object has tenancy enabled, check that user is able to access the tenant
 		if t, ok := d.(Tenantable); ok {
