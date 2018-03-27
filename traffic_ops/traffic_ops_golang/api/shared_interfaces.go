@@ -32,21 +32,22 @@ type Updater interface {
 }
 
 type Identifier interface {
-	GetID() (int, bool)
+	GetKeys() (map[string]interface{}, bool)
 	GetType() string
 	GetAuditName() string
+	GetKeyFieldsInfo() []KeyFieldInfo
 }
 
 type Creator interface {
 	Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType)
-	SetID(int)
+	SetKeys(map[string]interface{})
 	Identifier
 	Validator
 }
 
 type Deleter interface {
 	Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType)
-	SetID(int)
+	SetKeys(map[string]interface{})
 	Identifier
 }
 
