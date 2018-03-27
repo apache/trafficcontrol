@@ -25,6 +25,15 @@ under the License.
         <div class="pull-right" role="group">
             <button class="btn btn-primary" title="Create Delivery Service Request" ng-click="createRequest()"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+            <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                    More
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
+                    <li role="menuitem"><a ng-click="compareRequests()">Compare Delivery Service Requests</a></li>
+                </ul>
+            </div>
         </div>
         <div class="clearfix"></div>
     </div>

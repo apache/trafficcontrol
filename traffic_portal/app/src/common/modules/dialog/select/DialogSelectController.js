@@ -34,21 +34,16 @@ var DialogSelectController = function(params, collection, $scope, $uibModalInsta
 		$uibModalInstance.dismiss('cancel');
 	};
 
-	$scope.label = function (item) {
-		if ($scope.params.label) {
-			return item[$scope.params.label];
-		} else {
-			return item['name'];
-		}
-	};
-
 	var init = function() {
-		if ($scope.params.labelFunction) {
+		if ($scope.params.label) {
+			$scope.label = function(item) { return item[$scope.params.label]; }
+		} else if ($scope.params.labelFunction) {
 			$scope.label = $scope.params.labelFunction;
+		} else {
+			$scope.label = function(item) { return item['name']; }
 		}
 	};
 	init();
-
 
 };
 
