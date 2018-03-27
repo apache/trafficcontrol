@@ -81,6 +81,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/dashboard').name,
         require('./modules/private/dashboard/view').name,
         require('./modules/private/deliveryServiceRequests').name,
+        require('./modules/private/deliveryServiceRequests/compare').name,
         require('./modules/private/deliveryServiceRequests/comments').name,
         require('./modules/private/deliveryServiceRequests/edit').name,
         require('./modules/private/deliveryServiceRequests/list').name,

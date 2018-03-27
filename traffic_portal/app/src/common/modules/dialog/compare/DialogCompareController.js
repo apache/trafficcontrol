@@ -33,13 +33,16 @@ var DialogCompareController = function(params, collection, $scope, $uibModalInst
 		$uibModalInstance.dismiss('cancel');
 	};
 
-	$scope.label = function (item) {
-		if ($scope.params.label !== undefined) {
-			return $scope.params.label
+	var init = function() {
+		if ($scope.params.label) {
+			$scope.label = function(item) { return item[$scope.params.label]; }
+		} else if ($scope.params.labelFunction) {
+			$scope.label = $scope.params.labelFunction;
 		} else {
-			return 'name';
+			$scope.label = function(item) { return item['name']; }
 		}
 	};
+	init();
 
 };
 

@@ -128,6 +128,34 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 		return (request.status == 'rejected' || request.status == 'complete');
 	};
 
+	$scope.compareRequests = function() {
+		var params = {
+			title: 'Compare Delivery Service Requests',
+			message: "Please select 2 delivery service requests to compare",
+			labelFunction: function (item) {
+				return item['deliveryService']['xmlId'] + ' ' + item['changeType'] + ' (' + item['author'] + ' created on ' + item['createdAt'] + ')'
+			}
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/compare/dialog.compare.tpl.html',
+			controller: 'DialogCompareController',
+			size: 'lg',
+			resolve: {
+				params: function () {
+					return params;
+				},
+				collection: function(deliveryServiceRequestService) {
+					return deliveryServiceRequestService.getDeliveryServiceRequests();
+				}
+			}
+		});
+		modalInstance.result.then(function(requests) {
+			$location.path($location.path() + '/compare/' + requests[0].id + '/' + requests[1].id);
+		}, function () {
+			// do nothing
+		});
+	};
+
 	$scope.assignRequest = function(request, assign, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		var params = {
