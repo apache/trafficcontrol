@@ -27,7 +27,6 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
-
 )
 
 func TestFuncs(t *testing.T) {

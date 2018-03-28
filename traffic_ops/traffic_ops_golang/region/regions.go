@@ -42,9 +42,18 @@ func GetRefType() *TORegion {
 	return &refType
 }
 
+func (region TORegion) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+}
+
 //Implementation of the Identifier, Validator interface functions
-func (region *TORegion) GetID() (int, bool) {
-	return region.ID, true
+func (region TORegion) GetKeys() (map[string]interface{}, bool) {
+	return map[string]interface{}{"id": region.ID}, true
+}
+
+func (region *TORegion) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	region.ID = i
 }
 
 func (region *TORegion) GetAuditName() string {
@@ -53,10 +62,6 @@ func (region *TORegion) GetAuditName() string {
 
 func (region *TORegion) GetType() string {
 	return "region"
-}
-
-func (region *TORegion) SetID(i int) {
-	region.ID = i
 }
 
 func (region *TORegion) Validate(db *sqlx.DB) []error {
@@ -239,7 +244,7 @@ func (region *TORegion) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
-	region.SetID(id)
+	region.SetKeys(map[string]interface{}{"id": id})
 	region.LastUpdated = lastUpdated
 	err = tx.Commit()
 	if err != nil {

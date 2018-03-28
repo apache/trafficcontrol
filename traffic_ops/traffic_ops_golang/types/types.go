@@ -45,12 +45,21 @@ func GetRefType() *TOType {
 	return &refType
 }
 
+func (typ TOType) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+}
+
 //Implementation of the Identifier, Validator interface functions
-func (typ *TOType) GetID() (int, bool) {
+func (typ TOType) GetKeys() (map[string]interface{}, bool) {
 	if typ.ID == nil {
-		return 0, false
+		return map[string]interface{}{"id": 0}, false
 	}
-	return *typ.ID, true
+	return map[string]interface{}{"id": *typ.ID}, true
+}
+
+func (typ *TOType) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	typ.ID = &i
 }
 
 func (typ *TOType) GetAuditName() string {
@@ -65,10 +74,6 @@ func (typ *TOType) GetAuditName() string {
 
 func (typ *TOType) GetType() string {
 	return "type"
-}
-
-func (typ *TOType) SetID(i int) {
-	typ.ID = &i
 }
 
 func (typ *TOType) Validate(db *sqlx.DB) []error {
@@ -255,7 +260,7 @@ func (typ *TOType) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErro
 		return tc.DBError, tc.SystemError
 	}
 
-	typ.SetID(id)
+	typ.SetKeys(map[string]interface{}{"id": id})
 	typ.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {

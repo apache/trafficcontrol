@@ -45,12 +45,21 @@ func GetRefType() *TOProfile {
 	return &refType
 }
 
+func (prof TOProfile) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+}
+
 //Implementation of the Identifier, Validator interface functions
-func (prof TOProfile) GetID() (int, bool) {
+func (prof TOProfile) GetKeys() (map[string]interface{}, bool) {
 	if prof.ID == nil {
-		return 0, false
+		return map[string]interface{}{"id": 0}, false
 	}
-	return *prof.ID, true
+	return map[string]interface{}{"id": *prof.ID}, true
+}
+
+func (prof *TOProfile) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	prof.ID = &i
 }
 
 func (prof *TOProfile) GetAuditName() string {
@@ -65,10 +74,6 @@ func (prof *TOProfile) GetAuditName() string {
 
 func (prof *TOProfile) GetType() string {
 	return "profile"
-}
-
-func (prof *TOProfile) SetID(i int) {
-	prof.ID = &i
 }
 
 func (prof *TOProfile) Validate(db *sqlx.DB) []error {
@@ -263,7 +268,7 @@ func (prof *TOProfile) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 		return tc.DBError, tc.SystemError
 	}
 
-	prof.SetID(id)
+	prof.SetKeys(map[string]interface{}{"id": id})
 	prof.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {

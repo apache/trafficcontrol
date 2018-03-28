@@ -45,12 +45,21 @@ func GetRefType() *TOPhysLocation {
 	return &refType
 }
 
+func (pl TOPhysLocation) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+}
+
 //Implementation of the Identifier, Validator interface functions
-func (pl *TOPhysLocation) GetID() (int, bool) {
+func (pl TOPhysLocation) GetKeys() (map[string]interface{}, bool) {
 	if pl.ID == nil {
-		return 0, false
+		return map[string]interface{}{"id": 0}, false
 	}
-	return *pl.ID, true
+	return map[string]interface{}{"id": *pl.ID}, true
+}
+
+func (pl *TOPhysLocation) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	pl.ID = &i
 }
 
 func (pl *TOPhysLocation) GetAuditName() string {
@@ -65,10 +74,6 @@ func (pl *TOPhysLocation) GetAuditName() string {
 
 func (pl *TOPhysLocation) GetType() string {
 	return "physLocation"
-}
-
-func (pl *TOPhysLocation) SetID(i int) {
-	pl.ID = &i
 }
 
 func (pl *TOPhysLocation) Validate(db *sqlx.DB) []error {
@@ -272,7 +277,7 @@ func (pl *TOPhysLocation) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 		return tc.DBError, tc.SystemError
 	}
 
-	pl.SetID(id)
+	pl.SetKeys(map[string]interface{}{"id": id})
 	pl.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {

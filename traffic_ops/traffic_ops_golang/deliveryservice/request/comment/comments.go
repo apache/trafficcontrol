@@ -45,24 +45,32 @@ func GetRefType() *TODeliveryServiceRequestComment {
 	return &refType
 }
 
+func (comment TODeliveryServiceRequestComment) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+}
+
 //Implementation of the Identifier, Validator interface functions
-func (comment TODeliveryServiceRequestComment) GetID() (int, bool) {
+func (comment TODeliveryServiceRequestComment) GetKeys() (map[string]interface{}, bool) {
 	if comment.ID == nil {
-		return 0, false
+		return map[string]interface{}{"id": 0}, false
 	}
-	return *comment.ID, true
+	return map[string]interface{}{"id": *comment.ID}, true
+}
+
+func (comment *TODeliveryServiceRequestComment) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	comment.ID = &i
 }
 
 func (comment TODeliveryServiceRequestComment) GetAuditName() string {
-	return strconv.Itoa(*comment.ID)
+	if comment.ID != nil {
+		return strconv.Itoa(*comment.ID)
+	}
+	return "unknown"
 }
 
 func (comment TODeliveryServiceRequestComment) GetType() string {
 	return "deliveryservice_request_comment"
-}
-
-func (comment *TODeliveryServiceRequestComment) SetID(i int) {
-	comment.ID = &i
 }
 
 func (comment TODeliveryServiceRequestComment) Validate(db *sqlx.DB) []error {
@@ -129,7 +137,7 @@ func (comment *TODeliveryServiceRequestComment) Create(db *sqlx.DB, user auth.Cu
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
-	comment.SetID(id)
+	comment.SetKeys(map[string]interface{}{"id": id})
 	comment.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {

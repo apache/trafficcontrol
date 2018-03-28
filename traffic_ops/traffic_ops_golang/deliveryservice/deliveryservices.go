@@ -31,6 +31,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
@@ -49,12 +50,21 @@ func GetRefType() *TODeliveryService {
 	return &refType
 }
 
+func (ds TODeliveryService) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+}
+
 //Implementation of the Identifier, Validator interface functions
-func (ds *TODeliveryService) GetID() (int, bool) {
+func (ds TODeliveryService) GetKeys() (map[string]interface{}, bool) {
 	if ds.ID == nil {
-		return 0, false
+		return map[string]interface{}{"id": 0}, false
 	}
-	return *ds.ID, true
+	return map[string]interface{}{"id": *ds.ID}, true
+}
+
+func (ds *TODeliveryService) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	ds.ID = &i
 }
 
 func (ds *TODeliveryService) GetAuditName() string {
@@ -66,10 +76,6 @@ func (ds *TODeliveryService) GetAuditName() string {
 
 func (ds *TODeliveryService) GetType() string {
 	return "ds"
-}
-
-func (ds *TODeliveryService) SetID(i int) {
-	ds.ID = &i
 }
 
 func Validate(db *sqlx.DB, ds *tc.DeliveryServiceNullable) []error {
@@ -317,7 +323,7 @@ func (ds *TODeliveryService) Create(db *sqlx.DB, user auth.CurrentUser) (error, 
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
-	ds.SetID(id)
+	ds.SetKeys(map[string]interface{}{"id": id})
 	ds.LastUpdated = &lastUpdated
 	return nil, tc.NoError
 }

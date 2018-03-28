@@ -46,22 +46,29 @@ func GetRefType() *TODivision {
 }
 
 func (division TODivision) GetAuditName() string {
-	if division.Name == nil {
-		id, _ := division.GetID()
-		return strconv.Itoa(id)
+	if division.Name != nil {
+		return *division.Name
 	}
-	return *division.Name
+	if division.ID != nil {
+		return strconv.Itoa(*division.ID)
+	}
+	return "unknown"
+}
+
+func (division TODivision) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (division TODivision) GetID() (int, bool) {
+func (division TODivision) GetKeys() (map[string]interface{}, bool) {
 	if division.ID == nil {
-		return 0, false
+		return map[string]interface{}{"id": 0}, false
 	}
-	return *division.ID, true
+	return map[string]interface{}{"id": *division.ID}, true
 }
 
-func (division *TODivision) SetID(i int) {
+func (division *TODivision) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
 	division.ID = &i
 }
 
@@ -134,7 +141,7 @@ func (division *TODivision) Create(db *sqlx.DB, user auth.CurrentUser) (error, t
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
-	division.SetID(id)
+	division.SetKeys(map[string]interface{}{"id": id})
 	division.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {

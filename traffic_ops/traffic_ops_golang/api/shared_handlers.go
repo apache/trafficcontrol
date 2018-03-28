@@ -33,21 +33,20 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/jmoiron/sqlx"
-	"strings"
 )
 
 const PathParamsKey = "pathParams"
 
-type KeyFieldInfo struct{
+type KeyFieldInfo struct {
 	Field string
-	Func func(string)(interface{},error)
+	Func  func(string) (interface{}, error)
 }
 
-func GetIntKey(s string)(interface{},error){
+func GetIntKey(s string) (interface{}, error) {
 	return strconv.Atoi(s)
 }
 
-func GetStringKey(s string)(interface{},error){
+func GetStringKey(s string) (interface{}, error) {
 	return s, nil
 }
 
@@ -203,22 +202,23 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 		}
 
 		keyFields := u.GetKeyFieldsInfo() //expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a {}interface of the right type. in most that will be [{Field:"id",Func: func(s string)({}interface,error){return strconv.Atoi(s)}}]
-		keys, ok := u.GetKeys() // a map of keyField to keyValue where keyValue is an {}interface
+		keys, ok := u.GetKeys()           // a map of keyField to keyValue where keyValue is an {}interface
 		if !ok {
-
+			log.Errorf("unable to parse keys from request: %++v", u)
+			handleErrs(http.StatusBadRequest, errors.New("unable to parse required keys from request body"))
 		}
-		for _,keyFieldInfo := range keyFields {
+		for _, keyFieldInfo := range keyFields {
 			paramKey := params[keyFieldInfo.Field]
 			if paramKey == "" {
 				log.Errorf("missing key: %s", keyFieldInfo.Field)
-				handleErrs(http.StatusBadRequest, errors.New("missing key: " + keyFieldInfo.Field))
+				handleErrs(http.StatusBadRequest, errors.New("missing key: "+keyFieldInfo.Field))
 				return
 			}
 
 			paramValue, err := keyFieldInfo.Func(paramKey)
 			if err != nil {
 				log.Errorf("failed to parse key %s: %s", keyFieldInfo.Field, err)
-				handleErrs(http.StatusBadRequest, errors.New("failed to parse key: " + keyFieldInfo.Field))
+				handleErrs(http.StatusBadRequest, errors.New("failed to parse key: "+keyFieldInfo.Field))
 			}
 
 			if paramValue != keys[keyFieldInfo.Field] {
@@ -293,7 +293,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 
 		keyFields := d.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
 		keys := make(map[string]interface{})
-		for _,keyFieldInfo := range keyFields {
+		for _, keyFieldInfo := range keyFields {
 			paramKey := params[keyFieldInfo.Field]
 			if paramKey == "" {
 				log.Errorf("missing key: %s", keyFieldInfo.Field)
@@ -308,7 +308,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 			}
 			keys[keyFieldInfo.Field] = paramValue
 		}
-		d.SetKeys(keys)// if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
+		d.SetKeys(keys) // if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
 
 		// if the object has tenancy enabled, check that user is able to access the tenant
 		if t, ok := d.(Tenantable); ok {

@@ -48,28 +48,35 @@ func GetRefType() *TOASN {
 	return &refType
 }
 
+func (asn TOASN) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+}
+
 //Implementation of the Identifier, Validator interface functions
-func (asn TOASN) GetID() (int, bool) {
+func (asn TOASN) GetKeys() (map[string]interface{}, bool) {
 	if asn.ID == nil {
-		return 0, false
+		return map[string]interface{}{"id": 0}, false
 	}
-	return *asn.ID, true
+	return map[string]interface{}{"id": *asn.ID}, true
+}
+
+func (asn *TOASN) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	asn.ID = &i
 }
 
 func (asn TOASN) GetAuditName() string {
-	if asn.ASN == nil {
-		id, _ := asn.GetID()
-		return strconv.Itoa(id)
+	if asn.ASN != nil {
+		return strconv.Itoa(*asn.ASN)
 	}
-	return strconv.Itoa(*asn.ASN)
+	if asn.ID != nil {
+		return strconv.Itoa(*asn.ID)
+	}
+	return "unknown"
 }
 
 func (asn TOASN) GetType() string {
 	return "asn"
-}
-
-func (asn *TOASN) SetID(i int) {
-	asn.ID = &i
 }
 
 func (asn TOASN) Validate(db *sqlx.DB) []error {
@@ -138,7 +145,7 @@ func (asn *TOASN) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
-	asn.SetID(id)
+	asn.SetKeys(map[string]interface{}{"id": id})
 	asn.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
