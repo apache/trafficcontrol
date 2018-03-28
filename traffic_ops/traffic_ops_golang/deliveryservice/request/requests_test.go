@@ -83,10 +83,10 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 	*/
 	}
 
-	r.SetID(10)
-	id, _ := r.GetID()
-	if id != 10 {
-		t.Errorf("expected ID to be %d,  not %d", 10, id)
+	r.SetKeys(map[string]interface{}{"id": 10})
+	keys, _ := r.GetKeys()
+	if keys["id"].(int) != 10 {
+		t.Errorf("expected ID to be %d,  not %d", 10, keys["id"].(int))
 	}
 	exp := "10"
 	if s != r.GetAuditName() {

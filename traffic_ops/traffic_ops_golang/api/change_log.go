@@ -20,7 +20,7 @@ package api
  */
 
 import (
-	"strconv"
+	"fmt"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -49,8 +49,13 @@ const (
 )
 
 func CreateChangeLog(level string, action string, i Identifier, user auth.CurrentUser, db *sqlx.DB) error {
-	id, _ := i.GetID()
-	message := action + " " + i.GetType() + ": " + i.GetAuditName() + " id: " + strconv.Itoa(id)
+	keys, _ := i.GetKeys()
+	keysString := "{ "
+	for key, value := range keys {
+		keysString += key + ":" + fmt.Sprintf("%v", value) + " "
+	}
+	keysString += "}"
+	message := action + " " + i.GetType() + ": " + i.GetAuditName() + " keys: " + keysString
 	// if the object has its own log message generation, use it
 	if t, ok := i.(ChangeLogger); ok {
 		m, err := t.ChangeLogMessage(action)

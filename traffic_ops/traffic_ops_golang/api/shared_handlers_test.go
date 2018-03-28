@@ -43,9 +43,18 @@ type tester struct {
 
 type emptyTester tester
 
-//Identifier interface functions
-func (i *tester) GetID() (int, bool) {
-	return i.ID, true
+func (i tester) GetKeyFieldsInfo() []KeyFieldInfo {
+	return []KeyFieldInfo{{"id", GetIntKey}}
+}
+
+//Implementation of the Identifier, Validator interface functions
+func (i tester) GetKeys() (map[string]interface{}, bool) {
+	return map[string]interface{}{"id": i.ID}, true
+}
+
+func (i *tester) SetKeys(keys map[string]interface{}) {
+	id, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	i.ID = id
 }
 
 func (i *tester) GetType() string {
@@ -67,10 +76,6 @@ func (v *tester) Validate(db *sqlx.DB) []error {
 //Creator interface functions
 func (i *tester) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	return i.error, i.errorType
-}
-
-func (i *tester) SetID(newID int) {
-	i.ID = newID
 }
 
 //Reader interface functions

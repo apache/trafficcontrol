@@ -49,15 +49,15 @@ func GetRefType() *TOCDN {
 }
 
 func (cdn TOCDN) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id",api.GetIntKey}}
+	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
 func (cdn TOCDN) GetKeys() (map[string]interface{}, bool) {
 	if cdn.ID == nil {
-		return map[string]interface{}{"id":0}, false
+		return map[string]interface{}{"id": 0}, false
 	}
-	return map[string]interface{}{"id":*cdn.ID}, true
+	return map[string]interface{}{"id": *cdn.ID}, true
 }
 
 func (cdn TOCDN) GetAuditName() string {
@@ -170,7 +170,7 @@ func (cdn *TOCDN) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
-	cdn.SetID(id)
+	cdn.SetKeys(map[string]interface{}{"id": id})
 	cdn.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {

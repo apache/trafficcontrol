@@ -46,14 +46,21 @@ func GetRefType() *TODeliveryServiceRequest {
 	return &refType
 }
 
-//Implementation of the Identifier, Validator interface functions
+func (req TODeliveryServiceRequest) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+}
 
-// GetID is part of the tc.Identifier interface
-func (req TODeliveryServiceRequest) GetID() (int, bool) {
+//Implementation of the Identifier, Validator interface functions
+func (req TODeliveryServiceRequest) GetKeys() (map[string]interface{}, bool) {
 	if req.ID == nil {
-		return 0, false
+		return map[string]interface{}{"id": 0}, false
 	}
-	return *req.ID, true
+	return map[string]interface{}{"id": *req.ID}, true
+}
+
+func (req *TODeliveryServiceRequest) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	req.ID = &i
 }
 
 // GetAuditName is part of the tc.Identifier interface
@@ -64,11 +71,6 @@ func (req TODeliveryServiceRequest) GetAuditName() string {
 // GetType is part of the tc.Identifier interface
 func (req TODeliveryServiceRequest) GetType() string {
 	return "deliveryservice_request"
-}
-
-// SetID is part of the tc.Identifier interface
-func (req *TODeliveryServiceRequest) SetID(i int) {
-	req.ID = &i
 }
 
 // Read implements the api.Reader interface
@@ -355,7 +357,7 @@ func (req *TODeliveryServiceRequest) Create(db *sqlx.DB, user auth.CurrentUser) 
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
-	req.SetID(id)
+	req.SetKeys(map[string]interface{}{"id": id})
 	req.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
@@ -435,8 +437,11 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 
 func (req TODeliveryServiceRequest) getXMLID() string {
 	if req.DeliveryService == nil || req.DeliveryService.XMLID == nil {
-		id, _ := req.GetID()
-		return strconv.Itoa(id)
+
+		if req.ID != nil {
+			return strconv.Itoa(*req.ID)
+		}
+		return "0"
 	}
 	return *req.DeliveryService.XMLID
 }

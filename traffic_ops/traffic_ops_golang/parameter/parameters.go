@@ -46,12 +46,21 @@ func GetRefType() *TOParameter {
 	return &refType
 }
 
+func (parameter TOParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+}
+
 //Implementation of the Identifier, Validator interface functions
-func (parameter *TOParameter) GetID() (int, bool) {
+func (parameter TOParameter) GetKeys() (map[string]interface{}, bool) {
 	if parameter.ID == nil {
-		return 0, false
+		return map[string]interface{}{"id": 0}, false
 	}
-	return *parameter.ID, true
+	return map[string]interface{}{"id": *parameter.ID}, true
+}
+
+func (parameter *TOParameter) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	parameter.ID = &i
 }
 
 func (parameter *TOParameter) GetAuditName() string {
@@ -66,10 +75,6 @@ func (parameter *TOParameter) GetAuditName() string {
 
 func (parameter *TOParameter) GetType() string {
 	return "parameter"
-}
-
-func (parameter *TOParameter) SetID(i int) {
-	parameter.ID = &i
 }
 
 // Validate fulfills the api.Validator interface
@@ -147,7 +152,7 @@ func (pl *TOParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 		return tc.DBError, tc.SystemError
 	}
 
-	pl.SetID(id)
+	pl.SetKeys(map[string]interface{}{"id": id})
 	pl.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {

@@ -32,8 +32,12 @@ import (
 type testIdentifier struct {
 }
 
-func (i *testIdentifier) GetID() (int, bool) {
-	return 1, true
+func (i testIdentifier) GetKeyFieldsInfo() []KeyFieldInfo {
+	return []KeyFieldInfo{{"id", GetIntKey}}
+}
+
+func (i *testIdentifier) GetKeys() (map[string]interface{}, bool) {
+	return map[string]interface{}{"id": 1}, true
 }
 
 func (i *testIdentifier) GetType() string {
@@ -55,8 +59,8 @@ func TestCreateChangeLog(t *testing.T) {
 	defer db.Close()
 	i := testIdentifier{}
 
-	id, _ := i.GetID()
-	expectedMessage := Created + " " + i.GetType() + ": " + i.GetAuditName() + " id: " + strconv.Itoa(id)
+	keys, _ := i.GetKeys()
+	expectedMessage := Created + " " + i.GetType() + ": " + i.GetAuditName() + " keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
 
 	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	user := auth.CurrentUser{ID: 1}

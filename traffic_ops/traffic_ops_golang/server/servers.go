@@ -48,28 +48,35 @@ func GetRefType() *TOServer {
 	return &refType
 }
 
+func (server TOServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+}
+
 //Implementation of the Identifier, Validator interface functions
-func (server *TOServer) GetID() (int, bool) {
+func (server TOServer) GetKeys() (map[string]interface{}, bool) {
 	if server.ID == nil {
-		return 0, false
+		return map[string]interface{}{"id": 0}, false
 	}
-	return *server.ID, true
+	return map[string]interface{}{"id": *server.ID}, true
+}
+
+func (server *TOServer) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	server.ID = &i
 }
 
 func (server *TOServer) GetAuditName() string {
 	if server.DomainName != nil {
 		return *server.DomainName
 	}
-	id, _ := server.GetID()
-	return strconv.Itoa(id)
+	if server.ID != nil {
+		return strconv.Itoa(*server.ID)
+	}
+	return "unknown"
 }
 
 func (server *TOServer) GetType() string {
 	return "server"
-}
-
-func (server *TOServer) SetID(i int) {
-	server.ID = &i
 }
 
 func (server *TOServer) Validate(db *sqlx.DB) []error {
@@ -441,7 +448,7 @@ func (server *TOServer) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
-	server.SetID(id)
+	server.SetKeys(map[string]interface{}{"id": id})
 	server.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {

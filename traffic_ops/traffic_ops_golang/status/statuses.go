@@ -45,28 +45,35 @@ func GetRefType() *TOStatus {
 	return &refType
 }
 
+func (status TOStatus) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+}
+
 //Implementation of the Identifier, Validator interface functions
-func (status TOStatus) GetID() (int, bool) {
+func (status TOStatus) GetKeys() (map[string]interface{}, bool) {
 	if status.ID == nil {
-		return 0, false
+		return map[string]interface{}{"id": 0}, false
 	}
-	return *status.ID, true
+	return map[string]interface{}{"id": *status.ID}, true
+}
+
+func (status *TOStatus) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	status.ID = &i
 }
 
 func (status TOStatus) GetAuditName() string {
-	if status.Name == nil {
-		id, _ := status.GetID()
-		return strconv.Itoa(id)
+	if status.Name != nil {
+		return *status.Name
 	}
-	return *status.Name
+	if status.ID != nil {
+		return strconv.Itoa(*status.ID)
+	}
+	return "unknown"
 }
 
 func (status TOStatus) GetType() string {
 	return "status"
-}
-
-func (status *TOStatus) SetID(i int) {
-	status.ID = &i
 }
 
 func (status TOStatus) Validate(db *sqlx.DB) []error {
@@ -249,7 +256,7 @@ func (status *TOStatus) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
-	status.SetID(id)
+	status.SetKeys(map[string]interface{}{"id": id})
 	status.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
