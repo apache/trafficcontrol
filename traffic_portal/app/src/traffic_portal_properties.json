@@ -43,21 +43,65 @@
       "enabled": false
     },
     "cacheChecks": {
-      "_comments": "These are configurable properties for the cache checks view. The data for the cache checks view is derived from TO extensions.",
+      "_comments": "These are configurable properties for the cache checks view. The data for the cache checks view is derived from TO extensions. The extensions array should include an entry for each of your extensions or you can check GET api/1.3/servers/checks to see which checks you have configured.",
       "show": true,
-      "descriptions": {
-        "10G": "Ping the IPv4 address of the EDGE or MID servers",
-        "10G6": "Ping the IPv6 address of the EDGE or MID servers",
-        "CDU": "Cache Disk Utilization %",
-        "CHR": "Cache Hit Ratio %",
-        "DSCP": "Checks the DSCP value of packets from the edge server to the Traffic Ops server",
-        "FQDN": "DNS check that matches what the DNS servers responds with compared to what Traffic Ops has",
-        "ILO": "Ping the iLO interface for EDGE or MID servers",
-        "MTU": "Ping the EDGE or MID using the configured MTU from Traffic Ops",
-        "ORT": "Number of configuration differences as determined by ORT found between Traffic Ops and the cache",
-        "RVL": "Content invalidation request(s) are pending for the EDGE or MID",
-        "UPD": "Configuration file updates have been applied or are pending for the EDGE or MID"
-      }
+      "updatePending": {
+        "show": true,
+        "key": "UPD",
+        "desc": "Configuration file updates have been applied or are pending for the EDGE or MID"
+      },
+      "revalPending": {
+        "show": true,
+        "key": "RVL",
+        "desc": "Content invalidation request(s) are pending for the EDGE or MID"
+      },
+      "extensions": [
+        {
+          "key": "ILO",
+          "desc": "Ping the iLO interface for EDGE or MID servers",
+          "type": "bool"
+        },
+        {
+          "key": "10G",
+          "desc": "Ping the IPv4 address of the EDGE or MID servers",
+          "type": "bool"
+        },
+        {
+          "key": "FQDN",
+          "desc": "DNS check that matches what the DNS servers responds with compared to what Traffic Ops has",
+          "type": "bool"
+        },
+        {
+          "key": "DSCP",
+          "desc": "Checks the DSCP value of packets from the edge server to the Traffic Ops server",
+          "type": "bool"
+        },
+        {
+          "key": "10G6",
+          "desc": "Ping the IPv6 address of the EDGE or MID servers",
+          "type": "bool"
+        },
+        {
+          "key": "MTU",
+          "desc": "Ping the EDGE or MID using the configured MTU from Traffic Ops",
+          "type": "bool"
+        },
+        {
+          "key": "CHR",
+          "desc": "Cache Hit Ratio %",
+          "type": "number"
+        },
+        {
+          "key": "CDU",
+          "desc": "Cache Disk Utilization %",
+          "type": "number"
+        },
+        {
+          "key": "ORT",
+          "desc": "Number of configuration differences as determined by ORT found between Traffic Ops and the cache",
+          "type": "number"
+        }
+      ]
     },
     "deliveryServices": {
       "_comment": "Delivery service settings",

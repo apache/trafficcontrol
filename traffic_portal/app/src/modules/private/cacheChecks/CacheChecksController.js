@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var CacheChecksController = function(cacheChecks, showReval, $scope, $state, $interval, locationUtils, serverUtils, propertiesModel) {
+var CacheChecksController = function(cacheChecks, $scope, $state, $interval, locationUtils, serverUtils, propertiesModel) {
 
 	var cacheChecksInterval,
 		autoRefresh = false,
@@ -37,9 +37,7 @@ var CacheChecksController = function(cacheChecks, showReval, $scope, $state, $in
 
 	$scope.cacheChecks = cacheChecks;
 
-	$scope.showReval = (showReval[0]) ? showReval[0].value : 0;
-
-	$scope.ccDescriptions = propertiesModel.properties.cacheChecks.descriptions;
+	$scope.config = propertiesModel.properties.cacheChecks;
 
 	$scope.ssh = serverUtils.ssh;
 
@@ -49,6 +47,17 @@ var CacheChecksController = function(cacheChecks, showReval, $scope, $state, $in
 
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
+	};
+
+	$scope.searchTerm = function(extension, value) {
+		if (extension.type == 'bool') {
+			if (value == 1) {
+				return extension.key;
+			} else {
+				return '';
+			}
+		}
+		return value;
 	};
 
 	$scope.$on("$destroy", function() {
@@ -71,5 +80,5 @@ var CacheChecksController = function(cacheChecks, showReval, $scope, $state, $in
 
 };
 
-CacheChecksController.$inject = ['cacheChecks', 'showReval', '$scope', '$state', '$interval', 'locationUtils', 'serverUtils', 'propertiesModel'];
+CacheChecksController.$inject = ['cacheChecks', '$scope', '$state', '$interval', 'locationUtils', 'serverUtils', 'propertiesModel'];
 module.exports = CacheChecksController;

@@ -30,12 +30,8 @@ module.exports = angular.module('trafficPortal.private.cacheChecks', [])
 						resolve: {
 							cacheChecks: function(serverService) {
 								return serverService.getCacheChecks();
-							},
-							showReval: function(parameterService) {
-								return parameterService.getParameters({ name: 'use_reval_pending', configFile: 'global' });
 							}
 						}
-
 					}
 				}
 			})

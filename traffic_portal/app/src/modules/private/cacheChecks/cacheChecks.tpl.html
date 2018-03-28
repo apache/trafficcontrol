@@ -35,17 +35,9 @@ under the License.
                 <th>Hostname</th>
                 <th>Profile</th>
                 <th>Status</th>
-                <th uib-popover="{{ccDescriptions['UPD']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">UPD</th>
-                <th ng-if="showReval == 1" uib-popover="{{ccDescriptions['RVL']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">RVL</th>
-                <th uib-popover="{{ccDescriptions['ILO']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">ILO</th>
-                <th uib-popover="{{ccDescriptions['10G']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">10G</th>
-                <th uib-popover="{{ccDescriptions['FQDN']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">FQDN</th>
-                <th uib-popover="{{ccDescriptions['DSCP']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">DSCP</th>
-                <th uib-popover="{{ccDescriptions['10G6']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">10G6</th>
-                <th uib-popover="{{ccDescriptions['MTU']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">MTU</th>
-                <th uib-popover="{{ccDescriptions['CHR']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">CHR</th>
-                <th uib-popover="{{ccDescriptions['CDU']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">CDU</th>
-                <th uib-popover="{{ccDescriptions['ORT']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">ORT</th>
+                <th ng-if="::config.updatePending.show" uib-popover="{{::config.updatePending.desc}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{::config.updatePending.key}}</th>
+                <th ng-if="::config.revalPending.show" uib-popover="{{::config.revalPending.desc}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{::config.revalPending.key}}</th>
+                <th ng-repeat="e in ::config.extensions" uib-popover="{{::e['desc']}}" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{::e['key']}}</th>
             </tr>
             </thead>
             <tbody>
@@ -53,40 +45,18 @@ under the License.
                 <td>{{::cc.hostName}}</td>
                 <td>{{::cc.profile}}</td>
                 <td>{{::cc.adminState}}</td>
-                <td data-order="{{::cc.updPending}}" data-search="{{(cc.updPending) ? 'UPD' : ''}}">
+                <td ng-if="::config.updatePending.show" data-order="{{::cc.updPending}}" data-search="{{(cc.updPending) ? config.updatePending.key : ''}}">
                     <i title="Updates Pending" ng-show="cc.updPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
                     <i title="Updates Applied" ng-show="!cc.updPending" class="fa fa-check fa-lg" aria-hidden="true"></i>
                 </td>
-                <td ng-if="showReval == 1" data-order="{{::cc.revalPending}}" data-search="{{(cc.revalPending) ? 'RVL' : ''}}">
+                <td ng-if="::config.revalPending.show" data-order="{{::cc.revalPending}}" data-search="{{(cc.revalPending) ? config.revalPending.key : ''}}">
                     <i ng-show="cc.revalPending" class="fa fa-clock-o fa-lg" aria-hidden="true"></i>
                 </td>
-                <td data-order="{{::cc.checks['ILO']}}" data-search="{{(cc.checks['ILO'] == 1) ? 'ILO' : ''}}">
-                    <i ng-show="cc.checks['ILO'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
-                    <i ng-show="cc.checks['ILO'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
+                <td ng-repeat="e in ::config.extensions" data-order="{{::cc.checks[e.key]}}" data-search="{{searchTerm(e, cc.checks[e.key])}}">
+                    <i ng-if="e.type == 'bool' && cc.checks[e.key] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
+                    <i ng-if="e.type == 'bool' && cc.checks[e.key] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
+                    <span ng-if="e.type != 'bool'">{{::cc.checks[e.key]}}</span>
                 </td>
-                <td data-order="{{::cc.checks['10G']}}" data-search="{{(cc.checks['10G'] == 1) ? '10G' : ''}}">
-                    <i ng-show="cc.checks['10G'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
-                    <i ng-show="cc.checks['10G'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
-                </td>
-                <td data-order="{{::cc.checks['FQDN']}}" data-search="{{(cc.checks['FQDN'] == 1) ? 'FQDN' : ''}}">
-                    <i ng-show="cc.checks['FQDN'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
-                    <i ng-show="cc.checks['FQDN'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
-                </td>
-                <td data-order="{{::cc.checks['DSCP']}}" data-search="{{(cc.checks['DSCP'] == 1) ? 'DSCP' : ''}}">
-                    <i ng-show="cc.checks['DSCP'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
-                    <i ng-show="cc.checks['DSCP'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
-                </td>
-                <td data-order="{{::cc.checks['10G6']}}" data-search="{{(cc.checks['10G6'] == 1) ? '10G6' : ''}}">
-                    <i ng-show="cc.checks['10G6'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
-                    <i ng-show="cc.checks['10G6'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
-                </td>
-                <td data-order="{{::cc.checks['MTU']}}" data-search="{{(cc.checks['MTU'] == 1) ? 'MTU' : ''}}">
-                    <i ng-show="cc.checks['MTU'] == 1" class="fa fa-check fa-lg" aria-hidden="true"></i>
-                    <i ng-show="cc.checks['MTU'] == 0" class="fa fa-times fa-lg" aria-hidden="true"></i>
-                </td>
-                <td>{{::cc.checks['CHR']}}</td>
-                <td>{{::cc.checks['CDU']}}</td>
-                <td>{{::cc.checks['ORT']}}</td>
             </tr>
             </tbody>
         </table>
