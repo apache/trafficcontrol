@@ -26,6 +26,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -38,10 +39,10 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOServer tc.ServerNullable
+type TOServer v13.ServerNullable
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOServer(tc.ServerNullable{})
+var refType = TOServer{}
 
 func GetRefType() *TOServer {
 	return &refType
@@ -311,6 +312,7 @@ func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	defer resultRows.Close()
 
 	var lastUpdated tc.TimeNoMod
+	var id int
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
@@ -319,15 +321,18 @@ func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 			return tc.DBError, tc.SystemError
 		}
 	}
-	log.Debugf("lastUpdated: %++v", lastUpdated)
-	server.LastUpdated = lastUpdated
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no cdn found with this id"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
-		}
+
+	if rowsAffected == 0 {
+		err = errors.New("no server was inserted, no id was returned")
+		log.Errorln(err)
+		return tc.DBError, tc.SystemError
+	} else if rowsAffected > 1 {
+		err = errors.New("too many ids returned from server insert")
+		log.Errorln(err)
+		return tc.DBError, tc.SystemError
 	}
+	server.SetID(id)
+	server.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
@@ -437,7 +442,7 @@ func (server *TOServer) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		return tc.DBError, tc.SystemError
 	}
 	server.SetID(id)
-	server.LastUpdated = lastUpdated
+	server.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
