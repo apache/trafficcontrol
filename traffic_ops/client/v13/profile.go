@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	API_v13_Profiles = "/api/1.3/profiles"
+	API_v13_Profiles = "/api/1.3/profiles-wip"
 )
 
 // Create a Profile
