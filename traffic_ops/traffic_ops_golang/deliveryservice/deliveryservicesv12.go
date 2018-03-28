@@ -25,21 +25,29 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
-type TODeliveryServiceV12 tc.DeliveryServiceNullableV12
 
-func GetRefTypeV12(cfg config.Config, db *sqlx.DB) *TODeliveryServiceV12 {
-	return &TODeliveryServiceV12{}
+type TODeliveryServiceV12 struct {
+	ReqInfo *api.APIInfo
+	tc.DeliveryServiceNullableV12
+}
+
+
+func GetTypeV12Factory() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer{
+		toReturn := TODeliveryServiceV12{reqInfo, tc.DeliveryServiceNullableV12{}}
+		return &toReturn
+	}
 }
 
 func (ds TODeliveryServiceV12) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -96,11 +104,12 @@ func getDSTenantIDByName(tx *sql.Tx, name string) (*int, bool, error) {
 }
 
 // GetXMLID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
-func (ds *TODeliveryServiceV12) GetXMLID(tx *sql.Tx) (string, bool, error) {
+
+func (ds *TODeliveryServiceV12) GetXMLID(tx *sqlx.Tx) (string, bool, error) {
 	if ds.ID == nil {
 		return "", false, errors.New("missing ID")
 	}
-	return GetXMLID(tx, *ds.ID)
+	return GetXMLID(tx.Tx, *ds.ID)
 }
 
 // GetXMLID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
@@ -116,14 +125,11 @@ func GetXMLID(tx *sql.Tx, id int) (string, bool, error) {
 }
 
 // IsTenantAuthorized checks that the user is authorized for both the delivery service's existing tenant, and the new tenant they're changing it to (if different).
-func (ds *TODeliveryServiceV12) IsTenantAuthorized(user *auth.CurrentUser, db *sqlx.DB) (bool, error) {
-	tx, err := db.DB.Begin() // must be last, MUST not return an error if this suceeds, without closing the tx
-	if err != nil {
-		return false, errors.New("beginning transaction: " + err.Error())
-	}
-	defer dbhelpers.FinishTx(tx, util.BoolPtr(true))
-	return isTenantAuthorized(user, tx, (*tc.DeliveryServiceNullableV12)(ds))
+
+func (ds *TODeliveryServiceV12) IsTenantAuthorized(user auth.CurrentUser, tx *sqlx.Tx) (bool, error) {
+	return isTenantAuthorized(user, tx, &ds.DeliveryServiceNullableV12)
 }
+
 
 // getTenantID returns the tenant Id of the given delivery service. Note it may return a nil id and nil error, if the tenant ID in the database is nil.
 func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceNullableV12) (*int, error) {
@@ -138,8 +144,8 @@ func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceNullableV12) (*int, error) {
 	return existingID, err
 }
 
-func isTenantAuthorized(user *auth.CurrentUser, tx *sql.Tx, ds *tc.DeliveryServiceNullableV12) (bool, error) {
-	existingID, err := getTenantID(tx, ds)
+func isTenantAuthorized(user auth.CurrentUser, tx *sqlx.Tx, ds *tc.DeliveryServiceNullableV12) (bool, error) {
+	existingID, err := getTenantID(tx.Tx, ds)
 	if err != nil {
 		return false, errors.New("getting tenant ID: " + err.Error())
 	}
@@ -147,7 +153,7 @@ func isTenantAuthorized(user *auth.CurrentUser, tx *sql.Tx, ds *tc.DeliveryServi
 		ds.TenantID = existingID
 	}
 	if existingID != nil && existingID != ds.TenantID {
-		userAuthorizedForExistingDSTenant, err := tenant.IsResourceAuthorizedToUserTx(*existingID, user, tx)
+		userAuthorizedForExistingDSTenant, err := tenant.IsResourceAuthorizedToUserTx(*existingID, user, tx.Tx)
 		if err != nil {
 			return false, errors.New("checking authorization for existing DS ID: " + err.Error())
 		}
@@ -156,7 +162,7 @@ func isTenantAuthorized(user *auth.CurrentUser, tx *sql.Tx, ds *tc.DeliveryServi
 		}
 	}
 	if ds.TenantID != nil {
-		userAuthorizedForNewDSTenant, err := tenant.IsResourceAuthorizedToUserTx(*ds.TenantID, user, tx)
+		userAuthorizedForNewDSTenant, err := tenant.IsResourceAuthorizedToUserTx(*ds.TenantID, user, tx.Tx)
 		if err != nil {
 			return false, errors.New("checking authorization for new DS ID: " + err.Error())
 		}
@@ -167,70 +173,136 @@ func isTenantAuthorized(user *auth.CurrentUser, tx *sql.Tx, ds *tc.DeliveryServi
 	return true, nil
 }
 
-func (ds *TODeliveryServiceV12) Validate(db *sqlx.DB) []error {
-	tx, err := db.DB.Begin()
-	if err != nil {
-		return []error{errors.New("beginning transaction: " + err.Error())}
-	}
-	defer dbhelpers.FinishTx(tx, util.BoolPtr(true))
-	return []error{(*tc.DeliveryServiceNullableV12)(ds).Validate(tx)}
+
+func (ds *TODeliveryServiceV12) Validate() []error {
+	return ds.DeliveryServiceNullableV12.Validate(ds.ReqInfo.Tx.Tx)
 }
 
-func CreateV12(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-	ds := tc.DeliveryServiceNullableV12{}
-	if err := api.Parse(r.Body, inf.Tx.Tx, &ds); err != nil {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
-		return
-	}
-	dsv13 := tc.NewDeliveryServiceNullableV13FromV12(ds)
-	if authorized, err := isTenantAuthorized(inf.User, inf.Tx.Tx, &ds); err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
-		return
-	} else if !authorized {
-		api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
-		return
-	}
-	dsv13, errCode, userErr, sysErr = create(inf.Tx.Tx, inf.Config, inf.User, dsv13)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
-		return
-	}
-	*inf.CommitTx = true
-	api.WriteResp(w, r, []tc.DeliveryServiceNullableV12{dsv13.DeliveryServiceNullableV12})
+// unimplemented, needed to satisfy CRUDer, since the framework doesn't allow a create to return an array of one
+func(ds *TODeliveryServiceV12) Create() (error, tc.ApiErrorType) {
+	return errors.New("The Create method is not implemented"), http.StatusNotImplemented
 }
 
-func (ds *TODeliveryServiceV12) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
-	returnable := []interface{}{}
-	dses, errs, errType := readGetDeliveryServices(params, db, user)
-	if len(errs) > 0 {
-		for _, err := range errs {
-			if err.Error() == `id cannot parse to integer` {
-				return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError //matches perl response
-			}
+func CreateV12() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, errCode, userErr, sysErr)
+			return
 		}
-		return nil, errs, errType
+		defer inf.Close()
+		ds := tc.DeliveryServiceNullableV12{}
+		if err := api.Parse(r.Body, inf.Tx.Tx, &ds); err != nil {
+			api.HandleErr(w, r, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+			return
+		}
+		dsv13 := tc.NewDeliveryServiceNullableV13FromV12(ds)
+		if authorized, err := isTenantAuthorized(*inf.User, inf.Tx, &ds); err != nil {
+			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+			return
+		} else if !authorized {
+			api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+			return
+		}
+		dsv13, errCode, userErr, sysErr = create(inf.Tx.Tx, *inf.Config, inf.User, dsv13)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, errCode, userErr, sysErr)
+			return
+		}
+		*inf.CommitTx = true
+		api.WriteResp(w, r, []tc.DeliveryServiceNullableV12{dsv13.DeliveryServiceNullableV12})
+	}
+}
+
+	func(ds *TODeliveryServiceV12) Read(params map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
+	returnable := []interface{}{}
+	dses, errs, errType := readGetDeliveryServices(params, ds.ReqInfo.Tx, *ds.ReqInfo.User)
+	if len(errs) > 0 {
+	for _, err := range errs {
+	if err.Error() == `id cannot parse to integer` {
+	return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError //matches perl response
+	}
+	}
+	return nil, errs, errType
 	}
 
 	for _, ds := range dses {
-		returnable = append(returnable, ds.DeliveryServiceNullableV12)
+	returnable = append(returnable, ds.DeliveryServiceNullableV12)
 	}
 	return returnable, nil, tc.NoError
+	}
+
+	//The DeliveryService implementation of the Deleter interface
+	//all implementations of Deleter should use transactions and return the proper errorType
+	func(ds *TODeliveryServiceV12) Delete() (error, tc.ApiErrorType){
+		log.Debugln("TODeliveryServiceV12.Delete calling id '%v' xmlid '%v'\n", ds.ID, ds.XMLID)
+		// return nil, tc.NoError // debug
+
+		if ds.ID == nil {
+			log.Errorln("TODeliveryServiceV12.Delete called with nil ID")
+			return tc.DBError, tc.DataMissingError
+		}
+		xmlID, ok, err := ds.GetXMLID(ds.ReqInfo.Tx)
+		if err != nil {
+			log.Errorln("TODeliveryServiceV12.Delete ID '" + string(*ds.ID) + "' loading XML ID: " + err.Error())
+			return tc.DBError, tc.SystemError
+		}
+		if !ok {
+			log.Errorln("TODeliveryServiceV12.Delete ID '" + string(*ds.ID) + "' had no delivery service!")
+			return tc.DBError, tc.DataMissingError
+		}
+		ds.XMLID = &xmlID
+
+		// Note ds regexes MUST be deleted before the ds, because there's a ON DELETE CASCADE on deliveryservice_regex (but not on regex).
+		// Likewise, it MUST happen in a transaction with the later DS delete, so they aren't deleted if the DS delete fails.
+		if _, err := ds.ReqInfo.Tx.Exec(`DELETE FROM regex WHERE id IN (SELECT regex FROM deliveryservice_regex WHERE deliveryservice=$1)`, *ds.ID); err != nil {
+			log.Errorln("TODeliveryServiceV12.Delete deleting regexes for delivery service: " + err.Error())
+			return tc.DBError, tc.SystemError
+		}
+
+		if _, err := ds.ReqInfo.Tx.Exec(`DELETE FROM deliveryservice_regex WHERE deliveryservice=$1`, *ds.ID); err != nil {
+			log.Errorln("TODeliveryServiceV12.Delete deleting delivery service regexes: " + err.Error())
+			return tc.DBError, tc.SystemError
+		}
+
+		result, err := ds.ReqInfo.Tx.Exec(`DELETE FROM deliveryservice WHERE id=$1`, *ds.ID)
+		if err != nil {
+			log.Errorln("TODeliveryServiceV12.Delete deleting delivery service: " + err.Error())
+			return tc.DBError, tc.SystemError
+		}
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			return tc.DBError, tc.SystemError
+		}
+		if rowsAffected != 1 {
+			if rowsAffected < 1 {
+				return errors.New("no delivery service with that id found"), tc.DataMissingError
+			}
+			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
+		}
+
+		paramConfigFilePrefixes := []string{"hdr_rw_", "hdr_rw_mid_", "regex_remap_", "cacheurl_"}
+		configFiles := []string{}
+		for _, prefix := range paramConfigFilePrefixes {
+			configFiles = append(configFiles, prefix + *ds.XMLID+".config")
+		}
+
+		if _, err := ds.ReqInfo.Tx.Exec(`DELETE FROM parameter WHERE name = 'location' AND config_file = ANY($1)`, pq.Array(configFiles)); err != nil {
+			log.Errorln("TODeliveryServiceV12.Delete deleting delivery service parameters: " + err.Error())
+			return tc.DBError, tc.SystemError
+		}
+
+		return nil, tc.NoError
+	}
+
+
+// unimplemented, needed to satisfy CRUDer, since the framework doesn't allow an update to return an array of one
+func(ds *TODeliveryServiceV12) Update() (error, tc.ApiErrorType) {
+	return errors.New("The Update method is not implemented"), http.StatusNotImplemented
 }
 
-func (ds *TODeliveryServiceV12) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	v13 := (*TODeliveryServiceV13)(&tc.DeliveryServiceNullableV13{DeliveryServiceNullableV12: *(*tc.DeliveryServiceNullableV12)(ds)})
-	err, errType := v13.Delete(db, user)
-	*ds = (TODeliveryServiceV12)(v13.DeliveryServiceNullableV12) // TODO avoid copy
-	return err, errType
-}
-
-func UpdateV12(w http.ResponseWriter, r *http.Request) {
+func UpdateV12() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, errCode, userErr, sysErr)
@@ -245,18 +317,19 @@ func UpdateV12(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	dsv13 := tc.NewDeliveryServiceNullableV13FromV12(ds)
-	if authorized, err := isTenantAuthorized(inf.User, inf.Tx.Tx, &ds); err != nil {
+	if authorized, err := isTenantAuthorized(*inf.User, inf.Tx, &ds); err != nil {
 		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 		return
 	} else if !authorized {
 		api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 		return
 	}
-	dsv13, errCode, userErr, sysErr = update(inf.Tx.Tx, inf.Config, inf.User, &dsv13)
+	dsv13, errCode, userErr, sysErr = update(inf.Tx.Tx, *inf.Config, *inf.User, &dsv13)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, errCode, userErr, sysErr)
 		return
 	}
 	*inf.CommitTx = true
 	api.WriteResp(w, r, []tc.DeliveryServiceNullableV12{dsv13.DeliveryServiceNullableV12})
+}
 }

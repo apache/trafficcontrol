@@ -30,7 +30,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -42,18 +41,16 @@ import (
 const ASNsPrivLevel = 10
 
 //we need a type alias to define functions on
-type TOASNV11 tc.ASNNullable
-
-type TOASNV12 TOASNV11
-
-func GetRefTypeV11() *TOASNV11 {
-	asn := TOASNV11(tc.ASNNullable{})
-	return &asn
+type TOASNV11 struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	tc.ASNNullable
 }
 
-func GetRefTypeV12() *TOASNV12 {
-	asn := TOASNV12(tc.ASNNullable{})
-	return &asn
+func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := TOASNV11{reqInfo, tc.ASNNullable{}}
+		return &toReturn
+	}
 }
 
 func (asn TOASNV11) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -89,7 +86,7 @@ func (asn TOASNV11) GetType() string {
 	return "asn"
 }
 
-func (asn TOASNV11) Validate(db *sqlx.DB) []error {
+func (asn TOASNV11) Validate() []error {
 	errs := validation.Errors{
 		"asn":          validation.Validate(asn.ASN, validation.NotNil, validation.Min(0)),
 		"cachegroupId": validation.Validate(asn.CachegroupID, validation.NotNil, validation.Min(0)),
@@ -104,24 +101,8 @@ func (asn TOASNV11) Validate(db *sqlx.DB) []error {
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted asn and have
 //to be added to the struct
-func (asn *TOASNV11) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	resultRows, err := tx.NamedQuery(insertQuery(), asn)
+func (asn *TOASNV11) Create() (error, tc.ApiErrorType) {
+	resultRows, err := asn.ReqInfo.Tx.NamedQuery(insertQuery(), asn)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -157,20 +138,18 @@ func (asn *TOASNV11) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiEr
 	}
 	asn.SetKeys(map[string]interface{}{"id": id})
 	asn.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
-func (asn *TOASNV12) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
-	asns, err, errType := read(db, parameters, user)
+// Read implements the /api/1.1/asns/id route for reading individual ASNs.
+// Note this does NOT correctly implement the 1.1 API for all ASNs, because that route is in a different format than the CRUD utilities and all other routes.
+// The /api/1.1/asns route MUST call V11ReadAll, not this function, to correctly implement the 1.1 API.
+func (asn *TOASNV11) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
+	asns, err, errType := read(asn.ReqInfo.Tx, parameters)
 	if len(err) > 0 {
 		return nil, err, errType
 	}
+	*asn.ReqInfo.CommitTx = true
 	iasns := make([]interface{}, len(asns), len(asns))
 	for i, readASN := range asns {
 		iasns[i] = readASN
@@ -178,41 +157,37 @@ func (asn *TOASNV12) Read(db *sqlx.DB, parameters map[string]string, user auth.C
 	return iasns, err, errType
 }
 
-// Read implements the /api/1.1/asns/id route for reading individual ASNs.
-// Note this does NOT correctly implement the 1.1 API for all ASNs, because that route is in a different format than the CRUD utilities and all other routes.
-// The /api/1.1/asns route MUST call V11ReadAll, not this function, to correctly implement the 1.1 API.
-func (asn *TOASNV11) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
-	v12 := TOASNV12(*asn)
-	return v12.Read(db, params, user)
-}
 
 // V11ReadAll implements the asns 1.1 route, which is different from the 1.1 route for a single ASN and from 1.2+ routes, in that it wraps the content in an additional "asns" object.
-func V11ReadAll(db *sqlx.DB) http.HandlerFunc {
+func V11ReadAll() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
-		ctx := r.Context()
+
+		inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, errCode, userErr, sysErr)
+			return
+		}
+		defer inf.Close()
+
 		params, err := api.GetCombinedParams(r)
 		if err != nil {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-		user, err := auth.GetCurrentUser(ctx)
-		if err != nil {
-			log.Errorf("unable to retrieve current user from context: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-		asns, errs, errType := read(db, params, *user)
+
+		asns, errs, errType := read(inf.Tx, params)
 		if len(errs) > 0 {
 			tc.HandleErrorsWithType(errs, errType, handleErrs)
 			return
 		}
+		*inf.CommitTx = true
 		resp := struct {
 			Response struct {
-				ASNs []TOASNV12 `json:"asns"`
+				ASNs []tc.ASNNullable `json:"asns"`
 			} `json:"response"`
 		}{Response: struct {
-			ASNs []TOASNV12 `json:"asns"`
+			ASNs []tc.ASNNullable `json:"asns"`
 		}{ASNs: asns}}
 
 		respBts, err := json.Marshal(resp)
@@ -225,7 +200,7 @@ func V11ReadAll(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]TOASNV12, []error, tc.ApiErrorType) {
+func read(tx *sqlx.Tx, parameters map[string]string) ([]tc.ASNNullable, []error, tc.ApiErrorType) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
@@ -242,16 +217,16 @@ func read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]T
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying ASNs: %v", err)
 		return nil, []error{err}, tc.SystemError
 	}
 	defer rows.Close()
 
-	ASNs := []TOASNV12{}
+	ASNs := []tc.ASNNullable{}
 	for rows.Next() {
-		var s TOASNV12
+		var s tc.ASNNullable
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorf("error parsing ASN rows: %v", err)
 			return nil, []error{err}, tc.SystemError
@@ -279,25 +254,9 @@ FROM asn a JOIN cachegroup c ON a.cachegroup = c.id`
 //ParsePQUniqueConstraintError is used to determine if a asn with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (asn *TOASNV11) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (asn *TOASNV11) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with asn: %++v", updateQuery(), asn)
-	resultRows, err := tx.NamedQuery(updateQuery(), asn)
+	resultRows, err := asn.ReqInfo.Tx.NamedQuery(updateQuery(), asn)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -330,36 +289,15 @@ func (asn *TOASNV11) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiEr
 			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
 //The ASN implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (asn *TOASNV11) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (asn *TOASNV11) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with asn: %++v", deleteQuery(), asn)
-	result, err := tx.NamedExec(deleteQuery(), asn)
+	result, err := asn.ReqInfo.Tx.NamedExec(deleteQuery(), asn)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -375,12 +313,7 @@ func (asn *TOASNV11) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiEr
 			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 

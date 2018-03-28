@@ -48,10 +48,6 @@ func GetRefType() *TOServer {
 	return &refType
 }
 
-func (server *TOServer) SetID(i int) {
-	server.ID = &i
-}
-
 func (server TOServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
 }
@@ -371,7 +367,7 @@ func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
-	server.SetID(id)
+	server.SetKeys(map[string]interface{}{"id": id})
 	server.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {

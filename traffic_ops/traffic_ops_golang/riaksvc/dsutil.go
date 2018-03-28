@@ -63,7 +63,59 @@ func GetDeliveryServiceSSLKeysObj(xmlID string, version string, tx *sql.Tx, auth
 	return key, found, nil
 }
 
-func PutDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, authOpts *riak.AuthOptions) error {
+
+func GetDeliveryServiceSSLKeysObjTx(xmlID string, version string, tx *sql.Tx, authOpts *riak.AuthOptions) (tc.DeliveryServiceSSLKeys, bool, error) {
+	key := tc.DeliveryServiceSSLKeys{}
+	if version == "" {
+		xmlID += "-latest"
+	} else {
+		xmlID += "-" + version
+	}
+	found := false
+	err := WithClusterTx(tx, authOpts, func(cluster StorageCluster) error {
+		// get the deliveryservice ssl keys by xmlID and version
+		ro, err := FetchObjectValues(xmlID, DeliveryServiceSSLKeysBucket, cluster)
+		if err != nil {
+			return err
+		}
+		if len(ro) == 0 {
+			return nil // not found
+		}
+		if err := json.Unmarshal(ro[0].Value, &key); err != nil {
+			log.Errorf("failed at unmarshaling sslkey response: %s\n", err)
+			return errors.New("unmarshalling Riak result: " + err.Error())
+		}
+		found = true
+		return nil
+	})
+	if err != nil {
+		return key, false, err
+	}
+	return key, found, nil
+}
+
+	func PutDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, authOpts *riak.AuthOptions) error {
+	keyJSON, err := json.Marshal(&key)
+	if err != nil {
+		return errors.New("marshalling key: " + err.Error())
+	}
+	err = WithClusterTx(tx, authOpts, func(cluster StorageCluster) error {
+		obj := &riak.Object{
+			ContentType:     "text/json",
+			Charset:         "utf-8",
+			ContentEncoding: "utf-8",
+			Key:             key.DeliveryService,
+			Value:           []byte(keyJSON),
+		}
+		if err = SaveObject(obj, DeliveryServiceSSLKeysBucket, cluster); err != nil {
+			return errors.New("saving Riak object: " + err.Error())
+		}
+		return nil
+	})
+	return err
+}
+
+func PutDeliveryServiceSSLKeysObjTx(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, authOpts *riak.AuthOptions) error {
 	keyJSON, err := json.Marshal(&key)
 	if err != nil {
 		return errors.New("marshalling key: " + err.Error())

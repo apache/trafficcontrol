@@ -107,7 +107,7 @@ func (origin *TOOrigin) Validate(db *sqlx.DB) []error {
 	return tovalidate.ToErrors(validateErrs)
 }
 
-// GetTenantID returns a pointer to the Origin's tenant ID from the DB and any error encountered
+// GetTenantID returns a pointer to the Origin's tenant ID from the Tx and any error encountered
 func (origin *TOOrigin) GetTenantID(db *sqlx.DB) (*int, error) {
 	if origin.ID != nil {
 		var tenantID *int

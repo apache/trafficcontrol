@@ -23,11 +23,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"context"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/jmoiron/sqlx"
+	"time"
 )
 
 func Handler(db *sqlx.DB) http.HandlerFunc {
@@ -78,8 +80,9 @@ p.last_updated,
 p.value
 FROM parameter p
 WHERE p.config_file='global'`
-
-	rows, err := db.Queryx(query)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second * 10)
+	defer cancel()
+	rows, err := db.QueryxContext(ctx,query)
 
 	if err != nil {
 		return nil, fmt.Errorf("querying: %v", err)
