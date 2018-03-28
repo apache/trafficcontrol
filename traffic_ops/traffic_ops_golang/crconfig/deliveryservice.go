@@ -141,7 +141,7 @@ and d.active = true
 		if err := rows.Scan(&xmlID, &missLat, &missLon, &protocol, &ds.TTL, &ds.RoutingName, &geoProvider, &ttype, &geoLimit, &geoLimitCountries, &geoLimitRedirectURL, &dispersion, &geoBlocking, &trRespHdrsStr, &maxDNSAnswers, &profile, &dnsBypassIP, &dnsBypassIP6, &dnsBypassTTL, &dnsBypassCName, &httpBypassFQDN, &ip6RoutingEnabled, &deepCachingType, &trRequestHeaders, &trResponseHeaders, &anonymousBlocking); err != nil {
 			return nil, errors.New("scanning deliveryservice: " + err.Error())
 		}
-		// TODO prevent (lat XOR lon) in the DB and UI
+		// TODO prevent (lat XOR lon) in the Tx and UI
 		if missLat.Valid && missLon.Valid {
 			ds.MissLocation = &tc.CRConfigLatitudeLongitudeShort{Lat: missLat.Float64, Lon: missLon.Float64}
 		} else if missLat.Valid {

@@ -137,13 +137,13 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 	}
 
 	/*
-		if r.Update(db *sqlx.DB, ctx context.Context) {
+		if r.Update(db *sqlx.Tx, ctx context.Context) {
 			t.Errorf("expected ID to be %d,  not %d", 10, r.GetID())
 		}
-		if r.Insert(db *sqlx.DB, ctx context.Context) {
+		if r.Insert(db *sqlx.Tx, ctx context.Context) {
 			t.Errorf("expected ID to be %d,  not %d", 10, r.GetID())
 		}
-		if r.Delete(db *sqlx.DB, ctx context.Context) {
+		if r.Delete(db *sqlx.Tx, ctx context.Context) {
 			t.Errorf("expected ID to be %d,  not %d", 10, r.GetID())
 		}
 	*/

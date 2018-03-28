@@ -34,11 +34,11 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestASNs() []TOASNV11 {
-	ASNs := []TOASNV11{}
+func getTestASNs() []tc.ASNNullable {
+	ASNs := []tc.ASNNullable{}
 	i := 1
 	c := "Yukon"
-	testCase := TOASNV11{
+	testCase := tc.ASNNullable{
 		ASN:          &i,
 		Cachegroup:   &c,
 		CachegroupID: &i,
@@ -79,7 +79,7 @@ func TestGetASNs(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	v := map[string]string{"dsId": "1"}
 
-	asns, errs, _ := GetRefTypeV11().Read(db, v, auth.CurrentUser{})
+	asns, errs, _ := GetTypeSingleton(db)().Read(v, auth.CurrentUser{})
 
 	if len(errs) > 0 {
 		t.Errorf("asn.Read expected: no errors, actual: %v", errs)
@@ -114,9 +114,9 @@ func TestInterfaces(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	i := -99
-	asn := TOASNV11{ASN: &i, CachegroupID: &i}
+	asn := TOASNV11{nil,tc.ASNNullable{ASN: &i, CachegroupID: &i}}
 
-	errs := test.SortErrors(asn.Validate(nil))
+	errs := test.SortErrors(asn.Validate())
 	expected := []error{
 		errors.New(`'asn' must be no less than 0`),
 		errors.New(`'cachegroupId' must be no less than 0`),

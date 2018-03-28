@@ -30,7 +30,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -38,63 +37,66 @@ import (
 	"github.com/lib/pq"
 )
 
-type TOCacheGroup v13.CacheGroupNullable
+type TOCacheGroup struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	v13.CacheGroupNullable
+	}
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOCacheGroup{}
-
-func GetRefType() *TOCacheGroup {
-	return &refType
+func GetV11TypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+	return func(reqInfo *api.APIInfo) api.CRUDer {
+		toReturn := TOCacheGroup{reqInfo, v13.CacheGroupNullable{}}
+		return &toReturn
+	}
 }
 
-func (cachegroup TOCacheGroup) GetKeyFieldsInfo() []api.KeyFieldInfo {
+func (cg TOCacheGroup) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (cachegroup TOCacheGroup) GetKeys() (map[string]interface{}, bool) {
-	if cachegroup.ID == nil {
+func (cg TOCacheGroup) GetKeys() (map[string]interface{}, bool) {
+	if cg.ID == nil {
 		return map[string]interface{}{"id": 0}, false
 	}
-	return map[string]interface{}{"id": *cachegroup.ID}, true
+	return map[string]interface{}{"id": *cg.ID}, true
 }
 
-func (cachegroup *TOCacheGroup) SetKeys(keys map[string]interface{}) {
+func (cg *TOCacheGroup) SetKeys(keys map[string]interface{}) {
 	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
-	cachegroup.ID = &i
+	cg.ID = &i
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (cachegroup TOCacheGroup) GetID() (int, bool) {
-	if cachegroup.ID == nil {
+func (cg TOCacheGroup) GetID() (int, bool) {
+	if cg.ID == nil {
 		return 0, false
 	}
-	return *cachegroup.ID, true
+	return *cg.ID, true
 }
 
-func (cachegroup TOCacheGroup) GetAuditName() string {
-	if cachegroup.Name != nil {
-		return *cachegroup.Name
+func (cg TOCacheGroup) GetAuditName() string {
+	if cg.Name != nil {
+		return *cg.Name
 	}
-	id, _ := cachegroup.GetID()
+	id, _ := cg.GetID()
 	return strconv.Itoa(id)
 }
 
-func (cachegroup TOCacheGroup) GetType() string {
-	return "cachegroup"
+func (cg TOCacheGroup) GetType() string {
+	return "cg"
 }
 
-func (cachegroup *TOCacheGroup) SetID(i int) {
-	cachegroup.ID = &i
+func (cg *TOCacheGroup) SetID(i int) {
+	cg.ID = &i
 }
 
 // checks if a cachegroup with the given ID is in use as a parent or secondary parent.
-func isUsedByChildCache(db *sqlx.DB, ID int) (bool, error) {
+func isUsedByChildCache(tx *sqlx.Tx, ID int) (bool, error) {
 	pQuery := "SELECT count(*) from cachegroup WHERE parent_cachegroup_id=$1"
 	sQuery := "SELECT count(*) from cachegroup WHERE secondary_parent_cachegroup_id=$1"
 	count := 0
 
-	err := db.QueryRow(pQuery, ID).Scan(&count)
+	err := tx.QueryRow(pQuery, ID).Scan(&count)
 	if err != nil {
 		log.Errorf("received error: %++v from query execution", err)
 		return false, err
@@ -103,7 +105,7 @@ func isUsedByChildCache(db *sqlx.DB, ID int) (bool, error) {
 		return true, errors.New("cache is in use as a parent cache")
 	}
 
-	err = db.QueryRow(sQuery, ID).Scan(&count)
+	err = tx.QueryRow(sQuery, ID).Scan(&count)
 	if err != nil {
 		log.Errorf("received error: %++v from query execution", err)
 		return false, err
@@ -144,18 +146,18 @@ func IsValidParentCachegroupID(id *int) bool {
 }
 
 // Validate fulfills the api.Validator interface
-func (cachegroup TOCacheGroup) Validate(db *sqlx.DB) []error {
+func (cg TOCacheGroup) Validate() []error {
 	validName := validation.NewStringRule(IsValidCacheGroupName, "invalid characters found - Use alphanumeric . or - or _ .")
 	validShortName := validation.NewStringRule(IsValidCacheGroupName, "invalid characters found - Use alphanumeric . or - or _ .")
 	latitudeErr := "Must be a floating point number within the range +-90"
 	longitudeErr := "Must be a floating point number within the range +-180"
 	errs := validation.Errors{
-		"name":                        validation.Validate(cachegroup.Name, validation.Required, validName),
-		"shortName":                   validation.Validate(cachegroup.ShortName, validation.Required, validShortName),
-		"latitude":                    validation.Validate(cachegroup.Latitude, validation.Min(-90.0).Error(latitudeErr), validation.Max(90.0).Error(latitudeErr)),
-		"longitude":                   validation.Validate(cachegroup.Longitude, validation.Min(-180.0).Error(longitudeErr), validation.Max(180.0).Error(longitudeErr)),
-		"parentCacheGroupID":          validation.Validate(cachegroup.ParentCachegroupID, validation.Min(1)),
-		"secondaryParentCachegroupID": validation.Validate(cachegroup.SecondaryParentCachegroupID, validation.Min(1)),
+		"name":                        validation.Validate(cg.Name, validation.Required, validName),
+		"shortName":                   validation.Validate(cg.ShortName, validation.Required, validShortName),
+		"latitude":                    validation.Validate(cg.Latitude, validation.Min(-90.0).Error(latitudeErr), validation.Max(90.0).Error(latitudeErr)),
+		"longitude":                   validation.Validate(cg.Longitude, validation.Min(-180.0).Error(longitudeErr), validation.Max(180.0).Error(longitudeErr)),
+		"parentCacheGroupID":          validation.Validate(cg.ParentCachegroupID, validation.Min(1)),
+		"secondaryParentCachegroupID": validation.Validate(cg.SecondaryParentCachegroupID, validation.Min(1)),
 	}
 	return tovalidate.ToErrors(errs)
 }
@@ -165,13 +167,13 @@ func (cachegroup TOCacheGroup) Validate(db *sqlx.DB) []error {
 // sucessful lookup sets the two ids on the struct.
 //
 // used by Create()
-func getParentCachegroupIDs(db *sqlx.DB, cachegroup *TOCacheGroup) error {
+func getParentCachegroupIDs(tx *sqlx.Tx, cachegroup *TOCacheGroup) error {
 	query := `SELECT id FROM cachegroup where name=$1`
 	var parentID int
 	var secondaryParentID int
 
 	if cachegroup.ParentName != nil && *cachegroup.ParentName != "" {
-		err := db.QueryRow(query, *cachegroup.ParentName).Scan(&parentID)
+		err := tx.QueryRow(query, *cachegroup.ParentName).Scan(&parentID)
 		if err != nil {
 			log.Errorf("received error: %++v from query execution", err)
 			return err
@@ -184,7 +186,7 @@ func getParentCachegroupIDs(db *sqlx.DB, cachegroup *TOCacheGroup) error {
 	}
 
 	if cachegroup.SecondaryParentName != nil && *cachegroup.SecondaryParentName != "" {
-		err := db.QueryRow(query, *cachegroup.SecondaryParentName).Scan(&secondaryParentID)
+		err := tx.QueryRow(query, *cachegroup.SecondaryParentName).Scan(&secondaryParentID)
 		if err != nil {
 			log.Errorf("received error: %++v from query execution", err)
 			return err
@@ -202,14 +204,14 @@ func getParentCachegroupIDs(db *sqlx.DB, cachegroup *TOCacheGroup) error {
 //  the names are set on the struct.
 //
 // used by Read()
-func getParentCacheGroupNames(db *sqlx.DB, cachegroup *TOCacheGroup) error {
+func getParentCacheGroupNames(tx *sqlx.Tx, cachegroup *TOCacheGroup) error {
 	query1 := `SELECT name FROM cachegroup where id=$1`
 	var primaryName string
 	var secondaryName string
 
 	// primary parent lookup
 	if cachegroup.ParentCachegroupID != nil {
-		err := db.QueryRow(query1, *cachegroup.ParentCachegroupID).Scan(&primaryName)
+		err := tx.QueryRow(query1, *cachegroup.ParentCachegroupID).Scan(&primaryName)
 		if err != nil {
 			log.Errorf("received error: %++v from query execution", err)
 			return err
@@ -219,7 +221,7 @@ func getParentCacheGroupNames(db *sqlx.DB, cachegroup *TOCacheGroup) error {
 
 	// secondary parent lookup
 	if cachegroup.SecondaryParentCachegroupID != nil {
-		err := db.QueryRow(query1, *cachegroup.SecondaryParentCachegroupID).Scan(&secondaryName)
+		err := tx.QueryRow(query1, *cachegroup.SecondaryParentCachegroupID).Scan(&secondaryName)
 		if err != nil {
 			log.Errorf("received error: %++v from query execution", err)
 			return err
@@ -237,36 +239,19 @@ func getParentCacheGroupNames(db *sqlx.DB, cachegroup *TOCacheGroup) error {
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted cachegroup and have
 //to be added to the struct
-func (cachegroup *TOCacheGroup) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-
-	err = getParentCachegroupIDs(db, cachegroup)
+func (cg *TOCacheGroup) Create() (error, tc.ApiErrorType) {
+	err := getParentCachegroupIDs(cg.ReqInfo.Tx, cg)
 	if err != nil {
 		log.Error.Printf("failure looking up parent cache groups %v", err)
 		return tc.DBError, tc.SystemError
 	}
 
-	resultRows, err := tx.NamedQuery(insertQuery(), cachegroup)
+	resultRows, err := cg.ReqInfo.Tx.NamedQuery(insertQuery(), cg)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
 			if eType == tc.DataConflictError {
-				return errors.New("a cachegroup with " + err.Error()), eType
+				return errors.New("a cg with " + err.Error()), eType
 			}
 			return err, eType
 		} else {
@@ -287,35 +272,27 @@ func (cachegroup *TOCacheGroup) Create(db *sqlx.DB, user auth.CurrentUser) (erro
 		}
 	}
 	if rowsAffected == 0 {
-		err = errors.New("no cachegroup was inserted, no id was returned")
+		err = errors.New("no cg was inserted, no id was returned")
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	} else if rowsAffected > 1 {
-		err = errors.New("too many ids returned from cachegroup insert")
+		err = errors.New("too many ids returned from cg insert")
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
-	cachegroup.SetID(id)
-	cachegroup.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+	cg.SetID(id)
+	cg.LastUpdated = &lastUpdated
 	return nil, tc.NoError
 }
 
-func (cachegroup *TOCacheGroup) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
-
+func (cg *TOCacheGroup) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":        dbhelpers.WhereColumnInfo{"cachegroup.id", api.IsInt},
-		"name":      dbhelpers.WhereColumnInfo{"cachegroup.name", nil},
+		"id":        dbhelpers.WhereColumnInfo{"cg.id", api.IsInt},
+		"name":      dbhelpers.WhereColumnInfo{"cg.name", nil},
 		"shortName": dbhelpers.WhereColumnInfo{"short_name", nil},
-		"type":      dbhelpers.WhereColumnInfo{"cachegroup.type", nil},
+		"type":      dbhelpers.WhereColumnInfo{"cg.type", nil},
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
@@ -325,7 +302,7 @@ func (cachegroup *TOCacheGroup) Read(db *sqlx.DB, parameters map[string]string, 
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := cg.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying CacheGroup: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -339,7 +316,7 @@ func (cachegroup *TOCacheGroup) Read(db *sqlx.DB, parameters map[string]string, 
 			log.Errorf("error parsing CacheGroup rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
-		getParentCacheGroupNames(db, &s)
+		getParentCacheGroupNames(cg.ReqInfo.Tx, &s)
 		CacheGroups = append(CacheGroups, s)
 	}
 
@@ -351,38 +328,21 @@ func (cachegroup *TOCacheGroup) Read(db *sqlx.DB, parameters map[string]string, 
 //ParsePQUniqueConstraintError is used to determine if a cachegroup with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (cachegroup *TOCacheGroup) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-
+func (cg *TOCacheGroup) Update() (error, tc.ApiErrorType) {
 	// fix up parent ids.
-	err = getParentCachegroupIDs(db, cachegroup)
+	err := getParentCachegroupIDs(cg.ReqInfo.Tx, cg)
 	if err != nil {
 		log.Error.Printf("failure looking up parent cache groups %v", err)
 		return tc.DBError, tc.SystemError
 	}
 
-	log.Debugf("about to run exec query: %s with cachegroup: %++v", updateQuery(), cachegroup)
-	resultRows, err := tx.NamedQuery(updateQuery(), cachegroup)
+	log.Debugf("about to run exec query: %s with cg: %++v", updateQuery(), cg)
+	resultRows, err := cg.ReqInfo.Tx.NamedQuery(updateQuery(), cg)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
 			if eType == tc.DataConflictError {
-				return errors.New("a cachegroup with " + err.Error()), eType
+				return errors.New("a cg with " + err.Error()), eType
 			}
 			return err, eType
 		} else {
@@ -402,44 +362,21 @@ func (cachegroup *TOCacheGroup) Update(db *sqlx.DB, user auth.CurrentUser) (erro
 		}
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
-	cachegroup.LastUpdated = &lastUpdated
+	cg.LastUpdated = &lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return errors.New("no cachegroup found with this id"), tc.DataMissingError
+			return errors.New("no cg found with this id"), tc.DataMissingError
 		} else {
 			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
 //The CacheGroup implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (cachegroup *TOCacheGroup) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-
-	inUse, err := isUsedByChildCache(db, *cachegroup.ID)
+func (cg *TOCacheGroup) Delete() (error, tc.ApiErrorType) {
+	inUse, err := isUsedByChildCache(cg.ReqInfo.Tx, *cg.ID)
 	log.Debugf("inUse: %d, err: %v", inUse, err)
 	if inUse == false && err != nil {
 		return tc.DBError, tc.SystemError
@@ -448,8 +385,8 @@ func (cachegroup *TOCacheGroup) Delete(db *sqlx.DB, user auth.CurrentUser) (erro
 		return err, tc.DataConflictError
 	}
 
-	log.Debugf("about to run exec query: %s with cachegroup: %++v", deleteQuery(), cachegroup)
-	result, err := tx.NamedExec(deleteQuery(), cachegroup)
+	log.Debugf("about to run exec query: %s with cg: %++v", deleteQuery(), cg)
+	result, err := cg.ReqInfo.Tx.NamedExec(deleteQuery(), cg)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -460,17 +397,12 @@ func (cachegroup *TOCacheGroup) Delete(db *sqlx.DB, user auth.CurrentUser) (erro
 	}
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return errors.New("no cachegroup with that id found"), tc.DataMissingError
+			return errors.New("no cg with that id found"), tc.DataMissingError
 		} else {
 			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 

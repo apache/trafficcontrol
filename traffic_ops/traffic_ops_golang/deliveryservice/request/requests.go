@@ -26,24 +26,26 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
-// TODeliveryServiceRequest provides a type alias to define functions on
-type TODeliveryServiceRequest tc.DeliveryServiceRequestNullable
+//we need a type alias to define functions on
+type TODeliveryServiceRequest struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	tc.DeliveryServiceRequestNullable
+}
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TODeliveryServiceRequest(tc.DeliveryServiceRequestNullable{})
-
-// GetRefType is used to decode the JSON for deliveryservice requests
-func GetRefType() *TODeliveryServiceRequest {
-	return &refType
+func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := TODeliveryServiceRequest{reqInfo, tc.DeliveryServiceRequestNullable{}}
+		return &toReturn
+	}
 }
 
 func (req TODeliveryServiceRequest) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -74,7 +76,7 @@ func (req TODeliveryServiceRequest) GetType() string {
 }
 
 // Read implements the api.Reader interface
-func (req *TODeliveryServiceRequest) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (req *TODeliveryServiceRequest) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"assignee":   dbhelpers.WhereColumnInfo{Column: "s.username"},
 		"assigneeId": dbhelpers.WhereColumnInfo{Column: "r.assignee_id", Checker: api.IsInt},
@@ -104,7 +106,7 @@ func (req *TODeliveryServiceRequest) Read(db *sqlx.DB, parameters map[string]str
 	query := selectDeliveryServiceRequestsQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := req.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -120,7 +122,7 @@ func (req *TODeliveryServiceRequest) Read(db *sqlx.DB, parameters map[string]str
 		}
 
 		// TODO: combine tenancy with the query above so there's a single db call
-		t, err := s.IsTenantAuthorized(user, db)
+		t, err := s.IsTenantAuthorized(*req.ReqInfo.User)
 		if err != nil {
 			log.Errorf("error checking tenancy: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
@@ -159,7 +161,8 @@ LEFT OUTER JOIN tm_user e ON r.last_edited_by_id = e.id
 }
 
 // IsTenantAuthorized implements the Tenantable interface to ensure the user is authorized on the deliveryservice tenant
-func (req TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error) {
+func (req TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser) (bool, error) {
+
 	ds := req.DeliveryService
 	if ds == nil {
 		// No deliveryservice applied yet -- wide open
@@ -169,7 +172,7 @@ func (req TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, db
 		log.Debugf("tenantID is nil")
 		return false, errors.New("tenantID is nil")
 	}
-	return tenant.IsResourceAuthorizedToUser(*ds.TenantID, user, db)
+	return tenant.IsResourceAuthorizedToUserTx(*ds.TenantID, user, req.ReqInfo.Tx.Tx)
 }
 
 // Update implements the tc.Updater interface.
@@ -177,13 +180,13 @@ func (req TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser, db
 //ParsePQUniqueConstraintError is used to determine if a request with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (req *TODeliveryServiceRequest) Update() (error, tc.ApiErrorType) {
 	var current TODeliveryServiceRequest
 	if req.ID == nil {
 		log.Errorf("error updating DeliveryServiceRequest: ID is nil")
 		return errors.New("error updating DeliveryServiceRequest: ID is nil"), tc.DataMissingError
 	}
-	err := db.QueryRowx(selectDeliveryServiceRequestsQuery() + `WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(&current)
+	err := req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery() + `WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
@@ -205,26 +208,9 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 			tc.DataConflictError
 	}
 
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Println("could not begin transaction: ", err.Error())
-		return err, tc.SystemError
-	}
-
-	userID := tc.IDNoMod(user.ID)
+	userID := tc.IDNoMod(req.ReqInfo.User.ID)
 	req.LastEditedByID = &userID
-	resultRows, err := tx.NamedQuery(updateRequestQuery(), req)
+	resultRows, err := req.ReqInfo.Tx.NamedQuery(updateRequestQuery(), req)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -257,12 +243,6 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
@@ -273,7 +253,7 @@ func (req *TODeliveryServiceRequest) Update(db *sqlx.DB, user auth.CurrentUser) 
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted request and have
 //to be added to the struct
-func (req *TODeliveryServiceRequest) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (req *TODeliveryServiceRequest) Create() (error, tc.ApiErrorType) {
 	if req == nil {
 		return errors.New("nil deliveryservice_request"), tc.SystemError
 	}
@@ -296,7 +276,7 @@ func (req *TODeliveryServiceRequest) Create(db *sqlx.DB, user auth.CurrentUser) 
 		return errors.New("no xmlId associated with this request"), tc.DataMissingError
 	}
 	XMLID := *ds.XMLID
-	active, err := isActiveRequest(db, XMLID)
+	active, err := isActiveRequest(req.ReqInfo.Tx, XMLID)
 	if err != nil {
 		return err, tc.SystemError
 	}
@@ -304,27 +284,10 @@ func (req *TODeliveryServiceRequest) Create(db *sqlx.DB, user auth.CurrentUser) 
 		return errors.New(`An active request exists for delivery service '` + XMLID + `'`), tc.DataConflictError
 	}
 
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-
-	userID := tc.IDNoMod(user.ID)
+	userID := tc.IDNoMod(req.ReqInfo.User.ID)
 	req.AuthorID = &userID
 	req.LastEditedByID = &userID
-	resultRows, err := tx.NamedQuery(insertRequestQuery(), req)
+	resultRows, err := req.ReqInfo.Tx.NamedQuery(insertRequestQuery(), req)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -359,12 +322,7 @@ func (req *TODeliveryServiceRequest) Create(db *sqlx.DB, user auth.CurrentUser) 
 	}
 	req.SetKeys(map[string]interface{}{"id": id})
 	req.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
@@ -372,14 +330,14 @@ func (req *TODeliveryServiceRequest) Create(db *sqlx.DB, user auth.CurrentUser) 
 //all implementations of Deleter should use transactions and return the proper errorType
 
 // Delete removes the request from the db
-func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (req *TODeliveryServiceRequest) Delete() (error, tc.ApiErrorType) {
 	var st tc.RequestStatus
 	log.Debugln("DELETING REQUEST WITH ID ", strconv.Itoa(*req.ID))
 	if req.ID == nil {
 		return errors.New("cannot delete deliveryservice_request -- ID is nil"), tc.SystemError
 	}
 
-	err := db.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(*req.ID)).Scan(&st)
+	err := req.ReqInfo.Tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(*req.ID)).Scan(&st)
 	if err != nil {
 		return err, tc.SystemError
 	}
@@ -388,26 +346,10 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 		return fmt.Errorf("cannot delete a deliveryservice_request with state %s", string(st)), tc.DataConflictError
 	}
 
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Println("could not begin transaction: ", err.Error())
-		return tc.DBError, tc.SystemError
-	}
 	query := `DELETE FROM deliveryservice_request WHERE id=` + strconv.Itoa(*req.ID)
 	log.Debugf("about to run exec query: %s", query)
 
-	result, err := tx.Exec(query)
+	result, err := req.ReqInfo.Tx.Exec(query)
 	if err != nil {
 		log.Errorln("received error from delete execution: ", err.Error())
 		return tc.DBError, tc.SystemError
@@ -425,13 +367,8 @@ func (req *TODeliveryServiceRequest) Delete(db *sqlx.DB, user auth.CurrentUser) 
 		log.Errorln("the delete affected too many rows")
 		return fmt.Errorf("this delete affected too many rows: %d", rowsAffected), tc.SystemError
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
 	// success!
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
@@ -458,11 +395,11 @@ func (req TODeliveryServiceRequest) ChangeLogMessage(action string) (string, err
 }
 
 // isActiveRequest returns true if a request using this XMLID is currently in an active state
-func isActiveRequest(db *sqlx.DB, XMLID string) (bool, error) {
+func isActiveRequest(tx *sqlx.Tx, XMLID string) (bool, error) {
 	q := `SELECT EXISTS(SELECT 1 FROM deliveryservice_request
 WHERE deliveryservice->>'xmlId' = '` + XMLID + `'
 AND status IN ('draft', 'submitted', 'pending'))`
-	row := db.QueryRow(q)
+	row := tx.QueryRow(q)
 	var active bool
 	err := row.Scan(&active)
 	if err != nil {
@@ -509,17 +446,21 @@ WHERE id=:id`
 
 ////////////////////////////////////////////////////////////////
 // Assignment change
+
+func GetAssignmentTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := deliveryServiceRequestAssignment{TODeliveryServiceRequest{reqInfo, tc.DeliveryServiceRequestNullable{}}}
+		return &toReturn
+	}
+}
+
+
 type deliveryServiceRequestAssignment struct {
 	TODeliveryServiceRequest
 }
 
-// GetAssignRefType is used to decode the JSON for deliveryservice_request assignment
-func GetAssignRefType() *deliveryServiceRequestAssignment {
-	return &deliveryServiceRequestAssignment{}
-}
-
 // Update assignee only
-func (req *deliveryServiceRequestAssignment) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (req *deliveryServiceRequestAssignment) Update() (error, tc.ApiErrorType) {
 	// req represents the state the deliveryservice_request is to transition to
 	// we want to limit what changes here -- only assignee can change
 	if req.ID == nil {
@@ -528,7 +469,7 @@ func (req *deliveryServiceRequestAssignment) Update(db *sqlx.DB, user auth.Curre
 
 	// get original
 	var current TODeliveryServiceRequest
-	err := db.QueryRowx(selectDeliveryServiceRequestsQuery() + `WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(&current)
+	err := req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery() + `WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
@@ -545,30 +486,13 @@ func (req *deliveryServiceRequestAssignment) Update(db *sqlx.DB, user auth.Curre
 	*req = deliveryServiceRequestAssignment{current}
 	req.AssigneeID = assigneeID
 
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Println("could not begin transaction: ", err.Error())
-		return err, tc.SystemError
-	}
-
 	// LastEditedBy field should not change with status update
 	v := "null"
 	if req.AssigneeID != nil {
 		v = strconv.Itoa(*req.AssigneeID)
 	}
 	query := `UPDATE deliveryservice_request SET assignee_id = ` + v + ` WHERE id=` + strconv.Itoa(*req.ID)
-	_, err = tx.Exec(query)
+	_, err = req.ReqInfo.Tx.Exec(query)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -581,24 +505,17 @@ func (req *deliveryServiceRequestAssignment) Update(db *sqlx.DB, user auth.Curre
 		return tc.DBError, tc.SystemError
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-
 	// update req with current info
-	err = db.QueryRowx(selectDeliveryServiceRequestsQuery() + ` WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(req)
+	err = req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery() + ` WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(req)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
 	}
 
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
-func (req deliveryServiceRequestAssignment) Validate(db *sqlx.DB) []error {
+func (req deliveryServiceRequestAssignment) Validate() []error {
 	return nil
 }
 
@@ -621,13 +538,14 @@ type deliveryServiceRequestStatus struct {
 	TODeliveryServiceRequest
 }
 
-// GetStatusRefType is used to decode the JSON for deliveryservice_request status change
-func GetStatusRefType() *deliveryServiceRequestStatus {
-	return &deliveryServiceRequestStatus{}
+func GetStatusTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := deliveryServiceRequestStatus{TODeliveryServiceRequest{reqInfo, tc.DeliveryServiceRequestNullable{}}}
+		return &toReturn
+	}
 }
-
 // Update status only
-func (req *deliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (req *deliveryServiceRequestStatus) Update() (error, tc.ApiErrorType) {
 	// req represents the state the deliveryservice_request is to transition to
 	// we want to limit what changes here -- only status can change,  and only according to the established rules
 	// for status transition
@@ -637,7 +555,7 @@ func (req *deliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUs
 	if req.ID == nil {
 		log.Errorf("error updating DeliveryServiceRequestStatus: ID is nil")
 	}
-	err := db.QueryRowx(selectDeliveryServiceRequestsQuery() + ` WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(&current)
+	err := req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery() + ` WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
@@ -652,26 +570,9 @@ func (req *deliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUs
 	*req = deliveryServiceRequestStatus{current}
 	req.Status = st
 
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Println("could not begin transaction: ", err.Error())
-		return err, tc.SystemError
-	}
-
 	// LastEditedBy field should not change with status update
 	query := `UPDATE deliveryservice_request SET status = '` + string(*req.Status) + `' WHERE id=` + strconv.Itoa(*req.ID)
-	_, err = tx.Exec(query)
+	_, err = req.ReqInfo.Tx.Exec(query)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -684,25 +585,18 @@ func (req *deliveryServiceRequestStatus) Update(db *sqlx.DB, user auth.CurrentUs
 		return tc.DBError, tc.SystemError
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-
 	// update req with current info
-	err = db.QueryRowx(selectDeliveryServiceRequestsQuery() + ` WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(req)
+	err = req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery() + ` WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(req)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
 	}
 
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
 // Validate is not needed when only Status is updated
-func (req deliveryServiceRequestStatus) Validate(db *sqlx.DB) []error {
+func (req deliveryServiceRequestStatus) Validate() []error {
 	return nil
 }
 

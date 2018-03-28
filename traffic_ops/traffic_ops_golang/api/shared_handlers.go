@@ -25,15 +25,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-
-	"github.com/jmoiron/sqlx"
 )
 
 const PathParamsKey = "pathParams"
@@ -109,13 +106,13 @@ func GetCombinedParams(r *http.Request) (map[string]string, error) {
 //      we lose the ability to unmarshal the struct if a struct implementing the interface is passed in,
 //      because when when it is de-referenced it is a pointer to an interface. A new copy is created so that
 //      there are no issues with concurrent goroutines
-func decodeAndValidateRequestBody(r *http.Request, v Validator, db *sqlx.DB, user auth.CurrentUser) (interface{}, []error) {
-	payload := reflect.Indirect(reflect.ValueOf(v)).Addr().Interface() // does a shallow copy v's internal struct members
+func decodeAndValidateRequestBody(r *http.Request, v Validator) []error {
 	defer r.Body.Close()
-	if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
-		return nil, []error{err}
+
+	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
+		return []error{err}
 	}
-	return payload, payload.(Validator).Validate(db)
+	return v.Validate()
 }
 
 //this creates a handler function from the pointer to a struct implementing the Reader interface
@@ -123,12 +120,17 @@ func decodeAndValidateRequestBody(r *http.Request, v Validator, db *sqlx.DB, use
 //      combines the path and query parameters
 //      produces the proper status code based on the error code returned
 //      marshals the structs returned into the proper response json
-func ReadHandler(typeRef Reader, db *sqlx.DB) http.HandlerFunc {
+func ReadHandler(typeFactory func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//create error function with ResponseWriter and Request
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
-		ctx := r.Context()
+		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
+		if userErr != nil || sysErr != nil {
+			HandleErr(w, r, errCode, userErr, sysErr)
+			return
+		}
+		defer inf.Close()
 
 		// Load the PathParams into the query parameters for pass through
 		params, err := GetCombinedParams(r)
@@ -138,14 +140,9 @@ func ReadHandler(typeRef Reader, db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
-		user, err := auth.GetCurrentUser(ctx)
-		if err != nil {
-			log.Errorf("unable to retrieve current user from context: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
+		reader := typeFactory(inf)
 
-		results, errs, errType := typeRef.Read(db, params, *user)
+		results, errs, errType := reader.Read(params)
 		if len(errs) > 0 {
 			tc.HandleErrorsWithType(errs, errType, handleErrs)
 			return
@@ -173,10 +170,20 @@ func ReadHandler(typeRef Reader, db *sqlx.DB) http.HandlerFunc {
 //   *decoding and validating the struct
 //   *change log entry
 //   *forming and writing the body over the wire
-func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
+func UpdateHandler(typeFactory func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//create error function with ResponseWriter and Request
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
+
+		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
+		if userErr != nil || sysErr != nil {
+			HandleErr(w, r, errCode, userErr, sysErr)
+			return
+		}
+		defer inf.Close()
+
+		//decode the body and validate the request struct
+		u := typeFactory(inf)
 		//collect path parameters and user from context
 		ctx := r.Context()
 		params, err := GetCombinedParams(r)
@@ -195,13 +202,11 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 		//create local instance of the shared typeRef pointer
 		//no operations should be made on the typeRef
 		//decode the body and validate the request struct
-		decoded, errs := decodeAndValidateRequestBody(r, typeRef, db, *user)
+		errs := decodeAndValidateRequestBody(r, u)
 		if len(errs) > 0 {
 			handleErrs(http.StatusBadRequest, errs...)
 			return
 		}
-		u := decoded.(Updater)
-		//now we have a validated local object to update
 
 		keyFields := u.GetKeyFieldsInfo() //expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a {}interface of the right type. in most that will be [{Field:"id",Func: func(s string)({}interface,error){return strconv.Atoi(s)}}]
 		keys, ok := u.GetKeys()           // a map of keyField to keyValue where keyValue is an {}interface
@@ -233,7 +238,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 
 		// if the object has tenancy enabled, check that user is able to access the tenant
 		if t, ok := u.(Tenantable); ok {
-			authorized, err := t.IsTenantAuthorized(*user, db)
+			authorized, err := t.IsTenantAuthorized(*user)
 			if err != nil {
 				handleErrs(http.StatusBadRequest, err)
 				return
@@ -245,13 +250,18 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 		}
 
 		//run the update and handle any error
-		err, errType := u.Update(db, *user)
+		err, errType := u.Update()
 		if err != nil {
 			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
 			return
 		}
 		//auditing here
-		CreateChangeLog(ApiChange, Updated, u, *user, db)
+		err = CreateChangeLog(ApiChange, Updated, u, *inf.User, inf.Tx)
+		if err != nil {
+			HandleErr(w,r,http.StatusInternalServerError,tc.DBError,errors.New("inserting changelog: " + err.Error()))
+			return
+		}
+		*inf.CommitTx = true
 		//form response to send across the wire
 		resp := struct {
 			Response interface{} `json:"response"`
@@ -276,21 +286,22 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 //   *current user
 //   *change log entry
 //   *forming and writing the body over the wire
-func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
+func DeleteHandler(typeFactory func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
-		d := typeRef
-
-		ctx := r.Context()
-		params, err := GetCombinedParams(r)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
+		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
+		if userErr != nil || sysErr != nil {
+			HandleErr(w, r, errCode, userErr, sysErr)
 			return
 		}
-		user, err := auth.GetCurrentUser(ctx)
+		defer inf.Close()
+
+
+		d := typeFactory(inf)
+
+		params, err := GetCombinedParams(r)
 		if err != nil {
-			log.Errorf("unable to retrieve current user from context: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
@@ -316,7 +327,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 
 		// if the object has tenancy enabled, check that user is able to access the tenant
 		if t, ok := d.(Tenantable); ok {
-			authorized, err := t.IsTenantAuthorized(*user, db)
+			authorized, err := t.IsTenantAuthorized(*inf.User)
 			if err != nil {
 				handleErrs(http.StatusBadRequest, err)
 				return
@@ -328,7 +339,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 		}
 
 		log.Debugf("calling delete on object: %++v", d) //should have id set now
-		err, errType := d.Delete(db, *user)
+		err, errType := d.Delete()
 		if err != nil {
 			log.Errorf("error deleting: %++v", err)
 			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
@@ -336,7 +347,12 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 		}
 		//audit here
 		log.Debugf("changelog for delete on object")
-		CreateChangeLog(ApiChange, Deleted, d, *user, db)
+		err = CreateChangeLog(ApiChange, Deleted, d, *inf.User, inf.Tx)
+		if err != nil {
+			HandleErr(w,r,http.StatusInternalServerError,tc.DBError,errors.New("inserting changelog: " + err.Error()))
+			return
+		}
+		*inf.CommitTx = true
 		//
 		resp := struct {
 			tc.Alerts
@@ -361,31 +377,32 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 //   *decoding and validating the struct
 //   *change log entry
 //   *forming and writing the body over the wire
-func CreateHandler(typeRef Creator, db *sqlx.DB) http.HandlerFunc {
+func CreateHandler(typeConstructor func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
-		ctx := r.Context()
-		user, err := auth.GetCurrentUser(ctx)
-		if err != nil {
-			log.Errorf("unable to retrieve current user from context: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
+		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
+		if userErr != nil || sysErr != nil {
+			HandleErr(w, r, errCode, userErr, sysErr)
 			return
 		}
+		defer inf.Close()
 
+		i := typeConstructor(inf)
 		//decode the body and validate the request struct
-		decoded, errs := decodeAndValidateRequestBody(r, typeRef, db, *user)
+		errs := decodeAndValidateRequestBody(r, i)
+
 		if len(errs) > 0 {
 			handleErrs(http.StatusBadRequest, errs...)
 			return
 		}
-		i := decoded.(Creator)
+
 		log.Debugf("%++v", i)
 		//now we have a validated local object to insert
 
 		// if the object has tenancy enabled, check that user is able to access the tenant
 		if t, ok := i.(Tenantable); ok {
-			authorized, err := t.IsTenantAuthorized(*user, db)
+			authorized, err := t.IsTenantAuthorized(*inf.User)
 			if err != nil {
 				handleErrs(http.StatusBadRequest, err)
 				return
@@ -396,13 +413,18 @@ func CreateHandler(typeRef Creator, db *sqlx.DB) http.HandlerFunc {
 			}
 		}
 
-		err, errType := i.Create(db, *user)
+		err, errType := i.Create()
 		if err != nil {
 			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
 			return
 		}
 
-		CreateChangeLog(ApiChange, Created, i, *user, db)
+		err = CreateChangeLog(ApiChange, Created, i, *inf.User, inf.Tx)
+		if err != nil {
+			HandleErr(w,r,http.StatusInternalServerError,tc.DBError,errors.New("inserting changelog: " + err.Error()))
+			return
+		}
+		*inf.CommitTx = true
 
 		resp := struct {
 			Response interface{} `json:"response"`

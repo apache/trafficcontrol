@@ -30,23 +30,24 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/asaskevich/govalidator"
 	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
 //we need a type alias to define functions on
-type TOCDN v13.CDNNullable
+type TOCDN struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	v13.CDNNullable
+}
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOCDN{}
-
-func GetRefType() *TOCDN {
-	return &refType
+func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := TOCDN{reqInfo, v13.CDNNullable{}}
+		return &toReturn
+	}
 }
 
 func (cdn TOCDN) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -103,7 +104,7 @@ func IsValidCDNName(str string) bool {
 }
 
 // Validate fulfills the api.Validator interface
-func (cdn TOCDN) Validate(db *sqlx.DB) []error {
+func (cdn TOCDN) Validate() []error {
 	validName := validation.NewStringRule(IsValidCDNName, "invalid characters found - Use alphanumeric . or - .")
 	validDomainName := validation.NewStringRule(govalidator.IsDNSName, "not a valid domain name")
 	errs := validation.Errors{
@@ -120,26 +121,10 @@ func (cdn TOCDN) Validate(db *sqlx.DB) []error {
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted cdn and have
 //to be added to the struct
-func (cdn *TOCDN) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (cdn *TOCDN) Create() (error, tc.ApiErrorType) {
 	// make sure that cdn.DomainName is lowercase
 	*cdn.DomainName = strings.ToLower(*cdn.DomainName)
-	resultRows, err := tx.NamedQuery(insertQuery(), cdn)
+	resultRows, err := cdn.ReqInfo.Tx.NamedQuery(insertQuery(), cdn)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -175,18 +160,10 @@ func (cdn *TOCDN) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 	}
 	cdn.SetKeys(map[string]interface{}{"id": id})
 	cdn.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
-func (cdn *TOCDN) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
-
+func (cdn *TOCDN) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
@@ -203,7 +180,7 @@ func (cdn *TOCDN) Read(db *sqlx.DB, parameters map[string]string, user auth.Curr
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := cdn.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying CDNs: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -212,12 +189,12 @@ func (cdn *TOCDN) Read(db *sqlx.DB, parameters map[string]string, user auth.Curr
 
 	CDNs := []interface{}{}
 	for rows.Next() {
-		var s TOCDN
-		if err = rows.StructScan(&s); err != nil {
+		var cdn v13.CDNNullable
+		if err = rows.StructScan(&cdn); err != nil {
 			log.Errorf("error parsing CDN rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
-		CDNs = append(CDNs, s)
+		CDNs = append(CDNs, cdn)
 	}
 
 	return CDNs, []error{}, tc.NoError
@@ -228,27 +205,11 @@ func (cdn *TOCDN) Read(db *sqlx.DB, parameters map[string]string, user auth.Curr
 //ParsePQUniqueConstraintError is used to determine if a cdn with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (cdn *TOCDN) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with cdn: %++v", updateQuery(), cdn)
 	// make sure that cdn.DomainName is lowercase
 	*cdn.DomainName = strings.ToLower(*cdn.DomainName)
-	resultRows, err := tx.NamedQuery(updateQuery(), cdn)
+	resultRows, err := cdn.ReqInfo.Tx.NamedQuery(updateQuery(), cdn)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -281,36 +242,14 @@ func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
 //The CDN implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (cdn *TOCDN) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (cdn *TOCDN) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with cdn: %++v", deleteQuery(), cdn)
-	result, err := tx.NamedExec(deleteQuery(), cdn)
+	result, err := cdn.ReqInfo.Tx.NamedExec(deleteQuery(), cdn)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -326,12 +265,6 @@ func (cdn *TOCDN) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 

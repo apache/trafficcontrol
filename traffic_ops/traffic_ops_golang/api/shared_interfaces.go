@@ -22,43 +22,45 @@ package api
 import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/jmoiron/sqlx"
 )
 
-type Updater interface {
-	Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType)
+type CRUDer interface {
+	Creator
+	Reader
+	Updater
+	Deleter
 	Identifier
 	Validator
 }
 
+type Updater interface {
+	Update() (error, tc.ApiErrorType)
+}
+
 type Identifier interface {
 	GetKeys() (map[string]interface{}, bool)
+	SetKeys(map[string]interface{})
 	GetType() string
 	GetAuditName() string
 	GetKeyFieldsInfo() []KeyFieldInfo
 }
 
 type Creator interface {
-	Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType)
-	SetKeys(map[string]interface{})
-	Identifier
-	Validator
+	Create() (error, tc.ApiErrorType)
 }
 
 type Deleter interface {
-	Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType)
-	SetKeys(map[string]interface{})
-	Identifier
+	Delete() (error, tc.ApiErrorType)
 }
 
 type Validator interface {
-	Validate(db *sqlx.DB) []error
+	Validate() []error
 }
 
 type Tenantable interface {
-	IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error)
+	IsTenantAuthorized(user auth.CurrentUser) (bool, error)
 }
 
 type Reader interface {
-	Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType)
+	Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType)
 }

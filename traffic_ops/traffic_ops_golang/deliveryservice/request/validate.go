@@ -26,24 +26,16 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/go-ozzo/ozzo-validation"
-	"github.com/jmoiron/sqlx"
 )
 
 // Validate ensures all required fields are present and in correct form.  Also checks request JSON is complete and valid
-func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
-	tx, err := db.DB.Begin() // must be last, MUST not return an error if this suceeds, without closing the tx
-	if err != nil {
-		return []error{errors.New("beginning transaction: " + err.Error())}
-	}
-	commitTx := false
-	defer dbhelpers.FinishTx(tx, &commitTx)
-
+func (req *TODeliveryServiceRequest) Validate() []error {
 	fromStatus := tc.RequestStatusDraft
 	if req.ID != nil && *req.ID > 0 {
-		err := tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(*req.ID)).Scan(&fromStatus)
+		err := req.ReqInfo.Tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(*req.ID)).Scan(&fromStatus)
+
 		if err != nil {
 			return []error{err}
 		}
@@ -67,9 +59,10 @@ func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
 	}
 	errs := tovalidate.ToErrors(errMap)
 	// ensure the deliveryservice requested is valid
-	if err := req.DeliveryService.Validate(tx); err != nil {
-		errs = append(errs, err)
-	}
-	commitTx = true
+	e := req.DeliveryService.Validate(req.ReqInfo.Tx.Tx)
+
+	errs = append(errs, e...)
+
+
 	return errs
 }

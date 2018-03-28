@@ -379,7 +379,7 @@ func ParseOrgServerFQDN(orgServerFQDN string) (*string, *string, *string, error)
 	return &protocol, &FQDN, port, nil
 }
 
-func (ds *DeliveryServiceNullableV12) Validate(tx *sql.Tx) error {
+func (ds *DeliveryServiceNullableV12) Validate(tx *sql.Tx) []error {
 	ds.Sanitize()
 	isDNSName := validation.NewStringRule(govalidator.IsDNSName, "must be a valid hostname")
 	noPeriods := validation.NewStringRule(tovalidate.NoPeriods, "cannot contain periods")
@@ -402,7 +402,7 @@ func (ds *DeliveryServiceNullableV12) Validate(tx *sql.Tx) error {
 		toErrs = append(toErrs, errors.New("type fields: "+err.Error()))
 	}
 	if len(toErrs) > 0 {
-		return errors.New(util.JoinErrsStr(toErrs))
+		return toErrs
 	}
 	return nil
 }
@@ -423,20 +423,20 @@ func (ds *DeliveryServiceNullableV13) Sanitize() {
 	*ds.DeepCachingType = DeepCachingTypeFromString(string(*ds.DeepCachingType))
 }
 
-func (ds *DeliveryServiceNullableV13) Validate(tx *sql.Tx) error {
+func (ds *DeliveryServiceNullableV13) Validate(tx *sql.Tx) []error {
 	ds.Sanitize()
 	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
 		"must be one of 'NEVER' or 'ALWAYS'")
 	errs := tovalidate.ToErrors(validation.Errors{
 		"deepCachingType": validation.Validate(ds.DeepCachingType, neverOrAlways),
 	})
-	if err := ds.DeliveryServiceNullableV12.Validate(tx); err != nil {
-		errs = append(errs, err)
+	if v12Errs := ds.DeliveryServiceNullableV12.Validate(tx); len(v12Errs) > 0 {
+		errs = append(errs, v12Errs...)
 	}
 	if len(errs) == 0 {
 		return nil
 	}
-	return errors.New(util.JoinErrsStr(errs)) // don't add context, so versions chain well
+	return errs // don't add context, so versions chain well
 }
 
 // Value implements the driver.Valuer interface

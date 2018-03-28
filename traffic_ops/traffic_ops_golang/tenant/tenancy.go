@@ -49,7 +49,7 @@ func (dsInfo DeliveryServiceTenantInfo) IsTenantAuthorized(user *auth.CurrentUse
 	if dsInfo.TenantID == nil {
 		return false, errors.New("TenantID is nil")
 	}
-	return IsResourceAuthorizedToUserTx(*dsInfo.TenantID, user, tx)
+	return IsResourceAuthorizedToUserTx(*dsInfo.TenantID, *user, tx)
 }
 
 // returns tenant information for a deliveryservice
@@ -183,6 +183,33 @@ func GetUserTenantIDList(user auth.CurrentUser, db *sqlx.DB) ([]int, error) {
 	return tenants, nil
 }
 
+func GetUserTenantIDListTx(user auth.CurrentUser, tx *sqlx.Tx) ([]int, error) {
+	query := `WITH RECURSIVE q AS (SELECT id, name, active, parent_id FROM tenant WHERE id = $1
+	UNION SELECT t.id, t.name, t.active, t.parent_id  FROM tenant t JOIN q ON q.id = t.parent_id)
+	SELECT id FROM q;`
+
+	log.Debugln("\nQuery: ", query)
+
+	var tenantID int
+
+	rows, err := tx.Query(query, user.TenantID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tenants := []int{}
+
+	for rows.Next() {
+		if err := rows.Scan(&tenantID); err != nil {
+			return nil, err
+		}
+		tenants = append(tenants, tenantID)
+	}
+
+	return tenants, nil
+}
+
 // IsTenancyEnabled returns true if tenancy is enabled or false otherwise
 func IsTenancyEnabled(db *sqlx.DB) bool {
 	query := `SELECT COALESCE(value::boolean,FALSE) AS value FROM parameter WHERE name = 'use_tenancy' AND config_file = 'global' UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY`
@@ -237,7 +264,7 @@ func IsResourceAuthorizedToUser(resourceTenantID int, user auth.CurrentUser, db 
 
 // returns a boolean value describing if the user has access to the provided resource tenant id and an error
 // if use_tenancy is set to false (0 in the db) this method will return true allowing access.
-func IsResourceAuthorizedToUserTx(resourceTenantID int, user *auth.CurrentUser, tx *sql.Tx) (bool, error) {
+func IsResourceAuthorizedToUserTx(resourceTenantID int, user auth.CurrentUser, tx *sql.Tx) (bool, error) {
 	// $1 is the user tenant ID and $2 is the resource tenant ID
 	query := `WITH RECURSIVE q AS (SELECT id, active FROM tenant WHERE id = $1
 	UNION SELECT t.id, t.active FROM TENANT t JOIN q ON q.id = t.parent_id),
@@ -635,3 +662,4 @@ func getDSTenantIDByIDTx(tx *sql.Tx, id int) (*int, bool, error) {
 	}
 	return tenantID, true, nil
 }
+

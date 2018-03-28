@@ -28,6 +28,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/jmoiron/sqlx"
+	"errors"
 )
 
 type ChangeLog struct {
@@ -50,39 +51,34 @@ const (
 	Deleted   = "Deleted"
 )
 
-func CreateChangeLog(level string, action string, i Identifier, user auth.CurrentUser, db *sqlx.DB) error {
+func CreateChangeLog(level string, action string, i Identifier, user auth.CurrentUser, tx *sqlx.Tx) error {
 	t, ok := i.(ChangeLogger)
 	if !ok {
 		keys, _ := i.GetKeys()
-		return CreateChangeLogBuildMsg(level, action, user, db, i.GetType(), i.GetAuditName(), keys)
+		return CreateChangeLogBuildMsg(level, action, user, tx, i.GetType(), i.GetAuditName(), keys)
 	}
 	msg, err := t.ChangeLogMessage(action)
 	if err != nil {
 		log.Errorf("%++v creating log message for %++v", err, t)
 		keys, _ := i.GetKeys()
-		return CreateChangeLogBuildMsg(level, action, user, db, i.GetType(), i.GetAuditName(), keys)
+		return CreateChangeLogBuildMsg(level, action, user, tx, i.GetType(), i.GetAuditName(), keys)
 	}
-	return CreateChangeLogMsg(level, user, db, msg)
+	return CreateChangeLogRawErr(level, msg, user, tx.Tx)
 }
 
-func CreateChangeLogBuildMsg(level string, action string, user auth.CurrentUser, db *sqlx.DB, objType string, auditName string, keys map[string]interface{}) error {
+func CreateChangeLogBuildMsg(level string, action string, user auth.CurrentUser, tx *sqlx.Tx, objType string, auditName string, keys map[string]interface{}) error {
 	keyStr := "{ "
 	for key, value := range keys {
 		keyStr += key + ":" + fmt.Sprintf("%v", value) + " "
 	}
 	keyStr += "}"
 	msg := action + " " + objType + ": " + auditName + " keys: " + keyStr
-	return CreateChangeLogMsg(level, user, db, msg)
+	return CreateChangeLogRawErr(level, msg, user, tx.Tx)
 }
 
-func CreateChangeLogMsg(level string, user auth.CurrentUser, db *sqlx.DB, msg string) error {
-	query := `INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`
-	log.Debugf("about to exec %s with %s", query, msg)
-	if _, err := db.Exec(query, level, msg, user.ID); err != nil {
-		log.Errorf("received error: %++v from audit log insertion", err)
-		return err
-	}
-	return nil
+func CreateChangeLogRawErr(level string, msg string, user auth.CurrentUser, tx *sql.Tx) error {
+	 _, err := tx.Exec(`INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`, level, msg, user.ID)
+	 return errors.New("Inserting change log level '" + level + "' message '" + msg + "' user '" + user.UserName + "': " + err.Error())
 }
 
 func CreateChangeLogRaw(level string, msg string, user auth.CurrentUser, db *sql.DB) {
