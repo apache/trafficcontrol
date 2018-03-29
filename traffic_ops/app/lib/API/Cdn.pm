@@ -524,7 +524,8 @@ sub routing {
 			my $c = $self->get_traffic_router_connection( { hostname => $ccr_host } );
 			my $s = $c->get_crs_stats();
 			if ( !defined($s) ) {
-				return $self->internal_server_error( { "Internal Server" => "Error" } );
+				$self->app->log->error("Unable to contact $ccr_host for $cdn_name.");
+				return $self->internal_server_error( { "Internal Server" => "Error: Unable to contact $ccr_host" } );
 			}
 			else {
 
