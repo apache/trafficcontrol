@@ -821,7 +821,7 @@ sub main {
     }
 
     # check if the user running postinstall is root
-    if ( $ENV{USER} ne "root" ) {
+    if ( $> != 0 ) {
         errorOut("You must run this script as the root user");
     }
 
