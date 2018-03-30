@@ -350,6 +350,10 @@ sub process_cfg_file {
 	( $log_level >> $INFO ) && print "\nINFO: ======== Start processing config file: $cfg_file ========\n";
 
 	my $config_dir = $cfg_file_tracker->{$cfg_file}->{'location'};
+	if (!$config_dir) {
+		( $log_level >> $ERROR ) && print "ERROR No location information for $cfg_file.\n";
+		return $CFG_FILE_NOT_PROCESSED;
+	}
 
 	$uri = &set_uri($cfg_file);
 
