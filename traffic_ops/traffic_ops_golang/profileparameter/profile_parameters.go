@@ -46,17 +46,24 @@ func GetRefType() *TOProfileParameter {
 	return &refType
 }
 
+func (pp TOProfileParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"profile", api.GetIntKey}, {"parameter", api.GetIntKey}}
+}
+
 //Implementation of the Identifier, Validator interface functions
-func (pp *TOProfileParameter) GetID() (int, bool) {
-	if pp.Profile == nil {
-		return 0, false
+func (pp TOProfileParameter) GetKeys() (map[string]interface{}, bool) {
+	if pp.ProfileId == nil {
+		return map[string]interface{}{"profile": 0}, false
 	}
-	return *pp.Profile, true
+	if pp.ParameterId == nil {
+		return map[string]interface{}{"parameter": 0}, false
+	}
+	return map[string]interface{}{"id": *pp.Profile}, true
 }
 
 func (pp *TOProfileParameter) GetAuditName() string {
-	if pp.Profile != nil {
-		return strconv.Itoa(*pp.Profile)
+	if pp.ProfileId != nil {
+		return strconv.Itoa(*pp.ProfileId) + "-" + strconv.Itoa(*pp.ParameterId)
 	}
 	return "unknown"
 }
@@ -65,8 +72,12 @@ func (pp *TOProfileParameter) GetType() string {
 	return "profileParameter"
 }
 
-func (pp *TOProfileParameter) SetID(i int) {
-	pp.Profile = &i
+func (pp *TOProfileParameter) SetKeys(keys map[string]interface{}) {
+	profId, _ := keys["profile"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	pp.ProfileId = &profId
+
+	paramId, _ := keys["parameter"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	pp.ParameterId = &paramId
 }
 
 // Validate fulfills the api.Validator interface
@@ -119,17 +130,18 @@ func (pp *TOProfileParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error,
 	defer resultRows.Close()
 
 	var profile int
+	var parameter int
 	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
-		if err := resultRows.Scan(&profile, &lastUpdated); err != nil {
+		if err := resultRows.Scan(&profile, &parameter, &lastUpdated); err != nil {
 			log.Error.Printf("could not scan profile from insert: %s\n", err)
 			return tc.DBError, tc.SystemError
 		}
 	}
 	if rowsAffected == 0 {
-		err = errors.New("no parameter was inserted, no profile was returned")
+		err = errors.New("no profile_parameter was inserted, no profile+parameter was returned")
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
@@ -139,7 +151,7 @@ func (pp *TOProfileParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error,
 		return tc.DBError, tc.SystemError
 	}
 
-	pp.SetID(profile)
+	pp.SetKeys(map[string]interface{}{"profile": profile, "parameter": parameter})
 	pp.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
@@ -162,14 +174,12 @@ parameter) VALUES (
 func (pp *TOProfileParameter) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
-	privLevel := user.PrivLevel
-
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"profile":      dbhelpers.WhereColumnInfo{"pp.profile", api.IsInt},
+		"profile":      dbhelpers.WhereColumnInfo{"pp.profile", nil},
+		"parameter":    dbhelpers.WhereColumnInfo{"pp.parameter", nil},
 		"last_updated": dbhelpers.WhereColumnInfo{"pp.last_updated", nil},
-		"name":         dbhelpers.WhereColumnInfo{"p.parameter", nil},
 	}
 
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
@@ -188,20 +198,11 @@ func (pp *TOProfileParameter) Read(db *sqlx.DB, parameters map[string]string, us
 	defer rows.Close()
 
 	params := []interface{}{}
-	hiddenField := "********"
 	for rows.Next() {
-		var p tc.ParameterNullable
+		var p tc.ProfileParameterNullable
 		if err = rows.StructScan(&p); err != nil {
 			log.Errorf("error parsing pp rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
-		}
-		var isSecure bool
-		if p.Secure != nil {
-			isSecure = *p.Secure
-		}
-
-		if isSecure && (privLevel < auth.PrivLevelAdmin) {
-			p.Value = &hiddenField
 		}
 		params = append(params, p)
 	}
@@ -322,11 +323,14 @@ func (pp *TOProfileParameter) Delete(db *sqlx.DB, user auth.CurrentUser) (error,
 func selectQuery() string {
 
 	query := `SELECT
-p.last_updated,
-p.profile,
-p.id,
-p.parameter
-FROM profile_parameter p`
+pp.last_updated,
+pp.profile profile_id,
+pp.parameter parameter_id,
+prof.name profile,
+param.name parameter
+FROM profile_parameter pp
+JOIN profile prof ON prof.id = pp.profile
+JOIN parameter param ON param.id = pp.parameter`
 	return query
 }
 
@@ -341,6 +345,6 @@ WHERE id=:id RETURNING last_updated`
 
 func deleteQuery() string {
 	query := `DELETE FROM profile_parameter
-WHERE id=:id`
+	WHERE profile=:profile and parameter=:parameter`
 	return query
 }
