@@ -36,19 +36,19 @@ func getTestProfileParameters() []tc.ProfileParameterNullable {
 	pps := []tc.ProfileParameterNullable{}
 	lastUpdated := tc.TimeNoMod{}
 	lastUpdated.Scan(time.Now())
-	profile := 1
-	parameter := 1
+	profileId := 1
+	parameterId := 1
 
 	pp := tc.ProfileParameterNullable{
 		LastUpdated: &lastUpdated,
-		Profile:     &profile,
-		Parameter:   &parameter,
+		ProfileId:   &profileId,
+		ParameterId: &parameterId,
 	}
 	pps = append(pps, pp)
 
 	pp2 := pp
-	pp2.Profile = &profile
-	pp2.Parameter = &parameter
+	pp2.ProfileId = &profileId
+	pp2.ParameterId = &parameterId
 	pps = append(pps, pp2)
 
 	return pps
@@ -72,7 +72,9 @@ func TestGetProfileParameters(t *testing.T) {
 		rows = rows.AddRow(
 			ts.LastUpdated,
 			ts.Profile,
+			ts.ProfileId,
 			ts.Parameter,
+			ts.ParameterId,
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
