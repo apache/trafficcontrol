@@ -25,7 +25,8 @@ import (
 	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -37,10 +38,10 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOProfileParameter tc.ProfileParameterNullable
+type TOProfileParameter v13.ProfileParameterNullable
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOProfileParameter(tc.ProfileParameterNullable{})
+var refType = TOProfileParameter(v13.ProfileParameterNullable{})
 
 func GetRefType() *TOProfileParameter {
 	return &refType
