@@ -533,7 +533,6 @@ sub api_routes {
 	# -- DELIVERYSERVICES: STEERING DELIVERYSERVICES
 	$r->get("/internal/api/$version/steering")->over( authenticated => 1, not_ldap => 1 )->to( 'Steering#index', namespace => 'API::DeliveryService' );
 	$r->get("/internal/api/$version/steering/:xml_id")->over( authenticated => 1, not_ldap => 1 )->to( 'Steering#index', namespace => 'API::DeliveryService' );
-	$r->post("/internal/api/$version/steering")->over( authenticated => 1, not_ldap => 1 )->to( 'Steering#add', namespace => 'API::DeliveryService' );
 	$r->put("/internal/api/$version/steering/:xml_id")->over( authenticated => 1, not_ldap => 1 )->to( 'Steering#update', namespace => 'API::DeliveryService' );
 
 	$r->get("/api/$version/steering/:id/targets" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'SteeringTarget#index', namespace => 'API::DeliveryService' );
