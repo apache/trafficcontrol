@@ -48,7 +48,9 @@ sub get_dsn {
 	our $hostname = $db_info->{hostname};
 	our $port     = $db_info->{port};
 	our $type     = $db_info->{type};
-	our $dsn      = "DBI:$type:database=$dbname;host=$hostname;port=$port";
+	# add `ssl: true` to database.conf to require ssl
+	our $reqssl   = $db_info->{ssl} ? 'require' : 'disable';
+	our $dsn      = "DBI:$type:database=$dbname;host=$hostname;port=$port;sslmode=$reqssl";
 }
 
 sub get_dbinfo {
