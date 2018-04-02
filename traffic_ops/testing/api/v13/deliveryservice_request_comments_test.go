@@ -72,7 +72,7 @@ func UpdateTestDeliveryServiceRequestComments(t *testing.T) {
 	// Retrieve the delivery service request comment to check that the value got updated
 	resp, _, err := TOSession.GetDeliveryServiceRequestCommentByID(firstComment.ID)
 	if err != nil {
-		t.Errorf("cannot GET delivery service request comment by id: '$%s' %v - %v\n", firstComment.ID, err)
+		t.Errorf("cannot GET delivery service request comment by id: '$%d', %v\n", firstComment.ID, err)
 	}
 	respDSRC := resp[0]
 	if respDSRC.Value != newFirstCommentValue {
@@ -100,7 +100,7 @@ func DeleteTestDeliveryServiceRequestComments(t *testing.T) {
 	for _, comment := range comments {
 		_, _, err := TOSession.DeleteDeliveryServiceRequestCommentByID(comment.ID)
 		if err != nil {
-			t.Errorf("cannot DELETE delivery service request comment by id: '%s' %v\n", comment.ID, err)
+			t.Errorf("cannot DELETE delivery service request comment by id: '%d' %v\n", comment.ID, err)
 		}
 
 		// Retrieve the delivery service request comment to see if it got deleted
@@ -109,7 +109,7 @@ func DeleteTestDeliveryServiceRequestComments(t *testing.T) {
 			t.Errorf("error deleting delivery service request comment: %s\n", err.Error())
 		}
 		if len(comments) > 0 {
-			t.Errorf("expected delivery service request comment: %s to be deleted\n", comment.ID)
+			t.Errorf("expected delivery service request comment: %d to be deleted\n", comment.ID)
 		}
 	}
 }
