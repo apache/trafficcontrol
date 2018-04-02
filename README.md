@@ -6,20 +6,32 @@ HTTP caching proxy, implementing RFC 7234
 
 1. Install and set up a Golang development environment.
     * See https://golang.org/doc/install
-2. Clone this repository into your GOPATH.
+2. Get the latest necessary golang.org/x packages.
+```bash
+rm -rf $GOPATH/src/golang.org/x
+rm -rf $GOPATH/pkg/*
+
+go get golang.org/x/text
+go get golang.org/x/sys/unix
+go get golang.org/x/net/http2
+go get golang.org/x/net/ipv4
+go get golang.org/x/net/ipv6
+```
+  * golang.org/x must be updated when the Go compiler is, so we treat it as part of the compiler, rather than vendoring it like other dependencies, to avoid breaking updating to newer compilers than we internally work with. If you know what you're doing, feel free to skip this step, or omit `rm` of old `go get` source and packages.
+3. Clone this repository into your GOPATH.
 ```bash
 mkdir -p $GOPATH/src/github.com/apache/incubator-trafficcontrol
 cd $GOPATH/src/github.com/apache/incubator-trafficcontrol
 git clone https://github.com/apache/incubator-trafficcontrol/grove
 ```
-3. Build the application
+4. Build the application
 ```bash
 cd $GOPATH/src/github.com/apache/incubator-trafficcontrol/grove
 go build
 ```
-5. Install and configure an RPM development environment
+6. Install and configure an RPM development environment
    * See https://wiki.centos.org/HowTos/SetupRpmBuildEnvironment
-4. Build the RPM
+7. Build the RPM
 ```bash
 ./build/build_rpm.sh
 ```
