@@ -170,7 +170,7 @@ func main() {
 	useCache := false
 	toc, _, err := to.LoginWithAgent(*toURL, *toUser, *toPass, *toInsecure, UserAgent, useCache, TrafficOpsTimeout)
 	if err != nil {
-		fmt.Printf("Error connecting to Traffic Ops: %v\n", err)
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error connecting to Traffic Ops: " + err.Error())
 		os.Exit(1)
 	}
 
@@ -179,7 +179,7 @@ func main() {
 		needsUpdate := false
 		needsUpdate, revalPendingStatus, err = hasUpdatePending(toc, *host)
 		if err != nil {
-			fmt.Println("Error checking Traffic Ops update pending: " + err.Error())
+			fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error checking Traffic Ops update pending: " + err.Error())
 			os.Exit(1)
 		}
 		if !needsUpdate {
@@ -194,13 +194,13 @@ func main() {
 	rules, err = createRulesOldAPI(toc, *host, *certDir) // TODO remove once 1.3 / traffic_ops_golang is deployed to production.
 	// }
 	if err != nil {
-		fmt.Printf("Error creating rules: %v\n", err)
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error creating rules: " + err.Error())
 		os.Exit(1)
 	}
 
 	jsonRules, err := remap.RemapRulesToJSON(rules)
 	if err != nil {
-		fmt.Println("Error creating JSON Remap Rules: " + err.Error())
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error creating JSON Remap Rules: " + err.Error())
 		os.Exit(1)
 	}
 
@@ -212,7 +212,7 @@ func main() {
 	}
 
 	if err != nil {
-		fmt.Printf("Error marshalling rules JSON: %v\n", err)
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error marshalling rules JSON: " + err.Error())
 		os.Exit(1)
 	}
 
@@ -220,23 +220,23 @@ func main() {
 
 	remapPath, err := GetRemapPath()
 	if err != nil {
-		fmt.Println("Error getting remap config path: " + err.Error())
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting remap config path: " + err.Error())
 		os.Exit(1)
 	}
 
 	if err := WriteAndBackup(remapPath, bts); err != nil {
-		fmt.Println("Error writing new config file: " + err.Error())
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error writing new config file: " + err.Error())
 		os.Exit(1)
 	}
 
 	if err := exec.Command("service", "grove", "reload").Run(); err != nil {
-		fmt.Println("Error restarting grove service (but successfully updated config file): " + err.Error())
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error restarting grove service (but successfully updated config file): " + err.Error())
 		os.Exit(2)
 	}
 
 	if !*ignoreUpdateFlag {
 		if err := clearUpdatePending(toc, *host, revalPendingStatus); err != nil {
-			fmt.Println("Error clearing update pending flag in Traffic Ops (but successfully updated config): " + err.Error())
+			fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error clearing update pending flag in Traffic Ops (but successfully updated config): " + err.Error())
 			os.Exit(3)
 		}
 	}
@@ -247,53 +247,53 @@ func main() {
 func createRulesOldAPI(toc *to.Session, host string, certDir string) (remap.RemapRules, error) {
 	cachegroupsArr, err := toc.CacheGroups()
 	if err != nil {
-		fmt.Printf("Error getting Traffic Ops Cachegroups: %v\n", err)
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Cachegroups: " + err.Error())
 		os.Exit(1)
 	}
 	cachegroups := makeCachegroupsNameMap(cachegroupsArr)
 
 	serversArr, err := toc.Servers()
 	if err != nil {
-		fmt.Printf("Error getting Traffic Ops Servers: %v\n", err)
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Servers: " + err.Error())
 		os.Exit(1)
 	}
 	servers := makeServersHostnameMap(serversArr)
 
 	hostServer, ok := servers[host]
 	if !ok {
-		fmt.Printf("Error: host '%v' not in Servers\n", host)
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error: host '" + host + "' not in Servers\n")
 		os.Exit(1)
 	}
 
 	deliveryservices, err := toc.DeliveryServicesByServer(hostServer.ID)
 	if err != nil {
-		fmt.Printf("Error getting Traffic Ops Deliveryservices: %v\n", err)
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Deliveryservices: " + err.Error())
 		os.Exit(1)
 	}
 
 	deliveryserviceRegexArr, err := toc.DeliveryServiceRegexes()
 	if err != nil {
-		fmt.Printf("Error getting Traffic Ops Deliveryservice Regexes: %v\n", err)
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Deliveryservice Regexes: " + err.Error())
 		os.Exit(1)
 	}
 	deliveryserviceRegexes := makeDeliveryserviceRegexMap(deliveryserviceRegexArr)
 
 	cdnsArr, err := toc.CDNs()
 	if err != nil {
-		fmt.Printf("Error getting Traffic Ops CDNs: %v\n", err)
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops CDNs: " + err.Error())
 		os.Exit(1)
 	}
 	cdns := makeCDNMap(cdnsArr)
 
 	serverParameters, err := toc.Parameters(hostServer.Profile)
 	if err != nil {
-		fmt.Printf("Error getting Traffic Ops Parameters for host '%v' profile '%v': %v\n", host, hostServer.Profile, err)
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting Traffic Ops Parameters for host '" + host + "' profile '" + hostServer.Profile + "': " + err.Error())
 		os.Exit(1)
 	}
 
 	parents, err := getParents(host, servers, cachegroups)
 	if err != nil {
-		fmt.Printf("Error getting '%v' parents: %v\n", host, err)
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting '" + host + "' parents: " + err.Error())
 		os.Exit(1)
 	}
 
@@ -313,7 +313,7 @@ func createRulesOldAPI(toc *to.Session, host string, certDir string) (remap.Rema
 
 	cdnSSLKeys, err := toc.CDNSSLKeys(hostServer.CDNName)
 	if err != nil {
-		fmt.Printf("Error getting %v SSL keys: %v\n", hostServer.CDNName, err)
+		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error getting '" + hostServer.CDNName + "' SSL keys: " + err.Error())
 		os.Exit(1)
 	}
 	dsCerts := makeDSCertMap(cdnSSLKeys)
@@ -723,15 +723,15 @@ func createRulesOld(
 		cert, hasCert := dsCerts[ds.XMLID]
 		if protocol != ProtocolHTTP {
 			if !hasCert {
-				fmt.Fprint(os.Stderr, "HTTPS delivery service: "+ds.XMLID+" has no certificate!\n")
+				fmt.Fprint(os.Stderr, time.Now().Format(time.RFC3339Nano)+" HTTPS delivery service: "+ds.XMLID+" has no certificate!\n")
 			} else if err := createCertificateFiles(cert, certDir); err != nil {
-				fmt.Fprint(os.Stderr, "HTTPS delivery service "+ds.XMLID+" failed to create certificate: "+err.Error()+"\n")
+				fmt.Fprint(os.Stderr, time.Now().Format(time.RFC3339Nano)+" HTTPS delivery service "+ds.XMLID+" failed to create certificate: "+err.Error()+"\n")
 			}
 		}
 
 		dsType := strings.ToLower(ds.Type)
 		if !strings.HasPrefix(dsType, "http") && !strings.HasPrefix(dsType, "dns") {
-			fmt.Printf("createRules skipping deliveryservice %v - unknown type %v", ds.XMLID, ds.Type)
+			fmt.Printf(time.Now().Format(time.RFC3339Nano)+" createRules skipping deliveryservice %v - unknown type %v", ds.XMLID, ds.Type)
 			continue
 		}
 
@@ -741,7 +741,7 @@ func createRulesOld(
 		}
 		acl, err := makeACL(ds.RemapText)
 		if err != nil {
-			fmt.Printf("createRules skipping deliveryservice %v - unsupported ACL %v\n", ds.XMLID, ds.RemapText)
+			fmt.Println(time.Now().Format(time.RFC3339Nano) + " createRules skipping deliveryservice '" + ds.XMLID + "' - unsupported ACL " + ds.RemapText)
 			continue
 		}
 
@@ -888,7 +888,7 @@ func makeACL(remapTxt string) ([]*net.IPNet, error) {
 					maskBits--
 					mask = net.CIDRMask(maskBits, allBits)
 				}
-				fmt.Println("base: ", startAddrStr, " end:", endAddrStr, " maskBits:", maskBits)
+				fmt.Println(time.Now().Format(time.RFC3339Nano)+" DEBUG base: ", startAddrStr, " end:", endAddrStr, " maskBits:", maskBits) // TODO remove?
 				allow = append(allow, &net.IPNet{IP: start.Mask(mask), Mask: mask})
 			} else {
 				addrStr := strings.Trim(allowStr, "@src_ip=")
