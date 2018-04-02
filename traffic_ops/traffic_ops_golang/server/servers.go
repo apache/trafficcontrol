@@ -48,6 +48,10 @@ func GetRefType() *TOServer {
 	return &refType
 }
 
+func (server *TOServer) SetID(i int) {
+	server.ID = &i
+}
+
 func (server TOServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
 }
