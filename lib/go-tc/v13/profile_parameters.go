@@ -26,6 +26,14 @@ type ProfileParametersResponse struct {
 	Response []ProfileParameter `json:"response"`
 }
 
+// A Single ProfileParameter Response for Create to depict what changed
+// swagger:response ProfileParameterResponse
+// in: body
+type ProfileParameterResponse struct {
+	// in: body
+	Response ProfileParameter `json:"response"`
+}
+
 // ProfileParameter ...
 type ProfileParameter struct {
 	LastUpdated tc.TimeNoMod `json:"lastUpdated"`
