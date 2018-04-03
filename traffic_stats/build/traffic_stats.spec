@@ -82,6 +82,7 @@ oldpwd=$(pwd)
   cd "$godir" && \
   cp -L -r "$TC_DIR"/traffic_stats/* . && \
   build_dependencies traffic_stats  && \
+  go get -v && \
   go install -v \
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
