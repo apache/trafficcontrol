@@ -37,6 +37,11 @@ import (
 	"github.com/lib/pq"
 )
 
+const (
+	ProfileIDQueryParam   = "profileId"
+	ParameterIDQueryParam = "parameterId"
+)
+
 //we need a type alias to define functions on
 type TOProfileParameter v13.ProfileParameterNullable
 
@@ -48,23 +53,29 @@ func GetRefType() *TOProfileParameter {
 }
 
 func (pp TOProfileParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"profile", api.GetIntKey}, {"parameter", api.GetIntKey}}
+	return []api.KeyFieldInfo{{ProfileIDQueryParam, api.GetIntKey}, {ParameterIDQueryParam, api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
 func (pp TOProfileParameter) GetKeys() (map[string]interface{}, bool) {
-	if pp.ProfileId == nil {
-		return map[string]interface{}{"profile": 0}, false
+	if pp.ProfileID == nil {
+		return map[string]interface{}{ProfileIDQueryParam: 0}, false
 	}
-	if pp.ParameterId == nil {
-		return map[string]interface{}{"parameter": 0}, false
+	if pp.ParameterID == nil {
+		return map[string]interface{}{ParameterIDQueryParam: 0}, false
 	}
-	return map[string]interface{}{"id": *pp.Profile}, true
+	keys := make(map[string]interface{})
+	profileID := *pp.ProfileID
+	parameterID := *pp.ParameterID
+
+	keys[ProfileIDQueryParam] = profileID
+	keys[ParameterIDQueryParam] = parameterID
+	return keys, true
 }
 
 func (pp *TOProfileParameter) GetAuditName() string {
-	if pp.ProfileId != nil {
-		return strconv.Itoa(*pp.ProfileId) + "-" + strconv.Itoa(*pp.ParameterId)
+	if pp.ProfileID != nil {
+		return strconv.Itoa(*pp.ProfileID) + "-" + strconv.Itoa(*pp.ParameterID)
 	}
 	return "unknown"
 }
@@ -74,19 +85,19 @@ func (pp *TOProfileParameter) GetType() string {
 }
 
 func (pp *TOProfileParameter) SetKeys(keys map[string]interface{}) {
-	profId, _ := keys["profile"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
-	pp.ProfileId = &profId
+	profId, _ := keys[ProfileIDQueryParam].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	pp.ProfileID = &profId
 
-	paramId, _ := keys["parameter"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
-	pp.ParameterId = &paramId
+	paramId, _ := keys[ParameterIDQueryParam].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	pp.ParameterID = &paramId
 }
 
 // Validate fulfills the api.Validator interface
-func (pp TOProfileParameter) Validate(db *sqlx.DB) []error {
+func (pp *TOProfileParameter) Validate(db *sqlx.DB) []error {
 
 	errs := validation.Errors{
-		"profile":   validation.Validate(pp.Profile, validation.Required),
-		"parameter": validation.Validate(pp.Parameter, validation.Required),
+		"profile":   validation.Validate(pp.ProfileID, validation.Required),
+		"parameter": validation.Validate(pp.ParameterID, validation.Required),
 	}
 
 	return tovalidate.ToErrors(errs)
@@ -152,7 +163,7 @@ func (pp *TOProfileParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error,
 		return tc.DBError, tc.SystemError
 	}
 
-	pp.SetKeys(map[string]interface{}{"profile": profile, "parameter": parameter})
+	pp.SetKeys(map[string]interface{}{ProfileIDQueryParam: profile, ParameterIDQueryParam: parameter})
 	pp.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
@@ -167,8 +178,8 @@ func insertQuery() string {
 	query := `INSERT INTO profile_parameter (
 profile,
 parameter) VALUES (
-:profile,
-:parameter) RETURNING profile_profile,last_updated`
+:profile_id,
+:parameter_id) RETURNING profile, parameter, last_updated`
 	return query
 }
 
@@ -178,9 +189,9 @@ func (pp *TOProfileParameter) Read(db *sqlx.DB, parameters map[string]string, us
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"profile":      dbhelpers.WhereColumnInfo{"pp.profile", nil},
-		"parameter":    dbhelpers.WhereColumnInfo{"pp.parameter", nil},
-		"last_updated": dbhelpers.WhereColumnInfo{"pp.last_updated", nil},
+		"profileId":   dbhelpers.WhereColumnInfo{"pp.profile", nil},
+		"parameterId": dbhelpers.WhereColumnInfo{"pp.parameter", nil},
+		"lastUpdated": dbhelpers.WhereColumnInfo{"pp.last_updated", nil},
 	}
 
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
@@ -210,70 +221,6 @@ func (pp *TOProfileParameter) Read(db *sqlx.DB, parameters map[string]string, us
 
 	return params, []error{}, tc.NoError
 
-}
-
-//The TOProfileParameter implementation of the Updater interface
-//all implementations of Updater should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a parameter with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-func (pp *TOProfileParameter) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	log.Debugf("about to run exec query: %s with parameter: %++v", updateQuery(), pp)
-	resultRows, err := tx.NamedQuery(updateQuery(), pp)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a parameter with " + err.Error()), eType
-			}
-			return err, eType
-		}
-		log.Errorf("received error: %++v from update execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	defer resultRows.Close()
-
-	// get LastUpdated field -- updated by trigger in the db
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	log.Debugf("lastUpdated: %++v", lastUpdated)
-	pp.LastUpdated = &lastUpdated
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no parameter found with this id"), tc.DataMissingError
-		}
-		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
-	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
-	return nil, tc.NoError
 }
 
 //The Parameter implementation of the Deleter interface
@@ -338,14 +285,16 @@ JOIN parameter param ON param.id = pp.parameter`
 func updateQuery() string {
 	query := `UPDATE
 profile_parameter SET
-profile=:profile,
-parameter=:parameter
-WHERE id=:id RETURNING last_updated`
+profile=:profile_id,
+parameter=:parameter_id
+WHERE profile=:profile_id AND 
+      parameter = :parameter_id 
+      RETURNING last_updated`
 	return query
 }
 
 func deleteQuery() string {
 	query := `DELETE FROM profile_parameter
-	WHERE profile=:profile and parameter=:parameter`
+	WHERE profile=:profile_id and parameter=:parameter_id`
 	return query
 }

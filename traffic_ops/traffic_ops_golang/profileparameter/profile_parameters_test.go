@@ -36,19 +36,19 @@ func getTestProfileParameters() []tc.ProfileParameterNullable {
 	pps := []tc.ProfileParameterNullable{}
 	lastUpdated := tc.TimeNoMod{}
 	lastUpdated.Scan(time.Now())
-	profileId := 1
-	parameterId := 1
+	profileID := 1
+	parameterID := 1
 
 	pp := tc.ProfileParameterNullable{
 		LastUpdated: &lastUpdated,
-		ProfileId:   &profileId,
-		ParameterId: &parameterId,
+		ProfileID:   &profileID,
+		ParameterID: &parameterID,
 	}
 	pps = append(pps, pp)
 
 	pp2 := pp
-	pp2.ProfileId = &profileId
-	pp2.ParameterId = &parameterId
+	pp2.ProfileID = &profileID
+	pp2.ParameterID = &parameterID
 	pps = append(pps, pp2)
 
 	return pps
@@ -72,9 +72,9 @@ func TestGetProfileParameters(t *testing.T) {
 		rows = rows.AddRow(
 			ts.LastUpdated,
 			ts.Profile,
-			ts.ProfileId,
+			ts.ProfileID,
 			ts.Parameter,
-			ts.ParameterId,
+			ts.ParameterID,
 		)
 	}
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
@@ -100,9 +100,6 @@ func TestInterfaces(t *testing.T) {
 	}
 	if _, ok := i.(api.Reader); !ok {
 		t.Errorf("ProfileParameter must be Reader")
-	}
-	if _, ok := i.(api.Updater); !ok {
-		t.Errorf("ProfileParameter must be Updater")
 	}
 	if _, ok := i.(api.Deleter); !ok {
 		t.Errorf("ProfileParameter must be Deleter")
