@@ -22,11 +22,13 @@ package todata
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
 	"regexp"
 	"strings"
 	"sync"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
 )
 
 // Regexes maps Delivery Service Regular Expressions to delivery services.
@@ -202,14 +204,15 @@ func getDeliveryServiceRegexes(crc CRConfig) (Regexes, error) {
 	dsRegexes := map[tc.DeliveryServiceName][]string{}
 
 	for dsName, dsData := range crc.DeliveryServices {
-		if len(dsData.Matchsets) < 1 {
-			return Regexes{}, fmt.Errorf("CRConfig missing regex for '%s'", dsName)
-		}
 		for _, matchset := range dsData.Matchsets {
 			if len(matchset.MatchList) < 1 {
-				return Regexes{}, fmt.Errorf("CRConfig missing Regex for '%s'", dsName)
+				log.Warnln("CRConfig missing regex for delivery service '" + string(dsName) + "' matchset protocol '" + matchset.Protocol + "'")
+				continue
 			}
 			dsRegexes[dsName] = append(dsRegexes[dsName], matchset.MatchList[0].Regex)
+		}
+		if len(dsRegexes[dsName]) == 0 {
+			return Regexes{}, fmt.Errorf("CRConfig missing regex for '%s'", dsName)
 		}
 	}
 
