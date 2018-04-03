@@ -83,6 +83,7 @@ sub get_target_data {
 	my @weight_steering;
 	my @pos_order_steering;
 	my @neg_order_steering;
+	my @geo_steering;
 
 	my $target_rs = $self->db->resultset('SteeringTarget')->search( { deliveryservice => $ds_id } );
 
@@ -101,6 +102,9 @@ sub get_target_data {
 			elsif ( $row->type->name eq "STEERING_ORDER" && $row->value >= 0 ) {
 				push (@pos_order_steering, $t);
 			}
+			elsif ( $row->type->name =~ m/^STEERING_GEO/ ) {
+				push (@geo_steering, $t);
+			}
 			else { push (@weight_steering, $t); }
 			$i++;
 		}
@@ -108,9 +112,10 @@ sub get_target_data {
 		@weight_steering = sort { $b->{target_value} <=> $a->{target_value} } @weight_steering;
 		@neg_order_steering = sort { $a->{target_value} <=> $b->{target_value} } @neg_order_steering;
 		@pos_order_steering = sort { $a->{target_value} <=> $b->{target_value} } @pos_order_steering;
+		# TODO: group geo_steering targets by Origin lat/lon
 
-		#push everything into an a single array - negative order values first, weights second, positive order last.
-		push (@steering, @neg_order_steering, @weight_steering, @pos_order_steering);
+		#push everything into an a single array - negative order values 1st, geo 2nd, weights 3rd, positive order last.
+		push (@steering, @neg_order_steering, @geo_steering, @weight_steering, @pos_order_steering);
 	}
 	return @steering;
 }
