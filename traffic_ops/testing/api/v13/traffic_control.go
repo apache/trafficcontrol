@@ -16,26 +16,26 @@
 package v13
 
 import (
-	tcapi "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	v12 "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 )
 
 // TrafficControl - maps to the tc-fixtures.json file
 type TrafficControl struct {
-	ASNs                           []tcapi.ASN                           `json:"asns"`
-	CDNs                           []v13.CDN                             `json:"cdns"`
-	CacheGroups                    []tcapi.CacheGroup                    `json:"cachegroups"`
-	DeliveryServiceRequests        []tcapi.DeliveryServiceRequest        `json:"deliveryServiceRequests"`
-	DeliveryServiceRequestComments []tcapi.DeliveryServiceRequestComment `json:"deliveryServiceRequestComments"`
-	DeliveryServices               []tcapi.DeliveryService               `json:"deliveryservices"`
-	Divisions                      []tcapi.Division                      `json:"divisions"`
-	Profiles                       []tcapi.Profile                       `json:"profiles"`
-	Parameters                     []tcapi.Parameter                     `json:"parameters"`
-	ProfileParameters              []tcapi.ProfileParameter              `json:"profileParameters"`
-	PhysLocations                  []tcapi.PhysLocation                  `json:"physLocations"`
-	Regions                        []tcapi.Region                        `json:"regions"`
-	Servers                        []v13.Server                          `json:"servers"`
-	Statuses                       []tcapi.Status                        `json:"statuses"`
-	Tenants                        []tcapi.Tenant                        `json:"tenants"`
-	Types                          []tcapi.Type                          `json:"types"`
+	ASNs                           []v12.ASN                           `json:"asns"`
+	CDNs                           []v13.CDN                           `json:"cdns"`
+	CacheGroups                    []v12.CacheGroup                    `json:"cachegroups"`
+	DeliveryServiceRequests        []v12.DeliveryServiceRequest        `json:"deliveryServiceRequests"`
+	DeliveryServiceRequestComments []v12.DeliveryServiceRequestComment `json:"deliveryServiceRequestComments"`
+	DeliveryServices               []v12.DeliveryService               `json:"deliveryservices"`
+	Divisions                      []v12.Division                      `json:"divisions"`
+	Profiles                       []v12.Profile                       `json:"profiles"`
+	Parameters                     []v12.Parameter                     `json:"parameters"`
+	ProfileParameters              []v13.ProfileParameter              `json:"profileParameters"`
+	PhysLocations                  []v12.PhysLocation                  `json:"physLocations"`
+	Regions                        []v12.Region                        `json:"regions"`
+	Servers                        []v13.Server                        `json:"servers"`
+	Statuses                       []v12.Status                        `json:"statuses"`
+	Tenants                        []v12.Tenant                        `json:"tenants"`
+	Types                          []v12.Type                          `json:"types"`
 }

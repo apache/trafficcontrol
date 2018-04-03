@@ -28,16 +28,16 @@ type ProfileParametersResponse struct {
 type ProfileParameter struct {
 	LastUpdated TimeNoMod `json:"lastUpdated"`
 	Profile     string    `json:"profile"`
-	ProfileId   int       `json:"profileId"`
+	ProfileID   int       `json:"profileId"`
 	Parameter   string    `json:"parameter"`
-	ParameterId int       `json:"profileId"`
+	ParameterID int       `json:"profileId"`
 }
 
 // ProfileParameterNullable ...
 type ProfileParameterNullable struct {
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Profile     *string    `json:"profile" db:"profile"`
-	ProfileId   *int       `json:"profileId" db:"profile_id"`
+	ProfileID   *int       `json:"profileId" db:"profile_id"`
 	Parameter   *string    `json:"parameter" db:"parameter"`
-	ParameterId *int       `json:"parameterId" db:"parameter_id"`
+	ParameterID *int       `json:"parameterId" db:"parameter_id"`
 }
