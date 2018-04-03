@@ -47,12 +47,12 @@ Upgrade Procedure
 
 Upload tomcat.rpm
 -----------------
-The 'tomcat' package gets created when you build Traffic Router. You must either add it to the yum repo where you keep all of the Traffic Control packages, or manually copy it to the servers where you will be installing Traffic Router and run ```yum install [path to package]```
+The 'tomcat' package gets created when you build Traffic Router. You must either add it to the yum repo where you keep all of the Traffic Control packages, or manually copy it to the servers where you will be installing Traffic Router and run ``yum install [path to package]``
 It is preferable that you add it to your Yum repository because then it will be installed automatically when you perform the Traffic Router update.
 
 Update the traffic_router Package
 ------------------------------
-If openssl, apr, tomcat-native, jdk and tomcat_tr packages are all in an available repository then you just need to run: ``` yum update traffic_router ```.
+If openssl, apr, tomcat-native, jdk and tomcat_tr packages are all in an available repository then you just need to run: ``yum update traffic_router``.
 This will first cause the apr, tomcat-native, jdk and tomcat packages to be installed. When the 'tomcat' package runs, it will cause any older versions of traffic_router or tomcat to be uninstalled. This is because the previous versions of the traffic_router package included an untracked installation of tomcat. 
 
 
@@ -65,6 +65,6 @@ Development Environment Upgrade
 
 If you already have a development environment set up for the previous version of Traffic Router, then you will need to get and install these libraries on your workstation: openssl, apr and tomcat-native.
 Also, whenever you run either 'mvn clean verify' or 'TrafficRouterStart' you will need to pass a command line parameter telling Java where to look for the 'tomcat-native' libraries:
-``` mvn clean verify -Djava.library.path=[tomcat native library path on your box] ```
-``` java -Djava.library.path=[tomcat native library path on your box] TrafficRouterStart ```
+``mvn clean verify -Djava.library.path=[tomcat native library path on your box]``
+``java -Djava.library.path=[tomcat native library path on your box] TrafficRouterStart``
 
