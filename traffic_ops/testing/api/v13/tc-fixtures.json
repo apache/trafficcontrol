@@ -595,6 +595,16 @@
             "type": "ATS_PROFILE"
         }
     ],
+    "profileParameters": [
+        {
+            "profileId": 100,
+            "parameterId": 100
+        },
+        {
+            "profileId": 200,
+            "parameterId": 200
+        }
+    ],
     "regions": [
         {
             "divisionName": "division1",

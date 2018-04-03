@@ -20,17 +20,19 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 )
 
 const (
-	API_v13_Profile_Parameters = "/api/1.3/profile_parameters"
+	API_v13_Profile_Parameters = "/api/1.3/profileparameters"
+	ProfileIdQueryParam        = "profileId"
+	ParameterIdQueryParam      = "parameterId"
 )
 
 // Create a ProfileParameter
-func (to *Session) CreateProfileParameter(pp tc.ProfileParameter) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateProfileParameter(pp v13.ProfileParameter) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(pp)
@@ -48,28 +50,8 @@ func (to *Session) CreateProfileParameter(pp tc.ProfileParameter) (tc.Alerts, Re
 	return alerts, reqInf, nil
 }
 
-// Update a Profile Parameter by Profile
-func (to *Session) UpdateParameterByProfile(id int, pp tc.ProfileParameter) (tc.Alerts, ReqInf, error) {
-
-	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(pp)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	URI := fmt.Sprintf("%s/%d", API_v13_Profile_Parameters, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, URI, reqBody)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
-	}
-	defer resp.Body.Close()
-	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
-}
-
 // Returns a list of Profile Parameters
-func (to *Session) GetProfileParameters() ([]tc.ProfileParameter, ReqInf, error) {
+func (to *Session) GetProfileParameters() ([]v13.ProfileParameter, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_Profile_Parameters, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -77,32 +59,14 @@ func (to *Session) GetProfileParameters() ([]tc.ProfileParameter, ReqInf, error)
 	}
 	defer resp.Body.Close()
 
-	var data tc.ProfileParametersResponse
+	var data v13.ProfileParametersResponse
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
 }
 
-// GET a Profile Parameter by the Profile
-func (to *Session) GetProfileParameterByIDs(profile int, parameter int) ([]tc.ProfileParameter, ReqInf, error) {
-	URI := fmt.Sprintf("%s?profile=%d&parameter=%d", API_v13_Profile_Parameters, profile)
-	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.ProfileParametersResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
-}
-
 // GET a Profile Parameter by the Parameter
-func (to *Session) GetProfileParameterByParameter(parameter int) ([]tc.ProfileParameter, ReqInf, error) {
-	URI := API_v13_Profile_Parameters + "?parameter=" + strconv.Itoa(parameter)
+func (to *Session) GetProfileParameterByQueryParams(queryParams string) ([]v13.ProfileParameter, ReqInf, error) {
+	URI := API_v13_Profile_Parameters + queryParams
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -110,7 +74,7 @@ func (to *Session) GetProfileParameterByParameter(parameter int) ([]tc.ProfilePa
 	}
 	defer resp.Body.Close()
 
-	var data tc.ProfileParametersResponse
+	var data v13.ProfileParametersResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -119,8 +83,8 @@ func (to *Session) GetProfileParameterByParameter(parameter int) ([]tc.ProfilePa
 }
 
 // DELETE a Parameter by Parameter
-func (to *Session) DeleteParameterByParameter(parameter int) (tc.Alerts, ReqInf, error) {
-	URI := fmt.Sprintf("%s/%d", API_v13_Profile_Parameters, parameter)
+func (to *Session) DeleteParameterByProfileParameter(profile int, parameter int) (tc.Alerts, ReqInf, error) {
+	URI := fmt.Sprintf("%s/profile/%d/parameter/%d", API_v13_Profile_Parameters, profile, parameter)
 	resp, remoteAddr, err := to.request(http.MethodDelete, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
