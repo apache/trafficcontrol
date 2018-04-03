@@ -195,7 +195,6 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		//ProfileParameters
 		{1.3, http.MethodGet, `profileparameters/?(\.json)?$`, api.ReadHandler(profileparameter.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.3, http.MethodGet, `profileparameters/{id}$`, api.ReadHandler(profileparameter.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.3, http.MethodPut, `profileparameters/{id}$`, api.UpdateHandler(profileparameter.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.3, http.MethodPost, `profileparameters/?$`, api.CreateHandler(profileparameter.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.3, http.MethodDelete, `profilesparameters/{id}$`, api.DeleteHandler(profileparameter.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
