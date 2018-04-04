@@ -8,7 +8,6 @@ License:    Apache Software License
 URL:        https://github.com/apache/incubator-trafficcontrol/
 Source:     %{_sourcedir}/apache-tomcat-%{version}.tar.gz
 Requires:   jdk >= 1.8
-Obsoletes:  traffic_router < 2.3
 
 # Set OS version specific variables here
 %define startup_script %{_sysconfdir}/systemd/system/tomcat.service
