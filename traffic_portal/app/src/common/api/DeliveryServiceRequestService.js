@@ -77,7 +77,7 @@ var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUti
 	this.assignDeliveryServiceRequest = function(id, userId) {
 		var request = $q.defer();
 
-		$http.put(ENV.api['root'] + "deliveryservice_requests/" + id + "/assign", { id: id, assigneeId: userId })
+		$http.put(ENV.api['root'] + "deliveryservice_requests_assignee?id=" + id, { id: id, assigneeId: userId })
 			.then(
 				function() {
 					request.resolve();
@@ -94,7 +94,7 @@ var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUti
 	this.updateDeliveryServiceRequestStatus = function(id, status) {
 		var request = $q.defer();
 
-		$http.put(ENV.api['root'] + "deliveryservice_requests/" + id + "/status", { id: id, status: status })
+		$http.put(ENV.api['root'] + "deliveryservice_requests_status?id=" + id, { id: id, status: status })
 			.then(
 				function() {
 					request.resolve();
