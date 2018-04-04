@@ -307,8 +307,9 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 			}
 		});
 		modalInstance.result.then(function() {
-			deliveryServiceRequestService.deleteDeliveryServiceRequest(request.id, false).
+			deliveryServiceRequestService.deleteDeliveryServiceRequest(request.id).
 				then(function() {
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request deleted' } ], false);
 					$scope.refresh();
 				});
 		}, function () {

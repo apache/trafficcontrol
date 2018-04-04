@@ -43,7 +43,7 @@ var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUti
 	this.updateDeliveryServiceRequest = function(id, dsRequest) {
 		var request = $q.defer();
 
-		$http.put(ENV.api['root'] + "deliveryservice_requests/" + id, dsRequest)
+		$http.put(ENV.api['root'] + "deliveryservice_requests?id=" + id, dsRequest)
 			.then(
 				function() {
 					request.resolve();
@@ -58,16 +58,20 @@ var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUti
 	};
 
 	this.deleteDeliveryServiceRequest = function(id, delay) {
-		return Restangular.one("deliveryservice_requests", id).remove()
+		var deferred = $q.defer();
+
+		$http.delete(ENV.api['root'] + "deliveryservice_requests?id=" + id)
 			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Delivery service request deleted' } ], delay);
-					locationUtils.navigateToPath('/delivery-service-requests');
+				function(response) {
+					deferred.resolve(response);
 				},
 				function(fault) {
 					messageModel.setMessages(fault.data.alerts, false);
+					deferred.reject(fault);
 				}
 			);
+
+		return deferred.promise;
 	};
 
 	this.assignDeliveryServiceRequest = function(id, userId) {
@@ -127,7 +131,7 @@ var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUti
 	this.updateDeliveryServiceRequestComment = function(comment) {
 		var request = $q.defer();
 
-		$http.put(ENV.api['root'] + "deliveryservice_request_comments/" + comment.id, comment)
+		$http.put(ENV.api['root'] + "deliveryservice_request_comments?id=" + comment.id, comment)
 			.then(
 				function() {
 					request.resolve();
@@ -144,7 +148,7 @@ var DeliveryServiceRequestService = function(Restangular, $http, $q, locationUti
 	this.deleteDeliveryServiceRequestComment = function(comment) {
 		var deferred = $q.defer();
 
-		$http.delete(ENV.api['root'] + "deliveryservice_request_comments/" + comment.id)
+		$http.delete(ENV.api['root'] + "deliveryservice_request_comments?id=" + comment.id)
 			.then(
 				function(response) {
 					deferred.resolve(response);
