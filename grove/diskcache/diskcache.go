@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/grove/cacheobj"
+	"github.com/apache/incubator-trafficcontrol/grove/lru"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 
@@ -18,7 +19,7 @@ type DiskCache struct {
 	db           *bolt.DB
 	sizeBytes    uint64
 	maxSizeBytes uint64
-	lru          *LRU
+	lru          *lru.LRU
 }
 
 const BucketName = "b"
@@ -39,7 +40,7 @@ func New(path string, sizeBytes uint64) (*DiskCache, error) {
 		return nil, errors.New("creating bucket for database '" + path + "': " + err.Error())
 	}
 
-	return &DiskCache{db: db, maxSizeBytes: sizeBytes, lru: NewLRU()}, nil
+	return &DiskCache{db: db, maxSizeBytes: sizeBytes, lru: lru.NewLRU()}, nil
 }
 
 // Add takes a key and value to add. Returns whether an eviction occurred
