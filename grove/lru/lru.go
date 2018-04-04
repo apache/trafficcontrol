@@ -1,4 +1,4 @@
-package diskcache
+package lru
 
 import (
 	"container/list"
@@ -20,15 +20,18 @@ func NewLRU() *LRU {
 	return &LRU{l: list.New(), lElems: map[string]*list.Element{}}
 }
 
-func (c *LRU) Add(key string, size uint64) {
+// Add adds the key to the LRU, with the given size. Returns the size of the the old size, or 0 if no key existed.
+func (c *LRU) Add(key string, size uint64) uint64 {
 	c.m.Lock()
 	defer c.m.Unlock()
 	if elem, ok := c.lElems[key]; ok {
 		c.l.MoveToFront(elem)
+		oldSize := elem.Value.(*listObj).size
 		elem.Value.(*listObj).size = size
-		return
+		return oldSize
 	}
 	c.lElems[key] = c.l.PushFront(&listObj{key, size})
+	return 0
 }
 
 // RemoveOldest returns the key, size, and true if the LRU is nonempty; else false.

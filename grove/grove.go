@@ -361,23 +361,14 @@ func loadCerts(rules []remapdata.RemapRule) ([]tls.Certificate, error) {
 // createCaches creates the caches specified in the config. The nameFiles is the map of names to groups of files, nameMemBytes is the amount of memory to use for each named group, and memCacheBytes is the amount of memory to use for the default memory cache.
 func createCaches(nameFiles map[string][]config.CacheFile, nameMemBytes uint64, memCacheBytes uint64) (map[string]icache.Cache, error) {
 	caches := map[string]icache.Cache{}
-
-	memCache, err := memcache.New(memCacheBytes)
-	if err != nil {
-		return nil, errors.New("creating memory cache: " + err.Error())
-	}
-	caches[""] = memCache // default empty names to the mem cache
+	caches[""] = memcache.New(memCacheBytes) // default empty names to the mem cache
 
 	for name, files := range nameFiles {
 		multiDiskCache, err := diskcache.NewMulti(files)
 		if err != nil {
 			return nil, errors.New("creating cache '" + name + "': " + err.Error())
 		}
-		memCache, err := memcache.New(nameMemBytes)
-		if err != nil {
-			return nil, errors.New("creating memory cache for '" + name + "': " + err.Error())
-		}
-		caches[name] = tiercache.New(memCache, multiDiskCache)
+		caches[name] = tiercache.New(memcache.New(nameMemBytes), multiDiskCache)
 	}
 
 	return caches, nil
