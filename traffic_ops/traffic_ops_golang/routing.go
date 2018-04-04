@@ -21,6 +21,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"regexp"
 	"sort"
@@ -28,11 +29,9 @@ import (
 	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-
-	"fmt"
-
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/config"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -46,6 +45,17 @@ type Middleware func(handlerFunc http.HandlerFunc) http.HandlerFunc
 type Route struct {
 	// Order matters! Do not reorder this! Routes() uses positional construction for readability.
 	Version           float64
+	Method            string
+	Path              string
+	Handler           http.HandlerFunc
+	RequiredPrivLevel int
+	Authenticated     bool
+	Middlewares       []Middleware
+}
+
+// RawRoute is an HTTP route to be served at the root, rather than under /api/version. Raw Routes should be rare, and almost exclusively converted old Perl routes which have yet to be moved to an API path.
+type RawRoute struct {
+	// Order matters! Do not reorder this! Routes() uses positional construction for readability.
 	Method            string
 	Path              string
 	Handler           http.HandlerFunc
@@ -91,7 +101,7 @@ type PathHandler struct {
 }
 
 // CreateRouteMap returns a map of methods to a slice of paths and handlers; wrapping the handlers in the appropriate middleware. Uses Semantic Versioning: routes are added to every subsequent minor version, but not subsequent major versions. For example, a 1.2 route is added to 1.3 but not 2.1. Also truncates '2.0' to '2', creating succinct major versions.
-func CreateRouteMap(rs []Route, authBase AuthBase) map[string][]PathHandler {
+func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase) map[string][]PathHandler {
 	// TODO strong types for method, path
 	versions := getSortedRouteVersions(rs)
 	m := map[string][]PathHandler{}
@@ -104,23 +114,28 @@ func CreateRouteMap(rs []Route, authBase AuthBase) map[string][]PathHandler {
 			}
 			vstr := strconv.FormatFloat(version, 'f', -1, 64)
 			path := RoutePrefix + "/" + vstr + "/" + r.Path
-
-			middlewares := r.Middlewares
-
-			if middlewares == nil {
-				middlewares = getDefaultMiddleware()
-			}
-			if r.Authenticated { //a privLevel of zero is an unauthenticated endpoint.
-				authWrapper := authBase.GetWrapper(r.RequiredPrivLevel)
-				middlewares = append([]Middleware{authWrapper}, middlewares...)
-			}
-
+			middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel)
 			m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: use(r.Handler, middlewares)})
-
 			log.Infof("adding route %v %v\n", r.Method, path)
 		}
 	}
+	for _, r := range rawRoutes {
+		middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel)
+		m[r.Method] = append(m[r.Method], PathHandler{Path: r.Path, Handler: use(r.Handler, middlewares)})
+		log.Infof("adding raw route %v %v\n", r.Method, r.Path)
+	}
 	return m
+}
+
+func getRouteMiddleware(middlewares []Middleware, authBase AuthBase, authenticated bool, privLevel int) []Middleware {
+	if middlewares == nil {
+		middlewares = getDefaultMiddleware()
+	}
+	if authenticated { // a privLevel of zero is an unauthenticated endpoint.
+		authWrapper := authBase.GetWrapper(privLevel)
+		middlewares = append([]Middleware{authWrapper}, middlewares...)
+	}
+	return middlewares
 }
 
 // CompileRoutes - takes a map of methods to paths and handlers, and returns a map of methods to CompiledRoutes
@@ -180,7 +195,7 @@ func Handler(routes map[string][]CompiledRoute, catchall http.Handler, w http.Re
 
 // RegisterRoutes - parses the routes and registers the handlers with the Go Router
 func RegisterRoutes(d ServerData) error {
-	routeSlice, catchall, err := Routes(d)
+	routeSlice, rawRoutes, catchall, err := Routes(d)
 	if err != nil {
 		return err
 	}
@@ -191,7 +206,7 @@ func RegisterRoutes(d ServerData) error {
 	}
 
 	authBase := AuthBase{secret: d.Config.Secrets[0], getCurrentUserInfoStmt: userInfoStmt, override: nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
-	routes := CreateRouteMap(routeSlice, authBase)
+	routes := CreateRouteMap(routeSlice, rawRoutes, authBase)
 	compiledRoutes := CompileRoutes(routes)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		Handler(compiledRoutes, catchall, w, r)

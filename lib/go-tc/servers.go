@@ -86,8 +86,8 @@ type ServerNullable struct {
 	CDNName          *string              `json:"cdnName" db:"cdn_name"`
 	DeliveryServices *map[string][]string `json:"deliveryServices,omitempty"`
 	DomainName       *string              `json:"domainName" db:"domain_name"`
-	FQDN             *string             `json:"fqdn,omitempty"`
-	FqdnTime         time.Time           `json:"-"`
+	FQDN             *string              `json:"fqdn,omitempty"`
+	FqdnTime         time.Time            `json:"-"`
 	GUID             *string              `json:"guid" db:"guid"`
 	HostName         *string              `json:"hostName" db:"host_name"`
 	HTTPSPort        *int                 `json:"httpsPort" db:"https_port"`
@@ -121,7 +121,7 @@ type ServerNullable struct {
 	Status           *string              `json:"status" db:"status"`
 	StatusID         *int                 `json:"statusId" db:"status_id"`
 	TCPPort          *int                 `json:"tcpPort" db:"tcp_port"`
-	Type             string              `json:"type" db:"server_type"`
+	Type             string               `json:"type" db:"server_type"`
 	TypeID           *int                 `json:"typeId" db:"server_type_id"`
 	UpdPending       *bool                `json:"updPending" db:"upd_pending"`
 	XMPPID           *string              `json:"xmppId" db:"xmpp_id"`

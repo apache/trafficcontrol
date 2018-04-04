@@ -62,7 +62,8 @@ func main() {
 	var cfg config.Config
 	var err error
 	var errorToLog error
-	if cfg, err = config.LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName); err != nil {
+
+	if cfg, err = config.LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName, version); err != nil {
 		if !strings.Contains(err.Error(), "riak conf") {
 			fmt.Println("Error loading config: " + err.Error())
 			return

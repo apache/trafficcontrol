@@ -573,22 +573,6 @@ sub gen_crconfig_json {
     return ($data_obj);
 }
 
-sub write_crconfig_json_to_db {
-    my $self          = shift;
-    my $cdn_name      = shift;
-    my $crconfig_db   = shift;
-    my $crconfig_json = encode_json($crconfig_db);
-
-    my $snapshot = $self->db->resultset('Snapshot')->find( { cdn => $cdn_name } );
-    if ( defined($snapshot) ) {
-        $snapshot->update({ content => $crconfig_json });
-    } else {
-        my $insert = $self->db->resultset('Snapshot')->create( { cdn => $cdn_name, content => $crconfig_json } );
-        $insert->insert();
-    }
-
-}
-
 sub diff_crconfig_json {
     my $self     = shift;
     my $json     = shift;
