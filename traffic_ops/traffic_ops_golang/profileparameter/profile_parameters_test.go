@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
@@ -32,14 +33,14 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestProfileParameters() []tc.ProfileParameterNullable {
-	pps := []tc.ProfileParameterNullable{}
+func getTestProfileParameters() []v13.ProfileParameterNullable {
+	pps := []v13.ProfileParameterNullable{}
 	lastUpdated := tc.TimeNoMod{}
 	lastUpdated.Scan(time.Now())
 	profileID := 1
 	parameterID := 1
 
-	pp := tc.ProfileParameterNullable{
+	pp := v13.ProfileParameterNullable{
 		LastUpdated: &lastUpdated,
 		ProfileID:   &profileID,
 		ParameterID: &parameterID,
@@ -65,7 +66,7 @@ func TestGetProfileParameters(t *testing.T) {
 	defer db.Close()
 
 	testPPs := getTestProfileParameters()
-	cols := test.ColsFromStructByTag("db", tc.ProfileParameterNullable{})
+	cols := test.ColsFromStructByTag("db", v13.ProfileParameterNullable{})
 	rows := sqlmock.NewRows(cols)
 
 	for _, ts := range testPPs {
