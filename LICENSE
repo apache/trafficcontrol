@@ -334,12 +334,6 @@ For the errors component:
 @traffic_stats/vendor/github.com/pkg/errors/*
 ./traffic_stats/vendor/github.com/pkg/errors/LICENSE
 
-For the x/net component:
-@traffic_stats/vendor/golang.org/x/net/*
-@traffic_ops/testing/compare/vendor/golang.org/x/net/*
-./traffic_stats/vendor/golang.org/x/net/LICENSE
-./traffic_stats/vendor/golang.org/x/net/PATENTS
-
 For the MaxMind DB GeoLite2 Database:
 @traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz
 ./licenses/CC_A_SA_4-maxmind
@@ -407,16 +401,6 @@ For the backoff component:
 The riak-go-client component is used under the Apache license:
 @traffic_ops/traffic_ops_golang/vendor/github.com/basho/riak-go-client/*
 ./traffic_ops/traffic_ops_golang/vendor/github.com/basho/riak-go-client/LICENSE
-
-The x/crypto library is used under the BSD License from the Go Authors:
-@traffic_ops/traffic_ops_golang/vendor/golang.org/x/crypto/*
-@traffic_ops/testing/api/vendor/golang.org/x/crypto/*
-./traffic_ops/traffic_ops_golang/vendor/golang.org/x/crypto/LICENSE
-./traffic_ops/traffic_ops_golang/vendor/golang.org/x/crypto/PATENTS
-
-The x/net library is used under the BSD License from the Go Authors:
-@traffic_ops/testing/api/vendor/golang.org/x/net/*
-./traffic_ops/testing/api/vendor/golang.org/x/net/LICENSE
 
 The envconfig component is used under the MIT license:
 @traffic_ops/testing/api/vendor/github.com/kelseyhightower/envconfig/*
