@@ -35,6 +35,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/cachegroup"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/cdn"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/crconfig"
 	dsrequest "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request/comment"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/division"
@@ -65,8 +67,8 @@ func handlerToFunc(handler http.Handler) http.HandlerFunc {
 	}
 }
 
-// Routes returns the routes, and a catchall route for when no route matches.
-func Routes(d ServerData) ([]Route, http.Handler, error) {
+// Routes returns the API routes, raw non-API root level routes, and a catchall route for when no route matches.
+func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 	proxyHandler := rootHandler(d)
 
 	routes := []Route{
@@ -218,8 +220,23 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{1.3, http.MethodGet, `deliveryservices-wip/xmlId/{xmlID}/sslkeys$`, getDeliveryServiceSSLKeysByXMLIDHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
 		{1.3, http.MethodGet, `deliveryservices-wip/hostname/{hostName}/sslkeys$`, getDeliveryServiceSSLKeysByHostNameHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
 		{1.3, http.MethodPost, `deliveryservices-wip/hostname/{hostName}/sslkeys/add$`, addDeliveryServiceSSLKeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
+
+		//CRConfig
+		{1.2, http.MethodGet, `cdns/{cdn}/snapshot/?$`, crconfig.SnapshotGetHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
+		{1.2, http.MethodGet, `cdns/{cdn}/snapshot/new/?$`, crconfig.Handler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
+		{1.2, http.MethodPut, `cdns/{id}/snapshot/?$`, crconfig.SnapshotHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
+		{1.2, http.MethodPut, `snapshot/{cdn}/?$`, crconfig.SnapshotHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
 	}
-	return routes, proxyHandler, nil
+
+	// rawRoutes are served at the root path. These should be almost exclusively old Perl pre-API routes, which have yet to be converted in all clients. New routes should be in the versioned API path.
+	rawRoutes := []RawRoute{
+		// DEPRECATED - use PUT /api/1.2/snapshot/{cdn}
+		{http.MethodGet, `tools/write_crconfig/{cdn}/?$`, crconfig.SnapshotOldGUIHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
+		// DEPRECATED - use GET /api/1.2/cdns/{cdn}/snapshot
+		{http.MethodGet, `CRConfig-Snapshots/{cdn}/CRConfig.json?$`, crconfig.SnapshotGetHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
+	}
+
+	return routes, rawRoutes, proxyHandler, nil
 }
 
 // RootHandler returns the / handler for the service, which reverse-proxies the old Perl Traffic Ops

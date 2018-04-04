@@ -24,16 +24,16 @@ import (
 )
 
 type SOA struct {
-	Admin              *string `json:"admin,omitempty"`
-	AdminTime          time.Time
-	ExpireSeconds      *string `json:"expire,omitempty"`
-	ExpireSecondsTime  time.Time
-	MinimumSeconds     *string `json:"minimum,omitempty"`
-	MinimumSecondsTime time.Time
-	RefreshSeconds     *string `json:"refresh,omitempty"`
-	RefreshSecondsTime time.Time
-	RetrySeconds       *string `json:"retry,omitempty"`
-	RetrySecondsTime   time.Time
+	Admin              *string   `json:"admin,omitempty"`
+	AdminTime          time.Time `json:"-"`
+	ExpireSeconds      *string   `json:"expire,omitempty"`
+	ExpireSecondsTime  time.Time `json:"-"`
+	MinimumSeconds     *string   `json:"minimum,omitempty"`
+	MinimumSecondsTime time.Time `json:"-"`
+	RefreshSeconds     *string   `json:"refresh,omitempty"`
+	RefreshSecondsTime time.Time `json:"-"`
+	RetrySeconds       *string   `json:"retry,omitempty"`
+	RetrySecondsTime   time.Time `json:"-"`
 }
 
 // MissLocation ...
@@ -45,13 +45,13 @@ type MissLocation struct {
 // MatchSet ...
 type MatchSet struct {
 	Protocol  string      `json:"protocol"`
-	MatchList []MatchList `json:"matchList"`
+	MatchList []MatchList `json:"matchlist"`
 }
 
 // MatchList ...
 type MatchList struct {
 	Regex     string `json:"regex"`
-	MatchType string `json:"matchType"`
+	MatchType string `json:"match-type"`
 }
 
 // BypassDestination ...

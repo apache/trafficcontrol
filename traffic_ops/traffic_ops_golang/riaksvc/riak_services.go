@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
 )

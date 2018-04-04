@@ -21,11 +21,13 @@ package tc
 
 // CRConfig is JSON-serializable as the CRConfig used by Traffic Control.
 type CRConfig struct {
-	Config           CRConfigConfig                       `json:"config,omitempty"`
+	// Config is mostly a map of string values, but may contain an 'soa' key which is a map[string]string, and may contain a 'ttls' key with a value map[string]string. It might not contain these values, so they must be checked for, and all values must be checked by the user and an error returned if the type is unexpected. Be aware, neither the language nor the API provides any guarantees about the type!
+	Config           map[string]interface{}               `json:"config,omitempty"`
 	ContentServers   map[string]CRConfigTrafficOpsServer  `json:"contentServers,omitempty"`
 	ContentRouters   map[string]CRConfigRouter            `json:"contentRouters,omitempty"`
 	DeliveryServices map[string]CRConfigDeliveryService   `json:"deliveryServices,omitempty"`
 	EdgeLocations    map[string]CRConfigLatitudeLongitude `json:"edgeLocations,omitempty"`
+	RouterLocations  map[string]CRConfigLatitudeLongitude `json:"trafficRouterLocations,omitempty"`
 	Monitors         map[string]CRConfigMonitor           `json:"monitors,omitempty"`
 	Stats            CRConfigStats                        `json:"stats,omitempty"`
 }
@@ -65,9 +67,10 @@ type CRConfigTTL struct {
 type CRConfigRouterStatus string
 
 type CRConfigRouter struct {
-	APIPort      *string               `json:"apiPort,omitempty"`
+	APIPort      *string               `json:"api.port,omitempty"`
 	FQDN         *string               `json:"fqdn,omitempty"`
-	HTTPSPort    *int                  `json:"httpsPort,omitempty"`
+	HTTPSPort    *int                  `json:"httpsPort"`
+	HashCount    *int                  `json:"hashCount,omitempty"`
 	IP           *string               `json:"ip,omitempty"`
 	IP6          *string               `json:"ip6,omitempty"`
 	Location     *string               `json:"location,omitempty"`
@@ -83,38 +86,68 @@ type CRConfigTrafficOpsServer struct {
 	Fqdn             *string               `json:"fqdn,omitempty"`
 	HashCount        *int                  `json:"hashCount,omitempty"`
 	HashId           *string               `json:"hashId,omitempty"`
-	HttpsPort        *int                  `json:"httpsPort,omitempty"`
+	HttpsPort        *int                  `json:"httpsPort"`
 	InterfaceName    *string               `json:"interfaceName,omitempty"`
 	Ip               *string               `json:"ip,omitempty"`
 	Ip6              *string               `json:"ip6,omitempty"`
 	LocationId       *string               `json:"locationId,omitempty"`
-	Port             *int                  `json:"port,omitempty"`
+	Port             *int                  `json:"port"`
 	Profile          *string               `json:"profile,omitempty"`
 	ServerStatus     *CRConfigServerStatus `json:"status,omitempty"`
 	ServerType       *string               `json:"type,omitempty"`
 	DeliveryServices map[string][]string   `json:"deliveryServices,omitempty"`
+	RoutingDisabled  int64                 `json:"routingDisabled"`
 }
 
 //TODO: drichardson - reconcile this with the DeliveryService struct in deliveryservices.go
 type CRConfigDeliveryService struct {
-	CoverageZoneOnly    *string                          `json:"coverageZoneOnly,omitempty"`
-	Dispersion          *CRConfigDispersion              `json:"dispersion,omitempty"`
-	Domains             []string                         `json:"domains,omitempty"`
-	GeoLocationProvider *string                          `json:"geoLocationProvider,omitempty"`
-	MatchSets           []MatchSet                       `json:"matchSets,omitempty"`
-	MissLocation        *CRConfigLatitudeLongitude       `json:"missLocation,omitempty"`
-	Protocol            *CRConfigDeliveryServiceProtocol `json:"protocol,omitempty"`
-	RegionalGeoBlocking *string                          `json:"regionalGeoBlocking,omitempty"`
-	ResponseHeaders     map[string]string                `json:"responseHeaders,omitempty"`
-	Soa                 *SOA                             `json:"soa,omitempty"`
-	SSLEnabled          *string                          `json:"sslEnabled,omitempty"`
-	TTL                 *int                             `json:"ttl,omitempty"`
-	TTLs                *CRConfigTTL                     `json:"ttls,omitempty"`
+	CoverageZoneOnly     bool                                  `json:"coverageZoneOnly,string"`
+	Dispersion           *CRConfigDispersion                   `json:"dispersion,omitempty"`
+	Domains              []string                              `json:"domains,omitempty"`
+	GeoLocationProvider  *string                               `json:"geolocationProvider,omitempty"`
+	MatchSets            []*MatchSet                           `json:"matchsets,omitempty"`
+	MissLocation         *CRConfigLatitudeLongitudeShort       `json:"missLocation,omitempty"`
+	Protocol             *CRConfigDeliveryServiceProtocol      `json:"protocol,omitempty"`
+	RegionalGeoBlocking  *string                               `json:"regionalGeoBlocking,omitempty"`
+	ResponseHeaders      map[string]string                     `json:"responseHeaders,omitempty"`
+	RequestHeaders       []string                              `json:"requestHeaders,omitempty"`
+	Soa                  *SOA                                  `json:"soa,omitempty"`
+	SSLEnabled           bool                                  `json:"sslEnabled,string"`
+	TTL                  *int                                  `json:"ttl,omitempty"`
+	TTLs                 *CRConfigTTL                          `json:"ttls,omitempty"`
+	MaxDNSIPsForLocation *int                                  `json:"maxDnsIpsForLocation,omitempty"`
+	IP6RoutingEnabled    *bool                                 `json:"ip6RoutingEnabled,string,omitempty"`
+	RoutingName          *string                               `json:"routingName,omitempty"`
+	BypassDestination    map[string]*CRConfigBypassDestination `json:"bypassDestination,omitempty"`
+	DeepCachingType      *DeepCachingType                      `json:"deepCachingType"`
+	GeoEnabled           []CRConfigGeoEnabled                  `json:"geoEnabled,omitempty"`
+	GeoLimitRedirectURL  *string                               `json:"geoLimitRedirectURL,omitempty"`
+	StaticDNSEntries     []StaticDNSEntry                      `json:"staticDnsEntries,omitempty"`
+}
+
+type CRConfigGeoEnabled struct {
+	CountryCode string `json:"countryCode"`
+}
+
+type StaticDNSEntry struct {
+	Name  string `json:"name"`
+	TTL   int    `json:"ttl"`
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type CRConfigBypassDestination struct {
+	IP    *string `json:"ip,omitempty"`    // only used by DNS DSes
+	IP6   *string `json:"ip6,omitempty"`   // only used by DNS DSes
+	CName *string `json:"cname,omitempty"` // only used by DNS DSes
+	TTL   *int    `json:"ttl,omitempty"`   // only used by DNS DSes
+	FQDN  *string `json:"fqdn,omitempty"`  // only used by HTTP DSes
+	Port  *string `json:"port,omitempty"`  // only used by HTTP DSes
 }
 
 type CRConfigDispersion struct {
-	Limit    int     `json:"limit,omitempty"`
-	Shuffled *string `json:"shuffled,omitempty"`
+	Limit    int  `json:"limit"`
+	Shuffled bool `json:"shuffled,string"`
 }
 
 type CRConfigLatitudeLongitude struct {
@@ -122,15 +155,20 @@ type CRConfigLatitudeLongitude struct {
 	Lon float64 `json:"longitude"`
 }
 
+type CRConfigLatitudeLongitudeShort struct {
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"long"`
+}
+
 type CRConfigDeliveryServiceProtocol struct {
-	AcceptHTTP      bool `json:"acceptHttp,string,omitempty"`
-	AcceptHTTPS     bool `json:"acceptHttps,string,omitempty"`
-	RedirectOnHTTPS bool `json:"redirectOnHttps,string,omitempty"`
+	AcceptHTTP      *bool `json:"acceptHttp,string,omitempty"`
+	AcceptHTTPS     bool  `json:"acceptHttps,string"`
+	RedirectOnHTTPS bool  `json:"redirectToHttps,string"`
 }
 
 type CRConfigMonitor struct {
 	FQDN         *string               `json:"fqdn,omitempty"`
-	HTTPSPort    *int                  `json:"httpsPort,omitempty"`
+	HTTPSPort    *int                  `json:"httpsPort"`
 	IP           *string               `json:"ip,omitempty"`
 	IP6          *string               `json:"ip6,omitempty"`
 	Location     *string               `json:"location,omitempty"`

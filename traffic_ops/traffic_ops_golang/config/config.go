@@ -42,6 +42,7 @@ type Config struct {
 	// NOTE: don't care about any other fields for now..
 	RiakAuthOptions *riak.AuthOptions
 	RiakEnabled     bool
+	Version         string
 }
 
 // ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
@@ -107,14 +108,14 @@ func (c Config) EventLog() log.LogLocation {
 }
 
 // LoadConfig - reads the config file into the Config struct
-func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string) (Config, error) {
+func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appVersion string) (Config, error) {
 	// load json from cdn.conf
 	confBytes, err := ioutil.ReadFile(cdnConfPath)
 	if err != nil {
 		return Config{}, fmt.Errorf("reading CDN conf '%s': %v", cdnConfPath, err)
 	}
 
-	var cfg Config
+	cfg := Config{Version: appVersion}
 	err = json.Unmarshal(confBytes, &cfg)
 	if err != nil {
 		return Config{}, fmt.Errorf("unmarshalling '%s': %v", cdnConfPath, err)
