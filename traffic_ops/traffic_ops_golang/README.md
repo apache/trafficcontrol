@@ -17,6 +17,84 @@
     under the License.
 -->
 
+Prequisites
+=======================================
+
+To run `traffic_ops_golang` proxy locally the following prerequisites are needed:
+
+* Golang 1.8.4 or greater See: [https://golang.org/doc/install](https://golang.org/doc/install)
+* Postgres 9.6 or greater
+* Because the Golang proxy is fronting Mojolicious Perl you need to have that service setup and running as well [TO Perl Setup Here](https://github.com/apache/incubator-trafficcontrol/blob/master/traffic_ops/INSTALL.md)
+
+
+vendoring and building
+=======================================
+
+### vendoring
+We treat `golang.org/x` as apart of the Go compiler so that means that we still vendor application dependencies for stability and reproducible builds.  This is a helpful tool for managing dependencies [https://github.com/govend/govend](https://github.com/govend/govend])
+
+### building
+To download the remaining `golang.org/x` dependencies you need to:
+
+`$ go get -v`
+
+Configuration
+=======================================
+To run the Golang proxy locally the following represents a typical sequence flow.  */api/1.2* will proxy through to Mojo Perl. */api/1.3* will serve the response from the Golang proxy directly and/or interact with Postgres accordingly.
+
+**/api/1.2** routes:
+
+`TO Golang Proxy (port 8443)`<-->`TO Mojo Perl`<-->`TO Database (Postgres)`
+
+**/api/1.3** routes:
+
+`TO Golang Proxy (port 8443)`<-->`TO Database (Postgres)`
+
+### cdn.conf changes
+=======================================
+
+
+Copy `traffic_ops/app/conf/cdn.conf` to `$HOME/cdn.conf` so you can modify it for development purposes.
+
+`$HOME/cdn.conf`
+
+```    
+       "traffic_ops_golang" : {
+          "port" : "443",
+```
+
+```        
+       "traffic_ops_golang" : {
+          "port" : "8443",
+```
+
+### Logging
+=======================================
+
+By default `/var/log/traffic_ops/error.log` is configured for output, to change this modify your `$HOME/cdn.conf` for the following:
+
+`$HOME/cdn.conf`
+
+```
+    "traffic_ops_golang" : {
+        "..."
+        "log_location_error": "stdout",
+        "log_location_warning": "stdout",
+        "log_location_info": "stdout",
+        "log_location_debug": "stdout",
+        "log_location_event": "stdout",
+        ...
+     }
+```
+
+Development
+=======================================
+
+Go is a compiled language so any local changes will require you to CTRL-C the console and re-run the `traffic_ops_golang` Go binary locally:
+
+`go build && ./traffic_ops_golang -cfg $HOME/cdn.conf -dbcfg ../app/conf/development/database.conf`
+
+
 Converting Routes to Traffic Ops Golang
 =======================================
 
