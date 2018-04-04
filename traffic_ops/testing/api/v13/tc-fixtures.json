@@ -14,33 +14,37 @@
             "latitude": 0,
             "longitude": 0,
             "name": "parentCacheGroup",
-            "parentCacheGroupName": null,
-            "type": "EDGE"
+            "shortName": "pg1",
+            "typeId": 5,
+            "typeName": "MID_LOC"
         },
         {
             "latitude": 0,
             "longitude": 0,
             "name": "secondaryCacheGroup",
-            "parentCacheGroupName": null,
-            "type": "EDGE"
+            "shortName": "sg1",
+            "typeId": 5,
+            "typeName": "MID_LOC"
         },
         {
             "latitude": 0,
             "longitude": 0,
             "name": "cachegroup1",
             "parentCacheGroupName": "parentCacheGroup",
-            "secondaryCacheGroupName": "parentCacheGroup",
+            "secondaryParentCacheGroupName": "secondaryCacheGroup",
             "shortName": "cg1",
-            "type": "MID"
+            "typeId": 6,
+            "typeName": "EDGE_LOC"
         },
         {
             "latitude": 24.1234,
             "longitude": -121.1234,
             "name": "cachegroup2",
-            "parentCacheGroupName": "secondaryCacheGroup",
-            "secondaryCacheGroupName": "secondaryCacheGroup",
+            "parentCacheGroupName": "parentCacheGroup",
+            "secondaryParentCacheGroupName": "secondaryCacheGroup",
             "shortName": "cg2",
-            "type": "MID"
+            "typeId": 6,
+            "typeName": "EDGE_LOC"
         }
     ],
     "cdns": [

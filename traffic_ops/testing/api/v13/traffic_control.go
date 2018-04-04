@@ -24,7 +24,7 @@ import (
 type TrafficControl struct {
 	ASNs                           []tcapi.ASN                           `json:"asns"`
 	CDNs                           []v13.CDN                             `json:"cdns"`
-	CacheGroups                    []tcapi.CacheGroup                    `json:"cachegroups"`
+	CacheGroups                    []v13.CacheGroup                      `json:"cachegroups"`
 	DeliveryServiceRequests        []tcapi.DeliveryServiceRequest        `json:"deliveryServiceRequests"`
 	DeliveryServiceRequestComments []tcapi.DeliveryServiceRequestComment `json:"deliveryServiceRequestComments"`
 	DeliveryServices               []tcapi.DeliveryService               `json:"deliveryservices"`

@@ -25,7 +25,7 @@ import (
 func TestTypes(t *testing.T) {
 
 	CreateTestTypes(t)
-	UpdateTestTypes(t)
+	//UpdateTestTypes(t)
 	//GetTestTypes(t)
 	//DeleteTestTypes(t)
 
