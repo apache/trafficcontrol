@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Traffic Ops Golang Proxy Endpoints
   - /api/1.3/about `(GET)`
   - /api/1.3/asns `(GET,POST,PUT,DELETE)`
+  - /api/1.3/cachegroups `(GET,POST,PUT,DELETE)`
   - /api/1.3/cdns `(GET,POST,PUT,DELETE)`
   - /api/1.3/cdns/capacity `(GET)`
   - /api/1.3/cdns/configs `(GET)`
