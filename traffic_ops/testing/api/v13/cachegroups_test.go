@@ -2,17 +2,17 @@ package v13
 
 /*
 
-	 Licensed under the Apache License, Version 2.0 (the "License");
-	 you may not use this file except in compliance with the License.
-	 You may obtain a copy of the License at
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
 
-	 http://www.apache.org/licenses/LICENSE-2.0
+ http://www.apache.org/licenses/LICENSE-2.0
 
-	 Unless required by applicable law or agreed to in writing, software
-	 distributed under the License is distributed on an "AS IS" BASIS,
-	 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	 See the License for the specific language governing permissions and
-	 limitations under the License.
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
 */
 
 import (
@@ -20,6 +20,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 )
 
 func TestCacheGroups(t *testing.T) {
@@ -36,7 +37,7 @@ func CreateTestCacheGroups(t *testing.T) {
 
 	for _, cg := range testData.CacheGroups {
 		// get the typeID
-		typeResp, _, err  := TOSession.GetTypeByName(cg.Type);
+		typeResp, _, err := TOSession.GetTypeByName(cg.Type)
 		if err != nil {
 			t.Error("could not lookup a typeID for this cachegroup")
 			failed = true
@@ -81,7 +82,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 	cg.ShortName = expectedShortName
 
 	// fix the type id for test
-	typeResp, _, err  := TOSession.GetTypeByID(cg.TypeID);
+	typeResp, _, err := TOSession.GetTypeByID(cg.TypeID)
 	if err != nil {
 		t.Error("could not lookup a typeID for this cachegroup")
 		failed = true
@@ -105,14 +106,14 @@ func UpdateTestCacheGroups(t *testing.T) {
 	if cg.ShortName != expectedShortName {
 		t.Errorf("results do not match actual: %s, expected: %s\n", cg.ShortName, expectedShortName)
 	}
-	if ! failed {
+	if !failed {
 		log.Debugln("UpdateTestCacheGroups() PASSED: ")
 	}
 }
 
 func DeleteTestCacheGroups(t *testing.T) {
 	failed := false
-	var mids []tc.CacheGroup
+	var mids []v13.CacheGroup
 
 	// delete the edge caches.
 	for _, cg := range testData.CacheGroups {
@@ -176,7 +177,7 @@ func DeleteTestCacheGroups(t *testing.T) {
 		}
 	}
 
-	if ! failed {
+	if !failed {
 		log.Debugln("DeleteTestCacheGroups() PASSED: ")
 	}
 }

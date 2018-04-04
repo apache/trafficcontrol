@@ -27,6 +27,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -36,7 +37,7 @@ import (
 	"github.com/lib/pq"
 )
 
-type TOCacheGroup tc.CacheGroupNullable
+type TOCacheGroup v13.CacheGroupNullable
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
 var refType = TOCacheGroup{}
@@ -122,7 +123,7 @@ func isValidCacheGroupChar(r rune) bool {
 	if r >= '0' && r <= '9' {
 		return true
 	}
-	if r == '.' || r == '-'  || r == '_' {
+	if r == '.' || r == '-' || r == '_' {
 		return true
 	}
 	return false
@@ -148,29 +149,29 @@ func (cachegroup TOCacheGroup) Validate(db *sqlx.DB) []error {
 	latitudeErr := "Must be a floating point number within the range +-90"
 	longitudeErr := "Must be a floating point number within the range +-180"
 	errs := validation.Errors{
-		"name":       validation.Validate(cachegroup.Name, validation.Required, validName),
-		"shortName": validation.Validate(cachegroup.ShortName, validation.Required, validShortName),
-		"latitude": validation.Validate(cachegroup.Latitude, validation.Min(-90.0).Error(latitudeErr), validation.Max(90.0).Error(latitudeErr)),
-		"longitude": validation.Validate(cachegroup.Longitude, validation.Min(-180.0).Error(longitudeErr), validation.Max(180.0).Error(longitudeErr)),
-		"parentCacheGroupID": validation.Validate(cachegroup.ParentCacheGroupID,validation.Min(1)),
-		"secondaryParentCacheGroupID": validation.Validate(cachegroup.SecondaryParentCacheGroupID,validation.Min(1)),
+		"name":                        validation.Validate(cachegroup.Name, validation.Required, validName),
+		"shortName":                   validation.Validate(cachegroup.ShortName, validation.Required, validShortName),
+		"latitude":                    validation.Validate(cachegroup.Latitude, validation.Min(-90.0).Error(latitudeErr), validation.Max(90.0).Error(latitudeErr)),
+		"longitude":                   validation.Validate(cachegroup.Longitude, validation.Min(-180.0).Error(longitudeErr), validation.Max(180.0).Error(longitudeErr)),
+		"parentCacheGroupID":          validation.Validate(cachegroup.ParentCacheGroupID, validation.Min(1)),
+		"secondaryParentCacheGroupID": validation.Validate(cachegroup.SecondaryParentCacheGroupID, validation.Min(1)),
 	}
 	return tovalidate.ToErrors(errs)
 }
 
 // looks up the parent_cache_group_id and the secondary_cache_group_id
-// if the respective names are defined in the cachegroup struct.  A 
+// if the respective names are defined in the cachegroup struct.  A
 // sucessful lookup sets the two ids on the struct.
 func getParentCacheGroupIDs(db *sqlx.DB, cachegroup *TOCacheGroup) error {
 	query := `SELECT id FROM cachegroup where name=$1`
-	var parentID int;
-	var secondaryParentID int;
+	var parentID int
+	var secondaryParentID int
 
 	if cachegroup.ParentName != nil {
 		err := db.QueryRow(query, *cachegroup.ParentName).Scan(&parentID)
 		if err != nil {
-		  log.Errorf("received error: %++v from query execution", err)
-		  return err
+			log.Errorf("received error: %++v from query execution", err)
+			return err
 		}
 		cachegroup.ParentCacheGroupID = &parentID
 	}
@@ -268,9 +269,9 @@ func (cachegroup *TOCacheGroup) Read(db *sqlx.DB, parameters map[string]string, 
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":            dbhelpers.WhereColumnInfo{"id", api.IsInt},
-		"name":          dbhelpers.WhereColumnInfo{"name", nil},
-		"shortName":    dbhelpers.WhereColumnInfo{"short_name", nil},
+		"id":        dbhelpers.WhereColumnInfo{"id", api.IsInt},
+		"name":      dbhelpers.WhereColumnInfo{"name", nil},
+		"shortName": dbhelpers.WhereColumnInfo{"short_name", nil},
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
@@ -438,7 +439,7 @@ secondary_parent_cachegroup_id
 :parent_cachegroup_id,
 :secondary_parent_cachegroup_id
 ) RETURNING id,last_updated`
-		  return query
+	return query
 }
 
 func selectQuery() string {
