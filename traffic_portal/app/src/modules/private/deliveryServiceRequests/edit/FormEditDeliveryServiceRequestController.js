@@ -247,7 +247,11 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 			}
 		});
 		modalInstance.result.then(function() {
-			deliveryServiceRequestService.deleteDeliveryServiceRequest($stateParams.deliveryServiceRequestId, true);
+			deliveryServiceRequestService.deleteDeliveryServiceRequest($stateParams.deliveryServiceRequestId).
+				then(function() {
+					messageModel.setMessages([ { level: 'success', text: 'Delivery service request deleted' } ], true);
+					locationUtils.navigateToPath('/delivery-service-requests');
+				});
 		}, function () {
 			// do nothing
 		});
