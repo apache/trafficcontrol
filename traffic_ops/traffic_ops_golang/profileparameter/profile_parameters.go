@@ -211,7 +211,7 @@ func (pp *TOProfileParameter) Read(db *sqlx.DB, parameters map[string]string, us
 
 	params := []interface{}{}
 	for rows.Next() {
-		var p tc.ProfileParameterNullable
+		var p v13.ProfileParameterNullable
 		if err = rows.StructScan(&p); err != nil {
 			log.Errorf("error parsing pp rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
