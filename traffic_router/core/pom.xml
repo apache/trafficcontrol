@@ -18,7 +18,7 @@
 	<parent>
 		<groupId>com.comcast.cdn.traffic_control.traffic_router</groupId>
 		<artifactId>traffic_router</artifactId>
-		<version>2.3.0</version>
+		<version>2.3.1</version>
 	</parent>
 
 	<artifactId>ROOT</artifactId>
@@ -32,6 +32,7 @@
 		    <!-- Make sure to add -Djava.library.path=[tomcat native library path on your box] on the Maven
 		         command line -->
 			<java.library.path>must be passed on the Maven commandline</java.library.path>
+			<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 	<repositories>
 		<repository>
