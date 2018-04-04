@@ -30,7 +30,7 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 	"github.com/kelseyhightower/envconfig"
 	"golang.org/x/net/publicsuffix"
 )
@@ -191,7 +191,7 @@ func (to *Connect) getCDNNames() ([]string, error) {
 	}
 	fmt.Println(res)
 
-	var cdnResp tc.CDNsResponse
+	var cdnResp v13.CDNsResponse
 
 	err = json.Unmarshal([]byte(res), &cdnResp)
 	if err != nil {
