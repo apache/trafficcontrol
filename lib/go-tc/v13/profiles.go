@@ -26,6 +26,14 @@ type ProfilesResponse struct {
 	Response []Profile `json:"response"`
 }
 
+// A Single Profile Response for Update and Create to depict what changed
+// swagger:response ProfileResponse
+// in: body
+type ProfileResponse struct {
+	// in: body
+	Response Profile `json:"response"`
+}
+
 // Profile ...
 type Profile struct {
 	ID int `json:"id" db:"id"`
@@ -44,16 +52,36 @@ type Profile struct {
 
 // ProfileNullable ...
 type ProfileNullable struct {
+
+	// Unique identifier for the Profile
+	//
 	ID *int `json:"id" db:"id"`
 
 	// LastUpdated
 	//
 	LastUpdated *tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 
-	Name            *string `json:"name" db:"name"`
-	Description     *string `json:"description" db:"description"`
-	CDNName         *string `json:"cdnName" db:"cdn_name"`
-	CDNID           *int    `json:"cdn" db:"cdn"`
-	RoutingDisabled *bool   `json:"routingDisabled" db:"routing_disabled"`
-	Type            *string `json:"type" db:"type"`
+	// The Profile name
+	//
+	Name *string `json:"name" db:"name"`
+
+	// The Profile Description
+	//
+	Description *string `json:"description" db:"description"`
+
+	// The CDN name associated with the Profile
+	//
+	CDNName *string `json:"cdnName" db:"cdn_name"`
+
+	// The CDN id associated with the Profile
+	//
+	CDNID *int `json:"cdn" db:"cdn"`
+
+	// Enables
+	//
+	RoutingDisabled *bool `json:"routingDisabled" db:"routing_disabled"`
+
+	// The Type name associated with the Profile
+	//
+	Type *string `json:"type" db:"type"`
 }

@@ -58,7 +58,7 @@ type CDNQueryParams struct {
 	//
 	ID string `json:"id"`
 
-	// The CDN name for the CDN
+	// The CDN name
 	//
 	Name string `json:"name"`
 
