@@ -36,6 +36,14 @@ import (
 	"github.com/lib/pq"
 )
 
+const (
+	NameQueryParam       = "name"
+	SecureQueryParam     = "secure"
+	ConfigFileQueryParam = "configFile"
+	IDQueryParam         = "id"
+	ValueQueryParam      = "value"
+)
+
 //we need a type alias to define functions on
 type TOParameter tc.ParameterNullable
 
@@ -47,19 +55,19 @@ func GetRefType() *TOParameter {
 }
 
 func (parameter TOParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{IDQueryParam, api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
 func (parameter TOParameter) GetKeys() (map[string]interface{}, bool) {
 	if parameter.ID == nil {
-		return map[string]interface{}{"id": 0}, false
+		return map[string]interface{}{IDQueryParam: 0}, false
 	}
-	return map[string]interface{}{"id": *parameter.ID}, true
+	return map[string]interface{}{IDQueryParam: *parameter.ID}, true
 }
 
 func (parameter *TOParameter) SetKeys(keys map[string]interface{}) {
-	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	i, _ := keys[IDQueryParam].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
 	parameter.ID = &i
 }
 
@@ -85,9 +93,9 @@ func (parameter TOParameter) Validate(db *sqlx.DB) []error {
 	// - Admin rights only
 	// - Do not allow duplicate parameters by name+config_file+value
 	errs := validation.Errors{
-		"name":       validation.Validate(parameter.Name, validation.Required),
-		"configFile": validation.Validate(parameter.ConfigFile, validation.Required),
-		"value":      validation.Validate(parameter.Value, validation.Required),
+		NameQueryParam:       validation.Validate(parameter.Name, validation.Required),
+		ConfigFileQueryParam: validation.Validate(parameter.ConfigFile, validation.Required),
+		ValueQueryParam:      validation.Validate(parameter.Value, validation.Required),
 	}
 
 	return tovalidate.ToErrors(errs)
@@ -152,7 +160,7 @@ func (pl *TOParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 		return tc.DBError, tc.SystemError
 	}
 
-	pl.SetKeys(map[string]interface{}{"id": id})
+	pl.SetKeys(map[string]interface{}{IDQueryParam: id})
 	pl.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
@@ -184,11 +192,10 @@ func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, us
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"config_file":  dbhelpers.WhereColumnInfo{"p.config_file", nil},
-		"id":           dbhelpers.WhereColumnInfo{"p.id", api.IsInt},
-		"last_updated": dbhelpers.WhereColumnInfo{"p.last_updated", nil},
-		"name":         dbhelpers.WhereColumnInfo{"p.name", nil},
-		"secure":       dbhelpers.WhereColumnInfo{"p.secure", api.IsBool},
+		ConfigFileQueryParam: dbhelpers.WhereColumnInfo{"p.config_file", nil},
+		IDQueryParam:         dbhelpers.WhereColumnInfo{"p.id", api.IsInt},
+		NameQueryParam:       dbhelpers.WhereColumnInfo{"p.name", nil},
+		SecureQueryParam:     dbhelpers.WhereColumnInfo{"p.secure", api.IsBool},
 	}
 
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
