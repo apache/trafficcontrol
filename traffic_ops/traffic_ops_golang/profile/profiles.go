@@ -36,6 +36,14 @@ import (
 	"github.com/lib/pq"
 )
 
+const (
+	CDNQueryParam         = "cdn"
+	NameQueryParam        = "name"
+	IDQueryParam          = "id"
+	DescriptionQueryParam = "description"
+	TypeQueryParam        = "type"
+)
+
 //we need a type alias to define functions on
 type TOProfile v13.ProfileNullable
 
@@ -47,19 +55,19 @@ func GetRefType() *TOProfile {
 }
 
 func (prof TOProfile) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{IDQueryParam, api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
 func (prof TOProfile) GetKeys() (map[string]interface{}, bool) {
 	if prof.ID == nil {
-		return map[string]interface{}{"id": 0}, false
+		return map[string]interface{}{IDQueryParam: 0}, false
 	}
-	return map[string]interface{}{"id": *prof.ID}, true
+	return map[string]interface{}{IDQueryParam: *prof.ID}, true
 }
 
 func (prof *TOProfile) SetKeys(keys map[string]interface{}) {
-	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	i, _ := keys[IDQueryParam].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
 	prof.ID = &i
 }
 
@@ -79,10 +87,10 @@ func (prof *TOProfile) GetType() string {
 
 func (prof *TOProfile) Validate(db *sqlx.DB) []error {
 	errs := validation.Errors{
-		"name":        validation.Validate(prof.Name, validation.Required),
-		"description": validation.Validate(prof.Description, validation.Required),
-		"cdn":         validation.Validate(prof.CDNID, validation.Required),
-		"type":        validation.Validate(prof.Type, validation.Required),
+		NameQueryParam:        validation.Validate(prof.Name, validation.Required),
+		DescriptionQueryParam: validation.Validate(prof.Description, validation.Required),
+		CDNQueryParam:         validation.Validate(prof.CDNID, validation.Required),
+		TypeQueryParam:        validation.Validate(prof.Type, validation.Required),
 	}
 	if errs != nil {
 		return tovalidate.ToErrors(errs)
@@ -96,8 +104,8 @@ func (prof *TOProfile) Read(db *sqlx.DB, parameters map[string]string, user auth
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"name": dbhelpers.WhereColumnInfo{"prof.name", nil},
-		"id":   dbhelpers.WhereColumnInfo{"prof.id", api.IsInt},
+		NameQueryParam: dbhelpers.WhereColumnInfo{"prof.name", nil},
+		IDQueryParam:   dbhelpers.WhereColumnInfo{"prof.id", api.IsInt},
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
@@ -269,7 +277,7 @@ func (prof *TOProfile) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 		return tc.DBError, tc.SystemError
 	}
 
-	prof.SetKeys(map[string]interface{}{"id": id})
+	prof.SetKeys(map[string]interface{}{IDQueryParam: id})
 	prof.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
