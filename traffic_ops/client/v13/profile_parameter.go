@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	API_v13_Profile_Parameters = "/api/1.3/profileparameters"
+	API_v13_Profile_Parameters = "/api/1.3/profile_parameters"
 	ProfileIdQueryParam        = "profileId"
 	ParameterIdQueryParam      = "parameterId"
 )
