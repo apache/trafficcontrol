@@ -30,6 +30,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
@@ -46,6 +47,7 @@ const (
 
 //we need a type alias to define functions on
 type TOProfile v13.ProfileNullable
+type TOParameter v13.ParameterNullable
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
 var refType = TOProfile{}
@@ -112,7 +114,7 @@ func (prof *TOProfile) Read(db *sqlx.DB, parameters map[string]string, user auth
 		return nil, errs, tc.DataConflictError
 	}
 
-	query := selectQuery() + where + orderBy
+	query := selectProfilesQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
 	rows, err := db.NamedQuery(query, queryValues)
@@ -124,10 +126,20 @@ func (prof *TOProfile) Read(db *sqlx.DB, parameters map[string]string, user auth
 
 	profiles := []interface{}{}
 	for rows.Next() {
-		var p tc.ProfileNullable
+		var p v13.ProfileNullable
 		if err = rows.StructScan(&p); err != nil {
 			log.Errorf("error parsing Profile rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
+		}
+
+		// Attach Parameters if the 'id' parameter is sent
+		if _, ok := parameters[IDQueryParam]; ok {
+			params, err := ReadParameters(db, parameters, user, p)
+			p.Parameters = params
+			if len(errs) > 0 {
+				log.Errorf("Error getting Parameters: %v", err)
+				return nil, []error{tc.DBError}, tc.SystemError
+			}
 		}
 		profiles = append(profiles, p)
 	}
@@ -136,7 +148,7 @@ func (prof *TOProfile) Read(db *sqlx.DB, parameters map[string]string, user auth
 
 }
 
-func selectQuery() string {
+func selectProfilesQuery() string {
 
 	query := `SELECT
 prof.description,
@@ -149,6 +161,56 @@ c.id as cdn,
 c.name as cdn_name
 FROM profile prof
 JOIN cdn c ON prof.cdn = c.id`
+
+	return query
+}
+
+func ReadParameters(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser, profile v13.ProfileNullable) ([]v13.ParameterNullable, []error) {
+
+	var rows *sqlx.Rows
+	privLevel := user.PrivLevel
+	queryValues := make(map[string]interface{})
+	queryValues["profile_id"] = *profile.ID
+
+	query := selectParametersQuery()
+	rows, err := db.NamedQuery(query, queryValues)
+	if err != nil {
+		log.Errorf("Error querying Parameter: %v", err)
+		return nil, []error{tc.DBError}
+	}
+	defer rows.Close()
+
+	var params []v13.ParameterNullable
+	for rows.Next() {
+		var param v13.ParameterNullable
+
+		if err = rows.StructScan(&param); err != nil {
+			log.Errorf("error parsing parameter rows: %v", err)
+			return nil, []error{tc.DBError}
+		}
+		var isSecure bool
+		if param.Secure != nil {
+			isSecure = *param.Secure
+		}
+		if isSecure && (privLevel < auth.PrivLevelAdmin) {
+			param.Value = &parameter.HiddenField
+		}
+		params = append(params, param)
+	}
+	return params, []error{}
+}
+
+func selectParametersQuery() string {
+
+	query := `SELECT
+p.id,
+p.name,
+p.config_file,
+p.value,
+p.secure
+FROM parameter p
+JOIN profile_parameter pp ON pp.parameter = p.id 
+WHERE pp.profile = :profile_id`
 
 	return query
 }
@@ -240,8 +302,6 @@ func (prof *TOProfile) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
-	q := insertQuery()
-	fmt.Printf("q ---> %v\n", q)
 	resultRows, err := tx.NamedQuery(insertQuery(), prof)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
