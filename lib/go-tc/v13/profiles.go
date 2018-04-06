@@ -84,4 +84,6 @@ type ProfileNullable struct {
 	// The Type name associated with the Profile
 	//
 	Type *string `json:"type" db:"type"`
+
+	Parameters []ParameterNullable `json:"params"`
 }

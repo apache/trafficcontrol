@@ -44,6 +44,10 @@ const (
 	ValueQueryParam      = "value"
 )
 
+var (
+	HiddenField = "********"
+)
+
 //we need a type alias to define functions on
 type TOParameter tc.ParameterNullable
 
@@ -214,7 +218,6 @@ func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, us
 	defer rows.Close()
 
 	params := []interface{}{}
-	hiddenField := "********"
 	for rows.Next() {
 		var p tc.ParameterNullable
 		if err = rows.StructScan(&p); err != nil {
@@ -227,7 +230,7 @@ func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, us
 		}
 
 		if isSecure && (privLevel < auth.PrivLevelAdmin) {
-			p.Value = &hiddenField
+			p.Value = &HiddenField
 		}
 		params = append(params, p)
 	}
