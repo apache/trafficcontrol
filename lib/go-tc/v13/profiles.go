@@ -42,12 +42,13 @@ type Profile struct {
 	//
 	LastUpdated tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 
-	Name            string `json:"name"`
-	Description     string `json:"description"`
-	CDNName         string `json:"cdnName"`
-	CDNID           int    `json:"cdn"`
-	RoutingDisabled bool   `json:"routingDisabled"`
-	Type            string `json:"type"`
+	Name            string              `json:"name"`
+	Description     string              `json:"description"`
+	CDNName         string              `json:"cdnName"`
+	CDNID           int                 `json:"cdn"`
+	RoutingDisabled bool                `json:"routingDisabled"`
+	Type            string              `json:"type"`
+	Parameters      []ParameterNullable `json:"params,omitempty"`
 }
 
 // ProfileNullable ...
@@ -85,5 +86,7 @@ type ProfileNullable struct {
 	//
 	Type *string `json:"type" db:"type"`
 
-	Parameters []ParameterNullable `json:"params"`
+	// Parameters associated to the profile
+	//
+	Parameters []ParameterNullable `json:"params,omitempty"`
 }
