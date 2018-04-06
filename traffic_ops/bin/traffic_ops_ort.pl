@@ -385,19 +385,29 @@ sub process_cfg_file {
 		@disk_file_lines = @{ &open_file_get_contents($file) };
 	}
 
-	my @return             = &diff_file_lines( $cfg_file, \@db_file_lines, \@disk_file_lines );
-	my @db_lines_missing   = @{ shift(@return) };
-	my @disk_lines_missing = @{ shift(@return) };
+	# First, check if the file to be generated would be identical including order
+	my $change_needed = ( join( '\0', @disk_file_lines ) ne join( '\0', @db_file_lines ) );
 
-	if ( ($cfg_file eq "logs_xml.config" && !(@disk_file_lines ~~ @db_file_lines))
-		|| scalar(@disk_lines_missing) || scalar(@db_lines_missing) ) {
-		$cfg_file_tracker->{$cfg_file}->{'change_needed'}++;
+	# if different, look deeper to see if we care about the diffs (e.g. different order)
+	if ( $change_needed && !( $cfg_file eq 'logs_xml.config' || $cfg_file =~ /\.cer$/ ) ) {
+		my @return             = &diff_file_lines( $cfg_file, \@db_file_lines, \@disk_file_lines );
+		my @db_lines_missing   = @{ shift(@return) };
+		my @disk_lines_missing = @{ shift(@return) };
+
+		if ( scalar(@disk_lines_missing) == 0 && scalar(@db_lines_missing) == 0 ) {
+			# all lines accounted for
+			$change_needed = undef;
+		}
+	}
+
+	if ($change_needed) {
+		$cfg_file_tracker->{$cfg_file}{'change_needed'}++;
 		( $log_level >> $DEBUG ) && print "DEBUG $file needs updated.\n";
 		&backup_file( $cfg_file, \$result );
 	}
 	else {
 		( $log_level >> $INFO ) && print "INFO: All lines match TrOps for config file: $cfg_file.\n";
-		$cfg_file_tracker->{$cfg_file}->{'change_needed'} = 0;
+		$cfg_file_tracker->{$cfg_file}{'change_needed'} = 0;
 		( $log_level >> $TRACE ) && print "TRACE Setting change not needed for $cfg_file.\n";
 		$return_code = $CFG_FILE_UNCHANGED;
 	}
