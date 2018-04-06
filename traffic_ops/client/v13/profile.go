@@ -23,6 +23,7 @@ import (
 	"net/url"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 )
 
 const (
@@ -30,7 +31,7 @@ const (
 )
 
 // Create a Profile
-func (to *Session) CreateProfile(pl tc.Profile) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateProfile(pl v13.Profile) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(pl)
@@ -49,7 +50,7 @@ func (to *Session) CreateProfile(pl tc.Profile) (tc.Alerts, ReqInf, error) {
 }
 
 // Update a Profile by ID
-func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateProfileByID(id int, pl v13.Profile) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(pl)
@@ -69,7 +70,7 @@ func (to *Session) UpdateProfileByID(id int, pl tc.Profile) (tc.Alerts, ReqInf, 
 }
 
 // Returns a list of Profiles
-func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
+func (to *Session) GetProfiles() ([]v13.Profile, ReqInf, error) {
 	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_Profiles, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -77,13 +78,13 @@ func (to *Session) GetProfiles() ([]tc.Profile, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.ProfilesResponse
+	var data v13.ProfilesResponse
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
 }
 
 // GET a Profile by the Profile ID
-func (to *Session) GetProfileByID(id int) ([]tc.Profile, ReqInf, error) {
+func (to *Session) GetProfileByID(id int) ([]v13.Profile, ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", API_v13_Profiles, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -92,7 +93,7 @@ func (to *Session) GetProfileByID(id int) ([]tc.Profile, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.ProfilesResponse
+	var data v13.ProfilesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -101,7 +102,7 @@ func (to *Session) GetProfileByID(id int) ([]tc.Profile, ReqInf, error) {
 }
 
 // GET a Profile by the Profile name
-func (to *Session) GetProfileByName(name string) ([]tc.Profile, ReqInf, error) {
+func (to *Session) GetProfileByName(name string) ([]v13.Profile, ReqInf, error) {
 	URI := API_v13_Profiles + "?name=" + url.QueryEscape(name)
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -110,7 +111,7 @@ func (to *Session) GetProfileByName(name string) ([]tc.Profile, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.ProfilesResponse
+	var data v13.ProfilesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}

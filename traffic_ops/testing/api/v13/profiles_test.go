@@ -28,8 +28,11 @@ func TestProfiles(t *testing.T) {
 	CreateTestTypes(t)
 	CreateTestProfiles(t)
 	CreateTestParameters(t)
+	CreateTestProfileParameters(t)
 	UpdateTestProfiles(t)
 	GetTestProfiles(t)
+	GetTestProfilesWithParameters(t)
+	DeleteTestProfileParameters(t)
 	DeleteTestParameters(t)
 	DeleteTestProfiles(t)
 	DeleteTestTypes(t)
@@ -90,6 +93,27 @@ func GetTestProfiles(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot GET Profile by name: %v - %v\n", err, resp)
 		}
+	}
+}
+func GetTestProfilesWithParameters(t *testing.T) {
+	firstProfile := testData.Profiles[0]
+	resp, _, err := TOSession.GetProfileByName(firstProfile.Name)
+	if len(resp) > 0 {
+		respProfile := resp[0]
+		resp, _, err := TOSession.GetProfileByID(respProfile.ID)
+		if err != nil {
+			t.Errorf("cannot GET Profile by name: %v - %v\n", err, resp)
+		}
+		if len(resp) > 0 {
+			respProfile = resp[0]
+			respParameters := respProfile.Parameters
+			if len(respParameters) == 0 {
+				t.Errorf("expected a profile with parameters to be retrieved: %v - %v\n", err, respParameters)
+			}
+		}
+	}
+	if err != nil {
+		t.Errorf("cannot GET Profile by name: %v - %v\n", err, resp)
 	}
 }
 
