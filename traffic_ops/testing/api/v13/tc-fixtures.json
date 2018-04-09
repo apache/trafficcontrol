@@ -183,6 +183,18 @@
             "name": "division2"
         }
     ],
+    "locations": [
+        {
+            "latitude": 1.1,
+            "longitude": 2.2,
+            "name": "location1"
+        },
+        {
+            "latitude": 3.3,
+            "longitude": 4.4,
+            "name": "location2"
+        }
+    ],
     "parameters": [
         {
             "configFile": "rascal.properties",
