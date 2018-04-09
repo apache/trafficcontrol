@@ -35,7 +35,7 @@ function checkEnvironment() {
     export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
     export TC_VERSION=$(getVersion "$TC_DIR")
 	export TOMCAT_VERSION=8.5
-	export TOMCAT_RELEASE=29
+	export TOMCAT_RELEASE=30
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
 	export RPMBUILD="$WORKSPACE/rpmbuild"
 	export DIST="$WORKSPACE/dist"

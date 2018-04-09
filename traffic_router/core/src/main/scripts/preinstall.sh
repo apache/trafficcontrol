@@ -13,6 +13,20 @@
 # limitations under the License.
 #
 
+# figure out which version of traffic_router is currently running
+# and then shut it down
+set +e
+chkconfig --list tomcat >/dev/null
+
+if [ $? -eq 0 ]; then
+  service tomcat stop
+else
+   /usr/bin/sudo /usr/bin/systemctl list-unit-files traffic_router.service > /dev/null
+
+   [ $? -eq 0 ] && /usr/bin/sudo /usr/bin/systemctl stop traffic_router
+fi
+
+# delete the expanded war files from the previous version
 if [[ -e /opt/traffic_router/webapps/core ]]; then
   echo "Deleting previous version of TR webapp"
   rm -rf /opt/traffic_router/webapps/core
