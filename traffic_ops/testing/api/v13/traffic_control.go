@@ -29,6 +29,7 @@ type TrafficControl struct {
 	DeliveryServiceRequestComments []v12.DeliveryServiceRequestComment `json:"deliveryServiceRequestComments"`
 	DeliveryServices               []v12.DeliveryService               `json:"deliveryservices"`
 	Divisions                      []v12.Division                      `json:"divisions"`
+	Locations                      []v13.Location                      `json:"locations"`
 	Profiles                       []v13.Profile                       `json:"profiles"`
 	Parameters                     []v12.Parameter                     `json:"parameters"`
 	ProfileParameters              []v13.ProfileParameter              `json:"profileParameters"`
