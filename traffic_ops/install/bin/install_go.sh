@@ -15,7 +15,7 @@
 #
 
 GO_DOWNLOADS_URL=https://storage.googleapis.com/golang
-GO_TARBALL_VERSION=go1.8.3.linux-amd64.tar.gz
+GO_TARBALL_VERSION=go1.10.1.linux-amd64.tar.gz
 GO_TARBALL_URL=$GO_DOWNLOADS_URL/$GO_TARBALL_VERSION
 
 GO_TARBALL_VERSION_SHA_FILE=$GO_TARBALL_VERSION.sha256
@@ -30,8 +30,8 @@ yum -y install git
 rm -rf /usr/local/go
 
 cd /tmp
-rm $GO_TARBALL_VERSION
-rm $GO_TARBALL_VERSION_SHA_FILE
+rm -f $GO_TARBALL_VERSION
+rm -f $GO_TARBALL_VERSION_SHA_FILE
 curl -O $GO_TARBALL_URL
 curl -O $GO_TARBALL_VERSION_SHA_URL
 
