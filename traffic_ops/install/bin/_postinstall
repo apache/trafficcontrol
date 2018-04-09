@@ -269,7 +269,7 @@ sub generateLdapConf {
         }
     }
 
-    delete $ldapConf{setupLdap}
+    delete $ldapConf{setupLdap};
 
     # do a very loose check of form -- 'host' must be hostname:port
     if ( $ldapConf{ host } !~ /^\S+:\d+$/ ) {
