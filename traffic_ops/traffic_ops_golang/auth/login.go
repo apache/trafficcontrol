@@ -36,6 +36,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+const disallowed = "disallowed"
+
 type passwordForm struct {
 	Username string `json:"u"`
 	Password string `json:"p"`
@@ -50,31 +52,41 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			handleErrs(http.StatusBadRequest, err)
 			return
 		}
-		authenticated, err := checkLocalUser(form, db)
-		if err != nil {
-			log.Errorf("error checking local user: %s\n", err.Error())
-		}
-		var ldapErr error
-		if !authenticated {
-			if cfg.LDAPEnabled {
-				authenticated, ldapErr = checkLDAPUser(form, cfg.ConfigLDAP)
-				if ldapErr != nil {
-					log.Errorf("error checking ldap user: %s\n", ldapErr.Error())
-				}
-			}
-		}
 		resp := struct {
 			tc.Alerts
 		}{}
-		if authenticated {
-			expiry := time.Now().Add(time.Hour * 6)
-			cookie := tocookie.New(form.Username, expiry, cfg.Secrets[0])
-			httpCookie := http.Cookie{Name: "mojolicious", Value: cookie, Path: "/", Expires: expiry, HttpOnly: true}
-			http.SetCookie(w, &httpCookie)
-			resp = struct {
-				tc.Alerts
-			}{tc.CreateAlerts(tc.SuccessLevel, "Successfully logged in.")}
+		userAllowed, err := CheckLocalUserIsAllowed(form, db)
+		if err != nil {
+			log.Errorf("error checking local user: %s\n", err.Error())
+		}
+		if userAllowed {
+			authenticated, err := checkLocalUserPassword(form, db)
+			if err != nil {
+				log.Errorf("error checking local user password: %s\n", err.Error())
+			}
+			var ldapErr error
+			if !authenticated {
+				if cfg.LDAPEnabled {
+					authenticated, ldapErr = checkLDAPUser(form, cfg.ConfigLDAP)
+					if ldapErr != nil {
+						log.Errorf("error checking ldap user: %s\n", ldapErr.Error())
+					}
+				}
+			}
+			if authenticated {
+				expiry := time.Now().Add(time.Hour * 6)
+				cookie := tocookie.New(form.Username, expiry, cfg.Secrets[0])
+				httpCookie := http.Cookie{Name: "mojolicious", Value: cookie, Path: "/", Expires: expiry, HttpOnly: true}
+				http.SetCookie(w, &httpCookie)
+				resp = struct {
+					tc.Alerts
+				}{tc.CreateAlerts(tc.SuccessLevel, "Successfully logged in.")}
 
+			} else {
+				resp = struct {
+					tc.Alerts
+				}{tc.CreateAlerts(tc.ErrorLevel, "Invalid username or password.")}
+			}
 		} else {
 			resp = struct {
 				tc.Alerts
@@ -91,7 +103,21 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	}
 }
 
-func checkLocalUser(form passwordForm, db *sqlx.DB) (bool, error) {
+func CheckLocalUserIsAllowed(form passwordForm, db *sqlx.DB) (bool, error) {
+	var roleName string
+	err := db.Get(&roleName, "SELECT role.name FROM role INNER JOIN tm_user ON tm_user.role = role.id where username=$1",form.Username)
+	if err != nil {
+		return false, err
+	}
+	if roleName != "" {
+		if roleName != disallowed{ //relies on unchanging role name assumption.
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func checkLocalUserPassword(form passwordForm, db *sqlx.DB) (bool, error) {
 	var hashedPassword string
 	err := db.Get(&hashedPassword, "SELECT local_passwd FROM tm_user WHERE username=$1", form.Username)
 	if err != nil {
