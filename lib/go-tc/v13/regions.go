@@ -1,5 +1,7 @@
 package v13
 
+import tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -53,7 +55,9 @@ type Region struct {
 	//
 	ID int `json:"id" db:"id"`
 
-	LastUpdated string `json:"lastUpdated" db:"last_updated"`
+	// LastUpdated
+	//
+	LastUpdated tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 
 	// Region Name
 	//
