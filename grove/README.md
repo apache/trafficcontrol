@@ -157,6 +157,15 @@ The objects in the `to` array of parents have the following fields:
 | `weight` | The weight of this parent in the parent selection algorithm. |
 | `proxy_url` | The proxy URL, if this parent is being used as a forward proxy. Must include the scheme, fully qualified domain name, and port. If this rule is omitted, the parent will be requested directly with the `url` as a reverse proxy. |
 
+# Remap Rules and Nonstandard Ports
+In the remap rules file, the `from` is mapped verbatim to the `to`, and `from` is the `Host` header, Grove doesn't care anything about what DNS thinks the server is.
+
+This is especially confusing when Grove is running on a nonstandard port, because clients (like `curl`) will automatically append the port. For example, if Grove is serving at `http://foo.example:8080`, then `curl http://foo.example:8080/bar` will automatically send a `Host` header of `foo.example:8080`. This means, to work with clients automatically sending the port, the `from` remap must be `http://foo.example:8080`, not `http://foo.example`. Otherwise, because the mapping is done verbatim, it will match only the part before the port, and include the port in the remap.
+
+For example, if a remap rule exists from `http://foo.example` and to `http://bar.example:1234`, and Grove is serving on `:8080`, a request to `curl http://foo.example:8080/baz` will automatically send `Host: foo.example:8080`, and Grove will find a remap match and replace `http://foo.example` with `http://bar.example`, resulting in a malformed parent of `http://bar.example:1234:8080/baz`. Which is almost certainly not what you want.
+
+Therefore, for the literal Host header remapping Grove does, when Grove is serving on a nonstandard port, including the port in the `from` is almost always the right solution. Alternatively, if clients are known to be sending a `Host` header without the port, even to requests at a nonstandard port, the port must not be included in order for the remap rule to match.
+
 # Disk Cache
 
 By default, all remap rules use a shared memory cache, of the size specified in the global config `cache_size_bytes` key. However, it is also possible to use disk caching.
