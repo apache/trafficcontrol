@@ -59,7 +59,7 @@ func (to *Session) UpdateDeliveryServiceRequestCommentByID(id int, comment tc.De
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v13_DeliveryServiceRequestComments, id)
+	route := fmt.Sprintf("%s?id=%d", API_v13_DeliveryServiceRequestComments, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -86,7 +86,7 @@ func (to *Session) GetDeliveryServiceRequestComments() ([]tc.DeliveryServiceRequ
 
 // GET a delivery service request comment by ID
 func (to *Session) GetDeliveryServiceRequestCommentByID(id int) ([]tc.DeliveryServiceRequestComment, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_DeliveryServiceRequestComments, id)
+	route := fmt.Sprintf("%s?id=%d", API_v13_DeliveryServiceRequestComments, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -104,7 +104,7 @@ func (to *Session) GetDeliveryServiceRequestCommentByID(id int) ([]tc.DeliverySe
 
 // DELETE a delivery service request comment by ID
 func (to *Session) DeleteDeliveryServiceRequestCommentByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_DeliveryServiceRequestComments, id)
+	route := fmt.Sprintf("%s?id=%d", API_v13_DeliveryServiceRequestComments, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

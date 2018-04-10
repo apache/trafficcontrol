@@ -98,7 +98,7 @@ func (to *Session) GetDeliveryServiceRequestByXMLID(XMLID string) ([]tc.Delivery
 
 // GET a DeliveryServiceRequest by the DeliveryServiceRequest id
 func (to *Session) GetDeliveryServiceRequestByID(id int) ([]tc.DeliveryServiceRequest, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_DS_REQUESTS, id)
+	route := fmt.Sprintf("%s?id=%d", API_DS_REQUESTS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -119,7 +119,7 @@ func (to *Session) GetDeliveryServiceRequestByID(id int) ([]tc.DeliveryServiceRe
 // Update a DeliveryServiceRequest by ID
 func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServiceRequest) (tc.Alerts, ReqInf, error) {
 
-	route := fmt.Sprintf("%s/%d", API_DS_REQUESTS, id)
+	route := fmt.Sprintf("%s?id=%d", API_DS_REQUESTS, id)
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(dsr)
@@ -139,7 +139,7 @@ func (to *Session) UpdateDeliveryServiceRequestByID(id int, dsr tc.DeliveryServi
 
 // DELETE a DeliveryServiceRequest by DeliveryServiceRequest assignee
 func (to *Session) DeleteDeliveryServiceRequestByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_DS_REQUESTS, id)
+	route := fmt.Sprintf("%s?id=%d", API_DS_REQUESTS, id)
 	resp, remoteAddr, err := to.rawRequest(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
