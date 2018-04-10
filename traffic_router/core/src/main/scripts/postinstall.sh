@@ -27,8 +27,7 @@ if [ -f /opt/traffic_router/conf/*.crt ]; then
 fi
 
 
-#eval $(grep VERSION_ID /etc/os-release)
-$VERSION_ID = %{centos_ver}
+eval $(grep VERSION_ID /etc/os-release)
 echo "Traffic Router installed successfully."
 echo ""
 echo "Centos version for post install is : " $VERSION_ID
