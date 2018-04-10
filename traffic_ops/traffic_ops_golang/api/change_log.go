@@ -26,8 +26,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type ChangeLog struct {
@@ -50,7 +48,7 @@ const (
 	Deleted   = "Deleted"
 )
 
-func CreateChangeLog(level string, action string, i Identifier, user auth.CurrentUser, db *sqlx.DB) error {
+func CreateChangeLog(level string, action string, i Identifier, user auth.CurrentUser, db *sql.DB) error {
 	t, ok := i.(ChangeLogger)
 	if !ok {
 		keys, _ := i.GetKeys()
@@ -65,7 +63,7 @@ func CreateChangeLog(level string, action string, i Identifier, user auth.Curren
 	return CreateChangeLogMsg(level, user, db, msg)
 }
 
-func CreateChangeLogBuildMsg(level string, action string, user auth.CurrentUser, db *sqlx.DB, objType string, auditName string, keys map[string]interface{}) error {
+func CreateChangeLogBuildMsg(level string, action string, user auth.CurrentUser, db *sql.DB, objType string, auditName string, keys map[string]interface{}) error {
 	keyStr := "{ "
 	for key, value := range keys {
 		keyStr += key + ":" + fmt.Sprintf("%v", value) + " "
@@ -75,7 +73,7 @@ func CreateChangeLogBuildMsg(level string, action string, user auth.CurrentUser,
 	return CreateChangeLogMsg(level, user, db, msg)
 }
 
-func CreateChangeLogMsg(level string, user auth.CurrentUser, db *sqlx.DB, msg string) error {
+func CreateChangeLogMsg(level string, user auth.CurrentUser, db *sql.DB, msg string) error {
 	query := `INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`
 	log.Debugf("about to exec %s with %s", query, msg)
 	if _, err := db.Exec(query, level, msg, user.ID); err != nil {

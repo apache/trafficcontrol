@@ -89,6 +89,10 @@ func HandleErrorsWithType(errs []error, errType ApiErrorType, handleErrs func(st
 	}
 }
 
+func HandleErrWithType(err error, errType ApiErrorType, handleErrs func(status int, errs ...error)) {
+	HandleErrorsWithType([]error{err}, errType, handleErrs)
+}
+
 func (alerts *Alerts) ToStrings() []string {
 	alertStrs := []string{}
 	for _, alrt := range alerts.Alerts {

@@ -20,8 +20,11 @@ package cdn
  */
 
 import (
+	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -371,4 +374,110 @@ func deleteQuery() string {
 	query := `DELETE FROM cdn
 WHERE id=:id`
 	return query
+}
+
+func DeleteNameHandler(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
+		ctx := r.Context()
+		params, err := api.GetCombinedParams(r)
+		if err != nil {
+			handleErrs(http.StatusInternalServerError, err)
+			return
+		}
+		user, err := auth.GetCurrentUser(ctx)
+		if err != nil {
+			log.Errorf("unable to retrieve current user from context: %s", err)
+			handleErrs(http.StatusInternalServerError, err)
+			return
+		}
+		cdnName, hasCDNName := params["name"]
+		if !hasCDNName || cdnName == "" {
+			handleErrs(http.StatusBadRequest, err)
+			return
+		}
+		if ok, err := IsTenantAuthorized(*user, cdnName, db); err != nil {
+			handleErrs(http.StatusBadRequest, err)
+			return
+		} else if !ok {
+			handleErrs(http.StatusForbidden, errors.New("not authorized on this tenant"))
+			return
+		}
+		txSuccess := WithTx(db, handleErrs, func(tx *sql.Tx) bool {
+			res, err := tx.Exec(`DELETE FROM cdn WHERE name=$1`, cdnName)
+			if err != nil {
+				log.Errorf("received error: %++v from named delete execution", err)
+				tc.HandleErrWithType(tc.DBError, tc.SystemError, handleErrs)
+				return false
+			}
+			rowsAffected, err := res.RowsAffected()
+			if err != nil {
+				tc.HandleErrWithType(tc.DBError, tc.SystemError, handleErrs)
+				return false
+			}
+			if rowsAffected == 0 {
+				tc.HandleErrWithType(errors.New("not found"), tc.DataMissingError, handleErrs)
+				return false
+			}
+			if rowsAffected > 1 {
+				tc.HandleErrWithType(fmt.Errorf("affected too many rows: %d", rowsAffected), tc.SystemError, handleErrs)
+				return false
+			}
+			return true
+		})
+		if !txSuccess {
+			return // return; WithTx or its dbFunc called handleErrs which wrote the error response
+		}
+		WriteSuccess(w, "cdn was deleted", api.ApiChange, api.Deleted, cdnName, *user, db, handleErrs)
+	}
+}
+
+// WriteSuccess writes the success message to the client, and logs to the change log
+func WriteSuccess(w http.ResponseWriter, msg, changeLevel, changeAction, iden string, user auth.CurrentUser, db *sql.DB, handleErrs func(status int, errs ...error)) {
+	log.Debugf("changelog for delete on object")
+	api.CreateChangeLog(changeLevel, changeAction, TOCDN{Name: &iden}, user, db)
+	resp := struct{ tc.Alerts }{tc.CreateAlerts(tc.SuccessLevel, msg)}
+	respBts, err := json.Marshal(resp)
+	if err != nil {
+		handleErrs(http.StatusInternalServerError, err)
+		return
+	}
+	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Write(respBts)
+}
+
+// WithTx takes a function dbFunc and calls it with a transaction.
+// Returns whether the transaction succeeded or failed. All failures are written to the handleErrs function, and therefore to the user. If false is returned, the error has been written, and the caller shouldn't write anything else to the client.
+// The dbFunc returns true if the transaction should be committed. If dbFunc returns false, it is assumed it responded to the user, and WithTx will make no further response, but only log rollback errors.
+// The rowsAffected is the number of rows which should be affected on success. If negative, rows affected are not considered. If greater than or equal to zero, if the database returns any other number of rows affected, the transaction is rolled back and false (failure) returned.
+func WithTx(db *sql.DB, handleErrs func(status int, errs ...error), dbFunc func(*sql.Tx) bool) bool {
+	tx, err := db.Begin()
+	if err != nil {
+		log.Errorln("beginning transaction: " + err.Error())
+		tc.HandleErrorsWithType([]error{tc.DBError}, tc.SystemError, handleErrs)
+		return false
+	}
+	rollback := true
+	defer func() {
+		if !rollback {
+			return
+		}
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
+		}
+	}()
+	if !dbFunc(tx) {
+		return false
+	}
+	if err = tx.Commit(); err != nil {
+		log.Errorln("committing transaction: " + err.Error())
+		tc.HandleErrorsWithType([]error{tc.DBError}, tc.SystemError, handleErrs)
+		return false
+	}
+	rollback = false
+	return true
+}
+
+func IsTenantAuthorized(user auth.CurrentUser, name string, db *sql.DB) (bool, error) {
+	return true, nil // TODO implement
 }
