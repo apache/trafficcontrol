@@ -19,7 +19,7 @@ set +e
 chkconfig --list tomcat >/dev/null
 
 if [ $? -eq 0 ]; then
-  service tomcat stop
+  /sbin/service tomcat stop
 else
    /usr/bin/sudo /usr/bin/systemctl list-unit-files traffic_router.service > /dev/null
 
