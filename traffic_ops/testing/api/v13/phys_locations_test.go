@@ -31,6 +31,9 @@ func TestPhysLocations(t *testing.T) {
 	UpdateTestPhysLocations(t)
 	GetTestPhysLocations(t)
 	DeleteTestPhysLocations(t)
+	DeleteTestRegions(t)
+	DeleteTestDivisions(t)
+	DeleteTestCDNs(t)
 
 }
 

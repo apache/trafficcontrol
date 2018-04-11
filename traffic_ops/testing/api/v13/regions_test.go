@@ -25,11 +25,11 @@ import (
 func TestRegions(t *testing.T) {
 
 	CreateTestDivisions(t)
-
 	CreateTestRegions(t)
 	UpdateTestRegions(t)
 	GetTestRegions(t)
 	DeleteTestRegions(t)
+	DeleteTestDivisions(t)
 
 }
 
@@ -80,6 +80,13 @@ func UpdateTestRegions(t *testing.T) {
 		t.Errorf("results do not match actual: %s, expected: %s\n", respRegion.Name, expectedRegion)
 	}
 
+	// Set the name back to the fixture value so we can delete it after
+	remoteRegion.Name = firstRegion.Name
+	alert, _, err = TOSession.UpdateRegionByID(remoteRegion.ID, remoteRegion)
+	if err != nil {
+		t.Errorf("cannot UPDATE Region by id: %v - %v\n", err, alert)
+	}
+
 }
 
 func GetTestRegions(t *testing.T) {
@@ -93,25 +100,26 @@ func GetTestRegions(t *testing.T) {
 
 func DeleteTestRegions(t *testing.T) {
 
-	region := testData.Regions[1]
-	// Retrieve the Region by name so we can get the id
-	resp, _, err := TOSession.GetRegionByName(region.Name)
-	if err != nil {
-		t.Errorf("cannot GET Region by name: %v - %v\n", region.Name, err)
-	}
-	respRegion := resp[0]
+	for _, region := range testData.Regions {
+		// Retrieve the Region by name so we can get the id
+		resp, _, err := TOSession.GetRegionByName(region.Name)
+		if err != nil {
+			t.Errorf("cannot GET Region by name: %v - %v\n", region.Name, err)
+		}
+		respRegion := resp[0]
 
-	delResp, _, err := TOSession.DeleteRegionByID(respRegion.ID)
-	if err != nil {
-		t.Errorf("cannot DELETE Region by region: %v - %v\n", err, delResp)
-	}
+		delResp, _, err := TOSession.DeleteRegionByID(respRegion.ID)
+		if err != nil {
+			t.Errorf("cannot DELETE Region by region: %v - %v\n", err, delResp)
+		}
 
-	// Retrieve the Region to see if it got deleted
-	regionResp, _, err := TOSession.GetRegionByName(region.Name)
-	if err != nil {
-		t.Errorf("error deleting Region region: %s\n", err.Error())
-	}
-	if len(regionResp) > 0 {
-		t.Errorf("expected Region : %s to be deleted\n", region.Name)
+		// Retrieve the Region to see if it got deleted
+		regionResp, _, err := TOSession.GetRegionByName(region.Name)
+		if err != nil {
+			t.Errorf("error deleting Region region: %s\n", err.Error())
+		}
+		if len(regionResp) > 0 {
+			t.Errorf("expected Region : %s to be deleted\n", region.Name)
+		}
 	}
 }

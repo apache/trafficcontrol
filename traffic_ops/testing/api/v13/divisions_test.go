@@ -68,6 +68,13 @@ func UpdateTestDivisions(t *testing.T) {
 		t.Errorf("results do not match actual: %s, expected: %s\n", respDivision.Name, expectedDivision)
 	}
 
+	// Set the name back to the fixture value so we can delete it after
+	remoteDivision.Name = firstDivision.Name
+	alert, _, err = TOSession.UpdateDivisionByID(remoteDivision.ID, remoteDivision)
+	if err != nil {
+		t.Errorf("cannot UPDATE Division by id: %v - %v\n", err, alert)
+	}
+
 }
 
 func GetTestDivisions(t *testing.T) {
@@ -81,25 +88,26 @@ func GetTestDivisions(t *testing.T) {
 
 func DeleteTestDivisions(t *testing.T) {
 
-	division := testData.Divisions[1]
-	// Retrieve the Division by name so we can get the id
-	resp, _, err := TOSession.GetDivisionByName(division.Name)
-	if err != nil {
-		t.Errorf("cannot GET Division by name: %v - %v\n", division.Name, err)
-	}
-	respDivision := resp[0]
+	for _, division := range testData.Divisions {
+		// Retrieve the Division by name so we can get the id
+		resp, _, err := TOSession.GetDivisionByName(division.Name)
+		if err != nil {
+			t.Errorf("cannot GET Division by name: %v - %v\n", division.Name, err)
+		}
+		respDivision := resp[0]
 
-	delResp, _, err := TOSession.DeleteDivisionByID(respDivision.ID)
-	if err != nil {
-		t.Errorf("cannot DELETE Division by division: %v - %v\n", err, delResp)
-	}
+		delResp, _, err := TOSession.DeleteDivisionByID(respDivision.ID)
+		if err != nil {
+			t.Errorf("cannot DELETE Division by division: %v - %v\n", err, delResp)
+		}
 
-	// Retrieve the Division to see if it got deleted
-	divisionResp, _, err := TOSession.GetDivisionByName(division.Name)
-	if err != nil {
-		t.Errorf("error deleting Division division: %s\n", err.Error())
-	}
-	if len(divisionResp) > 0 {
-		t.Errorf("expected Division : %s to be deleted\n", division.Name)
+		// Retrieve the Division to see if it got deleted
+		divisionResp, _, err := TOSession.GetDivisionByName(division.Name)
+		if err != nil {
+			t.Errorf("error deleting Division division: %s\n", err.Error())
+		}
+		if len(divisionResp) > 0 {
+			t.Errorf("expected Division : %s to be deleted\n", division.Name)
+		}
 	}
 }
