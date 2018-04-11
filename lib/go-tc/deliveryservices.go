@@ -73,6 +73,7 @@ type DeliveryService struct {
 	EdgeHeaderRewrite    string                 `json:"edgeHeaderRewrite"`
 	ExampleURLs          []string               `json:"exampleURLs"`
 	GeoLimit             int                    `json:"geoLimit"`
+	FQPacingRate         int                    `json:"fqPacingRate"`
 	GeoProvider          int                    `json:"geoProvider"`
 	GlobalMaxMBPS        int                    `json:"globalMaxMbps"`
 	GlobalMaxTPS         int                    `json:"globalMaxTps"`
@@ -129,6 +130,7 @@ type DeliveryServiceNullable struct {
 	DNSBypassTTL             *int                    `json:"dnsBypassTtl" db:"dns_bypass_ttl"`
 	DSCP                     *int                    `json:"dscp" db:"dscp"`
 	EdgeHeaderRewrite        *string                 `json:"edgeHeaderRewrite" db:"edge_header_rewrite"`
+	FQPacingRate             *int                    `json:"fqPacingRate" db:"fq_pacing_rate"`
 	GeoLimit                 *int                    `json:"geoLimit" db:"geo_limit"`
 	GeoLimitCountries        *string                 `json:"geoLimitCountries" db:"geo_limit_countries"`
 	GeoLimitRedirectURL      *string                 `json:"geoLimitRedirectURL" db:"geolimit_redirect_url"`
