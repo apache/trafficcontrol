@@ -33,19 +33,41 @@ const (
 
 func TestDeliveryServiceRequests(t *testing.T) {
 
+	CreateTestCDNs(t)
+	CreateTestTypes(t)
 	CreateTestDeliveryServiceRequests(t)
 	GetTestDeliveryServiceRequests(t)
 	UpdateTestDeliveryServiceRequests(t)
 	DeleteTestDeliveryServiceRequests(t)
+	DeleteTestTypes(t)
+	DeleteTestCDNs(t)
 
 }
 
 func CreateTestDeliveryServiceRequests(t *testing.T) {
 	log.Debugln("CreateTestDeliveryServiceRequests")
 
+	// Attach CDNs
+	cdn := testData.CDNs[0]
+	resp, _, err := TOSession.GetCDNByName(cdn.Name)
+	if err != nil {
+		t.Errorf("cannot GET CDN by name: %v - %v\n", cdn.Name, err)
+	}
+	respCDN := resp[0]
+
+	// Attach Type
+	typ := testData.Types[19]
+	respTypes, _, err := TOSession.GetTypeByName(typ.Name)
+	if err != nil {
+		t.Errorf("cannot GET Type by name: %v - %v\n", typ.Name, err)
+	}
+	respTyp := respTypes[0]
+
 	dsr := testData.DeliveryServiceRequests[dsrGood]
-	resp, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
-	log.Debugln("Response: ", resp)
+	dsr.DeliveryService.CDNID = respCDN.ID
+	dsr.DeliveryService.TypeID = respTyp.ID
+	respDSR, _, err := TOSession.CreateDeliveryServiceRequest(dsr)
+	log.Debugln("Response: ", respDSR)
 	if err != nil {
 		t.Errorf("could not CREATE DeliveryServiceRequests: %v\n", err)
 	}

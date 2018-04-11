@@ -24,12 +24,16 @@ import (
 
 func TestDeliveryServiceRequestComments(t *testing.T) {
 
+	CreateTestCDNs(t)
+	CreateTestTypes(t)
 	CreateTestDeliveryServiceRequests(t)
 	CreateTestDeliveryServiceRequestComments(t)
 	UpdateTestDeliveryServiceRequestComments(t)
 	GetTestDeliveryServiceRequestComments(t)
 	DeleteTestDeliveryServiceRequestComments(t)
 	DeleteTestDeliveryServiceRequests(t)
+	DeleteTestTypes(t)
+	DeleteTestCDNs(t)
 
 }
 
