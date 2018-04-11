@@ -212,8 +212,8 @@ func (role *TORole) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
-	log.Debugf("about to run exec query: %s with role: %++v", updateQuery(), role)
-	resultRows, err := tx.NamedQuery(updateQuery(), role)
+	log.Debugf("about to run exec query: %s with role: %++v\n", updateQuery(), role)
+	result, err := tx.NamedExec(updateQuery(), role)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -226,11 +226,10 @@ func (role *TORole) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 			return tc.DBError, tc.SystemError
 		}
 	}
-	defer resultRows.Close()
-
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.Errorf("received error: %++v from checking result of update", err)
+		return tc.DBError, tc.SystemError
 	}
 
 	if rowsAffected != 1 {
