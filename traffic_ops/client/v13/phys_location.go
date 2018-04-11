@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	API_v13_PhysLocations = "/api/1.3/physlocations"
+	API_v13_PhysLocations = "/api/1.3/phys_locations"
 )
 
 // Create a PhysLocation
@@ -101,7 +101,7 @@ func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error
 
 // GET a PhysLocation by the PhysLocation name
 func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf, error) {
-	url := fmt.Sprintf("%s/name/%s", API_v13_PhysLocations, name)
+	url := fmt.Sprintf("%s?name=%s", API_v13_PhysLocations, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
