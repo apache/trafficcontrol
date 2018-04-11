@@ -29,6 +29,7 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
@@ -44,7 +45,7 @@ type ITrafficOpsSession interface {
 	Profiles() ([]tc.Profile, error)
 	Parameters(profileName string) ([]tc.Parameter, error)
 	DeliveryServices() ([]tc.DeliveryService, error)
-	CacheGroups() ([]tc.CacheGroup, error)
+	CacheGroups() ([]v13.CacheGroup, error)
 	CRConfigHistory() []CRConfigStat
 }
 
@@ -446,7 +447,7 @@ func (s TrafficOpsSessionThreadsafe) DeliveryServices() ([]tc.DeliveryService, e
 	return ss.DeliveryServices()
 }
 
-func (s TrafficOpsSessionThreadsafe) CacheGroups() ([]tc.CacheGroup, error) {
+func (s TrafficOpsSessionThreadsafe) CacheGroups() ([]v13.CacheGroup, error) {
 	ss := s.get()
 	if ss == nil {
 		return nil, ErrNilSession
