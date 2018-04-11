@@ -16,6 +16,7 @@
 package v13
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -45,6 +46,8 @@ func CreateTestProfiles(t *testing.T) {
 	for _, pr := range testData.Profiles {
 		cdns, _, err := TOSession.GetCDNByName(pr.CDNName)
 		respCDN := cdns[0]
+		cdnName := respCDN.Name
+		fmt.Printf("profileName: %s, cdnName %s\n", pr.Name, cdnName)
 		pr.CDNID = respCDN.ID
 
 		resp, _, err := TOSession.CreateProfile(pr)
