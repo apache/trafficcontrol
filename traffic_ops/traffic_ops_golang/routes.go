@@ -213,10 +213,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Roles
 		{1.3, http.MethodGet, `roles/?(\.json)?$`, api.ReadHandler(role.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.3, http.MethodGet, `roles/{id}$`, api.ReadHandler(role.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.3, http.MethodPut, `roles/{id}$`, api.UpdateHandler(role.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.3, http.MethodPost, `roles/?$`, api.CreateHandler(role.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.3, http.MethodDelete, `roles/{id}$`, api.DeleteHandler(role.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.3, http.MethodPut, `roles/?$`, api.UpdateHandler(role.GetRefType(), d.DB), auth.PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodPost, `roles/?$`, api.CreateHandler(role.GetRefType(), d.DB), auth.PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodDelete, `roles/?$`, api.DeleteHandler(role.GetRefType(), d.DB), auth.PrivLevelAdmin, Authenticated, nil},
 
 		//Servers
 		{1.3, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},
