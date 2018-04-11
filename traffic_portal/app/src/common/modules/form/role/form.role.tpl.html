@@ -1,0 +1,67 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li><a ng-click="navigateToPath('/roles')">Roles</a></li>
+            <li class="active">{{roleName}}</li>
+        </ol>
+        <div class="pull-right" role="group" ng-show="!settings.isNew">
+            <!--<button class="btn btn-primary" title="View Capabilities" ng-click="viewCapabilities()">View Capabilities</button>-->
+            <!--<button class="btn btn-primary" title="View Users" ng-click="viewUsers()">View Users</button>-->
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <form name="roleForm" class="form-horizontal form-label-left" novalidate>
+            <div class="form-group" ng-class="{'has-error': hasError(roleForm.name), 'has-feedback': hasError(roleForm.name)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="name" type="text" class="form-control" ng-model="role.name" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(roleForm.name, 'required')">Required</small>
+                    <span ng-show="hasError(roleForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(roleForm.privLevel), 'has-feedback': hasError(roleForm.privLevel)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Privilege Level *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input name="privLevel" type="number" class="form-control" ng-model="role.privLevel" ng-maxlength="3" ng-pattern="/^\d+$/" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(roleForm.privLevel, 'required')">Required Whole Number</small>
+                    <small class="input-error" ng-show="hasPropertyError(roleForm.privLevel, 'maxlength')">Too Long</small>
+                    <small class="input-error" ng-show="hasPropertyError(roleForm.privLevel, 'pattern')">Whole Number</small>
+                    <span ng-show="hasError(roleForm.privLevel)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="form-group" ng-class="{'has-error': hasError(roleForm.description), 'has-feedback': hasError(roleForm.description)}">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Description *</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <textarea name="value" type="text" class="form-control" ng-model="role.description" rows="10" required autofocus></textarea>
+                    <small class="input-error" ng-show="hasPropertyError(roleForm.description, 'required')">Required</small>
+                    <span ng-show="hasError(roleForm.description)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(role)">Delete</button>
+                <button type="button" class="btn btn-success" ng-disabled="roleForm.$pristine || roleForm.$invalid" ng-click="confirmSave(role)">{{settings.saveLabel}}</button>
+            </div>
+        </form>
+    </div>
+</div>

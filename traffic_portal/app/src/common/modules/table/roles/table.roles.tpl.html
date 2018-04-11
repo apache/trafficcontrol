@@ -23,6 +23,7 @@ under the License.
             <li class="active">Roles</li>
         </ol>
         <div class="pull-right">
+            <button class="btn btn-primary" title="Create Role" ng-click="createRole()"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
@@ -32,16 +33,16 @@ under the License.
         <table id="rolesTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>name</th>
-                <th>privilege level</th>
-                <th>description</th>
+                <th>Name</th>
+                <th>Privilege Level</th>
+                <th>Description</th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="role in ::roles">
-                <td>{{::role.name}}</td>
-                <td>{{::role.privLevel}}</td>
-                <td>{{::role.description}}</td>
+            <tr ng-click="editRole(r.id)" ng-repeat="r in ::roles">
+                <td>{{::r.name}}</td>
+                <td>{{::r.privLevel}}</td>
+                <td>{{::r.description}}</td>
             </tr>
             </tbody>
         </table>

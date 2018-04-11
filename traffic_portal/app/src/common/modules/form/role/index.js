@@ -17,31 +17,5 @@
  * under the License.
  */
 
-var TableRolesController = function(roles, $scope, $state, locationUtils) {
-
-	$scope.roles = roles;
-
-	$scope.editRole = function(id) {
-		locationUtils.navigateToPath('/roles/' + id);
-	};
-
-	$scope.createRole = function() {
-		locationUtils.navigateToPath('/roles/new');
-	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	angular.element(document).ready(function () {
-		$('#rolesTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
-		});
-	});
-
-};
-
-TableRolesController.$inject = ['roles', '$scope', '$state', 'locationUtils'];
-module.exports = TableRolesController;
+module.exports = angular.module('trafficPortal.form.role', [])
+	.controller('FormRoleController', require('./FormRoleController'));
