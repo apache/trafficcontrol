@@ -18,18 +18,18 @@ package client
 import (
 	"encoding/json"
 
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 )
 
 // CacheGroups gets the CacheGroups in an array of CacheGroup structs
 // (note CacheGroup used to be called location)
 // Deprecated: use GetCacheGroups.
-func (to *Session) CacheGroups() ([]tc.CacheGroup, error) {
+func (to *Session) CacheGroups() ([]v13.CacheGroup, error) {
 	cgs, _, err := to.GetCacheGroups()
 	return cgs, err
 }
 
-func (to *Session) GetCacheGroups() ([]tc.CacheGroup, ReqInf, error) {
+func (to *Session) GetCacheGroups() ([]v13.CacheGroup, ReqInf, error) {
 	url := "/api/1.2/cachegroups.json"
 	resp, remoteAddr, err := to.request("GET", url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -38,7 +38,7 @@ func (to *Session) GetCacheGroups() ([]tc.CacheGroup, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data tc.CacheGroupsResponse
+	var data v13.CacheGroupsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
