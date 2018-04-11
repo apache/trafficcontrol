@@ -35,7 +35,7 @@ func stripAllWhitespace(s string) string {
 }
 
 func TestBuildQuery(t *testing.T) {
-	v := map[string]string{"param1": "queryParamv1", "param2": "queryParamv2"}
+	v := map[string]string{"param1": "queryParamv1", "param2": "queryParamv2", "orderby": "param1,param2"}
 
 	selectStmt := `SELECT
 	t.col1,
@@ -62,12 +62,16 @@ FROM table t
 	}
 
 	if strings.Contains(actualQuery, expectedV1) {
-		t.Errorf("expected: %v error, actual: %v", actualQuery, expectedV1)
+		t.Errorf("expected: %v error, actual: %v", expectedV1, actualQuery)
 	}
 
 	expectedV2 := v["param2"]
 	if strings.Contains(actualQuery, expectedV2) {
-		t.Errorf("expected: %v error, actual: %v", actualQuery, expectedV2)
+		t.Errorf("expected: %v error, actual: %v", expectedV2, actualQuery)
 	}
 
+	expectedOrderby := queryParamsToSQLCols["param1"].Column + "," + queryParamsToSQLCols["param2"].Column
+	if expectedOrderby != orderBy {
+		t.Errorf("expected: %v error, actual: %v", expectedOrderby, orderBy)
+	}
 }

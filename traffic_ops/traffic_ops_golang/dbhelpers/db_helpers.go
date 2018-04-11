@@ -34,12 +34,9 @@ type WhereColumnInfo struct {
 	Checker func(string) error
 }
 
-const baseWhere = "\nWHERE"
-const baseOrderBy = "\nORDER BY"
-
 func BuildWhereAndOrderBy(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, map[string]interface{}, []error) {
-	whereClause := baseWhere
-	orderBy := baseOrderBy
+	var whereClause string
+	var orderBy string
 	var criteria string
 	var queryValues map[string]interface{}
 	var errs []error
@@ -52,20 +49,24 @@ func BuildWhereAndOrderBy(parameters map[string]string, queryParamsToSQLCols map
 		return "", "", queryValues, errs
 	}
 
-	if orderby, ok := parameters["orderby"]; ok {
-		log.Debugln("orderby: ", orderby)
-		if colInfo, ok := queryParamsToSQLCols[orderby]; ok {
-			log.Debugln("orderby column ", colInfo)
-			orderBy += " " + colInfo.Column
-		} else {
-			log.Debugln("Incorrect name for orderby: ", orderby)
+	if names, ok := parameters["orderby"]; ok {
+		var columns []string
+		log.Debugln("orderby: ", names)
+		for _, n := range strings.Split(names, ",") {
+			if colInfo, ok := queryParamsToSQLCols[n]; ok {
+				log.Debugln("orderby column ", colInfo)
+				columns = append(columns, colInfo.Column)
+			} else {
+				log.Debugln("Incorrect name for orderby: ", n)
+			}
 		}
+		orderBy = strings.Join(columns, ",")
 	}
-	if whereClause == baseWhere {
-		whereClause = ""
+	if whereClause != "" {
+		whereClause = "\nWHERE " + whereClause
 	}
-	if orderBy == baseOrderBy {
-		orderBy = ""
+	if orderBy != "" {
+		whereClause = "\nORDER BY " + whereClause
 	}
 	log.Debugf("\n--\n Where: %s \n Order By: %s", whereClause, orderBy)
 	return whereClause, orderBy, queryValues, errs
