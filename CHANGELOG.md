@@ -22,6 +22,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.3/deliveryservice_requests `(GET,POST,PUT,DELETE)`
   - /api/1.3/divisions `(GET,POST,PUT,DELETE)`
   - /api/1.3/hwinfos `(GET)`
+  - /api/1.3/locations `(GET,POST,PUT,DELETE)`
   - /api/1.3/parameters `(GET,POST,PUT,DELETE)`
   - /api/1.3/profileparameters `(GET,POST,PUT,DELETE)`
   - /api/1.3/phys_locations `(GET,POST,PUT,DELETE)`
