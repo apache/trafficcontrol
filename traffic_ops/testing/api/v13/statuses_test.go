@@ -25,9 +25,9 @@ import (
 func TestStatuses(t *testing.T) {
 
 	CreateTestStatuses(t)
-	//UpdateTestStatuses(t)
-	//GetTestStatuses(t)
-	//DeleteTestStatuses(t)
+	UpdateTestStatuses(t)
+	GetTestStatuses(t)
+	DeleteTestStatuses(t)
 
 }
 
@@ -52,8 +52,8 @@ func UpdateTestStatuses(t *testing.T) {
 		t.Errorf("cannot GET Status by name: %v - %v\n", firstStatus.Name, err)
 	}
 	remoteStatus := resp[0]
-	expectedStatusName := "testStatus1"
-	remoteStatus.Name = expectedStatusName
+	expectedStatusDesc := "new description"
+	remoteStatus.Description = expectedStatusDesc
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateStatusByID(remoteStatus.ID, remoteStatus)
 	if err != nil {
@@ -63,11 +63,11 @@ func UpdateTestStatuses(t *testing.T) {
 	// Retrieve the Status to check Status name got updated
 	resp, _, err = TOSession.GetStatusByID(remoteStatus.ID)
 	if err != nil {
-		t.Errorf("cannot GET Status by name: %v - %v\n", firstStatus.Name, err)
+		t.Errorf("cannot GET Status by ID: %v - %v\n", firstStatus.Description, err)
 	}
 	respStatus := resp[0]
-	if respStatus.Name != expectedStatusName {
-		t.Errorf("results do not match actual: %s, expected: %s\n", respStatus.Name, expectedStatusName)
+	if respStatus.Description != expectedStatusDesc {
+		t.Errorf("results do not match actual: %s, expected: %s\n", respStatus.Name, expectedStatusDesc)
 	}
 
 }
