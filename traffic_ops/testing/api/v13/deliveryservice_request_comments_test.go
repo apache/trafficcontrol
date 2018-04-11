@@ -18,7 +18,6 @@ package v13
 import (
 	"testing"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
@@ -51,9 +50,8 @@ func CreateTestDeliveryServiceRequestComments(t *testing.T) {
 	for _, comment := range testData.DeliveryServiceRequestComments {
 		comment.DeliveryServiceRequestID = respDSR.ID
 		resp, _, err := TOSession.CreateDeliveryServiceRequestComment(comment)
-		log.Debugln("Response: ", resp)
 		if err != nil {
-			t.Errorf("could not CREATE delivery service request comment: %v\n", err)
+			t.Errorf("could not CREATE delivery service request comment: %v - %v\n", err, resp)
 		}
 	}
 

@@ -21,7 +21,6 @@ import (
 	"net/http"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 
 	"fmt"
 )
@@ -40,7 +39,6 @@ func (to *Session) CreateDeliveryServiceRequestComment(comment tc.DeliveryServic
 		return tc.Alerts{}, reqInf, err
 	}
 	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_DeliveryServiceRequestComments, reqBody)
-	log.Infof("%s", reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -115,4 +113,3 @@ func (to *Session) DeleteDeliveryServiceRequestCommentByID(id int) (tc.Alerts, R
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
 }
-
