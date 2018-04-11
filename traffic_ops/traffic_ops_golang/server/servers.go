@@ -144,9 +144,19 @@ func (server *TOServer) Validate(db *sqlx.DB) []error {
 	}
 	log.Infof("got cdn id: %d from profile and cdn id: %d from server", cdnID, *server.CDNID)
 	if cdnID != *server.CDNID {
-		errs = append(errs, errors.New("CDN of profile does not match Server CDN"))
+		errs = append(errs, errors.New(fmt.Sprintf("CDN id '%d' for profile '%d' does not match Server CDN '%d'", cdnID, *server.ProfileID, *server.CDNID)))
 	}
 	return errs
+}
+
+// ChangeLogMessage implements the api.ChangeLogger interface for a custom log message
+func (server TOServer) ChangeLogMessage(action string) (string, error) {
+	status := *server.Status
+	hostName := *server.HostName
+
+	message := action + ` ` + status + `server: { "hostName":"` + hostName + `", id:` + strconv.Itoa(*server.ID) + ` }`
+
+	return message, nil
 }
 
 func (server *TOServer) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
