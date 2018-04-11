@@ -110,6 +110,7 @@ func (role *TORole) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
+
 	resultRows, err := tx.NamedQuery(insertQuery(), role)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -212,6 +213,7 @@ func (role *TORole) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
+
 	log.Debugf("about to run exec query: %s with role: %++v\n", updateQuery(), role)
 	result, err := tx.NamedExec(updateQuery(), role)
 	if err != nil {
@@ -308,8 +310,7 @@ func updateQuery() string {
 	query := `UPDATE
 role SET
 name=:name,
-description=:description,
-priv_level=:priv_level
+description=:description
 WHERE id=:id`
 	return query
 }
