@@ -17,41 +17,64 @@
  * under the License.
  */
 
-var RoleService = function(Restangular, messageModel) {
+var RoleService = function(Restangular, $http, $q, messageModel, ENV) {
 
     this.getRoles = function(queryParams) {
         return Restangular.all('roles').getList(queryParams);
     };
 
-    this.getRole = function(id) {
-        return Restangular.one("roles", id).get();
-    };
+    this.createRole = function(role) {
+        var request = $q.defer();
 
-    this.updateRole = function(role) {
-        return role.put()
+        $http.post(ENV.api['root'] + "roles", role)
             .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Role updated' } ], false);
+                function(result) {
+                    request.resolve(result.data);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
+                    request.reject(fault);
                 }
-        );
+            );
+
+        return request.promise;
     };
 
-    this.deleteRole = function(role) {
-        return role.remove()
+    this.updateRole = function(role) {
+        var request = $q.defer();
+
+        $http.put(ENV.api['root'] + "roles?id=" + role.id, role)
             .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Role deleted' } ], true);
+                function(result) {
+                    request.resolve(result.data);
                 },
                 function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
+                    messageModel.setMessages(fault.data.alerts, false);
+                    request.reject();
                 }
-        );
+            );
+
+        return request.promise;
+    };
+
+    this.deleteRole = function(id) {
+        var request = $q.defer();
+
+        $http.delete(ENV.api['root'] + "roles?id=" + id)
+            .then(
+                function(result) {
+                    request.resolve(result.data);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                    request.reject(fault);
+                }
+            );
+
+        return request.promise;
     };
 
 };
 
-RoleService.$inject = ['Restangular', 'messageModel'];
+RoleService.$inject = ['Restangular', '$http', '$q', 'messageModel', 'ENV'];
 module.exports = RoleService;

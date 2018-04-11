@@ -17,31 +17,27 @@
  * under the License.
  */
 
-var TableRolesController = function(roles, $scope, $state, locationUtils) {
+var FormNewRoleController = function(roles, $scope, $controller, locationUtils, roleService, messageModel) {
 
-	$scope.roles = roles;
+	// extends the FormRoleController to inherit common methods
+	angular.extend(this, $controller('FormRoleController', { roles: roles, $scope: $scope }));
 
-	$scope.editRole = function(id) {
-		locationUtils.navigateToPath('/roles/' + id);
+	$scope.roleName = 'New';
+
+	$scope.settings = {
+		isNew: true,
+		saveLabel: 'Create'
 	};
 
-	$scope.createRole = function() {
-		locationUtils.navigateToPath('/roles/new');
-	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	angular.element(document).ready(function () {
-		$('#rolesTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
+	$scope.confirmSave = function(role) {
+		roleService.createRole(role).
+			then(function(result) {
+				messageModel.setMessages(result.alerts, true);
+				locationUtils.navigateToPath('/roles');
 		});
-	});
+	};
 
 };
 
-TableRolesController.$inject = ['roles', '$scope', '$state', 'locationUtils'];
-module.exports = TableRolesController;
+FormNewRoleController.$inject = ['roles', '$scope', '$controller', 'locationUtils', 'roleService', 'messageModel'];
+module.exports = FormNewRoleController;

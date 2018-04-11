@@ -17,31 +17,27 @@
  * under the License.
  */
 
-var TableRolesController = function(roles, $scope, $state, locationUtils) {
+var FormRoleController = function(roles, $scope, $location, formUtils, locationUtils) {
 
-	$scope.roles = roles;
+	$scope.role = roles[0];
 
-	$scope.editRole = function(id) {
-		locationUtils.navigateToPath('/roles/' + id);
+	$scope.viewCapabilities = function() {
+		return; // todo: need to implement this view
+		$location.path($location.path() + '/capabilities');
 	};
 
-	$scope.createRole = function() {
-		locationUtils.navigateToPath('/roles/new');
+	$scope.viewUsers = function() {
+		return; // todo: need to implement this view
+		$location.path($location.path() + '/users');
 	};
 
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
+	$scope.navigateToPath = locationUtils.navigateToPath;
 
-	angular.element(document).ready(function () {
-		$('#rolesTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
-		});
-	});
+	$scope.hasError = formUtils.hasError;
+
+	$scope.hasPropertyError = formUtils.hasPropertyError;
 
 };
 
-TableRolesController.$inject = ['roles', '$scope', '$state', 'locationUtils'];
-module.exports = TableRolesController;
+FormRoleController.$inject = ['roles', '$scope', '$location', 'formUtils', 'locationUtils'];
+module.exports = FormRoleController;
