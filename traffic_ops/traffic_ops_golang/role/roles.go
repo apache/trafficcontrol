@@ -269,6 +269,16 @@ func (role *TORole) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
+	assignedUsers := 0
+	err = tx.Select(&assignedUsers, "SELECT COUNT(id) FROM tm_user WHERE role=$1", role.ID)
+	if err != nil {
+		log.Errorf("received error: %++v from assigned users check", err)
+		return tc.DBError, tc.SystemError
+	}
+	if assignedUsers != 0 {
+		return fmt.Errorf("can not delete a role with %d assigned users", assignedUsers), tc.DataConflictError
+	}
+
 	log.Debugf("about to run exec query: %s with role: %++v", deleteQuery(), role)
 	result, err := tx.NamedExec(deleteQuery(), role)
 	if err != nil {
