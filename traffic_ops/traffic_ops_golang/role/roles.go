@@ -270,7 +270,7 @@ func (role *TORole) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 		return tc.DBError, tc.SystemError
 	}
 	assignedUsers := 0
-	err = tx.Select(&assignedUsers, "SELECT COUNT(id) FROM tm_user WHERE role=$1", role.ID)
+	err = tx.Get(&assignedUsers, "SELECT COUNT(id) FROM tm_user WHERE role=$1", role.ID)
 	if err != nil {
 		log.Errorf("received error: %++v from assigned users check", err)
 		return tc.DBError, tc.SystemError
