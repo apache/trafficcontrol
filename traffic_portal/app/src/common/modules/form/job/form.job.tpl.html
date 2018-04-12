@@ -20,7 +20,7 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb">
-            <li><a ng-click="navigateToPath('/jobs')">Invalidate Content Jobs</a></li>
+            <li><a ng-click="navigateToPath('/jobs')">Invalidation Requests</a></li>
             <li class="active">{{jobName}}</li>
         </ol>
         <div class="clearfix"></div>
@@ -50,7 +50,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(jobForm.ttl), 'has-feedback': hasError(jobForm.ttl)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">TTL (hours) *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="ttl" type="number" class="form-control" placeholder="Number of hours until the invalidate content job expires" ng-model="job.ttl" ng-maxlength="3" ng-pattern="/^\d+$/" required autofocus>
+                    <input name="ttl" type="number" class="form-control" placeholder="Number of hours until the invalidation request expires" ng-model="job.ttl" ng-maxlength="3" ng-pattern="/^\d+$/" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(jobForm.ttl, 'required')">Required Whole Number</small>
                     <small class="input-error" ng-show="hasPropertyError(jobForm.ttl, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(jobForm.ttl, 'pattern')">Whole Number</small>

@@ -25,9 +25,10 @@ under the License.
     <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
         <div class="menu_section">
             <ul class="nav side-menu">
+                <li class="side-menu-category" ng-class="{'current-page': isState('trafficPortal.private.dashboard')}"><a href="/#!/dashboard"><i class="fa fa-sm fa-bar-chart"></i> Dashboard</a></li>
+                <li class="side-menu-category" ng-class="{'current-page': isState('trafficPortal.private.cdns')}"><a href="/#!/cdns"><i class="fa fa-sm fa-sitemap"></i> CDNs</a></li>
                 <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Monitor</span></a>
                     <ul class="nav child_menu" style="display: none">
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.dashboard')}"><a href="/#!/dashboard">Dashboard</a></li>
                         <li class="side-menu-category-item" ng-if="::showCacheChecks" ng-class="{'current-page': isState('trafficPortal.private.cacheChecks')}"><a href="/#!/cache-checks">Cache Checks</a></li>
                         <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.cacheStats')}"><a href="/#!/cache-stats">Cache Stats</a></li>
                     </ul>
@@ -38,29 +39,36 @@ under the License.
                         <li class="side-menu-category-item" ng-if="::dsRequestsEnabled" ng-class="{'current-page': isState('trafficPortal.private.deliveryServiceRequests')}"><a href="/#!/delivery-service-requests">Delivery Service Requests</a></li>
                     </ul>
                 </li>
-                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Admin</span></a>
+                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Configure</span></a>
                     <ul class="nav child_menu" style="display: none">
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.asns')}"><a href="/#!/asns">ASNs</a></li>
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.cacheGroups')}"><a href="/#!/cache-groups">Cache Groups</a></li>
-                        <!--<li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.capabilities')}"><a href="/#!/capabilities">Capabilities</a></li>-->
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.cdns')}"><a href="/#!/cdns">CDNs</a></li>
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.divisions')}"><a href="/#!/divisions">Divisions</a></li>
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.jobs')}"><a href="/#!/jobs">Jobs</a></li>
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.physLocations')}"><a href="/#!/phys-locations">Phys Locations</a></li>
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.parameters')}"><a href="/#!/parameters">Parameters</a></li>
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.profiles')}"><a href="/#!/profiles">Profiles</a></li>
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.regions')}"><a href="/#!/regions">Regions</a></li>
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.roles')}"><a href="/#!/roles">Roles</a></li>
                         <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.servers')}"><a href="/#!/servers">Servers</a></li>
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.statuses')}"><a href="/#!/statuses">Statuses</a></li>
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.tenants')}"><a href="/#!/tenants">Tenants</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.profiles')}"><a href="/#!/profiles">Profiles</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.parameters')}"><a href="/#!/parameters">Parameters</a></li>
                         <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.types')}"><a href="/#!/types">Types</a></li>
-                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.users')}"><a href="/#!/users">Users</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.statuses')}"><a href="/#!/statuses">Statuses</a></li>
+                    </ul>
+                </li>
+                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Topology</span></a>
+                    <ul class="nav child_menu" style="display: none">
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.cacheGroups')}"><a href="/#!/cache-groups">Cache Groups</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.physLocations')}"><a href="/#!/phys-locations">Phys Locations</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.divisions')}"><a href="/#!/divisions">Divisions</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.regions')}"><a href="/#!/regions">Regions</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.asns')}"><a href="/#!/asns">ASNs</a></li>
                     </ul>
                 </li>
                 <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> Tools</span></a>
                     <ul class="nav child_menu" style="display: none">
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.jobs')}"><a href="/#!/jobs">Invalidate Content</a></li>
                         <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.iso')}"><a href="/#!/iso">Generate ISO</a></li>
+                    </ul>
+                </li>
+                <li class="side-menu-category"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> User Admin</span></a>
+                    <ul class="nav child_menu" style="display: none">
+                        <!--<li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.capabilities')}"><a href="/#!/capabilities">Capabilities</a></li>-->
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.users')}"><a href="/#!/users">Users</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.tenants')}"><a href="/#!/tenants">Tenants</a></li>
+                        <li class="side-menu-category-item" ng-class="{'current-page': isState('trafficPortal.private.roles')}"><a href="/#!/roles">Roles</a></li>
                     </ul>
                 </li>
                 <li class="side-menu-category" ng-if="customMenu.items.length > 0"><a href="javascript:void(0);"><i class="fa fa-sm fa-chevron-right"></i> {{::customMenu.name}}</span></a>
