@@ -151,10 +151,20 @@ func (server *TOServer) Validate(db *sqlx.DB) []error {
 
 // ChangeLogMessage implements the api.ChangeLogger interface for a custom log message
 func (server TOServer) ChangeLogMessage(action string) (string, error) {
-	status := *server.Status
-	hostName := *server.HostName
+	var serverID string
+	var status string
+	var hostName string
+	if server.Status != nil {
+		status = *server.Status
+	}
+	if server.HostName != nil {
+		hostName = *server.HostName
+	}
+	if server.ID != nil {
+		serverID = strconv.Itoa(*server.ID)
+	}
 
-	message := action + ` ` + status + `server: { "hostName":"` + hostName + `", id:` + strconv.Itoa(*server.ID) + ` }`
+	message := action + ` ` + status + ` server: { "hostName":"` + hostName + `", id:` + serverID + ` }`
 
 	return message, nil
 }
