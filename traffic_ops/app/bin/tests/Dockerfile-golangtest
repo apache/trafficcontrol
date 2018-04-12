@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-FROM golang:1.10
+FROM golang:1.8
 MAINTAINER Dan Kirkwood <dangogh@apache.org>
 ARG DIR=github.com/apache/incubator-trafficcontrol
 
@@ -20,6 +20,6 @@ ADD lib /go/src/$DIR/lib
 
 WORKDIR /go/src/$DIR/traffic_ops/traffic_ops_golang
 
-CMD bash -c 'go get -v && go test -cover -v $(go list ./...)'
+CMD bash -c 'go get -v && go test -cover -v $(go list ./...)' ../../lib/go-*
 #
 # vi:syntax=Dockerfile
