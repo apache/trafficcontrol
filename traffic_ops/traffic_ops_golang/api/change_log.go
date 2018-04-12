@@ -85,9 +85,8 @@ func CreateChangeLogMsg(level string, user auth.CurrentUser, db *sqlx.DB, msg st
 	return nil
 }
 
-func CreateChangeLogRaw(level string, message string, user auth.CurrentUser, db *sql.DB) error {
-	if _, err := db.Exec(`INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`, level, message, user.ID); err != nil {
-		return fmt.Errorf("inserting change log level '%v' message '%v' user '%v': %v", level, message, user.ID, err)
+func CreateChangeLogRaw(level string, msg string, user auth.CurrentUser, db *sql.DB) {
+	if _, err := db.Exec(`INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`, level, msg, user.ID); err != nil {
+		log.Errorln("Inserting change log level '" + level + "' message '" + msg + "' user '" + user.UserName + "': " + err.Error())
 	}
-	return nil
 }
