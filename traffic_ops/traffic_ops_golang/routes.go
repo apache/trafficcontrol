@@ -37,6 +37,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/cdn"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/coordinate"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/crconfig"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	dsrequest "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request/comment"
 	dsserver "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/servers"
@@ -265,16 +266,31 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodPost, `parameterprofile/?$`, profileparameter.PostParamProfile(d.DB.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodDelete, `profileparameters/{profileId}/{parameterId}$`, api.DeleteHandler(profileparameter.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
-		//SSLKeys deliveryservice endpoints here that are marked  marked as '-wip' need to have tenancy checks added
-		{1.3, http.MethodGet, `deliveryservices-wip/xmlId/{xmlID}/sslkeys$`, getDeliveryServiceSSLKeysByXMLIDHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
-		{1.3, http.MethodGet, `deliveryservices-wip/hostname/{hostName}/sslkeys$`, getDeliveryServiceSSLKeysByHostNameHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
-		{1.3, http.MethodPost, `deliveryservices-wip/hostname/{hostName}/sslkeys/add$`, addDeliveryServiceSSLKeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
-
 		//CRConfig
 		{1.1, http.MethodGet, `cdns/{cdn}/snapshot/?$`, crconfig.SnapshotGetHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/{cdn}/snapshot/new/?$`, crconfig.Handler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
 		{1.1, http.MethodPut, `cdns/{id}/snapshot/?$`, crconfig.SnapshotHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
 		{1.1, http.MethodPut, `snapshot/{cdn}/?$`, crconfig.SnapshotHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
+
+		//SSLKeys deliveryservice endpoints here that are marked  marked as '-wip' need to have tenancy checks added
+		{1.3, http.MethodGet, `deliveryservices-wip/xmlId/{xmlID}/sslkeys$`, getDeliveryServiceSSLKeysByXMLIDHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodGet, `deliveryservices-wip/hostname/{hostName}/sslkeys$`, getDeliveryServiceSSLKeysByHostNameHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodPost, `deliveryservices-wip/hostname/{hostName}/sslkeys/add$`, addDeliveryServiceSSLKeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
+
+		//DeliveryServices
+		{1.3, http.MethodGet, `deliveryservices/?(\.json)?$`, api.ReadHandler(deliveryservice.GetRefTypeV13(d.Config, d.DB), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `deliveryservices/?(\.json)?$`, api.ReadHandler(deliveryservice.GetRefTypeV12(d.Config, d.DB), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodGet, `deliveryservices/{id}$`, api.ReadHandler(deliveryservice.GetRefTypeV13(d.Config, d.DB), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `deliveryservices/{id}$`, api.ReadHandler(deliveryservice.GetRefTypeV12(d.Config, d.DB), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodPost, `deliveryservices/?(\.json)?$`, deliveryservice.CreateV13(d.DB, d.Config), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodPost, `deliveryservices/?(\.json)?$`, deliveryservice.CreateV12(d.DB, d.Config), auth.PrivLevelOperations, Authenticated, nil},
+		{1.3, http.MethodPut, `deliveryservices/{id}$`, deliveryservice.UpdateV13(d.DB, d.Config), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodPut, `deliveryservices/{id}$`, deliveryservice.UpdateV12(d.DB, d.Config), auth.PrivLevelOperations, Authenticated, nil},
+		{1.3, http.MethodDelete, `deliveryservices/{id}$`, api.DeleteHandler(deliveryservice.GetRefTypeV13(d.Config, d.DB), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `deliveryservices/{id}$`, api.DeleteHandler(deliveryservice.GetRefTypeV12(d.Config, d.DB), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+
+		//System
+		{1.1, http.MethodGet, `system/info/?(\.json)?$`, systeminfo.Handler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 	}
 
 	// rawRoutes are served at the root path. These should be almost exclusively old Perl pre-API routes, which have yet to be converted in all clients. New routes should be in the versioned API path.
