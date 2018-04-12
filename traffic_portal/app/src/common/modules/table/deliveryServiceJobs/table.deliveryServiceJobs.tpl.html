@@ -22,10 +22,10 @@ under the License.
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
             <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?type=' + deliveryService.type)">{{::deliveryService.xmlId}}</a></li>
-            <li class="active">Invalidate Content Jobs</li>
+            <li class="active">Invalidation Requests</li>
         </ol>
         <div class="pull-right">
-            <button class="btn btn-primary" title="Create Invalidate Content Job" ng-click="createJob(deliveryService.id)"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-primary" title="Create Invalidation Request" ng-click="createJob(deliveryService.id)"><i class="fa fa-plus"></i></button>
             <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
         </div>
         <div class="clearfix"></div>
