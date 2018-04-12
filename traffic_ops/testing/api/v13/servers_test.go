@@ -32,10 +32,8 @@ func TestServers(t *testing.T) {
 	CreateTestPhysLocations(t)
 	CreateTestCacheGroups(t)
 	CreateTestServers(t)
-
 	UpdateTestServers(t)
 	GetTestServers(t)
-
 	DeleteTestServers(t)
 	DeleteTestCacheGroups(t)
 	DeleteTestPhysLocations(t)
@@ -116,7 +114,7 @@ func GetTestServers(t *testing.T) {
 func UpdateTestServers(t *testing.T) {
 
 	firstServer := testData.Servers[0]
-	// Retrieve the Server by hostname so we can get the id for the Update
+	// Retrieve the server by hostname so we can get the id for the Update
 	resp, _, err := TOSession.GetServerByHostName(firstServer.HostName)
 	if err != nil {
 		t.Errorf("cannot GET Server by hostname: %v - %v\n", firstServer.HostName, err)
@@ -134,7 +132,7 @@ func UpdateTestServers(t *testing.T) {
 		t.Errorf("cannot UPDATE Server by hostname: %v - %v\n", err, alert)
 	}
 
-	// Retrieve the Profile to check Profile name got updated
+	// Retrieve the server to check rack and interfaceName values were updated
 	resp, _, err = TOSession.GetServerByID(remoteServer.ID)
 	if err != nil {
 		t.Errorf("cannot GET Server by ID: %v - %v\n", remoteServer.HostName, err)
@@ -160,7 +158,7 @@ func DeleteTestServers(t *testing.T) {
 
 			delResp, _, err := TOSession.DeleteServerByID(respServer.ID)
 			if err != nil {
-				t.Errorf("cannot DELETE Server by hostname: %v - %v\n", err, delResp)
+				t.Errorf("cannot DELETE Server by ID: %v - %v\n", err, delResp)
 			}
 
 			// Retrieve the Server to see if it got deleted
