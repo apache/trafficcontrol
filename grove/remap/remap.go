@@ -108,7 +108,7 @@ func (p *RemappingProducer) Name() string                      { return p.rule.N
 func (p *RemappingProducer) DSCP() int                         { return p.rule.DSCP }
 func (p *RemappingProducer) PluginCfg() map[string]interface{} { return p.rule.Plugins }
 func (p *RemappingProducer) Cache() icache.Cache               { return p.rule.Cache }
-func (p *RemappingProducer) ToFQDN() string {
+func (p *RemappingProducer) FirstFQDN() string {
 	// TODO verify To is not allowed to be constructed with < 1 element
 	return strings.TrimPrefix(strings.TrimPrefix(p.rule.To[0].URL, "http://"), "https://")
 }
