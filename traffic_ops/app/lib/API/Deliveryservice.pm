@@ -1582,6 +1582,16 @@ sub is_valid_org_server_fqdn {
 		return "invalid. Must start with http:// or https://.";
 	}
 
+	$value =~ s{^https?://}{};
+	$value =~ s/:(.*)$//;
+	my $port = defined($1) ? $1 : 80;
+	if ( !&is_hostname($value) ) {
+		return "invalid. '" . $value . "' is not a valid org server hostname (rfc1123)";
+	}
+	if ( $port !~ /\d*/ || $port < 1 || 65535 < $port ) {
+		return "invalid. " . $port . " is not a valid port number";
+	}
+
 	return undef;
 }
 

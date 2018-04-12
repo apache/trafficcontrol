@@ -2237,9 +2237,8 @@ sub cachegroup_profiles {
 		if ( $row->type->name eq 'ORG' ) {
 			my $rs_ds = $self->db->resultset('DeliveryserviceServer')->search( { server => $row->id }, { prefetch => ['deliveryservice'] } );
 			while ( my $ds_row = $rs_ds->next ) {
-				my $ds_domain = $ds_row->deliveryservice->org_server_fqdn;
-				$ds_domain =~ s/https?:\/\/(.*)/$1/;
-				push( @{ $deliveryservices->{$ds_domain} }, $row );
+				my $org_uri = URI->new( $ds_row->deliveryservice->org_server_fqdn );
+				push( @{ $deliveryservices->{ $org_uri->host } }, $row );
 			}
 		}
 		else {
@@ -2405,7 +2404,7 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 					@ranked_parents = sort by_parent_rank @{ $parent_info->{ $org_uri->host } };
 				}
 				else {
-					$self->app->log->debug( "BUG: Did not match an origin: " . $org_uri );
+					$self->app->log->warn( "BUG: Did not match a multi-site origin: " . $org_uri );
 				}
 
 				my @parent_info;

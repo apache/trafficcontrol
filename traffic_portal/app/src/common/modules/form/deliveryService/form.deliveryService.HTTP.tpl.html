@@ -148,9 +148,9 @@ under the License.
                     <span uib-popover-html="label('orgServerFqdn', 'desc')" popover-trigger="mouseenter" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">* {{label('orgServerFqdn', 'title')}}</span>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="orgServerFqdn" type="text" class="form-control" placeholder="http(s)//:" ng-model="deliveryService.orgServerFqdn" ng-pattern="/^(https?:\/\/)/" required autofocus>
+                    <input name="orgServerFqdn" type="text" class="form-control" placeholder="http(s)//:" ng-model="deliveryService.orgServerFqdn" ng-pattern="/^(https?:\/\/)([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])(\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]{0,61}[a-zA-Z0-9]))*(:\d{1,5})?$/" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.orgServerFqdn, 'required')">Required</small>
-                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.orgServerFqdn, 'pattern')">Must start with http:// or https://</small>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.orgServerFqdn, 'pattern')">Must start with http:// or https:// and be followed by a valid hostname with an optional port (no trailing slash)</small>
                     <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.orgServerFqdn != dsCurrent.orgServerFqdn">Current Value: [ {{dsCurrent.orgServerFqdn}} ]</small>
                     <span ng-show="hasError(deliveryServiceForm.orgServerFqdn)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
