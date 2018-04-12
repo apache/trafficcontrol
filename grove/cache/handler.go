@@ -181,7 +181,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	toFQDN := ""
 	pluginCfg := map[string]interface{}{}
 	if remappingProducer != nil {
-		toFQDN = remappingProducer.ToFQDN()
+		toFQDN = remappingProducer.FirstFQDN()
 		pluginCfg = remappingProducer.PluginCfg()
 	}
 
@@ -213,16 +213,20 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	cache := remappingProducer.Cache()
 
+	var reqHost *string
 	cacheObj, ok := cache.Get(cacheKey)
 	if !ok {
 		log.Debugf("cache.Handler.ServeHTTP: '%v' not in cache (reqid %v)\n", cacheKey, reqID)
 		beforeParentRequestData := plugin.BeforeParentRequestData{Req: r, RemapRule: remappingProducer.Name()}
 		h.plugins.OnBeforeParentRequest(remappingProducer.PluginCfg(), pluginContext, beforeParentRequestData)
-		cacheObj, err := retrier.Get(r, nil)
+		cacheObj, reqHost, err := retrier.Get(r, nil)
 		if err != nil {
 			log.Errorf("retrying get error (in uncached): %v (reqid %v)\n", err, reqID)
 			responder.OriginConnectFailed = true
 			responder.ProxyStr = cacheObj.ProxyURL
+			if reqHost != nil {
+				responder.ToFQDN = *reqHost
+			}
 			responder.Do()
 			return
 		}
@@ -233,6 +237,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		responder.SetResponse(&codePtr, &hdrsPtr, &bodyPtr, connectionClose)
 		responder.OriginReqSuccess = true
 		responder.ProxyStr = cacheObj.ProxyURL
+		if reqHost != nil {
+			responder.ToFQDN = *reqHost
+		}
 		beforeRespData := plugin.BeforeRespondData{Req: r, CacheObj: cacheObj, Code: &codePtr, Hdr: &hdrsPtr, Body: &bodyPtr, RemapRule: remappingProducer.Name()}
 		h.plugins.OnBeforeRespond(remappingProducer.PluginCfg(), pluginContext, beforeRespData)
 		responder.Do()
@@ -252,7 +259,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Debugf("cache.Handler.ServeHTTP: '%v' cache hit! (reqid %v)\n", cacheKey, reqID)
 	case remapdata.ReuseCannot:
 		log.Debugf("cache.Handler.ServeHTTP: '%v' can't reuse (reqid %v)\n", cacheKey, reqID)
-		cacheObj, err = retrier.Get(r, nil)
+		cacheObj, reqHost, err = retrier.Get(r, nil)
 		if err != nil {
 			log.Errorf("retrying get error (in reuse-cannot): %v (reqid %v)\n", err, reqID)
 			responder.Do()
@@ -260,7 +267,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	case remapdata.ReuseMustRevalidate:
 		log.Debugf("cache.Handler.ServeHTTP: '%v' must revalidate (reqid %v)\n", cacheKey, reqID)
-		cacheObj, err = retrier.Get(r, cacheObj)
+		cacheObj, reqHost, err = retrier.Get(r, cacheObj)
 		if err != nil {
 			log.Errorf("retrying get error: %v (reqid %v)\n", err, reqID)
 			responder.Do()
@@ -269,7 +276,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case remapdata.ReuseMustRevalidateCanStale:
 		log.Debugf("cache.Handler.ServeHTTP: '%v' must revalidate (but allowed stale) (reqid %v)\n", cacheKey, reqID)
 		oldCacheObj := cacheObj
-		cacheObj, err = retrier.Get(r, cacheObj)
+		cacheObj, reqHost, err = retrier.Get(r, cacheObj)
 		if err != nil {
 			log.Errorf("retrying get error - serving stale as allowed: %v (reqid %v)\n", err, reqID)
 			cacheObj = oldCacheObj
@@ -285,6 +292,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	responder.OriginCode = cacheObj.OriginCode
 	responder.OriginBytes = cacheObj.Size
 	responder.ProxyStr = cacheObj.ProxyURL
+	if reqHost != nil {
+		responder.ToFQDN = *reqHost
+	}
 	beforeRespData := plugin.BeforeRespondData{Req: r, CacheObj: cacheObj, Code: &codePtr, Hdr: &hdrsPtr, Body: &bodyPtr, RemapRule: remappingProducer.Name()}
 	h.plugins.OnBeforeRespond(remappingProducer.PluginCfg(), pluginContext, beforeRespData)
 	responder.Do()
