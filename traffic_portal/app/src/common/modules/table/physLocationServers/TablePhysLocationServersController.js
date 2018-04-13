@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TablePhysLocationServersController = function(physLocation, servers, $scope, $state, locationUtils, serverUtils) {
+var TablePhysLocationServersController = function(physLocation, servers, $scope, $state, locationUtils, serverUtils, propertiesModel) {
 
 	$scope.physLocation = physLocation;
 
@@ -31,7 +31,13 @@ var TablePhysLocationServersController = function(physLocation, servers, $scope,
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.showChartsButton = propertiesModel.properties.servers.charts.show;
+
 	$scope.ssh = serverUtils.ssh;
+
+	$scope.gotoMonitor = serverUtils.gotoMonitor;
+
+	$scope.openCharts = serverUtils.openCharts;
 
 	$scope.isOffline = serverUtils.isOffline;
 
@@ -43,11 +49,14 @@ var TablePhysLocationServersController = function(physLocation, servers, $scope,
 		$('#serversTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"columnDefs": [
+				{ 'orderable': false, 'targets': 11 }
+			],
 			"aaSorting": []
 		});
 	});
 
 };
 
-TablePhysLocationServersController.$inject = ['physLocation', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils'];
+TablePhysLocationServersController.$inject = ['physLocation', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils', 'propertiesModel'];
 module.exports = TablePhysLocationServersController;

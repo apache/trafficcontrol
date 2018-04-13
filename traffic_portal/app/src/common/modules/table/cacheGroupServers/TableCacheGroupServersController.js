@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $state, $uibModal, cacheGroupService, locationUtils, serverUtils) {
+var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $state, $uibModal, cacheGroupService, locationUtils, serverUtils, propertiesModel) {
 
 	$scope.cacheGroup = cacheGroup;
 
@@ -99,9 +99,15 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $s
 		});
 	};
 
+	$scope.showChartsButton = propertiesModel.properties.servers.charts.show;
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	$scope.ssh = serverUtils.ssh;
+
+	$scope.gotoMonitor = serverUtils.gotoMonitor;
+
+	$scope.openCharts = serverUtils.openCharts;
 
 	$scope.isOffline = serverUtils.isOffline;
 
@@ -111,11 +117,14 @@ var TableCacheGroupsServersController = function(cacheGroup, servers, $scope, $s
 		$('#serversTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"columnDefs": [
+				{ 'orderable': false, 'targets': 11 }
+			],
 			"aaSorting": []
 		});
 	});
 
 };
 
-TableCacheGroupsServersController.$inject = ['cacheGroup', 'servers', '$scope', '$state', '$uibModal', 'cacheGroupService', 'locationUtils', 'serverUtils'];
+TableCacheGroupsServersController.$inject = ['cacheGroup', 'servers', '$scope', '$state', '$uibModal', 'cacheGroupService', 'locationUtils', 'serverUtils', 'propertiesModel'];
 module.exports = TableCacheGroupsServersController;

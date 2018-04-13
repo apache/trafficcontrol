@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableProfileServersController = function(profile, servers, $scope, $state, locationUtils, serverUtils) {
+var TableProfileServersController = function(profile, servers, $scope, $state, locationUtils, serverUtils, propertiesModel) {
 
 	$scope.profile = profile;
 
@@ -31,7 +31,13 @@ var TableProfileServersController = function(profile, servers, $scope, $state, l
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.showChartsButton = propertiesModel.properties.servers.charts.show;
+
 	$scope.ssh = serverUtils.ssh;
+
+	$scope.gotoMonitor = serverUtils.gotoMonitor;
+
+	$scope.openCharts = serverUtils.openCharts;
 
 	$scope.isOffline = serverUtils.isOffline;
 
@@ -43,11 +49,14 @@ var TableProfileServersController = function(profile, servers, $scope, $state, l
 		$('#serversTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"columnDefs": [
+				{ 'orderable': false, 'targets': 11 }
+			],
 			"aaSorting": []
 		});
 	});
 
 };
 
-TableProfileServersController.$inject = ['profile', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils'];
+TableProfileServersController.$inject = ['profile', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils', 'propertiesModel'];
 module.exports = TableProfileServersController;

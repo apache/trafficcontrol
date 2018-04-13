@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCDNServersController = function(cdn, servers, $scope, $state, $uibModal, locationUtils, serverUtils, cdnService) {
+var TableCDNServersController = function(cdn, servers, $scope, $state, $uibModal, locationUtils, serverUtils, cdnService, propertiesModel) {
 
 	var queueServerUpdates = function(cdn) {
 		cdnService.queueServerUpdates(cdn.id)
@@ -93,7 +93,13 @@ var TableCDNServersController = function(cdn, servers, $scope, $state, $uibModal
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.showChartsButton = propertiesModel.properties.servers.charts.show;
+
 	$scope.ssh = serverUtils.ssh;
+
+	$scope.gotoMonitor = serverUtils.gotoMonitor;
+
+	$scope.openCharts = serverUtils.openCharts;
 
 	$scope.isOffline = serverUtils.isOffline;
 
@@ -105,11 +111,14 @@ var TableCDNServersController = function(cdn, servers, $scope, $state, $uibModal
 		$('#serversTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"columnDefs": [
+				{ 'orderable': false, 'targets': 11 }
+			],
 			"aaSorting": []
 		});
 	});
 
 };
 
-TableCDNServersController.$inject = ['cdn', 'servers', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'cdnService'];
+TableCDNServersController.$inject = ['cdn', 'servers', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'cdnService', 'propertiesModel'];
 module.exports = TableCDNServersController;
