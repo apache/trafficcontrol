@@ -16,9 +16,9 @@ package v13
 */
 
 import (
-	"testing"
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"testing"
 )
 
 func TestServers(t *testing.T) {
