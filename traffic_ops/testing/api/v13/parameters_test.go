@@ -56,8 +56,8 @@ func UpdateTestParameters(t *testing.T) {
 		t.Errorf("cannot GET Parameter by name: %v - %v\n", firstParameter.Name, err)
 	}
 	remoteParameter := resp[0]
-	expectedParameterName := "UPDATED"
-	remoteParameter.Name = expectedParameterName
+	expectedParameterValue := "UPDATED"
+	remoteParameter.Value = expectedParameterValue
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateParameterByID(remoteParameter.ID, remoteParameter)
 	if err != nil {
@@ -70,8 +70,8 @@ func UpdateTestParameters(t *testing.T) {
 		t.Errorf("cannot GET Parameter by name: %v - %v\n", firstParameter.Name, err)
 	}
 	respParameter := resp[0]
-	if respParameter.Name != expectedParameterName {
-		t.Errorf("results do not match actual: %s, expected: %s\n", respParameter.Name, expectedParameterName)
+	if respParameter.Value != expectedParameterValue {
+		t.Errorf("results do not match actual: %s, expected: %s\n", respParameter.Value, expectedParameterValue)
 	}
 
 }
