@@ -207,118 +207,6 @@
         },
         {
             "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.503311+00:00",
-            "name": "key0",
-            "secure": true,
-            "value": "HOOJ3Ghq1x4gChp3iQkqVTcPlOj8UCi3"
-        },
-        {
-            "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.505157+00:00",
-            "name": "key1",
-            "secure": true,
-            "value": "_9LZYkRnfCS0rCBF7fTQzM9Scwlp2FhO"
-        },
-        {
-            "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.508548+00:00",
-            "name": "key2",
-            "secure": true,
-            "value": "AFpkxfc4oTiyFSqtY6_ohjt3V80aAIxS"
-        },
-        {
-            "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.401781+00:00",
-            "name": "key3",
-            "secure": true,
-            "value": "AL9kzs_SXaRZjPWH8G5e2m4ByTTzkzlc"
-        },
-        {
-            "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.406601+00:00",
-            "name": "key4",
-            "secure": true,
-            "value": "poP3n3szbD1U4vx1xQXV65BvkVgWzfN8"
-        },
-        {
-            "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.408784+00:00",
-            "name": "key5",
-            "secure": true,
-            "value": "1ir32ng4C4w137p5oq72kd2wqmIZUrya"
-        },
-        {
-            "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.410854+00:00",
-            "name": "key6",
-            "secure": true,
-            "value": "B1qLptn2T1b_iXeTCWDcVuYvANtH139f"
-        },
-        {
-            "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.412716+00:00",
-            "name": "key7",
-            "secure": true,
-            "value": "PiCV_5OODMzBbsNFMWsBxcQ8v1sK0TYE"
-        },
-        {
-            "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.414638+00:00",
-            "name": "key8",
-            "secure": true,
-            "value": "Ggpv6DqXDvt2s1CETPBpNKwaLk4fTM9l"
-        },
-        {
-            "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.416551+00:00",
-            "name": "key9",
-            "secure": true,
-            "value": "qPlVT_s6kL37aqb6hipDm4Bt55S72mI7"
-        },
-        {
-            "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.418689+00:00",
-            "name": "key10",
-            "secure": true,
-            "value": "BsI5A9EmWrobIS1FeuOs1z9fm2t2WSBe"
-        },
-        {
-            "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.420467+00:00",
-            "name": "key11",
-            "secure": true,
-            "value": "A54y66NCIj897GjS4yA9RrsSPtCUnQXP"
-        },
-        {
-            "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.422414+00:00",
-            "name": "key12",
-            "secure": true,
-            "value": "2jZH0NDPSJttIr4c2KP510f47EKqTQAu"
-        },
-        {
-            "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.424435+00:00",
-            "name": "key13",
-            "secure": true,
-            "value": "XduT2FBjBmmVID5JRB5LEf9oR5QDtBgC"
-        },
-        {
-            "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.426125+00:00",
-            "name": "key14",
-            "secure": true,
-            "value": "D9nH0SvK_0kP5w8QNd1UFJ28ulFkFKPn"
-        },
-        {
-            "configFile": "url_sig.config",
-            "lastUpdated": "2018-01-19T19:01:21.427797+00:00",
-            "name": "key15",
-            "secure": true,
-            "value": "udKXWYNwbXXweaaLzaKDGl57OixnIIcm"
-        },
-        {
-            "configFile": "url_sig.config",
             "lastUpdated": "2018-01-19T19:01:21.431062+00:00",
             "name": "error_url",
             "secure": true,
@@ -416,55 +304,6 @@
             "value": "--config regex_revalidate.config"
         },
         {
-            "configFile": "astats.config",
-            "lastUpdated": "2018-01-19T19:01:21.478516+00:00",
-            "name": "allow_ip6",
-            "secure": false,
-            "value": "::1,2033:D011:3300::336/64,2033:D011:3300::335/64,2033:D021:3300::333/64,2033:D021:3300::334/64"
-        },
-        {
-            "configFile": "astats.config",
-            "lastUpdated": "2018-01-19T19:01:21.480143+00:00",
-            "name": "record_types",
-            "secure": false,
-            "value": "144"
-        },
-        {
-            "configFile": "astats.config",
-            "lastUpdated": "2018-01-19T19:01:21.482959+00:00",
-            "name": "path",
-            "secure": false,
-            "value": "_astats"
-        },
-        {
-            "configFile": "storage.config",
-            "lastUpdated": "2018-01-19T19:01:21.484501+00:00",
-            "name": "location",
-            "secure": false,
-            "value": "/opt/trafficserver/etc/trafficserver/"
-        },
-        {
-            "configFile": "storage.config",
-            "lastUpdated": "2018-01-19T19:01:21.48625+00:00",
-            "name": "Drive_Prefix",
-            "secure": false,
-            "value": "/dev/sd"
-        },
-        {
-            "configFile": "storage.config",
-            "lastUpdated": "2018-01-19T19:01:21.487958+00:00",
-            "name": "Drive_Letters",
-            "secure": false,
-            "value": "b,c,d,e,f,g,h,i,j,k,l,m,n,o"
-        },
-        {
-            "configFile": "storage.config",
-            "lastUpdated": "2018-01-19T19:01:21.491181+00:00",
-            "name": "Disk_Volume",
-            "secure": false,
-            "value": "1"
-        },
-        {
             "configFile": "records.config",
             "lastUpdated": "2018-01-19T19:01:21.49285+00:00",
             "name": "CONFIG proxy.config.hostdb.storage_size",
@@ -477,13 +316,6 @@
             "name": "maxRevalDurationDays",
             "secure": false,
             "value": "90"
-        },
-        {
-            "configFile": "whaterver.config",
-            "lastUpdated": "2018-01-19T19:01:21.497838+00:00",
-            "name": "unassigned_parameter_1",
-            "secure": false,
-            "value": "852"
         },
         {
             "configFile": "package",
