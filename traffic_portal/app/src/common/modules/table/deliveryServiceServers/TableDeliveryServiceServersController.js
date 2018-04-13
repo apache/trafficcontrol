@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServiceServersController = function(deliveryService, servers, $scope, $state, $uibModal, locationUtils, serverUtils, deliveryServiceService) {
+var TableDeliveryServiceServersController = function(deliveryService, servers, $scope, $state, $uibModal, locationUtils, serverUtils, deliveryServiceService, propertiesModel) {
 
 	var removeServer = function(serverId) {
 		deliveryServiceService.deleteDeliveryServiceServer($scope.deliveryService.id, serverId)
@@ -31,6 +31,10 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 	$scope.deliveryService = deliveryService;
 
 	$scope.servers = servers;
+
+	$scope.editServer = function(id) {
+		locationUtils.navigateToPath('/servers/' + id);
+	};
 
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
@@ -65,7 +69,9 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 		});
 	};
 
-	$scope.confirmRemoveServer = function(server) {
+	$scope.confirmRemoveServer = function(server, $event) {
+		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+
 		var params = {
 			title: 'Remove Server from Delivery Service?',
 			message: 'Are you sure you want to remove ' + server.hostName + ' from this delivery service?'
@@ -87,7 +93,11 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 		});
 	};
 
+	$scope.showChartsButton = propertiesModel.properties.servers.charts.show;
+
 	$scope.ssh = serverUtils.ssh;
+
+	$scope.openCharts = serverUtils.openCharts;
 
 	$scope.isOffline = serverUtils.isOffline;
 
@@ -100,7 +110,7 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"columnDefs": [
-				{ 'orderable': false, 'targets': 10 }
+				{ 'orderable': false, 'targets': 11 }
 			],
 			"aaSorting": []
 		});
@@ -108,5 +118,5 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, $
 
 };
 
-TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'deliveryServiceService'];
+TableDeliveryServiceServersController.$inject = ['deliveryService', 'servers', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'deliveryServiceService', 'propertiesModel'];
 module.exports = TableDeliveryServiceServersController;

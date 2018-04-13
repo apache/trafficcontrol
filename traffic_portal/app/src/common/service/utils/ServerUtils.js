@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var ServerUtils = function($window, userModel) {
+var ServerUtils = function($window, propertiesModel, userModel) {
 
 	this.isCache = function(server) {
 		return server.type && (server.type.indexOf('EDGE') != -1 || server.type == 'MID');
@@ -42,7 +42,23 @@ var ServerUtils = function($window, userModel) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 	};
 
+	this.openCharts = function(server, $event) {
+		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		$window.open(
+			propertiesModel.properties.servers.charts.baseUrl + server.hostName,
+			'_blank'
+		);
+	};
+
+	this.gotoMonitor = function(server, $event) {
+		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		$window.open(
+			'http://' + server.hostName + '.' + server.domainName,
+			'_blank'
+		);
+	};
+
 };
 
-ServerUtils.$inject = ['$window', 'userModel'];
+ServerUtils.$inject = ['$window', 'propertiesModel', 'userModel'];
 module.exports = ServerUtils;

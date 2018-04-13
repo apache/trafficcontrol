@@ -54,6 +54,7 @@ under the License.
                 <th>CDN</th>
                 <th>Cache Group</th>
                 <th>ILO</th>
+                <th style="text-align: right;">Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -75,6 +76,10 @@ under the License.
                 <td data-search="^{{::s.cdnName}}$">{{::s.cdnName}}</td>
                 <td data-search="^{{::s.cachegroup}}$">{{::s.cachegroup}}</td>
                 <td data-search="^{{::s.iloIpAddress}}$"><a ng-click="ssh(s.iloIpAddress, $event)">{{::s.iloIpAddress}}</a></td>
+                <td style="text-align: right;">
+                    <span ng-if="s.type == 'RASCAL'"><a class="link action-link" title="Go to" ng-click="gotoMonitor(s, $event)"><i class="fa fa-sm fa-external-link"></i>&nbsp;&nbsp;</a></span>
+                    <span ng-if="showChartsButton"><a class="link action-link" title="View Charts" ng-click="openCharts(s, $event)"><i class="fa fa-sm fa-bar-chart"></i></a></span>
+                </td>
             </tr>
             </tbody>
         </table>

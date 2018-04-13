@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableTypeServersController = function(type, servers, $scope, $state, locationUtils, serverUtils) {
+var TableTypeServersController = function(type, servers, $scope, $state, locationUtils, serverUtils, propertiesModel) {
 
 	$scope.type = type;
 
@@ -31,7 +31,13 @@ var TableTypeServersController = function(type, servers, $scope, $state, locatio
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.showChartsButton = propertiesModel.properties.servers.charts.show;
+
 	$scope.ssh = serverUtils.ssh;
+
+	$scope.gotoMonitor = serverUtils.gotoMonitor;
+
+	$scope.openCharts = serverUtils.openCharts;
 
 	$scope.isOffline = serverUtils.isOffline;
 
@@ -43,11 +49,14 @@ var TableTypeServersController = function(type, servers, $scope, $state, locatio
 		$('#serversTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"columnDefs": [
+				{ 'orderable': false, 'targets': 11 }
+			],
 			"aaSorting": []
 		});
 	});
 
 };
 
-TableTypeServersController.$inject = ['type', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils'];
+TableTypeServersController.$inject = ['type', 'servers', '$scope', '$state', 'locationUtils', 'serverUtils', 'propertiesModel'];
 module.exports = TableTypeServersController;

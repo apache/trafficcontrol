@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormServerController = function(server, $scope, $location, $state, $uibModal, $window, formUtils, locationUtils, serverUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, typeService, messageModel, propertiesModel) {
+var FormServerController = function(server, $scope, $location, $state, $uibModal, formUtils, locationUtils, serverUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, typeService, messageModel, propertiesModel) {
 
     var getPhysLocations = function() {
         physLocationService.getPhysLocations()
@@ -89,14 +89,9 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
 
     $scope.isEdge = serverUtils.isEdge;
 
-    $scope.showChartsButton = propertiesModel.properties.servers.charts.show;
+    $scope.openCharts = serverUtils.openCharts;
 
-    $scope.openCharts = function(server) {
-        $window.open(
-            propertiesModel.properties.servers.charts.baseUrl + server.hostName,
-            '_blank'
-        );
-    };
+    $scope.showChartsButton = propertiesModel.properties.servers.charts.show;
 
     $scope.onCDNChange = function() {
         $scope.server.profileId = null; // the cdn of the server changed, so we need to blank out the selected server profile (if any)
@@ -167,5 +162,5 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
 
 };
 
-FormServerController.$inject = ['server', '$scope', '$location', '$state', '$uibModal', '$window', 'formUtils', 'locationUtils', 'serverUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'typeService', 'messageModel', 'propertiesModel'];
+FormServerController.$inject = ['server', '$scope', '$location', '$state', '$uibModal', 'formUtils', 'locationUtils', 'serverUtils', 'serverService', 'cacheGroupService', 'cdnService', 'physLocationService', 'profileService', 'typeService', 'messageModel', 'propertiesModel'];
 module.exports = FormServerController;

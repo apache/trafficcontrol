@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableServersController = function(servers, $scope, $state, $uibModal, locationUtils, serverUtils, cdnService) {
+var TableServersController = function(servers, $scope, $state, $uibModal, locationUtils, serverUtils, cdnService, propertiesModel) {
 
     $scope.servers = servers;
 
@@ -101,7 +101,13 @@ var TableServersController = function(servers, $scope, $state, $uibModal, locati
         $state.reload(); // reloads all the resolves for the view
     };
 
+    $scope.showChartsButton = propertiesModel.properties.servers.charts.show;
+
     $scope.ssh = serverUtils.ssh;
+
+    $scope.gotoMonitor = serverUtils.gotoMonitor;
+
+    $scope.openCharts = serverUtils.openCharts;
 
     $scope.isOffline = serverUtils.isOffline;
 
@@ -111,11 +117,14 @@ var TableServersController = function(servers, $scope, $state, $uibModal, locati
         $('#serversTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
             "iDisplayLength": 25,
+            "columnDefs": [
+                { 'orderable': false, 'targets': 11 }
+            ],
             "aaSorting": []
         });
     });
 
 };
 
-TableServersController.$inject = ['servers', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'cdnService'];
+TableServersController.$inject = ['servers', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'cdnService', 'propertiesModel'];
 module.exports = TableServersController;
