@@ -224,6 +224,10 @@ func DeepCachingTypeFromString(s string) DeepCachingType {
 
 // UnmarshalJSON unmarshals a JSON representation of a DeepCachingType (i.e. a string) or returns an error if the DeepCachingType is invalid
 func (t *DeepCachingType) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		*t = DeepCachingTypeNever
+		return nil
+	}
 	s, err := strconv.Unquote(string(data))
 	if err != nil {
 		return errors.New(string(data) + " JSON not quoted")
