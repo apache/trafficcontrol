@@ -419,7 +419,7 @@ trafficPortal.factory('authInterceptor', function ($rootScope, $q, $window, $loc
             } else if (rejection.status.toString().match(/^5\d[01356789]$/)) {
                 // matches 5xx EXCEPT for 502's and 504's which indicate a timeout and will be handled by each service call accordingly
                 $timeout(function () {
-                    if (alerts.length > 0) {
+                    if (alerts && alerts.length > 0) {
                             messageModel.setMessages(alerts, false);
                     } else {
                             messageModel.setMessages([ { level: 'error', text: rejection.status.toString() + ': ' + rejection.statusText } ], false);
