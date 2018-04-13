@@ -83,6 +83,7 @@ under the License.
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.type, 'required')">Required</small>
                     <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.typeId != dsCurrent.typeId">Current Value: [ {{dsCurrent.type}} ]</small>
+                    <small ng-show="deliveryService.typeId"><a href="/#!/types/{{deliveryService.typeId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
 
@@ -123,6 +124,7 @@ under the License.
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.tenantId, 'required')">Required</small>
                     <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.tenantId != dsCurrent.tenantId">Current Value: [ {{dsCurrent.tenant}} ]</small>
+                    <small ng-show="deliveryService.tenantId"><a href="/#!/tenants/{{deliveryService.tenantId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
 
@@ -136,6 +138,7 @@ under the License.
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.cdn, 'required')">Required</small>
                     <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.cdnId != dsCurrent.cdnId">Current Value: [ {{dsCurrent.cdnName}} ]</small>
+                    <small ng-show="deliveryService.cdnId"><a href="/#!/cdns/{{deliveryService.cdnId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
 
@@ -244,6 +247,7 @@ under the License.
                             <option value="">Select...</option>
                         </select>
                         <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.profileId != dsCurrent.profileId">Current Value: [ {{dsCurrent.profileName}} ]</small>
+                        <small ng-show="deliveryService.profileId"><a href="/#!/profiles/{{deliveryService.profileId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                     </div>
                 </div>
 
