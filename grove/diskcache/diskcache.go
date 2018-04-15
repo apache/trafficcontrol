@@ -24,7 +24,7 @@ type DiskCache struct {
 
 const BucketName = "b"
 
-func New(path string, sizeBytes uint64) (*DiskCache, error) {
+func New(path string, cacheSize uint64) (*DiskCache, error) {
 	db, err := bolt.Open(path, 0600, &bolt.Options{Timeout: 5 * time.Second})
 	if err != nil {
 		return nil, errors.New("opening database '" + path + "': " + err.Error())
@@ -40,7 +40,28 @@ func New(path string, sizeBytes uint64) (*DiskCache, error) {
 		return nil, errors.New("creating bucket for database '" + path + "': " + err.Error())
 	}
 
-	return &DiskCache{db: db, maxSizeBytes: sizeBytes, lru: lru.NewLRU()}, nil
+	return &DiskCache{db: db, maxSizeBytes: cacheSize, lru: lru.NewLRU(), sizeBytes: 0}, nil
+}
+
+// ResetAfterRestart rebuilds the LRU with an arbirtrary order and sets sizeBytes. This seems crazy, but it is better than doing nothing, sice gc is based on the LRU and sizeBytes. In the future, we may want to periodically sync the LRU to disk, but we'll still need to iterate over all keys in the disk DB to avoid orphaning objects.
+// Note: this assumes the LRU is empty. Don't run twice
+func (c *DiskCache) ResetAfterRestart() {
+	go c.db.View(func(tx *bolt.Tx) error {
+		log.Infof("Starting cache recovery from disk for: %s... ", c.db.Path())
+		size := 0
+		b := tx.Bucket([]byte(BucketName))
+
+		cursor := b.Cursor()
+
+		for k, v := cursor.First(); k != nil; k, v = cursor.Next() {
+			c.lru.Add(string(k), uint64(len(v)))
+			size += len(v)
+		}
+
+		atomic.AddUint64(&c.sizeBytes, uint64(size))
+		log.Infof("Cache recovery from disk for %s done (%d bytes). ", c.db.Path(), c.sizeBytes)
+		return nil
+	})
 }
 
 // Add takes a key and value to add. Returns whether an eviction occurred
@@ -78,7 +99,7 @@ func (c *DiskCache) Add(key string, val *cacheobj.CacheObj) bool {
 		go c.gc(newSizeBytes)
 	}
 
-	log.Debugf("DiskCache Add SUCCESS key '%+v' size '%+v'\n", key, val.Size)
+	log.Debugf("DiskCache Add SUCCESS key '%+v' size '%+v' valBytes '%+v' c.sizeBytes '%+v'\n", key, val.Size, len(valBytes), c.sizeBytes)
 	return eviction
 }
 
@@ -113,8 +134,21 @@ func (c *DiskCache) gc(cacheSizeBytes uint64) {
 	}
 }
 
-// Get takes a key, and returns its value, and whether it was found
+// Get takes a key, and returns its value, and whether it was found, and updates the lru-ness and hitcount
 func (c *DiskCache) Get(key string) (*cacheobj.CacheObj, bool) {
+	val, found := c.Peek(key)
+	if found {
+		// TODO JvD check to see if val.Size is good to use here.
+		c.lru.Add(key, val.Size) // TODO directly call c.ll.MoveToFront
+		log.Debugln("DiskCache.Get getting '" + key + "' from cache and updating LRU")
+		return val, true
+	}
+	return nil, false
+
+}
+
+// Peek takes a key, and returns its value, and whether it was found, without changing the lru-ness or hit-count
+func (c *DiskCache) Peek(key string) (*cacheobj.CacheObj, bool) {
 	log.Debugln("DiskCache.Get key '" + key + "'")
 	valBytes := []byte(nil)
 
@@ -127,25 +161,23 @@ func (c *DiskCache) Get(key string) (*cacheobj.CacheObj, bool) {
 		return nil
 	})
 	if err != nil {
-		log.Errorln("DiskCache.Get getting '" + key + "' from cache: " + err.Error())
+		log.Errorln("DiskCache.Peek getting '" + key + "' from cache: " + err.Error())
 		return nil, false
 	}
 
 	if valBytes == nil {
-		log.Debugln("DiskCache.Get key '" + key + "' CACHE MISS")
+		log.Debugln("DiskCache.Peek key '" + key + "' CACHE MISS")
 		return nil, false
 	}
 
 	buf := bytes.NewBuffer(valBytes)
 	val := cacheobj.CacheObj{}
 	if err := gob.NewDecoder(buf).Decode(&val); err != nil {
-		log.Errorln("DiskCache.Get decoding '" + key + "' from cache: " + err.Error())
+		log.Errorln("DiskCache.Peek decoding '" + key + "' from cache: " + err.Error())
 		return nil, false
 	}
 
-	c.lru.Add(key, uint64(len(valBytes))) // TODO directly call c.ll.MoveToFront
-
-	log.Debugln("DiskCache.Get key '" + key + "' CACHE HIT")
+	log.Debugln("DiskCache.Peek key '" + key + "' CACHE HIT")
 	return &val, true
 }
 
@@ -155,4 +187,13 @@ func (c *DiskCache) Size() uint64 {
 
 func (c *DiskCache) Close() {
 	c.db.Close()
+}
+
+func (c *DiskCache) Keys() []string {
+	return c.lru.Keys()
+
+}
+
+func (c *DiskCache) Capacity() uint64 {
+	return c.maxSizeBytes
 }

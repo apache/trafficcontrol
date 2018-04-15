@@ -21,6 +21,7 @@ func NewMulti(files []config.CacheFile) (*MultiDiskCache, error) {
 		if err != nil {
 			return nil, errors.New("creating disk cache '" + file.Path + "': " + err.Error())
 		}
+		cache.ResetAfterRestart() // should this be optional?
 		caches[i] = cache
 	}
 
@@ -45,6 +46,12 @@ func (c *MultiDiskCache) Get(key string) (*cacheobj.CacheObj, bool) {
 	return (*c)[i].Get(key)
 }
 
+func (c *MultiDiskCache) Peek(key string) (*cacheobj.CacheObj, bool) {
+	i := c.keyIdx(key)
+	log.Debugf("MultiDiskCache.Get key '%+v' mapped to %+v\n", key, i)
+	return (*c)[i].Peek(key)
+}
+
 func (c *MultiDiskCache) Size() uint64 {
 	sum := uint64(0)
 	for _, cache := range *c {
@@ -57,4 +64,21 @@ func (c *MultiDiskCache) Close() {
 	for _, cache := range *c {
 		cache.Close()
 	}
+}
+
+func (c *MultiDiskCache) Keys() []string {
+	// TODO Fix this - each cache is an independent LRU, and the below doesn't make sense.
+	arr := make([]string, 0)
+	for _, cache := range *c {
+		arr = append(arr, cache.Keys()...)
+	}
+	return arr
+}
+
+func (c *MultiDiskCache) Capacity() uint64 {
+	sum := uint64(0)
+	for _, cache := range *c {
+		sum += cache.Capacity()
+	}
+	return sum
 }
