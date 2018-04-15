@@ -19,6 +19,7 @@ func init() {
 	AddPlugin(10000, Funcs{onRequest: cacheinspect})
 }
 
+// CacheStatsEndpoint is our reserved path
 const CacheStatsEndpoint = "/_cacheinspect"
 
 func writeHTMLPageHeader(w http.ResponseWriter) {
@@ -104,7 +105,6 @@ func cacheinspect(icfg interface{}, d OnRequestData) bool {
 			w.Write([]byte(fmt.Sprintf("  ReqRespTime:                  %v\n", cacheObject.ReqRespTime)))
 			w.Write([]byte(fmt.Sprintf("  RespRespTime:                 %v\n", cacheObject.RespRespTime)))
 			w.Write([]byte(fmt.Sprintf("  LastModified:                 %v\n", cacheObject.LastModified)))
-			// w.Write([]byte(fmt.Sprintf("  Body (1st 1024 bytes):         <xmp>%s</xmp>\n", cacheObject.Body[:1024])))
 		} else {
 			w.Write([]byte("Not Found"))
 		}
