@@ -1,6 +1,8 @@
-# Cache Insepctor Plugin
+# Cache Inspector Plugin
 
-The cache inspector plugin allows you to view the contents of the cache.  Example output:
+The cache inspector plugin allows you to view the contents of the cache in a browser.  Point your browser at `http://<yourcacheiporhostname:yourcacheport>/_cacheinspect` to get started. Access to this endpoint is limited to the IP ranges defined in the `stats` object of the global configuration.
+
+Example output:
 
 ```
 Jump to:  disk  my-disk-cache-two  
@@ -20,7 +22,7 @@ Jump to:  disk  my-disk-cache-two
      00003	200	    37K	            16h19m9.050852429s  	GET:http://localhost/37k.bin?hah
      00004	200	    38K	            16h19m9.020264008s  	GET:http://localhost/38k.bin?hah
      00005	200	    39K	            16h19m8.989722029s  	GET:http://localhost/39k.bin?hah
-     00006	200 	40K	            16h19m8.967823063s  	GET:http://localhost/40k.bin?hah
+     00006	200     40K	            16h19m8.967823063s  	GET:http://localhost/40k.bin?hah
      00007	200	    41K	            16h19m8.939422783s  	GET:http://localhost/41k.bin?hah
      00008	200	    42K	            16h19m8.913485123s  	GET:http://localhost/42k.bin?h
 ```
