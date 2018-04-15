@@ -14,7 +14,6 @@ type LRU struct {
 type listObj struct {
 	key  string
 	size uint64
-	// hitCount uint64
 }
 
 func NewLRU() *LRU {
@@ -29,7 +28,6 @@ func (c *LRU) Add(key string, size uint64) uint64 {
 		c.l.MoveToFront(elem)
 		oldSize := elem.Value.(*listObj).size
 		elem.Value.(*listObj).size = size
-		// elem.Value.(*listObj).hitCount++
 		return oldSize
 	}
 	c.lElems[key] = c.l.PushFront(&listObj{key, size})
