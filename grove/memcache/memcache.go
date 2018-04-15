@@ -12,15 +12,16 @@ import (
 
 // MemCache is a threadsafe memory cache with a soft byte limit, enforced via LRU.
 type MemCache struct {
-	lru          *lru.LRU             // threadsafe.
+	lru          *lru.LRU                      // threadsafe.
 	cache        map[string]*cacheobj.CacheObj // mutexed: MUST NOT access without locking cacheM. TODO test performance of sync.Map
-	cacheM       sync.RWMutex         // TODO test performance of one mutex for lru+cache
-	sizeBytes    uint64               // atomic: MUST NOT access without sync.atomic
-	maxSizeBytes uint64               // constant: MUST NOT be modified after creation
+	cacheM       sync.RWMutex                  // TODO test performance of one mutex for lru+cache
+	sizeBytes    uint64                        // atomic: MUST NOT access without sync.atomic
+	maxSizeBytes uint64                        // constant: MUST NOT be modified after creation
 	gcChan       chan<- uint64
 }
 
 func New(bytes uint64) *MemCache {
+	log.Errorf("MemCache.New: creating cache with %d capacity.", bytes)
 	gcChan := make(chan uint64, 1)
 	c := &MemCache{
 		lru:          lru.NewLRU(),
@@ -33,6 +34,16 @@ func New(bytes uint64) *MemCache {
 }
 
 func (c *MemCache) Get(key string) (*cacheobj.CacheObj, bool) {
+	c.cacheM.RLock()
+	obj, ok := c.cache[key]
+	if ok {
+		c.lru.Add(key, obj.Size) // TODO directly call c.ll.MoveToFront
+	}
+	c.cacheM.RUnlock()
+	return obj, ok
+}
+
+func (c *MemCache) Peek(key string) (*cacheobj.CacheObj, bool) {
 	c.cacheM.RLock()
 	obj, ok := c.cache[key]
 	c.cacheM.RUnlock()
@@ -56,8 +67,8 @@ func (c *MemCache) Add(key string, val *cacheobj.CacheObj) bool {
 	return false // TODO remove eviction from interface; it's unnecessary and expensive
 }
 
-func (c *MemCache) Size() uint64 {	return atomic.LoadUint64(&c.sizeBytes) }
-func (c *MemCache) Close() {}
+func (c *MemCache) Size() uint64 { return atomic.LoadUint64(&c.sizeBytes) }
+func (c *MemCache) Close()       {}
 
 // doGC kicks off garbage collection if it isn't already. Does not block.
 func (c *MemCache) doGC(cacheSizeBytes uint64) {
@@ -93,4 +104,12 @@ func (c *MemCache) gc(cacheSizeBytes uint64) {
 
 		cacheSizeBytes = atomic.AddUint64(&c.sizeBytes, ^uint64(sizeBytes-1)) // subtract sizeBytes
 	}
+}
+
+func (c *MemCache) Keys() []string {
+	return c.lru.Keys()
+}
+
+func (c *MemCache) Capacity() uint64 {
+	return c.maxSizeBytes
 }

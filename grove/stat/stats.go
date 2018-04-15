@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/apache/incubator-trafficcontrol/grove/cacheobj"
 	"github.com/apache/incubator-trafficcontrol/grove/icache"
 	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
@@ -44,6 +45,12 @@ type Stats interface {
 
 	// Write writes to the remapRuleStats of s, and returns the bytes written to the connection
 	Write(w http.ResponseWriter, conn *web.InterceptConn, reqFQDN string, remoteAddr string, code int, bytesWritten uint64, cacheHit bool) uint64
+
+	CacheKeys(string) []string
+	CacheSizeByName(string) (uint64, bool)
+	CacheCapacityByName(string) (uint64, bool)
+	CacheNames() []string
+	CachePeek(string, string) (*cacheobj.CacheObj, bool)
 }
 
 func New(remapRules []remapdata.RemapRule, caches map[string]icache.Cache, cacheCapacityBytes uint64, httpConns *web.ConnMap, httpsConns *web.ConnMap, version string) Stats {
@@ -139,6 +146,16 @@ func (s stats) CacheMisses() uint64  { return atomic.LoadUint64(s.cacheMisses) }
 func (s stats) AddCacheMiss()        { atomic.AddUint64(s.cacheMisses, 1) }
 func (s *stats) System() StatsSystem { return StatsSystem(s.system) }
 func (s *stats) Remap() StatsRemaps  { return s.remap }
+
+// CacheSizeByName returns the size of tha cache for a particular cache
+func (s stats) CacheSizeByName(cName string) (uint64, bool) {
+	if cache, ok := s.caches[cName]; ok {
+		return cache.Size(), true
+	}
+	return 0, false
+}
+
+// CacheSize() returns the combined size of all caches.
 func (s stats) CacheSize() uint64 {
 	sum := uint64(0)
 	for _, c := range s.caches {
@@ -146,6 +163,33 @@ func (s stats) CacheSize() uint64 {
 	}
 	return sum
 }
+
+// CacheNames returns an array of all the cache names
+func (s stats) CacheNames() []string {
+	cNames := make([]string, 0)
+	for cacheName, _ := range s.caches {
+		cNames = append(cNames, cacheName)
+	}
+	return cNames
+}
+
+// CacheKeys returns an array of all the cache keys for the cache cacheName
+func (s stats) CacheKeys(cacheName string) []string {
+	return s.caches[cacheName].Keys()
+}
+
+// CachePeek returns the cached object *without* changing the recent-used-ness.
+func (s stats) CachePeek(key, cacheName string) (*cacheobj.CacheObj, bool) {
+	return s.caches[cacheName].Peek(key)
+}
+
+func (s stats) CacheCapacityByName(cName string) (uint64, bool) {
+	if cache, ok := s.caches[cName]; ok {
+		return cache.Capacity(), true
+	}
+	return 0, false
+}
+
 func (s stats) CacheCapacity() uint64 { return s.cacheCapacityBytes }
 
 type StatsRemaps interface {

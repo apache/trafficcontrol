@@ -38,6 +38,16 @@ func (c *TierCache) Get(key string) (*cacheobj.CacheObj, bool) {
 	return v, ok
 }
 
+// Peek returns the object if it's in the first cache. Else, it returns the object from the second cache. Else, false.
+// Peek does not change the lru-ness, or the first cache
+func (c *TierCache) Peek(key string) (*cacheobj.CacheObj, bool) {
+	v, ok := c.first.Peek(key)
+	if !ok {
+		v, ok = c.second.Peek(key)
+	}
+	return v, ok
+}
+
 // Add adds to both internal caches. Returns whether either reported an eviction.
 func (c *TierCache) Add(key string, val *cacheobj.CacheObj) bool {
 	aevict := c.first.Add(key, val)
@@ -56,3 +66,13 @@ func (c *TierCache) Close() {
 	c.first.Close()
 	c.second.Close()
 }
+
+// Keys eturn the keys of the second only. The first is just an accellerator.
+func (c *TierCache) Keys() []string {
+	arr := make([]string, 0)
+	arr = append(arr, c.second.Keys()...)
+	return arr
+}
+
+// Capacity returns the maximum size in bytes of the cache
+func (c *TierCache) Capacity() uint64 { return c.second.Capacity() }
