@@ -25,16 +25,21 @@ import (
 	"time"
 )
 
-var jsonTests = []struct {
-	time Time
-	json string
-}{
-	{Time{Time: time.Date(9999, 4, 12, 23, 20, 50, 520*1e6, time.Local)}, `"9999-04-12 23:20:50-07"`},
-	{Time{Time: time.Date(1996, 12, 19, 16, 39, 57, 0, time.UTC)}, `"1996-12-19 16:39:57+00"`},
-}
-
 // TestJSON tests that we get format tc uses for lastUpdated fields
-func TestJSON(t *testing.T) {
+func TestTimeJSON(t *testing.T) {
+	mst, err := time.LoadLocation("MST")
+	if err != nil {
+		t.Fatalf("unable to get MST location: %v", err)
+	}
+
+	var jsonTests = []struct {
+		time Time
+		json string
+	}{
+		{Time{Time: time.Date(9999, 4, 12, 23, 20, 50, 520*1e6, mst)}, `"9999-04-12 23:20:50-07"`},
+		{Time{Time: time.Date(1996, 12, 19, 16, 39, 57, 0, time.UTC)}, `"1996-12-19 16:39:57+00"`},
+	}
+
 	for _, tm := range jsonTests {
 		got, err := json.Marshal(tm.time)
 
