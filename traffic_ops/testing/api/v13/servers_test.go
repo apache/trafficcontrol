@@ -49,39 +49,39 @@ func TestServers(t *testing.T) {
 func CreateTestServers(t *testing.T) {
 
 	// GET EDGE1 profile
-	resp, _, err := TOSession.GetProfileByName("EDGE1")
+	respProfiles, _, err := TOSession.GetProfileByName("EDGE1")
 	if err != nil {
 		t.Errorf("cannot GET Profiles - %v\n", err)
 	}
-	respProfile := resp[0]
+	respProfile := respProfiles[0]
 
 	// GET EDGE type
-	resp2, _, err := TOSession.GetTypeByName("EDGE")
+	respTypes, _, err := TOSession.GetTypeByName("EDGE")
 	if err != nil {
 		t.Errorf("cannot GET Division by name: EDGE - %v\n", err)
 	}
-	respType := resp2[0]
+	respType := respTypes[0]
 
 	// GET ONLINE status
-	resp3, _, err := TOSession.GetStatusByName("ONLINE")
+	respStatuses, _, err := TOSession.GetStatusByName("ONLINE")
 	if err != nil {
 		t.Errorf("cannot GET Status by name: ONLINE - %v\n", err)
 	}
-	respStatus := resp3[0]
+	respStatus := respStatuses[0]
 
 	// GET Denver physlocation
-	resp4, _, err := TOSession.GetPhysLocationByName("Denver")
+	respPhysLocations, _, err := TOSession.GetPhysLocationByName("Denver")
 	if err != nil {
 		t.Errorf("cannot GET PhysLocation by name: Denver - %v\n", err)
 	}
-	respPhysLocation := resp4[0]
+	respPhysLocation := respPhysLocations[0]
 
 	// GET cachegroup1 cachegroup
-	resp5, _, err := TOSession.GetCacheGroupByName("cachegroup1")
+	respCacheGroups, _, err := TOSession.GetCacheGroupByName("cachegroup1")
 	if err != nil {
 		t.Errorf("cannot GET CacheGroup by name: cachegroup1 - %v\n", err)
 	}
-	respCacheGroup := resp5[0]
+	respCacheGroup := respCacheGroups[0]
 
 	// loop through servers, assign FKs and create
 	for _, server := range testData.Servers {
