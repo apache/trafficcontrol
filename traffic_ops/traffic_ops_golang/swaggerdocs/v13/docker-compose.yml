@@ -1,0 +1,15 @@
+version: '3.6'
+ 
+services:
+   swagger-generator:
+     build:
+       context: .
+       dockerfile: ./docker/Dockerfile
+     ports:
+       - 8000:8000
+     volumes:
+       - output:/output
+
+volumes:
+    output:
+

@@ -19,5 +19,5 @@
 
 unset DEBUG
 #export DEBUG=true
-swagger generate spec -o ./swagger.json
-echo "successfully generated the swagger.json file"
+swagger generate spec -o /output/swagger.json
+echo "successfully generated swagger output file: ./swagger.json"
