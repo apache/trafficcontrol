@@ -23,32 +23,28 @@ This directory contains the Go structs that glue together the Swagger 2.0 metada
 
 ### Setup
 
-See the install documentation for [https://github.com/go-swagger/go-swagger](go-swagger)
+* Install Docker for your platform:
+[https://docs.docker.com/install](https://docs.docker.com/install)
 
+* Install Docker Compose for your platform:
+[https://docs.docker.com/compose/install](https://docs.docker.com/compose/install)
 
-### Generate your Documentation
+### Running
 
-The **gen_docs.sh** script will scan all the Go files in the swaggerdocs directory and extract out all of the swagger meta tags that are embedded as comments.  The output of the **gen_docs.sh** script will be the **swagger.json** spec file.
+The docker-compose.yml will start 2 services a custom http service for hosting the `swaggerspec/swagger.json` and the Swagger UI.  
+
+To start the Swagger UI services just run:
+
+```$ docker-compose up```
+
+Once started navigate your browser to [http://localhost:8080](http://localhost:8080)
+
+### Generating your Swagger Spec File
+
+The **gen_swaggerspec.sh** script will scan all the Go files in the swaggerdocs directory and extract out all of the swagger meta tags that are embedded as comments.  The output of the **gen_swaggerspec.sh** script will be the **swaggerspec/swagger.json** spec file. 
+
+While the Docker services are running, just re-run **gen_swaggerspec.sh** and hit refresh on the page to see the Swagger doc updates in real time.
 
 ### Verifying your Documentation
 
 Once the **swagger.json** spec file has been generated it needs to to be served over http so that you can validate it using the Swagger Editor.  
-
-See the following steps:
-
-*    Execute the **cors-http-server.py** (this will start a server on **http://localhost:8000**
-  so that you can point to it using the [https://editor.swagger.io](Swagger Editor).  
-  
-  `$ ./cors-http-server.py`
-
-*    Navigate to [https://editor.swagger.io](Swagger Editor)
-    
-*    Use File->Import URL then plugin **http://localhost:8000**
-	* At this point the Swagger Editor will convert the **swagger.json** to yaml format and show the resulting documentation rendered as html.
-
-	OR
-	
-*	 Install the [https://swagger.io/swagger-ui/](Swagger UI) yourself and run locally.
-	
-  
-

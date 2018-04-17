@@ -15,30 +15,14 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+FROM golang:1.10.1 AS go-swagger
 
-FROM golang:1.10.1 AS swagger-gen
-
-RUN mkdir /go/src/v13
-WORKDIR /go/src/v13
-ADD . .
-
-RUN mkdir /output
-
-RUN go get -d -v ./...
-RUN go install -v ./...
-RUN go get -u github.com/go-swagger/go-swagger/cmd/swagger
-
-CMD ["./gen_docs.sh"]
-
+#  Swagger Spec Server
 FROM golang:1.10.1 AS swagger-server
 
-#RUN mkdir /usr/src/swagger-server
-
-ADD ./swagger-server /usr/src/swagger-server
-WORKDIR /usr/src/swagger-server
-
-
-COPY --from=swagger-gen /output /output
+ADD /swaggerspec .
+ADD ./swaggerspec-server /usr/src/swaggerspec-server
+WORKDIR /usr/src/swaggerspec-server
 
 RUN go build 
-CMD ["./swagger-server"]
+ENTRYPOINT ["./swaggerspec-server"]
