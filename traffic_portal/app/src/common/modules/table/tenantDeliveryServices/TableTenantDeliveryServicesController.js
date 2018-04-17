@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableTenantDeliveryServicesController = function(tenant, tenantDeliveryServices, $scope, $state, dateUtils, deliveryServiceUtils, locationUtils) {
+var TableTenantDeliveryServicesController = function(tenant, tenantDeliveryServices, $scope, $state, dateUtils, deliveryServiceUtils, locationUtils, propertiesModel) {
 
 	var protocols = deliveryServiceUtils.protocols;
 
@@ -26,6 +26,10 @@ var TableTenantDeliveryServicesController = function(tenant, tenantDeliveryServi
 	$scope.tenant = tenant;
 
 	$scope.tenantDeliveryServices = tenantDeliveryServices;
+
+	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
+
+	$scope.openCharts = deliveryServiceUtils.openCharts;
 
 	$scope.protocol = function(ds) {
 		return protocols[ds.protocol];
@@ -51,11 +55,14 @@ var TableTenantDeliveryServicesController = function(tenant, tenantDeliveryServi
 		$('#tenantDSsTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"columnDefs": [
+				{ 'orderable': false, 'targets': 12 }
+			],
 			"aaSorting": []
 		});
 	});
 
 };
 
-TableTenantDeliveryServicesController.$inject = ['tenant', 'tenantDeliveryServices', '$scope', '$state', 'dateUtils', 'deliveryServiceUtils', 'locationUtils'];
+TableTenantDeliveryServicesController.$inject = ['tenant', 'tenantDeliveryServices', '$scope', '$state', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'propertiesModel'];
 module.exports = TableTenantDeliveryServicesController;

@@ -43,7 +43,9 @@ var ServerUtils = function($window, propertiesModel, userModel) {
 	};
 
 	this.openCharts = function(server, $event) {
-		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		if ($event) {
+			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		}
 		$window.open(
 			propertiesModel.properties.servers.charts.baseUrl + server.hostName,
 			'_blank'

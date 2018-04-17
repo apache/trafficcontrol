@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServicesController = function(deliveryServices, $scope, $state, $location, $uibModal, dateUtils, deliveryServiceUtils, locationUtils) {
+var TableDeliveryServicesController = function(deliveryServices, $scope, $state, $location, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, propertiesModel) {
 
     var protocols = deliveryServiceUtils.protocols;
 
@@ -29,6 +29,10 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, $state,
     };
 
     $scope.deliveryServices = deliveryServices;
+
+    $scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
+
+    $scope.openCharts = deliveryServiceUtils.openCharts;
 
     $scope.getRelativeTime = dateUtils.getRelativeTime;
 
@@ -111,11 +115,14 @@ var TableDeliveryServicesController = function(deliveryServices, $scope, $state,
         $('#deliveryServicesTable').dataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
             "iDisplayLength": 25,
+            "columnDefs": [
+                { 'orderable': false, 'targets': 12 }
+            ],
             "aaSorting": []
         });
     });
 
 };
 
-TableDeliveryServicesController.$inject = ['deliveryServices', '$scope', '$state', '$location', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils'];
+TableDeliveryServicesController.$inject = ['deliveryServices', '$scope', '$state', '$location', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'propertiesModel'];
 module.exports = TableDeliveryServicesController;

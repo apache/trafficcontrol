@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableProfileDeliveryServicesController = function(profile, deliveryServices, $scope, $state, dateUtils, deliveryServiceUtils, locationUtils) {
+var TableProfileDeliveryServicesController = function(profile, deliveryServices, $scope, $state, dateUtils, deliveryServiceUtils, locationUtils, propertiesModel) {
 
 	var protocols = deliveryServiceUtils.protocols;
 
@@ -26,6 +26,10 @@ var TableProfileDeliveryServicesController = function(profile, deliveryServices,
 	$scope.profile = profile;
 
 	$scope.deliveryServices = deliveryServices;
+
+	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
+
+	$scope.openCharts = deliveryServiceUtils.openCharts;
 
 	$scope.protocol = function(ds) {
 		return protocols[ds.protocol];
@@ -51,11 +55,14 @@ var TableProfileDeliveryServicesController = function(profile, deliveryServices,
 		$('#deliveryServicesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"columnDefs": [
+				{ 'orderable': false, 'targets': 12 }
+			],
 			"aaSorting": []
 		});
 	});
 
 };
 
-TableProfileDeliveryServicesController.$inject = ['profile', 'deliveryServices', '$scope', '$state', 'dateUtils', 'deliveryServiceUtils', 'locationUtils'];
+TableProfileDeliveryServicesController.$inject = ['profile', 'deliveryServices', '$scope', '$state', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'propertiesModel'];
 module.exports = TableProfileDeliveryServicesController;
