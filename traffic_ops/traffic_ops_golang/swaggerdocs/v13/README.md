@@ -29,9 +29,9 @@ This directory contains the Go structs that glue together the Swagger 2.0 metada
 * Install Docker Compose for your platform:
 [https://docs.docker.com/compose/install](https://docs.docker.com/compose/install)
 
-### Running
+### Running the web services
 
-The docker-compose.yml will start 2 services a custom http service for hosting the `swaggerspec/swagger.json` and the Swagger UI.  
+The `docker-compose.yml` will start 2 services a custom http service for hosting the `swaggerspec/swagger.json` and the Swagger UI.  
 
 To start the Swagger UI services just run:
 
@@ -44,7 +44,3 @@ Once started navigate your browser to [http://localhost:8080](http://localhost:8
 The **gen_swaggerspec.sh** script will scan all the Go files in the swaggerdocs directory and extract out all of the swagger meta tags that are embedded as comments.  The output of the **gen_swaggerspec.sh** script will be the **swaggerspec/swagger.json** spec file. 
 
 While the Docker services are running, just re-run **gen_swaggerspec.sh** and hit refresh on the page to see the Swagger doc updates in real time.
-
-### Verifying your Documentation
-
-Once the **swagger.json** spec file has been generated it needs to to be served over http so that you can validate it using the Swagger Editor.  
