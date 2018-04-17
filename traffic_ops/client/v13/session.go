@@ -233,6 +233,17 @@ func LogoutWithAgent(toURL string, toUser string, toPasswd string, insecure bool
 	return to, remoteAddr, nil
 }
 
+// NewNoAuthSession returns a new Session without logging in
+// this can be used for querying unauthenticated endpoints without requiring a login
+func NewNoAuthSession(toURL string, insecure bool, userAgent string, useCache bool, requestTimeout time.Duration) *Session {
+	return NewSession("", "", toURL, userAgent, &http.Client{
+		Timeout: requestTimeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+		},
+	}, useCache)
+}
+
 // ErrUnlessOk returns nil and an error if the given Response's status code is anything but 200 OK. This includes reading the Response.Body and Closing it. Otherwise, the given response and error are returned unchanged.
 func (to *Session) ErrUnlessOK(resp *http.Response, remoteAddr net.Addr, err error, path string) (*http.Response, net.Addr, error) {
 	if err != nil {

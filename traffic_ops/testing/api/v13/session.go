@@ -23,13 +23,15 @@ import (
 )
 
 var (
-	TOSession *v13.Session
+	TOSession       *v13.Session
+	NoAuthTOSession *v13.Session
 )
 
 func SetupSession(toReqTimeout time.Duration, toURL string, toUser string, toPass string) error {
 	var err error
 
 	toReqTimeout = time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
+	NoAuthTOSession = v13.NewNoAuthSession(toURL, true, "to-api-v13-client-tests", true, toReqTimeout)
 	TOSession, _, err = v13.LoginWithAgent(toURL, toUser, toPass, true, "to-api-v13-client-tests", true, toReqTimeout)
 	return err
 }

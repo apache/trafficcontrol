@@ -21,6 +21,11 @@ import (
 	"testing"
 )
 
+type ErrorAndMessage struct {
+	Error   error
+	Message string
+}
+
 func FindNeedle(needle string, haystack []string) bool {
 	found := false
 	for _, s := range haystack {

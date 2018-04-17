@@ -16,11 +16,13 @@ package v13
 */
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/testing/api/utils"
 )
 
 func TestCacheGroups(t *testing.T) {
@@ -30,6 +32,7 @@ func TestCacheGroups(t *testing.T) {
 	UpdateTestCacheGroups(t)
 	DeleteTestCacheGroups(t)
 	DeleteTestTypes(t)
+	TestCacheGroupsAuthentication(t)
 }
 
 func CreateTestCacheGroups(t *testing.T) {
@@ -179,5 +182,43 @@ func DeleteTestCacheGroups(t *testing.T) {
 
 	if !failed {
 		log.Debugln("DeleteTestCacheGroups() PASSED: ")
+	}
+}
+
+func TestCacheGroupsAuthentication(t *testing.T) {
+	failed := false
+	errFormat := "expected error from %s when unauthenticated"
+
+	cg := testData.CacheGroups[0]
+
+	errors := make([]utils.ErrorAndMessage, 0)
+
+	_, _, err := NoAuthTOSession.CreateCacheGroup(cg)
+	errors = append(errors, utils.ErrorAndMessage{err, fmt.Sprintf(errFormat, "CreateCacheGroup")})
+
+	_, _, err = NoAuthTOSession.GetCacheGroups()
+	errors = append(errors, utils.ErrorAndMessage{err, fmt.Sprintf(errFormat, "GetCacheGroups")})
+
+	_, _, err = NoAuthTOSession.GetCacheGroupByName(cg.Name)
+	errors = append(errors, utils.ErrorAndMessage{err, fmt.Sprintf(errFormat, "GetCacheGroupByName")})
+
+	_, _, err = NoAuthTOSession.GetCacheGroupByID(cg.ID)
+	errors = append(errors, utils.ErrorAndMessage{err, fmt.Sprintf(errFormat, "GetCacheGroupByID")})
+
+	_, _, err = NoAuthTOSession.UpdateCacheGroupByID(cg.ID, cg)
+	errors = append(errors, utils.ErrorAndMessage{err, fmt.Sprintf(errFormat, "UpdateCacheGroupByID")})
+
+	_, _, err = NoAuthTOSession.DeleteCacheGroupByID(cg.ID)
+	errors = append(errors, utils.ErrorAndMessage{err, fmt.Sprintf(errFormat, "DeleteCacheGroupByID")})
+
+	for _, err := range errors {
+		if err.Error == nil {
+			t.Error(err.Message)
+			failed = true
+		}
+	}
+
+	if !failed {
+		log.Debugln("TestCacheGroupsAuthentication() PASSED: ")
 	}
 }
