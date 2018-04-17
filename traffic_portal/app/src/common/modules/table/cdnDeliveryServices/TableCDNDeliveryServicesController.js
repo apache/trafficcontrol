@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $scope, $state, dateUtils, deliveryServiceUtils,  locationUtils) {
+var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $scope, $state, dateUtils, deliveryServiceUtils, locationUtils, propertiesModel) {
 
 	var protocols = deliveryServiceUtils.protocols;
 
@@ -26,6 +26,10 @@ var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $scope,
 	$scope.cdn = cdn;
 
 	$scope.deliveryServices = deliveryServices;
+
+	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
+
+	$scope.openCharts = deliveryServiceUtils.openCharts;
 
 	$scope.protocol = function(ds) {
 		return protocols[ds.protocol];
@@ -51,11 +55,14 @@ var TableCDNDeliveryServicesController = function(cdn, deliveryServices, $scope,
 		$('#deliveryServicesTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
+			"columnDefs": [
+				{ 'orderable': false, 'targets': 12 }
+			],
 			"aaSorting": []
 		});
 	});
 
 };
 
-TableCDNDeliveryServicesController.$inject = ['cdn', 'deliveryServices', '$scope', '$state', 'dateUtils', 'deliveryServiceUtils', 'locationUtils'];
+TableCDNDeliveryServicesController.$inject = ['cdn', 'deliveryServices', '$scope', '$state', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'propertiesModel'];
 module.exports = TableCDNDeliveryServicesController;

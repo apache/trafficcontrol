@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var DeliveryServiceUtils = function() {
+var DeliveryServiceUtils = function($window, propertiesModel) {
 
 	this.protocols = {
 		0: "HTTP",
@@ -32,7 +32,17 @@ var DeliveryServiceUtils = function() {
 		2: "DROP"
 	};
 
+	this.openCharts = function(ds, $event) {
+		if ($event) {
+			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+		}
+		$window.open(
+			propertiesModel.properties.deliveryServices.charts.baseUrl + ds.xmlId,
+			'_blank'
+		);
+	};
+
 };
 
-DeliveryServiceUtils.$inject = [];
+DeliveryServiceUtils.$inject = ['$window', 'propertiesModel'];
 module.exports = DeliveryServiceUtils;

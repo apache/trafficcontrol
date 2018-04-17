@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableServerDeliveryServicesController = function(server, serverDeliveryServices, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, serverUtils, deliveryServiceService, serverService) {
+var TableServerDeliveryServicesController = function(server, serverDeliveryServices, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, serverUtils, deliveryServiceService, serverService, propertiesModel) {
 
 	var protocols = deliveryServiceUtils.protocols;
 
@@ -35,6 +35,10 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 	$scope.server = server;
 
 	$scope.serverDeliveryServices = serverDeliveryServices;
+
+	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
+
+	$scope.openCharts = deliveryServiceUtils.openCharts;
 
 	$scope.isEdge = serverUtils.isEdge;
 
@@ -110,7 +114,9 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 		});
 	};
 
-	$scope.confirmRemoveDS = function(ds) {
+	$scope.confirmRemoveDS = function(ds, $event) {
+		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+
 		var params = {
 			title: 'Remove Delivery Service from Server?',
 			message: 'Are you sure you want to remove ' + ds.xmlId + ' from this server?'
@@ -152,5 +158,5 @@ var TableServerDeliveryServicesController = function(server, serverDeliveryServi
 
 };
 
-TableServerDeliveryServicesController.$inject = ['server', 'serverDeliveryServices', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'serverUtils', 'deliveryServiceService', 'serverService'];
+TableServerDeliveryServicesController.$inject = ['server', 'serverDeliveryServices', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'serverUtils', 'deliveryServiceService', 'serverService', 'propertiesModel'];
 module.exports = TableServerDeliveryServicesController;

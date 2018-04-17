@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableUserDeliveryServicesController = function(user, userDeliveryServices, useTenancy, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, userService) {
+var TableUserDeliveryServicesController = function(user, userDeliveryServices, useTenancy, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, userService, propertiesModel) {
 
 	var protocols = deliveryServiceUtils.protocols;
 
@@ -29,6 +29,10 @@ var TableUserDeliveryServicesController = function(user, userDeliveryServices, u
 
 	$scope.useTenancy = useTenancy[0].value;
 
+	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
+
+	$scope.openCharts = deliveryServiceUtils.openCharts;
+
 	$scope.protocol = function(ds) {
 		return protocols[ds.protocol];
 	};
@@ -39,7 +43,9 @@ var TableUserDeliveryServicesController = function(user, userDeliveryServices, u
 
 	$scope.getRelativeTime = dateUtils.getRelativeTime;
 
-	$scope.removeDS = function(dsId) {
+	$scope.removeDS = function(dsId, $event) {
+		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+
 		userService.deleteUserDeliveryService(user.id, dsId)
 			.then(
 				function() {
@@ -94,5 +100,5 @@ var TableUserDeliveryServicesController = function(user, userDeliveryServices, u
 
 };
 
-TableUserDeliveryServicesController.$inject = ['user', 'userDeliveryServices', 'useTenancy', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils','locationUtils', 'userService'];
+TableUserDeliveryServicesController.$inject = ['user', 'userDeliveryServices', 'useTenancy', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils','locationUtils', 'userService', 'propertiesModel'];
 module.exports = TableUserDeliveryServicesController;
