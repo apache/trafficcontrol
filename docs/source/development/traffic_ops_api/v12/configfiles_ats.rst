@@ -17,7 +17,7 @@
 .. _to-api-v12-configfiles_ats:
 
 Config Files and Config File Metadata
-===
+=====================================
 
 .. _to-api-v12-configfiles_ats-route:
 
@@ -25,8 +25,6 @@ Config Files and Config File Metadata
 ++++++++++++++++++++++++++++++++++++++++++
 
 **GET /api/1.2/servers/:hostname/configfiles/ats**
-**GET /api/1.2/servers/:host_id/configfiles/ats**
-
 
   Authentication Required: Yes
 
@@ -36,8 +34,8 @@ Config Files and Config File Metadata
 
   **Response Properties**
 
-  +======================================================================================================+
-  |                                        Info Section                                                  |
+  +-------------------+--------+-------------------------------------------------------------------------+
+  |                   |        |           Info Section                                                  |
   +-------------------+--------+-------------------------------------------------------------------------+
   |    Parameter      |  Type  |                               Description                               |
   +===================+========+=========================================================================+
@@ -60,11 +58,7 @@ Config Files and Config File Metadata
   | ``cdnName``       | string | The name of the cache's assigned CDN.                                   |
   +-------------------+--------+-------------------------------------------------------------------------+
   | ``serverTcpPort`` |  int   | The configured port of the server's used by ATS.                        |
-  +======================================================================================================+
-  |                                    configFiles Section                                               |
   +-------------------+--------+-------------------------------------------------------------------------+
-  |    Parameter      |  Type  |                               Description                               |
-  +===================+========+=========================================================================+
   | ``fnameOnDisk``   | string | The filename of the configuration file as stored on the cache.          |
   +-------------------+--------+-------------------------------------------------------------------------+
   | ``location``      | string | The directory location of the configuration file as stored on the cache.|
@@ -73,7 +67,6 @@ Config Files and Config File Metadata
   +-------------------+--------+-------------------------------------------------------------------------+
   | ``scope``         | string | The scope of the configuration file.                                    |
   +-------------------+--------+-------------------------------------------------------------------------+
-  
 
   **Response Example** ::
 
