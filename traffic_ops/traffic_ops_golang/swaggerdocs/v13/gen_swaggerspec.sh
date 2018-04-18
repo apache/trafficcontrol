@@ -17,8 +17,9 @@
 #    specific language governing permissions and limitations
 #    under the License.
 
-unset DEBUG
+# Uncomment (or set in your environment) to enable debug output for the swagger generation
 #export DEBUG=true
+
 OUTPUT_DIR=swaggerspec
 SWAGGER_SPEC_FILE=$OUTPUT_DIR/swagger.json
 mkdir -p $OUTPUT_DIR
