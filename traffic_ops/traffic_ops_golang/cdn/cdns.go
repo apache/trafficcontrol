@@ -136,6 +136,8 @@ func (cdn *TOCDN) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
+	// make sure that cdn.DomainName is lowercase
+	*cdn.DomainName = strings.ToLower(*cdn.DomainName)
 	resultRows, err := tx.NamedQuery(insertQuery(), cdn)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -243,6 +245,8 @@ func (cdn *TOCDN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 		return tc.DBError, tc.SystemError
 	}
 	log.Debugf("about to run exec query: %s with cdn: %++v", updateQuery(), cdn)
+	// make sure that cdn.DomainName is lowercase
+	*cdn.DomainName = strings.ToLower(*cdn.DomainName)
 	resultRows, err := tx.NamedQuery(updateQuery(), cdn)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
