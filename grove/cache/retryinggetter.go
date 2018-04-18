@@ -173,7 +173,9 @@ func GetAndCache(
 				Size:             revalidateObj.Size,
 			}
 		}
-		cache.Add(cacheKey, obj) // TODO store pointer?
+		if req.Method == "GET" { // Only GETs get stored. HEADs are a special case handled with the same key, but they don't get stored by themselves. Others are uncachable.
+			cache.Add(cacheKey, obj) // TODO store pointer?
+		}
 		return obj
 	}
 

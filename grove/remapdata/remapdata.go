@@ -194,6 +194,9 @@ func (r RemapRule) CacheKey(method string, fromURI string) string {
 			uri = uri[:i]
 		}
 	}
+	if method == "HEAD" { // HEAD uses the same key as GET
+		method = "GET"
+	}
 	key := method + ":" + uri
 	return key
 }
