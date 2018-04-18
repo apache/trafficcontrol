@@ -67,7 +67,14 @@ func NewResponder(w http.ResponseWriter, pluginCfg map[string]interface{}, plugi
 // SetResponse is a helper which sets the RespondFunc of r to `web.Respond` with the given code, headers, body, and connectionClose. Note it takes a pointer to the headers and body, which may be modified after calling this but before the Do() sends the response.
 func (r *Responder) SetResponse(code *int, hdrs *http.Header, body *[]byte, connectionClose bool) {
 	r.ResponseCode = code
-	r.F = func() (uint64, error) { return web.Respond(r.W, *code, *hdrs, *body, connectionClose) }
+	r.F = func() (uint64, error) {
+		if r.Req.Method == "HEAD" {
+			emptyBody := make([]byte, 0) // make an empty body to return. Rest of the headers stays the same. body will get gc-ed.
+			return web.Respond(r.W, *code, *hdrs, emptyBody, connectionClose)
+		} else {
+			return web.Respond(r.W, *code, *hdrs, *body, connectionClose)
+		}
+	}
 }
 
 // Do responds to the client, according to the data in r, with the given code, headers, and body. It additionally writes to the event log, and adds statistics about this request. This should always be called for the final response to a client, in order to properly log, stat, and other final operations.
