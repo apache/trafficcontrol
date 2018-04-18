@@ -107,7 +107,7 @@ insert into capability (name, description) values ('change-log-write', 'Create c
 insert into capability (name, description) values ('division-read', 'View division configuration') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('division-write', 'Create, edit or delete division configuration') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('ds-cache-read', 'View delivery-service cache assignment') ON CONFLICT (name) DO NOTHING;
-insert into capability (name, description) values ('ds-cache-read', 'Create, edit or delete delivery-service cache assignment') ON CONFLICT (name) DO NOTHING;
+insert into capability (name, description) values ('ds-cache-write', 'Create, edit or delete delivery-service cache assignment') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('ds-health-read', 'View delivery-service health') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('ds-read', 'View delivery-service configuration') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('ds-write', 'Create, edit or delete delivery-service configuration') ON CONFLICT (name) DO NOTHING;
