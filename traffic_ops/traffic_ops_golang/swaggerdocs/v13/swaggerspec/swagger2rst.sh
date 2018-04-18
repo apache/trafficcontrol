@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # 
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -15,26 +17,9 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
- 
-version: '3.6'
 
-services:
-   swagger-spec-server:
-     build:
-       context: .
-       dockerfile: ./Dockerfile
-     ports:
-       - 8000:8000
-     volumes:
-       - ./swaggerspec:/swaggerspec
-
-   swagger-ui:
-     image: swaggerapi/swagger-ui
-     ports:
-       - 8080:8080
-     environment:
-       - API_URL=http://localhost:8000/swaggerspec/swagger.json
-
-volumes:
-    swaggerspec:
-
+OUTPUT_DIR=/swagger2rst
+OUTPUT_FILE=v13_api_docs.rst
+RST_FILE=$OUTPUT_DIR/$OUTPUT_FILE
+swg2rst swagger.json -f rst -o $RST_FILE
+echo "Created $OUTPUT_FILE from swagger.json"

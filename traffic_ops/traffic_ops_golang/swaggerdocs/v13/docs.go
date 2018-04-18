@@ -6,7 +6,7 @@
  This documentation is fully compliant with the Swagger 2.0 specification
 
      Schemes: http, https
-	 Host: localhost:8443
+	 Host: your-traffic-ops
      BasePath: /api/1.3
      Version: 1.3
      License: Apache 2 https://github.com/apache/incubator-trafficcontrol/blob/master/LICENSE

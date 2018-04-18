@@ -16,25 +16,15 @@
 # specific language governing permissions and limitations
 # under the License.
  
-version: '3.6'
+FROM python:2
 
-services:
-   swagger-spec-server:
-     build:
-       context: .
-       dockerfile: ./Dockerfile
-     ports:
-       - 8000:8000
-     volumes:
-       - ./swaggerspec:/swaggerspec
+WORKDIR /usr/src/app
+RUN mkdir /swagger2rst
 
-   swagger-ui:
-     image: swaggerapi/swagger-ui
-     ports:
-       - 8080:8080
-     environment:
-       - API_URL=http://localhost:8000/swaggerspec/swagger.json
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
-volumes:
-    swaggerspec:
+ADD . .
+ADD swagger.json .
 
+CMD [ "./swagger2rst.sh" ]

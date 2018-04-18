@@ -19,22 +19,14 @@
 version: '3.6'
 
 services:
-   swagger-spec-server:
+   to-rst:
      build:
        context: .
        dockerfile: ./Dockerfile
-     ports:
-       - 8000:8000
      volumes:
-       - ./swaggerspec:/swaggerspec
+       - .:/swagger2rst
 
-   swagger-ui:
-     image: swaggerapi/swagger-ui
-     ports:
-       - 8080:8080
-     environment:
-       - API_URL=http://localhost:8000/swaggerspec/swagger.json
 
 volumes:
-    swaggerspec:
+    swagger2rst:
 
