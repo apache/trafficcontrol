@@ -29,7 +29,7 @@ done
 
 export TO=/opt/traffic_ops/app
 
-# TODO: change sslmode=require when enabled in db
+# TODO: change sslmode=require when enabled in db 
 cat >$TO/db/dbconf.yml <<-DBCONF
 version: "1.0"
 name: dbconf.yml
@@ -125,6 +125,7 @@ psql -h "$DB_SERVER" -U "$DB_USER" -p "$DB_PORT" -c '\du'
 >&2 echo "Postgres is up"
 
 
+useradd trafops
 export PERL5LIB=$TO/lib:$TO/local/lib/perl5
 cd $TO || (echo "NO $TO found" && exit 1)
 

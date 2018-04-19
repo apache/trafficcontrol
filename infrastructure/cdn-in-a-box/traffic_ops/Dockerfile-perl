@@ -50,13 +50,12 @@ RUN yum -y install \
 
 # Build stage gets traffic ops source in place and installs perl modules using carton
 FROM trafficops-perl-base AS trafficops-perl-build
-
+ 
 RUN yum -y install \
     cpanminus\
     expat-devel\
-    git
-
-RUN yum -y clean all
+    git\
+    && yum -y clean all
 
 RUN cpanm Carton
 COPY traffic_ops/app /opt/traffic_ops/app
@@ -80,7 +79,7 @@ ENV DB_PORT=5432
 ENV POSTGRES_USER=traffic_ops
 ENV DB_PASSWORD=password
 
-ENV TO_HOST=trafficops-go
+ENV TO_HOST=trafficops
 ENV TO_EMAIL=none@example.com
 ENV TO_SECRET=itsasecret
 ENV TP_HOST=none
@@ -96,6 +95,4 @@ COPY infrastructure/cdn-in-a-box/traffic_ops/run-perl.sh /
 
 WORKDIR /opt/traffic_ops/app
 RUN mkdir -p /var/log/traffic_ops
-
-RUN useradd trafops
 CMD /run-perl.sh
