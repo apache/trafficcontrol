@@ -101,8 +101,11 @@ func codeUnderstood(code int) bool {
 
 // CanCache returns whether an object can be cached per RFC 7234, based on the request headers, response headers, and response code. If strictRFC is false, this ignores request headers denying cacheability such as `no-cache`, in order to protect origins.
 // TODO add options to ignore/violate request cache-control (to protect origins)
-func CanCache(reqHeaders http.Header, respCode int, respHeaders http.Header, strictRFC bool) bool {
+func CanCache(reqMethod string, reqHeaders http.Header, respCode int, respHeaders http.Header, strictRFC bool) bool {
 	log.Debugf("CanCache start\n")
+	if reqMethod != http.MethodGet {
+		return false // for now, we only support GET as a cacheable method.
+	}
 	reqCacheControl := web.ParseCacheControl(reqHeaders)
 	respCacheControl := web.ParseCacheControl(respHeaders)
 	log.Debugf("CanCache reqCacheControl %+v respCacheControl %+v\n", reqCacheControl, respCacheControl)

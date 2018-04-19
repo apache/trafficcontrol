@@ -68,12 +68,10 @@ func NewResponder(w http.ResponseWriter, pluginCfg map[string]interface{}, plugi
 func (r *Responder) SetResponse(code *int, hdrs *http.Header, body *[]byte, connectionClose bool) {
 	r.ResponseCode = code
 	r.F = func() (uint64, error) {
-		if r.Req.Method == "HEAD" {
-			emptyBody := make([]byte, 0) // make an empty body to return. Rest of the headers stays the same. body will get gc-ed.
-			return web.Respond(r.W, *code, *hdrs, emptyBody, connectionClose)
-		} else {
-			return web.Respond(r.W, *code, *hdrs, *body, connectionClose)
+		if r.Req.Method == http.MethodHead {
+			*body = nil
 		}
+		return web.Respond(r.W, *code, *hdrs, *body, connectionClose)
 	}
 }
 
