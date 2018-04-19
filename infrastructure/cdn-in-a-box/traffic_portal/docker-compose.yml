@@ -26,7 +26,6 @@ services:
     environment:
       - "USER=root"
     env_file:
-      - traffic_ops_db.env
       - traffic_ops.env
       - traffic_portal.env
     ports:

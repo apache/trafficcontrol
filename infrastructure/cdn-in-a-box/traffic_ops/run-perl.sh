@@ -29,7 +29,11 @@ done
 
 export TO=/opt/traffic_ops/app
 
+<<<<<<< HEAD
 # TODO: change sslmode=require when enabled in db
+=======
+# TODO: change sslmode=require when enabled in db 
+>>>>>>> docker setup for traffic_ops (perl and go)
 cat >$TO/db/dbconf.yml <<-DBCONF
 version: "1.0"
 name: dbconf.yml
