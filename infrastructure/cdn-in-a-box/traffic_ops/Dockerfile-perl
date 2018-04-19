@@ -1,0 +1,96 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+############################################################
+# Dockerfile to build Traffic Ops container images
+############################################################
+
+# Base stage installs rpms needed for both building and runtime
+FROM centos:7 AS trafficops-perl-base
+MAINTAINER Dan Kirkwood
+
+RUN yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm
+RUN yum -y install \
+    gcc \
+    libcap\
+    libcurl\
+    libcurl-devel\
+    libidn-devel\
+    libpcap-devel\
+    mkisofs\
+    openssl-devel\
+    perl\
+    perl-Crypt-ScryptKDF\
+    perl-DBD-Pg\
+    perl-DBI\
+    perl-Digest-SHA1\
+    perl-JSON\
+    perl-TermReadKey\
+    perl-Test-CPAN-Meta\
+    perl-WWW-Curl\
+    perl-core\
+    perl-libwww-perl\
+    postgresql96\
+    postgresql96-devel
+
+# Build stage gets traffic ops source in place and installs perl modules using carton
+FROM trafficops-perl-base AS trafficops-perl-build
+ 
+RUN yum -y install \
+    cpanminus\
+    expat-devel\
+    git\
+    && yum -y clean all
+
+RUN cpanm Carton
+COPY traffic_ops/app /opt/traffic_ops/app
+COPY traffic_ops/install /opt/traffic_ops/install
+WORKDIR /opt/traffic_ops/app
+RUN POSTGRES_HOME=/usr/pgsql-9.6 /usr/local/bin/carton || cat /root/.cpanm/work/*/build.log
+RUN /opt/traffic_ops/install/bin/install_go.sh
+RUN /opt/traffic_ops/install/bin/install_goose.sh
+
+# Trafficops Perl stage runs hypnotoad
+FROM trafficops-perl-base AS trafficops-perl
+
+# Copy only what's required...
+COPY --from=trafficops-perl-build /opt/traffic_ops /opt/traffic_ops
+COPY --from=trafficops-perl-build /usr/local/go /usr/local/go
+
+ENV DB_SERVER=db
+ENV POSTGRES_PASSWORD=!!twelve
+ENV DB_PORT=5432
+ENV POSTGRES_USER=traffic_ops
+ENV DB_PASSWORD=password
+
+ENV TO_HOST=trafficops
+ENV TO_EMAIL=none@example.com
+ENV TO_SECRET=itsasecret
+ENV TP_HOST=none
+ENV TP_EMAIL=none@example.com
+ENV RIAK_USER=riakuser
+ENV RIAK_PASSWORD=riakpass
+
+ENV MOJO_MODE production
+EXPOSE 60443
+
+COPY infrastructure/cdn-in-a-box/traffic_ops/profile.origin.traffic_ops /
+COPY infrastructure/cdn-in-a-box/traffic_ops/run-perl.sh /
+
+WORKDIR /opt/traffic_ops/app
+RUN mkdir -p /var/log/traffic_ops
+CMD /run-perl.sh

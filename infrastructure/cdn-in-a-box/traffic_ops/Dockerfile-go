@@ -1,0 +1,61 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+############################################################
+# Dockerfile to build Traffic Ops container images
+############################################################
+
+# build stage compiles traffic_ops_golang
+FROM golang:1.10 AS trafficops-build
+
+COPY .git /go/src/github.com/apache/incubator-trafficcontrol/.git
+COPY VERSION /go/src/github.com/apache/incubator-trafficcontrol/VERSION
+COPY traffic_ops/traffic_ops_golang /go/src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
+COPY lib /go/src/github.com/apache/incubator-trafficcontrol/lib
+
+WORKDIR /go/src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
+
+RUN go get -v && go install -ldflags "-X main.version=traffic_ops-$(cat ../../VERSION)-$(git rev-list HEAD | wc -l|tr -d ' ').$(git rev-parse --short=8 HEAD).el7 -B 0x`git rev-parse HEAD`"
+
+
+# trafficops-go is the runtime image
+FROM postgres:9.6 AS trafficops-go
+
+ENV DB_SERVER=db
+ENV DB_PORT=5432
+ENV POSTGRES_PASSWORD=!!twelve
+ENV POSTGRES_USER=traffic_ops
+ENV DB_PASSWORD=password
+
+ENV TO_HOST=trafficops
+ENV TO_EMAIL=none@example.com
+ENV TO_SECRET=itsasecret
+ENV TP_HOST=none
+ENV TP_EMAIL=none@example.com
+ENV RIAK_USER=riakuser
+ENV RIAK_PASSWORD=riakpass
+EXPOSE 443
+
+COPY --from=trafficops-build /go/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang
+
+RUN mkdir -p /var/log/traffic_ops
+RUN useradd trafops
+RUN chown -R trafops:trafops /opt/traffic_ops /var/log/traffic_ops
+
+COPY infrastructure/cdn-in-a-box/traffic_ops/run-go.sh /
+
+CMD /run-go.sh /opt/traffic_ops/app/bin/traffic_ops_golang -cfg /opt/traffic_ops/app/conf/cdn.conf -dbcfg=/opt/traffic_ops/app/conf/production/database.conf
