@@ -63,6 +63,7 @@ export PATH=/usr/local/go/bin:/opt/traffic_ops/go/bin:$PATH
 export GOPATH=/opt/traffic_ops/go
 
 cd $TO_DIR && ./db/admin.pl --env=production reset || echo "DB reset failed!"
+./db/adduser.pl $TO_ADMIN_USER $TO_ADMIN_PASSWORD | psql -U$DB_USER -h$DB_SERVER $DB_NAME || echo "adding traffic_ops admin user failed!"
 
 cd $TO_DIR && $TO_DIR/local/bin/hypnotoad script/cdn
 exec tail -f /var/log/traffic_ops/traffic_ops.log
