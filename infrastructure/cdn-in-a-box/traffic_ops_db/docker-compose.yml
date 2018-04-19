@@ -24,8 +24,8 @@ services:
       dockerfile: infrastructure/cdn-in-a-box/traffic_ops_db/Dockerfile
     restart: always
     env_file:
-      - traffic_ops_db.env
-      - traffic_ops.env
+      - db.env
+      - trafficops.env
     ports:
       - 5432:5432
     volumes:
@@ -44,4 +44,3 @@ services:
 
 volumes:
     pgdata:
-    logs:
