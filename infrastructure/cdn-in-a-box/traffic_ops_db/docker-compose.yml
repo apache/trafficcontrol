@@ -44,3 +44,4 @@ services:
 
 volumes:
     pgdata:
+    logs:
