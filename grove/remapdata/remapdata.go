@@ -194,8 +194,8 @@ func (r RemapRule) CacheKey(method string, fromURI string) string {
 			uri = uri[:i]
 		}
 	}
-	if method == "HEAD" { // HEAD uses the same key as GET
-		method = "GET"
+	if method == http.MethodHead { // HEAD uses the same key as GET
+		method = http.MethodGet
 	}
 	key := method + ":" + uri
 	return key
