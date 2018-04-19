@@ -150,7 +150,7 @@ func GetAndCache(
 		if revalidateObj == nil || respCode != http.StatusNotModified {
 			log.Debugf("GetAndCache new %v (reqid %v)\n", cacheKey, reqID)
 			obj = cacheobj.New(reqHeader, respBody, respCode, respCode, proxyURLStr, respHeader, reqTime, reqRespTime, respRespTime, lastModified)
-			if !remap.CanCache(reqHeader, respCode, respHeader, strictRFC) {
+			if !remap.CanCache(req.Method, reqHeader, respCode, respHeader, strictRFC) {
 				return obj // return without caching
 			}
 		} else {
@@ -173,9 +173,7 @@ func GetAndCache(
 				Size:             revalidateObj.Size,
 			}
 		}
-		if req.Method == "GET" { // Only GETs get stored. HEADs are a special case handled with the same key, but they don't get stored by themselves. Others are uncachable.
-			cache.Add(cacheKey, obj) // TODO store pointer?
-		}
+		cache.Add(cacheKey, obj) // TODO store pointer?
 		return obj
 	}
 

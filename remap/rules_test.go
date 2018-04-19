@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -21,7 +22,7 @@ func TestRules(t *testing.T) {
 		respHdr := http.Header{}
 		strictRFC := true
 
-		if CanCache(reqHdr, respCode, respHdr, strictRFC) {
+		if CanCache(http.MethodGet, reqHdr, respCode, respHdr, strictRFC) {
 			t.Errorf("CanCache returned true for no-store request and strict RFC")
 		}
 	}
@@ -35,7 +36,7 @@ func TestRules(t *testing.T) {
 		respHdr := http.Header{}
 		strictRFC := false
 
-		if !CanCache(reqHdr, respCode, respHdr, strictRFC) {
+		if !CanCache(http.MethodGet, reqHdr, respCode, respHdr, strictRFC) {
 			t.Errorf("CanCache returned false for no-store request and strict RFC disabled")
 		}
 	}
@@ -49,7 +50,7 @@ func TestRules(t *testing.T) {
 		respHdr := http.Header{}
 		strictRFC := false
 
-		if !CanCache(reqHdr, respCode, respHdr, strictRFC) {
+		if !CanCache(http.MethodGet, reqHdr, respCode, respHdr, strictRFC) {
 			t.Errorf("CanCache returned false for no-store request and strict RFC disabled")
 		}
 	}
@@ -70,7 +71,7 @@ func TestRules(t *testing.T) {
 
 		strictRFC := false
 
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseCan {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseCan {
 			t.Errorf("CanReuseStored for no-cache request and strict RFC disabled: expected ReuseCan, actual %v", reuse)
 		}
 	}
@@ -92,7 +93,7 @@ func TestRules(t *testing.T) {
 
 		strictRFC := false
 
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseCan {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseCan {
 			t.Errorf("CanReuseStored for no-cache request and strict RFC disabled: expected ReuseCan, actual %v", reuse)
 		}
 	}
@@ -114,7 +115,7 @@ func TestRules(t *testing.T) {
 
 		strictRFC := false
 
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseCan {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseCan {
 			t.Errorf("CanReuseStored for no-cache request and strict RFC disabled: expected ReuseCan, actual %v", reuse)
 		}
 	}
@@ -128,7 +129,7 @@ func TestRules(t *testing.T) {
 		}
 		strictRFC := false
 
-		if CanCache(reqHdr, respCode, respHdr, strictRFC) {
+		if CanCache(http.MethodGet, reqHdr, respCode, respHdr, strictRFC) {
 			t.Errorf("CanCache returned true for no-cache request and strict RFC disabled")
 		}
 	}
@@ -142,7 +143,7 @@ func TestRules(t *testing.T) {
 		}
 		strictRFC := false
 
-		if CanCache(reqHdr, respCode, respHdr, strictRFC) {
+		if CanCache(http.MethodGet, reqHdr, respCode, respHdr, strictRFC) {
 			t.Errorf("CanCache returned true for no-cache request and strict RFC disabled")
 		}
 	}
@@ -156,7 +157,7 @@ func TestRules(t *testing.T) {
 		}
 		strictRFC := false
 
-		if CanCache(reqHdr, respCode, respHdr, strictRFC) {
+		if CanCache(http.MethodGet, reqHdr, respCode, respHdr, strictRFC) {
 			t.Errorf("CanCache returned true for no-cache request and strict RFC enabled")
 		}
 	}
@@ -170,7 +171,7 @@ func TestRules(t *testing.T) {
 		}
 		strictRFC := true
 
-		if CanCache(reqHdr, respCode, respHdr, strictRFC) {
+		if CanCache(http.MethodGet, reqHdr, respCode, respHdr, strictRFC) {
 			t.Errorf("CanCache returned true for no-cache request and strict RFC enabled")
 		}
 	}
@@ -190,7 +191,7 @@ func TestRules(t *testing.T) {
 		respReqTime := tenMinsBeforeExpires
 		respRespTime := tenMinsBeforeExpires
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseCan {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseCan {
 			t.Errorf("CanReuseStored request after expires: expected ReuseCan, actual %v", reuse)
 		}
 	}
@@ -211,7 +212,7 @@ func TestRules(t *testing.T) {
 		respReqTime := now
 		respRespTime := now
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseMustRevalidateCanStale {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseMustRevalidateCanStale {
 			t.Errorf("CanReuseStored request after expires: expected ReuseMustRevalidateCanStale, actual %v", reuse)
 		}
 	}
@@ -234,7 +235,7 @@ func TestRules(t *testing.T) {
 		respReqTime := now
 		respRespTime := now
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseMustRevalidate {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseMustRevalidate {
 			t.Errorf("CanReuseStored request after expires and response must-revalidate: expected ReuseMustRevalidate, actual %v", reuse)
 		}
 	}
@@ -257,7 +258,7 @@ func TestRules(t *testing.T) {
 		respReqTime := now
 		respRespTime := now
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseMustRevalidate {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseMustRevalidate {
 			t.Errorf("CanReuseStored request after expires and response must-revalidate: expected ReuseMustRevalidate, actual %v", reuse)
 		}
 	}
@@ -280,7 +281,7 @@ func TestRules(t *testing.T) {
 		respReqTime := now
 		respRespTime := now
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseMustRevalidate {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseMustRevalidate {
 			t.Errorf("CanReuseStored request after expires and response must-revalidate: expected ReuseMustRevalidate, actual %v", reuse)
 		}
 	}
@@ -301,7 +302,7 @@ func TestRules(t *testing.T) {
 		respReqTime := now
 		respRespTime := now
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseCan {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseCan {
 			t.Errorf("CanReuseStored request after expires and response must-revalidate: expected ReuseCan, actual %v", reuse)
 		}
 	}
@@ -322,7 +323,7 @@ func TestRules(t *testing.T) {
 		respReqTime := tenMinutesAgo
 		respRespTime := tenMinutesAgo
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseMustRevalidateCanStale {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseMustRevalidateCanStale {
 			t.Errorf("CanReuseStored request after response max-age: expected ReuseMustRevalidateCanStale, actual %v", reuse)
 		}
 	}
@@ -343,7 +344,7 @@ func TestRules(t *testing.T) {
 		respReqTime := now
 		respRespTime := now
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseCan {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseCan {
 			t.Errorf("CanReuseStored request before s-maxage: expected ReuseCan, actual %v", reuse)
 		}
 	}
@@ -364,7 +365,7 @@ func TestRules(t *testing.T) {
 		respReqTime := tenMinutesAgo
 		respRespTime := tenMinutesAgo
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseMustRevalidateCanStale {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseMustRevalidateCanStale {
 			t.Errorf("CanReuseStored request after response s-maxage: expected ReuseMustRevalidateCanStale, actual %v", reuse)
 		}
 	}
@@ -387,7 +388,7 @@ func TestRules(t *testing.T) {
 		respReqTime := tenMinutesAgo
 		respRespTime := tenMinutesAgo
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseCan {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseCan {
 			t.Errorf("CanReuseStored request before s-maxage but after max-age: expected ReuseCan, actual %v", reuse)
 		}
 	}
@@ -410,7 +411,7 @@ func TestRules(t *testing.T) {
 		respReqTime := tenMinutesAgo
 		respRespTime := tenMinutesAgo
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseMustRevalidateCanStale {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseMustRevalidateCanStale {
 			t.Errorf("CanReuseStored request before s-maxage but after max-age: expected ReuseMustRevalidateCanStale, actual %v", reuse)
 		}
 	}
@@ -435,7 +436,7 @@ func TestRules(t *testing.T) {
 		respReqTime := tenMinutesAgo
 		respRespTime := tenMinutesAgo
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseCan {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseCan {
 			t.Errorf("CanReuseStored request before max-age but after Expires: expected ReuseCan, actual %v", reuse)
 		}
 	}
@@ -460,7 +461,7 @@ func TestRules(t *testing.T) {
 		respReqTime := tenMinutesAgo
 		respRespTime := tenMinutesAgo
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseMustRevalidateCanStale {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseMustRevalidateCanStale {
 			t.Errorf("CanReuseStored request after max-age but before Expires: expected ReuseMustRevalidateCanStale, actual %v", reuse)
 		}
 	}
@@ -485,7 +486,7 @@ func TestRules(t *testing.T) {
 		respReqTime := tenMinutesAgo
 		respRespTime := tenMinutesAgo
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseCan {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseCan {
 			t.Errorf("CanReuseStored request before s-maxage but after Expires: expected ReuseCan, actual %v", reuse)
 		}
 	}
@@ -510,7 +511,7 @@ func TestRules(t *testing.T) {
 		respReqTime := tenMinutesAgo
 		respRespTime := tenMinutesAgo
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseMustRevalidateCanStale {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseMustRevalidateCanStale {
 			t.Errorf("CanReuseStored request after max-age but before Expires: expected ReuseMustRevalidateCanStale, actual %v", reuse)
 		}
 	}
@@ -536,7 +537,7 @@ func TestRules(t *testing.T) {
 		respReqTime := tenMinutesAgo
 		respRespTime := tenMinutesAgo
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseCan {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseCan {
 			t.Errorf("CanReuseStored request before s-maxage but after Expires: expected ReuseCan, actual %v", reuse)
 		}
 	}
@@ -562,7 +563,7 @@ func TestRules(t *testing.T) {
 		respReqTime := tenMinutesAgo
 		respRespTime := tenMinutesAgo
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseMustRevalidateCanStale {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseMustRevalidateCanStale {
 			t.Errorf("CanReuseStored request after s-maxage but before Expires: expected ReuseMustRevalidateCanStale, actual %v", reuse)
 		}
 	}
@@ -588,7 +589,7 @@ func TestRules(t *testing.T) {
 		respReqTime := tenMinutesAgo
 		respRespTime := tenMinutesAgo
 		strictRFC := true
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseMustRevalidate {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseMustRevalidate {
 			t.Errorf("CanReuseStored request with strictRFC min-fresh 300 with 600 remaining: expected ReuseMustRevalidate, actual %v", reuse)
 		}
 	}
@@ -614,7 +615,7 @@ func TestRules(t *testing.T) {
 		respReqTime := tenMinutesAgo
 		respRespTime := tenMinutesAgo
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseCan {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseCan {
 			t.Errorf("CanReuseStored request with strictRFC min-fresh 1200 with 600 remaining: expected ReuseCan, actual %v", reuse)
 		}
 	}
@@ -640,7 +641,7 @@ func TestRules(t *testing.T) {
 		respReqTime := tenMinutesAgo
 		respRespTime := tenMinutesAgo
 		strictRFC := false
-		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != ReuseCan {
+		if reuse := CanReuseStored(reqHdr, respHdr, reqCC, respCC, respReqHdrs, respReqTime, respRespTime, strictRFC); reuse != remapdata.ReuseCan {
 			t.Errorf("CanReuseStored request with strictRFC min-fresh 1200 with 600 remaining: expected ReuseCan, actual %v", reuse)
 		}
 	}
@@ -654,7 +655,7 @@ func TestRules(t *testing.T) {
 			respHdr := http.Header{}
 			strictRFC := true
 
-			if !CanCache(reqHdr, respCode, respHdr, strictRFC) {
+			if !CanCache(http.MethodGet, reqHdr, respCode, respHdr, strictRFC) {
 				t.Errorf("CanCache returned false for request with no cache control and default-cacheable response code %v", code)
 			}
 		}
@@ -674,7 +675,7 @@ func TestRules(t *testing.T) {
 			respHdr := http.Header{}
 			strictRFC := true
 
-			if CanCache(reqHdr, respCode, respHdr, strictRFC) {
+			if CanCache(http.MethodGet, reqHdr, respCode, respHdr, strictRFC) {
 				t.Errorf("CanCache returned true for request with no cache control and non-default-cacheable response code %v", code)
 			}
 		}
@@ -701,7 +702,7 @@ func TestRules(t *testing.T) {
 				respHdr := hdr
 				strictRFC := true
 
-				if !CanCache(reqHdr, respCode, respHdr, strictRFC) {
+				if !CanCache(http.MethodGet, reqHdr, respCode, respHdr, strictRFC) {
 					t.Errorf("CanCache returned false for request with non-default-cacheable response code %v and cacheable header %v", respCode, respHdr)
 				}
 			}
