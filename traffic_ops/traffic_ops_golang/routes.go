@@ -35,13 +35,12 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/cachegroup"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/cdn"
-
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/coordinate"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/crconfig"
 	dsrequest "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request/comment"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/division"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/hwinfo"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/location"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/physlocation"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/ping"
@@ -185,6 +184,13 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//About
 		{1.3, http.MethodGet, `about/?(\.json)?$`, about.Handler(), auth.PrivLevelReadOnly, Authenticated, nil},
 
+		//Coordinates
+		{1.3, http.MethodGet, `coordinates/?(\.json)?$`, api.ReadHandler(coordinate.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodGet, `coordinates/?$`, api.ReadHandler(coordinate.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodPut, `coordinates/?$`, api.UpdateHandler(coordinate.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.3, http.MethodPost, `coordinates/?$`, api.CreateHandler(coordinate.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.3, http.MethodDelete, `coordinates/?$`, api.DeleteHandler(coordinate.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+
 		//Delivery service request: CRUD
 		{1.3, http.MethodGet, `deliveryservice_requests/?(\.json)?$`, api.ReadHandler(dsrequest.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.3, http.MethodPut, `deliveryservice_requests/?$`, api.UpdateHandler(dsrequest.GetRefType(), d.DB), auth.PrivLevelPortal, Authenticated, nil},
@@ -206,13 +212,6 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.3, http.MethodPost, `deliveryservices/{xmlID}/urisignkeys$`, saveDeliveryServiceURIKeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
 		{1.3, http.MethodPut, `deliveryservices/{xmlID}/urisignkeys$`, saveDeliveryServiceURIKeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
 		{1.3, http.MethodDelete, `deliveryservices/{xmlID}/urisignkeys$`, removeDeliveryServiceURIKeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
-
-		//Locations
-		{1.3, http.MethodGet, `locations/?(\.json)?$`, api.ReadHandler(location.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.3, http.MethodGet, `locations/?$`, api.ReadHandler(location.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.3, http.MethodPut, `locations/?$`, api.UpdateHandler(location.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.3, http.MethodPost, `locations/?$`, api.CreateHandler(location.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.3, http.MethodDelete, `locations/?$`, api.DeleteHandler(location.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//Servers
 		{1.3, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},

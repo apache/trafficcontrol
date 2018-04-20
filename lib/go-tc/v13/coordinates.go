@@ -21,43 +21,43 @@ import tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
  * under the License.
  */
 
-// A List of Locations Response
-// swagger:response LocationsResponse
+// A List of Coordinates Response
+// swagger:response CoordinatesResponse
 // in: body
-type LocationsResponse struct {
+type CoordinatesResponse struct {
 	// in: body
-	Response []Location `json:"response"`
+	Response []Coordinate `json:"response"`
 }
 
-// A Single Location Response for Update and Create to depict what changed
-// swagger:response LocationResponse
+// A Single Coordinate Response for Update and Create to depict what changed
+// swagger:response CoordinateResponse
 // in: body
-type LocationResponse struct {
+type CoordinateResponse struct {
 	// in: body
-	Response Location `json:"response"`
+	Response Coordinate `json:"response"`
 }
 
-// Location ...
-type Location struct {
+// Coordinate ...
+type Coordinate struct {
 
-	// The Location to retrieve
+	// The Coordinate to retrieve
 	//
-	// ID of the Location
+	// ID of the Coordinate
 	//
 	// required: true
 	ID int `json:"id" db:"id"`
 
-	// Name of the Location
+	// Name of the Coordinate
 	//
 	// required: true
 	Name string `json:"name" db:"name"`
 
-	// the latitude of the Location
+	// the latitude of the Coordinate
 	//
 	// required: true
 	Latitude float64 `json:"latitude" db:"latitude"`
 
-	// the latitude of the Location
+	// the latitude of the Coordinate
 	//
 	// required: true
 	Longitude float64 `json:"longitude" db:"longitude"`
@@ -67,27 +67,27 @@ type Location struct {
 	LastUpdated tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
-// LocationNullable ...
-type LocationNullable struct {
+// CoordinateNullable ...
+type CoordinateNullable struct {
 
-	// The Location to retrieve
+	// The Coordinate to retrieve
 	//
-	// ID of the Location
+	// ID of the Coordinate
 	//
 	// required: true
 	ID *int `json:"id" db:"id"`
 
-	// Name of the Location
+	// Name of the Coordinate
 	//
 	// required: true
 	Name *string `json:"name" db:"name"`
 
-	// the latitude of the Location
+	// the latitude of the Coordinate
 	//
 	// required: true
 	Latitude *float64 `json:"latitude" db:"latitude"`
 
-	// the latitude of the Location
+	// the latitude of the Coordinate
 	//
 	// required: true
 	Longitude *float64 `json:"longitude" db:"longitude"`
