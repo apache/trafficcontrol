@@ -132,7 +132,8 @@ func selectQuery() string {
 id,
 name,
 description,
-use_in_table
+use_in_table,
+last_updated
 FROM type typ`
 
 	return query
