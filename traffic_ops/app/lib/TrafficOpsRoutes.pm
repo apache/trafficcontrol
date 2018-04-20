@@ -807,15 +807,6 @@ sub api_routes {
 	$r->post("/api/$version/tenants")->over( authenticated => 1, not_ldap => 1 )->to( 'Tenant#create', namespace => $namespace );
 	$r->delete("/api/$version/tenants/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Tenant#delete', namespace => $namespace );
 
-	# -- TYPES
-	# Supports ?orderby=key
-	$r->get("/api/$version/types")->over( authenticated => 1, not_ldap => 1 )->to( 'Types#index', namespace => $namespace );
-	$r->get("/api/$version/types/trimmed")->over( authenticated => 1, not_ldap => 1 )->to( 'Types#index_trimmed', namespace => $namespace );
-	$r->get( "/api/$version/types/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Types#show', namespace => $namespace );
-	$r->post("/api/$version/types")->over( authenticated => 1, not_ldap => 1 )->to( 'Types#create', namespace => $namespace );
-	$r->put("/api/$version/types/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Types#update', namespace => $namespace );
-	$r->delete("/api/$version/types/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Types#delete', namespace => $namespace );
-
 	# -- USERS
 	$r->get("/api/$version/users")->over( authenticated => 1, not_ldap => 1 )->to( 'User#index', namespace => $namespace );
 	$r->get( "/api/$version/users/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'User#show', namespace => $namespace );
