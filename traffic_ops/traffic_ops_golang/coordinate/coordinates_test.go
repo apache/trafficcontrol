@@ -1,4 +1,4 @@
-package location
+package coordinate
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -36,30 +36,30 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestLocations() []v13.Location {
-	locs := []v13.Location{}
-	testLoc1 := v13.Location{
+func getTestCoordinates() []v13.Coordinate {
+	coords := []v13.Coordinate{}
+	testCoord1 := v13.Coordinate{
 		ID:          1,
-		Name:        "location1",
+		Name:        "coordinate1",
 		Latitude:    38.7,
 		Longitude:   90.7,
 		LastUpdated: tc.TimeNoMod{Time: time.Now()},
 	}
-	locs = append(locs, testLoc1)
+	coords = append(coords, testCoord1)
 
-	testLoc2 := v13.Location{
+	testCoord2 := v13.Coordinate{
 		ID:          2,
-		Name:        "location2",
+		Name:        "coordinate2",
 		Latitude:    38.7,
 		Longitude:   90.7,
 		LastUpdated: tc.TimeNoMod{Time: time.Now()},
 	}
-	locs = append(locs, testLoc2)
+	coords = append(coords, testCoord2)
 
-	return locs
+	return coords
 }
 
-func TestReadLocations(t *testing.T) {
+func TestReadCoordinates(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -71,11 +71,11 @@ func TestReadLocations(t *testing.T) {
 
 	refType := GetRefType()
 
-	testLocs := getTestLocations()
-	cols := test.ColsFromStructByTag("db", v13.Location{})
+	testCoords := getTestCoordinates()
+	cols := test.ColsFromStructByTag("db", v13.Coordinate{})
 	rows := sqlmock.NewRows(cols)
 
-	for _, ts := range testLocs {
+	for _, ts := range testCoords {
 		rows = rows.AddRow(
 			ts.ID,
 			ts.Name,
@@ -87,13 +87,13 @@ func TestReadLocations(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	v := map[string]string{"id": "1"}
 
-	locations, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+	coordinates, errs, _ := refType.Read(db, v, auth.CurrentUser{})
 	if len(errs) > 0 {
-		t.Errorf("location.Read expected: no errors, actual: %v", errs)
+		t.Errorf("coordinate.Read expected: no errors, actual: %v", errs)
 	}
 
-	if len(locations) != 2 {
-		t.Errorf("location.Read expected: len(locations) == 2, actual: %v", len(locations))
+	if len(coordinates) != 2 {
+		t.Errorf("coordinate.Read expected: len(coordinates) == 2, actual: %v", len(coordinates))
 	}
 }
 
@@ -114,22 +114,22 @@ func TestFuncs(t *testing.T) {
 
 func TestInterfaces(t *testing.T) {
 	var i interface{}
-	i = &TOLocation{}
+	i = &TOCoordinate{}
 
 	if _, ok := i.(api.Creator); !ok {
-		t.Errorf("location must be creator")
+		t.Errorf("coordinate must be creator")
 	}
 	if _, ok := i.(api.Reader); !ok {
-		t.Errorf("location must be reader")
+		t.Errorf("coordinate must be reader")
 	}
 	if _, ok := i.(api.Updater); !ok {
-		t.Errorf("location must be updater")
+		t.Errorf("coordinate must be updater")
 	}
 	if _, ok := i.(api.Deleter); !ok {
-		t.Errorf("location must be deleter")
+		t.Errorf("coordinate must be deleter")
 	}
 	if _, ok := i.(api.Identifier); !ok {
-		t.Errorf("location must be Identifier")
+		t.Errorf("coordinate must be Identifier")
 	}
 }
 
@@ -140,7 +140,7 @@ func TestValidate(t *testing.T) {
 	la := -190.0
 	lo := -190.0
 	lu := tc.TimeNoMod{Time: time.Now()}
-	c := TOLocation{ID: &id,
+	c := TOCoordinate{ID: &id,
 		Name:        &nm,
 		Latitude:    &la,
 		Longitude:   &lo,
@@ -159,10 +159,10 @@ func TestValidate(t *testing.T) {
 	}
 
 	//  valid name, latitude, longitude
-	nm = "This.is.2.a-Valid---Location."
+	nm = "This.is.2.a-Valid---Coordinate."
 	la = 90.0
 	lo = 90.0
-	c = TOLocation{ID: &id,
+	c = TOCoordinate{ID: &id,
 		Name:        &nm,
 		Latitude:    &la,
 		Longitude:   &lo,

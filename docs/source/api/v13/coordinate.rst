@@ -13,17 +13,17 @@
 .. limitations under the License.
 .. 
 
-.. _to-api-v13-location:
+.. _to-api-v13-coordinate:
 
-Location
-========
+Coordinate
+==========
 
-.. _to-api-v13-locations-route:
+.. _to-api-v13-coordinates-route:
 
-/api/1.3/locations
-++++++++++++++++++
+/api/1.3/coordinates
+++++++++++++++++++++
 
-**GET /api/1.3/locations**
+**GET /api/1.3/coordinates**
 
   Authentication Required: Yes
 
@@ -34,9 +34,9 @@ Location
   +-----------------+----------+---------------------------------------------------+
   | Name            | Required | Description                                       |
   +=================+==========+===================================================+
-  | ``id``          | no       | Filter Locations by ID.                           |
+  | ``id``          | no       | Filter Coordinates by ID.                         |
   +-----------------+----------+---------------------------------------------------+
-  | ``name``        | no       | Filter Locations by name.                         |
+  | ``name``        | no       | Filter Coordinates by name.                       |
   +-----------------+----------+---------------------------------------------------+
 
   **Response Properties**
@@ -44,15 +44,15 @@ Location
   +-----------------------------------+--------+--------------------------------------------------------------------------+
   | Parameter                         | Type   | Description                                                              |
   +===================================+========+==========================================================================+
-  | ``id``                            | int    | Local unique identifier for the Location                                 |
+  | ``id``                            | int    | Local unique identifier for the Coordinate                               |
   +-----------------------------------+--------+--------------------------------------------------------------------------+
   | ``lastUpdated``                   | string | The Time / Date this entry was last updated                              |
   +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``latitude``                      | float  | Latitude of the Location                                                 |
+  | ``latitude``                      | float  | Latitude of the Coordinate                                               |
   +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``longitude``                     | float  | Longitude of the Location                                                |
+  | ``longitude``                     | float  | Longitude of the Coordinate                                              |
   +-----------------------------------+--------+--------------------------------------------------------------------------+
-  | ``name``                          | string | The name of the Location                                                 |
+  | ``name``                          | string | The name of the Coordinate                                               |
   +-----------------------------------+--------+--------------------------------------------------------------------------+
 
   **Response Example** ::
@@ -64,23 +64,23 @@ Location
            "lastUpdated": "2012-09-25 20:27:28",
            "latitude": 0,
            "longitude": 0,
-           "name": "dc-chicago",
+           "name": "dc-chicago"
         },
         {
            "id": 22,
            "lastUpdated": "2012-09-25 20:27:28",
            "latitude": 0,
            "longitude": 0,
-           "name": "dc-chicago-1",
+           "name": "dc-chicago-1"
         }
-     ],
+     ]
     }
 
 |
 
-**POST /api/1.3/locations**
+**POST /api/1.3/coordinates**
 
-  Create Location.
+  Create Coordinate.
 
   Authentication Required: Yes
 
@@ -91,19 +91,19 @@ Location
   +---------------------------------+----------+-------------------------------------------------------------------+
   | Name                            | Required | Description                                                       |
   +=================================+==========+===================================================================+
-  | ``name``                        | yes      | The name of the Location entry                                    |
+  | ``name``                        | yes      | The name of the Coordinate entry                                  |
   +---------------------------------+----------+-------------------------------------------------------------------+
-  | ``latitude``                    | no       | Latitude of the Location                                          |
+  | ``latitude``                    | no       | Latitude of the Coordinate                                        |
   +---------------------------------+----------+-------------------------------------------------------------------+
-  | ``longitude``                   | no       | Longitude of the Location                                         |
+  | ``longitude``                   | no       | Longitude of the Coordinate                                       |
   +---------------------------------+----------+-------------------------------------------------------------------+
 
   **Request Example** ::
 
     {
-        "name": "my_location",
+        "name": "my_coordinate",
         "latitude": 1.2,
-        "longitude": 4.5,
+        "longitude": 4.5
     }
 
   **Response Properties**
@@ -111,13 +111,13 @@ Location
   +------------------------------------+--------+-------------------------------------------------------------------+
   | Parameter                          | Type   | Description                                                       |
   +====================================+========+===================================================================+
-  | ``id``                             | int    | The id of the Location                                            |
+  | ``id``                             | int    | The id of the Coordinate                                          |
   +------------------------------------+--------+-------------------------------------------------------------------+
-  | ``name``                           | string | The name of the Location                                          |
+  | ``name``                           | string | The name of the Coordinate                                        |
   +------------------------------------+--------+-------------------------------------------------------------------+
-  | ``latitude``                       | float  | Latitude of the Location                                          |
+  | ``latitude``                       | float  | Latitude of the Coordinate                                        |
   +------------------------------------+--------+-------------------------------------------------------------------+
-  | ``longitude``                      | float  | Longitude of the Location                                         |
+  | ``longitude``                      | float  | Longitude of the Coordinate                                       |
   +------------------------------------+--------+-------------------------------------------------------------------+
   | ``lastUpdated``                    | string | The Time / Date this entry was last updated                       |
   +------------------------------------+--------+-------------------------------------------------------------------+
@@ -134,23 +134,23 @@ Location
         "alerts": [
                   {
                           "level": "success",
-                          "text": "location was created"
+                          "text": "coordinate was created"
                   }
           ],
         "response": {
             'longitude' : 4.5,
             'lastUpdated' : '2016-01-25 13:55:30',
-            'name' : 'my_location',
+            'name' : 'my_coordinate',
             'latitude' : 1.2,
-            'id' : 1,
+            'id' : 1
         }
     }
    
 |
 
-**PUT /api/1.3/locations**
+**PUT /api/1.3/coordinates**
 
-  Update location.
+  Update coordinate.
 
   Authentication Required: Yes
 
@@ -161,7 +161,7 @@ Location
   +------+----------+------------------------------------+
   | Name | Required | Description                        |
   +======+==========+====================================+
-  | id   | yes      | The id of the location to edit.    |
+  | id   | yes      | The id of the coordinate to edit.  |
   +------+----------+------------------------------------+
 
   **Request Parameters**
@@ -169,22 +169,22 @@ Location
   +---------------------------------+----------+-------------------------------------------------------------------+
   | Name                            | Required | Description                                                       |
   +=================================+==========+===================================================================+
-  | ``id``                          | yes      | The id of the Location                                            |
+  | ``id``                          | yes      | The id of the Coordinate                                          |
   +---------------------------------+----------+-------------------------------------------------------------------+
-  | ``name``                        | yes      | The name of the Location entry                                    |
+  | ``name``                        | yes      | The name of the Coordinate entry                                  |
   +---------------------------------+----------+-------------------------------------------------------------------+
-  | ``latitude``                    | no       | Latitude of the Location                                          |
+  | ``latitude``                    | no       | Latitude of the Coordinate                                        |
   +---------------------------------+----------+-------------------------------------------------------------------+
-  | ``longitude``                   | no       | Longitude of the Location                                         |
+  | ``longitude``                   | no       | Longitude of the Coordinate                                       |
   +---------------------------------+----------+-------------------------------------------------------------------+
 
   **Request Example** ::
 
     {
         "id": 1,
-        "name": "my_location",
+        "name": "my_coordinate",
         "latitude": 12,
-        "longitude": 45,
+        "longitude": 45
     }
 
   **Response Properties**
@@ -192,13 +192,13 @@ Location
   +------------------------------------+--------+-------------------------------------------------------------------+
   | Parameter                          | Type   | Description                                                       |
   +====================================+========+===================================================================+
-  | ``id``                             | int    | The id of the Location                                            |
+  | ``id``                             | int    | The id of the Coordinate                                          |
   +------------------------------------+--------+-------------------------------------------------------------------+
-  | ``name``                           | string | The name of the Location                                          |
+  | ``name``                           | string | The name of the Coordinate                                        |
   +------------------------------------+--------+-------------------------------------------------------------------+
-  | ``latitude``                       | float  | Latitude of the Location                                          |
+  | ``latitude``                       | float  | Latitude of the Coordinate                                        |
   +------------------------------------+--------+-------------------------------------------------------------------+
-  | ``longitude``                      | float  | Longitude of the Location                                         |
+  | ``longitude``                      | float  | Longitude of the Coordinate                                       |
   +------------------------------------+--------+-------------------------------------------------------------------+
   | ``lastUpdated``                    | string | The Time / Date this entry was last updated                       |
   +------------------------------------+--------+-------------------------------------------------------------------+
@@ -215,23 +215,23 @@ Location
         "alerts": [
                   {
                           "level": "success",
-                          "text": "location was updated"
+                          "text": "coordinate was updated"
                   }
           ],
         "response": {
             'longitude' : 45,
             'lastUpdated' : '2016-01-25 13:55:30',
-            'name' : 'my_location',
+            'name' : 'my_coordinate',
             'latitude' : 12,
-            'id' : 1,
+            'id' : 1
         }
     }
 
 |
 
-**DELETE /api/1.3/locations**
+**DELETE /api/1.3/coordinates**
 
-  Delete location.
+  Delete coordinate.
 
   Authentication Required: Yes
 
@@ -242,7 +242,7 @@ Location
   +------+----------+--------------------------------------+
   | Name | Required | Description                          |
   +======+==========+======================================+
-  | id   | yes      | The id of the location to delete.    |
+  | id   | yes      | The id of the coordinate to delete.  |
   +------+----------+--------------------------------------+
   
   **Response Properties**
@@ -263,9 +263,9 @@ Location
           "alerts": [
                     {
                             "level": "success",
-                            "text": "location was deleted"
+                            "text": "coordinate was deleted"
                     }
-            ],
+            ]
     }
 
 |
