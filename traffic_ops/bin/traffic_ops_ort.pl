@@ -717,19 +717,7 @@ sub update_trops {
 	}
 	if ($update_result) {
 		#need to know if reval_pending is supported
-		my $uri     = "/api/1.3/servers/$hostname_short/update_status";
-		my $upd_ref = &lwp_get($uri);
-		if ($upd_ref eq '404') {
-			( $log_level >> $ERROR ) && printf("ERROR Traffic Ops version does not support update_status API. Reverting to UI route.\n");
-			$uri = "/update/$hostname_short";
-			$upd_ref = &lwp_get($uri);
-		}
-
-		if ( $upd_ref =~ m/^\d{3}$/ ) {
-			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
-			exit 1;
-		}
-		my $upd_json = decode_json($upd_ref);
+		my ($upd_json, $uri) = get_update_status();
 
 		my $upd_pending = ( defined( $upd_json->[0]->{'upd_pending'} ) ) ? $upd_json->[0]->{'upd_pending'} : undef;
 		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;
@@ -783,6 +771,32 @@ sub get_print_current_client_connections {
 	( $log_level >> $DEBUG ) && print "DEBUG There are currently $current_connections connections.\n";
 }
 
+sub get_update_status {
+	my $uri     = "/api/1.3/servers/$hostname_short/update_status";
+	my $upd_ref = &lwp_get($uri);
+	if ($upd_ref eq '404') {
+		( $log_level >> $ERROR ) && printf("ERROR ORT version incompatible with current version of Traffic Ops. Please upgrade to Traffic Ops 2.2.\n");
+		exit 1;
+	}
+
+	if ( $upd_ref =~ m/^\d{3}$/ ) {
+		( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
+		exit 1;
+	}
+
+	my $upd_json = decode_json($upd_ref);
+
+	##Some versions of Traffic Ops had the 1.3 API but did not have the use_reval_pending field.  If this field is not present, exit.
+	if ( !defined( $upd_json->[0]->{'use_reval_pending'} ) ) {
+		( $log_level >> $ERROR ) && printf("ERROR ORT version incompatible with current version of Traffic Ops. Please upgrade to Traffic Ops 2.2.\n");
+		exit 1;
+	}
+
+	$reval_in_use = $upd_json->[0]->{'use_reval_pending'};
+	
+	return ($upd_json, $uri);
+}
+
 sub check_revalidate_state {
 	my $sleep_override = shift;
 
@@ -791,33 +805,21 @@ sub check_revalidate_state {
 	( $log_level >> $DEBUG ) && print "DEBUG Checking revalidate state.\n";
 	if ( $script_mode == $REVALIDATE || $sleep_override == 1 ) {
 		## The herd is about to get /update/<hostname>
-		my $uri     = "/api/1.3/servers/$hostname_short/update_status";
-		my $upd_ref = &lwp_get($uri);
-		if ($upd_ref eq '404') {
-			( $log_level >> $ERROR ) && printf("ERROR Traffic Ops version does not support update_status API. Reverting to UI route.\n");
-			$uri = "/update/$hostname_short";
-			$upd_ref = &lwp_get($uri);
-		}
 
-		if ( $upd_ref =~ m/^\d{3}$/ ) {
-			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
-			exit 1;
-		}
+		my ($upd_json, $uri) = get_update_status();
 
-		my $upd_json = decode_json($upd_ref);
-		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;
-		if ( !defined($reval_pending) ) {
-			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri did not have an reval_pending key.  Separated revalidation requires upgrading to Traffic Ops version 2.1.\n";
+		if ( $reval_in_use == 0 ) {
+			( $log_level >> $ERROR ) && print "ERROR Update URL: Instant invalidate is not enabled.  Separated revalidation requires upgrading to Traffic Ops version 2.2 and enabling this feature.\n";
 			return($UPDATE_TROPS_NOTNEEDED);
 		}
-
+		my $reval_pending = $upd_json->[0]->{'reval_pending'};
 		if ( $reval_pending == 1 ) {
 			( $log_level >> $ERROR ) && print "ERROR Traffic Ops is signaling that a revalidation is waiting to be applied.\n";
 			$syncds_update = $UPDATE_TROPS_NEEDED;
 
-			my $parent_reval_pending = ( defined( $upd_json->[0]->{'parent_reval_pending'} ) ) ? $upd_json->[0]->{'parent_reval_pending'} : undef;
+			my $parent_reval_pending = $upd_json->[0]->{'parent_reval_pending'};
 			if ( !defined($parent_reval_pending) ) {
-				( $log_level >> $ERROR ) && print "ERROR Update URL: $uri did not have an parent_reval_pending key.  Separated revalidation requires upgrading to Traffic Ops version 2.1.  Unable to continue!\n";
+				( $log_level >> $ERROR ) && print "ERROR Update URL: $uri did not have an parent_reval_pending key.  Separated revalidation requires upgrading to Traffic Ops version 2.2.  Unable to continue!\n";
 				return($UPDATE_TROPS_NOTNEEDED);
 			}
 			if ( $parent_reval_pending == 1 ) {
@@ -883,30 +885,9 @@ sub check_syncds_state {
 	if ( $script_mode == $SYNCDS || $script_mode == $BADASS || $script_mode == $REPORT ) {
 		## The herd is about to get /update/<hostname>
 		## need to check if revalidation is being used first.
-		my $uri     = "/api/1.3/servers/$hostname_short/update_status";
-		my $upd_ref = &lwp_get($uri);
-		if ($upd_ref eq '404') {
-			( $log_level >> $ERROR ) && printf("ERROR Traffic Ops version does not support update_status API. Reverting to UI route.\n");
-			$uri = "/update/$hostname_short";
-			$upd_ref = &lwp_get($uri);
-		}
 
-		my $upd_json = decode_json($upd_ref);
-		my $reval_pending = ( defined( $upd_json->[0]->{'reval_pending'} ) ) ? $upd_json->[0]->{'reval_pending'} : undef;
-		if (defined($reval_pending) ) {
-			$reval_in_use = 1;
-		}
-		else {
-			$reval_in_use = 0;
-		}
+		my ($upd_json, $uri) = get_update_status();
 
-		$upd_ref = &lwp_get($uri);
-		if ( $upd_ref =~ m/^\d{3}$/ ) {
-			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
-			exit 1;
-		}
-
-		$upd_json = decode_json($upd_ref);
 		my $upd_pending = ( defined( $upd_json->[0]->{'upd_pending'} ) ) ? $upd_json->[0]->{'upd_pending'} : undef;
 		if ( !defined($upd_pending) ) {
 			( $log_level >> $ERROR ) && print "ERROR Update URL: $uri did not have an upd_pending key.\n";
@@ -943,12 +924,8 @@ sub check_syncds_state {
 						( $log_level >> $WARN ) && print "WARN In syncds mode, sleeping for " . $dispersion . "s to see if the update my parents need is cleared.\n";
 						( $dispersion > 0 ) && &sleep_timer($dispersion);
 					}
-					$upd_ref = &lwp_get($uri);
-					if ( $upd_ref =~ m/^\d{3}$/ ) {
-						( $log_level >> $ERROR ) && print "ERROR Update URL: $uri returned $upd_ref. Exiting, not sure what else to do.\n";
-						exit 1;
-					}
-					$upd_json = decode_json($upd_ref);
+					($upd_json, $uri) = get_update_status();
+					
 					$parent_pending = ( defined( $upd_json->[0]->{'parent_pending'} ) ) ? $upd_json->[0]->{'parent_pending'} : undef;
 					if ( !defined($parent_pending) ) {
 						( $log_level >> $ERROR ) && print "ERROR Invalid JSON for $uri. Exiting, not sure what else to do.\n";
@@ -1788,9 +1765,8 @@ sub get_cfg_file_list {
 
 	if ($result eq '404') {
 		$api_in_use = 0;
-		( $log_level >> $ERROR ) && printf("ERROR Traffic Ops version does not support config files API. Reverting to UI route.\n");
-		$uri = "/ort/$host_name/ort1";
-		$result = &lwp_get($uri);
+		( $log_level >> $ERROR ) && printf("ERROR Traffic Ops version does not support config files API. Please upgrade to Traffic Ops 2.2.\n");
+		exit 1;
 	}
 
 	my $ort_ref = decode_json($result);
