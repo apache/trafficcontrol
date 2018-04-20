@@ -26,19 +26,19 @@ import (
 )
 
 const (
-	API_v13_Locations = "/api/1.3/locations"
+	API_v13_Coordinates = "/api/1.3/coordinates"
 )
 
-// Create a Location
-func (to *Session) CreateLocation(location v13.Location) (tc.Alerts, ReqInf, error) {
+// Create a Coordinate
+func (to *Session) CreateCoordinate(coordinate v13.Coordinate) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(location)
+	reqBody, err := json.Marshal(coordinate)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Locations, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Coordinates, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -48,16 +48,16 @@ func (to *Session) CreateLocation(location v13.Location) (tc.Alerts, ReqInf, err
 	return alerts, reqInf, nil
 }
 
-// Update a Location by ID
-func (to *Session) UpdateLocationByID(id int, location v13.Location) (tc.Alerts, ReqInf, error) {
+// Update a Coordinate by ID
+func (to *Session) UpdateCoordinateByID(id int, coordinate v13.Coordinate) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(location)
+	reqBody, err := json.Marshal(coordinate)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s?id=%d", API_v13_Locations, id)
+	route := fmt.Sprintf("%s?id=%d", API_v13_Coordinates, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -68,23 +68,23 @@ func (to *Session) UpdateLocationByID(id int, location v13.Location) (tc.Alerts,
 	return alerts, reqInf, nil
 }
 
-// Returns a list of Locations
-func (to *Session) GetLocations() ([]v13.Location, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_Locations, nil)
+// Returns a list of Coordinates
+func (to *Session) GetCoordinates() ([]v13.Coordinate, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_Coordinates, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data v13.LocationsResponse
+	var data v13.CoordinatesResponse
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
 }
 
-// GET a Location by the Location id
-func (to *Session) GetLocationByID(id int) ([]v13.Location, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_v13_Locations, id)
+// GET a Coordinate by the Coordinate id
+func (to *Session) GetCoordinateByID(id int) ([]v13.Coordinate, ReqInf, error) {
+	route := fmt.Sprintf("%s?id=%d", API_v13_Coordinates, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -92,7 +92,7 @@ func (to *Session) GetLocationByID(id int) ([]v13.Location, ReqInf, error) {
 	}
 	defer resp.Body.Close()
 
-	var data v13.LocationsResponse
+	var data v13.CoordinatesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -100,9 +100,9 @@ func (to *Session) GetLocationByID(id int) ([]v13.Location, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// GET a Location by the Location name
-func (to *Session) GetLocationByName(name string) ([]v13.Location, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_Locations, name)
+// GET a Coordinate by the Coordinate name
+func (to *Session) GetCoordinateByName(name string) ([]v13.Coordinate, ReqInf, error) {
+	url := fmt.Sprintf("%s?name=%s", API_v13_Coordinates, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -110,7 +110,7 @@ func (to *Session) GetLocationByName(name string) ([]v13.Location, ReqInf, error
 	}
 	defer resp.Body.Close()
 
-	var data v13.LocationsResponse
+	var data v13.CoordinatesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -118,9 +118,9 @@ func (to *Session) GetLocationByName(name string) ([]v13.Location, ReqInf, error
 	return data.Response, reqInf, nil
 }
 
-// DELETE a Location by ID
-func (to *Session) DeleteLocationByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_v13_Locations, id)
+// DELETE a Coordinate by ID
+func (to *Session) DeleteCoordinateByID(id int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s?id=%d", API_v13_Coordinates, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

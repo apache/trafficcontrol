@@ -16,7 +16,7 @@
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
 
-CREATE TABLE location (
+CREATE TABLE coordinate (
     id bigserial primary key NOT NULL,
     name text UNIQUE NOT NULL,
     latitude numeric NOT NULL DEFAULT 0.0,
@@ -24,8 +24,8 @@ CREATE TABLE location (
     last_updated timestamp WITH time zone NOT NULL DEFAULT now()
 );
 
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON location FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
+CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON coordinate FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-DROP TABLE location;
+DROP TABLE coordinate;

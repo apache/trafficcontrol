@@ -183,16 +183,16 @@
             "name": "division2"
         }
     ],
-    "locations": [
+    "coordinates": [
         {
             "latitude": 1.1,
             "longitude": 2.2,
-            "name": "location1"
+            "name": "coordinate1"
         },
         {
             "latitude": 3.3,
             "longitude": 4.4,
-            "name": "location2"
+            "name": "coordinate2"
         }
     ],
     "parameters": [

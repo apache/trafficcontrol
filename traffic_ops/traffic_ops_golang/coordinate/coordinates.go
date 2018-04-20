@@ -1,4 +1,4 @@
-package location
+package coordinate
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -38,47 +38,47 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOLocation v13.LocationNullable
+type TOCoordinate v13.CoordinateNullable
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOLocation{}
+var refType = TOCoordinate{}
 
-func GetRefType() *TOLocation {
+func GetRefType() *TOCoordinate {
 	return &refType
 }
 
-func (location TOLocation) GetKeyFieldsInfo() []api.KeyFieldInfo {
+func (coordinate TOCoordinate) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (location TOLocation) GetKeys() (map[string]interface{}, bool) {
-	if location.ID == nil {
+func (coordinate TOCoordinate) GetKeys() (map[string]interface{}, bool) {
+	if coordinate.ID == nil {
 		return map[string]interface{}{"id": 0}, false
 	}
-	return map[string]interface{}{"id": *location.ID}, true
+	return map[string]interface{}{"id": *coordinate.ID}, true
 }
 
-func (location TOLocation) GetAuditName() string {
-	if location.Name != nil {
-		return *location.Name
+func (coordinate TOCoordinate) GetAuditName() string {
+	if coordinate.Name != nil {
+		return *coordinate.Name
 	}
-	if location.ID != nil {
-		return strconv.Itoa(*location.ID)
+	if coordinate.ID != nil {
+		return strconv.Itoa(*coordinate.ID)
 	}
 	return "0"
 }
 
-func (location TOLocation) GetType() string {
-	return "location"
+func (coordinate TOCoordinate) GetType() string {
+	return "coordinate"
 }
 
-func (location *TOLocation) SetKeys(keys map[string]interface{}) {
+func (coordinate *TOCoordinate) SetKeys(keys map[string]interface{}) {
 	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
-	location.ID = &i
+	coordinate.ID = &i
 }
 
-func isValidLocationChar(r rune) bool {
+func isValidCoordinateChar(r rune) bool {
 	if r >= 'a' && r <= 'z' {
 		return true
 	}
@@ -94,33 +94,33 @@ func isValidLocationChar(r rune) bool {
 	return false
 }
 
-// IsValidLocationName returns true if the name contains only characters valid for a Location name
-func IsValidLocationName(str string) bool {
-	i := strings.IndexFunc(str, func(r rune) bool { return !isValidLocationChar(r) })
+// IsValidCoordinateName returns true if the name contains only characters valid for a Coordinate name
+func IsValidCoordinateName(str string) bool {
+	i := strings.IndexFunc(str, func(r rune) bool { return !isValidCoordinateChar(r) })
 	return i == -1
 }
 
 // Validate fulfills the api.Validator interface
-func (location TOLocation) Validate(db *sqlx.DB) []error {
-	validName := validation.NewStringRule(IsValidLocationName, "invalid characters found - Use alphanumeric . or - or _ .")
+func (coordinate TOCoordinate) Validate(db *sqlx.DB) []error {
+	validName := validation.NewStringRule(IsValidCoordinateName, "invalid characters found - Use alphanumeric . or - or _ .")
 	latitudeErr := "Must be a floating point number within the range +-90"
 	longitudeErr := "Must be a floating point number within the range +-180"
 	errs := validation.Errors{
-		"name":      validation.Validate(location.Name, validation.Required, validName),
-		"latitude":  validation.Validate(location.Latitude, validation.Min(-90.0).Error(latitudeErr), validation.Max(90.0).Error(latitudeErr)),
-		"longitude": validation.Validate(location.Longitude, validation.Min(-180.0).Error(longitudeErr), validation.Max(180.0).Error(longitudeErr)),
+		"name":      validation.Validate(coordinate.Name, validation.Required, validName),
+		"latitude":  validation.Validate(coordinate.Latitude, validation.Min(-90.0).Error(latitudeErr), validation.Max(90.0).Error(latitudeErr)),
+		"longitude": validation.Validate(coordinate.Longitude, validation.Min(-180.0).Error(longitudeErr), validation.Max(180.0).Error(longitudeErr)),
 	}
 	return tovalidate.ToErrors(errs)
 }
 
-//The TOLocation implementation of the Creator interface
+//The TOCoordinate implementation of the Creator interface
 //all implementations of Creator should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a location with conflicting values exists
+//ParsePQUniqueConstraintError is used to determine if a coordinate with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-//The insert sql returns the id and lastUpdated values of the newly inserted location and have
+//The insert sql returns the id and lastUpdated values of the newly inserted coordinate and have
 //to be added to the struct
-func (location *TOLocation) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (coordinate *TOCoordinate) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -137,12 +137,12 @@ func (location *TOLocation) Create(db *sqlx.DB, user auth.CurrentUser) (error, t
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
-	resultRows, err := tx.NamedQuery(insertQuery(), location)
+	resultRows, err := tx.NamedQuery(insertQuery(), coordinate)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
 			if eType == tc.DataConflictError {
-				return errors.New("a location with " + err.Error()), eType
+				return errors.New("a coordinate with " + err.Error()), eType
 			}
 			return err, eType
 		} else {
@@ -163,16 +163,16 @@ func (location *TOLocation) Create(db *sqlx.DB, user auth.CurrentUser) (error, t
 		}
 	}
 	if rowsAffected == 0 {
-		err = errors.New("no location was inserted, no id was returned")
+		err = errors.New("no coordinate was inserted, no id was returned")
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	} else if rowsAffected > 1 {
-		err = errors.New("too many ids returned from location insert")
+		err = errors.New("too many ids returned from coordinate insert")
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
-	location.SetKeys(map[string]interface{}{"id": id})
-	location.LastUpdated = &lastUpdated
+	coordinate.SetKeys(map[string]interface{}{"id": id})
+	coordinate.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
@@ -182,7 +182,7 @@ func (location *TOLocation) Create(db *sqlx.DB, user auth.CurrentUser) (error, t
 	return nil, tc.NoError
 }
 
-func (location *TOLocation) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (coordinate *TOCoordinate) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
 	// Query Parameters to Database Query column mappings
@@ -201,30 +201,30 @@ func (location *TOLocation) Read(db *sqlx.DB, parameters map[string]string, user
 
 	rows, err := db.NamedQuery(query, queryValues)
 	if err != nil {
-		log.Errorf("Error querying Location: %v", err)
+		log.Errorf("Error querying Coordinate: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
 	}
 	defer rows.Close()
 
-	Locations := []interface{}{}
+	Coordinates := []interface{}{}
 	for rows.Next() {
-		var s TOLocation
+		var s TOCoordinate
 		if err = rows.StructScan(&s); err != nil {
-			log.Errorf("error parsing Location rows: %v", err)
+			log.Errorf("error parsing Coordinate rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
-		Locations = append(Locations, s)
+		Coordinates = append(Coordinates, s)
 	}
 
-	return Locations, []error{}, tc.NoError
+	return Coordinates, []error{}, tc.NoError
 }
 
-//The TOLocation implementation of the Updater interface
+//The TOCoordinate implementation of the Updater interface
 //all implementations of Updater should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a location with conflicting values exists
+//ParsePQUniqueConstraintError is used to determine if a coordinate with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (location *TOLocation) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (coordinate *TOCoordinate) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -241,13 +241,13 @@ func (location *TOLocation) Update(db *sqlx.DB, user auth.CurrentUser) (error, t
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
-	log.Debugf("about to run exec query: %s with location: %++v", updateQuery(), location)
-	resultRows, err := tx.NamedQuery(updateQuery(), location)
+	log.Debugf("about to run exec query: %s with coordinate: %++v", updateQuery(), coordinate)
+	resultRows, err := tx.NamedQuery(updateQuery(), coordinate)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
 			if eType == tc.DataConflictError {
-				return errors.New("a location with " + err.Error()), eType
+				return errors.New("a coordinate with " + err.Error()), eType
 			}
 			return err, eType
 		} else {
@@ -267,10 +267,10 @@ func (location *TOLocation) Update(db *sqlx.DB, user auth.CurrentUser) (error, t
 		}
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
-	location.LastUpdated = &lastUpdated
+	coordinate.LastUpdated = &lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return errors.New("no location found with this id"), tc.DataMissingError
+			return errors.New("no coordinate found with this id"), tc.DataMissingError
 		} else {
 			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
@@ -284,9 +284,9 @@ func (location *TOLocation) Update(db *sqlx.DB, user auth.CurrentUser) (error, t
 	return nil, tc.NoError
 }
 
-//The Location implementation of the Deleter interface
+//The Coordinate implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (location *TOLocation) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (coordinate *TOCoordinate) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -303,8 +303,8 @@ func (location *TOLocation) Delete(db *sqlx.DB, user auth.CurrentUser) (error, t
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
-	log.Debugf("about to run exec query: %s with location: %++v", deleteQuery(), location)
-	result, err := tx.NamedExec(deleteQuery(), location)
+	log.Debugf("about to run exec query: %s with coordinate: %++v", deleteQuery(), coordinate)
+	result, err := tx.NamedExec(deleteQuery(), coordinate)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -315,7 +315,7 @@ func (location *TOLocation) Delete(db *sqlx.DB, user auth.CurrentUser) (error, t
 	}
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
-			return errors.New("no location with that id found"), tc.DataMissingError
+			return errors.New("no coordinate with that id found"), tc.DataMissingError
 		} else {
 			return fmt.Errorf("this delete affected too many rows: %d", rowsAffected), tc.SystemError
 		}
@@ -337,13 +337,13 @@ longitude,
 last_updated,
 name
 
-FROM location l`
+FROM coordinate c`
 	return query
 }
 
 func updateQuery() string {
 	query := `UPDATE
-location SET
+coordinate SET
 latitude=:latitude,
 longitude=:longitude,
 name=:name
@@ -352,7 +352,7 @@ WHERE id=:id RETURNING last_updated`
 }
 
 func insertQuery() string {
-	query := `INSERT INTO location (
+	query := `INSERT INTO coordinate (
 latitude,
 longitude,
 name) VALUES (
@@ -363,7 +363,7 @@ name) VALUES (
 }
 
 func deleteQuery() string {
-	query := `DELETE FROM location
+	query := `DELETE FROM coordinate
 WHERE id=:id`
 	return query
 }
