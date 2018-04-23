@@ -18,6 +18,6 @@
 FROM postgres:9.6
 
 COPY traffic_ops/app/db/create_tables.sql /docker-entrypoint-initdb.d/100-create_tables.sql
-COPY infrastructure/cdn-in-a-box/traffic_ops_db/initdb.d /docker-entrypoint-initdb.d
+COPY infrastructure/cdn-in-a-box/traffic_vault/initdb.d /docker-entrypoint-initdb.d
 
 RUN chmod 755 /docker-entrypoint-initdb.d/*
