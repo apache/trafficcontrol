@@ -32,8 +32,8 @@ services:
     ports:
       - 61443:61443
     volumes:
-      - conf:/opt/traffic_ops/app/conf
-      - logs:/var/log/traffic_ops
+      - conf:/opt/traffic_portal/app/conf
+      - logs:/var/log/traffic_portal
     networks:
       - cdnnet
 
