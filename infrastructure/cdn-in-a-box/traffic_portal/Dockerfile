@@ -59,6 +59,9 @@ RUN mkdir -p /etc/traffic_portal
 RUN mkdir -p /etc/logrotate.d
 RUN mkdir -p /etc/init.d
 RUN mkdir -p /var/log/traffic_portal
+RUN mkdir -p /etc/traffic_portal/conf/
+RUN mkdir -p /etc/pki/tls/private
+RUN mkdir -p /etc/pki/tls/certs
 RUN mkdir -p ${TP_HOME}/server
 
 # Copy the final product into its proper place(s)
