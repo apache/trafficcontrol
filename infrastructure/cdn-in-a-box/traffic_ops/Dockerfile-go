@@ -29,7 +29,8 @@ COPY lib /go/src/github.com/apache/incubator-trafficcontrol/lib
 
 WORKDIR /go/src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
 
-RUN go get -v && go install -ldflags "-X main.version=traffic_ops-$(cat ../../VERSION)-$(git rev-list HEAD | wc -l|tr -d ' ').$(git rev-parse --short=8 HEAD).el7 -B 0x`git rev-parse HEAD`"
+RUN go get -v
+RUN go install -ldflags "-X main.version=traffic_ops-$(cat ../../VERSION)-$(git rev-list HEAD | wc -l|tr -d ' ').$(git rev-parse --short=8 HEAD).el7 -B 0x`git rev-parse HEAD`"
 
 
 # trafficops-go is the runtime image

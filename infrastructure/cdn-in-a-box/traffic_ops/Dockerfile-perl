@@ -49,12 +49,13 @@ RUN yum -y install \
 
 # Build stage gets traffic ops source in place and installs perl modules using carton
 FROM trafficops-perl-base AS trafficops-perl-build
- 
+
 RUN yum -y install \
     cpanminus\
     expat-devel\
-    git\
-    && yum -y clean all
+    git
+
+RUN yum -y clean all
 
 RUN cpanm Carton
 COPY traffic_ops/app /opt/traffic_ops/app
@@ -63,6 +64,7 @@ WORKDIR /opt/traffic_ops/app
 RUN POSTGRES_HOME=/usr/pgsql-9.6 /usr/local/bin/carton || cat /root/.cpanm/work/*/build.log
 RUN /opt/traffic_ops/install/bin/install_go.sh
 RUN /opt/traffic_ops/install/bin/install_goose.sh
+RUN /opt/traffic_ops/install/bin/download_web_deps
 
 # Trafficops Perl stage runs hypnotoad
 FROM trafficops-perl-base AS trafficops-perl
