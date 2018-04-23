@@ -18,7 +18,7 @@
 FROM node:latest AS trafficportal-build
 
 # Getting the whole source.. should eventually find a way to not include everything (since we don't need it all)
-COPY traffic_portal/ /
+COPY traffic_portal /traffic_portal
 
 # Installs dependencies
 RUN apt-get update -y && apt-get install -y libffi-dev ruby-dev rubygems vim
