@@ -87,7 +87,7 @@ TPCONF
 sleep 3
 
 # Print out the status, because trafficportal will fail silently if you let it
-/etc/init.d/trafficportal status
+/etc/init.d/traffic_portal status
 
 #Fallback
 if [[ ! -f /var/log/traffic_portal/traffic_portal.log ]]; then
