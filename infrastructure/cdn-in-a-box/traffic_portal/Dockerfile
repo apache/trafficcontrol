@@ -79,7 +79,7 @@ RUN chmod +x /etc/init.d/traffic_portal
 
 EXPOSE 61443
 
-RUN chmod +x /run.sh
 COPY infrastructure/cdn-in-a-box/traffic_portal/run.sh /
+RUN chmod +x /run.sh
 
 CMD /run.sh
