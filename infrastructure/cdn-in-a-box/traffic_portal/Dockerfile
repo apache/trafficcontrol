@@ -24,7 +24,7 @@ COPY traffic_portal/ /
 RUN apt-get update -y && apt-get install -y libffi-dev ruby-dev rubygems vim
 
 # Installs rubygem dependencies
-RUN gem update --system > /dev/null
+RUN gem update --system
 RUN gem install --no-rdoc --no-ri compass
 RUN gem install --no-rdoc --no-ri sass -v 3.4.22
 
@@ -50,18 +50,11 @@ ENV TP_HOME /opt/traffic_portal
 # The source location in the previous build stage
 ENV SRC /traffic_portal
 
-# This really ought to be taken care of by docker-compose, but idk; the other pieces are doing this
-ENV TO_PORT 443
-ENV TO_HOST trafficops-go
-
 # Setting up directory structure
 RUN mkdir -p /etc/traffic_portal
 RUN mkdir -p /etc/logrotate.d
 RUN mkdir -p /etc/init.d
 RUN mkdir -p /var/log/traffic_portal
-RUN mkdir -p /etc/traffic_portal/conf/
-RUN mkdir -p /etc/pki/tls/private
-RUN mkdir -p /etc/pki/tls/certs
 RUN mkdir -p ${TP_HOME}/server
 
 # Copy the final product into its proper place(s)
