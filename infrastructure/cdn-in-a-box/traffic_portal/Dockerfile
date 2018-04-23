@@ -24,7 +24,7 @@ COPY traffic_portal/ /
 RUN apt-get update -y && apt-get install -y libffi-dev ruby-dev rubygems vim
 
 # Installs rubygem dependencies
-RUN gem update --system
+RUN gem update --system > /dev/null
 RUN gem install --no-rdoc --no-ri compass
 RUN gem install --no-rdoc --no-ri sass -v 3.4.22
 
