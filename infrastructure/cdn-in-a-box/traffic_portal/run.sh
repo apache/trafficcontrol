@@ -83,4 +83,15 @@ TPCONF
 
 /etc/init.d/traffic_portal start
 
+# Give trafficportal a second to create the logfile
+sleep 3
+
+# Print out the status, because trafficportal will fail silently if you let it
+/etc/init.d/trafficportal status
+
+#Fallback
+if [[ ! -f /var/log/traffic_portal/traffic_portal.log ]]; then
+	touch /var/log/traffic_portal/traffic_portal.log
+fi
+
 exec tail -f /var/log/traffic_portal/traffic_portal.log
