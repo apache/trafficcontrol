@@ -50,6 +50,10 @@ ENV TP_HOME /opt/traffic_portal
 # The source location in the previous build stage
 ENV SRC /traffic_portal
 
+# This really ought to be taken care of by docker-compose, but idk; the other pieces are doing this
+ENV TO_PORT 443
+ENV TO_HOST trafficops-go
+
 # Setting up directory structure
 RUN mkdir -p /etc/traffic_portal
 RUN mkdir -p /etc/logrotate.d
