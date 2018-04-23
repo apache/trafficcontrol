@@ -125,7 +125,6 @@ psql -h "$DB_SERVER" -U "$DB_USER" -p "$DB_PORT" -c '\du'
 >&2 echo "Postgres is up"
 
 
-useradd trafops
 export PERL5LIB=$TO/lib:$TO/local/lib/perl5
 cd $TO || (echo "NO $TO found" && exit 1)
 

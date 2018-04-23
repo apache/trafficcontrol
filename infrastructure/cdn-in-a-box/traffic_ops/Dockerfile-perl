@@ -95,4 +95,6 @@ COPY infrastructure/cdn-in-a-box/traffic_ops/run-perl.sh /
 
 WORKDIR /opt/traffic_ops/app
 RUN mkdir -p /var/log/traffic_ops
+
+RUN useradd trafops
 CMD /run-perl.sh
