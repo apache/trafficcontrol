@@ -18,7 +18,7 @@
 FROM node:latest AS trafficportal-build
 
 # Getting the whole source.. should eventually find a way to not include everything (since we don't need it all)
-COPY traffic_portal/ /
+COPY traffic_portal /traffic_portal
 
 # Installs dependencies
 RUN apt-get update -y && apt-get install -y libffi-dev ruby-dev rubygems vim
@@ -69,11 +69,9 @@ COPY --from=trafficportal-build ${SRC}/build/etc/init.d/traffic_portal /etc/init
 COPY --from=trafficportal-build ${SRC}/build/etc/logrotate.d/traffic_portal /etc/logrotate.d/
 COPY --from=trafficportal-build ${SRC}/build/etc/logrotate.d/traffic_portal-access /etc/logrotate.d/
 COPY --from=trafficportal-build ${SRC}/app/dist/ .
-RUN mv dist/* .
-RUN rmdir dist
 
 # Now to build the release info
-RUN echo -e "{\n\"Version\":\"2.1\",\n\"Build Date\":\"$(dat +'%Y-%m-%d %H:%M:%S')\"\n}" > public/traffic_portal_release.json
+RUN echo -e "{\n\"Version\":\"2.1\",\n\"Build Date\":\"$(date +'%Y-%m-%d %H:%M:%S')\"\n}" > public/traffic_portal_release.json
 
 # Make some things executable
 RUN chmod +x ${TP_HOME}/node_modules/forever/bin/forever
