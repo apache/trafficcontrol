@@ -50,12 +50,13 @@ RUN yum -y install \
 
 # Build stage gets traffic ops source in place and installs perl modules using carton
 FROM trafficops-perl-base AS trafficops-perl-build
- 
+
 RUN yum -y install \
     cpanminus\
     expat-devel\
-    git\
-    && yum -y clean all
+    git
+
+RUN yum -y clean all
 
 RUN cpanm Carton
 COPY traffic_ops/app /opt/traffic_ops/app
