@@ -29,6 +29,8 @@ for v in ${envvars[*]}; do
 done
 
 mkdir -p /etc/traffic_portal/conf/
+mkdir -p /etc/pki/tls/private
+mkdir -p /etc/pki/tls/certs
 
 cat >/etc/traffic_portal/conf/config.js <<-TPCONF
 /*
