@@ -28,6 +28,7 @@ services:
     env_file:
       - traffic_vault.env
       - traffic_ops.env
+      - traffic_portal.env
     ports:
       - 61443:61443
     volumes:
