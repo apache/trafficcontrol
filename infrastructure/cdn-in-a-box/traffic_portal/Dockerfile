@@ -72,6 +72,9 @@ COPY --from=trafficportal-build ${SRC}/build/etc/init.d/traffic_portal /etc/init
 COPY --from=trafficportal-build ${SRC}/build/etc/logrotate.d/traffic_portal /etc/logrotate.d/
 COPY --from=trafficportal-build ${SRC}/build/etc/logrotate.d/traffic_portal-access /etc/logrotate.d/
 COPY --from=trafficportal-build ${SRC}/app/dist/ .
+COPY infrastructure/cdn-in-a-box/traffic_portal/server.key /etc/pki/tls/private/localhost.key
+COPY infrastructure/cdn-in-a-box/traffic_portal/server.crt /etc/pki/tls/certs/localhost.crt
+COPY infrastructure/cdn-in-a-box/traffic_portal/server.crt /etc/pki/tls/certs/ca-bundle.crt
 
 # Now to build the release info
 RUN echo -e "{\n\"Version\":\"2.1\",\n\"Build Date\":\"$(date +'%Y-%m-%d %H:%M:%S')\"\n}" > public/traffic_portal_release.json
