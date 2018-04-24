@@ -17,14 +17,12 @@ package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-
-import org.apache.wicket.ajax.json.JSONArray;
-import org.apache.wicket.ajax.json.JSONException;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
 
 public class AnonymousIpWhitelistTest {
 
@@ -32,12 +30,14 @@ public class AnonymousIpWhitelistTest {
 	AnonymousIpWhitelist ip6whitelist;
 
 	@Before
-	public void setup() throws JSONException, NetworkNodeException {
+	public void setup() throws IOException, JsonUtilsException, NetworkNodeException {
+		final ObjectMapper mapper = new ObjectMapper();
+
 		ip4whitelist = new AnonymousIpWhitelist();
-		ip4whitelist.init(new JSONArray("[\"192.168.30.0/24\", \"10.0.2.0/24\", \"10.0.0.0/16\"]"));
+		ip4whitelist.init(mapper.readTree("[\"192.168.30.0/24\", \"10.0.2.0/24\", \"10.0.0.0/16\"]"));
 
 		ip6whitelist = new AnonymousIpWhitelist();
-		ip6whitelist.init(new JSONArray("[\"::1/32\", \"2001::/64\"]"));
+		ip6whitelist.init(mapper.readTree("[\"::1/32\", \"2001::/64\"]"));
 	}
 
 	@Test
@@ -104,8 +104,10 @@ public class AnonymousIpWhitelistTest {
 	}
 
 	@Test
-	public void testWhitelistCreationLeafFirst() throws JSONException, NetworkNodeException {
-		ip4whitelist.init(new JSONArray("[\"10.0.2.0/24\", \"10.0.0.0/16\"]"));
+	public void testWhitelistCreationLeafFirst() throws IOException, JsonUtilsException, NetworkNodeException {
+		final ObjectMapper mapper = new ObjectMapper();
+
+		ip4whitelist.init(mapper.readTree("[\"10.0.2.0/24\", \"10.0.0.0/16\"]"));
 
 		assertThat(ip4whitelist.contains("10.0.2.1"), equalTo(true));
 
@@ -113,8 +115,10 @@ public class AnonymousIpWhitelistTest {
 	}
 
 	@Test
-	public void testWhitelistCreationParentFirst() throws JSONException, NetworkNodeException {
-		ip4whitelist.init(new JSONArray("[\"10.0.0.0/16\"], \"10.0.2.0/24\""));
+	public void testWhitelistCreationParentFirst() throws IOException, JsonUtilsException, NetworkNodeException {
+		final ObjectMapper mapper = new ObjectMapper();
+
+		ip4whitelist.init(mapper.readTree("[\"10.0.0.0/16\"], \"10.0.2.0/24\""));
 
 		assertThat(ip4whitelist.contains("10.0.2.1"), equalTo(true));
 
@@ -123,52 +127,59 @@ public class AnonymousIpWhitelistTest {
 
 	/* IPv4 validation */
 
-	@Test(expected = JSONException.class)
-	public void badIPv4Input1() throws JSONException, NetworkNodeException {
+	@Test(expected = IOException.class)
+	public void badIPv4Input1() throws IOException, JsonUtilsException, NetworkNodeException {
+		final ObjectMapper mapper = new ObjectMapper();
 		AnonymousIpWhitelist badlist = new AnonymousIpWhitelist();
-		badlist.init(new JSONArray("[\"\"192.168.1/24\"]"));
+		badlist.init(mapper.readTree("[\"\"192.168.1/24\"]"));
 		assertThat(badlist.contains("192.168.0.1"), equalTo(false));
 	}
 
-	@Test(expected = JSONException.class)
-	public void badIPv4Input2() throws JSONException, NetworkNodeException {
+	@Test(expected = IOException.class)
+	public void badIPv4Input2() throws IOException, JsonUtilsException, NetworkNodeException {
+		final ObjectMapper mapper = new ObjectMapper();
 		AnonymousIpWhitelist badlist = new AnonymousIpWhitelist();
-		badlist.init(new JSONArray("[\"\"256.168.0.1/24\"]"));
+		badlist.init(mapper.readTree("[\"\"256.168.0.1/24\"]"));
 		assertThat(badlist.contains("192.168.0.1"), equalTo(false));
 	}
 
-	@Test(expected = JSONException.class)
-	public void badNetmaskInput1() throws JSONException, NetworkNodeException {
+	@Test(expected = IOException.class)
+	public void badNetmaskInput1() throws IOException, JsonUtilsException, NetworkNodeException {
+		final ObjectMapper mapper = new ObjectMapper();
 		AnonymousIpWhitelist badlist = new AnonymousIpWhitelist();
-		badlist.init(new JSONArray("[\"\"192.168.0.1/33\"]"));
+		badlist.init(mapper.readTree("[\"\"192.168.0.1/33\"]"));
 		assertThat(badlist.contains("192.168.0.1"), equalTo(false));
 	}
 
-	@Test(expected = JSONException.class)
-	public void badNetmaskInput2() throws JSONException, NetworkNodeException {
+	@Test(expected = IOException.class)
+	public void badNetmaskInput2() throws IOException, JsonUtilsException, NetworkNodeException {
+		final ObjectMapper mapper = new ObjectMapper();
 		AnonymousIpWhitelist badlist = new AnonymousIpWhitelist();
-		badlist.init(new JSONArray("[\"\"::1/129\"]"));
+		badlist.init(mapper.readTree("[\"\"::1/129\"]"));
 		assertThat(badlist.contains("::1"), equalTo(false));
 	}
 
-	@Test(expected = JSONException.class)
-	public void badNetmaskInput3() throws JSONException, NetworkNodeException {
+	@Test(expected = IOException.class)
+	public void badNetmaskInput3() throws IOException, JsonUtilsException, NetworkNodeException {
+		final ObjectMapper mapper = new ObjectMapper();
 		AnonymousIpWhitelist badlist = new AnonymousIpWhitelist();
-		badlist.init(new JSONArray("[\"\"192.168.0.1/-1\"]"));
+		badlist.init(mapper.readTree("[\"\"192.168.0.1/-1\"]"));
 		assertThat(badlist.contains("192.168.0.1"), equalTo(false));
 	}
 
-	@Test(expected = JSONException.class)
-	public void validIPv4Input() throws JSONException, NetworkNodeException {
+	@Test(expected = IOException.class)
+	public void validIPv4Input() throws IOException, JsonUtilsException, NetworkNodeException {
+		final ObjectMapper mapper = new ObjectMapper();
 		AnonymousIpWhitelist badlist = new AnonymousIpWhitelist();
-		badlist.init(new JSONArray("[\"\"192.168.0.1/32\"]"));
+		badlist.init(mapper.readTree("[\"\"192.168.0.1/32\"]"));
 		assertThat(badlist.contains("192.168.0.1"), equalTo(false));
 	}
 
-	@Test(expected = JSONException.class)
-	public void validIPv6Input() throws JSONException, NetworkNodeException {
+	@Test(expected = IOException.class)
+	public void validIPv6Input() throws IOException, JsonUtilsException, NetworkNodeException {
+		final ObjectMapper mapper = new ObjectMapper();
 		AnonymousIpWhitelist badlist = new AnonymousIpWhitelist();
-		badlist.init(new JSONArray("[\"\"::1/128\"]"));
+		badlist.init(mapper.readTree("[\"\"::1/128\"]"));
 		assertThat(badlist.contains("::1"), equalTo(false));
 	}
 
