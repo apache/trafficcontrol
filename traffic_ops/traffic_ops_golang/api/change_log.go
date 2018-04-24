@@ -51,28 +51,34 @@ const (
 )
 
 func CreateChangeLog(level string, action string, i Identifier, user auth.CurrentUser, db *sqlx.DB) error {
-	keys, _ := i.GetKeys()
-	keysString := "{ "
-	for key, value := range keys {
-		keysString += key + ":" + fmt.Sprintf("%v", value) + " "
+	t, ok := i.(ChangeLogger)
+	if !ok {
+		keys, _ := i.GetKeys()
+		return CreateChangeLogBuildMsg(level, action, user, db, i.GetType(), i.GetAuditName(), keys)
 	}
-	keysString += "}"
-	message := action + " " + i.GetType() + ": " + i.GetAuditName() + " keys: " + keysString
-	// if the object has its own log message generation, use it
-	if t, ok := i.(ChangeLogger); ok {
-		m, err := t.ChangeLogMessage(action)
-		if err != nil {
-			log.Errorf("error %++v creating log message for %++v", err, t)
-			// use the default message in this case
-		} else {
-			message = m
-		}
-	}
-
-	query := `INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`
-	log.Debugf("about to exec %s with %s", query, message)
-	_, err := db.Exec(query, level, message, user.ID)
+	msg, err := t.ChangeLogMessage(action)
 	if err != nil {
+		log.Errorf("%++v creating log message for %++v", err, t)
+		keys, _ := i.GetKeys()
+		return CreateChangeLogBuildMsg(level, action, user, db, i.GetType(), i.GetAuditName(), keys)
+	}
+	return CreateChangeLogMsg(level, user, db, msg)
+}
+
+func CreateChangeLogBuildMsg(level string, action string, user auth.CurrentUser, db *sqlx.DB, objType string, auditName string, keys map[string]interface{}) error {
+	keyStr := "{ "
+	for key, value := range keys {
+		keyStr += key + ":" + fmt.Sprintf("%v", value) + " "
+	}
+	keyStr += "}"
+	msg := action + " " + objType + ": " + auditName + " keys: " + keyStr
+	return CreateChangeLogMsg(level, user, db, msg)
+}
+
+func CreateChangeLogMsg(level string, user auth.CurrentUser, db *sqlx.DB, msg string) error {
+	query := `INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`
+	log.Debugf("about to exec %s with %s", query, msg)
+	if _, err := db.Exec(query, level, msg, user.ID); err != nil {
 		log.Errorf("received error: %++v from audit log insertion", err)
 		return err
 	}
