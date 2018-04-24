@@ -38,8 +38,9 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/coordinate"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/crconfig"
 	dsrequest "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request"
-	dsserver "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/servers"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request/comment"
+	dsserver "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/servers"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservicesregexes"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/division"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/hwinfo"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
@@ -154,7 +155,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodDelete, `regions/{id}$`, api.DeleteHandler(region.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		// get all edge servers associated with a delivery service (from deliveryservice_server table)
-		{1.1, http.MethodGet, `deliveryservices/{id}/servers$`, api.ReadHandler(dsserver.GetRefType(), d.DB),auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `deliveryservices/{id}/servers$`, api.ReadHandler(dsserver.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Server
 		{1.1, http.MethodGet, `servers/checks$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
@@ -223,6 +224,14 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.3, http.MethodPut, `roles/?$`, api.UpdateHandler(role.GetRefType(), d.DB), auth.PrivLevelAdmin, Authenticated, nil},
 		{1.3, http.MethodPost, `roles/?$`, api.CreateHandler(role.GetRefType(), d.DB), auth.PrivLevelAdmin, Authenticated, nil},
 		{1.3, http.MethodDelete, `roles/?$`, api.DeleteHandler(role.GetRefType(), d.DB), auth.PrivLevelAdmin, Authenticated, nil},
+
+		//Delivery Services Regexes
+		{1.1, http.MethodGet, `deliveryservices_regexes/?(\.json)?$`, deliveryservicesregexes.Get(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `deliveryservices/{dsid}/regexes/?(\.json)?$`, deliveryservicesregexes.DSGet(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `deliveryservices/{dsid}/regexes/{regexid}?(\.json)?$`, deliveryservicesregexes.DSGetID(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPost, `deliveryservices/{dsid}/regexes/?(\.json)?$`, deliveryservicesregexes.Post(d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodPut, `deliveryservices/{dsid}/regexes/{regexid}?(\.json)?$`, deliveryservicesregexes.Put(d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `deliveryservices/{dsid}/regexes/{regexid}?(\.json)?$`, deliveryservicesregexes.Delete(d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//Servers
 		{1.3, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},

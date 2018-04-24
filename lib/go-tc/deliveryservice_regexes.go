@@ -31,3 +31,37 @@ type DeliveryServiceRegex struct {
 	SetNumber int    `json:"setNumber"`
 	Pattern   string `json:"pattern"`
 }
+
+type DeliveryServiceRegexV12 struct {
+	DeliveryServiceRegex
+}
+
+type DeliveryServiceRegexV13 struct {
+	DeliveryServiceRegexV12
+}
+
+type DeliveryServiceIDRegexResponse struct {
+	Response []DeliveryServiceIDRegex `json:"response"`
+}
+
+type DeliveryServiceIDRegex struct {
+	ID        int    `json:"id"`
+	Type      int    `json:"type"`
+	TypeName  string `json:"typeName"`
+	SetNumber int    `json:"setNumber"`
+	Pattern   string `json:"pattern"`
+}
+
+type DeliveryServiceIDRegexV12 struct {
+	DeliveryServiceIDRegex
+}
+
+type DeliveryServiceIDRegexV13 struct {
+	DeliveryServiceIDRegexV12
+}
+
+type DeliveryServiceRegexPost struct {
+	Type      int    `json:"type"`
+	SetNumber int    `json:"setNumber"`
+	Pattern   string `json:"pattern"`
+}
