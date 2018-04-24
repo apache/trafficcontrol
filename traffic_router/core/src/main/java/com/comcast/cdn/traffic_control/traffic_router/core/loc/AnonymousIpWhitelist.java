@@ -15,8 +15,8 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
 import org.apache.log4j.Logger;
-import org.apache.wicket.ajax.json.JSONArray;
-import org.apache.wicket.ajax.json.JSONException;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class AnonymousIpWhitelist {
 	private static final Logger LOGGER = Logger.getLogger(AnonymousIpWhitelist.class);
@@ -27,10 +27,12 @@ public class AnonymousIpWhitelist {
 		whitelist = new NetworkNode.SuperNode();
 	}
 
-	public void init(final JSONArray config) throws JSONException, NetworkNodeException {
-		for (int i = 0; i < config.length(); i++) {
-			final String network = config.getString(i);
-			this.add(network);
+	public void init(final JsonNode config) throws JsonUtilsException, NetworkNodeException {
+		if (config.isArray()) {
+			for (final JsonNode node : config) {
+				final String network = node.asText();
+				this.add(network);
+			}
 		}
 	}
 
