@@ -562,14 +562,14 @@ public class ConfigHandler {
 		}
 	}
 
-	private void parseAnonymousIpConfig(final JSONObject jo) throws JSONException {
+	private void parseAnonymousIpConfig(final JsonNode jo) throws JsonUtilsException {
 		final String anonymousPollingUrl = "anonymousip.polling.url";
 		final String anonymousPollingInterval = "anonymousip.polling.interval";
 		final String anonymousPolicyConfiguration = "anonymousip.policy.configuration";
-		
-		final JSONObject config = jo.getJSONObject("config");
-		final String configUrl = config.optString(anonymousPolicyConfiguration, null);
-		final String databaseUrl = config.optString(anonymousPollingUrl, null);
+
+		final JsonNode config = JsonUtils.getJsonNode(jo,"config");
+		final String configUrl = JsonUtils.optString(config, anonymousPolicyConfiguration, null);
+		final String databaseUrl = JsonUtils.optString(config, anonymousPollingUrl, null);
 
 		if (configUrl == null) {
 			LOGGER.info(anonymousPolicyConfiguration + " not configured; stopping service updater and disabling feature");
@@ -586,11 +586,13 @@ public class ConfigHandler {
 		}
 
 		if (jo.has(deliveryServicesKey)) {
-			final JSONObject dss = jo.getJSONObject(deliveryServicesKey);
-			for (final String ds : JSONObject.getNames(dss)) {
-				if (dss.getJSONObject(ds).has("anonymousBlockingEnabled") &&
-						dss.getJSONObject(ds).getString("anonymousBlockingEnabled").equals("true")) {
-					final long interval = config.optLong(anonymousPollingInterval);
+			final JsonNode dss = JsonUtils.getJsonNode(jo, deliveryServicesKey);
+			final Iterator<String> dsNames = dss.fieldNames();
+			while (dsNames.hasNext()) {
+				final String ds = dsNames.next();
+				final JsonNode dsNode = JsonUtils.getJsonNode(dss, ds);
+				if (JsonUtils.optString(dsNode, "anonymousBlockingEnabled").equals("true")) {
+					final long interval = JsonUtils.optLong(config, anonymousPollingInterval);
 					getAnonymousIpConfigUpdater().setDataBaseURL(configUrl, interval);
 					getAnonymousIpDatabaseUpdater().setDataBaseURL(databaseUrl, interval);
 					AnonymousIp.getCurrentConfig().enabled = true;

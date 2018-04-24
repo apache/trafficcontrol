@@ -15,15 +15,15 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
 import java.io.File;
-import java.io.FileReader;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.net.InetAddresses;
+import com.maxmind.geoip2.model.AnonymousIpResponse;
 import org.apache.log4j.Logger;
-import org.apache.wicket.ajax.json.JSONException;
-import org.apache.wicket.ajax.json.JSONObject;
-import org.apache.wicket.ajax.json.JSONTokener;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
@@ -33,8 +33,8 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.HTTPRouteResul
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
-import com.google.common.net.InetAddresses;
-import com.maxmind.geoip2.model.AnonymousIpResponse;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 
 public final class AnonymousIp {
 
@@ -91,22 +91,22 @@ public final class AnonymousIp {
 		return ipv6Whitelist;
 	}
 
-	private static void parseIPv4Whitelist(final JSONObject config, final AnonymousIp anonymousIp) throws JSONException {
-		if (config.optJSONArray("ip4Whitelist") != null) {
+	private static void parseIPv4Whitelist(final JsonNode config, final AnonymousIp anonymousIp) throws JsonUtilsException {
+		if (config.has("ip4Whitelist")) {
 			try {
 				anonymousIp.ipv4Whitelist = new AnonymousIpWhitelist();
-				anonymousIp.ipv4Whitelist.init(config.optJSONArray("ip4Whitelist"));
+				anonymousIp.ipv4Whitelist.init(JsonUtils.getJsonNode(config, "ip4Whitelist"));
 			} catch (NetworkNodeException e) {
 				LOGGER.error("Anonymous Ip ERR: Network node err ", e);
 			}
 		}
 	}
 
-	private static void parseIPv6Whitelist(final JSONObject config, final AnonymousIp anonymousIp) throws JSONException {
-		if (config.optJSONArray("ip6Whitelist") != null) {
+	private static void parseIPv6Whitelist(final JsonNode config, final AnonymousIp anonymousIp) throws JsonUtilsException {
+		if (config.has("ip6Whitelist")) {
 			try {
-				anonymousIp.ipv6Whitelist = new AnonymousIpWhitelist();
-				anonymousIp.ipv6Whitelist.init(config.optJSONArray("ip6Whitelist"));
+				anonymousIp.ipv4Whitelist = new AnonymousIpWhitelist();
+				anonymousIp.ipv4Whitelist.init(JsonUtils.getJsonNode(config, "ip6Whitelist"));
 			} catch (NetworkNodeException e) {
 				LOGGER.error("Anonymous Ip ERR: Network node err ", e);
 			}
@@ -114,15 +114,15 @@ public final class AnonymousIp {
 	}
 
 	@SuppressWarnings({ "PMD.NPathComplexity", "PMD.CyclomaticComplexity" })
-	private static AnonymousIp parseConfigJson(final JSONObject config) {
+	private static AnonymousIp parseConfigJson(final JsonNode config) {
 		final AnonymousIp anonymousIp = new AnonymousIp();
 		try {
-			final JSONObject blockingTypes = config.getJSONObject("anonymousIp");
+			final JsonNode blockingTypes = JsonUtils.getJsonNode(config, "anonymousIp");
 
-			anonymousIp.blockAnonymousIp = blockingTypes.getBoolean("blockAnonymousVPN");
-			anonymousIp.blockHostingProvider = blockingTypes.getBoolean("blockHostingProvider");
-			anonymousIp.blockPublicProxy = blockingTypes.getBoolean("blockPublicProxy");
-			anonymousIp.blockTorExitNode = blockingTypes.getBoolean("blockTorExitNode");
+			anonymousIp.blockAnonymousIp = JsonUtils.getBoolean(blockingTypes, "blockAnonymousVPN");
+			anonymousIp.blockHostingProvider = JsonUtils.getBoolean(blockingTypes, "blockHostingProvider");
+			anonymousIp.blockPublicProxy = JsonUtils.getBoolean(blockingTypes, "blockPublicProxy");
+			anonymousIp.blockTorExitNode = JsonUtils.getBoolean(blockingTypes, "blockTorExitNode");
 
 			anonymousIp.enabled = AnonymousIp.currentConfig.enabled;
 
@@ -130,7 +130,7 @@ public final class AnonymousIp {
 			parseIPv6Whitelist(config, anonymousIp);
 
 			if (config.has("redirectUrl")) {
-				anonymousIp.redirectUrl = config.getString("redirectUrl");
+				anonymousIp.redirectUrl = JsonUtils.getString(config, "redirectUrl");
 			}
 
 			return anonymousIp;
@@ -143,9 +143,10 @@ public final class AnonymousIp {
 
 	@SuppressWarnings({ "PMD.NPathComplexity" })
 	public static boolean parseConfigFile(final File f, final boolean verifyOnly) {
-		JSONObject json = null;
+		JsonNode json = null;
 		try {
-			json = new JSONObject(new JSONTokener(new FileReader(f)));
+			final ObjectMapper mapper = new ObjectMapper();
+			json = mapper.readTree(f);
 		} catch (Exception e) {
 			LOGGER.error("AnonymousIp ERR: json file exception " + f, e);
 			return false;
