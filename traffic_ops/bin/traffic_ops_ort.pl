@@ -2553,7 +2553,8 @@ sub set_uri {
 		( $log_level >> $DEBUG ) && print "DEBUG Setting external download URL.\n";
 	}
 	else {
-		$URI = "\/genfiles\/view\/$hostname_short\/" . $cfg_file_tracker->{$filename}->{'fname-in-TO'};
+		( $log_level >> $ERROR ) && print "ERROR Configuration File API not found!  Please upgrade to Traffic Ops 2.2.  Unable to continue.\n";
+		exit 1;
 	}
 
 	return if (!defined($cfg_file_tracker->{$filename}->{'fname-in-TO'}));
