@@ -21,10 +21,10 @@ services:
     image: trafficops-db
     build:
       context: ../..
-      dockerfile: infrastructure/cdn-in-a-box/traffic_vault/Dockerfile
+      dockerfile: infrastructure/cdn-in-a-box/traffic_ops_db/Dockerfile
     restart: always
     env_file:
-      - traffic_vault.env
+      - traffic_ops_db.env
       - traffic_ops.env
     ports:
       - 5432:5432
