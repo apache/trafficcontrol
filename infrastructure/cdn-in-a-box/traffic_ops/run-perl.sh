@@ -29,7 +29,7 @@ done
 
 export TO=/opt/traffic_ops/app
 
-# TODO: change sslmode=require when enabled in db 
+# TODO: change sslmode=require when enabled in db
 cat >$TO/db/dbconf.yml <<-DBCONF
 version: "1.0"
 name: dbconf.yml
