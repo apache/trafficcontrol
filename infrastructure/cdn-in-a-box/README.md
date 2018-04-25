@@ -32,7 +32,7 @@ Service                | Username         | Password
 -----------------------|------------------|-----------
 Traffic Ops (admin)    | `admin`          | `!!twelve`
 RIAK                   | `riakuser`       | `riakpass`
-Traffic Ops database | `traffic_ops`    | `password`
+Traffic Ops database   | `traffic_ops`    | `password`
 
 
 To know where these services are located on the local network, see [Ports and Interfaces](#ports)
