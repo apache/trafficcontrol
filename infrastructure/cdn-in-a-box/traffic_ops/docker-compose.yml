@@ -26,7 +26,7 @@ services:
     environment:
       - "USER=root"
     env_file:
-      - traffic_vault.env
+      - traffic_ops_db.env
       - traffic_ops.env
     ports:
       - 60443:60443
@@ -43,7 +43,7 @@ services:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/traffic_ops/Dockerfile-go
     env_file:
-      - traffic_vault.env
+      - traffic_ops_db.env
       - traffic_ops.env
     ports:
       - 443:443
