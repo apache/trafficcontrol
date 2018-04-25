@@ -66,7 +66,7 @@ module.exports = {
     },
     // set api 'base_url' to the traffic ops api url (all api calls made from the traffic portal will be proxied to the api base_url)
     api: {
-        base_url: "https://${TO_HOST}"
+        base_url: "https://${TO_HOST}/api/"
     },
     // default static files location (this is where the traffic portal html, css and javascript was installed. rpm installs these files at /opt/traffic_portal/public
     // change this to ./app/dist/public/ if you are running locally for development
