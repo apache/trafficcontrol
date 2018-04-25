@@ -24,7 +24,7 @@ Installation
 
 **Installing Traffic Stats:**
 
-	- See the `downloads <https://trafficcontrol.apache.org/downloads/index.html>`_ page for Traffic Control to get the lastest release.
+	- See the `downloads <https://trafficcontrol.apache.org/downloads/index.html>`_ page for Traffic Control to get the latest release.
 	- Follow our build `intructions <https://github.com/apache/incubator-trafficcontrol/tree/master/build>`_ to generate an RPM.
 	- Copy the RPM to your server
 	- perform the following command: ``sudo rpm -ivh <traffic_stats rpm>``
