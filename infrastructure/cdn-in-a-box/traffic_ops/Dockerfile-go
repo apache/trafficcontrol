@@ -22,6 +22,7 @@
 # build stage compiles traffic_ops_golang
 FROM golang:1.10 AS trafficops-build
 
+# TODO: generate BUILD_VERSION file prior -- just copy the file here
 COPY .git /go/src/github.com/apache/incubator-trafficcontrol/.git
 COPY VERSION /go/src/github.com/apache/incubator-trafficcontrol/VERSION
 COPY traffic_ops/traffic_ops_golang /go/src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
@@ -36,13 +37,14 @@ RUN go install -ldflags "-X main.version=traffic_ops-$(cat ../../VERSION)-$(git 
 # trafficops-go is the runtime image
 FROM postgres:9.6 AS trafficops-go
 
+
 ENV DB_SERVER=db
 ENV DB_PORT=5432
 ENV POSTGRES_PASSWORD=!!twelve
 ENV POSTGRES_USER=traffic_ops
 ENV DB_PASSWORD=password
 
-ENV TO_HOST=trafficops
+ENV TO_HOST=trafficops-go
 ENV TO_EMAIL=none@example.com
 ENV TO_SECRET=itsasecret
 ENV TP_HOST=none
@@ -51,12 +53,11 @@ ENV RIAK_USER=riakuser
 ENV RIAK_PASSWORD=riakpass
 EXPOSE 443
 
+COPY infrastructure/cdn-in-a-box/traffic_ops/run-go.sh /
 COPY --from=trafficops-build /go/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang
 
 RUN mkdir -p /var/log/traffic_ops
-RUN useradd trafops
-RUN chown -R trafops:trafops /opt/traffic_ops /var/log/traffic_ops
-
-COPY infrastructure/cdn-in-a-box/traffic_ops/run-go.sh /
+RUN chmod +x /run-go.sh
+RUN setcap cap_net_bind_service=+ep /opt/traffic_ops/app/bin/traffic_ops_golang
 
 CMD /run-go.sh /opt/traffic_ops/app/bin/traffic_ops_golang -cfg /opt/traffic_ops/app/conf/cdn.conf -dbcfg=/opt/traffic_ops/app/conf/production/database.conf
