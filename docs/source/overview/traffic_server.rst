@@ -15,7 +15,7 @@
 
 Traffic Server
 ==============
-The caches in a Traffic Control CDN are servers running the Apache Traffic Server software. See `ATS documentation <http://trafficserver.readthedocs.org/en/latest/>`_ for more information. Caches in a Traffic Control CDN are deployed in cache groups.
+The caches in a Traffic Control CDN are servers running the Apache Traffic Server software. See `ATS documentation <https://docs.trafficserver.apache.org/en/latest/index.html>`_ for more information. Caches in a Traffic Control CDN are deployed in cache groups.
 
 .. |arrow| image:: fwda.png
 
