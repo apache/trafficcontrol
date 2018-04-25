@@ -7,9 +7,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -29,7 +29,7 @@ done
 
 export TO=/opt/traffic_ops/app
 
-# TODO: change sslmode=require when enabled in db 
+# TODO: change sslmode=require when enabled in db
 cat >$TO/db/dbconf.yml <<-DBCONF
 version: "1.0"
 name: dbconf.yml
@@ -134,9 +134,9 @@ chown -R trafops:trafops .
 export GOPATH=/opt/traffic_ops/go
 export PATH=$PATH:$GOPATH/bin:/usr/local/go/bin
 
-cd $TO && ./db/admin.pl -env production upgrade
+./db/admin.pl -env production upgrade
 ./db/adduser.pl $TO_ADMIN_USER $TO_ADMIN_PASSWORD admin | tee /adduser.sql | psql -h "$DB_SERVER" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" -e
-cd $TO && ./local/bin/hypnotoad script/cdn
+./local/bin/hypnotoad script/cdn
 
 while [[ ! -f /var/log/traffic_ops/traffic_ops.log ]]; do
     echo waiting for /var/log/traffic_ops/traffic_ops.log
