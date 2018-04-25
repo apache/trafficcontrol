@@ -25,7 +25,6 @@ Use this guide to start developing applications that consume the Traffic Control
   traffic_portal
   traffic_router
   traffic_monitor
-  traffic_monitor_golang
   traffic_stats
   traffic_server
 
