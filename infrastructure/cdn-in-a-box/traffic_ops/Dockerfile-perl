@@ -79,7 +79,7 @@ ENV DB_PORT=5432
 ENV POSTGRES_USER=traffic_ops
 ENV DB_PASSWORD=password
 
-ENV TO_HOST=trafficops
+ENV TO_HOST=trafficops-go
 ENV TO_EMAIL=none@example.com
 ENV TO_SECRET=itsasecret
 ENV TP_HOST=none
