@@ -68,7 +68,8 @@ func TestCreateRouteMap(t *testing.T) {
 		{1.2, http.MethodGet, `path3`, PathThreeHandler, 0, false, []Middleware{}},
 	}
 
-	routeMap := CreateRouteMap(routes, authBase)
+	rawRoutes := []RawRoute{}
+	routeMap := CreateRouteMap(routes, rawRoutes, authBase)
 
 	route1Handler := routeMap["GET"][0].Handler
 

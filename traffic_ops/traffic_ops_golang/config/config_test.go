@@ -167,6 +167,7 @@ const (
 func TestLoadConfig(t *testing.T) {
 	var err error
 	var exp string
+	version := "Test Version"
 
 	// set up config paths
 	badPath := "/invalid-path/no-file-exists-here"
@@ -195,35 +196,35 @@ func TestLoadConfig(t *testing.T) {
 	defer os.Remove(goodRiakCfg) // clean up
 
 	// test bad paths
-	_, err = LoadConfig(badPath, badPath, badPath)
+	_, err = LoadConfig(badPath, badPath, badPath, version)
 	exp = fmt.Sprintf("reading CDN conf '%s'", badPath)
 	if !strings.HasPrefix(err.Error(), exp) {
 		t.Error("expected", exp, "got", err)
 	}
 
 	// bad json in cdn.conf
-	_, err = LoadConfig(badCfg, badCfg, badPath)
+	_, err = LoadConfig(badCfg, badCfg, badPath, version)
 	exp = fmt.Sprintf("unmarshalling '%s'", badCfg)
 	if !strings.HasPrefix(err.Error(), exp) {
 		t.Error("expected", exp, "got", err)
 	}
 
 	// good cdn.conf, bad db conf
-	_, err = LoadConfig(goodCfg, badPath, badPath)
+	_, err = LoadConfig(goodCfg, badPath, badPath, version)
 	exp = fmt.Sprintf("reading db conf '%s'", badPath)
 	if !strings.HasPrefix(err.Error(), exp) {
 		t.Error("expected", exp, "got", err)
 	}
 
 	// good cdn.conf,  bad json in database.conf
-	_, err = LoadConfig(goodCfg, badCfg, badPath)
+	_, err = LoadConfig(goodCfg, badCfg, badPath, version)
 	exp = fmt.Sprintf("unmarshalling '%s'", badCfg)
 	if !strings.HasPrefix(err.Error(), exp) {
 		t.Error("expected", exp, "got", err)
 	}
 
 	// good cdn.conf,  good database.conf
-	cfg, err = LoadConfig(goodCfg, goodDbCfg, goodRiakCfg)
+	cfg, err = LoadConfig(goodCfg, goodDbCfg, goodRiakCfg, version)
 	if err != nil {
 		t.Error("Good config -- unexpected error ", err)
 	}
