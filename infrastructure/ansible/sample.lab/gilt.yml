@@ -1,0 +1,45 @@
+---
+
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# This yaml file describes getting all the generic core roles using https://github.com/metacloud/gilt
+
+  - git: git@github.com:apache/trafficcontrol.git
+    version: master
+    files:
+      - src: infrastructure/ansible/roles/ats
+        dst: ../roles/ats
+      - src: infrastructure/ansible/roles/dataset_loader
+        dst: ../roles/dataset_loader
+      - src: infrastructure/ansible/roles/feigner
+        dst: ../roles/feigner
+      - src: infrastructure/ansible/roles/grove
+        dst: ../roles/grove
+      - src: infrastructure/ansible/roles/influxdb_relay
+        dst: ../roles/influxdb_relay
+      - src: infrastructure/ansible/roles/traffic-router
+        dst: ../roles/traffic-router
+      - src: infrastructure/ansible/roles/traffic-monitor
+        dst: ../roles/traffic-monitor
+      - src: infrastructure/ansible/roles/traffic_ops
+        dst: ../roles/traffic_ops
+      - src: infrastructure/ansible/roles/traffic_opsdb
+        dst: ../roles/traffic_opsdb
+      - src: infrastructure/ansible/roles/traffic_portal
+        dst: ../roles/traffic_portal
+      - src: infrastructure/ansible/roles/traffic_stats
+        dst: ../roles/traffic_stats
+      - src: infrastructure/ansible/roles/traffic-vault
+        dst: ../roles/traffic-vault

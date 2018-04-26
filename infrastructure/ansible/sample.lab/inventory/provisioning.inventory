@@ -1,0 +1,64 @@
+;
+; Licensed under the Apache License, Version 2.0 (the "License");
+; you may not use this file except in compliance with the License.
+; You may obtain a copy of the License at
+;
+;     http://www.apache.org/licenses/LICENSE-2.0
+;
+; Unless required by applicable law or agreed to in writing, software
+; distributed under the License is distributed on an "AS IS" BASIS,
+; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+; See the License for the specific language governing permissions and
+; limitations under the License.
+;
+
+[atsec]
+cdn-atsec-01.samplelab.kabletown.invalid ansible_host=192.168.100.45 cdn=MKGA component=atsec
+cdn-atsec-02.samplelab.kabletown.invalid ansible_host=192.168.100.15 cdn=MKGA component=atsec
+cdn-atsec-03.samplelab.kabletown.invalid ansible_host=192.168.100.211 cdn=MKGA component=atsec
+
+[atsmid]
+cdn-atsmid-01.samplelab.kabletown.invalid ansible_host=192.168.100.145 cdn=MKGA component=atsmid
+cdn-atsmid-02.samplelab.kabletown.invalid ansible_host=192.168.100.161 cdn=MKGA component=atsmid
+
+[fakeorigin]
+cdn-fo-01.samplelab.kabletown.invalid ansible_host=192.168.100.104 cdn=MKGA component=fakeorigin ds_names=ds0-cdn-fo-01.samplelab.kabletown.invalid,ds1-cdn-fo-01.samplelab.kabletown.invalid,ds10-cdn-fo-01.samplelab.kabletown.invalid,ds11-cdn-fo-01.samplelab.kabletown.invalid,ds12-cdn-fo-01.samplelab.kabletown.invalid,ds13-cdn-fo-01.samplelab.kabletown.invalid,ds14-cdn-fo-01.samplelab.kabletown.invalid,ds15-cdn-fo-01.samplelab.kabletown.invalid,ds16-cdn-fo-01.samplelab.kabletown.invalid,ds17-cdn-fo-01.samplelab.kabletown.invalid,ds18-cdn-fo-01.samplelab.kabletown.invalid,ds19-cdn-fo-01.samplelab.kabletown.invalid,ds2-cdn-fo-01.samplelab.kabletown.invalid,ds20-cdn-fo-01.samplelab.kabletown.invalid,ds21-cdn-fo-01.samplelab.kabletown.invalid,ds22-cdn-fo-01.samplelab.kabletown.invalid,ds23-cdn-fo-01.samplelab.kabletown.invalid,ds24-cdn-fo-01.samplelab.kabletown.invalid,ds25-cdn-fo-01.samplelab.kabletown.invalid,ds26-cdn-fo-01.samplelab.kabletown.invalid,ds27-cdn-fo-01.samplelab.kabletown.invalid,ds28-cdn-fo-01.samplelab.kabletown.invalid,ds29-cdn-fo-01.samplelab.kabletown.invalid,ds3-cdn-fo-01.samplelab.kabletown.invalid,ds4-cdn-fo-01.samplelab.kabletown.invalid,ds5-cdn-fo-01.samplelab.kabletown.invalid,ds6-cdn-fo-01.samplelab.kabletown.invalid,ds7-cdn-fo-01.samplelab.kabletown.invalid,ds8-cdn-fo-01.samplelab.kabletown.invalid,ds9-cdn-fo-01.samplelab.kabletown.invalid
+cdn-fo-02.samplelab.kabletown.invalid ansible_host=192.168.100.4 cdn=MKGA component=fakeorigin ds_names=ds0-cdn-fo-02.samplelab.kabletown.invalid,ds1-cdn-fo-02.samplelab.kabletown.invalid,ds10-cdn-fo-02.samplelab.kabletown.invalid,ds11-cdn-fo-02.samplelab.kabletown.invalid,ds12-cdn-fo-02.samplelab.kabletown.invalid,ds13-cdn-fo-02.samplelab.kabletown.invalid,ds14-cdn-fo-02.samplelab.kabletown.invalid,ds15-cdn-fo-02.samplelab.kabletown.invalid,ds16-cdn-fo-02.samplelab.kabletown.invalid,ds17-cdn-fo-02.samplelab.kabletown.invalid,ds18-cdn-fo-02.samplelab.kabletown.invalid,ds19-cdn-fo-02.samplelab.kabletown.invalid,ds2-cdn-fo-02.samplelab.kabletown.invalid,ds20-cdn-fo-02.samplelab.kabletown.invalid,ds21-cdn-fo-02.samplelab.kabletown.invalid,ds22-cdn-fo-02.samplelab.kabletown.invalid,ds23-cdn-fo-02.samplelab.kabletown.invalid,ds24-cdn-fo-02.samplelab.kabletown.invalid,ds25-cdn-fo-02.samplelab.kabletown.invalid,ds26-cdn-fo-02.samplelab.kabletown.invalid,ds27-cdn-fo-02.samplelab.kabletown.invalid,ds28-cdn-fo-02.samplelab.kabletown.invalid,ds29-cdn-fo-02.samplelab.kabletown.invalid,ds3-cdn-fo-02.samplelab.kabletown.invalid,ds4-cdn-fo-02.samplelab.kabletown.invalid,ds5-cdn-fo-02.samplelab.kabletown.invalid,ds6-cdn-fo-02.samplelab.kabletown.invalid,ds7-cdn-fo-02.samplelab.kabletown.invalid,ds8-cdn-fo-02.samplelab.kabletown.invalid,ds9-cdn-fo-02.samplelab.kabletown.invalid
+cdn-fo-03.samplelab.kabletown.invalid ansible_host=192.168.100.201 cdn=MKGA component=fakeorigin ds_names=ds0-cdn-fo-03.samplelab.kabletown.invalid,ds1-cdn-fo-03.samplelab.kabletown.invalid,ds10-cdn-fo-03.samplelab.kabletown.invalid,ds11-cdn-fo-03.samplelab.kabletown.invalid,ds12-cdn-fo-03.samplelab.kabletown.invalid,ds13-cdn-fo-03.samplelab.kabletown.invalid,ds14-cdn-fo-03.samplelab.kabletown.invalid,ds15-cdn-fo-03.samplelab.kabletown.invalid,ds16-cdn-fo-03.samplelab.kabletown.invalid,ds17-cdn-fo-03.samplelab.kabletown.invalid,ds18-cdn-fo-03.samplelab.kabletown.invalid,ds19-cdn-fo-03.samplelab.kabletown.invalid,ds2-cdn-fo-03.samplelab.kabletown.invalid,ds20-cdn-fo-03.samplelab.kabletown.invalid,ds21-cdn-fo-03.samplelab.kabletown.invalid,ds22-cdn-fo-03.samplelab.kabletown.invalid,ds23-cdn-fo-03.samplelab.kabletown.invalid,ds24-cdn-fo-03.samplelab.kabletown.invalid,ds25-cdn-fo-03.samplelab.kabletown.invalid,ds26-cdn-fo-03.samplelab.kabletown.invalid,ds27-cdn-fo-03.samplelab.kabletown.invalid,ds28-cdn-fo-03.samplelab.kabletown.invalid,ds29-cdn-fo-03.samplelab.kabletown.invalid,ds3-cdn-fo-03.samplelab.kabletown.invalid,ds4-cdn-fo-03.samplelab.kabletown.invalid,ds5-cdn-fo-03.samplelab.kabletown.invalid,ds6-cdn-fo-03.samplelab.kabletown.invalid,ds7-cdn-fo-03.samplelab.kabletown.invalid,ds8-cdn-fo-03.samplelab.kabletown.invalid,ds9-cdn-fo-03.samplelab.kabletown.invalid
+
+[grove]
+cdn-ec-01.samplelab.kabletown.invalid ansible_host=192.168.100.146 cdn=MKGA component=grove
+cdn-ec-02.samplelab.kabletown.invalid ansible_host=192.168.100.232 cdn=MKGA component=grove
+
+[influxdb]
+cdn-influxdb-01.samplelab.kabletown.invalid ansible_host=192.168.100.83 cdn=ALL component=influxdb
+cdn-influxdb-02.samplelab.kabletown.invalid ansible_host=192.168.100.241 cdn=ALL component=influxdb
+
+[influxrelay]
+cdn-influxrelay-01.samplelab.kabletown.invalid ansible_host=192.168.100.170 cdn=ALL component=influxrelay
+
+[riak]
+cdn-riak-01.samplelab.kabletown.invalid ansible_host=192.168.100.211 cdn=ALL component=riak
+cdn-riak-02.samplelab.kabletown.invalid ansible_host=192.168.100.100 cdn=ALL component=riak
+
+[traffic_monitor]
+cdn-trafficmonitor-01.samplelab.kabletown.invalid ansible_host=192.168.100.217 cdn=MKGA component=traffic_monitor
+cdn-trafficmonitor-02.samplelab.kabletown.invalid ansible_host=192.168.100.106 cdn=MKGA component=traffic_monitor
+cdn-trafficmonitor-03.samplelab.kabletown.invalid ansible_host=192.168.100.161 cdn=MKGA component=traffic_monitor
+cdn-trafficmonitor-04.samplelab.kabletown.invalid ansible_host=192.168.100.135 cdn=MKGA component=traffic_monitor
+
+[traffic_ops]
+cdn-to-01.samplelab.kabletown.invalid ansible_host=192.168.100.237 cdn=ALL component=traffic_ops
+
+[traffic_opsdb]
+cdn-todb-01.samplelab.kabletown.invalid ansible_host=192.168.100.249 cdn=ALL component=traffic_opsdb
+
+[traffic_portal]
+cdn-tp-01.samplelab.kabletown.invalid ansible_host=192.168.100.139 cdn=ALL component=traffic_portal
+
+[traffic_router]
+cdn-tr-01.samplelab.kabletown.invalid ansible_host=192.168.100.111 cdn=MKGA component=traffic_router
+cdn-tr-02.samplelab.kabletown.invalid ansible_host=192.168.100.68 cdn=MKGA component=traffic_router
+
+[traffic_stats]
+cdn-trafficstats-01.samplelab.kabletown.invalid ansible_host=192.168.100.208 cdn=ALL component=traffic_stats

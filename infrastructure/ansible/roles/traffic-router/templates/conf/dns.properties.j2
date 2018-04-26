@@ -1,0 +1,29 @@
+{#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#}
+# file deployed via ansible push, local edits are subject to be overwritten
+
+# TCP port that Traffic Router will use for incoming DNS requests
+dns.tcp.port = {{tr_dns_tcp_port}}
+
+# Maximum length of the queue for incoming TCP connection requests
+dns.tcp.backlog = {{tr_dns_tcp_backlog}}
+
+# UDP port that Traffic Router will use for incoming DNS requests
+dns.udp.port = {{tr_dns_udp_port}}
+
+# Maximum number of threads used to process incoming DNS requests
+dns.max-threads = {{tr_dns_max_threads}}
+
+# Path to auto generated zone files for reference
+dns.zones.dir = {{tr_dns_zones_dir}}

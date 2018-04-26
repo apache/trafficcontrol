@@ -1,0 +1,51 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Install traffic_monitor
+  yum:
+    name: "{{ tm_pkg_name }}"
+    state: present
+    update_cache: yes
+    use_backend: yum
+    enablerepo: "{{ additional_yum_repos | default([]) }}"
+  notify: Restart Traffic Monitor
+  become: yes
+  retries: 10
+
+- name: Copy traffic_monitor config
+  template:
+    src: traffic_monitor.cfg.j2
+    dest: /opt/traffic_monitor/conf/traffic_monitor.cfg
+    mode: 0600
+    owner: traffic_monitor
+    group: traffic_monitor
+  notify: Restart Traffic Monitor
+  become: yes
+
+- name: Copy traffic_ops config
+  template:
+    src: traffic_ops.cfg.j2
+    dest: /opt/traffic_monitor/conf/traffic_ops.cfg
+    mode: 0600
+    owner: traffic_monitor
+    group: traffic_monitor
+  notify: Restart Traffic Monitor
+  become: yes
+
+- name: Enable traffic_monitor
+  service:
+    name: traffic_monitor
+    enabled: yes
+  notify: Restart Traffic Monitor
+  become: yes

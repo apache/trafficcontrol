@@ -1,0 +1,52 @@
+{#
+; Licensed under the Apache License, Version 2.0 (the "License");
+; you may not use this file except in compliance with the License.
+; You may obtain a copy of the License at
+;
+;     http://www.apache.org/licenses/LICENSE-2.0
+;
+; Unless required by applicable law or agreed to in writing, software
+; distributed under the License is distributed on an "AS IS" BASIS,
+; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+; See the License for the specific language governing permissions and
+; limitations under the License.
+#}
+
+[traffic_opsdb-primary]
+{{ (groups['traffic_opsdb'] | map('extract', hostvars, ['inventory_hostname']) | list)[0] }} ansible_host={{ (groups['traffic_opsdb'] | map('extract', hostvars, ['ansible_host']) | list)[0] }}
+
+{% if (groups['traffic_opsdb'] | map('extract', hostvars, ['inventory_hostname']) | list)[1] is defined %}
+[traffic_opsdb-standby]
+{{ (groups['traffic_opsdb'] | map('extract', hostvars, ['inventory_hostname']) | list)[1] }} ansible_host={{ (groups['traffic_opsdb'] | map('extract', hostvars, ['ansible_host']) | list)[1] }}
+{% endif %}
+
+{% if groups['traffic_opsdb'][2:] | length %}
+[traffic_opsdb-replicas]
+  {% for host_obj in (groups['traffic_opsdb'])[2:] %}
+{{ host_obj['inventory_hostname'] }} ansible_host={{ host_obj['ansible_host'] }}
+  {% endfor %}
+{% endif %}
+
+[mso_parent_alias]
+{% for fo in groups['fakeorigin'] -%}
+  {%- set alias_list = (hostvars[fo]['ds_names'].split(',') | sort) -%}
+  {%- for alias in alias_list -%}
+{{ alias }} cdn={{ hostvars[fo]['cdn'] }} true_fqdn={{ fo }} ansible_host=127.{{ cdnDelegationIndex[hostvars[fo]['cdn']] | default(255) }}.{{ foIndex[fo] | default(255) }}.{{ loop.index }} component=mso_parent_alias
+{% endfor -%}
+{%- endfor -%}
+
+[traffic_ops]
+[traffic_ops:vars]
+additional_dns_names=to.{{ groups['traffic_ops'][0].split('.')[1:] | join('.') }}
+
+[traffic_opsdb]
+[traffic_opsdb:vars]
+additional_dns_names=todb.{{ groups['traffic_opsdb'][0].split('.')[1:] | join('.') }}
+
+[traffic_portal]
+[traffic_portal:vars]
+additional_dns_names=tp.{{ groups['traffic_portal'][0].split('.')[1:] | join('.') }}
+
+[traffic_stats]
+[traffic_stats:vars]
+additional_dns_names=stats.{{ groups['traffic_stats'][0].split('.')[1:] | join('.') }}

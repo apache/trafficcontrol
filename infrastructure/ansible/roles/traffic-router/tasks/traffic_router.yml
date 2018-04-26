@@ -1,0 +1,101 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Get Traffic Router Version
+  shell: (rpm -qa | grep traffic_router || echo 2.3.0) | sed -re 's/[^-]+-([0-9]+\.[0-9]+).*/\1/'
+  register: tr_old_version
+
+- name: Remove Tomcat 6
+  import_tasks: purge.tomcat.6.yml
+  when: tr_old_version.stdout is version('2.3', "<")
+
+- name: Protect against expired yum repo metadata
+  shell: yum clean expire-cache
+  args:
+    warn: false
+  become: yes
+
+- name: Install TR Dependencies
+  yum:
+    name:
+      - java-1.8.0-openjdk
+      - tomcat-native-1.2.17
+    state: present
+    update_cache: yes
+    use_backend: yum
+    enablerepo: "{{ additional_yum_repos | default([]) }}"
+  notify: Restart Traffic Router
+  become: yes
+
+- name: Install traffic_router
+  yum:
+    name:
+      - "{{ tr_pkg_name }}"
+    state: present
+    update_cache: yes
+  notify: Restart Traffic Router
+  become: yes
+  retries: 10
+
+- name: Copy traffic router configs
+  template:
+    src: "../templates/conf/{{item}}.j2"
+    dest: "{{tr_conf_dir}}/{{item}}"
+    mode: 0644
+    owner: root
+    group: root
+  notify: Restart Traffic Router
+  become: yes
+  with_items:
+    - cache.properties
+    - dns.properties
+    - log4j.properties
+    - logging.properties
+    - startup.properties
+    - traffic_monitor.properties
+    - traffic_ops.properties
+    - server.xml
+
+- name: Copy traffic router systemd unit file
+  template:
+    src: traffic_router.service.j2
+    dest: /lib/systemd/system/traffic_router.service
+    mode: 0755
+    owner: root
+    group: root
+  notify: Restart Traffic Router
+  become: yes
+  register: tr_systemd
+
+- name: Reload systemd unit files if needed
+  systemd:
+    daemon_reload: yes
+    name: traffic_router
+  when: tr_systemd is changed
+  become: yes
+
+- name: Purge cached CRConfig
+  file:
+    path: "{{ tr_db_dir }}/cr-config.json"
+    state: absent
+  when: tr_purge_crconfig_cache
+  become: yes
+  notify: Restart Traffic Router
+
+- name: Enable traffic_router service
+  systemd:
+    name: traffic_router
+    enabled: yes
+  notify: Restart Traffic Router
+  become: yes

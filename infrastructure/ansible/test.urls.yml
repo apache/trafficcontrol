@@ -1,0 +1,82 @@
+---
+
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  strategy: free
+
+  vars:
+    known_uri_paths:
+      - /SampleDir/kelloggs.mp4
+      - /SampleDir/LICENSE
+      - /SampleVideo/kelloggs.mp4
+
+  tasks:
+    - name: Load environment specific vars
+      include_vars:
+        file: "{{ lookup('env', 'PWD') }}/ansible/vars.yml"
+
+    - name: Load environment specific vault
+      include_vars:
+        file: "{{ lookup('env', 'PWD') }}/ansible/vault"
+      no_log: true
+
+    - name: Get TO Cookie
+      uri:
+        url: "{{ to_url }}/api/{{ to_api_version }}/user/login"
+        method: POST
+        body: '{ "u":"{{ to_admin_user }}", "p":"{{ to_admin_user_password }}" }'
+        validate_certs: no
+        follow_redirects: all
+        return_content: yes
+        body_format: json
+        status_code: 200,400
+        timeout: 120
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+      register: mojo_token
+      no_log: true
+
+    - name: Get All Delivery Services
+      uri:
+        url: "{{ to_url }}/api/{{ to_api_version }}/deliveryservices"
+        method: GET
+        validate_certs: no
+        follow_redirects: all
+        return_content: yes
+        body_format: json
+        status_code: 200,400
+        timeout: 120
+        headers:
+          Cookie: "{{ mojo_token.set_cookie | default(omit) }}"
+      register: get_all_ds
+
+    - name: Test URLs v4
+      shell: "curl --no-keepalive --show-error -Lvs4 --connect-timeout 2 --fail -o /dev/null {{ urls | join(' ') }} > /dev/null"
+      changed_when: false
+      vars:
+        url_query: '[?active == `true`].exampleURLs[]'
+        urls: "{{ lookup('cartesian', (get_all_ds.json.response | json_query(url_query)), known_uri_paths) | map('join') | list }}"
+      delegate_to: "{{ groups['traffic_ops'] | first }}"
+
+    - name: Test URLs v6
+      shell: "curl --no-keepalive --show-error -Lvs6 --connect-timeout 2 --fail -o /dev/null {{ urls | join(' ') }} > /dev/null"
+      changed_when: false
+      vars:
+        url_query: '[?active == `true`].exampleURLs[]'
+        urls: "{{ lookup('cartesian', (get_all_ds.json.response | json_query(url_query)), known_uri_paths) | map('join') | list }}"
+      delegate_to: "{{ groups['traffic_ops'] | first }}"

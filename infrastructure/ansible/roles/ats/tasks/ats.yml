@@ -1,0 +1,51 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+- name: Install ORT
+  yum:
+    name:
+      - "{{ ort_pkg_name }}"
+    state: present
+    enablerepo: "{{ additional_yum_repos | default([]) }}"
+
+- name: Deploy ORT Crontab
+  template:
+    src: crontab.j2
+    dest: /etc/cron.d/ats
+    owner: root
+    group: root
+    mode: u+rw
+  no_log: True
+
+- name: Stop ATS Nicely
+  systemd:
+    name: trafficserver
+    state: stopped
+  ignore_errors: true
+
+- name: Run ORT Badass
+  shell: "pkill -9 _ort || true; /opt/ort/traffic_ops_ort.pl -dispersion=0 --wait_for_parents=0 --login_dispersion=0 --retries=1 badass warn {{ ort_traffic_ops_url }} '{{ ort_traffic_ops_username }}:{{ ort_traffic_ops_password }}' 2>&1 | tee /tmp/badass_out"
+  no_log: True
+
+- name: Reboot
+  shell: "sleep 5 && reboot"
+  async: 1
+  poll: 0
+
+- name: Wait for the reboot to complete
+  wait_for_connection:
+    connect_timeout: 20
+    sleep: 5
+    delay: 5
+    timeout: 300

@@ -1,0 +1,480 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+install_traffic_portal: False
+tp_pkg_name: "{% if tp_version is defined and tp_version != omit %}{{ 'traffic_portal-'+tp_version }}{% else %}traffic_portal{% endif %}"
+
+# TP installation information
+tp_base_install_dir: /opt/traffic_portal
+tp_properties_dir: "{{ tp_base_install_dir }}/public"
+tp_conf_dir: /etc/traffic_portal/conf
+
+# config.js
+tp_timeout: "120s"
+tp_useSSL: False
+tp_http_port: 8080
+tp_sslPort: 8443
+tp_ssl_key_file: "/etc/pki/tls/localhost.key"
+tp_ssl_cert_file: "/etc/pki/tls/localhost.crt"
+tp_ssl_ca_files:
+  - /etc/pki/tls/ca-localhost.crt
+tp_files_static_location: "{{ tp_properties_dir }}"
+tp_log_stream_location: "/var/log/traffic_portal/access.log"
+tp_reject_unauthorized: 0
+tp_ts_base_url: "https://localhost"
+tp_to_base_url: "https://localhost"
+
+# Traffic_portal_properties.json
+# This makes me feel bad, but the structure itself isn't strongly defined
+# Addition is supported, but not removal
+tp_default_properties_template:
+  _comment: These are the default properties for Traffic Portal. Customize these values
+    to fit your needs.
+  properties:
+    name: Traffic Portal
+    api:
+      _comment: This should have the same value found in /etc/traffic_portal/conf/config.js
+      baseUrl: "{{ tp_to_base_url }}/api/"
+    enforceCapabilities: false
+    dashboard:
+      _comments: These are configurable properties for the dashboard
+      autoRefresh: true
+      currentStats:
+        refreshRateInMS: 30000
+      deliveryServiceGbps:
+        refreshRateInMS: 60000
+      healthyCacheCount:
+        refreshRateInMS: 60000
+      cacheStatusCount:
+        refreshRateInMS: 60000
+      cdnChart:
+        refreshRateInMS: 60000
+      capacity:
+        refreshRateInMS: 60000
+      routing:
+        refreshRateInMS: 60000
+      cacheGroupHealth:
+        refreshRateInMS: 60000
+    snapshot:
+      _comments: These are configurable properties for a cdn snapshot
+      diff:
+        _comments: The number of lines of context provided before and after a addition
+          or removal
+        context: 1000
+    cacheChecks:
+      _comments: These are configurable properties for the cache checks view. The data
+        for the cache checks view is derived from TO extensions. The extensions array
+        should include an entry for each of your extensions or you can check GET api/1.3/servers/checks
+        to see which checks you have configured.
+      show: true
+      updatePending:
+        show: true
+        key: UPD
+        desc: Configuration file updates have been applied or are pending for the EDGE
+          or MID
+      revalPending:
+        show: true
+        key: RVL
+        desc: Content invalidation request(s) are pending for the EDGE or MID
+      extensions:
+      - key: ILO
+        desc: Ping the iLO interface for EDGE or MID servers
+        type: bool
+      - key: 10G
+        desc: Ping the IPv4 address of the EDGE or MID servers
+        type: bool
+      - key: FQDN
+        desc: DNS check that matches what the DNS servers responds with compared to
+          what Traffic Ops has
+        type: bool
+      - key: DSCP
+        desc: Checks the DSCP value of packets from the edge server to the Traffic Ops
+          server
+        type: bool
+      - key: 10G6
+        desc: Ping the IPv6 address of the EDGE or MID servers
+        type: bool
+      - key: MTU
+        desc: Ping the EDGE or MID using the configured MTU from Traffic Ops
+        type: bool
+      - key: CHR
+        desc: Cache Hit Ratio %
+        type: number
+      - key: CDU
+        desc: Cache Disk Utilization %
+        type: number
+      - key: ORT
+        desc: Number of configuration differences as determined by ORT found between
+          Traffic Ops and the cache
+        type: number
+    deliveryServices:
+      _comment: Delivery service settings
+      defaults:
+        _comments: These are default values used when creating resources
+        ANY_MAP:
+          dscp: 0
+          regionalGeoBlocking: false
+          logsEnabled: false
+          geoProvider: 0
+          geoLimit: 0
+          ccrDnsTtl: 30
+          anonymousBlockingEnabled: false
+        DNS:
+          routingName: cdn
+          dscp: 0
+          ipv6RoutingEnabled: true
+          rangeRequestHandling: 0
+          qstringIgnore: 0
+          multiSiteOrigin: false
+          logsEnabled: false
+          geoProvider: 0
+          geoLimit: 0
+          missLat: 41.881944
+          missLong: -87.627778
+          signingAlgorithm:
+          ccrDnsTtl: 30
+          regionalGeoBlocking: false
+          anonymousBlockingEnabled: false
+        HTTP:
+          routingName: cdn
+          deepCachingType: NEVER
+          dscp: 0
+          ipv6RoutingEnabled: true
+          rangeRequestHandling: 0
+          qstringIgnore: 0
+          multiSiteOrigin: false
+          logsEnabled: false
+          initialDispersion: 1
+          regionalGeoBlocking: false
+          geoProvider: 0
+          geoLimit: 0
+          missLat: 41.881944
+          missLong: -87.627778
+          signingAlgorithm:
+          ccrDnsTtl: 3600
+          anonymousBlockingEnabled: false
+        STEERING:
+          dscp: 0
+          routingName: cdn
+          ipv6RoutingEnabled: true
+          logsEnabled: false
+          geoProvider: 0
+          geoLimit: 0
+          regionalGeoBlocking: false
+          ccrDnsTtl: 30
+          anonymousBlockingEnabled: false
+        descriptions:
+          _comments: This is the text used to configure delivery service field titles/descriptions
+          active:
+            title: Active
+            desc: Whether or not this delivery service is active on the CDN and is capable
+              of traffic.
+          anonymousBlockingEnabled:
+            title: Anonymous Blocking
+            desc: Set to true to enable blocking of anonymous IPs for this delivery
+              service. <b>Note:<b> Requires Geolocation provider's Anonymous IP database.
+          cacheurl:
+            title: Cache URL expression
+            desc: Allows you to manipulate the cache key of the incoming requests. Normally,
+              the cache key is the origin domain. This can be changed so that multiple
+              services can share a cache key, can also be used to preserve cached content
+              if service origin is changed.<br><b>Note:</b> Only valid in ATS 6. X and
+              earlier. Must be empty if using ATS 7. X and / or the <a href = "https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/cachekey.en.html"
+              target="_blank">cachekey plugin.</a><br><br>See <a href = "https://docs.trafficserver.apache.org/en/6.2.x/admin-guide/plugins/cacheurl.en.html"
+              target="_blank">ATS documentation on cacheurl </a>
+          ccrDnsTtl:
+            title: Delivery Service DNS TTL
+            desc: The Time To Live on the DNS record for the Traffic Router A and AAAA
+              records. Setting too high or too low will result in poor caching performance.
+          cdnId:
+            title: CDN
+            desc: The CDN in which the delivery service belongs to.
+          checkPath:
+            title: Check Path
+            desc: 'A path (ex: /crossdomain.xml) to verify the connection to the origin
+              server with. This can be used by Check Extension scripts to do periodic
+              health checks against the delivery service.'
+          deepCachingType:
+            title: Deep Caching
+            desc: Enables clients to be routed to the closest possible deep edge caches
+              on a per Delivery Service basis.<br><br><a href="http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#rl-deep-cache"
+              target="_blank">See Deep Caching</a>
+          displayName:
+            title: Display Name
+            desc: Name of the service that appears in the Traffic portal. No character
+              restrictions.
+          dnsBypassCname:
+            title: DNS Bypass CNAME
+            desc: Domain name to overflow requests when the Max Bps or Max Tps for this
+              delivery service exceeds.
+          dnsBypassIp:
+            title: DNS Bypass IP
+            desc: IPv4 address to overflow requests when the Max Bps or Max Tps for
+              this delivery service exceeds.
+          dnsBypassIp6:
+            title: DNS Bypass IPv6
+            desc: IPv6 address to overflow requests when the Max Bps or Max Tps for
+              this delivery service exceeds.
+          dnsBypassTtl:
+            title: DNS Bypass TTL
+            desc: TTL for the DNS bypass domain or IP when threshold exceeds.
+          dscp:
+            title: DSCP
+            desc: The Differentiated Services Code Point (DSCP) value to mark IP packets
+              to the client with.
+          edgeHeaderRewrite:
+            title: Edge Header Rewrite Rules
+            desc: 'Headers can be added or altered at each layer of the CDN. You must
+              tell us four things: the action, the header name, the header value, and
+              the direction to apply. The action will tell us whether we are adding,
+              removing, or replacing headers. The header name and header value will
+              determine the full header text. The direction will determine whether we
+              add it before we respond to a request or before we make a request further
+              up the chain in the server hierarchy. Examples include:<br><br><ul><li>Action:
+              Set</li><li>Header Name: X-CDN</li><li>Header Value: Foo</li><li>Direction:
+              Edge Response to Client</li></ul><br><br>See <a href="http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#rl-header-rewrite"
+              target="_blank">Header Rewrite Options and DSCP.</a>'
+          geoLimitRedirectURL:
+            title: Geo Limit Redirect URL
+            desc: Traffic Router will redirect to this URL when Geo Limit check fails.<br><br>See
+              <a href="http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_router.html#rl-tr-ngb"
+              target="_blank">GeoLimit Failure Redirect</a> feature...
+          geoLimit:
+            title: Geo Limit
+            desc: 'Some services are intended to be limited by geography. The possible
+              settings are:<br><br><ul><li>None: Do not limit by geography.</li><li>CZF
+              only: If the requesting IP is not in the Coverage Zone File, do not serve
+              the request.</li><li>CZF + US: If the requesting IP is not in the Coverage
+              Zone File or not in the United States, do not serve the request.</li><br>'
+          geoLimitCountries:
+            title: Geo Limit Countries
+            desc: 'How (if at all) is this service to be limited by geography. Example
+              Country Codes: CA, IN, PR.'
+          geoProvider:
+            title: Geolocation Provider
+            desc: Choose which Geolocation database provider, company that collects
+              data on the location of IP addresses, to use.
+          globalMaxMbps:
+            title: Global Max Mbps
+            desc: The maximum bits per second this delivery service can serve across
+              all EDGE caches before traffic will be diverted to the bypass destination.
+              For a DNS delivery service, the Bypass Ipv4 or Ipv6 will be used (depending
+              on whether this was a A or AAAA request), and for HTTP delivery services
+              the Bypass FQDN will be used.
+          globalMaxTps:
+            title: Global Max TPS
+            desc: The maximum transactions this delivery service can serve across all
+              EDGE caches before traffic will be diverted to the bypass destination.
+              For a DNS delivery service, the Bypass Ipv4 or Ipv6 will be used (depending
+              on whether this was a A or AAAA request), and for HTTP delivery services
+              the Bypass FQDN will be used.
+          fqPacingRate:
+            title: Fair Queuing Pacing Rate Bps
+            desc: The maximum bytes per second a cache will delivery on any single TCP
+              connection. This uses the Linux kernel's Fair Queuing setsockopt(SO_MAX_PACING_RATE)
+              to limit the rate of delivery.
+          httpBypassFqdn:
+            title: HTTP Bypass FQDN
+            desc: Traffic Router will redirect to this FQDN (with the same path) when
+              the Max Bps or Max Tps for this delivery service exceeds.
+          infoUrl:
+            title: Info URL
+            desc: Free text field used to enter a URL which provides information about
+              the service.
+          initialDispersion:
+            title: Initial Dispersion
+            desc: Determines number of machines content will be placed on within a cache
+              group. Setting too high will result in poor caching performance.
+          ipv6RoutingEnabled:
+            title: IPv6 Routing Enabled
+            desc: Default is True, entering False allows you to turn off CDN response
+              to IPv6 requests
+          logsEnabled:
+            title: Logs Enabled
+            desc: Allows you to turn on/off logging for the service
+          longDesc:
+            title: Long Description
+            desc: Free text field that describes the purpose of the delivery service
+              and will be displayed in the portal as a description field.
+          longDesc1:
+            title: Long Description 2
+            desc: Free text field not currently used in configuration. For example,
+              you can use this field to describe your customer type.
+          longDesc2:
+            title: Long Description 3
+            desc: Free text field not currently used in configuration.
+          maxDnsAnswers:
+            title: Max DNS Answers
+            desc: It is used to restrict the number of cache IP addresses that the CCR
+              will hand back. A numeric value from 1 to 15 which determines how many
+              caches your content will be spread across in a particular site. When a
+              customer requests your content they will get 1 to 15 IP addresses back
+              they can use. These are rotated in each response. Ideally the number will
+              reflect the amount of traffic. 1 = trial account with very little traffic,
+              2 = small production service. Add 1 more server for every 20 Gbps of traffic
+              you expect at peak. So 20 Gbps = 3, 40 Gbps = 4, 60 Gbps = 5
+          midHeaderRewrite:
+            title: Mid Header Rewrite Rules
+            desc: 'Headers can be added or altered at each layer of the CDN. You must
+              tell us four things: the action, the header name, the header value, and
+              the direction to apply. The action will tell us whether we are adding,
+              removing, or replacing headers. The header name and header value will
+              determine the full header text. The direction will determine whether we
+              add it before we respond to a request or before we make a request further
+              up the chain in the server hierarchy. Examples include:<ul><li>Action:
+              Set</li><li>Header Name: Host</li><li>Header Value: code_abc123</li><li>Direction:
+              Mid Request to Origin</li></ul><br><br>See <a href="http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#rl-header-rewrite"
+              target="_blank">Header Rewrite Options and DSCP.</a>'
+          missLat:
+            title: Geo Miss Default Latitude
+            desc: Default Latitude for this delivery service. When client localization
+              fails for both Coverage Zone and Geo Lookup, the client will be routed
+              as if it was at this lat.
+          missLong:
+            title: Geo Miss Default Longitude
+            desc: Default Longitude for this delivery service. When client localization
+              fails for both Coverage Zone and Geo Lookup, the client will be routed
+              as if it was at this long.
+          multiSiteOrigin:
+            title: Use Multi Site Origin Feature
+            desc: Set True/False to enable/disable the Multi Site Origin feature for
+              this delivery service.<br><br><a href="http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#rl-multi-site-origin"
+              target="_blank">See Multi Site Origin.</a>
+          orgServerFqdn:
+            title: Origin Server Base URL
+            desc: 'The Origin Server’s base URL which includes the protocol (http or
+              https). Example: http://movies.origin.com. Must be a domain only, no directories
+              or IP addresses'
+          originShield:
+            title: Origin Shield (Pipe Delimited String)
+            desc: 'Add another forward proxy upstream of the mid caches. Example: go_direct=true
+              will allow the Mid to hit the origin directly instead of failing if the
+              origin shield is down. Experimental Feature.'
+          profileId:
+            title: Delivery Service Profile
+            desc: 'Only used if a delivery service uses configurations that specifically
+              require a profile. Example: MSO configurations or cachekey plugin would
+              require a ds profile to be used.'
+          protocol:
+            title: Protocol
+            desc: 'The protocol to serve this delivery service to the clients with:<br><br>
+              <ul><li>HTTP: Deliver only HTTP traffic</li><li>HTTPS: Deliver only HTTPS
+              traffic </li><li>HTTP AND HTTPS: Deliver both types of traffic</li><li>HTTP
+              TO HTTPS: Deliver HTTP traffic as HTTPS traffic. </li></ul><br>'
+          qstringIgnore:
+            title: Query String Handling
+            desc: 'How to treat query strings:<br><br><ul><li>0 use in cache key and
+              hand up to origin: Each unique query string is treated as a unique URL.</li><li>1
+              Do not use in cache key, but pass up to origin: 2 URLs that are the same
+              except for the query string will match and cache HIT, while the origin
+              still sees original query string in the request.</li><li>2 Drop at edge:
+              2 URLs that are the same except for the query string will match and cache
+              HIT, while the origin will not see original query string in the request.</li></ul><b>Note:</b>
+              Choosing to drop query strings at the edge will preclude the use of a
+              Regex Remap Expression. <a href="http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#regex-remap-expression"
+              target="_blank">See Regex Remap Expression</a><br>To set the qstring without
+              the use of regex remap, or for further options, <a href="http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#qstring-handling"
+              target="_blank">See Qstring Handling</a><br>'
+          rangeRequestHandling:
+            title: Range Request Handling
+            desc: 'How to treat range requests.<br><br><ul><li>0: Do not cache (ranges
+              requested from files that are already cached due to a non range request
+              will be a HIT)</li><li>1: Use the <a href="https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/background_fetch.en.html"
+              target="_blank">background_fetch plugin.</a></li><li>2: Use the cache_range_requests
+              plugin.</li></ul>'
+          regexRemap:
+            title: Regex remap expression
+            desc: Allows remapping of incoming requests URL using regex pattern matching
+              to search/replace text.<br><br><a href="https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_remap.en.html"
+              target="_blank">See ATS documentation on regex remap</a><br><b>Note:</b>
+              You will not be able to save a Regex Remap Expression if you have Query
+              String Handling set to drop query strings at the edge. <a href="http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#regex-remap-expression"
+              target="_blank">See Regex Remap Expression</a>
+          regionalGeoBlocking:
+            title: Regional Geoblocking
+            desc: Define regional geo-blocking rules for delivery services in a JSON
+              format and set it to True/False. <a href="http://traffic-control-cdn.readthedocs.io/en/latest/admin/quick_howto/regionalgeo.html#configure-regional-geo-blocking-rgb"
+              target="_blank">See Regional Geo-blocking</a>
+          remapText:
+            title: Raw remap text
+            desc: For HTTP and DNS delivery services, this will get added to the end
+              of the remap line on the cache verbatim. For ANY_MAP delivery services
+              this is the remap line.
+          routingName:
+            title: Routing Name
+            desc: The routing name to use for the delivery FQDN, i.e. routing-name.deliveryservice.cdn-domain.
+              It must be a valid hostname without periods.
+          signingAlgorithm:
+            title: Signing Algorithm
+            desc: 'Type of URL signing method to sign the URLs:<br><ul><li>null: token
+              based auth is not enabled for this delivery service.</li><li>“url_sig”:
+              URL Sign token based auth is enabled for this delivery service.</li><li>“uri_signing”:
+              URI Signing token based auth is enabled for this delivery service.</li></ul><br><br><a
+              href="http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#rl-signed-urls"
+              target="_blank">See Token Based Authentication</a>'
+          tenantId:
+            title: Tenant
+            desc: Name of company or division of company who owns account. Allows you
+              to group your services and control access. Tenants are setup as a simple
+              hierarchy where you may create parent / child accounts.
+          trRequestHeaders:
+            title: Traffic Router Log Request Headers
+            desc: List of header keys separated by __RETURN__. Listed headers will be
+              included in TR access log entries under the “rh=” token.
+          trResponseHeaders:
+            title: Traffic Router Additional Response Headers
+            desc: List of header name:value pairs separated by __RETURN__. Listed pairs
+              will be included in all TR HTTP responses.
+          typeId:
+            title: Content Routing Type
+            desc: DNS is the standard routing type for most CDN services. HTTP Redirect
+              is a specialty routing service that is primarily used for video and large
+              file downloads where localization and latency are significant concerns.
+              A "Live" routing type should be used for all live services.<br><br><a
+              href="http://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_ops/using.html#rl-ds-types"
+              target="_blank">See Delivery Service Types.</a>
+          xmlId:
+            title: Key (XML ID)
+            desc: This id becomes a part of the CDN service domain in the form http://cdn.service-key.company.com/.
+              Must be all lowercase, no spaces or special characters. May contain dashes.
+      charts:
+        _comment: Delivery Service Charts
+        autoRefresh: true
+        refreshRateInMS: 30000
+        customLink:
+          _comment: Do you want to show a custom link to your own ds dashboards?
+          show: false
+          baseUrl: "{{ tp_ts_base_url }}/dashboard/script/traffic_ops_deliveryservice.js?which="
+    dsRequests:
+      _comments: Should all delivery service changes go through the delivery service
+        review process? You can also provide a role that will skip the process.
+      enabled: false
+      roleNeededToSkip: admin
+    servers:
+      _comment: Server settings
+      charts:
+        _comment: Do you want to show a charts button for each server? If so, where
+          can the charts be found? xml id will be appended to the provided url.
+        show: false
+        baseUrl: "{{ tp_ts_base_url }}/dashboard/script/traffic_ops_server.js?which="
+    customMenu:
+      _comments: These are custom items you want to add to the menu. 'items' is an array
+        of hashes where each hash has 'name' (the menu item name), 'embed' (true|false
+        to determine if content is embedded in TP or not), and 'url' (the url of the
+        content)
+      name: Other
+      items:
+      - name: Docs
+        embed: false
+        url: http://trafficcontrol.apache.org/

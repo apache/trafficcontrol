@@ -1,0 +1,80 @@
+{#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#}
+{
+{% if tcpPort is defined and tcpPort is not none and tcpPort != omit and tcpPort %}
+  "tcpPort": {{ tcpPort }},
+{% endif %}
+{% if httpsPort is defined and httpsPort is not none and httpsPort != omit and httpsPort %}
+  "httpsPort": {{ httpsPort }},
+{% endif %}
+{% if xmppId is defined and xmppId is not none and xmppId != omit and xmppId %}
+  "xmppId": "{{ xmppId }}",
+{% endif %}
+{% if xmppPasswd is defined and xmppPasswd is not none and xmppPasswd != omit and xmppPasswd %}
+  "xmppPasswd": "{{ xmppPasswd }}",
+{% endif %}
+{% if ip6Address is defined and ip6Address is not none and ip6Address != omit and ip6Address %}
+  "ip6Address": "{{ ip6Address }}",
+{% endif %}
+{% if ip6Gateway is defined and ip6Gateway is not none and ip6Gateway != omit and ip6Gateway %}
+  "ip6Gateway": "{{ ip6Gateway }}",
+{% endif %}
+{% if rack is defined and rack is not none and rack != omit and rack %}
+  "rack": "{{ rack }}",
+{% endif %}
+{% if mgmtIpAddress is defined and mgmtIpAddress is not none and mgmtIpAddress != omit and mgmtIpAddress %}
+  "mgmtIpAddress": "{{ mgmtIpAddress }}",
+{% endif %}
+{% if mgmtIpNetmask is defined and mgmtIpNetmask is not none and mgmtIpNetmask != omit and mgmtIpNetmask %}
+  "mgmtIpNetmask": "{{ mgmtIpNetmask }}",
+{% endif %}
+{% if mgmtIpGateway is defined and mgmtIpGateway is not none and mgmtIpGateway != omit and mgmtIpGateway %}
+  "mgmtIpGateway": "{{ mgmtIpGateway }}",
+{% endif %}
+{% if iloIpAddress is defined and iloIpAddress is not none and iloIpAddress != omit and iloIpAddress %}
+  "iloIpAddress": "{{ iloIpAddress }}",
+{% endif %}
+{% if iloIpNetmask is defined and iloIpNetmask is not none and iloIpNetmask != omit and iloIpNetmask %}
+  "iloIpNetmask": "{{ iloIpNetmask }}",
+{% endif %}
+{% if iloIpGateway is defined and iloIpGateway is not none and iloIpGateway != omit and iloIpGateway %}
+  "iloIpGateway": "{{ iloIpGateway }}",
+{% endif %}
+{% if iloUsername is defined and iloUsername is not none and iloUsername != omit and iloUsername %}
+  "iloUsername": "{{ iloUsername }}",
+{% endif %}
+{% if iloPassword is defined and iloPassword is not none and iloPassword != omit and iloPassword %}
+  "iloPassword": "{{ iloPassword }}",
+{% endif %}
+{% if routerHostName is defined and routerHostName is not none and routerHostName != omit and routerHostName %}
+  "routerHostName": "{{ routerHostName }}",
+{% endif %}
+{% if routerPortName is defined and routerPortName is not none and routerPortName != omit and routerPortName %}
+  "routerPortName": "{{ routerPortName }}",
+{% endif %}
+  "hostName": "{{ hostName }}",
+  "domainName": "{{ domainName }}",
+  "cachegroupId": {{ cachegroupId }},
+  "interfaceName": "{{ interfaceName }}",
+  "ipAddress": "{{ ipAddress }}",
+  "ipNetmask": "{{ ipNetmask }}",
+  "ipGateway": "{{ ipGateway }}",
+  "interfaceMtu": {{ interfaceMtu }},
+  "physLocationId": {{ physLocationId }},
+  "typeId": {{ typeId }},
+  "profileId": {{ profileId }},
+  "cdnId": {{ cdnId }},
+  "updPending": {{ updPending | bool | lower }},
+  "statusId": {{ statusId }}
+}

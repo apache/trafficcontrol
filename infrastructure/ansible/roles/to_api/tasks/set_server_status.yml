@@ -1,0 +1,63 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Ensure you're logged into TrafficOps
+  import_tasks: login.yml
+
+- name: Get server details for {{to_api_target_host}}
+  uri:
+    url: "{{ to_api_base_url }}/api/1.2/servers/hostname/{{ to_api_target_host.split('.')[0] }}/details"
+    method: GET
+    headers:
+      Cookie: "{{ hostvars.localhost.login.set_cookie }}"
+    validate_certs: no
+  delegate_to: localhost
+  delegate_facts: True
+  register: server_details
+
+- name: Current status of {{to_api_target_host}}
+  debug:
+    msg: "{{ server_details.json.response.status }}"
+    verbosity: 1
+  delegate_to: localhost
+
+- name: Show id of {{to_api_target_host}}
+  debug:
+    msg: "{{ server_details.json.response.id }}"
+    verbosity: 2
+  delegate_to: localhost
+
+- name: "{{ 'Set state of '+to_api_target_host+' to ' + to_api_desired_state }}"
+  uri:
+    url: "{{ to_api_base_url }}/api/1.2/servers/{{ server_details.json.response.id }}/status"
+    method: PUT
+    body_format: json
+    headers:
+      Cookie: "{{ hostvars.localhost.login.set_cookie }}"
+    validate_certs: no
+    return_content: yes
+    status_code:
+      - 200
+      - 201
+    body:
+      status: "{{ to_api_desired_state }}"
+      offlineReason: "{{ to_api_down_reason }}"
+  delegate_to: localhost
+  register: set_state_result
+
+- name: "{{ 'Show ' + to_api_desired_state + ' command output for '+to_api_target_host }}"
+  debug:
+    msg: "{{ set_state_result.content }}"
+    verbosity: 2
+  delegate_to: localhost

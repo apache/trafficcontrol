@@ -1,0 +1,728 @@
+{#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#}
+##
+## Where to emit the default log messages (typically at 'info'
+## severity):
+## off: disabled
+## file: the file specified by log.console.file
+## console: to standard output (seen when using `riak attach-direct`)
+## both: log.console.file and standard out.
+##
+## Default: file
+##
+## Acceptable values:
+##   - one of: off, file, console, both
+log.console = {{ riak_log_console }}
+
+## The severity level of the console log, default is 'info'.
+##
+## Default: info
+##
+## Acceptable values:
+##   - one of: debug, info, notice, warning, error, critical, alert, emergency, none
+log.console.level = {{ riak_log_console_level }}
+
+## When 'log.console' is set to 'file' or 'both', the file where
+## console messages will be logged.
+##
+## Default: $(platform_log_dir)/console.log
+##
+## Acceptable values:
+##   - the path to a file
+log.console.file = {{ riak_log_console_file }}
+
+## The file where error messages will be logged.
+##
+## Default: $(platform_log_dir)/error.log
+##
+## Acceptable values:
+##   - the path to a file
+log.error.file = {{ riak_log_error_file }}
+
+## When set to 'on', enables log output to syslog.
+##
+## Default: off
+##
+## Acceptable values:
+##   - on or off
+log.syslog = {{ riak_log_syslog }}
+
+## Whether to enable the crash log.
+##
+## Default: on
+##
+## Acceptable values:
+##   - on or off
+log.crash = {{ riak_log_crash }}
+
+## If the crash log is enabled, the file where its messages will
+## be written.
+##
+## Default: $(platform_log_dir)/crash.log
+##
+## Acceptable values:
+##   - the path to a file
+log.crash.file = {{ riak_log_crash_file }}
+
+## Maximum size in bytes of individual messages in the crash log
+##
+## Default: 64KB
+##
+## Acceptable values:
+##   - a byte size with units, e.g. 10GB
+log.crash.maximum_message_size = {{ riak_log_crash_maximum_message_size }}
+
+## Maximum size of the crash log in bytes, before it is rotated
+##
+## Default: 10MB
+##
+## Acceptable values:
+##   - a byte size with units, e.g. 10GB
+log.crash.size = {{ riak_log_crash_size }}
+
+## The schedule on which to rotate the crash log.  For more
+## information see:
+## https://github.com/basho/lager/blob/master/README.md#internal-log-rotation
+##
+## Default: $D0
+##
+## Acceptable values:
+##   - text
+log.crash.rotation = {{ riak_log_crash_rotation }}
+
+## The number of rotated crash logs to keep. When set to
+## 'current', only the current open log file is kept.
+##
+## Default: 5
+##
+## Acceptable values:
+##   - an integer
+##   - the text "current"
+log.crash.rotation.keep = {{ riak_log_crash_rotation_keep }}
+
+## Name of the Erlang node
+##
+## Default: riak@127.0.0.1
+##
+## Acceptable values:
+##   - text
+nodename = {{ riak_nodename }}
+
+## Cookie for distributed node communication.  All nodes in the
+## same cluster should use the same cookie or they will not be able to
+## communicate.
+##
+## Default: riak
+##
+## Acceptable values:
+##   - text
+distributed_cookie = {{ riak_distributed_cookie }}
+
+## Sets the number of threads in async thread pool, valid range
+## is 0-1024. If thread support is available, the default is 64.
+## More information at: http://erlang.org/doc/man/erl.html
+##
+## Default: 64
+##
+## Acceptable values:
+##   - an integer
+erlang.async_threads = {{ riak_erlang_async_threads | int }}
+
+## The number of concurrent ports/sockets
+## Valid range is 1024-134217727
+##
+## Default: 262144
+##
+## Acceptable values:
+##   - an integer
+erlang.max_ports = {{ riak_erlang_max_ports | int }}
+
+## Set scheduler forced wakeup interval. All run queues will be
+## scanned each Interval milliseconds. While there are sleeping
+## schedulers in the system, one scheduler will be woken for each
+## non-empty run queue found. An Interval of zero disables this
+## feature, which also is the default.
+## This feature is a workaround for lengthy executing native code, and
+## native code that do not bump reductions properly.
+## More information: http://www.erlang.org/doc/man/erl.html#+sfwi
+##
+## Default: 500
+##
+## Acceptable values:
+##   - an integer
+## erlang.schedulers.force_wakeup_interval = 500
+#erlang.schedulers.force_wakeup_interval = {{ riak_erlang_schedulers_force_wakeup_interval | int }}
+
+## Enable or disable scheduler compaction of load. By default
+## scheduler compaction of load is enabled. When enabled, load
+## balancing will strive for a load distribution which causes as many
+## scheduler threads as possible to be fully loaded (i.e., not run out
+## of work). This is accomplished by migrating load (e.g. runnable
+## processes) into a smaller set of schedulers when schedulers
+## frequently run out of work. When disabled, the frequency with which
+## schedulers run out of work will not be taken into account by the
+## load balancing logic.
+## More information: http://www.erlang.org/doc/man/erl.html#+scl
+##
+## Default: false
+##
+## Acceptable values:
+##   - one of: true, false
+## erlang.schedulers.compaction_of_load = false
+#erlang.schedulers.compaction_of_load = {{ riak_erlang_schedulers_compaction_of_load | bool | lower }}
+
+## Enable or disable scheduler utilization balancing of load. By
+## default scheduler utilization balancing is disabled and instead
+## scheduler compaction of load is enabled which will strive for a
+## load distribution which causes as many scheduler threads as
+## possible to be fully loaded (i.e., not run out of work). When
+## scheduler utilization balancing is enabled the system will instead
+## try to balance scheduler utilization between schedulers. That is,
+## strive for equal scheduler utilization on all schedulers.
+## More information: http://www.erlang.org/doc/man/erl.html#+sub
+##
+## Acceptable values:
+##   - one of: true, false
+## erlang.schedulers.utilization_balancing = true
+#erlang.schedulers.utilization_balancing = {{ riak_erlang_schedulers_utilization_balancing | bool | lower }}
+
+## Number of partitions in the cluster (only valid when first
+## creating the cluster). Must be a power of 2, minimum 8 and maximum
+## 1024.
+##
+## Default: 64
+##
+## Acceptable values:
+##   - an integer
+ring_size = {{ riak_ring_size | int }}
+
+## Number of concurrent node-to-node transfers allowed.
+##
+## Default: 2
+##
+## Acceptable values:
+##   - an integer
+## transfer_limit = 2
+transfer_limit = {{ riak_transfer_limit | int }}
+
+## Default cert location for https can be overridden
+## with the ssl config variable, for example:
+##
+## Acceptable values:
+##   - the path to a file
+ssl.certfile = {{ riak_ssl_certfile }}
+
+## Default key location for https can be overridden with the ssl
+## config variable, for example:
+##
+## Acceptable values:
+##   - the path to a file
+ssl.keyfile = {{ riak_ssl_keyfile }}
+
+## Default signing authority location for https can be overridden
+## with the ssl config variable, for example:
+##
+## Acceptable values:
+##   - the path to a file
+ssl.cacertfile = {{ riak_ssl_cacertfile }}
+
+## DTrace support Do not enable 'dtrace' unless your Erlang/OTP
+## runtime is compiled to support DTrace.  DTrace is available in
+## R15B01 (supported by the Erlang/OTP official source package) and in
+## R14B04 via a custom source repository & branch.
+##
+## Default: off
+##
+## Acceptable values:
+##   - on or off
+dtrace = {{ riak_dtrace }}
+
+## Platform-specific installation paths (substituted by rebar)
+##
+## Default: /usr/sbin
+##
+## Acceptable values:
+##   - the path to a directory
+platform_bin_dir = {{ riak_platform_bin_dir }}
+
+##
+## Default: /var/lib/riak
+##
+## Acceptable values:
+##   - the path to a directory
+platform_data_dir = {{ riak_platform_data_dir }}
+
+##
+## Default: /etc/riak
+##
+## Acceptable values:
+##   - the path to a directory
+platform_etc_dir = {{ riak_platform_etc_dir }}
+
+##
+## Default: /usr/lib64/riak/lib
+##
+## Acceptable values:
+##   - the path to a directory
+platform_lib_dir = {{ riak_platform_lib_dir }}
+
+##
+## Default: /var/log/riak
+##
+## Acceptable values:
+##   - the path to a directory
+platform_log_dir = {{ riak_platform_log_dir }}
+
+## Enable consensus subsystem. Set to 'on' to enable the
+## consensus subsystem used for strongly consistent Riak operations.
+##
+## Default: off
+##
+## Acceptable values:
+##   - on or off
+## strong_consistency = on
+strong_consistency = {{ riak_strong_consistency }}
+
+## listener.http.<name> is an IP address and TCP port that the Riak
+## HTTP interface will bind.
+##
+## Default: 127.0.0.1:8098
+##
+## Acceptable values:
+##   - an IP/port pair, e.g. 127.0.0.1:10011
+listener.http.internal = {{ riak_listener_http_internal }}
+
+## listener.protobuf.<name> is an IP address and TCP port that the Riak
+## Protocol Buffers interface will bind.
+##
+## Default: 127.0.0.1:8087
+##
+## Acceptable values:
+##   - an IP/port pair, e.g. 127.0.0.1:10011
+listener.protobuf.internal = {{ riak_listener_protobuf_internal }}
+
+## The maximum length to which the queue of pending connections
+## may grow. If set, it must be an integer > 0. If you anticipate a
+## huge number of connections being initialized *simultaneously*, set
+## this number higher.
+##
+## Default: 128
+##
+## Acceptable values:
+##   - an integer
+## protobuf.backlog = 128
+protobuf.backlog = {{ riak_protobuf_backlog | int }}
+
+## listener.https.<name> is an IP address and TCP port that the Riak
+## HTTPS interface will bind.
+##
+## Acceptable values:
+##   - an IP/port pair, e.g. 127.0.0.1:10011
+##
+listener.https.internal = {{ riak_listener_https_internal }}
+
+## How Riak will repair out-of-sync keys. Some features require
+## this to be set to 'active', including search.
+## * active: out-of-sync keys will be repaired in the background
+## * passive: out-of-sync keys are only repaired on read
+## * active-debug: like active, but outputs verbose debugging
+## information
+##
+## Default: active
+##
+## Acceptable values:
+##   - one of: active, passive, active-debug
+anti_entropy = {{ riak_anti_entropy }}
+
+## Specifies the storage engine used for Riak's key-value data
+## and secondary indexes (if supported).
+##
+## Default: bitcask
+##
+## Acceptable values:
+##   - one of: bitcask, leveldb, memory, multi, prefix_multi
+storage_backend = {{ riak_storage_backend }}
+
+## Simplify prefix_multi configuration for Riak CS. Keep this
+## commented out unless Riak is configured for Riak CS.
+##
+## Acceptable values:
+##   - an integer
+## cs_version = 20000
+{% if riak_cs_version is defined and riak_cs_version is not none %}cs_version = {{ riak_cs_version }}{% endif %}
+
+## Controls which binary representation of a riak value is stored
+## on disk.
+## * 0: Original erlang:term_to_binary format. Higher space overhead.
+## * 1: New format for more compact storage of small values.
+##
+## Default: 1
+##
+## Acceptable values:
+##   - the integer 1
+##   - the integer 0
+object.format = {{ riak_object_format | int }}
+
+## Reading or writing objects bigger than this size will write a
+## warning in the logs.
+##
+## Default: 5MB
+##
+## Acceptable values:
+##   - a byte size with units, e.g. 10GB
+object.size.warning_threshold = {{ riak_object_size_warning_threshold }}
+
+## Writing an object bigger than this will send a failure to the
+## client.
+##
+## Default: 50MB
+##
+## Acceptable values:
+##   - a byte size with units, e.g. 10GB
+object.size.maximum = {{ riak_object_size_maximum }}
+
+## Writing an object with more than this number of siblings will
+## generate a warning in the logs.
+##
+## Default: 25
+##
+## Acceptable values:
+##   - an integer
+object.siblings.warning_threshold = {{ riak_object_siblings_warning_threshold }}
+
+## Writing an object with more than this number of siblings will
+## send a failure to the client.
+##
+## Default: 100
+##
+## Acceptable values:
+##   - an integer
+object.siblings.maximum = {{ riak_object_siblings_maximum }}
+
+## Whether to allow list buckets.
+##
+## Default: enabled
+##
+## Acceptable values:
+##   - enabled or disabled
+## cluster.job.riak_kv.list_buckets = enabled
+cluster.job.riak_kv.list_buckets = {{ riak_cluster_job_riak_kv_list_buckets }}
+
+## Whether to allow streaming list buckets.
+##
+## Default: enabled
+##
+## Acceptable values:
+##   - enabled or disabled
+## cluster.job.riak_kv.stream_list_buckets = enabled
+cluster.job.riak_kv.stream_list_buckets = {{ riak_cluster_job_riak_kv_stream_list_buckets }}
+
+## Whether to allow list keys.
+##
+## Default: enabled
+##
+## Acceptable values:
+##   - enabled or disabled
+## cluster.job.riak_kv.list_keys = enabled
+cluster.job.riak_kv.list_keys = {{ riak_cluster_job_riak_kv_list_keys }}
+
+## Whether to allow streaming list keys.
+##
+## Default: enabled
+##
+## Acceptable values:
+##   - enabled or disabled
+## cluster.job.riak_kv.stream_list_keys = enabled
+cluster.job.riak_kv.stream_list_keys = {{ riak_cluster_job_riak_kv_stream_list_keys }}
+
+## Whether to allow secondary index queries.
+##
+## Default: enabled
+##
+## Acceptable values:
+##   - enabled or disabled
+## cluster.job.riak_kv.secondary_index = enabled
+cluster.job.riak_kv.secondary_index = {{ riak_cluster_job_riak_kv_secondary_index }}
+
+## Whether to allow streaming secondary index queries.
+##
+## Default: enabled
+##
+## Acceptable values:
+##   - enabled or disabled
+## cluster.job.riak_kv.stream_secondary_index = enabled
+cluster.job.riak_kv.stream_secondary_index = {{ riak_cluster_job_riak_kv_stream_secondary_index }}
+
+## Whether to allow term-based map-reduce.
+##
+## Default: enabled
+##
+## Acceptable values:
+##   - enabled or disabled
+## cluster.job.riak_kv.map_reduce = enabled
+cluster.job.riak_kv.map_reduce = {{ riak_cluster_job_riak_kv_map_reduce }}
+
+## Whether to allow JavaScript map-reduce.
+##
+## Default: enabled
+##
+## Acceptable values:
+##   - enabled or disabled
+## cluster.job.riak_kv.map_reduce_js = enabled
+cluster.job.riak_kv.map_reduce_js = {{ riak_cluster_job_riak_kv_map_reduce_js }}
+
+## A path under which bitcask data files will be stored.
+##
+## Default: $(platform_data_dir)/bitcask
+##
+## Acceptable values:
+##   - the path to a directory
+bitcask.data_root = {{ riak_bitcask_data_root }}
+
+## Configure how Bitcask writes data to disk.
+## erlang: Erlang's built-in file API
+## nif: Direct calls to the POSIX C API
+## The NIF mode provides higher throughput for certain
+## workloads, but has the potential to negatively impact
+## the Erlang VM, leading to higher worst-case latencies
+## and possible throughput collapse.
+##
+## Default: erlang
+##
+## Acceptable values:
+##   - one of: erlang, nif
+bitcask.io_mode = {{ riak_bitcask_io_mode }}
+
+## Set to 'off' to disable the admin panel.
+##
+## Default: off
+##
+## Acceptable values:
+##   - on or off
+riak_control = {{ riak_riak_control }}
+
+## Authentication mode used for access to the admin panel.
+##
+## Default: off
+##
+## Acceptable values:
+##   - one of: off, userlist
+riak_control.auth.mode = {{ riak_riak_control_auth_mode }}
+
+## If riak control's authentication mode (riak_control.auth.mode)
+## is set to 'userlist' then this is the list of usernames and
+## passwords for access to the admin panel.
+## To create users with given names, add entries of the format:
+## riak_control.auth.user.USERNAME.password = PASSWORD
+## replacing USERNAME with the desired username and PASSWORD with the
+## desired password for that user.
+##
+## Acceptable values:
+##   - text
+## riak_control.auth.user.admin.password = pass
+{% if riak_riak_control_auth_userlist is defined and riak_riak_control_auth_userlist is not none %}
+{% for username, password in riak_riak_control_auth_userlist %}
+riak_control.auth.user.{{ username }}.password = {{ password }}
+{% endfor %}
+{% endif %}
+
+## This parameter defines the percentage of total server memory
+## to assign to LevelDB. LevelDB will dynamically adjust its internal
+## cache sizes to stay within this size.  The memory size can
+## alternately be assigned as a byte count via leveldb.maximum_memory
+## instead.
+##
+## Default: 70
+##
+## Acceptable values:
+##   - an integer
+leveldb.maximum_memory.percent = {{ riak_leveldb_maximum_memory_percent | int }}
+
+## Enables or disables the compression of data on disk.
+## Enabling (default) saves disk space.  Disabling may reduce read
+## latency but increase overall disk activity.  Option can be
+## changed at any time, but will not impact data on disk until
+## next time a file requires compaction.
+##
+## Default: on
+##
+## Acceptable values:
+##   - on or off
+leveldb.compression = {{ riak_leveldb_compression }}
+
+## Selection of compression algorithms.  snappy is
+## original compression supplied for leveldb.  lz4 is new
+## algorithm that compresses to similar volume but averages twice
+## as fast on writes and four times as fast on reads.
+##
+## Acceptable values:
+##   - one of: snappy, lz4
+leveldb.compression.algorithm = {{ riak_leveldb_compression_algorithm }}
+
+##
+## Default: on
+##
+## Acceptable values:
+##   - on or off
+## multi_backend.name.leveldb.compression = on
+multi_backend.name.leveldb.compression = {{ riak_multi_backend_name_leveldb_compression }}
+
+##
+## Acceptable values:
+##   - one of: snappy, lz4
+## multi_backend.name.leveldb.compression.algorithm = lz4
+multi_backend.name.leveldb.compression.algorithm = {{ riak_multi_backend_name_leveldb_compression_algorithm }}
+
+## Whether to allow search queries.
+##
+## Default: enabled
+##
+## Acceptable values:
+##   - enabled or disabled
+## cluster.job.riak_search.query = enabled
+cluster.job.riak_search.query = {{ riak_cluster_job_riak_search_query }}
+
+## To enable Search set this 'on'.
+##
+## Default: off
+##
+## Acceptable values:
+##   - on or off
+search = {{ riak_search }}
+
+## How long Riak will wait for Solr to start. The start sequence
+## will be tried twice. If both attempts timeout, then the Riak node
+## will be shutdown. This may need to be increased as more data is
+## indexed and Solr takes longer to start. Values lower than 1s will
+## be rounded up to the minimum 1s.
+##
+## Default: 30s
+##
+## Acceptable values:
+##   - a time duration with units, e.g. '10s' for 10 seconds
+search.solr.start_timeout = {{ riak_search_solr_start_timeout }}
+
+## The port number which Solr binds to.
+## NOTE: Binds on every interface.
+##
+## Default: 8093
+##
+## Acceptable values:
+##   - an integer
+search.solr.port = {{ riak_search_solr_port | int }}
+
+## The port number which Solr JMX binds to.
+## NOTE: Binds on every interface.
+##
+## Default: 8985
+##
+## Acceptable values:
+##   - an integer
+search.solr.jmx_port = {{ riak_search_solr_jmx_port | int }}
+
+## The options to pass to the Solr JVM.  Non-standard options,
+## i.e. -XX, may not be portable across JVM implementations.
+## E.g. -XX:+UseCompressedStrings
+##
+## Default: -d64 -Xms1g -Xmx1g -XX:+UseStringCache -XX:+UseCompressedOops
+##
+## Acceptable values:
+##   - text
+search.solr.jvm_options = {{ riak_search_solr_jvm_options }}
+
+## The minimum batch size, in number of Riak objects. Any batches that
+## are smaller than this amount will not be immediately flushed to Solr,
+## but are guaranteed to be flushed within the
+## "search.queue.batch.flush_interval".
+##
+## Default: 10
+##
+## Acceptable values:
+##   - an integer
+## search.queue.batch.minimum = 10
+search.queue.batch.minimum = {{ riak_search_queue_batch_minimum | int }}
+
+## The maximum batch size, in number of Riak objects. Any batches that are
+## larger than this amount will be split, where the first
+## search.queue.batch.maximum set of objects will be flushed to Solr, and
+## the remaining objects enqueued for that index will be retained until the
+## next batch is delivered. This parameter ensures that at most
+## "search.queue.batch.maximum object" will be delivered into Solr in any
+## given request.
+##
+## Default: 500
+##
+## Acceptable values:
+##   - an integer
+## search.queue.batch.maximum = 500
+search.queue.batch.maximum = {{ riak_search_queue_batch_maximum }}
+
+## The maximum delay between notification to flush batches to Solr. This
+## setting is used to increase or decrease the frequency of batch delivery
+## into Solr, specifically for relatively low-volume input into Riak. This
+## setting ensures that data will be delivered into Solr in accordance with
+## the "search.queue.batch.minimum" and "search.queue.batch.maximum"
+## settings within the specified interval. Batches that are smaller than
+## "search.queue.batch.minimum" will be delivered to Solr within this
+## interval. This setting will generally hav no effect on heavily loaded
+## systems.
+##
+## Default: 500ms
+##
+## Acceptable values:
+##   - a time duration with units, e.g. '10s' for 10 seconds
+##   - the text "infinity"
+## search.queue.batch.flush_interval = 500ms
+search.queue.batch.flush_interval = {{ riak_search_queue_batch_flush_interval }}
+
+## The queue high watermark. If the total number of queued messages in a
+## Solr Queue Worker instance exceeds this limit, then the calling vnode
+## will be blocked until the total number falls below this limit. This
+## parameter exercises flow control between Riak and the Riak
+## Search batching subsystem if writes into Solr start to fall behind.
+##
+## Default: 1000
+##
+## Acceptable values:
+##   - an integer
+## search.queue.high_watermark = 1000
+search.queue.high_watermark = {{ riak_search_queue_high_watermark | int }}
+
+## The strategy for how we handle purging when we hit the
+## search.queue.high_watermark.
+## - purge_one -> Removes the oldest item on the queue from an
+## erroring (references to fuses blown in the code) index in
+## order to get below the search.queue.high_watermark.
+## - purge_index -> Removes all items associated with one random
+## erroring (references to fuses blown in the code) index in
+## order to get below the search.queue.high_watermark.
+## - off -> purging is disabled
+##
+## Default: purge_one
+##
+## Acceptable values:
+##   - one of: purge_one, purge_index, off
+## search.queue.high_watermark.purge_strategy = purge_one
+search.queue.high_watermark.purge_strategy = {{ riak_search_queue_high_watermark_purge_strategy }}
+
+## Whether to allow Yokozuna queries on this node
+##
+## Default: enabled
+##
+## Acceptable values:
+##   - enabled or disabled
+## cluster.job.yokozuna.query = enabled
+cluster.job.yokozuna.query = {{ riak_cluster_job_yokozuna_query }}
+
+tls_protocols.tlsv1 = {{ riak_tls_protocols_tlsv1 }}

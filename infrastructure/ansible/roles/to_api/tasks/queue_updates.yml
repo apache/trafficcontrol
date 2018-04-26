@@ -1,0 +1,51 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Ensure you're logged into TrafficOps
+  import_tasks: login.yml
+
+- name: Get cdn details
+  uri:
+    url: "{{ to_api_base_url }}/api/1.2/cdns"
+    method: GET
+    headers:
+      Cookie: "{{ hostvars.localhost.login.set_cookie }}"
+    validate_certs: no
+  delegate_to: localhost
+  delegate_facts: True
+  register: cdns_details
+  run_once: true
+
+- name: "{{ 'Queue updates for ' + to_api_target_cdn }}"
+  uri:
+    url: "{{ to_api_base_url }}/api/1.2/cdns/{{ cdns_details.json.response | selectattr('name','equalto',to_api_target_cdn) | map(attribute='id') | list | first }}/queue_update"
+    method: POST
+    body_format: json
+    headers:
+      Cookie: "{{ hostvars.localhost.login.set_cookie }}"
+    validate_certs: no
+    return_content: yes
+    status_code:
+      - 200
+      - 201
+    body:
+      action: 'queue'
+  delegate_to: localhost
+  register: queue_update_result
+
+- name: "{{ 'Show queue updates for ' + to_api_target_cdn + ' command output' }}"
+  debug:
+    msg: "{{ queue_update_result.content }}"
+    verbosity: 2
+  delegate_to: localhost

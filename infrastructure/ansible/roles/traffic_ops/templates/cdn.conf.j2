@@ -1,0 +1,71 @@
+{#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#}
+{
+   "cors" : {
+      "access_control_allow_origin" : "{{ to_cors_access_control_allow_origin }}"
+   },
+   "geniso" : {
+      "iso_root_path" : "{{ to_public_dir }}"
+   },
+   "hypnotoad" : {
+      "accept_interval" : {{ to_hypnotoad_accept_interval }},
+      "group" : "{{ to_group }}",
+      "heartbeat_timeout" : {{ to_hypnotoad_heartbeat_timeout }},
+      "listen" : [
+         "https://[::]:{{ to_hypnotoad_port }}?cert={{ to_certs_cert }}&key={{ to_certs_key }}&ca={{ to_certs_ca }}&verify={{ to_certs_verify}}&ciphers={{ to_hypnotoad_ciphers | join(":") }}"
+      ],
+      "pid_file" : "{{ to_hypnotoad_pidfile }}",
+      "user" : "{{ to_user }}",
+      "workers" : {{ to_hypnotoad_number_of_workers }}
+   },
+   "inactivity_timeout" : {{ to_inactivity_timeout }},
+   "portal" : {
+      "base_url" : "{{ to_portal_base_url }}",
+      "docs_url" : "{{ to_portal_docs_url }}",
+      "email_from" : "{{ to_portal_email_from }}",
+      "pass_reset_path" : "{{ to_portal_pass_reset_path }}",
+      "user_register_path" : "{{ to_portal_user_register_path }}"
+   },
+   "secrets" : [
+      "{{ to_secrets | join("\",\n\t\t\"") }}"
+   ],
+   "to" : {
+      "base_url" : "{{ to_base_url }}",
+      "email_from" : "{{ to_email_from }}",
+      "no_account_found_msg" : "{{ to_account_missing_msg }}"
+   },
+   "traffic_ops_golang" : {
+      "backend_max_connections" : {
+         "mojolicious" : {{ to_mojo_max_db_connections }}
+      },
+      "idle_timeout" : {{ to_go_inactive_timeout }},
+      "log_location_debug" : "{{ to_go_logging_file_debug }}",
+      "log_location_error" : "{{ to_go_logging_file_error }}",
+      "log_location_event" : "{{ to_go_logging_file_event }}",
+      "log_location_info" : "{{ to_go_logging_file_info }}",
+      "log_location_warning" : "{{ to_go_logging_file_warn }}",
+      "max_db_connections" : {{ to_go_max_db_connections }},
+      "db_max_idle_connections": {{ to_go_db_max_idle_connections }},
+      "db_conn_max_lifetime_seconds": {{ to_go_db_conn_max_lifetime_seconds }},
+      "db_query_timeout_seconds" : {{ to_go_db_query_timeout_seconds }},
+      "port" : "{{ to_go_port }}",
+      "proxy_keep_alive" : {{ to_go_proxy_keep_alive }},
+      "proxy_read_header_timeout" : {{ to_go_proxy_read_header_timeout }},
+      "proxy_timeout" : {{ to_go_proxy_timeout }},
+      "proxy_tls_timeout" : {{ to_go_proxy_tls_timeout }},
+      "read_header_timeout" : {{ to_go_read_header_timeout }},
+      "read_timeout" : {{ to_go_read_timeout }},
+      "write_timeout" : {{ to_go_write_timeout }}
+   }
+}

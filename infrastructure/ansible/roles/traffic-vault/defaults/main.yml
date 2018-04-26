@@ -1,0 +1,112 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+install_traffic_vault: false
+riak_version: 2.2.3
+riak_pkg_name: "{% if riak_version is defined and riak_version != omit %}{{ 'riak-'+riak_version }}{% else %}riak{% endif %}"
+
+# Local OS User to run the riak processes
+riak_group: riak
+riak_user: riak
+
+# Riak User account credentials for each role
+riak_admin_user:
+riak_admin_passwd:
+riak_user_user:
+riak_user_passwd:
+riak_ro_user:
+riak_ro_passwd:
+
+# Riak SSL Generation information
+riak_generate_ssl: true
+riak_SSL_csr_path: "{{ riak_platform_etc_dir }}/csr/server.csr"
+
+# Initial Riak node to use as the ringleader when constucting the cluster
+riak_ringleader: 127.0.0.1
+
+# riak.conf
+riak_log_console: file
+riak_log_console_level: info
+riak_log_console_file: $(platform_log_dir)/console.log
+riak_log_error_file: $(platform_log_dir)/error.log
+riak_log_syslog: 'off'
+riak_log_crash: 'on'
+riak_log_crash_file: $(platform_log_dir)/crash.log
+riak_log_crash_maximum_message_size: 64KB
+riak_log_crash_size: 10MB
+riak_log_crash_rotation: $D0
+riak_log_crash_rotation_keep: 5
+riak_nodename: riak@127.0.0.1
+riak_distributed_cookie: riak
+riak_erlang_async_threads: 64
+riak_erlang_max_ports: 262144
+riak_erlang_schedulers_force_wakeup_interval: 500
+riak_erlang_schedulers_compaction_of_load: false
+riak_erlang_schedulers_utilization_balancing: true
+riak_ring_size: 64
+riak_transfer_limit: 2
+riak_ssl_certfile: "{{ riak_platform_etc_dir }}/certs/server.crt"
+riak_ssl_keyfile: "{{ riak_platform_etc_dir }}/certs/server.key"
+riak_ssl_cacertfile: /etc/pki/tls/certs/ca-bundle.crt
+riak_dtrace: 'off'
+riak_platform_bin_dir: /usr/sbin
+riak_platform_data_dir: /var/lib/riak
+riak_platform_etc_dir: /etc/riak
+riak_platform_lib_dir: /usr/lib64/riak/lib
+riak_platform_log_dir: /var/log/riak
+riak_strong_consistency: 'off'
+riak_listener_http_internal: 127.0.0.1:8098
+riak_listener_protobuf_internal: 127.0.0.1:8087
+riak_protobuf_backlog: 128
+riak_listener_https_internal: 127.0.0.1:10011
+riak_anti_entropy: active
+riak_storage_backend: bitcask
+riak_cs_version:
+riak_object_format: 1
+riak_object_size_warning_threshold: 5MB
+riak_object_size_maximum: 50MB
+riak_object_siblings_warning_threshold: 25
+riak_object_siblings_maximum: 100
+riak_cluster_job_riak_kv_list_buckets: enabled
+riak_cluster_job_riak_kv_stream_list_buckets: enabled
+riak_cluster_job_riak_kv_list_keys: enabled
+riak_cluster_job_riak_kv_stream_list_keys: enabled
+riak_cluster_job_riak_kv_secondary_index: enabled
+riak_cluster_job_riak_kv_stream_secondary_index: enabled
+riak_cluster_job_riak_kv_map_reduce: enabled
+riak_cluster_job_riak_kv_map_reduce_js: enabled
+riak_bitcask_data_root: $(platform_data_dir)/bitcask
+riak_bitcask_io_mode: erlang
+riak_riak_control: 'off'
+riak_riak_control_auth_mode: 'off'
+riak_riak_control_auth_userlist:
+  #admin: pass
+riak_leveldb_maximum_memory_percent: 70
+riak_leveldb_compression: 'on'
+riak_leveldb_compression_algorithm: lz4
+riak_multi_backend_name_leveldb_compression: 'on'
+riak_multi_backend_name_leveldb_compression_algorithm: lz4
+riak_cluster_job_riak_search_query: enabled
+riak_search: 'off'
+riak_search_solr_start_timeout: 30s
+riak_search_solr_port: 8093
+riak_search_solr_jmx_port: 8985
+riak_search_solr_jvm_options: -d64 -Xms1g -Xmx1g -XX:+UseStringCache -XX:+UseCompressedOops
+riak_search_queue_batch_minimum: 10
+riak_search_queue_batch_maximum: 500
+riak_search_queue_batch_flush_interval: 500ms
+riak_search_queue_high_watermark: 1000
+riak_search_queue_high_watermark_purge_strategy: purge_one
+riak_cluster_job_yokozuna_query: enabled
+riak_tls_protocols_tlsv1: 'off'

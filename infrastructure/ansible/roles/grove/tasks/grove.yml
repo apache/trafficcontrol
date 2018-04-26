@@ -1,0 +1,81 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Install grove and config tool
+  yum:
+    name:
+      - "{{ g_pkg_name }}"
+      - "{{ gtccfg_pkg_name }}"
+    state: installed
+    enablerepo: "{{ additional_yum_repos | default([]) }}"
+
+- name: Configure Grove
+  template:
+    src: grove.cfg.j2
+    dest: "{{ grove_config_dir }}/grove.cfg"
+    owner: root
+    group: root
+    mode: 0600
+  no_log: True
+
+- name: Deploy GroveTCConfig Crontab
+  template:
+    src: crontab.j2
+    dest: /etc/cron.d/grove
+  no_log: True
+
+- name: Create an empty ORT file
+  copy:
+    dest: "/opt/ort/traffic_ops_ort.pl"
+    content: |
+      #!/usr/bin/perl
+      # empty for Grove, prevents systems previously running ORT from overriding TO Update Flag
+
+- name: Create log folder
+  file:
+    path: "{{ grove_custom_ats2_path | dirname }}"
+    state: directory
+    owner: "{{ grove_user }}"
+    group: "{{ grove_group }}"
+    mode: 0755
+
+- name: Create empty log file
+  file:
+    path: "{{ grove_custom_ats2_path }}"
+    state: touch
+    owner: "{{ grove_user }}"
+    group: "{{ grove_group }}"
+    mode: "u+rw,g-wx,o-wx"
+  changed_when: false
+
+- name: Create certs folder
+  file:
+    path: "{{ grove_certdir }}"
+    state: directory
+    mode: 0600
+
+- name: Enable Grove on startup
+  systemd:
+    name: grove
+    enabled: yes
+    daemon_reload: yes
+
+- name: Run the config generator
+  command: "/usr/sbin/grovetccfg -certdir {{ grove_certdir }} -host {{ ansible_hostname }} -insecure -pretty -tourl {{ grovetccfg_traffic_ops_url }} -touser {{ grovetccfg_traffic_ops_username }} -topass '{{ grovetccfg_traffic_ops_password }}'"
+  no_log: True
+  ignore_errors: True
+
+- name: Start Grove
+  systemd:
+    name: grove
+    state: restarted

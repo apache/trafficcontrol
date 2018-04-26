@@ -1,0 +1,156 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Install Postgres client tools
+  yum:
+    name:
+      - postgresql96
+    state: present
+    enablerepo: "{{ additional_yum_repos | default([]) }}"
+
+- name: Add Postgres96 bin dir to system-wide $PATH.
+  copy:
+    dest: /etc/profile.d/postgres96-bin.sh
+    content: PATH=$PATH:/usr/pgsql-9.6/bin
+
+- name: Install Traffic Ops
+  yum:
+    name: "{{ to_pkg_name }}"
+    state: installed
+    enablerepo: "{{ additional_yum_repos | default([]) }}"
+  notify: Restart Traffic Ops
+
+- name: Check if Postinstall has already been run
+  stat:
+    path: "{{ to_install_bin_installdir }}/postinstall.complete"
+  register: PostinstallComplete
+
+- name: Run Traffic Ops Postinstall
+  block:
+    - name: Render Traffic Ops Postinstall Answers
+      template:
+        src: "postinstall.input.j2"
+        owner: "{{ to_user }}"
+        group: "{{ to_group }}"
+        mode: 0600
+        dest: "{{ to_install_bin_installdir }}/configuration_file.json"
+      vars:
+        to_pi_openssl_generate_certificate: "no"
+      no_log: true
+
+    - name: Run Traffic Ops Postinstall
+      command: "{{ to_install_bin_installdir }}/postinstall -a -cfile {{ to_install_bin_installdir }}/configuration_file.json"
+      notify: Restart Traffic Ops
+      environment:
+        GOPATH: /opt/traffic_ops/go
+      register: Postinstall_output
+      failed_when:
+        (Postinstall_output.stdout.find("Success! Postinstall complete.") == -1) or
+        (Postinstall_output.rc != 0) or
+        (Postinstall_output.stderr.find("Installing modules failed") != -1)
+
+    - name: Mark Postinstall was successful
+      file:
+        path: "{{ to_install_bin_installdir }}/postinstall.complete"
+        state: touch
+
+  always:
+    - name: Cleanup the Postinstall Answers
+      file:
+        path: "{{ to_install_bin_installdir }}/configuration_file.json"
+        state: absent
+  when: PostinstallComplete.stat.exists == False
+
+- name: Enable & Stop Traffic Ops Service
+  systemd:
+    name: traffic_ops
+    enabled: yes
+    daemon_reload: yes
+    state: stopped
+  notify: Restart Traffic Ops
+
+- name: Render Traffic Ops database configuration file
+  template:
+    src: "dbconf.yml.j2"
+    owner: "{{ to_user }}"
+    group: "{{ to_group }}"
+    mode: 0600
+    dest: "{{ to_db_installdir }}/dbconf.yml"
+  notify: Restart Traffic Ops
+
+- name: Render Traffic Ops configuration files
+  template:
+    src: "{{item}}.j2"
+    owner: "{{ to_user }}"
+    group: "{{ to_group }}"
+    mode: 0600
+    dest: "{{ to_conf_installdir }}/{{item}}"
+  with_items:
+    - production/database.conf
+    - production/log4perl.conf
+    - production/riak.conf
+    - cdn.conf
+    - ldap.conf
+  notify: Restart Traffic Ops
+
+- name: Upgrade TODB
+  command: ./db/admin.pl -env=production upgrade
+  args:
+    chdir: "{{ to_app_installdir }}"
+  environment:
+    PATH: "{{ lookup('env', 'PATH') }}:{{ to_base_installdir }}/go/bin"
+    PERL5LIB: ./lib:./local/lib/perl5
+    GOPATH: /opt/traffic_ops/go
+  run_once: true
+
+- name: Initialize Riak SOLR
+  block:
+    - name: Add search schema
+      uri:
+        url: "{{ to_riak_uri }}/search/schema/sslkeys"
+        force_basic_auth: yes
+        user: "{{ to_riak_admin_username }}"
+        password: "{{ to_riak_admin_username_password }}"
+        method: PUT
+        remote_src: yes
+        src: /opt/traffic_ops/app/conf/misc/riak_search/sslkeys.xml
+        headers:
+          Content-Type: application/xml
+        status_code: 200,204
+
+    - name: Add search index
+      uri:
+        url: "{{ to_riak_uri }}/search/index/sslkeys"
+        force_basic_auth: yes
+        user: "{{ to_riak_admin_username }}"
+        password: "{{ to_riak_admin_username_password }}"
+        method: PUT
+        body_format: json
+        body:
+          schema: sslkeys
+        status_code: 200,204
+
+    - name: Associate search index to bucket
+      uri:
+        url: "{{ to_riak_uri }}/buckets/ssl/props"
+        force_basic_auth: yes
+        user: "{{ to_riak_admin_username }}"
+        password: "{{ to_riak_admin_username_password }}"
+        method: PUT
+        body_format: json
+        body:
+          props:
+            search_index: sslkeys
+        status_code: 200,204
+  run_once: true

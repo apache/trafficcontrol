@@ -1,0 +1,77 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+install_grove: False
+g_pkg_name: "{% if grove_version is defined and grove_version != omit %}{{ 'grove-'+grove_version }}{% else %}grove{% endif %}"
+gtccfg_pkg_name: "{% if grovetccfg_version is defined and grovetccfg_version != omit %}{{ 'grovetccfg-'+grovetccfg_version }}{% else %}grovetccfg{% endif %}"
+
+# Local OS user for the grove process
+grove_user: grove
+grove_group: grove
+
+# TO connection information
+grovetccfg_traffic_ops_url:
+grovetccfg_traffic_ops_username:
+grovetccfg_traffic_ops_password:
+
+# Crontab for grove
+grovetccfg_crontab:
+  # Poll TO for hot configuration reloadable data every 20 minutes
+  syncds:
+    schedule: '0,20,40 * * * *'
+    user: root
+    job:  "/usr/sbin/grovetccfg -certdir {{ grove_certdir }} -host {{ ansible_hostname }} -insecure -pretty -tourl {{ grovetccfg_traffic_ops_url }} -touser {{ grovetccfg_traffic_ops_username }} -topass '{{ grovetccfg_traffic_ops_password }}' > /tmp/grovetccfg.log 2>&1"
+
+# Grove configuration
+grove_custom_ats2_path: "/opt/trafficserver/var/log/trafficserver/custom_ats_2.log"
+grove_ssl_cert_path: "{{ grove_config_dir }}/certs/cert.pem"
+grove_ssl_key_path: "{{ grove_config_dir }}/certs/key.pem"
+grove_remap_file_path: "{{ grove_config_dir }}/remap.json"
+grove_log_path_error: "{{ grove_log_dir }}/error.log"
+grove_log_path_warn: "{{ grove_log_dir }}/error.log"
+grove_log_path_info: 'null'
+grove_log_path_debug: 'null'
+grove_log_path_event: "{{ grove_custom_ats2_path }}"
+grove_rfc_compliant: false
+grove_config_dir: '/etc/grove'
+grove_certdir: "{{ grove_config_dir }}/certs/"
+grove_port: 8080
+grove_https_port: 8443
+grove_cache_size_bytes_comment: "{{ grove_cache_size_bytes | int | human_readable(unit='G') }}"
+grove_cache_size_bytes: "{{ '3 GB' | human_to_bytes }}"
+grove_concurrent_rule_requests: 100
+grove_connection_close: "false"
+grove_interface_name: "eth0"
+grove_log_dir: "/var/log/grove"
+grove_parent_request_timeout: 10000
+grove_parent_request_keep_alive: 10000
+grove_parent_request_max_idle_connections: 10000
+grove_parent_request_idle_connection_timeout: 10000
+grove_server_read_timeout: 5000
+grove_server_write_timeout: 5000
+grove_server_idle_timeout: 5000
+
+# Which plugins to load into Grove
+grove_plugins:
+  - ats_log
+  - http_cacheinspector
+  - http_callgc
+  - http_memstats
+  - http_stats
+  - if_modified_since
+  - modify_headers
+  - modify_response_headers_global
+  - modify_parent_request_headers
+  - range_request_handler
+  - record_stats

@@ -40,6 +40,7 @@ favicon.(ico|png)$, Apache
 ^traffic_ops/experimental/goto/testFiles/, Apache
 cron\.d/[^/]*$, Apache
 \.pem$, Apache # Single certificate file.
+\.dockerignore$, Apache
 
 # Images, created for this project or used under an Apache license.
 ^misc/traffic-control-cdn/images/atc_logo\.png, Apache

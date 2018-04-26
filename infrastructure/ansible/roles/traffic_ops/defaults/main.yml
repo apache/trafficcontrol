@@ -1,0 +1,171 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+install_traffic_ops: False
+to_pkg_name: "{% if to_version is defined and to_version != omit %}{{ 'traffic_ops-'+to_version }}{% else %}traffic_ops{% endif %}"
+
+# Postgres Superuser account to use with TO database and user creation
+postgresql_admin_user:
+postgresql_admin_user_password:
+
+# Local OS Account to use with TrafficOps processes
+to_user: trafops # currently hardcoded into TO
+to_group: trafops # currently hardcoded into TO
+
+# TO Installation information
+to_base_installdir: /opt/traffic_ops
+to_app_installdir: "{{ to_base_installdir }}/app"
+to_public_dir: "{{ to_app_installdir }}/public"
+to_db_installdir: "{{ to_app_installdir }}/db"
+to_conf_installdir: "{{ to_app_installdir }}/conf"
+to_install_installdir: "{{ to_base_installdir }}/install"
+to_install_json_installdir: "{{ to_install_installdir }}/data/json"
+to_install_bin_installdir: "{{ to_install_installdir }}/bin"
+to_install_goose_script: "{{ to_install_bin_installdir }}/install_goose.sh"
+
+# URL users should use to reach TO
+to_url: "https://{{ ansible_fqdn }}"
+
+# Initial TO Administrative User
+to_admin_user:
+to_admin_user_password:
+
+# --- cdn.conf
+to_heartbeat_timeout: 20
+to_hypnotoad_number_of_workers: 12
+to_cors_access_control_allow_origin: "http://localhost:8080"
+to_base_url: https://localhost
+to_secrets:
+  - your-custom-secret1
+  - your-custom-secret2
+
+to_certs_cert: /etc/pki/tls/certs/localhost.crt
+to_certs_key: /etc/pki/tls/private/localhost.key
+to_certs_ca: /etc/pki/ca-trust/source/anchors/root.ca.crt
+to_certs_verify: "0x00"
+
+to_inactivity_timeout: 120
+to_gen_new_secret: "yes"
+to_no_of_secrets_to_keep: "2"
+
+to_hypnotoad_accept_interval: 0.1
+to_hypnotoad_heartbeat_timeout: 120
+to_hypnotoad_port: 60443
+to_hypnotoad_pidfile: /var/run/traffic_ops.pid
+to_hypnotoad_ciphers:
+  - AES128-GCM-SHA256
+  - HIGH
+  - "!RC4"
+  - "!MD5"
+  - "!aNULL"
+  - "!EDH"
+  - "!ED"
+
+to_portal_base_url: "http://localhost:8080"
+to_portal_docs_url: "https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_portal/usingtrafficportal.html#usingtrafficportal"
+to_portal_email_from: "TrafficControl <no-reply@trafficcontrol.apache.org>"
+to_portal_pass_reset_path: user
+to_portal_user_register_path: user/register
+to_email_from: "{{ to_portal_email_from }}"
+to_account_missing_msg: "Could not locate user."
+
+to_mojo_max_db_connections: 20
+to_go_max_db_connections: 20
+to_go_inactive_timeout: 120
+to_go_logging_file_debug: ""
+to_go_logging_file_event: /var/log/traffic_ops/access.log
+to_go_logging_file_info: /var/log/traffic_ops/info.log
+to_go_logging_file_warn: /var/log/traffic_ops/error.log
+to_go_logging_file_error: /var/log/traffic_ops/error.log
+to_go_db_max_idle_connections: 15
+to_go_db_conn_max_lifetime_seconds: 600
+to_go_db_query_timeout_seconds: 300
+to_go_port: 443
+to_go_proxy_keep_alive: 0
+to_go_proxy_read_header_timeout: 120
+to_go_proxy_timeout: 120
+to_go_proxy_tls_timeout: 120
+to_go_read_header_timeout: 120
+to_go_read_timeout: 120
+to_go_write_timeout: 120
+
+
+# --- database.conf & dbconf.yml
+todb_db_name: traffic_ops
+todb_type: Pg
+todb_port: 5432
+todb_host: localhost
+todb_username:
+todb_password:
+todb_ssl_enable: false
+todb_dbconf:
+  production:
+    driver: postgres
+    host: localhost
+    port: 5432
+    user: "{{ todb_username }}"
+    password: "{{ todb_password }}"
+    dbname: "{{ todb_db_name }}"
+    sslmode: disable
+    open_manual: ""
+
+
+# --- postinstall - input.json
+to_pi_script_with_args: "{{ to_pi_script }} -a -cfile {{ to_pi_input_json }}"
+to_pi_script: "{{ to_install_bin_dir }}/postinstall"
+to_pi_maxmind_download: "yes"
+to_pi_add_custom_profiles: "no"
+
+# --- postinstall - SSL Certs
+to_pi_openssl_generate_certificate: "yes"
+to_pi_openssl_country_name: "US"
+to_pi_openssl_state_or_province: "CO"
+to_pi_openssl_locality_name: "Denver"
+to_pi_openssl_org_name: "TrafficControl"
+to_pi_openssl_unit_name: "CDN"
+to_pi_openssl_common_name: "{{ ansible_hostname }}"
+to_pi_openssl_rsa_passphrase:
+
+# --- postinstall profiles.json
+to_pi_cdn_name: MKGA
+to_pi_health_polling_interval: "8000"
+to_pi_dns_subdomain: "{{ to_pi_cdn_name }}.{{ ansible_domain }}"
+to_pi_soa_admin: "traffic_ops"
+to_pi_driver_prefix: "/dev/sd"
+to_pi_ram_drive_prefix: "/dev/ram"
+to_pi_ram_drive_letters: "0,1,2,3,4,5,6,7"
+to_pi_health_thresh_load_avg: "25"
+to_pi_health_thresh_kbps: "1750000"
+to_pi_health_connect_timeout: "2000"
+
+# --- log4perl.conf
+to_log_file: "/var/log/traffic_ops/traffic_ops.log"
+
+# --- ldap.conf
+to_ldap_setup: "no"
+to_ldap_hostname: ""
+to_ldap_admin_dn: ""
+to_ldap_password: ""
+to_ldap_search_base: ""
+to_ldap_search_query: ""
+to_ldap_insecure: 0
+to_ldap_timeout_secs: ""
+
+# --- riak.conf
+to_riak_conf: "{{ to_config_dir }}/riak.conf"
+to_riak_username:
+to_riak_username_password:
+to_riak_admin_username:
+to_riak_admin_username_password:
+to_riak_uri: "https://riak1.kabletown.invalid:8088"

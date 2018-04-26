@@ -1,0 +1,123 @@
+;
+; Licensed under the Apache License, Version 2.0 (the "License");
+; you may not use this file except in compliance with the License.
+; You may obtain a copy of the License at
+;
+;     http://www.apache.org/licenses/LICENSE-2.0
+;
+; Unless required by applicable law or agreed to in writing, software
+; distributed under the License is distributed on an "AS IS" BASIS,
+; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+; See the License for the specific language governing permissions and
+; limitations under the License.
+;
+
+[traffic_opsdb-primary]
+cdn-todb-oshob-01.samplelab.kabletown.invalid ansible_host=192.168.100.249
+
+[mso_parent_alias]
+ds0-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.1 component=mso_parent_alias
+ds1-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.2 component=mso_parent_alias
+ds10-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.3 component=mso_parent_alias
+ds11-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.4 component=mso_parent_alias
+ds12-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.5 component=mso_parent_alias
+ds13-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.6 component=mso_parent_alias
+ds14-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.7 component=mso_parent_alias
+ds15-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.8 component=mso_parent_alias
+ds16-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.9 component=mso_parent_alias
+ds17-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.10 component=mso_parent_alias
+ds18-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.11 component=mso_parent_alias
+ds19-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.12 component=mso_parent_alias
+ds2-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.13 component=mso_parent_alias
+ds20-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.14 component=mso_parent_alias
+ds21-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.15 component=mso_parent_alias
+ds22-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.16 component=mso_parent_alias
+ds23-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.17 component=mso_parent_alias
+ds24-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.18 component=mso_parent_alias
+ds25-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.19 component=mso_parent_alias
+ds26-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.20 component=mso_parent_alias
+ds27-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.21 component=mso_parent_alias
+ds28-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.22 component=mso_parent_alias
+ds29-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.23 component=mso_parent_alias
+ds3-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.24 component=mso_parent_alias
+ds4-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.25 component=mso_parent_alias
+ds5-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.26 component=mso_parent_alias
+ds6-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.27 component=mso_parent_alias
+ds7-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.28 component=mso_parent_alias
+ds8-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.29 component=mso_parent_alias
+ds9-cdn-fo-01.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-01.samplelab.kabletown.invalid ansible_host=127.0.0.30 component=mso_parent_alias
+ds0-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.1 component=mso_parent_alias
+ds1-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.2 component=mso_parent_alias
+ds10-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.3 component=mso_parent_alias
+ds11-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.4 component=mso_parent_alias
+ds12-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.5 component=mso_parent_alias
+ds13-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.6 component=mso_parent_alias
+ds14-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.7 component=mso_parent_alias
+ds15-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.8 component=mso_parent_alias
+ds16-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.9 component=mso_parent_alias
+ds17-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.10 component=mso_parent_alias
+ds18-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.11 component=mso_parent_alias
+ds19-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.12 component=mso_parent_alias
+ds2-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.13 component=mso_parent_alias
+ds20-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.14 component=mso_parent_alias
+ds21-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.15 component=mso_parent_alias
+ds22-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.16 component=mso_parent_alias
+ds23-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.17 component=mso_parent_alias
+ds24-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.18 component=mso_parent_alias
+ds25-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.19 component=mso_parent_alias
+ds26-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.20 component=mso_parent_alias
+ds27-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.21 component=mso_parent_alias
+ds28-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.22 component=mso_parent_alias
+ds29-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.23 component=mso_parent_alias
+ds3-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.24 component=mso_parent_alias
+ds4-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.25 component=mso_parent_alias
+ds5-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.26 component=mso_parent_alias
+ds6-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.27 component=mso_parent_alias
+ds7-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.28 component=mso_parent_alias
+ds8-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.29 component=mso_parent_alias
+ds9-cdn-fo-02.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-02.samplelab.kabletown.invalid ansible_host=127.0.1.30 component=mso_parent_alias
+ds0-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.1 component=mso_parent_alias
+ds1-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.2 component=mso_parent_alias
+ds10-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.3 component=mso_parent_alias
+ds11-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.4 component=mso_parent_alias
+ds12-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.5 component=mso_parent_alias
+ds13-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.6 component=mso_parent_alias
+ds14-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.7 component=mso_parent_alias
+ds15-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.8 component=mso_parent_alias
+ds16-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.9 component=mso_parent_alias
+ds17-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.10 component=mso_parent_alias
+ds18-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.11 component=mso_parent_alias
+ds19-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.12 component=mso_parent_alias
+ds2-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.13 component=mso_parent_alias
+ds20-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.14 component=mso_parent_alias
+ds21-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.15 component=mso_parent_alias
+ds22-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.16 component=mso_parent_alias
+ds23-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.17 component=mso_parent_alias
+ds24-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.18 component=mso_parent_alias
+ds25-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.19 component=mso_parent_alias
+ds26-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.20 component=mso_parent_alias
+ds27-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.21 component=mso_parent_alias
+ds28-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.22 component=mso_parent_alias
+ds29-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.23 component=mso_parent_alias
+ds3-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.24 component=mso_parent_alias
+ds4-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.25 component=mso_parent_alias
+ds5-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.26 component=mso_parent_alias
+ds6-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.27 component=mso_parent_alias
+ds7-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.28 component=mso_parent_alias
+ds8-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.29 component=mso_parent_alias
+ds9-cdn-fo-03.samplelab.kabletown.invalid cdn=MKGA true_fqdn=cdn-fo-03.samplelab.kabletown.invalid ansible_host=127.0.2.30 component=mso_parent_alias
+[traffic_ops]
+[traffic_ops:vars]
+additional_dns_names=to.samplelab.kabletown.invalid
+
+[traffic_opsdb]
+[traffic_opsdb:vars]
+additional_dns_names=todb.samplelab.kabletown.invalid
+
+[traffic_portal]
+[traffic_portal:vars]
+additional_dns_names=tp.samplelab.kabletown.invalid
+
+[traffic_stats]
+[traffic_stats:vars]
+additional_dns_names=stats.samplelab.kabletown.invalid

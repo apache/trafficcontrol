@@ -1,0 +1,90 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Contruct list of IPs which should be servers linked to the MSO parent
+  set_fact:
+    mso_server_ip: "{{ (mso_server_ip | default([]) ) + [ '127.'+(cdnDelegationIndex[Target_cdn_delegation]|string)+'.'+(item.value|string)+'.'+((Target_mso_ds.0 + 1)|string) ] }}"
+  with_dict: "{{ foIndex }}"
+
+- name: Distribute Eligible MSO Profiles Among Servers
+  command: "{{ role_path }}/files/selection.set.py {{ Target_mso_ds.1.eligible_mso_server_profile_names | unique | sort | join(',') | quote }} {{ mso_server_ip | unique | sort | join(',') | quote }} denormalize"
+  register: mso_server_profiles_out
+  changed_when: false
+
+- name: Convert MSO Profile distribution to something more usable
+  set_fact:
+    mso_server_profiles: "{{ mso_server_profiles_out.stdout | from_json }}"
+
+# NOTE: THIS BREAKS IDEMPOTENCY
+- name: Update Applicable MSO Parent Servers
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/servers/{{ item.id }}"
+    method: PUT
+    body: "{{ lookup('template', 'server.j2') }}"
+  with_items: "{{ get_all_servers.json.response | json_query(server_query) }}"
+  vars:
+    server_query: "[?{{ mso_server_ip | map('regex_replace', '^(.*)', 'ipAddress == `\\1`') | join(' || ') }} ]"
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    lc_profiles: "{{ get_all_profiles.json.response | lower }}"
+    profile_name: "{{ mso_server_profiles[item.ipAddress] | lower }}"
+    profile_query: "[?name == `{{ profile_name }}`].id | [0]"
+    cdn_id: "{{ item.cdnId }}"
+    hostName: "{{ item.hostName }}"
+    domainName: "{{ item.domainName }}"
+    cachegroupId: "{{ item.cachegroupId }}"
+    statusId: "{{ item.statusId }}"
+    physLocationId: "{{ item.physLocationId }}"
+    typeId: "{{ item.typeId }}"
+    profileId: "{{ lc_profiles | to_json | from_json | json_query(profile_query) }}"
+    cdnId: "{{ item.cdnId }}"
+    updPending: "{{ item.updPending }}"
+    interfaceName: "{{ item.interfaceName }}"
+    ipAddress: "{{ item.ipAddress }}"
+    ipNetmask: "{{ item.ipNetmask }}"
+    ipGateway: "{{ item.ipGateway }}"
+    ip6Address: "{{ item.ip6Address }}"
+    ip6Gateway: "{{ item.ip6Gateway }}"
+    interfaceMtu: "{{ item.interfaceMtu }}"
+    tcpPort: "{{ item.tcpPort }}"
+    httpsPort: "{{ item.httpsPort }}"
+    xmppId: "{{ item.xmppId }}"
+    xmppPasswd: "{{ item.xmppPasswd }}"
+    rack: "{{ item.rack }}"
+    mgmtIpAddress: "{{ item.mgmtIpAddress }}"
+    mgmtIpNetmask: "{{ item.mgmtIpNetmask }}"
+    mgmtIpGateway: "{{ item.mgmtIpGateway }}"
+    iloIpAddress: "{{ item.iloIpAddress }}"
+    iloIpNetmask: "{{ item.iloIpNetmask }}"
+    iloIpGateway: "{{ item.iloIpGateway }}"
+    iloUsername: "{{ item.iloUsername }}"
+    iloPassword: "{{ item.iloPassword }}"
+    routerHostName: "{{ item.routerHostName }}"
+    routerPortName: "{{ item.routerPortName }}"
+  register: create_server_out
+  failed_when: (create_server_out.status == 400 and create_server_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_server_out.status > 400 and create_server_out.status < 600)
+
+- name: Assign Servers to Delivery Services - MSO
+  uri:
+    url: "{{ dl_to_url }}/api/{{ dl_to_api_version }}/deliveryserviceserver"
+    method: POST
+    body: "{{ lookup('template', 'deliveryserviceserver.j2') }}"
+  register: create_ds_assignment_out
+  failed_when: (create_ds_assignment_out.status == 400 and create_ds_assignment_out.json | to_json | from_json | json_query(error_query) | length != 0) or (create_ds_assignment_out.status > 400 and create_ds_assignment_out.status < 600 and create_ds_assignment_out.status != 500)
+  vars:
+    error_query: "alerts[?level=='error'].text[?!contains(@,'already exists')]"
+    computed_xmlid: "{{ Target_mso_ds.1.uniqueKey }}-{{ Target_cdn_delegation | lower }}"
+    target_xmlId: "{{ Target_mso_ds.1.xmlId | default(computed_xmlid) }}"
+    ds_query: "[?cdnId == `{{ Target_cdn_id}}` && xmlId == `{{ target_xmlId }}`].id | [0]"
+    deliveryService: "{{ get_all_ds_cdn.json.response | json_query(ds_query) }}"
+    replace: false
+    servers: "{{ create_server_out.results | map(attribute='item') | map(attribute='id') | list }}"

@@ -1,0 +1,43 @@
+---
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+install_traffic_opsdb: false
+initialize_traffic_opsdb: false
+
+# Local OS User to use for Postgres Processes
+postgresql_user: postgres
+postgresql_group: postgres
+
+# Port on which to listen for connections
+postgresql_port: 5432
+
+# Postgres PGDATA directory
+postgresql_datadir: /var/lib/pgsql/9.6/data
+
+# SSL CA root cert to use with SSL Connections
+postgresql_certs_ca: "{{ postgresql_datadir }}/lab.rootca.crt"
+
+# Postgres instance-wide maximum connection limit
+postgresql_max_connections: 700
+
+# Postgres database admin credentials
+postgresql_admin_user:
+postgresql_admin_user_password:
+
+# TODB database credentials
+todb_username:
+todb_password:
+
+# TODB database name
+todb_db_name: traffic_ops

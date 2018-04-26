@@ -1,0 +1,134 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- name: Install Postgres Yum Repo
+  yum:
+    name: "https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-{{ ansible_distribution_major_version }}-{{ ansible_architecture }}/pgdg-redhat96-9.6-3.noarch.rpm"
+    state: latest
+    enablerepo: "{{ additional_yum_repos | default([]) }}"
+
+- name: Install Postgres
+  yum:
+    name:
+      - postgresql96-server
+      - postgresql96
+      - postgresql96-devel
+      - gcc
+      - python-devel
+    state: present
+    enablerepo: "{{ additional_yum_repos | default([]) }}"
+
+- name: Ensure postgres data directory exists
+  file:
+    state: directory
+    path: "{{ postgresql_datadir }}"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0755
+
+- name: Initialize database
+  shell: "/usr/pgsql-9.6/bin/initdb -D '{{ postgresql_datadir }}'"
+  become: yes
+  become_user: "{{ postgresql_user }}"
+  args:
+    creates: "{{ postgresql_datadir }}/pg_hba.conf"
+
+- name: Update the systemd definition of PGDATA
+  ini_file:
+    create: no
+    path: /usr/lib/systemd/system/postgresql-9.6.service
+    section: Service
+    option: Environment
+    value: "PGDATA={{ postgresql_datadir }}"
+
+- name: Refresh Systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Add Postgres96 bin dir to system-wide $PATH.
+  copy:
+    dest: /etc/profile.d/postgres96-bin.sh
+    content: PATH=$PATH:/usr/pgsql-9.6/bin
+
+- name: Install psycopg2 python module
+  easy_install:
+    name: psycopg2
+  environment:
+    PATH: "/usr/pgsql-9.6/bin:{{ lookup('env', 'PATH') }}"
+
+- name: Render pgpass file for TrafficOps
+  template:
+    src: .pgpass.j2
+    dest: "~{{ postgresql_user }}/.pgpass"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0600
+
+- name: Apply Postgresql Configs
+  template:
+    src: "templates/{{ item }}.j2"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0775
+    dest: "{{ postgresql_datadir }}/{{ item }}"
+  with_items:
+    - pg_hba.conf
+    - postgresql.conf
+
+- name: Copy in SSL certificate
+  copy:
+    src: /etc/pki/tls/certs/server.crt
+    dest: "{{ postgresql_datadir }}/server.crt"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0600
+    remote_src: yes
+
+- name: Copy in SSL private key
+  copy:
+    src: /etc/pki/tls/private/server.key.pem
+    dest: "{{ postgresql_datadir }}/server.key"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0600
+    remote_src: yes
+
+- name: Copy in SSL CA certificate
+  copy:
+    src: /etc/pki/ca-trust/source/anchors/lab.rootca.crt
+    dest: "{{ postgresql_certs_ca }}"
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0600
+    remote_src: yes
+
+- name: Update Log Directory Permissions
+  file:
+    state: directory
+    path: /var/log/postgresql
+    owner: "{{ postgresql_user }}"
+    group: "{{ postgresql_group }}"
+    mode: 0775
+
+- name: Enable and start TODB
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  with_items:
+    - postgresql-9.6
+
+- name: Wait for TODB to Init Postgres and become available
+  wait_for:
+    port: "{{ postgresql_port }}"
+    delay: 3
