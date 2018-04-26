@@ -67,11 +67,9 @@ func (c *TierCache) Close() {
 	c.second.Close()
 }
 
-// Keys eturn the keys of the second only. The first is just an accellerator.
+// Keys returns the keys of the second tier only. The first is just an accelerator.
 func (c *TierCache) Keys() []string {
-	arr := make([]string, 0)
-	arr = append(arr, c.second.Keys()...)
-	return arr
+	return c.second.Keys()
 }
 
 // Capacity returns the maximum size in bytes of the cache
