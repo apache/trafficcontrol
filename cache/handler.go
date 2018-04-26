@@ -219,7 +219,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Debugf("cache.Handler.ServeHTTP: '%v' not in cache (reqid %v)\n", cacheKey, reqID)
 		beforeParentRequestData := plugin.BeforeParentRequestData{Req: r, RemapRule: remappingProducer.Name()}
 		h.plugins.OnBeforeParentRequest(remappingProducer.PluginCfg(), pluginContext, beforeParentRequestData)
-		cacheObj, reqHost, err := retrier.Get(r, nil)
+		cacheObj, reqHost, err = retrier.Get(r, nil)
 		if err != nil {
 			log.Errorf("retrying get error (in uncached): %v (reqid %v)\n", err, reqID)
 			responder.OriginConnectFailed = true

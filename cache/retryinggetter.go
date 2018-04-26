@@ -37,6 +37,7 @@ func NewRetrier(h *Handler, reqHdr http.Header, reqTime time.Time, reqCacheContr
 }
 
 // Get takes the HTTP request and the cached object if there is one, and makes a new request, retrying according to its RemappingProducer. If no cached object exists, pass a nil obj.
+// Along with the cacheobj.CacheObj, a string pointer to the request hostname used to fetch the cacheobj.CacheObj is returned.
 func (r *Retrier) Get(req *http.Request, obj *cacheobj.CacheObj) (*cacheobj.CacheObj, *string, error) {
 	retryGetFunc := func(remapping remap.Remapping, retryFailures bool, obj *cacheobj.CacheObj) *cacheobj.CacheObj {
 		// return true for Revalidate, and issue revalidate requests separately.
@@ -58,6 +59,7 @@ func (r *Retrier) Get(req *http.Request, obj *cacheobj.CacheObj) (*cacheobj.Cach
 }
 
 // retryingGet takes a function, and retries failures up to the RemappingProducer RetryNum limit. On failure, it creates a new remapping. The func f should use `remapping` to make its request. If it hits failures up to the limit, it returns the last received cacheobj.CacheObj
+// Along with the cacheobj.CacheObj, a string pointer to the request hostname used to fetch the cacheobj.CacheObj is returned.
 // TODO refactor to not close variables - it's awkward and confusing.
 func retryingGet(getCacheObj func(remapping remap.Remapping, retryFailures bool, obj *cacheobj.CacheObj) *cacheobj.CacheObj, request *http.Request, remappingProducer *remap.RemappingProducer, cachedObj *cacheobj.CacheObj) (*cacheobj.CacheObj, *string, error) {
 	obj := (*cacheobj.CacheObj)(nil)
@@ -67,7 +69,7 @@ func retryingGet(getCacheObj func(remapping remap.Remapping, retryFailures bool,
 			if obj == nil {
 				return nil, nil, errors.New("remapping producer allows no requests") // should never happen
 			}
-			return obj, &remapping.Request.URL.Host, nil
+			return obj, nil, nil
 		} else if err != nil {
 			return nil, nil, err
 		}
