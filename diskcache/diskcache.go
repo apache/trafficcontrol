@@ -24,7 +24,7 @@ type DiskCache struct {
 
 const BucketName = "b"
 
-func New(path string, cacheSize uint64) (*DiskCache, error) {
+func New(path string, cacheSizeBytes uint64) (*DiskCache, error) {
 	db, err := bolt.Open(path, 0600, &bolt.Options{Timeout: 5 * time.Second})
 	if err != nil {
 		return nil, errors.New("opening database '" + path + "': " + err.Error())
@@ -40,7 +40,7 @@ func New(path string, cacheSize uint64) (*DiskCache, error) {
 		return nil, errors.New("creating bucket for database '" + path + "': " + err.Error())
 	}
 
-	return &DiskCache{db: db, maxSizeBytes: cacheSize, lru: lru.NewLRU(), sizeBytes: 0}, nil
+	return &DiskCache{db: db, maxSizeBytes: cacheSizeBytes, lru: lru.NewLRU(), sizeBytes: 0}, nil
 }
 
 // ResetAfterRestart rebuilds the LRU with an arbirtrary order and sets sizeBytes. This seems crazy, but it is better than doing nothing, sice gc is based on the LRU and sizeBytes. In the future, we may want to periodically sync the LRU to disk, but we'll still need to iterate over all keys in the disk DB to avoid orphaning objects.
