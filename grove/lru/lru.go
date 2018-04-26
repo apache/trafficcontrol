@@ -8,7 +8,7 @@ import (
 type LRU struct {
 	l      *list.List
 	lElems map[string]*list.Element
-	m      sync.Mutex
+	m      sync.RWMutex
 }
 
 type listObj struct {
@@ -51,6 +51,8 @@ func (c *LRU) RemoveOldest() (string, uint64, bool) {
 
 // Keys returns a string array of the keys
 func (c *LRU) Keys() []string {
+	c.m.RLock()
+	defer c.m.RUnlock()
 	arr := make([]string, 0)
 	for e := c.l.Back(); e != nil; e = e.Prev() {
 		object := e.Value.(*listObj)
