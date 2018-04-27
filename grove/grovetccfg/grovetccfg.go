@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tcv13 "github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 
 	"github.com/apache/incubator-trafficcontrol/grove/config"
@@ -451,8 +452,8 @@ func makeServersHostnameMap(servers []tc.Server) map[string]tc.Server {
 	return m
 }
 
-func makeCachegroupsNameMap(cgs []tc.CacheGroup) map[string]tc.CacheGroup {
-	m := map[string]tc.CacheGroup{}
+func makeCachegroupsNameMap(cgs []tcv13.CacheGroup) map[string]tcv13.CacheGroup {
+	m := map[string]tcv13.CacheGroup{}
 	for _, cg := range cgs {
 		m[cg.Name] = cg
 	}
@@ -483,16 +484,16 @@ func makeDeliveryserviceRegexMap(dsrs []tc.DeliveryServiceRegexes) map[string][]
 	return m
 }
 
-func makeCDNMap(cdns []tc.CDN) map[string]tc.CDN {
-	m := map[string]tc.CDN{}
+func makeCDNMap(cdns []tcv13.CDN) map[string]tcv13.CDN {
+	m := map[string]tcv13.CDN{}
 	for _, cdn := range cdns {
 		m[cdn.Name] = cdn
 	}
 	return m
 }
 
-func makeDSCertMap(sslKeys []tc.CDNSSLKeys) map[string]tc.CDNSSLKeys {
-	m := map[string]tc.CDNSSLKeys{}
+func makeDSCertMap(sslKeys []tcv13.CDNSSLKeys) map[string]tcv13.CDNSSLKeys {
+	m := map[string]tcv13.CDNSSLKeys{}
 	for _, sslkey := range sslKeys {
 		m[sslkey.DeliveryService] = sslkey
 	}
@@ -520,7 +521,7 @@ func getServerDeliveryservices(hostname string, servers map[string]tc.Server, ds
 	return serverDses, nil
 }
 
-func getParents(hostname string, servers map[string]tc.Server, cachegroups map[string]tc.CacheGroup) ([]tc.Server, error) {
+func getParents(hostname string, servers map[string]tc.Server, cachegroups map[string]tcv13.CacheGroup) ([]tc.Server, error) {
 	server, ok := servers[hostname]
 	if !ok {
 		return nil, fmt.Errorf("hostname not found in Servers")
@@ -678,9 +679,9 @@ func createRulesOld(
 	dses []tc.DeliveryService,
 	parents []tc.Server,
 	dsRegexes map[string][]tc.DeliveryServiceRegex,
-	cdns map[string]tc.CDN,
+	cdns map[string]tcv13.CDN,
 	hostParams []tc.Parameter,
-	dsCerts map[string]tc.CDNSSLKeys,
+	dsCerts map[string]tcv13.CDNSSLKeys,
 	certDir string,
 ) (remap.RemapRules, error) {
 	rules := []remapdata.RemapRule{}
@@ -823,15 +824,15 @@ func createRulesOld(
 	return remapRules, nil
 }
 
-func getCertFileName(cert tc.CDNSSLKeys, dir string) string {
+func getCertFileName(cert tcv13.CDNSSLKeys, dir string) string {
 	return dir + string(os.PathSeparator) + strings.Replace(cert.Hostname, "*.", "", -1) + ".crt"
 }
 
-func getCertKeyFileName(cert tc.CDNSSLKeys, dir string) string {
+func getCertKeyFileName(cert tcv13.CDNSSLKeys, dir string) string {
 	return dir + string(os.PathSeparator) + strings.Replace(cert.Hostname, "*.", "", -1) + ".key"
 }
 
-func createCertificateFiles(cert tc.CDNSSLKeys, dir string) error {
+func createCertificateFiles(cert tcv13.CDNSSLKeys, dir string) error {
 	certFileName := getCertFileName(cert, dir)
 	crt, err := base64.StdEncoding.DecodeString(cert.Certificate.Crt)
 	if err != nil {
