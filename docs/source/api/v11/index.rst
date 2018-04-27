@@ -11,9 +11,30 @@
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
-Traffic Server
-**************
-See the `Apache Traffic Server documentation <https://docs.trafficserver.apache.org/en/latest/index.html>`_.
+API 1.1 Reference
+*****************
+Traffic Ops v1.1 API Documentation
 
+.. toctree:: 
+  :maxdepth: 1
+
+  asn
+  cachegroup
+  cdn
+  changelog
+  deliveryservice
+  hwinfo
+  parameter
+  phys_location
+  profile
+  region
+  role
+  server
+  static_dns
+  status
+  system
+  to_extension
+  type
+  user

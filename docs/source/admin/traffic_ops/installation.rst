@@ -30,7 +30,7 @@ The user must have the following for a successful minimal install:
 * Access to Centos Base and epel repositories
 * Access to `The Comprehensive Perl Archive Network (CPAN) <http://www.cpan.org/>`_
 
-As of version 2.0 only Postgres is supported as the database. This documentation assumes CentOS 7.2 and Postgresql 9.6.3. For a production install
+As of version 2.0 only Postgres is supported as the database. This documentation assumes CentOS 7.2 and Postgresql 9.6.3 for a production install.
 
 .. highlight:: none
 
