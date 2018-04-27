@@ -24,6 +24,8 @@ type ErrorConstant string
 func (e ErrorConstant) Error() string { return string(e) }
 
 const DBError = ErrorConstant("database access error")
+const NilTenantError = ErrorConstant("tenancy is enabled but request tenantID is nil")
+const TenantUserNotAuthError = ErrorConstant("user not authorized for requested tenant")
 
 const ApplicationJson = "application/json"
 const Gzip = "gzip"

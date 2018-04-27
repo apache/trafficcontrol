@@ -83,6 +83,8 @@ func HandleErrorsWithType(errs []error, errType ApiErrorType, handleErrs func(st
 		handleErrs(http.StatusBadRequest, errs...)
 	case DataMissingError:
 		handleErrs(http.StatusNotFound, errs...)
+	case ForbiddenError:
+		handleErrs(http.StatusForbidden, errs...)
 	default:
 		log.Errorf("received unknown ApiErrorType from read: %s\n", errType.String())
 		handleErrs(http.StatusInternalServerError, errs...)
