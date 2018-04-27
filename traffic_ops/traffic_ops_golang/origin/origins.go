@@ -20,6 +20,7 @@ package origin
  */
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"strconv"
@@ -30,6 +31,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -105,6 +107,62 @@ func (origin *TOOrigin) Validate(db *sqlx.DB) []error {
 	return tovalidate.ToErrors(validateErrs)
 }
 
+// GetTenantID returns a pointer to the Origin's tenant ID from the DB and any error encountered
+func (origin *TOOrigin) GetTenantID(db *sqlx.DB) (*int, error) {
+	if origin.ID != nil {
+		var tenantID *int
+		if err := db.QueryRow(`SELECT tenant FROM origin where id = $1`, *origin.ID).Scan(&tenantID); err != nil {
+			if err == sql.ErrNoRows {
+				return nil, nil
+			}
+			return nil, fmt.Errorf("querying tenant ID for origin ID '%v': %v", *origin.ID, err)
+		}
+		return tenantID, nil
+	}
+	return nil, nil
+}
+
+func (origin *TOOrigin) IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error) {
+	currentTenantID, err := origin.GetTenantID(db)
+	if err != nil {
+		return false, err
+	}
+
+	if currentTenantID != nil && tenant.IsTenancyEnabled(db) {
+		return tenant.IsResourceAuthorizedToUser(*currentTenantID, user, db)
+	}
+
+	return true, nil
+}
+
+// filterAuthorized will filter a slice of OriginNullables based upon tenant. It assumes that tenancy is enabled
+func filterAuthorized(origins []v13.OriginNullable, user auth.CurrentUser, db *sqlx.DB) ([]v13.OriginNullable, error) {
+	newOrigins := []v13.OriginNullable{}
+	for _, origin := range origins {
+		if origin.TenantID == nil {
+			if origin.ID == nil {
+				return nil, errors.New("isResourceAuthorized for origin with nil ID: no tenant ID")
+			} else {
+				return nil, fmt.Errorf("isResourceAuthorized for origin %d: no tenant ID", *origin.ID)
+			}
+		}
+		// TODO add/use a helper func to make a single SQL call, for performance
+		ok, err := tenant.IsResourceAuthorizedToUser(*origin.TenantID, user, db)
+		if err != nil {
+			if origin.ID == nil {
+				return nil, errors.New("isResourceAuthorized for origin with nil ID: " + err.Error())
+			} else {
+				return nil, fmt.Errorf("isResourceAuthorized for origin %d: "+err.Error(), *origin.ID)
+			}
+		}
+		if !ok {
+			continue
+		}
+		newOrigins = append(newOrigins, origin)
+	}
+	return newOrigins, nil
+}
+
 func (origin *TOOrigin) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
 	returnable := []interface{}{}
 
@@ -113,6 +171,15 @@ func (origin *TOOrigin) Read(db *sqlx.DB, params map[string]string, user auth.Cu
 	origins, errs, errType := getOrigins(params, db, privLevel)
 	if len(errs) > 0 {
 		return nil, errs, errType
+	}
+
+	var err error
+	if tenant.IsTenancyEnabled(db) {
+		origins, err = filterAuthorized(origins, user, db)
+		if err != nil {
+			log.Errorln("Checking tenancy: " + err.Error())
+			return nil, []error{errors.New("Error checking tenancy.")}, tc.SystemError
+		}
 	}
 
 	for _, origin := range origins {
@@ -197,12 +264,34 @@ LEFT JOIN tenant t ON o.tenant = t.id`
 	return selectStmt
 }
 
+func checkTenancy(tenantID *int, db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	if tenant.IsTenancyEnabled(db) {
+		if tenantID == nil {
+			return tc.NilTenantError, tc.ForbiddenError
+		}
+		authorized, err := tenant.IsResourceAuthorizedToUser(*tenantID, user, db)
+		if err != nil {
+			return tc.DBError, tc.SystemError
+		}
+		if !authorized {
+			return tc.TenantUserNotAuthError, tc.ForbiddenError
+		}
+	}
+	return nil, tc.NoError
+}
+
 //The TOOrigin implementation of the Updater interface
 //all implementations of Updater should use transactions and return the proper errorType
 //ParsePQUniqueConstraintError is used to determine if an origin with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 func (origin *TOOrigin) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
+	err, errType := checkTenancy(origin.TenantID, db, user)
+	if err != nil {
+		return err, errType
+	}
+
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -247,11 +336,11 @@ func (origin *TOOrigin) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	}
 
 	if rowsAffected == 0 {
-		err = errors.New("no origin was inserted, no id was returned")
+		err = errors.New("no origin was updated, no id was returned")
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	} else if rowsAffected > 1 {
-		err = errors.New("too many ids returned from origin insert")
+		err = errors.New("too many ids returned from origin update")
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
@@ -291,6 +380,12 @@ WHERE id=:id RETURNING last_updated`
 //The insert sql returns the id and lastUpdated values of the newly inserted origin and have
 //to be added to the struct
 func (origin *TOOrigin) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
+	err, errType := checkTenancy(origin.TenantID, db, user)
+	if err != nil {
+		return err, errType
+	}
+
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {

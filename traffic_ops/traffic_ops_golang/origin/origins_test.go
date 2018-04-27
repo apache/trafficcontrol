@@ -159,6 +159,9 @@ func TestInterfaces(t *testing.T) {
 	if _, ok := i.(api.Identifier); !ok {
 		t.Errorf("origin must be Identifier")
 	}
+	if _, ok := i.(api.Tenantable); !ok {
+		t.Errorf("origin must be tenantable")
+	}
 }
 
 func TestValidate(t *testing.T) {

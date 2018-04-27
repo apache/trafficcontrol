@@ -118,6 +118,18 @@ func GetUserTenantList(user auth.CurrentUser, db *sqlx.DB) ([]Tenant, error) {
 	return tenants, nil
 }
 
+// IsTenancyEnabled returns true if tenancy is enabled or false otherwise
+func IsTenancyEnabled(db *sqlx.DB) bool {
+	query := `SELECT COALESCE(value::boolean,FALSE) AS value FROM parameter WHERE name = 'use_tenancy' AND config_file = 'global' UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY`
+	var useTenancy bool
+	err := db.QueryRow(query).Scan(&useTenancy)
+	if err != nil {
+		log.Errorf("Error checking if tenancy is enabled: %v", err)
+		return false
+	}
+	return useTenancy
+}
+
 // returns a boolean value describing if the user has access to the provided resource tenant id and an error
 // if use_tenancy is set to false (0 in the db) this method will return true allowing access.
 func IsResourceAuthorizedToUser(resourceTenantID int, user auth.CurrentUser, db *sqlx.DB) (bool, error) {
