@@ -113,7 +113,7 @@ bootstrap-theme\.css\.map, MIT
 datatables\.min, MIT
 GeoLite2-City.mmdb.gz, CC-A-SA
 jquery\.tree\.min\.css$, MIT
-jquery\.dataTables\.min\.(css|js)$, MIT
+jquery\.dataTables\..*\.(css|js)$, MIT
 ^traffic_ops/traffic_ops_golang/vendor/github.com/basho/backoff/.*, MIT
 
 # Ignored - Do not report.

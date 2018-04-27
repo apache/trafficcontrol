@@ -13,17 +13,15 @@
 .. limitations under the License.
 .. 
 
-Developer's Guide
-*****************
-Use this guide to start developing applications that consume the Traffic Control APIs, to create extensions to Traffic Ops, or work on Traffic Control itself.
+APIs
+****
+A guide to external RESTful APIs for Traffic Ops
 
 .. toctree::
   :maxdepth: 2
 
-  building
-  traffic_ops
-  traffic_portal
-  traffic_router
-  traffic_monitor
-  traffic_stats
-
+  traffic_ops_api
+  routes
+  v11/index
+  v12/index
+  

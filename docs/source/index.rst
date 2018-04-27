@@ -60,6 +60,14 @@ A guide to the various internal and external APIs, and an introduction for the T
 
    development/index
 
+APIs
+====
+A guide to external RESTful APIs for Traffic Ops
+
+.. toctree::
+   :maxdepth: 3
+
+   api/index
 
 FAQ
 ===

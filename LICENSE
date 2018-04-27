@@ -273,19 +273,22 @@ For the jMenu component:
 
 For the DataTables component:
 @traffic_ops/app/public/js/jquery.dataTables.js
-@traffic_portal/app/src/assets/css/jquery.dataTables.min.css
-@traffic_portal/app/src/assets/js/dataTables.tableTools.js
-@traffic_portal/app/src/assets/js/jquery.dataTables.min.js
+@traffic_portal/app/src/assets/css/jquery.dataTables.min_1.10.9.css
+@traffic_portal/app/src/assets/js/jquery.dataTables.min_1.10.16.js
 @traffic_portal/app/src/assets/images/sort_*
 ./licenses/MIT-datatables
+
+For the moment.js component:
+@traffic_portal/app/src/assets/js/moment-min_2.22.1.js
+./licenses/MIT-momentjs
+
+For the jsdiff component:
+@traffic_portal/app/src/assets/js/jsdiff-min_3.5.0.js
+./licenses/BSD-jsdiff
 
 For the jquery.tree component:
 @traffic_ops/app/public/*/jquery.tree.min.*
 ./licenses/MIT-jquery_tree
-
-For the ng-map component:
-@traffic_portal/app/src/assets/js/ng-map_1.17.6.min.js
-./licenses/MIT-ng_map
 
 For the angular-loading-bar component:
 @traffic_portal/app/src/styles/loading.scss
