@@ -1,0 +1,47 @@
+package diskcache
+
+import (
+	"container/heap"
+)
+
+type PriQueueObj struct {
+	key      string
+	size     int
+	priority int
+	heapIdx  int
+}
+
+type PriorityQueue []*PriQueueObj
+
+func (q PriorityQueue) Len() int { return len(q) }
+
+func (q PriorityQueue) Less(i, j int) bool {
+	return q[i].priority < q[j].priority
+}
+
+func (q PriorityQueue) Swap(i, j int) {
+	q[i], q[j] = q[j], q[i]
+	q[i].heapIdx = i
+	q[j].heapIdx = j
+}
+
+func (q *PriorityQueue) Push(v interface{}) {
+	n := len(*q)
+	obj := v.(*PriQueueObj)
+	obj.heapIdx = n
+	*q = append(*q, obj)
+}
+
+func (q *PriorityQueue) Pop() interface{} {
+	old := *q
+	n := len(old)
+	obj := old[n-1]
+	obj.heapIdx = -1 // recommended by https://golang.org/pkg/container/heap/ for safety
+	*q = old[0 : n-1]
+	return obj
+}
+
+func (pq *PriorityQueue) update(obj *PriQueueObj, newPriority int) {
+	obj.priority = newPriority
+	heap.Fix(pq, obj.heapIdx)
+}
