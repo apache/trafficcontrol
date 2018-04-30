@@ -21,7 +21,7 @@ FROM node:latest AS trafficportal-build
 COPY traffic_portal /traffic_portal
 
 # Installs dependencies
-RUN apt-get update -y && apt-get install -y libffi-dev ruby-dev rubygems vim
+RUN apt-get update -y && apt-get install -y libffi-dev ruby-dev rubygems vim openssl
 
 # Installs rubygem dependencies
 RUN gem update --system
@@ -39,6 +39,12 @@ WORKDIR /traffic_portal
 RUN npm install
 RUN bower install
 RUN grunt dist
+
+# Dynamically-generated ssl certificates
+RUN openssl genrsa -des3 -passout pass:dummypassword -out localhost.key 2048 -noout
+RUN openssl rsa -in localhost.key -passin pass:dummypassword -out localhost.key
+RUN openssl req -new -key localhost.key -out localhost.csr -passin pass:dummypassword -subj "/C=US/ST=Colorado/L=Denver/O=Comcast/OU=iaa/CN=localhost/emailAddress=Brennan_Fieck@comcast.com"
+RUN openssl x509 -in localhost.csr -out localhost.crt -req -signkey localhost.key -days 1001
 
 
 # Now the actual deployment container
@@ -69,9 +75,9 @@ COPY --from=trafficportal-build ${SRC}/build/etc/init.d/traffic_portal /etc/init
 COPY --from=trafficportal-build ${SRC}/build/etc/logrotate.d/traffic_portal /etc/logrotate.d/
 COPY --from=trafficportal-build ${SRC}/build/etc/logrotate.d/traffic_portal-access /etc/logrotate.d/
 COPY --from=trafficportal-build ${SRC}/app/dist/ .
-COPY infrastructure/cdn-in-a-box/traffic_portal/server.key /etc/pki/tls/private/localhost.key
-COPY infrastructure/cdn-in-a-box/traffic_portal/server.crt /etc/pki/tls/certs/localhost.crt
-COPY infrastructure/cdn-in-a-box/traffic_portal/server.crt /etc/pki/tls/certs/ca-bundle.crt
+COPY --from=trafficportal-build ${SRC}/localhost.key /etc/pki/tls/private/localhost.key
+COPY --from=trafficportal-build ${SRC}/localhost.crt /etc/pki/tls/certs/localhost.crt
+COPY --from=trafficportal-build ${SRC}/localhost.crt /etc/pki/tls/certs/ca-bundle.crt
 
 # Now to build the release info
 RUN echo -e "{\n\"Version\":\"2.1\",\n\"Build Date\":\"$(dat +'%Y-%m-%d %H:%M:%S')\"\n}" > public/traffic_portal_release.json
