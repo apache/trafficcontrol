@@ -17,7 +17,7 @@ CIAO provides API gateways and user interfaces over HTTP(S) for the pieces of th
 
 * 5432 - Exposes a connection to the Traffic Ops's Postgres database. Note that this is *not* meant to be used through a browser, and instead is an endpoint for direct connection to the database (this is used by Traffic Ops to store information).
 
-* 8080 - The "adminer" portal which allows access to the Traffic Ops Database through a browser.
+* 8000 - The "adminer" portal which allows access to the Traffic Ops Database through a browser.
 
 * 60443 - This is the endpoint for the old Perl-based API for Traffic Ops. Rather than send requests here, you should send them to port 443, as the Go-based API there will act as a reverse proxy to pass off API requests it doesn't directly handle back to this port.
 
