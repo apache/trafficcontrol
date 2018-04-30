@@ -338,7 +338,8 @@ sub ui_routes {
 	$r->get('/tools/queue_updates')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#queue_updates', namespace => $namespace );
 	$r->get('/tools/snapshot_crconfig')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#snapshot_crconfig', namespace => $namespace );
 	$r->get('/tools/diff_crconfig/:cdn_name')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#diff_crconfig_iframe', namespace => $namespace );
-	$r->get('/tools/write_crconfig/:cdn_name')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#write_crconfig', namespace => $namespace );
+	# flash_and_close is a helper for the traffic_ops_golang migration, to allow Go handlers to intercept GUI routes, do their work, then redirect to this to perform the GUI operation
+	$r->get('/tools/flash_and_close/:msg')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#flash_and_close', namespace => $namespace );
 	$r->get('/tools/invalidate_content/')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#invalidate_content', namespace => $namespace );
 
 	# -- Topology - CCR Config, rewrote in json
