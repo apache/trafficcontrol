@@ -105,23 +105,11 @@ sub diff_crconfig_iframe {
     );
 }
 
-sub write_crconfig {
-    my $self     = shift;
-    my $cdn_name = $self->param('cdn_name');
-    my ( $json, $error ) = UI::Topology::gen_crconfig_json( $self, $cdn_name );
-    if ( defined $error ) {
-        $self->flash( alertmsg => $error );
-    }
-    else {
-        if ( !&is_oper($self) ) {
-            $self->flash( alertmsg => "No can do. Get more privs." );
-        } else {
-            UI::Topology::write_crconfig_json_to_db( $self, $cdn_name, $json );
-            &log( $self, "Snapshot CRConfig created.", "OPER" );
-            $self->flash( alertmsg => "Successfully wrote CRConfig.json!" );
-        }
-    }
-    return $self->redirect_to('/utils/close_fancybox');
+sub flash_and_close {
+    my $self = shift;
+		my $msg = $self->param('msg');
+		$self->flash( alertmsg => $msg );
+		return $self->redirect_to('/utils/close_fancybox');
 }
 
 sub queue_updates {
