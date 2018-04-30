@@ -426,3 +426,15 @@ For the Pixabay icons:
 @traffic_ops/app/public/images/info.png
 @traffic_ops/app/public/images/graph.png
 ./licenses/CC0
+
+The bytefmt component is used under the Apache 2.0 license:
+@grove/vendor/code.cloudfoundry.org/bytefmt/*
+./grove/vendor/code.cloudfoundry.org/bytefmt/LICENSE
+
+The bytefmt component is used under the MIT license:
+@grove/vendor/github.com/coreos/bbolt/*
+./grove/vendor/github.com/coreos/bbolt/LICENSE
+
+For the siphash component:
+@grove/vendor/github.com/dchest/siphash/*
+./licenses/CC0
