@@ -22,7 +22,6 @@ package crconfig
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -71,14 +70,17 @@ func Handler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		respBts, err := json.Marshal(crConfig)
+		resp := struct {
+			Response *tc.CRConfig `json:"response"`
+		}{crConfig}
+		respBts, err := json.Marshal(resp)
 		if err != nil {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 		log.Infof("CRConfig time to generate: %+v\n", time.Since(start))
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", respBts)
+		w.Write(respBts)
 	}
 }
 
@@ -107,7 +109,7 @@ func SnapshotGetHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", []byte(snapshot))
+		w.Write([]byte(`{"response":` + snapshot + `}`))
 	}
 }
 

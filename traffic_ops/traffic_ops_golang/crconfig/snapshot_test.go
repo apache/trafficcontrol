@@ -20,10 +20,10 @@ package crconfig
  */
 
 import (
-	"reflect"
-	"encoding/json"
-	"testing"
 	"database/sql/driver"
+	"encoding/json"
+	"reflect"
+	"testing"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -72,6 +72,7 @@ func TestGetSnapshot(t *testing.T) {
 }
 
 type AnyTime struct{}
+
 // Match satisfies sqlmock.Argument interface
 func (a AnyTime) Match(v driver.Value) bool {
 	_, ok := v.(time.Time)
@@ -79,11 +80,11 @@ func (a AnyTime) Match(v driver.Value) bool {
 }
 
 type Any struct{}
+
 // Match satisfies sqlmock.Argument interface
 func (a Any) Match(v driver.Value) bool {
 	return true
 }
-
 
 func MockSnapshot(mock sqlmock.Sqlmock, expected []byte, cdn string) {
 	mock.ExpectExec("insert").WithArgs(cdn, expected, AnyTime{}).WillReturnResult(sqlmock.NewResult(1, 1))
