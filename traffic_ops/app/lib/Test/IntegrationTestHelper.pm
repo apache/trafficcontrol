@@ -43,7 +43,6 @@ use Fixtures::Integration::FederationTmuser;
 use Fixtures::Integration::Hwinfo;
 use Fixtures::Integration::JobAgent;
 use Fixtures::Integration::Job;
-use Fixtures::Integration::JobResult;
 use Fixtures::Integration::JobStatus;
 use Fixtures::Integration::Log;
 use Fixtures::Integration::Parameter;

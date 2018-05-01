@@ -569,43 +569,6 @@ ALTER SEQUENCE job_id_seq OWNED BY job.id;
 
 
 --
--- Name: job_result; Type: TABLE; Schema: public; Owner: traffic_ops
---
-
-CREATE TABLE job_result (
-    id bigint NOT NULL,
-    job bigint NOT NULL,
-    agent bigint NOT NULL,
-    result text NOT NULL,
-    description text,
-    last_updated timestamp with time zone DEFAULT now()
-);
-
-
-ALTER TABLE job_result OWNER TO traffic_ops;
-
---
--- Name: job_result_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
---
-
-CREATE SEQUENCE job_result_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE job_result_id_seq OWNER TO traffic_ops;
-
---
--- Name: job_result_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
---
-
-ALTER SEQUENCE job_result_id_seq OWNED BY job_result.id;
-
-
---
 -- Name: job_status; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
@@ -1374,13 +1337,6 @@ ALTER TABLE ONLY job_agent ALTER COLUMN id SET DEFAULT nextval('job_agent_id_seq
 -- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
 --
 
-ALTER TABLE ONLY job_result ALTER COLUMN id SET DEFAULT nextval('job_result_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: traffic_ops
---
-
 ALTER TABLE ONLY job_status ALTER COLUMN id SET DEFAULT nextval('job_status_id_seq'::regclass);
 
 
@@ -1623,14 +1579,6 @@ ALTER TABLE ONLY job
 
 ALTER TABLE ONLY job_agent
     ADD CONSTRAINT idx_89603_primary PRIMARY KEY (id);
-
-
---
--- Name: idx_89614_primary; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY job_result
-    ADD CONSTRAINT idx_89614_primary PRIMARY KEY (id);
 
 
 --
@@ -2009,20 +1957,6 @@ CREATE INDEX idx_89593_fk_job_user_id1 ON job USING btree (job_user);
 
 
 --
--- Name: idx_89614_fk_agent_id1; Type: INDEX; Schema: public; Owner: traffic_ops
---
-
-CREATE INDEX idx_89614_fk_agent_id1 ON job_result USING btree (agent);
-
-
---
--- Name: idx_89614_fk_job_id1; Type: INDEX; Schema: public; Owner: traffic_ops
---
-
-CREATE INDEX idx_89614_fk_job_id1 ON job_result USING btree (job);
-
-
---
 -- Name: idx_89634_fk_log_1; Type: INDEX; Schema: public; Owner: traffic_ops
 --
 
@@ -2376,13 +2310,6 @@ CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job_agent FOR EACH R
 -- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
 --
 
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job_result FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: on_update_current_timestamp; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job_status FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
 
@@ -2482,14 +2409,6 @@ CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON tm_user FOR EACH ROW
 --
 
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON type FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
-
---
--- Name: fk_agent_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY job_result
-    ADD CONSTRAINT fk_agent_id1 FOREIGN KEY (agent) REFERENCES job_agent(id) ON DELETE CASCADE;
 
 
 --
@@ -2738,14 +2657,6 @@ ALTER TABLE ONLY job
 
 ALTER TABLE ONLY job
     ADD CONSTRAINT fk_job_deliveryservice1 FOREIGN KEY (job_deliveryservice) REFERENCES deliveryservice(id);
-
-
---
--- Name: fk_job_id1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY job_result
-    ADD CONSTRAINT fk_job_id1 FOREIGN KEY (job) REFERENCES job(id) ON DELETE CASCADE;
 
 
 --
