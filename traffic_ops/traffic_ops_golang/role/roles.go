@@ -87,13 +87,15 @@ func (role TORole) Validate(db *sqlx.DB) []error {
 	errsToReturn := tovalidate.ToErrors(errs)
 	checkCaps := `SELECT cap FROM UNNEST($1::text[]) AS cap WHERE NOT cap =  ANY(ARRAY(SELECT c.name FROM capability AS c WHERE c.name = ANY($1)))`
 	var badCaps []string
-	err := db.Select(&badCaps, checkCaps, pq.Array(role.Capabilities))
-	if err != nil {
-		log.Errorf("got error from selecting bad capabilities: %v", err)
-		return []error{tc.DBError}
-	}
-	if len(badCaps) > 0 {
-		errsToReturn = append(errsToReturn, fmt.Errorf("can not add non-existent capabilities: %v", badCaps))
+	if db != nil {
+		err := db.Select(&badCaps, checkCaps, pq.Array(role.Capabilities))
+		if err != nil {
+			log.Errorf("got error from selecting bad capabilities: %v", err)
+			return []error{tc.DBError}
+		}
+		if len(badCaps) > 0 {
+			errsToReturn = append(errsToReturn, fmt.Errorf("can not add non-existent capabilities: %v", badCaps))
+		}
 	}
 	return errsToReturn
 }
@@ -130,8 +132,11 @@ func (role *TORole) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 					continue CapabilitiesLoop
 				}
 			}
-			return errors.New("Can not create a role with a capability you do not have: " + cap), tc.ForbiddenError
+			return errors.New("can not create a role with a capability you do not have: " + cap), tc.ForbiddenError
 		}
+	}
+	if *role.PrivLevel > user.PrivLevel {
+		return errors.New("can not create a role with a higher priv level than your own"), tc.ForbiddenError
 	}
 	resultRows, err := tx.NamedQuery(insertQuery(), role)
 	if err != nil {
@@ -286,6 +291,10 @@ func (role *TORole) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 			}
 			return errors.New("Can not update a role with a capability you do not have: " + cap), tc.ForbiddenError
 		}
+	}
+
+	if *role.PrivLevel > user.PrivLevel {
+		return errors.New("can not create a role with a higher priv level than your own"), tc.ForbiddenError
 	}
 
 	log.Debugf("about to run exec query: %s with role: %++v\n", updateQuery(), role)
