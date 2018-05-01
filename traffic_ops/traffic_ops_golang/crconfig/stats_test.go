@@ -21,19 +21,19 @@ package crconfig
 
 import (
 	"reflect"
-	"time"
 	"testing"
+	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 func ExpectedMakeStats() tc.CRConfigStats {
 	return tc.CRConfigStats{
-		CDNName:         randStr(),
-		TMHost:          randStr(),
-		TMPath:          randStr(),
-		TMUser:          randStr(),
-		TMVersion:       randStr(),
+		CDNName:   randStr(),
+		TMHost:    randStr(),
+		TMPath:    randStr(),
+		TMUser:    randStr(),
+		TMVersion: randStr(),
 	}
 }
 
@@ -46,7 +46,7 @@ func TestMakeStats(t *testing.T) {
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("makeStats expected: %+v, actual: %+v", expected, actual)
 	}
-	if actual.DateUnixSeconds == nil ||  *actual.DateUnixSeconds < start.Unix() || *actual.DateUnixSeconds > end.Unix() {
+	if actual.DateUnixSeconds == nil || *actual.DateUnixSeconds < start.Unix() || *actual.DateUnixSeconds > end.Unix() {
 		t.Errorf("makeStats DateUniSeconds expected: < %+v > %+v, actual: %+v", start.Unix(), end.Unix(), actual.DateUnixSeconds)
 	}
 }
