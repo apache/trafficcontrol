@@ -17,17 +17,23 @@
  * under the License.
  */
 
-var FormRoleController = function(roles, $scope, formUtils, locationUtils) {
-
-	$scope.role = roles[0];
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
-	$scope.hasError = formUtils.hasError;
-
-	$scope.hasPropertyError = formUtils.hasPropertyError;
-
-};
-
-FormRoleController.$inject = ['roles', '$scope', 'formUtils', 'locationUtils'];
-module.exports = FormRoleController;
+module.exports = angular.module('trafficPortal.private.roles.capabilities', [])
+	.config(function($stateProvider, $urlRouterProvider) {
+		$stateProvider
+			.state('trafficPortal.private.roles.capabilities', {
+				url: '/{roleId}/capabilities',
+				views: {
+					rolesContent: {
+						templateUrl: 'common/modules/table/roleCapabilities/table.roleCapabilities.tpl.html',
+						controller: 'TableRoleCapabilitiesController',
+						resolve: {
+							roles: function($stateParams, roleService) {
+								return roleService.getRoles({ id: $stateParams.roleId });
+							}
+						}
+					}
+				}
+			})
+		;
+		$urlRouterProvider.otherwise('/');
+	});

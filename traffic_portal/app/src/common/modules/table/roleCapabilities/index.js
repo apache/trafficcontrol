@@ -1,3 +1,4 @@
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,17 +18,6 @@
  * under the License.
  */
 
-var FormRoleController = function(roles, $scope, formUtils, locationUtils) {
-
-	$scope.role = roles[0];
-
-	$scope.navigateToPath = locationUtils.navigateToPath;
-
-	$scope.hasError = formUtils.hasError;
-
-	$scope.hasPropertyError = formUtils.hasPropertyError;
-
-};
-
-FormRoleController.$inject = ['roles', '$scope', 'formUtils', 'locationUtils'];
-module.exports = FormRoleController;
+module.exports = angular.module('trafficPortal.table.roleCapabilities', [])
+	.controller('TableRoleCapabilitiesController', require('./TableRoleCapabilitiesController'))
+	.controller('TableAssignCapabilitiesController', require('./TableAssignCapabilitiesController'));
