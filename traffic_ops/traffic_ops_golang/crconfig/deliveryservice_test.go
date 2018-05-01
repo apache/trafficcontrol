@@ -20,12 +20,12 @@ package crconfig
  */
 
 import (
-	"strconv"
-	"strings"
+	"encoding/json"
 	"math/rand"
 	"reflect"
+	"strconv"
+	"strings"
 	"testing"
-	"encoding/json"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
@@ -46,7 +46,7 @@ func randMatchlistArr() []tc.MatchList {
 	arr := []tc.MatchList{}
 	for i := 0; i < num; i++ {
 		arr = append(arr, tc.MatchList{
-			Regex: *randStr(),
+			Regex:     *randStr(),
 			MatchType: *randStr(),
 		})
 	}
@@ -59,7 +59,7 @@ func randMatchsetArr() []*tc.MatchSet {
 	arr := []*tc.MatchSet{}
 	for i := 0; i < num; i++ {
 		arr = append(arr, &tc.MatchSet{
-			Protocol: httpStr,
+			Protocol:  httpStr,
 			MatchList: randMatchlistArr(),
 		})
 	}
@@ -82,44 +82,44 @@ func randDS() tc.CRConfigDeliveryService {
 	geoProviderStr := GeoProviderMaxmindStr
 	return tc.CRConfigDeliveryService{
 		CoverageZoneOnly: false,
-		Dispersion:           &tc.CRConfigDispersion{
-			Limit: 42,
+		Dispersion: &tc.CRConfigDispersion{
+			Limit:    42,
 			Shuffled: true,
 		},
 		// Domains: []string{"foo"},
 		GeoLocationProvider: &geoProviderStr,
 		// MatchSets:            randMatchsetArr(),
-		MissLocation:         &tc.CRConfigLatitudeLongitudeShort{
+		MissLocation: &tc.CRConfigLatitudeLongitudeShort{
 			Lat: *randFloat64(),
 			Lon: *randFloat64(),
 		},
-		Protocol:             &tc.CRConfigDeliveryServiceProtocol{
+		Protocol: &tc.CRConfigDeliveryServiceProtocol{
 			// AcceptHTTP: &truePtr,
-			AcceptHTTPS: false,
+			AcceptHTTPS:     false,
 			RedirectOnHTTPS: false,
 		},
 		RegionalGeoBlocking: &falseStrPtr,
-		ResponseHeaders: nil,
-		RequestHeaders: nil,
+		ResponseHeaders:     nil,
+		RequestHeaders:      nil,
 		Soa: &tc.SOA{
-			Admin:     &ttlAdmin,
-			ExpireSeconds:     &ttlExpire,
-			MinimumSeconds:     &ttlMinimum,
+			Admin:          &ttlAdmin,
+			ExpireSeconds:  &ttlExpire,
+			MinimumSeconds: &ttlMinimum,
 			RefreshSeconds: &ttlRefresh,
-			RetrySeconds: &ttlRetry,
+			RetrySeconds:   &ttlRetry,
 		},
 		SSLEnabled: false,
-		TTL: ttl,
-		TTLs: &tc.CRConfigTTL {
-			ASeconds: &ttlStr,
-			AAAASeconds : &ttlStr,
-			NSSeconds: &ttlNS,
-			SOASeconds: &ttlSOA,
+		TTL:        ttl,
+		TTLs: &tc.CRConfigTTL{
+			ASeconds:    &ttlStr,
+			AAAASeconds: &ttlStr,
+			NSSeconds:   &ttlNS,
+			SOASeconds:  &ttlSOA,
 		},
 		// MaxDNSIPsForLocation: randInt(),
 		IP6RoutingEnabled: randBool(),
-		RoutingName: randStr(),
-		BypassDestination:    map[string]*tc.CRConfigBypassDestination {
+		RoutingName:       randStr(),
+		BypassDestination: map[string]*tc.CRConfigBypassDestination{
 			"HTTP": &tc.CRConfigBypassDestination{
 				// IP: randStr(),
 				// IP6: randStr(),
@@ -130,13 +130,13 @@ func randDS() tc.CRConfigDeliveryService {
 			},
 		},
 		DeepCachingType: nil,
-		GeoEnabled: nil,
+		GeoEnabled:      nil,
 		// GeoLimitRedirectURL: randStr(),
-		StaticDNSEntries:     []tc.StaticDNSEntry{
+		StaticDNSEntries: []tc.StaticDNSEntry{
 			tc.StaticDNSEntry{
-				Name: *randStr(),
-				TTL: *randInt(),
-				Type: *randStr(),
+				Name:  *randStr(),
+				TTL:   *randInt(),
+				Type:  *randStr(),
 				Value: *randStr(),
 			},
 		},
@@ -212,7 +212,7 @@ func TestMakeDSes(t *testing.T) {
 func ExpectedGetServerProfileParams(expectedMakeDSes map[string]tc.CRConfigDeliveryService) map[string]map[string]string {
 	expected := map[string]map[string]string{}
 	for dsName, _ := range expectedMakeDSes {
-		expected[dsName] = map[string]string {
+		expected[dsName] = map[string]string{
 			"param0": "val0",
 			"param1": "val1",
 		}
@@ -278,7 +278,7 @@ func ExpectedGetDSRegexesDomains(expectedDSParams map[string]string) (map[string
 	}
 
 	for dsName, _ := range expectedDSParams {
-		pattern := `.*\.`+dsName+`\..*`
+		pattern := `.*\.` + dsName + `\..*`
 
 		matchsets[dsName][setnum] = &tc.MatchSet{}
 		matchset := matchsets[dsName][setnum]
@@ -311,7 +311,6 @@ func TestGetDSRegexesDomains(t *testing.T) {
 
 	cdn := "mycdn"
 
-
 	expectedMakeDSes := ExpectedMakeDSes()
 	expectedServerProfileParams := ExpectedGetServerProfileParams(expectedMakeDSes)
 	expectedDSParams, err := getDSParams(expectedServerProfileParams)
@@ -334,14 +333,14 @@ func TestGetDSRegexesDomains(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(expectedMatchsets, actualMatchsets) {
-			t.Errorf("getDSRegexesDomains expected: %+v, actual: %+v", expectedMatchsets, actualMatchsets)
+		t.Errorf("getDSRegexesDomains expected: %+v, actual: %+v", expectedMatchsets, actualMatchsets)
 	}
 	if !reflect.DeepEqual(expectedDomains, actualDomains) {
-			t.Errorf("getDSRegexesDomains expected: %+v, actual: %+v", expectedDomains, actualDomains)
+		t.Errorf("getDSRegexesDomains expected: %+v, actual: %+v", expectedDomains, actualDomains)
 	}
 }
 
-func ExpectedGetStaticDNSEntries(expectedMakeDSes map[string]tc.CRConfigDeliveryService) (map[tc.DeliveryServiceName][]tc.StaticDNSEntry) {
+func ExpectedGetStaticDNSEntries(expectedMakeDSes map[string]tc.CRConfigDeliveryService) map[tc.DeliveryServiceName][]tc.StaticDNSEntry {
 	expected := map[tc.DeliveryServiceName][]tc.StaticDNSEntry{}
 	for dsName, ds := range expectedMakeDSes {
 		for _, entry := range ds.StaticDNSEntries {
@@ -355,7 +354,7 @@ func MockGetStaticDNSEntries(mock sqlmock.Sqlmock, expected map[tc.DeliveryServi
 	rows := sqlmock.NewRows([]string{"ds", "name", "ttl", "value", "type"})
 	for dsName, entries := range expected {
 		for _, entry := range entries {
-			rows = rows.AddRow(dsName, entry.Name, entry.TTL, entry.Value, entry.Type + "_RECORD")
+			rows = rows.AddRow(dsName, entry.Name, entry.TTL, entry.Value, entry.Type+"_RECORD")
 		}
 	}
 	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
@@ -383,6 +382,6 @@ func TestGetStaticDNSEntries(t *testing.T) {
 		t.Fatalf("getStaticDNSEntries len expected: %v, actual: %v", len(expected), len(actual))
 	}
 	if !reflect.DeepEqual(expected, actual) {
-			t.Errorf("getDSRegexesDomains expected: %+v, actual: %+v", expected, actual)
+		t.Errorf("getDSRegexesDomains expected: %+v, actual: %+v", expected, actual)
 	}
 }
