@@ -42,9 +42,9 @@ __PACKAGE__->table("deliveryservice");
   is_nullable: 0
 
 =head2 anonymous_blocking_enabled
-  data_type: 'integer'
-  default_value: 0
-  is_nullable: 1
+  data_type: 'boolean'
+  default_value: false
+  is_nullable: 0
 
 =head2 dscp
 
@@ -332,7 +332,7 @@ __PACKAGE__->add_columns(
   "active",
   { data_type => "boolean", default_value => \"false", is_nullable => 0 },
   "anonymous_blocking_enabled",
-  { data_type => "integer", default_value => 0, is_nullable => 1 },
+  { data_type => "boolean", default_value => \"false", is_nullable => 0 },
   "dscp",
   { data_type => "bigint", is_nullable => 0 },
   "signing_algorithm",
