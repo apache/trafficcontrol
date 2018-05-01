@@ -18,11 +18,8 @@
 # under the License.
 
 set -ex
-env
 
-export TP=/opt/traffic_portal/
-
-envvars=( TO_PORT )
+envvars=( TO_HOST CERT_COUNTRY CERT_STATE CERT_CITY CERT_COMPANY )
 for v in ${envvars[*]}; do
 	val=${!v}
 	[[ -z $val ]] && echo "$v is unset" && exit 1
@@ -31,6 +28,10 @@ done
 mkdir -p /etc/traffic_portal/conf/
 mkdir -p /etc/pki/tls/private
 mkdir -p /etc/pki/tls/certs
+key=/etc/pki/tls/private/localhost.key
+cert=/etc/pki/tls/certs/localhost.crt
+mkdir -p $(dirname $key) $(dirname $cert)
+openssl req -newkey rsa:2048 -nodes -keyout $key -x509 -days 365 -out $crt -subj "/C=$CERT_COUNTRY/ST=$CERT_STATE/L=$CERT_CITY/O=$CERT_COMPANY"
 
 cat >/etc/traffic_portal/conf/config.js <<-TPCONF
 /*
@@ -60,8 +61,8 @@ module.exports = {
     sslPort: 61443, // set to https port
     // if useSSL is true, generate ssl certs and provide the proper locations.
     ssl: {
-        key:    '/etc/pki/tls/private/localhost.key',
-        cert:   '/etc/pki/tls/certs/localhost.crt',
+        key:    '${key}',
+        cert:   '${cert}',
         ca:     [ '/etc/pki/tls/certs/ca-bundle.crt' ]
     },
     // set api 'base_url' to the traffic ops api url (all api calls made from the traffic portal will be proxied to the api base_url)
