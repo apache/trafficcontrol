@@ -141,7 +141,6 @@ func TestValidate(t *testing.T) {
 	expectedErrs := []error{
 		errors.New(`'description' cannot be blank`),
 		errors.New(`'privLevel' cannot be blank`),
-
 	}
 
 	if !reflect.DeepEqual(expectedErrs, errs) {
@@ -149,7 +148,7 @@ func TestValidate(t *testing.T) {
 	}
 
 	//  name,  domainname both valid
-	r = TORole{Name: stringAddr("this is a valid name"), Description: stringAddr("this is a description"),PrivLevel:intAddr(30),}
+	r = TORole{Name: stringAddr("this is a valid name"), Description: stringAddr("this is a description"), PrivLevel: intAddr(30)}
 	expectedErrs = []error{}
 	errs = r.Validate(nil)
 	if !reflect.DeepEqual(expectedErrs, errs) {

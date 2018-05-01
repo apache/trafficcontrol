@@ -83,7 +83,19 @@ func (role TORole) Validate(db *sqlx.DB) []error {
 		"name":        validation.Validate(role.Name, validation.Required),
 		"description": validation.Validate(role.Description, validation.Required),
 		"privLevel":   validation.Validate(role.PrivLevel, validation.Required)}
-	return tovalidate.ToErrors(errs)
+
+	errsToReturn := tovalidate.ToErrors(errs)
+	checkCaps := `SELECT cap FROM UNNEST($1::text[]) AS cap WHERE NOT cap =  ANY(ARRAY(SELECT c.name FROM capability AS c WHERE c.name = ANY($1)))`
+	var badCaps []string
+	err := db.Select(&badCaps, checkCaps, pq.Array(role.Capabilities))
+	if err != nil {
+		log.Errorf("got error from selecting bad capabilities: %v", err)
+		return []error{tc.DBError}
+	}
+	if len(badCaps) > 0 {
+		errsToReturn = append(errsToReturn, fmt.Errorf("can not add non-existent capabilities: %v", badCaps))
+	}
+	return errsToReturn
 }
 
 //The TORole implementation of the Creator interface
@@ -110,7 +122,17 @@ func (role *TORole) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
-
+	if role.Capabilities != nil {
+	CapabilitiesLoop:
+		for _, cap := range *role.Capabilities {
+			for _, userCap := range user.Capabilities {
+				if cap == userCap {
+					continue CapabilitiesLoop
+				}
+			}
+			return errors.New("Can not create a role with a capability you do not have: " + cap), tc.ForbiddenError
+		}
+	}
 	resultRows, err := tx.NamedQuery(insertQuery(), role)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -145,12 +167,50 @@ func (role *TORole) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 		return tc.DBError, tc.SystemError
 	}
 	role.SetKeys(map[string]interface{}{"id": id})
+	//after we have role ID we can associate the capabilities:
+	err, errType := role.createRoleCapabilityAssociations(tx)
+	if err != nil {
+		return err, errType
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
 		return tc.DBError, tc.SystemError
 	}
 	rollbackTransaction = false
+	return nil, tc.NoError
+}
+
+func (role *TORole) createRoleCapabilityAssociations(tx *sqlx.Tx) (error, tc.ApiErrorType) {
+	result, err := tx.Exec(associateCapabilities(), role.ID, pq.Array(role.Capabilities))
+	if err != nil {
+		log.Errorf("received non pq error: %++v from create execution", err)
+		return tc.DBError, tc.SystemError
+	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		log.Errorf("could not check result after inserting role_capability relations: %v", err)
+	}
+	expected := len(*role.Capabilities)
+	if int(rows) != expected {
+		log.Errorf("wrong number of role_capability rows created: %d expected: %d", rows, expected)
+	}
+	return nil, tc.NoError
+}
+
+func (role *TORole) deleteRoleCapabilityAssociations(tx *sqlx.Tx) (error, tc.ApiErrorType) {
+	result, err := tx.Exec(deleteAssociatedCapabilities(), role.ID)
+	if err != nil {
+
+		log.Errorf("received error: %++v from create execution", err)
+		return tc.DBError, tc.SystemError
+
+	}
+	_, err = result.RowsAffected()
+	if err != nil {
+		log.Errorf("could not check result after inserting role_capability relations: %v", err)
+	}
 	return nil, tc.NoError
 }
 
@@ -180,12 +240,14 @@ func (role *TORole) Read(db *sqlx.DB, parameters map[string]string, user auth.Cu
 
 	Roles := []interface{}{}
 	for rows.Next() {
-		var s TORole
-		if err = rows.StructScan(&s); err != nil {
+		var r TORole
+		var caps []string
+		if err = rows.Scan(&r.ID, &r.Name, &r.Description, &r.PrivLevel, pq.Array(&caps)); err != nil {
 			log.Errorf("error parsing Role rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
-		Roles = append(Roles, s)
+		r.Capabilities = &caps
+		Roles = append(Roles, r)
 	}
 
 	return Roles, []error{}, tc.NoError
@@ -212,6 +274,18 @@ func (role *TORole) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
+	}
+
+	if role.Capabilities != nil {
+	CapabilitiesLoop:
+		for _, cap := range *role.Capabilities {
+			for _, userCap := range user.Capabilities {
+				if cap == userCap {
+					continue CapabilitiesLoop
+				}
+			}
+			return errors.New("Can not update a role with a capability you do not have: " + cap), tc.ForbiddenError
+		}
 	}
 
 	log.Debugf("about to run exec query: %s with role: %++v\n", updateQuery(), role)
@@ -241,6 +315,17 @@ func (role *TORole) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
+	//remove associations
+	err, errType := role.deleteRoleCapabilityAssociations(tx)
+	if err != nil {
+		return err, errType
+	}
+	//create new associations
+	err, errType = role.createRoleCapabilityAssociations(tx)
+	if err != nil {
+		return err, errType
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
@@ -296,6 +381,12 @@ func (role *TORole) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
+	//remove associations
+	err, errType := role.deleteRoleCapabilityAssociations(tx)
+	if err != nil {
+		return err, errType
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
@@ -310,7 +401,8 @@ func selectQuery() string {
 id,
 name,
 description,
-priv_level
+priv_level,
+ARRAY(SELECT rc.cap_name FROM role_capability AS rc WHERE rc.role_id=id) AS capabilities
 
 FROM role`
 	return query
@@ -322,6 +414,22 @@ role SET
 name=:name,
 description=:description
 WHERE id=:id`
+	return query
+}
+
+func deleteAssociatedCapabilities() string {
+	query := `DELETE FROM role_capability
+WHERE role_id=$1`
+	return query
+}
+
+func associateCapabilities() string {
+	query := `INSERT INTO role_capability (
+role_id,
+cap_name) WITH
+	q1 AS ( SELECT * FROM (VALUES ($1::bigint)) AS role_id ),
+	q2 AS (SELECT UNNEST($2::text[]))
+	SELECT * FROM q1,q2`
 	return query
 }
 

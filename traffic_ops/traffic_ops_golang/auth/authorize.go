@@ -27,13 +27,15 @@ import (
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 type CurrentUser struct {
-	UserName  string `json:"userName" db:"username"`
-	ID        int    `json:"id" db:"id"`
-	PrivLevel int    `json:"privLevel" db:"priv_level"`
-	TenantID  int    `json:"tenantId" db:"tenant_id"`
+	UserName     string         `json:"userName" db:"username"`
+	ID           int            `json:"id" db:"id"`
+	PrivLevel    int            `json:"privLevel" db:"priv_level"`
+	TenantID     int            `json:"tenantId" db:"tenant_id"`
+	Capabilities pq.StringArray `json:"capabilities" db:"capabilities"`
 }
 
 // PrivLevelInvalid - The Default Priv level
@@ -67,10 +69,10 @@ func GetCurrentUserFromDB(CurrentUserStmt *sqlx.Stmt, user string) CurrentUser {
 	switch {
 	case err == sql.ErrNoRows:
 		log.Errorf("checking user %v info: user not in database", user)
-		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid}
+		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}
 	case err != nil:
 		log.Errorf("Error checking user %v info: %v", user, err.Error())
-		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid}
+		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}
 	default:
 		return currentUserInfo
 	}
@@ -86,5 +88,5 @@ func GetCurrentUser(ctx context.Context) (*CurrentUser, error) {
 			return nil, fmt.Errorf("CurrentUser found with bad type: %T", v)
 		}
 	}
-	return &CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid}, errors.New("No user found in Context")
+	return &CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}, errors.New("No user found in Context")
 }
