@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-GO_DOWNLOADS_URL=https://storage.googleapis.com/golang
+GO_DOWNLOADS_URL=https://dl.google.com/go
 GO_TARBALL_VERSION=go1.8.3.linux-amd64.tar.gz
 GO_TARBALL_URL=$GO_DOWNLOADS_URL/$GO_TARBALL_VERSION
 
