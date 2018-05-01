@@ -108,6 +108,7 @@ func getDeliveryServices(parameters map[string]string, db *sqlx.DB) ([]tc.Delive
 func selectDSesQuery() string {
 	query := `SELECT
  active,
+ anonymous_blocking_enabled,
  ccr_dns_ttl,
  cdn_id,
  cacheurl,
