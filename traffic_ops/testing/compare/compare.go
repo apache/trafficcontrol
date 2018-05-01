@@ -295,9 +295,13 @@ func main() {
 		}
 		log.Printf("CDNNames are %+v", cdnNames)
 
-		wg.Add(len(cdnNames))
+		wg.Add(2*len(cdnNames))
 		for _, cdnName := range cdnNames {
 			log.Print("CDN ", cdnName)
+			go func(c string) {
+				testRoute(tos, `api/1.3/cdns/`+c+`/snapshot`)
+				wg.Done()
+			}(cdnName)
 			go func(c string) {
 				testRoute(tos, `api/1.3/cdns/`+c+`/snapshot/new`)
 				wg.Done()
