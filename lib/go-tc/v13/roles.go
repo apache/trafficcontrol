@@ -1,3 +1,4 @@
+
 package v13
 
 /*
@@ -56,6 +57,11 @@ type Role struct {
 	//
 	// required: true
 	PrivLevel int `json:"privLevel" db:"priv_level"`
+
+	// Capabilities associated with the Role
+	//
+	// required: true
+	Capabilities []string `json:"capabilities" db:"capabilities"`
 }
 
 // RoleNullable ...
@@ -79,4 +85,9 @@ type RoleNullable struct {
 	//
 	// required: true
 	PrivLevel *int `json:"privLevel" db:"priv_level"`
+
+	// Capabilities associated with the Role
+	//
+	// required: true
+	Capabilities *[]string `json:"capabilities" db:"capabilities"`
 }

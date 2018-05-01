@@ -215,7 +215,7 @@ func RegisterRoutes(d ServerData) error {
 }
 
 func prepareUserInfoStmt(db *sqlx.DB) (*sqlx.Stmt, error) {
-	return db.Preparex("SELECT r.priv_level, u.id, u.username, COALESCE(u.tenant_id, -1) AS tenant_id FROM tm_user AS u JOIN role AS r ON u.role = r.id WHERE u.username = $1")
+	return db.Preparex("SELECT r.priv_level, u.id, u.username, COALESCE(u.tenant_id, -1) AS tenant_id, ARRAY(SELECT rc.cap_name FROM role_capability AS rc WHERE rc.role_id=r.id) AS capabilities FROM tm_user AS u JOIN role AS r ON u.role = r.id WHERE u.username = $1")
 }
 
 func use(h http.HandlerFunc, middlewares []Middleware) http.HandlerFunc {
