@@ -160,7 +160,7 @@ prof.type,
 c.id as cdn,
 c.name as cdn_name
 FROM profile prof
-JOIN cdn c ON prof.cdn = c.id`
+LEFT JOIN cdn c ON prof.cdn = c.id`
 
 	return query
 }
