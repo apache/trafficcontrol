@@ -776,6 +776,9 @@ sub stringify_ds {
     if ( defined( $ds->{'regionalGeoBlocking'} ) ) {
         $string .= "|Regional_Geoblocking:" . $ds->{'regionalGeoBlocking'};
     }
+    if ( defined( $ds->{'anonymousBlockingEnabled'} ) ) {
+        $string .= "|Anonymous_Blocking:" . $ds->{'anonymousBlockingEnabled'};
+    }
     if ( defined( $ds->{'geoLimitRedirectURL'}) ) {
 		$string .= "|Geolimit_Redirect_URL:" . $ds->{'geoLimitRedirectURL'};
 	}

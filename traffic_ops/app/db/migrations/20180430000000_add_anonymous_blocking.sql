@@ -12,7 +12,7 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-alter table deliveryservice add column anonymous_blocking_enabled int default 0;
+alter table deliveryservice add column anonymous_blocking_enabled boolean NOT NULL default FALSE;
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
