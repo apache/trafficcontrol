@@ -48,6 +48,9 @@ mkdir -p -m 777 %{buildroot}/var/log/%{name}
 mkdir -p -m 777 %{buildroot}/etc/init.d/
 cp -p  build/%{name}.init %{buildroot}/etc/init.d/%{name}
 
+mkdir -p -m 777 %{buildroot}/etc/logrotate.d/
+cp -p build/%{name}.logrotate %{buildroot}/etc/logrotate.d/%{name}
+
 %clean
 echo "cleaning"
 rm -r -f %{buildroot}
@@ -56,4 +59,5 @@ rm -r -f %{buildroot}
 /usr/sbin/%{name}
 /var/log/%{name}
 %config(noreplace) /etc/%{name}
+%config(noreplace) /etc/logrotate.d/%{name}
 /etc/init.d/%{name}

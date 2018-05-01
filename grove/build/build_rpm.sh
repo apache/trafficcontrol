@@ -25,7 +25,7 @@ echo "$BUILDDIR" > ~/.rpmmacros
 go build -v -ldflags "-X main.Version=$VERSION"
 
 # tar
-tar -cvzf $BUILDDIR/SOURCES/grove-${VERSION}.tgz grove conf/grove.cfg build/grove.init
+tar -cvzf $BUILDDIR/SOURCES/grove-${VERSION}.tgz grove conf/grove.cfg build/grove.init build/grove.logrotate
 
 # build RPM
 rpmbuild --define "version ${VERSION}" -ba build/grove.spec
