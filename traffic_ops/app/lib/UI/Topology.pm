@@ -493,6 +493,7 @@ sub gen_crconfig_json {
             }
 
             $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'regionalGeoBlocking'} = $row->regional_geo_blocking ? 'true' : 'false';
+            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'anonymousBlockingEnabled'} = $row->anonymous_blocking_enabled ? 'true' : 'false';
 
             if ( defined($row->geo_limit) && $row->geo_limit ne 0 ) {
                 $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoLimitRedirectURL'} =
@@ -543,8 +544,6 @@ sub gen_crconfig_json {
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'refresh'} = $cdn_soa_refresh;
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'soa'}->{'admin'}   = $cdn_soa_admin;
         $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'ip6RoutingEnabled'} = $row->ipv6_routing_enabled ? 'true' : 'false';
-
-        $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'anonymousBlockingEnabled'} = $row->anonymous_blocking_enabled ? 'true' : 'false';
 
     }
 
