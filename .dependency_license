@@ -114,7 +114,8 @@ datatables\.min, MIT
 GeoLite2-City.mmdb.gz, CC-A-SA
 jquery\.tree\.min\.css$, MIT
 jquery\.dataTables\..*\.(css|js)$, MIT
-^traffic_ops/traffic_ops_golang/vendor/github.com/basho/backoff/.*, MIT
+github\.com/basho/backoff/.*, MIT
+github\.com/dchest/siphash/.*, CC0
 
 # Ignored - Do not report.
 \.DS_Store, Ignore # Created automatically OSX.
