@@ -233,7 +233,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		// DEPRECATED - use PUT /api/1.2/snapshot/{cdn}
 		{http.MethodGet, `tools/write_crconfig/{cdn}/?$`, crconfig.SnapshotOldGUIHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
 		// DEPRECATED - use GET /api/1.2/cdns/{cdn}/snapshot
-		{http.MethodGet, `CRConfig-Snapshots/{cdn}/CRConfig.json?$`, crconfig.SnapshotGetHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
+		{http.MethodGet, `CRConfig-Snapshots/{cdn}/CRConfig.json?$`, crconfig.SnapshotOldGetHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
 	}
 
 	return routes, rawRoutes, proxyHandler, nil
