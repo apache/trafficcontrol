@@ -321,12 +321,12 @@ For the jwt-go component:
 
 For the pq component:
 @traffic_ops/experimental/traffic_ops_auth/vendor/github.com/lib/pq/*
-@traffic_ops/testing/api/vendor/github.com/lib/pq/*
+@traffic_ops/vendor/github.com/lib/pq/*
 ./traffic_ops/experimental/traffic_ops_auth/vendor/github.com/lib/pq/LICENSE.md
 
 and also:
-@traffic_ops/traffic_ops_golang/vendor/github.com/lib/pq/*
-./traffic_ops/traffic_ops_golang/vendor/github.com/lib/pq/LICENSE.md
+@traffic_ops/vendor/github.com/lib/pq/*
+./traffic_ops/vendor/github.com/lib/pq/LICENSE.md
 
 For the influxdb component:
 @traffic_stats/vendor/github.com/influxdata/influxdb/*
@@ -381,42 +381,40 @@ The invalid_passwords.txt file is from the Projects/OWASP SecLists Project provi
 ./licenses/MIT-SecLists
 
 For the go-sqlmock component:
-@traffic_ops/traffic_ops_golang/vendor/gopkg.in/DATA-DOG/go-sqlmock.v1/*
-./traffic_ops/traffic_ops_golang/vendor/gopkg.in/DATA-DOG/go-sqlmock.v1/LICENSE
+@traffic_ops/vendor/gopkg.in/DATA-DOG/go-sqlmock.v1/*
+./traffic_ops/vendor/gopkg.in/DATA-DOG/go-sqlmock.v1/LICENSE
 
 For the go-jwx component:
-@traffic_ops/traffic_ops_golang/vendor/github.com/lestrrat/go-jwx/*
-./traffic_ops/traffic_ops_golang/vendor/github.com/lestrrat/go-jwx/LICENSE
+@traffic_ops/vendor/github.com/lestrrat/go-jwx/*
+./traffic_ops/vendor/github.com/lestrrat/go-jwx/LICENSE
 
 For the protobuf component:
-@traffic_ops/traffic_ops_golang/vendor/github.com/golang/protobuf/*
-./traffic_ops/traffic_ops_golang/vendor/github.com/golang/protobuf/LICENSE
+@traffic_ops/vendor/github.com/golang/protobuf/*
+./traffic_ops/vendor/github.com/golang/protobuf/LICENSE
 
 For the sqlx component:
-@traffic_ops/traffic_ops_golang/vendor/github.com/jmoiron/sqlx/*
-@traffic_ops/testing/api/vendor/github.com/jmoiron/sqlx/*
-./traffic_ops/traffic_ops_golang/vendor/github.com/jmoiron/sqlx/LICENSE
+@traffic_ops/vendor/github.com/jmoiron/sqlx/*
+./traffic_ops/vendor/github.com/jmoiron/sqlx/LICENSE
 
 For the backoff component:
-@traffic_ops/traffic_ops_golang/vendor/github.com/basho/backoff/*
-./traffic_ops/traffic_ops_golang/vendor/github.com/basho/backoff/README.md
+@traffic_ops/vendor/github.com/basho/backoff/*
+./traffic_ops/vendor/github.com/basho/backoff/README.md
 
 The riak-go-client component is used under the Apache license:
-@traffic_ops/traffic_ops_golang/vendor/github.com/basho/riak-go-client/*
-./traffic_ops/traffic_ops_golang/vendor/github.com/basho/riak-go-client/LICENSE
+@traffic_ops/vendor/github.com/basho/riak-go-client/*
+./traffic_ops/vendor/github.com/basho/riak-go-client/LICENSE
 
 The envconfig component is used under the MIT license:
-@traffic_ops/testing/api/vendor/github.com/kelseyhightower/envconfig/*
-@traffic_ops/testing/compare/vendor/github.com/kelseyhightower/envconfig/*
-./traffic_ops/testing/api/vendor/github.com/kelseyhightower/envconfig/LICENSE
+@traffic_ops/vendor/github.com/kelseyhightower/envconfig/*
+./traffic_ops/vendor/github.com/kelseyhightower/envconfig/LICENSE
 
 The govalidator component is used under the MIT license:
-@traffic_ops/traffic_ops_golang/vendor/github.com/asaskevich/govalidator/*
-./traffic_ops/traffic_ops_golang/vendor/github.com/asaskevich/govalidator/LICENSE
+@traffic_ops/vendor/github.com/asaskevich/govalidator/*
+./traffic_ops/vendor/github.com/asaskevich/govalidator/LICENSE
 
 The ozzo-validation component is used under the MIT license:
-@traffic_ops/traffic_ops_golang/vendor/github.com/go-ozzo/ozzo-validation/*
-./traffic_ops/traffic_ops_golang/vendor/github.com/go-ozzo/ozzo-validation/LICENSE
+@traffic_ops/vendor/github.com/go-ozzo/ozzo-validation/*
+./traffic_ops/vendor/github.com/go-ozzo/ozzo-validation/LICENSE
 
 The spinner-small.gif is used under the WTFPL license:
 @traffic_ops/app/public/images/spinner-small.gif
