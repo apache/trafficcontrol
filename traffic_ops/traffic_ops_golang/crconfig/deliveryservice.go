@@ -41,7 +41,7 @@ const DefaultTLDTTLNS = 3600 * time.Second
 const GeoProviderMaxmindStr = "maxmindGeolocationService"
 const GeoProviderNeustarStr = "neustarGeolocationService"
 
-func makeDSes(cdn string, db *sql.DB) (map[string]tc.CRConfigDeliveryService, error) {
+func makeDSes(cdn string, domain string, db *sql.DB) (map[string]tc.CRConfigDeliveryService, error) {
 	dses := map[string]tc.CRConfigDeliveryService{}
 
 	admin := CDNSOAAdmin
@@ -93,7 +93,7 @@ and d.active = true
 		return nil, errors.New("getting deliveryservice server parameters: " + err.Error())
 	}
 
-	dsmatchsets, dsdomains, err := getDSRegexesDomains(cdn, db, dsParams)
+	dsmatchsets, dsdomains, err := getDSRegexesDomains(cdn, domain, db)
 	if err != nil {
 		return nil, errors.New("getting regex matchsets: " + err.Error())
 	}
@@ -373,12 +373,10 @@ func getProtocolStr(dsType string) string {
 	return "HTTP"
 }
 
-func getDSRegexesDomains(cdn string, db *sql.DB, dsParams map[string]string) (map[string][]*tc.MatchSet, map[string][]string, error) {
+func getDSRegexesDomains(cdn string, domain string, db *sql.DB) (map[string][]*tc.MatchSet, map[string][]string, error) {
 	dsmatchsets := map[string][]*tc.MatchSet{}
 	domains := map[string][]string{}
-
 	patternToHostReplacer := strings.NewReplacer(`\`, ``, `.*`, ``, `.`, ``)
-
 	q := `
 select r.pattern, t.name as type, dt.name as dstype, COALESCE(dr.set_number, 0), d.xml_id as dsname
 from regex as r
@@ -432,11 +430,6 @@ order by dr.set_number asc
 		matchset.Protocol = protocolStr
 		matchset.MatchList = append(matchset.MatchList, tc.MatchList{MatchType: matchType, Regex: pattern})
 
-		domain := ""
-		if val, ok := dsParams["domain_name"]; ok {
-			domain = val
-		}
-
 		if ttype == "HOST_REGEXP" && setnum == 0 {
 			domains[dsname] = append(domains[dsname], patternToHostReplacer.Replace(pattern)+"."+domain)
 		}
@@ -449,7 +442,6 @@ order by dr.set_number asc
 // If any profiles have conflicting parameters, an error is returned.
 func getDSParams(serverParams map[string]map[string]string) (map[string]string, error) {
 	dsParamNames := map[string]struct{}{
-		"domain_name":       struct{}{},
 		"tld.soa.admin":     struct{}{},
 		"tld.soa.expire":    struct{}{},
 		"tld.soa.minimum":   struct{}{},
