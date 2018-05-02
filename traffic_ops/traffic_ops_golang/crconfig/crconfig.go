@@ -35,7 +35,7 @@ func Make(db *sql.DB, cdn, user, toHost, reqPath, toVersion string) (*tc.CRConfi
 		return nil, errors.New("Error getting CDN info: " + err.Error())
 	}
 
-	if crc.Config, err = makeCRConfigConfig(cdn, db, dnssecEnabled); err != nil {
+	if crc.Config, err = makeCRConfigConfig(cdn, db, dnssecEnabled, cdnDomain); err != nil {
 		return nil, errors.New("Error getting Config: " + err.Error())
 	}
 
@@ -45,7 +45,7 @@ func Make(db *sql.DB, cdn, user, toHost, reqPath, toVersion string) (*tc.CRConfi
 	if crc.EdgeLocations, crc.RouterLocations, err = makeLocations(cdn, db); err != nil {
 		return nil, errors.New("Error getting Edge Locations: " + err.Error())
 	}
-	if crc.DeliveryServices, err = makeDSes(cdn, db); err != nil {
+	if crc.DeliveryServices, err = makeDSes(cdn, cdnDomain, db); err != nil {
 		return nil, errors.New("Error getting Delivery Services: " + err.Error())
 	}
 

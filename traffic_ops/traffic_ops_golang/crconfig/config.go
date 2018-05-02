@@ -25,11 +25,12 @@ import (
 	"strings"
 )
 
-func makeCRConfigConfig(cdn string, db *sql.DB, dnssecEnabled bool) (map[string]interface{}, error) {
+func makeCRConfigConfig(cdn string, db *sql.DB, dnssecEnabled bool, domain string) (map[string]interface{}, error) {
 	configParams, err := getConfigParams(cdn, db)
 	if err != nil {
 		return nil, errors.New("Error getting router params: " + err.Error())
 	}
+	configParams["domain_name"] = domain
 	soa := map[string]string{}
 	ttl := map[string]string{}
 	const soaPrefix = "tld.soa."
