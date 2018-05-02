@@ -324,10 +324,6 @@ For the pq component:
 @traffic_ops/vendor/github.com/lib/pq/*
 ./traffic_ops/experimental/traffic_ops_auth/vendor/github.com/lib/pq/LICENSE.md
 
-and also:
-@traffic_ops/vendor/github.com/lib/pq/*
-./traffic_ops/vendor/github.com/lib/pq/LICENSE.md
-
 For the influxdb component:
 @traffic_stats/vendor/github.com/influxdata/influxdb/*
 ./traffic_stats/vendor/github.com/influxdata/influxdb/LICENSE
