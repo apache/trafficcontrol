@@ -169,6 +169,7 @@ func TestMakeDSes(t *testing.T) {
 	defer db.Close()
 
 	cdn := "mycdn"
+	domain := "mycdn.invalid"
 
 	expected := ExpectedMakeDSes()
 	MockMakeDSes(mock, expected, cdn)
@@ -186,7 +187,7 @@ func TestMakeDSes(t *testing.T) {
 	expectedStaticDNSEntries := ExpectedGetStaticDNSEntries(expected)
 	MockGetStaticDNSEntries(mock, expectedStaticDNSEntries, cdn)
 
-	actual, err := makeDSes(cdn, db)
+	actual, err := makeDSes(cdn, domain, db)
 	if err != nil {
 		t.Fatalf("makeDSes expected: nil error, actual: %v", err)
 	}
@@ -310,6 +311,7 @@ func TestGetDSRegexesDomains(t *testing.T) {
 	defer db.Close()
 
 	cdn := "mycdn"
+	domain := "mycdn.invalid"
 
 	expectedMakeDSes := ExpectedMakeDSes()
 	expectedServerProfileParams := ExpectedGetServerProfileParams(expectedMakeDSes)
@@ -320,7 +322,7 @@ func TestGetDSRegexesDomains(t *testing.T) {
 	expectedMatchsets, expectedDomains := ExpectedGetDSRegexesDomains(expectedDSParams)
 	MockGetDSRegexesDomains(mock, expectedMatchsets, expectedDomains, cdn)
 
-	actualMatchsets, actualDomains, err := getDSRegexesDomains(cdn, db, expectedDSParams)
+	actualMatchsets, actualDomains, err := getDSRegexesDomains(cdn, domain, db)
 	if err != nil {
 		t.Fatalf("getDSRegexesDomains expected: nil error, actual: %v", err)
 	}
