@@ -113,6 +113,34 @@ func SnapshotGetHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	}
 }
 
+// SnapshotOldGetHandler gets and serves the CRConfig from the snapshot table, not wrapped in response to match the old non-API CRConfig-Snapshots endpoint
+func SnapshotOldGetHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
+		params, err := api.GetCombinedParams(r)
+		if err != nil {
+			handleErrs(http.StatusInternalServerError, err)
+			return
+		}
+		cdn, ok := params["cdn"]
+		if !ok {
+			handleErrs(http.StatusInternalServerError, errors.New("params missing CDN"))
+			return
+		}
+		snapshot, cdnExists, err := GetSnapshot(db.DB, cdn)
+		if err != nil {
+			handleErrs(http.StatusInternalServerError, errors.New("getting snapshot: "+err.Error()))
+			return
+		}
+		if !cdnExists {
+			handleErrs(http.StatusNotFound, errors.New("CDN not found"))
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(snapshot))
+	}
+}
+
 // SnapshotHandler creates the CRConfig JSON and writes it to the snapshot table in the database.
 func SnapshotHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
