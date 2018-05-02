@@ -67,7 +67,7 @@ Built: %(date) by %{getenv: USER}
     # Create build area with proper gopath structure
     mkdir -p src pkg bin || { echo "Could not create directories in $(pwd): $!"; exit 1; }
 
-
+     
 
     # build all internal go dependencies (expects package being built as argument)
     build_dependencies () {
@@ -92,10 +92,16 @@ Built: %(date) by %{getenv: USER}
            fi
        done
     }
+    oldpwd=$(pwd)
+    #copy in traffic_ops/vendor
+    vendordir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/vendor 
+    ( mkdir -p "$vendordir" && \
+      cd "$vendordir" && \
+      cp -r "$TC_DIR"/traffic_ops/vendor/* . \
+    ) || { echo "could not copy traffic_ops/vendor directory"; exit 1; } 
 
     # build traffic_ops_golang binary
     godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
-    oldpwd=$(pwd)
     ( mkdir -p "$godir" && \
       cd "$godir" && \
       cp -r "$TC_DIR"/traffic_ops/traffic_ops_golang/* . && \
