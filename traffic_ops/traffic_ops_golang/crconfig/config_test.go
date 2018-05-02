@@ -27,16 +27,19 @@ import (
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func ExpectedGetConfigParams() map[string]string {
-	return map[string]string{
-		"tld.ttls.foo" + *randStr(): *randStr(),
-		"tld.soa.bar" + *randStr():  *randStr(),
+func ExpectedGetConfigParams(domain string) []CRConfigConfigParameter{
+	return []CRConfigConfigParameter{
+		{"tld.ttls.foo" + *randStr(), *randStr()},
+		{"tld.soa.bar" + *randStr(),  *randStr()},
+		{"domain_name", domain},
 	}
 }
 
-func MockGetConfigParams(mock sqlmock.Sqlmock, expected map[string]string, cdn string) {
+func MockGetConfigParams(mock sqlmock.Sqlmock, expected []CRConfigConfigParameter, cdn string) {
 	rows := sqlmock.NewRows([]string{"name", "value"})
-	for n, v := range expected {
+	for _, param := range expected {
+		n := param.Name
+		v := param.Value
 		rows = rows.AddRow(n, v)
 	}
 	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
@@ -50,8 +53,9 @@ func TestGetConfigParams(t *testing.T) {
 	defer db.Close()
 
 	cdn := "mycdn"
+	domain := "mycdn.invalid"
 
-	expected := ExpectedGetConfigParams()
+	expected := ExpectedGetConfigParams(domain)
 	MockGetConfigParams(mock, expected, cdn)
 
 	actual, err := getConfigParams(cdn, db)
@@ -67,11 +71,13 @@ func TestGetConfigParams(t *testing.T) {
 const soaPrefix = "tld.soa."
 const ttlPrefix = "tld.ttls."
 
-func ExpectedMakeCRConfigConfig(expectedGetConfigParams map[string]string, expectedDNSSECEnabled bool) map[string]interface{} {
+func ExpectedMakeCRConfigConfig(expectedGetConfigParams []CRConfigConfigParameter, expectedDNSSECEnabled bool) map[string]interface{} {
 	m := map[string]interface{}{}
 	soa := map[string]string{}
 	ttl := map[string]string{}
-	for n, v := range expectedGetConfigParams {
+	for _, param := range expectedGetConfigParams {
+		n := param.Name
+		v := param.Value
 		if strings.HasPrefix(n, soaPrefix) {
 			soa[n[len(soaPrefix):]] = v
 		} else if strings.HasPrefix(n, ttlPrefix) {
@@ -98,14 +104,15 @@ func TestMakeCRConfigConfig(t *testing.T) {
 	defer db.Close()
 
 	cdn := "mycdn"
+	domain := "mycdn.invalid"
 	dnssecEnabled := true
 
-	expectedGetConfigParams := ExpectedGetConfigParams()
+	expectedGetConfigParams := ExpectedGetConfigParams(domain)
 	MockGetConfigParams(mock, expectedGetConfigParams, cdn)
 
 	expected := ExpectedMakeCRConfigConfig(expectedGetConfigParams, dnssecEnabled)
 
-	actual, err := makeCRConfigConfig(cdn, db, dnssecEnabled)
+	actual, err := makeCRConfigConfig(cdn, db, dnssecEnabled, domain)
 
 	if err != nil {
 		t.Fatalf("makeCRConfigConfig err expected: nil, actual: %v", err)
