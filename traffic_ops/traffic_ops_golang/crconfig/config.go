@@ -22,6 +22,7 @@ package crconfig
 import (
 	"database/sql"
 	"errors"
+	"strconv"
 	"strings"
 )
 
@@ -30,28 +31,41 @@ func makeCRConfigConfig(cdn string, db *sql.DB, dnssecEnabled bool, domain strin
 	if err != nil {
 		return nil, errors.New("Error getting router params: " + err.Error())
 	}
-	configParams["domain_name"] = domain
 	soa := map[string]string{}
 	ttl := map[string]string{}
+	maxmindDefaultOverrides := []CRConfigConfigMaxmindDefaultOverride{}
+
 	const soaPrefix = "tld.soa."
-	ttlPrefix := "tld.ttls."
+	const ttlPrefix = "tld.ttls."
+	const maxmindDefaultOverrideParameterName = "maxmind.default.override"
 	crConfigConfig := map[string]interface{}{}
-	for k, v := range configParams {
+	for _, param := range configParams {
+		k := param.Name
+		v := param.Value
 		if strings.HasPrefix(k, soaPrefix) {
 			soa[k[len(soaPrefix):]] = v
 		} else if strings.HasPrefix(k, ttlPrefix) {
 			ttl[k[len(ttlPrefix):]] = v
+		} else if k == maxmindDefaultOverrideParameterName {
+			overrideObj, err := createMaxmindDefaultOverrideObj(v)
+			if err != nil {
+				return nil, errors.New("Error parsing " + maxmindDefaultOverrideParameterName + " parameter: " + err.Error())
+			}
+			maxmindDefaultOverrides = append(maxmindDefaultOverrides, overrideObj)
 		} else {
 			crConfigConfig[k] = v
 		}
 	}
+	crConfigConfig["domain_name"] = domain
 	if len(soa) > 0 {
 		crConfigConfig["soa"] = soa
 	}
 	if len(ttl) > 0 {
 		crConfigConfig["ttls"] = ttl
 	}
-
+	if len(maxmindDefaultOverrides) > 0 {
+		crConfigConfig[maxmindDefaultOverrideParameterName] = maxmindDefaultOverrides
+	}
 	dnssecStr := "false"
 	if dnssecEnabled {
 		dnssecStr = "true"
@@ -61,7 +75,12 @@ func makeCRConfigConfig(cdn string, db *sql.DB, dnssecEnabled bool, domain strin
 	return crConfigConfig, nil
 }
 
-func getConfigParams(cdn string, db *sql.DB) (map[string]string, error) {
+type CRConfigConfigParameter struct {
+	Name  string
+	Value string
+}
+
+func getConfigParams(cdn string, db *sql.DB) ([]CRConfigConfigParameter, error) {
 	// TODO change to []struct{string,string} ? Speed might matter.
 	q := `
 select name, value from parameter where id in (
@@ -79,17 +98,51 @@ and config_file = 'CRConfig.json'
 	}
 	defer rows.Close()
 
-	params := map[string]string{}
+	params := []CRConfigConfigParameter{}
 	for rows.Next() {
 		name := ""
 		val := ""
 		if err := rows.Scan(&name, &val); err != nil {
 			return nil, errors.New("Error scanning router param: " + err.Error())
 		}
-		params[name] = val
+		params = append(params, CRConfigConfigParameter{Name: name, Value: val})
 	}
 	if err := rows.Err(); err != nil {
 		return nil, errors.New("Error iterating router param rows: " + err.Error())
 	}
 	return params, nil
+}
+
+type CRConfigConfigMaxmindDefaultOverride struct {
+	CountryCode string  `json:"countryCode"`
+	Lat         float64 `json:"lat"`
+	Lon         float64 `json:"long"`
+}
+
+func createMaxmindDefaultOverrideObj(maxmindDefaultOverrideParamVal string) (CRConfigConfigMaxmindDefaultOverride, error) {
+	countryCodeCoords := strings.Split(maxmindDefaultOverrideParamVal, ";")
+	if len(countryCodeCoords) < 2 {
+		return CRConfigConfigMaxmindDefaultOverride{}, errors.New("malformed maxmind.default.override parameter: '" + maxmindDefaultOverrideParamVal + "'")
+	}
+	countryCode := countryCodeCoords[0]
+	coords := countryCodeCoords[1]
+	latLon := strings.Split(coords, ",")
+	if len(latLon) < 2 {
+		return CRConfigConfigMaxmindDefaultOverride{}, errors.New("malformed maxmind.default.override parameter coordinates '" + maxmindDefaultOverrideParamVal + "'")
+	}
+	latStr := latLon[0]
+	lonStr := latLon[1]
+	lat, err := strconv.ParseFloat(latStr, 64)
+	if err != nil {
+		return CRConfigConfigMaxmindDefaultOverride{}, errors.New("malformed maxmind.default.override parameter coordinates, latitude not a number: '" + maxmindDefaultOverrideParamVal + "'")
+	}
+	lon, err := strconv.ParseFloat(lonStr, 64)
+	if err != nil {
+		return CRConfigConfigMaxmindDefaultOverride{}, errors.New("malformed maxmind.default.override parameter coordinates, longitude not an number: '" + maxmindDefaultOverrideParamVal + "'")
+	}
+	return CRConfigConfigMaxmindDefaultOverride{
+		CountryCode: countryCode,
+		Lat:         lat,
+		Lon:         lon,
+	}, nil
 }
