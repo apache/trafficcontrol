@@ -67,8 +67,6 @@ Built: %(date) by %{getenv: USER}
     # Create build area with proper gopath structure
     mkdir -p src pkg bin || { echo "Could not create directories in $(pwd): $!"; exit 1; }
 
-     
-
     # build all internal go dependencies (expects package being built as argument)
     build_dependencies () {
        IFS=$'\n'
