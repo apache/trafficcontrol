@@ -64,7 +64,7 @@ func makeCRConfigConfig(cdn string, db *sql.DB, dnssecEnabled bool, domain strin
 		crConfigConfig["ttls"] = ttl
 	}
 	if len(maxmindDefaultOverrides) > 0 {
-		crConfigConfig[maxmindDefaultOverrideParameterName] = maxmindDefaultOverrides
+		crConfigConfig["maxmindDefaultOverride"] = maxmindDefaultOverrides
 	}
 	dnssecStr := "false"
 	if dnssecEnabled {
