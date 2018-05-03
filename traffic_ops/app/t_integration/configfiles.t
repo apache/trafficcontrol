@@ -66,12 +66,6 @@ foreach my $server ( @{ $servers->{response} } ) {
 			$t->get_ok($path)->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } );
 		}
 	}
-	elsif ( $server->{type} eq 'CCR' || $server->{type} eq 'RASCAL' ) {
-		my $cdn_name = $files->{other}->{CDN_name};
-		my $path     = '/tools/write_crconfig/' . $cdn_name;
-		$t->get_ok($path)->status_is(302)->or( sub { diag $t->tx->res->content->asset->{content}; } );
-	}
-
 }
 
 done_testing();
