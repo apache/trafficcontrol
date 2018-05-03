@@ -105,7 +105,6 @@ and d.active = true
 
 	for rows.Next() {
 		ds := tc.CRConfigDeliveryService{
-			MissLocation:    &tc.CRConfigLatitudeLongitudeShort{},
 			Protocol:        &tc.CRConfigDeliveryServiceProtocol{},
 			ResponseHeaders: map[string]string{},
 			Soa:             cdnSOA,
@@ -139,12 +138,13 @@ and d.active = true
 		if err := rows.Scan(&xmlID, &missLat, &missLon, &protocol, &ds.TTL, &ds.RoutingName, &geoProvider, &ttype, &geoLimit, &geoLimitCountries, &geoLimitRedirectURL, &dispersion, &geoBlocking, &trRespHdrsStr, &maxDNSAnswers, &profile, &dnsBypassIP, &dnsBypassIP6, &dnsBypassTTL, &dnsBypassCName, &httpBypassFQDN, &ip6RoutingEnabled, &deepCachingType, &trRequestHeaders, &trResponseHeaders); err != nil {
 			return nil, errors.New("scanning deliveryservice: " + err.Error())
 		}
-
-		if missLat.Valid {
-			ds.MissLocation.Lat = missLat.Float64
-		}
-		if missLon.Valid {
-			ds.MissLocation.Lon = missLon.Float64
+		// TODO prevent (lat XOR lon) in the DB and UI
+		if missLat.Valid && missLon.Valid {
+			ds.MissLocation = &tc.CRConfigLatitudeLongitudeShort{Lat: missLat.Float64, Lon: missLon.Float64}
+		} else if missLat.Valid {
+			log.Warnln("delivery service " + xmlID + " has miss latitude but not longitude: omitting miss lat-lon from CRConfig")
+		} else if missLon.Valid {
+			log.Warnln("delivery service " + xmlID + " has miss longitude but not latitude: omitting miss lat-lon from CRConfig")
 		}
 		if ttl.Valid {
 			ttl := int(ttl.Int64)
