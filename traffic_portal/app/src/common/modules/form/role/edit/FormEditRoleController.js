@@ -51,8 +51,6 @@ var FormEditRoleController = function(roles, $scope, $controller, $uibModal, $an
 	};
 
 	$scope.viewUsers = function() {
-		alert('viewUsers');
-		return; // todo: need to implement this view
 		$location.path($location.path() + '/users');
 	};
 
