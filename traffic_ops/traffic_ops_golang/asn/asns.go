@@ -21,8 +21,10 @@ package asn
 
 import (
 	"errors"
+	"net/http"
 	"fmt"
 	"strconv"
+	"encoding/json"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -39,33 +41,40 @@ import (
 const ASNsPrivLevel = 10
 
 //we need a type alias to define functions on
-type TOASN tc.ASNNullable
+type TOASNV11 tc.ASNNullable
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOASN(tc.ASNNullable{})
+type TOASNV12 TOASNV11
 
-func GetRefType() *TOASN {
-	return &refType
+func GetRefTypeV11() *TOASNV11 {
+	asn := TOASNV11(tc.ASNNullable{})
+	return &asn
 }
 
-func (asn TOASN) GetKeyFieldsInfo() []api.KeyFieldInfo {
+func GetRefTypeV12() *TOASNV12 {
+	asn := TOASNV12(tc.ASNNullable{})
+	return &asn
+}
+
+func (asn TOASNV11) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
 }
 
+// func (asn TOASNV12) GetKeyFieldsInfo() []api.KeyFieldInfo { return TOASNV11(asn).GetKeyFieldsInfo() }
+
 //Implementation of the Identifier, Validator interface functions
-func (asn TOASN) GetKeys() (map[string]interface{}, bool) {
+func (asn TOASNV11) GetKeys() (map[string]interface{}, bool) {
 	if asn.ID == nil {
 		return map[string]interface{}{"id": 0}, false
 	}
 	return map[string]interface{}{"id": *asn.ID}, true
 }
 
-func (asn *TOASN) SetKeys(keys map[string]interface{}) {
+func (asn *TOASNV11) SetKeys(keys map[string]interface{}) {
 	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
 	asn.ID = &i
 }
 
-func (asn TOASN) GetAuditName() string {
+func (asn TOASNV11) GetAuditName() string {
 	if asn.ASN != nil {
 		return strconv.Itoa(*asn.ASN)
 	}
@@ -75,11 +84,11 @@ func (asn TOASN) GetAuditName() string {
 	return "unknown"
 }
 
-func (asn TOASN) GetType() string {
+func (asn TOASNV11) GetType() string {
 	return "asn"
 }
 
-func (asn TOASN) Validate(db *sqlx.DB) []error {
+func (asn TOASNV11) Validate(db *sqlx.DB) []error {
 	errs := validation.Errors{
 		"asn":          validation.Validate(asn.ASN, validation.NotNil, validation.Min(0)),
 		"cachegroupId": validation.Validate(asn.CachegroupID, validation.NotNil, validation.Min(0)),
@@ -87,14 +96,14 @@ func (asn TOASN) Validate(db *sqlx.DB) []error {
 	return tovalidate.ToErrors(errs)
 }
 
-//The TOASN implementation of the Creator interface
+//The TOASNV11 implementation of the Creator interface
 //all implementations of Creator should use transactions and return the proper errorType
 //ParsePQUniqueConstraintError is used to determine if a asn with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted asn and have
 //to be added to the struct
-func (asn *TOASN) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (asn *TOASNV11) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -156,9 +165,64 @@ func (asn *TOASN) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 	return nil, tc.NoError
 }
 
-func (asn *TOASN) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
+func (asn *TOASNV12) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+	asns, err, errType := read(db, parameters, user)
+	if len(err) > 0 {
+		return nil, err, errType
+	}
+	iasns := make([]interface{}, len(asns), len(asns))
+	for i, readASN := range asns {
+		iasns[i] = readASN
+	}
+	return iasns, err, errType
+}
 
+// Read implements the /api/1.1/asns/id route for reading individual ASNs.
+// Note this does NOT correctly implement the 1.1 API for all ASNs, because that route is in a different format than the CRUD utilities and all other routes.
+// The /api/1.1/asns route MUST call V11ReadAll, not this function, to correctly implement the 1.1 API.
+func (asn *TOASNV11) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+	v12 := TOASNV12(*asn)
+	return v12.Read(db, params, user)
+}
+
+// V11ReadAll implements the asns 1.1 route, which is different from the 1.1 route for a single ASN and from 1.2+ routes, in that it wraps the content in an additional "asns" object.
+func V11ReadAll(db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
+		ctx := r.Context()
+		params, err := api.GetCombinedParams(r)
+		if err != nil {
+			handleErrs(http.StatusInternalServerError, err)
+			return
+		}
+		user, err := auth.GetCurrentUser(ctx)
+		if err != nil {
+			log.Errorf("unable to retrieve current user from context: %s", err)
+			handleErrs(http.StatusInternalServerError, err)
+			return
+		}
+		asns, errs, errType := read(db, params, *user)
+		if len(errs) > 0 {
+			tc.HandleErrorsWithType(errs, errType, handleErrs)
+			return
+		}
+		resp := struct {
+			Response struct {
+				ASNs []TOASNV12 `json:"asns"`
+			} `json:"response"`
+		}{Response: struct {ASNs []TOASNV12  `json:"asns"` }{ASNs: asns}}
+
+		respBts, err := json.Marshal(resp)
+		if err != nil {
+			handleErrs(http.StatusInternalServerError, err)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, "%s", respBts)
+	}
+}
+
+func read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]TOASNV12, []error, tc.ApiErrorType) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
@@ -182,9 +246,9 @@ func (asn *TOASN) Read(db *sqlx.DB, parameters map[string]string, user auth.Curr
 	}
 	defer rows.Close()
 
-	ASNs := []interface{}{}
+	ASNs := []TOASNV12{}
 	for rows.Next() {
-		var s TOASN
+		var s TOASNV12
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorf("error parsing ASN rows: %v", err)
 			return nil, []error{err}, tc.SystemError
@@ -207,12 +271,12 @@ FROM asn a JOIN cachegroup c ON a.cachegroup = c.id`
 	return query
 }
 
-//The TOASN implementation of the Updater interface
+//The TOASNV11 implementation of the Updater interface
 //all implementations of Updater should use transactions and return the proper errorType
 //ParsePQUniqueConstraintError is used to determine if a asn with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (asn *TOASN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (asn *TOASNV11) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -274,7 +338,7 @@ func (asn *TOASN) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiError
 
 //The ASN implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (asn *TOASN) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (asn *TOASNV11) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
