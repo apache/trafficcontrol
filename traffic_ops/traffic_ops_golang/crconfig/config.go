@@ -38,6 +38,7 @@ func makeCRConfigConfig(cdn string, db *sql.DB, dnssecEnabled bool, domain strin
 	const soaPrefix = "tld.soa."
 	const ttlPrefix = "tld.ttls."
 	const maxmindDefaultOverrideParameterName = "maxmind.default.override"
+	const logRequestHeadersParameterName = "LogRequestHeaders"
 	crConfigConfig := map[string]interface{}{}
 	for _, param := range configParams {
 		k := param.Name
@@ -46,6 +47,12 @@ func makeCRConfigConfig(cdn string, db *sql.DB, dnssecEnabled bool, domain strin
 			soa[k[len(soaPrefix):]] = v
 		} else if strings.HasPrefix(k, ttlPrefix) {
 			ttl[k[len(ttlPrefix):]] = v
+		} else if k == logRequestHeadersParameterName {
+			hdrs := []string{}
+			for _, hdr := range strings.Split(param.Value, `__RETURN__`) {
+				hdrs = append(hdrs, strings.TrimSpace(hdr))
+			}
+			crConfigConfig["requestHeaders"] = hdrs
 		} else if k == maxmindDefaultOverrideParameterName {
 			overrideObj, err := createMaxmindDefaultOverrideObj(v)
 			if err != nil {
