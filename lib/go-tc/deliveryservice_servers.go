@@ -1,5 +1,7 @@
 package tc
 
+import "time"
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,179 +17,85 @@ package tc
    limitations under the License.
 */
 
-import (
-	"database/sql/driver"
-	"encoding/json"
-	"errors"
-	"fmt"
-	"strconv"
-	"strings"
+/*
+# get all delivery services associated with a server (from deliveryservice_server table)
+$r->get( "/api/$version/servers/:id/deliveryservices" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Deliveryservice#get_deliveryservices_by_serverId', namespace => $namespace );
 
-	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
-)
+# delivery service / server assignments
+$r->post("/api/$version/deliveryservices/:xml_id/servers")->over( authenticated => 1, not_ldap => 1 )
+->to( 'Deliveryservice#assign_servers', namespace => $namespace );
+$r->delete("/api/$version/deliveryservice_server/:dsId/:serverId" => [ dsId => qr/\d+/, serverId => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#remove_server_from_ds', namespace => $namespace );
+	# -- DELIVERYSERVICES: SERVERS
+	# Supports ?orderby=key
+	$r->get("/api/$version/deliveryserviceserver")->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#index', namespace => $namespace );
+	$r->post("/api/$version/deliveryserviceserver")->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#assign_servers_to_ds', namespace => $namespace );
 
-// IDNoMod type is used to suppress JSON unmarshalling
-type IDNoMod int
+*/
 
-// DeliveryServiceRequest is used as part of the workflow to create,
-// modify, or delete a delivery service.
-type DeliveryServiceRequest struct {
-	AssigneeID      int             `json:"assigneeId,omitempty"`
-	Assignee        string          `json:"assignee,omitempty"`
-	AuthorID        IDNoMod         `json:"authorId"`
-	Author          string          `json:"author"`
-	ChangeType      string          `json:"changeType"`
-	CreatedAt       *TimeNoMod      `json:"createdAt"`
-	ID              int             `json:"id"`
-	LastEditedBy    string          `json:"lastEditedBy,omitempty"`
-	LastEditedByID  IDNoMod         `json:"lastEditedById,omitempty"`
-	LastUpdated     *TimeNoMod      `json:"lastUpdated"`
-	DeliveryService DeliveryService `json:"deliveryService"`
-	Status          RequestStatus   `json:"status"`
-	XMLID           string          `json:"-" db:"xml_id"`
+// DeliveryServiceServerResponse ...
+type DeliveryServiceServerResponse struct {
+	Response []DeliveryServiceServer `json:"response"`
+	Size     int                     `json:"size"`
+	OrderBy  string                  `json:"orderby"`
+	Limit    int                     `json:"limit"`
 }
 
-// DeliveryServiceRequestNullable is used as part of the workflow to create,
-// modify, or delete a delivery service.
-type DeliveryServiceRequestNullable struct {
-	AssigneeID      *int                     `json:"assigneeId,omitempty" db:"assignee_id"`
-	Assignee        *string                  `json:"assignee,omitempty"`
-	AuthorID        *IDNoMod                 `json:"authorId" db:"author_id"`
-	Author          *string                  `json:"author"`
-	ChangeType      *string                  `json:"changeType" db:"change_type"`
-	CreatedAt       *TimeNoMod               `json:"createdAt" db:"created_at"`
-	ID              *int                     `json:"id" db:"id"`
-	LastEditedBy    *string                  `json:"lastEditedBy"`
-	LastEditedByID  *IDNoMod                 `json:"lastEditedById" db:"last_edited_by_id"`
-	LastUpdated     *TimeNoMod               `json:"lastUpdated" db:"last_updated"`
-	DeliveryService *DeliveryServiceNullable `json:"deliveryService" db:"deliveryservice"`
-	Status          *RequestStatus           `json:"status" db:"status"`
-	XMLID           *string                  `json:"-" db:"xml_id"`
+// DeliveryServiceServer ...
+type DeliveryServiceServer struct {
+	Server          *int             `json:"server"`
+	DeliveryService *int             `json:"deliveryService"`
+	LastUpdated     *TimeNoMod       `json:"lastUpdated" db:"last_updated"`
+}
+
+
+type DssServer struct {
+	Cachegroup       *string              `json:"cachegroup" db:"cachegroup"`
+	CachegroupID     *int                 `json:"cachegroupId" db:"cachegroup_id"`
+	CDNID            *int                 `json:"cdnId" db:"cdn_id"`
+	CDNName          *string              `json:"cdnName" db:"cdn_name"`
+	DeliveryServices *map[string][]string `json:"deliveryServices,omitempty"`
+	DomainName       *string              `json:"domainName" db:"domain_name"`
+	FQDN             *string              `json:"fqdn,omitempty"`
+	FqdnTime         time.Time            `json:"-"`
+	GUID             *string              `json:"guid" db:"guid"`
+	HostName         *string              `json:"hostName" db:"host_name"`
+	HTTPSPort        *int                 `json:"httpsPort" db:"https_port"`
+	ID               *int                 `json:"id" db:"id"`
+	ILOIPAddress     *string              `json:"iloIpAddress" db:"ilo_ip_address"`
+	ILOIPGateway     *string              `json:"iloIpGateway" db:"ilo_ip_gateway"`
+	ILOIPNetmask     *string              `json:"iloIpNetmask" db:"ilo_ip_netmask"`
+	ILOPassword      *string              `json:"iloPassword" db:"ilo_password"`
+	ILOUsername      *string              `json:"iloUsername" db:"ilo_username"`
+	InterfaceMtu     *int                 `json:"interfaceMtu" db:"interface_mtu"`
+	InterfaceName    *string              `json:"interfaceName" db:"interface_name"`
+	IP6Address       *string              `json:"ip6Address" db:"ip6_address"`
+	IP6Gateway       *string              `json:"ip6Gateway" db:"ip6_gateway"`
+	IPAddress        *string              `json:"ipAddress" db:"ip_address"`
+	IPGateway        *string              `json:"ipGateway" db:"ip_gateway"`
+	IPNetmask        *string              `json:"ipNetmask" db:"ip_netmask"`
+	LastUpdated      *TimeNoMod           `json:"lastUpdated" db:"last_updated"`
+	MgmtIPAddress    *string              `json:"mgmtIpAddress" db:"mgmt_ip_address"`
+	MgmtIPGateway    *string              `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
+	MgmtIPNetmask    *string              `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
+	OfflineReason    *string              `json:"offlineReason" db:"offline_reason"`
+	PhysLocation     *string              `json:"physLocation" db:"phys_location"`
+	PhysLocationID   *int                 `json:"physLocationId" db:"phys_location_id"`
+	Profile          *string              `json:"profile" db:"profile"`
+	ProfileDesc      *string              `json:"profileDesc" db:"profile_desc"`
+	ProfileID        *int                 `json:"profileId" db:"profile_id"`
+	Rack             *string              `json:"rack" db:"rack"`
+	RouterHostName   *string              `json:"routerHostName" db:"router_host_name"`
+	RouterPortName   *string              `json:"routerPortName" db:"router_port_name"`
+	Status           *string              `json:"status" db:"status"`
+	StatusID         *int                 `json:"statusId" db:"status_id"`
+	TCPPort          *int                 `json:"tcpPort" db:"tcp_port"`
+	Type             string               `json:"type" db:"server_type"`
+	TypeID           *int                 `json:"typeId" db:"server_type_id"`
+	UpdPending       *bool                `json:"updPending" db:"upd_pending"`
 }
 
 // UnmarshalJSON implements the json.Unmarshaller interface to suppress unmarshalling for IDNoMod
-func (a *IDNoMod) UnmarshalJSON([]byte) error {
-	return nil
-}
+//func (a *IDNoMod) UnmarshalJSON([]byte) error {
+	//return nil
+//}
 
-// RequestStatus captures where in the workflow this request is
-type RequestStatus string
-
-const (
-	// RequestStatusInvalid -- invalid state
-	RequestStatusInvalid = RequestStatus("invalid")
-	// RequestStatusDraft -- newly created; not ready to be reviewed
-	RequestStatusDraft = RequestStatus("draft")
-	// RequestStatusSubmitted -- newly created; ready to be reviewed
-	RequestStatusSubmitted = RequestStatus("submitted")
-	// RequestStatusRejected -- reviewed, but problems found
-	RequestStatusRejected = RequestStatus("rejected")
-	// RequestStatusPending -- reviewed and locked; ready to be implemented
-	RequestStatusPending = RequestStatus("pending")
-	// RequestStatusComplete -- implemented and locked
-	RequestStatusComplete = RequestStatus("complete")
-)
-
-// RequestStatuses -- user-visible string associated with each of the above
-var RequestStatuses = []RequestStatus{
-	// "invalid" -- don't list here..
-	"draft",
-	"submitted",
-	"rejected",
-	"pending",
-	"complete",
-}
-
-// UnmarshalJSON implements json.Unmarshaller
-func (r *RequestStatus) UnmarshalJSON(b []byte) error {
-	u, err := strconv.Unquote(string(b))
-	if err != nil {
-		return err
-	}
-
-	// just check to see if the string represents a valid requeststatus
-	_, err = RequestStatusFromString(u)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(b, (*string)(r))
-}
-
-// MarshalJSON implements json.Marshaller
-func (r RequestStatus) MarshalJSON() ([]byte, error) {
-	return json.Marshal(string(r))
-}
-
-// Value implements driver.Valuer
-func (r *RequestStatus) Value() (driver.Value, error) {
-	v, err := json.Marshal(r)
-	log.Debugf("value is %v; err is %v", v, err)
-	v = []byte(strings.Trim(string(v), `"`))
-	return v, err
-}
-
-// Scan implements sql.Scanner
-func (r *RequestStatus) Scan(src interface{}) error {
-	b, ok := src.([]byte)
-	if !ok {
-		return fmt.Errorf("expected requeststatus in byte array form; got %T", src)
-	}
-	b = []byte(`"` + string(b) + `"`)
-	return json.Unmarshal(b, r)
-}
-
-// RequestStatusFromString gets the status enumeration from a string
-func RequestStatusFromString(rs string) (RequestStatus, error) {
-	if rs == "" {
-		return RequestStatusDraft, nil
-	}
-	for _, s := range RequestStatuses {
-		if string(s) == rs {
-			return s, nil
-		}
-	}
-	return RequestStatusInvalid, errors.New(rs + " is not a valid RequestStatus name")
-}
-
-// ValidTransition returns nil if the transition is allowed for the workflow, an error if not
-func (r RequestStatus) ValidTransition(to RequestStatus) error {
-	if r == RequestStatusRejected || r == RequestStatusComplete {
-		// once rejected or completed,  no changes allowed
-		return errors.New(string(r) + " request cannot be changed")
-	}
-
-	if r == to {
-		// no change -- always allowed
-		return nil
-	}
-
-	// indicate if valid transitioning to this RequestStatus
-	switch to {
-	case RequestStatusDraft:
-		// can go back to draft if submitted or rejected
-		if r == RequestStatusSubmitted {
-			return nil
-		}
-	case RequestStatusSubmitted:
-		// can go be submitted if draft or rejected
-		if r == RequestStatusDraft {
-			return nil
-		}
-	case RequestStatusRejected:
-		// only submitted can be rejected
-		if r == RequestStatusSubmitted {
-			return nil
-		}
-	case RequestStatusPending:
-		// only submitted can move to pending
-		if r == RequestStatusSubmitted {
-			return nil
-		}
-	case RequestStatusComplete:
-		// only pending can be completed.  Completed can never change.
-		if r == RequestStatusPending {
-			return nil
-		}
-	}
-	return errors.New("invalid transition from " + string(r) + " to " + string(to))
-}

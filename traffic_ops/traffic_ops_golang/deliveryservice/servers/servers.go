@@ -1,4 +1,4 @@
-package profileparameter
+package servers
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -25,92 +25,105 @@ import (
 	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
-	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
-const (
-	ProfileIDQueryParam   = "profileId"
-	ParameterIDQueryParam = "parameterId"
-)
-
-//we need a type alias to define functions on
-type TOProfileParameter v13.ProfileParameterNullable
+// TODeliveryServiceRequest provides a type alias to define functions on
+type TODeliveryServiceServer tc.DeliveryServiceServer
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOProfileParameter(v13.ProfileParameterNullable{})
+var refType = TODeliveryServiceServer(tc.DeliveryServiceServer{})
 
-func GetRefType() *TOProfileParameter {
+func GetRefType() *TODeliveryServiceServer {
 	return &refType
 }
 
-func (pp TOProfileParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{ProfileIDQueryParam, api.GetIntKey}, {ParameterIDQueryParam, api.GetIntKey}}
+/*
+# get all delivery services associated with a server (from deliveryservice_server table)
+$r->get( "/api/$version/servers/:id/deliveryservices" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'Deliveryservice#get_deliveryservices_by_serverId', namespace => $namespace );
+
+# delivery service / server assignments
+$r->post("/api/$version/deliveryservices/:xml_id/servers")->over( authenticated => 1, not_ldap => 1 )
+->to( 'Deliveryservice#assign_servers', namespace => $namespace );
+$r->delete("/api/$version/deliveryservice_server/:dsId/:serverId" => [ dsId => qr/\d+/, serverId => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#remove_server_from_ds', namespace => $namespace );
+	# -- DELIVERYSERVICES: SERVERS
+	# Supports ?orderby=key
+	$r->get("/api/$version/deliveryserviceserver")->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#index', namespace => $namespace );
+	$r->post("/api/$version/deliveryserviceserver")->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#assign_servers_to_ds', namespace => $namespace );
+
+		{1.2, http.MethodGet, `deliveryservices/{id}/servers$`, api.ReadHandler(dsserver.GetRefType(), d.DB),auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.2, http.MethodGet, `deliveryservices/{id}/unassigned_servers$`, api.ReadHandler(dsserver.GetRefType(), d.DB),auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.2, http.MethodGet, `deliveryservices/{id}/servers/eligible$`, api.ReadHandler(dsserver.GetRefType(), d.DB),auth.PrivLevelReadOnly, Authenticated, nil},
+
+*/
+
+func (dss TODeliveryServiceServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"deliveryservice", api.GetIntKey}, {"server", api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (pp TOProfileParameter) GetKeys() (map[string]interface{}, bool) {
-	if pp.ProfileID == nil {
-		return map[string]interface{}{ProfileIDQueryParam: 0}, false
+func (dss TODeliveryServiceServer) GetKeys() (map[string]interface{}, bool) {
+	if dss.DeliveryService == nil {
+		return map[string]interface{}{"deliveryservice": 0}, false
 	}
-	if pp.ParameterID == nil {
-		return map[string]interface{}{ParameterIDQueryParam: 0}, false
+	if dss.Server == nil {
+		return map[string]interface{}{"server": 0}, false
 	}
 	keys := make(map[string]interface{})
-	profileID := *pp.ProfileID
-	parameterID := *pp.ParameterID
+	ds_id := *dss.DeliveryService
+	server_id := *dss.Server
 
-	keys[ProfileIDQueryParam] = profileID
-	keys[ParameterIDQueryParam] = parameterID
+	keys["deliveryservice"] = ds_id
+	keys["server"] = server_id
 	return keys, true
 }
 
-func (pp *TOProfileParameter) GetAuditName() string {
-	if pp.ProfileID != nil {
-		return strconv.Itoa(*pp.ProfileID) + "-" + strconv.Itoa(*pp.ParameterID)
+func (dss *TODeliveryServiceServer) GetAuditName() string {
+	if dss.DeliveryService != nil {
+		return strconv.Itoa(*dss.DeliveryService) + "-" + strconv.Itoa(*dss.Server)
 	}
 	return "unknown"
 }
 
-func (pp *TOProfileParameter) GetType() string {
-	return "profileParameter"
+func (dss *TODeliveryServiceServer) GetType() string {
+	return "deliveryserviceServers"
 }
 
-func (pp *TOProfileParameter) SetKeys(keys map[string]interface{}) {
-	profId, _ := keys[ProfileIDQueryParam].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
-	pp.ProfileID = &profId
+func (dss *TODeliveryServiceServer) SetKeys(keys map[string]interface{}) {
+	ds_id, _ := keys["deliveryservice"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	dss.DeliveryService = &ds_id
 
-	paramId, _ := keys[ParameterIDQueryParam].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
-	pp.ParameterID = &paramId
+	server_id, _ := keys["server"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	dss.Server = &server_id
 }
 
 // Validate fulfills the api.Validator interface
-func (pp *TOProfileParameter) Validate(db *sqlx.DB) []error {
+func (dss *TODeliveryServiceServer) Validate(db *sqlx.DB) []error {
 
 	errs := validation.Errors{
-		"profile":   validation.Validate(pp.ProfileID, validation.Required),
-		"parameter": validation.Validate(pp.ParameterID, validation.Required),
+		"deliveryservice": validation.Validate(dss.DeliveryService, validation.Required),
+		"server":          validation.Validate(dss.Server, validation.Required),
 	}
 
 	return tovalidate.ToErrors(errs)
 }
 
-//The TOProfileParameter implementation of the Creator interface
+//The TODeliveryServiceServer implementation of the Creator interface
 //all implementations of Creator should use transactions and return the proper errorType
 //ParsePQUniqueConstraintError is used to determine if a profileparameter with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 //The insert sql returns the profile and lastUpdated values of the newly inserted profileparameter and have
 //to be added to the struct
-func (pp *TOProfileParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (dss *TODeliveryServiceServer) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -127,7 +140,7 @@ func (pp *TOProfileParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error,
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
-	resultRows, err := tx.NamedQuery(insertQuery(), pp)
+	resultRows, err := tx.NamedQuery(insertQuery(), dss)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -141,19 +154,19 @@ func (pp *TOProfileParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error,
 	}
 	defer resultRows.Close()
 
-	var profile int
-	var parameter int
+	var ds_id int
+	var server_id int
 	var lastUpdated tc.TimeNoMod
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
-		if err := resultRows.Scan(&profile, &parameter, &lastUpdated); err != nil {
-			log.Error.Printf("could not scan profile from insert: %s\n", err)
+		if err := resultRows.Scan(&ds_id, &server_id, &lastUpdated); err != nil {
+			log.Error.Printf("could not scan dss from insert: %s\n", err)
 			return tc.DBError, tc.SystemError
 		}
 	}
 	if rowsAffected == 0 {
-		err = errors.New("no profile_parameter was inserted, no profile+parameter was returned")
+		err = errors.New("no deliveryServiceServer was inserted, nothing to return")
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
@@ -163,8 +176,8 @@ func (pp *TOProfileParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error,
 		return tc.DBError, tc.SystemError
 	}
 
-	pp.SetKeys(map[string]interface{}{ProfileIDQueryParam: profile, ParameterIDQueryParam: parameter})
-	pp.LastUpdated = &lastUpdated
+	dss.SetKeys(map[string]interface{}{"deliveryservice": ds_id, "server": server_id})
+	dss.LastUpdated = &lastUpdated
 	err = tx.Commit()
 	if err != nil {
 		log.Errorln("Could not commit transaction: ", err)
@@ -175,57 +188,59 @@ func (pp *TOProfileParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error,
 }
 
 func insertQuery() string {
-	query := `INSERT INTO profile_parameter (
-profile,
-parameter) VALUES (
-:profile_id,
-:parameter_id) RETURNING profile, parameter, last_updated`
+	query := `INSERT INTO deliveryservice_server (
+deliveryservice,
+server) VALUES (
+:ds_id,
+:server_id) RETURNING deliveryservice, server, last_updated`
 	return query
 }
 
-func (pp *TOProfileParameter) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
+func (dss *TODeliveryServiceServer) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+	idstr, ok := params["id"]
 
-	// Query Parameters to Database Query column mappings
-	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"profileId":   dbhelpers.WhereColumnInfo{"pp.profile", nil},
-		"parameterId": dbhelpers.WhereColumnInfo{"pp.parameter", nil},
-		"lastUpdated": dbhelpers.WhereColumnInfo{"pp.last_updated", nil},
+	if !ok {
+		log.Errorf("Deliveryservice Server Id missing")
+		return nil, []error{errors.New("Deliverservice id is required.")}, tc.DataMissingError
+	}
+	id, err := strconv.Atoi(idstr)
+
+	if err != nil {
+		log.Errorf("Deliveryservice Server Id is not an integer")
+		return nil, []error{errors.New("Deliverservice id is not an integer.")}, tc.SystemError
 	}
 
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
-	}
-
-	query := selectQuery() + where + orderBy
+	query := selectQuery()
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := db.Queryx(query, id)
 	if err != nil {
-		log.Errorf("Error querying Parameters: %v", err)
+		log.Errorf("Error querying DeliveryserviceServers: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
 	}
 	defer rows.Close()
 
-	params := []interface{}{}
+	servers := []interface{}{}
 	for rows.Next() {
-		var p v13.ProfileParameterNullable
-		if err = rows.StructScan(&p); err != nil {
-			log.Errorf("error parsing pp rows: %v", err)
+		var s tc.DssServer
+		if err = rows.StructScan(&s); err != nil {
+			log.Errorf("error parsing dss rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
-		params = append(params, p)
+		hiddenField := ""
+		if user.PrivLevel < auth.PrivLevelAdmin {
+			s.ILOPassword = &hiddenField
+		}
+		servers = append(servers, s)
 	}
 
-	return params, []error{}, tc.NoError
+	return servers, []error{}, tc.NoError
 
 }
 
 //The Parameter implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (pp *TOProfileParameter) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (dss *TODeliveryServiceServer) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -242,8 +257,8 @@ func (pp *TOProfileParameter) Delete(db *sqlx.DB, user auth.CurrentUser) (error,
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
-	log.Debugf("about to run exec query: %s with parameter: %++v", deleteQuery(), pp)
-	result, err := tx.NamedExec(deleteQuery(), pp)
+	log.Debugf("about to run exec query: %s with parameter: %++v", deleteQuery(), dss)
+	result, err := tx.NamedExec(deleteQuery(), dss)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -267,27 +282,71 @@ func (pp *TOProfileParameter) Delete(db *sqlx.DB, user auth.CurrentUser) (error,
 	rollbackTransaction = false
 	return nil, tc.NoError
 }
-
 func selectQuery() string {
 
-	query := `SELECT
-pp.last_updated,
-pp.profile profile_id,
-pp.parameter parameter_id,
-prof.name profile,
-param.name parameter
-FROM profile_parameter pp
-JOIN profile prof ON prof.id = pp.profile
-JOIN parameter param ON param.id = pp.parameter`
-	return query
+	const JumboFrameBPS = 9000
+
+	// COALESCE is needed to default values that are nil in the database
+	// because Go does not allow that to marshal into the struct
+	selectStmt := `SELECT
+	cg.name as cachegroup,
+	s.cachegroup as cachegroup_id,
+	s.cdn_id,
+	cdn.name as cdn_name,
+	s.domain_name,
+	s.guid,
+	s.host_name,
+	s.https_port,
+	s.id,
+	s.ilo_ip_address,
+	s.ilo_ip_gateway,
+	s.ilo_ip_netmask,
+	s.ilo_password,
+	s.ilo_username,
+	COALESCE(s.interface_mtu, ` + strconv.Itoa(JumboFrameBPS) + `) as interface_mtu,
+	s.interface_name,
+	s.ip6_address,
+	s.ip6_gateway,
+	s.ip_address,
+	s.ip_gateway,
+	s.ip_netmask,
+	s.last_updated,
+	s.mgmt_ip_address,
+	s.mgmt_ip_gateway,
+	s.mgmt_ip_netmask,
+	s.offline_reason,
+	pl.name as phys_location,
+	s.phys_location as phys_location_id,
+	p.name as profile,
+	p.description as profile_desc,
+	s.profile as profile_id,
+	s.rack,
+	s.router_host_name,
+	s.router_port_name,
+	st.name as status,
+	s.status as status_id,
+	s.tcp_port,
+	t.name as server_type,
+	s.type as server_type_id,
+	s.upd_pending as upd_pending
+	FROM server s
+	JOIN cachegroup cg ON s.cachegroup = cg.id
+	JOIN cdn cdn ON s.cdn_id = cdn.id
+	JOIN phys_location pl ON s.phys_location = pl.id
+	JOIN profile p ON s.profile = p.id
+	JOIN status st ON s.status = st.id
+	JOIN type t ON s.type = t.id
+	WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
+
+	return selectStmt
 }
 
 func updateQuery() string {
 	query := `UPDATE
-profile_parameter SET
-profile=:profile_id,
-parameter=:parameter_id
-WHERE profile=:profile_id AND 
+	profile_parameter SET
+	profile=:profile_id,
+	parameter=:parameter_id
+	WHERE profile=:profile_id AND 
       parameter = :parameter_id 
       RETURNING last_updated`
 	return query

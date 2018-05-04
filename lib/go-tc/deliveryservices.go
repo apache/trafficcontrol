@@ -281,17 +281,4 @@ type DeliveryServiceRouting struct {
 	RegionalDenied    int     `json:"regionalDenied"`
 }
 
-// DeliveryServiceServerResponse ...
-type DeliveryServiceServerResponse struct {
-	Response []DeliveryServiceServer `json:"response"`
-	Size     int                     `json:"size"`
-	OrderBy  string                  `json:"orderby"`
-	Limit    int                     `json:"limit"`
-}
 
-// DeliveryServiceServer ...
-type DeliveryServiceServer struct {
-	LastUpdated     string `json:"lastUpdated"`
-	Server          int    `json:"server"`
-	DeliveryService int    `json:"deliveryService"`
-}
