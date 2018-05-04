@@ -63,6 +63,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/capabilities/new').name, // this must be defined before edit for the url matcher to work
         require('./modules/private/capabilities/list').name,
         require('./modules/private/capabilities/edit').name,
+        require('./modules/private/capabilities/endpoints').name,
         require('./modules/private/capabilities/users').name,
         require('./modules/private/cdns').name,
         require('./modules/private/cdns/config').name,
@@ -290,6 +291,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/cacheGroupServers').name,
         require('./common/modules/table/cacheGroupStaticDnsEntries').name,
         require('./common/modules/table/capabilities').name,
+        require('./common/modules/table/capabilityEndpoints').name,
         require('./common/modules/table/capabilityUsers').name,
         require('./common/modules/table/changeLogs').name,
         require('./common/modules/table/asns').name,

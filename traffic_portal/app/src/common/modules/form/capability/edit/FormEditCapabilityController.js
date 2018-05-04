@@ -47,8 +47,6 @@ var FormEditCapabilityController = function(capability, $scope, $controller, $ui
 	};
 
 	$scope.viewEndpoints = function() {
-		alert('viewEndpoints');
-		return;
 		$location.path($location.path() + '/endpoints');
 	};
 

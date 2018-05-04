@@ -48,7 +48,7 @@ API-Capabilities
   +-------------------+--------+--------------------------------------------------+
   | ``httpMethod``    | enum   | One of: 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'. |
   +-------------------+--------+--------------------------------------------------+
-  | ``route``         | string | API route.                                       |
+  | ``httpRoute``     | string | API route.                                       |
   +-------------------+--------+--------------------------------------------------+
   | ``capability``    | string | Capability name.                                 |
   +-------------------+--------+--------------------------------------------------+
@@ -62,14 +62,14 @@ API-Capabilities
            {
               "id": "6",
               "httpMethod": "GET",
-              "route": "/api/*/asns",
+              "httpRoute": "/api/*/asns",
               "capability": "asn-read",
               "lastUpdated": "2017-04-02 08:22:43"
            },
            {
               "id": "7",
               "httpMethod": "GET",
-              "route": "/api/*/asns/*",
+              "httpRoute": "/api/*/asns/*",
               "capability": "asn-read",
               "lastUpdated": "2017-04-02 08:22:43"
            }
@@ -103,7 +103,7 @@ API-Capabilities
   +-------------------+--------+--------------------------------------------------+
   | ``httpMethod``    | enum   | One of: 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'. |
   +-------------------+--------+--------------------------------------------------+
-  | ``route``         | string | API route.                                       |
+  | ``httpRoute``     | string | API route.                                       |
   +-------------------+--------+--------------------------------------------------+
   | ``capability``    | string | Capability name.                                 |
   +-------------------+--------+--------------------------------------------------+
@@ -117,7 +117,7 @@ API-Capabilities
            {
               "id": "6",
               "httpMethod": "GET",
-              "route": "/api/*/asns",
+              "httpRoute": "/api/*/asns",
               "capability": "asn-read",
               "lastUpdated": "2017-04-02 08:22:43"
            }
@@ -141,7 +141,7 @@ API-Capabilities
   +================+==========+========+==================================================+
   | ``httpMethod`` | yes      | enum   | One of: 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'. |
   +----------------+----------+--------+--------------------------------------------------+
-  | ``route``      | yes      | string | API route.                                       |
+  | ``httpRoute``  | yes      | string | API route.                                       |
   +----------------+----------+--------+--------------------------------------------------+
   | ``capability`` | yes      | string | Capability name                                  |
   +----------------+----------+--------+--------------------------------------------------+
@@ -150,7 +150,7 @@ API-Capabilities
 
     {
         "httpMethod": "POST",
-        "route": "/api/*/cdns",
+        "httpRoute": "/api/*/cdns",
         "capability": "cdn-write"
     }
 
@@ -165,7 +165,7 @@ API-Capabilities
   +--------------------+--------+--------------------------------------------------+
   | ``>httpMethod``    | enum   | One of: 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'. |
   +--------------------+--------+--------------------------------------------------+
-  | ``>route``         | string | API route.                                       |
+  | ``>httpRoute``     | string | API route.                                       |
   +--------------------+--------+--------------------------------------------------+
   | ``>capability``    | string | Capability name                                  |
   +--------------------+--------+--------------------------------------------------+
@@ -185,7 +185,7 @@ API-Capabilities
         "response":{
               "id": "6",
               "httpMethod": "POST",
-              "route": "/api/*/cdns",
+              "httpRoute": "/api/*/cdns",
               "capability": "cdn-write",
               "lastUpdated": "2017-04-02 08:22:43"
         },
@@ -222,7 +222,7 @@ API-Capabilities
   +===================+========+==================================================+
   | ``httpMethod``    | enum   | One of: 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'. |
   +-------------------+--------+--------------------------------------------------+
-  | ``route``         | string | API route.                                       |
+  | ``httpRoute``     | string | API route.                                       |
   +-------------------+--------+--------------------------------------------------+
   | ``capability``    | string | Capability name                                  |
   +-------------------+--------+--------------------------------------------------+
@@ -232,7 +232,7 @@ API-Capabilities
 
     {
         "httpMethod": "GET",
-        "route": "/api/*/cdns",
+        "httpRoute": "/api/*/cdns",
         "capability": "cdn-read"
     }
 
@@ -247,7 +247,7 @@ API-Capabilities
   +--------------------+--------+--------------------------------------------------+
   | ``>httpMethod``    | enum   | One of: 'GET', 'POST', 'PUT', 'PATCH', 'DELETE'. |
   +--------------------+--------+--------------------------------------------------+
-  | ``>route``         | string | API route.                                       |
+  | ``>httpRoute``     | string | API route.                                       |
   +--------------------+--------+--------------------------------------------------+
   | ``>capability``    | string | Capability name                                  |
   +--------------------+--------+--------------------------------------------------+
@@ -266,7 +266,7 @@ API-Capabilities
         "response":{
               "id": "6",
               "httpMethod": "GET",
-              "route": "/api/*/cdns",
+              "httpRoute": "/api/*/cdns",
               "capability": "cdn-read",
               "lastUpdated": "2017-04-02 08:22:43"
         },
