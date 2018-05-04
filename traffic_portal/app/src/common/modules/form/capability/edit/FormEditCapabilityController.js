@@ -53,8 +53,6 @@ var FormEditCapabilityController = function(capability, $scope, $controller, $ui
 	};
 
 	$scope.viewUsers = function() {
-		alert('viewUsers');
-		return;
 		$location.path($location.path() + '/users');
 	};
 
