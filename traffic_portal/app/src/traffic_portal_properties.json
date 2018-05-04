@@ -128,7 +128,8 @@
           "logsEnabled": false,
           "geoProvider": 0,
           "geoLimit": 0,
-          "ccrDnsTtl": 30
+          "ccrDnsTtl": 30,
+          "anonymousBlockingEnabled": false
         },
         "DNS": {
           "routingName": "cdn",
@@ -144,7 +145,8 @@
           "missLong": -87.627778,
           "signingAlgorithm": null,
           "ccrDnsTtl": 30,
-          "regionalGeoBlocking": false
+          "regionalGeoBlocking": false,
+          "anonymousBlockingEnabled": false
         },
         "HTTP": {
           "routingName": "cdn",
@@ -162,7 +164,8 @@
           "missLat": 41.881944,
           "missLong": -87.627778,
           "signingAlgorithm": null,
-          "ccrDnsTtl": 3600
+          "ccrDnsTtl": 3600,
+          "anonymousBlockingEnabled": false
         },
         "STEERING": {
           "dscp": 0,
@@ -172,13 +175,18 @@
           "geoProvider": 0,
           "geoLimit": 0,
           "regionalGeoBlocking": false,
-          "ccrDnsTtl": 30
+          "ccrDnsTtl": 30,
+          "anonymousBlockingEnabled": false
         },
         "descriptions": {
           "_comments": "This is the text used to configure delivery service field titles/descriptions",
           "active": {
             "title": "Active",
             "desc": "When this is set to false Traffic Router will not serve DNS or HTTP responses for this delivery service."
+          },
+          "anonymousBlockingEnabled": {
+            "title": "Anonymous Blocking",
+            "desc": "Set to true to enable blocking of anonymous IPs for this delivery service -- requires MaxMind's Anonymous IP database."
           },
           "cacheurl": {
             "title": "Cache URL expression",
@@ -252,10 +260,10 @@
             "title": "Global Max TPS",
             "desc": "The maximum transactions this delivery service can serve across all EDGE caches before traffic will be diverted to the bypass destination. For a DNS delivery service, the Bypass Ipv4 or Ipv6 will be used (depending on whether this was a A or AAAA request), and for HTTP delivery services the Bypass FQDN will be used."
           },
-	  "fqPacingRate": {
-	    "title": "Fair Queuing Pacing Rate Bps",
+	      "fqPacingRate": {
+            "title": "Fair Queuing Pacing Rate Bps",
             "desc": "The maximum bytes per second a cache will delivery on any single TCP connection. This uses the Linux kernel's Fair Queuing setsockopt(SO_MAX_PACING_RATE) to limit the rate of delivery."
-	   },
+	      },
           "httpBypassFqdn": {
             "title": "HTTP Bypass FQDN",
             "desc": "This is the FQDN Traffic Router will redirect to (with the same path) when the max Bps or Max Tps for this delivery service are exceeded."
