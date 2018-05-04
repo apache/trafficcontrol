@@ -21,6 +21,10 @@ var TableRoleCapabilitiesController = function(roles, $scope, $state, $uibModal,
 
 	$scope.role = roles[0];
 
+	$scope.editCapability = function(name) {
+		locationUtils.navigateToPath('/capabilities/' + name);
+	};
+
 	$scope.selectCapabilities = function() {
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/table/roleCapabilities/table.assignCapabilities.tpl.html',
