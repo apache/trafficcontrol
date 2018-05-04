@@ -20,7 +20,7 @@ module.exports = angular.module('trafficPortal.private.custom', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.custom', {
-				url: 'custom',
+				url: 'custom?url',
 				views: {
 					privateContent: {
 						templateUrl: 'modules/private/custom/custom.tpl.html',
