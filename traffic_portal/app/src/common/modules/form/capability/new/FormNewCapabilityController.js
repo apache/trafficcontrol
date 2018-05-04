@@ -17,31 +17,27 @@
  * under the License.
  */
 
-var TableCapabilitiesController = function(capabilities, $scope, $state, locationUtils) {
+var FormNewCapabilityController = function(capability, $scope, $controller, locationUtils, capabilityService, messageModel) {
 
-	$scope.capabilities = capabilities;
+	// extends the FormCapabilityController to inherit common methods
+	angular.extend(this, $controller('FormCapabilityController', { capability: capability, $scope: $scope }));
 
-	$scope.editCapability = function(name) {
-		locationUtils.navigateToPath('/capabilities/' + name);
+	$scope.capName = 'New';
+
+	$scope.settings = {
+		isNew: true,
+		saveLabel: 'Create'
 	};
 
-	$scope.createCapability = function() {
-		locationUtils.navigateToPath('/capabilities/new');
+	$scope.confirmSave = function(cap) {
+		capabilityService.createCapability(cap).
+			then(function(result) {
+				messageModel.setMessages(result.alerts, true);
+				locationUtils.navigateToPath('/capabilities');
+			});
 	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	angular.element(document).ready(function () {
-		$('#capabilitiesTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
-		});
-	});
 
 };
 
-TableCapabilitiesController.$inject = ['capabilities', '$scope', '$state', 'locationUtils'];
-module.exports = TableCapabilitiesController;
+FormNewCapabilityController.$inject = ['capability', '$scope', '$controller', 'locationUtils', 'capabilityService', 'messageModel'];
+module.exports = FormNewCapabilityController;

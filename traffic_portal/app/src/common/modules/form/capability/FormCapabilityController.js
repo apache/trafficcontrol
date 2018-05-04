@@ -17,31 +17,17 @@
  * under the License.
  */
 
-var TableCapabilitiesController = function(capabilities, $scope, $state, locationUtils) {
+var FormCapabilityController = function(capability, $scope, formUtils, locationUtils) {
 
-	$scope.capabilities = capabilities;
+	$scope.capability = capability;
 
-	$scope.editCapability = function(name) {
-		locationUtils.navigateToPath('/capabilities/' + name);
-	};
+	$scope.navigateToPath = locationUtils.navigateToPath;
 
-	$scope.createCapability = function() {
-		locationUtils.navigateToPath('/capabilities/new');
-	};
+	$scope.hasError = formUtils.hasError;
 
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	angular.element(document).ready(function () {
-		$('#capabilitiesTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
-		});
-	});
+	$scope.hasPropertyError = formUtils.hasPropertyError;
 
 };
 
-TableCapabilitiesController.$inject = ['capabilities', '$scope', '$state', 'locationUtils'];
-module.exports = TableCapabilitiesController;
+FormCapabilityController.$inject = ['capability', '$scope', 'formUtils', 'locationUtils'];
+module.exports = FormCapabilityController;
