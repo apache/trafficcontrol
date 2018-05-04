@@ -17,31 +17,23 @@
  * under the License.
  */
 
-var TableCapabilitiesController = function(capabilities, $scope, $state, locationUtils) {
-
-	$scope.capabilities = capabilities;
-
-	$scope.editCapability = function(name) {
-		locationUtils.navigateToPath('/capabilities/' + name);
-	};
-
-	$scope.createCapability = function() {
-		locationUtils.navigateToPath('/capabilities/new');
-	};
-
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
-	};
-
-	angular.element(document).ready(function () {
-		$('#capabilitiesTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": 25,
-			"aaSorting": []
-		});
+module.exports = angular.module('trafficPortal.private.capabilities.edit', [])
+	.config(function($stateProvider, $urlRouterProvider) {
+		$stateProvider
+			.state('trafficPortal.private.capabilities.edit', {
+				url: '/{capName}',
+				views: {
+					capabilitiesContent: {
+						templateUrl: 'common/modules/form/capability/form.capability.tpl.html',
+						controller: 'FormEditCapabilityController',
+						resolve: {
+							capability: function($stateParams, capabilityService) {
+								return capabilityService.getCapability($stateParams.capName);
+							}
+						}
+					}
+				}
+			})
+		;
+		$urlRouterProvider.otherwise('/');
 	});
-
-};
-
-TableCapabilitiesController.$inject = ['capabilities', '$scope', '$state', 'locationUtils'];
-module.exports = TableCapabilitiesController;

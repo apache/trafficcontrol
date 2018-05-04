@@ -17,41 +17,68 @@
  * under the License.
  */
 
-var CapabilityService = function(Restangular, messageModel) {
+var CapabilityService = function(Restangular, $q, $http, messageModel, ENV) {
 
 	this.getCapabilities = function(queryParams) {
 		return Restangular.all('capabilities').getList(queryParams);
 	};
 
-	this.getCapability = function(id) {
-		return Restangular.one("capabilities", id).get();
+	this.getCapability = function(name) {
+		return Restangular.one("capabilities", name).get();
 	};
 
-	this.updateCapability = function(capability) {
-		return capability.put()
+	this.createCapability = function(cap) {
+		var request = $q.defer();
+
+		$http.post(ENV.api['root'] + "capabilities", cap)
 			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Capability updated' } ], false);
+				function(result) {
+					request.resolve(result.data);
 				},
 				function(fault) {
 					messageModel.setMessages(fault.data.alerts, false);
+					request.reject(fault);
 				}
 			);
+
+		return request.promise;
 	};
 
-	this.deleteCapability = function(capability) {
-		return capability.remove()
+	this.updateCapability = function(cap) {
+		var request = $q.defer();
+
+		$http.put(ENV.api['root'] + "capabilities/" + cap.name, cap)
 			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Capability deleted' } ], true);
+				function(result) {
+					request.resolve(result.data);
 				},
 				function(fault) {
-					messageModel.setMessages(fault.data.alerts, true);
+					messageModel.setMessages(fault.data.alerts, false);
+					request.reject();
 				}
 			);
+
+		return request.promise;
+	};
+
+	this.deleteCapability = function(cap) {
+		var request = $q.defer();
+
+		$http.delete(ENV.api['root'] + "capabilities/" + cap.name)
+			.then(
+				function(result) {
+					request.resolve(result.data);
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
+					request.reject(fault);
+				}
+			);
+
+		return request.promise;
 	};
 
 };
 
-CapabilityService.$inject = ['Restangular', 'messageModel'];
+CapabilityService.$inject = ['Restangular', '$q', '$http', 'messageModel', 'ENV'];
 module.exports = CapabilityService;

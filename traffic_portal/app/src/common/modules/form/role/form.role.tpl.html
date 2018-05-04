@@ -35,8 +35,9 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(roleForm.name), 'has-feedback': hasError(roleForm.name)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="name" type="text" class="form-control" ng-model="role.name" required autofocus>
+                    <input name="name" type="text" class="form-control" ng-model="role.name" ng-pattern="/^\S*$/" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(roleForm.name, 'required')">Required</small>
+                    <small class="input-error" ng-show="hasPropertyError(roleForm.name, 'pattern')">No spaces</small>
                     <span ng-show="hasError(roleForm.name)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
@@ -53,7 +54,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(roleForm.description), 'has-feedback': hasError(roleForm.description)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Description *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea name="value" type="text" class="form-control" ng-model="role.description" rows="10" required autofocus></textarea>
+                    <textarea name="description" type="text" class="form-control" ng-model="role.description" rows="10" required autofocus></textarea>
                     <small class="input-error" ng-show="hasPropertyError(roleForm.description, 'required')">Required</small>
                     <span ng-show="hasError(roleForm.description)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
