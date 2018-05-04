@@ -157,13 +157,13 @@ $t->post_ok("/api/1.2/capabilities" => {Accept => 'application/json'} => json =>
 
 # trying to delete a referenced capability. first add a mapping to it.
 my $http_method = "GET";
-my $route = "sample/route";
+my $http_route = "sample/route";
 $t->post_ok("/api/1.2/api_capabilities" => {Accept => 'application/json'} => json => {
-		"httpMethod" => $http_method, "route" => $route, "capability" => $cap_name
+		"httpMethod" => $http_method, "httpRoute" => $http_route, "capability" => $cap_name
 	})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content};} )
 	->json_is( "/response/id" => 1 )
 	->json_is( "/response/httpMethod" => $http_method )
-	->json_is( "/response/route" => $route )
+	->json_is( "/response/httpRoute" => $http_route )
 	->json_is( "/response/capability" => $cap_name )
 	, 'Does mapping details return?';
 

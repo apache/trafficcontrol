@@ -43,7 +43,7 @@ sub index {
 			@data, {
 				"id"          => $row->id,
 				"httpMethod"  => $row->http_method,
-				"route"       => $row->route,
+				"httpRoute"   => $row->route,
 				"capability"  => $row->capability->name,
 				"lastUpdated" => $row->last_updated
 			}
@@ -62,7 +62,7 @@ sub renderResults {
 			@data, {
 				"id"          => $row->id,
 				"httpMethod"  => $row->http_method,
-				"route"       => $row->route,
+				"httpRoute"   => $row->route,
 				"capability"  => $row->capability->name,
 				"lastUpdated" => $row->last_updated
 			}
@@ -86,7 +86,7 @@ sub is_mapping_valid {
 	my $self        = shift;
 	my $id          = shift;
 	my $http_method = shift;
-	my $route       = shift;
+	my $http_route  = shift;
 	my $capability  = shift;
 
 	if ( !defined($http_method) ) {
@@ -97,7 +97,7 @@ sub is_mapping_valid {
 		return ( undef, "HTTP method \'$http_method\' is invalid. Valid values are: " . join( ", ", sort keys %valid_http_methods ) );
 	}
 
-	if ( !defined($route) or $route eq "" ) {
+	if ( !defined($http_route) or $http_route eq "" ) {
 		return ( undef, "Route is required." );
 	}
 
@@ -112,7 +112,7 @@ sub is_mapping_valid {
 	}
 
 	# search a mapping for the same http_method & route
-	$rs_data = $self->db->resultset("ApiCapability")->search( { 'route' => { 'like', $route } } )->search(
+	$rs_data = $self->db->resultset("ApiCapability")->search( { 'route' => { 'like', $http_route } } )->search(
 		{
 			'http_method' => { '=', $http_method }
 		}
@@ -122,7 +122,7 @@ sub is_mapping_valid {
 	if ( !defined($id) ) {
 		if ( defined($rs_data) ) {
 			my $allocated_capability = $rs_data->capability->name;
-			return ( undef, "HTTP method '$http_method', route '$route' are already mapped to capability: $allocated_capability" );
+			return ( undef, "HTTP method '$http_method', route '$http_route' are already mapped to capability: $allocated_capability" );
 		}
 	}
 	else {
@@ -130,7 +130,7 @@ sub is_mapping_valid {
 			my $lid = $rs_data->id;
 			if ( $lid ne $id ) {
 				my $allocated_capability = $rs_data->capability->name;
-				return ( undef, "HTTP method '$http_method', route '$route' are already mapped to capability: $allocated_capability" );
+				return ( undef, "HTTP method '$http_method', route '$http_route' are already mapped to capability: $allocated_capability" );
 			}
 		}
 	}
@@ -151,18 +151,18 @@ sub create {
 	}
 
 	my $http_method = $params->{httpMethod} if defined( $params->{httpMethod} );
-	my $route       = $params->{route}      if defined( $params->{route} );
+	my $http_route  = $params->{httpRoute}  if defined( $params->{httpRoute} );
 	my $capability  = $params->{capability} if defined( $params->{capability} );
 	my $id          = undef;
 
-	my ( $is_valid, $errStr ) = $self->is_mapping_valid( $id, $http_method, $route, $capability );
+	my ( $is_valid, $errStr ) = $self->is_mapping_valid( $id, $http_method, $http_route, $capability );
 	if ( !$is_valid ) {
 		return $self->alert($errStr);
 	}
 
 	my $values = {
 		http_method => $http_method,
-		route       => $route,
+		route       => $http_route,
 		capability  => $capability
 	};
 
@@ -172,12 +172,12 @@ sub create {
 		my $response;
 		$response->{id}          = $rs->id;
 		$response->{httpMethod}  = $rs->http_method;
-		$response->{route}       = $rs->route;
+		$response->{httpRoute}   = $rs->route;
 		$response->{capability}  = $rs->capability->name;
 		$response->{lastUpdated} = $rs->last_updated;
 
 		&log( $self,
-			"Created API-Capability mapping: '$response->{httpMethod}', '$response->{route}', '$response->{capability}' for id: " . $response->{id},
+			"Created API-Capability mapping: '$response->{httpMethod}', '$response->{httpRoute}', '$response->{capability}' for id: " . $response->{id},
 			"APICHANGE" );
 
 		return $self->success( $response, "API-Capability mapping was created." );
@@ -201,7 +201,7 @@ sub update {
 	}
 
 	my $http_method = $params->{httpMethod} if defined( $params->{httpMethod} );
-	my $route       = $params->{route}      if defined( $params->{route} );
+	my $http_route  = $params->{httpRoute}  if defined( $params->{httpRoute} );
 	my $capability  = $params->{capability} if defined( $params->{capability} );
 
 	my $mapping = $self->db->resultset('ApiCapability')->find( { id => $id } );
@@ -209,14 +209,14 @@ sub update {
 		return $self->not_found();
 	}
 
-	my ( $is_valid, $errStr ) = $self->is_mapping_valid( $id, $http_method, $route, $capability );
+	my ( $is_valid, $errStr ) = $self->is_mapping_valid( $id, $http_method, $http_route, $capability );
 	if ( !$is_valid ) {
 		return $self->alert($errStr);
 	}
 
 	my $values = {
 		http_method => $http_method,
-		route       => $route,
+		route       => $http_route,
 		capability  => $capability
 	};
 
@@ -225,12 +225,12 @@ sub update {
 		my $response;
 		$response->{id}          = $rs->id;
 		$response->{httpMethod}  = $rs->http_method;
-		$response->{route}       = $rs->route;
+		$response->{httpRoute}   = $rs->route;
 		$response->{capability}  = $rs->capability->name;
 		$response->{lastUpdated} = $rs->last_updated;
 
 		&log( $self,
-			"Updated API-Capability mapping: '$response->{httpMethod}', '$response->{route}', '$response->{capability}' for id: " . $response->{id},
+			"Updated API-Capability mapping: '$response->{httpMethod}', '$response->{httpRoute}', '$response->{capability}' for id: " . $response->{id},
 			"APICHANGE" );
 
 		return $self->success( $response, "API-Capability mapping was updated." );
