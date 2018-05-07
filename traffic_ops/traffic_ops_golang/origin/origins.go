@@ -264,17 +264,37 @@ LEFT JOIN tenant t ON o.tenant = t.id`
 	return selectStmt
 }
 
-func checkTenancy(tenantID *int, db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func checkTenancy(originTenantID, deliveryserviceID *int, db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	if tenant.IsTenancyEnabled(db) {
-		if tenantID == nil {
+		if originTenantID == nil {
 			return tc.NilTenantError, tc.ForbiddenError
 		}
-		authorized, err := tenant.IsResourceAuthorizedToUser(*tenantID, user, db)
+		authorized, err := tenant.IsResourceAuthorizedToUser(*originTenantID, user, db)
 		if err != nil {
-			return tc.DBError, tc.SystemError
+			return err, tc.SystemError
 		}
 		if !authorized {
 			return tc.TenantUserNotAuthError, tc.ForbiddenError
+		}
+
+		if deliveryserviceID != nil {
+			var deliveryserviceTenantID *int
+			if err := db.QueryRow(`SELECT tenant_id FROM deliveryservice where id = $1`, *deliveryserviceID).Scan(&deliveryserviceTenantID); err != nil {
+				if err == sql.ErrNoRows {
+					return errors.New("checking tenancy: requested delivery service does not exist"), tc.DataConflictError
+				}
+				log.Errorf("could not get tenant_id from deliveryservice %d: %++v\n", *deliveryserviceID, err)
+				return err, tc.SystemError
+			}
+			if deliveryserviceTenantID != nil {
+				authorized, err := tenant.IsResourceAuthorizedToUser(*deliveryserviceTenantID, user, db)
+				if err != nil {
+					return err, tc.SystemError
+				}
+				if !authorized {
+					return tc.TenantDSUserNotAuthError, tc.ForbiddenError
+				}
+			}
 		}
 	}
 	return nil, tc.NoError
@@ -287,7 +307,7 @@ func checkTenancy(tenantID *int, db *sqlx.DB, user auth.CurrentUser) (error, tc.
 //generic error message returned
 func (origin *TOOrigin) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
-	err, errType := checkTenancy(origin.TenantID, db, user)
+	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, db, user)
 	if err != nil {
 		return err, errType
 	}
@@ -381,7 +401,7 @@ WHERE id=:id RETURNING last_updated`
 //to be added to the struct
 func (origin *TOOrigin) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
-	err, errType := checkTenancy(origin.TenantID, db, user)
+	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, db, user)
 	if err != nil {
 		return err, errType
 	}
