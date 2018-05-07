@@ -27,7 +27,7 @@ func TestDeriveGoodPassword(t *testing.T) {
 
 	pass := "password"
 	derivedPassword, err := DerivePassword(pass)
-	err = VerifyPassword(pass, derivedPassword)
+	err = VerifySCRYPTPassword(pass, derivedPassword)
 	if err != nil {
 		t.Errorf("password should be valid")
 	}
@@ -37,7 +37,7 @@ func TestDeriveBadPassword(t *testing.T) {
 
 	pass := "password"
 	derivedPassword, err := DerivePassword(pass)
-	err = VerifyPassword("badpassword", derivedPassword)
+	err = VerifySCRYPTPassword("badpassword", derivedPassword)
 	if err == nil {
 		t.Errorf("password should be invalid")
 	}
@@ -45,7 +45,7 @@ func TestDeriveBadPassword(t *testing.T) {
 
 func TestScryptPasswordIsRequired(t *testing.T) {
 
-	err := VerifyPassword("password", "")
+	err := VerifySCRYPTPassword("password", "")
 	if err == nil {
 		t.Errorf("scrypt password should be required")
 	}

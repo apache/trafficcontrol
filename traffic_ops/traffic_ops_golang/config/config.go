@@ -159,7 +159,7 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appV
 	if cfg.LDAPConfPath != "" {
 		cfg.LDAPEnabled, cfg.ConfigLDAP, err = GetLDAPConfig(cfg.LDAPConfPath)
 		if err != nil {
-			cfg.LDAPEnabled = false // probably unnecessary
+			cfg.LDAPEnabled = false
 			return cfg, fmt.Errorf("parsing ldap config '%s': %v", cfg.LDAPConfPath, err)
 		}
 	} else {
