@@ -30,6 +30,7 @@ type TrafficControl struct {
 	DeliveryServices               []v12.DeliveryService               `json:"deliveryservices"`
 	Divisions                      []v12.Division                      `json:"divisions"`
 	Coordinates                    []v13.Coordinate                    `json:"coordinates"`
+	Origins                        []v13.OriginNullable                `json:"origins"`
 	Profiles                       []v13.Profile                       `json:"profiles"`
 	Parameters                     []v12.Parameter                     `json:"parameters"`
 	ProfileParameters              []v13.ProfileParameter              `json:"profileParameters"`

@@ -13,6 +13,13 @@
         {
             "latitude": 0,
             "longitude": 0,
+            "name": "originCachegroup",
+            "shortName": "og1",
+            "typeName": "ORG_LOC"
+        },
+        {
+            "latitude": 0,
+            "longitude": 0,
             "name": "parentCachegroup",
             "shortName": "pg1",
             "typeName": "MID_LOC"
@@ -193,6 +200,24 @@
             "latitude": 3.3,
             "longitude": 4.4,
             "name": "coordinate2"
+        }
+    ],
+    "origins": [
+        {
+            "name": "origin1",
+            "fqdn": "origin1.example.com",
+            "ipAddress": "1.2.3.4",
+            "ip6Address": "dead:beef:cafe::42",
+            "port": 1234,
+            "protocol": "http"
+        },
+        {
+            "name": "origin2",
+            "fqdn": "origin2.example.com",
+            "ipAddress": "5.6.7.8",
+            "ip6Address": "cafe::42",
+            "port": 5678,
+            "protocol": "https"
         }
     ],
     "parameters": [
@@ -412,6 +437,14 @@
             "name": "MID1",
             "routing_disabled": false,
             "type": "ATS_PROFILE"
+        },
+        {
+            "cdnName": "cdn1",
+            "description": "origin description",
+            "lastUpdated": "2018-03-02T17:27:11.80173+00:00",
+            "name": "ORIGIN1",
+            "routing_disabled": false,
+            "type": "ORG_PROFILE"
         },
         {
             "cdnName": "cdn1",
@@ -995,6 +1028,12 @@
             "lastUpdated": "2018-03-02T19:13:46.814833+00:00",
             "name": "CCR",
             "useInTable": "server"
+        },
+        {
+            "description": "Origin Cachegroup",
+            "lastUpdated": "2018-03-02T19:13:46.816199+00:00",
+            "name": "ORG_LOC",
+            "useInTable": "cachegroup"
         },
         {
             "description": "Mid Cachegroup",
