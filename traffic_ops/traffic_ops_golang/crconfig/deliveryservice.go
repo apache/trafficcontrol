@@ -341,8 +341,8 @@ and d.active = true
 	return dses, nil
 }
 
-func getStaticDNSEntries(cdn string, db *sql.DB) (map[tc.DeliveryServiceName][]tc.StaticDNSEntry, error) {
-	entries := map[tc.DeliveryServiceName][]tc.StaticDNSEntry{}
+func getStaticDNSEntries(cdn string, db *sql.DB) (map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry, error) {
+	entries := map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry{}
 
 	q := `
 select d.xml_id as ds, e.host as name, e.ttl, e.address as value, t.name as type
@@ -368,7 +368,7 @@ and d.active = true
 			return nil, errors.New("scanning static DNS entries: " + err.Error())
 		}
 		ttype = strings.Replace(ttype, "_RECORD", "", -1)
-		entries[tc.DeliveryServiceName(ds)] = append(entries[tc.DeliveryServiceName(ds)], tc.StaticDNSEntry{Name: name, TTL: ttl, Value: value, Type: ttype})
+		entries[tc.DeliveryServiceName(ds)] = append(entries[tc.DeliveryServiceName(ds)], tc.CRConfigStaticDNSEntry{Name: name, TTL: ttl, Value: value, Type: ttype})
 	}
 	return entries, nil
 }

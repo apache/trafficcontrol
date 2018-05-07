@@ -123,14 +123,14 @@ type CRConfigDeliveryService struct {
 	DeepCachingType          *DeepCachingType                      `json:"deepCachingType"`
 	GeoEnabled               []CRConfigGeoEnabled                  `json:"geoEnabled,omitempty"`
 	GeoLimitRedirectURL      *string                               `json:"geoLimitRedirectURL,omitempty"`
-	StaticDNSEntries         []StaticDNSEntry                      `json:"staticDnsEntries,omitempty"`
+	StaticDNSEntries         []CRConfigStaticDNSEntry              `json:"staticDnsEntries,omitempty"`
 }
 
 type CRConfigGeoEnabled struct {
 	CountryCode string `json:"countryCode"`
 }
 
-type StaticDNSEntry struct {
+type CRConfigStaticDNSEntry struct {
 	Name  string `json:"name"`
 	TTL   int    `json:"ttl"`
 	Type  string `json:"type"`
