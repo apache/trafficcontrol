@@ -34,11 +34,11 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestASNs() []TOASN {
-	ASNs := []TOASN{}
+func getTestASNs() []TOASNV11 {
+	ASNs := []TOASNV11{}
 	i := 1
 	c := "Yukon"
-	testCase := TOASN{
+	testCase := TOASNV11{
 		ASN:          &i,
 		Cachegroup:   &c,
 		CachegroupID: &i,
@@ -65,7 +65,7 @@ func TestGetASNs(t *testing.T) {
 	defer db.Close()
 
 	testCase := getTestASNs()
-	cols := test.ColsFromStructByTag("db", TOASN{})
+	cols := test.ColsFromStructByTag("db", TOASNV11{})
 	rows := sqlmock.NewRows(cols)
 
 	for _, ts := range testCase {
@@ -79,7 +79,7 @@ func TestGetASNs(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	v := map[string]string{"dsId": "1"}
 
-	asns, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+	asns, errs, _ := GetRefTypeV11().Read(db, v, auth.CurrentUser{})
 
 	if len(errs) > 0 {
 		t.Errorf("asn.Read expected: no errors, actual: %v", errs)
@@ -93,7 +93,7 @@ func TestGetASNs(t *testing.T) {
 
 func TestInterfaces(t *testing.T) {
 	var i interface{}
-	i = &TOASN{}
+	i = &TOASNV11{}
 
 	if _, ok := i.(api.Creator); !ok {
 		t.Errorf("asn must be creator")
@@ -114,7 +114,7 @@ func TestInterfaces(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	i := -99
-	asn := TOASN{ASN: &i, CachegroupID: &i}
+	asn := TOASNV11{ASN: &i, CachegroupID: &i}
 
 	errs := test.SortErrors(asn.Validate(nil))
 	expected := []error{
