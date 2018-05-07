@@ -123,9 +123,9 @@ func checkLocalUserPassword(form passwordForm, db *sqlx.DB) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	err = VerifyPassword(form.Password, hashedPassword)
+	err = VerifySCRYPTPassword(form.Password, hashedPassword)
 	if err != nil {
-		if hashedPassword == sha1Hex(form.Password) {
+		if hashedPassword == sha1Hex(form.Password) { // for backwards compatibility
 			return true, nil
 		}
 		return false, err

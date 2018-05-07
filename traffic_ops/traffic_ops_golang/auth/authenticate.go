@@ -89,9 +89,9 @@ func DerivePassword(password string) (string, error) {
 	return strings.Join(scryptPass, KEY_DELIM), nil
 }
 
-// VerifyPassword parses the original Derived Key (DK) from the SCRYPT password
+// VerifySCRYPTPassword parses the original Derived Key (DK) from the SCRYPT password
 // so that it can compare that with the password/scriptPassword param
-func VerifyPassword(password string, scryptPassword string) error {
+func VerifySCRYPTPassword(password string, scryptPassword string) error {
 
 	scomp, err := parseScrypt(scryptPassword)
 	if err != nil {
