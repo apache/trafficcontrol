@@ -52,6 +52,7 @@ func (c *MemCache) Get(key string) (*cacheobj.CacheObj, bool) {
 	obj, ok := c.cache[key]
 	if ok {
 		c.lru.Add(key, obj.Size) // TODO directly call c.ll.MoveToFront
+		atomic.AddUint64(&obj.HitCount, 1)
 	}
 	c.cacheM.RUnlock()
 	return obj, ok

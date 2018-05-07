@@ -152,16 +152,16 @@ func (c *DiskCache) gc(cacheSizeBytes uint64) {
 func (c *DiskCache) Get(key string) (*cacheobj.CacheObj, bool) {
 	val, found := c.Peek(key)
 	if found {
-		// TODO JvD check to see if val.Size is good to use here.
 		c.lru.Add(key, val.Size) // TODO directly call c.ll.MoveToFront
 		log.Debugln("DiskCache.Get getting '" + key + "' from cache and updating LRU")
+		atomic.AddUint64(&val.HitCount, 1)
 		return val, true
 	}
 	return nil, false
 
 }
 
-// Peek takes a key, and returns its value, and whether it was found, without changing the lru-ness or hit-count
+// Peek takes a key, and returns its value, and whether it was found, without changing the lru-ness or hitcount
 func (c *DiskCache) Peek(key string) (*cacheobj.CacheObj, bool) {
 	log.Debugln("DiskCache.Get key '" + key + "'")
 	valBytes := []byte(nil)
