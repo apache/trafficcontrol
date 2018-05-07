@@ -133,8 +133,8 @@ func randDS() tc.CRConfigDeliveryService {
 		DeepCachingType: nil,
 		GeoEnabled:      nil,
 		// GeoLimitRedirectURL: randStr(),
-		StaticDNSEntries: []tc.StaticDNSEntry{
-			tc.StaticDNSEntry{
+		StaticDNSEntries: []tc.CRConfigStaticDNSEntry{
+			tc.CRConfigStaticDNSEntry{
 				Name:  *randStr(),
 				TTL:   *randInt(),
 				Type:  *randStr(),
@@ -343,17 +343,17 @@ func TestGetDSRegexesDomains(t *testing.T) {
 	}
 }
 
-func ExpectedGetStaticDNSEntries(expectedMakeDSes map[string]tc.CRConfigDeliveryService) map[tc.DeliveryServiceName][]tc.StaticDNSEntry {
-	expected := map[tc.DeliveryServiceName][]tc.StaticDNSEntry{}
+func ExpectedGetStaticDNSEntries(expectedMakeDSes map[string]tc.CRConfigDeliveryService) map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry {
+	expected := map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry{}
 	for dsName, ds := range expectedMakeDSes {
 		for _, entry := range ds.StaticDNSEntries {
-			expected[tc.DeliveryServiceName(dsName)] = append(expected[tc.DeliveryServiceName(dsName)], tc.StaticDNSEntry{Name: entry.Name, TTL: entry.TTL, Value: entry.Value, Type: entry.Type})
+			expected[tc.DeliveryServiceName(dsName)] = append(expected[tc.DeliveryServiceName(dsName)], tc.CRConfigStaticDNSEntry{Name: entry.Name, TTL: entry.TTL, Value: entry.Value, Type: entry.Type})
 		}
 	}
 	return expected
 }
 
-func MockGetStaticDNSEntries(mock sqlmock.Sqlmock, expected map[tc.DeliveryServiceName][]tc.StaticDNSEntry, cdn string) {
+func MockGetStaticDNSEntries(mock sqlmock.Sqlmock, expected map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry, cdn string) {
 	rows := sqlmock.NewRows([]string{"ds", "name", "ttl", "value", "type"})
 	for dsName, entries := range expected {
 		for _, entry := range entries {
