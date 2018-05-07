@@ -119,6 +119,7 @@ func cacheinspect(icfg interface{}, d OnRequestData) bool {
 			w.Write([]byte(fmt.Sprintf("  ReqRespTime:                  %v\n", cacheObject.ReqRespTime)))
 			w.Write([]byte(fmt.Sprintf("  RespRespTime:                 %v\n", cacheObject.RespRespTime)))
 			w.Write([]byte(fmt.Sprintf("  LastModified:                 %v\n", cacheObject.LastModified)))
+			w.Write([]byte(fmt.Sprintf("  HitCount:                     %v\n", cacheObject.HitCount)))
 		} else {
 			w.Write([]byte("Not Found"))
 		}
@@ -169,7 +170,7 @@ func cacheinspect(icfg interface{}, d OnRequestData) bool {
 				w.Write([]byte(fmt.Sprintf("showing only first %d and last %d:\n\n", head, tail)))
 			}
 
-			w.Write([]byte(fmt.Sprintf("<b>     #\t\tCode\tSize\tAge\t\t\tKey</b>\n")))
+			w.Write([]byte(fmt.Sprintf("<b>            #    Code      Size                   Age    HitCount      Key</b>\n")))
 			for i, key := range keys {
 				if (doSearch && !strings.Contains(key, searchArr[0])) || !doSearch && (i > tail && i < len(keys)-head) {
 					continue
@@ -177,8 +178,8 @@ func cacheinspect(icfg interface{}, d OnRequestData) bool {
 
 				cacheObject, _ := d.Stats.CachePeek(key, cName)
 				age := time.Now().Sub(cacheObject.ReqRespTime)
-				w.Write([]byte(fmt.Sprintf("     %05d\t%d\t%s\t%-20v\t<a href=\"http://%s%s?key=%s&cache=%s\">%s</a>\n",
-					i, cacheObject.Code, bytefmt.ByteSize(cacheObject.Size), age, req.Host, CacheStatsEndpoint, url.QueryEscape(key), cName, key)))
+				w.Write([]byte(fmt.Sprintf("     %8d%8d%10s%22v%12d      <a href=\"http://%s%s?key=%s&cache=%s\">%s</a>\n",
+					i, cacheObject.Code, bytefmt.ByteSize(cacheObject.Size), age, cacheObject.HitCount, req.Host, CacheStatsEndpoint, url.QueryEscape(key), cName, key)))
 			}
 
 		}

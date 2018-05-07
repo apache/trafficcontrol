@@ -187,6 +187,7 @@ func GetAndCache(
 				RespRespTime:     respRespTime,
 				LastModified:     revalidateObj.LastModified,
 				Size:             revalidateObj.Size,
+				HitCount:         revalidateObj.HitCount, // no need to +1 here, the cache Get did that
 			}
 		}
 		cache.Add(cacheKey, obj) // TODO store pointer?

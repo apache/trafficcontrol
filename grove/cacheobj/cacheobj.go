@@ -34,6 +34,7 @@ type CacheObj struct {
 	RespRespTime     time.Time // the origin server's Date time when the object was sent
 	LastModified     time.Time // the origin LastModified if it exists, or Date if it doesn't
 	Size             uint64
+	HitCount         uint64 // the number of times this object was hit
 }
 
 // ComputeSize computes the size of the given CacheObj. This computation is expensive, as the headers must be iterated over. Thus, the size should be computed once and stored, not computed on-the-fly for every new request for the cached object.
@@ -55,6 +56,7 @@ func New(reqHeader http.Header, bytes []byte, code int, originCode int, proxyURL
 		ReqRespTime:      reqRespTime,
 		RespRespTime:     respRespTime,
 		LastModified:     lastModified,
+		HitCount:         1,
 	}
 	// copyHeader(reqHeader, &obj.reqHeaders)
 	// copyHeader(respHeader, &obj.respHeaders)
