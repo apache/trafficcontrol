@@ -788,12 +788,24 @@ sub get_update_status {
 
 	##Some versions of Traffic Ops had the 1.3 API but did not have the use_reval_pending field.  If this field is not present, exit.
 	if ( !defined( $upd_json->[0]->{'use_reval_pending'} ) ) {
-		( $log_level >> $ERROR ) && printf("ERROR ORT version incompatible with current version of Traffic Ops. Please upgrade to Traffic Ops 2.2.\n");
-		exit 1;
+		my $info_uri = "/api/1.2/system/info.json";
+		my $info_ref = &lwp_get($info_uri);
+		if ($info_ref eq '404') {
+			( $log_level >> $ERROR ) && printf("ERROR Unable to get status of use_reval_pending parameter.  Stopping.\n");
+			exit 1;
+		}
+		if ( $info_ref =~ m/^\d{3}$/ ) {
+			( $log_level >> $ERROR ) && print "ERROR Update URL: $info_uri returned $info_ref. Exiting, not sure what else to do.\n";
+			exit 1;
+		}
+		my $info_json = decode_json($info_ref);
+		if (defined( $info_json->{'response'}->{'parameters'}->{'use_reval_pending'} ) ) {
+			$reval_in_use = $info_json->{'response'}->{'parameters'}->{'use_reval_pending'};
+		}
 	}
-
-	$reval_in_use = $upd_json->[0]->{'use_reval_pending'};
-	
+	else {
+		$reval_in_use = $upd_json->[0]->{'use_reval_pending'};
+	}
 	return ($upd_json, $uri);
 }
 
