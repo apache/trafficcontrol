@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+	<meta charset="utf-8"/>
+	<title>Traffic Control Test Origin</title>
+	<meta property="og:title" content="Traffic Control Test Origin"/>
+	<meta name="twitter-title" content="Traffic Control Test Origin"/>
+	<meta name="author" content="ocket8888"/>
+	<meta name="description" content="A simple web server that offers video content for testing Traffic Control services."/>
+	<meta property="og:description" content="A simple web server that offers video content for testing Traffic Control services."/>
+
+	<!-- There's probably no real reason to support icons on all these different devices, but it's easy and complete so... ¯\_(ツ)_/¯ -->
+	<!-- third-generation iPad with high-resolution Retina display: -->
+	<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/tc-logo.svg">
+	<!-- iPhone with high-resolution Retina display: -->
+	<link rel="apple-touch-icon-precomposed" sizes="114x114" href="/tc-logo.svg">
+	<!-- first- and second-generation iPad: -->
+	<link rel="apple-touch-icon-precomposed" sizes="72x72" href="/tc-logo.svg">
+	<!-- non-Retina iPhone, iPod Touch, and Android 2.1+ devices: -->
+	<link rel="apple-touch-icon-precomposed" href="/tc-logo.svg">
+	<!-- basic favicon -->
+	<link rel="shortcut icon" href="/tc-logo.svg">
+	<style type="text/css">
+		body {
+			text-align: center;
+			height: 100vh;
+			width: 100vw;
+			background: center/90% no-repeat black url(/tc-verbose-logo.svg);
+			margin: 0;
+			color: white;
+		}
+
+		h1 {
+			padding: 10px 0;
+			margin: 0;
+		}
+
+		video {
+			height: calc(100vh - 100px - 2em);
+			width: auto;
+		}
+	</style>
+</head>
+<body>
+	<h1>Welcome to the Traffic Control test Origin server</h1>
+	<video controls autoplay src="/Night_of_the_Living_Dead.mp4">
+		Something wicked happened.
+	</video>
+</body>
+</html>
