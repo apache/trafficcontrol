@@ -20,7 +20,7 @@
 ############################################################
 
 # build stage compiles traffic_ops_golang
-FROM golang:1.10 AS trafficops-build
+FROM golang:1.10.1 AS trafficops-build
 
 # TODO: generate BUILD_VERSION file prior -- just copy the file here
 COPY .git /go/src/github.com/apache/incubator-trafficcontrol/.git
