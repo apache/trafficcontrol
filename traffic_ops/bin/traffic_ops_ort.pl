@@ -1292,8 +1292,9 @@ sub check_plugins {
 					{
 						($plugin_config_file) = split( /\s+/, $plugin_config_file);
 
-						# Skip parameters that start with '-', since those are probabably parameters, not config files.
+						# Skip parameters that start with '-' or 'proxy.config.', since those are probabably parameters, not config files.
 						last if $plugin_config_file =~ m/^-/; # Exit subblock.
+						last if $plugin_config_file =~ m/^proxy.config./;
 
 						( my @parts ) = split( /\//, $plugin_config_file );
 						$plugin_config_file = $parts[$#parts];
@@ -2563,10 +2564,6 @@ sub set_uri {
 	elsif ( $api_in_use == 1 && defined($cfg_file_tracker->{$filename}->{'url'}) ) {
 		$URI = $cfg_file_tracker->{$filename}->{'url'};
 		( $log_level >> $DEBUG ) && print "DEBUG Setting external download URL.\n";
-	}
-	else {
-		( $log_level >> $ERROR ) && print "ERROR Configuration File API not found!  Please upgrade to Traffic Ops 2.2.  Unable to continue.\n";
-		exit 1;
 	}
 
 	return if (!defined($cfg_file_tracker->{$filename}->{'fname-in-TO'}));
