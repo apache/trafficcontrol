@@ -23,6 +23,8 @@ import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"math"
+	"strconv"
 )
 
 type Hdr struct {
@@ -198,3 +200,145 @@ func ParseHTTPDate(d string) (time.Time, bool) {
 
 // RemapTextKey is the plugin shared data key inserted by grovetccfg for the Remap Line of the Delivery Service in Traffic Control, Traffic Ops.
 const RemapTextKey = "remap_text"
+
+const Day = time.Hour * time.Duration(24)
+
+// GetHTTPDeltaSeconds is a helper function which gets an HTTP Delta Seconds from the given map (which is typically a `http.Header` or `CacheControl`. Returns false if the given key doesn't exist in the map, or if the value isn't a valid Delta Seconds per RFC2616§3.3.2.
+func GetHTTPDeltaSeconds(m map[string][]string, key string) (time.Duration, bool) {
+	maybeSeconds, ok := m[key]
+	if !ok {
+		return 0, false
+	}
+	if len(maybeSeconds) == 0 {
+		return 0, false
+	}
+	maybeSec := maybeSeconds[0]
+
+	seconds, err := strconv.ParseUint(maybeSec, 10, 64)
+	if err != nil {
+		return 0, false
+	}
+	return time.Duration(seconds) * time.Second, true
+}
+
+// GetHTTPDeltaSeconds is a helper function which gets an HTTP Delta Seconds from the given map (which is typically a `http.Header` or `CacheControl`. Returns false if the given key doesn't exist in the map, or if the value isn't a valid Delta Seconds per RFC2616§3.3.2.
+func GetHTTPDeltaSecondsCacheControl(m map[string]string, key string) (time.Duration, bool) {
+	maybeSec, ok := m[key]
+	if !ok {
+		return 0, false
+	}
+	seconds, err := strconv.ParseUint(maybeSec, 10, 64)
+	if err != nil {
+		return 0, false
+	}
+	return time.Duration(seconds) * time.Second, true
+}
+
+// HeuristicFreshness follows the recommendation of RFC7234§4.2.2 and returns the min of 10% of the (Date - Last-Modified) headers and 24 hours, if they exist, and 24 hours if they don't.
+// TODO: smarter and configurable heuristics
+func HeuristicFreshness(respHeaders http.Header) time.Duration {
+	sinceLastModified, ok := sinceLastModified(respHeaders)
+	if !ok {
+		return Day
+	}
+	freshness := time.Duration(math.Min(float64(Day), float64(sinceLastModified)))
+	return freshness
+}
+
+func sinceLastModified(headers http.Header) (time.Duration, bool) {
+	lastModified, ok := GetHTTPDate(headers, "last-modified")
+	if !ok {
+		return 0, false
+	}
+	date, ok := GetHTTPDate(headers, "date")
+	if !ok {
+		return 0, false
+	}
+	return date.Sub(lastModified), true
+}
+
+// GetFreshnessLifetime calculates the freshness_lifetime per RFC7234§4.2.1
+func GetFreshnessLifetime(respHeaders http.Header, respCacheControl CacheControl) time.Duration {
+	if s, ok := GetHTTPDeltaSecondsCacheControl(respCacheControl, "s-maxage"); ok {
+		return s
+	}
+	if s, ok := GetHTTPDeltaSecondsCacheControl(respCacheControl, "max-age"); ok {
+		return s
+	}
+
+	getExpires := func() (time.Duration, bool) {
+		expires, ok := GetHTTPDate(respHeaders, "Expires")
+		if !ok {
+			return 0, false
+		}
+		date, ok := GetHTTPDate(respHeaders, "Date")
+		if !ok {
+			return 0, false
+		}
+		return expires.Sub(date), true
+	}
+	if s, ok := getExpires(); ok {
+		return s
+	}
+	return HeuristicFreshness(respHeaders)
+}
+
+// t6AgeValue is used to calculate current_age per RFC7234§4.2.3
+func AgeValue(respHeaders http.Header) time.Duration {
+	s, ok := GetHTTPDeltaSeconds(respHeaders, "age")
+	if !ok {
+		return 0
+	}
+	return s
+}
+
+func GetCurrentAge(respHeaders http.Header, respReqTime time.Time, respRespTime time.Time) time.Duration {
+	correctedInitial := CorrectedInitialAge(respHeaders, respReqTime, respRespTime)
+	resident := residentTime(respRespTime)
+	log.Debugf("getCurrentAge: correctedInitialAge %v residentTime %v\n", correctedInitial, resident)
+	return correctedInitial + resident
+}
+
+func CorrectedInitialAge(respHeaders http.Header, respReqTime time.Time, respRespTime time.Time) time.Duration {
+	return time.Duration(math.Max(float64(ApparentAge(respHeaders, respRespTime)), float64(CorrectedAgeValue(respHeaders, respReqTime, respRespTime))))
+}
+
+func CorrectedAgeValue(respHeaders http.Header, respReqTime time.Time, respRespTime time.Time) time.Duration {
+	return AgeValue(respHeaders) + responseDelay(respReqTime, respRespTime)
+}
+
+func responseDelay(respReqTime time.Time, respRespTime time.Time) time.Duration {
+	return respRespTime.Sub(respReqTime)
+}
+
+func residentTime(respRespTime time.Time) time.Duration {
+	return time.Now().Sub(respRespTime)
+}
+
+func ApparentAge(respHeaders http.Header, respRespTime time.Time) time.Duration {
+	dateValue, ok := dateValue(respHeaders)
+	if !ok {
+		return 0 // TODO log warning?
+	}
+	rawAge := respRespTime.Sub(dateValue)
+	return time.Duration(math.Max(0.0, float64(rawAge)))
+}
+
+// dateValue is used to calculate current_age per RFC7234§4.2.3. It returns time, or false if the response had no Date header (in violation of HTTP/1.1).
+func dateValue(respHeaders http.Header) (time.Time, bool) {
+	return GetHTTPDate(respHeaders, "date")
+}
+
+// FreshFor checks returns how long this object is still good for
+func FreshFor(
+	respHeaders http.Header,
+	respCacheControl CacheControl,
+	respReqTime time.Time,
+	respRespTime time.Time,
+) time.Duration {
+	freshnessLifetime := GetFreshnessLifetime(respHeaders, respCacheControl)
+	currentAge := GetCurrentAge(respHeaders, respReqTime, respRespTime)
+	log.Debugf("FreshFor: freshnesslifetime %v currentAge %v\n", freshnessLifetime, currentAge)
+	//fresh := freshnessLifetime > currentAge
+	return freshnessLifetime - currentAge
+}

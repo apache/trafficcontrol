@@ -170,16 +170,17 @@ func cacheinspect(icfg interface{}, d OnRequestData) bool {
 				w.Write([]byte(fmt.Sprintf("showing only first %d and last %d:\n\n", head, tail)))
 			}
 
-			w.Write([]byte(fmt.Sprintf("<b>            #    Code      Size                   Age    HitCount      Key</b>\n")))
+			w.Write([]byte(fmt.Sprintf("<b>            #    Code      Size                   Age              FreshFor    HitCount      Key</b>\n")))
 			for i, key := range keys {
-				if (doSearch && !strings.Contains(key, searchArr[0])) || !doSearch && (i > tail && i < len(keys)-head) {
+				if (doSearch && !strings.Contains(key, searchArr[0])) || !doSearch && (i >= tail && i < len(keys)-head) {
 					continue
 				}
 
 				cacheObject, _ := d.Stats.CachePeek(key, cName)
 				age := time.Now().Sub(cacheObject.ReqRespTime)
-				w.Write([]byte(fmt.Sprintf("     %8d%8d%10s%22v%12d      <a href=\"http://%s%s?key=%s&cache=%s\">%s</a>\n",
-					i, cacheObject.Code, bytefmt.ByteSize(cacheObject.Size), age, cacheObject.HitCount, req.Host, CacheStatsEndpoint, url.QueryEscape(key), cName, key)))
+				freshFor := web.FreshFor(cacheObject.RespHeaders, cacheObject.RespCacheControl, cacheObject.ReqRespTime, cacheObject.RespRespTime)
+				w.Write([]byte(fmt.Sprintf("     %8d%8d%10s%22v%22v%12d      <a href=\"http://%s%s?key=%s&cache=%s\">%s</a>\n",
+					i, cacheObject.Code, bytefmt.ByteSize(cacheObject.Size), age, freshFor, cacheObject.HitCount, req.Host, CacheStatsEndpoint, url.QueryEscape(key), cName, key)))
 			}
 
 		}
