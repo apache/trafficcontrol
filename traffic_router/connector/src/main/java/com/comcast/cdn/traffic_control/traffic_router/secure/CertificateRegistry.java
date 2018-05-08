@@ -22,8 +22,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.log4j.Logger;
 
 public class CertificateRegistry {
+	private static final Logger log = Logger.getLogger(CertificateRegistry.class);
 	private CertificateDataConverter certificateDataConverter = new CertificateDataConverter();
 	volatile private Map<String, HandshakeData>	handshakeDataMap = new HashMap<>();
 	private RouterNioEndpoint sslEndpoint = null;
@@ -92,14 +94,13 @@ public class CertificateRegistry {
 
 		// store the result for the next import
 		previousData.clear();
-		for (final CertificateData certificateData : certificateDataList )
-		{
+		for (final CertificateData certificateData : certificateDataList) {
 			previousData.put(certificateData.getHostname(), certificateData);
 		}
 
 		handshakeDataMap = master;
 
-		if (sslEndpoint != null ) {
+		if (sslEndpoint != null) {
 			sslEndpoint.reloadSSLHosts(changes);
 		}
 

@@ -60,7 +60,6 @@ function initBuildArea() {
         wget http://archive.apache.org/dist/tomcat/tomcat-8/v$VERSION.$RELEASE/bin/apache-tomcat-$VERSION.$RELEASE.tar.gz -O "$RPMBUILD"/SOURCES/apache-tomcat-$VERSION.$RELEASE.tar.gz
 
         cp "$TR_DIR/tomcat-rpm/tomcat.service" "$RPMBUILD/SOURCES/" || { echo "Could not copy source files: $?"; exit 1; }
-        cp "$TR_DIR/tomcat-rpm/tomcat.inc" "$RPMBUILD/SOURCES/" || { echo "Could not copy source files: $?"; exit 1; }
         cp "$TR_DIR/tomcat-rpm/tomcat.spec" "$RPMBUILD/SPECS/" || { echo "Could not copy spec files: $?"; exit 1; }
 
         echo "The build area has been initialized."
@@ -95,6 +94,6 @@ function buildRpmForEl () {
         cp "$rpm" "$DIST/." || { echo "Could not copy $rpm to $DIST: $?"; exit 1; }
 }
 
-checkEnvironment npm node
+checkEnvironment
 initBuildArea
 buildRpmTomcat

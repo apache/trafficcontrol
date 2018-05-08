@@ -27,17 +27,8 @@ if [ -f /opt/traffic_router/conf/*.crt ]; then
 fi
 
 
-eval $(grep VERSION_ID /etc/os-release)
 echo "Traffic Router installed successfully."
-echo ""
-echo "Centos version for post install is : " $VERSION_ID
 
-if [[ -n "$VERSION_ID" && "$VERSION_ID" == "7" ]]; then
-    systemctl daemon-reload
-	echo "Start with 'sudo systemctl start traffic_router'"
-else
-    chkconfig --add traffic_router
-    chkconfig traffic_router on
-	echo "Start with 'sudo service traffic_router start'"
-fi
+systemctl daemon-reload
+echo "Start with 'sudo systemctl start traffic_router'"
 
