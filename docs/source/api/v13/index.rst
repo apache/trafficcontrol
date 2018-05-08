@@ -22,3 +22,4 @@ Traffic Ops API V1.3
   :maxdepth: 1
 
   coordinate
+  origin
