@@ -21,14 +21,14 @@ chkconfig --list tomcat >/dev/null
 if [ $? -eq 0 ]; then
   /sbin/service tomcat stop
 else
-   /usr/bin/sudo /usr/bin/systemctl list-unit-files traffic_router.service > /dev/null
+  /usr/bin/sudo /usr/bin/systemctl list-unit-files traffic_router.service > /dev/null
 
-   [ $? -eq 0 ] && /usr/bin/sudo /usr/bin/systemctl stop traffic_router
+  [ $? -eq 0 ] && /usr/bin/sudo /usr/bin/systemctl stop traffic_router
 fi
 
 # delete the expanded war files from the previous version
 if [[ -e /opt/traffic_router/webapps/core ]]; then
-  echo "Deleting previous version of TR webapp"
+  echo "Deleting previous version of Traffic Router webapp"
   rm -rf /opt/traffic_router/webapps/core
 fi
 

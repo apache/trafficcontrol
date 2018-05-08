@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class RouterNioEndpoint extends NioEndpoint {
-    private static final Logger LOGGER = Logger.getLogger(CertificateRegistry.class);
+    private static final Logger LOGGER = Logger.getLogger(RouterNioEndpoint.class);
     // Grabs the aliases from our custom certificate registry, creates a sslHostConfig for them
     // and adds the newly created config to the list of sslHostConfigs.  We also remove the default config
     // since it won't be found in our registry.  This allows OpenSSL to start successfully and serve our
@@ -47,8 +47,7 @@ public class RouterNioEndpoint extends NioEndpoint {
         }
     }
 
-    synchronized private void replaceSSLHosts(final Map<String, HandshakeData> sslHostsData)
-    {
+    synchronized private void replaceSSLHosts(final Map<String, HandshakeData> sslHostsData) {
         final Set<String> aliases = sslHostsData.keySet();
         boolean firstAlias = true;
         String lastHostName = "";
@@ -70,8 +69,7 @@ public class RouterNioEndpoint extends NioEndpoint {
                 lastHostName = sslHostConfig.getHostName();
             }
 
-            if (firstAlias && ! "".equals(alias))
-            {
+            if (firstAlias && ! "".equals(alias)) {
                 // One of the configs must be set as the default
                 setDefaultSSLHostConfigName(sslHostConfig.getHostName());
                 firstAlias = false;

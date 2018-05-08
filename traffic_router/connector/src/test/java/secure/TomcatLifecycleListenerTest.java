@@ -57,11 +57,9 @@ public class TomcatLifecycleListenerTest {
 			Lifecycle.AFTER_STOP_EVENT,
 			Lifecycle.BEFORE_START_EVENT,
 			Lifecycle.BEFORE_STOP_EVENT,
-//			Lifecycle.DESTROY_EVENT,
 			Lifecycle.PERIODIC_EVENT,
 			Lifecycle.START_EVENT,
 			Lifecycle.STOP_EVENT
-			//Lifecycle.AFTER_INIT_EVENT
 		).forEach(s -> {
 			tomcatLifecycleListener.lifecycleEvent(new LifecycleEvent(lifecycle,s, new Object()));
 		});

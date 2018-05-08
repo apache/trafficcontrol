@@ -24,7 +24,6 @@ import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
-//import java.security.spec.RSAMultiPrimePrivateCrtKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Base64;
 
@@ -57,19 +56,6 @@ public class Pkcs1KeySpecDecoder {
 		// man 3 rsa
 		// -- or --
 		// http://linux.die.net/man/3/rsa
-
-		// We don't need the version data at derSequence[0]
-//		final BigInteger n = derSequence[1].getBigInteger();
-//		final BigInteger e = derSequence[2].getBigInteger();
-//		final BigInteger d = derSequence[3].getBigInteger();
-//		final BigInteger p = derSequence[4].getBigInteger();
-//		final BigInteger q = derSequence[5].getBigInteger();
-//		final BigInteger dmp1 = derSequence[6].getBigInteger();
-//		final BigInteger dmq1 = derSequence[7].getBigInteger();
-//		final BigInteger iqmp = derSequence[8].getBigInteger();
-//
-//		return new RSAMultiPrimePrivateCrtKeySpec(n, e, d, p, q, dmp1, dmq1, iqmp, null);
-
 		//Convert to PKCS8 since OpenSSL doesn't support PKCS1.  This works because of the BouncyCastle security provider.
 		try {
 			return new PKCS8EncodedKeySpec(Base64.getDecoder().decode((data.getBytes())));

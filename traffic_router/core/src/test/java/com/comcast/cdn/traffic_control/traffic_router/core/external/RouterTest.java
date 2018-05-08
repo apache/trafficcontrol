@@ -339,7 +339,7 @@ public class RouterTest {
 		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + httpToHttpsId + ".bar");
 
-		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
 			Header header = response.getFirstHeader("Location");
 			assertThat(header.getValue(), isIn(httpToHttpsLocations));
@@ -357,7 +357,7 @@ public class RouterTest {
 		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + httpToHttpsId + ".bar");
 
-		try (CloseableHttpResponse response = httpClient.execute(httpGet)){
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
 			Header header = response.getFirstHeader("Location");
 			assertThat(header.getValue(), isIn(httpToHttpsLocations));

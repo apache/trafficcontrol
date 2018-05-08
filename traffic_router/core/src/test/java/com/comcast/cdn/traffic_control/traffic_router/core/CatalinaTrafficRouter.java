@@ -15,7 +15,6 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core;
 
-//import org.apache.catalina.Container;
 import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;

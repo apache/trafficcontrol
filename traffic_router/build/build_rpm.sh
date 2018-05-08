@@ -51,22 +51,12 @@ function installDnsSec {
 
 #----------------------------------------
 function buildRpmTrafficRouter () {
+	echo "Building the rpm."
+
 	installDnsSec
 
-    export STARTUP_SCRIPT_DIR="/etc/init.d"
-    export STARTUP_SCRIPT_LOC="../core/src/main/etc/init.d"
-	buildRpmFor_el 6
-    export STARTUP_SCRIPT_DIR="/etc/systemd/system"
-    export STARTUP_SCRIPT_LOC="../core/src/main/etc/systemd/system"
-	buildRpmFor_el 7
-}
-
-function buildRpmFor_el () {
-	local vers="7"
-    [[ -n $1 ]] && vers=$1
-
-	echo "Building the rpm for CentOS" $vers
-	export RHEL_VERSION=el$vers
+	export STARTUP_SCRIPT_DIR="/etc/systemd/system"
+	export STARTUP_SCRIPT_LOC="../core/src/main/etc/systemd/system"
 
 	cd "$TR_DIR" || { echo "Could not cd to $TR_DIR: $?"; exit 1; }
 	export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
