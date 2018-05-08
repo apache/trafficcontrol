@@ -29,21 +29,18 @@ Jump to:  disk  my-disk-cache-two
 
 *** Cache "" ***
 
-  * Size of in use cache:      9.5M 
-  * Cache capacity:            9.5M 
-  * Number of elements in LRU: 169
+  * Size of in use cache:      1.5M
+  * Cache capacity:            9.5M
+  * Number of elements in LRU: 54
   * Objects in cache sorted by Least Recently Used on top, showing only first 100 and last 100:
 
-     #		Code	Size	        Age			            Key
-     00000	200	    34K	            16h19m9.135951506s  	GET:http://localhost/34k.bin?hah
-     00001	200	    35K	            16h19m9.103181146s  	GET:http://localhost/35k.bin?hah
-     00002	200	    36K	            16h19m9.079490592s  	GET:http://localhost/36k.bin?hah
-     00003	200	    37K	            16h19m9.050852429s  	GET:http://localhost/37k.bin?hah
-     00004	200	    38K	            16h19m9.020264008s  	GET:http://localhost/38k.bin?hah
-     00005	200	    39K	            16h19m8.989722029s  	GET:http://localhost/39k.bin?hah
-     00006	200     40K	            16h19m8.967823063s  	GET:http://localhost/40k.bin?hah
-     00007	200	    41K	            16h19m8.939422783s  	GET:http://localhost/41k.bin?hah
-     00008	200	    42K	            16h19m8.913485123s  	GET:http://localhost/42k.bin?h
+            #    Code      Size                   Age              FreshFor    HitCount      Key
+            0     200       15K             600.922ms            50.541023s           1      GET:http://localhost/15k.bin?
+            1     200       16K             627.929ms            50.540856s           1      GET:http://localhost/16k.bin?
+            2     200       17K             650.813ms            50.540698s           1      GET:http://localhost/17k.bin?
+            3     200       18K             671.732ms            50.540547s           1      GET:http://localhost/18k.bin?
+            4     200       19K             691.981ms            50.540373s           1      GET:http://localhost/19k.bin?
+            5     200       20K             715.566ms            50.540261s           1      GET:http://localhost/20k.bin?
 ```
 
 
