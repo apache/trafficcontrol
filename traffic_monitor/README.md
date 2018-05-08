@@ -17,4 +17,4 @@
     under the License.
 -->
 
-To run: `./build.sh && traffic_monitor --opsCfg ./traffic_ops.cfg -config ./traffic_monitor-example-config.json`
+To run: `./build.sh && traffic_monitor --opsCfg ./conf/traffic_ops.cfg -config ./conf/traffic_monitor.cfg`
