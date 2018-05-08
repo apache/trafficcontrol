@@ -101,7 +101,7 @@ sub index {
 		push(
 			@data, {
 				"active"               => \$row->active,
-				"anonymousBlockingEnabled" => $row->anonymous_blocking_enabled
+				"anonymousBlockingEnabled" => $row->anonymous_blocking_enabled,
 				"cacheurl"             => $row->cacheurl,
 				"ccrDnsTtl"            => $row->ccr_dns_ttl,
 				"cdnId"                => $row->cdn->id,
