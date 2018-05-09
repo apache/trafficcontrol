@@ -45,7 +45,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	crConfig, err := Make(inf.Tx.Tx, inf.Params["cdn"], inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-		return
 	}
 	log.Infof("CRConfig time to generate: %+v\n", time.Since(start))
 	api.WriteResp(w, r, crConfig)

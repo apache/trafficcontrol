@@ -1,5 +1,9 @@
 package tc
 
+import (
+	"time"
+)
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,17 +23,51 @@ package tc
  * under the License.
  */
 
-// CRConfig is JSON-serializable as the CRConfig used by Traffic Control.
+// CRConfigToV11 converts the latest CRConfig object to a V11 object, by a shallow copy. Note this does not copy pointers for objects that haven't changed, and thus shouldn't be used to do a real copy, but only to convert, e.g. a latest-version object queried from the database to a V11 API endpoint.
+func CRConfigToV11(v14 CRConfig) CRConfigV11 {
+	v11 := CRConfigV11{
+		Config:          v14.Config,
+		ContentRouters:  v14.ContentRouters,
+		EdgeLocations:   v14.EdgeLocations,
+		Monitors:        v14.Monitors,
+		RouterLocations: v14.RouterLocations,
+		Stats:           v14.Stats,
+	}
+	v11.DeliveryServices = make(map[string]CRConfigDeliveryServiceV11, len(v14.DeliveryServices))
+	for name, ds := range v14.DeliveryServices {
+		v11.DeliveryServices[name] = ds.CRConfigDeliveryServiceV11
+	}
+	v11.ContentServers = make(map[string]CRConfigServerV11, len(v14.ContentServers))
+	for name, s := range v14.ContentServers {
+		v11.ContentServers[name] = s.CRConfigServerV11
+	}
+	return v11
+}
+
 type CRConfig struct {
-	// Config is mostly a map of string values, but may contain an 'soa' key which is a map[string]string, and may contain a 'ttls' key with a value map[string]string. It might not contain these values, so they must be checked for, and all values must be checked by the user and an error returned if the type is unexpected. Be aware, neither the language nor the API provides any guarantees about the type!
 	Config           map[string]interface{}               `json:"config,omitempty"`
-	ContentServers   map[string]CRConfigTrafficOpsServer  `json:"contentServers,omitempty"`
+	ContentServers   map[string]CRConfigServer            `json:"contentServers,omitempty"`
 	ContentRouters   map[string]CRConfigRouter            `json:"contentRouters,omitempty"`
 	DeliveryServices map[string]CRConfigDeliveryService   `json:"deliveryServices,omitempty"`
 	EdgeLocations    map[string]CRConfigLatitudeLongitude `json:"edgeLocations,omitempty"`
-	RouterLocations  map[string]CRConfigLatitudeLongitude `json:"trafficRouterLocations,omitempty"`
 	Monitors         map[string]CRConfigMonitor           `json:"monitors,omitempty"`
+	RouterLocations  map[string]CRConfigLatitudeLongitude `json:"trafficRouterLocations,omitempty"`
 	Stats            CRConfigStats                        `json:"stats,omitempty"`
+	// APIVersion is the version of the API used to create this CRConfig. Note for snapshots, this will be the latest version supported by the server, NOT the version called to create the snapshot. Snapshots will always be created as the latest version supported by the server.
+	APIVersion float64 `json:"version"`
+}
+
+// CRConfig is JSON-serializable as the CRConfig used by Traffic Control.
+type CRConfigV11 struct {
+	// Config is mostly a map of string values, but may contain an 'soa' key which is a map[string]string, and may contain a 'ttls' key with a value map[string]string. It might not contain these values, so they must be checked for, and all values must be checked by the user and an error returned if the type is unexpected. Be aware, neither the language nor the API provides any guarantees about the type!
+	Config           map[string]interface{}                `json:"config,omitempty"`
+	ContentServers   map[string]CRConfigServerV11          `json:"contentServers,omitempty"`
+	ContentRouters   map[string]CRConfigRouter             `json:"contentRouters,omitempty"`
+	DeliveryServices map[string]CRConfigDeliveryServiceV11 `json:"deliveryServices,omitempty"`
+	EdgeLocations    map[string]CRConfigLatitudeLongitude  `json:"edgeLocations,omitempty"`
+	RouterLocations  map[string]CRConfigLatitudeLongitude  `json:"trafficRouterLocations,omitempty"`
+	Monitors         map[string]CRConfigMonitor            `json:"monitors,omitempty"`
+	Stats            CRConfigStats                         `json:"stats,omitempty"`
 }
 
 type CRConfigConfig struct {
@@ -81,7 +119,12 @@ type CRConfigRouter struct {
 
 type CRConfigServerStatus string
 
-type CRConfigTrafficOpsServer struct {
+type CRConfigServer struct {
+	CRConfigServerV11
+	DeliveryServicesModified time.Time `json:"deliveryServicesModified"`
+}
+
+type CRConfigServerV11 struct {
 	CacheGroup       *string               `json:"cacheGroup,omitempty"`
 	Fqdn             *string               `json:"fqdn,omitempty"`
 	HashCount        *int                  `json:"hashCount,omitempty"`
@@ -100,7 +143,7 @@ type CRConfigTrafficOpsServer struct {
 }
 
 //TODO: drichardson - reconcile this with the DeliveryService struct in deliveryservices.go
-type CRConfigDeliveryService struct {
+type CRConfigDeliveryServiceV11 struct {
 	AnonymousBlockingEnabled *string                               `json:"anonymousBlockingEnabled,omitempty"`
 	CoverageZoneOnly         bool                                  `json:"coverageZoneOnly,string"`
 	Dispersion               *CRConfigDispersion                   `json:"dispersion,omitempty"`
@@ -124,6 +167,16 @@ type CRConfigDeliveryService struct {
 	GeoEnabled               []CRConfigGeoEnabled                  `json:"geoEnabled,omitempty"`
 	GeoLimitRedirectURL      *string                               `json:"geoLimitRedirectURL,omitempty"`
 	StaticDNSEntries         []CRConfigStaticDNSEntry              `json:"staticDnsEntries,omitempty"`
+}
+
+type CRConfigDeliveryService struct {
+	CRConfigDeliveryServiceV11
+	// Modified is the last time the core delivery service data, from the deliveryservice database table, has changed. It does NOT change if fields from other tables change. Use AnyModified to determine if any fields in the object have changed.
+	Modified time.Time `json:"modified"`
+	// ServersModified is the last time any member fields which affect DNS routing have changed. Specifically: matchsets, routingName.
+	ServersModified time.Time `json:"serversModified"`
+	// AnyModified is the last time any member fields from any table have changed.
+	AnyModified time.Time `json:"anyModified"`
 }
 
 type CRConfigGeoEnabled struct {

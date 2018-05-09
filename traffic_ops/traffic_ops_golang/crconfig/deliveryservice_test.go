@@ -83,64 +83,66 @@ func randDS() tc.CRConfigDeliveryService {
 	ttlSOA := "86400"
 	geoProviderStr := GeoProviderMaxmindStr
 	return tc.CRConfigDeliveryService{
-		AnonymousBlockingEnabled: &falseStrPtr,
-		CoverageZoneOnly:         false,
-		Dispersion: &tc.CRConfigDispersion{
-			Limit:    42,
-			Shuffled: true,
-		},
-		// Domains: []string{"foo"},
-		GeoLocationProvider: &geoProviderStr,
-		// MatchSets:            randMatchsetArr(),
-		MissLocation: &tc.CRConfigLatitudeLongitudeShort{
-			Lat: *randFloat64(),
-			Lon: *randFloat64(),
-		},
-		Protocol: &tc.CRConfigDeliveryServiceProtocol{
-			// AcceptHTTP: &truePtr,
-			AcceptHTTPS:     false,
-			RedirectOnHTTPS: false,
-		},
-		RegionalGeoBlocking: &falseStrPtr,
-		ResponseHeaders:     nil,
-		RequestHeaders:      nil,
-		Soa: &tc.SOA{
-			Admin:          &ttlAdmin,
-			ExpireSeconds:  &ttlExpire,
-			MinimumSeconds: &ttlMinimum,
-			RefreshSeconds: &ttlRefresh,
-			RetrySeconds:   &ttlRetry,
-		},
-		SSLEnabled: false,
-		TTL:        ttl,
-		TTLs: &tc.CRConfigTTL{
-			ASeconds:    &ttlStr,
-			AAAASeconds: &ttlStr,
-			NSSeconds:   &ttlNS,
-			SOASeconds:  &ttlSOA,
-		},
-		// MaxDNSIPsForLocation: randInt(),
-		IP6RoutingEnabled: randBool(),
-		RoutingName:       randStr(),
-		BypassDestination: map[string]*tc.CRConfigBypassDestination{
-			"HTTP": &tc.CRConfigBypassDestination{
-				// IP: randStr(),
-				// IP6: randStr(),
-				// CName: randStr(),
-				// TTL: randInt(),
-				FQDN: randStr(),
-				// Port: randStr(),
+		CRConfigDeliveryServiceV11: tc.CRConfigDeliveryServiceV11{
+			AnonymousBlockingEnabled: &falseStrPtr,
+			CoverageZoneOnly:         false,
+			Dispersion: &tc.CRConfigDispersion{
+				Limit:    42,
+				Shuffled: true,
 			},
-		},
-		DeepCachingType: nil,
-		GeoEnabled:      nil,
-		// GeoLimitRedirectURL: randStr(),
-		StaticDNSEntries: []tc.CRConfigStaticDNSEntry{
-			tc.CRConfigStaticDNSEntry{
-				Name:  *randStr(),
-				TTL:   *randInt(),
-				Type:  *randStr(),
-				Value: *randStr(),
+			// Domains: []string{"foo"},
+			GeoLocationProvider: &geoProviderStr,
+			// MatchSets:            randMatchsetArr(),
+			MissLocation: &tc.CRConfigLatitudeLongitudeShort{
+				Lat: *randFloat64(),
+				Lon: *randFloat64(),
+			},
+			Protocol: &tc.CRConfigDeliveryServiceProtocol{
+				// AcceptHTTP: &truePtr,
+				AcceptHTTPS:     false,
+				RedirectOnHTTPS: false,
+			},
+			RegionalGeoBlocking: &falseStrPtr,
+			ResponseHeaders:     nil,
+			RequestHeaders:      nil,
+			Soa: &tc.SOA{
+				Admin:          &ttlAdmin,
+				ExpireSeconds:  &ttlExpire,
+				MinimumSeconds: &ttlMinimum,
+				RefreshSeconds: &ttlRefresh,
+				RetrySeconds:   &ttlRetry,
+			},
+			SSLEnabled: false,
+			TTL:        ttl,
+			TTLs: &tc.CRConfigTTL{
+				ASeconds:    &ttlStr,
+				AAAASeconds: &ttlStr,
+				NSSeconds:   &ttlNS,
+				SOASeconds:  &ttlSOA,
+			},
+			// MaxDNSIPsForLocation: randInt(),
+			IP6RoutingEnabled: randBool(),
+			RoutingName:       randStr(),
+			BypassDestination: map[string]*tc.CRConfigBypassDestination{
+				"HTTP": &tc.CRConfigBypassDestination{
+					// IP: randStr(),
+					// IP6: randStr(),
+					// CName: randStr(),
+					// TTL: randInt(),
+					FQDN: randStr(),
+					// Port: randStr(),
+				},
+			},
+			DeepCachingType: nil,
+			GeoEnabled:      nil,
+			// GeoLimitRedirectURL: randStr(),
+			StaticDNSEntries: []tc.CRConfigStaticDNSEntry{
+				tc.CRConfigStaticDNSEntry{
+					Name:  *randStr(),
+					TTL:   *randInt(),
+					Type:  *randStr(),
+					Value: *randStr(),
+				},
 			},
 		},
 	}
@@ -153,15 +155,20 @@ func ExpectedMakeDSes() map[string]tc.CRConfigDeliveryService {
 	}
 }
 
-func MockMakeDSes(mock sqlmock.Sqlmock, expected map[string]tc.CRConfigDeliveryService, cdn string) {
-	// select d.xml_id, d.miss_lat, d.miss_long, d.protocol, d.ccr_dns_ttl as ttl, d.routing_name, d.geo_provider, t.name as type, d.geo_limit, d.geo_limit_countries, d.geolimit_redirect_url, d.initial_dispersion, d.regional_geo_blocking, d.tr_response_headers, d.max_dns_answers, p.name as profile, d.dns_bypass_ip, d.dns_bypass_ip6, d.dns_bypass_ttl, d.dns_bypass_cname, d.http_bypass_fqdn, d.ipv6_routing_enabled, d.deep_caching_type, d.tr_request_headers, d.tr_response_headers, d.anonymous_blocking_enabled
+func ExpectedMakeDSesCacheDSes() map[tc.CacheName][]ServerDS {
+	return map[tc.CacheName][]ServerDS{}
+}
 
-	rows := sqlmock.NewRows([]string{"xml_id", "miss_lat", "miss_long", "protocol", "ttl", "routing_name", "geo_provider", "type", "geo_limit", "geo_limit_countries", "geeo_limit_redirect_url", "initial_dispersion", "regional_geo_blocking", "tr_response_headers", "max_dns_answers", "profile", "dns_bypass_ip", "dns_bypass_ip6", "dns_bypass_ttl", "dns_bypass_cname", "http_bypass_fqdn", "ipv6_routing_enabled", "deep_caching_type", "tr_request_headers", "tr_response_headers", "anonymous_blocking_enabled"})
+func MockMakeDSes(mock sqlmock.Sqlmock, expected map[string]tc.CRConfigDeliveryService, cdn string) {
+	// select d.xml_id, d.miss_lat, d.miss_long, d.protocol, d.ccr_dns_ttl as ttl, d.routing_name, d.geo_provider, t.name as type, d.geo_limit, d.geo_limit_countries, d.geolimit_redirect_url, d.initial_dispersion, d.regional_geo_blocking, d.tr_response_headers, d.max_dns_answers, p.name as profile, d.dns_bypass_ip, d.dns_bypass_ip6, d.dns_bypass_ttl, d.dns_bypass_cname, d.http_bypass_fqdn, d.ipv6_routing_enabled, d.deep_caching_type, d.tr_request_headers, d.tr_response_headers
+
+	rows := sqlmock.NewRows([]string{"xml_id", "miss_lat", "miss_long", "protocol", "ttl", "routing_name", "geo_provider", "type", "geo_limit", "geo_limit_countries", "geeo_limit_redirect_url", "initial_dispersion", "regional_geo_blocking", "tr_response_headers", "max_dns_answers", "profile", "dns_bypass_ip", "dns_bypass_ip6", "dns_bypass_ttl", "dns_bypass_cname", "http_bypass_fqdn", "ipv6_routing_enabled", "deep_caching_type", "tr_request_headers", "tr_response_headers", "anonymous_blocking_enabled", "updated"})
 
 	for dsName, ds := range expected {
-		rows = rows.AddRow(dsName, ds.MissLocation.Lat, ds.MissLocation.Lon, 0, *ds.TTL, *ds.RoutingName, 0, "HTTP", 0, "", "", 42, false, "", nil, "", "", "", 0, "", *ds.BypassDestination["HTTP"].FQDN, *ds.IP6RoutingEnabled, nil, "", "", false)
+		rows = rows.AddRow(dsName, ds.MissLocation.Lat, ds.MissLocation.Lon, 0, *ds.TTL, *ds.RoutingName, 0, "HTTP", 0, "", "", 42, false, "", nil, "", "", "", 0, "", *ds.BypassDestination["HTTP"].FQDN, *ds.IP6RoutingEnabled, nil, "", "", false, time.Time{})
+
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestMakeDSes(t *testing.T) {
@@ -196,8 +203,10 @@ func TestMakeDSes(t *testing.T) {
 		t.Fatalf("creating transaction: %v", err)
 	}
 	defer tx.Commit()
+	MockMakeDSes(mock, expected, cdn)
 
-	actual, err := makeDSes(cdn, domain, tx)
+	cacheDSes := ExpectedMakeDSesCacheDSes()
+	actual, err := makeDSes(cdn, domain, cacheDSes, tx)
 	if err != nil {
 		t.Fatalf("makeDSes expected: nil error, actual: %v", err)
 	}
@@ -220,25 +229,25 @@ func TestMakeDSes(t *testing.T) {
 	}
 }
 
-func ExpectedGetServerProfileParams(expectedMakeDSes map[string]tc.CRConfigDeliveryService) map[string]map[string]string {
-	expected := map[string]map[string]string{}
+func ExpectedGetServerProfileParams(expectedMakeDSes map[string]tc.CRConfigDeliveryService) map[string]map[string]ParamVal {
+	expected := map[string]map[string]ParamVal{}
 	for dsName, _ := range expectedMakeDSes {
-		expected[dsName] = map[string]string{
-			"param0": "val0",
-			"param1": "val1",
+		expected[dsName] = map[string]ParamVal{
+			"param0": ParamVal{Val: "val0"},
+			"param1": ParamVal{Val: "val1"},
 		}
 	}
 	return expected
 }
 
-func MockGetServerProfileParams(mock sqlmock.Sqlmock, expected map[string]map[string]string, cdn string) {
-	rows := sqlmock.NewRows([]string{"name", "value", "profile"})
+func MockGetServerProfileParams(mock sqlmock.Sqlmock, expected map[string]map[string]ParamVal, cdn string) {
+	rows := sqlmock.NewRows([]string{"name", "value", "profile", "updated"})
 	for dsName, params := range expected {
 		for param, val := range params {
-			rows = rows.AddRow(param, val, dsName)
+			rows = rows.AddRow(param, val.Val, dsName, time.Time{})
 		}
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestGetServerProfileParams(t *testing.T) {
@@ -285,7 +294,7 @@ func TestGetServerProfileParams(t *testing.T) {
 	}
 }
 
-func ExpectedGetDSRegexesDomains(expectedDSParams map[string]string) (map[string][]*tc.MatchSet, map[string][]string) {
+func ExpectedGetDSRegexesDomains(expectedDSParams map[string]ParamVal) (map[string][]*tc.MatchSet, map[string][]string) {
 	matchsets := map[string][]*tc.MatchSet{}
 	domains := map[string][]string{}
 
@@ -295,7 +304,7 @@ func ExpectedGetDSRegexesDomains(expectedDSParams map[string]string) (map[string
 
 	domain := "foo"
 	if val, ok := expectedDSParams["domain_name"]; ok {
-		domain = val
+		domain = val.Val
 	}
 
 	for dsName, _ := range expectedDSParams {
@@ -312,15 +321,15 @@ func ExpectedGetDSRegexesDomains(expectedDSParams map[string]string) (map[string
 }
 
 func MockGetDSRegexesDomains(mock sqlmock.Sqlmock, expectedMatchsets map[string][]*tc.MatchSet, expectedDomains map[string][]string, cdn string) {
-	rows := sqlmock.NewRows([]string{"pattern", "type", "dstype", "set_number", "xml_id"})
+	rows := sqlmock.NewRows([]string{"pattern", "type", "dstype", "set_number", "xml_id", "updated"})
 	for dsName, matchsets := range expectedMatchsets {
 		for _, matchset := range matchsets {
 			for _, matchlist := range matchset.MatchList {
-				rows = rows.AddRow(matchlist.Regex, "HOST", "HTTP", 0, dsName)
+				rows = rows.AddRow(matchlist.Regex, "HOST", "HTTP", 0, dsName, time.Time{})
 			}
 		}
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestGetDSRegexesDomains(t *testing.T) {
@@ -352,7 +361,8 @@ func TestGetDSRegexesDomains(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actualMatchsets, actualDomains, err := getDSRegexesDomains(cdn, domain, tx)
+	actualMatchsets, actualDomains, actualDSModifieds, err := getDSRegexesDomains(cdn, domain, tx)
+	actualDSModifieds = actualDSModifieds
 	if err != nil {
 		t.Fatalf("getDSRegexesDomains expected: nil error, actual: %v", err)
 	}
@@ -383,13 +393,13 @@ func ExpectedGetStaticDNSEntries(expectedMakeDSes map[string]tc.CRConfigDelivery
 }
 
 func MockGetStaticDNSEntries(mock sqlmock.Sqlmock, expected map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry, cdn string) {
-	rows := sqlmock.NewRows([]string{"ds", "name", "ttl", "value", "type"})
+	rows := sqlmock.NewRows([]string{"ds", "name", "ttl", "value", "type", "updated"})
 	for dsName, entries := range expected {
 		for _, entry := range entries {
-			rows = rows.AddRow(dsName, entry.Name, entry.TTL, entry.Value, entry.Type+"_RECORD")
+			rows = rows.AddRow(dsName, entry.Name, entry.TTL, entry.Value, entry.Type+"_RECORD", time.Time{})
 		}
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestGetStaticDNSEntries(t *testing.T) {
@@ -415,7 +425,8 @@ func TestGetStaticDNSEntries(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actual, err := getStaticDNSEntries(cdn, tx)
+	actual, actualDSModifieds, err := getStaticDNSEntries(cdn, tx)
+	actualDSModifieds = actualDSModifieds
 	if err != nil {
 		t.Fatalf("getStaticDNSEntries expected: nil error, actual: %v", err)
 	}

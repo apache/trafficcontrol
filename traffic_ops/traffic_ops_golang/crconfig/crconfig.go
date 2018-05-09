@@ -27,25 +27,27 @@ import (
 )
 
 func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string) (*tc.CRConfig, error) {
-	crc := tc.CRConfig{}
+	crc := tc.CRConfig{APIVersion: 1.4}
 	err := error(nil)
 
 	cdnDomain, dnssecEnabled, err := getCDNInfo(cdn, tx)
 	if err != nil {
 		return nil, errors.New("Error getting CDN info: " + err.Error())
 	}
-
 	if crc.Config, err = makeCRConfigConfig(cdn, tx, dnssecEnabled, cdnDomain); err != nil {
 		return nil, errors.New("Error getting Config: " + err.Error())
 	}
-
-	if crc.ContentServers, crc.ContentRouters, crc.Monitors, err = makeCRConfigServers(cdn, tx, cdnDomain); err != nil {
+	serverDSNames, err := getServerDSNames(cdn, tx)
+	if err != nil {
+		return nil, errors.New("Error getting server delivery services: " + err.Error())
+	}
+	if crc.ContentServers, crc.ContentRouters, crc.Monitors, err = makeCRConfigServers(cdn, tx, cdnDomain, serverDSNames); err != nil {
 		return nil, errors.New("Error getting Servers: " + err.Error())
 	}
 	if crc.EdgeLocations, crc.RouterLocations, err = makeLocations(cdn, tx); err != nil {
 		return nil, errors.New("Error getting Edge Locations: " + err.Error())
 	}
-	if crc.DeliveryServices, err = makeDSes(cdn, cdnDomain, tx); err != nil {
+	if crc.DeliveryServices, err = makeDSes(cdn, cdnDomain, serverDSNames, tx); err != nil {
 		return nil, errors.New("Error getting Delivery Services: " + err.Error())
 	}
 

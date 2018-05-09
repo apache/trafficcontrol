@@ -57,24 +57,26 @@ func randFloat64() *float64 {
 	return &f
 }
 
-func randServer() tc.CRConfigTrafficOpsServer {
+func randServer() tc.CRConfigServer {
 	status := tc.CRConfigServerStatus(*randStr())
 	cachegroup := randStr()
-	return tc.CRConfigTrafficOpsServer{
-		CacheGroup:      cachegroup,
-		Fqdn:            randStr(),
-		HashCount:       randInt(),
-		HashId:          randStr(),
-		HttpsPort:       randInt(),
-		InterfaceName:   randStr(),
-		Ip:              randStr(),
-		Ip6:             randStr(),
-		LocationId:      cachegroup,
-		Port:            randInt(),
-		Profile:         randStr(),
-		ServerStatus:    &status,
-		ServerType:      randStr(),
-		RoutingDisabled: *randInt64(),
+	return tc.CRConfigServer{
+		CRConfigServerV11: tc.CRConfigServerV11{
+			CacheGroup:      cachegroup,
+			Fqdn:            randStr(),
+			HashCount:       randInt(),
+			HashId:          randStr(),
+			HttpsPort:       randInt(),
+			InterfaceName:   randStr(),
+			Ip:              randStr(),
+			Ip6:             randStr(),
+			LocationId:      cachegroup,
+			Port:            randInt(),
+			Profile:         randStr(),
+			ServerStatus:    &status,
+			ServerType:      randStr(),
+			RoutingDisabled: *randInt64(),
+		},
 	}
 }
 
@@ -150,8 +152,8 @@ func ExpectedGetAllServers(params map[string]ServerParams) map[string]ServerUnio
 	expected := map[string]ServerUnion{}
 	for name, param := range params {
 		s := ServerUnion{
-			APIPort:                  param.APIPort,
-			CRConfigTrafficOpsServer: randServer(),
+			APIPort:        param.APIPort,
+			CRConfigServer: randServer(),
 		}
 		i := int(*param.Weight * *param.WeightMultiplier)
 		s.HashCount = &i
@@ -214,18 +216,18 @@ func TestGetAllServers(t *testing.T) {
 	}
 }
 
-func ExpectedGetServerDSNames() map[tc.CacheName][]tc.DeliveryServiceName {
-	return map[tc.CacheName][]tc.DeliveryServiceName{
-		"cache0": []tc.DeliveryServiceName{"ds0", "ds1"},
-		"cache1": []tc.DeliveryServiceName{"ds0", "ds1"},
+func ExpectedGetServerDSNames() map[tc.CacheName][]ServerDS {
+	return map[tc.CacheName][]ServerDS{
+		"cache0": []ServerDS{ServerDS{DS: "ds0"}, ServerDS{DS: "ds1"}},
+		"cache1": []ServerDS{ServerDS{DS: "ds0"}, ServerDS{DS: "ds1"}},
 	}
 }
 
-func MockGetServerDSNames(mock sqlmock.Sqlmock, expected map[tc.CacheName][]tc.DeliveryServiceName, cdn string) {
-	rows := sqlmock.NewRows([]string{"host_name", "xml_id"})
+func MockGetServerDSNames(mock sqlmock.Sqlmock, expected map[tc.CacheName][]ServerDS, cdn string) {
+	rows := sqlmock.NewRows([]string{"host_name", "xml_id", "last_updated"})
 	for cache, dses := range expected {
 		for _, ds := range dses {
-			rows = rows.AddRow(cache, ds)
+			rows = rows.AddRow(cache, ds.DS, time.Time{})
 		}
 	}
 	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
@@ -267,12 +269,12 @@ func TestGetServerDSNames(t *testing.T) {
 	}
 }
 
-func ExpectedGetServerDSes(expectedGetServerDSNames map[tc.CacheName][]tc.DeliveryServiceName) map[tc.CacheName]map[string][]string {
+func ExpectedGetServerDSes(expectedGetServerDSNames map[tc.CacheName][]ServerDS) map[tc.CacheName]map[string][]string {
 	e := map[tc.CacheName]map[string][]string{}
 	for cache, dses := range expectedGetServerDSNames {
 		e[cache] = map[string][]string{}
 		for _, ds := range dses {
-			e[cache][string(ds)] = []string{string(ds) + "regex0", string(ds) + "regex1"}
+			e[cache][string(ds.DS)] = []string{string(ds.DS) + "regex0", string(ds.DS) + "regex1"}
 		}
 	}
 	return e
@@ -295,6 +297,13 @@ func MockGetServerDSes(mock sqlmock.Sqlmock, expected map[tc.CacheName]map[strin
 	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
 }
 
+func ExpectedCacheDSes() map[tc.CacheName][]ServerDS {
+	return map[tc.CacheName][]ServerDS{
+		"cache0": []ServerDS{ServerDS{DS: "ds0"}, ServerDS{DS: "ds1"}},
+		"cache1": []ServerDS{ServerDS{DS: "ds0"}, ServerDS{DS: "ds1"}},
+	}
+}
+
 func TestGetServerDSes(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -307,10 +316,10 @@ func TestGetServerDSes(t *testing.T) {
 
 	mock.ExpectBegin()
 	expectedGetServerDSNames := ExpectedGetServerDSNames()
-	MockGetServerDSNames(mock, expectedGetServerDSNames, cdn)
-
 	expected := ExpectedGetServerDSes(expectedGetServerDSNames)
 	MockGetServerDSes(mock, expected, cdn)
+	MockGetServerDSNames(mock, expectedGetServerDSNames, cdn)
+
 	mock.ExpectCommit()
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
@@ -320,7 +329,8 @@ func TestGetServerDSes(t *testing.T) {
 	}
 	defer tx.Commit()
 
-	actual, err := getServerDSes(cdn, tx, domain)
+	cacheDSes := ExpectedCacheDSes()
+	actual, err := getServerDSes(cdn, tx, domain, cacheDSes)
 
 	if err != nil {
 		t.Fatalf("getServerDSes expected: nil error, actual: %v", err)
