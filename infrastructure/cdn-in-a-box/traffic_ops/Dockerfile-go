@@ -22,6 +22,9 @@
 # build stage compiles traffic_ops_golang
 FROM golang:1.10.1 AS trafficops-build
 
+# Installs dependencies
+RUN apt-get update -y && apt-get install -y libffi-dev ruby-dev rubygems vim libcap2-bin
+
 # TODO: generate BUILD_VERSION file prior -- just copy the file here
 COPY .git /go/src/github.com/apache/incubator-trafficcontrol/.git
 COPY VERSION /go/src/github.com/apache/incubator-trafficcontrol/VERSION
@@ -53,6 +56,8 @@ ENV RIAK_USER=riakuser
 ENV RIAK_PASSWORD=riakpass
 EXPOSE 443
 
+# Installs dependencies
+RUN apt-get update -y && apt-get install -y libffi-dev ruby-dev rubygems vim libcap2-bin
 COPY infrastructure/cdn-in-a-box/traffic_ops/run-go.sh /
 COPY --from=trafficops-build /go/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang
 
