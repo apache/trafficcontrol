@@ -134,7 +134,7 @@ chown -R trafops:trafops .
 export GOPATH=/opt/traffic_ops/go
 export PATH=$PATH:$GOPATH/bin:/usr/local/go/bin
 
-./db/admin.pl -env production upgrade
+./db/admin.pl --env production upgrade
 ./db/adduser.pl $TO_ADMIN_USER $TO_ADMIN_PASSWORD admin | tee /adduser.sql | psql -h "$DB_SERVER" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" -e
 ./local/bin/hypnotoad script/cdn
 
