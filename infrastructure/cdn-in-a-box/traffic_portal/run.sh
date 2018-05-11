@@ -31,7 +31,7 @@ mkdir -p /etc/pki/tls/certs
 key=/etc/pki/tls/private/localhost.key
 cert=/etc/pki/tls/certs/localhost.crt
 mkdir -p $(dirname $key) $(dirname $cert)
-openssl req -newkey rsa:2048 -nodes -keyout $key -x509 -days 365 -out $crt -subj "/C=$CERT_COUNTRY/ST=$CERT_STATE/L=$CERT_CITY/O=$CERT_COMPANY"
+openssl req -newkey rsa:2048 -nodes -keyout $key -x509 -days 365 -out $cert -subj "/C=$CERT_COUNTRY/ST=$CERT_STATE/L=$CERT_CITY/O=$CERT_COMPANY"
 
 cat >/etc/traffic_portal/conf/config.js <<-TPCONF
 /*
