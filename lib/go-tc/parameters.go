@@ -50,3 +50,42 @@ type ParameterNullable struct {
 	Secure      *bool           `json:"secure" db:"secure"`
 	Value       *string         `json:"value" db:"value"`
 }
+
+type ProfileParameterByName struct {
+	ConfigFile  string    `json:"configFile"`
+	ID          int       `json:"id"`
+	LastUpdated TimeNoMod `json:"lastUpdated"`
+	Name        string    `json:"name"`
+	Secure      bool      `json:"secure"`
+	Value       string    `json:"value"`
+}
+
+type ProfileParameterByNamePost struct {
+	ConfigFile string `json:"configFile"`
+	Name       string `json:"name"`
+	Secure     int    `json:"secure"`
+	Value      string `json:"value"`
+}
+
+type ProfileParameterPostRespObj struct {
+	ProfileParameterByNamePost
+	ID int64 `json:"id"`
+}
+
+type ProfileParameterPostResp struct {
+	Parameters  []ProfileParameterPostRespObj `json:"parameters"`
+	ProfileID   int                           `json:"profileId"`
+	ProfileName string                        `json:"profileName"`
+}
+
+type PostProfileParam struct {
+	ProfileID int64   `json:"profileId"`
+	ParamIDs  []int64 `json:"paramIds"`
+	Replace   bool    `json:"replace"`
+}
+
+type PostParamProfile struct {
+	ParamID    int64   `json:"paramId"`
+	ProfileIDs []int64 `json:"profileIds"`
+	Replace    bool    `json:"replace"`
+}
