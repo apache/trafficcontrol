@@ -96,7 +96,7 @@ cat >$TO/conf/cdn.conf <<-CDNCONF
         "no_account_found_msg" : "A Traffic Ops user account is required for access. Please contact your Traffic Ops user administrator."
     },
     "portal" : {
-        "base_url" : "http://localhost:8080/!#/",
+        "base_url" : "http://localhost:61443/!#/",
         "email_from" : "no-reply@traffic-portal-domain.com",
         "pass_reset_path" : "user",
         "user_register_path" : "user"
