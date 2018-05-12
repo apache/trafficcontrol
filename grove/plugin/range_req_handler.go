@@ -1,18 +1,5 @@
 package plugin
 
-import (
-	"encoding/json"
-
-	"crypto/rand"
-	"encoding/hex"
-	"fmt"
-	"github.com/apache/incubator-trafficcontrol/grove/web"
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"net/http"
-	"strconv"
-	"strings"
-)
-
 /*
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -27,9 +14,22 @@ import (
    limitations under the License.
 */
 
+import (
+	"crypto/rand"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+
+	"github.com/apache/incubator-trafficcontrol/grove/web"
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+)
+
 type byteRange struct {
-	Start int
-	End   int
+	Start int64
+	End   int64
 }
 
 type rangeRequestConfig struct {
@@ -50,6 +50,9 @@ func rangeReqHandleLoad(b json.RawMessage) interface{} {
 		log.Errorln("range_rew_handler  loading config, unmarshalling JSON: " + err.Error())
 		return nil
 	}
+	if !(cfg.Mode == "getfull" || cfg.Mode == "patch") {
+		log.Errorf("Unknown mode for range_req_handler plugin: %s", cfg.Mode)
+	}
 	log.Debugf("range_rew_handler: load success: %+v\n", cfg)
 	return &cfg
 }
@@ -62,6 +65,7 @@ func rangeReqHandlerOnRequest(icfg interface{}, d OnRequestData) bool {
 		return false
 	}
 	log.Debugf("Range string is: %s", rHeader)
+	// put the ranges [] in the context so we can use it later
 	byteRanges := parseRangeHeader(rHeader)
 	*d.Context = byteRanges
 	return false
@@ -82,49 +86,14 @@ func rangeReqHandleBeforeParent(icfg interface{}, d BeforeParentRequestData) {
 		return
 	}
 	if cfg.Mode == "getfull" {
-		// getfull means get the whole thing from parent/org, but serve the requested range. Just remove the Range header from the upstream request, and put the range header in the context so we can use it in the response.
+		// getfull means get the whole thing from parent/org, but serve the requested range. Just remove the Range header from the upstream request
 		d.Req.Header.Del("Range")
 	}
 	return
 }
 
-//--
-//> GET /10Mb.txt HTTP/1.1
-//> Host: localhost
-//> Range: bytes=0-1,500000-500009
-//> User-Agent: curl/7.54.0
-//> Accept: */*
-//>
-//< HTTP/1.1 206 Partial Content
-//< Date: Sat, 12 May 2018 14:21:56 GMT
-//< Server: Apache/2.4.29 (Unix)
-//< Last-Modified: Sat, 12 May 2018 14:19:11 GMT
-//< ETag: "a00000-56c02efb675c0"
-//< Accept-Ranges: bytes
-//< Content-Length: 216
-//< Cache-Control: max-age=60, public
-//< Expires: Sat, 12 May 2018 14:22:56 GMT
-//< Content-Type: multipart/byteranges; boundary=4d583e1cee600e82
-//<
-//
-//--4d583e1cee600e82
-//Content-type: text/plain
-//Content-range: bytes 0-1/10485760
-//
-//00
-//--4d583e1cee600e82
-//Content-type: text/plain
-//Content-range: bytes 500000-500009/10485760
-//
-//000500000
-//
-//--4d583e1cee600e82--
-//--
-
-// https://httpwg.org/specs/rfc7230.html#message.body.length
-
 // rangeReqHandleBeforeRespond builds the 206 response
-// assume all the needed ranges have been put in cache before, which is the truth for "getfull" mode which gets the whole object into cache.
+// Assume all the needed ranges have been put in cache before, which is the truth for "getfull" mode which gets the whole object into cache.
 func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 	log.Debugf("rangeReqHandleBeforeRespond calling\n")
 	ictx := d.Context
@@ -148,14 +117,14 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 		multipartBoundaryString = hex.EncodeToString(multipartBoundaryBytes)
 		d.Hdr.Set("Content-Type", fmt.Sprintf("multipart/byteranges; boundary=%s", multipartBoundaryString))
 	}
-	totalContentLength, err := strconv.Atoi(d.Hdr.Get("Content-Length"))
+	totalContentLength, err := strconv.ParseInt(d.Hdr.Get("Content-Length"), 10, 64)
 	if err != nil {
 		log.Errorf("Invalid Content-Length header: %v", d.Hdr.Get("Content-Length"))
 	}
 	body := make([]byte, 0)
 	for _, thisRange := range ctx {
-		if thisRange.End == -1 {
-			thisRange.End = totalContentLength
+		if thisRange.End == -1 || thisRange.End >= totalContentLength { // if the end range is "", or too large serve until the end
+			thisRange.End = totalContentLength - 1
 		}
 		log.Debugf("range:%d-%d", thisRange.Start, thisRange.End)
 		if multipartBoundaryString != "" {
@@ -185,9 +154,9 @@ func parseRange(rangeString string) (byteRange, error) {
 	if parts[0] == "" {
 		bRange.Start = 0
 	} else {
-		start, err := strconv.Atoi(parts[0])
+		start, err := strconv.ParseInt(parts[0], 10, 64)
 		if err != nil {
-			log.Errorf("Error converting rangeString \"%\" to numbers", rangeString)
+			log.Errorf("Error converting rangeString start \"%\" to numbers", rangeString)
 			return byteRange{}, err
 		}
 		bRange.Start = start
@@ -195,9 +164,9 @@ func parseRange(rangeString string) (byteRange, error) {
 	if parts[1] == "" {
 		bRange.End = -1 // -1 means till the end
 	} else {
-		end, err := strconv.Atoi(parts[1])
+		end, err := strconv.ParseInt(parts[1], 10, 64)
 		if err != nil {
-			log.Errorf("Error converting rangeString \"%\" to numbers", rangeString)
+			log.Errorf("Error converting rangeString end \"%\" to numbers", rangeString)
 			return byteRange{}, err
 		}
 		bRange.End = end
