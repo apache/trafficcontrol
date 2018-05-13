@@ -117,6 +117,7 @@ type RemappingProducer struct {
 }
 
 func (p *RemappingProducer) CacheKey() string                  { return p.cacheKey }
+func (p *RemappingProducer) OverrideCacheKey(newKey string)    { p.cacheKey = newKey }
 func (p *RemappingProducer) ConnectionClose() bool             { return p.rule.ConnectionClose }
 func (p *RemappingProducer) Name() string                      { return p.rule.Name }
 func (p *RemappingProducer) DSCP() int                         { return p.rule.DSCP }

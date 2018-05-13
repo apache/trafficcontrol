@@ -37,7 +37,13 @@ type rangeRequestConfig struct {
 }
 
 func init() {
-	AddPlugin(10000, Funcs{load: rangeReqHandleLoad, onRequest: rangeReqHandlerOnRequest, beforeParentRequest: rangeReqHandleBeforeParent, beforeRespond: rangeReqHandleBeforeRespond})
+	AddPlugin(10000, Funcs{
+		load:                rangeReqHandleLoad,
+		onRequest:           rangeReqHandlerOnRequest,
+		beforeCacheLookUp:   rangeReqHandleBeforeCacheLookup,
+		beforeParentRequest: rangeReqHandleBeforeParent,
+		beforeRespond:       rangeReqHandleBeforeRespond,
+	})
 }
 
 // rangeReqHandleLoad loads the configuration
@@ -50,7 +56,7 @@ func rangeReqHandleLoad(b json.RawMessage) interface{} {
 		log.Errorln("range_rew_handler  loading config, unmarshalling JSON: " + err.Error())
 		return nil
 	}
-	if !(cfg.Mode == "getfull" || cfg.Mode == "patch") {
+	if !(cfg.Mode == "get_full_serve_range" || cfg.Mode == "patch") {
 		log.Errorf("Unknown mode for range_req_handler plugin: %s", cfg.Mode)
 	}
 	log.Debugf("range_rew_handler: load success: %+v\n", cfg)
@@ -71,7 +77,24 @@ func rangeReqHandlerOnRequest(icfg interface{}, d OnRequestData) bool {
 	return false
 }
 
-// rangeReqHandleBeforeParent changes the parent request if needed (mode == getfull)
+func rangeReqHandleBeforeCacheLookup(icfg interface{}, d BeforeCacheLookUpData, overRideFunc func(string)) {
+	cfg, ok := icfg.(*rangeRequestConfig)
+	if !ok {
+		log.Errorf("range_req_handler config '%v' type '%T' expected *rangeRequestConfig\n", icfg, icfg)
+		return
+	}
+	if cfg.Mode == "store_ranges" {
+		sep := "?"
+		if strings.Contains(d.DefaultCacheKey, "?") {
+			sep = "&"
+		}
+		newKey := d.DefaultCacheKey + sep + "grove_range_req_handler_plugin_data=" + d.Req.Header.Get("Range")
+		overRideFunc(newKey)
+		log.Debugf("range_req_handler: store_ranges default key:%s, new key:%s", d.DefaultCacheKey, newKey)
+	}
+}
+
+// rangeReqHandleBeforeParent changes the parent request if needed (mode == get_full_serve_range)
 func rangeReqHandleBeforeParent(icfg interface{}, d BeforeParentRequestData) {
 	log.Debugf("rangeReqHandleBeforeParent calling.")
 	rHeader := d.Req.Header.Get("Range")
@@ -85,15 +108,15 @@ func rangeReqHandleBeforeParent(icfg interface{}, d BeforeParentRequestData) {
 		log.Errorf("range_req_handler config '%v' type '%T' expected *rangeRequestConfig\n", icfg, icfg)
 		return
 	}
-	if cfg.Mode == "getfull" {
-		// getfull means get the whole thing from parent/org, but serve the requested range. Just remove the Range header from the upstream request
+	if cfg.Mode == "get_full_serve_range" {
+		// get_full_serve_range means get the whole thing from parent/org, but serve the requested range. Just remove the Range header from the upstream request
 		d.Req.Header.Del("Range")
 	}
 	return
 }
 
 // rangeReqHandleBeforeRespond builds the 206 response
-// Assume all the needed ranges have been put in cache before, which is the truth for "getfull" mode which gets the whole object into cache.
+// Assume all the needed ranges have been put in cache before, which is the truth for "get_full_serve_range" mode which gets the whole object into cache.
 func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 	log.Debugf("rangeReqHandleBeforeRespond calling\n")
 	ictx := d.Context
@@ -103,6 +126,15 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 	}
 	if len(ctx) == 0 {
 		return // there was no (valid) range header
+	}
+
+	cfg, ok := icfg.(*rangeRequestConfig)
+	if !ok {
+		log.Errorf("range_req_handler config '%v' type '%T' expected *rangeRequestConfig\n", icfg, icfg)
+		return
+	}
+	if cfg.Mode == "store_ranges" {
+		return // no need to do anything here.
 	}
 
 	multipartBoundaryString := ""

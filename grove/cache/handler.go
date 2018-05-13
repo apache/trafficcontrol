@@ -222,6 +222,10 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Debugf("Serve got Cache-Control %+v (reqid %v)\n", reqCacheControl, reqID)
 
 	connectionClose := h.connectionClose || remappingProducer.ConnectionClose()
+
+	beforeCacheLookUpData := plugin.BeforeCacheLookUpData{Req: r, DefaultCacheKey: remappingProducer.CacheKey()}
+	h.plugins.OnBeforeCacheLookup(remappingProducer.PluginCfg(), pluginContext, beforeCacheLookUpData, remappingProducer.OverrideCacheKey)
+
 	cacheKey := remappingProducer.CacheKey()
 	retrier := NewRetrier(h, reqHeader, reqTime, reqCacheControl, remappingProducer, reqID)
 
