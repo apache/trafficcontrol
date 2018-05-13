@@ -47,6 +47,7 @@ type Funcs struct {
 	load                LoadFunc
 	startup             StartupFunc
 	onRequest           OnRequestFunc
+	beforeCacheLookUp   BeforeCacheLookupFunc
 	beforeParentRequest BeforeParentRequestFunc
 	beforeRespond       BeforeRespondFunc
 	afterRespond        AfterRespondFunc
@@ -91,6 +92,12 @@ type BeforeRespondData struct {
 	Context   *interface{}
 }
 
+type BeforeCacheLookUpData struct {
+	Req             *http.Request
+	DefaultCacheKey string
+	Context         *interface{}
+}
+
 type AfterRespondData struct {
 	W         http.ResponseWriter
 	Stats     stat.Stats
@@ -105,6 +112,7 @@ type AfterRespondData struct {
 type LoadFunc func(json.RawMessage) interface{}
 type StartupFunc func(icfg interface{}, d StartupData)
 type OnRequestFunc func(icfg interface{}, d OnRequestData) bool
+type BeforeCacheLookupFunc func(icfg interface{}, d BeforeCacheLookUpData, cacheKeyOverRideFunc func(string))
 type BeforeParentRequestFunc func(icfg interface{}, d BeforeParentRequestData)
 type BeforeRespondFunc func(icfg interface{}, d BeforeRespondData)
 type AfterRespondFunc func(icfg interface{}, d AfterRespondData)
@@ -132,6 +140,7 @@ type Plugins interface {
 	LoadFuncs() map[string]LoadFunc
 	OnStartup(cfgs map[string]interface{}, context map[string]*interface{}, d StartupData)
 	OnRequest(cfgs map[string]interface{}, context map[string]*interface{}, d OnRequestData) bool
+	OnBeforeCacheLookup(cfgs map[string]interface{}, context map[string]*interface{}, d BeforeCacheLookUpData, cacheKeyOverrideFunc func(string))
 	OnBeforeParentRequest(cfgs map[string]interface{}, context map[string]*interface{}, d BeforeParentRequestData)
 	OnBeforeRespond(cfgs map[string]interface{}, context map[string]*interface{}, d BeforeRespondData)
 	OnAfterRespond(cfgs map[string]interface{}, context map[string]*interface{}, d AfterRespondData)
@@ -173,6 +182,16 @@ func (ps pluginsSlice) OnRequest(cfgs map[string]interface{}, context map[string
 		}
 	}
 	return false
+}
+
+func (ps pluginsSlice) OnBeforeCacheLookup(cfgs map[string]interface{}, context map[string]*interface{}, d BeforeCacheLookUpData, cacheKeyOverrideFunc func(string)) {
+	for _, p := range ps {
+		if p.funcs.beforeCacheLookUp == nil {
+			continue
+		}
+		d.Context = context[p.name]
+		p.funcs.beforeCacheLookUp(cfgs[p.name], d, cacheKeyOverrideFunc)
+	}
 }
 
 func (ps pluginsSlice) OnBeforeParentRequest(cfgs map[string]interface{}, context map[string]*interface{}, d BeforeParentRequestData) {
