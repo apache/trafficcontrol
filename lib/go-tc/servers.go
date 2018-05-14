@@ -138,3 +138,42 @@ type ServerUpdateStatus struct {
 	ParentPending      bool   `json:"parent_pending"`
 	ParentRevalPending bool   `json:"parent_reval_pending"`
 }
+
+type ServerDetail struct {
+	CacheGroup         *string           `json:"cachegroup" db:"cachegroup"`
+	CDNName            *string           `json:"cdnName" db:"cdn_name"`
+	DeliveryServiceIDs []int64           `json:"deliveryservices,omitempty"`
+	DomainName         *string           `json:"domainName" db:"domain_name"`
+	GUID               *string           `json:"guid" db:"guid"`
+	HardwareInfo       map[string]string `json:"hardwareInfo"`
+	HostName           *string           `json:"hostName" db:"host_name"`
+	HTTPSPort          *int              `json:"httpsPort" db:"https_port"`
+	ID                 *int              `json:"id" db:"id"`
+	ILOIPAddress       *string           `json:"iloIpAddress" db:"ilo_ip_address"`
+	ILOIPGateway       *string           `json:"iloIpGateway" db:"ilo_ip_gateway"`
+	ILOIPNetmask       *string           `json:"iloIpNetmask" db:"ilo_ip_netmask"`
+	ILOPassword        *string           `json:"iloPassword" db:"ilo_password"`
+	ILOUsername        *string           `json:"iloUsername" db:"ilo_username"`
+	InterfaceMTU       *int              `json:"interfaceMtu" db:"interface_mtu"`
+	InterfaceName      *string           `json:"interfaceName" db:"interface_name"`
+	IP6Address         *string           `json:"ip6Address" db:"ip6_address"`
+	IP6Gateway         *string           `json:"ip6Gateway" db:"ip6_gateway"`
+	IPAddress          *string           `json:"ipAddress" db:"ip_address"`
+	IPGateway          *string           `json:"ipGateway" db:"ip_gateway"`
+	IPNetmask          *string           `json:"ipNetmask" db:"ip_netmask"`
+	MgmtIPAddress      *string           `json:"mgmtIpAddress" db:"mgmt_ip_address"`
+	MgmtIPGateway      *string           `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
+	MgmtIPNetmask      *string           `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
+	OfflineReason      *string           `json:"offlineReason" db:"offline_reason"`
+	PhysLocation       *string           `json:"physLocation" db:"phys_location"`
+	Profile            *string           `json:"profile" db:"profile"`
+	ProfileDesc        *string           `json:"profileDesc" db:"profile_desc"`
+	Rack               *string           `json:"rack" db:"rack"`
+	RouterHostName     *string           `json:"routerHostName" db:"router_host_name"`
+	RouterPortName     *string           `json:"routerPortName" db:"router_port_name"`
+	Status             *string           `json:"status" db:"status"`
+	TCPPort            *int              `json:"tcpPort" db:"tcp_port"`
+	Type               string            `json:"type" db:"server_type"`
+	XMPPID             *string           `json:"xmppId" db:"xmpp_id"`
+	XMPPPasswd         *string           `json:"xmppPasswd" db:"xmpp_passwd"`
+}
