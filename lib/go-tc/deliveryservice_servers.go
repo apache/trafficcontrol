@@ -19,21 +19,20 @@ import "time"
 
 // DeliveryServiceServerResponse ...
 type DeliveryServiceServerResponse struct {
+	Orderby  string                  `json:"orderby"`
 	Response []DeliveryServiceServer `json:"response"`
 	Size     int                     `json:"size"`
-	OrderBy  string                  `json:"orderby"`
 	Limit    int                     `json:"limit"`
 }
 
 // DeliveryServiceServer ...
 type DeliveryServiceServer struct {
-	Server          *int             `json:"server"`
-	DeliveryService *int             `json:"deliveryService"`
+	Server          *int             `json:"server" db:"server"`
+	DeliveryService *int             `json:"deliveryService" db:"deliveryservice"`
 	LastUpdated     *TimeNoMod       `json:"lastUpdated" db:"last_updated"`
 }
 
-
-type DssServer struct {
+type DSServer struct {
 	Cachegroup       *string              `json:"cachegroup" db:"cachegroup"`
 	CachegroupID     *int                 `json:"cachegroupId" db:"cachegroup_id"`
 	CDNID            *int                 `json:"cdnId" db:"cdn_id"`
@@ -80,7 +79,7 @@ type DssServer struct {
 }
 
 // DeliveryServiceNullable - a version of the deliveryservice that allows for all fields to be null
-type DssDeliveryService struct {
+type DSSDeliveryService struct {
 	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
 	//
 	Active                   *bool                   `json:"active" db:"active"`
