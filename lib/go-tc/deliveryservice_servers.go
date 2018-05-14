@@ -1,6 +1,8 @@
 package tc
 
-import "time"
+import (
+	"time"
+)
 
 /*
 
@@ -23,6 +25,26 @@ type DeliveryServiceServerResponse struct {
 	Response []DeliveryServiceServer `json:"response"`
 	Size     int                     `json:"size"`
 	Limit    int                     `json:"limit"`
+}
+
+type DSSMapResponse struct {
+		DsId	int					`json:"dsId"`
+		Replace bool				`json:"replace"`
+		Servers []int				`json:"servers"`
+	}
+
+type DSSReplaceResponse struct {
+	Alerts 		[]Alert             `json:"alerts"`
+	Response 	DSSMapResponse		`json:"response"`
+}
+
+type DSServersResponse struct {
+	Response DeliveryServiceServers  `json:"response"`
+}
+
+type DeliveryServiceServers struct {
+	ServerNames []string			`json:"serverNames"`
+	XmlId string 					`json:"xmlId"`
 }
 
 // DeliveryServiceServer ...

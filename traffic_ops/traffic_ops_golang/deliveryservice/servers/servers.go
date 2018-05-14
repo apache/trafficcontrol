@@ -382,9 +382,11 @@ func GetReplaceHandler( db *sqlx.DB ) http.HandlerFunc {
 			return
 		}
 		rollbackTransaction = false
+		resAlerts := []tc.Alert{ tc.Alert{"sever assignement","success"}}
+		repRes := tc.DSSReplaceResponse{resAlerts, tc.DSSMapResponse{*dsId,*payload.Replace,respServers }}
 
 		// marshal the results to the response stream
-		respBts, err := json.Marshal(respServers)
+		respBts, err := json.Marshal(repRes)
 		if err != nil {
 			log.Errorln("Could not marshal the response as expected: ", err)
 			handleErrs(http.StatusInternalServerError, err)
@@ -398,14 +400,11 @@ func GetReplaceHandler( db *sqlx.DB ) http.HandlerFunc {
 }
 
 
-type DeliveryServiceServers struct {
-	ServerNames []string			`json:"serverNames"`
-	XmlId string 					`json:"xmlId"`
-}
 
-type TODeliveryServiceServers DeliveryServiceServers
 
-var serversRef = TODeliveryServiceServers(DeliveryServiceServers{})
+type TODeliveryServiceServers tc.DeliveryServiceServers
+
+var serversRef = TODeliveryServiceServers(tc.DeliveryServiceServers{})
 
 func GetServersRef() *TODeliveryServiceServers {
 	return &serversRef
@@ -539,7 +538,8 @@ func GetCreateHandler( db *sqlx.DB ) http.HandlerFunc {
 		rollbackTransaction = false
 
 		// marshal the results to the response stream
-		payloadResp := struct { Response TODeliveryServiceServers  `json:"response"`}{*payload}
+		tcPayload := tc.DeliveryServiceServers{payload.ServerNames, payload.XmlId}
+		payloadResp := tc.DSServersResponse{tcPayload}
 		respBts, err := json.Marshal(payloadResp)
 		if err != nil {
 			log.Errorln("Could not marshal the response as expected: ", err)
@@ -558,25 +558,16 @@ func selectDeliveryService() string {
 	return query
 }
 
-func selectServerIds() string {
-	query := `SELECT id FROM server WHERE host_name in (?)`
-	return query
-}
-
-func insertQuery() string {
-	query := `INSERT INTO deliveryservice_server (deliveryservice, server) 
-(SELECT d.id, s.id FROM deliveryservice d, server s 
-WHERE d.xml_id=:xml_id and s.host_name=:server) 
-RETURNING server`
-	return query
-}
-
 func insertIdsQuery() string {
 	query := `INSERT INTO deliveryservice_server (deliveryservice, server) 
 VALUES (:id, :server )`
 	return query
 }
 
+func selectServerIds() string {
+	query := `SELECT id FROM server WHERE host_name in (?)`
+	return query
+}
 
 // api/1.1/deliveryservices/{id}/servers|unassigned_servers|eligible
 func GetReadHandler(db *sqlx.DB, filter string) http.HandlerFunc {
@@ -822,16 +813,6 @@ func SDSSelectQuery() string {
 		FROM deliveryservice
 		WHERE id in (SELECT deliveryservice FROM deliverservice_server where server = $1)`
 		return selectStmt
-}
-
-
-func insertFromNamesQuery() string {
-	query := `INSERT INTO deliveryservice_server (
-	deliveryservice,
-	server) VALUES (
-	:select id from deliveryservice where xml_id=:xml_id,
-	select id from server where host_name=:server_name) RETURNING deliveryservice, server, last_updated`
-	return query
 }
 
 func updateQuery() string {
