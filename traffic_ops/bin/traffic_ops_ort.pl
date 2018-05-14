@@ -2651,7 +2651,7 @@ sub open_file_get_contents {
 		chomp($line);
 		( $log_level >> $TRACE ) && print "TRACE Line from cfg file on disk:\t$line.\n";
 		if ( $line =~ m/^\#/ || $line =~ m/^$/ ) {
-			if ( ( $line !~ m/DO NOT EDIT - Generated for / && $line !~ m/$header_comment/ ) && $line !~ m/12M NOTE\:/ ) {
+			if ( ( $line !~ m/DO NOT EDIT - Generated for / && $line !~ m/$header_comment/ ) && $line !~ m/TRAFFIC OPS NOTE\:/ ) {
 				next;
 			}
 		}
@@ -2710,10 +2710,10 @@ sub diff_file_lines {
 					}
 				}
 			}
-			elsif ( ( $line =~ m/DO NOT EDIT - Generated for / && $line =~ m/$header_comment/ ) || $line =~ m/12M NOTE\:/ ) {
+			elsif ( ( $line =~ m/DO NOT EDIT - Generated for / && $line =~ m/$header_comment/ ) || $line =~ m/TRAFFIC OPS NOTE\:/ ) {
 				my $found_it = 0;
 				foreach my $line_disk (@disk_file_lines) {
-					if ( ( $line =~ m/DO NOT EDIT - Generated for / && $line =~ m/$header_comment/ ) || $line =~ m/12M NOTE\:/ ) {
+					if ( ( $line =~ m/DO NOT EDIT - Generated for / && $line =~ m/$header_comment/ ) || $line =~ m/TRAFFIC OPS NOTE\:/ ) {
 						$found_it++;
 					}
 				}
@@ -2741,7 +2741,7 @@ sub diff_file_lines {
 					}
 				}
 			}
-			elsif ( ( $line =~ m/DO NOT EDIT - Generated for / && $line =~ m/$header_comment/ ) || $line =~ m/12M NOTE\:/ ) {
+			elsif ( ( $line =~ m/DO NOT EDIT - Generated for / && $line =~ m/$header_comment/ ) || $line =~ m/TRAFFIC OPS NOTE\:/ ) {
 				next;
 			}
 			else {
