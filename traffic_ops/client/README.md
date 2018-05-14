@@ -7,7 +7,7 @@ _This version of the SDK is deprecated in favor of the newer [TO API v1.3 Client
 `go get github.com/apache/incubator-trafficcontrol/traffic_ops/client`
 
 2. Get a basic TO session started and fetch a list of CDNs
-```
+```go
 package main
 
 import (

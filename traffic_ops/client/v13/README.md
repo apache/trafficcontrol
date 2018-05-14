@@ -6,7 +6,7 @@
 `go get github.com/apache/incubator-trafficcontrol/traffic_ops/client/v13`
 
 2. Get a basic TO session started and fetch a list of CDNs
-```
+```go
 package main
 
 import (
