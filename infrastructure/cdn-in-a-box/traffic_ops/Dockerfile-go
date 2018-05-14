@@ -26,10 +26,11 @@ FROM golang:1.10.1 AS trafficops-build
 RUN apt-get update -y && apt-get install -y libffi-dev ruby-dev rubygems vim libcap2-bin
 
 # TODO: generate BUILD_VERSION file prior -- just copy the file here
+COPY BUILD_NUMBER* VERSION /go/src/github.com/apache/incubator-trafficcontrol/
 COPY .git /go/src/github.com/apache/incubator-trafficcontrol/.git
-COPY VERSION /go/src/github.com/apache/incubator-trafficcontrol/VERSION
-COPY traffic_ops/traffic_ops_golang /go/src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
 COPY lib /go/src/github.com/apache/incubator-trafficcontrol/lib
+COPY traffic_ops/vendor /go/src/github.com/apache/incubator-trafficcontrol/traffic_ops/vendor
+COPY traffic_ops/traffic_ops_golang /go/src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
 
 WORKDIR /go/src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
 
