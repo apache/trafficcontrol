@@ -1,7 +1,7 @@
-#TO Client SDK Golang
+#TO Client Library Golang
 
 ##Getting Started
-1. Obtain the latest version of the SDK
+1. Obtain the latest version of the library
 
 `go get github.com/apache/incubator-trafficcontrol/traffic_ops/client/v13`
 
