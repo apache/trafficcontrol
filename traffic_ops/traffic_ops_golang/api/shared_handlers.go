@@ -432,6 +432,20 @@ func WriteResp(w http.ResponseWriter, r *http.Request, v interface{}) {
 	w.Write(respBts)
 }
 
+// WriteRespVals is like WriteResp, but also takes a map of root-level values to write. The API most commonly needs these for meta-parameters, like size, limit, and orderby.
+// This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
+func WriteRespVals(w http.ResponseWriter, r *http.Request, v interface{}, vals map[string]interface{}) {
+	vals["response"] = v
+	respBts, err := json.Marshal(vals)
+	if err != nil {
+		log.Errorf("marshalling JSON for %T: %v", v, err)
+		tc.GetHandleErrorsFunc(w, r)(http.StatusInternalServerError, errors.New(http.StatusText(http.StatusInternalServerError)))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(respBts)
+}
+
 // HandleErr handles an API error, writing the given statusCode and userErr to the user, and logging the sysErr. If userErr is nil, the text of the HTTP statusCode is written.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func HandleErr(w http.ResponseWriter, r *http.Request, statusCode int, userErr error, sysErr error) {
@@ -462,6 +476,18 @@ func RespWriter(w http.ResponseWriter, r *http.Request) func(v interface{}, err 
 			return
 		}
 		WriteResp(w, r, v)
+	}
+}
+
+// RespWriterVals is like RespWriter, but also takes a map of root-level values to write. The API most commonly needs these for meta-parameters, like size, limit, and orderby.
+// This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
+func RespWriterVals(w http.ResponseWriter, r *http.Request, vals map[string]interface{}) func(v interface{}, err error) {
+	return func(v interface{}, err error) {
+		if err != nil {
+			HandleErr(w, r, http.StatusInternalServerError, nil, err)
+			return
+		}
+		WriteRespVals(w, r, v, vals)
 	}
 }
 

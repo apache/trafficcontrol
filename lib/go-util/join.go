@@ -21,6 +21,8 @@ package util
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
 )
 
 func JoinErrsStr(errs []error) string {
@@ -57,4 +59,8 @@ func JoinErrsSep(errs []error, separator string) error {
 	joinedErrors = joinedErrors[:len(joinedErrors)-len(separator)] // strip trailing separator
 
 	return fmt.Errorf("%s", joinedErrors)
+}
+
+func CamelToSnakeCase(s string) string {
+	return strings.ToLower(regexp.MustCompile("([a-z0-9])([A-Z])").ReplaceAllString(s, "${1}_${2}"))
 }
