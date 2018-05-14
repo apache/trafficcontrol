@@ -1,6 +1,6 @@
-#TO Client Library Golang
+# TO Client Library Golang
 
-##Getting Started
+## Getting Started
 1. Obtain the latest version of the library
 
 `go get github.com/apache/incubator-trafficcontrol/traffic_ops/client/v13`
