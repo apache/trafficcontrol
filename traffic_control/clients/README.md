@@ -1,6 +1,6 @@
-#Traffic Control Client SDK
+#TrafficOps Native Client Libraries
 
-There are two client SDK supported:
+There are two client libraries supported:
 
 ##Python
 * Supported TO API Versions
