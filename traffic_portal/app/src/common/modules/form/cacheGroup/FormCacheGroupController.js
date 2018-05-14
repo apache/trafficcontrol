@@ -20,7 +20,7 @@
 var FormCacheGroupController = function(cacheGroup, $scope, $location, formUtils, locationUtils, cacheGroupService, typeService) {
 
     var getCacheGroups = function() {
-        cacheGroupService.getCacheGroups()
+        cacheGroupService.getCacheGroups({ orderby: 'name' })
             .then(function(result) {
                 $scope.cacheGroups = result;
             });

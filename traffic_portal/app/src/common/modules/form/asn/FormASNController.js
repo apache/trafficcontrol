@@ -20,7 +20,7 @@
 var FormASNController = function(asn, $scope, formUtils, locationUtils, cacheGroupService) {
 
     var getCacheGroups = function() {
-        cacheGroupService.getCacheGroups()
+        cacheGroupService.getCacheGroups({ orderby: 'name' })
             .then(function(result) {
                 $scope.cachegroups = result;
             });

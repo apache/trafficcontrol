@@ -31,7 +31,7 @@ module.exports = angular.module('trafficPortal.private.types.cacheGroups', [])
 								return typeService.getType($stateParams.typeId);
 							},
 							cacheGroups: function($stateParams, cacheGroupService) {
-								return cacheGroupService.getCacheGroups({ type: $stateParams.typeId });
+								return cacheGroupService.getCacheGroups({ type: $stateParams.typeId, orderby: 'name' });
 							}
 						}
 					}
