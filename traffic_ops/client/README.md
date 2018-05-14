@@ -1,7 +1,7 @@
-#TO Client Library Golang
+# TO Client Library Golang
 _This version of the SDK is deprecated in favor of the newer [TO API v1.3 Client Library](https://github.com/apache/incubator-trafficcontrol/tree/master/traffic_ops/client/v13)_
 
-##Getting Started
+## Getting Started
 1. Obtain the latest version of the library
 
 `go get github.com/apache/incubator-trafficcontrol/traffic_ops/client`
