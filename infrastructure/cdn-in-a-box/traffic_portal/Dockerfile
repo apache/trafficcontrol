@@ -17,9 +17,6 @@
 
 FROM node:latest AS trafficportal-build
 
-# Getting the whole source.. should eventually find a way to not include everything (since we don't need it all)
-COPY traffic_portal /traffic_portal
-
 # Installs dependencies
 RUN apt-get update -y && apt-get install -y libffi-dev ruby-dev rubygems vim openssl
 
@@ -34,17 +31,20 @@ RUN npm install -g bower grunt-cli
 # Sure, why not run javascript as root?
 RUN echo '{ "allow_root": true }' > /root/.bowerrc
 
-# The build step, using yum.js (even though we already have apt-get.js) and make.js
-WORKDIR /traffic_portal
-RUN npm install
-RUN bower install
-RUN grunt dist
-
 # Dynamically-generated ssl certificates
 RUN openssl genrsa -des3 -passout pass:dummypassword -out localhost.key 2048 -noout
 RUN openssl rsa -in localhost.key -passin pass:dummypassword -out localhost.key
 RUN openssl req -new -key localhost.key -out localhost.csr -passin pass:dummypassword -subj "/C=US/ST=Colorado/L=Denver/O=Comcast/OU=iaa/CN=localhost/emailAddress=Brennan_Fieck@comcast.com"
 RUN openssl x509 -in localhost.csr -out localhost.crt -req -signkey localhost.key -days 1001
+
+# Getting the whole source.. should eventually find a way to not include everything (since we don't need it all)
+COPY traffic_portal /traffic_portal
+
+# The build step, using yum.js (even though we already have apt-get.js) and make.js
+WORKDIR /traffic_portal
+RUN npm install
+RUN bower install
+RUN grunt dist
 
 
 # Now the actual deployment container
