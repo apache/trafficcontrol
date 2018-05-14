@@ -50,6 +50,7 @@ func getTestOrigins() []v13.Origin {
 		ID:                1,
 		IP6Address:        "dead:beef:cafe::42",
 		IPAddress:         "10.2.3.4",
+		IsPrimary:         false,
 		LastUpdated:       tc.TimeNoMod{Time: time.Now()},
 		Name:              "originName",
 		Port:              443,
@@ -100,6 +101,7 @@ func TestReadOrigins(t *testing.T) {
 			to.ID,
 			to.IP6Address,
 			to.IPAddress,
+			to.IsPrimary,
 			to.LastUpdated,
 			to.Name,
 			to.Port,
@@ -173,14 +175,16 @@ func TestValidate(t *testing.T) {
 
 	// verify that non-null fields are invalid
 	c := TOOrigin{ID: nil,
-		Name:     nil,
-		FQDN:     nil,
-		Protocol: nil,
+		Name:      nil,
+		FQDN:      nil,
+		IsPrimary: nil,
+		Protocol:  nil,
 	}
 	errs := test.SortErrors(c.Validate(nil))
 
 	expectedErrs := []error{
 		errors.New(`'fqdn' cannot be blank`),
+		errors.New(`'isPrimary' is required`),
 		errors.New(`'name' cannot be blank`),
 		errors.New(`'protocol' cannot be blank`),
 	}
@@ -195,6 +199,7 @@ func TestValidate(t *testing.T) {
 	fqdn := "is.a.valid.hostname"
 	ip6 := "dead:beef::42"
 	ip := "1.2.3.4"
+	primary := false
 	port := 65535
 	pro := "http"
 	lu := tc.TimeNoMod{Time: time.Now()}
@@ -203,6 +208,7 @@ func TestValidate(t *testing.T) {
 		FQDN:        &fqdn,
 		IP6Address:  &ip6,
 		IPAddress:   &ip,
+		IsPrimary:   &primary,
 		Port:        &port,
 		Protocol:    &pro,
 		LastUpdated: &lu,
