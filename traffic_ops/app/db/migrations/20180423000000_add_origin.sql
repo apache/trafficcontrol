@@ -23,16 +23,20 @@ CREATE TABLE origin (
     name text UNIQUE NOT NULL,
     fqdn text NOT NULL,
     protocol origin_protocol NOT NULL DEFAULT 'http',
+    is_primary boolean NOT NULL DEFAULT FALSE,
     port bigint,
     ip_address text,
     ip6_address text,
-    deliveryservice bigint REFERENCES deliveryservice(id) ON DELETE SET NULL,
-    coordinate bigint REFERENCES coordinate(id) ON DELETE SET NULL,
-    profile bigint REFERENCES profile(id) ON DELETE SET NULL,
-    cachegroup bigint REFERENCES cachegroup(id) ON DELETE SET NULL,
-    tenant bigint REFERENCES tenant(id) ON DELETE SET NULL,
-    last_updated timestamp WITH time zone NOT NULL DEFAULT now()
+    deliveryservice bigint REFERENCES deliveryservice(id) ON DELETE CASCADE,
+    coordinate bigint REFERENCES coordinate(id) ON DELETE RESTRICT,
+    profile bigint REFERENCES profile(id) ON DELETE RESTRICT,
+    cachegroup bigint REFERENCES cachegroup(id) ON DELETE RESTRICT,
+    tenant bigint REFERENCES tenant(id) ON DELETE RESTRICT,
+    last_updated timestamp WITH time zone NOT NULL DEFAULT now(),
+    CHECK (is_primary = FALSE or deliveryservice IS NOT NULL)
 );
+
+CREATE UNIQUE INDEX origin_is_primary_deliveryservice_constraint ON origin (is_primary, deliveryservice) WHERE is_primary;
 
 CREATE INDEX origin_deliveryservice_fkey ON origin USING btree (deliveryservice);
 CREATE INDEX origin_coordinate_fkey ON origin USING btree (coordinate);

@@ -44,6 +44,7 @@ type Origin struct {
 	ID                int          `json:"id" db:"id"`
 	IP6Address        string       `json:"ip6Address" db:"ip6_address"`
 	IPAddress         string       `json:"ipAddress" db:"ip_address"`
+	IsPrimary         bool         `json:"isPrimary" db:"is_primary"`
 	LastUpdated       tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Name              string       `json:"name" db:"name"`
 	Port              int          `json:"port" db:"port"`
@@ -65,6 +66,7 @@ type OriginNullable struct {
 	ID                *int          `json:"id" db:"id"`
 	IP6Address        *string       `json:"ip6Address" db:"ip6_address"`
 	IPAddress         *string       `json:"ipAddress" db:"ip_address"`
+	IsPrimary         *bool         `json:"isPrimary" db:"is_primary"`
 	LastUpdated       *tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Name              *string       `json:"name" db:"name"`
 	Port              *int          `json:"port" db:"port"`
@@ -114,6 +116,11 @@ func (o *OriginBuilder) IP6Address(ip string) *OriginBuilder {
 
 func (o *OriginBuilder) IPAddress(ip string) *OriginBuilder {
 	o.originBuild.IPAddress = &ip
+	return o
+}
+
+func (o *OriginBuilder) IsPrimary(isPrimary bool) *OriginBuilder {
+	o.originBuild.IsPrimary = &isPrimary
 	return o
 }
 
