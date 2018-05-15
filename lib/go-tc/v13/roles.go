@@ -41,34 +41,6 @@ type Role struct {
 	// ID of the Role
 	//
 	// required: true
-	ID int `json:"id" db:"id`
-
-	// Name of the Role
-	//
-	// required: true
-	Name string `json:"name" db:"name"`
-
-	// Description of the Role
-	//
-	// required: true
-	Description string `json:"description" db:"description"`
-
-	// Priv Level of the Role
-	//
-	// required: true
-	PrivLevel int `json:"privLevel" db:"priv_level"`
-
-	// Capabilities associated with the Role
-	//
-	// required: true
-	Capabilities []string `json:"capabilities" db:"capabilities"`
-}
-
-// RoleNullable ...
-type RoleNullable struct {
-	// ID of the Role
-	//
-	// required: true
 	ID *int `json:"id" db:"id"`
 
 	// Name of the Role

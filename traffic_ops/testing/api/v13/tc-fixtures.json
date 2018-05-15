@@ -456,6 +456,20 @@
             "name": "region2"
         }
     ],
+    "roles": [
+        {
+            "name":"new_admin",
+            "description":"super-user 2",
+            "privLevel":30,
+            "capabilities":["all-read","all-write", "cdn-read"]
+        },
+        {
+            "name":"bad_admin",
+            "description":"super-user 3",
+            "privLevel":30,
+            "capabilities":["all-read","all-write","invalid-capability"]
+        }
+    ],
     "servers": [
         {
             "domainName": "ga.atlanta.kabletown.net",

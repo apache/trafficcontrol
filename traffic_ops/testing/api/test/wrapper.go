@@ -22,6 +22,7 @@ import (
 	"net/http"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/client"
 )
 
@@ -30,10 +31,10 @@ var (
 )
 
 //GetCDN returns a Cdn struct
-func GetCDN() (tc.CDN, error) {
+func GetCDN() (v13.CDN, error) {
 	cdns, err := to.CDNs()
 	if err != nil {
-		return *new(tc.CDN), err
+		return *new(v13.CDN), err
 	}
 	cdn := cdns[0]
 	if cdn.Name == "ALL" {
