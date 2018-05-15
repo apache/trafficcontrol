@@ -94,7 +94,7 @@ func (origin *TOOrigin) Validate(db *sqlx.DB) []error {
 	validateErrs := validation.Errors{
 		"cachegroupId":      validation.Validate(origin.CachegroupID, validation.Min(1)),
 		"coordinateId":      validation.Validate(origin.CoordinateID, validation.Min(1)),
-		"deliveryServiceId": validation.Validate(origin.DeliveryServiceID, validation.Min(1)),
+		"deliveryServiceId": validation.Validate(origin.DeliveryServiceID, validation.NotNil),
 		"fqdn":              validation.Validate(origin.FQDN, validation.Required, is.DNSName),
 		"ip6Address":        validation.Validate(origin.IP6Address, validation.NilOrNotEmpty, is.IPv6),
 		"ipAddress":         validation.Validate(origin.IPAddress, validation.NilOrNotEmpty, is.IPv4),
@@ -257,8 +257,8 @@ o.tenant as tenant_id
 
 FROM origin o
 
+JOIN deliveryservice d ON o.deliveryservice = d.id
 LEFT JOIN cachegroup cg ON o.cachegroup = cg.id
-LEFT JOIN deliveryservice d ON o.deliveryservice = d.id
 LEFT JOIN coordinate c ON o.coordinate = c.id
 LEFT JOIN profile p ON o.profile = p.id
 LEFT JOIN tenant t ON o.tenant = t.id`

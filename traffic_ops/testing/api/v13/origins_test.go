@@ -33,12 +33,14 @@ func TestOrigins(t *testing.T) {
 	defer DeleteTestCacheGroups(t)
 	CreateTestCoordinates(t)
 	defer DeleteTestCoordinates(t)
-	// TODO: add deliveryservices and tenants once their API integration tests are implemented
+	// TODO: add deliveryservices once their API integration tests are implemented
+	// TODO: add tenants once their API integration tests are implemented
+	log.Debugln("TestOrigins() not implemented, requires Delivery Service API tests")
 
-	CreateTestOrigins(t)
-	defer DeleteTestOrigins(t)
-	UpdateTestOrigins(t)
-	GetTestOrigins(t)
+	//CreateTestOrigins(t)
+	//defer DeleteTestOrigins(t)
+	//UpdateTestOrigins(t)
+	//GetTestOrigins(t)
 
 }
 
