@@ -27,10 +27,10 @@ import (
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func ExpectedGetConfigParams(domain string) []CRConfigConfigParameter{
+func ExpectedGetConfigParams(domain string) []CRConfigConfigParameter {
 	return []CRConfigConfigParameter{
 		{"tld.ttls.foo" + *randStr(), *randStr()},
-		{"tld.soa.bar" + *randStr(),  *randStr()},
+		{"tld.soa.bar" + *randStr(), *randStr()},
 		{"domain_name", domain},
 	}
 }
