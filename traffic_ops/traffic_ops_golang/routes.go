@@ -79,17 +79,17 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//ASN: CRUD
 		{1.2, http.MethodGet, `asns/?(\.json)?$`, api.ReadHandler(asn.GetRefTypeV12(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodGet, `asns/?(\.json)?$`, asn.V11ReadAll(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `asns/{id}$`, api.ReadHandler(asn.GetRefTypeV11(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPut, `asns/{id}$`, api.UpdateHandler(asn.GetRefTypeV11(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `asns/{id:[0-9]+}$`, api.ReadHandler(asn.GetRefTypeV11(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPut, `asns/{id:[0-9]+}$`, api.UpdateHandler(asn.GetRefTypeV11(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `asns/?$`, api.CreateHandler(asn.GetRefTypeV11(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodDelete, `asns/{id}$`, api.DeleteHandler(asn.GetRefTypeV11(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `asns/{id:[0-9]+}$`, api.DeleteHandler(asn.GetRefTypeV11(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//CacheGroup: CRUD
 		{1.1, http.MethodGet, `cachegroups/?(\.json)?$`, api.ReadHandler(cachegroup.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `cachegroups/{id}$`, api.ReadHandler(cachegroup.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPut, `cachegroups/{id}$`, api.UpdateHandler(cachegroup.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `cachegroups/{id:[0-9]+}$`, api.ReadHandler(cachegroup.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPut, `cachegroups/{id:[0-9]+}$`, api.UpdateHandler(cachegroup.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `cachegroups/?$`, api.CreateHandler(cachegroup.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodDelete, `cachegroups/{id}$`, api.DeleteHandler(cachegroup.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `cachegroups/{id:[0-9]+}$`, api.DeleteHandler(cachegroup.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//CDN
 		{1.1, http.MethodGet, `cdns/capacity$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
@@ -100,57 +100,57 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//CDN: CRUD
 		{1.1, http.MethodGet, `cdns/?(\.json)?$`, api.ReadHandler(cdn.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `cdns/{id}$`, api.ReadHandler(cdn.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPut, `cdns/{id}$`, api.UpdateHandler(cdn.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `cdns/{id:[0-9]+}$`, api.ReadHandler(cdn.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPut, `cdns/{id:[0-9]+}$`, api.UpdateHandler(cdn.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `cdns/?$`, api.CreateHandler(cdn.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodDelete, `cdns/{id}$`, api.DeleteHandler(cdn.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `cdns/{id:[0-9]+}$`, api.DeleteHandler(cdn.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//CDN: Monitoring: Traffic Monitor
 		{1.1, http.MethodGet, `cdns/{name}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Division: CRUD
 		{1.1, http.MethodGet, `divisions/?(\.json)?$`, api.ReadHandler(division.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `divisions/{id}$`, api.ReadHandler(division.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPut, `divisions/{id}$`, api.UpdateHandler(division.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `divisions/{id:[0-9]+}$`, api.ReadHandler(division.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPut, `divisions/{id:[0-9]+}$`, api.UpdateHandler(division.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `divisions/?$`, api.CreateHandler(division.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodDelete, `divisions/{id}$`, api.DeleteHandler(division.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `divisions/{id:[0-9]+}$`, api.DeleteHandler(division.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//HWInfo
 		{1.1, http.MethodGet, `hwinfo-wip/?(\.json)?$`, hwinfo.HWInfoHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Parameter: CRUD
 		{1.1, http.MethodGet, `parameters/?(\.json)?$`, api.ReadHandler(parameter.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `parameters/{id}$`, api.ReadHandler(parameter.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPut, `parameters/{id}$`, api.UpdateHandler(parameter.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `parameters/{id:[0-9]+}$`, api.ReadHandler(parameter.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPut, `parameters/{id:[0-9]+}$`, api.UpdateHandler(parameter.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `parameters/?$`, api.CreateHandler(parameter.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodDelete, `parameters/{id}$`, api.DeleteHandler(parameter.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `parameters/{id:[0-9]+}$`, api.DeleteHandler(parameter.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//Phys_Location: CRUD
 		{1.1, http.MethodGet, `phys_locations/?(\.json)?$`, api.ReadHandler(physlocation.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `phys_locations/{id}$`, api.ReadHandler(physlocation.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPut, `phys_locations/{id}$`, api.UpdateHandler(physlocation.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `phys_locations/{id:[0-9]+}$`, api.ReadHandler(physlocation.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPut, `phys_locations/{id:[0-9]+}$`, api.UpdateHandler(physlocation.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `phys_locations/?$`, api.CreateHandler(physlocation.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodDelete, `phys_locations/{id}$`, api.DeleteHandler(physlocation.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `phys_locations/{id:[0-9]+}$`, api.DeleteHandler(physlocation.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//Ping
 		{1.1, http.MethodGet, `ping$`, ping.PingHandler(), 0, NoAuth, nil},
 
 		//Profile: CRUD
 		{1.1, http.MethodGet, `profiles/?(\.json)?$`, api.ReadHandler(profile.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `profiles/{id}$`, api.ReadHandler(profile.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPut, `profiles/{id}$`, api.UpdateHandler(profile.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{id:[0-9]+}$`, api.ReadHandler(profile.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPut, `profiles/{id:[0-9]+}$`, api.UpdateHandler(profile.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `profiles/?$`, api.CreateHandler(profile.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodDelete, `profiles/{id}$`, api.DeleteHandler(profile.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `profiles/{id:[0-9]+}$`, api.DeleteHandler(profile.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//Region: CRUD
 		{1.1, http.MethodGet, `regions/?(\.json)?$`, api.ReadHandler(region.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `regions/{id}$`, api.ReadHandler(region.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPut, `regions/{id}$`, api.UpdateHandler(region.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `regions/{id:[0-9]+}$`, api.ReadHandler(region.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPut, `regions/{id:[0-9]+}$`, api.UpdateHandler(region.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `regions/?$`, api.CreateHandler(region.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodDelete, `regions/{id}$`, api.DeleteHandler(region.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `regions/{id:[0-9]+}$`, api.DeleteHandler(region.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		// get all edge servers associated with a delivery service (from deliveryservice_server table)
-		{1.1, http.MethodGet, `deliveryservices/{id}/servers$`, api.ReadHandler(dsserver.GetRefType(), d.DB),auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `deliveryservices/{id:[0-9]+}/servers$`, api.ReadHandler(dsserver.GetRefType(), d.DB),auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Server
 		{1.1, http.MethodGet, `servers/checks$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
@@ -160,27 +160,27 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Server: CRUD
 		{1.1, http.MethodGet, `servers/?(\.json)?$`, api.ReadHandler(server.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `servers/{id}$`, api.ReadHandler(server.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPut, `servers/{id}$`, api.UpdateHandler(server.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `servers/{id:[0-9]+}$`, api.ReadHandler(server.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPut, `servers/{id:[0-9]+}$`, api.UpdateHandler(server.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `servers/?$`, api.CreateHandler(server.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodDelete, `servers/{id}$`, api.DeleteHandler(server.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `servers/{id:[0-9]+}$`, api.DeleteHandler(server.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//Status: CRUD
 		{1.1, http.MethodGet, `statuses/?(\.json)?$`, api.ReadHandler(status.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `statuses/{id}$`, api.ReadHandler(status.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPut, `statuses/{id}$`, api.UpdateHandler(status.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `statuses/{id:[0-9]+}$`, api.ReadHandler(status.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPut, `statuses/{id:[0-9]+}$`, api.UpdateHandler(status.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `statuses/?$`, api.CreateHandler(status.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodDelete, `statuses/{id}$`, api.DeleteHandler(status.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `statuses/{id:[0-9]+}$`, api.DeleteHandler(status.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//System
 		{1.1, http.MethodGet, `system/info/?(\.json)?$`, systeminfo.Handler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Type: CRUD
 		{1.1, http.MethodGet, `types/?(\.json)?$`, api.ReadHandler(types.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `types/{id}$`, api.ReadHandler(types.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPut, `types/{id}$`, api.UpdateHandler(types.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `types/{id:[0-9]+}$`, api.ReadHandler(types.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPut, `types/{id:[0-9]+}$`, api.UpdateHandler(types.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `types/?$`, api.CreateHandler(types.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodDelete, `types/{id}$`, api.DeleteHandler(types.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `types/{id:[0-9]+}$`, api.DeleteHandler(types.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//About
 		{1.3, http.MethodGet, `about/?(\.json)?$`, about.Handler(), auth.PrivLevelReadOnly, Authenticated, nil},
@@ -199,8 +199,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.3, http.MethodDelete, `deliveryservice_requests/?$`, api.DeleteHandler(dsrequest.GetRefType(), d.DB), auth.PrivLevelPortal, Authenticated, nil},
 
 		//Delivery service request: Actions
-		{1.3, http.MethodPut, `deliveryservice_requests/{id}/assign$`, api.UpdateHandler(dsrequest.GetAssignRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.3, http.MethodPut, `deliveryservice_requests/{id}/status$`, api.UpdateHandler(dsrequest.GetStatusRefType(), d.DB), auth.PrivLevelPortal, Authenticated, nil},
+		{1.3, http.MethodPut, `deliveryservice_requests/{id:[0-9]+}/assign$`, api.UpdateHandler(dsrequest.GetAssignRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.3, http.MethodPut, `deliveryservice_requests/{id:[0-9]+}/status$`, api.UpdateHandler(dsrequest.GetStatusRefType(), d.DB), auth.PrivLevelPortal, Authenticated, nil},
 
 		//Delivery service request comment: CRUD
 		{1.3, http.MethodGet, `deliveryservice_request_comments/?(\.json)?$`, api.ReadHandler(comment.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
@@ -215,14 +215,14 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.3, http.MethodDelete, `deliveryservices/{xmlID}/urisignkeys$`, removeDeliveryServiceURIKeysHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
 
 		//Servers
-		{1.3, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.3, http.MethodPost, `servers/{id:[0-9]+}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.3, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//ProfileParameters
 		{1.3, http.MethodGet, `profile_parameters/?(\.json)?$`, api.ReadHandler(profileparameter.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.3, http.MethodGet, `profile_parameters/{id}$`, api.ReadHandler(profileparameter.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodGet, `profile_parameters/{id:[0-9]+}$`, api.ReadHandler(profileparameter.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.3, http.MethodPost, `profile_parameters/?$`, api.CreateHandler(profileparameter.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.3, http.MethodDelete, `profile_parameters/{id}$`, api.DeleteHandler(profileparameter.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.3, http.MethodDelete, `profile_parameters/{id:[0-9]+}$`, api.DeleteHandler(profileparameter.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//SSLKeys deliveryservice endpoints here that are marked  marked as '-wip' need to have tenancy checks added
 		{1.3, http.MethodGet, `deliveryservices-wip/xmlId/{xmlID}/sslkeys$`, getDeliveryServiceSSLKeysByXMLIDHandler(d.DB, d.Config), auth.PrivLevelAdmin, Authenticated, nil},
@@ -232,7 +232,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//CRConfig
 		{1.1, http.MethodGet, `cdns/{cdn}/snapshot/?$`, crconfig.SnapshotGetHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/{cdn}/snapshot/new/?$`, crconfig.Handler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
-		{1.1, http.MethodPut, `cdns/{id}/snapshot/?$`, crconfig.SnapshotHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
+		{1.1, http.MethodPut, `cdns/{id:[0-9]+}/snapshot/?$`, crconfig.SnapshotHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
 		{1.1, http.MethodPut, `snapshot/{cdn}/?$`, crconfig.SnapshotHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
 	}
 
