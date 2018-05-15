@@ -24,12 +24,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
+	"os"
+	"path/filepath"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/basho/riak-go-client"
-	"path/filepath"
-	"os"
 )
 
 // Config reflects the structure of the cdn.conf file
@@ -126,6 +126,7 @@ func (c Config) EventLog() log.LogLocation {
 
 const BlockStartup = true
 const AllowStartup = false
+
 // LoadConfig - reads the config file into the Config struct
 
 func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appVersion string) (Config, []error, bool) {
@@ -170,7 +171,7 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appV
 		}
 	} else { // ldap config location not specified in cdn.conf, check in directory with cdn.conf for backwards compatibility with perl.
 		confDir := filepath.Dir(cdnConfPath)
-		genericLDAPConfPath := filepath.Join(confDir,"cdn.conf")
+		genericLDAPConfPath := filepath.Join(confDir, "cdn.conf")
 		if _, err := os.Stat(genericLDAPConfPath); !os.IsNotExist(err) { // ldap.conf exists and we should error if it is not readable/parseable.
 			cfg.LDAPEnabled, cfg.ConfigLDAP, err = GetLDAPConfig(genericLDAPConfPath)
 			if err != nil { // no config or unparseable, do not enable LDAP

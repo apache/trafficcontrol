@@ -72,6 +72,7 @@ func ConnectToLDAP(cfg *config.ConfigLDAP) (*ldap.Conn, error) {
 func LookupUserDN(username string, cfg *config.ConfigLDAP) (string, bool, error) {
 	l, err := ConnectToLDAP(cfg)
 	if err != nil {
+		log.Errorln("unable to connect to ldap to lookup user")
 		return "", false, err
 	}
 	defer l.Close()
@@ -93,7 +94,7 @@ func LookupUserDN(username string, cfg *config.ConfigLDAP) (string, bool, error)
 
 	sr, err := l.Search(searchRequest)
 	if err != nil {
-		log.Errorln("error issuing search:")
+		log.Errorln("error issuing search: ", err)
 		return "", false, err
 	}
 
@@ -107,6 +108,7 @@ func LookupUserDN(username string, cfg *config.ConfigLDAP) (string, bool, error)
 func AuthenticateUserDN(userDN string, password string, cfg *config.ConfigLDAP) (bool, error) {
 	l, err := ConnectToLDAP(cfg)
 	if err != nil {
+		log.Errorln("unable to connect to ldap to authenticate user")
 		return false, err
 	}
 	defer l.Close()
@@ -114,6 +116,7 @@ func AuthenticateUserDN(userDN string, password string, cfg *config.ConfigLDAP) 
 	// Bind as the user to verify their password
 	err = l.Bind(userDN, password)
 	if err != nil {
+		log.Errorf("unable to bind as user: %+v\n", userDN)
 		return false, err
 	}
 	return true, nil
