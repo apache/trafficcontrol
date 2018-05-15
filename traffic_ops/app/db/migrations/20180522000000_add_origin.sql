@@ -27,13 +27,12 @@ CREATE TABLE origin (
     port bigint,
     ip_address text,
     ip6_address text,
-    deliveryservice bigint REFERENCES deliveryservice(id) ON DELETE CASCADE,
+    deliveryservice bigint NOT NULL REFERENCES deliveryservice(id) ON DELETE CASCADE,
     coordinate bigint REFERENCES coordinate(id) ON DELETE RESTRICT,
     profile bigint REFERENCES profile(id) ON DELETE RESTRICT,
     cachegroup bigint REFERENCES cachegroup(id) ON DELETE RESTRICT,
     tenant bigint REFERENCES tenant(id) ON DELETE RESTRICT,
-    last_updated timestamp WITH time zone NOT NULL DEFAULT now(),
-    CHECK (is_primary = FALSE or deliveryservice IS NOT NULL)
+    last_updated timestamp WITH time zone NOT NULL DEFAULT now()
 );
 
 CREATE UNIQUE INDEX origin_is_primary_deliveryservice_constraint ON origin (is_primary, deliveryservice) WHERE is_primary;

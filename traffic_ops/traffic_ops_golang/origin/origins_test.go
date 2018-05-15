@@ -175,14 +175,16 @@ func TestValidate(t *testing.T) {
 
 	// verify that non-null fields are invalid
 	c := TOOrigin{ID: nil,
-		Name:      nil,
-		FQDN:      nil,
-		IsPrimary: nil,
-		Protocol:  nil,
+		Name:              nil,
+		DeliveryServiceID: nil,
+		FQDN:              nil,
+		IsPrimary:         nil,
+		Protocol:          nil,
 	}
 	errs := test.SortErrors(c.Validate(nil))
 
 	expectedErrs := []error{
+		errors.New(`'deliveryServiceId' is required`),
 		errors.New(`'fqdn' cannot be blank`),
 		errors.New(`'isPrimary' is required`),
 		errors.New(`'name' cannot be blank`),
@@ -204,14 +206,15 @@ func TestValidate(t *testing.T) {
 	pro := "http"
 	lu := tc.TimeNoMod{Time: time.Now()}
 	c = TOOrigin{ID: &id,
-		Name:        &nm,
-		FQDN:        &fqdn,
-		IP6Address:  &ip6,
-		IPAddress:   &ip,
-		IsPrimary:   &primary,
-		Port:        &port,
-		Protocol:    &pro,
-		LastUpdated: &lu,
+		Name:              &nm,
+		DeliveryServiceID: &id,
+		FQDN:              &fqdn,
+		IP6Address:        &ip6,
+		IPAddress:         &ip,
+		IsPrimary:         &primary,
+		Port:              &port,
+		Protocol:          &pro,
+		LastUpdated:       &lu,
 	}
 	expectedErrs = []error{}
 	errs = c.Validate(nil)
