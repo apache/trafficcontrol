@@ -37,7 +37,7 @@ import (
 )
 
 //we need a type alias to define functions on
-type TORole v13.RoleNullable
+type TORole v13.Role
 
 //the refType is passed into the handlers where a copy of its type is used to decode the json.
 var refType = TORole{}
@@ -123,17 +123,6 @@ func (role *TORole) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
-	}
-	if role.Capabilities != nil {
-	CapabilitiesLoop:
-		for _, cap := range *role.Capabilities {
-			for _, userCap := range user.Capabilities {
-				if cap == userCap {
-					continue CapabilitiesLoop
-				}
-			}
-			return errors.New("can not create a role with a capability you do not have: " + cap), tc.ForbiddenError
-		}
 	}
 	if *role.PrivLevel > user.PrivLevel {
 		return errors.New("can not create a role with a higher priv level than your own"), tc.ForbiddenError
@@ -279,18 +268,6 @@ func (role *TORole) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 	if err != nil {
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
-	}
-
-	if role.Capabilities != nil {
-	CapabilitiesLoop:
-		for _, cap := range *role.Capabilities {
-			for _, userCap := range user.Capabilities {
-				if cap == userCap {
-					continue CapabilitiesLoop
-				}
-			}
-			return errors.New("Can not update a role with a capability you do not have: " + cap), tc.ForbiddenError
-		}
 	}
 
 	if *role.PrivLevel > user.PrivLevel {

@@ -311,7 +311,7 @@ func TestGetDSRegexesDomains(t *testing.T) {
 	}
 	defer db.Close()
 
-	cdn := "mycdn"s
+	cdn := "mycdn"
 	domain := "mycdn.invalid"
 
 	expectedMakeDSes := ExpectedMakeDSes()

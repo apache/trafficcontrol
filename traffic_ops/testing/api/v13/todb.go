@@ -61,6 +61,18 @@ func SetupTestData(*sql.DB) error {
 		os.Exit(1)
 	}
 
+	err = SetupCapabilities(db)
+	if err != nil {
+		fmt.Printf("\nError setting up capabilities %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
+		os.Exit(1)
+	}
+
+	err = SetupRoleCapabilities(db)
+	if err != nil {
+		fmt.Printf("\nError setting up roleCapabilities %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
+		os.Exit(1)
+	}
+
 	err = SetupTmusers(db)
 	if err != nil {
 		fmt.Printf("\nError setting up tm_user %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
@@ -82,6 +94,31 @@ INSERT INTO role (id, name, description, priv_level) VALUES (5, 'portal','Portal
 INSERT INTO role (id, name, description, priv_level) VALUES (7, 'federation','Role for Secondary CZF', 15) ON CONFLICT DO NOTHING;
 `
 	err := execSQL(db, sqlStmt, "role")
+	if err != nil {
+		return fmt.Errorf("exec failed %v", err)
+	}
+	return nil
+}
+
+func SetupCapabilities(db *sql.DB) error {
+	sqlStmt := `
+INSERT INTO capability (name, description) VALUES ('all-read','Full read access') ON CONFLICT DO NOTHING;
+INSERT INTO capability (name, description) VALUES ('all-write','Full write access') ON CONFLICT DO NOTHING;
+INSERT INTO capability (name, description) VALUES ('cdn-read','View CDN configuration') ON CONFLICT DO NOTHING;
+`
+	err := execSQL(db, sqlStmt, "capability")
+	if err != nil {
+		return fmt.Errorf("exec failed %v", err)
+	}
+	return nil
+}
+
+func SetupRoleCapabilities(db *sql.DB) error {
+	sqlStmt := `
+INSERT INTO role_capability (role_id, cap_name) VALUES (4,'all-write') ON CONFLICT DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) VALUES (4,'all-read') ON CONFLICT DO NOTHING;
+`
+	err := execSQL(db, sqlStmt, "role_capability")
 	if err != nil {
 		return fmt.Errorf("exec failed %v", err)
 	}
