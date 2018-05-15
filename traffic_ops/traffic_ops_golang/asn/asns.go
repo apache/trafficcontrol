@@ -20,11 +20,11 @@ package asn
  */
 
 import (
-	"errors"
-	"net/http"
-	"fmt"
-	"strconv"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"strconv"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -210,7 +210,9 @@ func V11ReadAll(db *sqlx.DB) http.HandlerFunc {
 			Response struct {
 				ASNs []TOASNV12 `json:"asns"`
 			} `json:"response"`
-		}{Response: struct {ASNs []TOASNV12  `json:"asns"` }{ASNs: asns}}
+		}{Response: struct {
+			ASNs []TOASNV12 `json:"asns"`
+		}{ASNs: asns}}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
