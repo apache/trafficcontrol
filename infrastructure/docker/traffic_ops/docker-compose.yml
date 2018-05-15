@@ -23,7 +23,11 @@
 # and type 'docker-compose up -d'
 #
 # You should then be able to go to https://localhost and test Traffic Ops or the go api.
-# if you make code changes to the Go proxy then you
+# if you make code changes to the Go proxy then you just need to rebuild it and then
+# restart Traffic Ops:
+#
+# bash -c "clear && docker exec trafficops_to_server_1 /bin/bash /etc/init.d/traffic_ops /bin/bash /etc/init.d/traffic_ops start; sleep 5"
+#
 
 ---
 version: '2'
