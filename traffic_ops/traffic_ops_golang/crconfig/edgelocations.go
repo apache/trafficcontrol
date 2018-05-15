@@ -101,7 +101,7 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 			// to keep current default behavior when localizationMethods is unset/empty, enable all current localization methods
 			latlon.LocalizationMethods = []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodCZ, tc.LocalizationMethodDeepCZ}
 		}
-		if ttype == RouterTypeName {
+		if ttype == tc.RouterTypeName {
 			routerLocs[cachegroup] = latlon
 		} else {
 			latlon.BackupLocations.FallbackToClosest = fallbackToClosest
