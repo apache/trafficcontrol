@@ -228,6 +228,10 @@
             "title": "Geolocation Provider",
             "desc": "Choose which Geolocation database provider, company that collects data on the location of IP addresses, to use."
           },
+          "anonymousBlockingEnabled": {
+            "title": "Anonymous Blocking",
+            "desc": "Set to true to enable blocking of anonymous IPs for this delivery service. <b>Note:<b> Requires Geolocation provider's Anonymous IP database."
+          },
           "geoLimit": {
             "title": "Geo Limit",
             "desc": "Some services are intended to be limited by geography. The possible settings are:<br><br><ul><li>None: Do not limit by geography.</li><li>CZF only: If the requesting IP is not in the Coverage Zone File, do not serve the request.</li><li>CZF + US: If the requesting IP is not in the Coverage Zone File or not in the United States, do not serve the request.</li><br>"
