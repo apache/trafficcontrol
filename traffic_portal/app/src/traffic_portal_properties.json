@@ -128,7 +128,8 @@
           "logsEnabled": false,
           "geoProvider": 0,
           "geoLimit": 0,
-          "ccrDnsTtl": 30
+          "ccrDnsTtl": 30,
+          "anonymousBlockingEnabled": false
         },
         "DNS": {
           "routingName": "cdn",
@@ -144,7 +145,8 @@
           "missLong": -87.627778,
           "signingAlgorithm": null,
           "ccrDnsTtl": 30,
-          "regionalGeoBlocking": false
+          "regionalGeoBlocking": false,
+          "anonymousBlockingEnabled": false
         },
         "HTTP": {
           "routingName": "cdn",
@@ -162,7 +164,8 @@
           "missLat": 41.881944,
           "missLong": -87.627778,
           "signingAlgorithm": null,
-          "ccrDnsTtl": 3600
+          "ccrDnsTtl": 3600,
+          "anonymousBlockingEnabled": false
         },
         "STEERING": {
           "dscp": 0,
@@ -172,7 +175,8 @@
           "geoProvider": 0,
           "geoLimit": 0,
           "regionalGeoBlocking": false,
-          "ccrDnsTtl": 30
+          "ccrDnsTtl": 30,
+          "anonymousBlockingEnabled": false
         },
         "descriptions": {
           "_comments": "This is the text used to configure delivery service field titles/descriptions",
