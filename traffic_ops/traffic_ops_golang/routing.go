@@ -138,6 +138,8 @@ func getRouteMiddleware(middlewares []Middleware, authBase AuthBase, authenticat
 	return middlewares
 }
 
+const defaultCapture = `([^/]+)`
+
 // CompileRoutes - takes a map of methods to paths and handlers, and returns a map of methods to CompiledRoutes
 func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 	compiledRoutes := map[string][]CompiledRoute{}
@@ -151,10 +153,16 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 				if close < 0 {
 					panic("malformed route")
 				}
-				param := route[open+1 : close]
-
-				params = append(params, param)
-				route = route[:open] + `([^/]+)` + route[close+1:]
+				paramDef := route[open+1 : close]
+				paramDefParts := strings.Split(paramDef,":")
+				paramName := paramDefParts[0]
+				params = append(params, paramName)
+				if len(paramDefParts) > 1 {
+					paramCapture := `(` + strings.Join(paramDefParts[1:],":") + `)`
+					route = route[:open] + paramCapture + route[close+1:]
+				} else {
+					route = route[:open] + defaultCapture + route[close+1:]
+				}
 			}
 			regex := regexp.MustCompile(route)
 			compiledRoutes[method] = append(compiledRoutes[method], CompiledRoute{Handler: handler, Regex: regex, Params: params})
