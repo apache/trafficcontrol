@@ -28,6 +28,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/basho/riak-go-client"
+	"path/filepath"
+	"os"
 )
 
 // Config reflects the structure of the cdn.conf file
@@ -97,6 +99,8 @@ type ConfigLDAP struct {
 	LDAPTimeoutSecs int    `json:"ldap_timeout_secs"`
 }
 
+const DefaultLDAPTimeoutSecs = 60
+
 // ErrorLog - critical messages
 func (c Config) ErrorLog() log.LogLocation {
 	return log.LogLocation(c.LogLocationError)
@@ -120,53 +124,66 @@ func (c Config) EventLog() log.LogLocation {
 	return log.LogLocation(c.LogLocationEvent)
 }
 
+const BlockStartup = true
+const AllowStartup = false
 // LoadConfig - reads the config file into the Config struct
 
-func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appVersion string) (Config, error) {
+func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appVersion string) (Config, []error, bool) {
 	// load json from cdn.conf
 	confBytes, err := ioutil.ReadFile(cdnConfPath)
 	if err != nil {
-		return Config{}, fmt.Errorf("reading CDN conf '%s': %v", cdnConfPath, err)
+		return Config{}, []error{fmt.Errorf("reading CDN conf '%s': %v", cdnConfPath, err)}, BlockStartup
 	}
 
 	cfg := Config{Version: appVersion}
 	err = json.Unmarshal(confBytes, &cfg)
 	if err != nil {
-		return Config{}, fmt.Errorf("unmarshalling '%s': %v", cdnConfPath, err)
+		return Config{}, []error{fmt.Errorf("unmarshalling '%s': %v", cdnConfPath, err)}, BlockStartup
 	}
 
 	// load json from database.conf
 	dbConfBytes, err := ioutil.ReadFile(dbConfPath)
 	if err != nil {
-		return Config{}, fmt.Errorf("reading db conf '%s': %v", dbConfPath, err)
+		return Config{}, []error{fmt.Errorf("reading db conf '%s': %v", dbConfPath, err)}, BlockStartup
 	}
 	err = json.Unmarshal(dbConfBytes, &cfg.DB)
 	if err != nil {
-		return Config{}, fmt.Errorf("unmarshalling '%s': %v", dbConfPath, err)
+		return Config{}, []error{fmt.Errorf("unmarshalling '%s': %v", dbConfPath, err)}, BlockStartup
 	}
 	cfg, err = ParseConfig(cfg)
 	if err != nil {
-		return Config{}, fmt.Errorf("parsing config '%s': %v", dbConfPath, err)
+		return Config{}, []error{fmt.Errorf("parsing config '%s': %v", dbConfPath, err)}, BlockStartup
 	}
 
 	if riakConfPath != "" {
 		cfg.RiakEnabled, cfg.RiakAuthOptions, err = riaksvc.GetRiakConfig(riakConfPath)
 		if err != nil {
-			return Config{}, fmt.Errorf("parsing config '%s': %v", riakConfPath, err)
+			return Config{}, []error{fmt.Errorf("parsing config '%s': %v", riakConfPath, err)}, BlockStartup
 		}
 	}
-
+	// check for and load ldap.conf
 	if cfg.LDAPConfPath != "" {
 		cfg.LDAPEnabled, cfg.ConfigLDAP, err = GetLDAPConfig(cfg.LDAPConfPath)
 		if err != nil {
 			cfg.LDAPEnabled = false
-			return cfg, fmt.Errorf("parsing ldap config '%s': %v", cfg.LDAPConfPath, err)
+			return cfg, []error{fmt.Errorf("parsing ldap config '%s': %v", cfg.LDAPConfPath, err)}, BlockStartup
 		}
-	} else {
-		cfg.LDAPEnabled = false
+	} else { // ldap config location not specified in cdn.conf, check in directory with cdn.conf for backwards compatibility with perl.
+		confDir := filepath.Dir(cdnConfPath)
+		genericLDAPConfPath := filepath.Join(confDir,"cdn.conf")
+		if _, err := os.Stat(genericLDAPConfPath); !os.IsNotExist(err) { // ldap.conf exists and we should error if it is not readable/parseable.
+			cfg.LDAPEnabled, cfg.ConfigLDAP, err = GetLDAPConfig(genericLDAPConfPath)
+			if err != nil { // no config or unparseable, do not enable LDAP
+				cfg.LDAPEnabled = false
+				return cfg, []error{err}, BlockStartup
+			}
+		} else {
+			cfg.LDAPEnabled = false
+			return cfg, []error{}, AllowStartup // no ldap.conf, disable and allow startup
+		}
 	}
 
-	return cfg, err
+	return cfg, []error{}, AllowStartup
 }
 
 // GetCertPath - extracts path to cert .cert file
@@ -254,7 +271,6 @@ func ParseConfig(cfg Config) (Config, error) {
 func GetLDAPConfig(LDAPConfPath string) (bool, *ConfigLDAP, error) {
 	LDAPConfBytes, err := ioutil.ReadFile(LDAPConfPath)
 	if err != nil {
-
 		return false, nil, fmt.Errorf("reading LDAP conf '%v': %v", LDAPConfPath, err)
 	}
 	LDAPconf, err := getLDAPConf(string(LDAPConfBytes))
@@ -265,7 +281,7 @@ func GetLDAPConfig(LDAPConfPath string) (bool, *ConfigLDAP, error) {
 }
 
 func getLDAPConf(s string) (*ConfigLDAP, error) {
-	ldapConf := ConfigLDAP{}
+	ldapConf := ConfigLDAP{LDAPTimeoutSecs: DefaultLDAPTimeoutSecs} //if the field is not set in the config we use the default instead of 0
 	err := json.Unmarshal([]byte(s), &ldapConf)
 	return &ldapConf, err
 }

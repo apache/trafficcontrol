@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -59,23 +58,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	var cfg config.Config
-	var err error
-	var errorToLog error
-
-	if cfg, err = config.LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName, version); err != nil {
-		if !strings.Contains(err.Error(), "riak conf") {
-			fmt.Println("Error loading config: " + err.Error())
-			return
+	cfg, errsToLog, blockStart := config.LoadConfig(*configFileName, *dbConfigFileName, *riakConfigFileName, version)
+	if blockStart {
+		for _, err := range errsToLog {
+			fmt.Println(err)
 		}
-		errorToLog = err
+		os.Exit(1)
 	}
+
 
 	if err := log.InitCfg(cfg); err != nil {
 		fmt.Printf("Error initializing loggers: %v\n", err)
+		for _, err := range errsToLog {
+			fmt.Println(err)
+		}
 		return
 	}
-	log.Warnln(errorToLog)
+	for _, err := range errsToLog {
+		log.Warnln(err)
+	}
 
 	log.Infof(`Using Config values:
 		Port:                 %s
@@ -100,7 +101,8 @@ func main() {
 		Warn Log:             %s
 		Info Log:             %s
 		Debug Log:            %s
-		Event Log:            %s`, cfg.Port, cfg.DB.Hostname, cfg.DB.User, cfg.DB.DBName, cfg.DB.SSL, cfg.MaxDBConnections, cfg.Listen[0], cfg.Insecure, cfg.CertPath, cfg.KeyPath, time.Duration(cfg.ProxyTimeout)*time.Second, time.Duration(cfg.ProxyKeepAlive)*time.Second, time.Duration(cfg.ProxyTLSTimeout)*time.Second, time.Duration(cfg.ProxyReadHeaderTimeout)*time.Second, time.Duration(cfg.ReadTimeout)*time.Second, time.Duration(cfg.ReadHeaderTimeout)*time.Second, time.Duration(cfg.WriteTimeout)*time.Second, time.Duration(cfg.IdleTimeout)*time.Second, cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug, cfg.LogLocationEvent)
+		Event Log:            %s
+		LDAP Enabled:         %v`, cfg.Port, cfg.DB.Hostname, cfg.DB.User, cfg.DB.DBName, cfg.DB.SSL, cfg.MaxDBConnections, cfg.Listen[0], cfg.Insecure, cfg.CertPath, cfg.KeyPath, time.Duration(cfg.ProxyTimeout)*time.Second, time.Duration(cfg.ProxyKeepAlive)*time.Second, time.Duration(cfg.ProxyTLSTimeout)*time.Second, time.Duration(cfg.ProxyReadHeaderTimeout)*time.Second, time.Duration(cfg.ReadTimeout)*time.Second, time.Duration(cfg.ReadHeaderTimeout)*time.Second, time.Duration(cfg.WriteTimeout)*time.Second, time.Duration(cfg.IdleTimeout)*time.Second, cfg.LogLocationError, cfg.LogLocationWarning, cfg.LogLocationInfo, cfg.LogLocationDebug, cfg.LogLocationEvent, cfg.LDAPEnabled)
 
 	sslStr := "require"
 	if !cfg.DB.SSL {
