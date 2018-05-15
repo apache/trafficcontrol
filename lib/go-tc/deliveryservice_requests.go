@@ -184,8 +184,8 @@ func (r RequestStatus) ValidTransition(to RequestStatus) error {
 			return nil
 		}
 	case RequestStatusComplete:
-		// only pending can be completed.  Completed can never change.
-		if r == RequestStatusPending {
+		// only submitted or pending requests can be completed
+		if r == RequestStatusSubmitted || r == RequestStatusPending {
 			return nil
 		}
 	}

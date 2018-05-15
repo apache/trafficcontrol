@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormNewDeliveryServiceController = function(deliveryService, type, types, $scope, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel) {
+var FormNewDeliveryServiceController = function(deliveryService, type, types, $scope, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel, propertiesModel, userModel) {
 
 	// extends the FormDeliveryServiceController to inherit common methods
 	angular.extend(this, $controller('FormDeliveryServiceController', { deliveryService: deliveryService, dsCurrent: deliveryService, type: type, types: types, $scope: $scope }));
@@ -30,7 +30,39 @@ var FormNewDeliveryServiceController = function(deliveryService, type, types, $s
 		saveLabel: 'Create'
 	};
 
+	var createDeliveryServiceCreateRequest = function(dsRequest, dsRequestComment, autoFulfilled) {
+		deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest).
+			then(
+				function(response) {
+					var comment = {
+						deliveryServiceRequestId: response.id,
+						value: dsRequestComment
+					};
+					var promises = [];
+
+					deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
+						then(
+							function() {
+								if (!autoFulfilled) {
+									messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + dsRequest.deliveryService.xmlId + ' delivery service' } ], true);
+									locationUtils.navigateToPath('/delivery-service-requests');
+								}
+							}
+						);
+
+					if (autoFulfilled) {
+						// assign the ds request
+						promises.push(deliveryServiceRequestService.assignDeliveryServiceRequest(response.id, userModel.user.id));
+						// set the status to 'complete'
+						promises.push(deliveryServiceRequestService.updateDeliveryServiceRequestStatus(response.id, 'complete'));
+					}
+				}
+			);
+	};
+
+
 	$scope.save = function(deliveryService) {
+		// if ds requests are enabled in traffic_portal_properties.json, we'll create a ds request, else just create the ds
 		if ($scope.dsRequestsEnabled) {
 			var params = {
 				title: "Delivery Service Create Request",
@@ -45,35 +77,47 @@ var FormNewDeliveryServiceController = function(deliveryService, type, types, $s
 						return params;
 					},
 					statuses: function() {
-						return [
-							{ id: $scope.DRAFT, name: 'Save as Draft' },
-							{ id: $scope.SUBMITTED, name: 'Submit for Review and Deployment' }
+						var statuses = [
+							{ id: $scope.DRAFT, name: 'Save Request as Draft' },
+							{ id: $scope.SUBMITTED, name: 'Submit Request for Review and Deployment' }
 						];
+						if (userModel.user.roleName == propertiesModel.properties.dsRequests.roleNeededToSkip) {
+							statuses.push({ id: $scope.COMPLETE, name: 'Fulfill Request Immediately' });
+						}
+						return statuses;
 					}
 				}
 			});
 			modalInstance.result.then(function(options) {
+				var status = 'draft';
+				if (options.status.id == $scope.SUBMITTED || options.status.id == $scope.COMPLETE) {
+					status = 'submitted';
+				};
 				var dsRequest = {
 					changeType: 'create',
-					status: (options.status.id == $scope.SUBMITTED) ? 'submitted' : 'draft',
+					status: status,
 					deliveryService: deliveryService
 				};
-				deliveryServiceRequestService.createDeliveryServiceRequest(dsRequest).
-					then(
-						function(response) {
-							var comment = {
-								deliveryServiceRequestId: response.id,
-								value: options.comment
-							};
-							deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
-							then(
-								function() {
-									messageModel.setMessages([ { level: 'success', text: 'Created request to ' + dsRequest.changeType + ' the ' + dsRequest.deliveryService.xmlId + ' delivery service' } ], true);
-									locationUtils.navigateToPath('/delivery-service-requests');
-								}
-							);
-						}
-					);
+				// if the user chooses to complete/fulfill the create request immediately, the ds will be created and behind the
+				// scenes a delivery service request will be created and marked as complete
+				if (options.status.id == $scope.COMPLETE) {
+					deliveryServiceService.createDeliveryService(deliveryService).
+						then(
+							function(result) {
+								createDeliveryServiceCreateRequest(dsRequest, options.comment, true);
+								messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + deliveryService.xmlId + ' ] created' } ], true);
+								locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?type=' + result.data.response[0].type);
+							},
+							function(fault) {
+								$anchorScroll(); // scrolls window to top
+								messageModel.setMessages(fault.data.alerts, false);
+							}
+						);
+
+				} else {
+					createDeliveryServiceCreateRequest(dsRequest, options.comment, false);
+				}
+
 			}, function () {
 				// do nothing
 			});
@@ -94,5 +138,5 @@ var FormNewDeliveryServiceController = function(deliveryService, type, types, $s
 
 };
 
-FormNewDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel'];
+FormNewDeliveryServiceController.$inject = ['deliveryService', 'type', 'types', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService', 'deliveryServiceRequestService', 'messageModel', 'propertiesModel', 'userModel'];
 module.exports = FormNewDeliveryServiceController;

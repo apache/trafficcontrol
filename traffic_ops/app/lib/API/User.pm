@@ -536,7 +536,7 @@ sub current {
 	my @data;
 	my $current_username = $self->current_user()->{username};
 	if ( &is_ldap($self) ) {
-		my $role = $self->db->resultset('Role')->search( { name => "read-only" } )->get_column('id')->single;
+		my $role = $self->db->resultset('Role')->search( { name => "read-only" } )->single;
 
 		push(
 			@data, {
@@ -545,7 +545,8 @@ sub current {
 				"tenantId"        => undef,
 				"tenant"          => undef,
 				"publicSshKey"    => "",
-				"role"            => $role,
+				"role"            => $role->id,
+				"roleName"        => $role->name,
 				"uid"             => "0",
 				"gid"             => "0",
 				"company"         => "",
@@ -574,6 +575,7 @@ sub current {
 					"username"        => $row->username,
 					"publicSshKey"    => $row->public_ssh_key,
 					"role"            => $row->role->id,
+					"roleName"        => $row->role->name,
 					"uid"             => $row->uid,
 					"gid"             => $row->gid,
 					"company"         => $row->company,
