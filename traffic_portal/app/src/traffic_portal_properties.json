@@ -39,8 +39,9 @@
       }
     },
     "dsRequests": {
-      "_comments": "Should all delivery service changes go through the delivery service review process?",
-      "enabled": false
+      "_comments": "Should all delivery service changes go through the delivery service review process? You can also provide a role that will skip the process.",
+      "enabled": false,
+      "roleNeededToSkip": "admin"
     },
     "cacheChecks": {
       "_comments": "These are configurable properties for the cache checks view. The data for the cache checks view is derived from TO extensions. The extensions array should include an entry for each of your extensions or you can check GET api/1.3/servers/checks to see which checks you have configured.",
