@@ -28,7 +28,7 @@ module.exports = angular.module('trafficPortal.private.cacheGroups.list', [])
                         controller: 'TableCacheGroupsController',
                         resolve: {
                             cacheGroups: function(cacheGroupService) {
-                                return cacheGroupService.getCacheGroups();
+                                return cacheGroupService.getCacheGroups({ orderby: 'name' });
                             }
                         }
                     }

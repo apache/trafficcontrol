@@ -1,0 +1,18 @@
+{
+
+   "customer": "Cisco",
+   "version": "1",
+   "date" : "2017-05-23 03:28:25",
+   "name": "Anonymous IP Blocking Policy",
+
+   "anonymousIp": { "blockAnonymousVPN": true,
+                    "blockHostingProvider": true, 
+                    "blockPublicProxy": true,
+                    "blockTorExitNode": false},
+                    
+   "ip4Whitelist": ["192.168.30.0/24", "10.0.2.0/24", "5.34.32.0/24"],
+   
+   "ip6Whitelist": ["2001:550:90a::/48", "::1/128"],
+   
+   "redirectUrl": "http://youvebeenblocked.com"
+}

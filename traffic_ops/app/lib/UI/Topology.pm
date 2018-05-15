@@ -493,6 +493,7 @@ sub gen_crconfig_json {
             }
 
             $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'regionalGeoBlocking'} = $row->regional_geo_blocking ? 'true' : 'false';
+            $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'anonymousBlockingEnabled'} = $row->anonymous_blocking_enabled ? 'true' : 'false';
 
             if ( defined($row->geo_limit) && $row->geo_limit ne 0 ) {
                 $data_obj->{'deliveryServices'}->{ $row->xml_id }->{'geoLimitRedirectURL'} =
@@ -773,6 +774,9 @@ sub stringify_ds {
     }
     if ( defined( $ds->{'regionalGeoBlocking'} ) ) {
         $string .= "|Regional_Geoblocking:" . $ds->{'regionalGeoBlocking'};
+    }
+    if ( defined( $ds->{'anonymousBlockingEnabled'} ) ) {
+        $string .= "|Anonymous_Blocking:" . $ds->{'anonymousBlockingEnabled'};
     }
     if ( defined( $ds->{'geoLimitRedirectURL'}) ) {
 		$string .= "|Geolimit_Redirect_URL:" . $ds->{'geoLimitRedirectURL'};

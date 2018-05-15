@@ -33,8 +33,6 @@ import java.util.Set;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
@@ -49,9 +47,11 @@ import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultDetails;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.comcast.cdn.traffic_control.traffic_router.core.util.StringProtector;
 
-@SuppressWarnings({"PMD.TooManyFields","PMD.CyclomaticComplexity"})
+@SuppressWarnings({"PMD.TooManyFields","PMD.CyclomaticComplexity", "PMD.AvoidDuplicateLiterals"})
 public class DeliveryService {
 	protected static final Logger LOGGER = Logger.getLogger(DeliveryService.class);
 	private final String id;
@@ -86,6 +86,7 @@ public class DeliveryService {
 	private final Set<String> requestHeaders = new HashSet<String>();
 	private final boolean regionalGeoEnabled;
 	private final String geolocationProvider;
+	private final boolean anonymousIpEnabled;
 	private final boolean sslEnabled;
 	private static final int STANDARD_HTTP_PORT = 80;
 	private static final int STANDARD_HTTPS_PORT = 443;
@@ -145,6 +146,7 @@ public class DeliveryService {
 			LOGGER.info("DeliveryService '" + id + "' will use default geolocation provider Maxmind");
 		}
 		sslEnabled = JsonUtils.optBoolean(dsJo, "sslEnabled");
+		this.anonymousIpEnabled = JsonUtils.optBoolean(dsJo, "anonymousBlockingEnabled");
 
 		final JsonNode protocol = dsJo.get("protocol");
 		acceptHttp = JsonUtils.optBoolean(protocol, "acceptHttp", true);
@@ -615,6 +617,10 @@ public class DeliveryService {
 
 	public String getGeolocationProvider() {
 		return geolocationProvider;
+	}
+
+	public boolean isAnonymousIpEnabled() {
+		return anonymousIpEnabled;
 	}
 
 	public List<CacheLocation> filterAvailableLocations(final Collection<CacheLocation> cacheLocations) {

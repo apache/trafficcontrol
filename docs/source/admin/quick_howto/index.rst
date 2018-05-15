@@ -27,6 +27,7 @@ Traffic Ops
   dnssec.rst
   federations.rst
   regionalgeo.rst
+  anonymous_blocking.rst
   steering.rst
 
 Traffic Portal

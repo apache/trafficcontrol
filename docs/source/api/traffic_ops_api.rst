@@ -190,3 +190,7 @@ The 3 most common errors returned by Traffic Ops are:
 
   The rest of the API documentation will only document the ``200 OK`` case, where no errors have occured.
 
+TrafficOps Native Client Libraries
+----------------------------------
+
+TrafficOps client libraries are available in both Golang and Python.  You can read more about them at https://github.com/apache/incubator-trafficcontrol/tree/master/traffic_control/clients
