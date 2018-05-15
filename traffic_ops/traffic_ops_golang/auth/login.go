@@ -105,12 +105,12 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 func CheckLocalUserIsAllowed(form passwordForm, db *sqlx.DB) (bool, error) {
 	var roleName string
-	err := db.Get(&roleName, "SELECT role.name FROM role INNER JOIN tm_user ON tm_user.role = role.id where username=$1",form.Username)
+	err := db.Get(&roleName, "SELECT role.name FROM role INNER JOIN tm_user ON tm_user.role = role.id where username=$1", form.Username)
 	if err != nil {
 		return false, err
 	}
 	if roleName != "" {
-		if roleName != disallowed{ //relies on unchanging role name assumption.
+		if roleName != disallowed { //relies on unchanging role name assumption.
 			return true, nil
 		}
 	}

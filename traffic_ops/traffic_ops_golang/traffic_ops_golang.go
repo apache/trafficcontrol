@@ -66,7 +66,6 @@ func main() {
 		os.Exit(1)
 	}
 
-
 	if err := log.InitCfg(cfg); err != nil {
 		fmt.Printf("Error initializing loggers: %v\n", err)
 		for _, err := range errsToLog {
