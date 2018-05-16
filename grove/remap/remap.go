@@ -29,6 +29,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/grove/icache"
 	"github.com/apache/incubator-trafficcontrol/grove/plugin"
 	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
+	"github.com/apache/incubator-trafficcontrol/grove/rfc"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -336,7 +337,7 @@ func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.LoadFunc,
 	if remapRulesJSON.RetryCodes != nil {
 		remapRules.RetryCodes = make(map[int]struct{}, len(*remapRulesJSON.RetryCodes))
 		for _, code := range *remapRulesJSON.RetryCodes {
-			if _, ok := ValidHTTPCodes[code]; !ok {
+			if _, ok := rfc.ValidHTTPCodes[code]; !ok {
 				return nil, nil, nil, fmt.Errorf("error parsing rules: retry code invalid: %v", code)
 			}
 			remapRules.RetryCodes[code] = struct{}{}
@@ -392,7 +393,7 @@ func LoadRemapRules(path string, pluginConfigLoaders map[string]plugin.LoadFunc,
 		if jsonRule.RetryCodes != nil {
 			rule.RetryCodes = make(map[int]struct{}, len(*jsonRule.RetryCodes))
 			for _, code := range *jsonRule.RetryCodes {
-				if _, ok := ValidHTTPCodes[code]; !ok {
+				if _, ok := rfc.ValidHTTPCodes[code]; !ok {
 					return nil, nil, nil, fmt.Errorf("error parsing rule %v retry code invalid: %v", rule.Name, code)
 				}
 				rule.RetryCodes[code] = struct{}{}
@@ -511,7 +512,7 @@ func makeTo(tosJSON []RemapRuleToJSON, rule remapdata.RemapRule, baseTransport *
 		if toJSON.RetryCodes != nil {
 			to.RetryCodes = make(map[int]struct{}, len(*toJSON.RetryCodes))
 			for _, code := range *toJSON.RetryCodes {
-				if _, ok := ValidHTTPCodes[code]; !ok {
+				if _, ok := rfc.ValidHTTPCodes[code]; !ok {
 					return nil, fmt.Errorf("error parsing to %v retry code invalid: %v", to.URL, code)
 				}
 				to.RetryCodes[code] = struct{}{}

@@ -23,6 +23,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/grove/cacheobj"
 	"github.com/apache/incubator-trafficcontrol/grove/icache"
 	"github.com/apache/incubator-trafficcontrol/grove/remap"
+	"github.com/apache/incubator-trafficcontrol/grove/rfc"
 	"github.com/apache/incubator-trafficcontrol/grove/thread"
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 
@@ -56,7 +57,7 @@ func (r *Retrier) Get(req *http.Request, obj *cacheobj.CacheObj) (*cacheobj.Cach
 	retryGetFunc := func(remapping remap.Remapping, retryFailures bool, obj *cacheobj.CacheObj) *cacheobj.CacheObj {
 		// return true for Revalidate, and issue revalidate requests separately.
 		canReuse := func(cacheObj *cacheobj.CacheObj) bool {
-			return remap.CanReuse(r.ReqHdr, r.ReqCacheControl, cacheObj, r.H.strictRFC, true)
+			return rfc.CanReuse(r.ReqHdr, r.ReqCacheControl, cacheObj, r.H.strictRFC, true)
 		}
 		getAndCache := func() *cacheobj.CacheObj {
 			return GetAndCache(remapping.Request, remapping.ProxyURL, remapping.CacheKey, remapping.Name, remapping.Request.Header, r.ReqTime, r.H.strictRFC, remapping.Cache, r.H.ruleThrottlers[remapping.Name], obj, remapping.Timeout, retryFailures, remapping.RetryNum, remapping.RetryCodes, remapping.Transport, r.ReqID)
@@ -166,7 +167,7 @@ func GetAndCache(
 		if revalidateObj == nil || respCode != http.StatusNotModified {
 			log.Debugf("GetAndCache new %v (reqid %v)\n", cacheKey, reqID)
 			obj = cacheobj.New(reqHeader, respBody, respCode, respCode, proxyURLStr, respHeader, reqTime, reqRespTime, respRespTime, lastModified)
-			if !remap.CanCache(req.Method, reqHeader, respCode, respHeader, strictRFC) {
+			if !rfc.CanCache(req.Method, reqHeader, respCode, respHeader, strictRFC) {
 				return obj // return without caching
 			}
 		} else {
