@@ -20,11 +20,13 @@ package api
  */
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -73,6 +75,13 @@ func CreateChangeLog(level string, action string, i Identifier, user auth.Curren
 	if err != nil {
 		log.Errorf("received error: %++v from audit log insertion", err)
 		return err
+	}
+	return nil
+}
+
+func CreateChangeLogRaw(level string, message string, user auth.CurrentUser, db *sql.DB) error {
+	if _, err := db.Exec(`INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`, level, message, user.ID); err != nil {
+		return fmt.Errorf("inserting change log level '%v' message '%v' user '%v': %v", level, message, user.ID, err)
 	}
 	return nil
 }
