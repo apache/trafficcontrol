@@ -66,7 +66,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.hostName), 'has-feedback': hasError(serverForm.hostName)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Hostname *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="hostName" type="text" class="form-control" ng-model="server.hostName" ng-maxlength="45" ng-pattern="/^([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/" required autofocus>
+                    <input name="hostName" type="text" class="form-control" ng-model="server.hostName" ng-maxlength="100" ng-pattern="/^([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.hostName, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.hostName, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.hostName, 'pattern')">Invalid</small>
@@ -76,7 +76,7 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(serverForm.domainName), 'has-feedback': hasError(serverForm.domainName)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Domain name *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="domainName" type="text" class="form-control" ng-model="server.domainName" ng-maxlength="45" ng-pattern="/^\S*$/" required autofocus>
+                    <input name="domainName" type="text" class="form-control" ng-model="server.domainName" ng-maxlength="100" ng-pattern="/^\S*$/" required autofocus>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.domainName, 'required')">Required</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.domainName, 'maxlength')">Too Long</small>
                     <small class="input-error" ng-show="hasPropertyError(serverForm.domainName, 'pattern')">Invalid</small>
