@@ -22,7 +22,6 @@ import (
 	"strings"
 	"time"
 
-	//"github.com/apache/incubator-trafficcontrol/grove/rfc"
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
