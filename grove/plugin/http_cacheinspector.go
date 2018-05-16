@@ -26,6 +26,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/grove/web"
 	"time"
 
+	"github.com/apache/incubator-trafficcontrol/grove/rfc"
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 )
 
@@ -178,7 +179,7 @@ func cacheinspect(icfg interface{}, d OnRequestData) bool {
 
 				cacheObject, _ := d.Stats.CachePeek(key, cName)
 				age := time.Now().Sub(cacheObject.ReqRespTime)
-				freshFor := web.FreshFor(cacheObject.RespHeaders, cacheObject.RespCacheControl, cacheObject.ReqRespTime, cacheObject.RespRespTime)
+				freshFor := rfc.FreshFor(cacheObject.RespHeaders, cacheObject.RespCacheControl, cacheObject.ReqRespTime, cacheObject.RespRespTime)
 				w.Write([]byte(fmt.Sprintf("     %8d%8d%10s%22v%22v%12d      <a href=\"http://%s%s?key=%s&cache=%s\">%s</a>\n",
 					i, cacheObject.Code, bytefmt.ByteSize(cacheObject.Size), age, freshFor, cacheObject.HitCount, req.Host, CacheStatsEndpoint, url.QueryEscape(key), cName, key)))
 			}
