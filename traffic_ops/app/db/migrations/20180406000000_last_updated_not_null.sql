@@ -70,9 +70,6 @@ ALTER TABLE job ALTER COLUMN last_updated SET NOT NULL;
 UPDATE job_agent SET last_updated = now() WHERE last_updated IS NULL;
 ALTER TABLE job_agent ALTER COLUMN last_updated SET NOT NULL;
 
-UPDATE job_result SET last_updated = now() WHERE last_updated IS NULL;
-ALTER TABLE job_result ALTER COLUMN last_updated SET NOT NULL;
-
 UPDATE job_status SET last_updated = now() WHERE last_updated IS NULL;
 ALTER TABLE job_status ALTER COLUMN last_updated SET NOT NULL;
 
@@ -155,7 +152,6 @@ ALTER TABLE federation_tmuser ALTER COLUMN last_updated DROP NOT NULL;
 ALTER TABLE hwinfo ALTER COLUMN last_updated DROP NOT NULL;
 ALTER TABLE job ALTER COLUMN last_updated DROP NOT NULL;
 ALTER TABLE job_agent ALTER COLUMN last_updated DROP NOT NULL;
-ALTER TABLE job_result ALTER COLUMN last_updated DROP NOT NULL;
 ALTER TABLE job_status ALTER COLUMN last_updated DROP NOT NULL;
 ALTER TABLE log ALTER COLUMN last_updated DROP NOT NULL;
 ALTER TABLE parameter ALTER COLUMN last_updated DROP NOT NULL;
