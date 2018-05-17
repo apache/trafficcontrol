@@ -72,53 +72,60 @@ public class Fetcher {
 	}
 
 	protected HttpURLConnection getConnection(final String url, final String data, final String requestMethod, final long lastFetchTime) throws IOException {
-		String method = GET_STR;
+		HttpURLConnection http = null;
+		try {
+			String method = GET_STR;
 
-		if (requestMethod != null) {
-			method = requestMethod;
-		}
-
-		LOGGER.info(method + "ing: " + url + "; timeout is " + timeout);
-
-		final URLConnection connection = new URL(url).openConnection();
-
-		connection.setIfModifiedSince(lastFetchTime);
-
-		if (timeout != 0) {
-			connection.setConnectTimeout(timeout);
-			connection.setReadTimeout(timeout);
-		}
-
-		final HttpURLConnection http = (HttpURLConnection) connection;
-
-		if (connection instanceof HttpsURLConnection) {
-			final HttpsURLConnection https = (HttpsURLConnection) connection;
-			https.setHostnameVerifier(new HostnameVerifier() {
-				@Override
-				public boolean verify(final String arg0, final SSLSession arg1) {
-					return true;
-				}
-			});
-		}
-
-		http.setInstanceFollowRedirects(false);
-		http.setRequestMethod(method);
-		http.setAllowUserInteraction(true);
-		http.addRequestProperty("Accept-Encoding", GZIP_ENCODING_STRING);
-
-		for (final String key : requestProps.keySet()) {
-			http.addRequestProperty(key, requestProps.get(key));
-		}
-
-		if (method.equals(POST_STR) && data != null) {
-			http.setDoOutput(true); // Triggers POST.
-
-			try (final OutputStream output = http.getOutputStream()) {
-				output.write(data.getBytes(UTF8_STR));
+			if (requestMethod != null) {
+				method = requestMethod;
 			}
-		}
 
-		connection.connect();
+			LOGGER.info(method + "ing: " + url + "; timeout is " + timeout);
+
+			final URLConnection connection = new URL(url).openConnection();
+
+			connection.setIfModifiedSince(lastFetchTime);
+
+			if (timeout != 0) {
+				connection.setConnectTimeout(timeout);
+				connection.setReadTimeout(timeout);
+			}
+
+			http = (HttpURLConnection) connection;
+
+			if (connection instanceof HttpsURLConnection) {
+				final HttpsURLConnection https = (HttpsURLConnection) connection;
+				https.setHostnameVerifier(new HostnameVerifier() {
+					@Override
+					public boolean verify(final String arg0, final SSLSession arg1) {
+						return true;
+					}
+				});
+			}
+
+			http.setInstanceFollowRedirects(false);
+			http.setRequestMethod(method);
+			http.setAllowUserInteraction(true);
+			http.addRequestProperty("Accept-Encoding", GZIP_ENCODING_STRING);
+
+			for (final String key : requestProps.keySet()) {
+				http.addRequestProperty(key, requestProps.get(key));
+			}
+
+			if (method.equals(POST_STR) && data != null) {
+				http.setDoOutput(true); // Triggers POST.
+
+				try (final OutputStream output = http.getOutputStream()) {
+					output.write(data.getBytes(UTF8_STR));
+				}
+			}
+
+			connection.connect();
+
+		} catch (Exception e) {
+			LOGGER.error("Failed Http Request to " + http.getURL() + " Status " + http.getResponseCode());
+			http.disconnect();
+		}
 
 		return http;
 	}
@@ -133,44 +140,50 @@ public class Fetcher {
 
 	private String fetchIfModifiedSince(final String url, final String data, final String method, final long lastFetchTime) throws IOException {
 		final OutputStream out = null;
+		String ifModifiedSince = null;
 		try {
 			final HttpURLConnection connection = getConnection(url, data, method, lastFetchTime);
+			if (connection != null) {
+				if (connection.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
+					return null;
+				}
 
-			if (connection.getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
-				return null;
+				if (connection.getResponseCode() > 399) {
+					LOGGER.warn("Failed Http Request to " + url + " Status " + connection.getResponseCode());
+					return null;
+				}
+
+				final StringBuilder sb = new StringBuilder();
+				createStringBuilderFromResponse(sb, connection);
+				ifModifiedSince = sb.toString();
 			}
 
-			if (connection.getResponseCode() > 399) {
-				LOGGER.warn("Failed Http Request to " + url + " Status " + connection.getResponseCode());
-				return null;
-			}
-
-			final StringBuilder sb = new StringBuilder();
-			createStringBuilderFromResponse(sb, connection);
-
-			return sb.toString();
 		} finally {
 			IOUtils.closeQuietly(out);
 		}
+		return ifModifiedSince;
 	}
 
 	public int getIfModifiedSince(final String url, final long lastFetchTime, final StringBuilder stringBuilder) throws IOException {
 		final OutputStream out = null;
+		int status = 0;
 		try {
 			final HttpURLConnection connection = getConnection(url, null, "GET", lastFetchTime);
-			final int status = connection.getResponseCode();
+			if (connection != null) {
+				status = connection.getResponseCode();
 
-			if (status == HttpURLConnection.HTTP_NOT_MODIFIED) {
-				return status;
+				if (status == HttpURLConnection.HTTP_NOT_MODIFIED) {
+					return status;
+				}
+
+				if (connection.getResponseCode() > 399) {
+					LOGGER.warn("Failed Http Request to " + url + " Status " + connection.getResponseCode());
+					return status;
+				}
+
+				createStringBuilderFromResponse(stringBuilder, connection);
+
 			}
-
-			if (connection.getResponseCode() > 399) {
-				LOGGER.warn("Failed Http Request to " + url + " Status " + connection.getResponseCode());
-				return status;
-			}
-
-			createStringBuilderFromResponse(stringBuilder, connection);
-
 			return status;
 		} finally {
 			IOUtils.closeQuietly(out);
