@@ -6,7 +6,7 @@ Simple Java API client for communicating with the TrafficOps API
 
 ### Create Traffic Ops session
 
-*Using a provided URI*
+**Using a provided URI**
 
 ```java
 //Construct TrafficOps Session
@@ -15,7 +15,7 @@ final TOSession.Builder toSessionBuilder = TOSession.builder()
 	.fromURI(trafficOpsUri);
 final TOSession toSession = toSessionBuilder.build();
 ```
-*Explicitly set properties *
+**Explicitly set properties**
 
 ```java
 //Construct TrafficOps Session
@@ -45,13 +45,13 @@ try {
 
 ### Getting a list of All Servers
 
-*Synchronously*
+**Synchronously**
 
 ```java
 final CollectionResponse response = toSession.getServers().get();
 ```
 
-*Asynchronously*
+**Asynchronously**
 
 ```java
 toSession
