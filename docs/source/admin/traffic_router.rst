@@ -228,41 +228,44 @@ Fields Always Present
 +-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |FED          |_*DNS Only*_ The result was obtained through federated coverage zone data outside of any delivery service                                                               |
 +-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|GEO_REDIRECT |The request was redirected (302) based on the National Geo blocking (Geo Limit Redirect URL) configured on the Delivery Service.                                                                 |
+|GEO_REDIRECT |The request was redirected (302) based on the National Geo blocking (Geo Limit Redirect URL) configured on the Delivery Service.                                        |
 +-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|RGALT        |The request was redirected (302) to the Regional Geo blocking URL. Regional Geo blocking is enabled on the Delivery Service and is configured through the regional_geoblock.polling.url setting for the Traffic Router profile.      |
+|RGALT        |The request was redirected (302) to the Regional Geo blocking URL. Regional Geo blocking is enabled on the Delivery Service and is configured through the               |
+|             |regional_geoblock.polling.url setting for the Traffic Router profile.                                                                                                   |
 +-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|RGDENY       |_*DNS Only*_ The result was obtained through federated coverage zone data outside of any delivery service The request was regionally blocked because there was no rule for the request made.    |
+|RGDENY       |_*DNS Only*_ The result was obtained through federated coverage zone data outside of any delivery service The request was regionally blocked because there was no rule  |
+|             |for the request made.                                                                                                                                                   |
 +-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|-            |The request was not redirected. This is usually a result of a DNS request to the Traffic Router or an explicit denial for that request.                                                          |
+|-            |The request was not redirected. This is usually a result of a DNS request to the Traffic Router or an explicit denial for that request.                                 |
 +-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
 **rdtl meanings**
 
-+--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
-|Name                      |Meaning                                                                                                                                     |
-+==========================+============================================================================================================================================+
-|DS_NOT_FOUND              |Always goes with rtypes STATIC_ROUTE and DS_MISS                                                                                            |
-+--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
-|DS_BYPASS                 |Used Bypass Destination for Redirect of Delivery Service                                                                                    |
-+--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
-|DS_NO_BYPASS              |No valid Bypass Destination is configured for the matched Delivery Service and the delivery service does not have the requested resource    |
-+--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
-|DS_CZ_ONLY                |The selected Delivery Service only supports resource lookup based on Coverage Zone data                                                     |
-+--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
-|DS_CLIENT_GEO_UNSUPPORTED |Traffic Router did not find a resource supported by coverage zone data and was unable to determine the geolocation of the requesting client |
-+--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
-|GEO_NO_CACHE_FOUND        |Traffic Router could not find a resource via geolocation data based on the requesting client's geolocation                                  |
-+--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
-|NO_DETAILS                |This entry is for a standard request.                                  |
-+--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
-|REGIONAL_GEO_ALTERNATE_WITHOUT_CACHE        |This goes with the rtype RGDENY. The URL is being regionally Geo blocked.                                  |
-+--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
-|REGIONAL_GEO_NO_RULE      |The request was blocked because there was no rule in the Delivery Service for the request.                                  |
-+--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
-|-                         |The request was not redirected. This is usually a result of a DNS request to the Traffic Router or an explicit denial for that request.          |
-+--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
++---------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+|Name                                   |Meaning                                                                                                                                     |
++====================================================================================================================================================================================+
+|DS_NOT_FOUND                           |Always goes with rtypes STATIC_ROUTE and DS_MISS                                                                                            |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|DS_BYPASS                              |Used Bypass Destination for Redirect of Delivery Service                                                                                    |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|DS_NO_BYPASS                           |No valid Bypass Destination is configured for the matched Delivery Service and the delivery service does not have the requested resource    |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|DS_CZ_ONLY                             |The selected Delivery Service only supports resource lookup based on Coverage Zone data                                                     |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|DS_CLIENT_GEO_UNSUPPORTED              |Traffic Router did not find a resource supported by coverage zone data and was unable to determine the geolocation of the requesting client |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|GEO_NO_CACHE_FOUND                     |Traffic Router could not find a resource via geolocation data based on the requesting client's geolocation                                  |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|NO_DETAILS                             |This entry is for a standard request.                                                                                                       |
++---------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+|REGIONAL_GEO_ALTERNATE_WITHOUT_CACHE   |This goes with the rtype RGDENY. The URL is being regionally Geo blocked.                                                                   |
++---------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+|REGIONAL_GEO_NO_RULE                   |The request was blocked because there was no rule in the Delivery Service for the request.                                                  |
++---------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+|-                                      |The request was not redirected. This is usually a result of a DNS request to the Traffic Router or an explicit denial for that request.     |
++---------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
+
 
 
 ---------------
