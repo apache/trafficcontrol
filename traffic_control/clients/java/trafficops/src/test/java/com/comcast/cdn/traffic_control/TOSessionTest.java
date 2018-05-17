@@ -78,7 +78,7 @@ public class TOSessionTest {
 		assertNotNull(cResp.getResponse());
 		assertEquals(1, cResp.getResponse().size());
 		
-		final Map<String,Object> service = cResp.getResponse().get(0);
+		final Map<String,?> service = cResp.getResponse().get(0);
 		assertEquals("us-co-denver", service.get("cachegroup"));
 		LOG.debug("Service: {}", service);
 	}

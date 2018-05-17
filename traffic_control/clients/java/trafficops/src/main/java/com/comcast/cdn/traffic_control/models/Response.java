@@ -14,13 +14,13 @@ public class Response {
 	}
 	
 	public class CollectionResponse extends Response {
-		private List<Map<String, Object>> response;
+		private List<Map<String, ?>> response;
 
-		public List<Map<String, Object>> getResponse() {
+		public List<Map<String, ?>> getResponse() {
 			return response;
 		}
 
-		public void setResponse(List<Map<String, Object>> response) {
+		public void setResponse(List<Map<String, ?>> response) {
 			this.response = response;
 		}
 	}
