@@ -28,7 +28,7 @@ module.exports = angular.module('trafficPortal.private.profiles.list', [])
                         controller: 'TableProfilesController',
                         resolve: {
                             profiles: function(profileService) {
-                                return profileService.getProfiles();
+                                return profileService.getProfiles({ orderby: 'name' });
                             }
                         }
                     }

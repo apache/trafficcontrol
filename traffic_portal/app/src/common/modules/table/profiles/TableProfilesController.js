@@ -65,7 +65,7 @@ var TableProfilesController = function(profiles, $scope, $state, $location, $uib
                     return params;
                 },
                 collection: function(profileService) {
-                    return profileService.getProfiles();
+                    return profileService.getProfiles({ orderby: 'name' });
                 }
             }
         });

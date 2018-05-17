@@ -101,7 +101,7 @@ var TableParameterProfilesController = function(parameter, parameterProfiles, $s
 					return parameter;
 				},
 				allProfiles: function(profileService) {
-					return profileService.getProfiles();
+					return profileService.getProfiles({ orderby: 'name' });
 				},
 				assignedProfiles: function() {
 					return parameterProfiles;
