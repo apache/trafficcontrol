@@ -205,6 +205,7 @@ Fields Always Present
 |rerr  |Message about internal Traffic Router Error                                      |String                                                                              |
 +------+---------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
 
+
 **rtype meanings**
 
 +-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -236,7 +237,7 @@ Fields Always Present
 |RGDENY       |_*DNS Only*_ The result was obtained through federated coverage zone data outside of any delivery service The request was regionally blocked because there was no rule  |
 |             |for the request made.                                                                                                                                                   |
 +-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| "-"          |The request was not redirected. This is usually a result of a DNS request to the Traffic Router or an explicit denial for that request.                                 |
+| "-"         |The request was not redirected. This is usually a result of a DNS request to the Traffic Router or an explicit denial for that request.                                 |
 +-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
