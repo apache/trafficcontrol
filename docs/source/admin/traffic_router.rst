@@ -256,7 +256,7 @@ Fields Always Present
 |GEO_NO_CACHE_FOUND        |Traffic Router could not find a resource via geolocation data based on the requesting client's geolocation                                  |
 +--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
 |NO_DETAILS                |This entry is for a standard request.                                  |
-++--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
 |REGIONAL_GEO_ALTERNATE_WITHOUT_CACHE        |This goes with the rtype RGDENY. The URL is being regionally Geo blocked.                                  |
 +--------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
 |REGIONAL_GEO_NO_RULE      |The request was blocked because there was no rule in the Delivery Service for the request.                                  |
