@@ -848,6 +848,7 @@ sub stringify_cs_ds {
     foreach my $ds ( sort keys %{$csds} ) {
         if ( ref( $csds->{$ds} ) eq 'ARRAY' ) {
             foreach my $map ( @{ $csds->{$ds} } ) {
+                next if !defined $map;
                 push( @strings, "|ds:" . $ds . "|server:" . $server . "|mapped:" . $map . "|" );
             }
         }
