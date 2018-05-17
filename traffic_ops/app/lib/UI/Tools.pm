@@ -73,7 +73,18 @@ sub diff_crconfig_iframe {
     my $self = shift;
     &stash_role($self);
     my $cdn_name = $self->param('cdn_name');
-    my ( $json, $error ) = UI::Topology::gen_crconfig_json( $self, $cdn_name );
+
+    foreach my $cookie ( @{ $self->req->cookies } ) {
+        $self->ua->cookie_jar->add(Mojo::Cookie::Response->new(name => $cookie->{'name'}, value => $cookie->{'value'}, domain => 'localhost', path => '/'));
+    }
+    my $resp = $self->ua->request_timeout(60)->get('/api/1.2/cdns/' . $cdn_name . '/snapshot/new')->res;
+    my $json = undef;
+    my $error = undef;
+    if ( $resp->code ne '200' ) {
+        $error = $resp->message;
+    } else {
+        $json = decode_json($resp->body)->{'response'};
+    }
 
     my ( @ds_text, @loc_text, @cs_text, @csds_text, @rascal_text, @ccr_text, @cfg_text );
     if ( defined $error ) {
