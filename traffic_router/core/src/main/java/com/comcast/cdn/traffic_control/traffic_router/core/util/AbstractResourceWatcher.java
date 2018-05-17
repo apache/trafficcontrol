@@ -129,13 +129,13 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 
 	@Override
 	protected File downloadDatabase(final String url, final File existingDb) {
+		final String interpolatedUrl = trafficOpsUtils.replaceTokens(url);
 		if (fetcher == null) {
-			LOGGER.warn("[" + getClass().getSimpleName() + "] Waiting for configuration to be processed, unable to download from '" + url + "'");
+			LOGGER.warn("[" + getClass().getSimpleName() + "] Waiting for configuration to be processed, unable to download from '" + interpolatedUrl + "'");
 			return null;
 		}
 
 		String jsonData = null;
-		final String interpolatedUrl = trafficOpsUtils.replaceTokens(url);
 		try {
 			jsonData = fetcher.fetchIfModifiedSince(interpolatedUrl, existingDb.lastModified());
 		}
