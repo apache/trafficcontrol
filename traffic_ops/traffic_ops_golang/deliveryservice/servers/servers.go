@@ -32,11 +32,11 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
 	"github.com/go-ozzo/ozzo-validation"
 
+	"encoding/json"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	"net/http"
-	"encoding/json"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 )
 
 // TODeliveryServiceRequest provides a type alias to define functions on
@@ -140,7 +140,7 @@ func ReadDSSHandler(db *sqlx.DB) http.HandlerFunc {
 func (dss *TODeliveryServiceServer) readDSS(db *sqlx.DB, params map[string]string, user auth.CurrentUser) (*tc.DeliveryServiceServerResponse, []error, tc.ApiErrorType) {
 	limitstr := params["limit"]
 	pagestr := params["page"]
-	orderby := params["deliveryService"]
+	orderby := params["orderby"]
 	limit := 20
 	offset := 1
 	page := 1
@@ -175,7 +175,7 @@ func (dss *TODeliveryServiceServer) readDSS(db *sqlx.DB, params map[string]strin
 		orderby = "deliveryService"
 	}
 
-	query := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset))
+	query, err := selectQuery(orderby, strconv.Itoa(limit), strconv.Itoa(offset))
 	log.Debugln("Query is ", query)
 
 	rows, err := db.NamedQuery(query, dss)
@@ -195,7 +195,7 @@ func (dss *TODeliveryServiceServer) readDSS(db *sqlx.DB, params map[string]strin
 		servers = append(servers, s)
 	}
 
-	return &tc.DeliveryServiceServerResponse{orderby, servers,page, limit}, []error{}, tc.NoError
+	return &tc.DeliveryServiceServerResponse{orderby, servers, page, limit}, []error{}, tc.NoError
 }
 
 //all implementations of Deleter should use transactions and return the proper errorType
@@ -244,16 +244,34 @@ func (dss *TODeliveryServiceServer) Delete(db *sqlx.DB, user auth.CurrentUser) (
 	return nil, tc.NoError
 }
 
-func selectQuery( orderby string, limit string, offset string) string {
+func selectQuery(orderBy string, limit string, offset string) (string, error) {
 
 	selectStmt := `SELECT
 	s.deliveryService,
 	s.server,
 	s.last_updated
-	FROM deliveryservice_server s
-	ORDER BY `+ orderby +` LIMIT `+limit+` OFFSET `+offset+` ROWS`
+	FROM deliveryservice_server s`
 
-	return selectStmt
+	allowedOrderByCols := map[string]string{
+		"":                "",
+		"deliveryservice": "s.deliveryService",
+		"server":          "s.server",
+		"lastupdated":     "s.last_updated",
+		"deliveryService": "s.deliveryService",
+		"lastUpdated":     "s.last_updated",
+		"last_updated":    "s.last_updated",
+	}
+	orderBy, ok := allowedOrderByCols[orderBy]
+	if !ok {
+		return "", errors.New("orderBy '" + orderBy + "' not permitted")
+	}
+
+	if orderBy != "" {
+		selectStmt += ` ORDER BY ` + orderBy
+	}
+
+	selectStmt += ` LIMIT ` + limit + ` OFFSET ` + offset + ` ROWS`
+	return selectStmt, nil
 }
 
 func deleteQuery() string {
@@ -262,22 +280,23 @@ func deleteQuery() string {
 	return query
 }
 
-
 type DSServers struct {
-	DsId *int 						`json:"dsId" db:"deliveryservice"`
-	Servers []int					`json:"servers"`
-	Replace *bool	 				`json:"replace"`
+	DsId    *int  `json:"dsId" db:"deliveryservice"`
+	Servers []int `json:"servers"`
+	Replace *bool `json:"replace"`
 }
 
 type TODSServers DSServers
+
 var dsserversRef = TODSServers(DSServers{})
 
 func GetServersForDsIdRef() *TODSServers {
 	return &dsserversRef
 }
 
-func GetReplaceHandler( db *sqlx.DB ) http.HandlerFunc {
+func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 		ctx := r.Context()
 		user, err := auth.GetCurrentUser(ctx)
@@ -288,10 +307,9 @@ func GetReplaceHandler( db *sqlx.DB ) http.HandlerFunc {
 		}
 
 		// get list of server Ids to insert
-		defer r.Body.Close()
 		payload := GetServersForDsIdRef()
 		servers := payload.Servers
-		dsId    := payload.DsId
+		dsId := payload.DsId
 
 		if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
 			log.Errorf("Error trying to decode the request body: %s", err)
@@ -340,7 +358,7 @@ func GetReplaceHandler( db *sqlx.DB ) http.HandlerFunc {
 
 		if *payload.Replace {
 			// delete existing
-			rows, err := db.Queryx( "DELETE FROM deliveryservice_server WHERE deliveryservice = $1", *dsId)
+			rows, err := db.Queryx("DELETE FROM deliveryservice_server WHERE deliveryservice = $1", *dsId)
 			if err != nil {
 				log.Errorf("unable to remove the existing servers assigned to the delivery service: %s", err)
 				handleErrs(http.StatusInternalServerError, err)
@@ -354,7 +372,7 @@ func GetReplaceHandler( db *sqlx.DB ) http.HandlerFunc {
 		respServers := []int{}
 
 		for i < len(servers) {
-			dtos := map[string]interface{}{"id":dsId, "server":servers[i]}
+			dtos := map[string]interface{}{"id": dsId, "server": servers[i]}
 			resultRows, err := tx.NamedQuery(insertIdsQuery(), dtos)
 			if err != nil {
 				if pqErr, ok := err.(*pq.Error); ok {
@@ -381,9 +399,8 @@ func GetReplaceHandler( db *sqlx.DB ) http.HandlerFunc {
 			log.Errorln("Could not commit transaction: ", err)
 			return
 		}
-		rollbackTransaction = false
-		resAlerts := []tc.Alert{ tc.Alert{"sever assignement","success"}}
-		repRes := tc.DSSReplaceResponse{resAlerts, tc.DSSMapResponse{*dsId,*payload.Replace,respServers }}
+		resAlerts := []tc.Alert{tc.Alert{"server assignements complete", "success"}}
+		repRes := tc.DSSReplaceResponse{resAlerts, tc.DSSMapResponse{*dsId, *payload.Replace, respServers}}
 
 		// marshal the results to the response stream
 		respBts, err := json.Marshal(repRes)
@@ -393,14 +410,12 @@ func GetReplaceHandler( db *sqlx.DB ) http.HandlerFunc {
 			return
 		}
 
+		rollbackTransaction = false
 		w.Header().Set(tc.ContentType, tc.ApplicationJson)
 		fmt.Fprintf(w, "%s", respBts)
 		return
 	}
 }
-
-
-
 
 type TODeliveryServiceServers tc.DeliveryServiceServers
 
@@ -411,7 +426,7 @@ func GetServersRef() *TODeliveryServiceServers {
 }
 
 // api/1.1/deliveryservices/{xml_id}/servers
-func GetCreateHandler( db *sqlx.DB ) http.HandlerFunc {
+func GetCreateHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
@@ -420,6 +435,7 @@ func GetCreateHandler( db *sqlx.DB ) http.HandlerFunc {
 		if err != nil {
 			log.Errorf("unable to get parameters from request: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
+			return
 		}
 
 		xmlId, ok := params["xml_id"]
@@ -450,6 +466,10 @@ func GetCreateHandler( db *sqlx.DB ) http.HandlerFunc {
 				return
 			case tc.ForbiddenError:
 				handleErrs(http.StatusForbidden, err)
+				return
+			default:
+				e := http.StatusInternalServerError
+				handleErrs(e, err)
 				return
 			}
 		}
@@ -511,7 +531,7 @@ func GetCreateHandler( db *sqlx.DB ) http.HandlerFunc {
 		for serverIds.Next() {
 			var serverId int
 			err := serverIds.Scan(&serverId)
-			dtos := map[string]interface{}{"id":dsId, "server":serverId}
+			dtos := map[string]interface{}{"id": dsId, "server": serverId}
 			resultRows, err := tx.NamedQuery(insertIdsQuery(), dtos)
 			if err != nil {
 				if pqErr, ok := err.(*pq.Error); ok {
@@ -535,7 +555,6 @@ func GetCreateHandler( db *sqlx.DB ) http.HandlerFunc {
 			log.Errorln("Could not commit transaction: ", err)
 			return
 		}
-		rollbackTransaction = false
 
 		// marshal the results to the response stream
 		tcPayload := tc.DeliveryServiceServers{payload.ServerNames, payload.XmlId}
@@ -547,6 +566,7 @@ func GetCreateHandler( db *sqlx.DB ) http.HandlerFunc {
 			return
 		}
 
+		rollbackTransaction = false
 		w.Header().Set(tc.ContentType, tc.ApplicationJson)
 		fmt.Fprintf(w, "%s", respBts)
 		return
@@ -569,8 +589,8 @@ func selectServerIds() string {
 	return query
 }
 
-// api/1.1/deliveryservices/{id}/servers|unassigned_servers|eligible
-func GetReadHandler(db *sqlx.DB, filter string) http.HandlerFunc {
+// GetReadHandler api/1.1/deliveryservices/{id}/servers|unassigned_servers|eligible
+func GetReadHandler(db *sqlx.DB, filter tc.Filter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 		params, err := api.GetCombinedParams(r)
@@ -581,7 +601,7 @@ func GetReadHandler(db *sqlx.DB, filter string) http.HandlerFunc {
 
 		where := `WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
 
-		if filter[0] == 'u' {
+		if filter == tc.UNASSIGNED {
 			where = `WHERE s.id not in (select server from deliveryservice_server where deliveryservice = $1)`
 		}
 
@@ -643,7 +663,6 @@ func read(db *sqlx.DB, params map[string]string, user auth.CurrentUser, where st
 
 	return servers, []error{}, tc.NoError
 }
-
 
 func dssSelectQuery() string {
 
@@ -711,7 +730,7 @@ func GetDServiceRef() *TODSSDeliveryService {
 	return &dserviceRef
 }
 
-// api/1.1/servers/{id}/deliveryservices$
+// Read api/1.1/servers/{id}/deliveryservices$
 func (dss *TODSSDeliveryService) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
 	var err error = nil
 	orderby := params["orderby"]
@@ -724,7 +743,7 @@ func (dss *TODSSDeliveryService) Read(db *sqlx.DB, params map[string]string, use
 	query := SDSSelectQuery()
 	log.Debugln("Query is ", query)
 
-	rows, err := db.Queryx(query, serverId )
+	rows, err := db.Queryx(query, serverId)
 	if err != nil {
 		log.Errorf("Error querying DeliveryserviceServers: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -746,29 +765,19 @@ func (dss *TODSSDeliveryService) Read(db *sqlx.DB, params map[string]string, use
 
 func SDSSelectQuery() string {
 
-	const JumboFrameBPS = 9000
-
-	// COALESCE is needed to default values that are nil in the database
-	// because Go does not allow that to marshal into the struct
 	selectStmt := `SELECT
-		active,
-	    cacheurl,
+ 		active,
 		ccr_dns_ttl,
 		cdn_id,
-		cdnName,
+		cacheurl,
 		check_path,
-		deep_caching_type,
-		display_name,
-		check_path,
-		deep_caching_type,
-		display_name,
 		dns_bypass_cname,
 		dns_bypass_ip,
 		dns_bypass_ip6,
 		dns_bypass_ttl,
 		dscp,
+		display_name,
 		edge_header_rewrite,
-		fq_pacing_rate,
 		geo_limit,
 		geo_limit_countries,
 		geolimit_redirect_url,
@@ -777,9 +786,9 @@ func SDSSelectQuery() string {
 		global_max_tps,
 		http_bypass_fqdn,
 		id,
+		ipv6_routing_enabled,
 		info_url,
 		initial_dispersion,
-		ipv6_routing_enabled,
 		last_updated,
 		logs_enabled,
 		long_desc,
@@ -790,11 +799,10 @@ func SDSSelectQuery() string {
 		miss_lat,
 		miss_long,
 		multi_site_origin,
-		origin_sheild,
+		multi_site_origin_algorithm,
 		org_server_fqdn,
-		profileDescription,
+		origin_shield,
 		profile,
-		profileName,
 		protocol,
 		qstring_ignore,
 		range_request_handling,
@@ -802,17 +810,16 @@ func SDSSelectQuery() string {
 		regional_geo_blocking,
 		remap_text,
 		routing_name,
-		signing_algorithm,
 		ssl_key_version,
+		signing_algorithm,
 		tr_request_headers,
 		tr_response_headers,
 		tenant_id,
-		typeName,
 		type,
 		xml_id
-		FROM deliveryservice
-		WHERE id in (SELECT deliveryservice FROM deliverservice_server where server = $1)`
-		return selectStmt
+	FROM deliveryservice d
+		WHERE id in (SELECT deliveryService FROM deliveryservice_server where server = $1)`
+	return selectStmt
 }
 
 func updateQuery() string {
@@ -825,5 +832,3 @@ func updateQuery() string {
       RETURNING last_updated`
 	return query
 }
-
-
