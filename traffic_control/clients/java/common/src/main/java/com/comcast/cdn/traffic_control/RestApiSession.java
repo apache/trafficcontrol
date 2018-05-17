@@ -32,15 +32,26 @@ import com.google.common.collect.ImmutableList;
 public abstract class RestApiSession implements Closeable {
 	private static final Logger LOG = LoggerFactory.getLogger(RestApiSession.class);
 
-	private static final String URL_FORMAT_STR = "%s://%s:%s/%s/%s/%s";
-	
-	public static final String DEFAULT_API_PATH = "api";
-	public static final String DEFAULT_API_VERSION = "1.2";
 	public static final ImmutableList<Header> DEFAULT_HEADERS;
 	static {
 		DEFAULT_HEADERS = ImmutableList.<Header>builder()
 				.add(new BasicHeader("Content-Type", "application/json; charset=UTF-8")).build();
 	};
+	
+	public abstract ImmutableList<Header> defaultHeaders();
+	public abstract Builder toBuilder();
+
+	@AutoValue.Builder
+	public abstract static class Builder {
+		public abstract RestApiSession build();
+
+		public abstract Builder setDefaultHeaders(ImmutableList<Header> headers);
+		public abstract ImmutableList.Builder<Header> defaultHeadersBuilder();
+	}
+	public static Builder builder() {
+		return new AutoValue_RestApiSession.Builder()
+				.setDefaultHeaders(DEFAULT_HEADERS);
+	}
 
 	private CloseableHttpAsyncClient httpclient;
 
@@ -79,11 +90,6 @@ public abstract class RestApiSession implements Closeable {
 			httpclient = null;
 		}
 	}
-
-	public String buildUrl(String path) {
-		return String.format(URL_FORMAT_STR, this.ssl() ?"https":"http", this.host(), this.port(), this.apiBasePath(),
-				this.apiVersion(), path);
-	}
 	
 	public CompletableFuture<HttpResponse> get(String url) {
 		return execute(RequestBuilder.get(url));
@@ -120,6 +126,9 @@ public abstract class RestApiSession implements Closeable {
 		return future;
 	}
 	
+	/**
+	 * An adapter around a FutureCallback to provide a CompletableFuture for use with HttpAsyncClients.  
+	 */
 	private class CompletableFutureCallback extends CompletableFuture<HttpResponse> implements FutureCallback<HttpResponse>{
 		private Future<HttpResponse> reFuture;
 		
@@ -152,45 +161,5 @@ public abstract class RestApiSession implements Closeable {
 		public void setReFuture(Future<HttpResponse> reFuture) {
 			this.reFuture = reFuture;
 		}
-	}
-
-	public abstract String host();
-
-	public abstract int port();
-
-	public abstract String apiVersion();
-
-	public abstract String apiBasePath();
-
-	public abstract ImmutableList<Header> defaultHeaders();
-
-	public abstract boolean ssl();
-
-	static Builder builder() {
-		return new AutoValue_RestApiSession.Builder()
-				.setApiBasePath(DEFAULT_API_PATH)
-				.setApiVersion(DEFAULT_API_VERSION)
-				.setDefaultHeaders(DEFAULT_HEADERS);
-	}
-	
-	public abstract Builder toBuilder();
-
-	@AutoValue.Builder
-	public abstract static class Builder {
-		public abstract RestApiSession build();
-
-		public abstract Builder setHost(String host);
-
-		public abstract Builder setPort(int port);
-
-		public abstract Builder setApiVersion(String version);
-
-		public abstract Builder setApiBasePath(String version);
-
-		public abstract Builder setSsl(boolean ssl);
-
-		public abstract Builder setDefaultHeaders(ImmutableList<Header> headers);
-		public abstract ImmutableList.Builder<Header> defaultHeadersBuilder();
-
 	}
 }
