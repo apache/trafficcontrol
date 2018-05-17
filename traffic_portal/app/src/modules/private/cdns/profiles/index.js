@@ -31,7 +31,7 @@ module.exports = angular.module('trafficPortal.private.cdns.profiles', [])
 								return cdnService.getCDN($stateParams.cdnId);
 							},
 							profiles: function($stateParams, profileService) {
-								return profileService.getProfiles({ cdn: $stateParams.cdnId });
+								return profileService.getProfiles({ cdn: $stateParams.cdnId, orderby: 'name' });
 							}
 						}
 					}

@@ -27,7 +27,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, type, t
     };
 
     var getProfiles = function() {
-        profileService.getProfiles()
+        profileService.getProfiles({ orderby: 'name' })
             .then(function(result) {
                 $scope.profiles = _.filter(result, function(profile) {
                     return profile.type == 'DS_PROFILE';
