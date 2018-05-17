@@ -40,10 +40,11 @@ public class ProtectedFetcher extends Fetcher {
 	}
 
 	private HttpURLConnection extractCookie(final HttpURLConnection http) throws IOException {
-		if (http.getHeaderField("Set-Cookie") != null) {
-			setCookie(HttpCookie.parse(http.getHeaderField("Set-Cookie")).get(0));
+		if (http != null) {
+			if (http.getHeaderField("Set-Cookie") != null) {
+				setCookie(HttpCookie.parse(http.getHeaderField("Set-Cookie")).get(0));
+			}
 		}
-
 		return http;
 	}
 
