@@ -236,7 +236,7 @@ Fields Always Present
 |RGDENY       |_*DNS Only*_ The result was obtained through federated coverage zone data outside of any delivery service The request was regionally blocked because there was no rule  |
 |             |for the request made.                                                                                                                                                   |
 +-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| -           |The request was not redirected. This is usually a result of a DNS request to the Traffic Router or an explicit denial for that request.                                 |
+| "-"          |The request was not redirected. This is usually a result of a DNS request to the Traffic Router or an explicit denial for that request.                                 |
 +-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
@@ -263,7 +263,7 @@ Fields Always Present
 +---------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
 |REGIONAL_GEO_NO_RULE                   |The request was blocked because there was no rule in the Delivery Service for the request.                                                  |
 +---------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
-| -                                     |The request was not redirected. This is usually a result of a DNS request to the Traffic Router or an explicit denial for that request.     |
+| "-"                                   |The request was not redirected. This is usually a result of a DNS request to the Traffic Router or an explicit denial for that request.     |
 +---------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------+
 
 
