@@ -567,6 +567,41 @@ ALTER TABLE job_id_seq OWNER TO traffic_ops;
 
 ALTER SEQUENCE job_id_seq OWNED BY job.id;
 
+--
+-- Name: job_result; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE job_result (
+    id bigint NOT NULL,
+    job bigint NOT NULL,
+    agent bigint NOT NULL,
+    result text NOT NULL,
+    description text,
+    last_updated timestamp with time zone DEFAULT now()
+);
+
+
+ALTER TABLE job_result OWNER TO traffic_ops;
+
+--
+-- Name: job_result_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
+--
+
+CREATE SEQUENCE job_result_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE job_result_id_seq OWNER TO traffic_ops;
+
+--
+-- Name: job_result_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
+--
+
+ALTER SEQUENCE job_result_id_seq OWNED BY job_result.id;
 
 --
 -- Name: job_status; Type: TABLE; Schema: public; Owner: traffic_ops
