@@ -64,9 +64,6 @@ CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job FOR EACH ROW EXE
 DROP TRIGGER IF EXISTS on_update_current_timestamp ON job_agent;
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job_agent FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
-DROP TRIGGER IF EXISTS on_update_current_timestamp ON job_result;
-CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job_result FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
-
 DROP TRIGGER IF EXISTS on_update_current_timestamp ON job_status;
 CREATE TRIGGER on_update_current_timestamp BEFORE UPDATE ON job_status FOR EACH ROW EXECUTE PROCEDURE on_update_current_timestamp_last_updated();
 
