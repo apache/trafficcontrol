@@ -139,9 +139,12 @@ public abstract class TOSession implements Closeable {
 	
 	
 	public static Builder builder() {
-		return new AutoValue_TOSession.Builder()
+		final Builder b = new AutoValue_TOSession.Builder()
 				.setApiBasePath(DEFAULT_API_PATH)
 				.setApiVersion(DEFAULT_API_VERSION);
+		b.restClientBuilder();
+		
+		return b;
 	}
 	public abstract Builder toBuilder();
 	
