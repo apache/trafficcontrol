@@ -26,6 +26,7 @@ use Mojo::UserAgent;
 use POSIX;
 use HTTP::Cookies;
 use DBI;
+use JSON;
 
 sub tools {
     my $self = shift;
