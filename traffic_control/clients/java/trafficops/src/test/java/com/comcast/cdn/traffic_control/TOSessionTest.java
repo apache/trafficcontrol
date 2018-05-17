@@ -2,6 +2,7 @@ package com.comcast.cdn.traffic_control;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -23,6 +24,8 @@ import com.comcast.cdn.traffic_control.models.Response.CollectionResponse;
 public class TOSessionTest {
 	private static final Logger LOG = LoggerFactory.getLogger(TOSessionTest.class);
 	
+	public static final URI baseUri = URI.create("http://trafficcontrol.apache.org:443");
+	
 	public static final String DeliveryService_Good_Response = "{\"response\": [{\"cachegroup\": \"us-co-denver\"}]}";
 	
 	private RestApiSession sessionMock;
@@ -38,20 +41,32 @@ public class TOSessionTest {
 
 	@Test
 	public void testBuild() {
-		TOSession.builder().setRestClient(sessionMock).build();
+		TOSession.builder()
+			.setRestClient(sessionMock)
+			.fromURI(baseUri)
+			.build();
 	}
 	
 	@Test(expected=LoginException.class)
 	public void test401Response() throws Throwable {
 		HttpResponse resp = Mockito.mock(HttpResponse.class);
-		Mockito.when(resp.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_0, 401, "Not Auth"));
+		Mockito
+			.when(resp.getStatusLine())
+			.thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_0, 401, "Not Auth"));
 		
-		CompletableFuture<HttpResponse> f = new CompletableFuture<>();
+		final CompletableFuture<HttpResponse> f = new CompletableFuture<>();
 		f.complete(resp);
 		
-		Mockito.doReturn(f).when(sessionMock).execute(Mockito.any(RequestBuilder.class));
+		Mockito
+			.doReturn(f)
+			.when(sessionMock)
+			.execute(Mockito.any(RequestBuilder.class));
 		
-		TOSession session = TOSession.builder().setRestClient(sessionMock).build();
+		TOSession session = TOSession
+				.builder()
+				.fromURI(baseUri)
+				.setRestClient(sessionMock)
+				.build();
 		
 		try {
 			session.getDeliveryServices().get();
@@ -62,16 +77,29 @@ public class TOSessionTest {
 	
 	@Test
 	public void deliveryServices() throws Throwable {
-		HttpResponse resp = Mockito.mock(HttpResponse.class);
-		Mockito.doReturn(new BasicStatusLine(HttpVersion.HTTP_1_0, 200, "Ok")).when(resp).getStatusLine();
-		Mockito.doReturn(new StringEntity(DeliveryService_Good_Response)).when(resp).getEntity();
+		final HttpResponse resp = Mockito.mock(HttpResponse.class);
+		Mockito
+			.doReturn(new BasicStatusLine(HttpVersion.HTTP_1_0, 200, "Ok"))
+			.when(resp)
+			.getStatusLine();
+		Mockito
+			.doReturn(new StringEntity(DeliveryService_Good_Response))
+			.when(resp)
+			.getEntity();
 		
-		CompletableFuture<HttpResponse> f = new CompletableFuture<>();
+		final CompletableFuture<HttpResponse> f = new CompletableFuture<>();
 		f.complete(resp);
 		
-		Mockito.doReturn(f).when(sessionMock).execute(Mockito.any(RequestBuilder.class));
+		Mockito
+			.doReturn(f)
+			.when(sessionMock)
+			.execute(Mockito.any(RequestBuilder.class));
 		
-		TOSession session = TOSession.builder().setRestClient(sessionMock).build();
+		final TOSession session = TOSession.builder()
+				.fromURI(baseUri)
+				.setRestClient(sessionMock)
+				.build();
+		
 		CollectionResponse cResp = session.getDeliveryServices().get();
 		
 		assertNotNull(cResp);
