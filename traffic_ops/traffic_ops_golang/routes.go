@@ -38,10 +38,12 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/coordinate"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/crconfig"
 	dsrequest "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request"
-	dsserver "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/servers"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request/comment"
+	dsserver "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/servers"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/division"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/hwinfo"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/interface"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/ip"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/physlocation"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/ping"
@@ -154,7 +156,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodDelete, `regions/{id}$`, api.DeleteHandler(region.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		// get all edge servers associated with a delivery service (from deliveryservice_server table)
-		{1.1, http.MethodGet, `deliveryservices/{id}/servers$`, api.ReadHandler(dsserver.GetRefType(), d.DB),auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `deliveryservices/{id}/servers$`, api.ReadHandler(dsserver.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Server
 		{1.1, http.MethodGet, `servers/checks$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
@@ -227,6 +229,18 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//Servers
 		{1.3, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.3, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+
+		//IPs
+		{1.3, http.MethodGet, `ips/?(\.json)?$`, api.ReadHandler(ip.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodPut, `ips/?$`, api.UpdateHandler(ip.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodPost, `ips/?$`, api.CreateHandler(ip.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodDelete, `ips/?$`, api.DeleteHandler(ip.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+
+		//Interfaces
+		{1.3, http.MethodGet, `interfaces/?(\.json)?$`, api.ReadHandler(intf.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodPut, `interfaces/?$`, api.UpdateHandler(intf.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodPost, `interfaces/?$`, api.CreateHandler(intf.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodDelete, `interfaces/?$`, api.DeleteHandler(intf.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//ProfileParameters
 		{1.3, http.MethodGet, `profile_parameters/?(\.json)?$`, api.ReadHandler(profileparameter.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},

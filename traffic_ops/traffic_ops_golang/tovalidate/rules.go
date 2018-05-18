@@ -13,7 +13,10 @@
 package tovalidate
 
 import (
+	"net"
 	"strings"
+
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/utils"
 )
 
 // NoSpaces returns true if the string has no spaces
@@ -45,4 +48,23 @@ func IsOneOfStringICase(set ...string) func(string) bool {
 		lowcased = append(lowcased, strings.ToLower(s))
 	}
 	return IsOneOfString(lowcased...)
+}
+
+// IsIPv6CIDR returns true if the string is a valid IPv6 CIDR
+func IsIPv6CIDR(str string) bool {
+	ip, _, err := net.ParseCIDR(str)
+	if err != nil {
+		return false
+	}
+	ip = ip.To4()
+	if ip == nil {
+		return true
+	}
+	return false
+}
+func IsIPv4Mask(str string) bool {
+	if utils.GetIPv4MaskLeadingOnes(str) == 0 {
+		return false
+	}
+	return true
 }

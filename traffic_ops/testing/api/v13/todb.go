@@ -362,6 +362,8 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM snapshot;
 	DELETE FROM cdn;
 	DELETE FROM tenant;
+	DELETE FROM ip;
+	DELETE FROM interface;
 `
 	err := execSQL(db, sqlStmt, "Tearing down")
 	if err != nil {

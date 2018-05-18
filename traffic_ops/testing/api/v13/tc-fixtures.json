@@ -1067,6 +1067,46 @@
             "lastUpdated": "2018-03-02T19:13:46.832327+00:00",
             "name": "MID",
             "useInTable": "server"
+        },
+        {
+            "description": "Management IP",
+            "lastUpdated": "2018-03-02T19:13:46.832327+00:00",
+            "name": "IP_MANAGEMENT",
+            "useInTable": "ip"
+        },
+        {
+            "description": "ILO IP",
+            "lastUpdated": "2018-03-02T19:13:46.832327+00:00",
+            "name": "IP_ILO",
+            "useInTable": "ip"
+        },
+        {
+            "description": "Primary IP",
+            "lastUpdated": "2018-03-02T19:13:46.832327+00:00",
+            "name": "IP_PRIMARY",
+            "useInTable": "ip"
+        },
+        {
+            "description": "Secondary streaming IP",
+            "lastUpdated": "2018-03-02T19:13:46.832327+00:00",
+            "name": "IP_SECONDARY",
+            "useInTable": "ip"
+        }
+    ],
+    "ips": [
+        {
+            "interfaceName": "eth0",
+            "ipAddress": "192.168.0.2",
+            "ipNetmask": "255.255.255.0",
+            "ipGateway": "192.168.0.1",
+	    "ip6Address": "2345:1234:12:8::1/64",
+	    "ip6Gateway": "2345:1234:12:8::1"
+        }
+    ],
+    "interfaces": [
+        {
+            "interfaceName": "eth0",
+            "interfaceMtu": 9000
         }
     ]
 }
