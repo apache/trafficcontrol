@@ -196,37 +196,52 @@ func TestLoadConfig(t *testing.T) {
 	defer os.Remove(goodRiakCfg) // clean up
 
 	// test bad paths
-	_, err = LoadConfig(badPath, badPath, badPath, version)
+	_, errs, blockStartup := LoadConfig(badPath, badPath, badPath, version)
 	exp = fmt.Sprintf("reading CDN conf '%s'", badPath)
-	if !strings.HasPrefix(err.Error(), exp) {
+	if !strings.HasPrefix(errs[0].Error(), exp) {
 		t.Error("expected", exp, "got", err)
+	}
+	if blockStartup != true {
+		t.Error("expected blockStartup to be true but it was ", blockStartup)
 	}
 
 	// bad json in cdn.conf
-	_, err = LoadConfig(badCfg, badCfg, badPath, version)
+	_, errs, blockStartup = LoadConfig(badCfg, badCfg, badPath, version)
 	exp = fmt.Sprintf("unmarshalling '%s'", badCfg)
-	if !strings.HasPrefix(err.Error(), exp) {
+	if !strings.HasPrefix(errs[0].Error(), exp) {
 		t.Error("expected", exp, "got", err)
+	}
+	if blockStartup != true {
+		t.Error("expected blockStartup to be true but it was ", blockStartup)
 	}
 
 	// good cdn.conf, bad db conf
-	_, err = LoadConfig(goodCfg, badPath, badPath, version)
+	_, errs, blockStartup = LoadConfig(goodCfg, badPath, badPath, version)
 	exp = fmt.Sprintf("reading db conf '%s'", badPath)
-	if !strings.HasPrefix(err.Error(), exp) {
+	if !strings.HasPrefix(errs[0].Error(), exp) {
 		t.Error("expected", exp, "got", err)
+	}
+	if blockStartup != true {
+		t.Error("expected blockStartup to be true but it was ", blockStartup)
 	}
 
 	// good cdn.conf,  bad json in database.conf
-	_, err = LoadConfig(goodCfg, badCfg, badPath, version)
+	_, errs, blockStartup = LoadConfig(goodCfg, badCfg, badPath, version)
 	exp = fmt.Sprintf("unmarshalling '%s'", badCfg)
-	if !strings.HasPrefix(err.Error(), exp) {
+	if !strings.HasPrefix(errs[0].Error(), exp) {
 		t.Error("expected", exp, "got", err)
+	}
+	if blockStartup != true {
+		t.Error("expected blockStartup to be true but it was ", blockStartup)
 	}
 
 	// good cdn.conf,  good database.conf
-	cfg, err = LoadConfig(goodCfg, goodDbCfg, goodRiakCfg, version)
-	if err != nil {
+	cfg, errs, blockStartup = LoadConfig(goodCfg, goodDbCfg, goodRiakCfg, version)
+	if len(errs) != 0 {
 		t.Error("Good config -- unexpected error ", err)
+	}
+	if blockStartup != false {
+		t.Error("expected blockStartup to be false but it was ", blockStartup)
 	}
 
 	expectedRiak := riak.AuthOptions{User: "riakuser", Password: "password", TlsConfig: &tls.Config{InsecureSkipVerify: true}}
