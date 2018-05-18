@@ -16,7 +16,6 @@ package plugin
 
 import (
 	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -33,7 +32,8 @@ type byteRange struct {
 }
 
 type rangeRequestConfig struct {
-	Mode string `json::"mode"`
+	Mode              string `json:"mode"`
+	MultiPartBoundary string // not in the json
 }
 
 func init() {
@@ -49,7 +49,7 @@ func init() {
 // rangeReqHandleLoad loads the configuration
 func rangeReqHandleLoad(b json.RawMessage) interface{} {
 	cfg := rangeRequestConfig{}
-	log.Errorf("rangeReqHandleLoad loading: %s", b)
+	log.Errorf("rangeReqHandleLoad loading: %s\n", b)
 
 	err := json.Unmarshal(b, &cfg)
 	if err != nil {
@@ -57,8 +57,16 @@ func rangeReqHandleLoad(b json.RawMessage) interface{} {
 		return nil
 	}
 	if !(cfg.Mode == "get_full_serve_range" || cfg.Mode == "patch") {
-		log.Errorf("Unknown mode for range_req_handler plugin: %s", cfg.Mode)
+		log.Errorf("Unknown mode for range_req_handler plugin: %s\n", cfg.Mode)
 	}
+
+	multipartBoundaryBytes := make([]byte, 16)
+	if _, err := rand.Read(multipartBoundaryBytes); err != nil {
+		log.Errorf("Error with rand.Read: %v\n", err)
+	}
+	// Use UUID format
+	cfg.MultiPartBoundary = fmt.Sprintf("%x-%x-%x-%x-%x", multipartBoundaryBytes[0:4], multipartBoundaryBytes[4:6], multipartBoundaryBytes[6:8], multipartBoundaryBytes[8:10], multipartBoundaryBytes[10:])
+
 	log.Debugf("range_rew_handler: load success: %+v\n", cfg)
 	return &cfg
 }
@@ -67,17 +75,18 @@ func rangeReqHandleLoad(b json.RawMessage) interface{} {
 func rangeReqHandlerOnRequest(icfg interface{}, d OnRequestData) bool {
 	rHeader := d.R.Header.Get("Range")
 	if rHeader == "" {
-		log.Debugf("No Range header found")
+		log.Debugf("No Range header found\n")
 		return false
 	}
-	log.Debugf("Range string is: %s", rHeader)
+	log.Debugf("Range string is: %s\n", rHeader)
 	// put the ranges [] in the context so we can use it later
 	byteRanges := parseRangeHeader(rHeader)
 	*d.Context = byteRanges
 	return false
 }
 
-func rangeReqHandleBeforeCacheLookup(icfg interface{}, d BeforeCacheLookUpData, overRideFunc func(string)) {
+// rangeReqHandleBeforeCacheLookup is used to override the cacheKey when in store_ranges mode.
+func rangeReqHandleBeforeCacheLookup(icfg interface{}, d BeforeCacheLookUpData) {
 	cfg, ok := icfg.(*rangeRequestConfig)
 	if !ok {
 		log.Errorf("range_req_handler config '%v' type '%T' expected *rangeRequestConfig\n", icfg, icfg)
@@ -89,8 +98,8 @@ func rangeReqHandleBeforeCacheLookup(icfg interface{}, d BeforeCacheLookUpData, 
 			sep = "&"
 		}
 		newKey := d.DefaultCacheKey + sep + "grove_range_req_handler_plugin_data=" + d.Req.Header.Get("Range")
-		overRideFunc(newKey)
-		log.Debugf("range_req_handler: store_ranges default key:%s, new key:%s", d.DefaultCacheKey, newKey)
+		d.CacheKeyOverrideFunc(newKey)
+		log.Debugf("range_req_handler: store_ranges default key:%s, new key:%s\n", d.DefaultCacheKey, newKey)
 	}
 }
 
@@ -99,10 +108,10 @@ func rangeReqHandleBeforeParent(icfg interface{}, d BeforeParentRequestData) {
 	log.Debugf("rangeReqHandleBeforeParent calling.")
 	rHeader := d.Req.Header.Get("Range")
 	if rHeader == "" {
-		log.Debugf("No Range header found")
+		log.Debugln("No Range header found")
 		return
 	}
-	log.Debugf("Range string is: %s", rHeader)
+	log.Debugf("Range string is: %s\n", rHeader)
 	cfg, ok := icfg.(*rangeRequestConfig)
 	if !ok {
 		log.Errorf("range_req_handler config '%v' type '%T' expected *rangeRequestConfig\n", icfg, icfg)
@@ -117,12 +126,13 @@ func rangeReqHandleBeforeParent(icfg interface{}, d BeforeParentRequestData) {
 
 // rangeReqHandleBeforeRespond builds the 206 response
 // Assume all the needed ranges have been put in cache before, which is the truth for "get_full_serve_range" mode which gets the whole object into cache.
+// If mode == store_ranges, do nothing, we just return the object stored-as is
 func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 	log.Debugf("rangeReqHandleBeforeRespond calling\n")
 	ictx := d.Context
 	ctx, ok := (*ictx).([]byteRange)
 	if !ok {
-		log.Errorf("Invalid context: %v", ictx)
+		log.Errorf("Invalid context: %v\n", ictx)
 	}
 	if len(ctx) == 0 {
 		return // there was no (valid) range header
@@ -137,35 +147,34 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 		return // no need to do anything here.
 	}
 
-	multipartBoundaryString := ""
+	// mode != store_ranges
+	multipartBoundaryString := cfg.MultiPartBoundary
+	multipart := false
 	originalContentType := d.Hdr.Get("Content-type")
 	*d.Hdr = web.CopyHeader(*d.Hdr) // copy the headers, we don't want to mod the cacheObj
 	if len(ctx) > 1 {
-		//multipart = true
-		multipartBoundaryBytes := make([]byte, 8)
-		if _, err := rand.Read(multipartBoundaryBytes); err != nil {
-			log.Errorf("Error with rand.Read: %v", err)
-		}
-		multipartBoundaryString = hex.EncodeToString(multipartBoundaryBytes)
+		multipart = true
+		multipartBoundaryString = cfg.MultiPartBoundary
 		d.Hdr.Set("Content-Type", fmt.Sprintf("multipart/byteranges; boundary=%s", multipartBoundaryString))
 	}
 	totalContentLength, err := strconv.ParseInt(d.Hdr.Get("Content-Length"), 10, 64)
 	if err != nil {
-		log.Errorf("Invalid Content-Length header: %v", d.Hdr.Get("Content-Length"))
+		log.Errorf("Invalid Content-Length header: %v\n", d.Hdr.Get("Content-Length"))
 	}
 	body := make([]byte, 0)
 	for _, thisRange := range ctx {
 		if thisRange.End == -1 || thisRange.End >= totalContentLength { // if the end range is "", or too large serve until the end
 			thisRange.End = totalContentLength - 1
 		}
-		log.Debugf("range:%d-%d", thisRange.Start, thisRange.End)
-		if multipartBoundaryString != "" {
-			body = append(body, []byte(fmt.Sprintf("\r\n--%s\r\n", multipartBoundaryString))...)
-			body = append(body, []byte(fmt.Sprintf("Content-type: %s\r\n", originalContentType))...)
-			body = append(body, []byte(fmt.Sprintf("Content-range: bytes %d-%d/%d\r\n\r\n", thisRange.Start, thisRange.End, totalContentLength))...)
+
+		rangeString := "bytes " + strconv.FormatInt(thisRange.Start, 10) + "-" + strconv.FormatInt(thisRange.End, 10) + "\r\n\r\n"
+		log.Debugf("range:%d-%d\n", thisRange.Start, thisRange.End)
+		if multipart {
+			body = append(body, []byte("\r\n--"+multipartBoundaryString+"\r\n")...)
+			body = append(body, []byte("Content-type: "+originalContentType+"%s\r\n")...)
+			body = append(body, []byte("Content-range: "+rangeString)...)
 		} else {
-			byteRangeString := fmt.Sprintf("bytes %d-%d/%d", thisRange.Start, thisRange.End, totalContentLength)
-			d.Hdr.Add("Content-Range", byteRangeString)
+			d.Hdr.Add("Content-Range", rangeString+"/"+strconv.FormatInt(totalContentLength, 10))
 		}
 		bSlice := (*d.Body)[thisRange.Start : thisRange.End+1]
 		body = append(body, bSlice...)
@@ -188,7 +197,7 @@ func parseRange(rangeString string) (byteRange, error) {
 	} else {
 		start, err := strconv.ParseInt(parts[0], 10, 64)
 		if err != nil {
-			log.Errorf("Error converting rangeString start \"%\" to numbers", rangeString)
+			log.Errorf("Error converting rangeString start \"%\" to numbers\n", rangeString)
 			return byteRange{}, err
 		}
 		bRange.Start = start
@@ -198,7 +207,7 @@ func parseRange(rangeString string) (byteRange, error) {
 	} else {
 		end, err := strconv.ParseInt(parts[1], 10, 64)
 		if err != nil {
-			log.Errorf("Error converting rangeString end \"%\" to numbers", rangeString)
+			log.Errorf("Error converting rangeString end \"%\" to numbers\n", rangeString)
 			return byteRange{}, err
 		}
 		bRange.End = end
@@ -210,11 +219,10 @@ func parseRangeHeader(rHdrVal string) []byteRange {
 	byteRanges := make([]byteRange, 0)
 	rangeStringParts := strings.Split(rHdrVal, "=")
 	if rangeStringParts[0] != "bytes" {
-		log.Errorf("Not a valid Range type: \"%s\"", rangeStringParts[0])
+		log.Errorf("Not a valid Range type: \"%s\"\n", rangeStringParts[0])
 	}
 
 	for _, thisRangeString := range strings.Split(rangeStringParts[1], ",") {
-		log.Debugf("bRangeStr: %s", thisRangeString)
 		thisRange, err := parseRange(thisRangeString)
 		if err != nil {
 			return nil

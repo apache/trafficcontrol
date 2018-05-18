@@ -31,6 +31,8 @@ The `Funcs` object contains functions for each hook, as well as a load function 
 
 * `onRequest` is called immediately when a request is received. It returns a boolean indicating whether to stop processing. Examples are IP blocking, or serving custom endpoints for statistics or to invalidate a cache entry.
 
+* `beforeCacheLookUp` is called immedidiately before looking the object up in the cache. It can be used to modify the cacheKey to be used to for this object using the passed `CacheKeyOverrideFunc` func. Once set using that function Grove will keep using that cacheKey throughout the life of the object in the cache.
+
 * `beforeParentRequest` is called immediately before making a request to a parent. It may manipulate the request being made to the parent. Examples are removing headers in the client request such as `Range`.
 
 * `beforeRespond` is called immediately before responding to a client. It may manipulate the code, headers, and body being returned. Examples are header modifications, or handling if-modified-since requests.
