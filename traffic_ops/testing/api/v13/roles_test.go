@@ -84,7 +84,7 @@ func UpdateTestRoles(t *testing.T) {
 	}
 	respRole := resp[0]
 	if *respRole.Name != expectedRole {
-		t.Errorf("results do not match actual: %s, expected: %s\n", respRole.Name, expectedRole)
+		t.Errorf("results do not match actual: %s, expected: %s\n", *respRole.Name, expectedRole)
 	}
 
 	// Set the name back to the fixture value so we can delete it after
@@ -133,7 +133,7 @@ func DeleteTestRoles(t *testing.T) {
 		t.Errorf("error deleting Role role: %s\n", err.Error())
 	}
 	if len(roleResp) > 0 {
-		t.Errorf("expected Role : %s to be deleted\n", role.Name)
+		t.Errorf("expected Role : %s to be deleted\n", *role.Name)
 	}
 
 }
