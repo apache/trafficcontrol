@@ -30,6 +30,8 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/interface"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/ip"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -264,22 +266,22 @@ s.guid,
 s.host_name,
 s.https_port,
 s.id,
-s.ilo_ip_address,
-s.ilo_ip_gateway,
-s.ilo_ip_netmask,
+host(ipi.ipv4) as ilo_ip_address,
+ipi.ipv4_gateway as ilo_ip_gateway,
+netmask(ipi.ipv4) as ilo_ip_netmask,
 s.ilo_password,
 s.ilo_username,
-COALESCE(s.interface_mtu, ` + strconv.Itoa(JumboFrameBPS) + `) as interface_mtu,
-s.interface_name,
-s.ip6_address,
-s.ip6_gateway,
-s.ip_address,
-s.ip_gateway,
-s.ip_netmask,
+COALESCE(if.interface_mtu, ` + strconv.Itoa(JumboFrameBPS) + `) as interface_mtu,
+if.interface_name as interface_name,
+ipp.ipv6 as ip6_address,
+ipp.ipv6_gateway as ip6_gateway,
+host(ipp.ipv4) as ip_address,
+ipp.ipv4_gateway as ip_gateway,
+netmask(ipp.ipv4) as ip_netmask,
 s.last_updated,
-s.mgmt_ip_address,
-s.mgmt_ip_gateway,
-s.mgmt_ip_netmask,
+host(ipm.ipv4) as mgmt_ip_address,
+ipm.ipv4_gateway as mgmt_ip_gateway,
+netmask(ipm.ipv4) as mgmt_ip_netmask,
 s.offline_reason,
 pl.name as phys_location,
 s.phys_location as phys_location_id,
@@ -306,7 +308,11 @@ JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id`
+JOIN type t ON s.type = t.id
+JOIN ip ipp ON s.id = ipp.server and ipp.type = (SELECT id FROM type WHERE name='IP_PRIMARY')
+JOIN ip ipm ON s.id = ipm.server and ipm.type = (SELECT id FROM type WHERE name='IP_MANAGEMENT')
+JOIN ip ipi ON s.id = ipi.server and ipi.type = (SELECT id FROM type WHERE name='IP_ILO')
+JOIN interface if ON s.id = if.server and if.id = ipp.interface`
 
 	return selectStmt
 }
@@ -334,6 +340,7 @@ func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		return tc.DBError, tc.SystemError
 	}
 
+	// update record in table server
 	log.Debugf("about to run exec query: %s with server: %++v", updateQuery(), server)
 	resultRows, err := tx.NamedQuery(updateQuery(), server)
 	if err != nil {
@@ -370,6 +377,69 @@ func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
+
+	// update record in table interface
+	primaryIP, err, errType := getIpByServerAndType(db, *server.ID, "IP_PRIMARY")
+	if err != nil {
+		log.Errorf("can not get primary ip for server %d: %+v", *server.ID, err)
+		return err, errType
+	}
+
+	intfUpdate := intf.TOInterface{
+		ID:            primaryIP.InterfaceID,
+		ServerID:      server.ID,
+		InterfaceName: server.InterfaceName,
+		InterfaceMtu:  server.InterfaceMtu,
+	}
+
+	err, errType = intfUpdate.UpdateExecAndCheck(tx)
+	if err != nil {
+		log.Errorf("update interface error during server updating: %+v", err)
+		return err, errType
+	}
+
+	// handle primary ip
+	primaryIP.IPAddress = server.IPAddress
+	primaryIP.IPGateway = server.IPGateway
+	primaryIP.IPNetmask = server.IPNetmask
+	primaryIP.IP6Address = server.IP6Address
+	primaryIP.IP6Gateway = server.IP6Gateway
+	err, errType = primaryIP.UpdateExecAndCheck(tx)
+	if err != nil {
+		log.Errorf("update primary ip error during server updating: %+v", err)
+		return err, errType
+	}
+
+	// handle management ip
+	managementIP, err, errType := getIpByServerAndType(db, *server.ID, "IP_MANAGEMENT")
+	if err != nil {
+		log.Errorf("can not get management ip for server %d: %+v", *server.ID, err)
+		return err, errType
+	}
+	managementIP.IPAddress = server.MgmtIPAddress
+	managementIP.IPGateway = server.MgmtIPGateway
+	managementIP.IPNetmask = server.MgmtIPNetmask
+	err, errType = managementIP.UpdateExecAndCheck(tx)
+	if err != nil {
+		log.Errorf("update management ip error during server updating: %+v", err)
+		return err, errType
+	}
+
+	// handle ilo ip
+	iloIP, err, errType := getIpByServerAndType(db, *server.ID, "IP_ILO")
+	if err != nil {
+		log.Errorf("can not get ilo ip for server %d: %+v", *server.ID, err)
+		return err, errType
+	}
+	iloIP.IPAddress = server.MgmtIPAddress
+	iloIP.IPGateway = server.MgmtIPGateway
+	iloIP.IPNetmask = server.MgmtIPNetmask
+	err, errType = iloIP.UpdateExecAndCheck(tx)
+	if err != nil {
+		log.Errorf("update ilo ip error during server updating: %+v", err)
+		return err, errType
+	}
+
 	server.SetID(id)
 	server.LastUpdated = &lastUpdated
 	err = tx.Commit()
@@ -381,6 +451,44 @@ func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	return nil, tc.NoError
 }
 
+//get the unique IP record by server and ip type
+//ip type includes IP_PRIMARY, IP_MANAGEMENT and IP_ILO
+func getIpByServerAndType(db *sqlx.DB, serverID int, ipType string) (*ip.TOIP, error, tc.ApiErrorType) {
+	var ipTypeID int
+	queryTypeStr := fmt.Sprintf("SELECT id FROM type WHERE name='%s'", ipType)
+	err := db.Get(&ipTypeID, queryTypeStr)
+	if err != nil {
+		log.Errorf("received error: %+v from get ID for type %s", err, ipType)
+		return nil, fmt.Errorf("can not get type id for type %s", ipType), tc.SystemError
+	}
+
+	queryIpStr := ip.SelectQuery() + " where ip.server=$1 and ip.type=$2"
+	log.Debugln("Query is ", queryIpStr)
+	rows, err := db.Queryx(queryIpStr, serverID, ipTypeID)
+	if err != nil {
+		log.Errorf("received error: %+v from get IP for server %d and type %d", err, serverID, ipTypeID)
+		return nil, tc.DBError, tc.SystemError
+	}
+	defer rows.Close()
+
+	var ipFound ip.TOIP
+	if rows.Next() {
+		if err = rows.StructScan(&ipFound); err != nil {
+			log.Errorf("received error: %+v from scan IP", err)
+			return nil, tc.DBError, tc.SystemError
+		}
+		if rows.Next() {
+			log.Errorf("too many ips found for server %d and type %s", serverID, ipType)
+			return nil, fmt.Errorf("too many ips found for server %d and type %s", serverID, ipType), tc.SystemError
+		}
+	} else {
+		log.Errorf("no ip found for server %d and type %s", serverID, ipType)
+		return nil, fmt.Errorf("no ip found for server %d and type %s", serverID, ipType), tc.SystemError
+	}
+
+	return &ipFound, nil, tc.NoError
+}
+
 func updateQuery() string {
 	query := `UPDATE
 server SET
@@ -389,21 +497,8 @@ cdn_id=:cdn_id,
 domain_name=:domain_name,
 host_name=:host_name,
 https_port=:https_port,
-ilo_ip_address=:ilo_ip_address,
-ilo_ip_netmask=:ilo_ip_netmask,
-ilo_ip_gateway=:ilo_ip_gateway,
 ilo_username=:ilo_username,
 ilo_password=:ilo_password,
-interface_mtu=:interface_mtu,
-interface_name=:interface_name,
-ip6_address=:ip6_address,
-ip6_gateway=:ip6_gateway,
-ip_address=:ip_address,
-ip_netmask=:ip_netmask,
-ip_gateway=:ip_gateway,
-mgmt_ip_address=:mgmt_ip_address,
-mgmt_ip_netmask=:mgmt_ip_netmask,
-mgmt_ip_gateway=:mgmt_ip_gateway,
 offline_reason=:offline_reason,
 phys_location=:phys_location_id,
 profile=:profile_id,
@@ -446,6 +541,7 @@ func (server *TOServer) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		server.XMPPID = server.HostName
 	}
 
+	// create record in table server
 	resultRows, err := tx.NamedQuery(insertQuery(), server)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -480,6 +576,80 @@ func (server *TOServer) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		log.Errorln(err)
 		return tc.DBError, tc.SystemError
 	}
+
+	// create record in table interface
+	intfCreate := intf.TOInterface{
+		ServerID:      &id,
+		InterfaceName: server.InterfaceName,
+		InterfaceMtu:  server.InterfaceMtu,
+	}
+
+	err, errType := intfCreate.InsertExecAndCheck(tx)
+	if err != nil {
+		return err, errType
+	}
+
+	// create record for primary ip in table ip
+	var ipType int
+	queryStr := "SELECT id FROM type WHERE name='IP_PRIMARY'"
+	err = db.Get(&ipType, queryStr)
+	if err != nil {
+		log.Errorf("received error: %+v from SELECT id FROM type", err)
+		return tc.DBError, tc.SystemError
+	}
+	ipCreate := ip.TOIP{
+		ServerID:    &id,
+		TypeID:      &ipType,
+		InterfaceID: intfCreate.ID,
+		IPAddress:   server.IPAddress,
+		IPGateway:   server.IPGateway,
+		IPNetmask:   server.IPNetmask,
+		IP6Address:  server.IP6Address,
+		IP6Gateway:  server.IP6Gateway,
+	}
+	err, errType = ipCreate.InsertExecAndCheck(tx)
+	if err != nil {
+		return err, errType
+	}
+
+	// create record for management ip in table ip
+	queryStr = "SELECT id FROM type WHERE name='IP_MANAGEMENT'"
+	err = db.Get(&ipType, queryStr)
+	if err != nil {
+		log.Errorf("received error: %+v from SELECT id FROM type", err)
+		return tc.DBError, tc.SystemError
+	}
+	ipCreate = ip.TOIP{
+		ServerID:  &id,
+		TypeID:    &ipType,
+		IPAddress: server.MgmtIPAddress,
+		IPGateway: server.MgmtIPGateway,
+		IPNetmask: server.MgmtIPNetmask,
+	}
+	err, errType = ipCreate.InsertExecAndCheck(tx)
+	if err != nil {
+		return err, errType
+	}
+
+	// create record for ilo ip in table ip
+	queryStr = "SELECT id FROM type WHERE name='IP_ILO'"
+	err = db.Get(&ipType, queryStr)
+	if err != nil {
+		log.Errorf("received error: %+v from SELECT id FROM type", err)
+		return tc.DBError, tc.SystemError
+	}
+	ipCreate = ip.TOIP{
+		ServerID:  &id,
+		TypeID:    &ipType,
+		IPAddress: server.ILOIPAddress,
+		IPGateway: server.ILOIPGateway,
+		IPNetmask: server.ILOIPNetmask,
+	}
+	err, errType = ipCreate.InsertExecAndCheck(tx)
+	if err != nil {
+		return err, errType
+	}
+
 	server.SetKeys(map[string]interface{}{"id": id})
 	server.LastUpdated = &lastUpdated
 	err = tx.Commit()
@@ -498,21 +668,8 @@ cdn_id,
 domain_name,
 host_name,
 https_port,
-ilo_ip_address,
-ilo_ip_netmask,
-ilo_ip_gateway,
 ilo_username,
 ilo_password,
-interface_mtu,
-interface_name,
-ip6_address,
-ip6_gateway,
-ip_address,
-ip_netmask,
-ip_gateway,
-mgmt_ip_address,
-mgmt_ip_netmask,
-mgmt_ip_gateway,
 offline_reason,
 phys_location,
 profile,
@@ -528,21 +685,8 @@ upd_pending) VALUES (
 :domain_name,
 :host_name,
 :https_port,
-:ilo_ip_address,
-:ilo_ip_netmask,
-:ilo_ip_gateway,
 :ilo_username,
 :ilo_password,
-:interface_mtu,
-:interface_name,
-:ip6_address,
-:ip6_gateway,
-:ip_address,
-:ip_netmask,
-:ip_gateway,
-:mgmt_ip_address,
-:mgmt_ip_netmask,
-:mgmt_ip_gateway,
 :offline_reason,
 :phys_location_id,
 :profile_id,
