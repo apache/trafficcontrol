@@ -56,3 +56,7 @@ type CacheGroupNullable struct {
 	TypeID                      *int          `json:"typeId" db:"type_id"`     // aliased to type_id to disambiguate struct scans due join on 'type' table
 	LastUpdated                 *tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
+
+type CachegroupTrimmedName struct {
+	Name string `json:"name"`
+}
