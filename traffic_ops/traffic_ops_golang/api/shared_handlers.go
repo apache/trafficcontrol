@@ -465,6 +465,19 @@ func RespWriter(w http.ResponseWriter, r *http.Request) func(v interface{}, err 
 	}
 }
 
+// WriteRespAlert creates an alert, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
+// This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
+func WriteRespAlert(w http.ResponseWriter, r *http.Request, level tc.AlertLevel, msg string) {
+	resp := struct{ tc.Alerts }{tc.CreateAlerts(level, msg)}
+	respBts, err := json.Marshal(resp)
+	if err != nil {
+		HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("marshalling JSON: "+err.Error()))
+		return
+	}
+	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Write(respBts)
+}
+
 // IntParams parses integer parameters, and returns map of the given params, or an error. This guarantees if error is nil, all requested parameters successfully parsed and exist in the returned map, hence if error is nil there's no need to check for existence. The intParams may be nil if no integer parameters are required.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func IntParams(params map[string]string, intParamNames []string) (map[string]int, error) {
