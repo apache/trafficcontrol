@@ -558,3 +558,15 @@ func GetUserByEmail(tx *sqlx.Tx, email string) (tc.User, bool, error) {
 	}
 	return u, true, nil
 }
+
+// GetGlobalParam returns the global parameter with the requested name, whether it existed, and any error
+func GetGlobalParam(tx *sql.Tx, name string) (string, bool, error) {
+	val := ""
+	if err := tx.QueryRow(`SELECT value FROM parameter WHERE config_file = 'global' and name = $1`, name).Scan(&val); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("querying global parameter '" + name + "': " + err.Error())
+	}
+	return val, true, nil
+}
