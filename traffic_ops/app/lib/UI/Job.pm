@@ -74,7 +74,7 @@ sub newjob {
 			$org_server_fqdn =~ s/\/$//;
 		}
 		else {
-			$org_server_fqdn = $ds->org_server_fqdn;
+			$org_server_fqdn = UI::DeliveryService::compute_org_server_fqdn($self, $ds->id);
 		}
 		my $ds_id = $ds->id;
 

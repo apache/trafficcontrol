@@ -58,11 +58,15 @@ sub edit {
 	my $server_count = $self->db->resultset('DeliveryserviceServer')->search( { deliveryservice => $id } )->count();
 	my $static_count = $self->db->resultset('Staticdnsentry')->search( { deliveryservice => $id } )->count();
 
+	my $origin = {};
+	$origin->{org_server_fqdn} = compute_org_server_fqdn($self, $id);
+
 	$self->stash_profile_selector('DS_PROFILE', defined($data->profile) ? $data->profile->id : undef);
 	$self->stash_cdn_selector($data->cdn->id);
 	&stash_role($self);
 	$self->stash(
 		ds           => $data,
+		origin       => $origin,
 		server_count => $server_count,
 		static_count => $static_count,
 		fbox_layout  => 1,
@@ -71,6 +75,24 @@ sub edit {
 		hidden       => {},               # for form validation purposes
 		mode         => 'edit'            # for form generation
 	);
+}
+
+sub compute_org_server_fqdn {
+	my $self = shift;
+	my $ds_id = shift;
+
+	my $origin = $self->db->resultset('Origin')->search( { deliveryservice => $ds_id, is_primary => 1 } )->single();
+	if (!defined( $origin )) {
+		return undef;
+	}
+
+	my $protocol = $origin->protocol;
+	my $fqdn = $origin->fqdn;
+	my $port = $origin->port;
+
+	my $url = $protocol . "://" . $fqdn;
+
+	return defined($port) ? $url . ":" . $port : $url;
 }
 
 sub get_example_urls {
@@ -223,7 +245,7 @@ sub read {
 				"dns_bypass_ip6"              => $row->dns_bypass_ip6,
 				"dns_bypass_cname"            => $row->dns_bypass_cname,
 				"dns_bypass_ttl"              => $row->dns_bypass_ttl,
-				"org_server_fqdn"             => $row->org_server_fqdn,
+				"org_server_fqdn"             => compute_org_server_fqdn($self, $row->id),
 				"multi_site_origin"           => \$row->multi_site_origin,
 				"ccr_dns_ttl"                 => $row->ccr_dns_ttl,
 				"type"                        => $row->type->id,
@@ -440,13 +462,13 @@ sub check_deliveryservice_input {
 		$self->field('ds.routing_name')->is_equal("", $self->param('ds.routing_name') . " is not a valid hostname without periods.");
 	}
 
-	my $org_host_name = $self->param('ds.org_server_fqdn');
-	$self->field('ds.org_server_fqdn')->is_like( qr/^(https?:\/\/)/, "Origin Server Base URL must start with http(s)://" );
+	my $org_host_name = $self->param('origin.org_server_fqdn');
+	$self->field('origin.org_server_fqdn')->is_like( qr/^(https?:\/\/)/, "Origin Server Base URL must start with http(s)://" );
 	$org_host_name =~ s!^https?://?!!i;
 	$org_host_name =~ s/:(.*)$//;
 	my $port = defined($1) ? $1 : 80;
 	if ( !&is_hostname($org_host_name) || $port !~ /^[1-9][0-9]*$/ ) {
-		$self->field('ds.org_server_fqdn')
+		$self->field('origin.org_server_fqdn')
 			->is_equal( "", $org_host_name . " is not a valid org server name (rfc1123) or " . $port . " is not a valid port" );
 	}
 	if ( $self->param('ds.http_bypass_fqdn') ne ""
@@ -792,6 +814,31 @@ sub delete_cfg_file {
 	}
 }
 
+sub get_primary_origin_from_deliveryservice {
+	my $deliveryservice_id = shift;
+	my $deliveryservice = shift;
+	my $org_server_fqdn = shift;
+
+	if ( !defined( $org_server_fqdn ) || $org_server_fqdn eq "" ) {
+		return undef;
+	}
+
+	$org_server_fqdn =~ m{^(https?)://([^:]+)(:(\d+))?$}i;
+	my $protocol = lc($1);
+	my $fqdn = $2;
+	my $port = $4;
+
+	return {
+		name => $deliveryservice->{xml_id},
+		deliveryservice => $deliveryservice_id,
+		fqdn => $fqdn,
+		protocol => $protocol,
+		is_primary => 1,
+		port => $port,
+		tenant => $deliveryservice ->{tenant_id}
+	};
+}
+
 # Update
 sub update {
 	my $self = shift;
@@ -815,7 +862,6 @@ sub update {
 			geo_limit_countries         => sanitize_geo_limit_countries( $self->paramAsScalar('ds.geo_limit_countries') ),
 			geolimit_redirect_url       => $self->param('ds.geolimit_redirect_url'),
 			geo_provider                => $self->paramAsScalar('ds.geo_provider'),
-			org_server_fqdn             => $self->paramAsScalar('ds.org_server_fqdn'),
 			multi_site_origin           => $self->paramAsScalar('ds.multi_site_origin'),
 			ccr_dns_ttl                 => $self->paramAsScalar('ds.ccr_dns_ttl'),
 			type                        => $self->typeid(),
@@ -872,6 +918,15 @@ sub update {
 		$update->update( \%hash );
 		$update->update();
 		&log( $self, "Update deliveryservice with xml_id:" . $self->param('ds.xml_id'), "UICHANGE" );
+
+		# find this DS's primary Origin and update it too
+		my $origin_rs = $self->db->resultset('Origin')->find( { deliveryservice => $id, is_primary => 1 } );
+		if ( defined( $origin_rs ) ) {
+			my $origin = get_primary_origin_from_deliveryservice($id, \%hash, $self->paramAsScalar('origin.org_server_fqdn'));
+			if ( defined( $origin ) ) {
+				$origin_rs->update($origin);
+			}
+		}
 
 		# get the existing regexp set in a hash
 		my $regexp_set;
@@ -979,12 +1034,15 @@ sub update {
 		my $regexp_set   = &get_regexp_set( $self, $id );
 		my @example_urls = &get_example_urls( $self, $id, $regexp_set, $data, $cdn_domain, $data->protocol );
 		my $action;
+		my $origin = {};
+		$origin->{org_server_fqdn} = compute_org_server_fqdn($self, $id);
 
 		$self->stash_profile_selector('DS_PROFILE', defined($data->profile) ? $data->profile->id : undef);
 		$self->stash_cdn_selector($data->cdn->id);
 
 		$self->stash(
 			ds           => $data,
+			origin       => $origin,
 			fbox_layout  => 1,
 			server_count => $server_count,
 			static_count => $static_count,
@@ -1056,7 +1114,6 @@ sub create {
 				dns_bypass_ip6              => $self->paramAsScalar('ds.dns_bypass_ip6'),
 				dns_bypass_cname            => $self->paramAsScalar('ds.dns_bypass_cname'),
 				dns_bypass_ttl              => $self->paramAsScalar('ds.dns_bypass_ttl'),
-				org_server_fqdn             => $self->paramAsScalar('ds.org_server_fqdn'),
 				multi_site_origin           => $self->paramAsScalar('ds.multi_site_origin'),
 				ccr_dns_ttl                 => $self->paramAsScalar('ds.ccr_dns_ttl'),
 				type                        => $self->paramAsScalar('ds.type'),
@@ -1097,6 +1154,14 @@ sub create {
 		$insert->insert();
 		$new_id = $insert->id;
 		&log( $self, "Create deliveryservice with xml_id:" . $self->param('ds.xml_id'), "UICHANGE" );
+
+		# create primary Origin for this DS
+		my $origin = get_primary_origin_from_deliveryservice($insert->id, $new_ds, $self->paramAsScalar('origin.org_server_fqdn'));
+		if (defined( $origin )) {
+			my $origin_rs = $self->db->resultset('Origin')->create($origin)->insert();
+			&log( $self, "Created origin [ '" . $origin_rs->name . "' ] with id: " . $origin_rs->id, "UICHANGE" );
+		}
+
 
 		if ( $new_id == -1 ) {    # there was an error the flash will already be set,
 			my $referer = $self->req->headers->header('referer');
@@ -1183,6 +1248,7 @@ sub create {
 				&stash_role($self);
 				$self->stash(
 					ds               => {},
+					origin           => {},
 					fbox_layout      => 1,
 					selected_type    => $selected_type,
 					selected_profile => $selected_profile,
@@ -1204,6 +1270,7 @@ sub create {
 		&stash_role($self);
 		$self->stash(
 			ds               => {},
+			origin           => {},
 			fbox_layout      => 1,
 			selected_type    => $selected_type,
 			selected_profile => $selected_profile,
@@ -1327,6 +1394,7 @@ sub add {
 	$self->stash(
 		fbox_layout      => 1,
 		ds               => {},
+		origin           => {},
 		selected_type    => "",
 		selected_profile => "",
 		selected_cdn     => "",

@@ -119,7 +119,7 @@ sub edit {
 
 	$self->stash( ds_id            => $id );
 	$self->stash( assigned_servers => $dss_data );
-	$self->stash( ds_name          => $ds->xml_id . ' (' . $ds->org_server_fqdn . ')' );
+	$self->stash( ds_name          => $ds->xml_id . ' (' . UI::DeliveryService::compute_org_server_fqdn($self, $ds->id) . ')' );
 	$self->stash( fbox_layout      => 1 );
 	$self->stash( dss_data         => $dss_data );
 	$self->stash( totals           => $totals );

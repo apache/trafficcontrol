@@ -260,7 +260,8 @@ func validateTypeFields(db *sqlx.DB, ds *tc.DeliveryServiceNullableV12) []error 
 		"multiSiteOrigin": validation.Validate(ds.MultiSiteOrigin,
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 		"orgServerFqdn": validation.Validate(ds.OrgServerFQDN,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
+			validation.NewStringRule(validateOrgServerFQDN, "must start with http:// or https:// and be followed by a valid hostname with an optional port (no trailing slash)")),
 		"protocol": validation.Validate(ds.Protocol,
 			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
 		"qstringIgnore": validation.Validate(ds.QStringIgnore,
@@ -273,6 +274,14 @@ func validateTypeFields(db *sqlx.DB, ds *tc.DeliveryServiceNullableV12) []error 
 		return toErrs
 	}
 	return nil
+}
+
+func validateOrgServerFQDN(orgServerFQDN string) bool {
+	_, fqdn, port, err := parseOrgServerFQDN(orgServerFQDN)
+	if err != nil || !govalidator.IsHost(*fqdn) || (port != nil && !govalidator.IsPort(*port)) {
+		return false
+	}
+	return true
 }
 
 func requiredIfMatchesTypeName(patterns []string, typeName string) func(interface{}) error {

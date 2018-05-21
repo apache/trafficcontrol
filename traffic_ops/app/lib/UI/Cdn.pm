@@ -475,7 +475,7 @@ sub adeliveryservice {
         my $cdn_name = defined( $row->cdn_id ) ? $row->cdn->name : "";
 
         # This will be undefined for 'Steering' delivery services
-        my $org_server_fqdn = defined($row->org_server_fqdn) ? $row->org_server_fqdn : "";
+        my $org_server_fqdn = UI::DeliveryService::compute_org_server_fqdn($self, $row->id) // "";
 
         my $ptext = defined($row->profile) ? $row->profile->name : "-";
         my $line = [

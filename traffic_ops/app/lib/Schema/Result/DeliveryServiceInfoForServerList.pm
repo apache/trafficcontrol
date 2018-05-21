@@ -45,7 +45,10 @@ SELECT
     deliveryservice.routing_name AS routing_name,
     deliveryservice.signing_algorithm AS signing_algorithm,
     deliveryservice.qstring_ignore AS qstring_ignore,
-    deliveryservice.org_server_fqdn as org_server_fqdn,
+    (SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')
+        FROM origin o
+        WHERE o.deliveryservice = deliveryservice.id
+        AND o.is_primary) as org_server_fqdn,
     deliveryservice.multi_site_origin as multi_site_origin,
     deliveryservice.range_request_handling as range_request_handling,
     deliveryservice.fq_pacing_rate as fq_pacing_rate,

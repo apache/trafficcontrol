@@ -29,6 +29,7 @@ use Schema;
 use Utils::Tenant;
 use Fixtures::Cdn;
 use Fixtures::Deliveryservice;
+use Fixtures::Origin;
 use Fixtures::DeliveryserviceTmuser;
 use Fixtures::Asn;
 use Fixtures::Cachegroup;
@@ -136,6 +137,7 @@ sub load_core_data {
 	$self->load_all_fixtures( Fixtures::Server->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Asn->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Deliveryservice->new($schema_values) );
+	$self->load_all_fixtures( Fixtures::Origin->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Regex->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::DeliveryserviceRegex->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::DeliveryserviceTmuser->new($schema_values) );
@@ -162,6 +164,7 @@ sub unload_core_data {
 	$self->teardown($schema, 'DeliveryserviceRegex');
 	$self->teardown($schema, 'Regex');
 	$self->teardown($schema, 'DeliveryserviceServer');
+	$self->teardown($schema, 'Origin');
 	$self->teardown($schema, 'Deliveryservice');
 	$self->teardown($schema, 'Server');
 	$self->teardown($schema, 'PhysLocation');

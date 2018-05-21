@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -196,7 +197,7 @@ func create(db *sql.DB, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 	commitTx := false
 	defer dbhelpers.FinishTx(tx, &commitTx)
 
-	resultRows, err := tx.Query(insertQuery(), &ds.Active, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CheckPath, &deepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OrgServerFQDN, &ds.OriginShield, &ds.ProfileID, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.TypeID, &ds.XMLID)
+	resultRows, err := tx.Query(insertQuery(), &ds.Active, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CheckPath, &deepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OriginShield, &ds.ProfileID, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.TypeID, &ds.XMLID)
 
 	if err != nil {
 		if pqerr, ok := err.(*pq.Error); ok {
@@ -270,6 +271,11 @@ func create(db *sql.DB, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 	if err := createDNSSecKeys(tx, cfg, *ds.ID, *ds.XMLID, cdnName, cdnDomain, dnssecEnabled, ds.ExampleURLs); err != nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating DNSSEC keys: " + err.Error())
 	}
+
+	if err := createPrimaryOrigin(db, tx, user, ds); err != nil {
+		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating delivery service: " + err.Error())
+	}
+
 	ds.LastUpdated = &lastUpdated
 	commitTx = true
 	api.CreateChangeLogRaw(api.ApiChange, "Created ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), *user, db)
@@ -303,6 +309,88 @@ func createDefaultRegex(tx *sql.Tx, dsID int, xmlID string) error {
 	if _, err := tx.Exec(`INSERT INTO deliveryservice_regex (deliveryservice, regex, set_number) VALUES ($1::bigint, $2::bigint, 0)`, dsID, regexID); err != nil {
 		return errors.New("executing parameter query to insert location: " + err.Error())
 	}
+	return nil
+}
+
+func parseOrgServerFQDN(orgServerFQDN string) (*string, *string, *string, error) {
+	originRegex := regexp.MustCompile(`^(https?)://([^:]+)(:(\d+))?$`)
+	matches := originRegex.FindStringSubmatch(orgServerFQDN)
+	if len(matches) == 0 {
+		return nil, nil, nil, fmt.Errorf("unable to parse invalid orgServerFqdn: '%s'", orgServerFQDN)
+	}
+
+	protocol := strings.ToLower(matches[1])
+	FQDN := matches[2]
+
+	if len(protocol) == 0 || len(FQDN) == 0 {
+		return nil, nil, nil, fmt.Errorf("empty Origin protocol or FQDN parsed from '%s'", orgServerFQDN)
+	}
+
+	var port *string
+	if len(matches[4]) != 0 {
+		port = &matches[4]
+	}
+	return &protocol, &FQDN, port, nil
+}
+
+func createPrimaryOrigin(db *sql.DB, tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullableV13) error {
+	if ds.OrgServerFQDN == nil {
+		return nil
+	}
+
+	protocol, fqdn, port, err := parseOrgServerFQDN(*ds.OrgServerFQDN)
+	if err != nil {
+		return fmt.Errorf("creating primary origin: %v", err)
+	}
+
+	originID := 0
+	q := `INSERT INTO origin (name, fqdn, protocol, is_primary, port, deliveryservice, tenant) VALUES ($1, $2, $3, TRUE, $4, $5, $6) RETURNING id`
+	if err := tx.QueryRow(q, ds.XMLID, fqdn, protocol, port, ds.ID, ds.TenantID).Scan(&originID); err != nil {
+		return fmt.Errorf("insert origin from '%s': %s", *ds.OrgServerFQDN, err.Error())
+	}
+
+	api.CreateChangeLogRaw(api.ApiChange, "Created primary origin id: "+strconv.Itoa(originID)+" for delivery service: "+*ds.XMLID, *user, db)
+
+	return nil
+}
+
+func updatePrimaryOrigin(db *sql.DB, tx *sql.Tx, user *auth.CurrentUser, ds tc.DeliveryServiceNullableV13) error {
+	count := 0
+	q := `SELECT count(*) FROM origin WHERE deliveryservice = $1 AND is_primary`
+	if err := tx.QueryRow(q, *ds.ID).Scan(&count); err != nil {
+		return fmt.Errorf("querying existing primary origin for ds %s: %s", *ds.XMLID, err.Error())
+	}
+
+	if ds.OrgServerFQDN == nil || *ds.OrgServerFQDN == "" {
+		if count == 1 {
+			// the update is removing the existing orgServerFQDN, so the existing row needs to be deleted
+			q = `DELETE FROM origin WHERE deliveryservice = $1 AND is_primary`
+			if _, err := tx.Exec(q, *ds.ID); err != nil {
+				return fmt.Errorf("deleting primary origin for ds %s: %s", *ds.XMLID, err.Error())
+			}
+			api.CreateChangeLogRaw(api.ApiChange, "Deleted primary origin for delivery service: "+*ds.XMLID, *user, db)
+		}
+		return nil
+	}
+
+	if count == 0 {
+		// orgServerFQDN is going from null to not null, so the primary origin needs to be created
+		return createPrimaryOrigin(db, tx, user, ds)
+	}
+
+	protocol, fqdn, port, err := parseOrgServerFQDN(*ds.OrgServerFQDN)
+	if err != nil {
+		return fmt.Errorf("updating primary origin: %v", err)
+	}
+
+	name := ""
+	q = `UPDATE origin SET protocol = $1, fqdn = $2, port = $3 WHERE is_primary AND deliveryservice = $4 RETURNING name`
+	if err := tx.QueryRow(q, protocol, fqdn, port, *ds.ID).Scan(&name); err != nil {
+		return fmt.Errorf("update primary origin for ds %s from '%s': %s", *ds.XMLID, *ds.OrgServerFQDN, err.Error())
+	}
+
+	api.CreateChangeLogRaw(api.ApiChange, "Updated primary origin: "+name+" for delivery service: "+*ds.XMLID, *user, db)
+
 	return nil
 }
 
@@ -423,7 +511,7 @@ func update(db *sql.DB, cfg config.Config, user auth.CurrentUser, ds *tc.Deliver
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
 
-	resultRows, err := tx.Query(updateDSQuery(), &ds.Active, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CheckPath, &deepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OrgServerFQDN, &ds.OriginShield, &ds.ProfileID, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.TypeID, &ds.XMLID, &ds.ID)
+	resultRows, err := tx.Query(updateDSQuery(), &ds.Active, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CheckPath, &deepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OriginShield, &ds.ProfileID, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.TypeID, &ds.XMLID, &ds.ID)
 
 	if err != nil {
 		if err, ok := err.(*pq.Error); ok {
@@ -506,6 +594,11 @@ func update(db *sql.DB, cfg config.Config, user auth.CurrentUser, ds *tc.Deliver
 	if err := ensureCacheURLParams(tx, *ds.ID, *ds.XMLID, ds.CacheURL); err != nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating mid cacheurl parameters: " + err.Error())
 	}
+
+	if err := updatePrimaryOrigin(db, tx, &user, *ds); err != nil {
+		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("updating delivery service: " + err.Error())
+	}
+
 	ds.LastUpdated = &lastUpdated
 	commitTx = true
 	api.CreateChangeLogRaw(api.ApiChange, "Updated ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, db)
@@ -1018,7 +1111,10 @@ ds.mid_header_rewrite,
 COALESCE(ds.miss_lat, 0.0),
 COALESCE(ds.miss_long, 0.0),
 ds.multi_site_origin,
-ds.org_server_fqdn,
+(SELECT o.protocol::::text || ':://' || o.fqdn || rtrim(concat('::', o.port::::text), '::')
+	FROM origin o
+	WHERE o.deliveryservice = ds.id
+	AND o.is_primary) as org_server_fqdn,
 ds.origin_shield,
 ds.profile as profileID,
 profile.name as profile_name,
@@ -1085,24 +1181,23 @@ mid_header_rewrite=$30,
 miss_lat=$31,
 miss_long=$32,
 multi_site_origin=$33,
-org_server_fqdn=$34,
-origin_shield=$35,
-profile=$36,
-protocol=$37,
-qstring_ignore=$38,
-range_request_handling=$39,
-regex_remap=$40,
-regional_geo_blocking=$41,
-remap_text=$42,
-routing_name=$43,
-signing_algorithm=$44,
-ssl_key_version=$45,
-tenant_id=$46,
-tr_request_headers=$47,
-tr_response_headers=$48,
-type=$49,
-xml_id=$50
-WHERE id=$51
+origin_shield=$34,
+profile=$35,
+protocol=$36,
+qstring_ignore=$37,
+range_request_handling=$38,
+regex_remap=$39,
+regional_geo_blocking=$40,
+remap_text=$41,
+routing_name=$42,
+signing_algorithm=$43,
+ssl_key_version=$44,
+tenant_id=$45,
+tr_request_headers=$46,
+tr_response_headers=$47,
+type=$48,
+xml_id=$49
+WHERE id=$50
 RETURNING last_updated
 `
 }
@@ -1143,7 +1238,6 @@ mid_header_rewrite,
 miss_lat,
 miss_long,
 multi_site_origin,
-org_server_fqdn,
 origin_shield,
 profile,
 protocol,
@@ -1161,7 +1255,7 @@ tr_response_headers,
 type,
 xml_id
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49)
 RETURNING id, last_updated
 `
 }

@@ -526,7 +526,10 @@ sub delivery_service_data_by_profile {
 		deliveryservice.routing_name,
 		deliveryservice.signing_algorithm,
 		deliveryservice.qstring_ignore,
-		deliveryservice.org_server_fqdn,
+		(SELECT o.protocol::text || \'://\' || o.fqdn || rtrim(concat(\':\', o.port::text), \':\')
+			FROM origin o
+			WHERE o.deliveryservice = deliveryservice.id
+			AND o.is_primary) as org_server_fqdn,
 		deliveryservice.origin_shield,
 		regex.pattern AS pattern,
     	retype.name AS re_type,
@@ -2237,7 +2240,7 @@ sub cachegroup_profiles {
 		if ( $row->type->name eq 'ORG' ) {
 			my $rs_ds = $self->db->resultset('DeliveryserviceServer')->search( { server => $row->id }, { prefetch => ['deliveryservice'] } );
 			while ( my $ds_row = $rs_ds->next ) {
-				my $org_uri = URI->new( $ds_row->deliveryservice->org_server_fqdn );
+				my $org_uri = URI->new( UI::DeliveryService::compute_org_server_fqdn($self, $ds_row->deliveryservice->id) );
 				push( @{ $deliveryservices->{ $org_uri->host } }, $row );
 			}
 		}

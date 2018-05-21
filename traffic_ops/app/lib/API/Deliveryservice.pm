@@ -138,7 +138,7 @@ sub index {
 				"missLat"              => defined( $row->miss_lat ) ? 0.0 + $row->miss_lat : undef,
 				"missLong"             => defined( $row->miss_long ) ? 0.0 + $row->miss_long : undef,
 				"multiSiteOrigin"      => \$row->multi_site_origin,
-				"orgServerFqdn"        => $row->org_server_fqdn,
+				"orgServerFqdn"        => UI::DeliveryService::compute_org_server_fqdn($self, $row->id),
 				"originShield"         => $row->origin_shield,
 				"profileId"            => defined( $row->profile ) ? $row->profile->id : undef,
 				"profileName"          => defined( $row->profile ) ? $row->profile->name : undef,
@@ -262,7 +262,7 @@ sub show {
 				"missLat"              => defined( $row->miss_lat ) ? 0.0 + $row->miss_lat : undef,
 				"missLong"             => defined( $row->miss_long ) ? 0.0 + $row->miss_long : undef,
 				"multiSiteOrigin"      => \$row->multi_site_origin,
-				"orgServerFqdn"        => $row->org_server_fqdn,
+				"orgServerFqdn"        => UI::DeliveryService::compute_org_server_fqdn($self, $row->id),
 				"originShield"         => $row->origin_shield,
 				"profileId"            => defined( $row->profile ) ? $row->profile->id : undef,
 				"profileName"          => defined( $row->profile ) ? $row->profile->name : undef,
@@ -376,7 +376,6 @@ sub update {
 		miss_lat               => $params->{missLat},
 		miss_long              => $params->{missLong},
 		multi_site_origin      => $params->{multiSiteOrigin},
-		org_server_fqdn        => $params->{orgServerFqdn},
 		origin_shield          => $params->{originShield},
 		profile                => $params->{profileId},
 		protocol               => $params->{protocol},
@@ -412,6 +411,21 @@ sub update {
 
 	my $rs = $ds->update($values);
 	if ($rs) {
+
+		# find this DS's primary Origin and update it too
+		my $origin_rs = $self->db->resultset('Origin')->find( { deliveryservice => $id, is_primary => 1 } );
+		my $origin = UI::DeliveryService::get_primary_origin_from_deliveryservice($id, $values, $params->{orgServerFqdn});
+		if ( defined( $origin ) && defined( $origin_rs ) ) {
+			$origin_rs->update($origin);
+			&log( $self, "Updated primary origin [ '" . $origin_rs->name . "' ] with id: " . $origin_rs->id, "APICHANGE" );
+		} elsif ( defined( $origin ) && !defined( $origin_rs ) ) {
+			$origin_rs = $self->db->resultset('Origin')->create($origin)->insert();
+			&log( $self, "Created primary origin [ '" . $origin_rs->name . "' ] with id: " . $origin_rs->id, "APICHANGE" );
+		} elsif ( !defined( $origin ) && defined( $origin_rs ) ) {
+			my $name = $origin_rs->name;
+			$origin_rs->delete();
+			&log( $self, "Deleted primary origin [ '" . $name . "' ] ", "APICHANGE" );
+		}
 
 		# create location parameters for header_rewrite*, regex_remap* and cacheurl* config files if necessary
 		&UI::DeliveryService::header_rewrite( $self, $rs->id, $values->{profileId}, $values->{xmlId}, $values->{edgeHeaderRewrite}, "edge" );
@@ -480,7 +494,7 @@ sub update {
 				"missLat"                  => defined($rs->miss_lat) ? 0.0 + $rs->miss_lat : undef,
 				"missLong"                 => defined($rs->miss_long) ? 0.0 + $rs->miss_long : undef,
 				"multiSiteOrigin"          => $rs->multi_site_origin,
-				"orgServerFqdn"            => $rs->org_server_fqdn,
+				"orgServerFqdn"            => UI::DeliveryService::compute_org_server_fqdn($self, $rs->id),
 				"originShield"             => $rs->origin_shield,
 				"profileId"                => defined($rs->profile) ? $rs->profile->id : undef,
 				"profileName"              => defined($rs->profile) ? $rs->profile->name : undef,
@@ -614,7 +628,7 @@ sub safe_update {
 				"missLat"                  => defined($rs->miss_lat) ? 0.0 + $rs->miss_lat : undef,
 				"missLong"                 => defined($rs->miss_long) ? 0.0 + $rs->miss_long : undef,
 				"multiSiteOrigin"          => $rs->multi_site_origin,
-				"orgServerFqdn"            => $rs->org_server_fqdn,
+				"orgServerFqdn"            => UI::DeliveryService::compute_org_server_fqdn($self, $rs->id),
 				"originShield"             => $rs->origin_shield,
 				"profileId"                => defined($rs->profile) ? $rs->profile->id : undef,
 				"profileName"              => defined($rs->profile) ? $rs->profile->name : undef,
@@ -719,7 +733,6 @@ sub create {
 		miss_lat               => $params->{missLat},
 		miss_long              => $params->{missLong},
 		multi_site_origin      => $params->{multiSiteOrigin},
-		org_server_fqdn        => $params->{orgServerFqdn},
 		origin_shield          => $params->{originShield},
 		profile                => $params->{profileId},
 		protocol               => $params->{protocol},
@@ -755,6 +768,12 @@ sub create {
 	if ($insert) {
 
 		&log( $self, "Created delivery service [ '" . $insert->xml_id . "' ] with id: " . $insert->id, "APICHANGE" );
+
+		my $origin = UI::DeliveryService::get_primary_origin_from_deliveryservice($insert->id, $values, $params->{orgServerFqdn});
+		if (defined( $origin )) {
+			my $origin_rs = $self->db->resultset('Origin')->create($origin)->insert();
+			&log( $self, "Created origin [ '" . $origin_rs->name . "' ] with id: " . $origin_rs->id, "APICHANGE" );
+		}
 
 		# create location parameters for header_rewrite*, regex_remap* and cacheurl* config files if necessary
 		&UI::DeliveryService::header_rewrite( $self, $insert->id, $values->{id}, $values->{xml_id}, $values->{edge_header_rewrite}, "edge" );
@@ -834,7 +853,7 @@ sub create {
 				"missLat"                  => defined($insert->miss_lat) ? 0.0 + $insert->miss_lat : undef,
 				"missLong"                 => defined($insert->miss_long) ? 0.0 + $insert->miss_long : undef,
 				"multiSiteOrigin"          => $insert->multi_site_origin,
-				"orgServerFqdn"            => $insert->org_server_fqdn,
+				"orgServerFqdn"            => UI::DeliveryService::compute_org_server_fqdn($self, $insert->id),
 				"originShield"             => $insert->origin_shield,
 				"profileId"                => defined($insert->profile) ? $insert->profile->id : undef,
 				"profileName"              => defined($insert->profile) ? $insert->profile->name : undef,
@@ -1027,7 +1046,7 @@ sub get_deliveryservices_by_serverId {
 					"missLat"              => defined( $row->miss_lat ) ? 0.0 + $row->miss_lat : undef,
 					"missLong"             => defined( $row->miss_long ) ? 0.0 + $row->miss_long : undef,
 					"multiSiteOrigin"      => \$row->multi_site_origin,
-					"orgServerFqdn"        => $row->org_server_fqdn,
+					"orgServerFqdn"        => UI::DeliveryService::compute_org_server_fqdn($self, $row->id),
 					"originShield"         => $row->origin_shield,
 					"profileId"            => defined( $row->profile ) ? $row->profile->id : undef,
 					"profileName"          => defined( $row->profile ) ? $row->profile->name : undef,
@@ -1128,7 +1147,7 @@ sub get_deliveryservices_by_userId {
 					"missLat"              => defined( $row->miss_lat ) ? 0.0 + $row->miss_lat : undef,
 					"missLong"             => defined( $row->miss_long ) ? 0.0 + $row->miss_long : undef,
 					"multiSiteOrigin"      => \$row->multi_site_origin,
-					"orgServerFqdn"        => $row->org_server_fqdn,
+					"orgServerFqdn"        => UI::DeliveryService::compute_org_server_fqdn($self, $row->id),
 					"originShield"         => $row->origin_shield,
 					"profileId"            => defined( $row->profile ) ? $row->profile->id : undef,
 					"profileName"          => defined( $row->profile ) ? $row->profile->name : undef,

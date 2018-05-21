@@ -44,7 +44,7 @@ __PACKAGE__->table("profile");
 
   data_type: 'timestamp with time zone'
   default_value: current_timestamp
-  is_nullable: 1
+  is_nullable: 0
   original: {default_value => \"now()"}
 
 =head2 type
@@ -83,7 +83,7 @@ __PACKAGE__->add_columns(
   {
     data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable   => 1,
+    is_nullable   => 0,
     original      => { default_value => \"now()" },
   },
   "type",
@@ -179,6 +179,21 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
+=head2 origins
+
+Type: has_many
+
+Related object: L<Schema::Result::Origin>
+
+=cut
+
+__PACKAGE__->has_many(
+  "origins",
+  "Schema::Result::Origin",
+  { "foreign.profile" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
 =head2 profile_parameters
 
 Type: has_many
@@ -210,8 +225,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07047 @ 2017-09-05 09:54:32
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:BzUCSsUKInomx0bcvL5eAw
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2018-05-15 16:06:00
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:eX4sXLElEMpaA0xfHTv5lw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
