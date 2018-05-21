@@ -86,12 +86,12 @@ func SetupTestData(*sql.DB) error {
 func SetupRoles(db *sql.DB) error {
 
 	sqlStmt := `
-INSERT INTO role (id, name, description, priv_level) VALUES (1, 'disallowed','Block all access',0) ON CONFLICT DO NOTHING;
-INSERT INTO role (id, name, description, priv_level) VALUES (2, 'read-only user','Block all access', 10) ON CONFLICT DO NOTHING;
-INSERT INTO role (id, name, description, priv_level) VALUES (3, 'operations','Block all access', 20) ON CONFLICT DO NOTHING;
-INSERT INTO role (id, name, description, priv_level) VALUES (4, 'admin','super-user', 30) ON CONFLICT DO NOTHING;
-INSERT INTO role (id, name, description, priv_level) VALUES (5, 'portal','Portal User', 2) ON CONFLICT DO NOTHING;
-INSERT INTO role (id, name, description, priv_level) VALUES (7, 'federation','Role for Secondary CZF', 15) ON CONFLICT DO NOTHING;
+INSERT INTO role (name, description, priv_level) VALUES ('disallowed','Block all access',0) ON CONFLICT DO NOTHING;
+INSERT INTO role (name, description, priv_level) VALUES ('read-only user','Block all access', 10) ON CONFLICT DO NOTHING;
+INSERT INTO role (name, description, priv_level) VALUES ('operations','Block all access', 20) ON CONFLICT DO NOTHING;
+INSERT INTO role (name, description, priv_level) VALUES ('admin','super-user', 30) ON CONFLICT DO NOTHING;
+INSERT INTO role (name, description, priv_level) VALUES ('portal','Portal User', 2) ON CONFLICT DO NOTHING;
+INSERT INTO role (name, description, priv_level) VALUES ('federation','Role for Secondary CZF', 15) ON CONFLICT DO NOTHING;
 `
 	err := execSQL(db, sqlStmt, "role")
 	if err != nil {
@@ -141,7 +141,7 @@ INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_
 INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Operations + `','` + encryptedPassword + `','` + encryptedPassword + `', 3, 3);
 INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Admin + `','` + encryptedPassword + `','` + encryptedPassword + `', 4, 2);
 INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Portal + `','` + encryptedPassword + `','` + encryptedPassword + `', 5, 3);
-INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Federation + `','` + encryptedPassword + `','` + encryptedPassword + `', 7, 3);
+INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Federation + `','` + encryptedPassword + `','` + encryptedPassword + `', 6, 3);
 `
 	err = execSQL(db, sqlStmt, "tm_user")
 	if err != nil {
@@ -345,6 +345,7 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM deliveryservice_tmuser;
 	DELETE FROM tm_user;
 	DELETE FROM role;
+	ALTER SEQUENCE role_id_seq RESTART WITH 1;
 	DELETE FROM deliveryservice_regex;
 	DELETE FROM regex;
 	DELETE FROM deliveryservice_server;
