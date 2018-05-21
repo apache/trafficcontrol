@@ -384,6 +384,8 @@ Metrics
 
 **GET /api/1.1/cdns/metric_types/:metric/start_date/:start/end_date/:end**
 
+*Note: this route is not currently implemented in Traffic Ops. See https://github.com/apache/incubator-trafficcontrol/issues/2309*
+
   Retrieves edge metrics of one or all locations (cache groups).
 
   Authentication Required: Yes
