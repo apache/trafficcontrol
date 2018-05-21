@@ -180,7 +180,7 @@ sub register {
 			}
 			my $start_time_gmt = strftime( "%Y-%m-%d %H:%M:%S", gmtime($start_time) );
 			my $entered_time   = strftime( "%Y-%m-%d %H:%M:%S", gmtime() );
-			my $org_server_fqdn = $self->db->resultset("Deliveryservice")->search( { id => $ds_id } )->get_column('org_server_fqdn')->single();
+			my $org_server_fqdn = UI::DeliveryService::compute_org_server_fqdn($self, $ds_id);
 
 			my $tm_user_id = $self->db->resultset('TmUser')->search( { username => $self->current_user()->{username} } )->get_column('id')->single();
 
@@ -227,7 +227,7 @@ sub register {
 				my ( $scheme, $asset_hostname, $path, $query, $fragment ) = $asset =~ m|(?:([^:/?#]+):)?(?://([^/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?|;
 
 				while ( my $ds_row = $rs_ds->next ) {
-					my $org_server_fqdn = $ds_row->org_server_fqdn;
+					my $org_server_fqdn = UI::DeliveryService::compute_org_server_fqdn($self, $ds_row->id);
 					if ( defined($org_server_fqdn) && $asset =~ /$org_server_fqdn/ ) {
 						return 1;    # Success
 					}

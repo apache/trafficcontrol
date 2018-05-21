@@ -341,14 +341,14 @@
 		<% } %>
 	</div>
 	<div class="block form-row" id="org_server_fqdn_row">
-		<% unless (field('ds.org_server_fqdn')->valid) { %>
-			<span class="field-with-error"><%= field('ds.org_server_fqdn')->error %></span>
+		<% unless (field('origin.org_server_fqdn')->valid) { %>
+			<span class="field-with-error"><%= field('origin.org_server_fqdn')->error %></span>
 		<% } %>
-		%= label_for 'org_server_fqdn' => '* Origin Server Base URL', class => 'label'
+		%= label_for 'origin.org_server_fqdn' => '* Origin Server Base URL', class => 'label'
 		<% if ($priv_level >= 20) { %>
-		%= field('ds.org_server_fqdn')->text(class => 'field', id => 'org_server_fqdn', name => 'ds.org_server_fqdn');
+		%= field('origin.org_server_fqdn')->text(class => 'field', id => 'org_server_fqdn', name => 'origin.org_server_fqdn');
 		<% } else { %>
-		%= field('ds.org_server_fqdn')->text(class => 'field', readonly => 'readonly');
+		%= field('origin.org_server_fqdn')->text(class => 'field', readonly => 'readonly');
 		<% } %>
 	</div>
 	<div class="block form-row" id="multi_site_origin_row">

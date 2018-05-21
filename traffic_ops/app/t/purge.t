@@ -48,7 +48,10 @@ $t->post_ok( '/login', => form => { u => 'admin', p => 'password' } )->status_is
 
 my $q = "SELECT deliveryservice.id, 
            deliveryservice.xml_id, 
-           deliveryservice.org_server_fqdn,
+           (SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')
+               FROM origin o
+               WHERE o.deliveryservice = deliveryservice.id
+               AND o.is_primary) as org_server_fqdn,
            deliveryservice.type,
            profile.id AS profile_id, 
            cdn.name AS cdn_name 

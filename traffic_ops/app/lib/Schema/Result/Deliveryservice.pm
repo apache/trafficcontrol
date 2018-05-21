@@ -87,11 +87,6 @@ __PACKAGE__->table("deliveryservice");
   data_type: 'bigint'
   is_nullable: 1
 
-=head2 org_server_fqdn
-
-  data_type: 'text'
-  is_nullable: 1
-
 =head2 type
 
   data_type: 'bigint'
@@ -170,7 +165,7 @@ __PACKAGE__->table("deliveryservice");
 
   data_type: 'timestamp with time zone'
   default_value: current_timestamp
-  is_nullable: 1
+  is_nullable: 0
   original: {default_value => \"now()"}
 
 =head2 protocol
@@ -349,8 +344,6 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 1 },
   "dns_bypass_ttl",
   { data_type => "bigint", is_nullable => 1 },
-  "org_server_fqdn",
-  { data_type => "text", is_nullable => 1 },
   "type",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 0 },
   "profile",
@@ -383,7 +376,7 @@ __PACKAGE__->add_columns(
   {
     data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable   => 1,
+    is_nullable   => 0,
     original      => { default_value => \"now()" },
   },
   "protocol",
@@ -464,7 +457,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_89502_ds_id_unique>
+=head2 C<idx_140234_ds_id_unique>
 
 =over 4
 
@@ -474,9 +467,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_89502_ds_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_140234_ds_id_unique", ["id"]);
 
-=head2 C<idx_89502_ds_name_unique>
+=head2 C<idx_140234_ds_name_unique>
 
 =over 4
 
@@ -486,7 +479,7 @@ __PACKAGE__->add_unique_constraint("idx_89502_ds_id_unique", ["id"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_89502_ds_name_unique", ["xml_id"]);
+__PACKAGE__->add_unique_constraint("idx_140234_ds_name_unique", ["xml_id"]);
 
 =head1 RELATIONS
 
@@ -577,6 +570,21 @@ __PACKAGE__->has_many(
   "jobs",
   "Schema::Result::Job",
   { "foreign.job_deliveryservice" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
+=head2 origins
+
+Type: has_many
+
+Related object: L<Schema::Result::Origin>
+
+=cut
+
+__PACKAGE__->has_many(
+  "origins",
+  "Schema::Result::Origin",
+  { "foreign.deliveryservice" => "self.id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
@@ -681,8 +689,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07047 @ 2018-02-28 21:54:35
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:3ETqht/3FTxKgD/YuRf3Bg
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2018-05-17 16:24:12
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Yjz2V+duaN88QPILxLqoHg
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #

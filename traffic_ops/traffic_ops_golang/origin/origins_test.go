@@ -179,7 +179,6 @@ func TestValidate(t *testing.T) {
 		Name:              nil,
 		DeliveryServiceID: nil,
 		FQDN:              nil,
-		IsPrimary:         nil,
 		Protocol:          nil,
 	}
 	errs := test.SortErrors(c.Validate(nil))
@@ -187,7 +186,6 @@ func TestValidate(t *testing.T) {
 	expectedErrs := []error{
 		errors.New(`'deliveryServiceId' is required`),
 		errors.New(`'fqdn' cannot be blank`),
-		errors.New(`'isPrimary' is required`),
 		errors.New(`'name' cannot be blank`),
 		errors.New(`'protocol' cannot be blank`),
 	}
@@ -202,7 +200,6 @@ func TestValidate(t *testing.T) {
 	fqdn := "is.a.valid.hostname"
 	ip6 := "dead:beef::42"
 	ip := "1.2.3.4"
-	primary := false
 	port := 65535
 	pro := "http"
 	lu := tc.TimeNoMod{Time: time.Now()}
@@ -212,7 +209,6 @@ func TestValidate(t *testing.T) {
 		FQDN:              &fqdn,
 		IP6Address:        &ip6,
 		IPAddress:         &ip,
-		IsPrimary:         &primary,
 		Port:              &port,
 		Protocol:          &pro,
 		LastUpdated:       &lu,

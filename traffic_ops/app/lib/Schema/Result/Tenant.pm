@@ -52,7 +52,7 @@ __PACKAGE__->table("tenant");
 
   data_type: 'timestamp with time zone'
   default_value: current_timestamp
-  is_nullable: 1
+  is_nullable: 0
   original: {default_value => \"now()"}
 
 =cut
@@ -80,7 +80,7 @@ __PACKAGE__->add_columns(
   {
     data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable   => 1,
+    is_nullable   => 0,
     original      => { default_value => \"now()" },
   },
 );
@@ -125,6 +125,21 @@ __PACKAGE__->has_many(
   "deliveryservices",
   "Schema::Result::Deliveryservice",
   { "foreign.tenant_id" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
+=head2 origins
+
+Type: has_many
+
+Related object: L<Schema::Result::Origin>
+
+=cut
+
+__PACKAGE__->has_many(
+  "origins",
+  "Schema::Result::Origin",
+  { "foreign.tenant" => "self.id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
@@ -179,8 +194,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-04-04 20:51:35
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:7I7o08tTBHjshtXVypmOUw
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2018-05-15 16:06:00
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:fLrBvjW6JLyIRv59Qkrr+Q
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #

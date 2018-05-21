@@ -98,7 +98,6 @@ func (origin *TOOrigin) Validate(db *sqlx.DB) []error {
 		"fqdn":              validation.Validate(origin.FQDN, validation.Required, is.DNSName),
 		"ip6Address":        validation.Validate(origin.IP6Address, validation.NilOrNotEmpty, is.IPv6),
 		"ipAddress":         validation.Validate(origin.IPAddress, validation.NilOrNotEmpty, is.IPv4),
-		"isPrimary":         validation.Validate(origin.Name, validation.NotNil),
 		"name":              validation.Validate(origin.Name, validation.Required, noSpaces),
 		"port":              validation.Validate(origin.Port, validation.NilOrNotEmpty.Error(portErr), validation.Min(1).Error(portErr), validation.Max(65535).Error(portErr)),
 		"profileId":         validation.Validate(origin.ProfileID, validation.Min(1)),
@@ -202,6 +201,7 @@ func getOrigins(params map[string]string, db *sqlx.DB, privLevel int) ([]v13.Ori
 		"deliveryservice": dbhelpers.WhereColumnInfo{"o.deliveryservice", api.IsInt},
 		"id":              dbhelpers.WhereColumnInfo{"o.id", api.IsInt},
 		"name":            dbhelpers.WhereColumnInfo{"o.name", nil},
+		"primary":         dbhelpers.WhereColumnInfo{"o.is_primary", api.IsBool},
 		"profileId":       dbhelpers.WhereColumnInfo{"o.profile", api.IsInt},
 		"tenant":          dbhelpers.WhereColumnInfo{"o.tenant", api.IsInt},
 	}
@@ -331,6 +331,17 @@ func (origin *TOOrigin) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		return tc.DBError, tc.SystemError
 	}
 
+	isPrimary := false
+	ds := 0
+	q := `SELECT is_primary, deliveryservice FROM origin WHERE id = $1`
+	if err := tx.QueryRow(q, *origin.ID).Scan(&isPrimary, &ds); err != nil {
+		log.Errorf("updating origin %d, received error in select: %v", *origin.ID, err)
+		return tc.DBError, tc.SystemError
+	}
+	if isPrimary && *origin.DeliveryServiceID != ds {
+		return errors.New("cannot update the delivery service of a primary origin"), tc.DataConflictError
+	}
+
 	log.Debugf("about to run exec query: %s with origin: %++v", updateQuery(), origin)
 	resultRows, err := tx.NamedQuery(updateQuery(), origin)
 	if err != nil {
@@ -385,7 +396,6 @@ deliveryservice=:deliveryservice_id,
 fqdn=:fqdn,
 ip6_address=:ip6_address,
 ip_address=:ip_address,
-is_primary=:is_primary,
 name=:name,
 port=:port,
 profile=:profile_id,
@@ -479,7 +489,6 @@ deliveryservice,
 fqdn,
 ip6_address,
 ip_address,
-is_primary,
 name,
 port,
 profile,
@@ -491,7 +500,6 @@ tenant) VALUES (
 :fqdn,
 :ip6_address,
 :ip_address,
-:is_primary,
 :name,
 :port,
 :profile_id,
@@ -519,6 +527,17 @@ func (origin *TOOrigin) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
+
+	isPrimary := false
+	q := `SELECT is_primary FROM origin WHERE id = $1`
+	if err := tx.QueryRow(q, *origin.ID).Scan(&isPrimary); err != nil {
+		log.Errorf("deleting origin %d, received error selecting is_primary: %v", *origin.ID, err)
+		return tc.DBError, tc.SystemError
+	}
+	if isPrimary {
+		return errors.New("cannot delete a primary origin"), tc.DataConflictError
+	}
+
 	log.Debugf("about to run exec query: %s with origin: %++v", deleteQuery(), origin)
 	result, err := tx.NamedExec(deleteQuery(), origin)
 	if err != nil {

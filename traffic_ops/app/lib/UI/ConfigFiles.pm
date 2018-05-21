@@ -445,7 +445,7 @@ sub cachegroup_profiles {
 		if ( $row->type->name eq 'ORG' ) {
 			my $rs_ds = $self->db->resultset('DeliveryserviceServer')->search( { server => $row->id }, { prefetch => ['deliveryservice'] } );
 			while ( my $ds_row = $rs_ds->next ) {
-				my $ds_domain = $ds_row->deliveryservice->org_server_fqdn;
+				my $ds_domain = UI::DeliveryService::compute_org_server_fqdn($self, $ds_row->deliveryservice->id);
 				$ds_domain =~ s/https?:\/\/(.*)/$1/;
 				push( @{ $deliveryservices->{$ds_domain} }, $row );
 			}

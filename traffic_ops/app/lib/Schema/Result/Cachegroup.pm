@@ -72,7 +72,7 @@ __PACKAGE__->table("cachegroup");
 
   data_type: 'timestamp with time zone'
   default_value: current_timestamp
-  is_nullable: 1
+  is_nullable: 0
   original: {default_value => \"now()"}
 
 =cut
@@ -103,7 +103,7 @@ __PACKAGE__->add_columns(
   {
     data_type     => "timestamp with time zone",
     default_value => \"current_timestamp",
-    is_nullable   => 1,
+    is_nullable   => 0,
     original      => { default_value => \"now()" },
   },
 );
@@ -124,7 +124,7 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =head1 UNIQUE CONSTRAINTS
 
-=head2 C<idx_54252_cg_name_unique>
+=head2 C<idx_140208_cg_name_unique>
 
 =over 4
 
@@ -134,9 +134,9 @@ __PACKAGE__->set_primary_key("id", "type");
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_54252_cg_name_unique", ["name"]);
+__PACKAGE__->add_unique_constraint("idx_140208_cg_name_unique", ["name"]);
 
-=head2 C<idx_54252_cg_short_unique>
+=head2 C<idx_140208_cg_short_unique>
 
 =over 4
 
@@ -146,9 +146,9 @@ __PACKAGE__->add_unique_constraint("idx_54252_cg_name_unique", ["name"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_54252_cg_short_unique", ["short_name"]);
+__PACKAGE__->add_unique_constraint("idx_140208_cg_short_unique", ["short_name"]);
 
-=head2 C<idx_54252_lo_id_unique>
+=head2 C<idx_140208_lo_id_unique>
 
 =over 4
 
@@ -158,7 +158,7 @@ __PACKAGE__->add_unique_constraint("idx_54252_cg_short_unique", ["short_name"]);
 
 =cut
 
-__PACKAGE__->add_unique_constraint("idx_54252_lo_id_unique", ["id"]);
+__PACKAGE__->add_unique_constraint("idx_140208_lo_id_unique", ["id"]);
 
 =head1 RELATIONS
 
@@ -219,6 +219,21 @@ __PACKAGE__->has_many(
   "cachegroups",
   "Schema::Result::Cachegroup",
   { "foreign.parent_cachegroup_id" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
+=head2 origins
+
+Type: has_many
+
+Related object: L<Schema::Result::Origin>
+
+=cut
+
+__PACKAGE__->has_many(
+  "origins",
+  "Schema::Result::Origin",
+  { "foreign.cachegroup" => "self.id" },
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
@@ -308,8 +323,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2016-11-18 22:45:19
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:lU7dUVFuoTyhpC7x7BGaDg
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2018-05-15 16:06:00
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:2EeelbrXDdiyrV9BXGuIeA
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #
