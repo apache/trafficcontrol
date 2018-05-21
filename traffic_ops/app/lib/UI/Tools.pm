@@ -78,7 +78,7 @@ sub diff_crconfig_iframe {
     foreach my $cookie ( @{ $self->req->cookies } ) {
         $self->ua->cookie_jar->add(Mojo::Cookie::Response->new(name => $cookie->{'name'}, value => $cookie->{'value'}, domain => 'localhost', path => '/'));
     }
-    my $resp = $self->ua->request_timeout(60)->get('/api/1.2/cdns/' . $cdn_name . '/snapshot/new')->res;
+    my $resp = $self->ua->request_timeout(60)->get('https://localhost:' . $self->config->{'traffic_ops_golang'}{'port'} . '/api/1.2/cdns/' . $cdn_name . '/snapshot/new')->res;
     my $json = undef;
     my $error = undef;
     if ( $resp->code ne '200' ) {
