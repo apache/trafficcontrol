@@ -325,7 +325,13 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		if dsId == nil {
-			log.Error.Printf("no delivery service id sent in POST; could not begin transaction: %v", err)
+			log.Error.Printf("no deliveryservice id sent in POST; could not begin transaction: %v", err)
+			handleErrs(http.StatusBadRequest, err)
+			return
+		}
+
+		if payload.Replace == nil {
+			log.Error.Printf("no 'replace' indicator sent in POST; could not begin transaction: %v", err)
 			handleErrs(http.StatusBadRequest, err)
 			return
 		}
