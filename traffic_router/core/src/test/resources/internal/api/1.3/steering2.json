@@ -1,0 +1,34 @@
+{
+  "response": [
+    {
+      "deliveryService": "steering-test-1",
+      "targets": [
+        {
+          "deliveryService": "steering-target-1",
+          "weight": "2000"
+        },
+        {
+          "deliveryService": "steering-target-2",
+          "weight": "8000"
+        }
+      ],
+      "filters" :[
+        { "pattern" : ".*/force-to-target-1/.*", "deliveryService" : "steering-target-1"},
+        { "pattern" : ".*/force-to-target-2/.*", "deliveryService" : "steering-target-2"}
+      ]
+    },
+    {
+      "deliveryService": "steering-test-2",
+      "targets": [
+        {
+          "deliveryService": "steering-target-3",
+          "weight": "60000"
+        },
+        {
+          "deliveryService": "steering-target-4",
+          "weight": "45000"
+        }
+      ]
+    }
+  ]
+}
