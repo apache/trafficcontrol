@@ -523,10 +523,18 @@ func getServerDeliveryservices(hostname string, servers map[string]tc.Server, ds
 	dsByID := makeDeliveryservicesIDMap(dses)
 	serverDses := []tc.DeliveryService{}
 	for _, dssrv := range dssrvs {
-		if dssrv.Server != serverID {
+		if dssrv.Server == nil {
+			fmt.Fprint(os.Stderr, time.Now().Format(time.RFC3339Nano)+" getServerDeliveryservices: DeliveryServiceServer Server is nil!\n")
 			continue
 		}
-		ds, ok := dsByID[dssrv.DeliveryService]
+		if dssrv.DeliveryService == nil {
+			fmt.Fprint(os.Stderr, time.Now().Format(time.RFC3339Nano)+" getServerDeliveryservices: DeliveryServiceServer DeliveryService is nil!\n")
+			continue
+		}
+		if *dssrv.Server != serverID {
+			continue
+		}
+		ds, ok := dsByID[*dssrv.DeliveryService]
 		if !ok {
 			return nil, fmt.Errorf("delivery service ID %v not found in Traffic Ops DeliveryServices", dssrv.DeliveryService)
 		}
@@ -752,7 +760,7 @@ func createRulesOld(
 
 		toClientHeaders, toOriginHeaders, err := makeModHdrs(ds.EdgeHeaderRewrite, ds.RemapText)
 		if err != nil {
-			return remap.RemapRules{}, err
+			return remap.RemapRules{}, errors.New("Making headers for delivery service '" + ds.XMLID + "':" + err.Error())
 		}
 		acl, err := makeACL(ds.RemapText)
 		if err != nil {
@@ -940,7 +948,7 @@ func makeModHdrs(edgeHRW string, remapTXT string) (web.ModHdrs, web.ModHdrs, err
 			line = strings.TrimSuffix(line, "[L]")
 			parts := strings.Fields(line)
 			if len(parts) < 2 {
-				return web.ModHdrs{}, web.ModHdrs{}, errors.New("malformed line '" + line + "'")
+				return web.ModHdrs{}, web.ModHdrs{}, errors.New("edge header rewrite: malformed line '" + line + "'")
 			}
 			switch {
 			case parts[0] == "cond":
@@ -952,7 +960,7 @@ func makeModHdrs(edgeHRW string, remapTXT string) (web.ModHdrs, web.ModHdrs, err
 				}
 			case parts[0] == "set-header" || parts[0] == "add-header": // Technically these are different
 				if len(parts) < 3 {
-					return web.ModHdrs{}, web.ModHdrs{}, errors.New("malformed line '" + line + "'")
+					return web.ModHdrs{}, web.ModHdrs{}, errors.New("edge header rewrite: malformed line '" + line + "'")
 				}
 				hdr := web.Hdr{Name: parts[1], Value: strings.Join(parts[2:], " ")}
 				if toOrigin {
