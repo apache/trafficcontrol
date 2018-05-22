@@ -308,12 +308,25 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 
 		// get list of server Ids to insert
 		payload :=  createServersForDsIdRef() 
-		servers := payload.Servers
-		dsId := payload.DsId
 
 		if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
 			log.Errorf("Error trying to decode the request body: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
+			return
+		}
+
+		servers := payload.Servers
+		dsId := payload.DsId
+
+		if servers == nil {
+			log.Error.Printf("no servers sent in POST; could not begin transaction: %v", err)
+			handleErrs(http.StatusBadRequest, err)
+			return
+		}
+
+		if dsId == nil {
+			log.Error.Printf("no delivery service id sent in POST; could not begin transaction: %v", err)
+			handleErrs(http.StatusBadRequest, err)
 			return
 		}
 
