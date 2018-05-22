@@ -56,9 +56,9 @@ type DeliveryServiceServer struct {
 
 type Filter int
 const (
-	ASSIGNED Filter = iota
-	UNASSIGNED
-	ELIGIBLE
+	Assigned Filter = iota
+	Unassigned
+	Eligible
 )
 
 type DSServer struct {
@@ -107,7 +107,7 @@ type DSServer struct {
 	UpdPending       *bool                `json:"updPending" db:"upd_pending"`
 }
 
-// DSSDeliveryService - a version of the deliveryservice that allows for all fields to be null
+// DSSDeliveryService is a representation of a deliveryservice that allows for all fields to be null
 type DSSDeliveryService struct {
 	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
 	//

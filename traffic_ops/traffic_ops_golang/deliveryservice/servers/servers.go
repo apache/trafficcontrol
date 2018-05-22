@@ -100,7 +100,7 @@ func (dss *TODeliveryServiceServer) Validate(db *sqlx.DB) []error {
 	return tovalidate.ToErrors(errs)
 }
 
-// api/1.1/deliveryserviceserver$
+// ReadDSSHandler list all of the Deliveryservice Servers in response to requests to api/1.1/deliveryserviceserver$
 func ReadDSSHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//create error function with ResponseWriter and Request
@@ -288,9 +288,9 @@ type DSServers struct {
 
 type TODSServers DSServers
 
-var dsserversRef = TODSServers(DSServers{})
 
-func GetServersForDsIdRef() *TODSServers {
+func createServersForDsIdRef() *TODSServers {
+	var dsserversRef = TODSServers(DSServers{})
 	return &dsserversRef
 }
 
@@ -307,7 +307,7 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		// get list of server Ids to insert
-		payload := GetServersForDsIdRef()
+		payload :=  createServersForDsIdRef() 
 		servers := payload.Servers
 		dsId := payload.DsId
 
@@ -371,8 +371,8 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 		i := 0
 		respServers := []int{}
 
-		for i < len(servers) {
-			dtos := map[string]interface{}{"id": dsId, "server": servers[i]}
+		for _ , server := range servers {
+			dtos := map[string]interface{}{"id": dsId, "server": server}
 			resultRows, err := tx.NamedQuery(insertIdsQuery(), dtos)
 			if err != nil {
 				if pqErr, ok := err.(*pq.Error); ok {
@@ -388,7 +388,7 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 				log.Errorf("received non pq error: %++v from create execution", err)
 				return
 			}
-			respServers = append(respServers, servers[i])
+			respServers = append(respServers, server)
 			resultRows.Next()
 			i++
 			defer resultRows.Close()
@@ -419,13 +419,13 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 
 type TODeliveryServiceServers tc.DeliveryServiceServers
 
-var serversRef = TODeliveryServiceServers(tc.DeliveryServiceServers{})
 
-func GetServersRef() *TODeliveryServiceServers {
+func createServersRef() *TODeliveryServiceServers {
+	serversRef := TODeliveryServiceServers(tc.DeliveryServiceServers{})
 	return &serversRef
 }
 
-// api/1.1/deliveryservices/{xml_id}/servers
+// GetCreateHandler assigns an existing Server to and existing Deliveryservice in response to api/1.1/deliveryservices/{xml_id}/servers
 func GetCreateHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
@@ -480,7 +480,7 @@ func GetCreateHandler(db *sqlx.DB) http.HandlerFunc {
 
 		// get list of server Ids to insert
 		defer r.Body.Close()
-		payload := GetServersRef()
+		payload := createServersRef()
 
 		if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
 			log.Errorf("Error trying to decode the request body: %s", err)
@@ -589,7 +589,7 @@ func selectServerIds() string {
 	return query
 }
 
-// GetReadHandler api/1.1/deliveryservices/{id}/servers|unassigned_servers|eligible
+// GetReadHandler retrieves lists of servers  based in the filter identified in the request: api/1.1/deliveryservices/{id}/servers|unassigned_servers|eligible
 func GetReadHandler(db *sqlx.DB, filter tc.Filter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
@@ -601,7 +601,7 @@ func GetReadHandler(db *sqlx.DB, filter tc.Filter) http.HandlerFunc {
 
 		where := `WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
 
-		if filter == tc.UNASSIGNED {
+		if filter == tc.Unassigned {
 			where = `WHERE s.id not in (select server from deliveryservice_server where deliveryservice = $1)`
 		}
 
@@ -730,7 +730,7 @@ func GetDServiceRef() *TODSSDeliveryService {
 	return &dserviceRef
 }
 
-// Read api/1.1/servers/{id}/deliveryservices$
+// Read shows all of the delivery services associated with the specified server.
 func (dss *TODSSDeliveryService) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
 	var err error = nil
 	orderby := params["orderby"]
