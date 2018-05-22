@@ -32,6 +32,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/test"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/utils"
 
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -40,36 +41,36 @@ import (
 func getTestOrigins() []v13.Origin {
 	origins := []v13.Origin{}
 	testOrigin := v13.Origin{
-		Cachegroup:        "Cachegroup",
-		CachegroupID:      1,
-		Coordinate:        "originCoordinate",
-		CoordinateID:      1,
-		DeliveryService:   "testDS",
-		DeliveryServiceID: 1,
-		FQDN:              "origin.cdn.net",
-		ID:                1,
-		IP6Address:        "dead:beef:cafe::42",
-		IPAddress:         "10.2.3.4",
-		IsPrimary:         false,
-		LastUpdated:       tc.TimeNoMod{Time: time.Now()},
-		Name:              "originName",
-		Port:              443,
-		Profile:           "profile",
-		ProfileID:         1,
-		Protocol:          "https",
-		Tenant:            "tenantName",
-		TenantID:          1,
+		Cachegroup:        utils.StrPtr("Cachegroup"),
+		CachegroupID:      utils.IntPtr(1),
+		Coordinate:        utils.StrPtr("originCoordinate"),
+		CoordinateID:      utils.IntPtr(1),
+		DeliveryService:   utils.StrPtr("testDS"),
+		DeliveryServiceID: utils.IntPtr(1),
+		FQDN:              utils.StrPtr("origin.cdn.net"),
+		ID:                utils.IntPtr(1),
+		IP6Address:        utils.StrPtr("dead:beef:cafe::42"),
+		IPAddress:         utils.StrPtr("10.2.3.4"),
+		IsPrimary:         utils.BoolPtr(false),
+		LastUpdated:       utils.NewTimeNoMod(),
+		Name:              utils.StrPtr("originName"),
+		Port:              utils.IntPtr(443),
+		Profile:           utils.StrPtr("profile"),
+		ProfileID:         utils.IntPtr(1),
+		Protocol:          utils.StrPtr("https"),
+		Tenant:            utils.StrPtr("tenantName"),
+		TenantID:          utils.IntPtr(1),
 	}
 	origins = append(origins, testOrigin)
 
 	testOrigin2 := testOrigin
-	testOrigin2.FQDN = "origin2.cdn.com"
-	testOrigin2.Name = "origin2"
+	testOrigin2.FQDN = utils.StrPtr("origin2.cdn.com")
+	testOrigin2.Name = utils.StrPtr("origin2")
 	origins = append(origins, testOrigin2)
 
 	testOrigin3 := testOrigin
-	testOrigin3.FQDN = "origin3.cdn.org"
-	testOrigin3.Name = "origin3"
+	testOrigin3.FQDN = utils.StrPtr("origin3.cdn.org")
+	testOrigin3.Name = utils.StrPtr("origin3")
 	origins = append(origins, testOrigin3)
 
 	return origins
