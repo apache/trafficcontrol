@@ -947,6 +947,9 @@ func makeModHdrs(edgeHRW string, remapTXT string) (web.ModHdrs, web.ModHdrs, err
 		for _, line := range strings.Split(edgeHRW, "__RETURN__") {
 			line = strings.TrimSuffix(line, "[L]")
 			parts := strings.Fields(line)
+			if len(parts) == 0 {
+				continue
+			}
 			if len(parts) < 2 {
 				return web.ModHdrs{}, web.ModHdrs{}, errors.New("edge header rewrite: malformed line '" + line + "'")
 			}
