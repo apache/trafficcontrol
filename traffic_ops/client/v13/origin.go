@@ -30,7 +30,7 @@ const (
 )
 
 // Create an Origin
-func (to *Session) CreateOrigin(origin v13.OriginNullable) (*v13.OriginDetailResponse, ReqInf, error) {
+func (to *Session) CreateOrigin(origin v13.Origin) (*v13.OriginDetailResponse, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(origin)
@@ -51,7 +51,7 @@ func (to *Session) CreateOrigin(origin v13.OriginNullable) (*v13.OriginDetailRes
 }
 
 // Update an Origin by ID
-func (to *Session) UpdateOriginByID(id int, origin v13.OriginNullable) (*v13.OriginDetailResponse, ReqInf, error) {
+func (to *Session) UpdateOriginByID(id int, origin v13.Origin) (*v13.OriginDetailResponse, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(origin)
@@ -73,7 +73,7 @@ func (to *Session) UpdateOriginByID(id int, origin v13.OriginNullable) (*v13.Ori
 }
 
 // GET a list of Origins by a query parameter string
-func (to *Session) GetOriginsByQueryParams(queryParams string) ([]v13.OriginNullable, ReqInf, error) {
+func (to *Session) GetOriginsByQueryParams(queryParams string) ([]v13.Origin, ReqInf, error) {
 	URI := API_v13_Origins + queryParams
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
@@ -91,22 +91,22 @@ func (to *Session) GetOriginsByQueryParams(queryParams string) ([]v13.OriginNull
 }
 
 // Returns a list of Origins
-func (to *Session) GetOrigins() ([]v13.OriginNullable, ReqInf, error) {
+func (to *Session) GetOrigins() ([]v13.Origin, ReqInf, error) {
 	return to.GetOriginsByQueryParams("")
 }
 
 // GET an Origin by the Origin ID
-func (to *Session) GetOriginByID(id int) ([]v13.OriginNullable, ReqInf, error) {
+func (to *Session) GetOriginByID(id int) ([]v13.Origin, ReqInf, error) {
 	return to.GetOriginsByQueryParams(fmt.Sprintf("?id=%d", id))
 }
 
 // GET an Origin by the Origin name
-func (to *Session) GetOriginByName(name string) ([]v13.OriginNullable, ReqInf, error) {
+func (to *Session) GetOriginByName(name string) ([]v13.Origin, ReqInf, error) {
 	return to.GetOriginsByQueryParams(fmt.Sprintf("?name=%s", name))
 }
 
 // GET a list of Origins by Delivery Service ID
-func (to *Session) GetOriginsByDeliveryServiceID(id int) ([]v13.OriginNullable, ReqInf, error) {
+func (to *Session) GetOriginsByDeliveryServiceID(id int) ([]v13.Origin, ReqInf, error) {
 	return to.GetOriginsByQueryParams(fmt.Sprintf("?deliveryservice=%d", id))
 }
 
