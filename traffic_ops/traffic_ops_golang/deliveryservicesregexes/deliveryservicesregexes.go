@@ -31,6 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
 	"github.com/jmoiron/sqlx"
@@ -503,7 +504,7 @@ func Delete(dbx *sqlx.DB) http.HandlerFunc {
 			return
 		}
 		commitTx := false
-		defer FinishTx(tx, &commitTx)
+		defer dbhelpers.FinishTx(tx, &commitTx)
 
 		count := 0
 		if err := db.QueryRow(`SELECT count(*) from deliveryservice_regex where deliveryservice = $1`, dsID).Scan(&count); err != nil {
@@ -574,16 +575,4 @@ func Delete(dbx *sqlx.DB) http.HandlerFunc {
 		w.Write(respBts)
 		commitTx = true
 	}
-}
-
-// FinishTx commits the transaction if commit is true when it's called, otherwise it rolls back the transaction. This is designed to be called in a defer.
-func FinishTx(tx *sql.Tx, commit *bool) {
-	if tx == nil {
-		return
-	}
-	if !*commit {
-		tx.Rollback()
-		return
-	}
-	tx.Commit()
 }
