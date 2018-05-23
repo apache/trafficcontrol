@@ -99,7 +99,7 @@ ok $t->post_ok(
 		'ds.display_name'                => 'display name 1',
 		'ds.regional_geo_blocking'       => '1',
 		'ds.geolimit_redirect_url'       => '',
-		'ds.anonymous_blocking_enabled'  => '0',
+		'ds.anonymous_blocking_enabled'  => '1',
 	}
 )->status_is(302), "create HTTP delivery service";
 my $t1_id = &get_ds_id('tst_xml_id_1');
@@ -152,7 +152,7 @@ ok $t->post_ok(
 		'ds.display_name'                => 'display name 2',
 		'ds.regional_geo_blocking'       => '0',
 		'ds.geolimit_redirect_url'       => '',
-		'ds.anonymous_blocking_enabled'  => '1',
+		'ds.anonymous_blocking_enabled'  => '0',
 	}
 )->status_is(302), "create DNS DeliveryService";
 $t2_id = &get_ds_id('tst_xml_id_2');
@@ -221,23 +221,6 @@ ok $t->get_ok('/ds/1')->status_is(200), "validate existing delivery service";
 # validate existing delivery service
 ok $t->get_ok('/ds/1')->status_is(200), "validate existing delivery service";
 
-#Validate create
-# Note the 4 is the index, not the id.
-#This can potentially make the tests fragile if more ds's are added to the fixtures...
-
-ok $t->get_ok('/datadeliveryservice')->
-	status_is(200)->
-	json_is( '/0/dscp' => '40' )
-	->json_is( '/0/active' => '1' )
-	->json_is( '/0/protocol' => '3' )
-	->json_is( '/0/display_name' => 'display name 1' )
-	->json_is( '/0/regional_geo_blocking' => '1' )
-	->json_is( '/0/regional_geo_blocking' => '1' )
-	->json_is( '/1/regional_geo_blocking' => '0' )
-	->json_is( '/0/anonymous_blocking_enabled' => '0' )
-	->json_is( '/1/anonymous_blocking_enabled' => '1' ),
-	"validate delivery services were created";
-
 $t2_id = &get_ds_id('tst_xml_id_2');
 ok defined($t2_id), "validated delivery service with all fields was added";
 
@@ -292,44 +275,10 @@ ok $t->post_ok(
 		'ds.tr_response_headers'         => '',
 		'ds.regional_geo_blocking'       => '1',
 		'ds.geolimit_redirect_url'       => 'http://update.redirect.url.com',
+		'ds.anonymous_blocking_enabled'  => '1',
 	}
 )->status_is(302), "update deliveryservice";
 
-#Validate update
-# 1.0 API
-# Note the 4 is the index, not the id.
-#The delivery service that was updated is always the last one in the list coming back from /datadeliveryservice.
-#This can potentially make the tests fragile if more ds's are added to the fixtures...
-ok $t->get_ok('/datadeliveryservice')->status_is(200)
-  ->or( sub { diag $t->tx->res->content->asset->{content}; } )
-  ->json_is( '/1/dscp' => '41' )
-  ->json_is( '/1/routing_name' => 'bar' )
-  ->json_is( '/1/deep_caching_type' => 'NEVER' )
-  ->json_is( '/1/active' => '0' )
-  ->json_is( '/1/profile_description' => 'mid description' )
-  ->json_is( '/1/org_server_fqdn'     => 'http://update.knutsel.com' )
-  ->json_is( '/1/xml_id'              => 'tst_xml_id_2' )
-  ->json_is( '/1/signed'         => '0' )
-  ->json_is( '/1/qstring_ignore' => '0' )
-  ->json_is( '/1/dns_bypass_ip'  => '10.10.10.11' )
-  ->json_is( '/1/dns_bypass_ip6' => '2001:558:fee8:180::1/64' )
-  ->json_is( '/1/dns_bypass_ttl' => '31' )
-  ->json_is( '/1/ccr_dns_ttl' => 3601 )
-  ->json_is( '/1/global_max_mbps' => 4000000 )
-  ->json_is( '/1/global_max_tps' => 10001 )
-  ->json_is( '/1/fq_pacing_rate' => 500000 )
-  ->json_is( '/1/miss_lat' => '0' )
-  ->json_is( '/1/miss_long' => '0' )
-  ->json_is( '/1/long_desc' => 'long_update' )
-  ->json_is( '/1/long_desc_1' => 'cust_update' )
-  ->json_is( '/1/long_desc_2' => 'service_update' )
-  ->json_is( '/1/info_url'    => 'http://knutsel-update.com' )
-  ->json_is( '/1/protocol'    => '1' )
-  ->json_is( '/1/profile_name' => 'MID1' )
-  ->json_is( '/1/geolimit_redirect_url' => 'http://update.redirect.url.com' )
-  ->json_is( '/1/display_name'          => 'Testing Delivery Service' )
-  ->json_is( '/1/regional_geo_blocking' => '1' ),
-  "validate delivery service was updated";
 
 #delete delivery service
 ok $t->get_ok("/ds/$t2_id/delete")->status_is(302), "delete ds";
