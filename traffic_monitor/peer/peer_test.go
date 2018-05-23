@@ -8,9 +8,9 @@ package peer
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  *   http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -19,11 +19,12 @@ package peer
  * under the License.
  */
 
-
 import (
 	"fmt"
 	"io/ioutil"
 	"testing"
+
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 )
 
 func TestCrStates(t *testing.T) {
@@ -33,7 +34,7 @@ func TestCrStates(t *testing.T) {
 	if err != nil {
 		t.Log(err)
 	}
-	crStates, err := CrstatesUnMarshall(text)
+	crStates, err := tc.CRStatesUnMarshall(text)
 	if err != nil {
 		t.Log(err)
 	}
@@ -42,8 +43,8 @@ func TestCrStates(t *testing.T) {
 		t.Logf("%v -> %v", cacheName, crState.IsAvailable)
 	}
 
-	fmt.Println(len(crStates.Deliveryservice), "deliveryservices found")
-	for dsName, deliveryService := range crStates.Deliveryservice {
+	fmt.Println(len(crStates.DeliveryService), "deliveryservices found")
+	for dsName, deliveryService := range crStates.DeliveryService {
 		t.Logf("%v -> %v (len:%v)", dsName, deliveryService.IsAvailable, len(deliveryService.DisabledLocations))
 	}
 
