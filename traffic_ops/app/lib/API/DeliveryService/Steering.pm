@@ -105,22 +105,24 @@ sub find_steering {
             });
         }
         elsif ( $row->type eq "STEERING_GEO_ORDER" ) {
+            my $coords = get_primary_origin_coordinates($self, $row->target_id);
             push(@{$targets},{
             'deliveryService' => $row->target_xml_id,
             'order' => 0,
             'geoOrder' => $row->value,
-            'latitude' => 0, # TODO: fill these in w/ the DeliveryService Origin lat/lon
-            'longitude' => 0,
+            'latitude' => $coords->{lat},
+            'longitude' => $coords->{lon},
             'weight'  => 0
             });
         }
         elsif ( $row->type eq "STEERING_GEO_WEIGHT" ) {
+            my $coords = get_primary_origin_coordinates($self, $row->target_id);
             push(@{$targets},{
             'deliveryService' => $row->target_xml_id,
             'order' => 0,
             'geoOrder' => 0,
-            'latitude' => 0, # TODO: fill these in w/ the DeliveryService Origin lat/lon
-            'longitude' => 0,
+            'latitude' => $coords->{lat},
+            'longitude' => $coords->{lon},
             'weight'  => $row->value
             });
         }
@@ -144,6 +146,27 @@ sub find_steering {
 
     return $response;
 }
+
+sub get_primary_origin_coordinates {
+    my $self = shift;
+    my $ds_id = shift;
+
+    my %coordinates = (lat => 0.0, lon => 0.0);
+
+    my $origin_rs = $self->db->resultset('Origin')->find(
+        { deliveryservice => $ds_id, is_primary => 1 },
+        { prefetch => 'coordinate' });
+
+    if ( !defined($origin_rs) || !defined($origin_rs->coordinate) ) {
+        return \%coordinates;
+    }
+
+    $coordinates{lat} = $origin_rs->coordinate->latitude;
+    $coordinates{lon} = $origin_rs->coordinate->longitude;
+
+    return \%coordinates;
+}
+
 
 sub get_ds_id {
     my $self = shift;

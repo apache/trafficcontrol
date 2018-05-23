@@ -112,7 +112,6 @@ sub get_target_data {
 		@weight_steering = sort { $b->{target_value} <=> $a->{target_value} } @weight_steering;
 		@neg_order_steering = sort { $a->{target_value} <=> $b->{target_value} } @neg_order_steering;
 		@pos_order_steering = sort { $a->{target_value} <=> $b->{target_value} } @pos_order_steering;
-		# TODO: group geo_steering targets by Origin lat/lon
 
 		#push everything into an a single array - negative order values 1st, geo 2nd, weights 3rd, positive order last.
 		push (@steering, @neg_order_steering, @geo_steering, @weight_steering, @pos_order_steering);
