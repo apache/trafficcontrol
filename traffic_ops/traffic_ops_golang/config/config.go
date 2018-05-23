@@ -171,7 +171,7 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appV
 		}
 	} else { // ldap config location not specified in cdn.conf, check in directory with cdn.conf for backwards compatibility with perl.
 		confDir := filepath.Dir(cdnConfPath)
-		genericLDAPConfPath := filepath.Join(confDir, "cdn.conf")
+		genericLDAPConfPath := filepath.Join(confDir, "ldap.conf")
 		if _, err := os.Stat(genericLDAPConfPath); !os.IsNotExist(err) { // ldap.conf exists and we should error if it is not readable/parseable.
 			cfg.LDAPEnabled, cfg.ConfigLDAP, err = GetLDAPConfig(genericLDAPConfPath)
 			if err != nil { // no config or unparseable, do not enable LDAP
