@@ -95,6 +95,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 
 	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
 				"active" => \0,
+				"anonymousBlockingEnabled" => 0,
 				"cdnId" => 100,
 				"dscp" => 0,
 				"displayName" => "ds_any_map_display_name",
@@ -118,6 +119,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 
 	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
 				"active" => \0,
+				"anonymousBlockingEnabled" => 0,
 				"cdnId" => 100,
 				"dscp" => 0,
 				"displayName" => "ds_steering_display_name",
@@ -143,6 +145,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 
 	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
 				"active" => \0,
+				"anonymousBlockingEnabled" => 1,
 				"cdnId" => 100,
 				"displayName" => "ds_http_display_name",
 				"dscp" => 0,
@@ -163,7 +166,6 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 				"typeId" => 36,
 				"tenantId" => $tenant_id,
 				"xmlId" => "ds_http",
-				"anonymousBlockingEnabled" => 1,
 			})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
 			->json_is( "/response/0/active" => 0)
 			->json_is( "/response/0/tenantId" => $tenant_id)
@@ -180,6 +182,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 
 	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
 				"active" => \0,
+				"anonymousBlockingEnabled" => 0,
 				"cdnId" => 100,
 				"displayName" => "ds_http_display_name",
 				"dscp" => 0,
@@ -207,6 +210,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 
 	ok $t->post_ok('/api/1.2/deliveryservices' => {Accept => 'application/json'} => json => {
 			"active" => \0,
+			"anonymousBlockingEnabled" => 0,
 			"cdnId" => 100,
 			"deepCachingType" => "NEVER",
 			"displayName" => "ds_displayname_1",
@@ -244,6 +248,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 	my $ds_id = &get_ds_id('ds_1');
 	ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/json'} => json => {
 			"active" => \1,
+			"anonymousBlockingEnabled" => 0,
 			"cdnId" => 100,
 			"deepCachingType" => "NEVER",
             "displayName" => "ds_displayname_11",
@@ -280,6 +285,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 
 	ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/json'} => json => {
 				"active" => \1,
+				"anonymousBlockingEnabled" => 0,
 				"cdnId" => 100,
 				"displayName" => "ds_displayname_11",
 				"dscp" => 1,
@@ -310,6 +316,7 @@ ok $t->get_ok("/api/1.2/deliveryservices?logsEnabled=true")->status_is(200)->or(
 
 	ok $t->put_ok('/api/1.2/deliveryservices/' . $ds_id => {Accept => 'application/json'} => json => {
 				"active" => \1,
+				"anonymousBlockingEnabled" => 0,
 				"cdnId" => 100,
 				"displayName" => "ds_displayname_11",
 				"dscp" => 1,

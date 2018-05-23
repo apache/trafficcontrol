@@ -356,6 +356,7 @@ sub prepare_tenant {
                 "geoLimit" => 0,
                 "geoProvider" => 0,
                 "qstringIgnore" => 0,
+                "anonymousBlockingEnabled" => "0",
             })
             ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             ->json_is( "/response/0/xmlId" => $ds_xml_id)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -417,6 +418,7 @@ sub prepare_tenant {
                 "geoLimit" => 0,
                 "geoProvider" => 0,
                 "qstringIgnore" => 0,
+                "anonymousBlockingEnabled" => "0",
             })
             ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             ->json_is( "/response/0/xmlId" => $st_ds_xml_id)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -1014,6 +1016,7 @@ sub test_ds_resource_write_allow_access {
                 "geoLimit" => 0,
                 "geoProvider" => 0,
                 "qstringIgnore" => 0,
+                "anonymousBlockingEnabled" => "0",
             })
             ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             ->json_is( "/response/0/xmlId" => $new_ds_xml_id)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -1116,6 +1119,7 @@ sub test_ds_resource_write_block_access {
                 "geoLimit" => 0,
                 "geoProvider" => 0,
                 "qstringIgnore" => 0,
+                "anonymousBlockingEnabled" => "0",
             })
             ->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             ->json_is( "/alerts/0/text" => $resource_tenant eq "none" ? "Invalid tenant. Must set tenant for delivery-service.": "Invalid tenant. This tenant is not available to you for delivery-service assignment.")
@@ -1203,6 +1207,7 @@ sub test_ds_resource_write_block_access {
                 "geoLimit" => 0,
                 "geoProvider" => 0,
                 "qstringIgnore" => 0,
+                "anonymousBlockingEnabled" => "0",
             })
             ->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
             ->json_is( "/response/0/xmlId" =>  $new_ds_xml_id2 )

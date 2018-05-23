@@ -308,6 +308,7 @@ my %definition_for = (
 			display_name          => 'steering-ds1-displayname',
 			initial_dispersion    => 1,
 			regional_geo_blocking => 1,
+			anonymous_blocking_enabled => 0,
 		},
 	},
 	steering_ds2 => {
@@ -347,6 +348,7 @@ my %definition_for = (
 			display_name          => 'steering-ds2-displayname',
 			initial_dispersion    => 1,
 			regional_geo_blocking => 1,
+			anonymous_blocking_enabled => 0,
 		},
 	},
 	new_steering => {
@@ -386,6 +388,7 @@ my %definition_for = (
 			display_name          => 'new-steering-ds-displayname',
 			initial_dispersion    => 1,
 			regional_geo_blocking => 1,
+			anonymous_blocking_enabled => 0,
 		},
 	},
 	target_ds1 => {
@@ -425,6 +428,7 @@ my %definition_for = (
 			display_name          => 'target-ds1-displayname',
 			initial_dispersion    => 1,
 			regional_geo_blocking => 1,
+			anonymous_blocking_enabled => 0,
 		},
 	},
 	target_ds2 => {
@@ -464,6 +468,7 @@ my %definition_for = (
 			display_name          => 'target-ds2-displayname',
 			initial_dispersion    => 1,
 			regional_geo_blocking => 1,
+			anonymous_blocking_enabled => 0,
 		},
 	},
 	target_ds3 => {
@@ -503,6 +508,7 @@ my %definition_for = (
 			display_name          => 'target-ds3-displayname',
 			initial_dispersion    => 1,
 			regional_geo_blocking => 1,
+			anonymous_blocking_enabled => 0,
 		},
 	},
 	target_ds4 => {
@@ -542,6 +548,7 @@ my %definition_for = (
 			display_name          => 'target-ds4-displayname',
 			initial_dispersion    => 1,
 			regional_geo_blocking => 1,
+			anonymous_blocking_enabled => 0,
 		},
 	},
 	ds_cdn1_root => {
@@ -583,6 +590,7 @@ my %definition_for = (
 			initial_dispersion    => 1,
 			regional_geo_blocking => 1,
 			logs_enabled          => 1,
+			anonymous_blocking_enabled => 0,
 		},
 	},
 	ds_period1 => {
@@ -624,6 +632,7 @@ my %definition_for = (
 			initial_dispersion    => 1,
 			regional_geo_blocking => 1,
 			logs_enabled          => 1,
+			anonymous_blocking_enabled => 0,
 		},
 	},
 	
