@@ -1,0 +1,152 @@
+{
+    "parent_selection": "consistent-hash",
+    "plugins": {
+        "modify_response_headers_global": {
+            "set": [
+                {
+                    "name": "Server",
+                    "value": "Grove/0.39999999"
+                }
+            ]
+        }
+    },
+    "retry_codes": null,
+    "retry_num": null,
+    "rules": [
+        {
+            "allow": null,
+            "certificate-file": "",
+            "certificate-key-file": "",
+            "concurrent_rule_requests": 0,
+            "connection-close": false,
+            "deny": null,
+            "from": "http://disk-test.cdn.kabletown.net",
+            "name": "jvd-test",
+            "parent_selection": "consistent-hash",
+            "cache_name": "disk",
+            "plugins": {
+                "modify_parent_request_headers": {
+                    "set": [
+                        {
+                            "name": "X-From-CDN",
+                            "value": "Traffic-Control"
+                        }
+                    ]
+                },
+                "modify_headers": {
+                    "set": [
+                        {
+                            "name": "X-CDN-name",
+                            "value": "JvD-Grove"
+                        }
+                    ]
+                },
+                "range_req_handler": {
+                    "mode": "get_full_serve_range"
+                }
+            },
+            "query-string": {
+                "cache": true,
+                "remap": true
+            },
+            "retry_codes": [],
+            "retry_num": 5,
+            "timeout_ms": 5000000,
+            "to": [
+                {
+                    "retry_codes": [],
+                    "retry_num": 0,
+                    "timeout_ms": 5000000,
+                    "url": "http://localhost",
+                    "weight": 1
+                }
+            ]
+        },
+        {
+            "allow": null,
+            "certificate-file": "",
+            "certificate-key-file": "",
+            "concurrent_rule_requests": 0,
+            "connection-close": false,
+            "deny": null,
+            "from": "http://disk1-test.cdn.kabletown.net",
+            "name": "jvd1-test",
+            "parent_selection": "consistent-hash",
+            "cache_name": "disk",
+            "plugins": {
+                "modify_parent_request_headers": {
+                    "set": [
+                        {
+                            "name": "X-From-CDN",
+                            "value": "Traffic-Control"
+                        }
+                    ]
+                },
+                "modify_headers": {
+                    "set": [
+                        {
+                            "name": "X-CDN-name",
+                            "value": "JvD-Grove"
+                        }
+                    ]
+                }
+            },
+            "query-string": {
+                "cache": true,
+                "remap": true
+            },
+            "retry_codes": [],
+            "retry_num": 5,
+            "timeout_ms": 5000000,
+            "to": [
+                {
+                    "retry_codes": [],
+                    "retry_num": 0,
+                    "timeout_ms": 5000000,
+                    "url": "http://localhost",
+                    "weight": 1
+                }
+            ]
+        },
+        {
+            "allow": null,
+            "certificate-file": "",
+            "certificate-key-file": "",
+            "concurrent_rule_requests": 0,
+            "connection-close": false,
+            "deny": null,
+            "from": "http://mem-test.cdn.kabletown.net",
+            "name": "cim-linear-hds.http.http.cim-linear-hds",
+            "parent_selection": "consistent-hash",
+            "query-string": {
+                "cache": true,
+                "remap": true
+            },
+            "retry_codes": [],
+            "retry_num": 5,
+            "timeout_ms": 5000,
+            "plugins": {
+              "range_req_handler": {
+                "mode": "store_ranges"
+              }
+            },
+            "to": [
+                {
+                    "retry_codes": [],
+                    "retry_num": 0,
+                    "timeout_ms": 5000000,
+                    "url": "http://localhost",
+                    "weight": 1
+                }
+            ]
+        }
+    ],
+    "stats": {
+        "allow": [
+            "127.0.0.1/32",
+            "::1/128"
+        ],
+        "deny": null
+    },
+    "timeout_ms": 5000
+}
