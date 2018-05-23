@@ -47,6 +47,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 		defer r.Body.Close()
+		authenticated := false
 		form := passwordForm{}
 		if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
 			handleErrs(http.StatusBadRequest, err)
@@ -60,7 +61,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			log.Errorf("error checking local user: %s\n", err.Error())
 		}
 		if userAllowed {
-			authenticated, err := checkLocalUserPassword(form, db)
+			authenticated, err = checkLocalUserPassword(form, db)
 			if err != nil {
 				log.Errorf("error checking local user password: %s\n", err.Error())
 			}
@@ -81,7 +82,6 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				resp = struct {
 					tc.Alerts
 				}{tc.CreateAlerts(tc.SuccessLevel, "Successfully logged in.")}
-
 			} else {
 				resp = struct {
 					tc.Alerts
@@ -97,8 +97,10 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-
 		w.Header().Set(tc.ContentType, tc.ApplicationJson)
+		if !authenticated {
+			w.WriteHeader(http.StatusUnauthorized)
+		}
 		fmt.Fprintf(w, "%s", respBts)
 	}
 }

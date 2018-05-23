@@ -98,8 +98,10 @@ func LookupUserDN(username string, cfg *config.ConfigLDAP) (string, bool, error)
 		return "", false, err
 	}
 
-	if len(sr.Entries) != 1 {
-		return "", false, errors.New("User does not exist or too many entries returned")
+	if len(sr.Entries) < 1 {
+		return "", false, errors.New("User does not exist")
+	} else if len(sr.Entries) > 1 {
+		return "", false, errors.New("too many user entries returned")
 	}
 	userDN := sr.Entries[0].DN
 	return userDN, true, nil
