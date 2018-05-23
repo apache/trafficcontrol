@@ -308,15 +308,17 @@ sub is_target_valid {
 	# Validate the input against the rules
 	my $result = validate( $params, $rules );
 
-	# TODO: fix indentation below, validate GEO-types
-	if ( $result->{success} ) {
-                if ( ( $target_type eq "STEERING_WEIGHT" ) and ( $params->{value} < 0 ) ) {
-		    return ( 0, "Invalid value for target type STEERING_WEIGHT: can not be negative" );
-                }
-		return ( 1, $result->{data} );
+	if ($result->{success}) {
+		if (($target_type eq "STEERING_WEIGHT") and ($params->{value} < 0)) {
+			return(0, "Invalid value for target type STEERING_WEIGHT: cannot be negative");
+		}
+		elsif (($target_type eq "STEERING_GEO_WEIGHT") and ($params->{value} < 0)) {
+			return(0, "Invalid value for target type STEERING_GEO_WEIGHT: cannot be negative");
+		}
+		return(1, $result->{data});
 	}
 	else {
-		return ( 0, $result->{error} );
+		return(0, $result->{error});
 	}
 }
 
