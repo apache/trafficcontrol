@@ -126,7 +126,7 @@ sub update {
 	}
 
 	$params->{targetId} = $target_ds_id; # to ensure that is_valid passes
-	my ( $is_valid, $result ) = $self->is_target_valid($params);
+	my ( $is_valid, $result ) = $self->is_target_valid($params, $ds);
 
 	if ( !$is_valid ) {
 		return $self->alert($result);
@@ -196,7 +196,7 @@ sub create {
 		return $self->alert("Steering target delivery-service tenant is not available to the user.");
 	}
 
-	my ( $is_valid, $result ) = $self->is_target_valid($params);
+	my ( $is_valid, $result ) = $self->is_target_valid($params, $ds);
 
 	if ( !$is_valid ) {
 		return $self->alert($result);
@@ -289,10 +289,15 @@ sub delete {
 sub is_target_valid {
 	my $self   = shift;
 	my $params = shift;
+	my $steering_ds = shift;
 
 	my ( $is_valid, $target_type ) = $self->is_valid_target_type( $params->{typeId} );
 	if ( !$is_valid ) {
 		return ( 0, "Invalid target type" );
+	}
+
+	if ( $steering_ds->type->name ne "CLIENT_STEERING" && ($target_type eq "STEERING_GEO_WEIGHT" || $target_type eq "STEERING_GEO_ORDER") ) {
+		return(0, "Invalid target type: STEERING_GEO_WEIGHT and STEERING_GEO_ORDER are only supported in CLIENT_STEERING delivery services");
 	}
 
 	my $rules = {

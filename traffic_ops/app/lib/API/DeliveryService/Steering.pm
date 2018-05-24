@@ -161,8 +161,8 @@ sub get_primary_origin_coordinates {
         return \%coordinates;
     }
 
-    $coordinates{lat} = $origin_rs->coordinate->latitude;
-    $coordinates{lon} = $origin_rs->coordinate->longitude;
+    $coordinates{lat} = $origin_rs->coordinate->latitude + 0.0;
+    $coordinates{lon} = $origin_rs->coordinate->longitude + 0.0;
 
     return \%coordinates;
 }
