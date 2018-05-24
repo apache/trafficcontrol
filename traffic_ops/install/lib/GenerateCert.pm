@@ -40,57 +40,40 @@ my $msg      = << 'EOF';
 
 EOF
 
-sub writeCdn_conf {
-    my $cdn_conf = shift;
+# Check the cdn.conf for the cert and key file references -- abort if they don't match what's defined here
+# This normally wouldn't happen unless the user modified the cdn.conf to reference different file names, and in that
+# case, they're probably generating certs outside of this anyway: this check is just here for safety..
+sub checkCdnConf {
+	my $cdn_conf = shift;
+	my $conf;
+	# load cdn.conf
+	{
+		local $/;  # slurp mode
+		open my $fh, '<', $cdn_conf or die "Cannot load $cdn_conf\n";
+		$conf = decode_json(scalar <$fh>);
+	}
 
+	my $listen = $conf->{hypnotoad}{listen}[0];
+	my $msg;
 
-    # load as perl hash to find string to be replaced
-    my $cdnh = do $cdn_conf;
+	if (!defined $listen) {
+		my $msg = <<"EOF";
+	The "listen" portion of $cdn_conf is missing from $cdn_conf.
+	Please ensure it contains the same structure as the one originally installed.
+EOF
+	}
 
-    # get existing port, if any
-    my $listen = $cdnh->{hypnotoad}{listen}[0];
-    my ($port) = $listen =~ /:(\d+)/;
-    if (!defined($port)) {
-        $port = 60443;
-    }
-    # listen param to be inserted
-    my $listen_str = "https://[::]:${port}?cert=${cert}&key=${key}&ca=${ca}&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED";
+	if ($listen !~ m@cert=$cert@ || $listen !~ m@key=$key@) {
+		$msg = << "EOF";
+	The "listen" portion of $cdn_conf is:
+	$listen
+	and does not reference the same "cert=" and "key=" values as are created here.
+	Please modify $cdn_conf to add the following as parameters:
+	?cert=$cert&key=$key
+EOF
+	}
 
-    if ( exists $cdnh->{hypnotoad} ) {
-        $cdnh->{hypnotoad}{listen} = [$listen_str];
-    }
-    else {
-        # add the whole hypnotoad config without affecting anything else in the config
-        $cdnh->{hypnotoad} = {
-            listen   => [$listen_str],
-            user     => 'trafops',
-            group    => 'trafops',
-            pid_file => '/var/run/traffic_ops.pid',
-            workers  => 48,
-        };
-    }
-
-    # write whole config to temp file in pwd (keeps in same filesystem)
-    my $tmpfile = File::Temp->new( DIR => '.' );
-    writeJson( $tmpfile, $cdnh );
-    close $tmpfile;
-
-    # make backup of current file
-    my $backup_num = 0;
-    my $backup_name;
-    do {
-        $backup_num++;
-        $backup_name = "$cdn_conf.backup$backup_num";
-    } while ( -e $backup_name );
-    rename( $cdn_conf, $backup_name ) or die("rename(): $!");
-
-    # rename temp file to cdn.conf and set ownership/permissions same as backup
-    my @stats = stat($backup_name);
-    my ( $uid, $gid, $perm ) = @stats[ 4, 5, 2 ];
-    move( $tmpfile, $cdn_conf ) or die("move(): $!");
-
-    chown $uid, $gid, $cdn_conf;
-    chmod $perm, $cdn_conf;
+	return $msg;
 }
 
 # execOpenssl takes a description of the command being done, and an array of arguments to OpenSSL,
@@ -197,7 +180,6 @@ sub createCert {
     $result = InstallUtils::execCommand( "/bin/chmod", "664",             "$csr" );
     $result = InstallUtils::execCommand( "/bin/chown", "trafops:trafops", "$csr" );
 
-    writeCdn_conf($cdn_conf);
 
     my $msg = << 'EOF';
 
@@ -211,6 +193,11 @@ sub createCert {
 EOF
 
     InstallUtils::logger( $msg, "info" );
+    my $error = checkCdnConf($cdn_conf);
+    if ($error) {
+	    errorOut( $error, "error ");
+	    exit 1;
+    }
 
     return 0;
 }
