@@ -26,6 +26,7 @@ Traffic Ops API V1.2
   cache
   cachegroup
   cachegroup_parameter
+  cachegroup_fallbacks
   cache_stats
   capability
   cdn
