@@ -12,23 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-BUILDDIR="$HOME/rpmbuild"
+ROOTDIR=$(git rev-parse --show-toplevel)
+[ ! -z "$ROOTDIR" ] || { echo "Cannot find repository root." >&2 ; exit 1; }
 
+cd "$ROOTDIR/grove"
+
+BUILDDIR="$ROOTDIR/grove/rpmbuild"
 VERSION=`cat ./VERSION`.`git rev-list --all --count`
 
 # prep build environment
-rm -rf $BUILDDIR
-mkdir -p $BUILDDIR/{BUILD,RPMS,SOURCES}
-echo "$BUILDDIR" > ~/.rpmmacros
+[ -e $BUILDDIR ] && rm -rf $BUILDDIR
+[ ! -e $BUILDDIR ] || { echo "Failed to clean up rpm build directory '$BUILDDIR': $?" >&2; exit 1; }
+mkdir -p $BUILDDIR/{BUILD,RPMS,SOURCES} || { echo "Failed to create build directory '$BUILDDIR': $?" >&2; exit 1; }
 
 # build
-go build -v -ldflags "-X main.Version=$VERSION"
+go get -v -d . || { echo "Failed to go get dependencies: $?" >&2; exit 1; }
+go build -v -ldflags "-X main.Version=$VERSION" || { echo "Failed to build grove: $?" >&2; exit 1; }
 
 # tar
-tar -cvzf $BUILDDIR/SOURCES/grove-${VERSION}.tgz grove conf/grove.cfg build/grove.init build/grove.logrotate
+tar -cvzf $BUILDDIR/SOURCES/grove-${VERSION}.tgz grove conf/grove.cfg build/grove.init build/grove.logrotate || { echo "Failed to create archive for rpmbuild: $?" >&2; exit 1; }
+
+# Work around bug in rpmbuild. Fixed in rpmbuild 4.13.
+# See: https://github.com/rpm-software-management/rpm/commit/916d528b0bfcb33747e81a57021e01586aa82139
+# Takes ownership of the spec file.
+spec=build/grove.spec
+spec_owner=$(stat -c%u $spec)
+spec_group=$(stat -c%g $spec)
+if ! id $spec_owner >/dev/null 2>&1; then
+	chown $(id -u):$(id -g) build/grove.spec
+
+	function give_spec_back {
+		chown ${spec_owner}:${spec_group} build/grove.spec
+	}
+	trap give_spec_back EXIT
+fi
 
 # build RPM
-rpmbuild --define "version ${VERSION}" -ba build/grove.spec
+rpmbuild --define "_topdir $BUILDDIR" --define "version ${VERSION}" -ba build/grove.spec || { echo "rpmbuild failed: $?" >&2; exit 1; }
 
 # copy build RPM to .
-cp $BUILDDIR/RPMS/x86_64/grove-${VERSION}-1.x86_64.rpm .
+[ -e ../dist ] || mkdir -p ../dist
+cp $BUILDDIR/RPMS/x86_64/grove-${VERSION}-1.x86_64.rpm ../dist
