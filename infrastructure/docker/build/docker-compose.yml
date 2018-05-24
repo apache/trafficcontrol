@@ -68,6 +68,7 @@ services:
       context: ../../..
     volumes:
       - ../../..:/trafficcontrol:z
+      - ../../../.m2:/root/.m2
 
   traffic_stats_build:
     image: traffic_stats_builder
