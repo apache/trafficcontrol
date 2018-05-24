@@ -32,7 +32,6 @@ public class SteeringTarget extends DefaultHashable {
 	private int order = 0;
 	@JsonProperty
 	private int geoOrder = 0;
-	// TODO: lat/long should probably be moved to the DeliveryService itself, but this is ok for a start
 	@JsonProperty
 	private double latitude = DEFAULT_LAT;
 	@JsonProperty
