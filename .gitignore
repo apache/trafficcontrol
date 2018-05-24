@@ -34,4 +34,4 @@ traffic_router/*.log
 /dist
 *.pyc
 bin/docker-compose
-.m2/
+/.m2
