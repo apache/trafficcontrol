@@ -78,6 +78,14 @@ services:
     volumes:
       - ../../..:/trafficcontrol:z
 
+  grove_build:
+    image: grove_builder
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-grove
+      context: ../../..
+    volumes:
+      - ../../..:/trafficcontrol:z
+
   weasel:
     image: licenseweasel/weasel:0.1
     volumes:
