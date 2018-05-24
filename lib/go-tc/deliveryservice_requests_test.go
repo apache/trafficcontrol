@@ -53,7 +53,7 @@ func TestStatusTransition(t *testing.T) {
 	var validTests = [][]error{
 		// To:  Dra  Sub  Rej  Pen  Com   // From:
 		[]error{nil, nil, bad, bad, bad}, // Draft
-		[]error{nil, nil, nil, nil, bad}, // Submitted
+		[]error{nil, nil, nil, nil, nil}, // Submitted
 		[]error{bad, bad, bad, bad, bad}, // Rejected
 		[]error{bad, bad, bad, nil, nil}, // Pending
 		[]error{bad, bad, bad, bad, bad}, // Complete
