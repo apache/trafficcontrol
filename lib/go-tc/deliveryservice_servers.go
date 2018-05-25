@@ -61,6 +61,10 @@ const (
 	Eligible
 )
 
+type DSServersAttrResponse struct {
+	Response []DSServer 	`json:"response"`
+}
+
 type DSServer struct {
 	Cachegroup       *string              `json:"cachegroup" db:"cachegroup"`
 	CachegroupID     *int                 `json:"cachegroupId" db:"cachegroup_id"`
