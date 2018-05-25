@@ -215,7 +215,7 @@ func (dss *TODeliveryServiceServer) Delete(db *sqlx.DB, user auth.CurrentUser) (
 	}()
 
 	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
+		log.Errorln("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
 	log.Debugf("about to run exec query: %s with parameter: %++v", deleteQuery(), dss)
@@ -280,17 +280,17 @@ func deleteQuery() string {
 	return query
 }
 
-type DSServers struct {
+type DSServerIds struct {
 	DsId    *int  `json:"dsId" db:"deliveryservice"`
 	Servers []int `json:"servers"`
 	Replace *bool `json:"replace"`
 }
 
-type TODSServers DSServers
+type TODSServerIds DSServerIds
 
 
-func createServersForDsIdRef() *TODSServers {
-	var dsserversRef = TODSServers(DSServers{})
+func createServersForDsIdRef() *TODSServerIds {
+	var dsserversRef = TODSServerIds(DSServerIds{})
 	return &dsserversRef
 }
 
@@ -319,19 +319,16 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 		dsId := payload.DsId
 
 		if servers == nil {
-			log.Error.Printf("no servers sent in POST; could not begin transaction")
 			api.HandleErr(w, r, http.StatusBadRequest, errors.New("servers must exist in post"), nil)
 			return
 		}
 
 		if dsId == nil {
-			log.Error.Printf("no deliveryservice id sent in POST; could not begin transaction")
 			api.HandleErr(w, r, http.StatusBadRequest, errors.New("dsid must exist in post"), nil)
 			return
 		}
 
 		if payload.Replace == nil {
-			log.Error.Printf("no 'replace' indicator sent in POST; could not begin transaction")
 			api.HandleErr(w, r, http.StatusBadRequest, errors.New("replace must exist in post"), nil)
 			return
 		}
@@ -370,7 +367,7 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 		}()
 
 		if err != nil {
-			log.Error.Printf("could not begin transaction: %v", err)
+			log.Errorln("could not begin transaction: %v", err)
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
@@ -396,7 +393,7 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 			if err != nil {
 				if pqErr, ok := err.(*pq.Error); ok {
 					err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-					log.Error.Printf("could not begin transaction: %v", err)
+					log.Errorln("could not begin transaction: %v", err)
 					if eType == tc.DataConflictError {
 						handleErrs(http.StatusInternalServerError, err)
 						return
@@ -512,7 +509,7 @@ func GetCreateHandler(db *sqlx.DB) http.HandlerFunc {
 		q, arg, err := sqlx.In(selectServerIds(), serverNames)
 
 		if err != nil {
-			log.Error.Printf("Could not form IN query : %v", err)
+			log.Errorln("Could not form IN query : %v", err)
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
@@ -520,7 +517,7 @@ func GetCreateHandler(db *sqlx.DB) http.HandlerFunc {
 		serverIds, err := db.Query(q, arg...)
 		defer serverIds.Close()
 		if err != nil {
-			log.Error.Printf("Could not select the ServerIds: %v", err)
+			log.Errorln("Could not select the ServerIds: %v", err)
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
@@ -539,7 +536,7 @@ func GetCreateHandler(db *sqlx.DB) http.HandlerFunc {
 		}()
 
 		if err != nil {
-			log.Error.Printf("could not begin transaction: %v", err)
+			log.Errorln("could not begin transaction: %v", err)
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
@@ -555,7 +552,7 @@ func GetCreateHandler(db *sqlx.DB) http.HandlerFunc {
 			if err != nil {
 				if pqErr, ok := err.(*pq.Error); ok {
 					err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-					log.Error.Printf("could not begin transaction: %v", err)
+					log.Errorln("could not begin transaction: %v", err)
 					if eType == tc.DataConflictError {
 						handleErrs(http.StatusInternalServerError, err)
 						return
@@ -631,7 +628,8 @@ func GetReadHandler(db *sqlx.DB, filter tc.Filter) http.HandlerFunc {
 			return
 		}
 
-		respBts, err := json.Marshal(servers)
+		dssres := tc.DSServersAttrResponse{ servers }
+		respBts, err := json.Marshal(dssres)
 		if err != nil {
 			handleErrs(http.StatusInternalServerError, err)
 			return
@@ -642,7 +640,7 @@ func GetReadHandler(db *sqlx.DB, filter tc.Filter) http.HandlerFunc {
 	}
 }
 
-func read(db *sqlx.DB, params map[string]string, user auth.CurrentUser, where string) ([]interface{}, []error, tc.ApiErrorType) {
+func read(db *sqlx.DB, params map[string]string, user auth.CurrentUser, where string) ([]tc.DSServer, []error, tc.ApiErrorType) {
 	idstr, ok := params["id"]
 
 	if !ok {
@@ -666,7 +664,7 @@ func read(db *sqlx.DB, params map[string]string, user auth.CurrentUser, where st
 	}
 	defer rows.Close()
 
-	servers := []interface{}{}
+	servers := []tc.DSServer{}
 	for rows.Next() {
 		var s tc.DSServer
 		if err = rows.StructScan(&s); err != nil {
