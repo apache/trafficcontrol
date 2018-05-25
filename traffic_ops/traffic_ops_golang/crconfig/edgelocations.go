@@ -57,6 +57,36 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 		if ttype == RouterTypeName {
 			routerLocs[cachegroup] = latlon
 		} else {
+			primaryCacheId := ""
+			if err := db.QueryRow(`select id from cachegroup where name = $1`, cachegroup).Scan(&primaryCacheId); err != nil {
+				return nil, nil, errors.New("Failed while retrieving from cachegroup: " + err.Error())
+			}
+
+			dbRows, err := db.Query(`select backup_cg from cachegroup_fallbacks where primary_cg = $1 order by set_order`, primaryCacheId)
+
+			if err != nil {
+				return nil, nil, errors.New("Error retrieving from cachegroup_fallbacks: " + err.Error())
+			}
+			defer dbRows.Close()
+
+			index := 0
+			for dbRows.Next() {
+				backup_id := ""
+				backup_name := ""
+				if err := dbRows.Scan(&backup_id); err != nil {
+					return nil, nil, errors.New("Error while scanning from cachegroup_fallbacks: " + err.Error())
+				}
+				if err := db.QueryRow(`select name from cachegroup where id = $1`, backup_id).Scan(&backup_name); err != nil {
+					return nil, nil, errors.New("Error scanning cachegroup: " + err.Error())
+				} else {
+					latlon.BackupLocations.List = append(latlon.BackupLocations.List, backup_name)
+					index++
+				}
+			}
+
+			 if err := dbRows.Err(); err != nil {
+				return nil, nil, errors.New("Error iterating cachegroup_fallbacks rows: " + err.Error())
+			}
 			edgeLocs[cachegroup] = latlon
 		}
 	}
