@@ -14,13 +14,13 @@
 ..
 
 *********************************
-Traffic Router - Migrating to 2.3
+Traffic Router - Migrating to 3.0
 *********************************
 .. contents::
   :depth: 2
   :backlinks: top
 
-Release Notes v2.3
+Release Notes v3.0
 ==========================
 * Replaced custom Java SNI implementation with a native implementation using tomcat-native, apr (Apache Portable Runtime) and OpenSSL
   This should significantly improve the performance of routing 'https' delivery services.

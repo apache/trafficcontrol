@@ -39,7 +39,7 @@ The following are requirements to ensure an accurate set up:
 3. Ensure the FQDN of the Traffic Router is resolvable in DNS. This FQDN must be resolvable by the clients expected to use this CDN.
 4. Install a traffic router: ``sudo yum install traffic_router``.
 
-.. Note:: As of Traffic Control version 2.3, traffic router depends upon a package called 'tomcat'. This package should have been created when you built Traffic Router. If you get an error while installing the 'traffic_router' package make sure that the 'tomcat' package is in your package repository.
+.. Note:: As of Traffic Control version 3.0, traffic router depends upon a package called 'tomcat'. This package should have been created when you built Traffic Router. If you get an error while installing the 'traffic_router' package make sure that the 'tomcat' package is in your package repository.
 
 5. Edit ``/opt/traffic_router/conf/traffic_monitor.properties`` and specify the correct online Traffic Monitor(s) for your CDN. See :ref:`rl-tr-config-files`
 	# traffic_monitor.properties: url that should normally point to this file
@@ -61,7 +61,7 @@ The following are requirements to ensure an accurate set up:
 Configuring Traffic Router
 ==========================
 
-.. Note:: Traffic Router 2.3 has been converted to a formal Tomcat instance, meaning that is now installed separately from the Tomcat servlet engine. The Traffic Router installation package contains all of the Traffic Router specific software, configuration and startup scripts including some additional configuration files needed for Tomcat. These new configuration files can all be found in the ``/opt/traffic_router/conf`` directory and generally serve to override Tomcat's default settings.
+.. Note:: Traffic Router 3.0 has been converted to a formal Tomcat instance, meaning that is now installed separately from the Tomcat servlet engine. The Traffic Router installation package contains all of the Traffic Router specific software, configuration and startup scripts including some additional configuration files needed for Tomcat. These new configuration files can all be found in the ``/opt/traffic_router/conf`` directory and generally serve to override Tomcat's default settings.
 .. Note:: Starting with Traffic Router 1.5, many of the configuration files under ``/opt/traffic_router/conf`` are only needed to override the default configuration values for Traffic Router. Most of the given default values will work well for any CDN. Critical values that must be changed are hostnames and credentials for communicating with other Traffic Control components such as Traffic Ops and Traffic Monitor.
 
 .. Note:: Pre-existing installations having configuration files in ``/opt/traffic_router/conf`` will still be used and honored for Traffic Router 1.5 and onward.
@@ -480,7 +480,7 @@ HTTPS for Http Type Delivery Services
 Starting with version 1.7 Traffic Router added the ability to allow https traffic between itself and clients on a per http type delivery service basis.
 
 .. Note::
-  As of version 2.3 Traffic Router has been integrated with native OpenSSL. This makes establishing HTTPS connections to Traffic Router much less expensive
+  As of version 3.0 Traffic Router has been integrated with native OpenSSL. This makes establishing HTTPS connections to Traffic Router much less expensive
   than previous versions. However establishing an HTTPS connection is more computationally demanding than an HTTP connection. Since each client will in turn
   get redirected to ATS, Traffic Router is most always creating a new HTTPS connection for all HTTPS traffic.
   It is likely to mean that an existing Traffic Router may have some decrease in performance if you wish to support a lot of HTTPS traffic.
