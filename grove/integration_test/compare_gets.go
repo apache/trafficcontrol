@@ -106,7 +106,7 @@ func compareResponses(response1 responseType, response2 responseType, ignoreHdrs
 
 	if ignoreMPB {
 		contentTypeHdr := response1.Headers.Get("Content-type")
-		fmt.Println("ignoreing", contentTypeHdr, response1)
+		//fmt.Println("ignoreing", contentTypeHdr, response1)
 		if strings.HasPrefix(contentTypeHdr, "multipart/byteranges") {
 			parts := strings.Split(contentTypeHdr, "=")
 			MPBoundary := parts[1]
@@ -151,7 +151,7 @@ func main() {
 	resp := httpGet(*originURL+"/"+*path, *orgHdrs)
 	cresp := httpGet(*cacheURL+"/"+*path, *cacheHdrs)
 	if !compareResponses(resp, cresp, strings.Split(*ignoreHdrs, ","), *ignoreMultiPartBoundary) {
-		fmt.Println("FAIL: Body bytes don't match \n%s\n != \n%s\n", string(resp.Body), string(cresp.Body))
+		fmt.Printf("FAIL: Body bytes don't match \n%s\n != \n%s\n", string(resp.Body), string(cresp.Body))
 		os.Exit(1)
 
 	}
