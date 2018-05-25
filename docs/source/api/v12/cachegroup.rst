@@ -23,7 +23,7 @@ Cache Group
 /api/1.2/cachegroups
 ++++++++++++++++++++
 
-**GET /api/1.1/cachegroups**
+**GET /api/1.2/cachegroups**
 
   Authentication Required: Yes
 
@@ -66,6 +66,8 @@ Cache Group
   +-----------------------------------+--------+--------------------------------------------------------------------------+
   | ``typeName``                      | string | The name of the type of Cache Group entry                                |
   +-----------------------------------+--------+--------------------------------------------------------------------------+
+  | ``fallbackToClosest``             | bool   | Behaviour during non-availability/ failure of configured fallbacks       |
+  +-----------------------------------+--------+--------------------------------------------------------------------------+
 
   **Response Example** ::
 
@@ -83,7 +85,8 @@ Cache Group
            "secondaryParentCachegroupName": null,
            "shortName": "dcchi",
            "typeName": "MID_LOC",
-           "typeId": "4"
+           "typeId": "4",
+           "fallbackToClosest":true
         },
         {
            "id": "22",
@@ -97,7 +100,8 @@ Cache Group
            "secondaryParentCachegroupName": null,
            "shortName": "dcchi",
            "typeName": "MID_LOC",
-           "typeId": "4"
+           "typeId": "4",
+           "fallbackToClosest":false
         }
      ],
     }
@@ -168,6 +172,8 @@ Cache Group
   +-----------------------------------+--------+--------------------------------------------------------------------------+
   | ``typeName``                      | string | The name of the type of Cache Group entry                                |
   +-----------------------------------+--------+--------------------------------------------------------------------------+
+  | ``fallbackToClosest``             | bool   | Behaviour during non-availability/ failure of configured fallbacks       |
+  +-----------------------------------+--------+--------------------------------------------------------------------------+
 
   **Response Example** ::
 
@@ -185,7 +191,8 @@ Cache Group
            "secondaryParentCachegroupName": null,
            "shortName": "dcchi",
            "typeName": "MID_LOC",
-           "typeId": "4"
+           "typeId": "4",
+           "fallbackToClosest":true
         }
      ],
     }
@@ -448,6 +455,8 @@ Cache Group
   +---------------------------------+----------+-------------------------------------------------------------------+
   | ``typeId``                      | yes      | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
   +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``fallbackToClosest``           | no       | Behaviour on configured fallbacks failure, true / false           |
+  +---------------------------------+----------+-------------------------------------------------------------------+
 
   **Request Example** ::
 
@@ -457,7 +466,8 @@ Cache Group
         "latitude": 12,
         "longitude": 45,
         "parentCachegroup": "cache_group_mid",
-        "typeId": 6
+        "typeId": 6,
+        "fallbackToClosest":true
     }
 
   **Response Properties**
@@ -484,6 +494,8 @@ Cache Group
   | ``secondaryParentCachegroupId``    | string | id of Secondary Parent Cache Group entry.                         |
   +------------------------------------+--------+-------------------------------------------------------------------+
   | ``typeName``                       | string | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``fallbackToClosest``              | bool   | Behaviour during non-availability/failure of configured fallbacks |
   +------------------------------------+--------+-------------------------------------------------------------------+
   | ``lastUpdated``                    | string | The Time / Date this entry was last updated                       |
   +------------------------------------+--------+-------------------------------------------------------------------+
@@ -514,7 +526,8 @@ Cache Group
             'typeName' : 'EDGE_LOC',
             'id' : '104',
             'parentCachegroupId' : '103',
-            'secondaryParentCachegroupId' : null
+            'secondaryParentCachegroupId' : null,
+            'fallbackToClosest':true
         }
     }
    
@@ -555,6 +568,8 @@ Cache Group
   +---------------------------------+----------+-------------------------------------------------------------------+
   | ``typeName``                    | yes      | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
   +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``fallbackToClosest``           | no       | Behaviour on configured fallbacks failure, true / false           |
+  +---------------------------------+----------+-------------------------------------------------------------------+
 
   **Request Example** ::
 
@@ -564,7 +579,8 @@ Cache Group
         "latitude": 12,
         "longitude": 45,
         "parentCachegroup": "cache_group_mid",
-        "typeName": "EDGE_LOC"
+        "typeName": "EDGE_LOC",
+        "fallbackToClosest":true
     }
 
   **Response Properties**
@@ -591,6 +607,8 @@ Cache Group
   | ``secondaryParentCachegroupId``    | string | id of Secondary Parent Cache Group entry.                         |
   +------------------------------------+--------+-------------------------------------------------------------------+
   | ``typeName``                       | string | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
+  +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``fallbackToClosest``              | bool   | Behaviour during non-availability/failure of configured fallbacks |
   +------------------------------------+--------+-------------------------------------------------------------------+
   | ``lastUpdated``                    | string | The Time / Date this entry was last updated                       |
   +------------------------------------+--------+-------------------------------------------------------------------+
@@ -621,7 +639,8 @@ Cache Group
             'typeName' : 'EDGE_LOC',
             'id' : '104',
             'parentCachegroupId' : '103',
-            'secondaryParentCachegroupId' : null
+            'secondaryParentCachegroupId' : null,
+            'fallbackToClosest':true
         }
     }
 

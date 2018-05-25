@@ -116,32 +116,23 @@ sub create {
 	my $cache_id = $self->param('cacheGroupId');
 	my $params = $self->req->json;
 
-	if ( !defined($cache_id)) {
-		my @param_array = @{$params};
-		$cache_id = $param_array[0]{cacheGroupId};
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
 	}
 
 	if ( !defined($params) ) {
 		return $self->alert("parameters must be in JSON format,  please check!");
 	}
 
-	if ( !&is_oper($self) ) {
-		return $self->forbidden();
+	if ( !defined($cache_id)) {
+		my @param_array = @{$params};
+		$cache_id = $param_array[0]{cacheGroupId};
 	}
 
-	#only integers
-	if ( $cache_id !~ /^\d+?$/ ) {
-		&log( $self, "No such Cachegroup id $cache_id");
-		return $self->not_found();
-	}
+	my ( $is_valid, $result ) = $self->is_valid_cachegroup_fallback($params, $cache_id);
 
-	my $cachegroup = $self->db->resultset('Cachegroup')->search( { id => $cache_id } )->single();
-	if ( !defined($cachegroup) ) {
-		return $self->not_found();
-	}
-
-	if ( ($cachegroup->type->name ne "EDGE_LOC") ) {
-		return $self->alert("cachegroup should be type EDGE_LOC.");
+	if ( !$is_valid ) {
+		return $self->alert($result);
 	}
 
 	foreach my $config (@{ $params }) {
@@ -198,37 +189,28 @@ sub update {
 	my $cache_id = $self->param('cacheGroupId');
 	my $params = $self->req->json;
 
-	if ( !defined($cache_id)) {
-		my @param_array = @{$params};
-		$cache_id = $param_array[0]{cacheGroupId};
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
 	}
 
 	if ( !defined($params) ) {
 		return $self->alert("parameters must be in JSON format,  please check!");
 	}
 
-	if ( !&is_oper($self) ) {
-		return $self->forbidden();
-	}
-
-	#only integers
-	if ( $cache_id !~ /^\d+?$/ ) {
-		&log( $self, "No such Cachegroup id $cache_id");
-		return $self->not_found();
-	}
-
-	my $cachegroup = $self->db->resultset('Cachegroup')->search( { id => $cache_id } )->single();
-	if ( !defined($cachegroup) ) {
-		return $self->not_found();
-	}
-
-	if ( ($cachegroup->type->name ne "EDGE_LOC") ) {
-		return $self->alert("cachegroup should be type EDGE_LOC.");
+	if ( !defined($cache_id)) {
+		my @param_array = @{$params};
+		$cache_id = $param_array[0]{cacheGroupId};
 	}
 
 	my $rs_backups = $self->db->resultset('CachegroupFallback')->search( { primary_cg => $cache_id } );
 	if ( !defined ($rs_backups->next) ) {
 		return $self->alert( "Backup list not configured for $cache_id, create and update" );
+	}
+
+	my ( $is_valid, $result ) = $self->is_valid_cachegroup_fallback($params, $cache_id);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
 	}
 
 	foreach my $config (@{ $params }) {
@@ -273,6 +255,33 @@ sub update {
 	} else {
 		return $self->alert("Backup configuration UPDATE for cache group $cache_id Failed." );
 	}
+}
+
+sub is_valid_cachegroup_fallback {
+	my $self     = shift;
+	my $params   = shift;
+	my $cache_id = shift;
+
+	if ( $cache_id !~ /^\d+?$/ ) {
+		return ( 0, "Invalid cachegroup id" );
+	}
+
+	my $cachegroup = $self->db->resultset('Cachegroup')->search( { id => $cache_id } )->single();
+	if ( !defined($cachegroup) ) {
+		return ( 0, "Invalid cachegroup id, should be an integer" );
+	}
+
+	if ( ($cachegroup->type->name ne "EDGE_LOC") ) {
+		return ( 0, "cachegroup is not of type EDGE_LOC" );
+	}
+
+	foreach my $config (@{ $params }) {
+		if ( $config->{fallbackId} !~ /^\d+?$/ ) {
+			return ( 0, "Invalid cachegroup specified as fallback, should be an integer" );
+		}
+	}
+
+	return ( 1, "success" );
 }
 
 1;
