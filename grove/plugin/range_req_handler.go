@@ -179,7 +179,7 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 		bSlice := (*d.Body)[thisRange.Start : thisRange.End+1]
 		body = append(body, bSlice...)
 	}
-	if multipartBoundaryString != "" {
+	if multipart {
 		body = append(body, []byte(fmt.Sprintf("\r\n--%s--\r\n", multipartBoundaryString))...)
 	}
 	d.Hdr.Set("Content-Length", fmt.Sprintf("%d", len(body)))
