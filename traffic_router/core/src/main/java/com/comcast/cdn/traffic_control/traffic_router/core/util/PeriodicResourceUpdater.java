@@ -52,11 +52,7 @@ import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 public class PeriodicResourceUpdater {
 	private static final Logger LOGGER = Logger.getLogger(PeriodicResourceUpdater.class);
 
-	private static final AsyncHttpClient asyncHttpClient = new AsyncHttpClient(
-			new AsyncHttpClientConfig.Builder()
-				.setConnectionTimeoutInMs(10000)
-				.build());
-
+	private static AsyncHttpClient asyncHttpClient;
 	protected String databaseLocation;
 	protected final ResourceUrl urls;
 	protected ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
@@ -105,6 +101,7 @@ public class PeriodicResourceUpdater {
 	final private boolean pauseTilLoaded;
 
 	public void init() {
+		asyncHttpClient = newAsyncClient();
 		putCurrent();
 		LOGGER.info("Starting schedule with interval: "+getPollingInterval() + " : "+TimeUnit.MILLISECONDS);
 		scheduledService = executorService.scheduleWithFixedDelay(updater, 0, getPollingInterval(), TimeUnit.MILLISECONDS);
@@ -119,6 +116,13 @@ public class PeriodicResourceUpdater {
 				}
 			}
 		}
+	}
+
+	private AsyncHttpClient newAsyncClient() {
+		return new AsyncHttpClient(
+				new AsyncHttpClientConfig.Builder()
+						.setConnectionTimeoutInMs(10000)
+							.build());
 	}
 
 	private synchronized void putCurrent() {
@@ -284,6 +288,12 @@ public class PeriodicResourceUpdater {
 		@Override
 		public void onThrowable(final Throwable t){
 			LOGGER.warn("Failed request " + request.getUrl() + ": " + t, t);
+			if (asyncHttpClient!=null) {
+				while (!asyncHttpClient.isClosed()) {
+					asyncHttpClient.close();
+				}
+			}
+			asyncHttpClient = newAsyncClient();
 		}
 	};
 
