@@ -166,6 +166,10 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 		if thisRange.End == -1 || thisRange.End >= totalContentLength { // if the end range is "", or too large serve until the end
 			thisRange.End = totalContentLength - 1
 		}
+		if thisRange.Start == -1 {
+			thisRange.Start = totalContentLength - thisRange.End
+			thisRange.End = totalContentLength - 1
+		}
 
 		rangeString := "bytes " + strconv.FormatInt(thisRange.Start, 10) + "-" + strconv.FormatInt(thisRange.End, 10)
 		log.Debugf("range:%d-%d\n", thisRange.Start, thisRange.End)
@@ -174,7 +178,6 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 			body = append(body, []byte("Content-type: "+originalContentType+"%s\r\n")...)
 			body = append(body, []byte("Content-range: "+rangeString+"\r\n\r\n")...)
 		} else {
-			log.Debugf("Adding Range Header (should only happen once: %s\n", rangeString+"/"+strconv.FormatInt(totalContentLength, 10))
 			d.Hdr.Add("Content-Range", rangeString+"/"+strconv.FormatInt(totalContentLength, 10))
 		}
 		bSlice := (*d.Body)[thisRange.Start : thisRange.End+1]
@@ -194,7 +197,7 @@ func parseRange(rangeString string) (byteRange, error) {
 
 	var bRange byteRange
 	if parts[0] == "" {
-		bRange.Start = 0
+		bRange.Start = -1 // -1 means from the end
 	} else {
 		start, err := strconv.ParseInt(parts[0], 10, 64)
 		if err != nil {
