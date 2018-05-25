@@ -58,7 +58,7 @@ This will first cause the apr, tomcat-native, jdk and tomcat packages to be inst
 
 Restore Property Files
 ------------------------------
-Replace the Traffic Router properties files with the correct ones for the CDN. The properties files from the previous install can be found at: /opt/traffic_router/conf/traffic_ops.properties.rpmsaved & traffic_monitor.properties.rpmsaved.
+The install process does not override or replace any of the files in the /opt/traffic_router/conf directory. Previous versions of the traffic_ops.properties and traffic_monitor.properties should still be good. On a new install replace the Traffic Router properties files with the correct ones for the CDN. 
 
 Development Environment Upgrade
 ===============================
