@@ -175,8 +175,8 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 		log.Debugf("range:%d-%d\n", thisRange.Start, thisRange.End)
 		if multipart {
 			body = append(body, []byte("\r\n--"+multipartBoundaryString+"\r\n")...)
-			body = append(body, []byte("Content-type: "+originalContentType+"%s\r\n")...)
-			body = append(body, []byte("Content-range: "+rangeString+"\r\n\r\n")...)
+			body = append(body, []byte("Content-type: "+originalContentType+"\r\n")...)
+			body = append(body, []byte("Content-range: "+rangeString+"/"+strconv.FormatInt(totalContentLength, 10)+"\r\n\r\n")...)
 		} else {
 			d.Hdr.Add("Content-Range", rangeString+"/"+strconv.FormatInt(totalContentLength, 10))
 		}
