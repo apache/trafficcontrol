@@ -148,6 +148,11 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		{1.1, http.MethodGet, `user/current/?(\.json)?$`, user.Current, auth.PrivLevelReadOnly, Authenticated, nil},
 
+		{1.1, http.MethodGet, `users/?(\.json)?$`, user.Get(d.DB.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `users/{id}?(\.json)?$`, user.GetID(d.DB.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPut, `users/{id}?(\.json)?$`, user.Put(d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodPost, `users/?(\.json)?$`, user.Post(d.DB.DB), auth.PrivLevelOperations, Authenticated, nil},
+
 		//Parameter: CRUD
 		{1.1, http.MethodGet, `parameters/?(\.json)?$`, api.ReadHandler(parameter.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodGet, `parameters/{id}$`, api.ReadHandler(parameter.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},

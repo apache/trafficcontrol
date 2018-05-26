@@ -158,6 +158,34 @@ func WriteRespAlertObj(w http.ResponseWriter, r *http.Request, level tc.AlertLev
 	w.Write(respBts)
 }
 
+// WriteRespAlert is like WriteResp, but also takes an alert level and message to write at the root level.
+// This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
+func WriteRespWithAlert(w http.ResponseWriter, r *http.Request, v interface{}, level tc.AlertLevel, msg string) {
+	vals := map[string]interface{}{
+		"alerts":   tc.CreateAlerts(level, msg).Alerts,
+		"response": v,
+	}
+	respBts, err := json.Marshal(vals)
+	if err != nil {
+		HandleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("marshalling JSON for %T: %v", v, err))
+		return
+	}
+	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Write(respBts)
+}
+
+// RespAlertWriter is like RespWriter, but also takes an alert level and message to write at the root level
+// This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
+func RespWithAlertWriter(w http.ResponseWriter, r *http.Request, level tc.AlertLevel, msg string) func(v interface{}, err error) {
+	return func(v interface{}, err error) {
+		if err != nil {
+			HandleErr(w, r, http.StatusInternalServerError, nil, err)
+			return
+		}
+		WriteRespWithAlert(w, r, v, level, msg)
+	}
+}
+
 // IntParams parses integer parameters, and returns map of the given params, or an error if any integer param is not an integer. The intParams may be nil if no integer parameters are required. Note this does not check existence; if an integer paramter is required, it should be included in the requiredParams given to NewInfo.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func IntParams(params map[string]string, intParamNames []string) (map[string]int, error) {

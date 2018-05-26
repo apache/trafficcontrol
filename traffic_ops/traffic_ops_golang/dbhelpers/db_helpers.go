@@ -22,6 +22,8 @@ package dbhelpers
 import (
 	"database/sql"
 	"errors"
+	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -99,6 +101,53 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo
 	criteria = strings.Join(criteriaArgs, " AND ")
 
 	return criteria, queryValues, errs
+}
+
+// BuildInsertColumns creates the insert query columns, the query parameters, and the slice of values to insert, from a struct.
+// Nil pointers are not included. This allows dynamically inserting into columns which are `not null default`, where a naïve query would fail with not null conflicts.
+// This does not return the entire query as a string, so where clauses, returning statements, and other modifications may be used.
+// The struct must have `db:"column_name"` tags for the column names to insert.
+//
+// Example:
+//  cols, params, vals := buildInsertColumns(u)
+//  db.Exec(`INSERT INTO my_table (` + cols + `) VALUES (` + params + `)`, vals..)
+// ```
+//
+func BuildInsertColumns(v interface{}) (string, string, []interface{}, error) {
+	cols := []string{}
+	vals := []interface{}{}
+	params := []string{}
+	colI := 1 // SQL query parameters start at 1
+	val := reflect.Indirect(reflect.ValueOf(v))
+	if val.Type().Kind() != reflect.Struct {
+		return "", "", nil, errors.New("value must be a struct or a pointer to a struct")
+	}
+	// appendVals is a recursing function, which calls itself on anonymous embedded structs.
+	// This way, embedded struct members are treated like direct members, and included in the columns.
+	appendVals := (func(reflect.Value))(nil)
+	appendVals = func(val reflect.Value) {
+		for i := 0; i < val.NumField(); i++ {
+			field := val.Field(i)
+			typeField := val.Type().Field(i)
+			if field.Kind() == reflect.Struct && typeField.Anonymous {
+				appendVals(field)
+				continue
+			}
+			dbTag := typeField.Tag.Get("db")
+			if dbTag == "" {
+				continue
+			}
+			if field.Kind() == reflect.Ptr && field.IsNil() {
+				continue
+			}
+			cols = append(cols, dbTag)
+			vals = append(vals, field.Interface())
+			params = append(params, "$"+strconv.Itoa(colI))
+			colI++
+		}
+	}
+	appendVals(val)
+	return strings.Join(cols, ","), strings.Join(params, ","), vals, nil
 }
 
 //parses pq errors for uniqueness constraint violations
