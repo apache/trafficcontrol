@@ -184,9 +184,9 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 		body = append(body, bSlice...)
 	}
 	if multipart {
-		body = append(body, []byte(fmt.Sprintf("\r\n--%s--\r\n", multipartBoundaryString))...)
+		body = append(body, []byte("\r\n--"+multipartBoundaryString+"--\r\n")...)
 	}
-	d.Hdr.Set("Content-Length", fmt.Sprintf("%d", len(body)))
+	d.Hdr.Set("Content-Length", strconv.Itoa(len(body)))
 	*d.Body = body
 	*d.Code = http.StatusPartialContent
 	return
