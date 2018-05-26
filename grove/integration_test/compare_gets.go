@@ -1,5 +1,19 @@
 package main
 
+/*
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
 import (
 	"flag"
 	"fmt"
@@ -106,6 +120,8 @@ func compareResponses(response1 responseType, response2 responseType, ignoreHdrs
 
 	if ignoreMPB {
 		contentTypeHdr := response1.Headers.Get("Content-type")
+		ignoreHdrs = append(ignoreHdrs, "Content-Type")   // the boundary will be different
+		ignoreHdrs = append(ignoreHdrs, "Content-Length") // the boundary will be different
 		//fmt.Println("ignoreing", contentTypeHdr, response1)
 		if strings.HasPrefix(contentTypeHdr, "multipart/byteranges") {
 			parts := strings.Split(contentTypeHdr, "=")
@@ -145,7 +161,7 @@ func main() {
 	orgHdrs := flag.String("ohdrs", "", "Comma seperated list of headers to add to origin request")
 	cacheHdrs := flag.String("chdrs", "", "Comma separated list of headers to add to cache request")
 	ignoreHdrs := flag.String("ignorehdrs", "Server,Date", "Comma separated list of headers to ignore in the compare")
-	ignoreMultiPartBoundary := flag.Bool("ignorembp", true, "Ignore multi part boundary in body comparison.")
+	ignoreMultiPartBoundary := flag.Bool("ignorempb", true, "Ignore multi part boundary in body comparison.")
 	flag.Parse()
 
 	resp := httpGet(*originURL+"/"+*path, *orgHdrs)
