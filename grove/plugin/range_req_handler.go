@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -30,6 +31,8 @@ type byteRange struct {
 	Start int64
 	End   int64
 }
+
+const MAXINT64 = 1<<63 - 1
 
 type rangeRequestConfig struct {
 	Mode              string `json:"mode"`
@@ -163,7 +166,7 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 	}
 	body := make([]byte, 0)
 	for _, thisRange := range ctx {
-		if thisRange.End == -1 || thisRange.End >= totalContentLength { // if the end range is "", or too large serve until the end
+		if thisRange.End == MAXINT64 || thisRange.End >= totalContentLength { // if the end range is "", or too large serve until the end
 			thisRange.End = totalContentLength - 1
 		}
 		if thisRange.Start == -1 {
@@ -207,7 +210,7 @@ func parseRange(rangeString string) (byteRange, error) {
 		bRange.Start = start
 	}
 	if parts[1] == "" {
-		bRange.End = -1 // -1 means till the end
+		bRange.End = MAXINT64 // MAXINT64 means till the end
 	} else {
 		end, err := strconv.ParseInt(parts[1], 10, 64)
 		if err != nil {
@@ -233,5 +236,38 @@ func parseRangeHeader(rHdrVal string) []byteRange {
 		}
 		byteRanges = append(byteRanges, thisRange)
 	}
-	return byteRanges
+
+	// if there is just one range, return, and don't incur the overhead of determining overlaps
+	if len(byteRanges) <= 1 {
+		return byteRanges
+	}
+
+	// Collapse overlapping byte range requests, first sort the array by Start
+	sort.Slice(byteRanges, func(i, j int) bool {
+		return byteRanges[i].Start < byteRanges[j].Start
+	})
+
+	// Then, copy ranges into collapsedRanges if applicable, collapse as needed
+	collapsedRanges := make([]byteRange, 0)
+	j := 0
+	collapsedRanges = append(collapsedRanges, byteRanges[j])
+	for i := 1; i < len(byteRanges); i++ {
+		if collapsedRanges[j].End < byteRanges[i].Start {
+			// Most normal case, the ranges are not overlapping; add the range to the collapsedRanges array
+			collapsedRanges = append(collapsedRanges, byteRanges[i])
+			j++
+			continue
+		}
+		if collapsedRanges[j].Start <= byteRanges[i].Start && collapsedRanges[j].End >= byteRanges[i].End {
+			// Don't add the entry at i, it is part of the entry at i-1
+			continue
+		}
+		if collapsedRanges[j].Start <= byteRanges[i].Start && collapsedRanges[j].End < byteRanges[i].End {
+			// Overlapping ranges, combine into one
+			collapsedRanges[j].End = byteRanges[i].End
+			continue
+		}
+	}
+
+	return collapsedRanges
 }
