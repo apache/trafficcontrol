@@ -544,6 +544,36 @@ type DeliveryServiceRouting struct {
 	RegionalDenied    int     `json:"regionalDenied"`
 }
 
+type UserAvailableDS struct {
+	ID          *int    `json:"id" db:"id"`
+	DisplayName *string `json:"displayName" db:"display_name"`
+	XMLID       *string `json:"xmlId" db:"xml_id"`
+	TenantID    *int    `json:"-"` // tenant is necessary to check authorization, but not serialized
+}
+
+type DeliveryServiceUserPost struct {
+	UserID           *int   `json:"userId"`
+	DeliveryServices *[]int `json:"deliveryServices"`
+	Replace          *bool  `json:"replace"`
+}
+
+type UserDeliveryServicePostResponse struct {
+	Alerts   []Alert                 `json:"alerts"`
+	Response DeliveryServiceUserPost `json:"response"`
+}
+
+type UserDeliveryServicesResponseV13 struct {
+	Response []DeliveryServiceV13 `json:"response"`
+}
+
+type UserDeliveryServicesResponseV12 struct {
+	Response []DeliveryServiceV13 `json:"response"`
+}
+
+type UserDeliveryServicesResponse struct {
+	Response []DeliveryServiceNullableV13 `json:"response"`
+}
+
 type DSServerIDs struct {
 	DeliveryServiceID *int  `json:"dsId", db:"deliveryservice"`
 	ServerIDs         []int `json:"servers"`
