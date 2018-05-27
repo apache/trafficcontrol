@@ -21,7 +21,7 @@
             "connection-close": false,
             "deny": null,
             "from": "http://disk-test.cdn.kabletown.net",
-            "name": "jvd-test",
+            "name": "test",
             "parent_selection": "consistent-hash",
             "cache_name": "disk",
             "plugins": {
@@ -37,7 +37,7 @@
                     "set": [
                         {
                             "name": "X-CDN-name",
-                            "value": "JvD-Grove"
+                            "value": "GroverCDN"
                         }
                     ]
                 },
@@ -70,7 +70,7 @@
             "connection-close": false,
             "deny": null,
             "from": "http://disk1-test.cdn.kabletown.net",
-            "name": "jvd1-test",
+            "name": "test1",
             "parent_selection": "consistent-hash",
             "cache_name": "disk",
             "plugins": {
@@ -86,7 +86,7 @@
                     "set": [
                         {
                             "name": "X-CDN-name",
-                            "value": "JvD-Grove"
+                            "value": "GroverCDN"
                         }
                     ]
                 }
@@ -116,7 +116,7 @@
             "connection-close": false,
             "deny": null,
             "from": "http://mem-test.cdn.kabletown.net",
-            "name": "cim-linear-hds.http.http.cim-linear-hds",
+            "name": "test2",
             "parent_selection": "consistent-hash",
             "query-string": {
                 "cache": true,
