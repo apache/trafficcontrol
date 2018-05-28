@@ -52,10 +52,10 @@ sub delete {
 			&log( $self, "Backup configuration DELETED", "APICHANGE");
 			return $self->success_message("Backup configuration DELETED");
 		} else {
-			return $self->alert( "Backup configuration DELETED." );
+			return $self->alert( "Backup configuration DELETE Failed!." );
 		}
 	} else {
-		&log( $self, "No backup Cachegroups found");
+		$self->app->log->error("No backup Cachegroups found");
 		return $self->not_found();
 	}
 }
@@ -66,21 +66,10 @@ sub show {
 	my $fallback_id = $self->param("fallbackId");
 	my $id = $cache_id ? $cache_id : $fallback_id;
 
-	#only integers
-	if ( $id !~ /^\d+?$/ ) {
-		&log( $self, "No such Cachegroup id $id");
-		return $self->success([]);
-	}
+	my ( $is_valid, $result ) = $self->is_valid_cachegroup_fallback(undef, $cache_id);
 
-	my $cachegroup = $self->db->resultset('Cachegroup')->search( { id => $id } )->single();
-	if ( !defined($cachegroup) ) {
-		&log( $self, "No such Cachegroup $id");
-		return $self->success([]);
-	}
-
-	if ( ($cachegroup->type->name ne "EDGE_LOC") ) {
-		&log( $self, "cachegroup should be type EDGE_LOC.");
-		return $self->success([]);
+	if ( !$is_valid ) {
+		return $self->alert($result);
 	}
 
 	my $rs_backups = undef;
@@ -106,7 +95,7 @@ sub show {
 		}
 		return $self->success( $response );
 	} else {
-		&log( $self, "No backup Cachegroups");
+		$self->app->log->error("No backup Cachegroups");
 		return $self->success([]);
 	}
 }
@@ -138,12 +127,12 @@ sub create {
 	foreach my $config (@{ $params }) {
 		my $rs_backup = $self->db->resultset('Cachegroup')->search( { id => $config->{fallbackId} } )->single();
 		if ( !defined($rs_backup) ) {
-			&log( $self, "ERROR Backup config: No such Cache Group $config->{fallbackId}");
+			$self->app->log->error("ERROR Backup config: No such Cache Group $config->{fallbackId}");
 			next;
 		} 
 
 		if ( ($rs_backup->type->name ne "EDGE_LOC") ) {
-			&log( $self, "ERROR Backup config: $config->{name} is not EDGE_LOC");
+			$self->app->log->error("ERROR Backup config: $config->{name} is not EDGE_LOC");
 			next;
 		}
 
@@ -160,7 +149,7 @@ sub create {
         
 		my $rs_data = $self->db->resultset('CachegroupFallback')->create($values)->insert();
 		if ( !defined($rs_data)) {
-			&log( $self, "Database operation for backup configuration for cache group $cache_id failed.");
+			$self->app->log->error("Database operation for backup configuration for cache group $cache_id failed.");
 		}
 	}
 
@@ -216,12 +205,12 @@ sub update {
 	foreach my $config (@{ $params }) {
 		my $rs_backup = $self->db->resultset('Cachegroup')->search( { id => $config->{fallbackId} } )->single();
 		if ( !defined($rs_backup) ) {
-			&log( $self, "ERROR Backup config: No such Cache Group $config->{fallbackId}");
+			$self->app->log->error("ERROR Backup config: No such Cache Group $config->{fallbackId}");
 			next;
 		} 
 
 		if ( ($rs_backup->type->name ne "EDGE_LOC") ) {
-			&log( $self, "ERROR Backup config: $config->{name} is not EDGE_LOC");
+			$self->app->log->error("ERROR Backup config: $config->{name} is not EDGE_LOC");
 			next;
 		}
 
@@ -263,12 +252,12 @@ sub is_valid_cachegroup_fallback {
 	my $cache_id = shift;
 
 	if ( $cache_id !~ /^\d+?$/ ) {
-		return ( 0, "Invalid cachegroup id" );
+		return ( 0, "Invalid cachegroup id, should be an integer" );
 	}
 
 	my $cachegroup = $self->db->resultset('Cachegroup')->search( { id => $cache_id } )->single();
 	if ( !defined($cachegroup) ) {
-		return ( 0, "Invalid cachegroup id, should be an integer" );
+		return ( 0, "Invalid cachegroup id" );
 	}
 
 	if ( ($cachegroup->type->name ne "EDGE_LOC") ) {
