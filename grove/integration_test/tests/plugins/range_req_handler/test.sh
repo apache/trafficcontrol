@@ -41,7 +41,7 @@ done
 # multipart
 for host in "mem-test.cdn.kabletown.net" "disk-test.cdn.kabletown.net"
 do
-  for r in "0-0" "0-100" "5000-" "-100" "0-0,10-15" "0-100,200-210" "33-99,101-188" "8-10,9-15,100-200" "0-300,200-250" "-33,66-99,50-150" "500-,300-304"
+  for r in "0-0" "0-100" "5000-" "-100" "0-0,10-15" "0-100,200-210" "33-99,101-188" "8-10,9-15,100-200" "0-300,200-250" "-33,66-99,50-150" "300-304,500-,600-700"
   do
     test="${CMP_TOOL}  --chdrs \"Host:$host Range:bytes=${r}\" --ohdrs \"Range:bytes=${r}\" --path \"10Mb.txt\" --ignorehdrs \"Server,Date\" --ignorempb"
     testno=$(($testno+1))
@@ -53,6 +53,6 @@ do
   done
 done
 
-echo "$testno tests done, $result failed."
+echo "plugin/range_req_handler: $testno tests done, $result failed."
 
 exit $result
