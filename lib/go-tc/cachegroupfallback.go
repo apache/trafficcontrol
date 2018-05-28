@@ -20,24 +20,24 @@ package tc
  * under the License.
  */
 
-// A List of CACHEGROUPFALLBACKs Response
-// swagger:response CACHEGROUPFALLBACKsResponse
+// A List of cachegroupFallbacks Response
+// swagger:response cachegroupFallbacksResponse
 // in: body
-type CACHEGROUPFALLBACKsResponse struct {
+type cachegroupFallbacksResponse struct {
 	// in: body
-	Response []CACHEGROUPFALLBACK `json:"response"`
+	Response []cachegroupFallback `json:"response"`
 }
 
-// A Single CACHEGROUPFALLBACK Response for Update and Create to depict what changed
-// swagger:response CACHEGROUPFALLBACKResponse
+// A Single cachegroupFallback Response for Update and Create to depict what changed
+// swagger:response cachegroupFallbackResponse
 // in: body
-type CACHEGROUPFALLBACKResponse struct {
+type cachegroupFallbackResponse struct {
 	// in: body
-	Response CACHEGROUPFALLBACK `json:"response"`
+	Response cachegroupFallback `json:"response"`
 }
 
-// CACHEGROUPFALLBACK ...
-type CACHEGROUPFALLBACK struct {
+// cachegroupFallback ...
+type cachegroupFallback struct {
 
 	PrimaryCgId int `json:"primaryId" db:"primary_cg"`
 	BackupCgId  int `json:"backupId" db:"backup_cg"`
@@ -45,8 +45,8 @@ type CACHEGROUPFALLBACK struct {
 
 }
 
-// CACHEGROUPFALLBACKNullable ...
-type CACHEGROUPFALLBACKNullable struct {
+// cachegroupFallbackNullable ...
+type cachegroupFallbackNullable struct {
 
 	PrimaryCgId *int `json:"primaryId" db:"primary_cg"`
 	BackupCgId  *int `json:"backupId" db:"backup_cg"`

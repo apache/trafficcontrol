@@ -19,8 +19,8 @@
 
 -- cachegroup_fallbacks
 CREATE TABLE cachegroup_fallbacks (
-    primary_cg bigint,
-    backup_cg bigint CHECK (primary_cg != backup_cg),
+    primary_cg bigint NOT NULL,
+    backup_cg bigint CHECK (primary_cg != backup_cg) NOT NULL,
     set_order bigint NOT NULL,
     CONSTRAINT fk_primary_cg FOREIGN KEY (primary_cg) REFERENCES cachegroup(id) ON DELETE CASCADE,   
     CONSTRAINT fk_backup_cg FOREIGN KEY (backup_cg) REFERENCES cachegroup(id) ON DELETE CASCADE,

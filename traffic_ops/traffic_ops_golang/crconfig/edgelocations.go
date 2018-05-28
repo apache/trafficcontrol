@@ -32,7 +32,7 @@ func makeLocations(cdn string, db *sql.DB) (map[string]tc.CRConfigLatitudeLongit
 
 	// TODO test whether it's faster to do a single query, joining lat/lon into servers
 	q := `
-select cg.name, t.name as type, cg.latitude, cg.longitude from cachegroup as cg
+select cg.name, cg.id, t.name as type, cg.latitude, cg.longitude from cachegroup as cg
 inner join server as s on s.cachegroup = cg.id
 inner join type as t on t.id = s.type
 inner join status as st ON st.id = s.status
@@ -49,20 +49,20 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 
 	for rows.Next() {
 		cachegroup := ""
+		primaryCacheID := ""
 		ttype := ""
 		latlon := tc.CRConfigLatitudeLongitude{}
-		if err := rows.Scan(&cachegroup, &ttype, &latlon.Lat, &latlon.Lon); err != nil {
+		if err := rows.Scan(&cachegroup, &primaryCacheID, &ttype, &latlon.Lat, &latlon.Lon); err != nil {
 			return nil, nil, errors.New("Error scanning cachegroup: " + err.Error())
 		}
 		if ttype == RouterTypeName {
 			routerLocs[cachegroup] = latlon
 		} else {
-			primaryCacheId := ""
-			if err := db.QueryRow(`select id from cachegroup where name = $1`, cachegroup).Scan(&primaryCacheId); err != nil {
-				return nil, nil, errors.New("Failed while retrieving from cachegroup: " + err.Error())
-			}
-
-			dbRows, err := db.Query(`select backup_cg from cachegroup_fallbacks where primary_cg = $1 order by set_order`, primaryCacheId)
+			q := `select cachegroup.name from cachegroup_fallbacks
+join cachegroup on cachegroup_fallbacks.backup_cg = cachegroup.id
+and cachegroup_fallbacks.primary_cg = $1
+`
+			dbRows, err := db.Query(q, primaryCacheID)
 
 			if err != nil {
 				return nil, nil, errors.New("Error retrieving from cachegroup_fallbacks: " + err.Error())
@@ -71,20 +71,16 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 
 			index := 0
 			for dbRows.Next() {
-				backup_id := ""
-				backup_name := ""
-				if err := dbRows.Scan(&backup_id); err != nil {
+				backupName := ""
+				if err := dbRows.Scan(&backupName); err != nil {
 					return nil, nil, errors.New("Error while scanning from cachegroup_fallbacks: " + err.Error())
-				}
-				if err := db.QueryRow(`select name from cachegroup where id = $1`, backup_id).Scan(&backup_name); err != nil {
-					return nil, nil, errors.New("Error scanning cachegroup: " + err.Error())
 				} else {
-					latlon.BackupLocations.List = append(latlon.BackupLocations.List, backup_name)
+					latlon.BackupLocations.List = append(latlon.BackupLocations.List, backupName)
 					index++
 				}
 			}
 
-			 if err := dbRows.Err(); err != nil {
+			if err := dbRows.Err(); err != nil {
 				return nil, nil, errors.New("Error iterating cachegroup_fallbacks rows: " + err.Error())
 			}
 			edgeLocs[cachegroup] = latlon
