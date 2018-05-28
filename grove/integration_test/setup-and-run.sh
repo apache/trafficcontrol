@@ -55,6 +55,44 @@ curl -H'Host: mem-test.cdn.kabletown.net' -Lsv -r 50000-50009  http://localhost:
 #cd $GOPATH/src/github.com/apache/incubator-trafficcontrol/grove/integration_test
 go build compare_gets.go
 
+#function run_test () {
+#  command=${1}
+#  output=${2:-/dev/null}
+#  echo -n "Test ${testno} (${command}): "
+#  ${command} > ${output} 2>&1
+#  thisresult=$?
+#
+#  result=$(($result+thisresult))
+#  if [ $thisresult -eq 0 ]
+#  then
+#    echo "PASS"
+#  else
+#    echo "FAIL"
+#  fi
+#
+#  testno=$(($testno+1))
+#}
 
+
+function run_test () {
+  "$@"
+  thisresult=$?
+
+  result=$(($result+thisresult))
+  if [ $thisresult -eq 0 ]
+  then
+    echo "PASS"
+  else
+    echo "FAIL"
+  fi
+
+  testno=$(($testno+1))
+}
+export -f run_test
+
+
+$GOPATH/src/github.com/apache/incubator-trafficcontrol/grove/integration_test/tests/plugins/modify_headers/test.sh
+
+$GOPATH/src/github.com/apache/incubator-trafficcontrol/grove/integration_test/tests/plugins/range_req_handler/test.sh
 
 
