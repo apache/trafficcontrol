@@ -206,14 +206,15 @@ func getServers(params map[string]string, db *sqlx.DB, privLevel int) ([]tc.Serv
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
-		"cachegroup":   dbhelpers.WhereColumnInfo{"s.cachegroup", api.IsInt},
-		"cdn":          dbhelpers.WhereColumnInfo{"s.cdn_id", api.IsInt},
-		"id":           dbhelpers.WhereColumnInfo{"s.id", api.IsInt},
-		"hostName":     dbhelpers.WhereColumnInfo{"s.host_name", nil},
-		"physLocation": dbhelpers.WhereColumnInfo{"s.phys_location", api.IsInt},
-		"profileId":    dbhelpers.WhereColumnInfo{"s.profile", api.IsInt},
-		"status":       dbhelpers.WhereColumnInfo{"st.name", nil},
-		"type":         dbhelpers.WhereColumnInfo{"t.name", nil},
+		"cachegroup":       dbhelpers.WhereColumnInfo{"s.cachegroup", api.IsInt},
+		"parentCachegroup": dbhelpers.WhereColumnInfo{"cg.parent_cachegroup_id", api.IsInt},
+		"cdn":              dbhelpers.WhereColumnInfo{"s.cdn_id", api.IsInt},
+		"id":               dbhelpers.WhereColumnInfo{"s.id", api.IsInt},
+		"hostName":         dbhelpers.WhereColumnInfo{"s.host_name", nil},
+		"physLocation":     dbhelpers.WhereColumnInfo{"s.phys_location", api.IsInt},
+		"profileId":        dbhelpers.WhereColumnInfo{"s.profile", api.IsInt},
+		"status":           dbhelpers.WhereColumnInfo{"st.name", nil},
+		"type":             dbhelpers.WhereColumnInfo{"t.name", nil},
 	}
 
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
