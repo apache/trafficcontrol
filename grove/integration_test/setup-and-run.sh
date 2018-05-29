@@ -75,9 +75,10 @@ go build compare_gets.go
 
 
 function run_test () {
-  "$@"
+  "$@" > /tmp/run_test.out 2>&1
   thisresult=$?
 
+   echo -n "Test ${testno} ($@): "
   result=$(($result+thisresult))
   if [ $thisresult -eq 0 ]
   then
@@ -90,9 +91,12 @@ function run_test () {
 }
 export -f run_test
 
+cp  $GOPATH/src/github.com/apache/incubator-trafficcontrol/grove/integration_test/tests/plugins/modify_headers/remap.json /remap.json
+pkill -HUP grove
+bash $GOPATH/src/github.com/apache/incubator-trafficcontrol/grove/integration_test/tests/plugins/modify_headers/test.sh
 
-$GOPATH/src/github.com/apache/incubator-trafficcontrol/grove/integration_test/tests/plugins/modify_headers/test.sh
-
-$GOPATH/src/github.com/apache/incubator-trafficcontrol/grove/integration_test/tests/plugins/range_req_handler/test.sh
+cp $GOPATH/src/github.com/apache/incubator-trafficcontrol/grove/integration_test/tests/plugins/range_req_handler/remap.json /remap.json
+pkill -HUP grove
+bash $GOPATH/src/github.com/apache/incubator-trafficcontrol/grove/integration_test/tests/plugins/range_req_handler/test.sh
 
 
