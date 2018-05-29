@@ -103,14 +103,9 @@ func GetCombinedParams(r *http.Request) (map[string]string, error) {
 //      we lose the ability to unmarshal the struct if a struct implementing the interface is passed in,
 //      because when when it is de-referenced it is a pointer to an interface. A new copy is created so that
 //      there are no issues with concurrent goroutines
-func decodeAndValidateRequestBody(r *http.Request, v Validator, db *sqlx.DB) (interface{}, []error) {
-	typ := reflect.TypeOf(v)
-	if typ.Kind() == reflect.Ptr {
-		typ = typ.Elem()
-	}
-	payload := reflect.New(typ).Interface()
+func decodeAndValidateRequestBody(r *http.Request, v Validator, db *sqlx.DB, user auth.CurrentUser) (interface{}, []error) {
+	payload := reflect.Indirect(reflect.ValueOf(v)).Addr().Interface() // does a shallow copy v's internal struct members
 	defer r.Body.Close()
-
 	if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
 		return nil, []error{err}
 	}
@@ -175,17 +170,6 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//create error function with ResponseWriter and Request
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
-		//create local instance of the shared typeRef pointer
-		//no operations should be made on the typeRef
-		//decode the body and validate the request struct
-		decoded, errs := decodeAndValidateRequestBody(r, typeRef, db)
-		if len(errs) > 0 {
-			handleErrs(http.StatusBadRequest, errs...)
-			return
-		}
-		u := decoded.(Updater)
-		//now we have a validated local object to update
-
 		//collect path parameters and user from context
 		ctx := r.Context()
 		params, err := GetCombinedParams(r)
@@ -201,11 +185,23 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
+		//create local instance of the shared typeRef pointer
+		//no operations should be made on the typeRef
+		//decode the body and validate the request struct
+		decoded, errs := decodeAndValidateRequestBody(r, typeRef, db, *user)
+		if len(errs) > 0 {
+			handleErrs(http.StatusBadRequest, errs...)
+			return
+		}
+		u := decoded.(Updater)
+		//now we have a validated local object to update
+
 		keyFields := u.GetKeyFieldsInfo() //expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a {}interface of the right type. in most that will be [{Field:"id",Func: func(s string)({}interface,error){return strconv.Atoi(s)}}]
 		keys, ok := u.GetKeys()           // a map of keyField to keyValue where keyValue is an {}interface
 		if !ok {
 			log.Errorf("unable to parse keys from request: %++v", u)
 			handleErrs(http.StatusBadRequest, errors.New("unable to parse required keys from request body"))
+			return // TODO verify?
 		}
 		for _, keyFieldInfo := range keyFields {
 			paramKey := params[keyFieldInfo.Field]
@@ -219,6 +215,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 			if err != nil {
 				log.Errorf("failed to parse key %s: %s", keyFieldInfo.Field, err)
 				handleErrs(http.StatusBadRequest, errors.New("failed to parse key: "+keyFieldInfo.Field))
+				return
 			}
 
 			if paramValue != keys[keyFieldInfo.Field] {
@@ -361,16 +358,6 @@ func CreateHandler(typeRef Creator, db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
-		//decode the body and validate the request struct
-		decoded, errs := decodeAndValidateRequestBody(r, typeRef, db)
-		if len(errs) > 0 {
-			handleErrs(http.StatusBadRequest, errs...)
-			return
-		}
-		i := decoded.(Creator)
-		log.Debugf("%++v", i)
-		//now we have a validated local object to insert
-
 		ctx := r.Context()
 		user, err := auth.GetCurrentUser(ctx)
 		if err != nil {
@@ -378,6 +365,16 @@ func CreateHandler(typeRef Creator, db *sqlx.DB) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
+
+		//decode the body and validate the request struct
+		decoded, errs := decodeAndValidateRequestBody(r, typeRef, db, *user)
+		if len(errs) > 0 {
+			handleErrs(http.StatusBadRequest, errs...)
+			return
+		}
+		i := decoded.(Creator)
+		log.Debugf("%++v", i)
+		//now we have a validated local object to insert
 
 		// if the object has tenancy enabled, check that user is able to access the tenant
 		if t, ok := i.(Tenantable); ok {
