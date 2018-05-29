@@ -90,7 +90,7 @@ func getURIsignkeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 
 		// create and start a cluster
-		cluster, err := riaksvc.GetRiakCluster(db, cfg.RiakAuthOptions)
+		cluster, err := riaksvc.GetRiakCluster(db.DB, cfg.RiakAuthOptions)
 		if err != nil {
 			handleErr(http.StatusInternalServerError, err)
 			return
@@ -172,7 +172,7 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.Ha
 		}
 
 		// create and start a cluster
-		cluster, err := riaksvc.GetRiakCluster(db, cfg.RiakAuthOptions)
+		cluster, err := riaksvc.GetRiakCluster(db.DB, cfg.RiakAuthOptions)
 		if err != nil {
 			handleErr(http.StatusInternalServerError, err)
 			return
@@ -281,7 +281,7 @@ func saveDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.Hand
 		}
 
 		// create and start a cluster
-		cluster, err := riaksvc.GetRiakCluster(db, cfg.RiakAuthOptions)
+		cluster, err := riaksvc.GetRiakCluster(db.DB, cfg.RiakAuthOptions)
 		if err != nil {
 			handleErr(http.StatusInternalServerError, err)
 			return

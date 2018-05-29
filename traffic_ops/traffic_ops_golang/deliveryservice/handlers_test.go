@@ -32,7 +32,7 @@ import (
 // TestValidateErrors ...
 func TestValidateErrors(t *testing.T) {
 
-	ds := GetRefType()
+	ds := &TODeliveryServiceV13{}
 	if err := json.Unmarshal([]byte(errorTestCase()), &ds); err != nil {
 		fmt.Printf("err ---> %v\n", err)
 		return

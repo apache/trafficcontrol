@@ -16,9 +16,10 @@ package v13
 */
 
 import (
+	"testing"
+
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"testing"
 )
 
 func TestServers(t *testing.T) {
@@ -55,13 +56,6 @@ func CreateTestServers(t *testing.T) {
 	}
 	respProfile := respProfiles[0]
 
-	// GET EDGE type
-	respTypes, _, err := TOSession.GetTypeByName("EDGE")
-	if err != nil {
-		t.Errorf("cannot GET Division by name: EDGE - %v\n", err)
-	}
-	respType := respTypes[0]
-
 	// GET ONLINE status
 	respStatuses, _, err := TOSession.GetStatusByName("ONLINE")
 	if err != nil {
@@ -85,6 +79,13 @@ func CreateTestServers(t *testing.T) {
 
 	// loop through servers, assign FKs and create
 	for _, server := range testData.Servers {
+		// GET EDGE type
+		respTypes, _, err := TOSession.GetTypeByName(server.TypeName)
+		if err != nil {
+			t.Errorf("cannot GET Division by name: EDGE - %v\n", err)
+		}
+		respType := respTypes[0]
+
 		server.CDNID = respProfile.CDNID
 		server.ProfileID = respProfile.ID
 		server.TypeID = respType.ID
@@ -114,8 +115,10 @@ func GetTestServers(t *testing.T) {
 func UpdateTestServers(t *testing.T) {
 
 	firstServer := testData.Servers[0]
+	hostName := firstServer.HostName
 	// Retrieve the server by hostname so we can get the id for the Update
-	resp, _, err := TOSession.GetServerByHostName(firstServer.HostName)
+	resp, _, err := TOSession.GetServerByHostName(hostName)
+
 	if err != nil {
 		t.Errorf("cannot GET Server by hostname: %v - %v\n", firstServer.HostName, err)
 	}

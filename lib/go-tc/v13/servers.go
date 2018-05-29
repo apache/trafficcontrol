@@ -78,6 +78,7 @@ type Server struct {
 	TCPPort          int                 `json:"tcpPort" db:"tcp_port"`
 	Type             string              `json:"type" db:"server_type"`
 	TypeID           int                 `json:"typeId" db:"server_type_id"`
+	TypeName         string              `json:"typeName" db:"server_type_name"`
 	UpdPending       bool                `json:"updPending" db:"upd_pending"`
 	XMPPID           string              `json:"xmppId" db:"xmpp_id"`
 	XMPPPasswd       string              `json:"xmppPasswd" db:"xmpp_passwd"`
