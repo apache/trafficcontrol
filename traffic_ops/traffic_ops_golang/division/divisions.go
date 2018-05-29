@@ -23,6 +23,8 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"database/sql"
+	"net/http"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -374,4 +376,26 @@ func deleteQuery() string {
 	query := `DELETE FROM division
 WHERE id=:id`
 	return query
+}
+
+func GetName(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params, _, userErr, sysErr, errCode := api.AllParams(r, nil)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, errCode, userErr, sysErr)
+			return
+		}
+		api.RespWriter(w, r)(getDivisionByName(db, params["name"]))
+	}
+}
+
+func getDivisionByName(db *sql.DB, name string) ([]tc.DivisionNullable, error) {
+	d := tc.DivisionNullable{}
+	if err := db.QueryRow(`SELECT id, name, last_updated from division where name = $1`, name).Scan(&d.ID, &d.Name, &d.LastUpdated); err != nil {
+		if err == sql.ErrNoRows {
+			return []tc.DivisionNullable{}, nil // emulates old Perl behavior; TODO return result error to user?
+		}
+		return nil, errors.New("querying division by name: " + err.Error())
+	}
+	return []tc.DivisionNullable{d}, nil
 }
