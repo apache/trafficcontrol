@@ -33,6 +33,7 @@ sub delete {
 	my $fallback_id = $self->param('fallbackId');
 	my $params = $self->req->json;
 	my $rs_backups = undef; 
+	my $result = ""; 
 
 	if ( !&is_oper($self) ) {
 		return $self->forbidden();
@@ -40,22 +41,27 @@ sub delete {
 
 	if ( defined ($cache_id) && defined($fallback_id) ) {
 		$rs_backups = $self->db->resultset('CachegroupFallback')->search( { primary_cg => $cache_id , backup_cg => $fallback_id} );
+		$result = "Backup Cachegroup $fallback_id  DELETED from cachegroup $cache_id fallback list";
 	} elsif (defined ($cache_id)) {
 		$rs_backups = $self->db->resultset('CachegroupFallback')->search( { primary_cg => $cache_id} );
+		$result = "Fallback list for Cachegroup $cache_id DELETED";
 	} elsif (defined ($fallback_id)) {
+		$result = "Cachegroup $fallback_id DELETED from all the configured fallback lists";
 		$rs_backups = $self->db->resultset('CachegroupFallback')->search( { backup_cg => $fallback_id} );
+	} else {
+		return $self->alert("Invalid input");
 	}
 
 	if ( ($rs_backups->count > 0) ) {
 		my $del_records = $rs_backups->delete();
 		if ($del_records) {
-			&log( $self, "Backup configuration DELETED", "APICHANGE");
-			return $self->success_message("Backup configuration DELETED");
+			&log( $self, $result, "APICHANGE");
+			return $self->success( $result );
 		} else {
 			return $self->alert( "Backup configuration DELETE Failed!." );
 		}
 	} else {
-		$self->app->log->error("No backup Cachegroups found");
+		$self->app->log->error( "No backup Cachegroups found" );
 		return $self->not_found();
 	}
 }

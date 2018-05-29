@@ -49,7 +49,7 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 
 	for rows.Next() {
 		cachegroup := ""
-		primaryCacheID := ""
+		primaryCacheID := 0
 		ttype := ""
 		latlon := tc.CRConfigLatitudeLongitude{}
 		if err := rows.Scan(&cachegroup, &primaryCacheID, &ttype, &latlon.Lat, &latlon.Lon); err != nil {

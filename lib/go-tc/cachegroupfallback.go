@@ -20,24 +20,24 @@ package tc
  * under the License.
  */
 
-// A List of cachegroupFallbacks Response
-// swagger:response cachegroupFallbacksResponse
+// A List of CacheGroupFallbacks Response
+// swagger:response CacheGroupFallbacksResponse
 // in: body
-type cachegroupFallbacksResponse struct {
+type CacheGroupFallbacksResponse struct {
 	// in: body
-	Response []cachegroupFallback `json:"response"`
+	Response []CacheGroupFallback `json:"response"`
 }
 
-// A Single cachegroupFallback Response for Update and Create to depict what changed
-// swagger:response cachegroupFallbackResponse
+// A Single CacheGroupFallback Response for Update and Create to depict what changed
+// swagger:response CacheGroupFallbackResponse
 // in: body
-type cachegroupFallbackResponse struct {
+type CacheGroupFallbackResponse struct {
 	// in: body
-	Response cachegroupFallback `json:"response"`
+	Response CacheGroupFallback `json:"response"`
 }
 
-// cachegroupFallback ...
-type cachegroupFallback struct {
+// CacheGroupFallback ...
+type CacheGroupFallback struct {
 
 	PrimaryCgId int `json:"primaryId" db:"primary_cg"`
 	BackupCgId  int `json:"backupId" db:"backup_cg"`
@@ -45,8 +45,8 @@ type cachegroupFallback struct {
 
 }
 
-// cachegroupFallbackNullable ...
-type cachegroupFallbackNullable struct {
+// CacheGroupFallbackNullable ...
+type CacheGroupFallbackNullable struct {
 
 	PrimaryCgId *int `json:"primaryId" db:"primary_cg"`
 	BackupCgId  *int `json:"backupId" db:"backup_cg"`
