@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -43,6 +44,9 @@ type KeyFieldInfo struct {
 }
 
 func GetIntKey(s string) (interface{}, error) {
+	if strings.HasSuffix(s, ".json") {
+		s = s[:len(s) - len(".json")]
+	}
 	return strconv.Atoi(s)
 }
 
@@ -249,7 +253,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 		resp := struct {
 			Response interface{} `json:"response"`
 			tc.Alerts
-		}{[]interface{}{u}, tc.CreateAlerts(tc.SuccessLevel, u.GetType()+" was updated.")}
+		}{u, tc.CreateAlerts(tc.SuccessLevel, u.GetType()+" was updated.")}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {

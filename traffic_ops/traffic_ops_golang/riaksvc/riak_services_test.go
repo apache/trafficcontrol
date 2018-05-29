@@ -151,7 +151,7 @@ func TestGetRiakCluster(t *testing.T) {
 	rows1.AddRow("www", "devnull.com")
 	mock.ExpectQuery("SELECT").WillReturnRows(rows1)
 
-	if _, err := GetRiakCluster(db, nil); err == nil {
+	if _, err := GetRiakCluster(db.DB, nil); err == nil {
 		t.Errorf("expected an error due to nil RiakAuthoptions in the config but, go no error.")
 	}
 
@@ -161,14 +161,14 @@ func TestGetRiakCluster(t *testing.T) {
 		TlsConfig: &tls.Config{},
 	}
 
-	if _, err := GetRiakCluster(db, &authOptions); err != nil {
+	if _, err := GetRiakCluster(db.DB, &authOptions); err != nil {
 		t.Errorf("expected no errors, actual: %s.", err)
 	}
 
 	rows2 := sqlmock.NewRows([]string{"s.host_name", "s.domain_name"})
 	mock.ExpectQuery("SELECT").WillReturnRows(rows2)
 
-	if _, err := GetRiakCluster(db, &authOptions); err == nil {
+	if _, err := GetRiakCluster(db.DB, &authOptions); err == nil {
 		t.Errorf("expected an error due to no available riak servers.")
 	}
 }
