@@ -249,7 +249,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 		resp := struct {
 			Response interface{} `json:"response"`
 			tc.Alerts
-		}{[]interface{}{u}, tc.CreateAlerts(tc.SuccessLevel, u.GetType()+" was updated.")}
+		}{u, tc.CreateAlerts(tc.SuccessLevel, u.GetType()+" was updated.")}
 
 		respBts, err := json.Marshal(resp)
 		if err != nil {
