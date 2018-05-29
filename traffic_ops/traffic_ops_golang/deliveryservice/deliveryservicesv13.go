@@ -76,7 +76,8 @@ func (ds TODeliveryServiceV13) GetKeys() (map[string]interface{}, bool) {
 }
 
 func (ds *TODeliveryServiceV13) SetKeys(keys map[string]interface{}) {
-	ds.V12().SetKeys(keys)
+	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	ds.ID = &i
 }
 
 func (ds *TODeliveryServiceV13) GetAuditName() string {
@@ -358,11 +359,25 @@ func UpdateV13(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
+		params, _, userErr, sysErr, errCode := api.AllParams(r, nil)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, errCode, userErr, sysErr)
+			return
+		}
+		if strings.HasSuffix(params["id"], ".json") {
+			params["id"] = params["id"][:len(params["id"])-len(".json")]
+		}
+		id, err := strconv.Atoi(params["id"])
+		if err != nil {
+			api.HandleErr(w, r, http.StatusBadRequest, errors.New("id must be an integer"), sysErr)
+		}
+
 		ds := tc.DeliveryServiceNullableV13{}
 		if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 			api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 			return
 		}
+		ds.ID = &id
 
 		if authorized, err := isTenantAuthorized(*user, db, &ds.DeliveryServiceNullableV12); err != nil {
 			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
@@ -372,7 +387,7 @@ func UpdateV13(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		ds, errCode, userErr, sysErr := update(db.DB, cfg, *user, &ds)
+		ds, errCode, userErr, sysErr = update(db.DB, cfg, *user, &ds)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, errCode, userErr, sysErr)
 			return
@@ -521,19 +536,31 @@ func (ds *TODeliveryServiceV13) Delete(db *sqlx.DB, user auth.CurrentUser) (erro
 	if ds.ID == nil {
 		log.Errorln("TODeliveryServiceV13.Delete called with nil ID")
 		return tc.DBError, tc.DataMissingError
-	} else if ok, err := ds.V12().LoadXMLID(db); err != nil {
+	}
+	xmlID, ok, err := ds.V12().GetXMLID(db)
+	if err != nil {
 		log.Errorln("TODeliveryServiceV13.Delete ID '" + string(*ds.ID) + "' loading XML ID: " + err.Error())
 		return tc.DBError, tc.SystemError
-	} else if !ok {
+	}
+	if !ok {
 		log.Errorln("TODeliveryServiceV13.Delete ID '" + string(*ds.ID) + "' had no delivery service!")
 		return tc.DBError, tc.DataMissingError
-	} else if ds.XMLID == nil {
-		// should never happen
-		log.Errorf("TODeliveryServiceV13.Delete ID '%v' loaded nil XML ID!", *ds.ID)
+	}
+	ds.XMLID = &xmlID
+
+	// Note ds regexes MUST be deleted before the ds, because there's a ON DELETE CASCADE on deliveryservice_regex (but not on regex).
+	// Likewise, it MUST happen in a transaction with the later DS delete, so they aren't deleted if the DS delete fails.
+	if _, err := tx.Exec(`DELETE FROM regex WHERE id IN (SELECT regex FROM deliveryservice_regex WHERE deliveryservice=$1)`, *ds.ID); err != nil {
+		log.Errorln("TODeliveryServiceV13.Delete deleting regexes for delivery service: " + err.Error())
 		return tc.DBError, tc.SystemError
 	}
 
-	result, err := tx.Exec(`DELETE FROM deliveryservice WHERE id=$1`, ds.ID)
+	if _, err := tx.Exec(`DELETE FROM deliveryservice_regex WHERE deliveryservice=$1`, *ds.ID); err != nil {
+		log.Errorln("TODeliveryServiceV13.Delete deleting delivery service regexes: " + err.Error())
+		return tc.DBError, tc.SystemError
+	}
+
+	result, err := tx.Exec(`DELETE FROM deliveryservice WHERE id=$1`, *ds.ID)
 	if err != nil {
 		log.Errorln("TODeliveryServiceV13.Delete deleting delivery service: " + err.Error())
 		return tc.DBError, tc.SystemError
@@ -547,11 +574,6 @@ func (ds *TODeliveryServiceV13) Delete(db *sqlx.DB, user auth.CurrentUser) (erro
 			return errors.New("no delivery service with that id found"), tc.DataMissingError
 		}
 		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
-	}
-
-	if _, err := tx.Exec(`DELETE FROM deliveryservice_regex WHERE deliveryservice=$1`, ds.ID); err != nil {
-		log.Errorln("TODeliveryServiceV13.Delete deleting delivery service regexes: " + err.Error())
-		return tc.DBError, tc.SystemError
 	}
 
 	paramConfigFilePrefixes := []string{"hdr_rw_", "hdr_rw_mid_", "regex_remap_", "cacheurl_"}
@@ -595,6 +617,9 @@ func filterAuthorized(dses []tc.DeliveryServiceNullableV13, user auth.CurrentUse
 }
 
 func readGetDeliveryServices(params map[string]string, db *sqlx.DB) ([]tc.DeliveryServiceNullableV13, []error, tc.ApiErrorType) {
+	if strings.HasSuffix(params["id"], ".json") {
+		params["id"] = params["id"][:len(params["id"])-len(".json")]
+	}
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{

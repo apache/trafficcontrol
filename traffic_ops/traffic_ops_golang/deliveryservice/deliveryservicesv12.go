@@ -132,21 +132,19 @@ func getDSTenantIDByName(db *sql.DB, name string) (*int, bool, error) {
 	return tenantID, true, nil
 }
 
-// LoadXMLID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
-func (ds *TODeliveryServiceV12) LoadXMLID(db *sqlx.DB) (bool, error) {
+// GetXMLID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
+func (ds *TODeliveryServiceV12) GetXMLID(db *sqlx.DB) (string, bool, error) {
 	if ds.ID == nil {
-		return false, errors.New("missing ID")
+		return "", false, errors.New("missing ID")
 	}
-
 	xmlID := ""
 	if err := db.QueryRow(`SELECT xml_id FROM deliveryservice where id = $1`, ds.ID).Scan(&xmlID); err != nil {
 		if err == sql.ErrNoRows {
-			return false, nil
+			return "", false, nil
 		}
-		return false, fmt.Errorf("querying xml_id for delivery service ID '%v': %v", *ds.ID, err)
+		return "", false, fmt.Errorf("querying xml_id for delivery service ID '%v': %v", *ds.ID, err)
 	}
-	ds.XMLID = &xmlID
-	return true, nil
+	return xmlID, true, nil
 }
 
 // IsTenantAuthorized checks that the user is authorized for both the delivery service's existing tenant, and the new tenant they're changing it to (if different).
