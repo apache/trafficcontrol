@@ -152,7 +152,7 @@
             "deliveryService": {
                 "active": false,
                 "ccrDnsTtl": 30,
-                "deepCachingType": "ALWAYS",
+                "deepCachingType": "NEVER",
                 "displayName": "Testing transitions",
                 "dscp": 3,
                 "geoLimit": 1,
@@ -520,8 +520,8 @@
             "interfaceName": "bond0",
             "ip6Address": "2345:1234:12:8::1/64",
             "ip6Gateway": "2345:1234:12:8::1",
-            "ipAddress": "127.0.0.1",
-            "ipGateway": "127.0.0.1",
+            "ipAddress": "127.0.0.21",
+            "ipGateway": "127.0.0.21",
             "ipNetmask": "255.255.255.252",
             "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
             "mgmtIpAddress": "",
@@ -533,6 +533,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
+            "typeName": "EDGE",
             "updPending": true,
             "xmppId": "atlanta-edge-01\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -564,6 +565,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 8086,
+            "typeName": "EDGE",
             "updPending": true,
             "xmppId": "",
             "xmppPasswd": ""
@@ -595,6 +597,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
+            "typeName": "EDGE",
             "updPending": true,
             "xmppId": "atlanta-router-01\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -626,6 +629,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
+            "typeName": "EDGE",
             "updPending": true,
             "xmppId": "atlanta-edge-03\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -657,6 +661,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
+            "typeName": "EDGE",
             "updPending": true,
             "xmppId": "atlanta-edge-14\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -688,6 +693,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
+            "typeName": "EDGE",
             "updPending": true,
             "xmppId": "atlanta-edge-15\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -719,6 +725,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
+            "typeName": "MID",
             "updPending": true,
             "xmppId": "atlanta-mid-16\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -750,6 +757,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
+            "typeName": "EDGE",
             "updPending": true,
             "xmppId": "atlanta-org-1\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -781,6 +789,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
+            "typeName": "EDGE",
             "updPending": true,
             "xmppId": "atlanta-org-1\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -812,6 +821,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
+            "typeName": "MID",
             "updPending": true,
             "xmppId": "atlanta-mid-01\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -843,15 +853,16 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 81,
+            "typeName": "TRAFFIC_MONITOR",
             "updPending": true,
-            "xmppId": "rascal\\\\@kabletown.net",
+            "xmppId": "",
             "xmppPasswd": "X"
         },
         {
-            "domainName": "kabletown.net",
+            "domainName": "local",
             "guid": null,
-            "hostName": "riak01",
-            "httpsPort": null,
+            "hostName": "riak",
+            "httpsPort": 8088,
             "iloIpAddress": "",
             "iloIpGateway": "",
             "iloIpNetmask": "",
@@ -861,8 +872,8 @@
             "interfaceName": "eth1",
             "ip6Address": "2345:1234:12:b::12/64",
             "ip6Gateway": "2345:1234:12:b::12",
-            "ipAddress": "127.0.0.5",
-            "ipGateway": "127.0.0.5",
+            "ipAddress": "127.0.0.1",
+            "ipGateway": "127.0.0.1",
             "ipNetmask": "255.255.252.0",
             "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
             "mgmtIpAddress": "",
@@ -874,6 +885,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 8088,
+            "typeName": "RIAK",
             "updPending": true,
             "xmppId": "",
             "xmppPasswd": ""
@@ -1107,6 +1119,12 @@
             "description": "Mid Tier Cache",
             "lastUpdated": "2018-03-02T19:13:46.832327+00:00",
             "name": "MID",
+            "useInTable": "server"
+        },
+        {
+            "description": "Traffic Monitor (Rascal)",
+            "lastUpdated": "2018-03-02T19:13:46.832327+00:00",
+            "name": "TRAFFIC_MONITOR",
             "useInTable": "server"
         }
     ]
