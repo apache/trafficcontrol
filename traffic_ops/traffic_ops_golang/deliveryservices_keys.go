@@ -26,6 +26,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -38,14 +39,10 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
 )
 
 // Delivery Services: SSL Keys.
-
-// SSLKeysBucket ...
-const SSLKeysBucket = "ssl"
 
 // returns the cdn_id found by domainname.
 func getCDNIDByDomainname(domainName string, db *sqlx.DB) (sql.NullInt64, error) {
@@ -100,60 +97,34 @@ func getXMLID(cdnID sql.NullInt64, hostRegex string, db *sqlx.DB) (sql.NullStrin
 	return xmlID, nil
 }
 
-func getDeliveryServiceSSLKeysByXMLID(xmlID string, version string, db *sqlx.DB, cfg config.Config) ([]byte, error) {
-	var respBytes []byte
-	// create and start a cluster
-	cluster, err := riaksvc.GetRiakCluster(db, cfg.RiakAuthOptions)
+func getDeliveryServiceSSLKeysByXMLID(xmlID string, version string, db *sql.DB, cfg config.Config) ([]byte, error) {
+	if cfg.RiakEnabled == false {
+		err := errors.New("Riak is not configured!")
+		log.Errorln("getting delivery services SSL keys: " + err.Error())
+		return nil, err
+	}
+	key, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(xmlID, version, db, cfg.RiakAuthOptions)
 	if err != nil {
+		log.Errorln("getting delivery service keys: " + err.Error())
 		return nil, err
 	}
-	if err = cluster.Start(); err != nil {
-		return nil, err
-	}
-	defer func() {
-		if err := cluster.Stop(); err != nil {
-			log.Errorf("%v\n", err)
-		}
-	}()
-
-	if version == "" {
-		xmlID = xmlID + "-latest"
-	} else {
-		xmlID = xmlID + "-" + version
-	}
-
-	// get the deliveryservice ssl keys by xmlID and version
-	ro, err := riaksvc.FetchObjectValues(xmlID, SSLKeysBucket, cluster)
-	if err != nil {
-		return nil, err
-	}
-
-	// no keys we're found
-	if ro == nil {
+	if !ok {
 		alert := tc.CreateAlerts(tc.InfoLevel, "no object found for the specified key")
-		respBytes, err = json.Marshal(alert)
+		respBytes, err := json.Marshal(alert)
 		if err != nil {
 			log.Errorf("failed to marshal an alert response: %s\n", err)
 			return nil, err
 		}
-	} else { // keys were found
-		var key tc.DeliveryServiceSSLKeys
-
-		// unmarshal into a response tc.DeliveryServiceSSLKeysResponse object.
-		if err := json.Unmarshal(ro[0].Value, &key); err != nil {
-			log.Errorf("failed at unmarshaling sslkey response: %s\n", err)
-			return nil, err
-		}
-		resp := tc.DeliveryServiceSSLKeysResponse{
-			Response: key,
-		}
-		respBytes, err = json.Marshal(resp)
-		if err != nil {
-			log.Errorf("failed to marshal a sslkeys response: %s\n", err)
-			return nil, err
-		}
+		return respBytes, nil
 	}
 
+	respBytes := []byte{}
+	resp := tc.DeliveryServiceSSLKeysResponse{Response: key}
+	respBytes, err = json.Marshal(resp)
+	if err != nil {
+		log.Errorf("failed to marshal a sslkeys response: %s\n", err)
+		return nil, err
+	}
 	return respBytes, nil
 }
 
@@ -245,8 +216,12 @@ func verifyAndEncodeCertificate(certificate string, rootCA string) (string, erro
 func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorsFunc(w, r)
-		var keysObj tc.DeliveryServiceSSLKeys
-
+		if !cfg.RiakEnabled {
+			err := errors.New("Riak is not configured!")
+			log.Errorln("adding Riak SSL keys for delivery service: " + err.Error())
+			handleErr(http.StatusInternalServerError, err)
+			return
+		}
 		defer r.Body.Close()
 
 		ctx := r.Context()
@@ -262,7 +237,7 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg config.Config) http.Handl
 			return
 		}
 
-		// unmarshal the request
+		keysObj := tc.DeliveryServiceSSLKeys{}
 		if err := json.Unmarshal(data, &keysObj); err != nil {
 			log.Errorf("ERROR: could not unmarshal the request, %v\n", err)
 			handleErr(http.StatusBadRequest, err)
@@ -301,34 +276,8 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg config.Config) http.Handl
 			return
 		}
 
-		// create and start a cluster
-		cluster, err := riaksvc.GetRiakCluster(db, cfg.RiakAuthOptions)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-		if err = cluster.Start(); err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-		defer func() {
-			if err := cluster.Stop(); err != nil {
-				log.Errorf("%v\n", err)
-			}
-		}()
-
-		// create a storage object and store the data
-		obj := &riak.Object{
-			ContentType:     "text/json",
-			Charset:         "utf-8",
-			ContentEncoding: "utf-8",
-			Key:             keysObj.DeliveryService,
-			Value:           []byte(keysJSON),
-		}
-
-		err = riaksvc.SaveObject(obj, SSLKeysBucket, cluster)
-		if err != nil {
-			log.Errorf("%v\n", err)
+		if err := riaksvc.PutDeliveryServiceSSLKeysObj(keysObj, db.DB, cfg.RiakAuthOptions); err != nil {
+			log.Errorln("putting Riak SSL keys for delivery service '" + keysObj.DeliveryService + "': " + err.Error())
 			handleErr(http.StatusInternalServerError, err)
 			return
 		}
@@ -430,7 +379,7 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg config.Config) 
 						return
 					}
 				}
-				respBytes, err = getDeliveryServiceSSLKeysByXMLID(xmlID, version, db, cfg)
+				respBytes, err = getDeliveryServiceSSLKeysByXMLID(xmlID, version, db.DB, cfg)
 				if err != nil {
 					handleErr(http.StatusInternalServerError, err)
 					return
@@ -485,7 +434,7 @@ func getDeliveryServiceSSLKeysByXMLIDHandler(db *sqlx.DB, cfg config.Config) htt
 			}
 		}
 
-		respBytes, err = getDeliveryServiceSSLKeysByXMLID(xmlID, version, db, cfg)
+		respBytes, err = getDeliveryServiceSSLKeysByXMLID(xmlID, version, db.DB, cfg)
 		if err != nil {
 			handleErr(http.StatusInternalServerError, err)
 			return

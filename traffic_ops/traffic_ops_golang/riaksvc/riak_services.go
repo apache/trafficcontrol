@@ -21,12 +21,14 @@ package riaksvc
 
 import (
 	"crypto/tls"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"time"
 
+	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
 	"github.com/basho/riak-go-client"
@@ -165,7 +167,7 @@ func SaveObject(obj *riak.Object, bucket string, cluster StorageCluster) error {
 }
 
 // returns a riak cluster of online riak nodes.
-func GetRiakCluster(db *sqlx.DB, authOptions *riak.AuthOptions) (StorageCluster, error) {
+func GetRiakCluster(db *sql.DB, authOptions *riak.AuthOptions) (StorageCluster, error) {
 	riakServerQuery := `
 		SELECT s.host_name, s.domain_name FROM server s
 		INNER JOIN type t on s.type = t.id
@@ -215,4 +217,110 @@ func GetRiakCluster(db *sqlx.DB, authOptions *riak.AuthOptions) (StorageCluster,
 	cluster, err := riak.NewCluster(opts)
 
 	return RiakStorageCluster{Cluster: cluster}, err
+}
+
+func WithCluster(db *sql.DB, authOpts *riak.AuthOptions, f func(StorageCluster) error) error {
+	log.Errorf("DEBUG WithCluster authOps: %++v\n", authOpts)
+	cluster, err := GetRiakCluster(db, authOpts)
+	if err != nil {
+		return errors.New("getting riak cluster: " + err.Error())
+	}
+	if err = cluster.Start(); err != nil {
+		return errors.New("starting riak cluster: " + err.Error())
+	}
+	defer func() {
+		if err := cluster.Stop(); err != nil {
+			log.Errorln("error stopping Riak cluster: " + err.Error())
+		}
+	}()
+	return f(cluster)
+}
+
+func WithClusterX(db *sqlx.DB, authOpts *riak.AuthOptions, f func(StorageCluster) error) error {
+	log.Errorf("DEBUG WithCluster authOps: %++v\n", authOpts)
+	cluster, err := GetRiakCluster(db.DB, authOpts)
+	if err != nil {
+		return errors.New("getting riak cluster: " + err.Error())
+	}
+	if err = cluster.Start(); err != nil {
+		return errors.New("starting riak cluster: " + err.Error())
+	}
+	defer func() {
+		if err := cluster.Stop(); err != nil {
+			log.Errorln("error stopping Riak cluster: " + err.Error())
+		}
+	}()
+	return f(cluster)
+}
+
+// returns a riak cluster of online riak nodes.
+func GetRiakClusterTx(tx *sql.Tx, authOptions *riak.AuthOptions) (StorageCluster, error) {
+	// TODO remove duplication with GetRiakCluster
+
+	riakServerQuery := `
+		SELECT s.host_name, s.domain_name FROM server s
+		INNER JOIN type t on s.type = t.id
+		INNER JOIN status st on s.status = st.id
+		WHERE t.name = 'RIAK' AND st.name = 'ONLINE'
+		`
+
+	if authOptions == nil {
+		return nil, errors.New("ERROR: no riak auth information from riak.conf, cannot authenticate to any riak servers")
+	}
+
+	var nodes []*riak.Node
+	rows, err := tx.Query(riakServerQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var s tc.Server
+		var n *riak.Node
+		if err := rows.Scan(&s.HostName, &s.DomainName); err != nil {
+			return nil, err
+		}
+		addr := fmt.Sprintf("%s.%s:%d", s.HostName, s.DomainName, RiakPort)
+		nodeOpts := &riak.NodeOptions{
+			RemoteAddress: addr,
+			AuthOptions:   authOptions,
+		}
+		nodeOpts.AuthOptions.TlsConfig.ServerName = fmt.Sprintf("%s.%s", s.HostName, s.DomainName)
+		n, err := riak.NewNode(nodeOpts)
+		if err != nil {
+			return nil, err
+		}
+		nodes = append(nodes, n)
+	}
+
+	if len(nodes) == 0 {
+		return nil, errors.New("ERROR: no available riak servers")
+	}
+
+	opts := &riak.ClusterOptions{
+		Nodes:             nodes,
+		ExecutionAttempts: MaxCommandExecutionAttempts,
+	}
+
+	cluster, err := riak.NewCluster(opts)
+
+	return RiakStorageCluster{Cluster: cluster}, err
+}
+
+func WithClusterTx(tx *sql.Tx, authOpts *riak.AuthOptions, f func(StorageCluster) error) error {
+	log.Errorf("DEBUG WithCluster authOps: %++v\n", authOpts)
+	cluster, err := GetRiakClusterTx(tx, authOpts)
+	if err != nil {
+		return errors.New("getting riak cluster: " + err.Error())
+	}
+	if err = cluster.Start(); err != nil {
+		return errors.New("starting riak cluster: " + err.Error())
+	}
+	defer func() {
+		if err := cluster.Stop(); err != nil {
+			log.Errorln("error stopping Riak cluster: " + err.Error())
+		}
+	}()
+	return f(cluster)
 }

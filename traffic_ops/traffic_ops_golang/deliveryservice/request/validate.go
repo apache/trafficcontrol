@@ -24,10 +24,11 @@ import (
 	"fmt"
 	"strconv"
 
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
-	validation "github.com/go-ozzo/ozzo-validation"
+
+	"github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -61,7 +62,7 @@ func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
 	errs := tovalidate.ToErrors(errMap)
 
 	// ensure the deliveryservice requested is valid
-	e := deliveryservice.Validate(db, req.DeliveryService)
+	e := deliveryservice.ValidateV13(db, req.DeliveryService)
 	errs = append(errs, e...)
 
 	return errs

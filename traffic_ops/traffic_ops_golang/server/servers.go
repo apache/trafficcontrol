@@ -413,7 +413,9 @@ router_port_name=:router_port_name,
 status=:status_id,
 tcp_port=:tcp_port,
 type=:server_type_id,
-upd_pending=:upd_pending
+upd_pending=:upd_pending,
+xmpp_id=:xmpp_id,
+xmpp_passwd=:xmpp_passwd
 WHERE id=:id RETURNING last_updated`
 	return query
 }
@@ -442,8 +444,10 @@ func (server *TOServer) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		log.Error.Printf("could not begin transaction: %v", err)
 		return tc.DBError, tc.SystemError
 	}
+
 	if server.XMPPID == nil || *server.XMPPID == "" {
-		server.XMPPID = server.HostName
+		hostName := *server.HostName
+		server.XMPPID = &hostName
 	}
 
 	resultRows, err := tx.NamedQuery(insertQuery(), server)
@@ -522,7 +526,10 @@ router_port_name,
 status,
 tcp_port,
 type,
-upd_pending) VALUES (
+upd_pending,
+xmpp_id,
+xmpp_passwd
+) VALUES (
 :cachegroup_id,
 :cdn_id,
 :domain_name,
@@ -552,7 +559,10 @@ upd_pending) VALUES (
 :status_id,
 :tcp_port,
 :server_type_id,
-:upd_pending) RETURNING id,last_updated`
+:upd_pending,
+:xmpp_id,
+:xmpp_passwd
+) RETURNING id,last_updated`
 	return query
 }
 

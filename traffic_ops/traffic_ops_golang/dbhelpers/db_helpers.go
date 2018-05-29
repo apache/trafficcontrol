@@ -20,12 +20,14 @@ package dbhelpers
  */
 
 import (
+	"database/sql"
 	"errors"
 	"strings"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
@@ -117,4 +119,28 @@ func ParsePQUniqueConstraintError(err *pq.Error) (error, tc.ApiErrorType) {
 	}
 	log.Error.Printf("failed to parse unique constraint from pq error: %v", err)
 	return tc.DBError, tc.SystemError
+}
+
+// FinishTx commits the transaction if commit is true when it's called, otherwise it rolls back the transaction. This is designed to be called in a defer.
+func FinishTx(tx *sql.Tx, commit *bool) {
+	if tx == nil {
+		return
+	}
+	if !*commit {
+		tx.Rollback()
+		return
+	}
+	tx.Commit()
+}
+
+// FinishTxX commits the transaction if commit is true when it's called, otherwise it rolls back the transaction. This is designed to be called in a defer.
+func FinishTxX(tx *sqlx.Tx, commit *bool) {
+	if tx == nil {
+		return
+	}
+	if !*commit {
+		tx.Rollback()
+		return
+	}
+	tx.Commit()
 }
