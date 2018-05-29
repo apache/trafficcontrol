@@ -34,7 +34,7 @@ run_test grep "< Server: Grove/0.39999999"  /tmp/hdrs.out
 run_test curl -XTRACE -H'Host: disk-test.cdn.kabletown.net' http://localhost:8080/10Mb.txt -Lkvs -o /tmp/out
 cp /tmp/run_test.out /tmp/hdrs.out
 run_test grep "X-From-Cdn: Traffic-Control" /tmp/out
-run_test grep "< X-Cdn-Name: GroverCDN" /tmp/out
+run_test grep "< X-Cdn-Name: GroverCDN" /tmp/hdrs.out
 
 echo "plugin/modify_headers: $testno tests done, $result failed."
 
