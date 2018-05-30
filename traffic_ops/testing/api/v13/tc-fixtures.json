@@ -1014,6 +1014,26 @@
             "xmppPasswd": ""
         }
     ],
+    "staticdnsentries": [
+        {
+            "host": "host1",
+            "address": "address1",
+            "typeName": "AAAA_RECORD",
+            "ttl": 10 
+        },
+        {
+            "host": "host2",
+            "address": "address2",
+            "typeName": "A_RECORD",
+            "ttl": 10 
+        },
+        {
+            "host": "host3",
+            "name": "127.0.0.1",
+            "typeName": "CNAME_RECORD",
+            "ttl": 10 
+        }
+    ],
     "statuses": [
         {
             "description": "Edge: Puts server in CCR config file in this state, but CCR will never route traffic to it. Mid: Server will not be included in parent.config files for its edge caches",
