@@ -47,6 +47,8 @@ type Config struct {
 	LogLocationDebug   string `json:"log_location_debug"`
 	LogLocationEvent   string `json:"log_location_event"`
 
+	Plugins []string `json:"plugins"`
+
 	ReqTimeoutMS         int `json:"parent_request_timeout_ms"` // TODO rename "parent_request" to distinguish from client requests
 	ReqKeepAliveMS       int `json:"parent_request_keep_alive_ms"`
 	ReqMaxIdleConns      int `json:"parent_request_max_idle_connections"`

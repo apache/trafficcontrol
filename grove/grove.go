@@ -93,7 +93,7 @@ func main() {
 	reqIdleConnTimeout := time.Duration(cfg.ReqIdleConnTimeoutMS) * time.Millisecond
 	baseTransport := remap.NewRemappingTransport(reqTimeout, reqKeepAlive, reqMaxIdleConns, reqIdleConnTimeout)
 
-	plugins := plugin.Get()
+	plugins := plugin.Get(cfg.Plugins)
 	remapper, err := remap.LoadRemapper(cfg.RemapRulesFile, plugins.LoadFuncs(), caches, baseTransport)
 	if err != nil {
 		log.Errorf("starting service: loading remap rules: %v\n", err)
@@ -193,6 +193,7 @@ func main() {
 			log.Warnln("reloading config: caches changed in new config! Dynamic cache reloading is not supported! Old cache files and sizes will be used, and new cache config will NOT be loaded! Restart service to apply cache changes!")
 		}
 
+		plugins = plugin.Get(cfg.Plugins)
 		oldRemapper := remapper
 		remapper, err = remap.LoadRemapper(cfg.RemapRulesFile, plugins.LoadFuncs(), caches, baseTransport)
 		if err != nil {
@@ -253,6 +254,8 @@ func main() {
 			cfg.InterfaceName,
 		)
 		httpsHandler.Set(httpsCacheHandler)
+
+		plugins.OnStartup(remapper.PluginCfg(), pluginContext, plugin.StartupData{Config: cfg, Shared: remapper.PluginSharedCfg()})
 
 		if cfg.Port != oldCfg.Port {
 			ctx, cancel := context.WithTimeout(context.Background(), ShutdownTimeout)

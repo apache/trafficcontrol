@@ -132,9 +132,20 @@ func (p pluginsSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 var plugins = pluginsSlice{}
 
-func Get() Plugins {
-	sort.Sort(plugins)
-	return pluginsSlice(plugins)
+func Get(enabled []string) Plugins {
+	enabledM := map[string]struct{}{}
+	for _, name := range enabled {
+		enabledM[name] = struct{}{}
+	}
+	enabledPlugins := pluginsSlice{}
+	for _, plugin := range plugins {
+		if _, ok := enabledM[plugin.name]; !ok {
+			continue
+		}
+		enabledPlugins = append(enabledPlugins, plugin)
+	}
+	sort.Sort(enabledPlugins)
+	return enabledPlugins
 }
 
 type Plugins interface {
