@@ -1,0 +1,50 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li class="active">Coordinates</li>
+        </ol>
+        <div class="pull-right" role="group" ng-if="!settings.isNew">
+            <button class="btn btn-primary" title="Create Coordinate" ng-click="createCoordinate()"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
+        </div>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <br>
+        <table id="coordinatesTable" class="table responsive-utilities jambo_table">
+            <thead>
+            <tr class="headings">
+                <th>Name</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-click="editCoordinate(c.id)" ng-repeat="c in ::coordinates">
+                <td data-search="^{{::c.name}}$">{{::c.name}}</td>
+                <td data-search="^{{::c.latitude}}$">{{::c.latitude}}</td>
+                <td data-search="^{{::c.longitude}}$">{{::c.longitude}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
