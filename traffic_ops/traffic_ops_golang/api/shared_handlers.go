@@ -248,7 +248,7 @@ func UpdateHandler(typeRef Updater, db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 		//auditing here
-		CreateChangeLog(ApiChange, Updated, u, *user, db)
+		CreateChangeLog(ApiChange, Updated, u, *user, db.DB)
 		//form response to send across the wire
 		resp := struct {
 			Response interface{} `json:"response"`
@@ -333,7 +333,7 @@ func DeleteHandler(typeRef Deleter, db *sqlx.DB) http.HandlerFunc {
 		}
 		//audit here
 		log.Debugf("changelog for delete on object")
-		CreateChangeLog(ApiChange, Deleted, d, *user, db)
+		CreateChangeLog(ApiChange, Deleted, d, *user, db.DB)
 		//
 		resp := struct {
 			tc.Alerts
@@ -399,7 +399,7 @@ func CreateHandler(typeRef Creator, db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
-		CreateChangeLog(ApiChange, Created, i, *user, db)
+		CreateChangeLog(ApiChange, Created, i, *user, db.DB)
 
 		resp := struct {
 			Response interface{} `json:"response"`

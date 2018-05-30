@@ -562,7 +562,7 @@ func Delete(dbx *sqlx.DB) http.HandlerFunc {
 		}
 
 		log.Debugf("changelog for delete on object")
-		api.CreateChangeLogMsg(api.ApiChange, *user, dbx, fmt.Sprintf(`deleted deliveryservice_regex {"ds": %d, "regex": %d}`, dsID, regexID))
+		api.CreateChangeLogMsg(api.ApiChange, *user, db, fmt.Sprintf(`deleted deliveryservice_regex {"ds": %d, "regex": %d}`, dsID, regexID))
 		resp := struct {
 			tc.Alerts
 		}{tc.CreateAlerts(tc.SuccessLevel, "deliveryservice_regex was deleted.")}

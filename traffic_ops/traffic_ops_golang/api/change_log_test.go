@@ -64,7 +64,7 @@ func TestCreateChangeLog(t *testing.T) {
 
 	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	user := auth.CurrentUser{ID: 1}
-	err = CreateChangeLog(ApiChange, Created, &i, user, db)
+	err = CreateChangeLog(ApiChange, Created, &i, user, db.DB)
 	if err != nil {
 		t.Fatal(err)
 	}
