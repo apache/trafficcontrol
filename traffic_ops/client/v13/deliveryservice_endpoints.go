@@ -64,3 +64,7 @@ func deliveryServiceSSLKeysByIDEp(id string) string {
 func deliveryServiceSSLKeysByHostnameEp(hostname string) string {
 	return apiBase + dsPath + "/hostname/" + hostname + "/sslkeys.json"
 }
+
+func deliveryServicesByXMLID(XMLID string) string {
+	return apiBase + dsPath + "?xmlId=" + XMLID
+}

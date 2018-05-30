@@ -21,6 +21,11 @@ import tc "github.com/apache/trafficcontrol/lib/go-tc"
  * under the License.
  */
 
+// StaticDNSEntries ...
+type StaticDNSEntriesResponse struct {
+	Response []StaticDNSEntry `json:"response"`
+}
+
 // StatisDNSEntry ...
 type StaticDNSEntry struct {
 

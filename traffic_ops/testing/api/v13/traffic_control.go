@@ -39,6 +39,7 @@ type TrafficControl struct {
 	Roles                          []v13.Role                          `json:"roles"`
 	Servers                        []v13.Server                        `json:"servers"`
 	Statuses                       []v12.Status                        `json:"statuses"`
+	StaticDNSEntries               []v13.StaticDNSEntry                `json:"staticdnsentries"`
 	Tenants                        []v12.Tenant                        `json:"tenants"`
 	Types                          []v12.Type                          `json:"types"`
 }

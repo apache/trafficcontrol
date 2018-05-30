@@ -1018,19 +1018,22 @@
         {
             "host": "host1",
             "address": "address1",
-            "typeName": "AAAA_RECORD",
+            "dsname": "ds1",
+            "typename": "AAAA_RECORD",
             "ttl": 10 
         },
         {
             "host": "host2",
             "address": "address2",
-            "typeName": "A_RECORD",
+            "dsname": "ds2",
+            "typename": "A_RECORD",
             "ttl": 10 
         },
         {
             "host": "host3",
-            "name": "127.0.0.1",
-            "typeName": "CNAME_RECORD",
+            "dsName": "ds3",
+            "address": "127.0.0.1",
+            "typename": "CNAME_RECORD",
             "ttl": 10 
         }
     ],
