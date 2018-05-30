@@ -436,3 +436,11 @@ For the siphash component:
 For the miekg/dns component:
 @traffic_ops/traffic_ops_golang/vendor/github.com/miekg/dns/*
 ./licenses/BSD-miekg-dns
+
+The asn1-ber.v1 component is used under the MIT license:
+@traffic_ops/vendor/gopkg.in/asn1-ber.v1/*
+./traffic_ops/vendor/gopkg.in/asn1-ber.v1/LICENSE
+
+The ldap.v2 component is used under the MIT license:
+@traffic_ops/vendor/gopkg.in/ldap.v2/*
+./traffic_ops/vendor/gopkg.in/ldap.v2/LICENSE
