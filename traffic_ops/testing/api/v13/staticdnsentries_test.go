@@ -56,14 +56,31 @@ func TestStaticDNSEntries(t *testing.T) {
 func CreateTestStaticDNSEntries(t *testing.T) {
 
 	for _, staticDNSEntry := range testData.StaticDNSEntries {
-		// GET EDGE type
+
+		// GET StaticDNSEntry type
 		respTypes, _, err := TOSession.GetTypeByName(staticDNSEntry.Type)
-		fmt.Printf("respTypes ---> %v\n", respTypes)
 		if err != nil {
 			t.Errorf("cannot GET Type by name: %v\n", err)
 		}
 		respType := respTypes[0]
-		staticDNSEntry.Type = respType.Name
+		staticDNSEntry.TypeID = respType.ID
+
+		// GET DeliveryService to associate
+		respDSes, _, err := TOSession.GetDeliveryServiceByXMLID(staticDNSEntry.DeliveryService)
+		if err != nil {
+			t.Errorf("cannot GET DeliveryService by XMLID: %v\n", err)
+		}
+		respDS := respDSes[0]
+		staticDNSEntry.DeliveryServiceID = respDS.ID
+
+		// GET Cachegroup to associate
+		respGroups, _, err := TOSession.GetCacheGroupByName(staticDNSEntry.CacheGroupName)
+		if err != nil {
+			t.Errorf("cannot GET CacheGroup by Name: %v\n", err)
+		}
+		respGroup := respGroups[0]
+		staticDNSEntry.CacheGroupID = respGroup.ID
+
 		resp, _, err := TOSession.CreateStaticDNSEntry(staticDNSEntry)
 		log.Debugln("Response: ", resp)
 		if err != nil {
@@ -75,25 +92,27 @@ func CreateTestStaticDNSEntries(t *testing.T) {
 
 func UpdateTestStaticDNSEntries(t *testing.T) {
 
-	firstStaticDNSEntrie := testData.StaticDNSEntries[0]
-	// Retrieve the StaticDNSEntrie by name so we can get the id for the Update
-	resp, _, err := TOSession.GetStaticDNSEntriesByHost(firstStaticDNSEntrie.Host)
+	firstStaticDNSEntry := testData.StaticDNSEntries[0]
+	// Retrieve the StaticDNSEntries by name so we can get the id for the Update
+	resp, _, err := TOSession.GetStaticDNSEntriesByHost(firstStaticDNSEntry.Host)
 	if err != nil {
-		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v\n", firstStaticDNSEntrie.Host, err)
+		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v\n", firstStaticDNSEntry.Host, err)
 	}
 	remoteStaticDNSEntry := resp[0]
+	fmt.Printf("remoteStaticDNSEntry ---> %v\n", remoteStaticDNSEntry)
+	fmt.Printf("remoteStaticDNSEntry.ID ---> %v\n", remoteStaticDNSEntry.ID)
 	expectedAddress := "address99"
 	remoteStaticDNSEntry.Address = expectedAddress
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
 	if err != nil {
-		t.Errorf("cannot UPDATE StaticDNSEntrie by id: %v - %v\n", err, alert)
+		t.Errorf("cannot UPDATE StaticDNSEntries by id: %v - %v\n", err, alert)
 	}
 
-	// Retrieve the StaticDNSEntrie to check StaticDNSEntrie name got updated
+	// Retrieve the StaticDNSEntries to check StaticDNSEntries name got updated
 	resp, _, err = TOSession.GetStaticDNSEntryByID(remoteStaticDNSEntry.ID)
 	if err != nil {
-		t.Errorf("cannot GET StaticDNSEntries by name: '$%s', %v\n", firstStaticDNSEntrie.Host, err)
+		t.Errorf("cannot GET StaticDNSEntries by name: '$%s', %v\n", firstStaticDNSEntry.Host, err)
 	}
 	respStaticDNSEntry := resp[0]
 	if respStaticDNSEntry.Address != expectedAddress {
@@ -115,17 +134,17 @@ func GetTestStaticDNSEntries(t *testing.T) {
 func DeleteTestStaticDNSEntries(t *testing.T) {
 
 	for _, staticDNSEntry := range testData.StaticDNSEntries {
-		// Retrieve the StaticDNSEntrie by name so we can get the id for the Update
+		// Retrieve the StaticDNSEntries by name so we can get the id for the Update
 		resp, _, err := TOSession.GetStaticDNSEntriesByHost(staticDNSEntry.Host)
 		if err != nil {
 			t.Errorf("cannot GET StaticDNSEntries by name: %v - %v\n", staticDNSEntry.Host, err)
 		}
 		if len(resp) > 0 {
-			respStaticDNSEntrie := resp[0]
+			respStaticDNSEntry := resp[0]
 
-			_, _, err := TOSession.DeleteStaticDNSEntryByID(respStaticDNSEntrie.ID)
+			_, _, err := TOSession.DeleteStaticDNSEntryByID(respStaticDNSEntry.ID)
 			if err != nil {
-				t.Errorf("cannot DELETE StaticDNSEntrie by name: '%s' %v\n", respStaticDNSEntrie.Host, err)
+				t.Errorf("cannot DELETE StaticDNSEntrie by name: '%s' %v\n", respStaticDNSEntry.Host, err)
 			}
 
 			// Retrieve the StaticDNSEntrie to see if it got deleted
