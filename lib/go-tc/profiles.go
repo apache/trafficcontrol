@@ -47,3 +47,7 @@ type ProfileNullable struct {
 	RoutingDisabled *bool      `json:"routingDisabled" db:"routing_disabled"`
 	Type            *string    `json:"type" db:"type"`
 }
+
+type ProfileTrimmed struct {
+	Name string `json:"name"`
+}
