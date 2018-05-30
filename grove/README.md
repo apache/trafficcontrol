@@ -66,6 +66,7 @@ The config file is JSON of the following format:
   "port": 8080,
   "cache_size_bytes": 50000,
   "remap_rules_file": "./remap.json",
+  "plugins": ["ats_log", "http_stats", "if_modified_since", "record_stats"],
 ```
 
 The config file has the following fields:
@@ -96,6 +97,7 @@ The config file has the following fields:
 | `server_write_timeout_ms` | The length of time in milliseconds to allow a client to write data, before the connection is terminated. This value should be carefully considered, as too short a timeout will result in terminating legitimate clients with slow connections, while too long a timeout will make the server vulnerable to SlowLoris attacks.|
 | `cache_files` | Groups of cache files to use for disk caching. See [Disk Cache](#disk-cache) |
 | `file_mem_bytes` | The size in bytes of the memory cache to use for each group of cache files. Note this size is used for each group, and thus the total memory used is `file_mem_bytes*len(cache_files)+cache_size_bytes`.  See [Disk Cache](#disk-cache) |
+| `plugins` | An array of plugins to enable |
 
 # Remap Rules
 
