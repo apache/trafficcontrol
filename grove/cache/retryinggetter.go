@@ -132,7 +132,7 @@ func GetAndCache(
 			proxyURLStr = proxyURL.Host
 		}
 		if revalidateObj != nil {
-			req.Header.Set(ModifiedSinceHdr, revalidateObj.RespRespTime.Format(time.RFC1123))
+			req.Header.Set(ModifiedSinceHdr, revalidateObj.LastModified.Format(time.RFC1123))
 		} else {
 			req.Header.Del(ModifiedSinceHdr)
 		}
