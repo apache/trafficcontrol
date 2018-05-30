@@ -41,18 +41,20 @@ under the License.
             <div class="form-group" ng-class="{'has-error': hasError(coordinateForm.latitude), 'has-feedback': hasError(coordinateForm.latitude)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Magnetic Latitude *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="latitude" type="number" class="form-control" ng-model="coordinate.latitude" ng-pattern="/^[-+]?[0-9]*\.?[0-9]+$/" required autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(coordinateForm.latitude, 'required')">Required Coordinate</small>
-                    <small class="input-error" ng-show="hasPropertyError(coordinateForm.latitude, 'pattern')">Invalid Coordinate</small>
+                    <input name="latitude" type="number" class="form-control" ng-model="coordinate.latitude" ng-min="-90.0" ng-max="90.0" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(coordinateForm.latitude, 'required')">Required latitude</small>
+                    <small class="input-error" ng-show="hasPropertyError(coordinateForm.latitude, 'min')">Invalid latitude. Must be between -90.0 and 90.0</small>
+                    <small class="input-error" ng-show="hasPropertyError(coordinateForm.latitude, 'max')">Invalid latitude. Must be between -90.0 and 90.0</small>
                     <span ng-show="hasError(coordinateForm.latitude)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(coordinateForm.longitude), 'has-feedback': hasError(coordinateForm.longitude)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">Geo Magnetic Longitude *</label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input name="longitude" type="number" class="form-control" ng-model="coordinate.longitude" ng-pattern="/^[-+]?[0-9]*\.?[0-9]+$/" required autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(coordinateForm.longitude, 'required')">Required Coordinate</small>
-                    <small class="input-error" ng-show="hasPropertyError(coordinateForm.longitude, 'pattern')">Invalid Coordinate</small>
+                    <input name="longitude" type="number" class="form-control" ng-model="coordinate.longitude" ng-min="-180.0" ng-max="180.0" required autofocus>
+                    <small class="input-error" ng-show="hasPropertyError(coordinateForm.longitude, 'required')">Required longitude</small>
+                    <small class="input-error" ng-show="hasPropertyError(coordinateForm.longitude, 'min')">Invalid longitude. Must be between -180.0 and 180.0</small>
+                    <small class="input-error" ng-show="hasPropertyError(coordinateForm.longitude, 'max')">Invalid longitude. Must be between -180.0 and 180.0</small>
                     <span ng-show="hasError(coordinateForm.longitude)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
             </div>
