@@ -32,3 +32,14 @@ type Region struct {
 	LastUpdated  TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Name         string    `json:"name" db:"name"`
 }
+
+type RegionName struct {
+	ID           int       `json:"id"`
+	Name         string    `json:"name"`
+	Division RegionNameDivision `json:"division"`
+}
+
+type RegionNameDivision struct {
+	ID     int       `json:"id"`
+	Name string    `json:"name"`
+}
