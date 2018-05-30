@@ -60,3 +60,7 @@ type PhysLocationNullable struct {
 	State       *string    `json:"state" db:"state"`
 	Zip         *string    `json:"zip" db:"zip"`
 }
+
+type PhysLocationTrimmed struct {
+	Name string `json:"name"`
+}
