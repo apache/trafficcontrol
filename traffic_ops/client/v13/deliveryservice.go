@@ -56,6 +56,16 @@ func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryServiceV13,
 	return data.Response, reqInf, nil
 }
 
+func (to *Session) GetDeliveryServiceByXMLID(XMLID string) ([]tc.DeliveryService, ReqInf, error) {
+	var data tc.GetDeliveryServiceResponse
+	reqInf, err := get(to, deliveryServicesByXMLID(XMLID), &data)
+	if err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
 // DeliveryService gets the DeliveryService for the ID it's passed
 // Deprecated: use GetDeliveryService
 func (to *Session) DeliveryService(id string) (*tc.DeliveryServiceV13, error) {
