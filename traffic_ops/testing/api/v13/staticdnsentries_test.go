@@ -16,6 +16,7 @@ package v13
 */
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -24,23 +25,45 @@ import (
 
 func TestStaticDNSEntries(t *testing.T) {
 
+	CreateTestCDNs(t)
+	CreateTestTypes(t)
+	CreateTestProfiles(t)
+	CreateTestStatuses(t)
+	CreateTestDivisions(t)
+	CreateTestRegions(t)
+	CreateTestPhysLocations(t)
+	CreateTestCacheGroups(t)
+	CreateTestServers(t)
+	CreateTestDeliveryServices(t)
 	CreateTestStaticDNSEntries(t)
-	UpdateTestStaticDNSEntries(t)
 	GetTestStaticDNSEntries(t)
+	UpdateTestStaticDNSEntries(t)
 	DeleteTestStaticDNSEntries(t)
+	DeleteTestTypes(t)
+	DeleteTestDeliveryServices(t)
+	DeleteTestServers(t)
+	DeleteTestCacheGroups(t)
+	DeleteTestPhysLocations(t)
+	DeleteTestRegions(t)
+	DeleteTestDivisions(t)
+	DeleteTestStatuses(t)
+	DeleteTestProfiles(t)
+	DeleteTestTypes(t)
+	DeleteTestCDNs(t)
 
 }
 
 func CreateTestStaticDNSEntries(t *testing.T) {
 
 	for _, staticDNSEntry := range testData.StaticDNSEntries {
-
-		// GET DeliveryService by Name
-		//respStatuses, _, err := TOSession.GetStatusByName("ONLINE")
-		//if err != nil {
-		//t.Errorf("cannot GET Status by name: ONLINE - %v\n", err)
-		//}
-		//respStatus := respStatuses[0]
+		// GET EDGE type
+		respTypes, _, err := TOSession.GetTypeByName(staticDNSEntry.Type)
+		fmt.Printf("respTypes ---> %v\n", respTypes)
+		if err != nil {
+			t.Errorf("cannot GET Type by name: %v\n", err)
+		}
+		respType := respTypes[0]
+		staticDNSEntry.Type = respType.Name
 		resp, _, err := TOSession.CreateStaticDNSEntry(staticDNSEntry)
 		log.Debugln("Response: ", resp)
 		if err != nil {
