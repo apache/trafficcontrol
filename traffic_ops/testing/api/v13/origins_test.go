@@ -22,26 +22,34 @@ import (
 )
 
 func TestOrigins(t *testing.T) {
-
 	CreateTestCDNs(t)
 	defer DeleteTestCDNs(t)
 	CreateTestTypes(t)
 	defer DeleteTestTypes(t)
 	CreateTestProfiles(t)
 	defer DeleteTestProfiles(t)
+	CreateTestStatuses(t)
+	defer DeleteTestStatuses(t)
+	CreateTestDivisions(t)
+	defer DeleteTestDivisions(t)
+	CreateTestRegions(t)
+	defer DeleteTestRegions(t)
+	CreateTestPhysLocations(t)
+	defer DeleteTestPhysLocations(t)
 	CreateTestCacheGroups(t)
 	defer DeleteTestCacheGroups(t)
+	CreateTestServers(t)
+	defer DeleteTestServers(t)
+	CreateTestDeliveryServices(t)
+	defer DeleteTestDeliveryServices(t)
 	CreateTestCoordinates(t)
 	defer DeleteTestCoordinates(t)
-	// TODO: add deliveryservices once their API integration tests are implemented
 	// TODO: add tenants once their API integration tests are implemented
-	log.Debugln("TestOrigins() not implemented, requires Delivery Service API tests")
 
-	//CreateTestOrigins(t)
-	//defer DeleteTestOrigins(t)
-	//UpdateTestOrigins(t)
-	//GetTestOrigins(t)
-
+	CreateTestOrigins(t)
+	defer DeleteTestOrigins(t)
+	UpdateTestOrigins(t)
+	GetTestOrigins(t)
 }
 
 func CreateTestOrigins(t *testing.T) {
@@ -63,6 +71,17 @@ func CreateTestOrigins(t *testing.T) {
 	}
 	respCacheGroup := respCacheGroups[0]
 
+	// GET deliveryservices
+	respDeliveryServices, _, err := TOSession.GetDeliveryServices()
+	if err != nil {
+		t.Errorf("cannot GET Delivery Services - %v\n", err)
+		failed = true
+	}
+	if len(respDeliveryServices) == 0 {
+		t.Errorf("no delivery services found")
+		failed = true
+	}
+
 	// GET coordinate1 coordinate
 	respCoordinates, _, err := TOSession.GetCoordinateByName("coordinate1")
 	if err != nil {
@@ -76,6 +95,7 @@ func CreateTestOrigins(t *testing.T) {
 		origin.CachegroupID = &respCacheGroup.ID
 		origin.CoordinateID = &respCoordinate.ID
 		origin.ProfileID = &respProfile.ID
+		origin.DeliveryServiceID = &respDeliveryServices[0].ID
 
 		resp, _, err := TOSession.CreateOrigin(origin)
 		log.Debugln("Response: ", origin.Name, " ", resp)
