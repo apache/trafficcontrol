@@ -157,10 +157,10 @@ host,
 type,
 ttl) VALUES (
 :address,
-:deliveryservice,
-:cachegroup,
+:deliveryservice_id,
+:cachegroup_id,
 :host,
-:type,
+:type_id,
 :ttl) RETURNING id,last_updated`
 	return query
 }
@@ -292,6 +292,7 @@ func selectQuery() string {
 	return `SELECT
 ds.xml_id as dsname,
 sde.host,
+sde.id as id,
 sde.ttl,
 sde.address,
 tp.name as type,

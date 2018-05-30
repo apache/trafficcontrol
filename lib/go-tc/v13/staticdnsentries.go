@@ -34,14 +34,22 @@ type StaticDNSEntry struct {
 	// required: true
 	Address string `json:"address" db:"address"`
 
-	// The Cachegroup associated
+	// The Cachegroup Name associated
 	//
-	CacheGroup string `json:"cachegroup" db:"cachegroup"`
+	CacheGroupName string `json:"cachegroup"`
+
+	// The Cachegroup ID associated
+	//
+	CacheGroupID int `json:"cachegroupId" db:"cachegroup_id"`
+
+	// The DeliveryService associated
+	//
+	DeliveryService string `json:"deliveryservice" db:"dsname"`
 
 	// The DeliveryService associated
 	//
 	// required: true
-	DeliveryService string `json:"deliveryservice" db:"dsname"`
+	DeliveryServiceID int `json:"deliveryserviceId" db:"deliveryservice_id"`
 
 	// The host of the static dns entry
 	//
@@ -64,9 +72,13 @@ type StaticDNSEntry struct {
 
 	// The type of the static DNS entry
 	//
-	// required: true
 	// enum: ["A_RECORD", "AAAA_RECORD", "CNAME_RECORD"]
-	Type string `json:"type" db:"type"`
+	Type string `json:"type"`
+
+	// The type id of the static DNS entry
+	//
+	// required: true
+	TypeID int `json:"typeId" db:"type_id"`
 }
 
 // StatisDNSEntryNullable ...
@@ -77,14 +89,22 @@ type StaticDNSEntryNullable struct {
 	// required: true
 	Address *string `json:"address" db:"address"`
 
-	// The Cachegroup associated
+	// The Cachegroup Name associated
 	//
-	CacheGroup *string `json:"cachegroup" db:"cachegroup"`
+	CacheGroupName *string `json:"cachegroup" db:"cachegroup"`
 
-	// The DeliveryService associated
+	// The Cachegroup ID associated
+	//
+	CacheGroupID *int `json:"cachegroupId" db:"cachegroup_id"`
+
+	// The DeliveryService Name associated
+	//
+	DeliveryService *string `json:"deliveryservice" db:"dsname"`
+
+	// DeliveryService ID of the StaticDNSEntry
 	//
 	// required: true
-	DeliveryService *string `json:"deliveryservice" db:"dsname"`
+	DeliveryServiceID *int `json:"deliveryserviceId" db:"deliveryservice_id"`
 
 	// The host of the static dns entry
 	//
@@ -107,7 +127,11 @@ type StaticDNSEntryNullable struct {
 
 	// The type of the static DNS entry
 	//
-	// required: true
 	// enum: ["A_RECORD", "AAAA_RECORD", "CNAME_RECORD"]
-	Type *string `json:"type" db:"type"`
+	Type *string `json:"type"`
+
+	// The type id of the static DNS entry
+	//
+	// required: true
+	TypeID int `json:"typeId" db:"type_id"`
 }
