@@ -60,7 +60,7 @@ type StaticDNSEntry struct {
 	// The type of the static DNS entry
 	//
 	// required: true
-	// enum: ["A_RECORD", "CNAME_RECORD"]
+	// enum: ["A_RECORD", "AAAA_RECORD", "CNAME_RECORD"]
 	Type string `json:"type" db:"type"`
 }
 
@@ -103,6 +103,6 @@ type StaticDNSEntryNullable struct {
 	// The type of the static DNS entry
 	//
 	// required: true
-	// enum: ["A_RECORD", "CNAME_RECORD"]
+	// enum: ["A_RECORD", "AAAA_RECORD", "CNAME_RECORD"]
 	Type *string `json:"type" db:"type"`
 }

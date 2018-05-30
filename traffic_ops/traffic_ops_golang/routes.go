@@ -315,7 +315,12 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.3, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.3, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 
+		//StaticDNSEntries
 		{1.1, http.MethodGet, `staticdnsentries/?(\.json)?$`, api.ReadOnlyHandler(staticdnsentry.GetReaderSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodGet, `staticdnsentries/?(\.json)?$`, api.ReadHandler(staticdnsentry.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodPut, `staticdnsentries/?$`, api.UpdateHandler(staticdnsentry.GetRefType(), d.DB), auth.PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodPost, `staticdnsentries/?$`, api.CreateHandler(staticdnsentry.GetRefType(), d.DB), auth.PrivLevelAdmin, Authenticated, nil},
+		{1.3, http.MethodDelete, `staticdnsentries/?$`, api.DeleteHandler(staticdnsentry.GetRefType(), d.DB), auth.PrivLevelAdmin, Authenticated, nil},
 
 		//ProfileParameters
 		{1.1, http.MethodGet, `profiles/{id}/parameters/?(\.json)?$`, profileparameter.GetProfileID(d.DB.DB), auth.PrivLevelReadOnly, Authenticated, nil},
