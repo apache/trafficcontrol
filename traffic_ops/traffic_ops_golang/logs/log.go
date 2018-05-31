@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -32,26 +33,72 @@ const DefaultLogLimit = 1000
 const DefaultLogLimitForDays = 1000000
 const DefaultLogDays = 30
 
-func Get(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"days", "limit"})
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-			return
-		}
-		defer inf.Close()
-
-		limit := DefaultLogLimit
-		days := DefaultLogDays
-		if pDays, ok := inf.IntParams["days"]; ok {
-			days = pDays
-			limit = DefaultLogLimitForDays
-		}
-		if pLimit, ok := inf.IntParams["limit"]; ok {
-			limit = pLimit
-		}
-		api.RespWriter(w, r, inf.Tx.Tx)(getLog(inf.Tx.Tx, days, limit))
+func Get(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"days", "limit"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	limit := DefaultLogLimit
+	days := DefaultLogDays
+	if pDays, ok := inf.IntParams["days"]; ok {
+		days = pDays
+		limit = DefaultLogLimitForDays
+	}
+	if pLimit, ok := inf.IntParams["limit"]; ok {
+		limit = pLimit
+	}
+
+	setLastSeenCookie(w)
+	api.RespWriter(w, r, inf.Tx.Tx)(getLog(inf.Tx.Tx, days, limit))
+}
+
+func GetNewCount(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"days", "limit"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	lastSeen, ok := getLastSeenCookie(r)
+	if !ok {
+		setLastSeenCookie(w) // only set the cookie if it didn't exist; emulates old Perl behavior
+		api.WriteResp(w, r, tc.NewLogCountResp{NewLogCount: 0})
+		return
+	}
+	newCount, err := getLogCountSince(inf.Tx.Tx, lastSeen)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting log new count: "+err.Error()))
+		return
+	}
+	api.WriteResp(w, r, tc.NewLogCountResp{NewLogCount: newCount})
+}
+
+const LastSeenLogCookieName = "last_seen_log"
+
+func setLastSeenCookie(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:    LastSeenLogCookieName,
+		Value:   time.Now().Format(time.RFC3339Nano),
+		Expires: time.Now().Add(time.Hour * 24 * 7),
+		Path:    "/",
+	})
+}
+
+// getLastSeenCookie returns the time of the last log seen cookie, or whether the cookie didn't exist or there was an error parsing it. Errors are not logged or returned, only that the cookie could not be retrieved.
+func getLastSeenCookie(r *http.Request) (time.Time, bool) {
+	cookie, err := r.Cookie(LastSeenLogCookieName)
+	if err != nil {
+		return time.Time{}, false
+	}
+	lastSeen, err := time.Parse(time.RFC3339Nano, cookie.Value)
+	if err != nil {
+		return time.Time{}, false
+	}
+	return lastSeen, true
 }
 
 func getLog(tx *sql.Tx, days int, limit int) ([]tc.Log, error) {
@@ -74,4 +121,12 @@ LIMIT $2
 		ls = append(ls, l)
 	}
 	return ls, nil
+}
+
+func getLogCountSince(tx *sql.Tx, since time.Time) (uint64, error) {
+	count := uint64(0)
+	if err := tx.QueryRow(`SELECT count(*) from log where last_updated > $1`, since).Scan(&count); err != nil {
+		return 0, errors.New("querying log last seen count: " + err.Error())
+	}
+	return count, nil
 }

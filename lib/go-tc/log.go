@@ -27,3 +27,7 @@ type Log struct {
 	TicketNum    *int       `json:"ticketNum"`
 	User         *string    `json:"user"`
 }
+
+type NewLogCountResp struct {
+	NewLogCount uint64 `json:"newLogcount"`
+}
