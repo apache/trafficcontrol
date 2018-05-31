@@ -51,7 +51,6 @@ func TestDeliveryServices(t *testing.T) {
 func CreateTestDeliveryServices(t *testing.T) {
 	log.Debugln("CreateTestDeliveryServices")
 
-	// TODO delete on DS delete
 	pl := tc.Parameter{
 		ConfigFile: "remap.config",
 		Name:       "location",
@@ -216,6 +215,16 @@ func DeleteTestDeliveryServices(t *testing.T) {
 		if err == nil && foundDS != nil {
 			failed = true
 			t.Errorf("expected Delivery Service: %s to be deleted\n", ds.XMLID)
+		}
+	}
+
+	// clean up parameter created in CreateTestDeliveryServices()
+	params, _, err := TOSession.GetParameterByNameAndConfigFile("location", "remap.config")
+	for _, param := range params {
+		deleted, _, err := TOSession.DeleteParameterByID(param.ID)
+		if err != nil {
+			failed = true
+			t.Errorf("cannot DELETE parameter by ID (%d): %v - %v\n", param.ID, err, deleted)
 		}
 	}
 

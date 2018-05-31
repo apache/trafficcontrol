@@ -97,8 +97,7 @@ func CreateTestOrigins(t *testing.T) {
 		origin.ProfileID = &respProfile.ID
 		origin.DeliveryServiceID = &respDeliveryServices[0].ID
 
-		resp, _, err := TOSession.CreateOrigin(origin)
-		log.Debugln("Response: ", origin.Name, " ", resp)
+		_, _, err = TOSession.CreateOrigin(origin)
 		if err != nil {
 			t.Errorf("could not CREATE origins: %v\n", err)
 			failed = true
