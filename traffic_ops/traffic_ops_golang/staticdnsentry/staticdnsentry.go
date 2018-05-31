@@ -171,6 +171,7 @@ ttl) VALUES (
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 func (staticDNSEntry *TOStaticDNSEntry) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+	fmt.Printf("staticDNSEntry.DeliveryService ---> %v\n", *staticDNSEntry.DeliveryService)
 	rollbackTransaction := true
 	tx, err := db.Beginx()
 	defer func() {
@@ -233,11 +234,12 @@ func (staticDNSEntry *TOStaticDNSEntry) Update(db *sqlx.DB, user auth.CurrentUse
 func updateQuery() string {
 	query := `UPDATE
 staticdnsentry SET
+id=:id,
 address=:address,
-deliveryservice=:deliveryservice,
-cachegroup=:cachegroup,
+deliveryservice=:deliveryservice_id,
+cachegroup=:cachegroup_id,
 host=:host,
-type=:type,
+type=:type_id,
 ttl=:ttl
 WHERE id=:id RETURNING last_updated`
 	return query
@@ -293,9 +295,12 @@ func selectQuery() string {
 ds.xml_id as dsname,
 sde.host,
 sde.id as id,
+sde.deliveryservice as deliveryservice_id,
 sde.ttl,
 sde.address,
+tp.id as type_id,
 tp.name as type,
+cg.id as cachegroup_id,
 cg.name as cachegroup
 FROM staticdnsentry as sde
 JOIN type as tp on sde.type = tp.id
