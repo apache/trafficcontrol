@@ -45,7 +45,8 @@ do
 done
 
 start() {
-	service traffic_ops start
+	TO_DIR=/opt/traffic_ops/app
+	cd $TO_DIR && $TO_DIR/local/bin/hypnotoad script/cdn
 	exec tail -f /var/log/traffic_ops/traffic_ops.log
 }
 

@@ -30,57 +30,87 @@
 #
 
 ---
-version: '2'
+version: '2.1'
 
-volumes:
-  incubator-trafficcontrol:
-  traffic_ops:
-  conf:
+networks:
+  cdnnet:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.13.238.0/24
+        - subnet: "fc01:9400:1000:7::/64"
 
 services:
   db:
     image: postgres:9.6.6
+    # TODO: change to expose: "5432" to limit to containers
     ports: 
       - "5432:5432"
 
-  db_init:
+  dbinit:
     environment:
       POSTGRES_HOME: /usr/pgsql-9.6
-      PGPASSWORD: secretrootpass
-      DB_USERNAME: traffic_ops
+      PGPASSWORD: password
       DB_NAME: traffic_ops
-      DB_USER_PASS: twelve
-      DB_SERVER: db
       DB_PORT: 5432
+      DB_SERVER: db
+      DB_USER_PASS: password
+      DB_USER: traffic_ops
     build:
       context: .
-      dockerfile: Dockerfile_psql
+      dockerfile: Dockerfile-dbinit
     depends_on: 
       - db
 
-  to_server:
+  trafficops-perl:
+    image: trafficops-perl
     environment:
-      DB_SERVER: db
-      DB_PORT: 5432
       DB_NAME: traffic_ops
-      DB_ROOT_PASS: null
-      DB_USER_PASS: twelve
+      DB_PORT: 5432
+      DB_ROOT_PASS: password
+      DB_SERVER: db
+      DB_USER_PASS: password
       DB_USER: traffic_ops
       ADMIN_USER: superroot
-      ADMIN_PASS: passward
+      ADMIN_PASS: password
       CERT_COUNTRY: US
       CERT_STATE: Colorado
       CERT_CITY: Denver
       CERT_COMPANY: NotComcast
-      TRAFFIC_VAULT_PASS: tvsecret
+      TRAFFIC_VAULT_PASS: password
+      DOMAIN: trafficops_default
+    expose: 
+      - "60443"
+    build:
+      context: .
+      args:
+        RPM: traffic_ops.rpm 
+    depends_on:
+      - dbinit
+
+  trafficops:
+    image: trafficops-go
+    environment:
+      DB_NAME: traffic_ops
+      DB_PORT: 5432
+      DB_ROOT_PASS: password
+      DB_SERVER: db
+      DB_USER_PASS: password
+      DB_USER: traffic_ops
+      ADMIN_USER: superroot
+      ADMIN_PASS: password
+      CERT_COUNTRY: US
+      CERT_STATE: Colorado
+      CERT_CITY: Denver
+      CERT_COMPANY: NotComcast
+      TRAFFIC_VAULT_PASS: password
       DOMAIN: trafficops_default
     ports: 
       - "443:443"
     build:
       context: .
-      args:
-        RPM: traffic_ops.rpm 
-    volumes:
-      - ../../../traffic_ops/traffic_ops_golang/traffic_ops_golang:/opt/traffic_ops/app/bin/traffic_ops_golang
+      dockerfile: Dockerfile-go
     depends_on:
-      - db_init
+      - dbinit
