@@ -114,3 +114,9 @@ type CDNSSLKeysCertificate struct {
 	Crt string `json:"crt"`
 	Key string `json:"key"`
 }
+
+
+type CDNConfig struct {
+	Name *string `json:"name"`
+	ID   *int    `json:"id"`
+}
