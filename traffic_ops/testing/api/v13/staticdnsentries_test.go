@@ -16,7 +16,6 @@ package v13
 */
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-log"
@@ -38,9 +37,8 @@ func TestStaticDNSEntries(t *testing.T) {
 	CreateTestStaticDNSEntries(t)
 	GetTestStaticDNSEntries(t)
 	UpdateTestStaticDNSEntries(t)
-	DeleteTestStaticDNSEntries(t)
-	DeleteTestTypes(t)
 	DeleteTestDeliveryServices(t)
+	DeleteTestStaticDNSEntries(t)
 	DeleteTestServers(t)
 	DeleteTestCacheGroups(t)
 	DeleteTestPhysLocations(t)
@@ -99,14 +97,12 @@ func UpdateTestStaticDNSEntries(t *testing.T) {
 		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v\n", firstStaticDNSEntry.Host, err)
 	}
 	remoteStaticDNSEntry := resp[0]
-	fmt.Printf("remoteStaticDNSEntry ---> %v\n", remoteStaticDNSEntry)
-	fmt.Printf("remoteStaticDNSEntry.ID ---> %v\n", remoteStaticDNSEntry.ID)
-	expectedAddress := "address99"
+	expectedAddress := "address2"
 	remoteStaticDNSEntry.Address = expectedAddress
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
 	if err != nil {
-		t.Errorf("cannot UPDATE StaticDNSEntries by id: %v - %v\n", err, alert)
+		t.Errorf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
 	}
 
 	// Retrieve the StaticDNSEntries to check StaticDNSEntries name got updated
