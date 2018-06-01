@@ -36,12 +36,12 @@ type WhereColumnInfo struct {
 	Checker func(string) error
 }
 
-const baseWhere = "\nWHERE"
-const baseOrderBy = "\nORDER BY"
+const BaseWhere = "\nWHERE"
+const BaseOrderBy = "\nORDER BY"
 
 func BuildWhereAndOrderBy(parameters map[string]string, queryParamsToSQLCols map[string]WhereColumnInfo) (string, string, map[string]interface{}, []error) {
-	whereClause := baseWhere
-	orderBy := baseOrderBy
+	whereClause := BaseWhere
+	orderBy := BaseOrderBy
 	var criteria string
 	var queryValues map[string]interface{}
 	var errs []error
@@ -63,10 +63,10 @@ func BuildWhereAndOrderBy(parameters map[string]string, queryParamsToSQLCols map
 			log.Debugln("Incorrect name for orderby: ", orderby)
 		}
 	}
-	if whereClause == baseWhere {
+	if whereClause == BaseWhere {
 		whereClause = ""
 	}
-	if orderBy == baseOrderBy {
+	if orderBy == BaseOrderBy {
 		orderBy = ""
 	}
 	log.Debugf("\n--\n Where: %s \n Order By: %s", whereClause, orderBy)

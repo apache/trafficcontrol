@@ -28,7 +28,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
 	"github.com/apache/incubator-trafficcontrol/lib/go-util"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -356,7 +355,7 @@ func CreateV12(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 func (ds *TODeliveryServiceV12) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
 	returnable := []interface{}{}
-	dses, errs, errType := readGetDeliveryServices(params, db)
+	dses, errs, errType := readGetDeliveryServices(params, db, user)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			if err.Error() == `id cannot parse to integer` {
@@ -364,12 +363,6 @@ func (ds *TODeliveryServiceV12) Read(db *sqlx.DB, params map[string]string, user
 			}
 		}
 		return nil, errs, errType
-	}
-
-	dses, err := filterAuthorized(dses, user, db)
-	if err != nil {
-		log.Errorln("Checking tenancy: " + err.Error())
-		return nil, []error{errors.New("Error checking tenancy.")}, tc.SystemError
 	}
 
 	for _, ds := range dses {
