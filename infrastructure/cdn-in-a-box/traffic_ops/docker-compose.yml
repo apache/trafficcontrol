@@ -33,7 +33,15 @@
 version: '2.1'
 
 networks:
-  cdnnet:
+  dbnet:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.13.239.0/24
+        - subnet: "fc01:9400:1000:8::/64"
+  trafficopsnet:
     driver: bridge
     enable_ipv6: true
     ipam:
@@ -45,19 +53,19 @@ networks:
 services:
   db:
     image: postgres:9.6.6
+    networks:
+      - dbnet
+    env_file:
+      - variables.env
     # TODO: change to expose: "5432" to limit to containers
     ports: 
       - "5432:5432"
 
   dbinit:
-    environment:
-      POSTGRES_HOME: /usr/pgsql-9.6
-      PGPASSWORD: password
-      DB_NAME: traffic_ops
-      DB_PORT: 5432
-      DB_SERVER: db
-      DB_USER_PASS: password
-      DB_USER: traffic_ops
+    networks:
+      - dbnet
+    env_file:
+      - variables.env
     build:
       context: .
       dockerfile: Dockerfile-dbinit
@@ -66,21 +74,11 @@ services:
 
   trafficops-perl:
     image: trafficops-perl
-    environment:
-      DB_NAME: traffic_ops
-      DB_PORT: 5432
-      DB_ROOT_PASS: password
-      DB_SERVER: db
-      DB_USER_PASS: password
-      DB_USER: traffic_ops
-      ADMIN_USER: superroot
-      ADMIN_PASS: password
-      CERT_COUNTRY: US
-      CERT_STATE: Colorado
-      CERT_CITY: Denver
-      CERT_COMPANY: NotComcast
-      TRAFFIC_VAULT_PASS: password
-      DOMAIN: trafficops_default
+    networks:
+      - dbnet
+      - trafficopsnet
+    env_file:
+      - variables.env
     expose: 
       - "60443"
     build:
@@ -92,21 +90,11 @@ services:
 
   trafficops:
     image: trafficops-go
-    environment:
-      DB_NAME: traffic_ops
-      DB_PORT: 5432
-      DB_ROOT_PASS: password
-      DB_SERVER: db
-      DB_USER_PASS: password
-      DB_USER: traffic_ops
-      ADMIN_USER: superroot
-      ADMIN_PASS: password
-      CERT_COUNTRY: US
-      CERT_STATE: Colorado
-      CERT_CITY: Denver
-      CERT_COMPANY: NotComcast
-      TRAFFIC_VAULT_PASS: password
-      DOMAIN: trafficops_default
+    networks:
+      - dbnet
+      - trafficopsnet
+    env_file:
+      - variables.env
     ports: 
       - "443:443"
     build:
