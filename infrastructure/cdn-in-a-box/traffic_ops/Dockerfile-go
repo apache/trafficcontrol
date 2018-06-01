@@ -21,11 +21,15 @@
 ############################################################
 
 
-FROM traffic_ops:2.3.0 AS trafficops-perl
+FROM centos:7
+RUN yum -y install nmap-ncat openssl
 
-COPY --from=trafficops-perl /opt/traffic_ops/app/conf /opt/traffic_ops/app/conf
+RUN mkdir -p /opt/traffic_ops/app/bin /opt/traffic_ops/app/conf/production
 COPY --from=trafficops-perl /opt/traffic_ops/app/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang 
 
 EXPOSE 443
 WORKDIR /opt/traffic_ops/app
-ENTRYPOINT bash
+
+ADD config.sh /
+ADD run-go.sh /
+CMD /run-go.sh

@@ -55,6 +55,9 @@ RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/insta
 	&& export USER=root \
 	&& /opt/traffic_ops/install/bin/download_web_deps -i
 
+# TODO: move this up along with other yum's
+RUN yum -y install nmap-ncat openssl
+
 # \todo add Drive Letters to postinstall input
 # RUN sed -i -- 's/"value": "b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"/"value": "0"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_edge.traffic_ops
 # RUN sed -i -- 's/"value": "b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"/"value": "0"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_mid.traffic_ops
@@ -67,5 +70,7 @@ EXPOSE 443
 WORKDIR /opt/traffic_ops/app
 ENV MOJO_MODE production
 ADD profile.origin.traffic_ops /
+
+ADD config.sh /
 ADD run.sh /
 CMD /run.sh
