@@ -122,6 +122,37 @@ func GetUserTenantList(user auth.CurrentUser, db *sqlx.DB) ([]Tenant, error) {
 	return tenants, nil
 }
 
+// returns a TenantID list that the specified user has access too.
+// NOTE: This method does not use the use_tenancy parameter and if this method is being used
+// to control tenancy the parameter must be checked. The method IsResourceAuthorizedToUser checks the use_tenancy parameter
+// and should be used for this purpose in most cases.
+func GetUserTenantIDList(user auth.CurrentUser, db *sqlx.DB) ([]int, error) {
+	query := `WITH RECURSIVE q AS (SELECT id, name, active, parent_id FROM tenant WHERE id = $1
+	UNION SELECT t.id, t.name, t.active, t.parent_id  FROM tenant t JOIN q ON q.id = t.parent_id)
+	SELECT id FROM q;`
+
+	log.Debugln("\nQuery: ", query)
+
+	var tenantID int
+
+	rows, err := db.Query(query, user.TenantID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tenants := []int{}
+
+	for rows.Next() {
+		if err := rows.Scan(&tenantID); err != nil {
+			return nil, err
+		}
+			tenants = append(tenants, tenantID)
+	}
+
+	return tenants, nil
+}
+
 // IsTenancyEnabled returns true if tenancy is enabled or false otherwise
 func IsTenancyEnabled(db *sqlx.DB) bool {
 	query := `SELECT COALESCE(value::boolean,FALSE) AS value FROM parameter WHERE name = 'use_tenancy' AND config_file = 'global' UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY`
