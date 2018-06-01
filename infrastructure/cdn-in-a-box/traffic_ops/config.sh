@@ -45,6 +45,7 @@ done
 key=/server.key
 crt=/server.crt
 
+useradd -M trafops
 openssl req -newkey rsa:2048 -nodes -keyout $key -x509 -days 365 -out $crt -subj "/C=$CERT_COUNTRY/ST=$CERT_STATE/L=$CERT_CITY/O=$CERT_COMPANY"
 chown trafops:trafops $key $crt
 
@@ -116,6 +117,3 @@ cat <<-EOF >/opt/traffic_ops/app/conf/production/database.conf
         "type": "Pg"
 }
 EOF
-
-cat /opt/traffic_ops/app/conf/cdn.conf
-cat /opt/traffic_ops/app/conf/production/database.conf
