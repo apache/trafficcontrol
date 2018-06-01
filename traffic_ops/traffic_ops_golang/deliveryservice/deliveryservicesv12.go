@@ -35,6 +35,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/utils"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/go-ozzo/ozzo-validation"
@@ -327,6 +328,10 @@ func CreateV12(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 			api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 			return
+		}
+
+		if ds.RoutingName == nil || *ds.RoutingName == "" {
+			ds.RoutingName = utils.StrPtr("cdn")
 		}
 
 		if errs := validateV12(db, &ds); len(errs) > 0 {
