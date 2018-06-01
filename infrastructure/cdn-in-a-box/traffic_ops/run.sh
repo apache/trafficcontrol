@@ -55,12 +55,12 @@ while true; do
 	sleep 3
 done
 
-start() {
-	TO_DIR=/opt/traffic_ops/app
-	export PERL5LIB=$TO_DIR/lib:$TO_DIR/local/lib/perl5
-	cd $TO_DIR && $TO_DIR/local/bin/hypnotoad script/cdn
-	exec tail -f /var/log/traffic_ops/traffic_ops.log
-}
+TO_DIR=/opt/traffic_ops/app
+export PERL5LIB=$TO_DIR/lib:$TO_DIR/local/lib/perl5
+cd $TO_DIR && ./db/admin.pl -env production reset
+
+cd $TO_DIR && $TO_DIR/local/bin/hypnotoad script/cdn
+exec tail -f /var/log/traffic_ops/traffic_ops.log
 
 init() {
 	TRAFFIC_OPS_URI="https://localhost"
@@ -101,7 +101,3 @@ init() {
 
 	echo "INITIALIZED=1" >> /etc/environment
 }
-
-source /etc/environment
-#if [ -z "$INITIALIZED" ]; then init; fi
-start
