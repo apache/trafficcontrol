@@ -21,14 +21,19 @@
 ############################################################
 
 
-FROM centos/systemd
-MAINTAINER Dan Kirkwood
+FROM centos:7
 
 RUN yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm
-RUN yum install -y initscripts # needed for service command
-RUN yum install -y epel-release # needed for perl-Crypt-ScryptKDF
-RUN yum install -y perl-Crypt-ScryptKDF
-RUN yum install -y perl cpanminus perl-Test-CPAN-Meta
+RUN yum install -y \
+	cpanminus \
+	epel-release \
+	nmap-ncat \
+	openssl \
+	perl \
+	perl-Crypt-ScryptKDF \
+	perl-Test-CPAN-Meta && \
+	yum clean all
+
 RUN cpanm Carton
 RUN yum install -y perl-DBIx-Connector
 
@@ -42,29 +47,19 @@ RUN rm /$(basename $RPM)
 
 RUN POSTGRES_HOME=/usr/pgsql-9.6 cd /opt/traffic_ops/app && carton
 
-RUN /opt/traffic_ops/install/bin/install_go.sh
-RUN /opt/traffic_ops/install/bin/install_goose.sh
-
-# RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/install/lib/ \
-# 	&& export TERM=xterm \
-# 	&& export USER=root \
-# 	&& yes | /opt/traffic_ops/install/bin/build_trafficops_perl_library -i
+RUN /opt/traffic_ops/install/bin/install_go.sh && \
+    /opt/traffic_ops/install/bin/install_goose.sh
 
 RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/install/lib/ \
 	&& export TERM=xterm \
 	&& export USER=root \
 	&& /opt/traffic_ops/install/bin/download_web_deps -i
 
-# TODO: move this up along with other yum's
-RUN yum -y install nmap-ncat openssl
-
 # \todo add Drive Letters to postinstall input
 # RUN sed -i -- 's/"value": "b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"/"value": "0"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_edge.traffic_ops
 # RUN sed -i -- 's/"value": "b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"/"value": "0"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_mid.traffic_ops
 
 RUN echo "{\"user\": \"riakuser\",\"password\": \"$TRAFFIC_VAULT_PASS\"}" > /opt/traffic_ops/app/conf/production/riak.conf
-
-RUN cp /opt/traffic_ops/app/bin/traffic_ops_golang{,.new} && mv /opt/traffic_ops/app/bin/traffic_ops_golang{.new,} # fixes an 'Invalid Argument' bug; TODO diagnose, fix, & remove
 
 EXPOSE 443
 WORKDIR /opt/traffic_ops/app
