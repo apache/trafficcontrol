@@ -615,27 +615,6 @@ func filterAuthorized(dses []tc.DeliveryServiceNullableV13, user auth.CurrentUse
 	return newDSes, nil
 }
 
-func addTenancyCheck(where string, queryValues map[string]interface{}, user auth.CurrentUser, db *sqlx.DB) (string, map[string]interface{}, error) {
-	if where == "" {
-		where = dbhelpers.BaseWhere + " ds.tenant_id = ANY((:accessibleTenants)::::bigint[])"
-	} else {
-		where += " AND ds.tenant_id = ANY((:accessibleTenants)::::bigint[])"
-	}
-
-	tenants, err := tenant.GetUserTenantList(user, db)
-	if err != nil {
-		return "", queryValues, err
-	}
-
-	tenantIDs := make([]int, len(tenants))
-	for i, tenant := range tenants {
-		tenantIDs[i] = tenant.ID
-	}
-	queryValues["accessibleTenants"] = pq.Array(tenantIDs)
-
-	return where, queryValues, nil
-}
-
 func readGetDeliveryServices(params map[string]string, db *sqlx.DB, user auth.CurrentUser) ([]tc.DeliveryServiceNullableV13, []error, tc.ApiErrorType) {
 	if strings.HasSuffix(params["id"], ".json") {
 		params["id"] = params["id"][:len(params["id"])-len(".json")]
@@ -654,12 +633,12 @@ func readGetDeliveryServices(params map[string]string, db *sqlx.DB, user auth.Cu
 
 	if tenant.IsTenancyEnabled(db) {
 		log.Debugln("Tenancy is enabled")
-		var err error
-		where, queryValues, err = addTenancyCheck(where, queryValues, user, db)
+		tenantIDs, err := tenant.GetUserTenantIDList(user, db)
 		if err != nil {
 			log.Errorln("received error querying for user's tenants: " + err.Error())
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
+		where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "ds.tenant_id", tenantIDs)
 	}
 	query := selectQuery() + where + orderBy
 
