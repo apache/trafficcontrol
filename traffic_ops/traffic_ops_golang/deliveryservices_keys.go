@@ -37,73 +37,52 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+
 	"github.com/jmoiron/sqlx"
 )
 
 // Delivery Services: SSL Keys.
 
 // returns the cdn_id found by domainname.
-func getCDNIDByDomainname(domainName string, db *sqlx.DB) (sql.NullInt64, error) {
-	cdnQuery := `SELECT id from cdn WHERE domain_name = $1`
-	var cdnID sql.NullInt64
-
-	noCdnID := sql.NullInt64{
-		Int64: 0,
-		Valid: false,
-	}
-
-	rows, err := db.Query(cdnQuery, domainName)
-	if err != nil {
-		return noCdnID, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		if err := rows.Scan(&cdnID); err != nil {
-			return noCdnID, err
+func getCDNIDByDomainname(domainName string, tx *sql.Tx) (int64, bool, error) {
+	cdnID := int64(0)
+	if err := tx.QueryRow(`SELECT id from cdn WHERE domain_name = $1`, domainName).Scan(&cdnID); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, false, nil
 		}
+		return 0, false, err
 	}
-
-	return cdnID, nil
+	return cdnID, true, nil
 }
 
 // returns a delivery service xmlId for a cdn by host regex.
-func getXMLID(cdnID sql.NullInt64, hostRegex string, db *sqlx.DB) (sql.NullString, error) {
-	dsQuery := `
-			SELECT ds.xml_id from deliveryservice ds
-			INNER JOIN deliveryservice_regex dr 
-			on ds.id = dr.deliveryservice AND ds.cdn_id = $1
-			INNER JOIN regex r on r.id = dr.regex
-			WHERE r.pattern = $2
-		`
-	var xmlID sql.NullString
-
-	rows, err := db.Query(dsQuery, cdnID.Int64, hostRegex)
-	if err != nil {
-		xmlID.Valid = false
-		return xmlID, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		if err := rows.Scan(&xmlID); err != nil {
-			xmlID.Valid = false
-			return xmlID, err
+func getXMLID(cdnID int64, hostRegex string, tx *sql.Tx) (string, bool, error) {
+	q := `
+SELECT ds.xml_id from deliveryservice ds
+JOIN deliveryservice_regex dr on ds.id = dr.deliveryservice AND ds.cdn_id = $1
+JOIN regex r on r.id = dr.regex
+WHERE r.pattern = $2
+`
+	xmlID := ""
+	if err := tx.QueryRow(q, cdnID, hostRegex).Scan(&xmlID); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
 		}
+		return "", false, errors.New("querying xml id: " + err.Error())
 	}
-
-	return xmlID, nil
+	return xmlID, true, nil
 }
 
-func getDeliveryServiceSSLKeysByXMLID(xmlID string, version string, db *sql.DB, cfg config.Config) ([]byte, error) {
+func getDeliveryServiceSSLKeysByXMLID(xmlID string, version string, tx *sql.Tx, cfg config.Config) ([]byte, error) {
 	if cfg.RiakEnabled == false {
 		err := errors.New("Riak is not configured!")
 		log.Errorln("getting delivery services SSL keys: " + err.Error())
 		return nil, err
 	}
-	key, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(xmlID, version, db, cfg.RiakAuthOptions)
+	key, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(xmlID, version, tx, cfg.RiakAuthOptions)
 	if err != nil {
 		log.Errorln("getting delivery service keys: " + err.Error())
 		return nil, err
@@ -244,8 +223,16 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg config.Config) http.Handl
 			return
 		}
 
+		tx, err := db.DB.Begin()
+		if err != nil {
+			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("beginning transaction: "+err.Error()))
+			return
+		}
+		commitTx := false
+		defer dbhelpers.FinishTx(tx, &commitTx)
+
 		// check user tenancy access to this resource.
-		hasAccess, err, apiStatus := tenant.HasTenant(*user, keysObj.DeliveryService, db)
+		hasAccess, err, apiStatus := tenant.HasTenant(user, keysObj.DeliveryService, tx)
 		if !hasAccess {
 			switch apiStatus {
 			case tc.SystemError:
@@ -276,14 +263,15 @@ func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg config.Config) http.Handl
 			return
 		}
 
-		if err := riaksvc.PutDeliveryServiceSSLKeysObj(keysObj, db.DB, cfg.RiakAuthOptions); err != nil {
+		if err := riaksvc.PutDeliveryServiceSSLKeysObj(keysObj, tx, cfg.RiakAuthOptions); err != nil {
 			log.Errorln("putting Riak SSL keys for delivery service '" + keysObj.DeliveryService + "': " + err.Error())
 			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 
+		commitTx = true
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", keysJSON)
+		w.Write(keysJSON)
 	}
 }
 
@@ -328,15 +316,21 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg config.Config) 
 			hostRegex = ".*\\." + strArr[1] + "\\..*"
 		}
 
+		tx, err := db.DB.Begin()
+		if err != nil {
+			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("beginning transaction: "+err.Error()))
+			return
+		}
+		commitTx := false
+		defer dbhelpers.FinishTx(tx, &commitTx)
+
 		// lookup the cdnID
-		cdnID, err := getCDNIDByDomainname(domainName, db)
+		cdnID, ok, err := getCDNIDByDomainname(domainName, tx)
 		if err != nil {
 			handleErr(http.StatusInternalServerError, err)
 			return
 		}
-
-		// verify that a valid cdnID was returned.
-		if !cdnID.Valid {
+		if !ok {
 			alert := tc.CreateAlerts(tc.InfoLevel, fmt.Sprintf(" - a cdn does not exist for the domain: %s parsed from hostname: %s",
 				domainName, hostName))
 			respBytes, err = json.Marshal(alert)
@@ -344,50 +338,51 @@ func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg config.Config) 
 				log.Errorf("failed to marshal an alert response: %s\n", err)
 				return
 			}
-		} else {
-			// now lookup the deliveryservice xmlID
-			xmlIDStr, err := getXMLID(cdnID, hostRegex, db)
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(respBytes)
+		}
+		// now lookup the deliveryservice xmlID
+		xmlID, ok, err := getXMLID(cdnID, hostRegex, tx)
+		if err != nil {
+			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting xml id: "+err.Error()))
+			return
+		}
+		if !ok {
+			alert := tc.CreateAlerts(tc.InfoLevel, fmt.Sprintf("  - a delivery service does not exist for a host with hostname of %s",
+				hostName))
+			respBytes, err = json.Marshal(alert)
 			if err != nil {
+				log.Errorf("failed to marshal an alert response: %s\n", err)
 				handleErr(http.StatusInternalServerError, err)
 				return
 			}
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(respBytes)
+		}
 
-			// verify that the xmlIDStr returned is valid, ie not nil
-			if !xmlIDStr.Valid {
-				alert := tc.CreateAlerts(tc.InfoLevel, fmt.Sprintf("  - a delivery service does not exist for a host with hostname of %s",
-					hostName))
-				respBytes, err = json.Marshal(alert)
-				if err != nil {
-					log.Errorf("failed to marshal an alert response: %s\n", err)
-					handleErr(http.StatusInternalServerError, err)
-					return
-				}
-			} else {
-				xmlID := xmlIDStr.String
-				// check user tenancy access to this resource.
-				hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlID, db)
-				if !hasAccess {
-					switch apiStatus {
-					case tc.SystemError:
-						handleErr(http.StatusInternalServerError, err)
-						return
-					case tc.DataMissingError:
-						handleErr(http.StatusBadRequest, err)
-						return
-					case tc.ForbiddenError:
-						handleErr(http.StatusForbidden, err)
-						return
-					}
-				}
-				respBytes, err = getDeliveryServiceSSLKeysByXMLID(xmlID, version, db.DB, cfg)
-				if err != nil {
-					handleErr(http.StatusInternalServerError, err)
-					return
-				}
+		// check user tenancy access to this resource.
+		hasAccess, err, apiStatus := tenant.HasTenant(user, xmlID, tx)
+		if !hasAccess {
+			switch apiStatus {
+			case tc.SystemError:
+				handleErr(http.StatusInternalServerError, err)
+				return
+			case tc.DataMissingError:
+				handleErr(http.StatusBadRequest, err)
+				return
+			case tc.ForbiddenError:
+				handleErr(http.StatusForbidden, err)
+				return
 			}
 		}
+		respBytes, err = getDeliveryServiceSSLKeysByXMLID(xmlID, version, tx, cfg)
+		if err != nil {
+			handleErr(http.StatusInternalServerError, err)
+			return
+		}
+		commitTx = true
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", respBytes)
+		w.Write(respBytes)
 	}
 }
 
@@ -418,8 +413,16 @@ func getDeliveryServiceSSLKeysByXMLIDHandler(db *sqlx.DB, cfg config.Config) htt
 
 		xmlID := pathParams["xmlID"]
 
+		tx, err := db.DB.Begin()
+		if err != nil {
+			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("beginning transaction: "+err.Error()))
+			return
+		}
+		commitTx := false
+		defer dbhelpers.FinishTx(tx, &commitTx)
+
 		// check user tenancy access to this resource.
-		hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlID, db)
+		hasAccess, err, apiStatus := tenant.HasTenant(user, xmlID, tx)
 		if !hasAccess {
 			switch apiStatus {
 			case tc.SystemError:
@@ -434,13 +437,14 @@ func getDeliveryServiceSSLKeysByXMLIDHandler(db *sqlx.DB, cfg config.Config) htt
 			}
 		}
 
-		respBytes, err = getDeliveryServiceSSLKeysByXMLID(xmlID, version, db.DB, cfg)
+		respBytes, err = getDeliveryServiceSSLKeysByXMLID(xmlID, version, tx, cfg)
 		if err != nil {
 			handleErr(http.StatusInternalServerError, err)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", respBytes)
+		commitTx = true
+		w.Write(respBytes)
 	}
 }

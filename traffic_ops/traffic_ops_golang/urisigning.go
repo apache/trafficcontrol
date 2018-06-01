@@ -32,8 +32,10 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
 	"github.com/lestrrat/go-jwx/jwk"
@@ -73,8 +75,16 @@ func getURIsignkeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 		xmlID := pathParams["xmlID"]
 
+		tx, err := db.DB.Begin()
+		if err != nil {
+			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("beginning transaction: "+err.Error()))
+			return
+		}
+		commitTx := false
+		defer dbhelpers.FinishTx(tx, &commitTx)
+
 		// check user tenancy access to this resource.
-		hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlID, db)
+		hasAccess, err, apiStatus := tenant.HasTenant(user, xmlID, tx)
 		if !hasAccess {
 			switch apiStatus {
 			case tc.SystemError:
@@ -125,8 +135,9 @@ func getURIsignkeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		} else {
 			respBytes = ro[0].Value
 		}
+		commitTx = true
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", respBytes)
+		w.Write(respBytes)
 	}
 }
 
@@ -155,8 +166,16 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.Ha
 
 		xmlID := pathParams["xmlID"]
 
+		tx, err := db.DB.Begin()
+		if err != nil {
+			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("beginning transaction: "+err.Error()))
+			return
+		}
+		commitTx := false
+		defer dbhelpers.FinishTx(tx, &commitTx)
+
 		// check user tenancy access to this resource.
-		hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlID, db)
+		hasAccess, err, apiStatus := tenant.HasTenant(user, xmlID, tx)
 		if !hasAccess {
 			switch apiStatus {
 			case tc.SystemError:
@@ -213,8 +232,9 @@ func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.Ha
 			fmt.Fprintf(w, http.StatusText(http.StatusInternalServerError))
 			return
 		}
+		commitTx = true
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", respBytes)
+		w.Write(respBytes)
 	}
 }
 
@@ -245,8 +265,16 @@ func saveDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.Hand
 
 		xmlID := pathParams["xmlID"]
 
+		tx, err := db.DB.Begin()
+		if err != nil {
+			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("beginning transaction: "+err.Error()))
+			return
+		}
+		commitTx := false
+		defer dbhelpers.FinishTx(tx, &commitTx)
+
 		// check user tenancy access to this resource.
-		hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlID, db)
+		hasAccess, err, apiStatus := tenant.HasTenant(user, xmlID, tx)
 		if !hasAccess {
 			switch apiStatus {
 			case tc.SystemError:
@@ -313,7 +341,7 @@ func saveDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.Hand
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", data)
+		w.Write(data)
 	}
 }
 

@@ -32,13 +32,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-	// "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	// "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
 
-	// "github.com/asaskevich/govalidator"
-	// "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
-	// "github.com/lib/pq"
 )
 
 func Get(dbx *sqlx.DB) http.HandlerFunc {

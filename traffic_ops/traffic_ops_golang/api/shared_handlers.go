@@ -37,6 +37,8 @@ import (
 )
 
 const PathParamsKey = "pathParams"
+const DBKey = "db"
+const ConfigKey = "cfg"
 
 type KeyFieldInfo struct {
 	Field string

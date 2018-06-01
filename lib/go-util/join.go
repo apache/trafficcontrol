@@ -35,6 +35,15 @@ func JoinErrsStr(errs []error) string {
 	return joined.Error()
 }
 
+func ErrsToStrs(errs []error) []string {
+	errorStrs := []string{}
+	for _, errType := range errs {
+		et := errType.Error()
+		errorStrs = append(errorStrs, et)
+	}
+	return errorStrs
+}
+
 func JoinErrs(errs []error) error {
 	return JoinErrsSep(errs, "")
 }
