@@ -45,9 +45,15 @@ do
 done
 
 # Write config files
-if [[ -x /config.sh ]]; then
-	/config.sh
+set -x
+if [[ -r /config.sh ]]; then
+	. /config.sh
 fi
+
+while ! nc $DB_SERVER $DB_PORT </dev/null; do # &>/dev/null; do
+        echo "waiting for $DB_SERVER $DB_PORT"
+        sleep 3
+done
 
 while true; do
 	echo "Checking for existence of role $DB_USER"
@@ -56,6 +62,8 @@ while true; do
 done
 
 TO_DIR=/opt/traffic_ops/app
+cat conf/production/database.conf
+
 export PERL5LIB=$TO_DIR/lib:$TO_DIR/local/lib/perl5
 cd $TO_DIR && ./db/admin.pl -env production reset
 
