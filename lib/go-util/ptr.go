@@ -1,4 +1,4 @@
-package utils
+package util
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,12 +19,6 @@ package utils
  * under the License.
  */
 
-import (
-	"time"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
-)
-
 func StrPtr(str string) *string {
 	return &str
 }
@@ -35,8 +29,4 @@ func IntPtr(i int) *int {
 
 func BoolPtr(b bool) *bool {
 	return &b
-}
-
-func NewTimeNoMod() *tc.TimeNoMod {
-	return &tc.TimeNoMod{Time: time.Now()}
 }

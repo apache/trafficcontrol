@@ -1,9 +1,19 @@
 package tc
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"regexp"
+	"strings"
+
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/incubator-trafficcontrol/lib/go-util"
+
+	"github.com/asaskevich/govalidator"
+	"github.com/go-ozzo/ozzo-validation"
 )
 
 /*
@@ -23,7 +33,6 @@ import (
 
 const DefaultRoutingName = "cdn"
 
-//
 // GetDeliveryServiceResponse is deprecated use DeliveryServicesResponse...
 type GetDeliveryServiceResponse struct {
 	Response []DeliveryService `json:"response"`
@@ -205,6 +214,213 @@ type DeliveryServiceNullableV13 struct {
 	Tenant            *string          `json:"tenant,omitempty"`
 	TRResponseHeaders *string          `json:"trResponseHeaders,omitempty"`
 	TRRequestHeaders  *string          `json:"trRequestHeaders,omitempty"`
+}
+
+// NewDeliveryServiceNullableV13FromV12 creates a new V13 DS from a V12 DS, filling new fields with appropriate defaults.
+func NewDeliveryServiceNullableV13FromV12(ds DeliveryServiceNullableV12) DeliveryServiceNullableV13 {
+	newDS := DeliveryServiceNullableV13{DeliveryServiceNullableV12: ds}
+	newDS.Sanitize()
+	return newDS
+}
+
+func (ds *DeliveryServiceNullableV12) Sanitize() {
+	if ds.GeoLimitCountries != nil {
+		*ds.GeoLimitCountries = strings.ToUpper(strings.Replace(*ds.GeoLimitCountries, " ", "", -1))
+	}
+	if ds.ProfileID != nil && *ds.ProfileID == -1 {
+		ds.ProfileID = nil
+	}
+	if ds.EdgeHeaderRewrite != nil && strings.TrimSpace(*ds.EdgeHeaderRewrite) == "" {
+		ds.EdgeHeaderRewrite = nil
+	}
+	if ds.MidHeaderRewrite != nil && strings.TrimSpace(*ds.MidHeaderRewrite) == "" {
+		ds.MidHeaderRewrite = nil
+	}
+	if ds.RoutingName == nil || *ds.RoutingName == "" {
+		ds.RoutingName = util.StrPtr(DefaultRoutingName)
+	}
+}
+
+func getTypeName(tx *sql.Tx, id int) (string, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`SELECT name from type where id=$1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("querying type name: " + err.Error())
+	}
+	return name, true, nil
+}
+
+func requiredIfMatchesTypeName(patterns []string, typeName string) func(interface{}) error {
+	return func(value interface{}) error {
+		switch v := value.(type) {
+		case *int:
+			if v != nil {
+				return nil
+			}
+		case *bool:
+			if v != nil {
+				return nil
+			}
+		case *string:
+			if v != nil {
+				return nil
+			}
+		case *float64:
+			if v != nil {
+				return nil
+			}
+		default:
+			return fmt.Errorf("validation failure: unknown type %T", value)
+		}
+		pattern := strings.Join(patterns, "|")
+		err := error(nil)
+		match := false
+		if typeName != "" {
+			match, err = regexp.MatchString(pattern, typeName)
+			if match {
+				return fmt.Errorf("is required if type is '%s'", typeName)
+			}
+		}
+		return err
+	}
+}
+
+// util.JoinErrs(errs).Error()
+
+func (ds *DeliveryServiceNullableV12) validateTypeFields(tx *sql.Tx) error {
+	// Validate the TypeName related fields below
+	typeName := ""
+	err := error(nil)
+	DNSRegexType := "^DNS.*$"
+	HTTPRegexType := "^HTTP.*$"
+	SteeringRegexType := "^STEERING.*$"
+	if ds.TypeID == nil {
+		return errors.New("missing type")
+	}
+	typeName, ok, err := getTypeName(tx, *ds.TypeID)
+	if err != nil {
+		return errors.New("getting type name: " + err.Error())
+	}
+	if !ok {
+		return errors.New("type not found")
+	}
+	errs := validation.Errors{
+		"initialDispersion": validation.Validate(ds.InitialDispersion,
+			validation.By(requiredIfMatchesTypeName([]string{HTTPRegexType}, typeName))),
+		"ipv6RoutingEnabled": validation.Validate(ds.IPV6RoutingEnabled,
+			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
+		"missLat": validation.Validate(ds.MissLat,
+			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+		"missLong": validation.Validate(ds.MissLong,
+			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+		"multiSiteOrigin": validation.Validate(ds.MultiSiteOrigin,
+			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+		"orgServerFqdn": validation.Validate(ds.OrgServerFQDN,
+			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
+			validation.NewStringRule(validateOrgServerFQDN, "must start with http:// or https:// and be followed by a valid hostname with an optional port (no trailing slash)")),
+		"protocol": validation.Validate(ds.Protocol,
+			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
+		"qstringIgnore": validation.Validate(ds.QStringIgnore,
+			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+		"rangeRequestHandling": validation.Validate(ds.RangeRequestHandling,
+			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+	}
+	toErrs := tovalidate.ToErrors(errs)
+	if len(toErrs) > 0 {
+		return errors.New(util.JoinErrsStr(toErrs))
+	}
+	return nil
+}
+
+func validateOrgServerFQDN(orgServerFQDN string) bool {
+	_, fqdn, port, err := ParseOrgServerFQDN(orgServerFQDN)
+	if err != nil || !govalidator.IsHost(*fqdn) || (port != nil && !govalidator.IsPort(*port)) {
+		return false
+	}
+	return true
+}
+
+func ParseOrgServerFQDN(orgServerFQDN string) (*string, *string, *string, error) {
+	originRegex := regexp.MustCompile(`^(https?)://([^:]+)(:(\d+))?$`)
+	matches := originRegex.FindStringSubmatch(orgServerFQDN)
+	if len(matches) == 0 {
+		return nil, nil, nil, fmt.Errorf("unable to parse invalid orgServerFqdn: '%s'", orgServerFQDN)
+	}
+
+	protocol := strings.ToLower(matches[1])
+	FQDN := matches[2]
+
+	if len(protocol) == 0 || len(FQDN) == 0 {
+		return nil, nil, nil, fmt.Errorf("empty Origin protocol or FQDN parsed from '%s'", orgServerFQDN)
+	}
+
+	var port *string
+	if len(matches[4]) != 0 {
+		port = &matches[4]
+	}
+	return &protocol, &FQDN, port, nil
+}
+
+func (ds *DeliveryServiceNullableV12) Validate(tx *sql.Tx) error {
+	ds.Sanitize()
+	isDNSName := validation.NewStringRule(govalidator.IsDNSName, "must be a valid hostname")
+	noPeriods := validation.NewStringRule(tovalidate.NoPeriods, "cannot contain periods")
+	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
+	errs := validation.Errors{
+		"active":              validation.Validate(ds.Active, validation.NotNil),
+		"cdnId":               validation.Validate(ds.CDNID, validation.Required),
+		"displayName":         validation.Validate(ds.DisplayName, validation.Required, validation.Length(1, 48)),
+		"dscp":                validation.Validate(ds.DSCP, validation.NotNil, validation.Min(0)),
+		"geoLimit":            validation.Validate(ds.GeoLimit, validation.NotNil),
+		"geoProvider":         validation.Validate(ds.GeoProvider, validation.NotNil),
+		"logsEnabled":         validation.Validate(ds.LogsEnabled, validation.NotNil),
+		"regionalGeoBlocking": validation.Validate(ds.RegionalGeoBlocking, validation.NotNil),
+		"routingName":         validation.Validate(ds.RoutingName, isDNSName, noPeriods, validation.Length(1, 48)),
+		"typeId":              validation.Validate(ds.TypeID, validation.Required, validation.Min(1)),
+		"xmlId":               validation.Validate(ds.XMLID, noSpaces, noPeriods, validation.Length(1, 48)),
+	}
+	toErrs := tovalidate.ToErrors(errs)
+	if len(toErrs) > 0 {
+		return errors.New(util.JoinErrsStr(toErrs))
+	}
+	if err := ds.validateTypeFields(tx); err != nil {
+		return errors.New("type fields: " + err.Error())
+	}
+	return nil
+}
+
+func (ds *DeliveryServiceNullableV13) Sanitize() {
+	ds.DeliveryServiceNullableV12.Sanitize()
+	signedAlgorithm := "url_sig"
+	if ds.Signed && (ds.SigningAlgorithm == nil || *ds.SigningAlgorithm == "") {
+		ds.SigningAlgorithm = &signedAlgorithm
+	}
+	if !ds.Signed && ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == signedAlgorithm {
+		ds.Signed = true
+	}
+	if ds.DeepCachingType == nil {
+		s := DeepCachingType("")
+		ds.DeepCachingType = &s
+	}
+	*ds.DeepCachingType = DeepCachingTypeFromString(string(*ds.DeepCachingType))
+}
+
+func (ds *DeliveryServiceNullableV13) Validate(tx *sql.Tx) error {
+	ds.Sanitize()
+	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
+		"must be one of 'NEVER' or 'ALWAYS'")
+	errs := tovalidate.ToErrors(validation.Errors{
+		"deepCachingType": validation.Validate(ds.DeepCachingType, neverOrAlways),
+	})
+	if err := ds.DeliveryServiceNullableV12.Validate(tx); err != nil {
+		errs = append(errs, err)
+	}
+	if len(errs) == 0 {
+		return nil
+	}
+	return errors.New(util.JoinErrsStr(errs)) // don't add context, so versions chain well
 }
 
 // Value implements the driver.Valuer interface

@@ -67,6 +67,10 @@ func (t *Time) UnmarshalJSON(b []byte) (err error) {
 // TimeNoMod supported JSON marshalling, but suppresses JSON unmarshalling
 type TimeNoMod Time
 
+func NewTimeNoMod() *TimeNoMod {
+	return &TimeNoMod{Time: time.Now()}
+}
+
 // Scan implements the database/sql Scanner interface.
 func (t *TimeNoMod) Scan(value interface{}) error {
 	t.Time, t.Valid = value.(time.Time)
