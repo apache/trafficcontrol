@@ -98,7 +98,7 @@ func GetUserTenantList(user auth.CurrentUser, db *sqlx.DB) ([]Tenant, error) {
 	var tenantID int
 	var name string
 	var active bool
-	var parentID int
+	var parentID *int
 
 	rows, err := db.Query(query, user.TenantID)
 	if err != nil {
@@ -112,7 +112,11 @@ func GetUserTenantList(user auth.CurrentUser, db *sqlx.DB) ([]Tenant, error) {
 		if err := rows.Scan(&tenantID, &name, &active, &parentID); err != nil {
 			return nil, err
 		}
-		tenants = append(tenants, Tenant{ID: tenantID, Name: name, Active: active, ParentID: parentID})
+		if parentID != nil {
+			tenants = append(tenants, Tenant{ID: tenantID, Name: name, Active: active, ParentID: *parentID})
+		} else {
+			tenants = append(tenants, Tenant{ID: tenantID, Name: name, Active: active, ParentID: -1})
+		}
 	}
 
 	return tenants, nil
