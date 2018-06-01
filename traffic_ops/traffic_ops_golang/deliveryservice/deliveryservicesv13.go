@@ -276,7 +276,7 @@ func create(db *sql.DB, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 
 func (ds *TODeliveryServiceV13) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
 	returnable := []interface{}{}
-	dses, errs, errType := readGetDeliveryServices(params, db)
+	dses, errs, errType := readGetDeliveryServices(params, db, user)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			if err.Error() == `id cannot parse to integer` { // TODO create const for string
@@ -284,12 +284,6 @@ func (ds *TODeliveryServiceV13) Read(db *sqlx.DB, params map[string]string, user
 			}
 		}
 		return nil, errs, errType
-	}
-
-	dses, err := filterAuthorized(dses, user, db)
-	if err != nil {
-		log.Errorln("Checking tenancy: " + err.Error())
-		return nil, []error{errors.New("Error checking tenancy.")}, tc.SystemError
 	}
 
 	for _, ds := range dses {
@@ -616,7 +610,28 @@ func filterAuthorized(dses []tc.DeliveryServiceNullableV13, user auth.CurrentUse
 	return newDSes, nil
 }
 
-func readGetDeliveryServices(params map[string]string, db *sqlx.DB) ([]tc.DeliveryServiceNullableV13, []error, tc.ApiErrorType) {
+func addTenancyCheck(where string, queryValues map[string]interface{}, user auth.CurrentUser, db *sqlx.DB) (string, map[string]interface{}, error) {
+	if where == "" {
+		where = dbhelpers.BaseWhere + " ds.tenant_id = ANY((:accessibleTenants)::::bigint[])"
+	} else {
+		where += " AND ds.tenant_id = ANY((:accessibleTenants)::::bigint[])"
+	}
+
+	tenants, err := tenant.GetUserTenantList(user, db)
+	if err != nil {
+		return "", queryValues, err
+	}
+
+	tenantIDs := make([]int, len(tenants))
+	for i, tenant := range tenants {
+		tenantIDs[i] = tenant.ID
+	}
+	queryValues["accessibleTenants"] = pq.Array(tenantIDs)
+
+	return where, queryValues, nil
+}
+
+func readGetDeliveryServices(params map[string]string, db *sqlx.DB, user auth.CurrentUser) ([]tc.DeliveryServiceNullableV13, []error, tc.ApiErrorType) {
 	if strings.HasSuffix(params["id"], ".json") {
 		params["id"] = params["id"][:len(params["id"])-len(".json")]
 	}
@@ -632,7 +647,19 @@ func readGetDeliveryServices(params map[string]string, db *sqlx.DB) ([]tc.Delive
 		return nil, errs, tc.DataConflictError
 	}
 
+	if tenant.IsTenancyEnabled(db) {
+		log.Debugln("Tenancy is enabled")
+		var err error
+		where, queryValues, err = addTenancyCheck(where, queryValues, user, db)
+		if err != nil {
+			log.Errorln("received error querying for user's tenants: " + err.Error())
+			return nil, []error{tc.DBError}, tc.SystemError
+		}
+	}
 	query := selectQuery() + where + orderBy
+
+	log.Debugln("generated deliveryServices query: " + query)
+	log.Debugf("executing with values: %++v\n", queryValues)
 
 	tx, err := db.Beginx()
 	if err != nil {
@@ -965,7 +992,7 @@ ds.ccr_dns_ttl,
 ds.cdn_id,
 cdn.name as cdnName,
 ds.check_path,
-ds.deep_caching_type,
+ds.deep_caching_type::::text as deep_caching_type,
 ds.display_name,
 ds.dns_bypass_cname,
 ds.dns_bypass_ip,
