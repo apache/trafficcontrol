@@ -429,13 +429,13 @@ trafficPortal.factory('authInterceptor', function ($rootScope, $q, $window, $loc
             if (rejection.status === 401) {
                 $rootScope.$broadcast('trafficPortal::exit');
                 userModel.resetUser();
-                if (url == '/' || $location.search().redirect) {
+                if (url == '/login' || $location.search().redirect) {
                     messageModel.setMessages(alerts, false);
                 } else {
                     $timeout(function () {
                         messageModel.setMessages(alerts, true);
                         // forward the to the login page with ?redirect=page/they/were/trying/to/reach
-                        $location.url('/').search({ redirect: encodeURIComponent(url) });
+                        $location.url('/login').search({ redirect: encodeURIComponent(url) });
                     }, 200);
                 }
             } else if (rejection.status === 403 || rejection.status === 404) {

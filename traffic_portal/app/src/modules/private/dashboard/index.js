@@ -22,7 +22,7 @@ module.exports = angular.module('trafficPortal.private.dashboard', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficPortal.private.dashboard', {
-                url: 'dashboard',
+                url: '',
                 abstract: true,
                 views: {
                     privateContent: {
