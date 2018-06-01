@@ -19,13 +19,13 @@ package utils
  * under the License.
  */
 
- import (
+import (
 	"time"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
- )
+)
 
- func StrPtr(str string) *string {
+func StrPtr(str string) *string {
 	return &str
 }
 

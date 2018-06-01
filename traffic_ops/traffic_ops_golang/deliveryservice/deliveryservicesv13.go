@@ -38,6 +38,7 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
+	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/utils"
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
@@ -152,6 +153,10 @@ func CreateV13(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 			api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 			return
+		}
+
+		if ds.RoutingName == nil || *ds.RoutingName == "" {
+			ds.RoutingName = utils.StrPtr("cdn")
 		}
 
 		if errs := validateV13(db, &ds); len(errs) > 0 {
