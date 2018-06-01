@@ -22,7 +22,7 @@ module.exports = angular.module('trafficPortal.public.login', [])
     .config(function($stateProvider, $urlRouterProvider) {
         $stateProvider
             .state('trafficPortal.public.login', {
-                url: '',
+                url: 'login',
                 views: {
                     publicContent: {
                         templateUrl: 'modules/public/login/login.tpl.html',
