@@ -47,7 +47,7 @@ type KeyFieldInfo struct {
 
 func GetIntKey(s string) (interface{}, error) {
 	if strings.HasSuffix(s, ".json") {
-		s = s[:len(s) - len(".json")]
+		s = s[:len(s)-len(".json")]
 	}
 	return strconv.Atoi(s)
 }

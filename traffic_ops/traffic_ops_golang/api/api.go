@@ -32,6 +32,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -266,7 +267,6 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	if err != nil {
 		return nil, userErr, errors.New("could not begin transaction: " + err.Error()), http.StatusInternalServerError
 	}
-	falsePtr := false
 	return &APIInfo{
 		Config:    cfg,
 		ReqID:     reqID,
@@ -274,7 +274,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 		IntParams: intParams,
 		User:      user,
 		Tx:        tx,
-		CommitTx:  &falsePtr,
+		CommitTx:  util.BoolPtr(false),
 	}, nil, nil, http.StatusOK
 }
 
