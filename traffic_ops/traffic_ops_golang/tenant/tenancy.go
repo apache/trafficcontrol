@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -61,24 +62,24 @@ func GetDeliveryServiceTenantInfo(xmlID string, tx *sql.Tx) (*DeliveryServiceTen
 	return &ds, nil
 }
 
-// tenancy check wrapper for deliveryservice
-func HasTenant(user *auth.CurrentUser, XMLID string, tx *sql.Tx) (bool, error, tc.ApiErrorType) {
+// Check checks that the given user has access to the given XMLID. Returns a user error, system error, and the HTTP status code to be returned to the user if an error occurred. On success, the user error and system error will both be nil, and the error code should be ignored.
+func Check(user *auth.CurrentUser, XMLID string, tx *sql.Tx) (error, error, int) {
 	dsInfo, err := GetDeliveryServiceTenantInfo(XMLID, tx)
 	if err != nil {
 		if dsInfo == nil {
-			return false, fmt.Errorf("deliveryservice lookup failure: %v", err), tc.SystemError
+			return nil, errors.New("deliveryservice lookup failure: " + err.Error()), http.StatusInternalServerError
 		} else {
-			return false, fmt.Errorf("no such deliveryservice: '%s'", XMLID), tc.DataMissingError
+			return errors.New("no such deliveryservice: '" + XMLID + "'"), nil, http.StatusBadRequest
 		}
 	}
 	hasAccess, err := dsInfo.IsTenantAuthorized(user, tx)
 	if err != nil {
-		return false, fmt.Errorf("user tenancy check failure: %v", err), tc.SystemError
+		return nil, errors.New("user tenancy check failure: " + err.Error()), http.StatusInternalServerError
 	}
 	if !hasAccess {
-		return false, fmt.Errorf("Access to this resource is not authorized"), tc.ForbiddenError
+		return nil, errors.New("Access to this resource is not authorized"), http.StatusForbidden
 	}
-	return true, nil, tc.NoError
+	return nil, nil, http.StatusOK
 }
 
 // returns a Tenant list that the specified user has access too.

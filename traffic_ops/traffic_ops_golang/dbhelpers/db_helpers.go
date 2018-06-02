@@ -145,11 +145,11 @@ func FinishTxX(tx *sqlx.Tx, commit *bool) {
 	tx.Commit()
 }
 
-func AddTenancyCheck(where string, queryValues map[string]interface{},tenantColumnName string, tenantIDs []int) (string, map[string]interface{}) {
+func AddTenancyCheck(where string, queryValues map[string]interface{}, tenantColumnName string, tenantIDs []int) (string, map[string]interface{}) {
 	if where == "" {
 		where = BaseWhere + " " + tenantColumnName + " = ANY(CAST(:accessibleTenants AS bigint[]))"
 	} else {
-		where += " AND "+ tenantColumnName + " = ANY(CAST(:accessibleTenants AS bigint[]))"
+		where += " AND " + tenantColumnName + " = ANY(CAST(:accessibleTenants AS bigint[]))"
 	}
 
 	queryValues["accessibleTenants"] = pq.Array(tenantIDs)

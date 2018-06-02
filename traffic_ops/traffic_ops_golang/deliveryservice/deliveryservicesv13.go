@@ -364,7 +364,6 @@ func getDSType(tx *sql.Tx, xmlid string) (tc.DSType, bool, error) {
 }
 
 func UpdateV13(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, errCode, userErr, sysErr)

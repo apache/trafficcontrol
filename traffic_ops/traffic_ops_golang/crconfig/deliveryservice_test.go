@@ -82,7 +82,7 @@ func randDS() tc.CRConfigDeliveryService {
 	geoProviderStr := GeoProviderMaxmindStr
 	return tc.CRConfigDeliveryService{
 		AnonymousBlockingEnabled: &falseStrPtr,
-		CoverageZoneOnly: false,
+		CoverageZoneOnly:         false,
 		Dispersion: &tc.CRConfigDispersion{
 			Limit:    42,
 			Shuffled: true,

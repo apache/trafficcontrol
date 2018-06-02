@@ -25,7 +25,7 @@ import (
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"

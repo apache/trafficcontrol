@@ -22,22 +22,16 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
 	"github.com/basho/riak-go-client"
-	"github.com/jmoiron/sqlx"
 	"github.com/lestrrat/go-jwx/jwk"
 )
 
@@ -51,301 +45,152 @@ type URISignerKeyset struct {
 }
 
 // endpoint handler for fetching uri signing keys from riak
-func getURIsignkeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorsFunc(w, r)
-
-		if cfg.RiakEnabled == false {
-			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
-			return
-		}
-
-		ctx := r.Context()
-		pathParams, err := api.GetPathParams(ctx)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		user, err := auth.GetCurrentUser(ctx)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		xmlID := pathParams["xmlID"]
-
-		tx, err := db.DB.Begin()
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("beginning transaction: "+err.Error()))
-			return
-		}
-		commitTx := false
-		defer dbhelpers.FinishTx(tx, &commitTx)
-
-		// check user tenancy access to this resource.
-		hasAccess, err, apiStatus := tenant.HasTenant(user, xmlID, tx)
-		if !hasAccess {
-			switch apiStatus {
-			case tc.SystemError:
-				handleErr(http.StatusInternalServerError, err)
-				return
-			case tc.DataMissingError:
-				handleErr(http.StatusBadRequest, err)
-				return
-			case tc.ForbiddenError:
-				handleErr(http.StatusForbidden, err)
-				return
-			}
-		}
-
-		// create and start a cluster
-		cluster, err := riaksvc.GetRiakCluster(db.DB, cfg.RiakAuthOptions)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-		if err = cluster.Start(); err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-		defer func() {
-			if err := cluster.Stop(); err != nil {
-				log.Errorf("%v\n", err)
-			}
-		}()
-
-		ro, err := riaksvc.FetchObjectValues(xmlID, CDNURIKeysBucket, cluster)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		var respBytes []byte
-
-		if ro == nil {
-			var empty URISignerKeyset
-			respBytes, err = json.Marshal(empty)
-			if err != nil {
-				log.Errorf("failed to marshal an empty response: %s\n", err)
-				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintf(w, http.StatusText(http.StatusInternalServerError))
-				return
-			}
-		} else {
-			respBytes = ro[0].Value
-		}
-		commitTx = true
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(respBytes)
+func getURIsignkeysHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	if inf.Config.RiakEnabled == false {
+		api.HandleErr(w, r, http.StatusServiceUnavailable, errors.New("The RIAK service is unavailable"), errors.New("getting Riak SSL keys by host name: riak is not configured"))
+		return
+	}
+
+	xmlID := inf.Params["xmlID"]
+
+	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
+	}
+
+	cluster, err := riaksvc.StartCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("starting riak cluster: "+err.Error()))
+		return
+	}
+	defer riaksvc.StopCluster(cluster)
+
+	ro, err := riaksvc.FetchObjectValues(xmlID, CDNURIKeysBucket, cluster)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("fetching riak objects: "+err.Error()))
+		return
+	}
+	if len(ro) == 0 {
+		api.WriteRespRaw(w, r, URISignerKeyset{})
+		return
+	}
+	*inf.CommitTx = true
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(ro[0].Value)
 }
 
-// Http DELETE handler used to remove urisigning keys assigned to a delivery service.
-func removeDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorsFunc(w, r)
-
-		if cfg.RiakEnabled == false {
-			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
-			return
-		}
-
-		ctx := r.Context()
-		pathParams, err := api.GetPathParams(ctx)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		user, err := auth.GetCurrentUser(ctx)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		xmlID := pathParams["xmlID"]
-
-		tx, err := db.DB.Begin()
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("beginning transaction: "+err.Error()))
-			return
-		}
-		commitTx := false
-		defer dbhelpers.FinishTx(tx, &commitTx)
-
-		// check user tenancy access to this resource.
-		hasAccess, err, apiStatus := tenant.HasTenant(user, xmlID, tx)
-		if !hasAccess {
-			switch apiStatus {
-			case tc.SystemError:
-				handleErr(http.StatusInternalServerError, err)
-				return
-			case tc.DataMissingError:
-				handleErr(http.StatusBadRequest, err)
-				return
-			case tc.ForbiddenError:
-				handleErr(http.StatusForbidden, err)
-				return
-			}
-		}
-
-		// create and start a cluster
-		cluster, err := riaksvc.GetRiakCluster(db.DB, cfg.RiakAuthOptions)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-		if err = cluster.Start(); err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-		defer func() {
-			if err := cluster.Stop(); err != nil {
-				log.Errorf("%v\n", err)
-			}
-		}()
-
-		ro, err := riaksvc.FetchObjectValues(xmlID, CDNURIKeysBucket, cluster)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		// fetch the object and delete it if it exists.
-		var alert tc.Alerts
-
-		if ro == nil || ro[0].Value == nil {
-			alert = tc.CreateAlerts(tc.InfoLevel, "not deleted, no object found to delete")
-		} else if err := riaksvc.DeleteObject(xmlID, CDNURIKeysBucket, cluster); err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		} else { // object successfully deleted
-			alert = tc.CreateAlerts(tc.SuccessLevel, "object deleted")
-		}
-
-		// send response
-		respBytes, err := json.Marshal(alert)
-		if err != nil {
-			log.Errorf("failed to marshal an alert response: %s\n", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, http.StatusText(http.StatusInternalServerError))
-			return
-		}
-		commitTx = true
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(respBytes)
+// removeDeliveryServiceURIKeysHandler is the HTTP DELETE handler used to remove urisigning keys assigned to a delivery service.
+func removeDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	if inf.Config.RiakEnabled == false {
+		api.HandleErr(w, r, http.StatusServiceUnavailable, errors.New("The RIAK service is unavailable"), errors.New("getting Riak SSL keys by host name: riak is not configured"))
+		return
+	}
+
+	xmlID := inf.Params["xmlID"]
+	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
+	}
+
+	cluster, err := riaksvc.StartCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("starting riak cluster: "+err.Error()))
+		return
+	}
+	defer riaksvc.StopCluster(cluster)
+
+	ro, err := riaksvc.FetchObjectValues(xmlID, CDNURIKeysBucket, cluster)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("fetching riak objects: "+err.Error()))
+		return
+	}
+
+	if len(ro) == 0 || ro[0].Value == nil {
+		api.WriteRespAlert(w, r, tc.InfoLevel, "not deleted, no object found to delete")
+		return
+	}
+	if err := riaksvc.DeleteObject(xmlID, CDNURIKeysBucket, cluster); err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("deleting riak object: "+err.Error()))
+		return
+	}
+	*inf.CommitTx = true
+	api.WriteRespAlert(w, r, tc.SuccessLevel, "object deleted")
+	return
 }
 
-// Http POST or PUT handler used to store urisigning keys to a delivery service.
-func saveDeliveryServiceURIKeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorsFunc(w, r)
-
-		defer r.Body.Close()
-
-		if cfg.RiakEnabled == false {
-			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
-			return
-		}
-
-		ctx := r.Context()
-		pathParams, err := api.GetPathParams(ctx)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		user, err := auth.GetCurrentUser(ctx)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		xmlID := pathParams["xmlID"]
-
-		tx, err := db.DB.Begin()
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("beginning transaction: "+err.Error()))
-			return
-		}
-		commitTx := false
-		defer dbhelpers.FinishTx(tx, &commitTx)
-
-		// check user tenancy access to this resource.
-		hasAccess, err, apiStatus := tenant.HasTenant(user, xmlID, tx)
-		if !hasAccess {
-			switch apiStatus {
-			case tc.SystemError:
-				handleErr(http.StatusInternalServerError, err)
-				return
-			case tc.DataMissingError:
-				handleErr(http.StatusBadRequest, err)
-				return
-			case tc.ForbiddenError:
-				handleErr(http.StatusForbidden, err)
-				return
-			}
-		}
-
-		data, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		// validate that the received data is a valid jwk keyset
-		var keySet map[string]URISignerKeyset
-		if err := json.Unmarshal(data, &keySet); err != nil {
-			log.Errorf("%v\n", err)
-			handleErr(http.StatusBadRequest, err)
-			return
-		}
-		if err := validateURIKeyset(keySet); err != nil {
-			log.Errorf("%v\n", err)
-			handleErr(http.StatusBadRequest, err)
-			return
-		}
-
-		// create and start a cluster
-		cluster, err := riaksvc.GetRiakCluster(db.DB, cfg.RiakAuthOptions)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-		if err = cluster.Start(); err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-		defer func() {
-			if err := cluster.Stop(); err != nil {
-				log.Errorf("%v\n", err)
-			}
-		}()
-
-		// create a storage object and store the data
-		obj := &riak.Object{
-			ContentType:     "text/json",
-			Charset:         "utf-8",
-			ContentEncoding: "utf-8",
-			Key:             xmlID,
-			Value:           []byte(data),
-		}
-
-		err = riaksvc.SaveObject(obj, CDNURIKeysBucket, cluster)
-		if err != nil {
-			log.Errorf("%v\n", err)
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(data)
+// saveDeliveryServiceURIKeysHandler is the HTTP POST or PUT handler used to store urisigning keys to a delivery service.
+func saveDeliveryServiceURIKeysHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	if inf.Config.RiakEnabled == false {
+		api.HandleErr(w, r, http.StatusServiceUnavailable, errors.New("The RIAK service is unavailable"), errors.New("getting Riak SSL keys by host name: riak is not configured"))
+		return
+	}
+
+	xmlID := inf.Params["xmlID"]
+
+	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
+	}
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, errors.New("failed to read body"), errors.New("failed to read body: "+err.Error()))
+		return
+	}
+	keySet := map[string]URISignerKeyset{}
+	if err := json.Unmarshal(data, &keySet); err != nil {
+		api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON"), nil)
+	}
+	if err := validateURIKeyset(keySet); err != nil {
+		api.HandleErr(w, r, http.StatusBadRequest, errors.New("invalid keyset: "+err.Error()), nil)
+		return
+	}
+
+	cluster, err := riaksvc.StartCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("starting riak cluster: "+err.Error()))
+		return
+	}
+	defer riaksvc.StopCluster(cluster)
+
+	obj := &riak.Object{
+		ContentType:     "text/json",
+		Charset:         "utf-8",
+		ContentEncoding: "utf-8",
+		Key:             xmlID,
+		Value:           []byte(data),
+	}
+
+	if err = riaksvc.SaveObject(obj, CDNURIKeysBucket, cluster); err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("saving riak object: "+err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", tc.ApplicationJson)
+	w.Write(data)
 }
 
-// validates URISigingKeyset json.
+// validateURIKeyset validates URISigingKeyset json.
 func validateURIKeyset(msg map[string]URISignerKeyset) error {
 	var renewalKidFound int
 	var renewalKidMatched = false
