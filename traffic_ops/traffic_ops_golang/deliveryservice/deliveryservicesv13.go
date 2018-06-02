@@ -21,7 +21,6 @@ package deliveryservice
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -43,25 +42,16 @@ import (
 )
 
 //we need a type alias to define functions on
-type TODeliveryServiceV13 struct {
-	tc.DeliveryServiceNullableV13
-	Cfg config.Config
-	DB  *sqlx.DB
-}
+type TODeliveryServiceV13 tc.DeliveryServiceNullableV13
 
 func (ds *TODeliveryServiceV13) V12() *TODeliveryServiceV12 {
-	return &TODeliveryServiceV12{DeliveryServiceNullableV12: ds.DeliveryServiceNullableV12, DB: ds.DB, Cfg: ds.Cfg}
-}
-
-func (ds TODeliveryServiceV13) MarshalJSON() ([]byte, error) {
-	return json.Marshal(ds.DeliveryServiceNullableV13)
-}
-func (ds *TODeliveryServiceV13) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, ds.DeliveryServiceNullableV13)
+	v13 := (*tc.DeliveryServiceNullableV13)(ds)
+	v12 := &v13.DeliveryServiceNullableV12
+	return (*TODeliveryServiceV12)(v12)
 }
 
 func GetRefTypeV13(cfg config.Config, db *sqlx.DB) *TODeliveryServiceV13 {
-	return &TODeliveryServiceV13{Cfg: cfg, DB: db}
+	return &TODeliveryServiceV13{}
 }
 
 func (ds TODeliveryServiceV13) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -92,7 +82,7 @@ func (ds *TODeliveryServiceV13) Validate(db *sqlx.DB) []error {
 		return []error{errors.New("beginning transaction: " + err.Error())}
 	}
 	defer dbhelpers.FinishTx(tx, util.BoolPtr(true))
-	return []error{ds.DeliveryServiceNullableV13.Validate(tx)}
+	return []error{(*tc.DeliveryServiceNullableV13)(ds).Validate(tx)}
 }
 
 // CreateV13 implements the http.HandlerFunc type, and handles API 1.3 POST requests.
@@ -388,6 +378,7 @@ func UpdateV13(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, errCode, userErr, sysErr)
 		return
 	}
+	*inf.CommitTx = true
 	api.WriteResp(w, r, []tc.DeliveryServiceNullableV13{ds})
 }
 

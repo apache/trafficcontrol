@@ -21,7 +21,6 @@ package deliveryservice
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -37,22 +36,10 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type TODeliveryServiceV12 struct {
-	tc.DeliveryServiceNullableV12
-	Cfg config.Config
-	DB  *sqlx.DB
-}
-
-func (ds TODeliveryServiceV12) MarshalJSON() ([]byte, error) {
-	return json.Marshal(ds.DeliveryServiceNullableV12)
-}
-
-func (ds *TODeliveryServiceV12) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, ds.DeliveryServiceNullableV12)
-}
+type TODeliveryServiceV12 tc.DeliveryServiceNullableV12
 
 func GetRefTypeV12(cfg config.Config, db *sqlx.DB) *TODeliveryServiceV12 {
-	return &TODeliveryServiceV12{Cfg: cfg, DB: db}
+	return &TODeliveryServiceV12{}
 }
 
 func (ds TODeliveryServiceV12) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -113,12 +100,17 @@ func (ds *TODeliveryServiceV12) GetXMLID(tx *sql.Tx) (string, bool, error) {
 	if ds.ID == nil {
 		return "", false, errors.New("missing ID")
 	}
+	return GetXMLID(tx, *ds.ID)
+}
+
+// GetXMLID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
+func GetXMLID(tx *sql.Tx, id int) (string, bool, error) {
 	xmlID := ""
-	if err := tx.QueryRow(`SELECT xml_id FROM deliveryservice where id = $1`, ds.ID).Scan(&xmlID); err != nil {
+	if err := tx.QueryRow(`SELECT xml_id FROM deliveryservice where id = $1`, id).Scan(&xmlID); err != nil {
 		if err == sql.ErrNoRows {
 			return "", false, nil
 		}
-		return "", false, fmt.Errorf("querying xml_id for delivery service ID '%v': %v", *ds.ID, err)
+		return "", false, fmt.Errorf("querying xml_id for delivery service ID '%v': %v", id, err)
 	}
 	return xmlID, true, nil
 }
@@ -130,7 +122,7 @@ func (ds *TODeliveryServiceV12) IsTenantAuthorized(user *auth.CurrentUser, db *s
 		return false, errors.New("beginning transaction: " + err.Error())
 	}
 	defer dbhelpers.FinishTx(tx, util.BoolPtr(true))
-	return isTenantAuthorized(user, tx, &ds.DeliveryServiceNullableV12)
+	return isTenantAuthorized(user, tx, (*tc.DeliveryServiceNullableV12)(ds))
 }
 
 // getTenantID returns the tenant Id of the given delivery service. Note it may return a nil id and nil error, if the tenant ID in the database is nil.
@@ -181,7 +173,7 @@ func (ds *TODeliveryServiceV12) Validate(db *sqlx.DB) []error {
 		return []error{errors.New("beginning transaction: " + err.Error())}
 	}
 	defer dbhelpers.FinishTx(tx, util.BoolPtr(true))
-	return []error{ds.DeliveryServiceNullableV12.Validate(tx)}
+	return []error{(*tc.DeliveryServiceNullableV12)(ds).Validate(tx)}
 }
 
 func CreateV12(w http.ResponseWriter, r *http.Request) {
@@ -232,15 +224,9 @@ func (ds *TODeliveryServiceV12) Read(db *sqlx.DB, params map[string]string, user
 }
 
 func (ds *TODeliveryServiceV12) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	v13 := &TODeliveryServiceV13{
-		Cfg: ds.Cfg,
-		DB:  ds.DB,
-		DeliveryServiceNullableV13: tc.DeliveryServiceNullableV13{
-			DeliveryServiceNullableV12: ds.DeliveryServiceNullableV12,
-		},
-	}
+	v13 := (*TODeliveryServiceV13)(&tc.DeliveryServiceNullableV13{DeliveryServiceNullableV12: *(*tc.DeliveryServiceNullableV12)(ds)})
 	err, errType := v13.Delete(db, user)
-	ds.DeliveryServiceNullableV12 = v13.DeliveryServiceNullableV12 // TODO avoid copy
+	*ds = (TODeliveryServiceV12)(v13.DeliveryServiceNullableV12) // TODO avoid copy
 	return err, errType
 }
 
@@ -271,5 +257,6 @@ func UpdateV12(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, errCode, userErr, sysErr)
 		return
 	}
+	*inf.CommitTx = true
 	api.WriteResp(w, r, []tc.DeliveryServiceNullableV12{dsv13.DeliveryServiceNullableV12})
 }

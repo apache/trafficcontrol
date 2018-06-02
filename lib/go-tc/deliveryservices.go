@@ -9,8 +9,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/incubator-trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/go-ozzo/ozzo-validation"
@@ -382,11 +382,11 @@ func (ds *DeliveryServiceNullableV12) Validate(tx *sql.Tx) error {
 		"xmlId":               validation.Validate(ds.XMLID, noSpaces, noPeriods, validation.Length(1, 48)),
 	}
 	toErrs := tovalidate.ToErrors(errs)
+	if err := ds.validateTypeFields(tx); err != nil {
+		toErrs = append(toErrs, errors.New("type fields: "+err.Error()))
+	}
 	if len(toErrs) > 0 {
 		return errors.New(util.JoinErrsStr(toErrs))
-	}
-	if err := ds.validateTypeFields(tx); err != nil {
-		return errors.New("type fields: " + err.Error())
 	}
 	return nil
 }

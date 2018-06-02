@@ -405,12 +405,12 @@ The envconfig component is used under the MIT license:
 ./traffic_ops/vendor/github.com/kelseyhightower/envconfig/LICENSE
 
 The govalidator component is used under the MIT license:
-@traffic_ops/vendor/github.com/asaskevich/govalidator/*
-./traffic_ops/vendor/github.com/asaskevich/govalidator/LICENSE
+@vendor/github.com/asaskevich/govalidator/*
+./vendor/github.com/asaskevich/govalidator/LICENSE
 
 The ozzo-validation component is used under the MIT license:
-@traffic_ops/vendor/github.com/go-ozzo/ozzo-validation/*
-./traffic_ops/vendor/github.com/go-ozzo/ozzo-validation/LICENSE
+@vendor/github.com/go-ozzo/ozzo-validation/*
+./vendor/github.com/go-ozzo/ozzo-validation/LICENSE
 
 The spinner-small.gif is used under the WTFPL license:
 @traffic_ops/app/public/images/spinner-small.gif
