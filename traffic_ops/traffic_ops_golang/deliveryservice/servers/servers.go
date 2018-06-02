@@ -32,6 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
 	"github.com/go-ozzo/ozzo-validation"
@@ -350,24 +351,18 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 			}
 		}()
 
-		// if the object has tenancy enabled, check that user is able to access the tenant
-		// check user tenancy access to this resource.
-		row := db.QueryRow("SELECT xml_id FROM deliveryservice WHERE id = $1", *dsId)
-		var xmlId string
-		row.Scan(&xmlId)
-		hasAccess, err, apiStatus := tenant.HasTenant(user, xmlId, tx.Tx)
-		if !hasAccess {
-			switch apiStatus {
-			case tc.SystemError:
-				handleErrs(http.StatusInternalServerError, err)
-				return
-			case tc.DataMissingError:
-				handleErrs(http.StatusBadRequest, err)
-				return
-			case tc.ForbiddenError:
-				handleErrs(http.StatusForbidden, err)
-				return
-			}
+		xmlID, ok, err := deliveryservice.GetXMLID(tx.Tx, *dsId)
+		if err != nil {
+			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("deliveryserviceserver getting XMLID: "+err.Error()))
+			return
+		}
+		if !ok {
+			api.HandleErr(w, r, http.StatusBadRequest, errors.New("no delivery service with that ID exists"), nil)
+			return
+		}
+		if userErr, sysErr, errCode := tenant.Check(user, xmlID, tx.Tx); userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, errCode, userErr, sysErr)
+			return
 		}
 
 		if *payload.Replace {
@@ -466,7 +461,6 @@ func GetCreateHandler(db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
-		// perform the insert transaction
 		rollbackTransaction := true
 		tx, err := db.Beginx()
 		if err != nil {
@@ -484,25 +478,9 @@ func GetCreateHandler(db *sqlx.DB) http.HandlerFunc {
 			}
 		}()
 
-		// if the object has tenancy enabled, check that user is able to access the tenant
-		// check user tenancy access to this resource.
-		hasAccess, err, apiStatus := tenant.HasTenant(user, xmlId, tx.Tx)
-		if !hasAccess {
-			switch apiStatus {
-			case tc.SystemError:
-				handleErrs(http.StatusInternalServerError, err)
-				return
-			case tc.DataMissingError:
-				handleErrs(http.StatusBadRequest, err)
-				return
-			case tc.ForbiddenError:
-				handleErrs(http.StatusForbidden, err)
-				return
-			default:
-				e := http.StatusInternalServerError
-				handleErrs(e, err)
-				return
-			}
+		if userErr, sysErr, errCode := tenant.Check(user, xmlId, tx.Tx); userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, errCode, userErr, sysErr)
+			return
 		}
 
 		row := db.QueryRow(selectDeliveryService(), xmlId)

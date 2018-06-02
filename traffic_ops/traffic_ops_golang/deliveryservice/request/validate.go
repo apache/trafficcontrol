@@ -39,7 +39,7 @@ func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
 		return []error{errors.New("beginning transaction: " + err.Error())}
 	}
 	commitTx := false
-	dbhelpers.FinishTx(tx, &commitTx)
+	defer dbhelpers.FinishTx(tx, &commitTx)
 
 	fromStatus := tc.RequestStatusDraft
 	if req.ID != nil && *req.ID > 0 {
@@ -65,10 +65,11 @@ func (req *TODeliveryServiceRequest) Validate(db *sqlx.DB) []error {
 		"deliveryservice": validation.Validate(req.DeliveryService, validation.Required),
 		"status":          validation.Validate(req.Status, validation.Required, validation.By(validTransition)),
 	}
-
 	errs := tovalidate.ToErrors(errMap)
 	// ensure the deliveryservice requested is valid
-	errs = append(errs, req.DeliveryService.Validate(tx))
+	if err := req.DeliveryService.Validate(tx); err != nil {
+		errs = append(errs, err)
+	}
 	commitTx = true
 	return errs
 }
