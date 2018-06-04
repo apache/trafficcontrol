@@ -44,6 +44,8 @@ networks:
 
 services:
   db:
+    hostname: db
+    domainname: cdn.local
     image: postgres:9.6.6
     networks:
       - tcnet
@@ -53,18 +55,9 @@ services:
     ports: 
       - "5432:5432"
 
-  dbinit:
-    networks:
-      - tcnet
-    env_file:
-      - variables.env
-    build:
-      context: .
-      dockerfile: Dockerfile-dbinit
-    depends_on: 
-      - db
-
   trafficops-perl:
+    hostname: trafficops-perl
+    domainname: cdn.local
     image: trafficops-perl
     networks:
       - tcnet
@@ -80,6 +73,8 @@ services:
       - db
 
   trafficops:
+    hostname: trafficops
+    domainname: cdn.local
     image: trafficops-go
     networks:
       - tcnet
