@@ -34,6 +34,9 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 )
 
+const CDNDNSSECKeyType = "dnssec"
+const DNSSECStatusExisting = "existing"
+
 func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -41,6 +44,7 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
+
 	req := tc.CDNDNSSECGenerateReq{}
 	if err := api.Parse(r.Body, inf.Tx.Tx, &req); err != nil {
 		api.HandleErr(w, r, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
@@ -57,8 +61,6 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	*inf.CommitTx = true
 	api.WriteResp(w, r, "Successfully created dnssec keys for "+cdnName)
 }
-
-const DNSSECStatusExisting = "existing"
 
 func generateStoreDNSSECKeys(
 	tx *sql.Tx,
@@ -176,4 +178,34 @@ WHERE cdn.name = $1
 		dses = append(dses, ds)
 	}
 	return dses, cdnDomain, nil
+}
+
+func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	key := inf.Params["name"]
+
+	riakCluster, err := riaksvc.GetRiakClusterTx(inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting riak cluster: "+err.Error()))
+		return
+	}
+	if err := riakCluster.Start(); err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("starting riak cluster: "+err.Error()))
+		return
+	}
+	defer riaksvc.StopCluster(riakCluster)
+
+	if err := riaksvc.DeleteObject(key, CDNDNSSECKeyType, riakCluster); err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("deleting cdn dnssec keys: "+err.Error()))
+		return
+	}
+	*inf.CommitTx = true
+	api.CreateChangeLogRawTx(api.ApiChange, "Deleted DNSSEC keys for CDN "+key, inf.User, inf.Tx.Tx)
+	api.WriteResp(w, r, "Successfully deleted "+CDNDNSSECKeyType+" for "+key)
 }

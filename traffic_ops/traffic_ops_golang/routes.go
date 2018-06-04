@@ -128,6 +128,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//CDN: queue updates
 		{1.1, http.MethodPost, `cdns/{id}/queue_update$`, cdn.Queue(d.DB.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `cdns/dnsseckeys/generate(\.json)?$`, cdn.CreateDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil},
+		{1.1, http.MethodGet, `cdns/name/{name}/dnsseckeys/delete/?(\.json)?$`, cdn.DeleteDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil},
 
 		//CDN: Monitoring: Traffic Monitor
 		{1.1, http.MethodGet, `cdns/{name}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
