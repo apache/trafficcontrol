@@ -233,9 +233,6 @@ func create(db *sql.DB, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting delivery service type: " + err.Error())
 	}
 	ds.Type = &dsType
-	if ds.Protocol == nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("missing protocol after insert")
-	}
 
 	if err := createDefaultRegex(tx, *ds.ID, *ds.XMLID); err != nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating default regex: " + err.Error())
@@ -256,7 +253,7 @@ func create(db *sql.DB, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating DS: getting CDN info: " + err.Error())
 	}
 
-	ds.ExampleURLs = makeExampleURLs(*ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
+	ds.ExampleURLs = makeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
 
 	if err := ensureHeaderRewriteParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, edgeTier, *ds.Type); err != nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating edge header rewrite parameters: " + err.Error())
@@ -270,7 +267,7 @@ func create(db *sql.DB, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 	if err := ensureCacheURLParams(tx, *ds.ID, *ds.XMLID, ds.CacheURL); err != nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating cache url parameters: " + err.Error())
 	}
-	if err := createDNSSecKeys(tx, cfg, *ds.ID, *ds.XMLID, *ds.Protocol, cdnName, cdnDomain, dnssecEnabled, ds.ExampleURLs); err != nil {
+	if err := createDNSSecKeys(tx, cfg, *ds.ID, *ds.XMLID, cdnName, cdnDomain, dnssecEnabled, ds.ExampleURLs); err != nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating DNSSEC keys: " + err.Error())
 	}
 	ds.LastUpdated = &lastUpdated
@@ -318,7 +315,7 @@ JOIN cdn ON ds.cdn_id = cdn.id
 WHERE ds.id=$1
 `
 	xmlID := ""
-	protocol := sql.NullInt64{}
+	protocol := (*int)(nil)
 	dsType := ""
 	routingName := ""
 	cdnDomain := ""
@@ -333,7 +330,7 @@ WHERE ds.id=$1
 	if !ok {
 		return "", errors.New("delivery service has no match lists (is your delivery service missing regexes?)")
 	}
-	host, err := getHostName(int(protocol.Int64), dsType, routingName, matchList, cdnDomain) // protocol defaults to 0: doesn't need to check Valid()
+	host, err := getHostName(protocol, dsType, routingName, matchList, cdnDomain) // protocol defaults to 0: doesn't need to check Valid()
 	if err != nil {
 		return "", errors.New("getting hostname: " + err.Error())
 	}
@@ -457,9 +454,6 @@ func update(db *sql.DB, cfg config.Config, user auth.CurrentUser, ds *tc.Deliver
 	if ds.TypeID == nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("missing type after update")
 	}
-	if ds.Protocol == nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("missing protocol after update")
-	}
 	if ds.RoutingName == nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("missing routing name after update")
 	}
@@ -474,7 +468,7 @@ func update(db *sql.DB, cfg config.Config, user auth.CurrentUser, ds *tc.Deliver
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting CDN domain after update: " + err.Error())
 	}
 
-	newHostName, err := getHostName(*ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
+	newHostName, err := getHostName(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
 	if err != nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting hostname after update: " + err.Error())
 	}
@@ -691,11 +685,7 @@ func readGetDeliveryServices(params map[string]string, db *sqlx.DB, user auth.Cu
 			continue
 		}
 		ds.MatchList = &matchList
-		dsProtocol := 0
-		if ds.Protocol != nil {
-			dsProtocol = *ds.Protocol
-		}
-		ds.ExampleURLs = makeExampleURLs(dsProtocol, *ds.Type, *ds.RoutingName, *ds.MatchList, dsCDNDomains[*ds.XMLID])
+		ds.ExampleURLs = makeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, dsCDNDomains[*ds.XMLID])
 		dses[i] = ds
 	}
 
@@ -722,11 +712,12 @@ func updateSSLKeys(ds *tc.DeliveryServiceNullableV13, hostName string, db *sql.D
 	return nil
 }
 
-func getHostName(dsProtocol int, dsType string, dsRoutingName string, dsMatchList []tc.DeliveryServiceMatch, cdnDomain string) (string, error) {
+// getHostName gets the host name used for delivery service requests. The dsProtocol may be nil, if the delivery service type doesn't have a protocol (e.g. ANY_MAP).
+func getHostName(dsProtocol *int, dsType string, dsRoutingName string, dsMatchList []tc.DeliveryServiceMatch, cdnDomain string) (string, error) {
 	exampleURLs := makeExampleURLs(dsProtocol, dsType, dsRoutingName, dsMatchList, cdnDomain)
 
 	exampleURL := ""
-	if dsProtocol == 2 {
+	if dsProtocol != nil && *dsProtocol == 2 {
 		if len(exampleURLs) < 2 {
 			return "", errors.New("missing example URLs (does your delivery service have matchsets?)")
 		}
@@ -769,21 +760,26 @@ func getCDNNameDomainDNSSecEnabled(dsID int, tx *sql.Tx) (string, string, bool, 
 	return cdnName, cdnDomain, dnssecEnabled, nil
 }
 
-func makeExampleURLs(protocol int, dsType string, routingName string, matchList []tc.DeliveryServiceMatch, cdnDomain string) []string {
+// makeExampleURLs creates the example URLs for a delivery service. The dsProtocol may be nil, if the delivery service type doesn't have a protocol (e.g. ANY_MAP).
+func makeExampleURLs(protocol *int, dsType string, routingName string, matchList []tc.DeliveryServiceMatch, cdnDomain string) []string {
 	examples := []string{}
 	scheme := ""
 	scheme2 := ""
-	switch protocol {
-	case 0:
-		scheme = "http"
-	case 1:
-		scheme = "https"
-	case 2:
-		fallthrough
-	case 3:
-		scheme = "http"
-		scheme2 = "https"
-	default:
+	if protocol != nil {
+		switch *protocol {
+		case 0:
+			scheme = "http"
+		case 1:
+			scheme = "https"
+		case 2:
+			fallthrough
+		case 3:
+			scheme = "http"
+			scheme2 = "https"
+		default:
+			scheme = "http"
+		}
+	} else {
 		scheme = "http"
 	}
 	dsIsDNS := strings.HasPrefix(strings.ToLower(dsType), "DNS")
