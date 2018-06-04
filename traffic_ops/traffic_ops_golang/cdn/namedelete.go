@@ -30,7 +30,7 @@ import (
 
 func DeleteName(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		params, _, userErr, sysErr, errCode := api.AllParams(r, nil)
+		params, _, userErr, sysErr, errCode := api.AllParams(r, []string{"name"}, nil)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, errCode, userErr, sysErr)
 			return

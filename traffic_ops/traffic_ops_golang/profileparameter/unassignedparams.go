@@ -34,7 +34,7 @@ import (
 
 func GetUnassigned(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, intParams, userErr, sysErr, errCode := api.AllParams(r, []string{"id"})
+		_, intParams, userErr, sysErr, errCode := api.AllParams(r, []string{"id"}, []string{"id"})
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, errCode, userErr, sysErr)
 			return
