@@ -34,7 +34,7 @@ import (
 	"github.com/miekg/dns"
 )
 
-func createDNSSecKeys(tx *sql.Tx, cfg config.Config, dsID int, xmlID string, dsProtocol int, cdnName string, cdnDomain string, dnssecEnabled bool, exampleURLs []string) error {
+func createDNSSecKeys(tx *sql.Tx, cfg config.Config, dsID int, xmlID string, cdnName string, cdnDomain string, dnssecEnabled bool, exampleURLs []string) error {
 	if !dnssecEnabled {
 		return nil
 	}
