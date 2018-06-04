@@ -355,7 +355,7 @@ func UpdateV13(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		params, _, userErr, sysErr, errCode := api.AllParams(r, nil)
+		params, _, userErr, sysErr, errCode := api.AllParams(r, []string{"id"}, nil)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, errCode, userErr, sysErr)
 			return

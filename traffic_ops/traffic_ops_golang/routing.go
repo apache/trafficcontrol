@@ -164,7 +164,7 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 }
 
 // Handler - generic handler func used by the Handlers hooking into the routes
-func Handler(routes map[string][]CompiledRoute, catchall http.Handler, w http.ResponseWriter, r *http.Request) {
+func Handler(routes map[string][]CompiledRoute, catchall http.Handler, db *sqlx.DB, cfg *config.Config, w http.ResponseWriter, r *http.Request) {
 	requested := r.URL.Path[1:]
 
 	mRoutes, ok := routes[r.Method]
@@ -178,16 +178,17 @@ func Handler(routes map[string][]CompiledRoute, catchall http.Handler, w http.Re
 		if len(match) == 0 {
 			continue
 		}
-
-		ctx := r.Context()
-
 		params := map[string]string{}
 		for i, v := range compiledRoute.Params {
 			params[v] = match[i+1]
 		}
 
+		ctx := r.Context()
 		ctx = context.WithValue(ctx, api.PathParamsKey, params)
-		compiledRoute.Handler(w, r.WithContext(ctx))
+		ctx = context.WithValue(ctx, api.DBContextKey, db)
+		ctx = context.WithValue(ctx, api.ConfigContextKey, cfg)
+		r = r.WithContext(ctx)
+		compiledRoute.Handler(w, r)
 		return
 	}
 	catchall.ServeHTTP(w, r)
@@ -209,7 +210,7 @@ func RegisterRoutes(d ServerData) error {
 	routes := CreateRouteMap(routeSlice, rawRoutes, authBase)
 	compiledRoutes := CompileRoutes(routes)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		Handler(compiledRoutes, catchall, w, r)
+		Handler(compiledRoutes, catchall, d.DB, &d.Config, w, r)
 	})
 	return nil
 }
