@@ -42,13 +42,6 @@ do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
 done
 
-key=/server.key
-crt=/server.crt
-
-useradd -M trafops
-openssl req -newkey rsa:2048 -nodes -keyout $key -x509 -days 365 -out $crt -subj "/C=$CERT_COUNTRY/ST=$CERT_STATE/L=$CERT_CITY/O=$CERT_COMPANY"
-chown trafops:trafops $key $crt
-
 cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
 {
     "hypnotoad" : {
@@ -117,3 +110,18 @@ cat <<-EOF >/opt/traffic_ops/app/conf/production/database.conf
         "type": "Pg"
 }
 EOF
+
+cat <<-EOF >/opt/traffic_ops/app/db/dbconf.yml
+version: "1.0"
+name: dbconf.yml
+
+production:
+  driver: postgres
+  open: host=$DB_SERVER port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=$DB_NAME sslmode=disable
+EOF
+
+key=/server.key
+crt=/server.crt
+
+openssl req -newkey rsa:2048 -nodes -keyout $key -x509 -days 365 -out $crt -subj "/C=$CERT_COUNTRY/ST=$CERT_STATE/L=$CERT_CITY/O=$CERT_COMPANY"
+chown trafops:trafops $key $crt

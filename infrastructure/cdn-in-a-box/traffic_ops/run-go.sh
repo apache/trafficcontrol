@@ -62,3 +62,6 @@ CDNCONF=/opt/traffic_ops/app/conf/cdn.conf
 DBCONF=/opt/traffic_ops/app/conf/production/database.conf
 mkdir -p /var/log/traffic_ops
 ./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF
+
+cat /var/log/traffic_ops/*
+tail -f /dev/null

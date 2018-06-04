@@ -55,17 +55,14 @@ while ! nc $DB_SERVER $DB_PORT </dev/null; do # &>/dev/null; do
         sleep 3
 done
 
-while true; do
-	echo "Checking for existence of role $DB_USER"
-	psql -U postgres -h $DB_SERVER -p $DB_PORT postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='$DB_USER'" | grep -q 1 && break
-	sleep 3
-done
-
 TO_DIR=/opt/traffic_ops/app
 cat conf/production/database.conf
 
 export PERL5LIB=$TO_DIR/lib:$TO_DIR/local/lib/perl5
-cd $TO_DIR && ./db/admin.pl -env production reset
+export PATH=/usr/local/go/bin:/opt/traffic_ops/go/bin:$PATH
+export GOPATH=/opt/traffic_ops/go
+
+cd $TO_DIR && ./db/admin.pl --env=production reset || echo "DB reset failed!"
 
 cd $TO_DIR && $TO_DIR/local/bin/hypnotoad script/cdn
 exec tail -f /var/log/traffic_ops/traffic_ops.log
