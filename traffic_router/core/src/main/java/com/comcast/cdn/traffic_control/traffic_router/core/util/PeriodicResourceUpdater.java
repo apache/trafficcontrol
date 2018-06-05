@@ -52,7 +52,7 @@ import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 public class PeriodicResourceUpdater {
 	private static final Logger LOGGER = Logger.getLogger(PeriodicResourceUpdater.class);
 
-	private static AsyncHttpClient asyncHttpClient;
+	private AsyncHttpClient asyncHttpClient;
 	protected String databaseLocation;
 	protected final ResourceUrl urls;
 	protected ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
@@ -143,7 +143,9 @@ public class PeriodicResourceUpdater {
 				final Request request = getRequest(urls.nextUrl());
 				if (request != null) {
 					request.getHeaders().add("Accept-Encoding", GZIP_ENCODING_STRING);
-					asyncHttpClient.executeRequest(request, new UpdateHandler(request)); // AsyncHandlers are NOT thread safe; one instance per request
+					if ((asyncHttpClient!=null) && (!asyncHttpClient.isClosed())) {
+						asyncHttpClient.executeRequest(request, new UpdateHandler(request)); // AsyncHandlers are NOT thread safe; one instance per request
+					}
 					return true;
 				}
 			} else {
