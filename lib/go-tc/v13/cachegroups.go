@@ -19,7 +19,10 @@ package v13
  * under the License.
  */
 
-import tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+import (
+	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/incubator-trafficcontrol/lib/go-util"
+)
 
 // CacheGroupResponse ...
 type CacheGroupsResponse struct {
@@ -59,4 +62,10 @@ type CacheGroupNullable struct {
 
 type CachegroupTrimmedName struct {
 	Name string `json:"name"`
+}
+
+type CachegroupQueueUpdatesRequest struct {
+	Action string           `json:"action"`
+	CDN    *tc.CDNName      `json:"cdn"`
+	CDNID  *util.JSONIntStr `json:"cdnId"`
 }

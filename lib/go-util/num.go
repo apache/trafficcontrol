@@ -19,6 +19,11 @@ package util
  * under the License.
  */
 
+import (
+	"errors"
+	"strconv"
+)
+
 const MSPerNS = int64(1000000)
 
 // ToNumeric returns a float for any numeric type, and false if the interface does not hold a numeric type.
@@ -53,4 +58,24 @@ func ToNumeric(v interface{}) (float64, bool) {
 	default:
 		return 0.0, false
 	}
+}
+
+// JSONIntStr unmarshals JSON strings or numbers into an int.
+// This is designed to handle backwards-compatibility for old Perl endpoints which accept both. Please do not use this for new endpoints or new APIs, APIs should be well-typed.
+type JSONIntStr int64
+
+func (i *JSONIntStr) UnmarshalJSON(d []byte) error {
+	if len(d) == 0 {
+		return errors.New("empty object")
+	}
+	if d[0] == '"' {
+		d = d[1 : len(d)-1] // strip JSON quotes
+	}
+	err := error(nil)
+	di, err := strconv.ParseInt(string(d), 10, 64)
+	if err != nil {
+		return errors.New("not an integer")
+	}
+	*i = JSONIntStr(di)
+	return nil
 }

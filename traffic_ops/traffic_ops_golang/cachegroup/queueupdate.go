@@ -26,17 +26,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tcv13 "github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
-
-type QueueUpdatesReq struct {
-	Action string      `json:"action"`
-	CDN    *tc.CDNName `json:"cdn"`
-	CDNID  *string     `json:"cdnId"`
-}
 
 func QueueUpdates(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +44,7 @@ func QueueUpdates(db *sql.DB) http.HandlerFunc {
 			api.HandleErr(w, r, errCode, userErr, sysErr)
 			return
 		}
-		reqObj := QueueUpdatesReq{}
+		reqObj := tcv13.CachegroupQueueUpdatesRequest{}
 		if err := json.NewDecoder(r.Body).Decode(&reqObj); err != nil {
 			api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 			return
@@ -64,18 +58,13 @@ func QueueUpdates(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		if reqObj.CDN == nil || *reqObj.CDN == "" {
-			cdnID, err := strconv.ParseInt(*reqObj.CDNID, 10, 64)
+			cdn, ok, err := getCDNNameFromID(db, int64(*reqObj.CDNID))
 			if err != nil {
-				api.HandleErr(w, r, http.StatusBadRequest, errors.New("cdn id not an integer"), nil)
-				return
-			}
-			cdn, ok, err := getCDNNameFromID(db, cdnID)
-			if err != nil {
-				api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting CDN name from ID '"+*reqObj.CDNID+"': "+err.Error()))
+				api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting CDN name from ID '"+strconv.Itoa(int(*reqObj.CDNID))+"': "+err.Error()))
 				return
 			}
 			if !ok {
-				api.HandleErr(w, r, http.StatusBadRequest, errors.New("cdn "+*reqObj.CDNID+" does not exist"), nil)
+				api.HandleErr(w, r, http.StatusBadRequest, errors.New("cdn "+strconv.Itoa(int(*reqObj.CDNID))+" does not exist"), nil)
 				return
 			}
 			reqObj.CDN = &cdn
@@ -103,10 +92,7 @@ func QueueUpdates(db *sql.DB) http.HandlerFunc {
 			CDN:            *reqObj.CDN,
 			CacheGroupID:   cgID,
 		})
-
-		if err := api.CreateChangeLogRaw(api.ApiChange, "Server updates "+reqObj.Action+"d for "+string(cgName), *user, db); err != nil {
-			log.Errorln("creating cachegroup queue updates changelog: " + err.Error())
-		}
+		api.CreateChangeLogRaw(api.ApiChange, "Server updates "+reqObj.Action+"d for "+string(cgName), *user, db)
 	}
 }
 
