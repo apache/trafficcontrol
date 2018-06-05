@@ -129,6 +129,9 @@ public abstract class AbstractResourceWatcher extends AbstractServiceUpdater {
 
 	@Override
 	protected File downloadDatabase(final String url, final File existingDb) {
+		if ((trafficOpsUtils.getHostname() == null) || trafficOpsUtils.getCdnName() == null) {
+			return null;
+		}
 		final String interpolatedUrl = trafficOpsUtils.replaceTokens(url);
 		if (fetcher == null) {
 			LOGGER.warn("[" + getClass().getSimpleName() + "] Waiting for configuration to be processed, unable to download from '" + interpolatedUrl + "'");
