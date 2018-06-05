@@ -375,6 +375,11 @@ func UpdateV13(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 		ds.ID = &id
 
+		if errs := validateV13(db, &ds); len(errs) > 0 {
+			api.HandleErr(w, r, http.StatusBadRequest, errors.New("invalid request: "+util.JoinErrs(errs).Error()), nil)
+			return
+		}
+
 		if authorized, err := isTenantAuthorized(*user, db, &ds.DeliveryServiceNullableV12); err != nil {
 			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 			return
