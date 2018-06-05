@@ -32,7 +32,7 @@ func TestTypes(t *testing.T) {
 }
 
 func CreateTestTypes(t *testing.T) {
-        log.Debugln("---- CreateTestTypes ----")
+	log.Debugln("---- CreateTestTypes ----")
 
 	for _, typ := range testData.Types {
 		resp, _, err := TOSession.CreateType(typ)
@@ -45,7 +45,7 @@ func CreateTestTypes(t *testing.T) {
 }
 
 func UpdateTestTypes(t *testing.T) {
-        log.Debugln("---- UpdateTestTypes ----")
+	log.Debugln("---- UpdateTestTypes ----")
 
 	firstType := testData.Types[0]
 	// Retrieve the Type by name so we can get the id for the Update
@@ -74,7 +74,7 @@ func UpdateTestTypes(t *testing.T) {
 
 	log.Debugln("Response Type: ", respType)
 
-        respType.Name = firstType.Name
+	respType.Name = firstType.Name
 	alert, _, err = TOSession.UpdateTypeByID(respType.ID, respType)
 	if err != nil {
 		t.Errorf("cannot restore UPDATE Type by id: %v - %v\n", err, alert)
@@ -82,7 +82,7 @@ func UpdateTestTypes(t *testing.T) {
 }
 
 func GetTestTypes(t *testing.T) {
-        log.Debugln("---- GetTestTypes ----")
+	log.Debugln("---- GetTestTypes ----")
 
 	for _, typ := range testData.Types {
 		resp, _, err := TOSession.GetTypeByName(typ.Name)
@@ -91,12 +91,12 @@ func GetTestTypes(t *testing.T) {
 
 		}
 
-	        log.Debugln("Response: ", resp)
+		log.Debugln("Response: ", resp)
 	}
 }
 
 func DeleteTestTypes(t *testing.T) {
-        log.Debugln("---- DeleteTestTypes ----")
+	log.Debugln("---- DeleteTestTypes ----")
 
 	for _, typ := range testData.Types {
 		// Retrieve the Type by name so we can get the id for the Update
