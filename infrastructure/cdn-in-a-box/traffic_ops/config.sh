@@ -42,11 +42,14 @@ do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
 done
 
+key=/server.key
+crt=/server.crt
+
 cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
 {
     "hypnotoad" : {
         "listen" : [
-            "https://[::]:60443?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
+            "https://trafficops-perl:60443?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
         ],
         "user" : "trafops",
         "group" : "trafops",
@@ -55,6 +58,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "workers" : 12
     },
     "traffic_ops_golang" : {
+	"insecure": true,
         "port" : "443",
         "proxy_timeout" : 60,
         "proxy_keep_alive" : 60,
@@ -119,9 +123,6 @@ production:
   driver: postgres
   open: host=$DB_SERVER port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=$DB_NAME sslmode=disable
 EOF
-
-key=/server.key
-crt=/server.crt
 
 openssl req -newkey rsa:2048 -nodes -keyout $key -x509 -days 365 -out $crt -subj "/C=$CERT_COUNTRY/ST=$CERT_STATE/L=$CERT_CITY/O=$CERT_COMPANY"
 chown trafops:trafops $key $crt
