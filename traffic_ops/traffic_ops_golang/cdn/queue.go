@@ -25,7 +25,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
@@ -65,9 +64,7 @@ func Queue(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		api.WriteResp(w, r, QueueResp{Action: reqObj.Action, CDNID: int64(intParams["id"])})
-		if err := api.CreateChangeLogRaw(api.ApiChange, "Server updates "+reqObj.Action+"d for cdn "+params["id"], *user, db); err != nil {
-			log.Errorln("creating cdn queue updates changelog: " + err.Error())
-		}
+		api.CreateChangeLogRaw(api.ApiChange, "Server updates "+reqObj.Action+"d for cdn "+params["id"], *user, db)
 	}
 }
 
