@@ -106,7 +106,10 @@ func (h CRConfigHistoryThreadsafe) Add(i *CRConfigStat) {
 
 	if *h.len != 0 {
 		last := (*h.hist)[(*h.pos-1)%*h.limit]
-		if i.ReqAddr == last.ReqAddr && *i.Stats.DateUnixSeconds == *last.Stats.DateUnixSeconds && *i.Stats.CDNName == *last.Stats.CDNName {
+		datesEqual := (i.Stats.DateUnixSeconds == nil && last.Stats.DateUnixSeconds == nil) || (i.Stats.DateUnixSeconds != nil && last.Stats.DateUnixSeconds != nil && *i.Stats.DateUnixSeconds == *last.Stats.DateUnixSeconds)
+		cdnsEqual := (i.Stats.CDNName == nil && last.Stats.CDNName == nil) || (i.Stats.CDNName != nil && last.Stats.CDNName != nil && *i.Stats.CDNName == *last.Stats.CDNName)
+		reqAddrsEqual := i.ReqAddr == last.ReqAddr
+		if reqAddrsEqual && datesEqual && cdnsEqual {
 			return
 		}
 	}
