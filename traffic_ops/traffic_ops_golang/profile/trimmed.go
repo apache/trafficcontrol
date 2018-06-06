@@ -20,8 +20,8 @@ package profile
  */
 
 import (
-	"errors"
 	"database/sql"
+	"errors"
 	"net/http"
 
 	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
@@ -39,6 +39,7 @@ func getTrimmedProfiles(db *sql.DB) ([]tc.ProfileTrimmed, error) {
 	if err != nil {
 		return nil, errors.New("querying trimmed profiles: " + err.Error())
 	}
+	defer rows.Close()
 	profiles := []tc.ProfileTrimmed{}
 	for rows.Next() {
 		name := ""

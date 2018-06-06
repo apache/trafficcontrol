@@ -39,6 +39,7 @@ func getTrimmed(db *sql.DB) ([]tc.PhysLocationTrimmed, error) {
 	if err != nil {
 		return nil, errors.New("querying trimmed physical locations: " + err.Error())
 	}
+	defer rows.Close()
 	ps := []tc.PhysLocationTrimmed{}
 	for rows.Next() {
 		name := ""
