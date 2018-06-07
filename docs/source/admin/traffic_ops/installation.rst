@@ -167,8 +167,8 @@ To begin the install:
       ===========/opt/traffic_ops/install/data/json/profiles.json===========
       Traffic Ops url [https://localhost]:
       Traffic Ops url: https://localhost
-      Human-readable CDN Name.  (No whitespace, please) [kabletown_cdn]: blue cdn
-      Human-readable CDN Name.  (No whitespace, please): blue cdn
+      Human-readable CDN Name.  (No whitespace, please) [kabletown_cdn]: blue_cdn
+      Human-readable CDN Name.  (No whitespace, please): blue_cdn
       DNS sub-domain for which your CDN is authoritative [cdn1.kabletown.net]: blue-cdn.supercdn.net
       DNS sub-domain for which your CDN is authoritative: blue-cdn.supercdn.net
       Writing json to /opt/traffic_ops/install/data/json/profiles.json
