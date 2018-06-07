@@ -155,6 +155,7 @@ func create(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 		}
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("inserting ds: " + err.Error())
 	}
+	defer resultRows.Close()
 
 	id := 0
 	lastUpdated := tc.TimeNoMod{}
@@ -188,7 +189,7 @@ func create(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating default regex: " + err.Error())
 	}
 
-	matchlists, err := readGetDeliveryServicesMatchLists([]string{*ds.XMLID}, tx)
+	matchlists, err := GetDeliveryServicesMatchLists([]string{*ds.XMLID}, tx)
 	if err != nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating DS: reading matchlists: " + err.Error())
 	}
@@ -203,7 +204,7 @@ func create(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating DS: getting CDN info: " + err.Error())
 	}
 
-	ds.ExampleURLs = makeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
+	ds.ExampleURLs = MakeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
 
 	if err := ensureHeaderRewriteParams(tx, *ds.ID, *ds.XMLID, ds.EdgeHeaderRewrite, edgeTier, *ds.Type); err != nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating edge header rewrite parameters: " + err.Error())
@@ -217,8 +218,10 @@ func create(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 	if err := ensureCacheURLParams(tx, *ds.ID, *ds.XMLID, ds.CacheURL); err != nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating cache url parameters: " + err.Error())
 	}
-	if err := createDNSSecKeys(tx, cfg, *ds.ID, *ds.XMLID, cdnName, cdnDomain, dnssecEnabled, ds.ExampleURLs); err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating DNSSEC keys: " + err.Error())
+	if dnssecEnabled {
+		if err := PutDNSSecKeys(tx, &cfg, *ds.XMLID, cdnName, ds.ExampleURLs); err != nil {
+			return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating DNSSEC keys: " + err.Error())
+		}
 	}
 
 	if err := createPrimaryOrigin(tx, user, ds); err != nil {
@@ -343,7 +346,7 @@ WHERE ds.id=$1
 	if dsType == tc.DSTypeInvalid {
 		return "", errors.New("getting delivery services matchlist: got invalid delivery service type '" + dsTypeStr + "'")
 	}
-	matchLists, err := readGetDeliveryServicesMatchLists([]string{xmlID}, tx)
+	matchLists, err := GetDeliveryServicesMatchLists([]string{xmlID}, tx)
 	if err != nil {
 		return "", errors.New("getting delivery services matchlist: " + err.Error())
 	}
@@ -469,6 +472,7 @@ func update(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds *tc.Delive
 		}
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("query updating delivery service: " + err.Error())
 	}
+	resultRows.Close()
 	if !resultRows.Next() {
 		return tc.DeliveryServiceNullableV13{}, http.StatusNotFound, errors.New("no delivery service found with this id"), nil
 	}
@@ -516,7 +520,7 @@ func update(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds *tc.Delive
 		}
 	}
 
-	matchLists, err := readGetDeliveryServicesMatchLists([]string{*ds.XMLID}, tx)
+	matchLists, err := GetDeliveryServicesMatchLists([]string{*ds.XMLID}, tx)
 	if err != nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting matchlists after update: " + err.Error())
 	}
@@ -663,7 +667,7 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 		dsNames[i] = *ds.XMLID
 	}
 
-	matchLists, err := readGetDeliveryServicesMatchLists(dsNames, tx.Tx)
+	matchLists, err := GetDeliveryServicesMatchLists(dsNames, tx.Tx)
 	if err != nil {
 		return nil, []error{errors.New("getting delivery service matchlists: " + err.Error())}, tc.SystemError
 	}
@@ -673,7 +677,7 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 			continue
 		}
 		ds.MatchList = &matchList
-		ds.ExampleURLs = makeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, dsCDNDomains[*ds.XMLID])
+		ds.ExampleURLs = MakeExampleURLs(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, dsCDNDomains[*ds.XMLID])
 		dses[i] = ds
 	}
 
@@ -701,7 +705,7 @@ func updateSSLKeys(ds *tc.DeliveryServiceNullableV13, hostName string, tx *sql.T
 
 // getHostName gets the host name used for delivery service requests. The dsProtocol may be nil, if the delivery service type doesn't have a protocol (e.g. ANY_MAP).
 func getHostName(dsProtocol *int, dsType tc.DSType, dsRoutingName string, dsMatchList []tc.DeliveryServiceMatch, cdnDomain string) (string, error) {
-	exampleURLs := makeExampleURLs(dsProtocol, dsType, dsRoutingName, dsMatchList, cdnDomain)
+	exampleURLs := MakeExampleURLs(dsProtocol, dsType, dsRoutingName, dsMatchList, cdnDomain)
 
 	exampleURL := ""
 	if dsProtocol != nil && *dsProtocol == 2 {
@@ -748,7 +752,7 @@ func getCDNNameDomainDNSSecEnabled(dsID int, tx *sql.Tx) (string, string, bool, 
 }
 
 // makeExampleURLs creates the example URLs for a delivery service. The dsProtocol may be nil, if the delivery service type doesn't have a protocol (e.g. ANY_MAP).
-func makeExampleURLs(protocol *int, dsType tc.DSType, routingName string, matchList []tc.DeliveryServiceMatch, cdnDomain string) []string {
+func MakeExampleURLs(protocol *int, dsType tc.DSType, routingName string, matchList []tc.DeliveryServiceMatch, cdnDomain string) []string {
 	examples := []string{}
 	scheme := ""
 	scheme2 := ""
@@ -792,7 +796,8 @@ func makeExampleURLs(protocol *int, dsType tc.DSType, routingName string, matchL
 	return examples
 }
 
-func readGetDeliveryServicesMatchLists(dses []string, tx *sql.Tx) (map[string][]tc.DeliveryServiceMatch, error) {
+func GetDeliveryServicesMatchLists(dses []string, tx *sql.Tx) (map[string][]tc.DeliveryServiceMatch, error) {
+	// TODO move somewhere generic
 	q := `
 SELECT ds.xml_id as ds_name, t.name as type, r.pattern, COALESCE(dsr.set_number, 0)
 FROM regex as r
@@ -805,6 +810,7 @@ WHERE ds.xml_id = ANY($1)
 	if err != nil {
 		return nil, errors.New("getting delivery service regexes: " + err.Error())
 	}
+	defer rows.Close()
 
 	matches := map[string][]tc.DeliveryServiceMatch{}
 	for rows.Next() {

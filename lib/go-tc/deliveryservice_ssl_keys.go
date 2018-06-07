@@ -16,9 +16,12 @@ package tc
 */
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // DeliveryServiceSSLKeysResponse ...
@@ -94,14 +97,14 @@ type DNSSECKeySet struct {
 }
 
 type DNSSECKey struct {
-	InceptionDateUnix  int64 `json:"inceptionDate"`
-	ExpirationDateUnix int64 `json:"expirationDate"`
-	Name               string `json:"name"`
-	TTLSeconds         uint64 `json:"ttl,string"`
-	Status             string `json:"status"`
-	EffectiveDateUnix  int64 `json:"effectiveDate"`
-	Public             string `json:"public"`
-	Private            string `json:"private"`
+	InceptionDateUnix  int64              `json:"inceptionDate"`
+	ExpirationDateUnix int64              `json:"expirationDate"`
+	Name               string             `json:"name"`
+	TTLSeconds         uint64             `json:"ttl,string"`
+	Status             string             `json:"status"`
+	EffectiveDateUnix  int64              `json:"effectiveDate"`
+	Public             string             `json:"public"`
+	Private            string             `json:"private"`
 	DSRecord           *DNSSECKeyDSRecord `json:"dsRecord,omitempty"`
 }
 
@@ -109,4 +112,39 @@ type DNSSECKeyDSRecord struct {
 	Algorithm  int64  `json:"algorithm,string"`
 	DigestType int64  `json:"digestType,string"`
 	Digest     string `json:"digest"`
+}
+
+type CDNDNSSECGenerateReq struct {
+	// Key is the CDN name, as documented in the API documentation.
+	Key *string `json:"key"`
+	// Name is the CDN domain, as documented in the API documentation.
+	Name              *string `json:"name"`
+	TTL               *uint64 `json:"ttl,string"`
+	KSKExpirationDays *uint64 `json:"kskExpirationDays,string"`
+	ZSKExpirationDays *uint64 `json:"zskExpirationDays,string"`
+	EffectiveDateUnix *int64  `json:"effectiveDate"`
+}
+
+func (r CDNDNSSECGenerateReq) Validate(tx *sql.Tx) error {
+	errs := []string{}
+	if r.Key == nil {
+		errs = append(errs, "key (cdn name) must be set")
+	}
+	if r.Name == nil {
+		errs = append(errs, "name (cdn domain name) must be set")
+	}
+	if r.TTL == nil {
+		errs = append(errs, "ttl must be set")
+	}
+	if r.KSKExpirationDays == nil {
+		errs = append(errs, "kskExpirationDays must be set")
+	}
+	if r.ZSKExpirationDays == nil {
+		errs = append(errs, "zskExpirationDays must be set")
+	}
+	// effective date is optional
+	if len(errs) > 0 {
+		return errors.New("missing fields: " + strings.Join(errs, "; "))
+	}
+	return nil
 }
