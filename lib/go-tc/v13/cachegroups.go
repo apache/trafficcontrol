@@ -37,6 +37,7 @@ type CacheGroup struct {
 	ParentCachegroupID          int          `json:"parentCachegroupId" db:"parent_cachegroup_id"`
 	SecondaryParentName         string       `json:"secondaryParentCachegroupName"`
 	SecondaryParentCachegroupID int          `json:"secondaryParentCachegroupId" db:"secondary_parent_cachegroup_id"`
+	FallbackToClosest           bool         `json:"fallbackToClosest" db:"fallback_to_closest`
 	Type                        string       `json:"typeName" db:"type_name"` // aliased to type_name to disambiguate struct scans due to join on 'type' table
 	TypeID                      int          `json:"typeId" db:"type_id"`     // aliased to type_id to disambiguate struct scans due join on 'type' table
 	LastUpdated                 tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
@@ -52,6 +53,7 @@ type CacheGroupNullable struct {
 	ParentCachegroupID          *int          `json:"parentCachegroupId" db:"parent_cachegroup_id"`
 	SecondaryParentName         *string       `json:"secondaryParentCachegroupName"`
 	SecondaryParentCachegroupID *int          `json:"secondaryParentCachegroupId" db:"secondary_parent_cachegroup_id"`
+	FallbackToClosest           *bool         `json:"fallbackToClosest" db:"fallback_to_closest"`
 	Type                        *string       `json:"typeName" db:"type_name"` // aliased to type_name to disambiguate struct scans due to join on 'type' table
 	TypeID                      *int          `json:"typeId" db:"type_id"`     // aliased to type_id to disambiguate struct scans due join on 'type' table
 	LastUpdated                 *tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
