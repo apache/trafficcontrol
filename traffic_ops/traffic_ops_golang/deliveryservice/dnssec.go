@@ -26,7 +26,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
@@ -34,75 +33,70 @@ import (
 	"github.com/miekg/dns"
 )
 
-func createDNSSecKeys(tx *sql.Tx, cfg config.Config, dsID int, xmlID string, cdnName string, cdnDomain string, dnssecEnabled bool, exampleURLs []string) error {
-	if !dnssecEnabled {
-		return nil
-	}
-
+func PutDNSSecKeys(tx *sql.Tx, cfg *config.Config, xmlID string, cdnName string, exampleURLs []string) error {
 	keys, ok, err := riaksvc.GetDNSSECKeys(cdnName, tx, cfg.RiakAuthOptions)
 	if err != nil {
-		log.Errorln("Getting DNSSec keys from Riak: " + err.Error())
 		return errors.New("getting DNSSec keys from Riak: " + err.Error())
-	}
-	if !ok {
-		log.Errorln("Getting DNSSec keys from Riak: no DNSSec keys found")
+	} else if !ok {
 		return errors.New("getting DNSSec keys from Riak: no DNSSec keys found")
 	}
-
 	cdnKeys, ok := keys[cdnName]
 	// TODO warn and continue?
 	if !ok {
-		log.Errorln("Getting DNSSec keys from Riak: no DNSSec keys for CDN '" + cdnName + "'")
 		return errors.New("getting DNSSec keys from Riak: no DNSSec keys for CDN")
 	}
-	if len(cdnKeys.ZSK) == 0 {
-		log.Errorln("Getting DNSSec keys from Riak: no DNSSec ZSK keys for CDN '" + cdnName + "'")
-		return errors.New("getting DNSSec keys from Riak: no DNSSec ZSK keys for CDN")
-	}
-	if len(cdnKeys.KSK) == 0 {
-		log.Errorln("Getting DNSSec keys from Riak: no DNSSec ZSK keys for CDN '" + cdnName + "'")
-		return errors.New("getting DNSSec keys from Riak: no DNSSec ZSK keys for CDN")
-	}
-
-	kExpDays := getKeyExpirationDays(cdnKeys.KSK, dnssecDefaultKSKExpirationDays)
-	zExpDays := getKeyExpirationDays(cdnKeys.ZSK, dnssecDefaultZSKExpirationDays)
-	ttl := getKeyTTL(cdnKeys.KSK, dnssecDefaultTTL)
-	dsName, err := getDSDomainName(exampleURLs)
+	kExp := getKeyExpiration(cdnKeys.KSK, dnssecDefaultKSKExpiration)
+	zExp := getKeyExpiration(cdnKeys.ZSK, dnssecDefaultZSKExpiration)
+	overrideTTL := false
+	dsKeys, err := CreateDNSSECKeys(tx, cfg, xmlID, exampleURLs, cdnKeys, kExp, zExp, dnssecDefaultTTL, overrideTTL)
 	if err != nil {
-		log.Errorln("creating DS domain name: " + err.Error())
-		return errors.New("creating DS domain name: " + err.Error())
+		return errors.New("creating DNSSEC keys for delivery service '" + xmlID + "': " + err.Error())
 	}
-	inception := time.Now()
-	zExpiration := inception.Add(time.Duration(zExpDays) * time.Hour * 24)
-	kExpiration := inception.Add(time.Duration(kExpDays) * time.Hour * 24)
-
-	tld := false
-	effectiveDate := inception
-	zsk, err := getDNSSECKeys(dnssecZSKType, dsName, ttl, inception, zExpiration, dnssecKeyStatusNew, effectiveDate, tld)
-	if err != nil {
-		log.Errorln("getting DNSSEC keys for ZSK: " + err.Error())
-		return errors.New("getting DNSSEC keys for ZSK: " + err.Error())
-	}
-	ksk, err := getDNSSECKeys(dnssecKSKType, dsName, ttl, inception, kExpiration, dnssecKeyStatusNew, effectiveDate, tld)
-	if err != nil {
-		log.Errorln("getting DNSSEC keys for KSK: " + err.Error())
-		return errors.New("getting DNSSEC keys for KSK: " + err.Error())
-	}
-	keys[xmlID] = tc.DNSSECKeySet{ZSK: []tc.DNSSECKey{zsk}, KSK: []tc.DNSSECKey{ksk}}
-
+	keys[xmlID] = dsKeys
 	if err := riaksvc.PutDNSSECKeys(keys, cdnName, tx, cfg.RiakAuthOptions); err != nil {
-		log.Errorln("putting Riak DNSSEC keys: " + err.Error())
 		return errors.New("putting Riak DNSSEC keys: " + err.Error())
 	}
 	return nil
 }
 
-func getDNSSECKeys(keyType string, dsName string, ttl uint64, inception time.Time, expiration time.Time, status string, effectiveDate time.Time, tld bool) (tc.DNSSECKey, error) {
+// CreateDNSSECKeys creates DNSSEC keys for the given delivery service, updating existing keys if they exist. The overrideTTL parameter determines whether to reuse existing key TTLs if they exist, or to override existing TTLs with the ttl parameter's value.
+func CreateDNSSECKeys(tx *sql.Tx, cfg *config.Config, xmlID string, exampleURLs []string, cdnKeys tc.DNSSECKeySet, kskExpiration time.Duration, zskExpiration time.Duration, ttl time.Duration, overrideTTL bool) (tc.DNSSECKeySet, error) {
+	if len(cdnKeys.ZSK) == 0 {
+		return tc.DNSSECKeySet{}, errors.New("getting DNSSec keys from Riak: no DNSSec ZSK keys for CDN")
+	}
+	if len(cdnKeys.KSK) == 0 {
+		return tc.DNSSECKeySet{}, errors.New("getting DNSSec keys from Riak: no DNSSec ZSK keys for CDN")
+	}
+	if !overrideTTL {
+		ttl = getKeyTTL(cdnKeys.KSK, ttl)
+	}
+	dsName, err := GetDSDomainName(exampleURLs)
+	if err != nil {
+		return tc.DNSSECKeySet{}, errors.New("creating DS domain name: " + err.Error())
+	}
+	inception := time.Now()
+	zExpiration := inception.Add(zskExpiration)
+	kExpiration := inception.Add(kskExpiration)
+
+	tld := false
+	effectiveDate := inception
+	zsk, err := getDNSSECKeys(dnssecZSKType, dsName, ttl, inception, zExpiration, dnssecKeyStatusNew, effectiveDate, tld)
+	if err != nil {
+		return tc.DNSSECKeySet{}, errors.New("getting DNSSEC keys for ZSK: " + err.Error())
+	}
+	ksk, err := getDNSSECKeys(dnssecKSKType, dsName, ttl, inception, kExpiration, dnssecKeyStatusNew, effectiveDate, tld)
+	if err != nil {
+		return tc.DNSSECKeySet{}, errors.New("getting DNSSEC keys for KSK: " + err.Error())
+	}
+	return tc.DNSSECKeySet{ZSK: []tc.DNSSECKey{zsk}, KSK: []tc.DNSSECKey{ksk}}, nil
+}
+
+func getDNSSECKeys(keyType string, dsName string, ttl time.Duration, inception time.Time, expiration time.Time, status string, effectiveDate time.Time, tld bool) (tc.DNSSECKey, error) {
 	key := tc.DNSSECKey{
 		InceptionDateUnix:  inception.Unix(),
 		ExpirationDateUnix: expiration.Unix(),
 		Name:               dsName + ".",
-		TTLSeconds:         ttl,
+		TTLSeconds:         uint64(ttl / time.Second),
 		Status:             status,
 		EffectiveDateUnix:  effectiveDate.Unix(),
 	}
@@ -114,7 +108,7 @@ func getDNSSECKeys(keyType string, dsName string, ttl uint64, inception time.Tim
 
 // genKeys generates keys for DNSSEC for a delivery service. Returns the public key, private key, and DS record (which will be nil if ksk or tld is false).
 // This emulates the old Perl Traffic Ops behavior: the public key is of the RFC1035 single-line zone file format, base64 encoded; the private key is of the BIND private-key-file format, base64 encoded; the DSRecord contains the algorithm, digest type, and digest.
-func genKeys(dsName string, ksk bool, ttl uint64, tld bool) (string, string, *tc.DNSSECKeyDSRecord, error) {
+func genKeys(dsName string, ksk bool, ttl time.Duration, tld bool) (string, string, *tc.DNSSECKeyDSRecord, error) {
 	bits := 1024
 	flags := 256
 	algorithm := dns.RSASHA1 // 5 - http://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml
@@ -130,7 +124,7 @@ func genKeys(dsName string, ksk bool, ttl uint64, tld bool) (string, string, *tc
 			Name:   dsName,
 			Rrtype: dns.TypeDNSKEY,
 			Class:  dns.ClassINET,
-			Ttl:    uint32(ttl),
+			Ttl:    uint32(ttl / time.Second),
 		},
 		Flags:     uint16(flags),
 		Protocol:  uint8(protocol),
@@ -162,7 +156,8 @@ func genKeys(dsName string, ksk bool, ttl uint64, tld bool) (string, string, *tc
 const dnssecKSKType = "ksk"
 const dnssecZSKType = "zsk"
 
-func getDSDomainName(dsExampleURLs []string) (string, error) {
+func GetDSDomainName(dsExampleURLs []string) (string, error) {
+	// TODO move somewhere generic
 	if len(dsExampleURLs) == 0 {
 		return "", errors.New("no example URLs")
 	}
@@ -180,27 +175,26 @@ func getDSDomainName(dsExampleURLs []string) (string, error) {
 }
 
 const dnssecKeyStatusNew = "new"
-const secondsPerDay = 86400
-const dnssecDefaultKSKExpirationDays = 365
-const dnssecDefaultZSKExpirationDays = 30
+const dnssecDefaultKSKExpiration = time.Duration(365) * time.Hour * 24
+const dnssecDefaultZSKExpiration = time.Duration(30) * time.Hour * 24
 const dnssecDefaultTTL = 60
 
-func getKeyExpirationDays(keys []tc.DNSSECKey, defaultExpirationDays uint64) uint64 {
+func getKeyExpiration(keys []tc.DNSSECKey, defaultExpiration time.Duration) time.Duration {
 	for _, key := range keys {
 		if key.Status != dnssecKeyStatusNew {
 			continue
 		}
-		return uint64((key.ExpirationDateUnix - key.InceptionDateUnix) / secondsPerDay)
+		return time.Duration(key.ExpirationDateUnix-key.InceptionDateUnix) * time.Second
 	}
-	return defaultExpirationDays
+	return defaultExpiration
 }
 
-func getKeyTTL(keys []tc.DNSSECKey, defaultTTL uint64) uint64 {
+func getKeyTTL(keys []tc.DNSSECKey, defaultTTL time.Duration) time.Duration {
 	for _, key := range keys {
 		if key.Status != dnssecKeyStatusNew {
 			continue
 		}
-		return key.TTLSeconds
+		return time.Duration(key.TTLSeconds) * time.Second
 	}
 	return defaultTTL
 }
