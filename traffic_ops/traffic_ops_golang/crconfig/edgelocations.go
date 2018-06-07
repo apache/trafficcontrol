@@ -32,7 +32,7 @@ func makeLocations(cdn string, db *sql.DB) (map[string]tc.CRConfigLatitudeLongit
 
 	// TODO test whether it's faster to do a single query, joining lat/lon into servers
 	q := `
-select cg.name, cg.id, t.name as type, cg.latitude, cg.longitude from cachegroup as cg
+select cg.name, cg.id, t.name as type, cg.latitude, cg.longitude, cg.fallback_to_closest from cachegroup as cg
 inner join server as s on s.cachegroup = cg.id
 inner join type as t on t.id = s.type
 inner join status as st ON st.id = s.status
@@ -51,8 +51,9 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 		cachegroup := ""
 		primaryCacheID := 0
 		ttype := ""
+		var fallbackToClosest *bool
 		latlon := tc.CRConfigLatitudeLongitude{}
-		if err := rows.Scan(&cachegroup, &primaryCacheID, &ttype, &latlon.Lat, &latlon.Lon); err != nil {
+		if err := rows.Scan(&cachegroup, &primaryCacheID, &ttype, &latlon.Lat, &latlon.Lon, &fallbackToClosest); err != nil {
 			return nil, nil, errors.New("Error scanning cachegroup: " + err.Error())
 		}
 		if ttype == RouterTypeName {
@@ -68,6 +69,14 @@ and cachegroup_fallbacks.primary_cg = $1
 				return nil, nil, errors.New("Error retrieving from cachegroup_fallbacks: " + err.Error())
 			}
 			defer dbRows.Close()
+
+
+			if fallbackToClosest == nil {
+				fallbackToClosest = new(bool)
+				*fallbackToClosest = true
+
+			}
+			latlon.BackupLocations.FallbackToClosest = *fallbackToClosest
 
 			index := 0
 			for dbRows.Next() {
