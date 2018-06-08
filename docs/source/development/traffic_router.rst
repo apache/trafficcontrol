@@ -51,7 +51,7 @@ Traffic Router Project Tree Overview
 
 		* ``src/main`` - Main source directory for Traffic Router Core
 
-			* ``etc/systemd/system/traffic_router.service`` - Unit script for launching the Traffic Router with Tomcat
+			* ``lib/systemd/system/traffic_router.service`` - Unit script for launching the Traffic Router with Tomcat
 			* ``conf/`` - All of the required configuration files for running the traffic_router web application, including those needed for Tomcat
 			* ``java/`` - Java source code for Traffic Router Core
 			* ``resources/`` - Resources pulled in during an RPM build
@@ -139,7 +139,11 @@ Test Cases
 
 RPM Packaging
 =============
-Running ``mvn package`` on a Linux based distribution will trigger the build process to create the Traffic Router rpm and the Traffic Router .war file, but will not run the integration tests.
+Running ``mvn package`` on a Linux based distribution will trigger the build process to create the Traffic Router rpm and the Traffic Router .war file, but will not run the integration tests, so it is a good way to update those artifacts quickly during development. But the prefered way to build the Traffic Router RPMs is to navigate to the root of the Traffic Control source tree and run:
+
+./pkg -v traffic_router_build
+
+This will create the traffic_router.rpm and the tomcat.rpm and copy them to the ./dist directory.
 
 API
 ===

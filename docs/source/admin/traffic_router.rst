@@ -118,6 +118,9 @@ Configuration files
 |                            +-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
 |                            | cache.config.json.refresh.period          | The interval in milliseconds which Traffic Router will poll for a new CRConfig                      | 60000                                             |
 +----------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
+| startup.properties         | various parameters                        | This configuration is used by systemctl to set environment variables when the traffic_router        |                                                   | 
+|                            |                                           | service is started. It primarily consists of command line settings for the Java process.            | N/A                                               |
++----------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
 | log4j.properties           | various parameters                        | Configuration of log4j is documented on their site; adjust as necessary based on needs              | N/A                                               |
 +----------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
 | server.xml                 | various parameters                        | Traffic Router specific configuration for Apache Tomcat. See Apache Tomcat documentation.           | N/A                                               |
@@ -580,18 +583,18 @@ While it is running it is suggested that you monitor your Traffic Router nodes f
 Tuning Recommendations
 ======================
 
-The following is an example of /opt/traffic_router/bin/setenv.sh that has been tested on a multi core server running under HTTPS load test requests.
+The following is an example of the command line parameters set in /opt/traffic_router/conf/startup.properties that has been tested on a multi core server running under HTTPS load test requests.
 This is following the general recommendation to use the G1 garbage collector for JVM applications running on multi core machines.
 In addition to using the G1 garbage collector the InitiatingHeapOccupancyPercent was lowered to run garbage collection more frequently which
-improved overall throughput for Traffic Router and reduced 'Stop the World' garbage collection. Note that setting the min and max heap settings
-in setenv.sh will override init scripts in /etc/systemd/system/traffic_router.service.
+improved overall throughput for Traffic Router and reduced 'Stop the World' garbage collection. Note that any environment variable settings in this file will override those 
+set in /lib/systemd/system/traffic_router.service.
 
-  /opt/traffic_router/bin/setenv.sh::
+  /opt/traffic_router/conf/startup.properties::
 
-
-      #! /bin/sh
-      export CATALINA_OPTS="$CATALINA_OPTS -server"
-      export CATALINA_OPTS="$CATALINA_OPTS -Xms2g -Xmx2g"
-      export CATALINA_OPTS="$CATALINA_OPTS -XX:+UseG1GC"
-      export CATALINA_OPTS="$CATALINA_OPTS -XX:+UnlockExperimentalVMOptions"
-      export CATALINA_OPTS="$CATALINA_OPTS -XX:InitiatingHeapOccupancyPercent=30"
+	CATALINA_OPTS="\
+  	-server -Xms2g -Xmx8g \
+  	-Dlog4j.configuration=file://$CATALINA_BASE/conf/log4j.properties \
+  	-Djava.library.path=/usr/lib64 \
+  	-XX:+UseG1GC \
+  	-XX:+UnlockExperimentalVMOptions \
+  	-XX:InitiatingHeapOccupancyPercent=30"
