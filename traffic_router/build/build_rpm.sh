@@ -55,8 +55,8 @@ function buildRpmTrafficRouter () {
 
 	installDnsSec
 
-	export STARTUP_SCRIPT_DIR="/etc/systemd/system"
-	export STARTUP_SCRIPT_LOC="../core/src/main/etc/systemd/system"
+	export STARTUP_SCRIPT_DIR="/lib/systemd/system"
+	export STARTUP_SCRIPT_LOC="../core/src/main/lib/systemd/system"
 
 	cd "$TR_DIR" || { echo "Could not cd to $TR_DIR: $?"; exit 1; }
 	export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}

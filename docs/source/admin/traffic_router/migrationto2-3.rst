@@ -37,7 +37,7 @@ System Requirements
 * JDK >= 8.0 installed or available in Yum repository
 * APR (Apache Portable Runtime) >= 1.4.8-3 installed or available in Yum repository
 * Tomcat Native >= 1.2.16 installed or available in Yum repository
-* tomcat >= 8.5-28 installed or available in Yum repository (This package is created automatically by the Traffic Router build process)
+* tomcat >= 8.5-30 installed or available in Yum repository (This package is created automatically by the Traffic Router build process)
 
 Upgrade Procedure
 ==========================
@@ -58,7 +58,7 @@ This will first cause the apr, tomcat-native, jdk and tomcat packages to be inst
 
 Restore Property Files
 ------------------------------
-The install process does not override or replace any of the files in the /opt/traffic_router/conf directory. Previous versions of the traffic_ops.properties and traffic_monitor.properties should still be good. On a new install replace the Traffic Router properties files with the correct ones for the CDN. 
+The install process does not override or replace any of the files in the /opt/traffic_router/conf directory. Previous versions of the traffic_ops.properties, traffic_monitor.properties and startup.properties should still be good. On a new install replace the Traffic Router properties files with the correct ones for the CDN. 
 
 Development Environment Upgrade
 ===============================
