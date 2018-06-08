@@ -91,3 +91,25 @@ services:
     volumes:
       - ../../..:/trafficcontrol:z
     command: ['-f', '/trafficcontrol/dist/weasel.txt', '/trafficcontrol']
+
+  ats_build:
+    image: ats_builder
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-ats
+      context: ../../..
+    environment:
+      - ts_git_branch=7.1.x
+      - ts_version=7.1.3
+    volumes:
+      - ../../..:/trafficcontrol:z
+
+  astats_build:
+    image: astats_builder
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-astats
+      context: ../../..
+    environment:
+      - ts_git_branch=7.1.x
+      - ts_version=7.1.3
+    volumes:
+      - ../../..:/trafficcontrol:z

@@ -19,25 +19,23 @@
 %global install_prefix "/opt"
 
 Name:		trafficserver
-Version:	5.2.0
-Release:	1%{?dist}
+Version:	%{traffic_control_version}
+Release:	%{build_number}
 Summary:	Apache Traffic Server
-Vendor:		Comcast
+Vendor:		Apache Traffic Control
 Group:		Applications/Communications
 License:	Apache License, Version 2.0
 URL:		http://trafficserver.apache.org/
-Source0:        %{name}-%{version}.tar.bz2
-Patch:		%{name}-%{version}-791ddc4.patch
+Source0:        %{name}-%{version}.tgz
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 Requires:	tcl, hwloc, pcre, openssl, libcap
 BuildRequires:	autoconf, automake, libtool, gcc-c++, glibc-devel, openssl-devel, expat-devel, pcre, libcap-devel, pcre-devel, perl-ExtUtils-MakeMaker, tcl-devel, hwloc-devel
 
 %description
-Apache Traffic Server with Comcast modifications and environment specific modifications
+Apache Traffic Server built via Traffic Control Docker Build Process
 
 %prep
 %setup
-%patch -p1
 autoreconf -vfi
 
 %build
@@ -55,7 +53,10 @@ cp $RPM_BUILD_DIR/%{name}-%{version}/rc/trafficserver $RPM_BUILD_ROOT/etc/init.d
 rm -rf $RPM_BUILD_ROOT
 
 %pre
-id ats &>/dev/null || /usr/sbin/useradd -u 176 -r ats -s /sbin/nologin -d /
+getent group ats >/dev/null || groupadd -r ats
+getent passwd ats >/dev/null || \
+useradd -r  -g ats -d / -s /sbin/nologin \
+    -c "Apache Traffic Server" ats &>/dev/null
 
 %post
 chkconfig --add %{name}
@@ -83,7 +84,6 @@ fi
 /opt/trafficserver/bin
 /opt/trafficserver/include
 /opt/trafficserver/lib
-/opt/trafficserver/lib64
 /opt/trafficserver/libexec
 /opt/trafficserver/share
 %dir /opt/trafficserver/var
@@ -99,10 +99,8 @@ fi
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/cluster.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/congestion.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/hosting.config
-%config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/icp.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/ip_allow.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/log_hosts.config
-%config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/logs_xml.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/parent.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/plugin.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/records.config
@@ -111,8 +109,7 @@ fi
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/splitdns.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/ssl_multicert.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/storage.config
-%config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/update.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/vaddrs.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/volume.config
-%config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/prefetch.config
-%config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/stats.config.xml
+%config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/metrics.config
+%config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/logging.config
