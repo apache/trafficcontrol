@@ -79,3 +79,22 @@ func (i *JSONIntStr) UnmarshalJSON(d []byte) error {
 	*i = JSONIntStr(di)
 	return nil
 }
+
+// BytesLenSplit splits the given byte array into an n-length arrays. If n > len(s), returns a slice with a single []byte containing all of s. If n <= 0, returns an empty slice.
+func BytesLenSplit(s []byte, n int) [][]byte {
+	ss := [][]byte{}
+	if n <= 0 {
+		return ss
+	}
+	if n > len(s) {
+		n = len(s)
+	}
+	for i := 0; i+n <= len(s); i += n {
+		ss = append(ss, s[i:i+n])
+	}
+	rem := len(s) % n
+	if rem != 0 {
+		ss = append(ss, s[n*(len(s)/n):])
+	}
+	return ss
+}
