@@ -202,7 +202,7 @@ func create(db *sql.DB, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 	if err != nil {
 		if pqerr, ok := err.(*pq.Error); ok {
 			err, _ := dbhelpers.ParsePQUniqueConstraintError(pqerr)
-			return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("a delivery service with " + err.Error())
+			return tc.DeliveryServiceNullableV13{}, http.StatusBadRequest, errors.New("a delivery service with " + err.Error()), nil
 		}
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("inserting ds: " + err.Error())
 	}
