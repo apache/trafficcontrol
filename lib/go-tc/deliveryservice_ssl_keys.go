@@ -17,11 +17,10 @@ package tc
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
-	"fmt"
-	"strconv"
 	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 // DeliveryServiceSSLKeysResponse ...
@@ -47,45 +46,78 @@ type DeliveryServiceSSLKeys struct {
 	Country         string                            `json:"country,omitempty"`
 	State           string                            `json:"state,omitempty"`
 	Key             string                            `json:"key"`
-	Version         int                               `json:"version"`
+	Version         string                            `json:"version"`
 	Certificate     DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
 }
 
-/*
- * The DeliveryServicesSSLKeys are stored in RIAK as JSON.
- * It was found that the "Version" field has been written to
- * RIAK as both a string numeral enclosed in quotes ie,
- *	"version: "1"
- * and sometimes as an integer ie,
- *	"version: 1
- * In order to deal with this problem, a custom Unmarshal() workaround
- * is used, see below.
- *
- */
-func (v *DeliveryServiceSSLKeys) UnmarshalJSON(b []byte) (err error) {
-	type Alias DeliveryServiceSSLKeys
-	o := &struct {
-		Version interface{} `json:"version"`
-		*Alias
-	}{
-		Alias: (*Alias)(v),
+type DeliveryServiceSSLKeysReq struct {
+	CDN             *string `json:"cdn,omitempty"`
+	DeliveryService *string `json:"deliveryservice,omitempty"`
+	BusinessUnit    *string `json:"businessUnit,omitempty"`
+	City            *string `json:"city,omitempty"`
+	Organization    *string `json:"organization,omitempty"`
+	HostName        *string `json:"hostname,omitempty"`
+	Country         *string `json:"country,omitempty"`
+	State           *string `json:"state,omitempty"`
+	// Key is the XMLID of the delivery service
+	Key         *string                            `json:"key"`
+	Version     *string                            `json:"version"`
+	Certificate *DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
+}
+
+func (r *DeliveryServiceSSLKeysReq) Sanitize() {
+	// DeliveryService and Key are the same value, so if the user sent one but not the other, set the missing one, in the principle of "be liberal in what you accept."
+	if r.DeliveryService == nil && r.Key != nil {
+		k := *r.Key // sqlx fails with aliased pointers, so make a new one
+		r.DeliveryService = &k
+	} else if r.Key == nil && r.DeliveryService != nil {
+		k := *r.DeliveryService // sqlx fails with aliased pointers, so make a new one
+		r.Key = &k
 	}
-	if err = json.Unmarshal(b, &o); err == nil {
-		switch t := o.Version.(type) {
-		case float64:
-			v.Version = int(t)
-			break
-		case int:
-			v.Version = t
-			break
-		case string:
-			v.Version, err = strconv.Atoi(t)
-			break
-		default:
-			err = fmt.Errorf("Version field is an unandled type: %T", t)
-		}
+	if r.Version == nil {
+		r.Version = util.StrPtr("")
 	}
-	return err
+}
+
+func (r *DeliveryServiceSSLKeysReq) Validate(tx *sql.Tx) error {
+	r.Sanitize()
+	errs := []string{}
+	if r.CDN == nil {
+		errs = append(errs, "cdn required")
+	}
+	if r.Key == nil {
+		errs = append(errs, "key required")
+	}
+	if r.DeliveryService == nil {
+		errs = append(errs, "deliveryservice required")
+	}
+	if r.Key != nil && r.DeliveryService != nil && *r.Key != *r.DeliveryService {
+		errs = append(errs, "deliveryservice and key must match")
+	}
+	if r.BusinessUnit == nil {
+		errs = append(errs, "businessUnit required")
+	}
+	if r.City == nil {
+		errs = append(errs, "city required")
+	}
+	if r.Organization == nil {
+		errs = append(errs, "organization required")
+	}
+	if r.HostName == nil {
+		errs = append(errs, "hostname required")
+	}
+	if r.Country == nil {
+		errs = append(errs, "country required")
+	}
+	if r.State == nil {
+		errs = append(errs, "state required")
+	}
+	// version is optional
+	// certificate is optional
+	if len(errs) > 0 {
+		return errors.New("missing fields: " + strings.Join(errs, "; "))
+	}
+	return nil
 }
 
 type RiakPingResp struct {

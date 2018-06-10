@@ -32,18 +32,21 @@ import (
 
 const DeliveryServiceSSLKeysBucket = "ssl"
 const DNSSECKeysBucket = "dnssec"
+const DefaultDSSSLKeyVersion = "latest"
+
+func MakeDSSSLKeyKey(dsName, version string) string {
+	if version == "" {
+		version = DefaultDSSSLKeyVersion
+	}
+	return dsName + "-" + version
+}
 
 func GetDeliveryServiceSSLKeysObj(xmlID string, version string, tx *sql.Tx, authOpts *riak.AuthOptions) (tc.DeliveryServiceSSLKeys, bool, error) {
 	key := tc.DeliveryServiceSSLKeys{}
-	if version == "" {
-		xmlID += "-latest"
-	} else {
-		xmlID += "-" + version
-	}
 	found := false
 	err := WithClusterTx(tx, authOpts, func(cluster StorageCluster) error {
 		// get the deliveryservice ssl keys by xmlID and version
-		ro, err := FetchObjectValues(xmlID, DeliveryServiceSSLKeysBucket, cluster)
+		ro, err := FetchObjectValues(MakeDSSSLKeyKey(xmlID, version), DeliveryServiceSSLKeysBucket, cluster)
 		if err != nil {
 			return err
 		}
@@ -103,7 +106,7 @@ func PutDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, aut
 			ContentType:     "text/json",
 			Charset:         "utf-8",
 			ContentEncoding: "utf-8",
-			Key:             key.DeliveryService,
+			Key:             MakeDSSSLKeyKey(key.DeliveryService, key.Version),
 			Value:           []byte(keyJSON),
 		}
 		if err = SaveObject(obj, DeliveryServiceSSLKeysBucket, cluster); err != nil {
@@ -124,7 +127,7 @@ func PutDeliveryServiceSSLKeysObjTx(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, a
 			ContentType:     "text/json",
 			Charset:         "utf-8",
 			ContentEncoding: "utf-8",
-			Key:             key.DeliveryService,
+			Key:             MakeDSSSLKeyKey(key.DeliveryService, key.Version),
 			Value:           []byte(keyJSON),
 		}
 		if err = SaveObject(obj, DeliveryServiceSSLKeysBucket, cluster); err != nil {
