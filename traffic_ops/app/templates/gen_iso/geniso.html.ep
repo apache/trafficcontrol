@@ -66,6 +66,7 @@ $(function () {
 												$("#mgmt_ip_netmask").val(newvalues.response[0].mgmtIpNetmask);
 												$("#mgmt_ip_gateway").val(newvalues.response[0].mgmtIpGateway);
 												$("#mgmt_interface").val(newvalues.response[0].mgmtInterface);
+												$("#stream").val("yes");
 											}
 										);
 									});
@@ -184,6 +185,16 @@ $(function () {
 									<td>Specify disk for OS install:</td>
 									<td><input type="text" size=45 id="ondisk" name="ondisk"/ value="sda"></td>
 									<td>Optional. Typical values are "sda".</td>
+								</tr>
+								<tr>
+									<td>Stream ISO:</td>
+									<td>
+										<select id="stream" name=stream>
+											<option>yes</option>
+											<option>no</option>
+										</select>
+									</td>
+									<td>If no, download link will be provided</td>
 								</tr>
 							</table>
 							<input class="button" type="submit" value="Generate ISO"/>
