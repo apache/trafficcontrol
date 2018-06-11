@@ -105,6 +105,7 @@ sub generate_iso {
 	my $mgmt_ip_netmask = $params->{mgmtIpNetmask};
 	my $mgmt_ip_gateway = $params->{mgmtIpGateway};
 	my $mgmt_interface 	= $params->{mgmtInterface};
+	my $stream          = $params->{stream};
 
 	#The API has hostname and domainName, the UI does not
 	my $fqdn = $hostname;
@@ -203,6 +204,11 @@ sub generate_iso {
 
 	my $cmd =
 		"mkisofs -o $iso_file_path -joliet-long -input-charset utf-8 -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -v -T $dir";
+
+	if ( $stream eq 'yes' ) {
+		$cmd = "mkisofs -joliet-long -input-charset utf-8 -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -v -T $dir";
+	}
+
 	my $type = "default";
 	my $custom_cmd = sprintf( "%s/%s", $dir, "generate" );
 
@@ -223,19 +229,28 @@ sub generate_iso {
 	print STUF "$cmd\n";
 	close STUF;
 
-	$self->app->log->info( "Writing ISO: " . $iso_file_path );
-	my $output = `$cmd 2>&1` || die("Error executing $cmd:");
-	$self->app->log->info($output);
+	my $response = {};
 
-	&log( $self, "ISO created [ " . $osversion_dir . " ] for " . $fqdn, "APICHANGE" );
+	if ( $stream eq 'no' ) {
+		$self->app->log->info("Writing ISO: " . $iso_file_path);
+		my $output = `$cmd 2>&1` || die("Error executing $cmd:");
+		$self->app->log->info($output);
 
-	my $iso_url = join( "/", $config->{'to'}{'base_url'}, $iso_dir, $iso_file_name );
+		&log($self, "ISO created [ " . $osversion_dir . " ] for " . $fqdn, "APICHANGE");
 
-	my $response = {
-		isoName => $iso_file_name,
-		isoURL => $iso_url,
-	};
+		my $iso_url = join("/", $config->{'to'}{'base_url'}, $iso_dir, $iso_file_name);
 
+		$response = {
+			isoName => $iso_file_name,
+			isoURL  => $iso_url,
+		};
+	}
+	else {
+		$self->res->headers->content_type("application/download");
+		$self->res->headers->content_disposition("attachment; filename=\"$iso_file_name\"");
+		my $data = `$cmd`;
+		$self->render( data => $data );
+	}
 	return $response;
 }
 
