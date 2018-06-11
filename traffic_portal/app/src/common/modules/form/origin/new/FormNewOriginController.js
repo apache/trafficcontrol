@@ -24,8 +24,6 @@ var FormNewOriginController = function(origin, $scope, $controller, $anchorScrol
 
 	$scope.originName = 'New';
 
-	$scope.isPrimary = "false";
-
 	$scope.settings = {
 		isNew: true,
 		saveLabel: 'Create'

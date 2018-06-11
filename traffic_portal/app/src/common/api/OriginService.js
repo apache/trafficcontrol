@@ -31,7 +31,7 @@ var OriginService = function($http, $q, Restangular, locationUtils, messageModel
 				function(response) {
                     messageModel.setMessages(response.data.alerts, true);
                     locationUtils.navigateToPath('/origins');
-					request.resolve(result);
+					request.resolve(response);
 				},
 				function(fault) {
                     messageModel.setMessages(fault.data.alerts, false)

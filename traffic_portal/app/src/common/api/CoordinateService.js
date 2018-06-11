@@ -31,7 +31,7 @@ var CoordinateService = function($http, $q, Restangular, locationUtils, messageM
 				function(response) {
                     messageModel.setMessages(response.data.alerts, true);
                     locationUtils.navigateToPath('/coordinates');
-					request.resolve(result);
+					request.resolve(response);
 				},
 				function(fault) {
                     messageModel.setMessages(fault.data.alerts, false)
