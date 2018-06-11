@@ -104,6 +104,9 @@ func sanitizeV12(ds *tc.DeliveryServiceNullableV12) {
 	if ds.MidHeaderRewrite != nil && strings.TrimSpace(*ds.MidHeaderRewrite) == "" {
 		ds.MidHeaderRewrite = nil
 	}
+	if ds.RoutingName == nil || *ds.RoutingName == "" {
+		ds.RoutingName = utils.StrPtr(tc.DefaultRoutingName)
+	}
 }
 
 // getDSTenantIDByID returns the tenant ID, whether the delivery service exists, and any error.
@@ -343,10 +346,6 @@ func CreateV12(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
 			api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 			return
-		}
-
-		if ds.RoutingName == nil || *ds.RoutingName == "" {
-			ds.RoutingName = utils.StrPtr("cdn")
 		}
 
 		if errs := validateV12(db, &ds); len(errs) > 0 {

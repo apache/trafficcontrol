@@ -21,6 +21,8 @@ import (
    limitations under the License.
 */
 
+const DefaultRoutingName = "cdn"
+
 //
 // GetDeliveryServiceResponse is deprecated use DeliveryServicesResponse...
 type GetDeliveryServiceResponse struct {
@@ -107,7 +109,7 @@ type DeliveryService struct {
 	RoutingName          string                 `json:"routingName"`
 	SigningAlgorithm     string                 `json:"signingAlgorithm" db:"signing_algorithm"`
 	TypeID               int                    `json:"typeId"`
-	Type                 string                 `json:"type"`
+	Type                 DSType                 `json:"type"`
 	TRResponseHeaders    string                 `json:"trResponseHeaders"`
 	TenantID             int                    `json:"tenantId,omitempty"`
 	XMLID                string                 `json:"xmlId"`
@@ -184,7 +186,7 @@ type DeliveryServiceNullable struct {
 	Signed               bool                    `json:"signed"`
 	SSLKeyVersion        *int                    `json:"sslKeyVersion" db:"ssl_key_version"`
 	TenantID             *int                    `json:"tenantId" db:"tenant_id"`
-	Type                 *string                 `json:"type"`
+	Type                 *DSType                 `json:"type"`
 	TypeID               *int                    `json:"typeId" db:"type"`
 	XMLID                *string                 `json:"xmlId" db:"xml_id"`
 	ExampleURLs          []string                `json:"exampleURLs"`
@@ -224,9 +226,9 @@ func (d *DeliveryServiceNullable) Scan(src interface{}) error {
 
 // DeliveryServiceMatch ...
 type DeliveryServiceMatch struct {
-	Type      string `json:"type"`
-	SetNumber int    `json:"setNumber"`
-	Pattern   string `json:"pattern"`
+	Type      DSMatchType `json:"type"`
+	SetNumber int         `json:"setNumber"`
+	Pattern   string      `json:"pattern"`
 }
 
 // DeliveryServiceAlert ...
