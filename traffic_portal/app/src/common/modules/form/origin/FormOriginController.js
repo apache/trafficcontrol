@@ -37,14 +37,16 @@ var FormOriginController = function(origin, $scope, $location, formUtils, locati
     };
 
     var getCacheGroups = function() {
-        cacheGroupService.getCacheGroups()
+        cacheGroupService.getCacheGroups({ orderby: 'name' })
             .then(function(result) {
-                $scope.cacheGroups = result;
+                $scope.cacheGroups = _.filter(result, function(cachegroup) {
+                    return cachegroup.typeName == 'ORG_LOC';
+                });
             });
     };
 
     var getCoordinates = function() {
-        coordinateService.getCoordinates()
+        coordinateService.getCoordinates({ orderby: 'name' })
             .then(function(result) {
                 $scope.coordinates = result;
             });
@@ -53,7 +55,7 @@ var FormOriginController = function(origin, $scope, $location, formUtils, locati
     var getDeliveryServices = function() {
         deliveryServiceService.getDeliveryServices()
             .then(function(result) {
-                $scope.deliveryServices = result;
+                $scope.deliveryServices =  _.sortBy(result, 'xmlId');
             });
     };
 
@@ -67,6 +69,11 @@ var FormOriginController = function(origin, $scope, $location, formUtils, locati
     $scope.tenantLabel = function(tenant) {
         return '-'.repeat(tenant.level) + ' ' + tenant.name;
     };
+
+    $scope.nullifyIfEmptyIP = function(origin) {
+        origin.ipAddress = origin.ipAddress == '' ? null : origin.ipAddress;
+        origin.ip6Address = origin.ip6Address == '' ? null : origin.ip6Address;
+    }
 
     $scope.navigateToPath = locationUtils.navigateToPath;
 

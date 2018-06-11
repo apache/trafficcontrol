@@ -26,8 +26,6 @@ var FormEditOriginController = function(origin, $scope, $state, $controller, $ui
 
 	$scope.originName = angular.copy($scope.origin.name);
 
-	$scope.isPrimary = angular.copy($scope.origin.isPrimary);
-
 	$scope.settings = {
 		isNew: false,
 		saveLabel: 'Update',
