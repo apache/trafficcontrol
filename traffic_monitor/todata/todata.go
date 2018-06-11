@@ -68,7 +68,7 @@ type TOData struct {
 	DeliveryServiceServers map[tc.DeliveryServiceName][]tc.CacheName
 	ServerDeliveryServices map[tc.CacheName][]tc.DeliveryServiceName
 	ServerTypes            map[tc.CacheName]tc.CacheType
-	DeliveryServiceTypes   map[tc.DeliveryServiceName]tc.DSType
+	DeliveryServiceTypes   map[tc.DeliveryServiceName]tc.DSTypeCategory
 	DeliveryServiceRegexes Regexes
 	ServerCachegroups      map[tc.CacheName]tc.CacheGroupName
 }
@@ -79,7 +79,7 @@ func New() *TOData {
 		DeliveryServiceServers: map[tc.DeliveryServiceName][]tc.CacheName{},
 		ServerDeliveryServices: map[tc.CacheName][]tc.DeliveryServiceName{},
 		ServerTypes:            map[tc.CacheName]tc.CacheType{},
-		DeliveryServiceTypes:   map[tc.DeliveryServiceName]tc.DSType{},
+		DeliveryServiceTypes:   map[tc.DeliveryServiceName]tc.DSTypeCategory{},
 		DeliveryServiceRegexes: NewRegexes(),
 		ServerCachegroups:      map[tc.CacheName]tc.CacheGroupName{},
 	}
@@ -279,16 +279,16 @@ func getServerTypes(crc CRConfig) (map[tc.CacheName]tc.CacheType, error) {
 	return serverTypes, nil
 }
 
-func getDeliveryServiceTypes(crc CRConfig) (map[tc.DeliveryServiceName]tc.DSType, error) {
-	dsTypes := map[tc.DeliveryServiceName]tc.DSType{}
+func getDeliveryServiceTypes(crc CRConfig) (map[tc.DeliveryServiceName]tc.DSTypeCategory, error) {
+	dsTypes := map[tc.DeliveryServiceName]tc.DSTypeCategory{}
 
 	for dsName, dsData := range crc.DeliveryServices {
 		if len(dsData.Matchsets) < 1 {
 			return nil, fmt.Errorf("CRConfig missing protocol for '%s'", dsName)
 		}
 		dsTypeStr := dsData.Matchsets[0].Protocol
-		dsType := tc.DSTypeFromString(dsTypeStr)
-		if dsType == tc.DSTypeInvalid {
+		dsType := tc.DSTypeCategoryFromString(dsTypeStr)
+		if dsType == tc.DSTypeCategoryInvalid {
 			return nil, fmt.Errorf("CRConfig unknowng protocol for '%s': '%s'", dsName, dsTypeStr)
 		}
 		dsTypes[dsName] = dsType

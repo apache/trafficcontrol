@@ -38,7 +38,6 @@ import (
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/utils"
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
@@ -155,10 +154,6 @@ func CreateV13(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		if ds.RoutingName == nil || *ds.RoutingName == "" {
-			ds.RoutingName = utils.StrPtr("cdn")
-		}
-
 		if errs := validateV13(db, &ds); len(errs) > 0 {
 			api.HandleErr(w, r, http.StatusBadRequest, errors.New("invalid request: "+util.JoinErrs(errs).Error()), nil)
 			return
@@ -228,7 +223,7 @@ func create(db *sql.DB, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 	if ds.TypeID == nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("missing type after insert")
 	}
-	dsType, err := getTypeNameFromID(*ds.TypeID, tx)
+	dsType, err := getTypeFromID(*ds.TypeID, tx)
 	if err != nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting delivery service type: " + err.Error())
 	}
@@ -316,11 +311,15 @@ WHERE ds.id=$1
 `
 	xmlID := ""
 	protocol := (*int)(nil)
-	dsType := ""
+	dsTypeStr := ""
 	routingName := ""
 	cdnDomain := ""
-	if err := tx.QueryRow(q, id).Scan(&xmlID, &protocol, &dsType, &routingName, &cdnDomain); err != nil {
+	if err := tx.QueryRow(q, id).Scan(&xmlID, &protocol, &dsTypeStr, &routingName, &cdnDomain); err != nil {
 		return "", fmt.Errorf("querying delivery service %v host name: "+err.Error()+"\n", id)
+	}
+	dsType := tc.DSTypeFromString(dsTypeStr)
+	if dsType == tc.DSTypeInvalid {
+		return "", errors.New("getting delivery services matchlist: got invalid delivery service type '" + dsTypeStr + "'")
 	}
 	matchLists, err := readGetDeliveryServicesMatchLists([]string{xmlID}, tx)
 	if err != nil {
@@ -337,13 +336,24 @@ WHERE ds.id=$1
 	return host, nil
 }
 
-func getTypeNameFromID(id int, tx *sql.Tx) (string, error) {
+func getTypeFromID(id int, tx *sql.Tx) (tc.DSType, error) {
 	// TODO combine with getOldHostName, to only make one query?
 	name := ""
 	if err := tx.QueryRow(`SELECT name FROM type WHERE id = $1`, id).Scan(&name); err != nil {
 		return "", fmt.Errorf("querying type ID %v: "+err.Error()+"\n", id)
 	}
-	return name, nil
+	return tc.DSTypeFromString(name), nil
+}
+
+func getDSType(tx *sql.Tx, xmlid string) (tc.DSType, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`SELECT name FROM type WHERE id = (select type from deliveryservice where xml_id = $1)`, xmlid).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, fmt.Errorf("querying deliveryservice type name: " + err.Error())
+	}
+	return tc.DSTypeFromString(name), true, nil
 }
 
 func UpdateV13(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
@@ -412,9 +422,21 @@ func update(db *sql.DB, cfg config.Config, user auth.CurrentUser, ds *tc.Deliver
 		return tc.DeliveryServiceNullableV13{}, http.StatusBadRequest, errors.New("missing id"), nil
 	}
 
-	oldHostName, err := getOldHostName(*ds.ID, tx)
+	dsType, ok, err := getDSType(tx, *ds.XMLID)
+	if !ok {
+		return tc.DeliveryServiceNullableV13{}, http.StatusNotFound, errors.New("delivery service '" + *ds.XMLID + "' not found"), nil
+	}
 	if err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting existing delivery service hostname: " + err.Error())
+		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting delivery service type during update: " + err.Error())
+	}
+
+	// oldHostName will be used to determine if SSL Keys need updating - this will be empty if the DS doesn't have SSL keys, because DS types without SSL keys may not have regexes, and thus will fail to get a host name.
+	oldHostName := ""
+	if dsType.HasSSLKeys() {
+		oldHostName, err = getOldHostName(*ds.ID, tx)
+		if err != nil {
+			return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting existing delivery service hostname: " + err.Error())
+		}
 	}
 
 	// TODO change DeepCachingType to implement sql.Valuer and sql.Scanner, so sqlx struct scan can be used.
@@ -462,20 +484,24 @@ func update(db *sql.DB, cfg config.Config, user auth.CurrentUser, ds *tc.Deliver
 	if ds.RoutingName == nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("missing routing name after update")
 	}
-	dsType, err := getTypeNameFromID(*ds.TypeID, tx)
+	newDSType, err := getTypeFromID(*ds.TypeID, tx)
 	if err != nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting delivery service type after update: " + err.Error())
 	}
-	ds.Type = &dsType
+	ds.Type = &newDSType
 
 	cdnDomain, err := getCDNDomain(*ds.ID, db) // need to get the domain again, in case it changed.
 	if err != nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting CDN domain after update: " + err.Error())
 	}
 
-	newHostName, err := getHostName(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
-	if err != nil {
-		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting hostname after update: " + err.Error())
+	// newHostName will be used to determine if SSL Keys need updating - this will be empty if the DS doesn't have SSL keys, because DS types without SSL keys may not have regexes, and thus will fail to get a host name.
+	newHostName := ""
+	if dsType.HasSSLKeys() {
+		newHostName, err = getHostName(ds.Protocol, *ds.Type, *ds.RoutingName, *ds.MatchList, cdnDomain)
+		if err != nil {
+			return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("getting hostname after update: " + err.Error())
+		}
 	}
 
 	matchLists, err := readGetDeliveryServicesMatchLists([]string{*ds.XMLID}, tx)
@@ -488,7 +514,7 @@ func update(db *sql.DB, cfg config.Config, user auth.CurrentUser, ds *tc.Deliver
 		ds.MatchList = &ml
 	}
 
-	if oldHostName != newHostName {
+	if newDSType.HasSSLKeys() && oldHostName != newHostName {
 		if err := updateSSLKeys(ds, newHostName, db, cfg); err != nil {
 			return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("updating delivery service " + *ds.XMLID + ": updating SSL keys: " + err.Error())
 		}
@@ -718,7 +744,7 @@ func updateSSLKeys(ds *tc.DeliveryServiceNullableV13, hostName string, db *sql.D
 }
 
 // getHostName gets the host name used for delivery service requests. The dsProtocol may be nil, if the delivery service type doesn't have a protocol (e.g. ANY_MAP).
-func getHostName(dsProtocol *int, dsType string, dsRoutingName string, dsMatchList []tc.DeliveryServiceMatch, cdnDomain string) (string, error) {
+func getHostName(dsProtocol *int, dsType tc.DSType, dsRoutingName string, dsMatchList []tc.DeliveryServiceMatch, cdnDomain string) (string, error) {
 	exampleURLs := makeExampleURLs(dsProtocol, dsType, dsRoutingName, dsMatchList, cdnDomain)
 
 	exampleURL := ""
@@ -735,7 +761,7 @@ func getHostName(dsProtocol *int, dsType string, dsRoutingName string, dsMatchLi
 	}
 
 	host := strings.NewReplacer(`http://`, ``, `https://`, ``).Replace(exampleURL)
-	if strings.HasPrefix(dsType, "HTTP") {
+	if dsType.IsHTTP() {
 		if firstDot := strings.Index(host, "."); firstDot == -1 {
 			host = "*" // TODO warn? error?
 		} else {
@@ -766,7 +792,7 @@ func getCDNNameDomainDNSSecEnabled(dsID int, tx *sql.Tx) (string, string, bool, 
 }
 
 // makeExampleURLs creates the example URLs for a delivery service. The dsProtocol may be nil, if the delivery service type doesn't have a protocol (e.g. ANY_MAP).
-func makeExampleURLs(protocol *int, dsType string, routingName string, matchList []tc.DeliveryServiceMatch, cdnDomain string) []string {
+func makeExampleURLs(protocol *int, dsType tc.DSType, routingName string, matchList []tc.DeliveryServiceMatch, cdnDomain string) []string {
 	examples := []string{}
 	scheme := ""
 	scheme2 := ""
@@ -787,13 +813,10 @@ func makeExampleURLs(protocol *int, dsType string, routingName string, matchList
 	} else {
 		scheme = "http"
 	}
-	dsIsDNS := strings.HasPrefix(strings.ToLower(dsType), "DNS")
+	dsIsDNS := dsType.IsDNS()
 	regexReplacer := strings.NewReplacer(`\`, ``, `.*`, ``, `.`, ``)
 	for _, match := range matchList {
-		switch {
-		case dsIsDNS:
-			fallthrough
-		case match.Type == `HOST_REGEXP`:
+		if dsIsDNS || match.Type == tc.DSMatchTypeHostRegex {
 			host := regexReplacer.Replace(match.Pattern)
 			if match.SetNumber == 0 {
 				examples = append(examples, scheme+`://`+routingName+`.`+host+`.`+cdnDomain)
@@ -806,7 +829,7 @@ func makeExampleURLs(protocol *int, dsType string, routingName string, matchList
 			if scheme2 != "" {
 				examples = append(examples, scheme2+`://`+match.Pattern)
 			}
-		case match.Type == `PATH_REGEXP`:
+		} else if match.Type == tc.DSMatchTypePathRegex {
 			examples = append(examples, match.Pattern)
 		}
 	}
@@ -831,9 +854,15 @@ WHERE ds.xml_id = ANY($1)
 	for rows.Next() {
 		m := tc.DeliveryServiceMatch{}
 		dsName := ""
-		if err := rows.Scan(&dsName, &m.Type, &m.Pattern, &m.SetNumber); err != nil {
+		matchTypeStr := ""
+		if err := rows.Scan(&dsName, &matchTypeStr, &m.Pattern, &m.SetNumber); err != nil {
 			return nil, errors.New("scanning delivery service regexes: " + err.Error())
 		}
+		matchType := tc.DSMatchTypeFromString(matchTypeStr)
+		if matchType == tc.DSMatchTypeInvalid {
+			return nil, errors.New("getting delivery service regexes: got invalid delivery service match type '" + matchTypeStr + "'")
+		}
+		m.Type = matchType
 		matches[dsName] = append(matches[dsName], m)
 	}
 	return matches, nil
@@ -846,8 +875,8 @@ const (
 	edgeTier
 )
 
-func ensureHeaderRewriteParams(tx *sql.Tx, dsID int, xmlID string, hdrRW *string, tier tierType, dsType string) error {
-	if tier == midTier && strings.Contains(dsType, "LIVE") && !strings.Contains(dsType, "NATNL") {
+func ensureHeaderRewriteParams(tx *sql.Tx, dsID int, xmlID string, hdrRW *string, tier tierType, dsType tc.DSType) error {
+	if tier == midTier && dsType.IsLive() && !dsType.IsNational() {
 		return nil // live local DSes don't get remap rules
 	}
 	configFile := "hdr_rw_" + xmlID + ".config"
