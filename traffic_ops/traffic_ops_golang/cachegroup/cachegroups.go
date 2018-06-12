@@ -314,6 +314,7 @@ func (cachegroup *TOCacheGroup) Read(db *sqlx.DB, parameters map[string]string, 
 		"id":        dbhelpers.WhereColumnInfo{"cachegroup.id", api.IsInt},
 		"name":      dbhelpers.WhereColumnInfo{"cachegroup.name", nil},
 		"shortName": dbhelpers.WhereColumnInfo{"short_name", nil},
+		"type":      dbhelpers.WhereColumnInfo{"cachegroup.type", nil},
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
