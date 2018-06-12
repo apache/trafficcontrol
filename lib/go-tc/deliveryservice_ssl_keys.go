@@ -187,3 +187,16 @@ func (r CDNDNSSECGenerateReq) Validate(tx *sql.Tx) error {
 }
 
 type URLSigKeys map[string]string
+
+type CDNSSLKeysResp []CDNSSLKey
+
+type CDNSSLKey struct {
+	DeliveryService string        `json:"deliveryservice"`
+	HostName        string        `json:"hostname"`
+	Certificate     CDNSSLKeyCert `json:"certificate"`
+}
+
+type CDNSSLKeyCert struct {
+	Crt string `json:"crt"`
+	Key string `json:"key"`
+}

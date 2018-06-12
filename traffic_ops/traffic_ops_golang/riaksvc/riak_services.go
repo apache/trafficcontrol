@@ -305,7 +305,6 @@ func GetRiakCluster(db *sql.DB, authOptions *riak.AuthOptions) (StorageCluster, 
 }
 
 func WithCluster(db *sql.DB, authOpts *riak.AuthOptions, f func(StorageCluster) error) error {
-	log.Errorf("DEBUG WithCluster authOps: %++v\n", authOpts)
 	cluster, err := GetRiakCluster(db, authOpts)
 	if err != nil {
 		return errors.New("getting riak cluster: " + err.Error())
@@ -322,7 +321,6 @@ func WithCluster(db *sql.DB, authOpts *riak.AuthOptions, f func(StorageCluster) 
 }
 
 func WithClusterX(db *sqlx.DB, authOpts *riak.AuthOptions, f func(StorageCluster) error) error {
-	log.Errorf("DEBUG WithCluster authOps: %++v\n", authOpts)
 	cluster, err := GetRiakCluster(db.DB, authOpts)
 	if err != nil {
 		return errors.New("getting riak cluster: " + err.Error())
@@ -351,7 +349,6 @@ func GetRiakClusterTx(tx *sql.Tx, authOptions *riak.AuthOptions) (StorageCluster
 }
 
 func WithClusterTx(tx *sql.Tx, authOpts *riak.AuthOptions, f func(StorageCluster) error) error {
-	log.Errorf("DEBUG WithCluster authOps: %++v\n", authOpts)
 	cluster, err := GetRiakClusterTx(tx, authOpts)
 	if err != nil {
 		return errors.New("getting riak cluster: " + err.Error())
@@ -384,4 +381,28 @@ func StopCluster(c StorageCluster) {
 	if err := c.Stop(); err != nil {
 		log.Errorln("stopping riak cluster: " + err.Error())
 	}
+}
+
+// Search searches Riak for the given query. Returns nil and a nil error if no object was found.
+func Search(cluster StorageCluster, index string, query string, filterQuery string, numRows int) ([]*riak.SearchDoc, error) {
+	iCmd, err := riak.NewSearchCommandBuilder().
+		WithIndexName(index).
+		WithQuery(query).
+		WithFilterQuery(filterQuery).
+		WithNumRows(uint32(numRows)).
+		Build()
+	if err != nil {
+		return nil, errors.New("building Riak command: " + err.Error())
+	}
+	if err = cluster.Execute(iCmd); err != nil {
+		return nil, errors.New("executing Riak command index '" + index + "' query '" + query + "': " + err.Error())
+	}
+	cmd, ok := iCmd.(*riak.SearchCommand)
+	if !ok {
+		return nil, fmt.Errorf("Riak command unexpected type %T", iCmd)
+	}
+	if cmd.Response == nil || cmd.Response.NumFound == 0 {
+		return nil, nil
+	}
+	return cmd.Response.Docs, nil
 }
