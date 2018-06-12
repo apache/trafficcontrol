@@ -250,7 +250,7 @@ func validateTypeFields(db *sqlx.DB, ds *tc.DeliveryServiceNullableV12) []error 
 
 	errs := validation.Errors{
 		"initialDispersion": validation.Validate(ds.InitialDispersion,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+			validation.By(requiredIfMatchesTypeName([]string{HTTPRegexType}, typeName))),
 		"ipv6RoutingEnabled": validation.Validate(ds.IPV6RoutingEnabled,
 			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
 		"missLat": validation.Validate(ds.MissLat,
