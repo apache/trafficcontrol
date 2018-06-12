@@ -23,24 +23,24 @@ var CoordinateService = function($http, $q, Restangular, locationUtils, messageM
         return Restangular.all('coordinates').getList(queryParams);
     };
 
-	this.createCoordinate = function(coordinate) {
-		var request = $q.defer();
+    this.createCoordinate = function(coordinate) {
+        var request = $q.defer();
 
-		$http.post(ENV.api['root'] + "coordinates", coordinate)
-			.then(
-				function(response) {
+        $http.post(ENV.api['root'] + "coordinates", coordinate)
+            .then(
+                function(response) {
                     messageModel.setMessages(response.data.alerts, true);
                     locationUtils.navigateToPath('/coordinates');
-					request.resolve(response);
-				},
-				function(fault) {
+                    request.resolve(response);
+                },
+                function(fault) {
                     messageModel.setMessages(fault.data.alerts, false)
-					request.reject(fault);
-				}
-			);
+                    request.reject(fault);
+                }
+            );
 
-		return request.promise;
-	};
+        return request.promise;
+    };
 
     this.updateCoordinate = function(id, coordinate) {
         var request = $q.defer();

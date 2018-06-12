@@ -19,60 +19,60 @@
 
 var FormEditOriginController = function(origin, $scope, $state, $controller, $uibModal, $anchorScroll, locationUtils, originService) {
 
-	$scope.origin = origin[0]
+    $scope.origin = origin[0]
 
-	// extends the FormOriginController to inherit common methods
-	angular.extend(this, $controller('FormOriginController', { origin: $scope.origin, $scope: $scope }));
+    // extends the FormOriginController to inherit common methods
+    angular.extend(this, $controller('FormOriginController', { origin: $scope.origin, $scope: $scope }));
 
-	$scope.originName = angular.copy($scope.origin.name);
+    $scope.originName = angular.copy($scope.origin.name);
 
-	$scope.settings = {
-		isNew: false,
-		saveLabel: 'Update',
-		deleteLabel: 'Delete'
-	};
+    $scope.settings = {
+        isNew: false,
+        saveLabel: 'Update',
+        deleteLabel: 'Delete'
+    };
 
-	$scope.save = function(origin) {
-		originService.updateOrigin(origin.id, origin).
-			then(
-				function(result) {
-					$state.reload(); // reloads all the resolves for the view
-				},
-				function(fault) {
-					$anchorScroll(); // scrolls window to top
-				}
-			);
-	};
+    $scope.save = function(origin) {
+        originService.updateOrigin(origin.id, origin).
+            then(
+                function(result) {
+                    $state.reload(); // reloads all the resolves for the view
+                },
+                function(fault) {
+                    $anchorScroll(); // scrolls window to top
+                }
+            );
+    };
 
-	$scope.confirmDelete = function(origin) {
-		var params = {
-			title: 'Delete Origin: ' + origin.name,
-			key: origin.name
-		};
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
-			controller: 'DialogDeleteController',
-			size: 'md',
-			resolve: {
-				params: function () {
-					return params;
-				}
-			}
-		});
-		modalInstance.result.then(function() {
-			originService.deleteOrigin(origin.id)
-				.then(
-					function(result) {
-						locationUtils.navigateToPath('/origins');
-					},
-					function(fault) {
-						$anchorScroll(); // scrolls window to top
-					}
-				);
-		}, function () {
-			// do nothing
-		});
-	};
+    $scope.confirmDelete = function(origin) {
+        var params = {
+            title: 'Delete Origin: ' + origin.name,
+            key: origin.name
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+            controller: 'DialogDeleteController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            originService.deleteOrigin(origin.id)
+                .then(
+                    function(result) {
+                        locationUtils.navigateToPath('/origins');
+                    },
+                    function(fault) {
+                        $anchorScroll(); // scrolls window to top
+                    }
+                );
+        }, function () {
+            // do nothing
+        });
+    };
 
 };
 

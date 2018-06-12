@@ -18,4 +18,4 @@
  */
 
 module.exports = angular.module('trafficPortal.form.origin.edit', [])
-	.controller('FormEditOriginController', require('./FormEditOriginController'));
+    .controller('FormEditOriginController', require('./FormEditOriginController'));
