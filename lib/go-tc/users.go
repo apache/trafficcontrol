@@ -90,3 +90,29 @@ type APIUsersResponse struct {
 type UserDeliveryServiceDeleteResponse struct {
 	Alerts []Alert `json:"alerts"`
 }
+
+// UserCurrent contains all the user info about the current user, as returned by /api/1.x/user/current
+type UserCurrent struct {
+	AddressLine1    *string `json:"addressLine1"`
+	AddressLine2    *string `json:"addressLine2"`
+	City            *string `json:"city"`
+	Company         *string `json:"company,omitempty"`
+	Country         *string `json:"country"`
+	Email           *string `json:"email,omitempty"`
+	FullName        *string `json:"fullName,omitempty"`
+	GID             *int    `json:"gid,omitempty"`
+	ID              *int    `json:"id,omitempty"`
+	LastUpdated     *string `json:"lastUpdated,omitempty"`
+	LocalUser       *bool   `json:"localUser"`
+	NewUser         *bool   `json:"newUser,omitempty"`
+	PhoneNumber     *string `json:"phoneNumber"`
+	PostalCode      *string `json:"postalCode"`
+	PublicSSHKey    *string `json:"publicSshKey,omitempty"`
+	Role            *int    `json:"role,omitempty"`
+	RoleName        *string `json:"rolename,omitempty"`
+	StateOrProvince *string `json:"stateOrProvince"`
+	Tenant          *string `json:"tenant"`
+	TenantID        *uint64 `json:"tenantId"`
+	UID             *int    `json:"uid,omitempty"`
+	UserName        *string `json:"username,omitempty"`
+}
