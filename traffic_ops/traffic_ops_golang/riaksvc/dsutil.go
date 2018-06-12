@@ -309,3 +309,50 @@ func PutURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, ds tc.DeliveryService
 	})
 	return err
 }
+
+const SSLKeysIndex = "sslkeys"
+const CDNSSLKeysLimit = 1000 // TODO: emulates Perl; reevaluate?
+
+func GetCDNSSLKeysObj(tx *sql.Tx, authOpts *riak.AuthOptions, cdnName string) ([]tc.CDNSSLKey, error) {
+	keys := []tc.CDNSSLKey{}
+	err := WithClusterTx(tx, authOpts, func(cluster StorageCluster) error {
+		// get the deliveryservice ssl keys by xmlID and version
+		query := `cdn:` + cdnName
+		filterQuery := `_yz_rk:*latest`
+		searchDocs, err := Search(cluster, SSLKeysIndex, query, filterQuery, CDNSSLKeysLimit)
+		if err != nil {
+			return errors.New("riak search error: " + err.Error())
+		}
+		if len(searchDocs) == 0 {
+			return nil // no error, and leave keys empty
+		}
+		keys = SearchDocsToCDNSSLKeys(searchDocs)
+		return nil
+	})
+	if err != nil {
+		return nil, errors.New("with cluster error: " + err.Error())
+	}
+	return keys, nil
+}
+
+// SearchDocsToCDNSSLKeys converts the SearchDoc array returned by Riak into a CDNSSLKey slice. If a SearchDoc doesn't contain expected fields, it creates the key with those fields defaulted to empty strings.
+func SearchDocsToCDNSSLKeys(docs []*riak.SearchDoc) []tc.CDNSSLKey {
+	keys := []tc.CDNSSLKey{}
+	for _, doc := range docs {
+		key := tc.CDNSSLKey{}
+		if dss := doc.Fields["deliveryservice"]; len(dss) > 0 {
+			key.DeliveryService = dss[0]
+		}
+		if hosts := doc.Fields["hostname"]; len(hosts) > 0 {
+			key.HostName = hosts[0]
+		}
+		if crts := doc.Fields["certificate.crt"]; len(crts) > 0 {
+			key.Certificate.Crt = crts[0]
+		}
+		if keys := doc.Fields["certificate.key"]; len(keys) > 0 {
+			key.Certificate.Key = keys[0]
+		}
+		keys = append(keys, key)
+	}
+	return keys
+}
