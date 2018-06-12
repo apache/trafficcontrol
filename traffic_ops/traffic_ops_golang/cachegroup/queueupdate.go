@@ -39,7 +39,7 @@ func QueueUpdates(db *sql.DB) http.HandlerFunc {
 			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting user: "+err.Error()))
 			return
 		}
-		params, intParams, userErr, sysErr, errCode := api.AllParams(r, []string{"id"})
+		params, intParams, userErr, sysErr, errCode := api.AllParams(r, []string{"id"}, []string{"id"})
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, errCode, userErr, sysErr)
 			return
