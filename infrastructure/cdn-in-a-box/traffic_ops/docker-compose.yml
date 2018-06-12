@@ -63,8 +63,9 @@ services:
       - tcnet
     env_file:
       - variables.env
-    expose: 
-      - "60443"
+    # TODO: change to expose: "60443" to limit to containers
+    ports: 
+      - "60443:60443"
     build:
       context: .
       args:
