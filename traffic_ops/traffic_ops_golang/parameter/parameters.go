@@ -51,12 +51,7 @@ var (
 //we need a type alias to define functions on
 type TOParameter tc.ParameterNullable
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOParameter(tc.ParameterNullable{})
-
-func GetRefType() *TOParameter {
-	return &refType
-}
+func GetRefType() *TOParameter { return &TOParameter{} }
 
 func (parameter TOParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{IDQueryParam, api.GetIntKey}}

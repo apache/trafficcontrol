@@ -39,12 +39,7 @@ import (
 //we need a type alias to define functions on
 type TORole v13.Role
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TORole{}
-
-func GetRefType() *TORole {
-	return &refType
-}
+func GetRefType() *TORole { return &TORole{} }
 
 func (role TORole) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

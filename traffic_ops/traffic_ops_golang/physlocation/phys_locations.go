@@ -38,12 +38,7 @@ import (
 //we need a type alias to define functions on
 type TOPhysLocation tc.PhysLocationNullable
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOPhysLocation(tc.PhysLocationNullable{})
-
-func GetRefType() *TOPhysLocation {
-	return &refType
-}
+func GetRefType() *TOPhysLocation { return &TOPhysLocation{} }
 
 func (pl TOPhysLocation) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

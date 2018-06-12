@@ -49,12 +49,7 @@ const (
 type TOProfile v13.ProfileNullable
 type TOParameter v13.ParameterNullable
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOProfile{}
-
-func GetRefType() *TOProfile {
-	return &refType
-}
+func GetRefType() *TOProfile { return &TOProfile{} }
 
 func (prof TOProfile) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{IDQueryParam, api.GetIntKey}}

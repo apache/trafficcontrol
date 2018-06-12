@@ -42,12 +42,7 @@ import (
 // TODeliveryServiceRequest provides a type alias to define functions on
 type TODeliveryServiceServer tc.DeliveryServiceServer
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TODeliveryServiceServer(tc.DeliveryServiceServer{})
-
-func GetRefType() *TODeliveryServiceServer {
-	return &refType
-}
+func GetRefType() *TODeliveryServiceServer { return &TODeliveryServiceServer{} }
 
 func (dss TODeliveryServiceServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"deliveryservice", api.GetIntKey}, {"server", api.GetIntKey}}
@@ -288,7 +283,6 @@ type DSServerIds struct {
 
 type TODSServerIds DSServerIds
 
-
 func createServersForDsIdRef() *TODSServerIds {
 	var dsserversRef = TODSServerIds(DSServerIds{})
 	return &dsserversRef
@@ -307,7 +301,7 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		// get list of server Ids to insert
-		payload :=  createServersForDsIdRef() 
+		payload := createServersForDsIdRef()
 
 		if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
 			log.Errorf("Error trying to decode the request body: %s", err)
@@ -387,7 +381,7 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 		i := 0
 		respServers := []int{}
 
-		for _ , server := range servers {
+		for _, server := range servers {
 			dtos := map[string]interface{}{"id": dsId, "server": server}
 			resultRows, err := tx.NamedQuery(insertIdsQuery(), dtos)
 			if err != nil {
@@ -434,7 +428,6 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 }
 
 type TODeliveryServiceServers tc.DeliveryServiceServers
-
 
 func createServersRef() *TODeliveryServiceServers {
 	serversRef := TODeliveryServiceServers(tc.DeliveryServiceServers{})
@@ -628,7 +621,7 @@ func GetReadHandler(db *sqlx.DB, filter tc.Filter) http.HandlerFunc {
 			return
 		}
 
-		dssres := tc.DSServersAttrResponse{ servers }
+		dssres := tc.DSServersAttrResponse{servers}
 		respBts, err := json.Marshal(dssres)
 		if err != nil {
 			handleErrs(http.StatusInternalServerError, err)

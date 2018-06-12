@@ -38,12 +38,7 @@ import (
 //we need a type alias to define functions on
 type TOType tc.TypeNullable
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOType(tc.TypeNullable{})
-
-func GetRefType() *TOType {
-	return &refType
-}
+func GetRefType() *TOType { return &TOType{} }
 
 func (typ TOType) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

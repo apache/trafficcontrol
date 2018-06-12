@@ -40,12 +40,7 @@ import (
 //we need a type alias to define functions on
 type TOCoordinate v13.CoordinateNullable
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOCoordinate{}
-
-func GetRefType() *TOCoordinate {
-	return &refType
-}
+func GetRefType() *TOCoordinate { return &TOCoordinate{} }
 
 func (coordinate TOCoordinate) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

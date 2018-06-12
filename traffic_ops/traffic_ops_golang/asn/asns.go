@@ -45,15 +45,9 @@ type TOASNV11 tc.ASNNullable
 
 type TOASNV12 TOASNV11
 
-func GetRefTypeV11() *TOASNV11 {
-	asn := TOASNV11(tc.ASNNullable{})
-	return &asn
-}
+func GetRefTypeV11() *TOASNV11 { return &TOASNV11{} }
 
-func GetRefTypeV12() *TOASNV12 {
-	asn := TOASNV12(tc.ASNNullable{})
-	return &asn
-}
+func GetRefTypeV12() *TOASNV12 { return &TOASNV12{} }
 
 func (asn TOASNV11) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

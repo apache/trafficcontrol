@@ -39,12 +39,7 @@ import (
 //we need a type alias to define functions on
 type TODivision tc.DivisionNullable
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TODivision(tc.DivisionNullable{})
-
-func GetRefType() *TODivision {
-	return &refType
-}
+func GetRefType() *TODivision { return &TODivision{} }
 
 func (division TODivision) GetAuditName() string {
 	if division.Name != nil {
@@ -155,7 +150,7 @@ func (division *TODivision) Create(db *sqlx.DB, user auth.CurrentUser) (error, t
 
 func (division *TODivision) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
 	if strings.HasSuffix(parameters["name"], ".json") {
-		parameters["name"] = parameters["name"][:len(parameters["name"]) - len(".json")]
+		parameters["name"] = parameters["name"][:len(parameters["name"])-len(".json")]
 	}
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query

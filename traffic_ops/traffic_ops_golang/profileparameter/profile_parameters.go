@@ -45,12 +45,7 @@ const (
 //we need a type alias to define functions on
 type TOProfileParameter v13.ProfileParameterNullable
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOProfileParameter(v13.ProfileParameterNullable{})
-
-func GetRefType() *TOProfileParameter {
-	return &refType
-}
+func GetRefType() *TOProfileParameter { return &TOProfileParameter{} }
 
 func (pp TOProfileParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{ProfileIDQueryParam, api.GetIntKey}, {ParameterIDQueryParam, api.GetIntKey}}

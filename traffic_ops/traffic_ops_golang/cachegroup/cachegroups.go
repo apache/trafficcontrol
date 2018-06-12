@@ -39,12 +39,7 @@ import (
 
 type TOCacheGroup v13.CacheGroupNullable
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOCacheGroup{}
-
-func GetRefType() *TOCacheGroup {
-	return &refType
-}
+func GetRefType() *TOCacheGroup { return &TOCacheGroup{} }
 
 func (cachegroup TOCacheGroup) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

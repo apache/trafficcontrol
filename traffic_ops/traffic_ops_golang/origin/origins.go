@@ -43,12 +43,7 @@ import (
 //we need a type alias to define functions on
 type TOOrigin v13.Origin
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOOrigin{}
-
-func GetRefType() *TOOrigin {
-	return &refType
-}
+func GetRefType() *TOOrigin { return &TOOrigin{} }
 
 func (origin *TOOrigin) SetID(i int) {
 	origin.ID = &i
