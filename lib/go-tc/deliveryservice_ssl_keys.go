@@ -85,6 +85,11 @@ func (v *DeliveryServiceSSLKeys) UnmarshalJSON(b []byte) (err error) {
 	return err
 }
 
+type RiakPingResp struct {
+	Status string `json:"status"`
+	Server string `json:"server"`
+}
+
 // DNSSECKeys is the DNSSEC keys object stored in Riak. The map key strings are both DeliveryServiceNames and CDNNames.
 type DNSSECKeys map[string]DNSSECKeySet
 
@@ -94,14 +99,14 @@ type DNSSECKeySet struct {
 }
 
 type DNSSECKey struct {
-	InceptionDateUnix  int64 `json:"inceptionDate"`
-	ExpirationDateUnix int64 `json:"expirationDate"`
-	Name               string `json:"name"`
-	TTLSeconds         uint64 `json:"ttl,string"`
-	Status             string `json:"status"`
-	EffectiveDateUnix  int64 `json:"effectiveDate"`
-	Public             string `json:"public"`
-	Private            string `json:"private"`
+	InceptionDateUnix  int64              `json:"inceptionDate"`
+	ExpirationDateUnix int64              `json:"expirationDate"`
+	Name               string             `json:"name"`
+	TTLSeconds         uint64             `json:"ttl,string"`
+	Status             string             `json:"status"`
+	EffectiveDateUnix  int64              `json:"effectiveDate"`
+	Public             string             `json:"public"`
+	Private            string             `json:"private"`
 	DSRecord           *DNSSECKeyDSRecord `json:"dsRecord,omitempty"`
 }
 
