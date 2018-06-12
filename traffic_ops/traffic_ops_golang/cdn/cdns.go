@@ -41,12 +41,7 @@ import (
 //we need a type alias to define functions on
 type TOCDN v13.CDNNullable
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOCDN{}
-
-func GetRefType() *TOCDN {
-	return &refType
-}
+func GetRefType() *TOCDN { return &TOCDN{} }
 
 func (cdn TOCDN) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

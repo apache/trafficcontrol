@@ -35,12 +35,7 @@ import (
 //we need a type alias to define functions on
 type TORegion tc.Region
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TORegion(tc.Region{})
-
-func GetRefType() *TORegion {
-	return &refType
-}
+func GetRefType() *TORegion { return &TORegion{} }
 
 func (region TORegion) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

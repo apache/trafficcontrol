@@ -38,12 +38,7 @@ import (
 //we need a type alias to define functions on
 type TODeliveryServiceRequestComment tc.DeliveryServiceRequestCommentNullable
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TODeliveryServiceRequestComment{}
-
-func GetRefType() *TODeliveryServiceRequestComment {
-	return &refType
-}
+func GetRefType() *TODeliveryServiceRequestComment { return &TODeliveryServiceRequestComment{} }
 
 func (comment TODeliveryServiceRequestComment) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}

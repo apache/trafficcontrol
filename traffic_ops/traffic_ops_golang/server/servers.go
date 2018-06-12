@@ -41,12 +41,7 @@ import (
 //we need a type alias to define functions on
 type TOServer v13.ServerNullable
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOServer{}
-
-func GetRefType() *TOServer {
-	return &refType
-}
+func GetRefType() *TOServer { return &TOServer{} }
 
 func (server *TOServer) SetID(i int) {
 	server.ID = &i
