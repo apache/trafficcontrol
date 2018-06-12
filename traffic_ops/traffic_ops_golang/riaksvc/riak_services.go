@@ -26,6 +26,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"strconv"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -114,6 +115,32 @@ func DeleteObject(key string, bucket string, cluster StorageCluster) error {
 	return nil
 }
 
+// PingCluster pings the given Riak cluster, and returns nil on success, or any error
+func PingCluster(cluster StorageCluster) error {
+	if cluster == nil {
+		return errors.New("ERROR: No valid cluster on which to execute a command")
+	}
+	pingCommandBuilder := riak.PingCommandBuilder{}
+	iCmd, err := pingCommandBuilder.Build()
+	if err != nil {
+		return errors.New("building riak ping command: " + err.Error())
+	}
+	if err := cluster.Execute(iCmd); err != nil {
+		return errors.New("executing riak ping command: " + err.Error())
+	}
+	cmd, ok := iCmd.(*riak.PingCommand)
+	if !ok {
+		return fmt.Errorf("unexpected riak command type: %T", iCmd)
+	}
+	if err := cmd.Error(); err != nil {
+		return errors.New("riak ping command returned error: " + err.Error())
+	}
+	if !cmd.Success() {
+		return errors.New("riak ping command returned failure, but no error")
+	}
+	return nil
+}
+
 // fetch an object from riak storage
 func FetchObjectValues(key string, bucket string, cluster StorageCluster) ([]*riak.Object, error) {
 	if cluster == nil {
@@ -166,6 +193,65 @@ func SaveObject(obj *riak.Object, bucket string, cluster StorageCluster) error {
 	return nil
 }
 
+type ServerAddr struct {
+	FQDN string
+	Port string
+}
+
+func GetRiakServers(tx *sql.Tx) ([]ServerAddr, error) {
+	rows, err := tx.Query(`
+SELECT CONCAT(s.host_name, '.', s.domain_name) FROM server s
+JOIN type t ON s.type = t.id
+JOIN status st ON s.status = st.id
+WHERE t.name = 'RIAK' AND st.name = 'ONLINE'
+`)
+	if err != nil {
+		return nil, errors.New("querying riak servers: " + err.Error())
+	}
+	defer rows.Close()
+	servers := []ServerAddr{}
+	portStr := strconv.Itoa(RiakPort)
+	for rows.Next() {
+		s := ServerAddr{Port: portStr}
+		if err := rows.Scan(&s.FQDN); err != nil {
+			return nil, errors.New("scanning riak servers: " + err.Error())
+		}
+		servers = append(servers, s)
+	}
+	return servers, nil
+}
+
+func RiakServersToCluster(servers []ServerAddr, authOptions *riak.AuthOptions) (StorageCluster, error) {
+	if authOptions == nil {
+		return nil, errors.New("ERROR: no riak auth information from riak.conf, cannot authenticate to any riak servers")
+	}
+	nodes := []*riak.Node{}
+	for _, srv := range servers {
+		nodeOpts := &riak.NodeOptions{
+			RemoteAddress: srv.FQDN + ":" + srv.Port,
+			AuthOptions:   authOptions,
+		}
+		nodeOpts.AuthOptions.TlsConfig.ServerName = srv.FQDN
+		node, err := riak.NewNode(nodeOpts)
+		if err != nil {
+			return nil, errors.New("creating riak node: " + err.Error())
+		}
+		nodes = append(nodes, node)
+	}
+	if len(nodes) == 0 {
+		return nil, errors.New("ERROR: no available riak servers")
+	}
+	opts := &riak.ClusterOptions{
+		Nodes:             nodes,
+		ExecutionAttempts: MaxCommandExecutionAttempts,
+	}
+	cluster, err := riak.NewCluster(opts)
+	if err != nil {
+		return nil, errors.New("creating riak cluster: " + err.Error())
+	}
+	return RiakStorageCluster{Cluster: cluster}, nil
+}
+
 // returns a riak cluster of online riak nodes.
 func GetRiakCluster(db *sql.DB, authOptions *riak.AuthOptions) (StorageCluster, error) {
 	riakServerQuery := `
@@ -188,7 +274,6 @@ func GetRiakCluster(db *sql.DB, authOptions *riak.AuthOptions) (StorageCluster, 
 
 	for rows.Next() {
 		var s tc.Server
-		var n *riak.Node
 		if err := rows.Scan(&s.HostName, &s.DomainName); err != nil {
 			return nil, err
 		}
@@ -253,59 +338,16 @@ func WithClusterX(db *sqlx.DB, authOpts *riak.AuthOptions, f func(StorageCluster
 	return f(cluster)
 }
 
-// returns a riak cluster of online riak nodes.
 func GetRiakClusterTx(tx *sql.Tx, authOptions *riak.AuthOptions) (StorageCluster, error) {
-	// TODO remove duplication with GetRiakCluster
-
-	riakServerQuery := `
-		SELECT s.host_name, s.domain_name FROM server s
-		INNER JOIN type t on s.type = t.id
-		INNER JOIN status st on s.status = st.id
-		WHERE t.name = 'RIAK' AND st.name = 'ONLINE'
-		`
-
-	if authOptions == nil {
-		return nil, errors.New("ERROR: no riak auth information from riak.conf, cannot authenticate to any riak servers")
-	}
-
-	var nodes []*riak.Node
-	rows, err := tx.Query(riakServerQuery)
+	servers, err := GetRiakServers(tx)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("getting riak servers: " + err.Error())
 	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var s tc.Server
-		var n *riak.Node
-		if err := rows.Scan(&s.HostName, &s.DomainName); err != nil {
-			return nil, err
-		}
-		addr := fmt.Sprintf("%s.%s:%d", s.HostName, s.DomainName, RiakPort)
-		nodeOpts := &riak.NodeOptions{
-			RemoteAddress: addr,
-			AuthOptions:   authOptions,
-		}
-		nodeOpts.AuthOptions.TlsConfig.ServerName = fmt.Sprintf("%s.%s", s.HostName, s.DomainName)
-		n, err := riak.NewNode(nodeOpts)
-		if err != nil {
-			return nil, err
-		}
-		nodes = append(nodes, n)
+	cluster, err := RiakServersToCluster(servers, authOptions)
+	if err != nil {
+		return nil, errors.New("creating riak cluster from servers: " + err.Error())
 	}
-
-	if len(nodes) == 0 {
-		return nil, errors.New("ERROR: no available riak servers")
-	}
-
-	opts := &riak.ClusterOptions{
-		Nodes:             nodes,
-		ExecutionAttempts: MaxCommandExecutionAttempts,
-	}
-
-	cluster, err := riak.NewCluster(opts)
-
-	return RiakStorageCluster{Cluster: cluster}, err
+	return cluster, nil
 }
 
 func WithClusterTx(tx *sql.Tx, authOpts *riak.AuthOptions, f func(StorageCluster) error) error {

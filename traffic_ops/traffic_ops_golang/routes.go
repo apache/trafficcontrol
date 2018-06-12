@@ -166,6 +166,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Ping
 		{1.1, http.MethodGet, `ping$`, ping.PingHandler(), 0, NoAuth, nil},
+		{1.1, http.MethodGet, `riak/ping/?(\.json)?$`, ping.Riak, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `keys/ping/?(\.json)?$`, ping.Keys, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Profile: CRUD
 		{1.1, http.MethodGet, `profiles/?(\.json)?$`, api.ReadHandler(profile.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
