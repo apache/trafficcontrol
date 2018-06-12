@@ -19,19 +19,19 @@
 
 var FormNewOriginController = function(origin, $scope, $controller, $anchorScroll, originService) {
 
-	// extends the FormOriginController to inherit common methods
-	angular.extend(this, $controller('FormOriginController', { origin: origin, $scope: $scope }));
+    // extends the FormOriginController to inherit common methods
+    angular.extend(this, $controller('FormOriginController', { origin: origin, $scope: $scope }));
 
-	$scope.originName = 'New';
+    $scope.originName = 'New';
 
-	$scope.settings = {
-		isNew: true,
-		saveLabel: 'Create'
-	};
+    $scope.settings = {
+        isNew: true,
+        saveLabel: 'Create'
+    };
 
-	$scope.save = function(origin) {
-		originService.createOrigin(origin);
-	};
+    $scope.save = function(origin) {
+        originService.createOrigin(origin);
+    };
 
 };
 

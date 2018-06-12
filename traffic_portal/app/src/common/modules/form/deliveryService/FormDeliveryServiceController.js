@@ -53,7 +53,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, type, t
 
     $scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
 
-	$scope.edgeFQDNs = function(ds) {
+    $scope.edgeFQDNs = function(ds) {
         var urlString = '';
         if (_.isArray(ds.exampleURLs) && ds.exampleURLs.length > 0) {
             for (var i = 0; i < ds.exampleURLs.length; i++) {
@@ -236,6 +236,10 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, type, t
 
     $scope.viewTargets = function() {
         $location.path($location.path() + '/targets');
+    };
+
+    $scope.viewOrigins = function() {
+        $location.path($location.path() + '/origins');
     };
 
     $scope.viewServers = function() {

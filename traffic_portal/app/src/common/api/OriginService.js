@@ -23,24 +23,24 @@ var OriginService = function($http, $q, Restangular, locationUtils, messageModel
         return Restangular.all('origins').getList(queryParams);
     };
 
-	this.createOrigin = function(origin) {
-		var request = $q.defer();
+    this.createOrigin = function(origin) {
+        var request = $q.defer();
 
-		$http.post(ENV.api['root'] + "origins", origin)
-			.then(
-				function(response) {
+        $http.post(ENV.api['root'] + "origins", origin)
+            .then(
+                function(response) {
                     messageModel.setMessages(response.data.alerts, true);
                     locationUtils.navigateToPath('/origins');
-					request.resolve(response);
-				},
-				function(fault) {
+                    request.resolve(response);
+                },
+                function(fault) {
                     messageModel.setMessages(fault.data.alerts, false)
-					request.reject(fault);
-				}
-			);
+                    request.reject(fault);
+                }
+            );
 
-		return request.promise;
-	};
+        return request.promise;
+    };
 
     this.updateOrigin = function(id, origin) {
         var request = $q.defer();
