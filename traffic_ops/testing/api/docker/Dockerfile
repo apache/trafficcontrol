@@ -11,18 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-FROM trafficops-perl:latest
+FROM golang:1.10.1
 MAINTAINER Dewayne Richardson <dewrich@apache.org>
 
-RUN yum -y install vim
-
-ARG TO_DIR=traffic_ops
-ARG API_DOCKER_DIR=.
-
-ARG TEST_DIR
-
-ENV TEST_DIR=$TEST_DIR
-
+RUN pwd
 ARG DB_NAME
 ARG DB_SERVER
 ARG DB_PORT
@@ -35,15 +27,27 @@ ENV DB_PORT=$DB_PORT
 ENV DB_USER=$DB_SERVER
 ENV DB_PASSWORD=$DB_PASSWORD
 
-#COPY --from=trafficops-perl /opt/traffic_ops /opt/traffic_ops
-COPY --from=trafficops-perl /usr/local/go /usr/local/go
+ARG SRC_DIR=/go/src
+ARG TC_DIR=$SRC_DIR/github.com/apache/incubator-trafficcontrol
+ARG TESTING_DIR=$TC_DIR/traffic_ops/testing
+ARG TESTING_API_DIR=$TESTING_DIR/api
+ 
+#COPY --from=trafficops-perl /opt/traffic_ops/app/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang
+#COPY --from=trafficops-perl /usr/local/go /usr/local/go
 
-ADD $API_DOCKER_DIR/$TO_RPM /
+WORKDIR $TC_DIR
 
-ENV PERL5LIB="/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5"
+# Add the lib/go-tc dir
+ADD lib lib
 
-WORKDIR /opt/traffic_ops/app
-ADD ./run_admin_pl.sh .
-RUN ./run_admin_pl.sh
+# Add the dependent dirs (without the cruft)
+ADD traffic_ops/traffic_ops_golang traffic_ops/traffic_ops_golang
+ADD traffic_ops/vendor traffic_ops/vendor
+ADD traffic_ops/testing/api traffic_ops/testing/api
+ADD traffic_ops/client traffic_ops/client
 
-#EXPOSE 60443
+#ADD conf .
+WORKDIR $TESTING_API_DIR/v13
+CMD ../docker/run_api_tests.sh
+
+# vi:syntax=Dockerfile

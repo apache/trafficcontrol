@@ -24,8 +24,10 @@
 source /etc/environment
 
 start() {
-   cd /opt/traffic_ops/testing/api
-   go get -u golang.org/x/net/publicsuffix && go test -v -cfg=conf/traffic-ops-test.conf
+   export PATH=/usr/local/go/bin:/opt/traffic_ops/go/bin:$PATH
+   export GOPATH=/go
+   go get -u golang.org/x/net/publicsuffix golang.org/x/crypto/scrypt
+   TODB_HOSTNAME=db TODB_NAME=traffic_ops TO_URL=https://trafficops go test -v -cfg=../conf/traffic-ops-test.conf
 }
 
 
@@ -41,12 +43,5 @@ finish() {
         [[ $st -ne 0 ]] && echo "Exiting with status $st"
         [[ -n $msg ]] && echo $msg
 }
-
-trap finish EXIT
-
-while ! nc $DBHOST $DBPORT </dev/null; do # &>/dev/null; do
-        echo "waiting for $DBHOST:$DBPORT"
-        sleep 3
-done
 
 start
