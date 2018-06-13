@@ -122,6 +122,9 @@ name: dbconf.yml
 production:
   driver: postgres
   open: host=$DB_SERVER port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=$DB_NAME sslmode=disable
+test:
+  driver: postgres
+  open: host=$DB_SERVER port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=to_test sslmode=disable
 EOF
 
 openssl req -newkey rsa:2048 -nodes -keyout $key -x509 -days 365 -out $crt -subj "/C=$CERT_COUNTRY/ST=$CERT_STATE/L=$CERT_CITY/O=$CERT_COMPANY"
