@@ -57,31 +57,38 @@ services:
       - "5432:5432"
 
   trafficops-perl:
-    hostname: trafficops-perl
-    domainname: cdn.local
-    image: trafficops-perl
-    networks:
-      - tcnet
-    env_file:
-      - variables.env
-    # TODO: change to expose: "60443" to limit to containers
-    ports: 
-      - "60443:60443"
     build:
       context: traffic_ops
       args:
         TRAFFIC_OPS_RPM: traffic_ops.rpm
     depends_on:
       - db
+    domainname: cdn.local
+    env_file:
+      - variables.env
+    hostname: trafficops-perl
+    image: trafficops-perl
+    networks:
+      - tcnet
+    # TODO: change to expose: "60443" to limit to containers
+    ports: 
+      - "60443:60443"
 
   trafficops:
-    hostname: trafficops
+    build:
+      context: traffic_ops
+      args:
+        TRAFFIC_OPS_RPM: traffic_ops.rpm
+    depends_on:
+      - db
+      - trafficops-perl
     domainname: cdn.local
+    env_file:
+      - variables.env
+    hostname: trafficops
     image: trafficops-go
     networks:
       - tcnet
-    env_file:
-      - variables.env
     ports: 
       - "8443:443"
     build:
@@ -92,11 +99,18 @@ services:
       - trafficops-perl
 
   trafficportal:
-    depends_on:
-      - trafficops
     build:
       context: traffic_portal
       args:
         TRAFFIC_PORTAL_RPM: traffic_portal.rpm
+    depends_on:
+      - trafficops
+    domainname: cdn.local
+    env_file:
+      - variables.env
+    hostname: trafficportal
+    image: trafficportal
+    networks:
+      - tcnet
     ports:
       - "8443:443"
