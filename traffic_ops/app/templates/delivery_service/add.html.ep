@@ -144,6 +144,7 @@
             $('#geo_limit_countries_row').show(speed);
             check_geolimit_redirect_url_row_showhide(1, speed);
             $('#anonymous_blocking_enabled_row').show(speed);
+            $('#go_direct_row').show(speed);
 		}
 		else if (type_selected.match(/^DNS/)) {
 			$("#regexp_selector :nth-child(3)").attr('disabled','disabled');
@@ -188,6 +189,7 @@
             $('#geo_limit_countries_row').show(speed);
             check_geolimit_redirect_url_row_showhide(0, speed);
             $('#anonymous_blocking_enabled_row').show(speed);
+            $('#go_direct_row').show(speed);
 		}
 		else if (type_selected.match(/^ANY_MAP$/)) {
             $('#protocoli_row').hide(speed);
@@ -229,6 +231,7 @@
             $('#regexp_add').show(speed);
             $('#geo_limit_countries_row').show(speed);
             $('#anonymous_blocking_enabled_row').hide(speed);
+            $('#go_direct_row').show(speed);
 		}
 		else if (type_selected.match(/STEERING$/)) {
             $('#protocoli_row').show(speed);
@@ -276,6 +279,7 @@
             $('#geo_limit_countries_row').show(speed);
             check_geolimit_redirect_url_row_showhide(0, speed);
             $('#anonymous_blocking_enabled_row').hide(speed);
+            $('#go_direct_row').show(speed);
 		}
 		//
 	}

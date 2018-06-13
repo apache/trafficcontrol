@@ -46,6 +46,11 @@ __PACKAGE__->table("deliveryservice");
   default_value: false
   is_nullable: 0
 
+=head2 go_direct
+  data_type: 'boolean'
+  default_value: false
+  is_nullable: 0
+
 =head2 dscp
 
   data_type: 'bigint'
@@ -332,6 +337,8 @@ __PACKAGE__->add_columns(
   "active",
   { data_type => "boolean", default_value => \"false", is_nullable => 0 },
   "anonymous_blocking_enabled",
+  { data_type => "boolean", default_value => \"false", is_nullable => 0 },
+  "go_direct",
   { data_type => "boolean", default_value => \"false", is_nullable => 0 },
   "dscp",
   { data_type => "bigint", is_nullable => 0 },

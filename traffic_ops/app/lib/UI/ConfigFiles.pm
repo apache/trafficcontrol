@@ -213,6 +213,7 @@ sub ds_data {
 		my $remap_text                  = $row->remap_text;
 		my $multi_site_origin           = $row->multi_site_origin;
 		my $multi_site_origin_algorithm = 0;
+		my $go_direct                   = ( $row->go_direct == 0) ? "false" : "true";
 
 		if ( $re_type eq 'HOST_REGEXP' ) {
 			my $host_re = $row->pattern;
@@ -281,6 +282,7 @@ sub ds_data {
 		$dsinfo->{dslist}->[$j]->{"remap_text"}                  = $remap_text;
 		$dsinfo->{dslist}->[$j]->{"multi_site_origin"}           = $multi_site_origin;
 		$dsinfo->{dslist}->[$j]->{"multi_site_origin_algorithm"} = $multi_site_origin_algorithm;
+		$dsinfo->{dslist}->[$j]->{"go_direct"}                   = $go_direct;
 
 		if ( defined($edge_header_rewrite) ) {
 			my $fname = "hdr_rw_" . $ds_xml_id . ".config";
@@ -1298,11 +1300,13 @@ sub parent_dot_config {
 
 		foreach my $remap ( @{ $data->{dslist} } ) {
 			my $org = $remap->{org};
+			my $go_direct = " go_direct=" . $remap->{go_direct};
+			my $ds_xml_id = $remap->{ds_xml_id};
 			next if !defined $org || $org eq "";
 			next if $done{$org};
 			my $org_uri = URI->new($org);
 			if ( $remap->{type} eq "HTTP_NO_CACHE" || $remap->{type} eq "HTTP_LIVE" || $remap->{type} eq "DNS_LIVE" ) {
-				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
+				$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . $go_direct . "\n";
 			}
 			else {
 				# check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
@@ -1344,7 +1348,6 @@ sub parent_dot_config {
 					$secparents = 'secondary_parent="' . join( '', @secondary_parent_info ) . '"';
 				}
 				my $round_robin = 'round_robin=consistent_hash';
-				my $go_direct   = 'go_direct=false';
 				$text
 					.= "dest_domain="
 					. $org_uri->host

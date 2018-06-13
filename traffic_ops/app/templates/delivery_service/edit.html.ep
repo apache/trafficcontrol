@@ -237,6 +237,7 @@ function setup_form(speed) {
             $('#steering_button').hide(speed);
 	    check_geolimit_redirect_url_row_showhide(1, speed);
             $('#anonymous_blocking_enabled_row').show(speed);
+            $('#go_direct_row').show(speed);
 		}
 		else if (type_selected.match(/^DNS/)) {
 			$("#regexp_selector :nth-child(3)").attr('disabled','disabled');
@@ -280,6 +281,7 @@ function setup_form(speed) {
             $('#steering_button').hide(speed);
 	    $('#geolimit_redirect_url_row').hide(speed);
             $('#anonymous_blocking_enabled_row').hide(speed);
+            $('#go_direct_row').show(speed);
 		}
 		else if (type_selected.match(/^ANY_MAP$/)) {
             $('#protocoli_row').hide(speed);
@@ -321,6 +323,7 @@ function setup_form(speed) {
             $('#regexp_add').show(speed);
             $('#steering_button').hide(speed);
             $('#anonymous_blocking_enabled_row').hide(speed);
+            $('#go_direct_row').show(speed);
 		}
 		else if (type_selected.match(/STEERING$/)) {
             $('#protocoli_row').show(speed);
@@ -370,6 +373,7 @@ function setup_form(speed) {
             $('#steering_button').show(speed);
             $('#geo_limit_countries_row').show(speed);
             $('#anonymous_blocking_enabled_row').hide(speed);
+            $('#go_direct_row').show(speed);
 		}
 		//
 	}

@@ -102,6 +102,7 @@ sub index {
 			@data, {
 				"active"               => \$row->active,
 				"anonymousBlockingEnabled" => \$row->anonymous_blocking_enabled,
+				"goDirect"             => \$row->go_direct,
 				"cacheurl"             => $row->cacheurl,
 				"ccrDnsTtl"            => $row->ccr_dns_ttl,
 				"cdnId"                => $row->cdn->id,
@@ -225,6 +226,7 @@ sub show {
 			@data, {
 				"active"               => \$row->active,
 				"anonymousBlockingEnabled" => \$row->anonymous_blocking_enabled,
+				"goDirect"             => \$row->go_direct,
 				"cacheurl"             => $row->cacheurl,
 				"ccrDnsTtl"            => $row->ccr_dns_ttl,
 				"cdnId"                => $row->cdn->id,
@@ -299,6 +301,19 @@ sub undef_if_empty {
     return $in;
 }
 
+sub typename {
+	my $self = shift;
+	my $type = shift;
+
+	if ( $type == 3 ) {
+		return "HTTP_LIVE";
+	} elsif ( $type == 2 ) {
+		return "HTTP_NO_CACHE";
+	} elsif ( $type == 6 ) {
+		return "DNS_LIVE";
+	}
+}
+
 sub update {
 	my $self   = shift;
 	my $id     = $self->param('id');
@@ -341,9 +356,35 @@ sub update {
 	my $upd_ssl = 0;
 	my $old_hostname = UI::SslKeys::get_hostname($self, $id, $ds);
 
+	my $type_name = $self->typename($params->{typeId});
+	my $go_direct = ($params->{goDirect} == 0) ? "false" : "true";
+	my $mso_config = $params->{multiSiteOrigin};
+	my $xml_id = $ds->xml_id;
+
+	my $conflict = &UI::DeliveryService::check_for_conflict( $self, $go_direct, $mso_config, $type_name );
+
+	if ( $conflict eq "ds_type_conflict" ) {
+		return $self->alert("Delivery service $xml_id could not be updated because go_direct should always be true for DS of type: $type_name");
+	} elsif ( $conflict eq "mso_conflict" ) {
+		return $self->alert("Delivery service $xml_id could not be updated because mso and go_direct are true for DS: $xml_id ");
+	}
+
+	my $org = $params->{orgServerFqdn};
+	my $ds_list = $self->db->resultset('Deliveryservice')->search( {org_server_fqdn => $org} );
+	$conflict = "false";
+
+	( $conflict, my $value ) = &UI::DeliveryService::check_ds_go_direct( $self, $go_direct, $ds_list, $xml_id );
+
+	if ( $conflict eq "ds_type_conflict" ) {
+		return $self->alert("Delivery service $xml_id could not be updated because all other DS associated with this origin server have go_direct as $value");
+	} elsif ( $conflict eq "mso_conflict" ) {
+		return $self->alert("Delivery service $xml_id could not be updated because mso and go_direct are true. Conflicts with DS: $value " );
+	}
+
 	my $values = {
 		active                 => $params->{active},
 		anonymous_blocking_enabled => $params->{anonymousBlockingEnabled},
+		go_direct              => $params->{goDirect},
 		cacheurl               => $params->{cacheurl},
 		ccr_dns_ttl            => $params->{ccrDnsTtl},
 		cdn_id                 => $params->{cdnId},
@@ -443,6 +484,7 @@ sub update {
 			@response, {
 				"active"                   => $rs->active,
 				"anonymousBlockingEnabled" => $rs->anonymous_blocking_enabled,
+				"goDirect"                 => $rs->go_direct,
 				"cacheurl"                 => $rs->cacheurl,
 				"ccrDnsTtl"                => $rs->ccr_dns_ttl,
 				"cdnId"                    => $rs->cdn->id,
@@ -577,6 +619,7 @@ sub safe_update {
 			@response, {
 				"active"                   => $rs->active,
 				"anonymousBlockingEnabled" => $rs->anonymous_blocking_enabled,
+				"goDirect"                 => $rs->go_direct,
 				"cacheurl"                 => $rs->cacheurl,
 				"ccrDnsTtl"                => $rs->ccr_dns_ttl,
 				"cdnId"                    => $rs->cdn->id,
@@ -684,9 +727,35 @@ sub create {
 		return $self->alert( "A deliveryservice with xmlId " . $xml_id . " already exists." );
 	}
 
+	my $type_name = $self->typename($params->{typeId});
+	my $go_direct = ($params->{goDirect} == 0) ? "false" : "true";
+	my $mso_config = $params->{multiSiteOrigin};
+
+	my $conflict = &UI::DeliveryService::check_for_conflict( $self, $go_direct, $mso_config, $type_name );
+
+	if ( $conflict eq "ds_type_conflict" ) {
+		return $self->alert("Delivery service $xml_id could not be created because go_direct should always be true for DS of type: $type_name");
+	} elsif ( $conflict eq "mso_conflict" ) {
+		return $self->alert("Delivery service $xml_id could not be created because mso and go_direct are true for DS: $xml_id ");
+	}
+
+	my $org = $params->{orgServerFqdn};
+	my $ds_list = $self->db->resultset('Deliveryservice')->search( {org_server_fqdn => $org} );
+	my $ds_xml_id;
+	$conflict = "false";
+
+	( $conflict, my $value ) = &UI::DeliveryService::check_ds_go_direct( $self, $go_direct, $ds_list, $xml_id );
+
+	if ( $conflict eq "ds_type_conflict" ) {
+		return $self->alert("Delivery service $xml_id could not be created because all other DS associated with this origin server have go_direct as $value");
+	} elsif ( $conflict eq "mso_conflict" ) {
+		return $self->alert("Delivery service $xml_id could not be created because mso and go_direct are true. Conflicts with DS: $value " );
+	}
+
 	my $values = {
 		active                 => $params->{active},
 		anonymous_blocking_enabled => $params->{anonymousBlockingEnabled},
+		go_direct              => $params->{goDirect},
 		cacheurl               => $params->{cacheurl},
 		ccr_dns_ttl            => $params->{ccrDnsTtl},
 		cdn_id                 => $params->{cdnId},
@@ -797,6 +866,7 @@ sub create {
 			@response, {
 				"active"                   => $insert->active,
 				"anonymousBlockingEnabled" => $insert->anonymous_blocking_enabled,
+				"goDirect"                 => $insert->go_direct,
 				"cacheurl"                 => $insert->cacheurl,
 				"ccrDnsTtl"                => $insert->ccr_dns_ttl,
 				"cdnId"                    => $insert->cdn->id,
@@ -992,6 +1062,7 @@ sub get_deliveryservices_by_serverId {
 				@data, {
 					"active"               => \$row->active,
 					"anonymousBlockingEnabled" => \$row->anonymous_blocking_enabled,
+					"goDirect"             => \$row->go_direct,
 					"cacheurl"             => $row->cacheurl,
 					"ccrDnsTtl"            => $row->ccr_dns_ttl,
 					"cdnId"                => $row->cdn->id,
@@ -1093,6 +1164,7 @@ sub get_deliveryservices_by_userId {
 				@data, {
 					"active"               => \$row->active,
 					"anonymousBlockingEnabled" => \$row->anonymous_blocking_enabled,
+					"goDirect"             => \$row->go_direct,
 					"cacheurl"             => $row->cacheurl,
 					"ccrDnsTtl"            => $row->ccr_dns_ttl,
 					"cdnId"                => $row->cdn->id,

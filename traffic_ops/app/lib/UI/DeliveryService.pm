@@ -258,6 +258,7 @@ sub read {
 				"logs_enabled"                => \$row->logs_enabled,
 				"deep_caching_type"           => $row->deep_caching_type,
 				"anonymous_blocking_enabled"  => $row->anonymous_blocking_enabled,
+				"go_direct"                   => $row->go_direct,
 			}
 		);
 	}
@@ -558,6 +559,73 @@ sub check_deliveryservice_input {
 	return $self->valid;
 }
 
+sub check_for_conflict {
+	my $self = shift;
+	my $go_direct = shift;
+	my $mso_config = shift;
+	my $type = shift;
+	my $conflict = "false";
+
+	if ( $type eq "HTTP_NO_CACHE"|| $type eq "HTTP_LIVE" || $type eq "DNS_LIVE" ) {
+		if ( $go_direct eq "false") {
+			$conflict = "ds_type_conflict";
+			return $conflict;
+		}
+	}
+
+	if ( ($mso_config == 1) && ($go_direct eq "true") ) {
+		$conflict = "mso_conflict";
+		return $conflict;
+	}
+}
+
+sub go_direct_validate_failed {
+	my $self = shift;
+	my @msgs = shift;
+
+	my $selected_type    = $self->param('ds.type');
+	my $selected_profile = $self->param('ds.profile');
+	my $selected_cdn     = $self->param('ds.cdn_id');
+	&stash_role($self);
+	$self->stash(
+		ds               => {},
+		fbox_layout      => 1,
+		selected_type    => $selected_type,
+		selected_profile => $selected_profile,
+		selected_cdn     => $selected_cdn,
+		hidden           => {},                  # for form validation purposes
+		mode             => "add",
+		msgs             => \@msgs
+	);
+
+}
+
+sub check_ds_go_direct {
+	my $self = shift;
+	my $go_direct = shift;
+	my $ds_list = shift;
+	my $xml_id = shift;
+	my $conflict;
+
+	while ( my $row = $ds_list->next ) {
+		my $ds_xml_id = $row->xml_id;
+		my $ds_go_direct = $row->go_direct ? "false" : "true";
+		my $ds_mso = $row->multi_site_origin;
+
+		if ( $ds_xml_id ne $xml_id ) {
+			if ( $ds_go_direct ne $go_direct ) {
+				$conflict = "ds_type_conflict";
+				return ( $conflict, $ds_go_direct );
+			}
+
+			if ( ($ds_mso == 1) && ($go_direct eq "true") ) {
+				$conflict = "mso_conflict";
+				return ( $conflict, $ds_xml_id );
+			}
+		}
+	}
+}
+
 sub associate_regexpes {
 	my $self  = shift;
 	my $ds_id = shift;
@@ -796,6 +864,8 @@ sub delete_cfg_file {
 sub update {
 	my $self = shift;
 	my $id   = $self->param('id');
+	my $xml_id = $self->paramAsScalar('ds.xml_id');
+
 	if ( !&is_oper($self) ) {
 		my $err = "You do not have enough privileges to modify this.";
 		$self->flash( message => $err );
@@ -804,6 +874,33 @@ sub update {
 	}
 
 	if ( $self->check_deliveryservice_input( $self->param('ds.cdn_id'), $id ) ) {
+
+		my $type = $self->typename();
+		my $mso_config = $self->paramAsScalar('ds.multi_site_origin');
+		my $go_direct = ($self->paramAsScalar('ds.go_direct') == 0) ? "false" : "true";
+		my $conflict = $self->check_for_conflict($go_direct, $mso_config, $type);
+
+		if ( $conflict eq "ds_type_conflict" ) {
+			$self->flash( message => "Update failed. go_direct value should always be true for the DS: " . $xml_id . " of TYPE: " . $type);
+			return $self->redirect_to( '/ds/' . $id );
+		} elsif ( $conflict eq "mso_conflict" ) {
+			$self->flash( message => "Update failed. Both mso and go_direct are true for DS: " . $xml_id );
+			return $self->redirect_to( '/ds/' . $id );
+		}
+
+		my $org = $self->paramAsScalar('ds.org_server_fqdn');
+		my $ds_list = $self->db->resultset('Deliveryservice')->search( {org_server_fqdn => $org} );
+		$conflict = "false";
+
+		( $conflict, my $value ) = $self->check_ds_go_direct( $go_direct, $ds_list, $xml_id );
+
+		if ( $conflict eq "ds_type_conflict" ) {
+			$self->flash( message => "Update failed. All other DS associated with this origin server have go_direct as $value");
+			return $self->redirect_to( '/ds/' . $id );
+		} elsif ( $conflict eq "mso_conflict" ) {
+			$self->flash( message => "Update failed. Both mso and go_direct are true. Conflicts with DS: $value ");
+			return $self->redirect_to( '/ds/' . $id );
+		}
 		# if error check passes
 		my %hash = (
 			xml_id                      => $self->paramAsScalar('ds.xml_id'),
@@ -847,7 +944,7 @@ sub update {
 			initial_dispersion => $self->paramAsScalar( 'ds.initial_dispersion', 1 ),
 			logs_enabled       => $self->paramAsScalar('ds.logs_enabled'),
 			deep_caching_type  => $self->paramAsScalar('ds.deep_caching_type'),
-			anonymous_blocking_enabled => $self->paramAsScalar('ds.anonymous_blocking_enabled'),
+			go_direct          => $self->paramAsScalar('ds.go_direct'),
 		);
 
 		my $typename = $self->typename();
@@ -1041,6 +1138,39 @@ sub create {
 	if ( $self->check_deliveryservice_input($cdn_id) ) {
 		my $tenant_utils = Utils::Tenant->new($self);
 		my $tenant_id = $tenant_utils->current_user_tenant();
+
+		my $type = $self->typename();
+		my $mso_config = $self->paramAsScalar('ds.multi_site_origin');
+		my $go_direct = ($self->paramAsScalar('ds.go_direct') == 0) ? "false" : "true";
+		my $conflict = $self->check_for_conflict($go_direct, $mso_config, $type);
+
+		if ( $conflict eq "ds_type_conflict" ) {
+			push( @msgs, "Delivery service $xml_id could not be created because go_direct should always be true for DS of type: $type" );
+			$self->go_direct_validate_failed(@msgs);
+			return $self->render('delivery_service/add');
+			
+		} elsif ( $conflict eq "mso_conflict" ) {
+			push( @msgs, "Delivery service $xml_id could not be created because both mso and go_direct are true");
+			$self->go_direct_validate_failed(@msgs);
+			return $self->render('delivery_service/add');
+		}
+
+		my $org = $self->paramAsScalar('ds.org_server_fqdn');
+		my $ds_list = $self->db->resultset('Deliveryservice')->search( {org_server_fqdn => $org} );
+		$conflict = "false";
+
+		( $conflict, my $value ) = $self->check_ds_go_direct( $go_direct, $ds_list, $xml_id );
+
+		if ( $conflict eq "ds_type_conflict" ) {
+			push( @msgs, "Delivery service $xml_id could not be created because all other DS associated with this origin server have go_direct as $value");
+			$self->go_direct_validate_failed(@msgs);
+			return $self->render('delivery_service/add');
+		} elsif ( $conflict eq "mso_conflict" ) {
+			push( @msgs, "Delivery service $xml_id could not be created because both mso and go_direct are true. Conflicts with DS: $value" );
+			$self->go_direct_validate_failed(@msgs);
+			return $self->render('delivery_service/add');
+		}
+
 		my $new_ds = {
 				xml_id                      => $self->paramAsScalar('ds.xml_id'),
 				display_name                => $self->paramAsScalar('ds.display_name'),
@@ -1091,6 +1221,7 @@ sub create {
 				tenant_id => $tenant_id,
 				deep_caching_type  => $self->paramAsScalar('ds.deep_caching_type'),
 				anonymous_blocking_enabled => $self->paramAsScalar('ds.anonymous_blocking_enabled'),
+				go_direct                  => $self->paramAsScalar('ds.go_direct'),
 		};
 
 		my $insert = $self->db->resultset('Deliveryservice')->create($new_ds);

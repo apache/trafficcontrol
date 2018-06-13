@@ -62,7 +62,8 @@ SELECT
     mid_header_rewrite as mid_header_rewrite,
     deliveryservice.protocol as protocol,
     deliveryservice.profile as profile,
-    deliveryservice.anonymous_blocking_enabled as anonymous_blocking_enabled
+    deliveryservice.anonymous_blocking_enabled as anonymous_blocking_enabled,
+    deliveryservice.go_direct as go_direct
 FROM
     deliveryservice
         JOIN deliveryservice_regex ON deliveryservice_regex.deliveryservice = deliveryservice.id
@@ -100,7 +101,8 @@ __PACKAGE__->add_columns(
         "fq_pacing_rate",              { data_type => "bigint",  is_nullable => 0},
 	"origin_shield",               { data_type => "varchar", is_nullable => 0, size => 1024 },
 	"profile",                     { data_type => "integer", is_nullable => 1},
-    "anonymous_blocking_enabled",  { data_type => "boolean", is_nullable => 0 },
+        "anonymous_blocking_enabled",  { data_type => "boolean", is_nullable => 0 },
+	"go_direct",                   { data_type => "boolean", is_nullable => 0},
 );
 
 1;

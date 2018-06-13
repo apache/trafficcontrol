@@ -1092,10 +1092,12 @@ sub parent_ds_data {
 			my $ds_xml_id                   = $dsinfo->xml_id;
 			my $origin_shield               = $dsinfo->origin_shield;
 			my $multi_site_origin           = $dsinfo->multi_site_origin;
+			my $go_direct                   = $dsinfo->go_direct;
 
 			$response_obj->{dslist}->[$j]->{"org"}                         = $org_fqdn;
 			$response_obj->{dslist}->[$j]->{"type"}                        = $ds_type;
 			$response_obj->{dslist}->[$j]->{"qstring_ignore"}              = $qstring_ignore;
+			$response_obj->{dslist}->[$j]->{"go_direct"}                   = $go_direct ? "false" : "true";
 
 			if ( defined( $dsinfo->profile ) ) {
 				my $dsqstring = $self->db->resultset('ProfileParameter')
@@ -2528,11 +2530,12 @@ sub parent_dot_config { #fix qstring - should be ignore for quika
 			foreach my $ds ( sort @{ $data->{dslist} } ) {
 				my $text;
 				my $org = $ds->{org};
+				my $go_direct = " go_direct=" . $ds->{go_direct};
 				next if !defined $org || $org eq "";
 				next if $done{$org};
 				my $org_uri = URI->new($org);
 				if ( $ds->{type} eq "HTTP_NO_CACHE" || $ds->{type} eq "HTTP_LIVE" || $ds->{type} eq "DNS_LIVE" ) {
-					$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . " go_direct=true\n";
+					$text .= "dest_domain=" . $org_uri->host . " port=" . $org_uri->port . $go_direct . "\n";
 				}
 				else {
 					# check for profile psel.qstring_handling.  If this parameter is assigned to the server profile,
