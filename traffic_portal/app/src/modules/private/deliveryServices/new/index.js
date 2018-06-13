@@ -61,6 +61,9 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.new', []
                                     return {};
                                 }
                             },
+                            origin: function() {
+                                return [{}];
+                            },
                             type: function($stateParams) {
                                 return $stateParams.type;
                             },
