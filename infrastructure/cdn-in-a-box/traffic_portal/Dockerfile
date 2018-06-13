@@ -32,6 +32,7 @@ ADD $TRAFFIC_PORTAL_RPM /
 # Install and delete the TRAFFIC_PORTAL_RPM when finished
 RUN yum install -y \
     nodejs \
+    openssl \
     /$(basename $TRAFFIC_PORTAL_RPM) && \
     rm /$(basename $TRAFFIC_PORTAL_RPM)
 
