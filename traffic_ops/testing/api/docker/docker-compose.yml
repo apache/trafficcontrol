@@ -14,19 +14,19 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#../../../../infrastructure/cdn-in-a-box/traffic_ops/
+#infrastructure/cdn-in-a-box/traffic_ops/
+
 ---
-version: '3.6'
+version: '2.1'
 
 services:
   api_tests:
     build:
-      context: ../../../..
-      dockerfile: traffic_ops/testing/api/docker/Dockerfile
+      context: .
+      dockerfile: Dockerfile
       args:
         DB_SERVER: db
         DB_PORT: 5432
     env_file:
       - traffic-ops-test.env
-    volumes:
-      - incubator-trafficcontrol:/incubator-trafficcontrol
-      - conf:/conf
