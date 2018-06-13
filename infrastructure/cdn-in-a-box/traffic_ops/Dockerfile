@@ -37,15 +37,16 @@ RUN yum install -y \
 RUN cpanm Carton
 RUN yum install -y perl-DBIx-Connector
 
-# Override RPM arg to use a different one using --build-arg RPM=...  Can be local file or http://...
-ARG RPM=traffic_ops.rpm
-ADD $RPM /
-RUN yum install -y /$(basename $RPM)
+# Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
+ARG TRAFFIC_OPS_RPM=traffic_ops.rpm
+ADD $TRAFFIC_OPS_RPM /
+RUN yum install -y /$(basename $TRAFFIC_OPS_RPM)
 
 # once installed, remove rpm to lower image size
-RUN rm /$(basename $RPM)
+RUN rm /$(basename $TRAFFIC_OPS_RPM) && \
+    yum clean all
 
-RUN POSTGRES_HOME=/usr/pgsql-9.6 cd /opt/traffic_ops/app && carton
+RUN POSTGRES_HOME=/usr/pgsql-9.6 cd /opt/traffic_ops/app && carton && rm -rf $HOME/.cpan*
 
 RUN /opt/traffic_ops/install/bin/install_go.sh && \
     /opt/traffic_ops/install/bin/install_goose.sh
