@@ -68,9 +68,9 @@ services:
     ports: 
       - "60443:60443"
     build:
-      context: .
+      context: traffic_ops
       args:
-        RPM: traffic_ops.rpm 
+        TRAFFIC_OPS_RPM: traffic_ops.rpm
     depends_on:
       - db
 
@@ -85,7 +85,7 @@ services:
     ports: 
       - "8443:443"
     build:
-      context: .
+      context: traffic_ops
       dockerfile: Dockerfile-go
     depends_on:
       - db
