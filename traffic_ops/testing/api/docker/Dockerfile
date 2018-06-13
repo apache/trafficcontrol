@@ -14,28 +14,36 @@
 FROM trafficops-perl:latest
 MAINTAINER Dewayne Richardson <dewrich@apache.org>
 
+RUN yum -y install vim
+
 ARG TO_DIR=traffic_ops
-ARG TEST_ENV=$TEST_ENV
-ARG API_DOCKER_DIR=traffic_ops/testing/api/docker
+ARG API_DOCKER_DIR=.
 
 ARG TEST_DIR
-ARG TEST_ENV
+
 ENV TEST_DIR=$TEST_DIR
-ENV TEST_ENV=$TEST_ENV
+
+ARG DB_NAME
 ARG DB_SERVER
 ARG DB_PORT
+ARG DB_USER
+ARG DB_PASSWORD
+
+ENV DB_NAME=$DB_SERVER
 ENV DB_SERVER=$DB_SERVER
 ENV DB_PORT=$DB_PORT
+ENV DB_USER=$DB_SERVER
+ENV DB_PASSWORD=$DB_PASSWORD
 
 #COPY --from=trafficops-perl /opt/traffic_ops /opt/traffic_ops
 COPY --from=trafficops-perl /usr/local/go /usr/local/go
 
 ADD $API_DOCKER_DIR/$TO_RPM /
-ADD $API_DOCKER_DIR/run_admin_pl.sh /
 
 ENV PERL5LIB="/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5"
 
 WORKDIR /opt/traffic_ops/app
-RUN ./db/admin.pl --env=$TEST_ENV reset
+ADD ./run_admin_pl.sh .
+RUN ./run_admin_pl.sh
 
 #EXPOSE 60443

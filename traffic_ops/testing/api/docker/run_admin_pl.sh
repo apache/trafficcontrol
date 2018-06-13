@@ -51,4 +51,4 @@ test:
 EOF
 
 cd /opt/traffic_ops/app
-./db/admin.pl --env=$TEST_ENV reset
+./db/admin.pl --env=test reset
