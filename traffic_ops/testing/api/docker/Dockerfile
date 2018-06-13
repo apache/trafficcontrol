@@ -11,38 +11,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#FROM centos:7.2.1511
-FROM docker_to_base:latest
+FROM trafficops-perl:latest
 MAINTAINER Dewayne Richardson <dewrich@apache.org>
 
 ARG TO_DIR=traffic_ops
-ARG TESTENV=$TESTENV
+ARG TEST_ENV=$TEST_ENV
 ARG API_DOCKER_DIR=traffic_ops/testing/api/docker
-# ignore this if it fails
-#RUN rm -rf /root/.cpan* 2>/dev/null || true
 
-ARG TESTDIR
-ARG TESTENV
-ENV TESTDIR=$TESTDIR
-ENV TESTENV=$TESTENV
-ARG DBHOST
-ARG DBPORT
-ENV DBHOST=$DBHOST
-ENV DBPORT=$DBPORT
-#ADD $API_DOCKER_DIR/run_traffic_ops.sh /opt/traffic_ops/app
+ARG TEST_DIR
+ARG TEST_ENV
+ENV TEST_DIR=$TEST_DIR
+ENV TEST_ENV=$TEST_ENV
+ARG DB_SERVER
+ARG DB_PORT
+ENV DB_SERVER=$DB_SERVER
+ENV DB_PORT=$DB_PORT
 
-ARG TO_RPM=traffic_ops-2.2.0-7398.7bb32b09.el7.x86_64.rpm
+#COPY --from=trafficops-perl /opt/traffic_ops /opt/traffic_ops
+COPY --from=trafficops-perl /usr/local/go /usr/local/go
+
 ADD $API_DOCKER_DIR/$TO_RPM /
-ADD $API_DOCKER_DIR/run_traffic_ops.sh /
-#WORKDIR /
-#RUN yum -y install $TO_RPM
-
-#ADD $API_DOCKER_DIR/local /opt/traffic_ops/app
-WORKDIR /opt/traffic_ops/app
+ADD $API_DOCKER_DIR/run_admin_pl.sh /
 
 ENV PERL5LIB="/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5"
 
-RUN POSTGRES_HOME=/usr/pgsql-9.6 carton
-CMD /run_traffic_ops.sh
+WORKDIR /opt/traffic_ops/app
+RUN ./db/admin.pl --env=$TEST_ENV reset
 
 #EXPOSE 60443
