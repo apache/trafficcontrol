@@ -624,6 +624,7 @@ func readGetDeliveryServices(params map[string]string, db *sqlx.DB, user auth.Cu
 		"id":               dbhelpers.WhereColumnInfo{"ds.id", api.IsInt},
 		"cdn":              dbhelpers.WhereColumnInfo{"ds.cdn_id", api.IsInt},
 		"xml_id":           dbhelpers.WhereColumnInfo{"ds.xml_id", nil},
+		"xmlId":            dbhelpers.WhereColumnInfo{"ds.xml_id", nil},
 		"profile":          dbhelpers.WhereColumnInfo{"ds.profile", api.IsInt},
 		"type":             dbhelpers.WhereColumnInfo{"ds.type", api.IsInt},
 		"logsEnabled":      dbhelpers.WhereColumnInfo{"ds.logs_enabled", api.IsBool},
