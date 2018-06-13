@@ -26,7 +26,7 @@ const DefaultRoutingName = "cdn"
 //
 // GetDeliveryServiceResponse is deprecated use DeliveryServicesResponse...
 type GetDeliveryServiceResponse struct {
-	Response []DeliveryService `json:"response"`
+	Response []DeliveryServiceV13 `json:"response"`
 }
 
 // DeliveryServicesResponse ...
@@ -61,7 +61,6 @@ type DeleteDeliveryServiceResponse struct {
 // TODO move contents to DeliveryServiceV12, fix references, and remove
 type DeliveryService struct {
 	Active                   bool                   `json:"active"`
-	AnonymousBlockingEnabled bool                   `json:"anonymousBlockingEnabled"`
 	CacheURL                 string                 `json:"cacheurl"`
 	CCRDNSTTL                int                    `json:"ccrDnsTtl"`
 	CDNID                    int                    `json:"cdnId"`
@@ -122,12 +121,13 @@ type DeliveryServiceV12 struct {
 
 type DeliveryServiceV13 struct {
 	DeliveryServiceV12
-	DeepCachingType   DeepCachingType `json:"deepCachingType"`
-	FQPacingRate      int             `json:"fqPacingRate,omitempty"`
-	SigningAlgorithm  string          `json:"signingAlgorithm" db:"signing_algorithm"`
-	TenantName        string          `json:"tenantName,omitempty"`
-	TRRequestHeaders  string          `json:"trRequestHeaders,omitempty"`
-	TRResponseHeaders string          `json:"trResponseHeaders,omitempty"`
+	AnonymousBlockingEnabled bool            `json:"anonymousBlockingEnabled"`
+	DeepCachingType          DeepCachingType `json:"deepCachingType"`
+	FQPacingRate             int             `json:"fqPacingRate,omitempty"`
+	SigningAlgorithm         string          `json:"signingAlgorithm" db:"signing_algorithm"`
+	TenantName               string          `json:"tenantName,omitempty"`
+	TRRequestHeaders         string          `json:"trRequestHeaders,omitempty"`
+	TRResponseHeaders        string          `json:"trResponseHeaders,omitempty"`
 }
 
 // DeliveryServiceNullable - a version of the deliveryservice that allows for all fields to be null
@@ -136,7 +136,6 @@ type DeliveryServiceNullable struct {
 	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
 	//
 	Active                   *bool                   `json:"active" db:"active"`
-	AnonymousBlockingEnabled *bool                   `json:"anonymousBlockingEnabled" db:"anonymous_blocking_enabled"`
 	CacheURL                 *string                 `json:"cacheurl" db:"cacheurl"`
 	CCRDNSTTL                *int                    `json:"ccrDnsTtl" db:"ccr_dns_ttl"`
 	CDNID                    *int                    `json:"cdnId" db:"cdn_id"`
@@ -199,12 +198,13 @@ type DeliveryServiceNullableV12 struct {
 
 type DeliveryServiceNullableV13 struct {
 	DeliveryServiceNullableV12
-	DeepCachingType   *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
-	FQPacingRate      *int             `json:"fqPacingRate,omitempty"`
-	SigningAlgorithm  *string          `json:"signingAlgorithm" db:"signing_algorithm"`
-	Tenant            *string          `json:"tenant,omitempty"`
-	TRResponseHeaders *string          `json:"trResponseHeaders,omitempty"`
-	TRRequestHeaders  *string          `json:"trRequestHeaders,omitempty"`
+	AnonymousBlockingEnabled *bool            `json:"anonymousBlockingEnabled" db:"anonymous_blocking_enabled"`
+	DeepCachingType          *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
+	FQPacingRate             *int             `json:"fqPacingRate,omitempty"`
+	SigningAlgorithm         *string          `json:"signingAlgorithm" db:"signing_algorithm"`
+	Tenant                   *string          `json:"tenant,omitempty"`
+	TRResponseHeaders        *string          `json:"trResponseHeaders,omitempty"`
+	TRRequestHeaders         *string          `json:"trRequestHeaders,omitempty"`
 }
 
 // Value implements the driver.Valuer interface
