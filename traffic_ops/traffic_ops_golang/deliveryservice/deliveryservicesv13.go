@@ -621,8 +621,18 @@ func readGetDeliveryServices(params map[string]string, db *sqlx.DB, user auth.Cu
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":       dbhelpers.WhereColumnInfo{"ds.id", api.IsInt},
-		"hostName": dbhelpers.WhereColumnInfo{"s.host_name", nil},
+		"id":               dbhelpers.WhereColumnInfo{"ds.id", api.IsInt},
+		"cdn":              dbhelpers.WhereColumnInfo{"ds.cdn_id", api.IsInt},
+		"xml_id":           dbhelpers.WhereColumnInfo{"ds.xml_id", nil},
+		"profile":          dbhelpers.WhereColumnInfo{"ds.profile", api.IsInt},
+		"type":             dbhelpers.WhereColumnInfo{"ds.type", api.IsInt},
+		"logsEnabled":      dbhelpers.WhereColumnInfo{"ds.logs_enabled", api.IsBool},
+		"tenant":           dbhelpers.WhereColumnInfo{"ds.tenant_id", api.IsInt},
+		"signingAlgorithm": dbhelpers.WhereColumnInfo{"ds.signing_algorithm", nil},
+	}
+
+	if _, ok := params["orderby"]; !ok {
+		params["orderby"] = "xml_id"
 	}
 
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
