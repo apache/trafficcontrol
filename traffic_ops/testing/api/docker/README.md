@@ -24,5 +24,4 @@ environment variables. By default the docker-compose.yml will look for it's defa
 
 When necessary the environment variables can be overridden via the command line docker-compose option as well like this:
 
-  $ docker-compose run -e TODB_HOSTNAME=your_traffic_ops_db_hostname -e TO_URL=https://your_traffic_ops_ip:8443 api_tests
-
+  $ docker-compose up --build 
