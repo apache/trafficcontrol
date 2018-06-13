@@ -60,59 +60,60 @@ type DeleteDeliveryServiceResponse struct {
 // DeliveryService ...
 // TODO move contents to DeliveryServiceV12, fix references, and remove
 type DeliveryService struct {
-	Active               bool                   `json:"active"`
-	CacheURL             string                 `json:"cacheurl"`
-	CCRDNSTTL            int                    `json:"ccrDnsTtl"`
-	CDNID                int                    `json:"cdnId"`
-	CDNName              string                 `json:"cdnName"`
-	CheckPath            string                 `json:"checkPath"`
-	DeepCachingType      DeepCachingType        `json:"deepCachingType"`
-	DisplayName          string                 `json:"displayName"`
-	DNSBypassCname       string                 `json:"dnsBypassCname"`
-	DNSBypassIP          string                 `json:"dnsBypassIp"`
-	DNSBypassIP6         string                 `json:"dnsBypassIp6"`
-	DNSBypassTTL         int                    `json:"dnsBypassTtl"`
-	DSCP                 int                    `json:"dscp"`
-	EdgeHeaderRewrite    string                 `json:"edgeHeaderRewrite"`
-	ExampleURLs          []string               `json:"exampleURLs"`
-	GeoLimit             int                    `json:"geoLimit"`
-	FQPacingRate         int                    `json:"fqPacingRate"`
-	GeoProvider          int                    `json:"geoProvider"`
-	GlobalMaxMBPS        int                    `json:"globalMaxMbps"`
-	GlobalMaxTPS         int                    `json:"globalMaxTps"`
-	HTTPBypassFQDN       string                 `json:"httpBypassFqdn"`
-	ID                   int                    `json:"id"`
-	InfoURL              string                 `json:"infoUrl"`
-	InitialDispersion    float32                `json:"initialDispersion"`
-	IPV6RoutingEnabled   bool                   `json:"ipv6RoutingEnabled"`
-	LastUpdated          *TimeNoMod             `json:"lastUpdated" db:"last_updated"`
-	LogsEnabled          bool                   `json:"logsEnabled"`
-	LongDesc             string                 `json:"longDesc"`
-	LongDesc1            string                 `json:"longDesc1"`
-	LongDesc2            string                 `json:"longDesc2"`
-	MatchList            []DeliveryServiceMatch `json:"matchList,omitempty"`
-	MaxDNSAnswers        int                    `json:"maxDnsAnswers"`
-	MidHeaderRewrite     string                 `json:"midHeaderRewrite"`
-	MissLat              float64                `json:"missLat"`
-	MissLong             float64                `json:"missLong"`
-	MultiSiteOrigin      bool                   `json:"multiSiteOrigin"`
-	OrgServerFQDN        string                 `json:"orgServerFqdn"`
-	ProfileDesc          string                 `json:"profileDescription"`
-	ProfileID            int                    `json:"profileId,omitempty"`
-	ProfileName          string                 `json:"profileName"`
-	Protocol             int                    `json:"protocol"`
-	QStringIgnore        int                    `json:"qstringIgnore"`
-	RangeRequestHandling int                    `json:"rangeRequestHandling"`
-	RegexRemap           string                 `json:"regexRemap"`
-	RegionalGeoBlocking  bool                   `json:"regionalGeoBlocking"`
-	RemapText            string                 `json:"remapText"`
-	RoutingName          string                 `json:"routingName"`
-	SigningAlgorithm     string                 `json:"signingAlgorithm" db:"signing_algorithm"`
-	TypeID               int                    `json:"typeId"`
-	Type                 DSType                 `json:"type"`
-	TRResponseHeaders    string                 `json:"trResponseHeaders"`
-	TenantID             int                    `json:"tenantId,omitempty"`
-	XMLID                string                 `json:"xmlId"`
+	Active                   bool                   `json:"active"`
+	AnonymousBlockingEnabled bool                   `json:"anonymousBlockingEnabled"`
+	CacheURL                 string                 `json:"cacheurl"`
+	CCRDNSTTL                int                    `json:"ccrDnsTtl"`
+	CDNID                    int                    `json:"cdnId"`
+	CDNName                  string                 `json:"cdnName"`
+	CheckPath                string                 `json:"checkPath"`
+	DeepCachingType          DeepCachingType        `json:"deepCachingType"`
+	DisplayName              string                 `json:"displayName"`
+	DNSBypassCname           string                 `json:"dnsBypassCname"`
+	DNSBypassIP              string                 `json:"dnsBypassIp"`
+	DNSBypassIP6             string                 `json:"dnsBypassIp6"`
+	DNSBypassTTL             int                    `json:"dnsBypassTtl"`
+	DSCP                     int                    `json:"dscp"`
+	EdgeHeaderRewrite        string                 `json:"edgeHeaderRewrite"`
+	ExampleURLs              []string               `json:"exampleURLs"`
+	GeoLimit                 int                    `json:"geoLimit"`
+	FQPacingRate             int                    `json:"fqPacingRate"`
+	GeoProvider              int                    `json:"geoProvider"`
+	GlobalMaxMBPS            int                    `json:"globalMaxMbps"`
+	GlobalMaxTPS             int                    `json:"globalMaxTps"`
+	HTTPBypassFQDN           string                 `json:"httpBypassFqdn"`
+	ID                       int                    `json:"id"`
+	InfoURL                  string                 `json:"infoUrl"`
+	InitialDispersion        float32                `json:"initialDispersion"`
+	IPV6RoutingEnabled       bool                   `json:"ipv6RoutingEnabled"`
+	LastUpdated              *TimeNoMod             `json:"lastUpdated" db:"last_updated"`
+	LogsEnabled              bool                   `json:"logsEnabled"`
+	LongDesc                 string                 `json:"longDesc"`
+	LongDesc1                string                 `json:"longDesc1"`
+	LongDesc2                string                 `json:"longDesc2"`
+	MatchList                []DeliveryServiceMatch `json:"matchList,omitempty"`
+	MaxDNSAnswers            int                    `json:"maxDnsAnswers"`
+	MidHeaderRewrite         string                 `json:"midHeaderRewrite"`
+	MissLat                  float64                `json:"missLat"`
+	MissLong                 float64                `json:"missLong"`
+	MultiSiteOrigin          bool                   `json:"multiSiteOrigin"`
+	OrgServerFQDN            string                 `json:"orgServerFqdn"`
+	ProfileDesc              string                 `json:"profileDescription"`
+	ProfileID                int                    `json:"profileId,omitempty"`
+	ProfileName              string                 `json:"profileName"`
+	Protocol                 int                    `json:"protocol"`
+	QStringIgnore            int                    `json:"qstringIgnore"`
+	RangeRequestHandling     int                    `json:"rangeRequestHandling"`
+	RegexRemap               string                 `json:"regexRemap"`
+	RegionalGeoBlocking      bool                   `json:"regionalGeoBlocking"`
+	RemapText                string                 `json:"remapText"`
+	RoutingName              string                 `json:"routingName"`
+	SigningAlgorithm         string                 `json:"signingAlgorithm" db:"signing_algorithm"`
+	TypeID                   int                    `json:"typeId"`
+	Type                     DSType                 `json:"type"`
+	TRResponseHeaders        string                 `json:"trResponseHeaders"`
+	TenantID                 int                    `json:"tenantId,omitempty"`
+	XMLID                    string                 `json:"xmlId"`
 }
 
 type DeliveryServiceV12 struct {
@@ -121,13 +122,12 @@ type DeliveryServiceV12 struct {
 
 type DeliveryServiceV13 struct {
 	DeliveryServiceV12
-	AnonymousBlockingEnabled bool            `json:"anonymousBlockingEnabled"`
-	DeepCachingType          DeepCachingType `json:"deepCachingType"`
-	FQPacingRate             int             `json:"fqPacingRate,omitempty"`
-	SigningAlgorithm         string          `json:"signingAlgorithm" db:"signing_algorithm"`
-	TenantName               string          `json:"tenantName,omitempty"`
-	TRRequestHeaders         string          `json:"trRequestHeaders,omitempty"`
-	TRResponseHeaders        string          `json:"trResponseHeaders,omitempty"`
+	DeepCachingType   DeepCachingType `json:"deepCachingType"`
+	FQPacingRate      int             `json:"fqPacingRate,omitempty"`
+	SigningAlgorithm  string          `json:"signingAlgorithm" db:"signing_algorithm"`
+	TenantName        string          `json:"tenantName,omitempty"`
+	TRRequestHeaders  string          `json:"trRequestHeaders,omitempty"`
+	TRResponseHeaders string          `json:"trResponseHeaders,omitempty"`
 }
 
 // DeliveryServiceNullable - a version of the deliveryservice that allows for all fields to be null
@@ -135,61 +135,62 @@ type DeliveryServiceV13 struct {
 type DeliveryServiceNullable struct {
 	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
 	//
-	Active               *bool                   `json:"active" db:"active"`
-	CacheURL             *string                 `json:"cacheurl" db:"cacheurl"`
-	CCRDNSTTL            *int                    `json:"ccrDnsTtl" db:"ccr_dns_ttl"`
-	CDNID                *int                    `json:"cdnId" db:"cdn_id"`
-	CDNName              *string                 `json:"cdnName"`
-	CheckPath            *string                 `json:"checkPath" db:"check_path"`
-	DisplayName          *string                 `json:"displayName" db:"display_name"`
-	DNSBypassCNAME       *string                 `json:"dnsBypassCname" db:"dns_bypass_cname"`
-	DNSBypassIP          *string                 `json:"dnsBypassIp" db:"dns_bypass_ip"`
-	DNSBypassIP6         *string                 `json:"dnsBypassIp6" db:"dns_bypass_ip6"`
-	DNSBypassTTL         *int                    `json:"dnsBypassTtl" db:"dns_bypass_ttl"`
-	DSCP                 *int                    `json:"dscp" db:"dscp"`
-	EdgeHeaderRewrite    *string                 `json:"edgeHeaderRewrite" db:"edge_header_rewrite"`
-	FQPacingRate         *int                    `json:"fqPacingRate" db:"fq_pacing_rate"`
-	GeoLimit             *int                    `json:"geoLimit" db:"geo_limit"`
-	GeoLimitCountries    *string                 `json:"geoLimitCountries" db:"geo_limit_countries"`
-	GeoLimitRedirectURL  *string                 `json:"geoLimitRedirectURL" db:"geolimit_redirect_url"`
-	GeoProvider          *int                    `json:"geoProvider" db:"geo_provider"`
-	GlobalMaxMBPS        *int                    `json:"globalMaxMbps" db:"global_max_mbps"`
-	GlobalMaxTPS         *int                    `json:"globalMaxTps" db:"global_max_tps"`
-	HTTPBypassFQDN       *string                 `json:"httpBypassFqdn" db:"http_bypass_fqdn"`
-	ID                   *int                    `json:"id" db:"id"`
-	InfoURL              *string                 `json:"infoUrl" db:"info_url"`
-	InitialDispersion    *int                    `json:"initialDispersion" db:"initial_dispersion"`
-	IPV6RoutingEnabled   *bool                   `json:"ipv6RoutingEnabled" db:"ipv6_routing_enabled"`
-	LastUpdated          *TimeNoMod              `json:"lastUpdated" db:"last_updated"`
-	LogsEnabled          *bool                   `json:"logsEnabled" db:"logs_enabled"`
-	LongDesc             *string                 `json:"longDesc" db:"long_desc"`
-	LongDesc1            *string                 `json:"longDesc1" db:"long_desc_1"`
-	LongDesc2            *string                 `json:"longDesc2" db:"long_desc_2"`
-	MatchList            *[]DeliveryServiceMatch `json:"matchList"`
-	MaxDNSAnswers        *int                    `json:"maxDnsAnswers" db:"max_dns_answers"`
-	MidHeaderRewrite     *string                 `json:"midHeaderRewrite" db:"mid_header_rewrite"`
-	MissLat              *float64                `json:"missLat" db:"miss_lat"`
-	MissLong             *float64                `json:"missLong" db:"miss_long"`
-	MultiSiteOrigin      *bool                   `json:"multiSiteOrigin" db:"multi_site_origin"`
-	OriginShield         *string                 `json:"originShield" db:"origin_shield"`
-	OrgServerFQDN        *string                 `json:"orgServerFqdn" db:"org_server_fqdn"`
-	ProfileDesc          *string                 `json:"profileDescription"`
-	ProfileID            *int                    `json:"profileId" db:"profile"`
-	ProfileName          *string                 `json:"profileName"`
-	Protocol             *int                    `json:"protocol" db:"protocol"`
-	QStringIgnore        *int                    `json:"qstringIgnore" db:"qstring_ignore"`
-	RangeRequestHandling *int                    `json:"rangeRequestHandling" db:"range_request_handling"`
-	RegexRemap           *string                 `json:"regexRemap" db:"regex_remap"`
-	RegionalGeoBlocking  *bool                   `json:"regionalGeoBlocking" db:"regional_geo_blocking"`
-	RemapText            *string                 `json:"remapText" db:"remap_text"`
-	RoutingName          *string                 `json:"routingName" db:"routing_name"`
-	Signed               bool                    `json:"signed"`
-	SSLKeyVersion        *int                    `json:"sslKeyVersion" db:"ssl_key_version"`
-	TenantID             *int                    `json:"tenantId" db:"tenant_id"`
-	Type                 *DSType                 `json:"type"`
-	TypeID               *int                    `json:"typeId" db:"type"`
-	XMLID                *string                 `json:"xmlId" db:"xml_id"`
-	ExampleURLs          []string                `json:"exampleURLs"`
+	Active                   *bool                   `json:"active" db:"active"`
+	AnonymousBlockingEnabled *bool                   `json:"anonymousBlockingEnabled" db:"anonymous_blocking_enabled"`
+	CacheURL                 *string                 `json:"cacheurl" db:"cacheurl"`
+	CCRDNSTTL                *int                    `json:"ccrDnsTtl" db:"ccr_dns_ttl"`
+	CDNID                    *int                    `json:"cdnId" db:"cdn_id"`
+	CDNName                  *string                 `json:"cdnName"`
+	CheckPath                *string                 `json:"checkPath" db:"check_path"`
+	DisplayName              *string                 `json:"displayName" db:"display_name"`
+	DNSBypassCNAME           *string                 `json:"dnsBypassCname" db:"dns_bypass_cname"`
+	DNSBypassIP              *string                 `json:"dnsBypassIp" db:"dns_bypass_ip"`
+	DNSBypassIP6             *string                 `json:"dnsBypassIp6" db:"dns_bypass_ip6"`
+	DNSBypassTTL             *int                    `json:"dnsBypassTtl" db:"dns_bypass_ttl"`
+	DSCP                     *int                    `json:"dscp" db:"dscp"`
+	EdgeHeaderRewrite        *string                 `json:"edgeHeaderRewrite" db:"edge_header_rewrite"`
+	FQPacingRate             *int                    `json:"fqPacingRate" db:"fq_pacing_rate"`
+	GeoLimit                 *int                    `json:"geoLimit" db:"geo_limit"`
+	GeoLimitCountries        *string                 `json:"geoLimitCountries" db:"geo_limit_countries"`
+	GeoLimitRedirectURL      *string                 `json:"geoLimitRedirectURL" db:"geolimit_redirect_url"`
+	GeoProvider              *int                    `json:"geoProvider" db:"geo_provider"`
+	GlobalMaxMBPS            *int                    `json:"globalMaxMbps" db:"global_max_mbps"`
+	GlobalMaxTPS             *int                    `json:"globalMaxTps" db:"global_max_tps"`
+	HTTPBypassFQDN           *string                 `json:"httpBypassFqdn" db:"http_bypass_fqdn"`
+	ID                       *int                    `json:"id" db:"id"`
+	InfoURL                  *string                 `json:"infoUrl" db:"info_url"`
+	InitialDispersion        *int                    `json:"initialDispersion" db:"initial_dispersion"`
+	IPV6RoutingEnabled       *bool                   `json:"ipv6RoutingEnabled" db:"ipv6_routing_enabled"`
+	LastUpdated              *TimeNoMod              `json:"lastUpdated" db:"last_updated"`
+	LogsEnabled              *bool                   `json:"logsEnabled" db:"logs_enabled"`
+	LongDesc                 *string                 `json:"longDesc" db:"long_desc"`
+	LongDesc1                *string                 `json:"longDesc1" db:"long_desc_1"`
+	LongDesc2                *string                 `json:"longDesc2" db:"long_desc_2"`
+	MatchList                *[]DeliveryServiceMatch `json:"matchList"`
+	MaxDNSAnswers            *int                    `json:"maxDnsAnswers" db:"max_dns_answers"`
+	MidHeaderRewrite         *string                 `json:"midHeaderRewrite" db:"mid_header_rewrite"`
+	MissLat                  *float64                `json:"missLat" db:"miss_lat"`
+	MissLong                 *float64                `json:"missLong" db:"miss_long"`
+	MultiSiteOrigin          *bool                   `json:"multiSiteOrigin" db:"multi_site_origin"`
+	OriginShield             *string                 `json:"originShield" db:"origin_shield"`
+	OrgServerFQDN            *string                 `json:"orgServerFqdn" db:"org_server_fqdn"`
+	ProfileDesc              *string                 `json:"profileDescription"`
+	ProfileID                *int                    `json:"profileId" db:"profile"`
+	ProfileName              *string                 `json:"profileName"`
+	Protocol                 *int                    `json:"protocol" db:"protocol"`
+	QStringIgnore            *int                    `json:"qstringIgnore" db:"qstring_ignore"`
+	RangeRequestHandling     *int                    `json:"rangeRequestHandling" db:"range_request_handling"`
+	RegexRemap               *string                 `json:"regexRemap" db:"regex_remap"`
+	RegionalGeoBlocking      *bool                   `json:"regionalGeoBlocking" db:"regional_geo_blocking"`
+	RemapText                *string                 `json:"remapText" db:"remap_text"`
+	RoutingName              *string                 `json:"routingName" db:"routing_name"`
+	Signed                   bool                    `json:"signed"`
+	SSLKeyVersion            *int                    `json:"sslKeyVersion" db:"ssl_key_version"`
+	TenantID                 *int                    `json:"tenantId" db:"tenant_id"`
+	Type                     *DSType                 `json:"type"`
+	TypeID                   *int                    `json:"typeId" db:"type"`
+	XMLID                    *string                 `json:"xmlId" db:"xml_id"`
+	ExampleURLs              []string                `json:"exampleURLs"`
 }
 
 type DeliveryServiceNullableV12 struct {
@@ -198,13 +199,12 @@ type DeliveryServiceNullableV12 struct {
 
 type DeliveryServiceNullableV13 struct {
 	DeliveryServiceNullableV12
-	AnonymousBlockingEnabled *bool            `json:"anonymousBlockingEnabled" db:"anonymous_blocking_enabled"`
-	DeepCachingType          *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
-	FQPacingRate             *int             `json:"fqPacingRate,omitempty"`
-	SigningAlgorithm         *string          `json:"signingAlgorithm" db:"signing_algorithm"`
-	Tenant                   *string          `json:"tenant,omitempty"`
-	TRResponseHeaders        *string          `json:"trResponseHeaders,omitempty"`
-	TRRequestHeaders         *string          `json:"trRequestHeaders,omitempty"`
+	DeepCachingType   *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
+	FQPacingRate      *int             `json:"fqPacingRate,omitempty"`
+	SigningAlgorithm  *string          `json:"signingAlgorithm" db:"signing_algorithm"`
+	Tenant            *string          `json:"tenant,omitempty"`
+	TRResponseHeaders *string          `json:"trResponseHeaders,omitempty"`
+	TRRequestHeaders  *string          `json:"trRequestHeaders,omitempty"`
 }
 
 // Value implements the driver.Valuer interface

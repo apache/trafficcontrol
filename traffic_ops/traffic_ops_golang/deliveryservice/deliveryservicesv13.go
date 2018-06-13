@@ -192,7 +192,7 @@ func create(db *sql.DB, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 	commitTx := false
 	defer dbhelpers.FinishTx(tx, &commitTx)
 
-	resultRows, err := tx.Query(insertQuery(), &ds.Active, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CheckPath, &deepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OriginShield, &ds.ProfileID, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.TypeID, &ds.XMLID)
+	resultRows, err := tx.Query(insertQuery(), &ds.Active, &ds.AnonymousBlockingEnabled, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CheckPath, &deepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OriginShield, &ds.ProfileID, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.TypeID, &ds.XMLID)
 
 	if err != nil {
 		if pqerr, ok := err.(*pq.Error); ok {
@@ -533,7 +533,7 @@ func update(db *sql.DB, cfg config.Config, user auth.CurrentUser, ds *tc.Deliver
 		deepCachingType = ds.DeepCachingType.String() // necessary, because DeepCachingType's default needs to insert the string, not "", and Query doesn't call .String().
 	}
 
-	resultRows, err := tx.Query(updateDSQuery(), &ds.Active, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CheckPath, &deepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OriginShield, &ds.ProfileID, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.TypeID, &ds.XMLID, &ds.ID)
+	resultRows, err := tx.Query(updateDSQuery(), &ds.Active, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CheckPath, &deepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OriginShield, &ds.ProfileID, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.TypeID, &ds.XMLID, &ds.AnonymousBlockingEnabled, &ds.ID)
 
 	if err != nil {
 		if err, ok := err.(*pq.Error); ok {
@@ -793,7 +793,7 @@ func readGetDeliveryServices(params map[string]string, db *sqlx.DB, user auth.Cu
 	for rows.Next() {
 		ds := tc.DeliveryServiceNullableV13{}
 		cdnDomain := ""
-		err := rows.Scan(&ds.Active, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CDNName, &ds.CheckPath, &ds.DeepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.ID, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LastUpdated, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OrgServerFQDN, &ds.OriginShield, &ds.ProfileID, &ds.ProfileName, &ds.ProfileDesc, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.Tenant, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.Type, &ds.TypeID, &ds.XMLID, &cdnDomain)
+		err := rows.Scan(&ds.Active, &ds.AnonymousBlockingEnabled, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CDNName, &ds.CheckPath, &ds.DeepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.ID, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LastUpdated, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OrgServerFQDN, &ds.OriginShield, &ds.ProfileID, &ds.ProfileName, &ds.ProfileDesc, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.Tenant, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.Type, &ds.TypeID, &ds.XMLID, &cdnDomain)
 		if err != nil {
 			return nil, []error{fmt.Errorf("getting delivery services: %v", err)}, tc.SystemError
 		}
@@ -1105,6 +1105,7 @@ func selectQuery() string {
 	return `
 SELECT
 ds.active,
+ds.anonymous_blocking_enabled,
 ds.cacheurl,
 ds.ccr_dns_ttl,
 ds.cdn_id,
@@ -1225,8 +1226,9 @@ tenant_id=$45,
 tr_request_headers=$46,
 tr_response_headers=$47,
 type=$48,
-xml_id=$49
-WHERE id=$50
+xml_id=$49,
+anonymous_blocking_enabled=$50
+WHERE id=$51
 RETURNING last_updated
 `
 }
@@ -1235,6 +1237,7 @@ func insertQuery() string {
 	return `
 INSERT INTO deliveryservice (
 active,
+anonymous_blocking_enabled,
 cacheurl,
 ccr_dns_ttl,
 cdn_id,
@@ -1285,6 +1288,7 @@ type,
 xml_id
 )
 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50)
 RETURNING id, last_updated
 `
 }
