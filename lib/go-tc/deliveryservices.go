@@ -543,3 +543,11 @@ type DeliveryServiceRouting struct {
 	RegionalAlternate int     `json:"regionalAlternate"`
 	RegionalDenied    int     `json:"regionalDenied"`
 }
+
+type DeliveryServiceAvailableResp []DeliveryServiceAvailableInfo
+
+type DeliveryServiceAvailableInfo struct {
+	XMLID       string `json:"xmlId"`
+	ID          int    `json:"id"`
+	DisplayName string `json:"displayName"`
+}
