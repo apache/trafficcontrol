@@ -179,6 +179,7 @@ func postDeliveryservice(payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",dns_bypass_cname"
 	sqlString += ",tr_request_headers"
 	sqlString += ",created_at"
+	sqlString += ",anonymous_blocking_enabled"
 	sqlString += ") VALUES ("
 	sqlString += ":name"
 	sqlString += ",:display_name"
@@ -221,6 +222,7 @@ func postDeliveryservice(payload []byte, db *sqlx.DB) (interface{}, error) {
 	sqlString += ",:dns_bypass_cname"
 	sqlString += ",:tr_request_headers"
 	sqlString += ",:created_at"
+	sqlString += ",:anonymous_blocking_enabled"
 	sqlString += ")"
 	result, err := db.NamedExec(sqlString, v)
 	if err != nil {
@@ -288,6 +290,7 @@ func putDeliveryservice(name string, payload []byte, db *sqlx.DB) (interface{}, 
 	sqlString += ",dns_bypass_cname = :dns_bypass_cname"
 	sqlString += ",tr_request_headers = :tr_request_headers"
 	sqlString += ",created_at = :created_at"
+	sqlString += ",anonymous_blocking_enabled = :anonymous_blocking_enabled"
 	sqlString += " WHERE name=:name"
 	result, err := db.NamedExec(sqlString, arg)
 	if err != nil {
