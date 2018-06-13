@@ -90,3 +90,13 @@ services:
     depends_on:
       - db
       - trafficops-perl
+
+  trafficportal:
+    depends_on:
+      - trafficops
+    build:
+      context: traffic_portal
+      args:
+        TRAFFIC_PORTAL_RPM: traffic_portal.rpm
+    ports:
+      - "8443:443"
