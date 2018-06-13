@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormOriginController = function(origin, $scope, $location, formUtils, locationUtils, tenantUtils, deliveryServiceService, profileService, tenantService, coordinateService, cacheGroupService, originService) {
+var FormOriginController = function(origin, $scope, $window, $location, formUtils, locationUtils, tenantUtils, deliveryServiceService, profileService, tenantService, coordinateService, cacheGroupService, originService) {
 
     var getProfiles = function() {
         profileService.getProfiles({ orderby: 'name' })
@@ -77,6 +77,11 @@ var FormOriginController = function(origin, $scope, $location, formUtils, locati
 
     $scope.navigateToPath = locationUtils.navigateToPath;
 
+    $scope.editDeliveryService = function(deliveryServiceId) {
+        ds = _.findWhere($scope.deliveryServices, { id: deliveryServiceId });
+        $window.open('/#!/delivery-services/' + ds.id + '?type=' + ds.type, '_blank');
+    };
+
     $scope.hasError = formUtils.hasError;
 
     $scope.hasPropertyError = formUtils.hasPropertyError;
@@ -92,5 +97,5 @@ var FormOriginController = function(origin, $scope, $location, formUtils, locati
 
 };
 
-FormOriginController.$inject = ['origin', '$scope', '$location', 'formUtils', 'locationUtils', 'tenantUtils', 'deliveryServiceService', 'profileService', 'tenantService', 'coordinateService', 'cacheGroupService', 'originService'];
+FormOriginController.$inject = ['origin', '$scope', '$window', '$location', 'formUtils', 'locationUtils', 'tenantUtils', 'deliveryServiceService', 'profileService', 'tenantService', 'coordinateService', 'cacheGroupService', 'originService'];
 module.exports = FormOriginController;

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceController = function(deliveryService, dsCurrent, type, types, $scope, $location, $uibModal, $window, formUtils, locationUtils, tenantUtils, deliveryServiceUtils, cdnService, profileService, tenantService, propertiesModel) {
+var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, type, types, $scope, $location, $uibModal, $window, formUtils, locationUtils, tenantUtils, deliveryServiceUtils, cdnService, profileService, tenantService, propertiesModel) {
 
     var getCDNs = function() {
         cdnService.getCDNs()
@@ -46,6 +46,8 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, type, t
     $scope.deliveryService = deliveryService;
 
     $scope.dsCurrent = dsCurrent; // this ds is used primarily for showing the diff between a ds request and the current DS
+
+    $scope.origin = origin[0];
 
     $scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
 
@@ -285,5 +287,5 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, type, t
 
 };
 
-FormDeliveryServiceController.$inject = ['deliveryService', 'dsCurrent', 'type', 'types', '$scope', '$location', '$uibModal', '$window', 'formUtils', 'locationUtils', 'tenantUtils', 'deliveryServiceUtils', 'cdnService', 'profileService', 'tenantService', 'propertiesModel'];
+FormDeliveryServiceController.$inject = ['deliveryService', 'dsCurrent', 'origin', 'type', 'types', '$scope', '$location', '$uibModal', '$window', 'formUtils', 'locationUtils', 'tenantUtils', 'deliveryServiceUtils', 'cdnService', 'profileService', 'tenantService', 'propertiesModel'];
 module.exports = FormDeliveryServiceController;

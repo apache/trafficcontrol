@@ -108,6 +108,7 @@ under the License.
                         <option value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(originForm.deliveryServiceId, 'required')">Required</small>
+                    <small ng-show="origin.deliveryServiceId"><a ng-click="editDeliveryService(origin.deliveryServiceId)" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
             <div class="form-group" ng-class="{'has-error': hasError(originForm.coordinateId), 'has-feedback': hasError(originForm.coordinateId)}">
