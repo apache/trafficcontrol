@@ -61,7 +61,7 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 		} else {
 			q := `select cachegroup.name from cachegroup_fallbacks
 join cachegroup on cachegroup_fallbacks.backup_cg = cachegroup.id
-and cachegroup_fallbacks.primary_cg = $1
+and cachegroup_fallbacks.primary_cg = $1 order by cachegroup_fallbacks.set_order
 `
 			dbRows, err := db.Query(q, primaryCacheID)
 
