@@ -18,13 +18,19 @@
 #infrastructure/cdn-in-a-box/traffic_ops/
 
 ---
-version: '2.1'
+version: '3'
+
+networks:
+  default:
+    external:
+      name: traffic_ops_tcnet
 
 services:
-  api_tests:
+  trafficops_api_tests:
+    image: trafficops-api-tests
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../../../..
+      dockerfile: traffic_ops/testing/api/docker/Dockerfile
       args:
         DB_SERVER: db
         DB_PORT: 5432
