@@ -17,17 +17,18 @@
 #
 # To use this compose you should first build Traffic Ops and then copy the RPM to :
 #
-# incubator-trafficcontrol/infrastructure/docker/traffic_ops/traffic_ops.rpm
+# incubator-trafficcontrol/infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
 #
-# You should then just be able to go to the directory incubator-trafficcontrol/infrastructure/docker/traffic_ops/
-# and type 'docker-compose up -d'
+#      cd incubator-trafficcontrol/infrastructure/cdn-in-a-box
+#  
+# Adjust the settings in `variables.env` to suit your needs.
 #
-# You should then be able to go to https://localhost and test Traffic Ops or the go api.
-# if you make code changes to the Go proxy then you just need to rebuild it and then
-# restart Traffic Ops:
+#      docker-compose up -d
 #
-# bash -c "clear && docker exec trafficops_to_server_1 /bin/bash /etc/init.d/traffic_ops /bin/bash /etc/init.d/traffic_ops start; sleep 5"
+# The Traffic Ops Go API will then be available on https://localhost:8443,
+# the Perl API on https://localhost:60443, and the postgres database on localhost 5432.
 #
+# Note that this setup is intended for testing and not for production use.
 
 ---
 version: '2.1'
@@ -82,7 +83,7 @@ services:
     env_file:
       - variables.env
     ports: 
-      - "443:443"
+      - "8443:443"
     build:
       context: .
       dockerfile: Dockerfile-go
