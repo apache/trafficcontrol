@@ -25,7 +25,7 @@
 #
 #      docker-compose up -d
 #
-# The Traffic Ops Go API will then be available on https://localhost:8443,
+# The Traffic Ops Go API will then be available on https://localhost:6443,
 # the Perl API on https://localhost:60443, and the postgres database on localhost 5432.
 #
 # Note that this setup is intended for testing and not for production use.
@@ -90,7 +90,7 @@ services:
     networks:
       - tcnet
     ports: 
-      - "8443:443"
+      - "6443:443"
     build:
       context: traffic_ops
       dockerfile: Dockerfile-go
@@ -113,4 +113,4 @@ services:
     networks:
       - tcnet
     ports:
-      - "8443:443"
+      - "443:443"
