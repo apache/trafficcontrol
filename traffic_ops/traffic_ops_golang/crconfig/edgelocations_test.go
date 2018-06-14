@@ -40,14 +40,19 @@ func ExpectedMakeLocations() (map[string]tc.CRConfigLatitudeLongitude, map[strin
 }
 
 func MockMakeLocations(mock sqlmock.Sqlmock, expectedEdgeLocs map[string]tc.CRConfigLatitudeLongitude, expectedRouterLocs map[string]tc.CRConfigLatitudeLongitude, cdn string) {
-	rows := sqlmock.NewRows([]string{"name", "type", "latitude", "longitude"})
+	rows := sqlmock.NewRows([]string{"name", "id", "type", "latitude", "longitude", "fallback_to_closest"})
 	for s, l := range expectedEdgeLocs {
-		rows = rows.AddRow(s, EdgeTypePrefix, l.Lat, l.Lon)
+		rows = rows.AddRow(s, 1, EdgeTypePrefix, l.Lat, l.Lon, false)
 	}
 	for s, l := range expectedRouterLocs {
-		rows = rows.AddRow(s, RouterTypeName, l.Lat, l.Lon)
+		rows = rows.AddRow(s, 1, RouterTypeName, l.Lat, l.Lon, false)
 	}
 	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
+
+	fallbackRows := sqlmock.NewRows([]string{"name"})
+	for range expectedEdgeLocs {
+		mock.ExpectQuery("select").WithArgs(1).WillReturnRows(fallbackRows)
+	}
 }
 
 func TestMakeLocations(t *testing.T) {
