@@ -16,6 +16,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
+# adduser.pl creates the sql necessary to add a user to the database for traffic_ops login.
+# Usage:   adduser.pl <username> <password> <role>
+#  -- the password is encrypted appropriately to be compatible with Traffic Ops.
+#
 use strict;
 use Crypt::ScryptKDF qw{ scrypt_hash };
 
