@@ -34,7 +34,8 @@ RUN yum install -y \
     nodejs \
     openssl \
     /$(basename $TRAFFIC_PORTAL_RPM) && \
-    rm /$(basename $TRAFFIC_PORTAL_RPM)
+    rm /$(basename $TRAFFIC_PORTAL_RPM) && \
+    yum clean all
 
 ADD config.js /etc/traffic_portal/conf/.
 ADD traffic_portal_properties.json /opt/traffic_portal/public/.
