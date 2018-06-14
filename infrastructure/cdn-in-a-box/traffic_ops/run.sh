@@ -20,7 +20,9 @@
 # The Dockerfile sets up a Docker image which can be used for any new Traffic Ops container;
 # This script, which should be run when the container is run (it's the ENTRYPOINT), will configure the container.
 #
-# The following environment variables must be set, ordinarily by `docker run -e` arguments:
+# The following environment variables are used to configure the database and traffic ops.  They must be set
+# in ../variables.env for docker-compose to pick up the values:
+# 
 # DB_SERVER
 # DB_PORT
 # DB_ROOT_PASS
