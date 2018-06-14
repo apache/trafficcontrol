@@ -23,7 +23,7 @@ version: '3'
 networks:
   default:
     external:
-      name: traffic_ops_tcnet
+      name: cdn-in-a-box_tcnet
 
 services:
   trafficops_api_tests:
