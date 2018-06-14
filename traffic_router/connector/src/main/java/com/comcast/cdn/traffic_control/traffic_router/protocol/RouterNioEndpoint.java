@@ -61,7 +61,7 @@ public class RouterNioEndpoint extends NioEndpoint {
             sslHostConfig.setHostName(sslHostsData.get(alias).getHostname());
             sslHostConfig.setProtocols("all");
             sslHostConfig.setConfigType(getSslConfigType());
-            sslHostConfig.setCertificateVerification("optionalNoCA");
+            sslHostConfig.setCertificateVerification("none");
             LOGGER.info("sslHostConfig: "+sslHostConfig.getHostName()+" "+sslHostConfig.getTruststoreAlgorithm());
 
             if (!sslHostConfig.getHostName().equals(lastHostName)) {
