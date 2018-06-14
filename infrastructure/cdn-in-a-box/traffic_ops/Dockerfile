@@ -65,7 +65,6 @@ RUN echo "{\"user\": \"riakuser\",\"password\": \"$TRAFFIC_VAULT_PASS\"}" > /opt
 EXPOSE 443
 WORKDIR /opt/traffic_ops/app
 ENV MOJO_MODE production
-ADD profile.origin.traffic_ops /
 
 ADD adduser.pl /
 ADD config.sh /
