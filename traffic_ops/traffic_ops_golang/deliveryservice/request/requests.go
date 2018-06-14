@@ -108,7 +108,7 @@ func (req *TODeliveryServiceRequest) Read(parameters map[string]string) ([]inter
 	}
 	if tenancyEnabled {
 		log.Debugln("Tenancy is enabled")
-		tenantIDs, err := tenant.GetUserTenantIDListTx(req.ReqInfo.User, req.ReqInfo.Tx)
+		tenantIDs, err := tenant.GetUserTenantIDListTx(req.ReqInfo.Tx.Tx, req.ReqInfo.User.TenantID)
 		if err != nil {
 			log.Errorln("received error querying for user's tenants: " + err.Error())
 			return nil, []error{tc.DBError}, tc.SystemError

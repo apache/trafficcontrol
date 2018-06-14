@@ -180,30 +180,26 @@ func GetUserTenantIDList(user auth.CurrentUser, db *sqlx.DB) ([]int, error) {
 	return tenants, nil
 }
 
-func GetUserTenantIDListTx(user *auth.CurrentUser, tx *sqlx.Tx) ([]int, error) {
-	query := `WITH RECURSIVE q AS (SELECT id, name, active, parent_id FROM tenant WHERE id = $1
-	UNION SELECT t.id, t.name, t.active, t.parent_id  FROM tenant t JOIN q ON q.id = t.parent_id)
-	SELECT id FROM q;`
-
-	log.Debugln("\nQuery: ", query)
-
-	var tenantID int
-
-	rows, err := tx.Query(query, user.TenantID)
+func GetUserTenantIDListTx(tx *sql.Tx, userTenantID int) ([]int, error) {
+	query := `
+WITH RECURSIVE q AS (SELECT id, name, active, parent_id FROM tenant WHERE id = $1
+UNION SELECT t.id, t.name, t.active, t.parent_id  FROM tenant t JOIN q ON q.id = t.parent_id)
+SELECT id FROM q;
+`
+	rows, err := tx.Query(query, userTenantID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	tenants := []int{}
-
 	for rows.Next() {
+		tenantID := 0
 		if err := rows.Scan(&tenantID); err != nil {
 			return nil, err
 		}
 		tenants = append(tenants, tenantID)
 	}
-
 	return tenants, nil
 }
 
@@ -219,10 +215,12 @@ func IsTenancyEnabled(db *sqlx.DB) bool {
 	return useTenancy
 }
 
+// IsTenancyEnabledTx returns true if tenancy is enabled or false otherwise
 func IsTenancyEnabledTx(tx *sql.Tx) (bool, error) {
 	query := `SELECT COALESCE(value::boolean,FALSE) AS value FROM parameter WHERE name = 'use_tenancy' AND config_file = 'global' UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY`
 	useTenancy := false
-	if err := tx.QueryRow(query).Scan(&useTenancy); err != nil {
+	err := tx.QueryRow(query).Scan(&useTenancy)
+	if err != nil {
 		return false, errors.New("checking if tenancy is enabled: " + err.Error())
 	}
 	return useTenancy, nil

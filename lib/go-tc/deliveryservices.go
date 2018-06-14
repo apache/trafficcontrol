@@ -526,6 +526,13 @@ type DeliveryServiceCapacity struct {
 	MaintenancePercent float64 `json:"maintenancePercent"`
 }
 
+type DeliveryServiceMatchesResp []DeliveryServicePatterns
+
+type DeliveryServicePatterns struct {
+	Patterns []string            `json:"patterns"`
+	DSName   DeliveryServiceName `json:"dsName"`
+}
+
 // DeliveryServiceRoutingResponse ...
 type DeliveryServiceRoutingResponse struct {
 	Response DeliveryServiceRouting `json:"response"`
