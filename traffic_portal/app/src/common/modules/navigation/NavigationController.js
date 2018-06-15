@@ -41,6 +41,9 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
         isDisabled: false
     };
 
+    $scope.hasCapability = function(cap) {
+        return userModel.hasCapability(cap);
+    };
 
     $scope.navigateToPath = function(path) {
         $location.url(path);

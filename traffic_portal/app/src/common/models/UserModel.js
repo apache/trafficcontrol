@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var UserModel = function($rootScope) {
+var UserModel = function($rootScope, propertiesModel) {
 
     this.loaded = false;
 
@@ -36,7 +36,14 @@ var UserModel = function($rootScope) {
         $rootScope.$broadcast('userModel::userUpdated', this.user);
     };
 
+    this.hasCapability = function(cap) {
+        if (propertiesModel.properties.enforceCapabilities == false) {
+            return true;
+        }
+        return _.has(this.user, 'capabilities') && _.indexOf(this.user.capabilities, cap) != -1;
+    };
+
 };
 
-UserModel.$inject = ['$rootScope'];
+UserModel.$inject = ['$rootScope', 'propertiesModel'];
 module.exports = UserModel;

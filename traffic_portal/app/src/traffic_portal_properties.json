@@ -6,6 +6,7 @@
       "_comment": "This should have the same value found in /etc/traffic_portal/conf/config.js",
       "baseUrl": "https://localhost:8444/api/"
     },
+    "enforceCapabilities": false,
     "dashboard": {
       "_comments": "These are configurable properties for the dashboard",
       "autoRefresh": true,
