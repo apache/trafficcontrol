@@ -54,9 +54,8 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         authService.logout();
     };
 
-    $scope.dumpDB = function() {
-        alert('not working yet');
-        // trafficPortalService.dumpDB();
+    $scope.dbDump = function() {
+        trafficPortalService.dbDump();
     };
 
     $scope.confirmQueueServerUpdates = function() {
