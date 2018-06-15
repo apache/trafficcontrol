@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TrafficPortalService = function($http, $q) {
+var TrafficPortalService = function($http, $q, $window, propertiesModel) {
 
     this.getReleaseVersionInfo = function() {
         var deferred = $q.defer();
@@ -34,11 +34,6 @@ var TrafficPortalService = function($http, $q) {
         return deferred.promise;
     };
 
-    this.dumpDB = function() {
-        // todo: need to fix this so it is not hard-coded
-        window.location = 'http://localhost:3000/api/1.2/dbdump';
-    };
-
     this.getProperties = function() {
         var deferred = $q.defer();
         $http.get('traffic_portal_properties.json')
@@ -51,7 +46,11 @@ var TrafficPortalService = function($http, $q) {
         return deferred.promise;
     };
 
+    this.dbDump = function() {
+        $window.open(propertiesModel.properties.api.baseUrl + '1.3/dbdump', '_blank');
+    };
+
 };
 
-TrafficPortalService.$inject = ['$http', '$q'];
+TrafficPortalService.$inject = ['$http', '$q', '$window', 'propertiesModel'];
 module.exports = TrafficPortalService;
