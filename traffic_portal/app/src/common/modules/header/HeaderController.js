@@ -32,6 +32,10 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
 
     $scope.changeLogs = [];
 
+    $scope.hasCapability = function(cap) {
+        return userModel.hasCapability(cap);
+    };
+
     $scope.isState = function(state) {
         return $state.current.name.indexOf(state) !== -1;
     };
