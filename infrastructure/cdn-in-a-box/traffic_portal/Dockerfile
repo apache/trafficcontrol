@@ -26,18 +26,19 @@ RUN curl -sL https://rpm.nodesource.com/setup_6.x | bash -
 
 # Override TRAFFIC_PORTAL_RPM arg to use a different one using --build-arg TRAFFIC_PORTAL_RPM=...  Can be local file or http://...
 ARG TRAFFIC_PORTAL_RPM=traffic_portal.rpm
-RUN echo $TRAFFIC_PORTAL_RPM
 ADD $TRAFFIC_PORTAL_RPM /
 
 # Install and delete the TRAFFIC_PORTAL_RPM when finished
 RUN yum install -y \
-    nodejs \
-    openssl \
-    /$(basename $TRAFFIC_PORTAL_RPM) && \
+    epel-release && \
+    yum install -y \
+      jq \
+      nodejs \
+      openssl \
+      /$(basename $TRAFFIC_PORTAL_RPM) && \
     rm /$(basename $TRAFFIC_PORTAL_RPM) && \
-    yum clean all
+    yum clean all || \
+    echo "ERROR INSTALLING PACKAGES"
 
-ADD config.js /etc/traffic_portal/conf/.
-ADD traffic_portal_properties.json /opt/traffic_portal/public/.
 ADD run.sh /
 CMD /run.sh
