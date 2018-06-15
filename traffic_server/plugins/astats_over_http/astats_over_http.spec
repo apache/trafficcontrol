@@ -17,32 +17,32 @@
 # under the License.
 
 %global install_prefix "/opt"
+%global traffic_server_version __TRAFFIC_SERVER_VERSION__
 
 Name:		astats_over_http
-Version:	1.3
-Release:	1%{?dist}
+Version:	%{traffic_control_version}
+Release:	%{build_number}
 Summary:	Apache Traffic Server %{name} plugin
 Vendor:		Comcast
 Group:		Applications/Communications
 License:	Apache License, Version 2.0
 URL:		https://github.com/apache/incubator-trafficcontrol/tree/master/traffic_server/plugins/astats_over_http
-Source0:	%{name}.tar.gz
+Source0:	%{name}-%{version}.tgz
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
-Requires:	trafficserver = 5.2.0
-BuildRequires:	trafficserver = 5.2.0
+Requires:	trafficserver = %{traffic_server_version}
 
 %description
 Apache Traffic Server plugin
 
 %prep
-%setup -q -n %{name}
+%setup 
 
 %build
-%{install_prefix}/trafficserver/bin/tsxs -v -c %{name}.c -o %{name}.so
+%{install_prefix}/trafficserver/bin/tsxs -v -c %{name}.c -o %{name}.so -I%{install_prefix}/trafficserver/include
 
 %install
 mkdir -p $RPM_BUILD_ROOT%{install_prefix}/trafficserver/libexec/trafficserver
-DESTDIR=$RPM_BUILD_ROOT %{install_prefix}/trafficserver/bin/tsxs -v -o %{name}.so -i
+cp %{name}.so $RPM_BUILD_ROOT%{install_prefix}/trafficserver/libexec/trafficserver/
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -52,5 +52,5 @@ rm -rf $RPM_BUILD_ROOT
 %postun
 
 %files
-%defattr(-,root,root)
+%defattr(644,ats,ats)
 /opt/trafficserver/libexec/trafficserver/%{name}.so
