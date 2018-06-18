@@ -242,3 +242,27 @@ func GetBucketKey(tx *sql.Tx, authOpts *riak.AuthOptions, bucket string, key str
 	}
 	return val, found, nil
 }
+
+func DeleteDSSSLKeys(tx *sql.Tx, authOpts *riak.AuthOptions, ds tc.DeliveryServiceName, version string) error {
+	if version == "" {
+		version = "latest"
+	}
+	key := string(ds) + "-" + version
+
+	cluster, err := GetRiakClusterTx(tx, authOpts)
+	if err != nil {
+		return errors.New("getting riak cluster: " + err.Error())
+	}
+	if err = cluster.Start(); err != nil {
+		return errors.New("starting riak cluster: " + err.Error())
+	}
+	defer func() {
+		if err := cluster.Stop(); err != nil {
+			log.Errorln("stopping Riak cluster: " + err.Error())
+		}
+	}()
+	if err := DeleteObject(key, DeliveryServiceSSLKeysBucket, cluster); err != nil {
+		return errors.New("deleting SSL keys: " + err.Error())
+	}
+	return nil
+}
