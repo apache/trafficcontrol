@@ -70,7 +70,7 @@ func CreateTestDeliveryServices(t *testing.T) {
 		}
 		ds.CDNID = respCDNs[0].ID
 
-		respTypes, _, err := TOSession.GetTypeByName(ds.Type)
+		respTypes, _, err := TOSession.GetTypeByName(string(ds.Type))
 		if err != nil {
 			t.Fatalf("cannot GET Type by name: %v\n", err)
 		}
