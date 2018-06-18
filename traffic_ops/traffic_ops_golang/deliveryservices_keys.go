@@ -213,6 +213,72 @@ func verifyAndEncodeCertificate(certificate string, rootCA string) (string, erro
 	return base64EncodedStr, nil
 }
 
+// verify the server certificate chain and return the
+// certificate and its chain in the proper order. Returns an
+// ordered certificate chain, including self signed certificates.
+func decodeCertificate(certificate string) ([]*x509.Certificate, error) {
+	var b64crt string
+
+	// strip newlines from encoded crt and decode it from base64.
+	crtArr := strings.Split(certificate, "\\n")
+	for i := 0; i < len(crtArr); i++ {
+		b64crt += crtArr[i]
+	}
+	pemCerts := make([]byte, base64.StdEncoding.EncodedLen(len(b64crt)))
+	_, err := base64.StdEncoding.Decode(pemCerts, []byte(b64crt))
+	if err != nil {
+		return nil, fmt.Errorf("could not base64 decode the certificate %v", err)
+	}
+
+	// decode, verify, and order certs
+	var bundle string
+	certs := strings.SplitAfter(string(pemCerts), "-----END CERTIFICATE-----")
+	if len(certs) > 1 {
+		// decode and verify the server certificate
+		block, _ := pem.Decode([]byte(certs[0]))
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return nil, fmt.Errorf("could not parse the server certificate %v", err)
+		}
+		if !(cert.KeyUsage&x509.KeyUsageKeyEncipherment > 0) {
+			return nil, fmt.Errorf("no key encipherment usage for the server certificate")
+		}
+		for i := 0; i < len(certs)-1; i++ {
+			bundle += certs[i]
+		}
+
+		var opts x509.VerifyOptions
+
+		intermediatePool := x509.NewCertPool()
+		if !intermediatePool.AppendCertsFromPEM([]byte(bundle)) {
+			return nil, fmt.Errorf("certificate CA bundle is empty, %v", err)
+		}
+
+		opts = x509.VerifyOptions{
+			Intermediates: intermediatePool,
+		}
+
+		chain, err := cert.Verify(opts)
+		if err != nil {
+			return nil, fmt.Errorf("could not verify the certificate chain, %v", err)
+		}
+		var certChain []*x509.Certificate
+		if len(chain) > 0 {
+			for _, link := range chain[0] {
+				// Only print non-self signed elements of the chain
+				//if link.AuthorityKeyId != nil && !bytes.Equal(link.AuthorityKeyId, link.SubjectKeyId) {
+				certChain = append(certChain, link)
+				//}
+			}
+			return certChain, nil
+		} else {
+			return nil, fmt.Errorf("can't find valid chain for cert in file in request")
+		}
+	} else {
+		return nil, fmt.Errorf("no certificate chain to decode")
+	}
+}
+
 func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErr := tc.GetHandleErrorsFunc(w, r)
