@@ -41,6 +41,7 @@ import (
 
 const DBContextKey = "db"
 const ConfigContextKey = "context"
+const ReqIDContextKey = "reqid"
 
 // WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
@@ -216,6 +217,7 @@ type APIInfo struct {
 	Params    map[string]string
 	IntParams map[string]int
 	User      *auth.CurrentUser
+	ReqID     uint64
 	Tx        *sqlx.Tx
 	CommitTx  *bool
 	Config    *config.Config
@@ -247,6 +249,11 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	if err != nil {
 		return nil, errors.New("getting config: " + err.Error()), nil, http.StatusInternalServerError
 	}
+	reqID, err := getReqID(r.Context())
+	if err != nil {
+		return nil, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
+	}
+
 	user, err := auth.GetCurrentUser(r.Context())
 	if err != nil {
 		return nil, errors.New("getting user: " + err.Error()), nil, http.StatusInternalServerError
@@ -262,6 +269,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	falsePtr := false
 	return &APIInfo{
 		Config:    cfg,
+		ReqID:     reqID,
 		Params:    params,
 		IntParams: intParams,
 		User:      user,
@@ -301,4 +309,17 @@ func getConfig(ctx context.Context) (*config.Config, error) {
 		}
 	}
 	return nil, errors.New("No config found in Context")
+}
+
+func getReqID(ctx context.Context) (uint64, error) {
+	val := ctx.Value(ReqIDContextKey)
+	if val != nil {
+		switch v := val.(type) {
+		case uint64:
+			return v, nil
+		default:
+			return 0, fmt.Errorf("ReqID found with bad type: %T", v)
+		}
+	}
+	return 0, errors.New("No ReqID found in Context")
 }
