@@ -90,7 +90,7 @@ services:
     networks:
       - tcnet
     ports: 
-      - "6443:443"
+      - "6443:6443"
     build:
       context: traffic_ops
       dockerfile: Dockerfile-go
