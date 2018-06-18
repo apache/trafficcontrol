@@ -59,7 +59,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
     },
     "traffic_ops_golang" : {
 	"insecure": true,
-        "port" : "443",
+        "port" : "6443",
         "proxy_timeout" : 60,
         "proxy_keep_alive" : 60,
         "proxy_tls_timeout" : 60,

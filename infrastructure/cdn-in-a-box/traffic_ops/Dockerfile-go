@@ -28,7 +28,7 @@ RUN mkdir -p /opt/traffic_ops/app/bin /opt/traffic_ops/app/conf/production
 COPY --from=trafficops-perl /opt/traffic_ops/app/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang 
 COPY --from=trafficops-perl /usr/local/go /usr/local/go
 
-EXPOSE 443
+EXPOSE 6443
 WORKDIR /opt/traffic_ops/app
 
 ADD config.sh /

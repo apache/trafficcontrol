@@ -18,7 +18,7 @@ openssl req -newkey rsa:2048 -nodes -keyout $key -x509 -days 365 -out $cert -sub
 
 
 # set configs to point to TO_HOST
-sed -i -e "/^\s*base_url:/ s@'.*'@'https://$TO_HOST'@" /etc/traffic_portal/conf/config.js
+sed -i -e "/^\s*base_url:/ s@'.*'@'https://$TO_HOST:6443/api/'@" /etc/traffic_portal/conf/config.js
 
 props=/opt/traffic_portal/public/traffic_portal_properties.json
 tmp=$(mktemp)
