@@ -87,7 +87,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "no_account_found_msg" : "A Traffic Ops user account is required for access. Please contact your Traffic Ops user administrator."
     },
     "portal" : {
-        "base_url" : "https://$TP_HOST:8080/!#/",
+        "base_url" : "https://$TP_HOST/!#/",
         "email_from" : "no-reply@traffic-portal-domain.com",
         "pass_reset_path" : "user",
         "user_register_path" : "user"
