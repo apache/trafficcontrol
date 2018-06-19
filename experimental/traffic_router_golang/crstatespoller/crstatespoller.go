@@ -26,12 +26,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_router/experimental/traffic_router_golang/availableservers"
-	"github.com/apache/incubator-trafficcontrol/traffic_router/experimental/traffic_router_golang/crconfig"
-	"github.com/apache/incubator-trafficcontrol/traffic_router/experimental/traffic_router_golang/crstates"
-	"github.com/apache/incubator-trafficcontrol/traffic_router/experimental/traffic_router_golang/fetch"
+	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/availableservers"
+	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/crconfig"
+	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/crstates"
+	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/fetch"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func updateAvailableServers(crcThs crconfig.Ths, crsThs crstates.Ths, as availableservers.AvailableServers) {
