@@ -16,8 +16,8 @@
 package v13
 
 import (
-	v12 "github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
+	v12 "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 )
 
 // TrafficControl - maps to the tc-fixtures.json file

@@ -21,7 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 // LoadFixtures ...

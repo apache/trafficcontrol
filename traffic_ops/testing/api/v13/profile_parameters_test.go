@@ -20,8 +20,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 )
 
 const queryParamFormat = "?profileId=%d&parameterId=%d"

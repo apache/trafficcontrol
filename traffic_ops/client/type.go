@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // Types gets an array of Types.

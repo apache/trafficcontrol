@@ -29,13 +29,13 @@ In order to run the tests you will need the following:
 
     To get your to_test database setup do the following:
     
-    `$ cd incubator-trafficcontrol/traffic_ops/app`
+    `$ cd trafficcontrol/traffic_ops/app`
     
     `$ db/admin.pl --env=test reset` 
 
     NOTE on passwords:
     Check that the passwords defined defined for your `to_test` database match 
-    here: `incubator-trafficcontrol/traffic_ops/app/conf/test/database.conf`
+    here: `trafficcontrol/traffic_ops/app/conf/test/database.conf`
     and here: `traffic-ops-test.conf` 
 
     The Traffic Ops users will be created by the tool for accessing the API once the database is accessible.
@@ -48,12 +48,12 @@ In order to run the tests you will need the following:
     
    	`$ export MOJO_MODE=test`  
    	
-   	`$ cd incubator-trafficcontrol/traffic_ops/app`
+   	`$ cd trafficcontrol/traffic_ops/app`
    	
     `$ bin/start.pl --secure`
 
 4. A running Traffic Ops Golang proxy pointing to the to_test database.
-	`$ cd incubator-trafficcontrol/traffic_ops/traffic_ops_golang`
+	`$ cd trafficcontrol/traffic_ops/traffic_ops_golang`
 	`$ cp ../app/conf/cdn.conf $HOME/cdn.conf`
 	change `traffic_ops_golang->port` to 8443
 

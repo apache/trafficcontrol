@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // DeliveryServices gets an array of DeliveryServices

@@ -14,9 +14,9 @@
 package main
 
 import (
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/server/auth"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/server/db"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/server/routes"
+	"github.com/apache/trafficcontrol/traffic_ops/experimental/server/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/experimental/server/db"
+	"github.com/apache/trafficcontrol/traffic_ops/experimental/server/routes"
 
 	"encoding/gob"
 	"encoding/json"

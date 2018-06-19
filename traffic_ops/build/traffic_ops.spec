@@ -29,7 +29,7 @@ License:          Apache License, Version 2.0
 Group:            Base System/System Tools
 Prefix:           /opt/traffic_ops
 Source:           %{_sourcedir}/traffic_ops-%{version}.tgz
-URL:              https://github.com/apache/incubator-trafficcontrol/
+URL:              https://github.com/apache/trafficcontrol/
 Vendor:           Apache Software Foundation
 Packager:         daniel_kirkwood at Cable dot Comcast dot com
 AutoReqProv:      no
@@ -71,7 +71,7 @@ Built: %(date) by %{getenv: USER}
     build_dependencies () {
        IFS=$'\n'
        array=($(go list -f '{{ join .Deps "\n" }}' | grep incubator | grep -v $1))
-       prefix=github.com/apache/incubator-trafficcontrol
+       prefix=github.com/apache/trafficcontrol
        for (( i=0; i<${#array[@]}; i++ )); do
            curPkg=${array[i]};
            curPkgShort=${curPkg#$prefix};
@@ -92,14 +92,14 @@ Built: %(date) by %{getenv: USER}
     }
     oldpwd=$(pwd)
     #copy in traffic_ops/vendor
-    vendordir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/vendor 
+    vendordir=src/github.com/apache/trafficcontrol/traffic_ops/vendor 
     ( mkdir -p "$vendordir" && \
       cd "$vendordir" && \
       cp -r "$TC_DIR"/traffic_ops/vendor/* . \
     ) || { echo "could not copy traffic_ops/vendor directory"; exit 1; } 
 
     # build traffic_ops_golang binary
-    godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
+    godir=src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
     ( mkdir -p "$godir" && \
       cd "$godir" && \
       cp -r "$TC_DIR"/traffic_ops/traffic_ops_golang/* . && \
@@ -138,7 +138,7 @@ Built: %(date) by %{getenv: USER}
         %__mkdir -p $RPM_BUILD_ROOT/%{PACKAGEDIR}/app/bin
     fi
 
-    src=src/github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang
+    src=src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
     %__cp -p  "$src"/traffic_ops_golang        "${RPM_BUILD_ROOT}"/opt/traffic_ops/app/bin/traffic_ops_golang
 %pre
     /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupadd -r %{TRAFFIC_OPS_GROUP}

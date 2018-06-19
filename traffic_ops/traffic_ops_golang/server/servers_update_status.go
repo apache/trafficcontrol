@@ -25,9 +25,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/jmoiron/sqlx"
 )
 

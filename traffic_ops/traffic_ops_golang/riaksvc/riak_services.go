@@ -28,8 +28,8 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"

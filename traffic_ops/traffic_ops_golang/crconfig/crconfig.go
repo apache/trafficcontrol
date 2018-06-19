@@ -23,7 +23,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func Make(db *sql.DB, cdn, user, toHost, reqPath, toVersion string) (*tc.CRConfig, error) {

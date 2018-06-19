@@ -23,7 +23,7 @@ import (
 	"os"
 	"reflect"
 
-	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
+	log "github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/kelseyhightower/envconfig"
 )
 

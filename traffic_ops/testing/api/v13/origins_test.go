@@ -18,7 +18,7 @@ package v13
 import (
 	"testing"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 func TestOrigins(t *testing.T) {

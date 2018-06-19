@@ -19,7 +19,7 @@
 
 #### `./swaggerdocs` overview
 
-This directory contains the Go structs that glue together the Swagger 2.0 metadata that will generate the Traffic Ops API documentation using the [go-swagger](https://github.com/go-swagger/go-swagger) meta tags.  The Traffic Ops API documentation is maintained by modifying the Go files in this directory and the Go structs that they reference from here **incubator-trafficcontrol/lib/go-tc/*.go**.  These combination of these two areas of .go files will produce Swagger documentation for the Traffic Ops Go API's.
+This directory contains the Go structs that glue together the Swagger 2.0 metadata that will generate the Traffic Ops API documentation using the [go-swagger](https://github.com/go-swagger/go-swagger) meta tags.  The Traffic Ops API documentation is maintained by modifying the Go files in this directory and the Go structs that they reference from here **trafficcontrol/lib/go-tc/*.go**.  These combination of these two areas of .go files will produce Swagger documentation for the Traffic Ops Go API's.
 
 ### Setup
 
