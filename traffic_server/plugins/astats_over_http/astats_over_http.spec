@@ -25,7 +25,7 @@ Summary:	Apache Traffic Server %{name} plugin
 Vendor:		Comcast
 Group:		Applications/Communications
 License:	Apache License, Version 2.0
-URL:		https://github.com/apache/incubator-trafficcontrol/tree/master/traffic_server/plugins/astats_over_http
+URL:		https://github.com/apache/trafficcontrol/tree/master/traffic_server/plugins/astats_over_http
 Source0:	%{name}.tar.gz
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 Requires:	trafficserver = 5.2.0
