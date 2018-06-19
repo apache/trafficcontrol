@@ -185,3 +185,5 @@ func (r CDNDNSSECGenerateReq) Validate(tx *sql.Tx) error {
 	}
 	return nil
 }
+
+type URLSigKeys map[string]string
