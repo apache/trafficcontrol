@@ -30,7 +30,7 @@ func (to *Session) DeliveryServices() ([]tc.DeliveryServiceV13, error) {
 }
 
 func (to *Session) GetDeliveryServices() ([]tc.DeliveryServiceV13, ReqInf, error) {
-	var data tc.GetDeliveryServiceResponse
+	var data tc.DeliveryServicesResponse
 	reqInf, err := get(to, deliveryServicesEp(), &data)
 	if err != nil {
 		return nil, reqInf, err
@@ -47,7 +47,7 @@ func (to *Session) DeliveryServicesByServer(id int) ([]tc.DeliveryServiceV13, er
 }
 
 func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryServiceV13, ReqInf, error) {
-	var data tc.GetDeliveryServiceResponse
+	var data tc.DeliveryServicesResponse
 	reqInf, err := get(to, deliveryServicesByServerEp(strconv.Itoa(id)), &data)
 	if err != nil {
 		return nil, reqInf, err
@@ -64,7 +64,7 @@ func (to *Session) DeliveryService(id string) (*tc.DeliveryServiceV13, error) {
 }
 
 func (to *Session) GetDeliveryService(id string) (*tc.DeliveryServiceV13, ReqInf, error) {
-	var data tc.GetDeliveryServiceResponse
+	var data tc.DeliveryServicesResponse
 	reqInf, err := get(to, deliveryServiceEp(id), &data)
 	if err != nil {
 		return nil, reqInf, err
