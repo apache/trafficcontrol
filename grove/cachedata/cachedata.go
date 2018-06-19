@@ -20,8 +20,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
-	"github.com/apache/incubator-trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/grove/remapdata"
+	"github.com/apache/trafficcontrol/grove/web"
 )
 
 // ParentResponseData contains data about the parent/origin response.

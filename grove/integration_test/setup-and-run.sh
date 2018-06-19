@@ -35,9 +35,9 @@ go get golang.org/x/net/ipv6
 
 mkdir -p $GOPATH/src/github.com/apache/
 cd $GOPATH/src/github.com/apache/
-#git clone https://github.com/apache/incubator-trafficcontrol
+#git clone https://github.com/apache/trafficcontrol
 git clone $REPO
-cd $GOPATH/src/github.com/apache/incubator-trafficcontrol/grove
+cd $GOPATH/src/github.com/apache/trafficcontrol/grove
 git checkout $BRANCH
 go build
 
@@ -46,13 +46,13 @@ openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout key.pem -out ce
 
 cp /remap-base-test.json /remap.json
 ls -l
-${GOPATH}/src/github.com/apache/incubator-trafficcontrol/grove/grove -cfg grove.cfg &
+${GOPATH}/src/github.com/apache/trafficcontrol/grove/grove -cfg grove.cfg &
 
 
 sleep 3
 curl -H'Host: mem-test.cdn.kabletown.net' -Lsv -r 50000-50009  http://localhost:8080/10Mb.txt
 
-#cd $GOPATH/src/github.com/apache/incubator-trafficcontrol/grove/integration_test
+#cd $GOPATH/src/github.com/apache/trafficcontrol/grove/integration_test
 go build compare_gets.go
 
 #function run_test () {
@@ -91,12 +91,12 @@ function run_test () {
 }
 export -f run_test
 
-cp  $GOPATH/src/github.com/apache/incubator-trafficcontrol/grove/integration_test/tests/plugins/modify_headers/remap.json /remap.json
+cp  $GOPATH/src/github.com/apache/trafficcontrol/grove/integration_test/tests/plugins/modify_headers/remap.json /remap.json
 pkill -HUP grove
-bash $GOPATH/src/github.com/apache/incubator-trafficcontrol/grove/integration_test/tests/plugins/modify_headers/test.sh
+bash $GOPATH/src/github.com/apache/trafficcontrol/grove/integration_test/tests/plugins/modify_headers/test.sh
 
-cp $GOPATH/src/github.com/apache/incubator-trafficcontrol/grove/integration_test/tests/plugins/range_req_handler/remap.json /remap.json
+cp $GOPATH/src/github.com/apache/trafficcontrol/grove/integration_test/tests/plugins/range_req_handler/remap.json /remap.json
 pkill -HUP grove
-bash $GOPATH/src/github.com/apache/incubator-trafficcontrol/grove/integration_test/tests/plugins/range_req_handler/test.sh
+bash $GOPATH/src/github.com/apache/trafficcontrol/grove/integration_test/tests/plugins/range_req_handler/test.sh
 
 

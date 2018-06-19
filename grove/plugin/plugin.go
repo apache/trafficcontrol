@@ -25,12 +25,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/grove/cachedata"
-	"github.com/apache/incubator-trafficcontrol/grove/cacheobj"
-	"github.com/apache/incubator-trafficcontrol/grove/config"
-	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
-	"github.com/apache/incubator-trafficcontrol/grove/stat"
-	"github.com/apache/incubator-trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/grove/cachedata"
+	"github.com/apache/trafficcontrol/grove/cacheobj"
+	"github.com/apache/trafficcontrol/grove/config"
+	"github.com/apache/trafficcontrol/grove/remapdata"
+	"github.com/apache/trafficcontrol/grove/stat"
+	"github.com/apache/trafficcontrol/grove/web"
 )
 
 func AddPlugin(priority uint64, funcs Funcs) {
