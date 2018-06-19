@@ -17,7 +17,7 @@
     under the License.
 -->
 
-[![Build Status](https://builds.apache.org/buildStatus/icon?job=incubator-trafficcontrol-master-build)](https://builds.apache.org/view/Incubator%20Projects/job/incubator-trafficcontrol-master-build/) [![Documentation Status](https://readthedocs.org/projects/traffic-control-cdn/badge/?version=latest)](http://traffic-control-cdn.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://builds.apache.org/buildStatus/icon?job=trafficcontrol-master-build)](https://builds.apache.org/view/Incubator%20Projects/job/trafficcontrol-master-build/) [![Documentation Status](https://readthedocs.org/projects/traffic-control-cdn/badge/?version=latest)](http://traffic-control-cdn.readthedocs.io/en/latest/?badge=latest)
 
 Apache Traffic Control (incubating) is an Open Source implementation of a Content Delivery Network.
 
@@ -29,16 +29,16 @@ Apache Traffic Control (incubating) is an Open Source implementation of a Conten
 * [Developer's Guide](http://traffic-control-cdn.readthedocs.io/en/latest/development/index.html)
 
 ##### Releases
-* [https://github.com/apache/incubator-trafficcontrol/releases](https://github.com/apache/incubator-trafficcontrol/releases)
+* [https://github.com/apache/trafficcontrol/releases](https://github.com/apache/trafficcontrol/releases)
  
 ##### Downloads
-* [http://trafficcontrol.incubator.apache.org/downloads/index.html](http://trafficcontrol.incubator.apache.org/downloads/index.html)
+* [http://trafficcontrol.apache.org/downloads/index.html](http://trafficcontrol.apache.org/downloads/index.html)
  
 ####  Questions, Comments, Bugs and More
 * [Frequently Asked Questions](http://traffic-control-cdn.readthedocs.io/en/latest/faq/index.html)
-* [Found a bug or file a feature request](https://github.com/apache/incubator-trafficcontrol/issues)
-* [Subscribe to our users list](mailto:users-subscribe@trafficcontrol.incubator.apache.org)
-* [Subscribe to our dev list](mailto:dev-subscribe@trafficcontrol.incubator.apache.org)
+* [Found a bug or file a feature request](https://github.com/apache/trafficcontrol/issues)
+* [Subscribe to our users list](mailto:users-subscribe@trafficcontrol.apache.org)
+* [Subscribe to our dev list](mailto:dev-subscribe@trafficcontrol.apache.org)
 * [Search the email archives](https://lists.apache.org/list.html?dev@trafficcontrol.apache.org)
 * [Check out the wiki](https://github.com/Comcast/traffic_control/wiki) for less formal documentation, design docs and roadmap discussions 
 
