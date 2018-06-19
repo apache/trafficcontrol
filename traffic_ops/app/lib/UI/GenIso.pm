@@ -38,51 +38,46 @@ my $install_cfg = "ks_scripts";
 sub geniso {
 	my $self = shift;
 
-	# if 'stream' is set to yes, skip to /iso_download endpoint
-	if ( $self->param('stream') eq 'yes' ) {
-		$self->iso_download();
+	&navbarpage($self);
+	my %serverselect;
+	my $rs_server = $self->db->resultset('Server')->search(undef,
+		{ columns => [ qw/id host_name domain_name/ ], orderby => "host_name" });
+
+	while (my $row = $rs_server->next) {
+		my $fqdn = $row->host_name . "." . $row->domain_name;
+		$serverselect{$fqdn} = $row->id;
+	}
+
+	my $osversionsdir;
+	# my $ksdir = $self->db->resultset('Parameter')->search( {  and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
+	my $ksdir = $self->db->resultset('Parameter')->search({ -and =>
+		[ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] })->get_column('value')->single();
+
+	if (defined $ksdir && $ksdir ne "") {
+		$osversionsdir = $ksdir;
 	}
 	else {
+		$osversionsdir = $filebasedir;
+	}
 
-		&navbarpage($self);
-		my %serverselect;
-		my $rs_server = $self->db->resultset('Server')->search(undef,
-			{ columns => [ qw/id host_name domain_name/ ], orderby => "host_name" });
+	my %osversions;
 
-		while (my $row = $rs_server->next) {
-			my $fqdn = $row->host_name . "." . $row->domain_name;
-			$serverselect{$fqdn} = $row->id;
-		}
+	{
+		open(CFG, "<$osversionsdir/osversions.cfg") || die("$osversionsdir/osversions.cfg:$!");
+		local $/;
+		eval <CFG>;
+		close CFG;
+	}
 
-		my $osversionsdir;
-		# my $ksdir = $self->db->resultset('Parameter')->search( {  and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
-		my $ksdir = $self->db->resultset('Parameter')->search({ -and =>
-			[ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] })->get_column('value')->single();
+	$self->stash(
+		serverselect => \%serverselect,
+		osversions   => \%osversions,
+	);
 
-		if (defined $ksdir && $ksdir ne "") {
-			$osversionsdir = $ksdir;
-		}
-		else {
-			$osversionsdir = $filebasedir;
-		}
-
-		my %osversions;
-
-		{
-			open(CFG, "<$osversionsdir/osversions.cfg") || die("$osversionsdir/osversions.cfg:$!");
-			local $/;
-			eval <CFG>;
-			close CFG;
-		}
-
-		$self->stash(
-			serverselect => \%serverselect,
-			osversions   => \%osversions,
-		);
-
-		my $hostname = $self->param('hostname');
-		if (defined($hostname)) {
-			my $iso_file_name = $self->iso_download();
+	my $hostname = $self->param('hostname');
+	if (defined($hostname)) {
+		my $iso_file_name = $self->iso_download();
+		if ( $self->param('stream') ne 'yes' ) {
 			$self->stash(iso_file_name => $iso_file_name);
 			return $self->render('gen_iso/geniso');
 		}

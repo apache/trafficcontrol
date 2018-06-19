@@ -231,7 +231,7 @@ sub generate_iso {
 
 	my $response = {};
 
-	if ( $stream eq 'no' ) {
+	if ( $stream ne 'yes' ) {
 		$self->app->log->info("Writing ISO: " . $iso_file_path);
 		my $output = `$cmd 2>&1` || die("Error executing $cmd:");
 		$self->app->log->info($output);
@@ -250,6 +250,10 @@ sub generate_iso {
 		$self->res->headers->content_disposition("attachment; filename=\"$iso_file_name\"");
 		my $data = `$cmd`;
 		$self->render( data => $data );
+		$response = {
+			iso => $data,
+			name => $iso_file_name,
+		};
 	}
 	return $response;
 }
