@@ -20,8 +20,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/grove/remap"
-	"github.com/apache/incubator-trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/grove/remap"
+	"github.com/apache/trafficcontrol/grove/web"
 )
 
 func StatsInc(m *web.ConnMap, num int, addrs *[]string) {

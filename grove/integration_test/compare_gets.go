@@ -17,7 +17,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/apache/incubator-trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/grove/web"
 	"io/ioutil"
 	"log"
 	"net/http"

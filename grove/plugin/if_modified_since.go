@@ -17,7 +17,7 @@ package plugin
 import (
 	"net/http"
 
-	"github.com/apache/incubator-trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/grove/web"
 )
 
 func init() {

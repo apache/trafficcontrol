@@ -23,11 +23,11 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/bytefmt"
-	"github.com/apache/incubator-trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/grove/web"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/grove/rfc"
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/grove/rfc"
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 func init() {
