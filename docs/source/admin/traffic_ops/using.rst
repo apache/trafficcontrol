@@ -13,11 +13,11 @@
 .. limitations under the License.
 ..
 
-.. |graph| image:: ../../../../traffic_ops/app/public/images/graph.png
-.. |info| image:: ../../../../traffic_ops/app/public/images/info.png
-.. |checkmark| image:: ../../../../traffic_ops/app/public/images/good.png
-.. |X| image:: ../../../../traffic_ops/app/public/images/bad.png
-.. |clock| image:: ../../../../traffic_ops/app/public/images/clock-black.png
+.. |graph| image:: ../../_static/graph.png
+.. |info| image:: ../../_static//info.png
+.. |checkmark| image:: ../../_static/good.png
+.. |X| image:: ../../_static/bad.png
+.. |clock| image:: ../../_static/clock-black.png
 
 Traffic Ops - Using
 %%%%%%%%%%%%%%%%%%%
