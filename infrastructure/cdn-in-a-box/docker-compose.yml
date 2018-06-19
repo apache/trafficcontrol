@@ -17,9 +17,9 @@
 #
 # To use this compose you should first build Traffic Ops and then copy the RPM to :
 #
-# incubator-trafficcontrol/infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
+# trafficcontrol/infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
 #
-#      cd incubator-trafficcontrol/infrastructure/cdn-in-a-box
+#      cd trafficcontrol/infrastructure/cdn-in-a-box
 #  
 # Adjust the settings in `variables.env` to suit your needs.
 #

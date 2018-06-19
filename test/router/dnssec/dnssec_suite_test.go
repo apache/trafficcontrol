@@ -25,7 +25,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"testing"
-	"github.com/apache/incubator-trafficcontrol/test/router/dnssec"
+	"github.com/apache/trafficcontrol/test/router/dnssec"
 	"github.com/miekg/dns"
 	"flag"
 	"log"
