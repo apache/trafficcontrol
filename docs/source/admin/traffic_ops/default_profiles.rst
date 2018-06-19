@@ -24,7 +24,7 @@ Traffic Ops - Default Profiles
 Traffic Ops has the concept of :ref:`rl-working-with-profiles`, which are an integral function within Traffic Ops.  To get started, a set of default Traffic Ops profiles need to be imported into Traffic Ops
 to get started to support Traffic Control components Traffic Router, Traffic Monitor, and Apache Traffic Server.
 
-`Download Default Profiles from here <http://trafficcontrol.incubator.apache.org/downloads/profiles/>`_ 
+`Download Default Profiles from here <http://trafficcontrol.apache.org/downloads/profiles/>`_ 
 
 .. _rl-to-profiles-min-needed:
 

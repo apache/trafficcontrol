@@ -193,4 +193,4 @@ The 3 most common errors returned by Traffic Ops are:
 TrafficOps Native Client Libraries
 ----------------------------------
 
-TrafficOps client libraries are available in both Golang and Python.  You can read more about them at https://github.com/apache/incubator-trafficcontrol/tree/master/traffic_control/clients
+TrafficOps client libraries are available in both Golang and Python.  You can read more about them at https://github.com/apache/trafficcontrol/tree/master/traffic_control/clients

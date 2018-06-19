@@ -167,7 +167,7 @@ Installing The Developer Environment
 ====================================
 To install the Traffic Ops Developer environment:
 
-1. Clone the traffic_control repository from `github.com <https://github.com/apache/incubator-trafficcontrol>`_.
+1. Clone the trafficcontrol repository from `github.com <https://github.com/apache/trafficcontrol>`_.
 2. Install the local dependencies using Carton (cpanfile).
 
   ::
