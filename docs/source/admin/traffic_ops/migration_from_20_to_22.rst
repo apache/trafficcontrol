@@ -120,3 +120,18 @@ Apache Traffic Server 7.x (Logging)
 Trafficserver v7 has changed the logging format.  Previously this was an xml file and now it is a lua file. Traffic Control compensates for this
 automatically depending upon the filename used for the logging parameters.  Previously the file used was ``logs_xml.config``, for ATS 7 it is now
 ``logging.config``.  The same parameters will work this new file, ``LogFormat.Format``, ``LogFormat.Name``, ``LogObject.Format`` etc.
+
+
+Traffic Ops Profile Modifications
+-------------------------------------------
+When upgrading to ATS 7.x, the Traffic Ops EDGE and MID cache profiles must be modified to provide new configuration values. Trafficserver recommends changes to the following parameters: https://cwiki.apache.org/confluence/display/TS/Upgrading+to+v7.0
+
+Most users of Traffic Control have enough profiles where making these modifications manually is a tedious and time consuming process. A new utility `traffic_ops/install/bin/convert_profile/convert_profile` is provided to automatically convert an ATS6 profile to an ATS7 profile. This utility can be reused in the future for ATS7->8 as well. 
+
+Usage example:
+  1. Use Traffic Portal GUI to export profile to JSON
+  2. Modify the trafficserver version numbers to match your current Traffic Server v6 RPM version and planned Traffic Server v7 RPM version
+  3. Run ``convert_profile -input_profile <exported_file> -rules convert622to713.json -out <new_profile_name>``
+  4. Review output messages and make manual updates if needed. If you have modified a default value the script also wants to change, it will prompt you to make the update manually. You may either do this directly in the JSON file or through the Traffic Portal GUI after import. 
+  5. Use Traffic Portal GUI to import the newly created profile
+
