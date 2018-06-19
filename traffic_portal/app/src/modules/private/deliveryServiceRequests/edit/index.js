@@ -59,6 +59,9 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.e
 									return dsRequest.deliveryService;
 								}
 							},
+							origin: function() {
+								return [{}];
+							},
 							type: function($stateParams) {
 								return $stateParams.type;
 							},
