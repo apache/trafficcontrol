@@ -25,11 +25,11 @@ Installing Traffic Server
 
 #. Build the astats RPM using the appropriate version number: ::
 
-    https://github.com/apache/incubator-trafficcontrol/tree/<version>/traffic_server
+    https://github.com/apache/trafficcontrol/tree/<version>/traffic_server
 
    Sample link: ::
 
-     https://github.com/apache/incubator-trafficcontrol/tree/master/traffic_server
+     https://github.com/apache/trafficcontrol/tree/master/traffic_server
 
 #.  Install Traffic Server and astats: ::
 

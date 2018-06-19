@@ -167,7 +167,7 @@ One time configuration:
 ``riak-admin security grant riak_core.set_bucket on any to admin``
 
 2. Add the search schema to Riak.  This schema is a simple Apache Solr configuration file which will index all records on cdn, hostname, and deliveryservice.
-	* Get the schema file by either cloning the project and going to `traffic_ops/app/config/misc/riak_search` or from `github <https://github.com/apache/incubator-trafficcontrol/tree/master/traffic_ops/app/conf/misc/riak_search>`_.
+	* Get the schema file by either cloning the project and going to `traffic_ops/app/config/misc/riak_search` or from `github <https://github.com/apache/trafficcontrol/tree/master/traffic_ops/app/conf/misc/riak_search>`_.
 	* Use curl to add the schema to riak: ``curl -kvs -XPUT "https://admin:pass@riakserver:8088/search/schema/sslkeys" -H 'Content-Type:application/xml'  -d @sslkeys.xml``
 
 3. Add search index to Riak
