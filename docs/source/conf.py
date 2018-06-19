@@ -32,7 +32,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'playdo'
+project = 'Traffic Control'
 copyright = '2018, jvd'
 author = 'jvd'
 
@@ -114,7 +114,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'playdodoc'
+htmlhelp_basename = 'traffic-control-cdn-doc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -141,7 +141,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'playdo.tex', 'playdo Documentation',
+    (master_doc, 'trafficcontrol.tex', 'trafficcontrol Documentation',
      'jvd', 'manual'),
 ]
 
@@ -151,7 +151,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'playdo', 'playdo Documentation',
+    (master_doc, 'trafficcontrol', 'trafficcontrol Documentation',
      [author], 1)
 ]
 
@@ -162,7 +162,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'playdo', 'playdo Documentation',
-     author, 'playdo', 'One line description of project.',
+    (master_doc, 'trafficcontrol', 'trafficcontrol Documentation',
+     author, 'trafficcontrol', 'Traffic Control is an Open Source implementation of a Content Delivery Network.',
      'Miscellaneous'),
 ]
