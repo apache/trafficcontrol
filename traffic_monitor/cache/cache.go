@@ -26,11 +26,11 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/dsdata"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/srvhttp"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
+	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
+	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
 
 // Handler is a cache handler, which fulfills the common/handler `Handler` interface.

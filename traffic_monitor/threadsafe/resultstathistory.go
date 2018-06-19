@@ -23,7 +23,7 @@ package threadsafe
 import (
 	"sync"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/cache"
+	"github.com/apache/trafficcontrol/traffic_monitor/cache"
 )
 
 // ResultStatHistory provides safe access for multiple goroutines readers and a single writer to a stored HistoryHistory object.

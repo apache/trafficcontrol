@@ -22,7 +22,7 @@ package datareq
 import (
 	"fmt"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/threadsafe"
+	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 )
 
 func srvAPIBandwidthCapacityKbps(statMaxKbpses threadsafe.CacheKbpses) []byte {

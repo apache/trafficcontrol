@@ -24,7 +24,7 @@ Packager:	david_neuman2 at Cable dot Comcast dot com
 Vendor:		Apache Software Foundation
 Group:		Applications/Communications
 License:	Apache License, Version 2.0
-URL:		https://github.com/apache/incubator-trafficcontrol
+URL:		https://github.com/apache/trafficcontrol
 Source:		%{_sourcedir}/traffic_monitor-%{traffic_control_version}.tgz
 
 %description
@@ -53,7 +53,7 @@ go_get_version() {
 build_dependencies () {
     IFS=$'\n'
     array=($(go list -f '{{ join .Deps "\n" }}' | grep incubator | grep -v $1))
-    prefix=github.com/apache/incubator-trafficcontrol
+    prefix=github.com/apache/trafficcontrol
     for (( i=0; i<${#array[@]}; i++ )); do
         curPkg=${array[i]};
         curPkgShort=${curPkg#$prefix};
@@ -74,7 +74,7 @@ build_dependencies () {
 }
 
 #build traffic_monitor binary
-godir=src/github.com/apache/incubator-trafficcontrol/traffic_monitor
+godir=src/github.com/apache/trafficcontrol/traffic_monitor
 oldpwd=$(pwd)
 ( mkdir -p "$godir" && \
   cd "$godir" && \
@@ -96,7 +96,7 @@ mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/var/log
 mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 
-src=src/github.com/apache/incubator-trafficcontrol/traffic_monitor
+src=src/github.com/apache/trafficcontrol/traffic_monitor
 cp -p "$src"/traffic_monitor               "${RPM_BUILD_ROOT}"/opt/traffic_monitor/bin/traffic_monitor
 cp  "$src"/static/index.html               "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static/index.html
 cp  "$src"/static/sorttable.js             "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static/sorttable.js

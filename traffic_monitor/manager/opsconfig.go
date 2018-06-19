@@ -27,17 +27,17 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/config"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/datareq"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/handler"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/health"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/peer"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/srvhttp"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/threadsafe"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/todata"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/towrap"
-	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/traffic_monitor/config"
+	"github.com/apache/trafficcontrol/traffic_monitor/datareq"
+	"github.com/apache/trafficcontrol/traffic_monitor/handler"
+	"github.com/apache/trafficcontrol/traffic_monitor/health"
+	"github.com/apache/trafficcontrol/traffic_monitor/peer"
+	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
+	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
+	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
+	to "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
 // StartOpsConfigManager starts the ops config manager goroutine, returning the (threadsafe) variables which it sets.

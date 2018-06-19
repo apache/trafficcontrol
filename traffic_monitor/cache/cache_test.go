@@ -25,10 +25,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/peer"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/srvhttp"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/peer"
+	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
+	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
 
 func TestHandlerPrecompute(t *testing.T) {

@@ -22,7 +22,7 @@ package datareq
 import (
 	"encoding/json"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/health"
+	"github.com/apache/trafficcontrol/traffic_monitor/health"
 )
 
 // JSONEvents represents the structure we wish to serialize to JSON, for Events.
