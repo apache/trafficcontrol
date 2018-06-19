@@ -111,6 +111,16 @@ Built: %(date) by %{getenv: USER}
       go build -ldflags "-X main.version=traffic_ops-%{version}-%{release} -B 0x`git rev-parse HEAD`" \
     ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
+    # build TO profile converter
+    convert_dir=src/github.com/apache/trafficcontrol/traffic_ops/install/bin/convert_profile
+    ( mkdir -p "$convert_dir" && \
+      cd "$convert_dir" && \
+      cp -r "$TC_DIR"/traffic_ops/install/bin/convert_profile/* . && \
+      echo "go building at $(pwd)" && \
+      go get -v &&\
+      go build \
+    ) || { echo "Could not build go profile converter at $(pwd): $!"; exit 1; };
+
 %install
 
     if [ -d $RPM_BUILD_ROOT ]; then
@@ -139,6 +149,11 @@ Built: %(date) by %{getenv: USER}
 
     src=src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
     %__cp -p  "$src"/traffic_ops_golang        "${RPM_BUILD_ROOT}"/opt/traffic_ops/app/bin/traffic_ops_golang
+
+    convert_profile_src=src/github.com/apache/trafficcontrol/traffic_ops/install/bin/convert_profile
+    %__cp -p  "$convert_profile_src"/convert_profile           "${RPM_BUILD_ROOT}"/opt/traffic_ops/install/bin/convert_profile
+    %__rm $RPM_BUILD_ROOT/%{PACKAGEDIR}/install/bin/convert_profile/*.go
+
 %pre
     /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupadd -r %{TRAFFIC_OPS_GROUP}
     /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/useradd -r -d %{PACKAGEDIR} -s /sbin/nologin %{TRAFFIC_OPS_USER} -g %{TRAFFIC_OPS_GROUP}
@@ -233,5 +248,6 @@ fi
 %{PACKAGEDIR}/app/public
 %{PACKAGEDIR}/app/templates
 %{PACKAGEDIR}/install
+%attr(755, %{TRAFFIC_OPS_USER},%{TRAFFIC_OPS_GROUP}) %{PACKAGEDIR}/install/bin/convert_profile/convert_profile
 %{PACKAGEDIR}/etc
 %doc %{PACKAGEDIR}/doc
