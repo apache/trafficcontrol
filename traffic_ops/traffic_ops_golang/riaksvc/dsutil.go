@@ -33,6 +33,7 @@ import (
 const DeliveryServiceSSLKeysBucket = "ssl"
 const DNSSECKeysBucket = "dnssec"
 const DefaultDSSSLKeyVersion = "latest"
+const URLSigKeysBucket = "url_sig_keys"
 
 func MakeDSSSLKeyKey(dsName, version string) string {
 	if version == "" {
@@ -54,7 +55,6 @@ func GetDeliveryServiceSSLKeysObj(xmlID string, version string, tx *sql.Tx, auth
 			return nil // not found
 		}
 		if err := json.Unmarshal(ro[0].Value, &key); err != nil {
-			log.Errorf("failed at unmarshaling sslkey response: %s\n", err)
 			return errors.New("unmarshalling Riak result: " + err.Error())
 		}
 		found = true
@@ -172,34 +172,23 @@ func Ping(tx *sql.Tx, authOpts *riak.AuthOptions) (tc.RiakPingResp, error) {
 func GetDNSSECKeys(cdnName string, tx *sql.Tx, authOpts *riak.AuthOptions) (tc.DNSSECKeys, bool, error) {
 	key := tc.DNSSECKeys{}
 	found := false
-	log.Errorln("riaksvc.GetDNSSECKeys calling")
 	err := WithClusterTx(tx, authOpts, func(cluster StorageCluster) error {
-		log.Errorln("riaksvc.GetDNSSECKeys in WithClusterTx")
 		ro, err := FetchObjectValues(cdnName, DNSSECKeysBucket, cluster)
-		log.Errorln("riaksvc.GetDNSSECKeys fetched object values")
 		if err != nil {
-			log.Errorln("riaksvc.GetDNSSECKeys fetched object values returning err")
 			return err
 		}
 		if len(ro) == 0 {
-			log.Errorln("riaksvc.GetDNSSECKeys returning nil, len(ro) is 0")
 			return nil // not found
 		}
-		log.Errorln("riaksvc.GetDNSSECKeys unmarshalling")
 		if err := json.Unmarshal(ro[0].Value, &key); err != nil {
-			log.Errorln("Unmarshaling Riak dnssec response: " + err.Error())
 			return errors.New("unmarshalling Riak dnssec response: " + err.Error())
 		}
-		log.Errorln("riaksvc.GetDNSSECKeys unmarshalled, found true, returning nil err")
 		found = true
 		return nil
 	})
-	log.Errorln("riaksvc.GetDNSSECKeys out of WithCluster")
 	if err != nil {
-		log.Errorln("riaksvc.GetDNSSECKeys WithCluster err, returning err")
 		return key, false, err
 	}
-	log.Errorln("riaksvc.GetDNSSECKeys returning success")
 	return key, found, nil
 }
 
@@ -268,4 +257,34 @@ func DeleteDSSSLKeys(tx *sql.Tx, authOpts *riak.AuthOptions, ds tc.DeliveryServi
 		return errors.New("deleting SSL keys: " + err.Error())
 	}
 	return nil
+}
+
+// GetURLSigConfigFileName returns the filename of the Apache Traffic Server URLSig config file
+// TODO move to ats config directory/file
+func GetURLSigConfigFileName(ds tc.DeliveryServiceName) string {
+	return "url_sig_" + string(ds) + ".config"
+}
+
+func GetURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, ds tc.DeliveryServiceName) (tc.URLSigKeys, bool, error) {
+	val := tc.URLSigKeys{}
+	found := false
+	key := GetURLSigConfigFileName(ds)
+	err := WithClusterTx(tx, authOpts, func(cluster StorageCluster) error {
+		ro, err := FetchObjectValues(key, URLSigKeysBucket, cluster)
+		if err != nil {
+			return err
+		}
+		if len(ro) == 0 {
+			return nil // not found
+		}
+		if err := json.Unmarshal(ro[0].Value, &val); err != nil {
+			return errors.New("unmarshalling Riak response: " + err.Error())
+		}
+		found = true
+		return nil
+	})
+	if err != nil {
+		return val, false, err
+	}
+	return val, found, nil
 }
