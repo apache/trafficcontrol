@@ -26,12 +26,12 @@ const DefaultRoutingName = "cdn"
 //
 // GetDeliveryServiceResponse is deprecated use DeliveryServicesResponse...
 type GetDeliveryServiceResponse struct {
-	Response []DeliveryServiceV13 `json:"response"`
+	Response []DeliveryService `json:"response"`
 }
 
 // DeliveryServicesResponse ...
 type DeliveryServicesResponse struct {
-	Response []DeliveryService `json:"response"`
+	Response []DeliveryServiceV13 `json:"response"`
 }
 
 // CreateDeliveryServiceResponse ...
