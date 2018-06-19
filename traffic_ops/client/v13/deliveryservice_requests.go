@@ -22,7 +22,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const (

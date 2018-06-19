@@ -3,7 +3,7 @@
 ## Getting Started
 1. Obtain the latest version of the library
 
-`go get github.com/apache/incubator-trafficcontrol/traffic_ops/client/v13`
+`go get github.com/apache/trafficcontrol/traffic_ops/client/v13`
 
 2. Get a basic TO session started and fetch a list of CDNs
 ```go
@@ -14,8 +14,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
-	toclient "github.com/apache/incubator-trafficcontrol/traffic_ops/client/v13"
+	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/client/v13"
 )
 
 const TOURL = "http://localhost"

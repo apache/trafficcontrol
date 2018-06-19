@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // Parameters gets an array of parameter structs for the profile given

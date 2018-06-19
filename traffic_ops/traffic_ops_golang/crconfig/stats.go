@@ -23,7 +23,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func makeStats(cdn string, user string, host string, path string, version string, db *sql.DB) tc.CRConfigStats {

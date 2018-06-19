@@ -18,7 +18,7 @@ package client
 import (
 	"encoding/json"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 )
 
 // CacheGroups gets the CacheGroups in an array of CacheGroup structs

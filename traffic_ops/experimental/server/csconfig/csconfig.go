@@ -15,7 +15,7 @@ package csconfig
 
 import (
 	"fmt"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/experimental/server/api"
+	"github.com/apache/trafficcontrol/traffic_ops/experimental/server/api"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/guregu/null.v3"
 	"log"
