@@ -33,8 +33,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Traffic Control'
-copyright = '2018, jvd'
-author = 'jvd'
+copyright = '2018, Apache Traffic Control'
+author = 'Apache Traffic Control'
 
 # The short X.Y version
 version = ''
@@ -141,8 +141,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'trafficcontrol.tex', 'trafficcontrol Documentation',
-     'jvd', 'manual'),
+    (master_doc, 'trafficcontrol.tex', 'Apache Traffic Control Documentation',
+     'Apache Traffic Control', 'manual'),
 ]
 
 
@@ -151,7 +151,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'trafficcontrol', 'trafficcontrol Documentation',
+    (master_doc, 'Apache Traffic Control', 'Apache Traffic Control Documentation',
      [author], 1)
 ]
 
