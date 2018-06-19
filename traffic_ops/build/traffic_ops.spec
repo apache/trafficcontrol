@@ -70,7 +70,7 @@ Built: %(date) by %{getenv: USER}
     # build all internal go dependencies (expects package being built as argument)
     build_dependencies () {
        IFS=$'\n'
-       array=($(go list -f '{{ join .Deps "\n" }}' | grep incubator | grep -v $1))
+       array=($(go list -f '{{ join .Deps "\n" }}' | grep trafficcontrol | grep -v $1))
        prefix=github.com/apache/trafficcontrol
        for (( i=0; i<${#array[@]}; i++ )); do
            curPkg=${array[i]};
