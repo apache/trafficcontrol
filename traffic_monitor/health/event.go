@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 type Time time.Time

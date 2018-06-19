@@ -25,11 +25,11 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/peer"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/srvhttp"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/threadsafe"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/peer"
+	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
+	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
+	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
 
 // APIPeerStates contains the data to be returned for an API call to get the peer states of a Traffic Monitor. This contains common API data returned by most endpoints, and a map of peers, to caches' states.

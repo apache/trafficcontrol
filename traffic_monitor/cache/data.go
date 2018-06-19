@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // CacheAvailableStatusReported is the status string returned by caches set to "reported" in Traffic Ops.

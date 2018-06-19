@@ -22,7 +22,7 @@ package threadsafe
 import (
 	"sync"
 
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // CopyTrafficMonitorConfigMap returns a deep copy of the given TrafficMonitorConfigMap
