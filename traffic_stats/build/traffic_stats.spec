@@ -24,7 +24,7 @@ Packager:	david_neuman2 at Cable dot Comcast dot com
 Vendor:		Apache Software Foundation
 Group:		Applications/Communications
 License:	Apache License, Version 2.0
-URL:		https://github.com/apache/incubator-trafficcontrol
+URL:		https://github.com/apache/trafficcontrol
 Source:		%{_sourcedir}/traffic_stats-%{traffic_control_version}.tgz
 
 %description
@@ -55,7 +55,7 @@ go_get_version() {
 build_dependencies () {
     IFS=$'\n'
     array=($(go list -f '{{ join .Deps "\n" }}' | grep incubator | grep -v $1))
-    prefix=github.com/apache/incubator-trafficcontrol
+    prefix=github.com/apache/trafficcontrol
     for (( i=0; i<${#array[@]}; i++ )); do
         curPkg=${array[i]};
         curPkgShort=${curPkg#$prefix};
@@ -76,7 +76,7 @@ build_dependencies () {
 }
 
 #get traffic_stats client
-godir=src/github.com/apache/incubator-trafficcontrol/traffic_stats
+godir=src/github.com/apache/trafficcontrol/traffic_stats
 oldpwd=$(pwd)
 ( mkdir -p "$godir" && \
   cd "$godir" && \
@@ -87,7 +87,7 @@ oldpwd=$(pwd)
 ) || { echo "Could not build go program at $(pwd): $!"; exit 1; }
 
 #build influxdb_tools
-godir=src/github.com/apache/incubator-trafficcontrol/traffic_stats/influxdb_tools
+godir=src/github.com/apache/trafficcontrol/traffic_stats/influxdb_tools
 ( mkdir -p "$godir" && \
   cd "$godir" && \
   cp -r "$TC_DIR"/traffic_stats/influxdb_tools/* . && \
@@ -107,7 +107,7 @@ mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 mkdir -p "${RPM_BUILD_ROOT}"/usr/share/grafana/public/dashboards/
 
-src=src/github.com/apache/incubator-trafficcontrol/traffic_stats
+src=src/github.com/apache/trafficcontrol/traffic_stats
 cp -p bin/traffic_stats     "${RPM_BUILD_ROOT}"/opt/traffic_stats/bin/traffic_stats
 cp "$src"/traffic_stats.cfg        "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/traffic_stats.cfg
 cp "$src"/traffic_stats_seelog.xml "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/traffic_stats_seelog.xml
