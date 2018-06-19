@@ -66,7 +66,7 @@ class TOSession(restapi.RestApiSession):
     of loading up dictionaries for request data.
 
     As of now you can see the following URL for API details:
-       https://trafficcontrol.incubator.apache.org/docs/latest/development/traffic_ops.html#api for details
+       https://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html#api for details
 
     Adding end-point methods: (See "Implemented Direct API URL Endpoint Methods" for actual examples)
         E.g. End-point with no URL parameters and no query parameters:
@@ -146,7 +146,7 @@ class TOSession(restapi.RestApiSession):
 
     NOTE: Only a small subset of the API endpoints are implemented.  More can be implemented as needed.
           See the Traffic Ops API documentation for more detail:
-              https://trafficcontrol.incubator.apache.org/docs/latest/development/traffic_ops.html#api
+              https://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html#api
     """
 
     def __init__(self, host_ip, host_port=443, api_version=u'1.2', ssl=True, headers=default_headers,
@@ -280,7 +280,7 @@ class TOSession(restapi.RestApiSession):
         return result_set, response  # Note: Return last response object received
 
     # Implemented Direct API URL Endpoint Methods
-    # See https://trafficcontrol.incubator.apache.org/docs/latest/development/traffic_ops.html#api for details
+    # See https://trafficcontrol.apache.org/docs/latest/development/traffic_ops.html#api for details
 
     @restapi.api_request(u'get', u'asns', (u'1.1', u'1.2',))
     def get_asns(self, query_params=None):
@@ -336,7 +336,7 @@ class TOSession(restapi.RestApiSession):
         """
         #GET /api/1.2/servers/hostname/:name/details
         Get server details from trafficOps
-        https://trafficcontrol.incubator.apache.org/docs/latest/development/traffic_ops_api/v12/server.html
+        https://trafficcontrol.apache.org/docs/latest/development/traffic_ops_api/v12/server.html
         :param hostname: Server hostname
         :rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
@@ -596,7 +596,7 @@ class TOSession(restapi.RestApiSession):
         Update server_status by Id.
         :param server_id: The server Id
         :type server_id: int
-        :status: https://trafficcontrol.incubator.apache.org/docs/latest/development/traffic_ops_api/v12/server.html   
+        :status: https://trafficcontrol.apache.org/docs/latest/development/traffic_ops_api/v12/server.html   
         :rtype: Tuple[Union[Dict[Text, Any], List[Dict[Text, Any]]], requests.Response]
         :raises: Union[trafficops.restapi.LoginError, trafficops.restapi.OperationError]
         """

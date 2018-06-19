@@ -21,7 +21,7 @@ package dnssec_test
 
 
 import (
-	"github.com/apache/incubator-trafficcontrol/test/router/dnssec"
+	"github.com/apache/trafficcontrol/test/router/dnssec"
 	"github.com/miekg/dns"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

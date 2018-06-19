@@ -28,7 +28,7 @@ import logging
 import time
 
 logging.basicConfig(level=logging.INFO)
-repo_name = "apache/incubator-trafficcontrol"
+repo_name = "apache/trafficcontrol"
 
 #
 # List of relevant JIRA field names
