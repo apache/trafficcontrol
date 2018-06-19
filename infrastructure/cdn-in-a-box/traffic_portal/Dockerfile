@@ -16,21 +16,29 @@
 # under the License.
 
 ############################################################
-# Dockerfile to build Traffic Ops container images
+# Dockerfile to build Traffic Portal container images
 # Based on CentOS 7.2
 ############################################################
 
-
 FROM centos:7
-RUN yum -y install nmap-ncat openssl
 
-RUN mkdir -p /opt/traffic_ops/app/bin /opt/traffic_ops/app/conf/production
-COPY --from=trafficops-perl /opt/traffic_ops/app/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang 
-COPY --from=trafficops-perl /usr/local/go /usr/local/go
+RUN curl -sL https://rpm.nodesource.com/setup_6.x | bash -
 
-EXPOSE 6443
-WORKDIR /opt/traffic_ops/app
+# Override TRAFFIC_PORTAL_RPM arg to use a different one using --build-arg TRAFFIC_PORTAL_RPM=...  Can be local file or http://...
+ARG TRAFFIC_PORTAL_RPM=traffic_portal.rpm
+ADD $TRAFFIC_PORTAL_RPM /
 
-ADD config.sh /
-ADD run-go.sh /
-CMD /run-go.sh
+# Install and delete the TRAFFIC_PORTAL_RPM when finished
+RUN yum install -y \
+    epel-release && \
+    yum install -y \
+      jq \
+      nodejs \
+      openssl \
+      /$(basename $TRAFFIC_PORTAL_RPM) && \
+    rm /$(basename $TRAFFIC_PORTAL_RPM) && \
+    yum clean all || \
+    echo "ERROR INSTALLING PACKAGES"
+
+ADD run.sh /
+CMD /run.sh

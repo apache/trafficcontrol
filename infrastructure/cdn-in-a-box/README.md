@@ -24,12 +24,21 @@ This is intended to simplify the process of creating a "CDN in a box",  easing
 the barrier to entry for newcomers as well as providing a way to spin up a
 minimal CDN for full system testing.
 
-For now,  only `traffic_ops` is implemented.  Other components will follow as well
-as details on specific parts of the implementation.. 
+For now,  only `traffic_ops` and `traffic_portal` are implemented.  Other
+components will follow as well as details on specific parts of the
+implementation.. 
 
-To start it, install `docker-ce` and `docker-compose` and simply:
-
+To start it, install `docker-ce` and `docker-compose`.  Create an rpm for each
+component and copy into the respective directory with no version number, e.g.
+`traffic_ops/traffic_ops.rpm`, `traffic_portal/traffic_portal.rpm`.
+    
     cd infrastructure/cdn-in-a-box/traffic_ops
     docker-compose up --build
 
-
+The process creates containers for each with ports exposed on the host.  The
+following should be available once the system is running:
+   
+    Traffic Portal: https://localhost    
+    Traffic Ops (go): https://localhost:6443
+    Traffic Ops (perl): https://localhost:60443
+    Postgres: `psql -h localhost -p 5432 -U postgres`

@@ -59,7 +59,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
     },
     "traffic_ops_golang" : {
 	"insecure": true,
-        "port" : "443",
+        "port" : "6443",
         "proxy_timeout" : 60,
         "proxy_keep_alive" : 60,
         "proxy_tls_timeout" : 60,
@@ -82,12 +82,12 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "access_control_allow_origin" : "*"
     },
     "to" : {
-        "base_url" : "http://localhost:3000",
+        "base_url" : "https://$TO_HOST",
         "email_from" : "no-reply@traffic-ops-domain.com",
         "no_account_found_msg" : "A Traffic Ops user account is required for access. Please contact your Traffic Ops user administrator."
     },
     "portal" : {
-        "base_url" : "http://localhost:8080/!#/",
+        "base_url" : "https://$TP_HOST/!#/",
         "email_from" : "no-reply@traffic-portal-domain.com",
         "pass_reset_path" : "user",
         "user_register_path" : "user"
@@ -122,6 +122,9 @@ name: dbconf.yml
 production:
   driver: postgres
   open: host=$DB_SERVER port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=$DB_NAME sslmode=disable
+test:
+  driver: postgres
+  open: host=$DB_SERVER port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=to_test sslmode=disable
 EOF
 
 openssl req -newkey rsa:2048 -nodes -keyout $key -x509 -days 365 -out $crt -subj "/C=$CERT_COUNTRY/ST=$CERT_STATE/L=$CERT_CITY/O=$CERT_COMPANY"
