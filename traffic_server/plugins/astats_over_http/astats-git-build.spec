@@ -29,7 +29,7 @@ Summary:	Apache Traffic Server %{name} plugin
 Vendor:		Comcast
 Group:		Applications/Communications
 License:	Apache License, Version 2.0
-URL:		https://github.com/apache/incubator-trafficcontrol/tree/master/traffic_server/plugins/astats_over_http
+URL:		https://github.com/apache/trafficcontrol/tree/master/traffic_server/plugins/astats_over_http
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 Requires:	trafficserver >= 6011
 BuildRequires:	trafficserver >= 6011
@@ -39,13 +39,13 @@ Apache Traffic Server plugin
 
 %prep
 rm -rf %{name}
-git clone https://git-wip-us.apache.org/repos/asf/incubator-trafficcontrol.git
-cd incubator-trafficcontrol
+git clone https://git-wip-us.apache.org/repos/asf/trafficcontrol.git
+cd trafficcontrol
 git checkout master
 git checkout %{commit} .
 cd ..
-mv incubator-trafficcontrol/traffic_server/plugins/astats_over_http %{name}
-rm -rf incubator-trafficcontrol
+mv trafficcontrol/traffic_server/plugins/astats_over_http %{name}
+rm -rf trafficcontrol
 %setup -D -n %{name} -T
 
 %build
