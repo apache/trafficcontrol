@@ -88,6 +88,19 @@ func getDSTenantIDByID(tx *sql.Tx, id int) (*int, bool, error) {
 	return tenantID, true, nil
 }
 
+// GetDSTenantIDByIDTx returns the tenant ID, whether the delivery service exists, and any error.
+// Note the id may be nil, even if true is returned, if the delivery service exists but its tenant_id field is null.
+func GetDSTenantIDByIDTx(tx *sql.Tx, id int) (*int, bool, error) {
+	tenantID := (*int)(nil)
+	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where id = $1`, id).Scan(&tenantID); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, false, nil
+		}
+		return nil, false, fmt.Errorf("querying tenant ID for delivery service ID '%v': %v", id, err)
+	}
+	return tenantID, true, nil
+}
+
 // getDSTenantIDByName returns the tenant ID, whether the delivery service exists, and any error.
 // Note the id may be nil, even if true is returned, if the delivery service exists but its tenant_id field is null.
 func getDSTenantIDByName(tx *sql.Tx, name string) (*int, bool, error) {
