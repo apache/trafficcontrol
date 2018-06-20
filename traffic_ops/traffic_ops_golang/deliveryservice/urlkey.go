@@ -93,6 +93,60 @@ func GetURLKeysByID(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, keys)
 }
 
+func GetURLKeysByName(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	if inf.Config.RiakEnabled == false {
+		api.HandleErr(w, r, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured!"))
+		return
+	}
+
+	ds := tc.DeliveryServiceName(inf.Params["name"])
+
+	// TODO create a helper function to check all this in a single line.
+	ok, err := tenant.IsTenancyEnabledTx(inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenancy enabled: "+err.Error()))
+		return
+	}
+	if ok {
+		dsTenantID, ok, err := GetDSTenantIDByNameTx(inf.Tx.Tx, ds)
+		if err != nil {
+			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+			return
+		}
+		if !ok {
+			api.HandleErr(w, r, http.StatusNotFound, errors.New("delivery service "+string(ds)+" not found"), nil)
+			return
+		}
+		if dsTenantID != nil {
+			if authorized, err := tenant.IsResourceAuthorizedToUserTx(*dsTenantID, inf.User, inf.Tx.Tx); err != nil {
+				api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+				return
+			} else if !authorized {
+				api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+				return
+			}
+		}
+	}
+
+	keys, ok, err := riaksvc.GetURLSigKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, ds)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting URL Sig keys from riak: "+err.Error()))
+		return
+	}
+	if !ok {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "No url sig keys found", struct{}{})
+		return
+	}
+	api.WriteResp(w, r, keys)
+}
+
 // GetDSNameFromID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
 // TODO move somewhere generic
 func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
