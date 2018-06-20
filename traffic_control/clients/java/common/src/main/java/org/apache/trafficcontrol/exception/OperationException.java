@@ -13,28 +13,28 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.exception;
+package org.apache.trafficcontrol.exception;
 
-public class TrafficControlException extends Exception {
-	private static final long serialVersionUID = 914940907727369814L;
+public class OperationException extends TrafficControlException {
+	private static final long serialVersionUID = 8799467021892976240L;
 
-	public TrafficControlException() {
+	public OperationException() {
 		super();
 	}
 
-	public TrafficControlException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+	public OperationException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
 	}
 
-	public TrafficControlException(String message, Throwable cause) {
+	public OperationException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
-	public TrafficControlException(String message) {
+	public OperationException(String message) {
 		super(message);
 	}
 
-	public TrafficControlException(Throwable cause) {
+	public OperationException(Throwable cause) {
 		super(cause);
 	}
 	

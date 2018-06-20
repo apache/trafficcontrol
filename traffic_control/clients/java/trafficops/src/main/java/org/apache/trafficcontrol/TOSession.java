@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control;
+package org.apache.trafficcontrol;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -27,11 +27,11 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.trafficcontrol.exception.LoginException;
+import org.apache.trafficcontrol.models.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.comcast.cdn.traffic_control.exception.LoginException;
-import com.comcast.cdn.traffic_control.models.Response;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;

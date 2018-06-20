@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control;
+package org.apache.trafficcontrol;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -26,15 +26,15 @@ import org.apache.http.HttpVersion;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicStatusLine;
+import org.apache.trafficcontrol.TOSession;
+import org.apache.trafficcontrol.exception.LoginException;
+import org.apache.trafficcontrol.models.Response.CollectionResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.comcast.cdn.traffic_control.exception.LoginException;
-import com.comcast.cdn.traffic_control.models.Response.CollectionResponse;
 
 public class TOSessionTest {
 	private static final Logger LOG = LoggerFactory.getLogger(TOSessionTest.class);

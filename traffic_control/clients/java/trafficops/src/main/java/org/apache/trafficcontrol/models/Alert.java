@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.models;
+package org.apache.trafficcontrol.models;
 
 public class Alert {
 	private String level;
