@@ -111,9 +111,7 @@ func rangeReqHandlerOnRequest(icfg interface{}, d OnRequestData) bool {
 		log.Debugf("No Range header found\n")
 		rHeader = "bytes=0-" // It is a GET for everything, get all slices.
 		isRR = false
-		//return false
 	}
-	//log.Debugf("Range string is: %s\n", rHeader)
 
 	// put the ranges [] in the context so we can use it later
 	byteRanges := parseRangeHeader(rHeader)
@@ -180,7 +178,6 @@ func rangeReqHandleBeforeCacheLookup(icfg interface{}, d BeforeCacheLookUpData) 
 		}
 		firstSlice := int64(thisRange.Start / cfg.SliceSize)
 		lastSlice := int64(thisRange.End/cfg.SliceSize) + 1
-		//log.Debugf("first %d, last %d, start %d, end %d -- mod %d\n", firstSlice, lastSlice, thisRange.Start, thisRange.End, thisRange.End%cfg.SliceSize)
 		requestList := make([]*http.Request, 0)
 		for i := firstSlice; i < lastSlice; i++ {
 
@@ -228,7 +225,6 @@ func rangeReqHandleBeforeCacheLookup(icfg interface{}, d BeforeCacheLookUpData) 
 			return
 		}
 
-		//log.Debugf("SLICE Starting child requests")
 		swg := sizedwaitgroup.New(cfg.WGSize)
 		client := &http.Client{
 			Transport: &http.Transport{
@@ -256,19 +252,16 @@ func rangeReqHandleBeforeCacheLookup(icfg interface{}, d BeforeCacheLookUpData) 
 
 		}
 		swg.Wait()
-		//log.Debugf("SLICE All done.")
 	}
 }
 
 // rangeReqHandleBeforeParent changes the parent request if needed (mode == get_full_serve_range)
 func rangeReqHandleBeforeParent(icfg interface{}, d BeforeParentRequestData) {
-	//log.Debugf("rangeReqHandleBeforeParent calling.")
 	rHeader := d.Req.Header.Get("Range")
 	if rHeader == "" {
 		log.Debugln("No Range header found")
 		return
 	}
-	//log.Debugf("Range string is: %s\n", rHeader)
 	cfg, ok := icfg.(*rangeRequestConfig)
 	if !ok {
 		log.Errorf("range_req_handler config '%v' type '%T' expected *rangeRequestConfig\n", icfg, icfg)
@@ -286,7 +279,6 @@ func rangeReqHandleBeforeParent(icfg interface{}, d BeforeParentRequestData) {
 // Assume all the needed ranges have been put in cache before, which is the truth for "get_full_serve_range" mode which gets the whole object into cache.
 // If mode == store_ranges, do nothing, we just return the object stored-as is
 func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
-	//log.Debugf("rangeReqHandleBeforeRespond calling\n")
 	ictx := d.Context
 	ctx, ok := (*ictx).(*RequestInfo)
 	if !ok {
@@ -322,7 +314,6 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 		sliceBody := make([]byte, 0)
 		for _, bRange := range ctx.SlicesNeeded {
 			cacheKey := cacheKeyForRange(*ctx.OriginalCacheKey, cfg.CacheKeyString, bRange)
-			//log.Debugf("SLICE: GETTING KEY: %s from d.Cache\n", cacheKey)
 			cachedObject, ok := d.Cache.Peek(cacheKey) // use Peek here, we already moved in the LRU and updated hitCount when we looked it up in beforeCacheLookup
 			if !ok {
 				log.Errorf("SLICE ERROR %s is not available in beforeRespond - this should not be possible, unless your cache is rolling _very_ fast!!!\n", cacheKey)
@@ -354,7 +345,6 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 		}
 
 		rangeString := "bytes " + strconv.FormatInt(thisRange.Start, 10) + "-" + strconv.FormatInt(thisRange.End, 10)
-		//log.Debugf("range:%d-%d\n", thisRange.Start, thisRange.End)
 		if multipart {
 			body = append(body, []byte("\r\n--"+multipartBoundaryString+"\r\n")...)
 			body = append(body, []byte("Content-type: "+originalContentType+"\r\n")...)
@@ -362,7 +352,6 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 		} else {
 			d.Hdr.Set("Content-Range", rangeString+"/"+strconv.FormatInt(ctx.TotalContentLength, 10))
 		}
-		//log.Debugf("[thisRange.Start-offsetInBody : thisRange.End+1-offsetInBody] = [%d-%d : %d+1-%d]\n", thisRange.Start, offsetInBody, thisRange.End, offsetInBody)
 		bSlice := (*d.Body)[thisRange.Start-offsetInBody : thisRange.End+1-offsetInBody]
 		body = append(body, bSlice...)
 	}
@@ -377,7 +366,6 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 		d.Hdr.Del("Content-Range")
 		*d.Code = http.StatusOK
 	}
-	//log.Debugf("ALL DONE %d = %d \n", len(body), len(*d.Body))
 	return
 }
 
