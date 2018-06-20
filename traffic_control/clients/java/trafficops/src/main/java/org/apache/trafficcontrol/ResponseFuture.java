@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control;
+package org.apache.trafficcontrol;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -25,11 +25,11 @@ import java.util.function.BiConsumer;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.StringEntity;
+import org.apache.trafficcontrol.exception.LoginException;
+import org.apache.trafficcontrol.exception.OperationException;
+import org.apache.trafficcontrol.models.Alert;
+import org.apache.trafficcontrol.models.Response;
 
-import com.comcast.cdn.traffic_control.exception.LoginException;
-import com.comcast.cdn.traffic_control.exception.OperationException;
-import com.comcast.cdn.traffic_control.models.Alert;
-import com.comcast.cdn.traffic_control.models.Response;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;

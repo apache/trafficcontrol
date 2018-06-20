@@ -13,28 +13,28 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.exception;
+package org.apache.trafficcontrol.exception;
 
-public class OperationException extends TrafficControlException {
-	private static final long serialVersionUID = 8799467021892976240L;
+public class InvalidJsonException extends TrafficControlException {
+	private static final long serialVersionUID = 1884362711438565843L;
 
-	public OperationException() {
+	public InvalidJsonException() {
 		super();
 	}
 
-	public OperationException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+	public InvalidJsonException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
 	}
 
-	public OperationException(String message, Throwable cause) {
+	public InvalidJsonException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
-	public OperationException(String message) {
+	public InvalidJsonException(String message) {
 		super(message);
 	}
 
-	public OperationException(Throwable cause) {
+	public InvalidJsonException(Throwable cause) {
 		super(cause);
 	}
 	

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.models;
+package org.apache.trafficcontrol.models;
 
 import java.util.List;
 import java.util.Map;
