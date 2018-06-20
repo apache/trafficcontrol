@@ -197,7 +197,7 @@ func rangeReqHandleBeforeCacheLookup(icfg interface{}, d BeforeCacheLookUpData) 
 			log.Debugf("SLICE URL MISS for key: %s queuing GET for %s\n", key, URL)
 			req, err := http.NewRequest("GET", URL, nil)
 			if err != nil {
-				log.Errorf("ERROR") // TODO
+				log.Errorf("SLICE error creating request: %v\n", err)
 			}
 			req.Host = d.Req.Host
 			req.Header.Set("Range", "bytes="+strconv.FormatInt(bRange.Start, 10)+"-"+strconv.FormatInt(bRange.End, 10))
@@ -382,7 +382,8 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 }
 
 // Use HEAD to get the info about the complete object (ETag, Content-Length). HEADs normally do not get cached, and only get served from previous GETs, so this should be safe.
-func getObjectInfo(originalCacheKey string, cache icache.Cache) http.Header { // TODO Check freshness
+func getObjectInfo(originalCacheKey string, cache icache.Cache) http.Header {
+	// TODO Check freshness
 	URL := strings.Replace(originalCacheKey, "GET:", "", 1)
 	key := "HEAD:" + URL
 	cachedObj, ok := cache.Get(key)
@@ -396,15 +397,15 @@ func getObjectInfo(originalCacheKey string, cache icache.Cache) http.Header { //
 		}
 		req, err := http.NewRequest("HEAD", URL, nil)
 		if err != nil {
-			log.Errorf("ERROR") // TODO
+			log.Errorf("SlICE: Error creating HEAD req:%v\n")
 		}
 		resp, err := client.Do(req)
 		if err != nil {
-			log.Errorf("Error in slicer HEAD:%v\n", err) // TODO
+			log.Errorf("SLICE: Error in HEAD:%v\n", err)
 		}
 		_, err = io.Copy(ioutil.Discard, resp.Body)
 		if err != nil {
-			log.Errorf("Error in slicer:%v\n", err) // TODO
+			log.Errorf("SLICE: Error in discard:%v\n", err)
 		}
 		cachedObj = cacheobj.New(req.Header, nil, resp.StatusCode, resp.StatusCode, "", resp.Header, time.Now(), time.Now(), time.Now(), time.Time{})
 		resp.Body.Close()
