@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.apache.trafficcontrol;
+package org.apache.trafficcontrol.client.trafficops;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -25,10 +25,11 @@ import java.util.function.BiConsumer;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.StringEntity;
-import org.apache.trafficcontrol.exception.LoginException;
-import org.apache.trafficcontrol.exception.OperationException;
-import org.apache.trafficcontrol.models.Alert;
-import org.apache.trafficcontrol.models.Response;
+import org.apache.trafficcontrol.client.RestApiSession;
+import org.apache.trafficcontrol.client.exception.LoginException;
+import org.apache.trafficcontrol.client.exception.OperationException;
+import org.apache.trafficcontrol.client.trafficops.models.Alert;
+import org.apache.trafficcontrol.client.trafficops.models.Response;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Charsets;

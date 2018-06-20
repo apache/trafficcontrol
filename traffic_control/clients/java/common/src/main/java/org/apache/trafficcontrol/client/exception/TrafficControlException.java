@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.apache.trafficcontrol.exception;
+package org.apache.trafficcontrol.client.exception;
 
 public class TrafficControlException extends Exception {
 	private static final long serialVersionUID = 914940907727369814L;

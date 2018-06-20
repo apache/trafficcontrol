@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.apache.trafficcontrol;
+package org.apache.trafficcontrol.client.trafficops;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -26,9 +26,9 @@ import org.apache.http.HttpVersion;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicStatusLine;
-import org.apache.trafficcontrol.TOSession;
-import org.apache.trafficcontrol.exception.LoginException;
-import org.apache.trafficcontrol.models.Response.CollectionResponse;
+import org.apache.trafficcontrol.client.RestApiSession;
+import org.apache.trafficcontrol.client.exception.LoginException;
+import org.apache.trafficcontrol.client.trafficops.models.Response.CollectionResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

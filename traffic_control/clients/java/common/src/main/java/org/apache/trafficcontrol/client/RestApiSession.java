@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.apache.trafficcontrol;
+package org.apache.trafficcontrol.client;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -35,7 +35,7 @@ import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.message.BasicHeader;
-import org.apache.trafficcontrol.exception.OperationException;
+import org.apache.trafficcontrol.client.exception.OperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.apache.trafficcontrol.exception;
+package org.apache.trafficcontrol.client.exception;
 
 public class InvalidJsonException extends TrafficControlException {
 	private static final long serialVersionUID = 1884362711438565843L;
