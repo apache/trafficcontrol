@@ -147,6 +147,87 @@ func GetURLKeysByName(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, keys)
 }
 
+func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name", "copy-name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	if inf.Config.RiakEnabled == false {
+		api.HandleErr(w, r, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured!"))
+		return
+	}
+
+	ds := tc.DeliveryServiceName(inf.Params["name"])
+	copyDS := tc.DeliveryServiceName(inf.Params["copy-name"])
+
+	// TODO create a helper function to check all this in a single line.
+	ok, err := tenant.IsTenancyEnabledTx(inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenancy enabled: "+err.Error()))
+		return
+	}
+	if ok {
+		dsTenantID, ok, err := GetDSTenantIDByNameTx(inf.Tx.Tx, ds)
+		if err != nil {
+			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+			return
+		}
+		if !ok {
+			api.HandleErr(w, r, http.StatusNotFound, errors.New("delivery service "+string(ds)+" not found"), nil)
+			return
+		}
+		if dsTenantID != nil {
+			if authorized, err := tenant.IsResourceAuthorizedToUserTx(*dsTenantID, inf.User, inf.Tx.Tx); err != nil {
+				api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+				return
+			} else if !authorized {
+				api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+				return
+			}
+		}
+
+		{
+			copyDSTenantID, ok, err := GetDSTenantIDByNameTx(inf.Tx.Tx, copyDS)
+			if err != nil {
+				api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+				return
+			}
+			if !ok {
+				api.HandleErr(w, r, http.StatusNotFound, errors.New("delivery service "+string(ds)+" not found"), nil)
+				return
+			}
+			if copyDSTenantID != nil {
+				if authorized, err := tenant.IsResourceAuthorizedToUserTx(*copyDSTenantID, inf.User, inf.Tx.Tx); err != nil {
+					api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+					return
+				} else if !authorized {
+					api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this copy tenant"), nil)
+					return
+				}
+			}
+		}
+	}
+
+	keys, ok, err := riaksvc.GetURLSigKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, copyDS)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting URL Sig keys from riak: "+err.Error()))
+		return
+	}
+	if !ok {
+		api.HandleErr(w, r, http.StatusBadRequest, errors.New("Unable to retrieve keys from Delivery Service '"+string(copyDS)+"'"), nil)
+		return
+	}
+
+	if err := riaksvc.PutURLSigKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, ds, keys); err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("setting URL Sig keys for '"+string(ds)+" copied from "+string(copyDS)+": "+err.Error()))
+		return
+	}
+	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully copied and stored keys")
+}
+
 // GetDSNameFromID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
 // TODO move somewhere generic
 func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {

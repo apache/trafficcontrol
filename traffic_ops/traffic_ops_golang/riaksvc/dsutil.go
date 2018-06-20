@@ -288,3 +288,24 @@ func GetURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, ds tc.DeliveryService
 	}
 	return val, found, nil
 }
+
+func PutURLSigKeys(tx *sql.Tx, authOpts *riak.AuthOptions, ds tc.DeliveryServiceName, keys tc.URLSigKeys) error {
+	keyJSON, err := json.Marshal(&keys)
+	if err != nil {
+		return errors.New("marshalling keys: " + err.Error())
+	}
+	err = WithClusterTx(tx, authOpts, func(cluster StorageCluster) error {
+		obj := &riak.Object{
+			ContentType:     "application/json",
+			Charset:         "utf-8",
+			ContentEncoding: "utf-8",
+			Key:             GetURLSigConfigFileName(ds),
+			Value:           []byte(keyJSON),
+		}
+		if err = SaveObject(obj, URLSigKeysBucket, cluster); err != nil {
+			return errors.New("saving Riak object: " + err.Error())
+		}
+		return nil
+	})
+	return err
+}
