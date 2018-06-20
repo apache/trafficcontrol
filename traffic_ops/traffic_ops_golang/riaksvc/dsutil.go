@@ -189,3 +189,25 @@ func PutDNSSECKeys(keys tc.DNSSECKeys, cdnName string, tx *sql.Tx, authOpts *ria
 	})
 	return err
 }
+
+func GetBucketKey(tx *sql.Tx, authOpts *riak.AuthOptions, bucket string, key string) ([]byte, bool, error) {
+	val := []byte{}
+	found := false
+	err := WithClusterTx(tx, authOpts, func(cluster StorageCluster) error {
+		// get the deliveryservice ssl keys by xmlID and version
+		ro, err := FetchObjectValues(key, bucket, cluster)
+		if err != nil {
+			return err
+		}
+		if len(ro) == 0 {
+			return nil // not found
+		}
+		val = ro[0].Value
+		found = true
+		return nil
+	})
+	if err != nil {
+		return val, false, err
+	}
+	return val, found, nil
+}
