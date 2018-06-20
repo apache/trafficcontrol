@@ -20,10 +20,13 @@ package deliveryservice
  */
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"errors"
 	"fmt"
+	"math/big"
 	"net/http"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -239,4 +242,85 @@ func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 		return tc.DeliveryServiceName(""), false, fmt.Errorf("querying xml_id for delivery service ID '%v': %v", id, err)
 	}
 	return name, true, nil
+}
+
+func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	if inf.Config.RiakEnabled == false {
+		api.HandleErr(w, r, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured!"))
+		return
+	}
+
+	ds := tc.DeliveryServiceName(inf.Params["name"])
+
+	// TODO create a helper function to check all this in a single line.
+	ok, err := tenant.IsTenancyEnabledTx(inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenancy enabled: "+err.Error()))
+		return
+	}
+	if ok {
+		dsTenantID, ok, err := GetDSTenantIDByNameTx(inf.Tx.Tx, ds)
+		if err != nil {
+			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+			return
+		}
+		if !ok {
+			api.HandleErr(w, r, http.StatusNotFound, errors.New("delivery service "+string(ds)+" not found"), nil)
+			return
+		}
+		if dsTenantID != nil {
+			if authorized, err := tenant.IsResourceAuthorizedToUserTx(*dsTenantID, inf.User, inf.Tx.Tx); err != nil {
+				api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+				return
+			} else if !authorized {
+				api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+				return
+			}
+		}
+	}
+
+	keys, err := GenerateURLSigKeys()
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("generating URL sig keys: "+err.Error()))
+	}
+
+	if err := riaksvc.PutURLSigKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, ds, keys); err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("setting URL Sig keys for '"+string(ds)+": "+err.Error()))
+		return
+	}
+	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully generated and stored keys")
+}
+
+func GenerateURLSigKeys() (tc.URLSigKeys, error) {
+	chars := `abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_`
+	numKeys := 16
+	numChars := 32
+	keys := map[string]string{}
+	for i := 0; i < numKeys; i++ {
+		v := ""
+		for i := 0; i < numChars; i++ {
+			bi, err := rand.Int(rand.Reader, big.NewInt(int64(len(chars))))
+			if err != nil {
+				return nil, errors.New("generating crypto rand int: " + err.Error())
+			}
+			if !bi.IsInt64() {
+				return nil, fmt.Errorf("crypto rand int returned non-int64")
+			}
+			i := bi.Int64()
+			if i >= int64(len(chars)) {
+				return nil, fmt.Errorf("crypto rand int returned a number larger than requested")
+			}
+			v += string(chars[int(i)])
+		}
+		key := "key" + strconv.Itoa(i)
+		keys[key] = v
+	}
+	return keys, nil
 }
