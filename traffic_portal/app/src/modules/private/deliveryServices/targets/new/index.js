@@ -30,6 +30,9 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.targets.
 							deliveryService: function($stateParams, deliveryServiceService) {
 								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
 							},
+							currentTargets: function($stateParams, deliveryServiceService) {
+								return deliveryServiceService.getDeliveryServiceTargets($stateParams.deliveryServiceId);
+							},
 							target: function(deliveryService) {
 								return {
 									deliveryServiceId: deliveryService.id
