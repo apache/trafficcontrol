@@ -44,13 +44,15 @@ go build
 cd /
 openssl req -newkey rsa:2048 -new -nodes -x509 -days 365 -keyout key.pem -out cert.pem -subj "/C=US/ST=CO/L=Denver/O=.../OU=.../CN=.../emailAddress=..."
 
-cp /remap-base-test.json /remap.json
+#cp /remap-base-test.json /remap.json
+cp  $GOPATH/src/github.com/apache/trafficcontrol/grove/integration_test/tests/plugins/range_req_handler/grove.cfg /grove.cfg
+cp  $GOPATH/src/github.com/apache/trafficcontrol/grove/integration_test/tests/plugins/range_req_handler/remap.json /remap.json
 ls -l
 ${GOPATH}/src/github.com/apache/trafficcontrol/grove/grove -cfg grove.cfg &
 
 
 sleep 3
-curl -H'Host: mem-test.cdn.kabletown.net' -Lsv -r 50000-50009  http://localhost:8080/10Mb.txt
+#curl -H'Host: mem-test.cdn.kabletown.net' -Lsv -r 50000-50009  http://localhost:8080/10Mb.txt
 
 #cd $GOPATH/src/github.com/apache/trafficcontrol/grove/integration_test
 go build compare_gets.go
