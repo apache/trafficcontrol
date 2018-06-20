@@ -22,6 +22,7 @@ package crconfig
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -77,6 +78,7 @@ left outer join profile as p on p.id = d.profile
 where d.cdn_id = (select id from cdn where name = $1)
 and d.active = true
 `
+	q += fmt.Sprintf(" and t.name != '%s'", tc.DSTypeAnyMap)
 	rows, err := db.Query(q, cdn)
 	if err != nil {
 		return nil, errors.New("querying deliveryservices: " + err.Error())
