@@ -38,7 +38,9 @@ In this mode, the plugin will remove the `Range` header from the request to the 
 This mode is appropriate for MPEG-DASH video where the full objects are not too larget to GET without using range requests, and the range requests the clients use are not all on the same boundaries.
 
 # 2 store_ranges
-In this mode the plugin will add the range to the cache-key, and store them as is. When all clients are guaranteed to use the same boundaries for their range requests, and the full object will never be requested this mode can be used.
+In this mode the plugin will add the range to the cache-key, and store them as is. When all clients are guaranteed to use the same boundaries for their range requests, and the full object will never be requested this mode can be used. This mode supports multi-part and will store and serve a multi-part content type response if needed.
+
+Note that using this mode can severely impact the cache performance if clients are requesting overlapping ranges, or ranges and the full object. Each and every range combination that is requested will be stored as a unique object.
 
 # 3 slice
 
@@ -56,5 +58,7 @@ In slice mode, the plugin will break the requested object up in to slices of a c
 ```
 
 `slice-size` is the sice of the slices being used in bytes, and `wg-size` is the number of concurrent requests the plugin will do to the origin.
+
+This mode only supports single ranges, multipart is not supported.
 
 Note that in the current implementation, the slice requests are being requested "through" the grove cache, meaning they will show up in the grove access logs as client requests from localhost.
