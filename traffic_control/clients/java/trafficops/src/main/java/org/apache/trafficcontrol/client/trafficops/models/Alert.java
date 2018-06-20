@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.apache.trafficcontrol.models;
+package org.apache.trafficcontrol.client.trafficops.models;
 
 public class Alert {
 	private String level;

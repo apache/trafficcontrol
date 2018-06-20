@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-package org.apache.trafficcontrol;
+package org.apache.trafficcontrol.client.trafficops;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -27,8 +27,9 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.trafficcontrol.exception.LoginException;
-import org.apache.trafficcontrol.models.Response;
+import org.apache.trafficcontrol.client.RestApiSession;
+import org.apache.trafficcontrol.client.exception.LoginException;
+import org.apache.trafficcontrol.client.trafficops.models.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

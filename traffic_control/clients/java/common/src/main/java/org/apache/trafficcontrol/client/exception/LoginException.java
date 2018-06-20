@@ -13,28 +13,28 @@
  * limitations under the License.
  */
 
-package org.apache.trafficcontrol.exception;
+package org.apache.trafficcontrol.client.exception;
 
-public class OperationException extends TrafficControlException {
-	private static final long serialVersionUID = 8799467021892976240L;
+public class LoginException extends TrafficControlException {
+	private static final long serialVersionUID = -5021620597469977194L;
 
-	public OperationException() {
+	public LoginException() {
 		super();
 	}
 
-	public OperationException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+	public LoginException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
 	}
 
-	public OperationException(String message, Throwable cause) {
+	public LoginException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
-	public OperationException(String message) {
+	public LoginException(String message) {
 		super(message);
 	}
 
-	public OperationException(Throwable cause) {
+	public LoginException(Throwable cause) {
 		super(cause);
 	}
 	
