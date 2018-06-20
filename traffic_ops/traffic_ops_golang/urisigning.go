@@ -36,7 +36,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
-	"github.com/lestrrat/go-jwx/jwk"
+	"github.com/lestrrat/go-jwx/jwe"
 )
 
 // CDNURIKeysBucket is the namespace or bucket used for CDN URI signing keys.
@@ -45,7 +45,7 @@ const CDNURIKeysBucket = "cdn_uri_sig_keys"
 // URISignerKeyset is the container for the CDN URI signing keys
 type URISignerKeyset struct {
 	RenewalKid *string               `json:"renewal_kid"`
-	Keys       []jwk.EssentialHeader `json:"keys"`
+	Keys       []jwe.EssentialHeader `json:"keys"`
 }
 
 // endpoint handler for fetching uri signing keys from riak
