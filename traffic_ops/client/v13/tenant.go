@@ -17,6 +17,7 @@ package v13
 
 import (
 	"encoding/json"
+	"net/url"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
@@ -36,6 +37,18 @@ func (to *Session) Tenants() ([]tc.Tenant, ReqInf, error) {
 func (to *Session) Tenant(id string) (*tc.Tenant, ReqInf, error) {
 	var data tc.GetTenantsResponse
 	reqInf, err := get(to, tenantEp(id), &data)
+	if err != nil {
+		return nil, reqInf, err
+	}
+
+	return &data.Response[0], reqInf, nil
+}
+
+// TenantByName gets the Tenant for the name it's passed
+func (to *Session) TenantByName(name string) (*tc.Tenant, ReqInf, error) {
+	var data tc.GetTenantsResponse
+	query := tenantsEp() + "?name=" + url.QueryEscape(name)
+	reqInf, err := get(to, query, &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
