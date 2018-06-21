@@ -85,6 +85,37 @@ func Check(user *auth.CurrentUser, XMLID string, tx *sql.Tx) (error, error, int)
 	return nil, nil, http.StatusOK
 }
 
+// Check checks that the given user has access to the given delivery service. Returns a user error, a system error, and an HTTP error code. If both the user and system error are nil, the error code should be ignored.
+func CheckID(tx *sql.Tx, user *auth.CurrentUser, dsID int) (error, error, int) {
+	ok, err := IsTenancyEnabledTx(tx)
+	if err != nil {
+		return nil, errors.New("checking tenancy enabled: " + err.Error()), http.StatusInternalServerError
+	}
+	if !ok {
+		return nil, nil, http.StatusOK
+	}
+
+	dsTenantID, ok, err := getDSTenantIDByIDTx(tx, dsID)
+	if err != nil {
+		return nil, errors.New("checking tenant: " + err.Error()), http.StatusInternalServerError
+	}
+	if !ok {
+		return errors.New("delivery service " + strconv.Itoa(dsID) + " not found"), nil, http.StatusNotFound
+	}
+	if dsTenantID == nil {
+		return nil, nil, http.StatusOK
+	}
+
+	authorized, err := IsResourceAuthorizedToUserTx(*dsTenantID, user, tx)
+	if err != nil {
+		return nil, errors.New("checking tenant: " + err.Error()), http.StatusInternalServerError
+	}
+	if !authorized {
+		return errors.New("not authorized on this tenant"), nil, http.StatusForbidden
+	}
+	return nil, nil, http.StatusOK
+}
+
 // returns a Tenant list that the specified user has access too.
 // NOTE: This method does not use the use_tenancy parameter and if this method is being used
 // to control tenancy the parameter must be checked. The method IsResourceAuthorizedToUser checks the use_tenancy parameter
@@ -162,6 +193,15 @@ func IsTenancyEnabled(db *sqlx.DB) bool {
 		return false
 	}
 	return useTenancy
+}
+
+func IsTenancyEnabledTx(tx *sql.Tx) (bool, error) {
+	query := `SELECT COALESCE(value::boolean,FALSE) AS value FROM parameter WHERE name = 'use_tenancy' AND config_file = 'global' UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY`
+	useTenancy := false
+	if err := tx.QueryRow(query).Scan(&useTenancy); err != nil {
+		return false, errors.New("checking if tenancy is enabled: " + err.Error())
+	}
+	return useTenancy, nil
 }
 
 // returns a boolean value describing if the user has access to the provided resource tenant id and an error
@@ -580,4 +620,18 @@ func deleteQuery() string {
 	query := `DELETE FROM tenant
 WHERE id=:id`
 	return query
+}
+
+// getDSTenantIDByIDTx returns the tenant ID, whether the delivery service exists, and any error.
+// Note the id may be nil, even if true is returned, if the delivery service exists but its tenant_id field is null.
+// TODO move somewhere generic
+func getDSTenantIDByIDTx(tx *sql.Tx, id int) (*int, bool, error) {
+	tenantID := (*int)(nil)
+	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where id = $1`, id).Scan(&tenantID); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, false, nil
+		}
+		return nil, false, fmt.Errorf("querying tenant ID for delivery service ID '%v': %v", id, err)
+	}
+	return tenantID, true, nil
 }
