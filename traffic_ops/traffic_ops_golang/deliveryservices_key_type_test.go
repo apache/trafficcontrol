@@ -36,18 +36,16 @@ const (
 	opsPass        = ""
 )
 
-var to *client.Session
 
-func CreateToConnection(trafficOpsURL string, username string, password string) error {
+func CreateToConnection(trafficOpsURL string, username string, password string) *client.Session {
 	toLocal, _, err := client.LoginWithAgent(trafficOpsURL, username, password, true, "cdn-bgp-consumer",
 		false, time.Second*time.Duration(30))
 	if err != nil {
 		fmt.Errorf("Unable to login to TO: %v", err)
-		return err
+		return nil
 	}
-	to = toLocal
 
-	return nil
+	return toLocal
 }
 
 //
@@ -56,11 +54,15 @@ func CreateToConnection(trafficOpsURL string, username string, password string) 
 func TestCertificateType(t *testing.T) {
 	// get list of edges on startup, look for updates later
 
-	CreateToConnection(opsUrl, opsUser, opsPass)
+	to := CreateToConnection(opsUrl, opsUser, opsPass)
+	if to == nil {
+		fmt.Printf("Unable to log into to\n")
+		return
+	}
 
 	deliveryServices, _, err :=  to.GetDeliveryServices()
 	if err != nil {
-		fmt.Errorf("Unable to get delivery services: %v", err)
+		fmt.Printf("Unable to get delivery services: %v", err)
 		return
 	}
 	messages := make(chan string)
