@@ -241,15 +241,21 @@ func (ds *DeliveryServiceNullableV12) Sanitize() {
 	}
 }
 
-func getTypeName(tx *sql.Tx, id int) (string, bool, error) {
+// getTypeData returns the type's name and use_in_table, true/false if the query returned data, and any error
+func getTypeData(tx *sql.Tx, id int) (string, string, bool, error) {
 	name := ""
-	if err := tx.QueryRow(`SELECT name from type where id=$1`, id).Scan(&name); err != nil {
+	var useInTablePtr *string
+	if err := tx.QueryRow(`SELECT name, use_in_table from type where id=$1`, id).Scan(&name, &useInTablePtr); err != nil {
 		if err == sql.ErrNoRows {
-			return "", false, nil
+			return "", "", false, nil
 		}
-		return "", false, errors.New("querying type name: " + err.Error())
+		return "", "", false, errors.New("querying type data: " + err.Error())
 	}
-	return name, true, nil
+	useInTable := ""
+	if useInTablePtr != nil {
+		useInTable = *useInTablePtr
+	}
+	return name, useInTable, true, nil
 }
 
 func requiredIfMatchesTypeName(patterns []string, typeName string) func(interface{}) error {
@@ -296,25 +302,35 @@ func (ds *DeliveryServiceNullableV12) validateTypeFields(tx *sql.Tx) error {
 	DNSRegexType := "^DNS.*$"
 	HTTPRegexType := "^HTTP.*$"
 	SteeringRegexType := "^STEERING.*$"
+	latitudeErr := "Must be a floating point number within the range +-90"
+	longitudeErr := "Must be a floating point number within the range +-180"
 	if ds.TypeID == nil {
 		return errors.New("missing type")
 	}
-	typeName, ok, err := getTypeName(tx, *ds.TypeID)
+	typeName, useInTable, ok, err := getTypeData(tx, *ds.TypeID)
 	if err != nil {
 		return errors.New("getting type name: " + err.Error())
 	}
 	if !ok {
 		return errors.New("type not found")
 	}
+	if useInTable != "deliveryservice" {
+		return errors.New("type is not a valid deliveryservice type")
+	}
 	errs := validation.Errors{
 		"initialDispersion": validation.Validate(ds.InitialDispersion,
-			validation.By(requiredIfMatchesTypeName([]string{HTTPRegexType}, typeName))),
+			validation.By(requiredIfMatchesTypeName([]string{HTTPRegexType}, typeName)),
+			validation.By(tovalidate.IsGreaterThanZero)),
 		"ipv6RoutingEnabled": validation.Validate(ds.IPV6RoutingEnabled,
 			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
 		"missLat": validation.Validate(ds.MissLat,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
+			validation.Min(-90.0).Error(latitudeErr),
+			validation.Max(90.0).Error(latitudeErr)),
 		"missLong": validation.Validate(ds.MissLong,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
+			validation.Min(-180.0).Error(longitudeErr),
+			validation.Max(180.0).Error(longitudeErr)),
 		"multiSiteOrigin": validation.Validate(ds.MultiSiteOrigin,
 			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
 		"orgServerFqdn": validation.Validate(ds.OrgServerFQDN,
