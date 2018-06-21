@@ -131,6 +131,7 @@ func main() {
 		ReadHeaderTimeout: time.Duration(cfg.ReadHeaderTimeout) * time.Second,
 		WriteTimeout:      time.Duration(cfg.WriteTimeout) * time.Second,
 		IdleTimeout:       time.Duration(cfg.IdleTimeout) * time.Second,
+		ErrorLog:          log.Error,
 	}
 
 	if err := server.ListenAndServeTLS(cfg.CertPath, cfg.KeyPath); err != nil {
