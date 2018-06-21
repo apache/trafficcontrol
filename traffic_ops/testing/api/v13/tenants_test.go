@@ -25,7 +25,7 @@ func TestTenants(t *testing.T) {
 	CreateTestTenants(t)
 	UpdateTestTenants(t)
 	GetTestTenants(t)
-	//DeleteTestTenants(t)
+	DeleteTestTenants(t)
 }
 
 func CreateTestTenants(t *testing.T) {
@@ -117,7 +117,7 @@ func DeleteTestTenants(t *testing.T) {
 
 		delResp, err := TOSession.DeleteTenant(strconv.Itoa(respTenant.ID))
 		if err != nil {
-			t.Errorf("cannot DELETE Tenant by name: %v - %v\n", err, delResp)
+			t.Errorf("cannot DELETE Tenant: %v - %v\n", err, delResp)
 		}
 
 		// Retrieve the Tenant to see if it got deleted
