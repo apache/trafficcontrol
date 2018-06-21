@@ -24,7 +24,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // Handler handles peer Traffic Monitor data, taking a raw reader, parsing the data, and passing a result object to the ResultChannel. This fulfills the common `Handler` interface.

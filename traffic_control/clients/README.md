@@ -7,12 +7,12 @@ There are two client libraries supported:
   * 1.1
   * 1.2
 * Documentation
-  * https://github.com/apache/incubator-trafficcontrol/tree/master/traffic_control/clients/python/trafficops
+  * https://github.com/apache/trafficcontrol/tree/master/traffic_control/clients/python/trafficops
 
 ## Golang
 ### TO API v1.2 _(Deprecated)_
 * Documentation
-  * https://github.com/apache/incubator-trafficcontrol/tree/master/traffic_ops/client
+  * https://github.com/apache/trafficcontrol/tree/master/traffic_ops/client
 ###TO API v1.3
 * Documentation
-  * https://github.com/apache/incubator-trafficcontrol/tree/master/traffic_ops/client/v13
+  * https://github.com/apache/trafficcontrol/tree/master/traffic_ops/client/v13

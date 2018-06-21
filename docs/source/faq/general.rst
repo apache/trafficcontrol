@@ -36,7 +36,7 @@ Who is using Traffic Control?
 
 How do I get help with Traffic Control?
 =======================================
-	Hop on to our Slack Channel by filling out `this form <https://goo.gl/Suzakj>`_, or send a question to our mailing list `here <mailto:users@trafficcontrol.incubator.apache.org>`_.
+	Hop on to our Slack Channel by filling out `this form <https://goo.gl/Suzakj>`_, or send a question to our mailing list `here <mailto:users@trafficcontrol.apache.org>`_.
 	
 What is Rascal?
 ===============

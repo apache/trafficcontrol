@@ -18,8 +18,8 @@ package v13
 import (
 	"strconv"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"testing"
 )
 
@@ -70,7 +70,7 @@ func CreateTestDeliveryServices(t *testing.T) {
 		}
 		ds.CDNID = respCDNs[0].ID
 
-		respTypes, _, err := TOSession.GetTypeByName(ds.Type)
+		respTypes, _, err := TOSession.GetTypeByName(string(ds.Type))
 		if err != nil {
 			t.Fatalf("cannot GET Type by name: %v\n", err)
 		}
@@ -113,7 +113,7 @@ func GetTestDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v\n", err, actualDSes)
 		failed = true
 	}
-	actualDSMap := map[string]tc.DeliveryService{}
+	actualDSMap := map[string]tc.DeliveryServiceV13{}
 	for _, ds := range actualDSes {
 		actualDSMap[ds.XMLID] = ds
 	}
@@ -138,7 +138,7 @@ func UpdateTestDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot GET Delivery Services: %v\n", err)
 	}
 
-	remoteDS := tc.DeliveryService{}
+	remoteDS := tc.DeliveryServiceV13{}
 	found := false
 	for _, ds := range dses {
 		if ds.XMLID == firstDS.XMLID {
@@ -190,7 +190,7 @@ func DeleteTestDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot GET Servers: %v\n", err)
 	}
 	for _, testDS := range testData.DeliveryServices {
-		ds := tc.DeliveryService{}
+		ds := tc.DeliveryServiceV13{}
 		found := false
 		for _, realDS := range dses {
 			if realDS.XMLID == testDS.XMLID {

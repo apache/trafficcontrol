@@ -22,15 +22,15 @@ package manager
 import (
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/cache"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/config"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/ds"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/health"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/peer"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/threadsafe"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/cache"
+	"github.com/apache/trafficcontrol/traffic_monitor/config"
+	"github.com/apache/trafficcontrol/traffic_monitor/ds"
+	"github.com/apache/trafficcontrol/traffic_monitor/health"
+	"github.com/apache/trafficcontrol/traffic_monitor/peer"
+	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
+	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
 
 func pruneHistory(history []cache.Result, limit uint64) []cache.Result {

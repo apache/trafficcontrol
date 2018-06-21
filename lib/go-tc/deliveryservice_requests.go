@@ -23,7 +23,7 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
+	log "github.com/apache/trafficcontrol/lib/go-log"
 )
 
 // IDNoMod type is used to suppress JSON unmarshalling

@@ -25,7 +25,7 @@ Thus, an integration test for Traffic Ops should simply query `localhost`; an in
 
 # Running the Integration Tests
 
-To run the integration tests, set up Traffic Ops in Docker (see https://github.com/apache/incubator-trafficcontrol/tree/master/infrastructure/docker/README.md), and run `run-docker-integration-test.sh`.
+To run the integration tests, set up Traffic Ops in Docker (see https://github.com/apache/trafficcontrol/tree/master/infrastructure/docker/README.md), and run `run-docker-integration-test.sh`.
 
 # Creating a Test
 
@@ -34,7 +34,7 @@ To create a new integration test, create an executable file -- it can be a shell
 Your executable should:
 * Query Traffic Ops at localhost
 * Query any other components at their IPs, which can be queried from Traffic Ops at `https://localhost/api/1.2/servers`
-  * If you're not using a Traffic Ops client, you'll need to send a login cookie; for an example of how to get the cookie, see https://github.com/apache/incubator-trafficcontrol/tree/master/infrastructure/docker/traffic_ops/run.sh
+  * If you're not using a Traffic Ops client, you'll need to send a login cookie; for an example of how to get the cookie, see https://github.com/apache/trafficcontrol/tree/master/infrastructure/docker/traffic_ops/run.sh
 * Return 0 and print nothing for success; return a nonzero code and print the error on failure
 
 That's it! The `run-docker-integration-test.sh` script will automatically run your executable in the Docker Traffic Ops container, and report its failures.

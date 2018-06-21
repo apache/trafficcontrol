@@ -18,7 +18,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/grove/web"
 )
 
 type CacheObj struct {

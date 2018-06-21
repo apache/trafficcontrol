@@ -19,9 +19,9 @@
 
 # Traffic Portal Installation / Configuration
 
-### 1. Build Traffic Portal RPM w/ Docker or fetch Traffic Portal RPM from [Jenkins](https://builds.apache.org/view/S-Z/view/TrafficControl/job/incubator-trafficcontrol-master-build)
+### 1. Build Traffic Portal RPM w/ Docker or fetch Traffic Portal RPM from [Jenkins](https://builds.apache.org/view/S-Z/view/TrafficControl/job/trafficcontrol-master-build)
 
-* Build instructions: https://github.com/apache/incubator-trafficcontrol/blob/master/BUILD.md
+* Build instructions: https://github.com/apache/trafficcontrol/blob/master/BUILD.md
 
 ### 2. Install
 

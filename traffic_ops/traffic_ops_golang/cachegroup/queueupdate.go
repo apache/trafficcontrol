@@ -26,10 +26,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	tcv13 "github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	tcv13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
 func QueueUpdates(db *sql.DB) http.HandlerFunc {

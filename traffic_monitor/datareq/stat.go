@@ -26,11 +26,11 @@ import (
 	"sort"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/lib/go-util"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/config"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/peer"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/threadsafe"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_monitor/config"
+	"github.com/apache/trafficcontrol/traffic_monitor/peer"
+	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 )
 
 type JSONStats struct {

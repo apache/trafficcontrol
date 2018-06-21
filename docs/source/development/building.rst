@@ -62,7 +62,7 @@ If any project names are provided on the command line, only those will be built.
 Otherwise, all projects are built.
 
 All artifacts (rpms, logs, source tar ball) are copied to ``dist`` at the top level of the
-``incubator-trafficcontrol`` directory.
+``trafficcontrol`` directory.
 
 Example
 ~~~~~~~

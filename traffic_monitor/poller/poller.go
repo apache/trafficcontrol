@@ -27,11 +27,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/fetcher"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/handler"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/towrap" // TODO move to common
+	"github.com/apache/trafficcontrol/lib/go-log"
+	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/fetcher"
+	"github.com/apache/trafficcontrol/traffic_monitor/handler"
+	"github.com/apache/trafficcontrol/traffic_monitor/towrap" // TODO move to common
 )
 
 type Poller interface {

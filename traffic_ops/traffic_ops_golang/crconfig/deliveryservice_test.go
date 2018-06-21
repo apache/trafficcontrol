@@ -27,7 +27,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -82,7 +82,7 @@ func randDS() tc.CRConfigDeliveryService {
 	geoProviderStr := GeoProviderMaxmindStr
 	return tc.CRConfigDeliveryService{
 		AnonymousBlockingEnabled: &falseStrPtr,
-		CoverageZoneOnly: false,
+		CoverageZoneOnly:         false,
 		Dispersion: &tc.CRConfigDispersion{
 			Limit:    42,
 			Shuffled: true,

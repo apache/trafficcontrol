@@ -26,7 +26,7 @@ keystore.*(?:                        keystore ){0}
 README.*(?:                          Readme's don't usually require a separate license. ){0}
 CHANGELOG.*(?:                       Changelogs don't usually require a separate license. ){0}
 Result(?:                            traffic_ops/app/lib/Schema/Result contains only generated code ){0}
-.*\.(?:png|gif|ico|jpe?g)?(?:        Images don't bear their own license information. ){0}
+.*\.(?:png|gif|ico|jpe?g|svg)?(?:    Images don't bear their own license information. ){0}
 sphinx_rtd_theme(?:                  MIT. Properly documented in LICENSE ){0}
 selenium(?:                          MIT. Properly documented in LICENSE ){0}
 gmx(?:                               MIT. Properly documented in LICENSE ){0}

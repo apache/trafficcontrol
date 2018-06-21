@@ -24,8 +24,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 
 	"github.com/basho/riak-go-client"
 )
@@ -33,7 +33,7 @@ import (
 const DeliveryServiceSSLKeysBucket = "ssl"
 const DNSSECKeysBucket = "dnssec"
 
-func GetDeliveryServiceSSLKeysObj(xmlID string, version string, db *sql.DB, authOpts *riak.AuthOptions) (tc.DeliveryServiceSSLKeys, bool, error) {
+func GetDeliveryServiceSSLKeysObj(xmlID string, version string, tx *sql.Tx, authOpts *riak.AuthOptions) (tc.DeliveryServiceSSLKeys, bool, error) {
 	key := tc.DeliveryServiceSSLKeys{}
 	if version == "" {
 		xmlID += "-latest"
@@ -41,7 +41,7 @@ func GetDeliveryServiceSSLKeysObj(xmlID string, version string, db *sql.DB, auth
 		xmlID += "-" + version
 	}
 	found := false
-	err := WithCluster(db, authOpts, func(cluster StorageCluster) error {
+	err := WithClusterTx(tx, authOpts, func(cluster StorageCluster) error {
 		// get the deliveryservice ssl keys by xmlID and version
 		ro, err := FetchObjectValues(xmlID, DeliveryServiceSSLKeysBucket, cluster)
 		if err != nil {
@@ -63,12 +63,12 @@ func GetDeliveryServiceSSLKeysObj(xmlID string, version string, db *sql.DB, auth
 	return key, found, nil
 }
 
-func PutDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, db *sql.DB, authOpts *riak.AuthOptions) error {
+func PutDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, authOpts *riak.AuthOptions) error {
 	keyJSON, err := json.Marshal(&key)
 	if err != nil {
 		return errors.New("marshalling key: " + err.Error())
 	}
-	err = WithCluster(db, authOpts, func(cluster StorageCluster) error {
+	err = WithClusterTx(tx, authOpts, func(cluster StorageCluster) error {
 		obj := &riak.Object{
 			ContentType:     "text/json",
 			Charset:         "utf-8",

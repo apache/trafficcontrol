@@ -27,17 +27,17 @@ The following document is a set of guidelines to streamline the contribution pro
 Things to know before getting started
 -------------------------------------
 #### Code of Conduct
-Please try to keep discussions respectful and follow the [Apache Software Foundation Code of Conduct](https://github.com/apache/incubator-trafficcontrol/blob/master/CODE_OF_CONDUCT.md) when interacting with others.
+Please try to keep discussions respectful and follow the [Apache Software Foundation Code of Conduct](https://github.com/apache/trafficcontrol/blob/master/CODE_OF_CONDUCT.md) when interacting with others.
 
 #### Design Decisions
-When we need to make changes to the project, we first discuss it on the [users@trafficcontrol.incubator.apache.org](mailto:users@trafficcontrol.incubator.apache.org) mailing list. We document our decisions as well as brainstorm project related ideas in the [wiki](https://cwiki.apache.org/confluence/display/TC/Traffic+Control+Home).
+When we need to make changes to the project, we first discuss it on the [users@trafficcontrol.apache.org](mailto:users@trafficcontrol.apache.org) mailing list. We document our decisions as well as brainstorm project related ideas in the [wiki](https://cwiki.apache.org/confluence/display/TC/Traffic+Control+Home).
 
 How to Contribute
 -------------------------------------
 
-We love pull requests! We simply don't have the time or resources to add every feature and support every platform. If you have improvements (enhancements or bug fixes) for Traffic Control, start by creating an [issue](https://github.com/apache/incubator-trafficcontrol/issues) and discussing it with us first on the [users@trafficcontrol.incubator.apache.org](mailto:users@trafficcontrol.incubator.apache.org) mailing list. We might already be working on it, or there might be an existing way to do it.
+We love pull requests! We simply don't have the time or resources to add every feature and support every platform. If you have improvements (enhancements or bug fixes) for Traffic Control, start by creating an [issue](https://github.com/apache/trafficcontrol/issues) and discussing it with us first on the [users@trafficcontrol.apache.org](mailto:users@trafficcontrol.apache.org) mailing list. We might already be working on it, or there might be an existing way to do it.
 
-Once your issue has been approved and you're ready to start slinging code, we have a few [guidelines](https://github.com/apache/incubator-trafficcontrol/blob/master/CONTRIBUTING.md#guidelines) to help maintain code quality and ensure the pull request process goes smoothly.
+Once your issue has been approved and you're ready to start slinging code, we have a few [guidelines](https://github.com/apache/trafficcontrol/blob/master/CONTRIBUTING.md#guidelines) to help maintain code quality and ensure the pull request process goes smoothly.
 
 Remember, your code doesn't have to be perfect. Hack it together and submit a [pull request](https://help.github.com/articles/using-pull-requests/). We'll work with you to make sure it fits properly into the project.
 
@@ -50,13 +50,13 @@ Following the project conventions will make the pull request process go faster a
 
 #### Create an issue
 
-If you want to add a new feature, make a [GitHub issue](https://github.com/apache/incubator-trafficcontrol/issues) and discuss it with us first on the [users@trafficcontrol.incubator.apache.org](mailto:users@trafficcontrol.incubator.apache.org) mailing list. We might already be working on it, or there might be an existing way to do it.
+If you want to add a new feature, make a [GitHub issue](https://github.com/apache/trafficcontrol/issues) and discuss it with us first on the [users@trafficcontrol.apache.org](mailto:users@trafficcontrol.apache.org) mailing list. We might already be working on it, or there might be an existing way to do it.
 
-If it's a bug fix, make a [GitHub issue](https://github.com/apache/incubator-trafficcontrol/issues) and discuss it with us first on the [users@trafficcontrol.incubator.apache.org](mailto:users@trafficcontrol.incubator.apache.org) mailing list. We need to know what the problem is and how to reproduce it so please create a [GitHub issue](https://github.com/apache/incubator-trafficcontrol/issues) for that as well.
+If it's a bug fix, make a [GitHub issue](https://github.com/apache/trafficcontrol/issues) and discuss it with us first on the [users@trafficcontrol.apache.org](mailto:users@trafficcontrol.apache.org) mailing list. We need to know what the problem is and how to reproduce it so please create a [GitHub issue](https://github.com/apache/trafficcontrol/issues) for that as well.
 
 #### Documentation
 
-If your pull request changes the user interface or API, make sure the relevant [documentation](http://trafficcontrol.apache.org/docs/latest/index.html) is updated. Documentation [source code](https://github.com/apache/incubator-trafficcontrol/tree/master/docs/source) is written using [reStructuredText](https://en.wikipedia.org/wiki/ReStructuredText). Please verify any document changes by installing [Sphinx](http://www.sphinx-doc.org/en/stable/) and running 'make' from the [root of the docs directory](https://github.com/apache/incubator-trafficcontrol/tree/master/docs).
+If your pull request changes the user interface or API, make sure the relevant [documentation](http://trafficcontrol.apache.org/docs/latest/index.html) is updated. Documentation [source code](https://github.com/apache/trafficcontrol/tree/master/docs/source) is written using [reStructuredText](https://en.wikipedia.org/wiki/ReStructuredText). Please verify any document changes by installing [Sphinx](http://www.sphinx-doc.org/en/stable/) and running 'make' from the [root of the docs directory](https://github.com/apache/trafficcontrol/tree/master/docs).
 
 #### Code formatting
 

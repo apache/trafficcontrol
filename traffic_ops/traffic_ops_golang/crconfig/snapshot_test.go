@@ -26,7 +26,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )

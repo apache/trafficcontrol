@@ -24,7 +24,7 @@ import (
 	"errors"
 	"strconv"
 
-	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
+	to "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
 const TrafficMonitorType = "RASCAL"

@@ -17,12 +17,14 @@
  * under the License.
  */
 
-var FormDeliveryServiceTargetController = function(deliveryService, target, $scope, formUtils, locationUtils, deliveryServiceService, typeService) {
+var FormDeliveryServiceTargetController = function(deliveryService, currentTargets, target, $scope, formUtils, locationUtils, deliveryServiceService, typeService) {
 
 	var getDeliveryServices = function() {
-		deliveryServiceService.getDeliveryServices()
+		deliveryServiceService.getDeliveryServices({ cdn: deliveryService.cdnId })
 			.then(function(result) {
-				$scope.deliveryServices = result;
+				$scope.deliveryServices = _.filter(result, function(ds) {
+					return ds.type.startsWith('HTTP') && _.findWhere(currentTargets, {targetId: ds.id}) == undefined;
+				});
 			});
 	};
 
@@ -53,5 +55,5 @@ var FormDeliveryServiceTargetController = function(deliveryService, target, $sco
 
 };
 
-FormDeliveryServiceTargetController.$inject = ['deliveryService', 'target', '$scope', 'formUtils', 'locationUtils', 'deliveryServiceService', 'typeService'];
+FormDeliveryServiceTargetController.$inject = ['deliveryService', 'currentTargets', 'target', '$scope', 'formUtils', 'locationUtils', 'deliveryServiceService', 'typeService'];
 module.exports = FormDeliveryServiceTargetController;

@@ -33,11 +33,11 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/about"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -59,14 +59,8 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 	return func(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			// TODO remove, and make username available to wrapLogTime
-			start := time.Now()
 			iw := &Interceptor{w: w}
 			w = iw
-			username := "-"
-			defer func() {
-				log.EventfRaw(`%s - %s [%s] "%v %v HTTP/1.1" %v %v %v "%v"`, r.RemoteAddr, username, time.Now().Format(AccessLogTimeFormat), r.Method, r.URL.Path, iw.code, iw.byteCount, int(time.Now().Sub(start)/time.Millisecond), r.UserAgent())
-			}()
-
 			handleErr := func(status int, err error) {
 				errBytes, jsonErr := json.Marshal(tc.CreateErrorAlerts(err))
 				if jsonErr != nil {
@@ -99,7 +93,7 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 				return
 			}
 
-			username = oldCookie.AuthData
+			username := oldCookie.AuthData
 			currentUserInfo := auth.GetCurrentUserFromDB(a.getCurrentUserInfoStmt, username)
 			if currentUserInfo.PrivLevel < privLevelRequired {
 				handleErr(http.StatusForbidden, errors.New("Forbidden."))
@@ -137,6 +131,12 @@ func wrapHeaders(h http.HandlerFunc) http.HandlerFunc {
 
 // AccessLogTimeFormat ...
 const AccessLogTimeFormat = "02/Jan/2006:15:04:05 -0700"
+
+func getWrapAccessLog(secret string) Middleware {
+	return func(h http.HandlerFunc) http.HandlerFunc {
+		return wrapAccessLog(secret, h)
+	}
+}
 
 func wrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

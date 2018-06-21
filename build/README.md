@@ -33,11 +33,11 @@ You can build from any repository/branch combination,  but that repository must 
 following `docker-compose` commands, you can limit building to one or more sub-projects by supplying arguments at the end.  If none
 are supplied,  then *all* will be run.
 
-Starting at the top-level of your trafficcontrol git clone (e.g. `~/src/incubator-trafficcontrol`):
+Starting at the top-level of your trafficcontrol git clone (e.g. `~/src/trafficcontrol`):
 
 > cd infrastructure/docker/build
 > docker-compose build traffic_ops_build traffic_monitor_build ...
-> GITREPO=https://github.com/username/incubator-trafficcontrol BRANCH=mybranch docker-compose up traffic_ops_build traffic_monitor_build ...
+> GITREPO=https://github.com/username/trafficcontrol BRANCH=mybranch docker-compose up traffic_ops_build traffic_monitor_build ...
 
 The resulting `.rpm` files will be created in the `artifacts` directory.
 

@@ -23,10 +23,10 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/cache"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/peer"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/threadsafe"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/traffic_monitor/cache"
+	"github.com/apache/trafficcontrol/traffic_monitor/peer"
+	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
+	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
 
 func srvCacheStats(params url.Values, errorCount threadsafe.Uint, path string, toData todata.TODataThreadsafe, statResultHistory threadsafe.ResultStatHistory, statInfoHistory threadsafe.ResultInfoHistory, monitorConfig threadsafe.TrafficMonitorConfigMap, combinedStates peer.CRStatesThreadsafe, statMaxKbpses threadsafe.CacheKbpses) ([]byte, int) {

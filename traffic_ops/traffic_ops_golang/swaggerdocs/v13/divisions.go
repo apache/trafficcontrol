@@ -1,6 +1,6 @@
 package v13
 
-import v13 "github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
+import v13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one

@@ -22,7 +22,7 @@ package datareq
 import (
 	"encoding/json"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/towrap"
+	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
 )
 
 func srvAPICRConfigHist(toc towrap.ITrafficOpsSession) ([]byte, error) {

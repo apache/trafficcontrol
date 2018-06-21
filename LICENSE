@@ -213,21 +213,7 @@ For readability, subcomponent licenses have been broken out into their own
 files, largely located in the licenses directory. Each subcomponent enumerated
 below lists the files it comprises and a link to the full text of the license.
 
-For the sphinx_rtd_theme component:
-@docs/source/_themes/sphinx_rtd_theme/*
-./licenses/MIT-sphinx_rtd_theme
-
-For the sphinx_rtd_theme/search.html component:
-@docs/source/_themes/sphinx_rtd_theme/search.html
-./licenses/BSD-sphinx_rtd_theme_search
-
-For the modernizr component:
-@docs/source/_themes/sphinx_rtd_theme/static/js/modernizr.min.js
-./licenses/MIT-modernizr
-
 For the fontawesome component:
-@docs/source/_themes/sphinx_rtd_theme/static/fonts/FontAwesome.otf
-@docs/source/_themes/sphinx_rtd_theme/static/fonts/fontawesome-webfont.*
 @traffic_portal/app/src/assets/fonts/[Ff]ont[Aa]wesome*
 
 These binary fontawesome fonts are provided under the SIL Open Font License 1.1:
@@ -235,18 +221,6 @@ These binary fontawesome fonts are provided under the SIL Open Font License 1.1:
 
 The fontawesome CSS files are provided under an MIT license:
 ./licenses/MIT-fontawesome
-
-For the Inconsolata and Lato fonts:
-@docs/source/_themes/sphinx_rtd_theme/static/fonts/Inconsolata-Bold.ttf
-@docs/source/_themes/sphinx_rtd_theme/static/fonts/Inconsolata.ttf
-@docs/source/_themes/sphinx_rtd_theme/static/fonts/Lato-Bold.ttf
-@docs/source/_themes/sphinx_rtd_theme/static/fonts/Lato-Regular.ttf
-./licenses/SIL-1.1
-
-For the RobotoSlab fonts
-@docs/source/_themes/sphinx_rtd_theme/static/fonts/RobotoSlab-Bold.ttf
-@docs/source/_themes/sphinx_rtd_theme/static/fonts/RobotoSlab-Regular.ttf
-./licenses/AL2-RobotoSlab
 
 For the bootstrap component:
 @misc/traffic-control-cdn/*/bootstrap*
@@ -405,12 +379,12 @@ The envconfig component is used under the MIT license:
 ./traffic_ops/vendor/github.com/kelseyhightower/envconfig/LICENSE
 
 The govalidator component is used under the MIT license:
-@traffic_ops/vendor/github.com/asaskevich/govalidator/*
-./traffic_ops/vendor/github.com/asaskevich/govalidator/LICENSE
+@vendor/github.com/asaskevich/govalidator/*
+./vendor/github.com/asaskevich/govalidator/LICENSE
 
 The ozzo-validation component is used under the MIT license:
-@traffic_ops/vendor/github.com/go-ozzo/ozzo-validation/*
-./traffic_ops/vendor/github.com/go-ozzo/ozzo-validation/LICENSE
+@vendor/github.com/go-ozzo/ozzo-validation/*
+./vendor/github.com/go-ozzo/ozzo-validation/LICENSE
 
 The spinner-small.gif is used under the WTFPL license:
 @traffic_ops/app/public/images/spinner-small.gif

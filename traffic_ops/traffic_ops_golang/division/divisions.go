@@ -25,12 +25,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -155,7 +156,7 @@ func (division *TODivision) Create(db *sqlx.DB, user auth.CurrentUser) (error, t
 
 func (division *TODivision) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
 	if strings.HasSuffix(parameters["name"], ".json") {
-		parameters["name"] = parameters["name"][:len(parameters["name"]) - len(".json")]
+		parameters["name"] = parameters["name"][:len(parameters["name"])-len(".json")]
 	}
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
