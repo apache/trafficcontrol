@@ -29,6 +29,7 @@ import (
 	"time"
 
 	tclog "github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/asn"
@@ -44,6 +45,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservicesregexes"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/division"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/hwinfo"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/origin"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/physlocation"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ping"
@@ -55,11 +57,10 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/staticdnsentry"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/status"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/systeminfo"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/types"
 
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/origin"
 	"github.com/basho/riak-go-client"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // Authenticated ...
@@ -169,12 +170,12 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodDelete, `regions/{id}$`, api.DeleteHandler(region.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		// get all edge servers associated with a delivery service (from deliveryservice_server table)
-		{1.1, http.MethodGet, `deliveryserviceserver$`, dsserver.ReadDSSHandler(d.DB),auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPost,`deliveryserviceserver$`, dsserver.GetReplaceHandler(d.DB),auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodPost,`deliveryservices/{xml_id}/servers$`, dsserver.GetCreateHandler( d.DB ) ,auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodGet, `servers/{id}/deliveryservices$`, api.ReadHandler(dsserver.GetDServiceRef(), d.DB),auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `deliveryservices/{id}/servers$`, dsserver.GetReadHandler(d.DB, tc.Assigned),auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `deliveryservices/{id}/unassigned_servers$`, dsserver.GetReadHandler(d.DB, tc.Unassigned),auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `deliveryserviceserver$`, dsserver.ReadDSSHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPost, `deliveryserviceserver$`, dsserver.GetReplaceHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodPost, `deliveryservices/{xml_id}/servers$`, dsserver.GetCreateHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `servers/{id}/deliveryservices$`, api.ReadHandler(dsserver.GetDServiceRef(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `deliveryservices/{id}/servers$`, dsserver.GetReadHandler(d.DB, tc.Assigned), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `deliveryservices/{id}/unassigned_servers$`, dsserver.GetReadHandler(d.DB, tc.Unassigned), auth.PrivLevelReadOnly, Authenticated, nil},
 		//{1.1, http.MethodGet, `deliveryservices/{id}/servers/eligible$`, dsserver.GetReadHandler(d.DB, tc.Eligible),auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Server
@@ -281,6 +282,13 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodPost, `profileparameter/?$`, profileparameter.PostProfileParam(d.DB.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `parameterprofile/?$`, profileparameter.PostParamProfile(d.DB.DB), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodDelete, `profileparameters/{profileId}/{parameterId}$`, api.DeleteHandler(profileparameter.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+
+		//Tenants
+		{1.2, http.MethodGet, `tenants/?(\.json)?$`, api.ReadHandler(tenant.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.2, http.MethodGet, `tenants/{id}$`, api.ReadHandler(tenant.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.2, http.MethodPut, `tenants/{id}$`, api.UpdateHandler(tenant.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.2, http.MethodPost, `tenants/?$`, api.CreateHandler(tenant.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.2, http.MethodDelete, `tenants/{id}$`, api.DeleteHandler(tenant.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//CRConfig
 		{1.1, http.MethodGet, `cdns/{cdn}/snapshot/?$`, crconfig.SnapshotGetHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
