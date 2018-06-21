@@ -27,7 +27,7 @@ start() {
    export PATH=/usr/local/go/bin:/opt/traffic_ops/go/bin:$PATH
    export GOPATH=/go
    go get -u golang.org/x/net/publicsuffix golang.org/x/crypto/scrypt
-   TODB_HOSTNAME=db TODB_NAME=traffic_ops TO_URL=https://trafficops go test -v -cfg=../conf/traffic-ops-test.conf
+   go test -v -cfg=../conf/traffic-ops-test.conf
 }
 
 

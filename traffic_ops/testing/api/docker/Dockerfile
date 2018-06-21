@@ -20,12 +20,18 @@ ARG DB_SERVER
 ARG DB_PORT
 ARG DB_USER
 ARG DB_PASSWORD
+ARG TO_URL
+ARG TODB_HOSTNAME
+ARG TODB_NAME
 
 ENV DB_NAME=$DB_SERVER
 ENV DB_SERVER=$DB_SERVER
 ENV DB_PORT=$DB_PORT
 ENV DB_USER=$DB_SERVER
 ENV DB_PASSWORD=$DB_PASSWORD
+ENV TO_URL=$TO_URL
+ENV TODB_HOSTNAME=$TODB_HOSTNAME
+ENV TODB_NAME=$TODB_NAME
 
 ARG SRC_DIR=/go/src
 ARG TC_DIR=$SRC_DIR/github.com/apache/trafficcontrol
@@ -41,6 +47,7 @@ WORKDIR $TC_DIR
 ADD lib lib
 
 # Add the dependent dirs (without the cruft)
+ADD vendor vendor
 ADD traffic_ops/traffic_ops_golang traffic_ops/traffic_ops_golang
 ADD traffic_ops/vendor traffic_ops/vendor
 ADD traffic_ops/testing/api traffic_ops/testing/api
