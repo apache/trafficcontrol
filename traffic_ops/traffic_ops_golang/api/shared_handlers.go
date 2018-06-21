@@ -135,6 +135,7 @@ func ReadHandler(typeRef Reader, db *sqlx.DB) http.HandlerFunc {
 		if err != nil {
 			log.Errorf("unable to get parameters from request: %s", err)
 			handleErrs(http.StatusInternalServerError, err)
+			return
 		}
 
 		user, err := auth.GetCurrentUser(ctx)
