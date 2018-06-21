@@ -53,7 +53,11 @@ func (to *Session) TenantByName(name string) (*tc.Tenant, ReqInf, error) {
 		return nil, reqInf, err
 	}
 
-	return &data.Response[0], reqInf, nil
+	var ten *tc.Tenant
+	if len(data.Response) > 0 {
+		ten = &data.Response[0]
+	}
+	return ten, reqInf, nil
 }
 
 // CreateTenant creates the Tenant it's passed
