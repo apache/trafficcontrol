@@ -32,7 +32,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/utils"
 
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -41,36 +40,36 @@ import (
 func getTestOrigins() []v13.Origin {
 	origins := []v13.Origin{}
 	testOrigin := v13.Origin{
-		Cachegroup:        utils.StrPtr("Cachegroup"),
-		CachegroupID:      utils.IntPtr(1),
-		Coordinate:        utils.StrPtr("originCoordinate"),
-		CoordinateID:      utils.IntPtr(1),
-		DeliveryService:   utils.StrPtr("testDS"),
-		DeliveryServiceID: utils.IntPtr(1),
-		FQDN:              utils.StrPtr("origin.cdn.net"),
-		ID:                utils.IntPtr(1),
-		IP6Address:        utils.StrPtr("dead:beef:cafe::42"),
-		IPAddress:         utils.StrPtr("10.2.3.4"),
-		IsPrimary:         utils.BoolPtr(false),
-		LastUpdated:       utils.NewTimeNoMod(),
-		Name:              utils.StrPtr("originName"),
-		Port:              utils.IntPtr(443),
-		Profile:           utils.StrPtr("profile"),
-		ProfileID:         utils.IntPtr(1),
-		Protocol:          utils.StrPtr("https"),
-		Tenant:            utils.StrPtr("tenantName"),
-		TenantID:          utils.IntPtr(1),
+		Cachegroup:        util.StrPtr("Cachegroup"),
+		CachegroupID:      util.IntPtr(1),
+		Coordinate:        util.StrPtr("originCoordinate"),
+		CoordinateID:      util.IntPtr(1),
+		DeliveryService:   util.StrPtr("testDS"),
+		DeliveryServiceID: util.IntPtr(1),
+		FQDN:              util.StrPtr("origin.cdn.net"),
+		ID:                util.IntPtr(1),
+		IP6Address:        util.StrPtr("dead:beef:cafe::42"),
+		IPAddress:         util.StrPtr("10.2.3.4"),
+		IsPrimary:         util.BoolPtr(false),
+		LastUpdated:       util.NewTimeNoMod(),
+		Name:              util.StrPtr("originName"),
+		Port:              util.IntPtr(443),
+		Profile:           util.StrPtr("profile"),
+		ProfileID:         util.IntPtr(1),
+		Protocol:          util.StrPtr("https"),
+		Tenant:            util.StrPtr("tenantName"),
+		TenantID:          util.IntPtr(1),
 	}
 	origins = append(origins, testOrigin)
 
 	testOrigin2 := testOrigin
-	testOrigin2.FQDN = utils.StrPtr("origin2.cdn.com")
-	testOrigin2.Name = utils.StrPtr("origin2")
+	testOrigin2.FQDN = util.StrPtr("origin2.cdn.com")
+	testOrigin2.Name = util.StrPtr("origin2")
 	origins = append(origins, testOrigin2)
 
 	testOrigin3 := testOrigin
-	testOrigin3.FQDN = utils.StrPtr("origin3.cdn.org")
-	testOrigin3.Name = utils.StrPtr("origin3")
+	testOrigin3.FQDN = util.StrPtr("origin3.cdn.org")
+	testOrigin3.Name = util.StrPtr("origin3")
 	origins = append(origins, testOrigin3)
 
 	return origins
