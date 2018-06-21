@@ -486,26 +486,13 @@ func (ten *TOTenant) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiEr
 		return tc.DBError, tc.SystemError
 	}
 
-	// if tenant has children, don't allow deletion
-	parentQ := `SELECT COUNT(*) FROM tenant WHERE parent_id = $1`
-	var count int
-	err = tx.QueryRowx(parentQ, *ten.ID).Scan(&count)
-	if err != nil {
-		log.Errorf("received error: %++v from parent query execution", err)
-		return err, tc.SystemError
-	}
-	if count > 0 {
-		name := "unknown"
-		if ten.Name != nil {
-			name = *ten.Name
-		}
-		log.Errorf("Tenant '%s' has children tenant(s); refusing to delete", name)
-		return fmt.Errorf("Tenant '%s' has children tenant(s):  Please update these tenants and retry.", name), tc.ForbiddenError
-	}
-
 	log.Debugf("about to run exec query: %s with tenant: %++v", deleteQuery(), ten)
 	result, err := tx.NamedExec(deleteQuery(), ten)
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			log.Infof("deleting tenant: %++v", pqErr)
+			return err, tc.DataConflictError
+		}
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
 	}
