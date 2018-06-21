@@ -19,17 +19,23 @@ package tc
  * under the License.
  */
 
-// TenantResponse ...
+// TenantResponse is the response for a request for a single tenant
 type TenantResponse struct {
 	Response Tenant        `json:"response"`
 	Alerts   []TenantAlert `json:"alerts"`
 }
 
-// TenantResponse ...
+// GetTenantResponse here to maintain backward compatability
+type GetTenantResponse TenantResponse
+
+// TenantResponse is the response for a request for a group of tenants
 type TenantsResponse struct {
 	Response []Tenant      `json:"response"`
 	Alerts   []TenantAlert `json:"alerts"`
 }
+
+// GetTenantsResponse here to maintain backward compatability
+type GetTenantsResponse TenantsResponse
 
 // Tenant ...
 type Tenant struct {
