@@ -19,9 +19,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
 
 const (
@@ -75,7 +75,6 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 }
 
 func TestDeliveryServiceRequestRequired(t *testing.T) {
-
 	CreateTestCDNs(t)
 	CreateTestTypes(t)
 	dsr := testData.DeliveryServiceRequests[dsrRequired]
@@ -84,26 +83,11 @@ func TestDeliveryServiceRequestRequired(t *testing.T) {
 		t.Errorf("Error occurred %v", err)
 	}
 
-	expected := []string{
-		"'active' cannot be blank",
-		"'cdnId' cannot be blank",
-		"'dscp' cannot be blank",
-		"'geoLimit' cannot be blank",
-		"'geoProvider' cannot be blank",
-		"'infoUrl' must be a valid URL",
-		"'initialDispersion' must be greater than zero",
-		"'logsEnabled' cannot be blank",
-		"'orgServerFqdn' must be a valid URL",
-		"'regionalGeoBlocking' cannot be blank",
-		"'routingName' must be a valid hostname",
-		"'typeId' cannot be blank",
-		"'xmlId' cannot contain spaces",
+	if len(alerts.Alerts) == 0 {
+		t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
 	}
-
-	utils.Compare(t, expected, alerts.ToStrings())
 	DeleteTestTypes(t)
 	DeleteTestCDNs(t)
-
 }
 
 func TestDeliveryServiceRequestRules(t *testing.T) {
@@ -142,14 +126,9 @@ func TestDeliveryServiceRequestRules(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error occurred %v", err)
 	}
-
-	expected := []string{
-		"'displayName' the length must be between 1 and 48",
-		"'routingName' cannot contain periods",
-		"'xmlId' cannot contain spaces",
+	if len(alerts.Alerts) == 0 {
+		t.Errorf("Expected: validation error alerts, actual: %+v", alerts)
 	}
-
-	utils.Compare(t, expected, alerts.ToStrings())
 	DeleteTestTypes(t)
 	DeleteTestCDNs(t)
 

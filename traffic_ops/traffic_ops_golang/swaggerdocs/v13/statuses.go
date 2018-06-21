@@ -20,7 +20,7 @@ package v13
  */
 
 import (
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 )
 
 // Statuses -  StatusesResponse to get the "response" top level key

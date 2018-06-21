@@ -26,7 +26,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/tools/testcaches/fakesrvrdata"
+	"github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches/fakesrvrdata"
 )
 
 // TODO config?

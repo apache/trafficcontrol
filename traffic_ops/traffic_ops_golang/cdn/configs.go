@@ -24,8 +24,8 @@ import (
 	"errors"
 	"net/http"
 
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	tc "github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
 func GetConfigs(db *sql.DB) http.HandlerFunc {

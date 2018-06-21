@@ -27,18 +27,13 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-	// "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	// "github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
-	// "github.com/asaskevich/govalidator"
-	// "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
-	// "github.com/lib/pq"
 )
 
 func Get(dbx *sqlx.DB) http.HandlerFunc {

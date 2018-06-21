@@ -22,7 +22,7 @@ package datareq
 import (
 	"encoding/json"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/threadsafe"
+	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 )
 
 func srvMonitorConfig(mcThs threadsafe.TrafficMonitorConfigMap) ([]byte, error) {

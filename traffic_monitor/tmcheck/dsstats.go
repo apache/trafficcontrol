@@ -24,9 +24,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/dsdata"
-	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
+	to "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
 // ValidateDSStates validates that all Delivery Services in the CRConfig exist in given Traffic Monitor's DSStats.

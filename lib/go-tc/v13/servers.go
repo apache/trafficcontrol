@@ -3,7 +3,7 @@ package v13
 import (
 	"time"
 
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 /*

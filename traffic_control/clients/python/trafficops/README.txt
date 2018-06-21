@@ -11,17 +11,17 @@ NOTE: Assuming in a already newly created and activated virtualenv
 
 From github.com via pip:
 
-# pip install git+https://github.com/apache/incubator-trafficcontrol.git#"egg=trafficops&subdirectory=traffic_control/clients/python/trafficops"
+# pip install git+https://github.com/apache/trafficcontrol.git#"egg=trafficops&subdirectory=traffic_control/clients/python/trafficops"
 
 or
 
-# pip install git+ssh://git@github.com/apache/incubator-trafficcontrol.git#"egg=trafficops&subdirectory=traffic_control/clients/python/trafficops"
+# pip install git+ssh://git@github.com/apache/trafficcontrol.git#"egg=trafficops&subdirectory=traffic_control/clients/python/trafficops"
 
-Local Installation from cloned 'incubator-trafficcontrol' repository:
+Local Installation from cloned 'trafficcontrol' repository:
 
-NOTE: 'incubator-trafficcontrol' => https://www.github.com/apache/incubator-trafficcontrol
+NOTE: 'trafficcontrol' => https://www.github.com/apache/trafficcontrol
 
-NOTE: Assuming cd'd to the root of a forked/cloned 'incubator-trafficcontrol' repository
+NOTE: Assuming cd'd to the root of a forked/cloned 'trafficcontrol' repository
 
     1. Activate your virtualenv environment (Python Virtual Environment)
         E.g.
@@ -29,10 +29,10 @@ NOTE: Assuming cd'd to the root of a forked/cloned 'incubator-trafficcontrol' re
             $ source ~/VENV/my_venv/bin/activate
             (my_venv) $
     2. Install the software for the correct environment in the activated virtualenv
-        (my_venv) $ cd <root of 'incubator-trafficcontrol' repository>/traffic_control/clients/python/trafficops
+        (my_venv) $ cd <root of 'trafficcontrol' repository>/traffic_control/clients/python/trafficops
         (my_venv) $ python setup.py install
         ...
-        (my_venv) $ cd <root of 'incubator-trafficcontrol' repository>
+        (my_venv) $ cd <root of 'trafficcontrol' repository>
     3. Test Package is installed correctly
         (my_venv) $ python
         (my_venv) $ Python 3.6.1 (default, Apr  4 2017, 09:40:21)

@@ -27,13 +27,13 @@ Traffic Control configuration generator for the Grove HTTP caching proxy.
     * See https://golang.org/doc/install
 2. Clone this repository into your GOPATH.
 ```bash
-mkdir -p $GOPATH/src/github.com/apache/incubator-trafficcontrol
-cd $GOPATH/src/github.com/apache/incubator-trafficcontrol
-git clone https://github.com/apache/incubator-trafficcontrol/grove
+mkdir -p $GOPATH/src/github.com/apache/trafficcontrol
+cd $GOPATH/src/github.com/apache/trafficcontrol
+git clone https://github.com/apache/trafficcontrol/grove
 ```
 3. Build the application
 ```bash
-cd $GOPATH/src/github.com/apache/incubator-trafficcontrol/grove/grovetccfg
+cd $GOPATH/src/github.com/apache/trafficcontrol/grove/grovetccfg
 go build
 ```
 5. Install and configure an RPM development environment

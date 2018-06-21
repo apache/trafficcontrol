@@ -23,8 +23,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/threadsafe"
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/towrap"
+	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
+	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
 )
 
 func srvTRConfig(opsConfig threadsafe.OpsConfig, toSession towrap.ITrafficOpsSession) ([]byte, time.Time, error) {

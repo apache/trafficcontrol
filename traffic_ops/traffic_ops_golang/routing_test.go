@@ -29,7 +29,7 @@ import (
 	"context"
 	"net/http/httptest"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
 type key int

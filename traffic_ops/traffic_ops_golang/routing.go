@@ -27,10 +27,12 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync/atomic"
+	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -64,8 +66,8 @@ type RawRoute struct {
 	Middlewares       []Middleware
 }
 
-func getDefaultMiddleware() []Middleware {
-	return []Middleware{wrapHeaders}
+func getDefaultMiddleware(secret string) []Middleware {
+	return []Middleware{getWrapAccessLog(secret), wrapHeaders}
 }
 
 // ServerData ...
@@ -129,7 +131,7 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase) map[str
 
 func getRouteMiddleware(middlewares []Middleware, authBase AuthBase, authenticated bool, privLevel int) []Middleware {
 	if middlewares == nil {
-		middlewares = getDefaultMiddleware()
+		middlewares = getDefaultMiddleware(authBase.secret)
 	}
 	if authenticated { // a privLevel of zero is an unauthenticated endpoint.
 		authWrapper := authBase.GetWrapper(privLevel)
@@ -164,9 +166,17 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 }
 
 // Handler - generic handler func used by the Handlers hooking into the routes
-func Handler(routes map[string][]CompiledRoute, catchall http.Handler, db *sqlx.DB, cfg *config.Config, w http.ResponseWriter, r *http.Request) {
-	requested := r.URL.Path[1:]
+func Handler(routes map[string][]CompiledRoute, catchall http.Handler, db *sqlx.DB, cfg *config.Config, getReqID func() uint64, w http.ResponseWriter, r *http.Request) {
+	reqID := getReqID()
 
+	reqIDStr := strconv.FormatUint(reqID, 10)
+	log.Infoln(r.Method + " " + r.URL.Path + " handling (reqid " + reqIDStr + ")")
+	start := time.Now()
+	defer func() {
+		log.Infoln(r.Method + " " + r.URL.Path + " handled (reqid " + reqIDStr + ") in " + time.Since(start).String())
+	}()
+
+	requested := r.URL.Path[1:]
 	mRoutes, ok := routes[r.Method]
 	if !ok {
 		catchall.ServeHTTP(w, r)
@@ -187,6 +197,7 @@ func Handler(routes map[string][]CompiledRoute, catchall http.Handler, db *sqlx.
 		ctx = context.WithValue(ctx, api.PathParamsKey, params)
 		ctx = context.WithValue(ctx, api.DBContextKey, db)
 		ctx = context.WithValue(ctx, api.ConfigContextKey, cfg)
+		ctx = context.WithValue(ctx, api.ReqIDContextKey, reqID)
 		r = r.WithContext(ctx)
 		compiledRoute.Handler(w, r)
 		return
@@ -209,8 +220,9 @@ func RegisterRoutes(d ServerData) error {
 	authBase := AuthBase{secret: d.Config.Secrets[0], getCurrentUserInfoStmt: userInfoStmt, override: nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
 	routes := CreateRouteMap(routeSlice, rawRoutes, authBase)
 	compiledRoutes := CompileRoutes(routes)
+	getReqID := nextReqIDGetter()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		Handler(compiledRoutes, catchall, d.DB, &d.Config, w, r)
+		Handler(compiledRoutes, catchall, d.DB, &d.Config, getReqID, w, r)
 	})
 	return nil
 }
@@ -224,4 +236,12 @@ func use(h http.HandlerFunc, middlewares []Middleware) http.HandlerFunc {
 		h = middlewares[i](h)
 	}
 	return h
+}
+
+// nextReqIDGetter returns a function for getting incrementing identifiers. The returned func is safe for calling with multiple goroutines. Note the returned identifiers will not be unique after the max uint64 value.
+func nextReqIDGetter() func() uint64 {
+	id := uint64(0)
+	return func() uint64 {
+		return atomic.AddUint64(&id, 1)
+	}
 }

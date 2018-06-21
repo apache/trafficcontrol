@@ -20,8 +20,8 @@ package threadsafe
  */
 
 import (
-	"github.com/apache/incubator-trafficcontrol/traffic_monitor/cache"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/cache"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"sync"
 )
 

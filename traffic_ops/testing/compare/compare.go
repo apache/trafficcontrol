@@ -30,7 +30,7 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/kelseyhightower/envconfig"
 	"golang.org/x/net/publicsuffix"
 )

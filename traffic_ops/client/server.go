@@ -21,7 +21,7 @@ import (
 	"net/url"
 	"strings"
 
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // Servers gets an array of servers

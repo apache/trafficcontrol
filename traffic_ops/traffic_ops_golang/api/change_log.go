@@ -23,9 +23,9 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -87,6 +87,12 @@ func CreateChangeLogMsg(level string, user auth.CurrentUser, db *sqlx.DB, msg st
 
 func CreateChangeLogRaw(level string, msg string, user auth.CurrentUser, db *sql.DB) {
 	if _, err := db.Exec(`INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`, level, msg, user.ID); err != nil {
+		log.Errorln("Inserting change log level '" + level + "' message '" + msg + "' user '" + user.UserName + "': " + err.Error())
+	}
+}
+
+func CreateChangeLogRawTx(level string, msg string, user *auth.CurrentUser, tx *sql.Tx) {
+	if _, err := tx.Exec(`INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`, level, msg, user.ID); err != nil {
 		log.Errorln("Inserting change log level '" + level + "' message '" + msg + "' user '" + user.UserName + "': " + err.Error())
 	}
 }

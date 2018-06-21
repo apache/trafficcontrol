@@ -17,10 +17,10 @@
  * under the License.
  */
 
-var FormEditDeliveryServiceTargetController = function(deliveryService, target, $scope, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService) {
+var FormEditDeliveryServiceTargetController = function(deliveryService, currentTargets, target, $scope, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceService) {
 
 	// extends the FormDeliveryServiceTargetController to inherit common methods
-	angular.extend(this, $controller('FormDeliveryServiceTargetController', { deliveryService: deliveryService, target: target, $scope: $scope }));
+	angular.extend(this, $controller('FormDeliveryServiceTargetController', { deliveryService: deliveryService, currentTargets: currentTargets, target: target, $scope: $scope }));
 
 	var deleteTarget = function(target) {
 		deliveryServiceService.deleteDeliveryServiceTarget(target.deliveryServiceId, target.targetId)
@@ -65,5 +65,5 @@ var FormEditDeliveryServiceTargetController = function(deliveryService, target, 
 
 };
 
-FormEditDeliveryServiceTargetController.$inject = ['deliveryService', 'target', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService'];
+FormEditDeliveryServiceTargetController.$inject = ['deliveryService', 'currentTargets', 'target', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'deliveryServiceService'];
 module.exports = FormEditDeliveryServiceTargetController;

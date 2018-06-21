@@ -20,23 +20,24 @@ package servers
  */
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strconv"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tovalidate"
-	"github.com/go-ozzo/ozzo-validation"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
-	"encoding/json"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"net/http"
 )
 
 // TODeliveryServiceRequest provides a type alias to define functions on
@@ -288,7 +289,6 @@ type DSServerIds struct {
 
 type TODSServerIds DSServerIds
 
-
 func createServersForDsIdRef() *TODSServerIds {
 	var dsserversRef = TODSServerIds(DSServerIds{})
 	return &dsserversRef
@@ -307,7 +307,7 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 
 		// get list of server Ids to insert
-		payload :=  createServersForDsIdRef() 
+		payload := createServersForDsIdRef()
 
 		if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
 			log.Errorf("Error trying to decode the request body: %s", err)
@@ -333,29 +333,14 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
-		// if the object has tenancy enabled, check that user is able to access the tenant
-		// check user tenancy access to this resource.
-		row := db.QueryRow("SELECT xml_id FROM deliveryservice WHERE id = $1", *dsId)
-		var xmlId string
-		row.Scan(&xmlId)
-		hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlId, db)
-		if !hasAccess {
-			switch apiStatus {
-			case tc.SystemError:
-				handleErrs(http.StatusInternalServerError, err)
-				return
-			case tc.DataMissingError:
-				handleErrs(http.StatusBadRequest, err)
-				return
-			case tc.ForbiddenError:
-				handleErrs(http.StatusForbidden, err)
-				return
-			}
-		}
-
 		// perform the insert transaction
 		rollbackTransaction := true
 		tx, err := db.Beginx()
+		if err != nil {
+			log.Errorln("could not begin transaction: %v", err)
+			handleErrs(http.StatusInternalServerError, err)
+			return
+		}
 		defer func() {
 			if tx == nil || !rollbackTransaction {
 				return
@@ -366,9 +351,17 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 			}
 		}()
 
+		xmlID, ok, err := deliveryservice.GetXMLID(tx.Tx, *dsId)
 		if err != nil {
-			log.Errorln("could not begin transaction: %v", err)
-			handleErrs(http.StatusInternalServerError, err)
+			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("deliveryserviceserver getting XMLID: "+err.Error()))
+			return
+		}
+		if !ok {
+			api.HandleErr(w, r, http.StatusBadRequest, errors.New("no delivery service with that ID exists"), nil)
+			return
+		}
+		if userErr, sysErr, errCode := tenant.Check(user, xmlID, tx.Tx); userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, errCode, userErr, sysErr)
 			return
 		}
 
@@ -387,7 +380,7 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 		i := 0
 		respServers := []int{}
 
-		for _ , server := range servers {
+		for _, server := range servers {
 			dtos := map[string]interface{}{"id": dsId, "server": server}
 			resultRows, err := tx.NamedQuery(insertIdsQuery(), dtos)
 			if err != nil {
@@ -435,7 +428,6 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 
 type TODeliveryServiceServers tc.DeliveryServiceServers
 
-
 func createServersRef() *TODeliveryServiceServers {
 	serversRef := TODeliveryServiceServers(tc.DeliveryServiceServers{})
 	return &serversRef
@@ -469,25 +461,26 @@ func GetCreateHandler(db *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
-		// if the object has tenancy enabled, check that user is able to access the tenant
-		// check user tenancy access to this resource.
-		hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlId, db)
-		if !hasAccess {
-			switch apiStatus {
-			case tc.SystemError:
-				handleErrs(http.StatusInternalServerError, err)
-				return
-			case tc.DataMissingError:
-				handleErrs(http.StatusBadRequest, err)
-				return
-			case tc.ForbiddenError:
-				handleErrs(http.StatusForbidden, err)
-				return
-			default:
-				e := http.StatusInternalServerError
-				handleErrs(e, err)
+		rollbackTransaction := true
+		tx, err := db.Beginx()
+		if err != nil {
+			log.Errorln("could not begin transaction: %v", err)
+			handleErrs(http.StatusInternalServerError, err)
+			return
+		}
+		defer func() {
+			if tx == nil || !rollbackTransaction {
 				return
 			}
+			err := tx.Rollback()
+			if err != nil {
+				log.Errorln(errors.New("rolling back transaction: " + err.Error()))
+			}
+		}()
+
+		if userErr, sysErr, errCode := tenant.Check(user, xmlId, tx.Tx); userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, errCode, userErr, sysErr)
+			return
 		}
 
 		row := db.QueryRow(selectDeliveryService(), xmlId)
@@ -518,25 +511,6 @@ func GetCreateHandler(db *sqlx.DB) http.HandlerFunc {
 		defer serverIds.Close()
 		if err != nil {
 			log.Errorln("Could not select the ServerIds: %v", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		// perform the insert transaction
-		rollbackTransaction := true
-		tx, err := db.Beginx()
-		defer func() {
-			if tx == nil || !rollbackTransaction {
-				return
-			}
-			err := tx.Rollback()
-			if err != nil {
-				log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-			}
-		}()
-
-		if err != nil {
-			log.Errorln("could not begin transaction: %v", err)
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
@@ -628,7 +602,7 @@ func GetReadHandler(db *sqlx.DB, filter tc.Filter) http.HandlerFunc {
 			return
 		}
 
-		dssres := tc.DSServersAttrResponse{ servers }
+		dssres := tc.DSServersAttrResponse{servers}
 		respBts, err := json.Marshal(dssres)
 		if err != nil {
 			handleErrs(http.StatusInternalServerError, err)

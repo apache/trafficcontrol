@@ -17,10 +17,10 @@
  * under the License.
  */
 
-var FormNewDeliveryServiceTargetController = function(deliveryService, target, $scope, $controller, deliveryServiceService) {
+var FormNewDeliveryServiceTargetController = function(deliveryService, currentTargets, target, $scope, $controller, deliveryServiceService) {
 
 	// extends the FormDeliveryServiceTargetController to inherit common methods
-	angular.extend(this, $controller('FormDeliveryServiceTargetController', { deliveryService: deliveryService, target: target, $scope: $scope }));
+	angular.extend(this, $controller('FormDeliveryServiceTargetController', { deliveryService: deliveryService, currentTargets: currentTargets, target: target, $scope: $scope }));
 
 	$scope.targetName = 'New';
 
@@ -35,5 +35,5 @@ var FormNewDeliveryServiceTargetController = function(deliveryService, target, $
 
 };
 
-FormNewDeliveryServiceTargetController.$inject = ['deliveryService', 'target', '$scope', '$controller', 'deliveryServiceService'];
+FormNewDeliveryServiceTargetController.$inject = ['deliveryService', 'currentTargets', 'target', '$scope', '$controller', 'deliveryServiceService'];
 module.exports = FormNewDeliveryServiceTargetController;

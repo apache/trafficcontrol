@@ -39,13 +39,13 @@ go get golang.org/x/net/ipv6
   * golang.org/x must be updated when the Go compiler is, so we treat it as part of the compiler, rather than vendoring it like other dependencies, to avoid breaking updating to newer compilers than we internally work with. If you know what you're doing, feel free to skip this step, or omit `rm` of old `go get` source and packages.
 3. Clone this repository into your GOPATH.
 ```bash
-mkdir -p $GOPATH/src/github.com/apache/incubator-trafficcontrol
-cd $GOPATH/src/github.com/apache/incubator-trafficcontrol
-git clone https://github.com/apache/incubator-trafficcontrol/grove
+mkdir -p $GOPATH/src/github.com/apache/trafficcontrol
+cd $GOPATH/src/github.com/apache/trafficcontrol
+git clone https://github.com/apache/trafficcontrol/grove
 ```
 4. Build the application
 ```bash
-cd $GOPATH/src/github.com/apache/incubator-trafficcontrol/grove
+cd $GOPATH/src/github.com/apache/trafficcontrol/grove
 go build
 ```
 6. Install and configure an RPM development environment
@@ -103,7 +103,7 @@ The config file has the following fields:
 
 The remap rules file is specified in the [config file](#configuration).
 
-Note there exists a tool for generating remap rules from [Traffic Control](https://github.com/apache/incubator-trafficcontrol), available [here](https://github.com/apache/incubator-trafficcontrol/grove/tree/master/grovetccfg).
+Note there exists a tool for generating remap rules from [Traffic Control](https://github.com/apache/trafficcontrol), available [here](https://github.com/apache/trafficcontrol/grove/tree/master/grovetccfg).
 
 The remap rules file is JSON of the following form:
 

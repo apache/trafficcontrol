@@ -17,9 +17,9 @@
 #
 # To use this compose you should first build Traffic Ops and then copy the RPM to :
 #
-# incubator-trafficcontrol/infrastructure/docker/traffic_ops/traffic_ops.rpm
+# trafficcontrol/infrastructure/docker/traffic_ops/traffic_ops.rpm
 #
-# You should then just be able to go to the directory incubator-trafficcontrol/infrastructure/docker/traffic_ops/
+# You should then just be able to go to the directory trafficcontrol/infrastructure/docker/traffic_ops/
 # and type 'docker-compose up -d'
 #
 # You should then be able to go to https://localhost and test Traffic Ops or the go api.
@@ -33,7 +33,7 @@
 version: '2'
 
 volumes:
-  incubator-trafficcontrol:
+  trafficcontrol:
   traffic_ops:
   conf:
 

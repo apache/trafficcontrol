@@ -28,8 +28,8 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
@@ -323,4 +323,23 @@ func WithClusterTx(tx *sql.Tx, authOpts *riak.AuthOptions, f func(StorageCluster
 		}
 	}()
 	return f(cluster)
+}
+
+// StartCluster gets and starts a riak cluster, returning an error if either getting or starting fails.
+func StartCluster(tx *sql.Tx, authOptions *riak.AuthOptions) (StorageCluster, error) {
+	cluster, err := GetRiakClusterTx(tx, authOptions)
+	if err != nil {
+		return nil, errors.New("getting cluster: " + err.Error())
+	}
+	if err = cluster.Start(); err != nil {
+		return nil, errors.New("starting cluster: " + err.Error())
+	}
+	return cluster, nil
+}
+
+// StopCluster stops the cluster, logging any error rather than returning it. This is designed to be called in a defer.
+func StopCluster(c StorageCluster) {
+	if err := c.Stop(); err != nil {
+		log.Errorln("stopping riak cluster: " + err.Error())
+	}
 }

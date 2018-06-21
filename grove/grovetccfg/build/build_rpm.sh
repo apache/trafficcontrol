@@ -22,7 +22,7 @@ mkdir -p $BUILDDIR/{BUILD,RPMS,SOURCES}
 echo "$BUILDDIR" > ~/.rpmmacros
 
 # get traffic_ops client
-# godir=src/github.com/apache/incubator-trafficcontrol/traffic_ops/client
+# godir=src/github.com/apache/trafficcontrol/traffic_ops/client
 # ( mkdir -p "$godir" && \
 #   cd "$godir" && \
 #   cp -r ${GOPATH}/${godir}/* . && \

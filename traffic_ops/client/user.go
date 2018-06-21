@@ -18,7 +18,7 @@ package client
 import (
 	"encoding/json"
 
-	tc "github.com/apache/incubator-trafficcontrol/lib/go-tc"
+	tc "github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // Users gets an array of Users.

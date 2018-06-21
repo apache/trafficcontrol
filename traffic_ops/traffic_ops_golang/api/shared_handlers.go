@@ -29,14 +29,16 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/jmoiron/sqlx"
 )
 
 const PathParamsKey = "pathParams"
+const DBKey = "db"
+const ConfigKey = "cfg"
 
 type KeyFieldInfo struct {
 	Field string
@@ -45,7 +47,7 @@ type KeyFieldInfo struct {
 
 func GetIntKey(s string) (interface{}, error) {
 	if strings.HasSuffix(s, ".json") {
-		s = s[:len(s) - len(".json")]
+		s = s[:len(s)-len(".json")]
 	}
 	return strconv.Atoi(s)
 }

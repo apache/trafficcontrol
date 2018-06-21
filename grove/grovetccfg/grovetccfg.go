@@ -32,14 +32,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	tcv13 "github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
-	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	tcv13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
+	to "github.com/apache/trafficcontrol/traffic_ops/client"
 
-	"github.com/apache/incubator-trafficcontrol/grove/config"
-	"github.com/apache/incubator-trafficcontrol/grove/remap"
-	"github.com/apache/incubator-trafficcontrol/grove/remapdata"
-	"github.com/apache/incubator-trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/grove/config"
+	"github.com/apache/trafficcontrol/grove/remap"
+	"github.com/apache/trafficcontrol/grove/remapdata"
+	"github.com/apache/trafficcontrol/grove/web"
 )
 
 // Duplicating Hdr and ModHdrs here for now...

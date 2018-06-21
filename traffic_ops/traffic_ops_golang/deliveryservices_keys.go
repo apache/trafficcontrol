@@ -28,104 +28,45 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/config"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-	"github.com/jmoiron/sqlx"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 )
 
 // Delivery Services: SSL Keys.
 
 // returns the cdn_id found by domainname.
-func getCDNIDByDomainname(domainName string, db *sqlx.DB) (sql.NullInt64, error) {
-	cdnQuery := `SELECT id from cdn WHERE domain_name = $1`
-	var cdnID sql.NullInt64
-
-	noCdnID := sql.NullInt64{
-		Int64: 0,
-		Valid: false,
-	}
-
-	rows, err := db.Query(cdnQuery, domainName)
-	if err != nil {
-		return noCdnID, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		if err := rows.Scan(&cdnID); err != nil {
-			return noCdnID, err
+func getCDNIDByDomainname(domainName string, tx *sql.Tx) (int64, bool, error) {
+	cdnID := int64(0)
+	if err := tx.QueryRow(`SELECT id from cdn WHERE domain_name = $1`, domainName).Scan(&cdnID); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, false, nil
 		}
+		return 0, false, err
 	}
-
-	return cdnID, nil
+	return cdnID, true, nil
 }
 
 // returns a delivery service xmlId for a cdn by host regex.
-func getXMLID(cdnID sql.NullInt64, hostRegex string, db *sqlx.DB) (sql.NullString, error) {
-	dsQuery := `
-			SELECT ds.xml_id from deliveryservice ds
-			INNER JOIN deliveryservice_regex dr 
-			on ds.id = dr.deliveryservice AND ds.cdn_id = $1
-			INNER JOIN regex r on r.id = dr.regex
-			WHERE r.pattern = $2
-		`
-	var xmlID sql.NullString
-
-	rows, err := db.Query(dsQuery, cdnID.Int64, hostRegex)
-	if err != nil {
-		xmlID.Valid = false
-		return xmlID, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		if err := rows.Scan(&xmlID); err != nil {
-			xmlID.Valid = false
-			return xmlID, err
+func getXMLID(cdnID int64, hostRegex string, tx *sql.Tx) (string, bool, error) {
+	q := `
+SELECT ds.xml_id from deliveryservice ds
+JOIN deliveryservice_regex dr on ds.id = dr.deliveryservice AND ds.cdn_id = $1
+JOIN regex r on r.id = dr.regex
+WHERE r.pattern = $2
+`
+	xmlID := ""
+	if err := tx.QueryRow(q, cdnID, hostRegex).Scan(&xmlID); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
 		}
+		return "", false, errors.New("querying xml id: " + err.Error())
 	}
-
-	return xmlID, nil
-}
-
-func getDeliveryServiceSSLKeysByXMLID(xmlID string, version string, db *sql.DB, cfg config.Config) ([]byte, error) {
-	if cfg.RiakEnabled == false {
-		err := errors.New("Riak is not configured!")
-		log.Errorln("getting delivery services SSL keys: " + err.Error())
-		return nil, err
-	}
-	key, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(xmlID, version, db, cfg.RiakAuthOptions)
-	if err != nil {
-		log.Errorln("getting delivery service keys: " + err.Error())
-		return nil, err
-	}
-	if !ok {
-		alert := tc.CreateAlerts(tc.InfoLevel, "no object found for the specified key")
-		respBytes, err := json.Marshal(alert)
-		if err != nil {
-			log.Errorf("failed to marshal an alert response: %s\n", err)
-			return nil, err
-		}
-		return respBytes, nil
-	}
-
-	respBytes := []byte{}
-	resp := tc.DeliveryServiceSSLKeysResponse{Response: key}
-	respBytes, err = json.Marshal(resp)
-	if err != nil {
-		log.Errorf("failed to marshal a sslkeys response: %s\n", err)
-		return nil, err
-	}
-	return respBytes, nil
+	return xmlID, true, nil
 }
 
 // verify the server certificate chain and return the
@@ -279,234 +220,134 @@ func decodeCertificate(certificate string) ([]*x509.Certificate, error) {
 	}
 }
 
-func addDeliveryServiceSSLKeysHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorsFunc(w, r)
-		if !cfg.RiakEnabled {
-			err := errors.New("Riak is not configured!")
-			log.Errorln("adding Riak SSL keys for delivery service: " + err.Error())
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-		defer r.Body.Close()
-
-		ctx := r.Context()
-		user, err := auth.GetCurrentUser(ctx)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		data, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		keysObj := tc.DeliveryServiceSSLKeys{}
-		if err := json.Unmarshal(data, &keysObj); err != nil {
-			log.Errorf("ERROR: could not unmarshal the request, %v\n", err)
-			handleErr(http.StatusBadRequest, err)
-			return
-		}
-
-		// check user tenancy access to this resource.
-		hasAccess, err, apiStatus := tenant.HasTenant(*user, keysObj.DeliveryService, db)
-		if !hasAccess {
-			switch apiStatus {
-			case tc.SystemError:
-				handleErr(http.StatusInternalServerError, err)
-				return
-			case tc.DataMissingError:
-				handleErr(http.StatusBadRequest, err)
-				return
-			case tc.ForbiddenError:
-				handleErr(http.StatusForbidden, err)
-				return
-			}
-		}
-
-		var certChain string
-		if certChain, err = verifyAndEncodeCertificate(keysObj.Certificate.Crt, ""); err != nil {
-			log.Errorf("ERROR: could not unmarshal the request, %v\n", err)
-			handleErr(http.StatusBadRequest, err)
-			return
-		}
-		keysObj.Certificate.Crt = certChain
-
-		// marshal the keysObj
-		keysJSON, err := json.Marshal(&keysObj)
-		if err != nil {
-			log.Errorf("ERROR: could not marshal the keys object, %v\n", err)
-			handleErr(http.StatusBadRequest, err)
-			return
-		}
-
-		if err := riaksvc.PutDeliveryServiceSSLKeysObj(keysObj, db.DB, cfg.RiakAuthOptions); err != nil {
-			log.Errorln("putting Riak SSL keys for delivery service '" + keysObj.DeliveryService + "': " + err.Error())
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", keysJSON)
+func addDeliveryServiceSSLKeysHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+	if !inf.Config.RiakEnabled {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("adding Riak SSL keys for delivery service:: riak is not configured"))
+		return
+	}
+	keysObj := tc.DeliveryServiceSSLKeys{}
+	if err := json.NewDecoder(r.Body).Decode(&keysObj); err != nil {
+		api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON"), nil)
+		return
+	}
+	if userErr, sysErr, errCode := tenant.Check(inf.User, keysObj.DeliveryService, inf.Tx.Tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
+	}
+	certChain, err := verifyAndEncodeCertificate(keysObj.Certificate.Crt, "")
+	if err != nil {
+		api.HandleErr(w, r, http.StatusBadRequest, errors.New("verifying certificate: "+err.Error()), nil)
+		return
+	}
+	keysObj.Certificate.Crt = certChain
+	if err := riaksvc.PutDeliveryServiceSSLKeysObj(keysObj, inf.Tx.Tx, inf.Config.RiakAuthOptions); err != nil {
+		api.HandleErr(w, r, http.StatusBadRequest, nil, errors.New("putting Riak SSL keys for delivery service '"+keysObj.DeliveryService+"': "+err.Error()))
+		return
+	}
+	*inf.CommitTx = true
+	api.WriteRespRaw(w, r, keysObj)
 }
 
 // fetch the ssl keys for a deliveryservice specified by the fully qualified hostname
-func getDeliveryServiceSSLKeysByHostNameHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorsFunc(w, r)
-		var respBytes []byte
-		var domainName string
-		var hostName string
-		var hostRegex string
-
-		if cfg.RiakEnabled == false {
-			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
-			return
-		}
-
-		version := r.URL.Query().Get("version")
-
-		ctx := r.Context()
-		user, err := auth.GetCurrentUser(ctx)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-		pathParams, err := api.GetPathParams(ctx)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		hostName = pathParams["hostName"]
-
-		strArr := strings.Split(hostName, ".")
-		ln := len(strArr)
-
-		if ln > 1 {
-			for i := 2; i < ln-1; i++ {
-				domainName += strArr[i] + "."
-			}
-			domainName += strArr[ln-1]
-			hostRegex = ".*\\." + strArr[1] + "\\..*"
-		}
-
-		// lookup the cdnID
-		cdnID, err := getCDNIDByDomainname(domainName, db)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		// verify that a valid cdnID was returned.
-		if !cdnID.Valid {
-			alert := tc.CreateAlerts(tc.InfoLevel, fmt.Sprintf(" - a cdn does not exist for the domain: %s parsed from hostname: %s",
-				domainName, hostName))
-			respBytes, err = json.Marshal(alert)
-			if err != nil {
-				log.Errorf("failed to marshal an alert response: %s\n", err)
-				return
-			}
-		} else {
-			// now lookup the deliveryservice xmlID
-			xmlIDStr, err := getXMLID(cdnID, hostRegex, db)
-			if err != nil {
-				handleErr(http.StatusInternalServerError, err)
-				return
-			}
-
-			// verify that the xmlIDStr returned is valid, ie not nil
-			if !xmlIDStr.Valid {
-				alert := tc.CreateAlerts(tc.InfoLevel, fmt.Sprintf("  - a delivery service does not exist for a host with hostname of %s",
-					hostName))
-				respBytes, err = json.Marshal(alert)
-				if err != nil {
-					log.Errorf("failed to marshal an alert response: %s\n", err)
-					handleErr(http.StatusInternalServerError, err)
-					return
-				}
-			} else {
-				xmlID := xmlIDStr.String
-				// check user tenancy access to this resource.
-				hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlID, db)
-				if !hasAccess {
-					switch apiStatus {
-					case tc.SystemError:
-						handleErr(http.StatusInternalServerError, err)
-						return
-					case tc.DataMissingError:
-						handleErr(http.StatusBadRequest, err)
-						return
-					case tc.ForbiddenError:
-						handleErr(http.StatusForbidden, err)
-						return
-					}
-				}
-				respBytes, err = getDeliveryServiceSSLKeysByXMLID(xmlID, version, db.DB, cfg)
-				if err != nil {
-					handleErr(http.StatusInternalServerError, err)
-					return
-				}
-			}
-		}
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", respBytes)
+func getDeliveryServiceSSLKeysByHostNameHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"hostName"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	if inf.Config.RiakEnabled == false {
+		api.HandleErr(w, r, http.StatusServiceUnavailable, errors.New("The RIAK service is unavailable"), errors.New("getting Riak SSL keys by host name: riak is not configured"))
+		return
+	}
+
+	version := inf.Params["version"]
+	hostName := inf.Params["hostName"]
+	domainName := ""
+	hostRegex := ""
+	strArr := strings.Split(hostName, ".")
+	ln := len(strArr)
+	if ln > 1 {
+		for i := 2; i < ln-1; i++ {
+			domainName += strArr[i] + "."
+		}
+		domainName += strArr[ln-1]
+		hostRegex = ".*\\." + strArr[1] + "\\..*"
+	}
+
+	// lookup the cdnID
+	cdnID, ok, err := getCDNIDByDomainname(domainName, inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting cdn id by domain name: "+err.Error()))
+		return
+	}
+	if !ok {
+		api.WriteRespAlert(w, r, tc.InfoLevel, " - a cdn does not exist for the domain: "+domainName+" parsed from hostname: "+hostName)
+		return
+	}
+	// now lookup the deliveryservice xmlID
+	xmlID, ok, err := getXMLID(cdnID, hostRegex, inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting xml id: "+err.Error()))
+		return
+	}
+	if !ok {
+		api.WriteRespAlert(w, r, tc.InfoLevel, "  - a delivery service does not exist for a host with hostname of "+hostName)
+		return
+	}
+
+	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
+	}
+
+	keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(xmlID, version, inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
+		return
+	}
+	if !ok {
+		api.WriteRespAlert(w, r, tc.InfoLevel, "no object found for the specified key")
+		return
+	}
+	*inf.CommitTx = true
+	api.WriteResp(w, r, keyObj)
 }
 
-// fetch the deliveryservice ssl keys by the specified xmlID.
-func getDeliveryServiceSSLKeysByXMLIDHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handleErr := tc.GetHandleErrorsFunc(w, r)
-		var respBytes []byte
-
-		if cfg.RiakEnabled == false {
-			handleErr(http.StatusServiceUnavailable, fmt.Errorf("The RIAK service is unavailable"))
-			return
-		}
-
-		version := r.URL.Query().Get("version")
-
-		ctx := r.Context()
-		user, err := auth.GetCurrentUser(ctx)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-		pathParams, err := api.GetPathParams(ctx)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		xmlID := pathParams["xmlID"]
-
-		// check user tenancy access to this resource.
-		hasAccess, err, apiStatus := tenant.HasTenant(*user, xmlID, db)
-		if !hasAccess {
-			switch apiStatus {
-			case tc.SystemError:
-				handleErr(http.StatusInternalServerError, err)
-				return
-			case tc.DataMissingError:
-				handleErr(http.StatusBadRequest, err)
-				return
-			case tc.ForbiddenError:
-				handleErr(http.StatusForbidden, err)
-				return
-			}
-		}
-
-		respBytes, err = getDeliveryServiceSSLKeysByXMLID(xmlID, version, db.DB, cfg)
-		if err != nil {
-			handleErr(http.StatusInternalServerError, err)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", respBytes)
+// getDeliveryServiceSSLKeysByXMLIDHandler fetches the deliveryservice ssl keys by the specified xmlID.
+func getDeliveryServiceSSLKeysByXMLIDHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlID"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+	if inf.Config.RiakEnabled == false {
+		api.HandleErr(w, r, http.StatusServiceUnavailable, errors.New("The RIAK service is unavailable"), errors.New("getting Riak SSL keys by xml id: riak is not configured"))
+		return
+	}
+	version := inf.Params["version"]
+	xmlID := inf.Params["xmlID"]
+	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
+	}
+	keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(xmlID, version, inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
+		return
+	}
+	if !ok {
+		api.WriteRespAlert(w, r, tc.InfoLevel, "no object found for the specified key")
+		return
+	}
+	*inf.CommitTx = true
+	api.WriteResp(w, r, keyObj)
 }

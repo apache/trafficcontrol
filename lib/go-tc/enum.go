@@ -98,40 +98,40 @@ func CacheTypeFromString(s string) CacheType {
 	return CacheTypeInvalid
 }
 
-// DSType is the Delivery Service type. HTTP, DNS, etc.
-type DSType string
+// DSTypeCategory is the Delivery Service type category: HTTP or DNS
+type DSTypeCategory string
 
 const (
-	// DSTypeHTTP represents an HTTP delivery service
-	DSTypeHTTP = DSType("http")
-	// DSTypeDNS represents a DNS delivery service
-	DSTypeDNS = DSType("dns")
-	// DSTypeInvalid represents an invalid delivery service type enumeration. Note this is the default construction for a DSType.
-	DSTypeInvalid = DSType("")
+	// DSTypeCategoryHTTP represents an HTTP delivery service
+	DSTypeCategoryHTTP = DSTypeCategory("http")
+	// DSTypeCategoryDNS represents a DNS delivery service
+	DSTypeCategoryDNS = DSTypeCategory("dns")
+	// DSTypeCategoryInvalid represents an invalid delivery service type enumeration. Note this is the default construction for a DSTypeCategory.
+	DSTypeCategoryInvalid = DSTypeCategory("")
 )
 
 // String returns a string representation of this delivery service type.
-func (t DSType) String() string {
+func (t DSTypeCategory) String() string {
 	switch t {
-	case DSTypeHTTP:
+	case DSTypeCategoryHTTP:
 		return "HTTP"
-	case DSTypeDNS:
+	case DSTypeCategoryDNS:
 		return "DNS"
 	default:
 		return "INVALIDDSTYPE"
 	}
 }
 
-// DSTypeFromString returns a delivery service type object from its string representation, or DSTypeInvalid if the string is not a valid type.
-func DSTypeFromString(s string) DSType {
+// DSTypeCategoryFromString returns a delivery service type object from its string representation, or DSTypeCategoryInvalid if the string is not a valid type.
+func DSTypeCategoryFromString(s string) DSTypeCategory {
 	s = strings.ToLower(s)
 	switch s {
 	case "http":
-		return DSTypeHTTP
+		return DSTypeCategoryHTTP
 	case "dns":
-		return DSTypeDNS
+		return DSTypeCategoryDNS
 	default:
-		return DSTypeInvalid
+		return DSTypeCategoryInvalid
 	}
 }
 
@@ -242,4 +242,195 @@ func (t *DeepCachingType) UnmarshalJSON(data []byte) error {
 // MarshalJSON marshals into a JSON representation
 func (t DeepCachingType) MarshalJSON() ([]byte, error) {
 	return json.Marshal(t.String())
+}
+
+// DSType is the Delivery Service type.
+type DSType string
+
+const (
+	DSTypeClientSteering   DSType = "CLIENT_STEERING"
+	DSTypeDNS              DSType = "DNS"
+	DSTypeDNSLive          DSType = "DNS_LIVE"
+	DSTypeDNSLiveNational  DSType = "DNS_LIVE_NATNL"
+	DSTypeHTTP             DSType = "HTTP"
+	DSTypeHTTPLive         DSType = "HTTP_LIVE"
+	DSTypeHTTPLiveNational DSType = "HTTP_LIVE_NATNL"
+	DSTypeHTTPNoCache      DSType = "HTTP_NO_CACHE"
+	DSTypeSteering         DSType = "STEERING"
+	DSTypeAnyMap           DSType = "ANY_MAP"
+	DSTypeInvalid          DSType = ""
+)
+
+// String returns a string representation of this delivery service type.
+func (t DSType) String() string {
+	switch t {
+	case DSTypeHTTPNoCache:
+		fallthrough
+	case DSTypeDNS:
+		fallthrough
+	case DSTypeDNSLive:
+		fallthrough
+	case DSTypeHTTP:
+		fallthrough
+	case DSTypeDNSLiveNational:
+		fallthrough
+	case DSTypeAnyMap:
+		fallthrough
+	case DSTypeHTTPLive:
+		fallthrough
+	case DSTypeSteering:
+		fallthrough
+	case DSTypeHTTPLiveNational:
+		fallthrough
+	case DSTypeClientSteering:
+		return string(t)
+	default:
+		return "INVALID"
+	}
+}
+
+// DSTypeFromString returns a delivery service type object from its string representation, or DSTypeInvalid if the string is not a valid type.
+func DSTypeFromString(s string) DSType {
+	s = strings.ToLower(strings.Replace(s, "_", "", -1))
+	switch s {
+	case "httpnocache":
+		return DSTypeHTTPNoCache
+	case "dns":
+		return DSTypeDNS
+	case "dnslive":
+		return DSTypeDNSLive
+	case "http":
+		return DSTypeHTTP
+	case "dnslivenatnl":
+		return DSTypeDNSLiveNational
+	case "anymap":
+		return DSTypeAnyMap
+	case "httplive":
+		return DSTypeHTTPLive
+	case "steering":
+		return DSTypeSteering
+	case "httplivenatnl":
+		return DSTypeHTTPLiveNational
+	case "clientsteering":
+		return DSTypeClientSteering
+	default:
+		return DSTypeInvalid
+	}
+}
+
+// IsHTTP returns whether the DSType is an HTTP category.
+func (t DSType) IsHTTP() bool {
+	switch t {
+	case DSTypeHTTP:
+		fallthrough
+	case DSTypeHTTPLive:
+		fallthrough
+	case DSTypeHTTPLiveNational:
+		fallthrough
+	case DSTypeHTTPNoCache:
+		return true
+	}
+	return false
+}
+
+// IsDNS returns whether the DSType is a DNS category.
+func (t DSType) IsDNS() bool {
+	switch t {
+	case DSTypeHTTPNoCache:
+		fallthrough
+	case DSTypeDNS:
+		fallthrough
+	case DSTypeDNSLive:
+		fallthrough
+	case DSTypeDNSLiveNational:
+		return true
+	}
+	return false
+}
+
+// IsSteering returns whether the DSType is a Steering category
+func (t DSType) IsSteering() bool {
+	switch t {
+	case DSTypeSteering:
+		fallthrough
+	case DSTypeClientSteering:
+		fallthrough
+	case DSTypeDNSLive:
+		return true
+	}
+	return false
+}
+
+// HasSSLKeys returns whether delivery services of this type have SSL keys.
+func (t DSType) HasSSLKeys() bool {
+	return t.IsHTTP() || t.IsDNS() || t.IsSteering()
+}
+
+// IsLive returns whether delivery services of this type are "live".
+func (t DSType) IsLive() bool {
+	switch t {
+	case DSTypeDNSLive:
+		fallthrough
+	case DSTypeDNSLiveNational:
+		fallthrough
+	case DSTypeHTTPLive:
+		fallthrough
+	case DSTypeHTTPLiveNational:
+		return true
+	}
+	return false
+}
+
+// IsLive returns whether delivery services of this type are "national".
+func (t DSType) IsNational() bool {
+	switch t {
+	case DSTypeDNSLiveNational:
+		fallthrough
+	case DSTypeHTTPLiveNational:
+		return true
+	}
+	return false
+}
+
+type DSMatchType string
+
+const (
+	DSMatchTypeHostRegex     DSMatchType = "HOST_REGEXP"
+	DSMatchTypePathRegex     DSMatchType = "PATH_REGEXP"
+	DSMatchTypeSteeringRegex DSMatchType = "STEERING_REGEXP"
+	DSMatchTypeHeaderRegex   DSMatchType = "HEADER_REGEXP"
+	DSMatchTypeInvalid       DSMatchType = ""
+)
+
+// String returns a string representation of this delivery service match type.
+func (t DSMatchType) String() string {
+	switch t {
+	case DSMatchTypeHostRegex:
+		fallthrough
+	case DSMatchTypePathRegex:
+		fallthrough
+	case DSMatchTypeSteeringRegex:
+		fallthrough
+	case DSMatchTypeHeaderRegex:
+		return string(t)
+	default:
+		return "INVALID_MATCH_TYPE"
+	}
+}
+
+// DSMatchTypeFromString returns a delivery service match type object from its string representation, or DSMatchTypeInvalid if the string is not a valid type.
+func DSMatchTypeFromString(s string) DSMatchType {
+	s = strings.ToLower(strings.Replace(s, "_", "", -1))
+	switch s {
+	case "hostregexp":
+		return DSMatchTypeHostRegex
+	case "pathregexp":
+		return DSMatchTypePathRegex
+	case "steeringregexp":
+		return DSMatchTypeSteeringRegex
+	case "headerregexp":
+		return DSMatchTypeHeaderRegex
+	default:
+		return DSMatchTypeInvalid
+	}
 }

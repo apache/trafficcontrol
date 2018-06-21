@@ -18,7 +18,7 @@ package v13
 import (
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_ops/client/v13"
+	"github.com/apache/trafficcontrol/traffic_ops/client/v13"
 	_ "github.com/lib/pq"
 )
 

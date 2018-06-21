@@ -28,7 +28,7 @@ ENV DB_USER=$DB_SERVER
 ENV DB_PASSWORD=$DB_PASSWORD
 
 ARG SRC_DIR=/go/src
-ARG TC_DIR=$SRC_DIR/github.com/apache/incubator-trafficcontrol
+ARG TC_DIR=$SRC_DIR/github.com/apache/trafficcontrol
 ARG TESTING_DIR=$TC_DIR/traffic_ops/testing
 ARG TESTING_API_DIR=$TESTING_DIR/api
  

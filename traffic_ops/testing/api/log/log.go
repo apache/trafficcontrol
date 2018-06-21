@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"testing"
 
-	log "github.com/apache/incubator-trafficcontrol/lib/go-log"
+	log "github.com/apache/trafficcontrol/lib/go-log"
 )
 
 // Succeed is the Unicode codepoint for a check mark.

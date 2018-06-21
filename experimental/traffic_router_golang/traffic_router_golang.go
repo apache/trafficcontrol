@@ -27,17 +27,17 @@ import (
 	"os"
 	"time"
 
-	"github.com/apache/incubator-trafficcontrol/traffic_router/experimental/traffic_router_golang/availableservers"
-	"github.com/apache/incubator-trafficcontrol/traffic_router/experimental/traffic_router_golang/config"
-	"github.com/apache/incubator-trafficcontrol/traffic_router/experimental/traffic_router_golang/coveragezone"
-	"github.com/apache/incubator-trafficcontrol/traffic_router/experimental/traffic_router_golang/crconfigpoller"
-	"github.com/apache/incubator-trafficcontrol/traffic_router/experimental/traffic_router_golang/crstatespoller"
-	"github.com/apache/incubator-trafficcontrol/traffic_router/experimental/traffic_router_golang/fetch"
-	"github.com/apache/incubator-trafficcontrol/traffic_router/experimental/traffic_router_golang/httpsrvr"
-	"github.com/apache/incubator-trafficcontrol/traffic_router/experimental/traffic_router_golang/toutil"
+	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/availableservers"
+	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/config"
+	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/coveragezone"
+	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/crconfigpoller"
+	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/crstatespoller"
+	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/fetch"
+	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/httpsrvr"
+	"github.com/apache/trafficcontrol/traffic_router/experimental/traffic_router_golang/toutil"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-log"
-	to "github.com/apache/incubator-trafficcontrol/traffic_ops/client"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	to "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
 const Version = "0.1"

@@ -16,8 +16,8 @@
 package v13
 
 import (
-	v12 "github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
+	v12 "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 )
 
 // TrafficControl - maps to the tc-fixtures.json file
@@ -27,7 +27,7 @@ type TrafficControl struct {
 	CacheGroups                    []v13.CacheGroup                    `json:"cachegroups"`
 	DeliveryServiceRequests        []v12.DeliveryServiceRequest        `json:"deliveryServiceRequests"`
 	DeliveryServiceRequestComments []v12.DeliveryServiceRequestComment `json:"deliveryServiceRequestComments"`
-	DeliveryServices               []v12.DeliveryService               `json:"deliveryservices"`
+	DeliveryServices               []v12.DeliveryServiceV13            `json:"deliveryservices"`
 	Divisions                      []v12.Division                      `json:"divisions"`
 	Coordinates                    []v13.Coordinate                    `json:"coordinates"`
 	Origins                        []v13.Origin                        `json:"origins"`
