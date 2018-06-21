@@ -41,7 +41,9 @@ public class CertificateDataConverter {
 				x509Chain.toArray(new X509Certificate[x509Chain.size()]), privateKey);
 
 		} catch (Exception e) {
-			log.error("Failed to convert certificate data from traffic ops to handshake data! " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
+			log.error("Failed to convert certificate data (delivery service = " + certificateData.getDeliveryservice()
+					+ ", hostname = " + certificateData.getHostname() + ") from traffic ops to handshake data! "
+					+ e.getClass().getSimpleName() + ": " + e.getMessage(), e);
 		}
 		return null;
 	}
