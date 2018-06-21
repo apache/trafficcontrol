@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
@@ -51,7 +52,7 @@ func getTestOrigins() []v13.Origin {
 		IP6Address:        util.StrPtr("dead:beef:cafe::42"),
 		IPAddress:         util.StrPtr("10.2.3.4"),
 		IsPrimary:         util.BoolPtr(false),
-		LastUpdated:       util.NewTimeNoMod(),
+		LastUpdated:       tc.NewTimeNoMod(),
 		Name:              util.StrPtr("originName"),
 		Port:              util.IntPtr(443),
 		Profile:           util.StrPtr("profile"),
