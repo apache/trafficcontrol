@@ -79,6 +79,7 @@ type TrafficRouter struct {
 	Location     string `json:"location"`
 	ServerStatus string `json:"status"`
 	APIPort      int    `json:"apiPort"`
+	HostName     string `json:"hostName"`
 }
 
 // TrafficRouterConfig is the json unmarshalled without any changes
@@ -142,10 +143,10 @@ type TrafficServer struct {
 	InterfaceName    string              `json:"interfaceName"`
 	Type             string              `json:"type"`
 	HashID           string              `json:"hashId"`
-	DeliveryServices []tsdeliveryService `json:"deliveryServices,omitempty"` // the deliveryServices key does not exist on mids
+	Deliveryservices []TSDeliveryService `json:"deliveryServices"`
 }
 
-type tsdeliveryService struct {
+type TSDeliveryService struct {
 	Xmlid  string   `json:"xmlId"`
 	Remaps []string `json:"remaps"`
 }
