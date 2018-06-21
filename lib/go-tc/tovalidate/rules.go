@@ -13,6 +13,8 @@
 package tovalidate
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -45,4 +47,20 @@ func IsOneOfStringICase(set ...string) func(string) bool {
 		lowcased = append(lowcased, strings.ToLower(s))
 	}
 	return IsOneOfString(lowcased...)
+}
+
+func IsGreaterThanZero(value interface{}) error {
+	switch v := value.(type) {
+	case *int:
+		if v == nil || *v > 0 {
+			return nil
+		}
+	case *float64:
+		if v == nil || *v > 0 {
+			return nil
+		}
+	default:
+		return fmt.Errorf("IsGreaterThanZero validation failure: unknown type %T", value)
+	}
+	return errors.New("must be greater than zero")
 }
