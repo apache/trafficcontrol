@@ -49,12 +49,6 @@ func OpenConnection() (*sql.DB, error) {
 func SetupTestData(*sql.DB) error {
 	var err error
 
-	err = SetupTenants(db)
-	if err != nil {
-		fmt.Printf("\nError setting up tenants %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
-		os.Exit(1)
-	}
-
 	err = SetupRoles(db)
 	if err != nil {
 		fmt.Printf("\nError setting up roles %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
@@ -70,6 +64,12 @@ func SetupTestData(*sql.DB) error {
 	err = SetupRoleCapabilities(db)
 	if err != nil {
 		fmt.Printf("\nError setting up roleCapabilities %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
+		os.Exit(1)
+	}
+
+	err = SetupTenants(db)
+	if err != nil {
+		fmt.Printf("\nError setting up tenant %s - %s, %v\n", Config.TrafficOps.URL, Config.TrafficOps.Users.Admin, err)
 		os.Exit(1)
 	}
 
@@ -136,12 +136,12 @@ func SetupTmusers(db *sql.DB) error {
 
 	// Creates users in different tenants
 	sqlStmt := `
-INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Disallowed + `','` + encryptedPassword + `','` + encryptedPassword + `', 1, 3);
-INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.ReadOnly + `','` + encryptedPassword + `','` + encryptedPassword + `', 2, 3);
-INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Operations + `','` + encryptedPassword + `','` + encryptedPassword + `', 3, 3);
+INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Disallowed + `','` + encryptedPassword + `','` + encryptedPassword + `', 1, 2);
+INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.ReadOnly + `','` + encryptedPassword + `','` + encryptedPassword + `', 2, 2);
+INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Operations + `','` + encryptedPassword + `','` + encryptedPassword + `', 3, 2);
 INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Admin + `','` + encryptedPassword + `','` + encryptedPassword + `', 4, 2);
-INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Portal + `','` + encryptedPassword + `','` + encryptedPassword + `', 5, 3);
-INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Federation + `','` + encryptedPassword + `','` + encryptedPassword + `', 6, 3);
+INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Portal + `','` + encryptedPassword + `','` + encryptedPassword + `', 5, 2);
+INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_id) VALUES ('` + Config.TrafficOps.Users.Federation + `','` + encryptedPassword + `','` + encryptedPassword + `', 6, 2);
 `
 	err = execSQL(db, sqlStmt, "tm_user")
 	if err != nil {
@@ -153,11 +153,11 @@ INSERT INTO tm_user (username, local_passwd, confirm_local_passwd, role, tenant_
 // SetupTenants ...
 func SetupTenants(db *sql.DB) error {
 
+	// TODO: root tenant must be present in initial database.  "badtenant" is needed for now so tests can be done
+	// with a tenant outside the user's tenant.  That should be removed once User API tests are in place rather than the SetupUsers defined above.
 	sqlStmt := `
 INSERT INTO tenant (id, name, active, parent_id, last_updated) VALUES (1, 'root', true, null, '2018-01-19 19:01:21.327262');
-INSERT INTO tenant (id, name, active, parent_id, last_updated) VALUES (2, 'grandparent tenant', true, 1, '2018-01-19 19:01:21.327262');
-INSERT INTO tenant (id, name, active, parent_id, last_updated) VALUES (3, 'parent tenant', true, 2, '2018-01-19 19:01:21.327262');
-INSERT INTO tenant (id, name, active, parent_id, last_updated) VALUES (4, 'child tenant', true, 3, '2018-01-19 19:01:21.327262');
+INSERT INTO tenant (id, name, active, parent_id, last_updated) VALUES (2, 'badtenant', true, 1, '2018-01-19 19:01:21.327262');
 `
 	err := execSQL(db, sqlStmt, "tenant")
 	if err != nil {

@@ -39,6 +39,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 	GetTestDeliveryServiceRequests(t)
 	UpdateTestDeliveryServiceRequests(t)
 	DeleteTestDeliveryServiceRequests(t)
+
 	DeleteTestTypes(t)
 	DeleteTestCDNs(t)
 
