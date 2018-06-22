@@ -542,6 +542,7 @@ func selectQuery() string {
 t.active AS active,
 t.name AS name,
 t.id AS id,
+t.last_updated AS last_updated,
 t.parent_id AS parent_id,
 p.name AS parent_name
 
