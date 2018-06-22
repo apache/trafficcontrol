@@ -58,6 +58,18 @@ func GetDeliveryServiceTenantInfo(xmlID string, tx *sql.Tx) (*DeliveryServiceTen
 	return &ds, nil
 }
 
+func GetDeliveryServiceTenantInfoID(tx *sql.Tx, dsID int) (*DeliveryServiceTenantInfo, error) {
+	ds := DeliveryServiceTenantInfo{}
+	ds.ID = util.IntPtr(dsID)
+	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where id = $1`, &ds.ID).Scan(&ds.TenantID); err != nil {
+		if err == sql.ErrNoRows {
+			return &ds, fmt.Errorf("a deliveryservice with id %v was not found", dsID)
+		}
+		return nil, errors.New("querying tenant id from delivery service: " + err.Error())
+	}
+	return &ds, nil
+}
+
 // Check checks that the given user has access to the given XMLID. Returns a user error, system error,
 // and the HTTP status code to be returned to the user if an error occurred. On success, the user error
 // and system error will both be nil, and the error code should be ignored.
