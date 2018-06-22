@@ -17,6 +17,7 @@ package v13
 
 import (
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -108,22 +109,34 @@ func UpdateTestTenants(t *testing.T) {
 
 func DeleteTestTenants(t *testing.T) {
 
-	for _, ten := range testData.Tenants {
-		// Retrieve the Tenant by name so we can get the id for the Update
-		respTenant, _, err := TOSession.TenantByName(ten.Name)
-		if err != nil {
-			t.Errorf("cannot GET Tenant by name: %v - %v\n", ten.Name, err)
-		}
+	t1 := "tenant1"
+	tenant1, _, err := TOSession.TenantByName(t1)
 
-		delResp, err := TOSession.DeleteTenant(strconv.Itoa(respTenant.ID))
-		if err != nil {
-			t.Errorf("cannot DELETE Tenant: %v - %v\n", err, delResp)
-		}
-
-		// Retrieve the Tenant to see if it got deleted
-		_, _, err = TOSession.TenantByName(ten.Name)
-		if err != nil {
-			t.Errorf("tenant not deleted: %v\n", err)
-		}
+	if err != nil {
+		t.Errorf("cannot GET Tenant by name: %v - %v\n", t1, err)
 	}
+
+	_, err = TOSession.DeleteTenant(strconv.Itoa(tenant1.ID))
+	if err == nil {
+		t.Errorf("%s has child tenants -- should not be able to delete", t1)
+	}
+	expected := "Tenant 'tenant1' has child tenants"
+	if !strings.Contains(err.Error(), expected) {
+		t.Errorf("expected error: %s;  got %s", expected, err.Error())
+	}
+
+	t2 := "tenant2"
+	tenant2, _, err := TOSession.TenantByName(t2)
+	_, err = TOSession.DeleteTenant(strconv.Itoa(tenant2.ID))
+	if err != nil {
+		t.Errorf("error deleting tenant %s: %v", t2, err)
+	}
+
+	// Now should be able to delete t1
+	tenant1, _, err = TOSession.TenantByName(t1)
+	_, err = TOSession.DeleteTenant(strconv.Itoa(tenant1.ID))
+	if err != nil {
+		t.Errorf("error deleting tenant %s: %v", t1, err)
+	}
+
 }
