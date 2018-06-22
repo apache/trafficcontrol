@@ -282,11 +282,11 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodDelete, `profileparameters/{profileId}/{parameterId}$`, api.DeleteHandler(profileparameter.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//Tenants
-		{1.2, http.MethodGet, `tenants/?(\.json)?$`, api.ReadHandler(tenant.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.2, http.MethodGet, `tenants/{id}$`, api.ReadHandler(tenant.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.2, http.MethodPut, `tenants/{id}$`, api.UpdateHandler(tenant.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.2, http.MethodPost, `tenants/?$`, api.CreateHandler(tenant.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.2, http.MethodDelete, `tenants/{id}$`, api.DeleteHandler(tenant.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `tenants/?(\.json)?$`, api.ReadHandler(tenant.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `tenants/{id}$`, api.ReadHandler(tenant.GetRefType(), d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPut, `tenants/{id}$`, api.UpdateHandler(tenant.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodPost, `tenants/?$`, api.CreateHandler(tenant.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `tenants/{id}$`, api.DeleteHandler(tenant.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//CRConfig
 		{1.1, http.MethodGet, `cdns/{cdn}/snapshot/?$`, crconfig.SnapshotGetHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
