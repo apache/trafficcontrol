@@ -490,7 +490,29 @@ func (ten *TOTenant) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiEr
 	result, err := tx.NamedExec(deleteQuery(), ten)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
-			log.Infof("deleting tenant: %++v", pqErr)
+			err = fmt.Errorf("pqErr is %++v\n", pqErr)
+			var existing string
+			switch pqErr.Table {
+			case "tenant":
+				existing = "child tenants"
+			case "tm_user":
+				existing = "users"
+			case "deliveryservice":
+				existing = "deliveryservices"
+			case "origin":
+				existing = "origins"
+			default:
+				existing = pqErr.Table
+			}
+
+			// another query to get tenant name for the error message
+			name := strconv.Itoa(*ten.ID)
+			if err := db.QueryRow(`SELECT name FROM tenant WHERE id = $1`, *ten.ID).Scan(&name); err != nil {
+				// use ID as a backup for name the error -- this should never happen
+				log.Debugf("error getting tenant name: %++v", err)
+			}
+
+			err = errors.New("Tenant '" + name + "' has " + existing + ". Please update these " + existing + " and retry.")
 			return err, tc.DataConflictError
 		}
 		log.Errorf("received error: %++v from delete execution", err)
