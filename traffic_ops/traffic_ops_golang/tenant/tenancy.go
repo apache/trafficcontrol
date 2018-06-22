@@ -63,7 +63,7 @@ func GetDeliveryServiceTenantInfoID(tx *sql.Tx, dsID int) (*DeliveryServiceTenan
 	ds.ID = util.IntPtr(dsID)
 	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where id = $1`, &ds.ID).Scan(&ds.TenantID); err != nil {
 		if err == sql.ErrNoRows {
-			return &ds, errors.New("a deliveryservice with id '" + strconv.Itoa(dsID) + "' was not found")
+			return &ds, fmt.Errorf("a deliveryservice with id %v was not found", dsID)
 		}
 		return nil, errors.New("querying tenant id from delivery service: " + err.Error())
 	}

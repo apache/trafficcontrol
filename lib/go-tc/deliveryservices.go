@@ -599,3 +599,33 @@ type AssignedDsResponse struct {
 	DSIds    []int `json:"dsIds"`
 	Replace  bool  `json:"replace"`
 }
+
+// DeliveryServiceSafeUpdate is the type deserialized from a PUT deliveryservices/{{ID}}/safe request.
+type DeliveryServiceSafeUpdate struct {
+	DisplayName *string `json:"displayName"`
+	InfoURL     *string `json:"infoUrl"`
+	LongDesc    *string `json:"longDesc"`
+	LongDesc1   *string `json:"longDesc1"`
+}
+
+// Sanitize sets any nil member pointer to a default-initialized value.
+func (ds *DeliveryServiceSafeUpdate) Sanitize() {
+	if ds.DisplayName == nil {
+		ds.DisplayName = util.StrPtr("")
+	}
+	if ds.InfoURL == nil {
+		ds.InfoURL = util.StrPtr("")
+	}
+	if ds.LongDesc == nil {
+		ds.LongDesc = util.StrPtr("")
+	}
+	if ds.LongDesc1 == nil {
+		ds.LongDesc1 = util.StrPtr("")
+	}
+}
+
+// Validate calls Sanitize and returns nil. There is nothing to validate for this object. This fulfills the traffic_ops_golang.api.ParseValidator interface.
+func (ds *DeliveryServiceSafeUpdate) Validate(tx *sql.Tx) error {
+	ds.Sanitize()
+	return nil
+}

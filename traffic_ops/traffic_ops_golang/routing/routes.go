@@ -544,6 +544,10 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.3, http.MethodPost, `deliveryservices/?(\.json)?$`, deliveryservice.CreateV13, auth.PrivLevelOperations, Authenticated, nil, 1705681904, noPerlBypass},
 		{1.1, http.MethodPost, `deliveryservices/?(\.json)?$`, deliveryservice.CreateV12, auth.PrivLevelOperations, Authenticated, nil, 652813412, noPerlBypass},
 
+		{1.4, http.MethodPut, `deliveryservices/{id}/safe/?(\.json)?$`, deliveryservice.UpdateSafeV14, auth.PrivLevelOperations, Authenticated, nil, 547210934, noPerlBypass},
+		{1.3, http.MethodPut, `deliveryservices/{id}/safe/?(\.json)?$`, deliveryservice.UpdateSafeV13, auth.PrivLevelOperations, Authenticated, nil, 547210933, noPerlBypass},
+		{1.1, http.MethodPut, `deliveryservices/{id}/safe/?(\.json)?$`, deliveryservice.UpdateSafeV12, auth.PrivLevelOperations, Authenticated, nil, 547210931, noPerlBypass},
+
 		{1.4, http.MethodPut, `deliveryservices/{id}/?(\.json)?$`, deliveryservice.UpdateV14, auth.PrivLevelOperations, Authenticated, nil, 1766567526, noPerlBypass},
 		{1.3, http.MethodPut, `deliveryservices/{id}/?(\.json)?$`, deliveryservice.UpdateV13, auth.PrivLevelOperations, Authenticated, nil, 1559124565, noPerlBypass},
 		{1.1, http.MethodPut, `deliveryservices/{id}/?(\.json)?$`, deliveryservice.UpdateV12, auth.PrivLevelOperations, Authenticated, nil, 597160536, noPerlBypass},
