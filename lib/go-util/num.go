@@ -106,3 +106,12 @@ func BytesLenSplit(s []byte, n int) [][]byte {
 	}
 	return ss
 }
+
+// IntSliceToMap creates an int set from an array.
+func IntSliceToMap(s []int) map[int]struct{} {
+	m := map[int]struct{}{}
+	for _, v := range s {
+		m[v] = struct{}{}
+	}
+	return m
+}

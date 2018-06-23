@@ -557,6 +557,23 @@ type DeliveryServiceUserPost struct {
 	Replace          *bool  `json:"replace"`
 }
 
+func (dsu *DeliveryServiceUserPost) Validate(tx *sql.Tx) error {
+	errs := []string{}
+	if dsu.UserID == nil {
+		errs = append(errs, "userId missing")
+	}
+	if dsu.DeliveryServices == nil {
+		errs = append(errs, "deliveryServices missing")
+	}
+	if dsu.Replace == nil {
+		errs = append(errs, "replace missing")
+	}
+	if len(errs) > 0 {
+		return errors.New("validation failed: " + strings.Join(errs, ", "))
+	}
+	return nil
+}
+
 type UserDeliveryServicePostResponse struct {
 	Alerts   []Alert                 `json:"alerts"`
 	Response DeliveryServiceUserPost `json:"response"`

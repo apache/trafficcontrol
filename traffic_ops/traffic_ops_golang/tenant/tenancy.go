@@ -32,6 +32,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+
+	"github.com/lib/pq"
 )
 
 // DeliveryServiceTenantInfo provides only deliveryservice info needed here
@@ -224,4 +226,83 @@ func getDSTenantIDByIDTx(tx *sql.Tx, id int) (*int, bool, error) {
 		return nil, false, fmt.Errorf("querying tenant ID for delivery service ID '%v': %v", id, err)
 	}
 	return tenantID, true, nil
+}
+
+// GetUserTenant returns the given user's tenant ID, whether the given user was found, and any error. Returns a nil ID, true, and nil error, if the user's tenant ID is nil in the database.
+func GetUserTenant(tx *sql.Tx, userID int) (*int, bool, error) {
+	tenantID := util.IntPtr(0)
+	if err := tx.QueryRow(`SELECT tenant_id FROM tm_user where id = $1`, userID).Scan(tenantID); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, false, nil
+		}
+		return nil, false, errors.New("querying user tenant ID: " + err.Error())
+	}
+	return tenantID, true, nil
+}
+
+// GetDeliveryServicesTenantIDs returns a map of delivery service IDs to their tenant IDs
+func GetDeliveryServicesTenantIDs(tx *sql.Tx, dsIDs []int) (map[int]int, error) {
+	rows, err := tx.Query(`SELECT id, tenant_id FROM deliveryservice where id = ANY($1)`, pq.Array(dsIDs))
+	if err != nil {
+		return nil, errors.New("querying delivery services tenants: " + err.Error())
+	}
+	defer rows.Close()
+
+	dsTenants := map[int]int{}
+	for rows.Next() {
+		dsID := 0
+		tenantID := 0
+		if err := rows.Scan(&dsID, &tenantID); err != nil {
+			return nil, errors.New("scanning delivery services tenants: " + err.Error())
+		}
+		dsTenants[dsID] = tenantID
+	}
+	return dsTenants, nil
+}
+
+// CheckDSIDs checks that the given user has access to all the given delivery services.
+// Returns a user error, system error, and the HTTP status code to be returned to the user if an error occurred. On success, the user error and system error will both be nil, and the error code should be ignored.
+func CheckDSIDs(tx *sql.Tx, user *auth.CurrentUser, dsIDs []int) (error, error, int) {
+	tenantsArr, err := GetUserTenantIDListTx(tx, user.TenantID)
+	if err != nil {
+		return nil, errors.New("getting user tenant IDs: " + err.Error()), http.StatusInternalServerError
+	}
+	thisUserTenants := util.IntSliceToMap(tenantsArr)
+
+	dsTenants, err := GetDeliveryServicesTenantIDs(tx, dsIDs)
+	if err != nil {
+		return nil, errors.New("getting delivery services tenant IDs: " + err.Error()), http.StatusInternalServerError
+	}
+
+	for dsID, tenantID := range dsTenants {
+		if _, ok := thisUserTenants[tenantID]; !ok {
+			return fmt.Errorf("unauthorized for delivery service %v", dsID), nil, http.StatusForbidden
+		}
+	}
+	return nil, nil, http.StatusOK
+}
+
+// CheckUser checks that the given user has access to the given user ID.
+// Returns a user error, system error, and the HTTP status code to be returned to the user if an error occurred. On success, the user error and system error will both be nil, and the error code should be ignored.
+func CheckUser(tx *sql.Tx, user *auth.CurrentUser, userID int) (error, error, int) {
+	tenantsArr, err := GetUserTenantIDListTx(tx, user.TenantID)
+	if err != nil {
+		return nil, errors.New("getting user tenant IDs: " + err.Error()), http.StatusInternalServerError
+	}
+	thisUserTenants := util.IntSliceToMap(tenantsArr)
+
+	requestedUserTenantID, ok, err := GetUserTenant(tx, userID)
+	if err != nil {
+		return nil, errors.New("getting user tenant ID: " + err.Error()), http.StatusInternalServerError
+	}
+	if !ok {
+		return errors.New("user not found"), nil, http.StatusNotFound
+	}
+	if requestedUserTenantID == nil {
+		return nil, nil, http.StatusOK
+	}
+	if _, ok := thisUserTenants[*requestedUserTenantID]; !ok {
+		return fmt.Errorf("unauthorized for user %v", userID), nil, http.StatusForbidden
+	}
+	return nil, nil, http.StatusOK
 }
