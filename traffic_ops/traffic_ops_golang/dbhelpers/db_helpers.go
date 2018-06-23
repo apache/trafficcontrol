@@ -306,16 +306,22 @@ func GetDSTenantIDFromXMLID(tx *sql.Tx, xmlid string) (int, bool, error) {
 	return id, true, nil
 }
 
+// returns returns the delivery service name and cdn, whether it existed, and any error.
 func GetDSNameAndCDNFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, tc.CDNName, bool, error) {
-	dsName := tc.DeliveryServiceName("")
-	cdnName := tc.CDNName("")
-	if err := tx.QueryRow(`SELECT ds.xml_id, cdn.name FROM deliveryservice ds JOIN cdn ON cdn.id = ds.cdn_id WHERE ds.id = $1`, id).Scan(&dsName, &cdnName); err != nil {
+	name := tc.DeliveryServiceName("")
+	cdn := tc.CDNName("")
+	if err := tx.QueryRow(`
+SELECT ds.xml_id, cdn.name
+FROM deliveryservice as ds
+JOIN cdn on cdn.id = ds.cdn_id
+WHERE ds.id = $1
+`, id).Scan(&name, &cdn); err != nil {
 		if err == sql.ErrNoRows {
 			return tc.DeliveryServiceName(""), tc.CDNName(""), false, nil
 		}
-		return tc.DeliveryServiceName(""), tc.CDNName(""), false, errors.New("querying: " + err.Error())
+		return tc.DeliveryServiceName(""), tc.CDNName(""), false, errors.New("querying delivery service name: " + err.Error())
 	}
-	return dsName, cdnName, true, nil
+	return name, cdn, true, nil
 }
 
 // GetProfileNameFromID returns the profile's name, whether a profile with ID exists, or any error.
@@ -560,6 +566,23 @@ func GetCDNs(tx *sql.Tx) (map[tc.CDNName]struct{}, error) {
 	return cdns, nil
 }
 
+// GetGlobalParams returns the value of the global param, whether it existed, or any error
+func GetGlobalParam(tx *sql.Tx, name string) (string, bool, error) {
+	return GetParam(tx, name, "global")
+}
+
+// GetParam returns the value of the param, whether it existed, or any error.
+func GetParam(tx *sql.Tx, name string, configFile string) (string, bool, error) {
+	val := ""
+	if err := tx.QueryRow(`select value from parameter where name = $1 and config_file = $2`, name, configFile).Scan(&val); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("Error querying global paramter '" + name + "': " + err.Error())
+	}
+	return val, true, nil
+}
+
 // GetCacheGroupNameFromID Get Cache Group name from a given ID
 func GetCacheGroupNameFromID(tx *sql.Tx, id int64) (tc.CacheGroupName, bool, error) {
 	name := ""
@@ -597,18 +620,6 @@ func GetUserByEmail(tx *sqlx.Tx, email string) (tc.User, bool, error) {
 		return u, false, err
 	}
 	return u, true, nil
-}
-
-// GetGlobalParam returns the global parameter with the requested name, whether it existed, and any error
-func GetGlobalParam(tx *sql.Tx, name string) (string, bool, error) {
-	val := ""
-	if err := tx.QueryRow(`SELECT value FROM parameter WHERE config_file = 'global' and name = $1`, name).Scan(&val); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("querying global parameter '" + name + "': " + err.Error())
-	}
-	return val, true, nil
 }
 
 // UsernameExists reports whether or not the the given username exists as a user in the database to
