@@ -302,6 +302,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodPost, `deliveryservices/request`, deliveryservicerequests.Request, auth.PrivLevelPortal, Authenticated, nil, 740875299, perlBypass},
 		{1.1, http.MethodGet, `deliveryservice_matches/?(\.json)?$`, deliveryservice.GetMatches, auth.PrivLevelReadOnly, Authenticated, nil, 1191301170, noPerlBypass},
 
+		{1.1, http.MethodGet, `deliveryservices/{id}/capacity/?(\.json)?$`, deliveryservice.GetCapacity, auth.PrivLevelReadOnly, Authenticated, nil, 1231409110, perlBypass},
+
 		//Server
 		{1.1, http.MethodGet, `servers/status$`, server.GetServersStatusCountsHandler, auth.PrivLevelReadOnly, Authenticated, nil, 2052786293, perlBypass},
 		{1.1, http.MethodGet, `servers/totals$`, handlerToFunc(proxyHandler), 0, NoAuth, []middleware.Middleware{}, 2037840835, noPerlBypass},

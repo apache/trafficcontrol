@@ -278,6 +278,18 @@ func GetDSTenantIDFromXMLID(tx *sql.Tx, xmlid string) (int, bool, error) {
 	return id, true, nil
 }
 
+func GetDSNameAndCDNFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, tc.CDNName, bool, error) {
+	dsName := tc.DeliveryServiceName("")
+	cdnName := tc.CDNName("")
+	if err := tx.QueryRow(`SELECT ds.xml_id, cdn.name FROM deliveryservice ds JOIN cdn ON cdn.id = ds.cdn_id WHERE ds.id = $1`, id).Scan(&dsName, &cdnName); err != nil {
+		if err == sql.ErrNoRows {
+			return tc.DeliveryServiceName(""), tc.CDNName(""), false, nil
+		}
+		return tc.DeliveryServiceName(""), tc.CDNName(""), false, errors.New("querying: " + err.Error())
+	}
+	return dsName, cdnName, true, nil
+}
+
 // GetProfileNameFromID returns the profile's name, whether a profile with ID exists, or any error.
 func GetProfileNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 	name := ""
