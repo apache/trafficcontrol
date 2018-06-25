@@ -33,7 +33,7 @@ Profile parameters
 	Role(s) Required:  admin or oper
 
 	**Request Properties**
-	This accept two formats: single profile-parameter, profile-parameter array.
+	This accepts two formats: single profile-parameter, profile-parameter array.
 
 	Single profile-parameter format:
 
@@ -177,12 +177,12 @@ Profile parameters
 
 **POST /api/1.2/profiles/name/{:name}/parameters**
 
-    Associate parameters to a profile. If the parameter does not exist, create it and associate to the profile. If the parameter already exists, associate it to the profile. If the parameter already associate the profile, keep the association.
-    If the profile does not exist, the API returns fail.
+    Associate parameters to a profile. If the parameter does not exist, create it and associate to the profile. If the parameter already exists, associate it to the profile. If the parameter is already associated with the profile, keep the association.
+    If the profile does not exist, the API returns an error.
 
     Authentication Required: Yes
 
-    Role(s) Required:  admin or oper. If there is parameter's secure equals 1 in the request properties, need admin role. 
+    Role(s) Required:  admin or oper. If the secure value is 1, the admin role is required. 
 
 	**Request Route Parameters**
 
@@ -193,7 +193,7 @@ Profile parameters
 	+------------+----------+----------------------------------------------------+
 
     **Request Properties**
-    The request properties accept 2 formats, both single paramter and parameters array formats are acceptable.
+    The request properties accept 2 formats, both single parameter and parameters array formats are acceptable.
 
     single parameter format:
 
@@ -227,12 +227,12 @@ Profile parameters
 
   **Request Example** ::
 
-    1. single parameter format exampe:  
+    1. single parameter format example:
     {
-        "name":"param1", 
+        "name":"param1",
         "configFile":"configFile1",  
         "value":"value1",   
-        "secure":0,  
+        "secure":0,
     }
 
     2. array format example:  
@@ -308,7 +308,7 @@ Profile parameters
       "alerts":[
         {
           "level": "success",
-          "text": ""Assign parameters successfully to profile CCR1"
+          "text": "Assign parameters successfully to profile CCR1"
         }
       ]
     }
@@ -317,19 +317,19 @@ Profile parameters
 
 **POST /api/1.2/profiles/id/{:id}/parameters**
 
-    Associate parameters to a profile. If the parameter does not exist, create it and associate to the profile. If the parameter already exists, associate it to the profile. If the parameter already associate the profile, keep the association.
-    If the profile does not exist, the API returns fail.
+    Associate parameters to a profile. If the parameter does not exist, create it and associate to the profile. If the parameter already exists, associate it to the profile. If the parameter is already associated with the profile, keep the association.
+    If the profile does not exist, the API returns an error.
 
     Authentication Required: Yes
 
-    Role(s) Required:  admin or oper. If there is parameter's secure equals 1 in the request properties, need admin role. 
+    Role(s) Required:  admin or oper. If the secure value is 1, the admin role is required. 
 
 	**Request Route Parameters**
 
 	+------------+----------+----------------------------------------------------+
 	| Name       | Required | Description                                        |
 	+============+==========+====================================================+
-	| ``id``     | yes      | profile name.                                      |
+	| ``id``     | yes      | profile id.                                      |
 	+------------+----------+----------------------------------------------------+
 
     **Request Properties**
