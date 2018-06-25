@@ -14,26 +14,24 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-DOMAIN=cdn.local
-CERT_CITY=Denver
-CERT_COMPANY=NotComcast
-CERT_COUNTRY=US
-CERT_STATE=CO
-DB_NAME=traffic_ops
-DB_ROOT_PASS=twelve
-DB_USER_PASS=twelve
-DB_PORT=5432
-DB_SERVER=db
-DB_USER=traffic_ops
-POSTGRES_PASSWORD=twelve
-PGPASSWORD=twelve
-TM_USER=tmonitor
-TM_PASSWORD=twelve
-TO_ADMIN_PASSWORD=twelve
-TO_ADMIN_USER=admin
-TO_EMAIL=cdnadmin@example.com
-TO_HOST=trafficops
-TO_PORT=6443
-TO_SECRET=blahblah
-TP_EMAIL=none
-TP_HOST=trafficportal
+############################################################
+# Dockerfile to build Traffic Monitor container images
+# Based on CentOS
+############################################################
+
+FROM centos/systemd
+
+# Default values for RPM -- override with `docker build --build-arg RPM=...'
+ARG RPM=traffic_monitor.rpm
+ADD $RPM /
+
+RUN yum install -y \
+    initscripts \
+    jq \
+    /$(basename $RPM) && \
+    rm /$(basename $RPM) && \
+    yum clean all
+
+EXPOSE 80
+ADD run.sh /
+ENTRYPOINT /run.sh
