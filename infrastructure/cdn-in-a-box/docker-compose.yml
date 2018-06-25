@@ -112,3 +112,18 @@ services:
       - tcnet
     ports:
       - "443:443"
+
+  trafficmonitor:
+    build:
+      context: traffic_monitor
+      args:
+        TRAFFIC_PORTAL_RPM: traffic_monitor.rpm
+    domainname: cdn.local
+    env_file:
+      - variables.env
+    hostname: trafficmonitor
+    image: trafficmonitor
+    networks:
+      - tcnet
+    ports:
+      - "80:80"
