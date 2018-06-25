@@ -17,13 +17,55 @@
  * under the License.
  */
 
-var EndpointService = function(Restangular) {
+var EndpointService = function(Restangular, locationUtils, messageModel) {
 
 	this.getEndpoints = function(queryParams) {
 		return Restangular.all('api_capabilities').getList(queryParams);
 	};
 
+	this.getEndpoint = function(id) {
+		return Restangular.one("api_capabilities", id).get();
+	};
+
+	this.createEndpoint = function(endpoint) {
+		return Restangular.service('api_capabilities').post(endpoint)
+			.then(
+				function() {
+					messageModel.setMessages([ { level: 'success', text: 'Endpoint created' } ], true);
+					locationUtils.navigateToPath('/endpoints');
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
+				}
+			);
+	};
+
+	this.updateEndpoint = function(endpoint) {
+		return endpoint.put()
+			.then(
+				function() {
+					messageModel.setMessages([ { level: 'success', text: 'Endpoint updated' } ], false);
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, false);
+				}
+			);
+	};
+
+	this.deleteEndpoint = function(id) {
+		return Restangular.one("api_capabilities", id).remove()
+			.then(
+				function() {
+					messageModel.setMessages([ { level: 'success', text: 'Endpoint deleted' } ], true);
+				},
+				function(fault) {
+					messageModel.setMessages(fault.data.alerts, true);
+				}
+			);
+	};
+
+
 };
 
-EndpointService.$inject = ['Restangular'];
+EndpointService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
 module.exports = EndpointService;
