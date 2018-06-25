@@ -33,6 +33,7 @@ use Fixtures::Origin;
 use Fixtures::DeliveryserviceTmuser;
 use Fixtures::Asn;
 use Fixtures::Cachegroup;
+use Fixtures::Coordinate;
 use Fixtures::EdgeCachegroup;
 use Fixtures::Log;
 use Fixtures::Job;
@@ -129,6 +130,7 @@ sub load_core_data {
 	$self->load_all_fixtures( Fixtures::Profile->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::ProfileParameter->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Type->new($schema_values) );
+	$self->load_all_fixtures( Fixtures::Coordinate->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Cachegroup->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::EdgeCachegroup->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Division->new($schema_values) );
@@ -171,6 +173,7 @@ sub unload_core_data {
 	$self->teardown($schema, 'Region');
 	$self->teardown($schema, 'Division');
 	$self->teardown_cachegroup();
+	$self->teardown($schema, 'Coordinate');
 	$self->teardown($schema, 'Profile');
 	$self->teardown($schema, 'Parameter');
 	$self->teardown($schema, 'ProfileParameter');

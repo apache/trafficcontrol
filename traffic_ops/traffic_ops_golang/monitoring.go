@@ -248,9 +248,10 @@ WHERE cdn.name = $1`
 
 func getCachegroups(db *sqlx.DB, cdn string) ([]Cachegroup, error) {
 	query := `
-SELECT name, latitude, longitude
-FROM cachegroup
-WHERE id IN
+SELECT cg.name, co.latitude, co.longitude
+FROM cachegroup cg
+LEFT JOIN coordinate co ON co.id = cg.coordinate
+WHERE cg.id IN
   (SELECT cachegroup FROM server WHERE server.cdn_id =
     (SELECT id FROM cdn WHERE name = $1));`
 

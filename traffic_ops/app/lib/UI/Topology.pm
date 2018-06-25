@@ -201,7 +201,7 @@ sub gen_crconfig_json {
             'type.name' => [ { -like => 'EDGE%' }, { -like => 'MID%' }, { -like => 'CCR' }, { -like => 'RASCAL' }, { -like => 'TR' }, { -like => 'TM' } ],
             'me.cdn_id' => $cdn_id
         }, {
-            prefetch => [ 'type',      'status',      'cachegroup', 'profile' ],
+            prefetch => [ 'type',      'status',      { 'cachegroup' => 'coordinate' }, 'profile' ],
             columns  => [ 'host_name', 'domain_name', 'tcp_port', 'https_port',   'interface_name', 'ip_address', 'ip6_address', 'id', 'xmpp_id', 'profile.routing_disabled' ]
         }
     );
@@ -248,8 +248,8 @@ sub gen_crconfig_json {
         elsif ( $row->type->name =~ m/^EDGE/ || $row->type->name =~ m/^MID/ ) {
 
             if ( $row->type->name =~ m/^EDGE/ ) {
-                $data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'latitude'}  = $row->cachegroup->latitude + 0;
-                $data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'longitude'} = $row->cachegroup->longitude + 0;
+                $data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'latitude'}  = $row->cachegroup->coordinate->latitude + 0;
+                $data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'longitude'} = $row->cachegroup->coordinate->longitude + 0;
                 $data_obj->{'edgeLocations'}->{ $row->cachegroup->name }->{'backupLocations'}->{'fallbackToClosest'} = $row->cachegroup->fallback_to_closest ? "true" : "false";
 
                 my $rs_backups = $self->db->resultset('CachegroupFallback')->search({ primary_cg => $row->cachegroup->id}, {order_by => 'set_order'});

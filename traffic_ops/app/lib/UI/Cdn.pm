@@ -635,11 +635,13 @@ sub acachegroup {
         $id_to_name{ $row->id } = $row->name;
     }
 
-    $rs = $self->db->resultset('Cachegroup')->search( undef, { prefetch => [ { 'type' => undef } ] } );
+    $rs = $self->db->resultset('Cachegroup')->search( undef, { prefetch => [ { 'type' => undef }, 'coordinate' ] } );
 
     while ( my $row = $rs->next ) {
         my @line = [
-            $row->id, $row->name, $row->short_name, $row->type->name, 0.0 + $row->latitude, 0.0 + $row->longitude,
+            $row->id, $row->name, $row->short_name, $row->type->name,
+            defined( $row->coordinate ) ? 0.0 + $row->coordinate->latitude : undef,
+            defined( $row->coordinate ) ? 0.0 + $row->coordinate->longitude: undef,
             defined( $row->parent_cachegroup_id )
             ? $id_to_name{ $row->parent_cachegroup_id }
             : undef,

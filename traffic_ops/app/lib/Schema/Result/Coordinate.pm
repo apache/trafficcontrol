@@ -107,6 +107,21 @@ __PACKAGE__->add_unique_constraint("coordinate_name_key", ["name"]);
 
 =head1 RELATIONS
 
+=head2 cachegroups
+
+Type: has_many
+
+Related object: L<Schema::Result::Cachegroup>
+
+=cut
+
+__PACKAGE__->has_many(
+  "cachegroups",
+  "Schema::Result::Cachegroup",
+  { "foreign.coordinate" => "self.id" },
+  { cascade_copy => 0, cascade_delete => 0 },
+);
+
 =head2 origins
 
 Type: has_many
@@ -123,8 +138,8 @@ __PACKAGE__->has_many(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2018-05-15 16:06:00
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:FZ64Zkbh+B6CECd1k/h66w
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2018-06-27 16:34:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:TdhJL1P7uk/07Oz2Y73Plw
 
 #
 #

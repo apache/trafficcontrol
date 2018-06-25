@@ -20,6 +20,7 @@ package cachegroup
  */
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"strconv"
@@ -33,7 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
-	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
@@ -215,7 +216,21 @@ func (cg *TOCacheGroup) Create() (error, tc.ApiErrorType) {
 		return tc.DBError, tc.SystemError
 	}
 
-	resultRows, err := cg.ReqInfo.Tx.NamedQuery(insertQuery(), cg)
+	coordinateID, err := cg.createCoordinate()
+	if err != nil {
+		log.Errorf("creating cachegroup: %v", err)
+		return tc.DBError, tc.SystemError
+	}
+
+	resultRows, err := cg.ReqInfo.Tx.Query(
+		insertQuery(),
+		cg.Name,
+		cg.ShortName,
+		coordinateID,
+		cg.TypeID,
+		cg.ParentCachegroupID,
+		cg.SecondaryParentCachegroupID,
+	)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -252,6 +267,64 @@ func (cg *TOCacheGroup) Create() (error, tc.ApiErrorType) {
 	cg.SetID(id)
 	cg.LastUpdated = &lastUpdated
 	return nil, tc.NoError
+}
+
+func (cg *TOCacheGroup) createCoordinate() (*int, error) {
+	var coordinateID *int
+	if cg.Latitude != nil && cg.Longitude != nil {
+		q := `INSERT INTO coordinate (name, latitude, longitude) VALUES ($1, $2, $3) RETURNING id`
+		if err := cg.ReqInfo.Tx.QueryRow(q, tc.CachegroupCoordinateNamePrefix+*cg.Name, *cg.Latitude, *cg.Longitude).Scan(&coordinateID); err != nil {
+			return nil, fmt.Errorf("insert coordinate for cg '%s': %s", *cg.Name, err.Error())
+		}
+	}
+	return coordinateID, nil
+}
+
+func (cg *TOCacheGroup) updateCoordinate() error {
+	if cg.Latitude != nil && cg.Longitude != nil {
+		q := `UPDATE coordinate SET name = $1, latitude = $2, longitude = $3 WHERE id = (SELECT coordinate FROM cachegroup WHERE id = $4)`
+		result, err := cg.ReqInfo.Tx.Exec(q, tc.CachegroupCoordinateNamePrefix+*cg.Name, *cg.Latitude, *cg.Longitude, *cg.ID)
+		if err != nil {
+			return fmt.Errorf("update coordinate for cg '%s': %s", *cg.Name, err.Error())
+		}
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			return fmt.Errorf("update coordinate for cg '%s', getting rows affected: %s", *cg.Name, err.Error())
+		}
+		if rowsAffected == 0 {
+			return fmt.Errorf("update coordinate for cg '%s', zero rows affected", *cg.Name)
+		}
+	}
+	return nil
+}
+
+func (cg *TOCacheGroup) deleteCoordinate(coordinateID int) error {
+	q := `UPDATE cachegroup SET coordinate = NULL WHERE id = $1`
+	result, err := cg.ReqInfo.Tx.Exec(q, *cg.ID)
+	if err != nil {
+		return fmt.Errorf("updating cg %d coordinate to null: %s", *cg.ID, err.Error())
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("updating cg %d coordinate to null, getting rows affected: %s", *cg.ID, err.Error())
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("updating cg %d coordinate to null, zero rows affected", *cg.ID)
+	}
+
+	q = `DELETE FROM coordinate WHERE id = $1`
+	result, err = cg.ReqInfo.Tx.Exec(q, coordinateID)
+	if err != nil {
+		return fmt.Errorf("delete coordinate %d for cg %d: %s", coordinateID, *cg.ID, err.Error())
+	}
+	rowsAffected, err = result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("delete coordinate %d for cg %d, getting rows affected: %s", coordinateID, *cg.ID, err.Error())
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("delete coordinate %d for cg %d, zero rows affected", coordinateID, *cg.ID)
+	}
+	return nil
 }
 
 func (cg *TOCacheGroup) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
@@ -304,8 +377,22 @@ func (cg *TOCacheGroup) Update() (error, tc.ApiErrorType) {
 		return tc.DBError, tc.SystemError
 	}
 
+	coordinateID, err, errType := cg.handleCoordinateUpdate()
+	if err != nil {
+		return err, errType
+	}
+
 	log.Debugf("about to run exec query: %s with cg: %++v", updateQuery(), cg)
-	resultRows, err := cg.ReqInfo.Tx.NamedQuery(updateQuery(), cg)
+	resultRows, err := cg.ReqInfo.Tx.Query(
+		updateQuery(),
+		cg.Name,
+		cg.ShortName,
+		coordinateID,
+		cg.ParentCachegroupID,
+		cg.SecondaryParentCachegroupID,
+		cg.TypeID,
+		cg.ID,
+	)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -341,6 +428,46 @@ func (cg *TOCacheGroup) Update() (error, tc.ApiErrorType) {
 	return nil, tc.NoError
 }
 
+func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, tc.ApiErrorType) {
+	coordinateID, err := cg.getCoordinateID()
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("no cg with id %d found", *cg.ID), tc.DataMissingError
+		}
+		log.Errorf("updating cg %d got error when querying coordinate: %s\n", *cg.ID, err)
+		return nil, tc.DBError, tc.SystemError
+	}
+	if coordinateID == nil && cg.Latitude != nil && cg.Longitude != nil {
+		newCoordinateID, err := cg.createCoordinate()
+		if err != nil {
+			log.Errorf("updating cg %d: %s\n", *cg.ID, err)
+			return nil, tc.DBError, tc.SystemError
+		}
+		coordinateID = newCoordinateID
+	} else if coordinateID != nil && (cg.Latitude == nil || cg.Longitude == nil) {
+		if err = cg.deleteCoordinate(*coordinateID); err != nil {
+			log.Errorf("updating cg %d: %s\n", *cg.ID, err)
+			return nil, tc.DBError, tc.SystemError
+		}
+		coordinateID = nil
+	} else {
+		if err = cg.updateCoordinate(); err != nil {
+			log.Errorf("updating cg %d: %s\n", *cg.ID, err)
+			return nil, tc.DBError, tc.SystemError
+		}
+	}
+	return coordinateID, nil, tc.NoError
+}
+
+func (cg *TOCacheGroup) getCoordinateID() (*int, error) {
+	q := `SELECT coordinate FROM cachegroup WHERE id = $1`
+	var coordinateID *int
+	if err := cg.ReqInfo.Tx.QueryRow(q, *cg.ID).Scan(&coordinateID); err != nil {
+		return nil, err
+	}
+	return coordinateID, nil
+}
+
 //The CacheGroup implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
 func (cg *TOCacheGroup) Delete() (error, tc.ApiErrorType) {
@@ -351,6 +478,22 @@ func (cg *TOCacheGroup) Delete() (error, tc.ApiErrorType) {
 	}
 	if inUse == true {
 		return err, tc.DataConflictError
+	}
+
+	coordinateID, err := cg.getCoordinateID()
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("no cachegroup with id %d found", *cg.ID), tc.DataMissingError
+		}
+		log.Errorf("deleting cachegroup %d, got error when querying coordinate: %s\n", *cg.ID, err.Error())
+		return tc.DBError, tc.SystemError
+	}
+
+	if coordinateID != nil {
+		if err = cg.deleteCoordinate(*coordinateID); err != nil {
+			log.Errorf("deleting cachegroup %d: %s\n", *cg.ID, err.Error())
+			return tc.DBError, tc.SystemError
+		}
 	}
 
 	log.Debugf("about to run exec query: %s with cg: %++v", deleteQuery(), cg)
@@ -376,26 +519,15 @@ func (cg *TOCacheGroup) Delete() (error, tc.ApiErrorType) {
 
 // insert query
 func insertQuery() string {
-	// to disambiguate struct scans, the named
-	// parameter 'type_id' is an alias to cachegroup.type
-	//see also the v13.CacheGroupNullable struct 'db' metadata
 	query := `INSERT INTO cachegroup (
 name,
 short_name,
-latitude,
-longitude,
+coordinate,
 type,
 parent_cachegroup_id,
 secondary_parent_cachegroup_id
-) VALUES(
-:name,
-:short_name,
-:latitude,
-:longitude,
-:type_id,
-:parent_cachegroup_id,
-:secondary_parent_cachegroup_id
-) RETURNING id,last_updated`
+) VALUES($1,$2,$3,$4,$5,$6)
+RETURNING id,last_updated`
 	return query
 }
 
@@ -409,8 +541,8 @@ func selectQuery() string {
 cachegroup.id,
 cachegroup.name,
 cachegroup.short_name,
-cachegroup.latitude,
-cachegroup.longitude,
+coordinate.latitude,
+coordinate.longitude,
 cachegroup.parent_cachegroup_id,
 cgp.name AS parent_cachegroup_name,
 cachegroup.secondary_parent_cachegroup_id,
@@ -419,6 +551,7 @@ type.name AS type_name,
 cachegroup.type AS type_id,
 cachegroup.last_updated
 FROM cachegroup
+LEFT JOIN coordinate ON coordinate.id = cachegroup.coordinate
 INNER JOIN type ON cachegroup.type = type.id
 LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
 LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id`
@@ -432,13 +565,12 @@ func updateQuery() string {
 	//see also the v13.CacheGroupNullable struct 'db' metadata
 	query := `UPDATE
 cachegroup SET
-name=:name,
-short_name=:short_name,
-latitude=:latitude,
-longitude=:longitude,
-parent_cachegroup_id=:parent_cachegroup_id,
-secondary_parent_cachegroup_id=:secondary_parent_cachegroup_id,
-type=:type_id WHERE id=:id RETURNING last_updated`
+name=$1,
+short_name=$2,
+coordinate=$3,
+parent_cachegroup_id=$4,
+secondary_parent_cachegroup_id=$5,
+type=$6 WHERE id=$7 RETURNING last_updated`
 	return query
 }
 

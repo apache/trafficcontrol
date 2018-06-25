@@ -214,6 +214,8 @@ ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'}
 ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'} => json => {
         "name" => "cache_group_edge_2",
         "shortName" => "cg_edge_2",
+        "latitude" => 0,
+        "longitude" => 0,
         "parentCachegroupId" => undef,
         "secondaryParentCachegroupId" => undef,
         "typeId" => 5 })->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
@@ -230,6 +232,8 @@ ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'}
 ok $t->put_ok('/api/1.2/cachegroups/' . $cg_id => {Accept => 'application/json'} => json => {
         "name" => "cache_group_edge_2",
         "shortName" => "cg_edge_2",
+        "latitude" => 0,
+        "longitude" => 0,
         "parentCachegroupId" => $cache_group_mid_id,
         "typeId" => 5})->status_is(200)->or( sub { diag $t->tx->res->content->asset->{content}; } )
     ->json_is( "/response/parentCachegroupId" => $cache_group_mid_id)

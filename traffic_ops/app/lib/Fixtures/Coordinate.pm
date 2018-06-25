@@ -1,4 +1,4 @@
-package Fixtures::Cachegroup;
+package Fixtures::Coordinate;
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,47 +19,48 @@ use namespace::autoclean;
 
 my %definition_for = (
 	mid_northeast => {
-		new   => 'Cachegroup',
+		new   => 'Coordinate',
 		using => {
 			id                   => 100,
 			name                 => 'mid-northeast-group',
-			short_name           => 'ne',
-			coordinate           => 100,
-			type                 => 2,
-			parent_cachegroup_id => undef,
+			latitude             => 120,
+			longitude            => 120,
 		},
 	},
 	mid_northwest => {
-		new   => 'Cachegroup',
+		new   => 'Coordinate',
 		using => {
 			id                   => 200,
 			name                 => 'mid-northwest-group',
-			short_name           => 'nw',
-			coordinate           => 200,
-			type                 => 2,
-			parent_cachegroup_id => 100,
+			latitude             => 100,
+			longitude            => 100,
 		},
 	},
 	mid_cg3 => {
-		new   => 'Cachegroup',
+		new   => 'Coordinate',
 		using => {
 			id                   => 800,
 			name                 => 'mid_cg3',
-			short_name           => 'mid_cg3',
-			coordinate           => 800,
-			type                 => 6,
-			parent_cachegroup_id => undef,
+			latitude             => 100,
+			longitude            => 100,
 		},
 	},
 	edge_cg4 => {
-		new   => 'Cachegroup',
+		new   => 'Coordinate',
 		using => {
 			id                   => 900,
 			name                 => 'edge_cg4',
-			short_name           => 'edge_cg4',
-			coordinate           => 900,
-			type                 => 5,
-			parent_cachegroup_id => 800,
+			latitude             => 100,
+			longitude            => 100,
+		},
+	},
+	edge_atl_group => {
+		new   => 'Coordinate',
+		using => {
+			id                   => 1000,
+			name                 => 'edge_atl_group',
+			latitude             => 120,
+			longitude            => 120,
 		},
 	},
 );

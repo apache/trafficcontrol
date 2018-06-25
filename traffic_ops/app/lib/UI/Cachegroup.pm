@@ -36,7 +36,7 @@ sub index {
 
 sub add {
 	my $self = shift;
-	$self->stash( fbox_layout => 1, cg_data => {} );
+	$self->stash( fbox_layout => 1, cg_data => {}, coordinate => {} );
 	&stash_role($self);
 	if ( $self->stash('priv_level') < 30 ) {
 		$self->stash( alertmsg => "Insufficient privileges!" );
@@ -50,7 +50,7 @@ sub view {
 	my $id   = $self->param('id');
 	$self->stash( cg_data => {} );
 
-	my $rs_param = $self->db->resultset('Cachegroup')->search( { id => $id } );
+	my $rs_param = $self->db->resultset('Cachegroup')->search( { 'me.id' => $id }, { prefetch => 'coordinate' } );
 	my $data = $rs_param->single;
 
 	my $type_id = $self->db->resultset('Cachegroup')->search( { id => $id } )->get_column('type')->single();
@@ -99,7 +99,8 @@ sub view {
 	);
 
 	&stash_role($self);
-	$self->stash( fbox_layout => 1, cg_data => $data, selected_type => $selected_type );
+	my $coordinate_data = defined( $data->coordinate ) ? $data->coordinate : {};
+	$self->stash( fbox_layout => 1, cg_data => $data, coordinate => $coordinate_data, selected_type => $selected_type );
 
 	if ( $mode eq "edit" and $self->stash('priv_level') > 20 ) {
 		$self->render( template => 'cachegroup/edit' );
@@ -125,7 +126,7 @@ sub read {
 		$idnames{ $row->id } = $row->name;
 	}
 
-	my $rs_data = $self->db->resultset("Cachegroup")->search( undef, { prefetch => [ { 'type' => undef, } ], order_by => 'me.' . $orderby } );
+	my $rs_data = $self->db->resultset("Cachegroup")->search( undef, { prefetch => [ { 'type' => undef, }, 'coordinate' ], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		if ( defined $row->parent_cachegroup_id ) {
 			push(
@@ -133,8 +134,8 @@ sub read {
 					"id"                   => $row->id,
 					"name"                 => $row->name,
 					"short_name"           => $row->short_name,
-					"latitude"             => $row->latitude,
-					"longitude"            => $row->longitude,
+					"latitude"             => $row->coordinate->latitude,
+					"longitude"            => $row->coordinate->longitude,
 					"last_updated"         => $row->last_updated,
 					"parent_location_id"   => $row->parent_cachegroup_id,
 					"parent_location_name" => $idnames{ $row->parent_cachegroup_id },
@@ -149,8 +150,8 @@ sub read {
 					"id"                   => $row->id,
 					"name"                 => $row->name,
 					"short_name"           => $row->short_name,
-					"latitude"             => $row->latitude,
-					"longitude"            => $row->longitude,
+					"latitude"             => $row->coordinate->latitude,
+					"longitude"            => $row->coordinate->longitude,
 					"last_updated"         => $row->last_updated,
 					"parent_location_id"   => $row->parent_cachegroup_id,
 					"parent_location_name" => undef,
@@ -193,8 +194,12 @@ sub delete {
 	}
 	else {
 		my $p_name = $self->db->resultset('Cachegroup')->search( { id => $id } )->get_column('name')->single();
-		my $delete = $self->db->resultset('Cachegroup')->search( { id => $id } );
+		my $delete = $self->db->resultset('Cachegroup')->search( { 'me.id' => $id }, { prefetch => 'coordinate' } );
+		my $coordinate = $delete->single()->coordinate;
 		$delete->delete();
+		if ( defined( $coordinate ) ) {
+			$coordinate->delete();
+		}
 		&log( $self, "Delete cachegroup " . $p_name, "UICHANGE" );
 	}
 	return $self->redirect_to('/close_fancybox.html');
@@ -235,11 +240,13 @@ sub update {
 			id                             => $id,
 			name                           => $self->param('cg_data.name'),
 			short_name                     => $self->param('cg_data.short_name'),
-			latitude                       => $self->param('cg_data.latitude'),
-			longitude                      => $self->param('cg_data.longitude'),
 			parent_cachegroup_id           => $parent_cachegroup_id,
 			secondary_parent_cachegroup_id => $secondary_parent_cachegroup_id,
 			type                           => $self->param('cg_data.type')
+		},
+		coordinate => {
+			latitude => $self->param('coordinate.latitude'),
+			longitude => $self->param('coordinate.longitude')
 		}
 	);
 
@@ -254,11 +261,12 @@ sub update {
 		$self->flash( alertmsg => $err );
 	}
 	else {
-		my $update = $self->db->resultset('Cachegroup')->find( { id => $self->param('id') } );
+		my $update = $self->db->resultset('Cachegroup')->find( { id => $self->param('id') }, { prefetch => 'coordinate' } );
 		$update->name( $self->param('cg_data.name') );
 		$update->short_name( $self->param('cg_data.short_name') );
-		$update->latitude( $self->param('cg_data.latitude') );
-		$update->longitude( $self->param('cg_data.longitude') );
+		$update->coordinate->name( 'from_cachegroup_' . $self->param('cg_data.name') );
+		$update->coordinate->latitude( $self->param('coordinate.latitude') );
+		$update->coordinate->longitude( $self->param('coordinate.longitude') );
 		if ( $parent_cachegroup_id != -1 ) {
 			$update->parent_cachegroup_id( $self->param('cg_data.parent_cachegroup_id') );
 		}
@@ -273,6 +281,7 @@ sub update {
                 }
 		$update->type( $self->param('cg_data.type') );
 		$update->update();
+		$update->coordinate->update();
 
 		foreach my $param ( $self->param ) {
 			next unless $param =~ /^param:/;
@@ -296,8 +305,8 @@ sub create {
 	my $self        = shift;
 	my $name        = $self->param('cg_data.name');
 	my $short_name  = $self->param('cg_data.short_name');
-	my $latitude    = $self->param('cg_data.latitude');
-	my $longitude   = $self->param('cg_data.longitude');
+	my $latitude    = $self->param('coordinate.latitude');
+	my $longitude   = $self->param('coordinate.longitude');
 	my $cachegroup  = $self->param('cg_data.parent_cachegroup_id');
 	my $type        = $self->param('cg_data.type');
 	my $data        = $self->get_cachegroups();
@@ -310,8 +319,10 @@ sub create {
 			cg_data     => {
 				name       => $name,
 				short_name => $short_name,
-				latitude   => $latitude,
-				longitude  => $longitude
+			},
+			coordinate => {
+				latitude => $latitude,
+				longitude => $longitude
 			}
 		);
 		return $self->render('cachegroup/add');
@@ -323,8 +334,10 @@ sub create {
 			cg_data     => {
 				name       => $name,
 				short_name => $short_name,
-				latitude   => $latitude,
-				longitude  => $longitude
+			},
+			coordinate  => {
+				latitude  => $latitude,
+				longitude => $longitude
 			}
 		);
 		return $self->render('cachegroup/add');
@@ -336,8 +349,10 @@ sub create {
 			cg_data     => {
 				name       => $name,
 				short_name => $short_name,
-				latitude   => $latitude,
-				longitude  => $longitude
+			},
+			coordinate  => {
+				latitude  => $latitude,
+				longitude => $longitude
 			}
 		);
 		return $self->render('cachegroup/add');
@@ -352,12 +367,22 @@ sub create {
 
 		my $parent_cachegroup_id = $cachegroup;    # sharing the code in JS for create and edit.
 		$parent_cachegroup_id = undef if ( $parent_cachegroup_id == -1 );
+
+		my $coordinate = $self->db->resultset('Coordinate')->create(
+			{
+				name => 'from_cachegroup_' . $name,
+				latitude => $latitude,
+				longitude => $longitude
+			}
+		);
+		$coordinate->insert();
+		my $coordinate_id = $coordinate->id;
+
 		my $insert = $self->db->resultset('Cachegroup')->create(
 			{
 				name                 => $name,
 				short_name           => $short_name,
-				latitude             => $latitude,
-				longitude            => $longitude,
+				coordinate           => $coordinate_id,
 				parent_cachegroup_id => $parent_cachegroup_id,
 				type                 => $type,
 			}
@@ -380,16 +405,16 @@ sub isValidCachegroup {
 	my $self = shift;
 	$self->field('cg_data.name')->is_required->is_like( qr/^[0-9a-zA-Z_\.\-]+$/, "Use alphanumeric . or _ ." );
 	$self->field('cg_data.short_name')->is_required->is_like( qr/^[0-9a-zA-Z_\.\-]+$/, "Use alphanumeric . or _" );
-	$self->field('cg_data.latitude')->is_required->is_like( qr/^[-]*[0-9]+[.]*[0-9]*/, "Invalid latitude entered." );
-	$self->field('cg_data.longitude')->is_required->is_like( qr/^[-]*[0-9]+[.]*[0-9]*/, "Invalid latitude entered." );
-	my $latitude  = $self->param('cg_data.latitude');
-	my $longitude = $self->param('cg_data.longitude');
+	$self->field('coordinate.latitude')->is_required->is_like( qr/^[-]*[0-9]+[.]*[0-9]*/, "Invalid latitude entered." );
+	$self->field('coordinate.longitude')->is_required->is_like( qr/^[-]*[0-9]+[.]*[0-9]*/, "Invalid latitude entered." );
+	my $latitude  = $self->param('coordinate.latitude');
+	my $longitude = $self->param('coordinate.longitude');
 
 	if ( abs $latitude > 90 ) {
-		$self->field('cg_data.latitude')->is_required->is_like( qr/^\./, "May not exceed +- 90.0." );
+		$self->field('coordinate.latitude')->is_required->is_like( qr/^\./, "May not exceed +- 90.0." );
 	}
 	if ( abs $longitude > 180 ) {
-		$self->field('cg_data.longitude')->is_required->is_like( qr/^\./, "May not exceed +- 180.0." );
+		$self->field('coordinate.longitude')->is_required->is_like( qr/^\./, "May not exceed +- 180.0." );
 	}
 
 	return $self->valid;
