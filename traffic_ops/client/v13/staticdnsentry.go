@@ -21,8 +21,8 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc"
-	"github.com/apache/incubator-trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 )
 
 const (
@@ -57,7 +57,7 @@ func (to *Session) UpdateStaticDNSEntryByID(id int, cdn v13.StaticDNSEntry) (tc.
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v13_StaticDNSEntries, id)
+	route := fmt.Sprintf("%s?id=%d", API_v13_StaticDNSEntries, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -84,7 +84,7 @@ func (to *Session) GetStaticDNSEntries() ([]v13.StaticDNSEntry, ReqInf, error) {
 
 // GET a StaticDNSEntry by the StaticDNSEntry ID
 func (to *Session) GetStaticDNSEntryByID(id int) ([]v13.StaticDNSEntry, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_StaticDNSEntries, id)
+	route := fmt.Sprintf("%s?id=%d", API_v13_StaticDNSEntries, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -120,7 +120,7 @@ func (to *Session) GetStaticDNSEntriesByHost(host string) ([]v13.StaticDNSEntry,
 
 // DELETE a StaticDNSEntry by ID
 func (to *Session) DeleteStaticDNSEntryByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_StaticDNSEntries, id)
+	route := fmt.Sprintf("%s?id=%d", API_v13_StaticDNSEntries, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
