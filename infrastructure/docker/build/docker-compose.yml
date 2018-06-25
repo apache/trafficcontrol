@@ -91,3 +91,11 @@ services:
     volumes:
       - ../../..:/trafficcontrol:z
     command: ['-f', '/trafficcontrol/dist/weasel.txt', '/trafficcontrol']
+
+  docs:
+    image: docs_builder
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-docs
+      context: ../../..
+    volumes:
+      - ../../..:/trafficcontrol:z

@@ -173,3 +173,21 @@ function createTarball() {
         rm -r "$bndir"
         echo "$tarball"
 }
+
+# ---------------------------------------
+function createDocsTarball() {
+	local projDir=$(cd "$1"; pwd)
+	local projName=trafficcontrol
+	local version=$(getVersion "$TC_DIR")
+	local tarball="dist/apache-$projName-$version-docs.tar.gz"
+	local tardir="${projDir}/docs/build/"
+
+	# Create a BULDNUMBER file and add to tarball
+	local bndir=$(mktemp -d)
+        getBuildNumber >"$bndir/BUILD_NUMBER"
+
+        # create the tarball only from files in repo and BUILD_NUMBER
+        tar -czf "$tarball" -C "$bndir" BUILD_NUMBER -C "$tardir" . --exclude-vcs
+        rm -r "$bndir"
+        echo "$tarball"
+}
