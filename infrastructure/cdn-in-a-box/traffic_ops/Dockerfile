@@ -46,7 +46,16 @@ RUN yum install -y /$(basename $TRAFFIC_OPS_RPM)
 RUN rm /$(basename $TRAFFIC_OPS_RPM) && \
     yum clean all
 
-RUN POSTGRES_HOME=/usr/pgsql-9.6 cd /opt/traffic_ops/app && carton && rm -rf $HOME/.cpan*
+# if local.tar.gz exists, untar to .../app/local to keep carton from reinstalling the Perl universe
+# NOTE: copying Dockerfile so the COPY succeeds whether or not local.tar.gz exists
+WORKDIR /opt/traffic_ops/app
+COPY Dockerfile local.tar.gz /tmp/
+
+# run carton whether or not local dir was installed
+RUN [ -f /tmp/local.tar.gz ] && \
+     tar xzvf /tmp/local.tar.gz || true && \
+     POSTGRES_HOME=/usr/pgsql-9.6 carton && \
+     rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz
 
 RUN /opt/traffic_ops/install/bin/install_go.sh && \
     /opt/traffic_ops/install/bin/install_goose.sh
@@ -54,7 +63,8 @@ RUN /opt/traffic_ops/install/bin/install_go.sh && \
 RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/install/lib/ \
 	&& export TERM=xterm \
 	&& export USER=root \
-	&& /opt/traffic_ops/install/bin/download_web_deps -i
+	&& /opt/traffic_ops/install/bin/download_web_deps -i || \
+	true # keep a failure here from failing all..
 
 # \todo add Drive Letters to postinstall input
 # RUN sed -i -- 's/"value": "b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"/"value": "0"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_edge.traffic_ops
