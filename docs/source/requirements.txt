@@ -13,3 +13,4 @@
 # limitations under the License.
 #
 Sphinx>=1.4.3
+sphinx_rtd_theme>=0.4.0

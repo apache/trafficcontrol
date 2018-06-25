@@ -57,6 +57,19 @@ for p in "${projects[@]}"; do
 		fi
 		continue
 	fi
+	if [[ $p == docs ]]; then
+		if isInGitTree; then
+			echo "-----  Building docs ..."
+			pushd docs
+			make html
+			popd
+			tarball=$(createDocsTarball "${TC_DIR}")
+			ls -l $tarball
+		else
+			echo "---- Skipping docs creation"
+		fi
+		continue
+	fi
 	# strip trailing /
 	p=${p%/}
 	bldscript="$p/build/build_rpm.sh"
