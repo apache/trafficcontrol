@@ -56,10 +56,10 @@ func CreateTestDeliveryServiceRequests(t *testing.T) {
 	respCDN := resp[0]
 
 	// Attach Type
-	typ := testData.Types[19]
-	respTypes, _, err := TOSession.GetTypeByName(typ.Name)
+	typ := testData.DeliveryServiceRequests[dsrGood].DeliveryService.Type.String()
+	respTypes, _, err := TOSession.GetTypeByName(typ)
 	if err != nil {
-		t.Errorf("cannot GET Type by name: %v - %v\n", typ.Name, err)
+		t.Errorf("cannot GET Type by name: %v - %v\n", typ, err)
 	}
 	respTyp := respTypes[0]
 
