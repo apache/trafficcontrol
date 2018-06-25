@@ -103,6 +103,7 @@
                 "regionalGeoBlocking": true,
                 "routingName": "goodroute",
                 "tenantId": 2,
+                "type": "HTTP",
                 "xmlId": "test-ds1"
             },
             "status": "draft"
@@ -122,6 +123,7 @@
                 "longDesc": "long desc",
                 "regionalGeoBlocking": false,
                 "tenantId": 1,
+                "type": "HTTP",
                 "xmlId": "test-ds1"
             },
             "status": "draft"
@@ -143,6 +145,7 @@
                 "regionalGeoBlocking": true,
                 "routingName": "x routing",
                 "tenantId": 2,
+                "type": "HTTP",
                 "xmlId": "test ds1"
             },
             "status": "draft"
@@ -163,6 +166,7 @@
                 "regionalGeoBlocking": true,
                 "routingName": "goodroute",
                 "tenantId": 2,
+                "type": "HTTP",
                 "xmlId": "test-transitions"
             },
             "status": "draft"
