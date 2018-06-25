@@ -30,6 +30,7 @@ use Fixtures::Integration::Asn;
 use Fixtures::Integration::CachegroupParameter;
 use Fixtures::Integration::Cachegroup;
 use Fixtures::Integration::Cdn;
+use Fixtures::Integration::Coordinate;
 use Fixtures::Integration::Deliveryservice;
 use Fixtures::Integration::DeliveryserviceRegex;
 use Fixtures::Integration::DeliveryserviceServer;
@@ -150,6 +151,7 @@ sub load_core_data {
 	$self->load_all_fixtures( Fixtures::Integration::Region->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::PhysLocation->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Status->new($schema_values) );
+	$self->load_all_fixtures( Fixtures::Integration::Coordinate->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Cachegroup->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Regex->new($schema_values) );
 	$self->load_all_fixtures( Fixtures::Integration::Parameter->new($schema_values) );

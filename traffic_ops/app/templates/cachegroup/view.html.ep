@@ -40,11 +40,11 @@ $(function () {
 							</tr>
 							<tr>
 								<td>Latitude</td>
-								<td class="editable" id="latitude"><%= $cg_data->latitude %></td>
+								<td class="editable" id="latitude"><%= $coordinate->latitude %></td>
 							</tr>
 							<tr>
 								<td>Longitude</td>
-								<td class="editable" id="longitude"><%= $cg_data->longitude %></td>
+								<td class="editable" id="longitude"><%= $coordinate->longitude %></td>
 							</tr>
 							<tr>
 								<td>Parent Location</td>

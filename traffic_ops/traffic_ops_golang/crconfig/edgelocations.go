@@ -32,7 +32,8 @@ func makeLocations(cdn string, db *sql.DB) (map[string]tc.CRConfigLatitudeLongit
 
 	// TODO test whether it's faster to do a single query, joining lat/lon into servers
 	q := `
-select cg.name, cg.id, t.name as type, cg.latitude, cg.longitude, cg.fallback_to_closest from cachegroup as cg
+select cg.name, cg.id, t.name as type, co.latitude, co.longitude, cg.fallback_to_closest from cachegroup as cg
+left join coordinate as co on co.id = cg.coordinate
 inner join server as s on s.cachegroup = cg.id
 inner join type as t on t.id = s.type
 inner join status as st ON st.id = s.status

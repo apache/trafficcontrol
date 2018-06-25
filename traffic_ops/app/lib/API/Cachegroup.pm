@@ -45,15 +45,15 @@ sub index {
 		$criteria{'type'} = $type_id;
 	}
 
-	my $rs_data = $self->db->resultset("Cachegroup")->search( \%criteria, { prefetch => [ 'type' ], order_by => 'me.' . $orderby } );
+	my $rs_data = $self->db->resultset("Cachegroup")->search( \%criteria, { prefetch => [ 'type', 'coordinate' ], order_by => 'me.' . $orderby } );
 	while ( my $row = $rs_data->next ) {
 		push(
 			@data, {
 				"id"                            => $row->id,
 				"name"                          => $row->name,
 				"shortName"                     => $row->short_name,
-				"latitude"                      => defined($row->latitude) ? 0.0 + $row->latitude : undef,
-				"longitude"                     => defined($row->longitude) ? 0.0 + $row->longitude : undef,
+				"latitude"                      => defined($row->coordinate) ? 0.0 + $row->coordinate->latitude : undef,
+				"longitude"                     => defined($row->coordinate) ? 0.0 + $row->coordinate->longitude : undef,
 				"lastUpdated"                   => $row->last_updated,
 				"parentCachegroupId"            => $row->parent_cachegroup_id,
 				"parentCachegroupName"          => ( defined $row->parent_cachegroup_id ) ? $idnames{ $row->parent_cachegroup_id } : undef,
@@ -90,7 +90,7 @@ sub show {
 	my $self = shift;
 	my $id   = $self->param('id');
 
-	my $rs_data = $self->db->resultset("Cachegroup")->search( { 'me.id' => $id }, { prefetch => [ 'type' ] } );
+	my $rs_data = $self->db->resultset("Cachegroup")->search( { 'me.id' => $id }, { prefetch => [ 'type', 'coordinate' ] } );
 
 	my @data = ();
 	my %idnames;
@@ -106,8 +106,8 @@ sub show {
 				"id"                            => $row->id,
 				"name"                          => $row->name,
 				"shortName"                     => $row->short_name,
-				"latitude"                      => defined($row->latitude) ? 0.0 + $row->latitude : undef,
-				"longitude"                     => defined($row->longitude) ? 0.0 + $row->longitude : undef,
+				"latitude"                      => defined($row->coordinate) ? 0.0 + $row->coordinate->latitude : undef,
+				"longitude"                     => defined($row->coordinate) ? 0.0 + $row->coordinate->longitude : undef,
 				"lastUpdated"                   => $row->last_updated,
 				"parentCachegroupId"            => $row->parent_cachegroup_id,
 				"parentCachegroupName"          => ( defined $row->parent_cachegroup_id ) ? $idnames{ $row->parent_cachegroup_id } : undef,
@@ -139,10 +139,12 @@ sub update {
 		return $self->alert($result);
 	}
 
-	my $cachegroup = $self->db->resultset('Cachegroup')->find( { id => $id } );
+	my $cachegroup = $self->db->resultset('Cachegroup')->find( { id => $id }, { prefetch => 'coordinate' } );
 	if ( !defined($cachegroup) ) {
 		return $self->not_found();
 	}
+
+	my $coordinate = $cachegroup->coordinate;
 
 	my $name = $params->{name};
 	if ( $cachegroup->name ne $name ) {
@@ -165,11 +167,20 @@ sub update {
 		$fallback_to_closest = $cachegroup->fallback_to_closest;
 	}
 
+	# note: this Perl API has been updated just to keep the Perl API tests happy until they can be removed.
+	# Hence, this assumes lat/long are always passed (even though they're technically optional)
+	my $lat = $params->{latitude};
+	my $long = $params->{longitude};
+	my $coordinate_values = {
+		latitude  => $lat,
+		longitude => $long
+	};
+
+	my $coordinate_rs = $coordinate->update($coordinate_values);
+
 	my $values = {
 		name                           => $params->{name},
 		short_name                     => $params->{shortName},
-		latitude                       => $params->{latitude},
-		longitude                      => $params->{longitude},
 		parent_cachegroup_id           => $params->{parentCachegroupId},
 		fallback_to_closest            => $fallback_to_closest,
 		secondary_parent_cachegroup_id => $params->{secondaryParentCachegroupId},
@@ -177,7 +188,7 @@ sub update {
 	};
 
 	my $rs = $cachegroup->update($values);
-	if ($rs) {
+	if ($rs && $coordinate_rs) {
 		my %idnames;
 		my $response;
 
@@ -189,8 +200,8 @@ sub update {
 		$response->{id}                 = $rs->id;
 		$response->{name}               = $rs->name;
 		$response->{shortName}          = $rs->short_name;
-		$response->{latitude}           = 0.0 + $rs->latitude;
-		$response->{longitude}          = 0.0 + $rs->longitude;
+		$response->{latitude}           = 0.0 + $coordinate_rs->latitude;
+		$response->{longitude}          = 0.0 + $coordinate_rs->longitude;
 		$response->{lastUpdated}        = $rs->last_updated;
 		$response->{parentCachegroupId} = $rs->parent_cachegroup_id;
 		$response->{parentCachegroupName} =
@@ -242,11 +253,19 @@ sub create {
 		return $self->alert( "A cachegroup with short_name " . $short_name . " already exists." );
 	}
 
+	my $coordinate_values = {
+		name      => "from_cachegroup_" . $params->{name},
+		latitude  => $params->{latitude},
+		longitude => $params->{longitude},
+	};
+
+	my $coordinate = $self->db->resultset('Coordinate')->create($coordinate_values);
+	my $coordinate_rs = $coordinate->insert();
+
 	my $values = {
 		name                           => $params->{name},
 		short_name                     => $params->{shortName},
-		latitude                       => $params->{latitude},
-		longitude                      => $params->{longitude},
+		coordinate                     => $coordinate_rs->id,
 		parent_cachegroup_id           => $params->{parentCachegroupId},
 		fallback_to_closest            => exists ($params->{fallbackToClosest}) ? $params->{fallbackToClosest} : 1,# defaults to true
 		secondary_parent_cachegroup_id => $params->{secondaryParentCachegroupId},
@@ -255,7 +274,7 @@ sub create {
 
 	my $insert = $self->db->resultset('Cachegroup')->create($values);
 	my $rs = $insert->insert();
-	if ($rs) {
+	if ($rs && $coordinate_rs) {
 		my %idnames;
 		my $response;
 
@@ -267,8 +286,8 @@ sub create {
 		$response->{id}                 = $rs->id;
 		$response->{name}               = $rs->name;
 		$response->{shortName}          = $rs->short_name;
-		$response->{latitude}           = 0.0 + $rs->latitude;
-		$response->{longitude}          = 0.0 + $rs->longitude;
+		$response->{latitude}           = 0.0 + $coordinate_rs->latitude;
+		$response->{longitude}          = 0.0 + $coordinate_rs->longitude;
 		$response->{lastUpdated}        = $rs->last_updated;
 		$response->{parentCachegroupId} = $rs->parent_cachegroup_id;
 		$response->{parentCachegroupName} =
@@ -327,8 +346,10 @@ sub delete {
 		return $self->alert("This cachegroup is currently used by one or more ASNs.");
 	}
 
+	my $coordinate = $cg->coordinate;
 	my $rs = $cg->delete();
-	if ($rs) {
+	my $rs_coordinate = $coordinate->delete();
+	if ($rs && $rs_coordinate) {
 		&log( $self, "Deleted Cachegroup named '" . $cg->name . "' with id: " . $cg->id, "APICHANGE" );
 		return $self->success_message("Cachegroup deleted.");
 	} else {

@@ -30,19 +30,19 @@
 	</div>
 	<br>
 	<div class="block">
-		<% unless (field('cg_data.latitude')->valid) { %>
-			<span class="field-with-error"><%= field('cg_data.latitude')->error %></span>
+		<% unless (field('coordinate.latitude')->valid) { %>
+			<span class="field-with-error"><%= field('coordinate.latitude')->error %></span>
 		<% } %>
 		%= label_for 'name' => '* Geo Magnetic Latitude', class => 'label'
-		%= field('cg_data.latitude')->text(class => 'field', required => 'required', size => 10, name => 'cg_data.latitude', id => 'cg_data.latitude')
+		%= field('coordinate.latitude')->text(class => 'field', required => 'required', size => 10, name => 'coordinate.latitude', id => 'coordinate.latitude')
 	</div>
 	<br>
 	<div class="block">
-		<% unless (field('cg_data.longitude')->valid) { %>
-			<span class="field-with-error"><%= field('cg_data.longitude')->error %></span>
+		<% unless (field('coordinate.longitude')->valid) { %>
+			<span class="field-with-error"><%= field('coordinate.longitude')->error %></span>
 		<% } %>
 		%= label_for 'name' => '* Geo Magnetic Longitude', class => 'label'
-		%= field('cg_data.longitude')->text(class => 'field', required => 'required', size => 10, name => 'cg_data.longitude', id => 'cg_data.longitude')
+		%= field('coordinate.longitude')->text(class => 'field', required => 'required', size => 10, name => 'coordinate.longitude', id => 'coordinate.longitude')
 	</div>
 	<br>
 	<div class="block">

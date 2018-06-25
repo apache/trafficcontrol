@@ -63,3 +63,5 @@ var apiErrorTypes = []string{"noError", "systemError", "dataConflictError", "dat
 func (a ApiErrorType) String() string {
 	return apiErrorTypes[a]
 }
+
+const CachegroupCoordinateNamePrefix = "from_cachegroup_"

@@ -40,16 +40,6 @@ __PACKAGE__->table("cachegroup");
   data_type: 'text'
   is_nullable: 0
 
-=head2 latitude
-
-  data_type: 'numeric'
-  is_nullable: 1
-
-=head2 longitude
-
-  data_type: 'numeric'
-  is_nullable: 1
-
 =head2 parent_cachegroup_id
 
   data_type: 'bigint'
@@ -81,6 +71,12 @@ __PACKAGE__->table("cachegroup");
   default_value: true
   is_nullable: 1
 
+=head2 coordinate
+
+  data_type: 'bigint'
+  is_foreign_key: 1
+  is_nullable: 1
+
 =cut
 
 __PACKAGE__->add_columns(
@@ -95,10 +91,6 @@ __PACKAGE__->add_columns(
   { data_type => "text", is_nullable => 0 },
   "short_name",
   { data_type => "text", is_nullable => 0 },
-  "latitude",
-  { data_type => "numeric", is_nullable => 1 },
-  "longitude",
-  { data_type => "numeric", is_nullable => 1 },
   "parent_cachegroup_id",
   { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
   "secondary_parent_cachegroup_id",
@@ -114,6 +106,8 @@ __PACKAGE__->add_columns(
   },
   "fallback_to_closest",
   { data_type => "boolean", default_value => \"true", is_nullable => 1 },
+  "coordinate",
+  { data_type => "bigint", is_foreign_key => 1, is_nullable => 1 },
 );
 
 =head1 PRIMARY KEY
@@ -260,6 +254,26 @@ __PACKAGE__->has_many(
   { cascade_copy => 0, cascade_delete => 0 },
 );
 
+=head2 coordinate
+
+Type: belongs_to
+
+Related object: L<Schema::Result::Coordinate>
+
+=cut
+
+__PACKAGE__->belongs_to(
+  "coordinate",
+  "Schema::Result::Coordinate",
+  { id => "coordinate" },
+  {
+    is_deferrable => 0,
+    join_type     => "LEFT",
+    on_delete     => "NO ACTION",
+    on_update     => "NO ACTION",
+  },
+);
+
 =head2 origins
 
 Type: has_many
@@ -361,8 +375,8 @@ __PACKAGE__->belongs_to(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07042 @ 2018-05-15 16:06:00
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:2EeelbrXDdiyrV9BXGuIeA
+# Created by DBIx::Class::Schema::Loader v0.07042 @ 2018-06-27 16:34:28
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:Xv7TVScj3TvTuzk/Gd9Mug
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
 #
