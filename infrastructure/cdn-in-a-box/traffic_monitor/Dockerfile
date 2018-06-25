@@ -26,9 +26,11 @@ ARG RPM=traffic_monitor.rpm
 ADD $RPM /
 
 RUN yum install -y \
-    initscripts \
-    jq \
-    /$(basename $RPM) && \
+        epel-release \
+        initscripts && \
+    yum install -y \
+        jq \
+        /$(basename $RPM) && \
     rm /$(basename $RPM) && \
     yum clean all
 
