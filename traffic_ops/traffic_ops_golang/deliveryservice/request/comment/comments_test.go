@@ -27,6 +27,7 @@ import (
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestFuncs(t *testing.T) {
@@ -67,7 +68,7 @@ func TestInterfaces(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	c := TODeliveryServiceRequestComment{}
-	errs := test.SortErrors(c.Validate(nil))
+	errs := test.SortErrors(c.Validate())
 
 	expectedErrs := []error{
 		errors.New(`'deliveryServiceRequestId' is required`),
@@ -80,9 +81,9 @@ func TestValidate(t *testing.T) {
 
 	v := "the comment value"
 	d := 1
-	c = TODeliveryServiceRequestComment{DeliveryServiceRequestID: &d, Value: &v}
+	c = TODeliveryServiceRequestComment{DeliveryServiceRequestCommentNullable: tc.DeliveryServiceRequestCommentNullable{DeliveryServiceRequestID: &d, Value: &v}}
 	expectedErrs = []error{}
-	errs = c.Validate(nil)
+	errs = c.Validate()
 	if !reflect.DeepEqual(expectedErrs, errs) {
 		t.Errorf("expected %s, got %s", expectedErrs, errs)
 	}

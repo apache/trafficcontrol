@@ -28,7 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/go-ozzo/ozzo-validation"
@@ -38,13 +37,13 @@ import (
 
 //we need a type alias to define functions on
 type TODeliveryServiceRequestComment struct{
-	DB *sqlx.DB `json:"-"`
+	ReqInfo *api.APIInfo `json:"-"`
 	tc.DeliveryServiceRequestCommentNullable
 }
 
-func GetTypeSingleton(db *sqlx.DB) func()api.CRUDer {
-	return func()api.CRUDer {
-		toReturn := TODeliveryServiceRequestComment{db, tc.DeliveryServiceRequestCommentNullable{}}
+func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := TODeliveryServiceRequestComment{reqInfo, tc.DeliveryServiceRequestCommentNullable{}}
 		return &toReturn
 	}
 }
@@ -77,7 +76,7 @@ func (comment TODeliveryServiceRequestComment) GetType() string {
 	return "deliveryservice_request_comment"
 }
 
-func (comment TODeliveryServiceRequestComment) Validate(db *sqlx.DB) []error {
+func (comment TODeliveryServiceRequestComment) Validate() []error {
 	errs := validation.Errors{
 		"deliveryServiceRequestId": validation.Validate(comment.DeliveryServiceRequestID, validation.NotNil),
 		"value":                    validation.Validate(comment.Value, validation.NotNil),
@@ -85,28 +84,11 @@ func (comment TODeliveryServiceRequestComment) Validate(db *sqlx.DB) []error {
 	return tovalidate.ToErrors(errs)
 }
 
-func (comment *TODeliveryServiceRequestComment) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-
-	userID := tc.IDNoMod(user.ID)
+func (comment *TODeliveryServiceRequestComment) Create() (error, tc.ApiErrorType) {
+	userID := tc.IDNoMod(comment.ReqInfo.User.ID)
 	comment.AuthorID = &userID
 
-	resultRows, err := tx.NamedQuery(insertQuery(), comment)
+	resultRows, err := comment.ReqInfo.Tx.NamedQuery(insertQuery(), comment)
 
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -143,16 +125,11 @@ func (comment *TODeliveryServiceRequestComment) Create(db *sqlx.DB, user auth.Cu
 	}
 	comment.SetKeys(map[string]interface{}{"id": id})
 	comment.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
-func (comment *TODeliveryServiceRequestComment) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (comment *TODeliveryServiceRequestComment) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
 	// Query Parameters to Database Query column mappings
@@ -171,7 +148,7 @@ func (comment *TODeliveryServiceRequestComment) Read(db *sqlx.DB, parameters map
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := comment.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying delivery service request comments: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -191,38 +168,22 @@ func (comment *TODeliveryServiceRequestComment) Read(db *sqlx.DB, parameters map
 	return comments, []error{}, tc.NoError
 }
 
-func (comment *TODeliveryServiceRequestComment) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (comment *TODeliveryServiceRequestComment) Update() (error, tc.ApiErrorType) {
 
 	var current TODeliveryServiceRequestComment
-	err := db.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
+	err := comment.ReqInfo.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequestComments: %v", err)
 		return err, tc.SystemError
 	}
 
-	userID := tc.IDNoMod(user.ID)
+	userID := tc.IDNoMod(comment.ReqInfo.User.ID)
 	if *current.AuthorID != userID {
 		return errors.New("Comments can only be updated by the author"), tc.DataConflictError
 	}
 
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
 	log.Debugf("about to run exec query: %s with comment: %++v", updateQuery(), comment)
-	resultRows, err := tx.NamedQuery(updateQuery(), comment)
+	resultRows, err := comment.ReqInfo.Tx.NamedQuery(updateQuery(), comment)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -255,47 +216,25 @@ func (comment *TODeliveryServiceRequestComment) Update(db *sqlx.DB, user auth.Cu
 			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
-func (comment *TODeliveryServiceRequestComment) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (comment *TODeliveryServiceRequestComment) Delete() (error, tc.ApiErrorType) {
 
 	var current TODeliveryServiceRequestComment
-	err := db.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
+	err :=comment.ReqInfo.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequestComments: %v", err)
 		return err, tc.SystemError
 	}
 
-	userID := tc.IDNoMod(user.ID)
+	userID := tc.IDNoMod(comment.ReqInfo.User.ID)
 	if *current.AuthorID != userID {
 		return errors.New("Comments can only be deleted by the author"), tc.DataConflictError
 	}
 
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
 	log.Debugf("about to run exec query: %s with comment: %++v", deleteQuery(), comment)
-	result, err := tx.NamedExec(deleteQuery(), comment)
+	result, err := comment.ReqInfo.Tx.NamedExec(deleteQuery(), comment)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -311,12 +250,6 @@ func (comment *TODeliveryServiceRequestComment) Delete(db *sqlx.DB, user auth.Cu
 			return fmt.Errorf("this delete affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 

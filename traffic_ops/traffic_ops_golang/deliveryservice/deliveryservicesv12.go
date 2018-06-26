@@ -126,7 +126,7 @@ func GetXMLID(tx *sql.Tx, id int) (string, bool, error) {
 
 // IsTenantAuthorized checks that the user is authorized for both the delivery service's existing tenant, and the new tenant they're changing it to (if different).
 
-func (ds *TODeliveryServiceV12) IsTenantAuthorized(user auth.CurrentUser, tx *sqlx.Tx) (bool, error) {
+func (ds *TODeliveryServiceV12) IsTenantAuthorized(user *auth.CurrentUser, tx *sqlx.Tx) (bool, error) {
 	return isTenantAuthorized(user, tx, &ds.DeliveryServiceNullableV12)
 }
 
@@ -144,7 +144,7 @@ func getTenantID(tx *sql.Tx, ds *tc.DeliveryServiceNullableV12) (*int, error) {
 	return existingID, err
 }
 
-func isTenantAuthorized(user auth.CurrentUser, tx *sqlx.Tx, ds *tc.DeliveryServiceNullableV12) (bool, error) {
+func isTenantAuthorized(user *auth.CurrentUser, tx *sqlx.Tx, ds *tc.DeliveryServiceNullableV12) (bool, error) {
 	existingID, err := getTenantID(tx.Tx, ds)
 	if err != nil {
 		return false, errors.New("getting tenant ID: " + err.Error())
@@ -197,7 +197,7 @@ func CreateV12() http.HandlerFunc {
 			return
 		}
 		dsv13 := tc.NewDeliveryServiceNullableV13FromV12(ds)
-		if authorized, err := isTenantAuthorized(*inf.User, inf.Tx, &ds); err != nil {
+		if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds); err != nil {
 			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 			return
 		} else if !authorized {
@@ -317,14 +317,14 @@ func UpdateV12() http.HandlerFunc {
 		return
 	}
 	dsv13 := tc.NewDeliveryServiceNullableV13FromV12(ds)
-	if authorized, err := isTenantAuthorized(*inf.User, inf.Tx, &ds); err != nil {
+	if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds); err != nil {
 		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 		return
 	} else if !authorized {
 		api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 		return
 	}
-	dsv13, errCode, userErr, sysErr = update(inf.Tx.Tx, *inf.Config, *inf.User, &dsv13)
+	dsv13, errCode, userErr, sysErr = update(inf.Tx.Tx, *inf.Config, inf.User, &dsv13)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, errCode, userErr, sysErr)
 		return

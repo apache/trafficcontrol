@@ -51,7 +51,7 @@ const (
 	Deleted   = "Deleted"
 )
 
-func CreateChangeLog(level string, action string, i Identifier, user auth.CurrentUser, tx *sqlx.Tx) error {
+func CreateChangeLog(level string, action string, i Identifier, user *auth.CurrentUser, tx *sqlx.Tx) error {
 	t, ok := i.(ChangeLogger)
 	if !ok {
 		keys, _ := i.GetKeys()
@@ -66,7 +66,7 @@ func CreateChangeLog(level string, action string, i Identifier, user auth.Curren
 	return CreateChangeLogRawErr(level, msg, user, tx.Tx)
 }
 
-func CreateChangeLogBuildMsg(level string, action string, user auth.CurrentUser, tx *sqlx.Tx, objType string, auditName string, keys map[string]interface{}) error {
+func CreateChangeLogBuildMsg(level string, action string, user *auth.CurrentUser, tx *sqlx.Tx, objType string, auditName string, keys map[string]interface{}) error {
 	keyStr := "{ "
 	for key, value := range keys {
 		keyStr += key + ":" + fmt.Sprintf("%v", value) + " "
@@ -76,12 +76,14 @@ func CreateChangeLogBuildMsg(level string, action string, user auth.CurrentUser,
 	return CreateChangeLogRawErr(level, msg, user, tx.Tx)
 }
 
-func CreateChangeLogRawErr(level string, msg string, user auth.CurrentUser, tx *sql.Tx) error {
-	 _, err := tx.Exec(`INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`, level, msg, user.ID)
-	 return errors.New("Inserting change log level '" + level + "' message '" + msg + "' user '" + user.UserName + "': " + err.Error())
+func CreateChangeLogRawErr(level string, msg string, user *auth.CurrentUser, tx *sql.Tx) error {
+	 if _, err := tx.Exec(`INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`, level, msg, user.ID); err != nil {
+		 return errors.New("Inserting change log level '" + level + "' message '" + msg + "' user '" + user.UserName + "': " + err.Error())
+	 }
+	 return nil
 }
 
-func CreateChangeLogRaw(level string, msg string, user auth.CurrentUser, db *sql.DB) {
+func CreateChangeLogRaw(level string, msg string, user *auth.CurrentUser, db *sql.DB) {
 	if _, err := db.Exec(`INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`, level, msg, user.ID); err != nil {
 		log.Errorln("Inserting change log level '" + level + "' message '" + msg + "' user '" + user.UserName + "': " + err.Error())
 	}

@@ -133,7 +133,7 @@ func CreateV13() http.HandlerFunc {
 			return
 		}
 
-		if authorized, err := isTenantAuthorized(*inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
+		if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
 			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 			return
 		} else if !authorized {
@@ -240,7 +240,7 @@ func create(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 	}
 
 	ds.LastUpdated = &lastUpdated
-	if err := api.CreateChangeLogRawErr(api.ApiChange, "Created ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), *user, tx); err!= nil {
+	if err := api.CreateChangeLogRawErr(api.ApiChange, "Created ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err!= nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("error writing to audit log: " + err.Error())
 	}
 	return ds, http.StatusOK, nil, nil
@@ -410,7 +410,7 @@ func UpdateV13() http.HandlerFunc {
 			return
 		}
 
-		if authorized, err := isTenantAuthorized(*inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
+		if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
 			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 			return
 		} else if !authorized {
@@ -418,7 +418,7 @@ func UpdateV13() http.HandlerFunc {
 			return
 		}
 
-		ds, errCode, userErr, sysErr = update(inf.Tx.Tx, *inf.Config, *inf.User, &ds)
+		ds, errCode, userErr, sysErr = update(inf.Tx.Tx, *inf.Config, inf.User, &ds)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, errCode, userErr, sysErr)
 			return
@@ -440,7 +440,7 @@ func getDSType(tx *sql.Tx, xmlid string) (tc.DSType, bool, error) {
 	return tc.DSTypeFromString(name), true, nil
 }
 
-func update(tx *sql.Tx, cfg config.Config, user auth.CurrentUser, ds *tc.DeliveryServiceNullableV13) (tc.DeliveryServiceNullableV13, int, error, error) {
+func update(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds *tc.DeliveryServiceNullableV13) (tc.DeliveryServiceNullableV13, int, error, error) {
 	if ds.XMLID == nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusBadRequest, errors.New("missing xml_id"), nil
 	}
@@ -560,7 +560,7 @@ func update(tx *sql.Tx, cfg config.Config, user auth.CurrentUser, ds *tc.Deliver
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("creating mid cacheurl parameters: " + err.Error())
 	}
 
-	if err := updatePrimaryOrigin(tx, &user, *ds); err != nil {
+	if err := updatePrimaryOrigin(tx, user, *ds); err != nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("updating delivery service: " + err.Error())
 	}
 
@@ -579,11 +579,11 @@ func (ds *TODeliveryServiceV13) Delete() (error, tc.ApiErrorType) {
 }
 
 // IsTenantAuthorized implements the Tenantable interface to ensure the user is authorized on the deliveryservice tenant
-func (ds *TODeliveryServiceV13) IsTenantAuthorized(user auth.CurrentUser, tx *sqlx.Tx) (bool, error) {
+func (ds *TODeliveryServiceV13) IsTenantAuthorized(user *auth.CurrentUser, tx *sqlx.Tx) (bool, error) {
 	return ds.V12().IsTenantAuthorized(user, tx)
 }
 
-func filterAuthorized(dses []tc.DeliveryServiceNullableV13, user auth.CurrentUser, db *sqlx.DB) ([]tc.DeliveryServiceNullableV13, error) {
+func filterAuthorized(dses []tc.DeliveryServiceNullableV13, user *auth.CurrentUser, db *sqlx.DB) ([]tc.DeliveryServiceNullableV13, error) {
 	newDSes := []tc.DeliveryServiceNullableV13{}
 	for _, ds := range dses {
 		// TODO add/use a helper func to make a single SQL call, for performance

@@ -39,7 +39,6 @@ type Updater interface {
 
 type Identifier interface {
 	GetKeys() (map[string]interface{}, bool)
-	SetKeys(map[string]interface{})
 	GetType() string
 	GetAuditName() string
 	GetKeyFieldsInfo() []KeyFieldInfo
@@ -47,6 +46,7 @@ type Identifier interface {
 
 type Creator interface {
 	Create() (error, tc.ApiErrorType)
+	SetKeys(map[string]interface{})
 }
 
 type Deleter interface {
@@ -58,7 +58,7 @@ type Validator interface {
 }
 
 type Tenantable interface {
-	IsTenantAuthorized(user auth.CurrentUser) (bool, error)
+	IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
 }
 
 type Reader interface {

@@ -191,7 +191,7 @@ func SnapshotHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-		api.CreateChangeLogRaw(api.ApiChange, "Snapshot of CRConfig performed for "+cdn, *user, db.DB)
+		api.CreateChangeLogRaw(api.ApiChange, "Snapshot of CRConfig performed for "+cdn, user, db.DB)
 		w.WriteHeader(http.StatusOK) // TODO change to 204 No Content in new version
 	}
 }
@@ -236,7 +236,7 @@ func SnapshotOldGUIHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			writePerlHTMLErr(w, r, err)
 			return
 		}
-		api.CreateChangeLogRaw(api.ApiChange, "Snapshot of CRConfig performed for "+cdn, *user, db.DB)
+		api.CreateChangeLogRaw(api.ApiChange, "Snapshot of CRConfig performed for "+cdn, user, db.DB)
 		http.Redirect(w, r, "/tools/flash_and_close/"+url.PathEscape("Successfully wrote the CRConfig.json!"), http.StatusFound)
 	}
 }

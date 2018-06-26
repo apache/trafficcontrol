@@ -72,7 +72,7 @@ JOIN type as rt ON r.type = rt.id
 				handleErrs(http.StatusInternalServerError, errors.New("querying: "+err.Error()))
 				return
 			}
-			if ok, err := tenant.IsResourceAuthorizedToUser(dsTenantID, *user, dbx); !ok {
+			if ok, err := tenant.IsResourceAuthorizedToUser(dsTenantID, user, dbx); !ok {
 				continue
 			} else if err != nil {
 				handleErrs(http.StatusInternalServerError, errors.New("checking tenancy: "+err.Error()))
@@ -153,7 +153,7 @@ ORDER BY dsr.set_number ASC
 				handleErrs(http.StatusInternalServerError, errors.New("querying: "+err.Error()))
 				return
 			}
-			if ok, err := tenant.IsResourceAuthorizedToUser(dsTenantID, *user, dbx); !ok {
+			if ok, err := tenant.IsResourceAuthorizedToUser(dsTenantID, user, dbx); !ok {
 				continue
 			} else if err != nil {
 				handleErrs(http.StatusInternalServerError, errors.New("checking tenancy: "+err.Error()))
@@ -245,7 +245,7 @@ ORDER BY dsr.set_number ASC
 				handleErrs(http.StatusInternalServerError, errors.New("querying: "+err.Error()))
 				return
 			}
-			if ok, err := tenant.IsResourceAuthorizedToUser(dsTenantID, *user, dbx); !ok {
+			if ok, err := tenant.IsResourceAuthorizedToUser(dsTenantID, user, dbx); !ok {
 				continue
 			} else if err != nil {
 				handleErrs(http.StatusInternalServerError, errors.New("checking tenancy: "+err.Error()))
@@ -301,7 +301,7 @@ func Post(dbx *sqlx.DB) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-		if ok, err := tenant.IsResourceAuthorizedToUser(dsTenantID, *user, dbx); !ok {
+		if ok, err := tenant.IsResourceAuthorizedToUser(dsTenantID, user, dbx); !ok {
 			handleErrs(http.StatusInternalServerError, errors.New("unauthorized"))
 			return
 		} else if err != nil {
@@ -403,7 +403,7 @@ func Put(dbx *sqlx.DB) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-		if ok, err := tenant.IsResourceAuthorizedToUser(dsTenantID, *user, dbx); !ok {
+		if ok, err := tenant.IsResourceAuthorizedToUser(dsTenantID, user, dbx); !ok {
 			handleErrs(http.StatusInternalServerError, errors.New("unauthorized"))
 			return
 		} else if err != nil {
@@ -525,7 +525,7 @@ func Delete(dbx *sqlx.DB) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-		if ok, err := tenant.IsResourceAuthorizedToUser(dsTenantID, *user, dbx); !ok {
+		if ok, err := tenant.IsResourceAuthorizedToUser(dsTenantID, user, dbx); !ok {
 			handleErrs(http.StatusUnauthorized, errors.New("unauthorized"))
 			return
 		} else if err != nil {
@@ -557,7 +557,7 @@ func Delete(dbx *sqlx.DB) http.HandlerFunc {
 		}
 
 		log.Debugf("changelog for delete on object")
-		api.CreateChangeLogRaw(api.ApiChange,fmt.Sprintf(`deleted deliveryservice_regex {"ds": %d, "regex": %d}`, dsID, regexID), *user, dbx.DB)
+		api.CreateChangeLogRaw(api.ApiChange,fmt.Sprintf(`deleted deliveryservice_regex {"ds": %d, "regex": %d}`, dsID, regexID), user, dbx.DB)
 		resp := struct {
 			tc.Alerts
 		}{tc.CreateAlerts(tc.SuccessLevel, "deliveryservice_regex was deleted.")}

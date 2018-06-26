@@ -113,10 +113,11 @@ func TestReadOrigins(t *testing.T) {
 			to.TenantID,
 		)
 	}
+	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	v := map[string]string{}
 
-	origins, errs, errType := getOrigins(v, db, auth.PrivLevelAdmin)
+	origins, errs, errType := getOrigins(v, db.MustBegin(), auth.PrivLevelAdmin)
 	log.Debugln("%v-->", origins)
 	if len(errs) > 0 {
 		t.Errorf("getOrigins expected: no errors, actual: %v with error type: %s", errs, errType.String())
@@ -175,13 +176,13 @@ func TestValidate(t *testing.T) {
 	const ip6Err = `'ip6Address' must be a valid IPv6 address`
 
 	// verify that non-null fields are invalid
-	c := TOOrigin{ID: nil,
+	c := TOOrigin{Origin: v13.Origin{ID: nil,
 		Name:              nil,
 		DeliveryServiceID: nil,
 		FQDN:              nil,
 		Protocol:          nil,
-	}
-	errs := test.SortErrors(c.Validate(nil))
+	}}
+	errs := test.SortErrors(c.Validate())
 
 	expectedErrs := []error{
 		errors.New(`'deliveryServiceId' is required`),
@@ -203,7 +204,7 @@ func TestValidate(t *testing.T) {
 	port := 65535
 	pro := "http"
 	lu := tc.TimeNoMod{Time: time.Now()}
-	c = TOOrigin{ID: &id,
+	c = TOOrigin{Origin:v13.Origin{ID: &id,
 		Name:              &nm,
 		DeliveryServiceID: &id,
 		FQDN:              &fqdn,
@@ -212,9 +213,9 @@ func TestValidate(t *testing.T) {
 		Port:              &port,
 		Protocol:          &pro,
 		LastUpdated:       &lu,
-	}
+	}}
 	expectedErrs = []error{}
-	errs = c.Validate(nil)
+	errs = c.Validate()
 	if !reflect.DeepEqual(expectedErrs, errs) {
 		t.Errorf("expected %s, got %s", expectedErrs, errs)
 	}
@@ -319,7 +320,7 @@ func TestValidate(t *testing.T) {
 				c.IP6Address = &tc.Str
 				value = tc.Str
 			}
-			errs = test.SortErrors(c.Validate(nil))
+			errs = test.SortErrors(c.Validate())
 			if !reflect.DeepEqual(tc.ExpectedErrors, errs) {
 				t.Errorf("given: '%v', expected %s, got %s", value, tc.ExpectedErrors, errs)
 			}

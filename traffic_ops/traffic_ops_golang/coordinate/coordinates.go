@@ -30,7 +30,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -39,13 +38,16 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOCoordinate v13.CoordinateNullable
+type TOCoordinate struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	v13.CoordinateNullable
+}
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOCoordinate{}
-
-func GetRefType() *TOCoordinate {
-	return &refType
+func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := TOCoordinate{reqInfo, v13.CoordinateNullable{}}
+		return &toReturn
+	}
 }
 
 func (coordinate TOCoordinate) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -102,7 +104,7 @@ func IsValidCoordinateName(str string) bool {
 }
 
 // Validate fulfills the api.Validator interface
-func (coordinate TOCoordinate) Validate(db *sqlx.DB) []error {
+func (coordinate TOCoordinate) Validate() []error {
 	validName := validation.NewStringRule(IsValidCoordinateName, "invalid characters found - Use alphanumeric . or - or _ .")
 	latitudeErr := "Must be a floating point number within the range +-90"
 	longitudeErr := "Must be a floating point number within the range +-180"
@@ -121,24 +123,8 @@ func (coordinate TOCoordinate) Validate(db *sqlx.DB) []error {
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted coordinate and have
 //to be added to the struct
-func (coordinate *TOCoordinate) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	resultRows, err := tx.NamedQuery(insertQuery(), coordinate)
+func (coordinate *TOCoordinate) Create() (error, tc.ApiErrorType) {
+	resultRows, err := coordinate.ReqInfo.Tx.NamedQuery(insertQuery(), coordinate)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -174,16 +160,10 @@ func (coordinate *TOCoordinate) Create(db *sqlx.DB, user auth.CurrentUser) (erro
 	}
 	coordinate.SetKeys(map[string]interface{}{"id": id})
 	coordinate.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
-func (coordinate *TOCoordinate) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (coordinate *TOCoordinate) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
 	// Query Parameters to Database Query column mappings
@@ -200,7 +180,7 @@ func (coordinate *TOCoordinate) Read(db *sqlx.DB, parameters map[string]string, 
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := coordinate.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Coordinate: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -225,25 +205,9 @@ func (coordinate *TOCoordinate) Read(db *sqlx.DB, parameters map[string]string, 
 //ParsePQUniqueConstraintError is used to determine if a coordinate with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (coordinate *TOCoordinate) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (coordinate *TOCoordinate) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with coordinate: %++v", updateQuery(), coordinate)
-	resultRows, err := tx.NamedQuery(updateQuery(), coordinate)
+	resultRows, err := coordinate.ReqInfo.Tx.NamedQuery(updateQuery(), coordinate)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -276,36 +240,14 @@ func (coordinate *TOCoordinate) Update(db *sqlx.DB, user auth.CurrentUser) (erro
 			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
 //The Coordinate implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (coordinate *TOCoordinate) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (coordinate *TOCoordinate) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with coordinate: %++v", deleteQuery(), coordinate)
-	result, err := tx.NamedExec(deleteQuery(), coordinate)
+	result, err := coordinate.ReqInfo.Tx.NamedExec(deleteQuery(), coordinate)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -321,12 +263,6 @@ func (coordinate *TOCoordinate) Delete(db *sqlx.DB, user auth.CurrentUser) (erro
 			return fmt.Errorf("this delete affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
