@@ -194,6 +194,7 @@
 									<filemode>755</filemode>
 									<username>root</username>
 									<groupname>root</groupname>
+									<configuration>noreplace</configuration>
 									<sources>
 										<source>
 											<location>${env.STARTUP_SCRIPT_LOC}</location>
