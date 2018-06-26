@@ -791,7 +791,10 @@ func SDSSelectQuery() string {
 		miss_long,
 		multi_site_origin,
 		multi_site_origin_algorithm,
-		org_server_fqdn,
+		(SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')
+		FROM origin o
+		WHERE o.deliveryservice = d.id
+		AND o.is_primary) as org_server_fqdn,
 		origin_shield,
 		profile,
 		protocol,
