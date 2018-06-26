@@ -21,7 +21,6 @@ package profileparameter
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -32,79 +31,33 @@ import (
 	"github.com/lib/pq"
 )
 
-func PostParamProfile(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-
-		paramProfile := tc.PostParamProfile{}
-		if err := json.NewDecoder(r.Body).Decode(&paramProfile); err != nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON"), nil)
-			return
-		}
-
-		if ok, err := paramExists(paramProfile.ParamID, db); err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("checking param ID %d existence: "+err.Error(), paramProfile.ParamID))
-			return
-		} else if !ok {
-			api.HandleErr(w, r, http.StatusBadRequest, fmt.Errorf("no parameter with ID %d exists", paramProfile.ParamID), nil)
-			return
-		}
-		if ok, err := profilesExist(paramProfile.ProfileIDs, db); err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("checking profiles IDs %v existence: "+err.Error(), paramProfile.ProfileIDs))
-			return
-		} else if !ok {
-			api.HandleErr(w, r, http.StatusBadRequest, fmt.Errorf("profiles with IDs %v don't all exist", paramProfile.ProfileIDs), nil)
-			return
-		}
-		if err := insertParameterProfile(paramProfile, db); err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("posting parameter profile: "+err.Error()))
-			return
-		}
-		// TODO create helper func
-		resp := struct {
-			Response tc.PostParamProfile `json:"response"`
-			tc.Alerts
-		}{paramProfile, tc.CreateAlerts(tc.SuccessLevel, fmt.Sprintf("%d profiles were assigned to the %d parameter", len(paramProfile.ProfileIDs), paramProfile.ParamID))}
-		respBts, err := json.Marshal(resp)
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("posting parameter profiles: "+err.Error()))
-			return
-		}
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
-		w.Write(respBts)
+func PostParamProfile(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	paramProfile := tc.PostParamProfile{}
+	if err := api.Parse(r.Body, inf.Tx.Tx, &paramProfile); err != nil {
+		api.HandleErr(w, r, http.StatusBadRequest, errors.New("parse error: "+err.Error()), nil)
+		return
+	}
+	if err := insertParameterProfile(paramProfile, inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("posting parameter profile: "+err.Error()))
+		return
+	}
+	*inf.CommitTx = true
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("%d profiles were assigned to the %d parameter", len(*paramProfile.ProfileIDs), *paramProfile.ParamID), paramProfile)
 }
 
-func paramExists(id int64, db *sql.DB) (bool, error) {
-	count := 0
-	if err := db.QueryRow(`SELECT count(*) from parameter where id = $1`, id).Scan(&count); err != nil {
-		return false, errors.New("querying param existence from id: " + err.Error())
-	}
-	return count > 0, nil
-}
-
-func profilesExist(ids []int64, db *sql.DB) (bool, error) {
-	count := 0
-	if err := db.QueryRow(`SELECT count(*) from profile where id = ANY($1)`, pq.Array(ids)).Scan(&count); err != nil {
-		return false, errors.New("querying profiles existence from id: " + err.Error())
-	}
-	return count == len(ids), nil
-}
-
-func insertParameterProfile(post tc.PostParamProfile, db *sql.DB) error {
-	tx, err := db.Begin()
-	if err != nil {
-		return errors.New("beginning transaction: " + err.Error())
-	}
-	commitTx := false
-	defer FinishTx(tx, &commitTx)
-
-	if post.Replace {
+func insertParameterProfile(post tc.PostParamProfile, tx *sql.Tx) error {
+	if *post.Replace {
 		if _, err := tx.Exec(`DELETE FROM profile_parameter WHERE parameter = $1`, post.ParamID); err != nil {
 			return errors.New("deleting old parameter profile: " + err.Error())
 		}
 	}
-
 	q := `
 INSERT INTO profile_parameter (profile, parameter)
 VALUES (unnest($1::int[]), $2)
@@ -113,6 +66,5 @@ ON CONFLICT DO NOTHING;
 	if _, err := tx.Exec(q, pq.Array(post.ProfileIDs), post.ParamID); err != nil {
 		return errors.New("inserting parameter profile: " + err.Error())
 	}
-	commitTx = true
 	return nil
 }

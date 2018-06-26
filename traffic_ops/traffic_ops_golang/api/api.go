@@ -137,6 +137,25 @@ func WriteRespAlert(w http.ResponseWriter, r *http.Request, level tc.AlertLevel,
 	w.Write(respBts)
 }
 
+// WriteRespAlertObj Writes the given alert, and the given response object.
+// This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
+func WriteRespAlertObj(w http.ResponseWriter, r *http.Request, level tc.AlertLevel, msg string, obj interface{}) {
+	resp := struct {
+		tc.Alerts
+		Response interface{} `json:"response"`
+	}{
+		Alerts:   tc.CreateAlerts(level, msg),
+		Response: obj,
+	}
+	respBts, err := json.Marshal(resp)
+	if err != nil {
+		HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("marshalling JSON: "+err.Error()))
+		return
+	}
+	w.Header().Set(tc.ContentType, tc.ApplicationJson)
+	w.Write(respBts)
+}
+
 // IntParams parses integer parameters, and returns map of the given params, or an error if any integer param is not an integer. The intParams may be nil if no integer parameters are required. Note this does not check existence; if an integer paramter is required, it should be included in the requiredParams given to NewInfo.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func IntParams(params map[string]string, intParamNames []string) (map[string]int, error) {

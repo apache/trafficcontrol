@@ -156,3 +156,74 @@ func AddTenancyCheck(where string, queryValues map[string]interface{}, tenantCol
 
 	return where, queryValues
 }
+
+// GetGlobalParams returns the value of the global param, whether it existed, or any error
+func GetGlobalParam(tx *sql.Tx, name string) (string, bool, error) {
+	return GetParam(tx, name, "global")
+}
+
+// GetParam returns the value of the param, whether it existed, or any error.
+func GetParam(tx *sql.Tx, name string, configFile string) (string, bool, error) {
+	val := ""
+	if err := tx.QueryRow(`select value from parameter where name = $1 and config_file = $2`, name, configFile).Scan(&val); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("Error querying global paramter '" + name + "': " + err.Error())
+	}
+	return val, true, nil
+}
+
+// GetDSNameFromID returns the delivery service name, whether it existed, and any error.
+func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
+	name := tc.DeliveryServiceName("")
+	if err := tx.QueryRow(`select xml_id from deliveryservice where id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return tc.DeliveryServiceName(""), false, nil
+		}
+		return tc.DeliveryServiceName(""), false, errors.New("querying delivery service name: " + err.Error())
+	}
+	return name, true, nil
+}
+
+// returns returns the delivery service name and cdn, whether it existed, and any error.
+func GetDSNameAndCDNFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, tc.CDNName, bool, error) {
+	name := tc.DeliveryServiceName("")
+	cdn := tc.CDNName("")
+	if err := tx.QueryRow(`
+SELECT ds.xml_id, cdn.name
+FROM deliveryservice as ds
+JOIN cdn on cdn.id = ds.cdn_id
+WHERE ds.id = $1
+`, id).Scan(&name, &cdn); err != nil {
+		if err == sql.ErrNoRows {
+			return tc.DeliveryServiceName(""), tc.CDNName(""), false, nil
+		}
+		return tc.DeliveryServiceName(""), tc.CDNName(""), false, errors.New("querying delivery service name: " + err.Error())
+	}
+	return name, cdn, true, nil
+}
+
+// GetProfileNameFromID returns the profile's name, whether a profile with ID exists, or any error.
+func GetProfileNameFromID(id int, tx *sql.Tx) (string, bool, error) {
+	name := ""
+	if err := tx.QueryRow(`SELECT name from profile where id = $1`, id).Scan(&name); err != nil {
+		if err == sql.ErrNoRows {
+			return "", false, nil
+		}
+		return "", false, errors.New("querying profile name from id: " + err.Error())
+	}
+	return name, true, nil
+}
+
+// GetProfileIDFromName returns the profile's ID, whether a profile with name exists, or any error.
+func GetProfileIDFromName(name string, tx *sql.Tx) (int, bool, error) {
+	id := 0
+	if err := tx.QueryRow(`SELECT id from profile where name = $1`, name).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, false, nil
+		}
+		return 0, false, errors.New("querying profile id from name: " + err.Error())
+	}
+	return id, true, nil
+}
