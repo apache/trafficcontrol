@@ -30,6 +30,8 @@ use Common::ReturnCodes qw(SUCCESS ERROR);
 use Mojolicious::Plugin::Config;
 use Data::Validate::IP qw(is_ipv4 is_ipv6);
 use Validate::Tiny ':all';
+use Net::Domain qw(hostfqdn);
+use MIME::Base64;
 
 my $filebasedir             = "/var/www/files";
 my $ksfiles_parm_name       = "kickstart.files.location";
@@ -238,7 +240,8 @@ sub generate_iso {
 
 		&log($self, "ISO created [ " . $osversion_dir . " ] for " . $fqdn, "APICHANGE");
 
-		my $iso_url = join("/", $config->{'to'}{'base_url'}, $iso_dir, $iso_file_name);
+		#my $iso_url = join("/", $config->{'to'}{'base_url'}, $iso_dir, $iso_file_name);
+		my $iso_url = join("/", "https://" + hostfqdn(), $iso_dir, $iso_file_name);
 
 		$response = {
 			isoName => $iso_file_name,
@@ -246,12 +249,13 @@ sub generate_iso {
 		};
 	}
 	else {
-		$self->res->headers->content_type("application/download");
+		$self->res->headers->content_type("application/x-iso9660-image");
 		$self->res->headers->content_disposition("attachment; filename=\"$iso_file_name\"");
 		my $data = `$cmd`;
-		$self->render( data => $data );
+		#$self->render( data => $data );
+		my $encodedIso = encode_base64($data);
 		$response = {
-			iso => $data,
+			iso => $encodedIso,
 			name => $iso_file_name,
 		};
 	}
