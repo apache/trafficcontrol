@@ -49,7 +49,7 @@ func (dsInfo DeliveryServiceTenantInfo) IsTenantAuthorized(user *auth.CurrentUse
 	if dsInfo.TenantID == nil {
 		return false, errors.New("TenantID is nil")
 	}
-	return IsResourceAuthorizedToUserTx(*dsInfo.TenantID, *user, tx)
+	return IsResourceAuthorizedToUserTx(*dsInfo.TenantID, user, tx)
 }
 
 // returns tenant information for a deliveryservice
@@ -233,7 +233,7 @@ func IsTenancyEnabledTx(tx *sql.Tx) (bool, error) {
 
 // returns a boolean value describing if the user has access to the provided resource tenant id and an error
 // if use_tenancy is set to false (0 in the db) this method will return true allowing access.
-func IsResourceAuthorizedToUser(resourceTenantID int, user auth.CurrentUser, db *sqlx.DB) (bool, error) {
+func IsResourceAuthorizedToUser(resourceTenantID int, user *auth.CurrentUser, db *sqlx.DB) (bool, error) {
 	// $1 is the user tenant ID and $2 is the resource tenant ID
 	query := `WITH RECURSIVE q AS (SELECT id, active FROM tenant WHERE id = $1
 	UNION SELECT t.id, t.active FROM TENANT t JOIN q ON q.id = t.parent_id),
@@ -264,7 +264,7 @@ func IsResourceAuthorizedToUser(resourceTenantID int, user auth.CurrentUser, db 
 
 // returns a boolean value describing if the user has access to the provided resource tenant id and an error
 // if use_tenancy is set to false (0 in the db) this method will return true allowing access.
-func IsResourceAuthorizedToUserTx(resourceTenantID int, user auth.CurrentUser, tx *sql.Tx) (bool, error) {
+func IsResourceAuthorizedToUserTx(resourceTenantID int, user *auth.CurrentUser, tx *sql.Tx) (bool, error) {
 	// $1 is the user tenant ID and $2 is the resource tenant ID
 	query := `WITH RECURSIVE q AS (SELECT id, active FROM tenant WHERE id = $1
 	UNION SELECT t.id, t.active FROM TENANT t JOIN q ON q.id = t.parent_id),

@@ -64,7 +64,7 @@ func Queue(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		api.WriteResp(w, r, QueueResp{Action: reqObj.Action, CDNID: int64(intParams["id"])})
-		api.CreateChangeLogRaw(api.ApiChange, "Server updates "+reqObj.Action+"d for cdn "+params["id"], *user, db)
+		api.CreateChangeLogRaw(api.ApiChange, "Server updates "+reqObj.Action+"d for cdn "+params["id"], user, db)
 	}
 }
 

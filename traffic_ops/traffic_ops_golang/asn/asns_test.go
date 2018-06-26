@@ -27,11 +27,11 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func getTestASNs() []tc.ASNNullable {
@@ -65,7 +65,7 @@ func TestGetASNs(t *testing.T) {
 	defer db.Close()
 
 	testCase := getTestASNs()
-	cols := test.ColsFromStructByTag("db", TOASNV11{})
+	cols := test.ColsFromStructByTag("db", tc.ASNNullable{})
 	rows := sqlmock.NewRows(cols)
 
 	for _, ts := range testCase {
@@ -76,10 +76,12 @@ func TestGetASNs(t *testing.T) {
 			*ts.LastUpdated,
 		)
 	}
+	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectCommit()
 	v := map[string]string{"dsId": "1"}
-
-	asns, errs, _ := GetTypeSingleton(db)().Read(v, auth.CurrentUser{})
+	reqInfo := api.APIInfo{Tx:db.MustBegin(),CommitTx:util.BoolPtr(false)}
+	asns, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
 
 	if len(errs) > 0 {
 		t.Errorf("asn.Read expected: no errors, actual: %v", errs)

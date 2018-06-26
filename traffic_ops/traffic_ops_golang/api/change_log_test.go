@@ -62,9 +62,10 @@ func TestCreateChangeLog(t *testing.T) {
 	keys, _ := i.GetKeys()
 	expectedMessage := Created + " " + i.GetType() + ": " + i.GetAuditName() + " keys: { id:" + strconv.Itoa(keys["id"].(int)) + " }"
 
+	mock.ExpectBegin()
 	mock.ExpectExec("INSERT").WithArgs(ApiChange, expectedMessage, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	user := auth.CurrentUser{ID: 1}
-	err = CreateChangeLog(ApiChange, Created, &i, user, db)
+	err = CreateChangeLog(ApiChange, Created, &i, &user, db.MustBegin())
 	if err != nil {
 		t.Fatal(err)
 	}

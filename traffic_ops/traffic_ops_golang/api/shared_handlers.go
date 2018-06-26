@@ -238,7 +238,7 @@ func UpdateHandler(typeFactory func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
 
 		// if the object has tenancy enabled, check that user is able to access the tenant
 		if t, ok := u.(Tenantable); ok {
-			authorized, err := t.IsTenantAuthorized(*user)
+			authorized, err := t.IsTenantAuthorized(user)
 			if err != nil {
 				handleErrs(http.StatusBadRequest, err)
 				return
@@ -256,7 +256,7 @@ func UpdateHandler(typeFactory func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
 			return
 		}
 		//auditing here
-		err = CreateChangeLog(ApiChange, Updated, u, *inf.User, inf.Tx)
+		err = CreateChangeLog(ApiChange, Updated, u, inf.User, inf.Tx)
 		if err != nil {
 			HandleErr(w,r,http.StatusInternalServerError,tc.DBError,errors.New("inserting changelog: " + err.Error()))
 			return
@@ -327,7 +327,7 @@ func DeleteHandler(typeFactory func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
 
 		// if the object has tenancy enabled, check that user is able to access the tenant
 		if t, ok := d.(Tenantable); ok {
-			authorized, err := t.IsTenantAuthorized(*inf.User)
+			authorized, err := t.IsTenantAuthorized(inf.User)
 			if err != nil {
 				handleErrs(http.StatusBadRequest, err)
 				return
@@ -347,7 +347,7 @@ func DeleteHandler(typeFactory func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
 		}
 		//audit here
 		log.Debugf("changelog for delete on object")
-		err = CreateChangeLog(ApiChange, Deleted, d, *inf.User, inf.Tx)
+		err = CreateChangeLog(ApiChange, Deleted, d, inf.User, inf.Tx)
 		if err != nil {
 			HandleErr(w,r,http.StatusInternalServerError,tc.DBError,errors.New("inserting changelog: " + err.Error()))
 			return
@@ -402,7 +402,7 @@ func CreateHandler(typeConstructor func(reqInfo *APIInfo) CRUDer) http.HandlerFu
 
 		// if the object has tenancy enabled, check that user is able to access the tenant
 		if t, ok := i.(Tenantable); ok {
-			authorized, err := t.IsTenantAuthorized(*inf.User)
+			authorized, err := t.IsTenantAuthorized(inf.User)
 			if err != nil {
 				handleErrs(http.StatusBadRequest, err)
 				return
@@ -419,7 +419,7 @@ func CreateHandler(typeConstructor func(reqInfo *APIInfo) CRUDer) http.HandlerFu
 			return
 		}
 
-		err = CreateChangeLog(ApiChange, Created, i, *inf.User, inf.Tx)
+		err = CreateChangeLog(ApiChange, Created, i, inf.User, inf.Tx)
 		if err != nil {
 			HandleErr(w,r,http.StatusInternalServerError,tc.DBError,errors.New("inserting changelog: " + err.Error()))
 			return

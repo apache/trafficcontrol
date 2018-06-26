@@ -27,9 +27,9 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -65,8 +65,6 @@ func TestReadCDNs(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	refType := GetRefType()
-
 	testCDNs := getTestCDNs()
 	cols := test.ColsFromStructByTag("db", v13.CDN{})
 	rows := sqlmock.NewRows(cols)
@@ -80,10 +78,13 @@ func TestReadCDNs(t *testing.T) {
 			ts.Name,
 		)
 	}
+	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	v := map[string]string{"dsId": "1"}
+	mock.ExpectCommit()
 
-	servers, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+	v := map[string]string{"dsId": "1"}
+	reqInfo := api.APIInfo{Tx:db.MustBegin(),CommitTx:util.BoolPtr(false)}
+	servers, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
 	if len(errs) > 0 {
 		t.Errorf("cdn.Read expected: no errors, actual: %v", errs)
 	}
@@ -132,8 +133,8 @@ func TestInterfaces(t *testing.T) {
 func TestValidate(t *testing.T) {
 	// invalid name, empty domainname
 	n := "not_a_valid_cdn"
-	c := TOCDN{Name: &n}
-	errs := test.SortErrors(c.Validate(nil))
+	c := TOCDN{CDNNullable: v13.CDNNullable{Name: &n}}
+	errs := test.SortErrors(c.Validate())
 
 	expectedErrs := []error{
 		errors.New(`'domainName' cannot be blank`),
@@ -147,11 +148,10 @@ func TestValidate(t *testing.T) {
 	//  name,  domainname both valid
 	n = "This.is.2.a-Valid---CDNNAME."
 	d := `awesome-cdn.example.net`
-	c = TOCDN{Name: &n, DomainName: &d}
+	c = TOCDN{CDNNullable: v13.CDNNullable{Name: &n, DomainName: &d}}
 	expectedErrs = []error{}
-	errs = c.Validate(nil)
+	errs = c.Validate()
 	if !reflect.DeepEqual(expectedErrs, errs) {
 		t.Errorf("expected %s, got %s", expectedErrs, errs)
 	}
-
 }

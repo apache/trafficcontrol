@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
@@ -69,10 +70,13 @@ func TestGetDivisions(t *testing.T) {
 			ts.Name,
 		)
 	}
+	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectCommit()
 	v := map[string]string{"dsId": "1"}
 
-	servers, errs, errType := getDivisions(v, db)
+	reqInfo := api.APIInfo{Tx:db.MustBegin(),CommitTx:util.BoolPtr(false)}
+	servers, errs, errType := GetTypeSingleton()(&reqInfo).Read(v)
 	if len(errs) > 0 {
 		t.Errorf("getDivisions expected: no errors, actual: %v with error type: %s", errs, errType.String())
 	}
@@ -106,7 +110,7 @@ func TestInterfaces(t *testing.T) {
 
 func TestValidation(t *testing.T) {
 	div := TODivision{}
-	errs := test.SortErrors(div.Validate(nil))
+	errs := test.SortErrors(div.Validate())
 	expected := []error{}
 
 	if reflect.DeepEqual(expected, errs) {

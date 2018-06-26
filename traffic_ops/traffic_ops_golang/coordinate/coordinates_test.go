@@ -26,10 +26,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -69,8 +69,6 @@ func TestReadCoordinates(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	refType := GetRefType()
-
 	testCoords := getTestCoordinates()
 	cols := test.ColsFromStructByTag("db", v13.Coordinate{})
 	rows := sqlmock.NewRows(cols)
@@ -84,10 +82,13 @@ func TestReadCoordinates(t *testing.T) {
 			ts.LastUpdated,
 		)
 	}
+	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectCommit()
 	v := map[string]string{"id": "1"}
 
-	coordinates, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+	reqInfo := api.APIInfo{Tx:db.MustBegin(),CommitTx:util.BoolPtr(false)}
+	coordinates, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
 	if len(errs) > 0 {
 		t.Errorf("coordinate.Read expected: no errors, actual: %v", errs)
 	}
@@ -140,13 +141,13 @@ func TestValidate(t *testing.T) {
 	la := -190.0
 	lo := -190.0
 	lu := tc.TimeNoMod{Time: time.Now()}
-	c := TOCoordinate{ID: &id,
-		Name:        &nm,
-		Latitude:    &la,
-		Longitude:   &lo,
+	c := TOCoordinate{ CoordinateNullable: v13.CoordinateNullable{ID: &id,
+		Name: &nm,
+		Latitude: &la,
+		Longitude: &lo,
 		LastUpdated: &lu,
-	}
-	errs := test.SortErrors(c.Validate(nil))
+	}}
+	errs := test.SortErrors(c.Validate())
 
 	expectedErrs := []error{
 		errors.New(`'latitude' Must be a floating point number within the range +-90`),
@@ -162,14 +163,14 @@ func TestValidate(t *testing.T) {
 	nm = "This.is.2.a-Valid---Coordinate."
 	la = 90.0
 	lo = 90.0
-	c = TOCoordinate{ID: &id,
-		Name:        &nm,
-		Latitude:    &la,
-		Longitude:   &lo,
+	c = TOCoordinate{ CoordinateNullable: v13.CoordinateNullable{ID: &id,
+		Name: &nm,
+		Latitude: &la,
+		Longitude: &lo,
 		LastUpdated: &lu,
-	}
+	}}
 	expectedErrs = []error{}
-	errs = c.Validate(nil)
+	errs = c.Validate()
 	if !reflect.DeepEqual(expectedErrs, errs) {
 		t.Errorf("expected %s, got %s", expectedErrs, errs)
 	}

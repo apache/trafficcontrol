@@ -58,7 +58,7 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 	b := true
 	u := "UPDATE"
 	st := tc.RequestStatusSubmitted
-	r := &TODeliveryServiceRequest{
+	r := &TODeliveryServiceRequest{DeliveryServiceRequestNullable: tc.DeliveryServiceRequestNullable{
 		ChangeType: &u,
 		Status:     &st,
 		DeliveryService: &tc.DeliveryServiceNullableV13{
@@ -74,7 +74,7 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 				},
 			},
 		},
-	}
+	}}
 
 	expectedErrors := []string{
 		/*

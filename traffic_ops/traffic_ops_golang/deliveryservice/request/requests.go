@@ -122,7 +122,7 @@ func (req *TODeliveryServiceRequest) Read(parameters map[string]string) ([]inter
 		}
 
 		// TODO: combine tenancy with the query above so there's a single db call
-		t, err := s.IsTenantAuthorized(*req.ReqInfo.User)
+		t, err := s.IsTenantAuthorized(req.ReqInfo.User)
 		if err != nil {
 			log.Errorf("error checking tenancy: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
@@ -161,7 +161,7 @@ LEFT OUTER JOIN tm_user e ON r.last_edited_by_id = e.id
 }
 
 // IsTenantAuthorized implements the Tenantable interface to ensure the user is authorized on the deliveryservice tenant
-func (req TODeliveryServiceRequest) IsTenantAuthorized(user auth.CurrentUser) (bool, error) {
+func (req TODeliveryServiceRequest) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 
 	ds := req.DeliveryService
 	if ds == nil {

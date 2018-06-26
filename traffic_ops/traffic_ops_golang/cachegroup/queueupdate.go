@@ -92,7 +92,7 @@ func QueueUpdates(db *sql.DB) http.HandlerFunc {
 			CDN:            *reqObj.CDN,
 			CacheGroupID:   cgID,
 		})
-		api.CreateChangeLogRaw(api.ApiChange, "Server updates "+reqObj.Action+"d for "+string(cgName), *user, db)
+		api.CreateChangeLogRaw(api.ApiChange, "Server updates "+reqObj.Action+"d for "+string(cgName), user, db)
 	}
 }
 

@@ -41,13 +41,16 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOOrigin v13.Origin
+type TOOrigin struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	v13.Origin
+}
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOOrigin{}
-
-func GetRefType() *TOOrigin {
-	return &refType
+func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := TOOrigin{reqInfo, v13.Origin{}}
+		return &toReturn
+	}
 }
 
 func (origin *TOOrigin) SetID(i int) {
@@ -85,7 +88,7 @@ func (origin *TOOrigin) GetType() string {
 	return "origin"
 }
 
-func (origin *TOOrigin) Validate(db *sqlx.DB) []error {
+func (origin *TOOrigin) Validate() []error {
 
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 	validProtocol := validation.NewStringRule(tovalidate.IsOneOfStringICase("http", "https"), "must be http or https")
@@ -108,10 +111,10 @@ func (origin *TOOrigin) Validate(db *sqlx.DB) []error {
 }
 
 // GetTenantID returns a pointer to the Origin's tenant ID from the Tx and any error encountered
-func (origin *TOOrigin) GetTenantID(db *sqlx.DB) (*int, error) {
+func (origin *TOOrigin) GetTenantID(tx *sqlx.Tx) (*int, error) {
 	if origin.ID != nil {
 		var tenantID *int
-		if err := db.QueryRow(`SELECT tenant FROM origin where id = $1`, *origin.ID).Scan(&tenantID); err != nil {
+		if err := tx.QueryRow(`SELECT tenant FROM origin where id = $1`, *origin.ID).Scan(&tenantID); err != nil {
 			if err == sql.ErrNoRows {
 				return nil, nil
 			}
@@ -122,21 +125,21 @@ func (origin *TOOrigin) GetTenantID(db *sqlx.DB) (*int, error) {
 	return nil, nil
 }
 
-func (origin *TOOrigin) IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error) {
-	currentTenantID, err := origin.GetTenantID(db)
+func (origin *TOOrigin) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
+	currentTenantID, err := origin.GetTenantID(origin.ReqInfo.Tx)
 	if err != nil {
 		return false, err
 	}
 
-	if currentTenantID != nil && tenant.IsTenancyEnabled(db) {
-		return tenant.IsResourceAuthorizedToUser(*currentTenantID, user, db)
+	if currentTenantID != nil && tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx) {
+		return tenant.IsResourceAuthorizedToUserTx(*currentTenantID, user, origin.ReqInfo.Tx.Tx)
 	}
 
 	return true, nil
 }
 
 // filterAuthorized will filter a slice of Origins based upon tenant. It assumes that tenancy is enabled
-func filterAuthorized(origins []v13.Origin, user auth.CurrentUser, db *sqlx.DB) ([]v13.Origin, error) {
+func filterAuthorized(origins []v13.Origin, user *auth.CurrentUser, tx *sqlx.Tx) ([]v13.Origin, error) {
 	newOrigins := []v13.Origin{}
 	for _, origin := range origins {
 		if origin.TenantID == nil {
@@ -147,7 +150,7 @@ func filterAuthorized(origins []v13.Origin, user auth.CurrentUser, db *sqlx.DB) 
 			}
 		}
 		// TODO add/use a helper func to make a single SQL call, for performance
-		ok, err := tenant.IsResourceAuthorizedToUser(*origin.TenantID, user, db)
+		ok, err := tenant.IsResourceAuthorizedToUserTx(*origin.TenantID, user, tx.Tx)
 		if err != nil {
 			if origin.ID == nil {
 				return nil, errors.New("isResourceAuthorized for origin with nil ID: " + err.Error())
@@ -163,19 +166,19 @@ func filterAuthorized(origins []v13.Origin, user auth.CurrentUser, db *sqlx.DB) 
 	return newOrigins, nil
 }
 
-func (origin *TOOrigin) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (origin *TOOrigin) Read(params map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	returnable := []interface{}{}
 
-	privLevel := user.PrivLevel
+	privLevel := origin.ReqInfo.User.PrivLevel
 
-	origins, errs, errType := getOrigins(params, db, privLevel)
+	origins, errs, errType := getOrigins(params, origin.ReqInfo.Tx, privLevel)
 	if len(errs) > 0 {
 		return nil, errs, errType
 	}
 
 	var err error
-	if tenant.IsTenancyEnabled(db) {
-		origins, err = filterAuthorized(origins, user, db)
+	if tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx) {
+		origins, err = filterAuthorized(origins, origin.ReqInfo.User, origin.ReqInfo.Tx)
 		if err != nil {
 			log.Errorln("Checking tenancy: " + err.Error())
 			return nil, []error{errors.New("Error checking tenancy.")}, tc.SystemError
@@ -189,7 +192,7 @@ func (origin *TOOrigin) Read(db *sqlx.DB, params map[string]string, user auth.Cu
 	return returnable, nil, tc.NoError
 }
 
-func getOrigins(params map[string]string, db *sqlx.DB, privLevel int) ([]v13.Origin, []error, tc.ApiErrorType) {
+func getOrigins(params map[string]string, tx *sqlx.Tx, privLevel int) ([]v13.Origin, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 	var err error
 
@@ -214,7 +217,7 @@ func getOrigins(params map[string]string, db *sqlx.DB, privLevel int) ([]v13.Ori
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err = db.NamedQuery(query, queryValues)
+	rows, err = tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, []error{fmt.Errorf("querying: %v", err)}, tc.SystemError
 	}
@@ -266,12 +269,12 @@ LEFT JOIN tenant t ON o.tenant = t.id`
 	return selectStmt
 }
 
-func checkTenancy(originTenantID, deliveryserviceID *int, db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	if tenant.IsTenancyEnabled(db) {
+func checkTenancy(originTenantID, deliveryserviceID *int, tx *sqlx.Tx, user *auth.CurrentUser) (error, tc.ApiErrorType) {
+	if tenant.IsTenancyEnabledTx(tx) {
 		if originTenantID == nil {
 			return tc.NilTenantError, tc.ForbiddenError
 		}
-		authorized, err := tenant.IsResourceAuthorizedToUser(*originTenantID, user, db)
+		authorized, err := tenant.IsResourceAuthorizedToUserTx(*originTenantID, user, tx.Tx)
 		if err != nil {
 			return err, tc.SystemError
 		}
@@ -281,7 +284,7 @@ func checkTenancy(originTenantID, deliveryserviceID *int, db *sqlx.DB, user auth
 
 		if deliveryserviceID != nil {
 			var deliveryserviceTenantID *int
-			if err := db.QueryRow(`SELECT tenant_id FROM deliveryservice where id = $1`, *deliveryserviceID).Scan(&deliveryserviceTenantID); err != nil {
+			if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where id = $1`, *deliveryserviceID).Scan(&deliveryserviceTenantID); err != nil {
 				if err == sql.ErrNoRows {
 					return errors.New("checking tenancy: requested delivery service does not exist"), tc.DataConflictError
 				}
@@ -289,7 +292,7 @@ func checkTenancy(originTenantID, deliveryserviceID *int, db *sqlx.DB, user auth
 				return err, tc.SystemError
 			}
 			if deliveryserviceTenantID != nil {
-				authorized, err := tenant.IsResourceAuthorizedToUser(*deliveryserviceTenantID, user, db)
+				authorized, err := tenant.IsResourceAuthorizedToUserTx(*deliveryserviceTenantID, user, tx.Tx)
 				if err != nil {
 					return err, tc.SystemError
 				}
@@ -307,34 +310,17 @@ func checkTenancy(originTenantID, deliveryserviceID *int, db *sqlx.DB, user auth
 //ParsePQUniqueConstraintError is used to determine if an origin with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (origin *TOOrigin) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (origin *TOOrigin) Update() (error, tc.ApiErrorType) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
-	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, db, user)
+	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
 	if err != nil {
 		return err, errType
-	}
-
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
 	}
 
 	isPrimary := false
 	ds := 0
 	q := `SELECT is_primary, deliveryservice FROM origin WHERE id = $1`
-	if err := tx.QueryRow(q, *origin.ID).Scan(&isPrimary, &ds); err != nil {
+	if err := origin.ReqInfo.Tx.QueryRow(q, *origin.ID).Scan(&isPrimary, &ds); err != nil {
 		log.Errorf("updating origin %d, received error in select: %v", *origin.ID, err)
 		return tc.DBError, tc.SystemError
 	}
@@ -343,7 +329,7 @@ func (origin *TOOrigin) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	}
 
 	log.Debugf("about to run exec query: %s with origin: %++v", updateQuery(), origin)
-	resultRows, err := tx.NamedQuery(updateQuery(), origin)
+	resultRows, err := origin.ReqInfo.Tx.NamedQuery(updateQuery(), origin)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -378,12 +364,6 @@ func (origin *TOOrigin) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		return tc.DBError, tc.SystemError
 	}
 	origin.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
@@ -412,31 +392,14 @@ WHERE id=:id RETURNING last_updated`
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted origin and have
 //to be added to the struct
-func (origin *TOOrigin) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (origin *TOOrigin) Create() (error, tc.ApiErrorType) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
-	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, db, user)
+	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
 	if err != nil {
 		return err, errType
 	}
 
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-
-	resultRows, err := tx.NamedQuery(insertQuery(), origin)
+	resultRows, err := origin.ReqInfo.Tx.NamedQuery(insertQuery(), origin)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -472,12 +435,7 @@ func (origin *TOOrigin) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	}
 	origin.SetKeys(map[string]interface{}{"id": id})
 	origin.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
@@ -510,27 +468,10 @@ tenant) VALUES (
 
 //The Origin implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (origin *TOOrigin) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-
+func (origin *TOOrigin) Delete() (error, tc.ApiErrorType) {
 	isPrimary := false
 	q := `SELECT is_primary FROM origin WHERE id = $1`
-	if err := tx.QueryRow(q, *origin.ID).Scan(&isPrimary); err != nil {
+	if err := origin.ReqInfo.Tx.QueryRow(q, *origin.ID).Scan(&isPrimary); err != nil {
 		log.Errorf("deleting origin %d, received error selecting is_primary: %v", *origin.ID, err)
 		return tc.DBError, tc.SystemError
 	}
@@ -539,7 +480,7 @@ func (origin *TOOrigin) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	}
 
 	log.Debugf("about to run exec query: %s with origin: %++v", deleteQuery(), origin)
-	result, err := tx.NamedExec(deleteQuery(), origin)
+	result, err := origin.ReqInfo.Tx.NamedExec(deleteQuery(), origin)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -555,12 +496,7 @@ func (origin *TOOrigin) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 			return fmt.Errorf("this delete affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
