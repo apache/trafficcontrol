@@ -54,7 +54,8 @@ CREDS
 
 login
 
-for f in *.json; do
-    ep=$(basename $f .json)
+# load json files using the API
+for f in */*.json; do
+    ep=$(dirname $f)
     curl -k -s --cookie "$COOKIEJAR" -X POST --data @"$f" "$TO_URL/api/1.3/$ep"
 done
