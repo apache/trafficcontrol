@@ -1,0 +1,59 @@
+{
+    "http-delivery-service": {
+        "matchsets": [
+            {
+                "protocol": "HTTP",
+                "matchlist": [
+                    {
+                        "regex": ".*\\.http-delivery-service\\..*"
+                    }
+                ]
+            }
+        ],
+        "protocol": {
+            "acceptHttps": "false"
+        },
+        "sslEnabled": "false",
+        "domains": [
+            "*.http-delivery-service.thecdn.example.com"
+        ]
+    },
+    "": {
+        "matchsets": [
+            {
+                "protocol": "HTTP",
+                "matchlist": [
+                    {
+                        "regex": ".*\\.https-delivery-service\\..*"
+                    }
+                ]
+            }
+        ],
+        "protocol": {
+            "acceptHttps": "true"
+        },
+        "sslEnabled": "true",
+        "domains": [
+            "*.https-delivery-service.thecdn.example.com"
+        ]
+    },
+    "dnssec-delivery-service": {
+        "matchsets": [
+            {
+                "protocol": "DNS",
+                "matchlist": [
+                    {
+                        "regex": ".*\\.dnssec-delivery-service\\..*"
+                    }
+                ]
+            }
+        ],
+        "protocol": {
+            "acceptHttps": "true"
+        },
+        "sslEnabled": "true",
+        "domains": [
+            "*.dnssec-delivery-service.thecdn.example.com"
+        ]
+    }
+}

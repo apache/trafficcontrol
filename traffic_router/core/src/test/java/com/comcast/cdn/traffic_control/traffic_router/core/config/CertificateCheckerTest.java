@@ -33,6 +33,7 @@ public class CertificateCheckerTest {
 
 	private JsonNode deliveryServicesJson;
 	private List<CertificateData> certificateDataList;
+	private CertificateData certificateData;
 
 	@Before
 	public void before() throws Exception {
@@ -40,7 +41,7 @@ public class CertificateCheckerTest {
 		certificate.setCrt("the-crt");
 		certificate.setKey("the-key");
 
-		CertificateData certificateData = new CertificateData();
+		certificateData = new CertificateData();
 		certificateData.setHostname("https-delivery-service.thecdn.example.com");
 		certificateData.setDeliveryservice("https-delivery-service");
 		certificateData.setCertificate(certificate);
@@ -49,6 +50,28 @@ public class CertificateCheckerTest {
 			certificateData
 		);
 
+	}
+
+	@Test
+	public void itReturnsFalseWhenDeliveryServiceNameIsNull() throws Exception {
+		final File file = new File("src/test/resources/deliveryServices_missingDSName.json");
+		final ObjectMapper mapper = new ObjectMapper();
+		deliveryServicesJson = mapper.readTree(file);
+		CertificateChecker certificateChecker = new CertificateChecker();
+		certificateData.setDeliveryservice(null);
+
+		assertThat(certificateChecker.certificatesAreValid(certificateDataList, deliveryServicesJson), equalTo(false));
+	}
+
+	@Test
+	public void itReturnsFalseWhenDeliveryServiceNameIsBlank() throws Exception {
+		final File file = new File("src/test/resources/deliveryServices_missingDSName.json");
+		final ObjectMapper mapper = new ObjectMapper();
+		deliveryServicesJson = mapper.readTree(file);
+		CertificateChecker certificateChecker = new CertificateChecker();
+		certificateData.setDeliveryservice("");
+
+		assertThat(certificateChecker.certificatesAreValid(certificateDataList, deliveryServicesJson), equalTo(false));
 	}
 
 	@Test

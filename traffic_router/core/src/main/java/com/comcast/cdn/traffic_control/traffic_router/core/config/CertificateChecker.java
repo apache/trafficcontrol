@@ -86,7 +86,10 @@ public class CertificateChecker {
 			}
 
 			for (final CertificateData certificateData : certificateDataList) {
-				if (certificateData.getDeliveryservice().equals(deliveryServiceId)) {
+				String certificateDeliveryServiceId = certificateData.getDeliveryservice();
+				if (deliveryServiceId == null) {
+					LOGGER.error("Delivery Service name is blank for hostname '" +  certificateData.getHostname() + "', skipping.");
+				} else if ((certificateDeliveryServiceId != null) && (deliveryServiceId != null) && (certificateDeliveryServiceId.equals(deliveryServiceId))) {
 					LOGGER.debug("Delivery Service " + deliveryServiceId + " has certificate data for https");
 					return true;
 				}
