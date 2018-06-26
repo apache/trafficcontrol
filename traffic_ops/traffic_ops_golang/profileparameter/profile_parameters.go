@@ -29,7 +29,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -43,13 +42,16 @@ const (
 )
 
 //we need a type alias to define functions on
-type TOProfileParameter v13.ProfileParameterNullable
+type TOProfileParameter struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	v13.ProfileParameterNullable
+}
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOProfileParameter(v13.ProfileParameterNullable{})
-
-func GetRefType() *TOProfileParameter {
-	return &refType
+func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := TOProfileParameter{reqInfo, v13.ProfileParameterNullable{}}
+		return &toReturn
+	}
 }
 
 func (pp TOProfileParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -93,7 +95,7 @@ func (pp *TOProfileParameter) SetKeys(keys map[string]interface{}) {
 }
 
 // Validate fulfills the api.Validator interface
-func (pp *TOProfileParameter) Validate(db *sqlx.DB) []error {
+func (pp *TOProfileParameter) Validate() []error {
 
 	errs := validation.Errors{
 		"profile":   validation.Validate(pp.ProfileID, validation.Required),
@@ -110,24 +112,8 @@ func (pp *TOProfileParameter) Validate(db *sqlx.DB) []error {
 //generic error message returned
 //The insert sql returns the profile and lastUpdated values of the newly inserted profileparameter and have
 //to be added to the struct
-func (pp *TOProfileParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	resultRows, err := tx.NamedQuery(insertQuery(), pp)
+func (pp *TOProfileParameter) Create() (error, tc.ApiErrorType) {
+	resultRows, err := pp.ReqInfo.Tx.NamedQuery(insertQuery(), pp)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -164,13 +150,6 @@ func (pp *TOProfileParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error,
 	}
 
 	pp.SetKeys(map[string]interface{}{ProfileIDQueryParam: profile, ParameterIDQueryParam: parameter})
-	pp.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
@@ -183,7 +162,11 @@ parameter) VALUES (
 	return query
 }
 
-func (pp *TOProfileParameter) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (pp *TOProfileParameter) Update() (error, tc.ApiErrorType) {
+	return errors.New("unimplemented"), tc.SystemError
+}
+
+func (pp *TOProfileParameter) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
 	// Query Parameters to Database Query column mappings
@@ -202,7 +185,7 @@ func (pp *TOProfileParameter) Read(db *sqlx.DB, parameters map[string]string, us
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := pp.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Parameters: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -225,25 +208,9 @@ func (pp *TOProfileParameter) Read(db *sqlx.DB, parameters map[string]string, us
 
 //The Parameter implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (pp *TOProfileParameter) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (pp *TOProfileParameter) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with parameter: %++v", deleteQuery(), pp)
-	result, err := tx.NamedExec(deleteQuery(), pp)
+	result, err := pp.ReqInfo.Tx.NamedExec(deleteQuery(), pp)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -259,12 +226,6 @@ func (pp *TOProfileParameter) Delete(db *sqlx.DB, user auth.CurrentUser) (error,
 		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 

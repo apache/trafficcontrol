@@ -47,14 +47,16 @@ const (
 )
 
 //we need a type alias to define functions on
-type TOProfile v13.ProfileNullable
-type TOParameter v13.ParameterNullable
+type TOProfile struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	v13.ProfileNullable
+}
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOProfile{}
-
-func GetRefType() *TOProfile {
-	return &refType
+func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := TOProfile{reqInfo, v13.ProfileNullable{}}
+		return &toReturn
+	}
 }
 
 func (prof TOProfile) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -88,7 +90,7 @@ func (prof *TOProfile) GetType() string {
 	return "profile"
 }
 
-func (prof *TOProfile) Validate(db *sqlx.DB) []error {
+func (prof *TOProfile) Validate() []error {
 	errs := validation.Errors{
 		NameQueryParam:        validation.Validate(prof.Name, validation.Required),
 		DescriptionQueryParam: validation.Validate(prof.Description, validation.Required),
@@ -101,7 +103,7 @@ func (prof *TOProfile) Validate(db *sqlx.DB) []error {
 	return nil
 }
 
-func (prof *TOProfile) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (prof *TOProfile) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
 	// Query Parameters to Database Query column mappings
@@ -118,7 +120,7 @@ func (prof *TOProfile) Read(db *sqlx.DB, parameters map[string]string, user auth
 	query := selectProfilesQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := prof.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Profile: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -135,7 +137,7 @@ func (prof *TOProfile) Read(db *sqlx.DB, parameters map[string]string, user auth
 
 		// Attach Parameters if the 'id' parameter is sent
 		if _, ok := parameters[IDQueryParam]; ok {
-			params, err := ReadParameters(db, parameters, user, p)
+			params, err := ReadParameters(prof.ReqInfo.Tx, parameters, prof.ReqInfo.User, p)
 			p.Parameters = params
 			if len(errs) > 0 {
 				log.Errorf("Error getting Parameters: %v", err)
@@ -166,7 +168,7 @@ LEFT JOIN cdn c ON prof.cdn = c.id`
 	return query
 }
 
-func ReadParameters(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser, profile v13.ProfileNullable) ([]v13.ParameterNullable, []error) {
+func ReadParameters(tx *sqlx.Tx, parameters map[string]string, user *auth.CurrentUser, profile v13.ProfileNullable) ([]v13.ParameterNullable, []error) {
 
 	var rows *sqlx.Rows
 	privLevel := user.PrivLevel
@@ -174,7 +176,7 @@ func ReadParameters(db *sqlx.DB, parameters map[string]string, user auth.Current
 	queryValues["profile_id"] = *profile.ID
 
 	query := selectParametersQuery()
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Parameter: %v", err)
 		return nil, []error{tc.DBError}
@@ -221,25 +223,9 @@ WHERE pp.profile = :profile_id`
 //ParsePQUniqueConstraintError is used to determine if a profile with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (prof *TOProfile) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (prof *TOProfile) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with profile: %++v", updateQuery(), prof)
-	resultRows, err := tx.NamedQuery(updateQuery(), prof)
+	resultRows, err := prof.ReqInfo.Tx.NamedQuery(updateQuery(), prof)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -270,12 +256,7 @@ func (prof *TOProfile) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 		}
 		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
@@ -286,24 +267,8 @@ func (prof *TOProfile) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted profile and have
 //to be added to the struct
-func (prof *TOProfile) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	resultRows, err := tx.NamedQuery(insertQuery(), prof)
+func (prof *TOProfile) Create() (error, tc.ApiErrorType) {
+	resultRows, err := prof.ReqInfo.Tx.NamedQuery(insertQuery(), prof)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -340,36 +305,15 @@ func (prof *TOProfile) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 
 	prof.SetKeys(map[string]interface{}{IDQueryParam: id})
 	prof.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
 //The Profile implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (prof *TOProfile) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (prof *TOProfile) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with profile: %++v", deleteQuery(), prof)
-	result, err := tx.NamedExec(deleteQuery(), prof)
+	result, err := prof.ReqInfo.Tx.NamedExec(deleteQuery(), prof)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -385,12 +329,6 @@ func (prof *TOProfile) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 

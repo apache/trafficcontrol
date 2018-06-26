@@ -96,8 +96,9 @@ func TestInterfaces(t *testing.T) {
 func TestValidate(t *testing.T) {
 	// invalid name, empty domainname
 	n := "not_a_valid_role"
-	r := TORole{Name: &n}
-	errs := test.SortErrors(r.Validate(nil))
+	reqInfo := api.APIInfo{}
+	r := TORole{ReqInfo: &reqInfo, Role: v13.Role{Name: &n}}
+	errs := test.SortErrors(r.Validate())
 
 	expectedErrs := []error{
 		errors.New(`'description' cannot be blank`),
@@ -109,9 +110,9 @@ func TestValidate(t *testing.T) {
 	}
 
 	//  name,  domainname both valid
-	r = TORole{Name: stringAddr("this is a valid name"), Description: stringAddr("this is a description"), PrivLevel: intAddr(30)}
+	r = TORole{ReqInfo: &reqInfo, Role: v13.Role{Name: stringAddr("this is a valid name"), Description: stringAddr("this is a description"), PrivLevel: intAddr(30)}}
 	expectedErrs = []error{}
-	errs = r.Validate(nil)
+	errs = r.Validate()
 	if !reflect.DeepEqual(expectedErrs, errs) {
 		t.Errorf("expected %s, got %s", expectedErrs, errs)
 	}

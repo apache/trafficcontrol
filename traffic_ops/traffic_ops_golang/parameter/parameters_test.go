@@ -24,14 +24,15 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
 	"encoding/json"
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
 func getTestParameters() []tc.ParameterNullable {
@@ -90,10 +91,14 @@ func TestGetParameters(t *testing.T) {
 			ts.Value,
 		)
 	}
+	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectCommit()
 	v := map[string]string{"name": "1"}
+	user := auth.CurrentUser{PrivLevel:30}
 
-	pps, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+	reqInfo := api.APIInfo{Tx:db.MustBegin(),CommitTx:util.BoolPtr(false),User:&user}
+	pps, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
 	if len(errs) > 0 {
 		t.Errorf("parameter.Read expected: no errors, actual: %v", errs)
 	}

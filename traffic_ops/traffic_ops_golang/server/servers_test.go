@@ -157,10 +157,11 @@ func TestGetServersByCachegroup(t *testing.T) {
 			ts.XMPPPasswd,
 		)
 	}
+	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	v := map[string]string{"cachegroup": "2"}
 
-	servers, errs, errType := getServers(v, db, auth.PrivLevelAdmin)
+	servers, errs, errType := getServers(v, db.MustBegin(), auth.PrivLevelAdmin)
 	log.Debugln("%v-->", servers)
 	if len(errs) > 0 {
 		t.Errorf("getServers expected: no errors, actual: %v with error type: %s", errs, errType.String())

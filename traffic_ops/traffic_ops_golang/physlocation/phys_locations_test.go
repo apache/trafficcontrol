@@ -26,8 +26,8 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -92,10 +92,14 @@ func TestGetPhysLocations(t *testing.T) {
 			ts.Zip,
 		)
 	}
+	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectCommit()
 	v := map[string]string{"dsId": "1"}
 
-	physLocations, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+	reqInfo := api.APIInfo{Tx:db.MustBegin(),CommitTx:util.BoolPtr(false)}
+
+	physLocations, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
 	if len(errs) > 0 {
 		t.Errorf("physLocation.Read expected: no errors, actual: %v", errs)
 	}
@@ -129,7 +133,7 @@ func TestInterfaces(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	p := TOPhysLocation{}
-	errs := test.SortErrors(p.Validate(nil))
+	errs := test.SortErrors(p.Validate())
 	expected := test.SortErrors([]error{
 		errors.New("'state' cannot be blank"),
 		errors.New("'zip' cannot be blank"),

@@ -713,16 +713,20 @@ func dssSelectQuery() string {
 	return selectStmt
 }
 
-type TODSSDeliveryService tc.DSSDeliveryService
+type TODSSDeliveryService struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	tc.DSSDeliveryService
+}
 
-var dserviceRef = TODSSDeliveryService(tc.DSSDeliveryService{})
-
-func GetDServiceRef() *TODSSDeliveryService {
-	return &dserviceRef
+func GetDSSDeliveryServiceReaderSingleton() func(reqInfo *api.APIInfo)api.Reader {
+	return func(reqInfo *api.APIInfo)api.Reader {
+		toReturn := TODSSDeliveryService{reqInfo, tc.DSSDeliveryService{}}
+		return &toReturn
+	}
 }
 
 // Read shows all of the delivery services associated with the specified server.
-func (dss *TODSSDeliveryService) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (dss *TODSSDeliveryService) Read(params map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	var err error = nil
 	orderby := params["orderby"]
 	serverId := params["id"]
@@ -734,7 +738,7 @@ func (dss *TODSSDeliveryService) Read(db *sqlx.DB, params map[string]string, use
 	query := SDSSelectQuery()
 	log.Debugln("Query is ", query)
 
-	rows, err := db.Queryx(query, serverId)
+	rows, err := dss.ReqInfo.Tx.Queryx(query, serverId)
 	if err != nil {
 		log.Errorf("Error querying DeliveryserviceServers: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError

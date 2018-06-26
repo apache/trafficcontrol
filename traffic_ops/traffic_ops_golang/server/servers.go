@@ -39,13 +39,16 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOServer v13.ServerNullable
+type TOServer struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	v13.ServerNullable
+}
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOServer{}
-
-func GetRefType() *TOServer {
-	return &refType
+func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := TOServer{reqInfo, v13.ServerNullable{}}
+		return &toReturn
+	}
 }
 
 func (server TOServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -79,7 +82,7 @@ func (server *TOServer) GetType() string {
 	return "server"
 }
 
-func (server *TOServer) Validate(db *sqlx.DB) []error {
+func (server *TOServer) Validate() []error {
 
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 
@@ -104,7 +107,7 @@ func (server *TOServer) Validate(db *sqlx.DB) []error {
 		return errs
 	}
 
-	rows, err := db.Query("select use_in_table from type where id=$1", server.TypeID)
+	rows, err := server.ReqInfo.Tx.Query("select use_in_table from type where id=$1", server.TypeID)
 	if err != nil {
 		log.Error.Printf("could not execute select use_in_table from type: %s\n", err)
 		errs = append(errs, tc.DBError)
@@ -123,7 +126,7 @@ func (server *TOServer) Validate(db *sqlx.DB) []error {
 		errs = append(errs, errors.New("invalid server type"))
 	}
 
-	rows, err = db.Query("select cdn from profile where id=$1", server.ProfileID)
+	rows, err = server.ReqInfo.Tx.Query("select cdn from profile where id=$1", server.ProfileID)
 	if err != nil {
 		log.Error.Printf("could not execute select cdnID from profile: %s\n", err)
 		errs = append(errs, tc.DBError)
@@ -173,12 +176,12 @@ func (server TOServer) ChangeLogMessage(action string) (string, error) {
 	return message, nil
 }
 
-func (server *TOServer) Read(db *sqlx.DB, params map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (server *TOServer) Read(params map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	returnable := []interface{}{}
 
-	privLevel := user.PrivLevel
+	privLevel := server.ReqInfo.User.PrivLevel
 
-	servers, errs, errType := getServers(params, db, privLevel)
+	servers, errs, errType := getServers(params, server.ReqInfo.Tx, privLevel)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			if err.Error() == `id cannot parse to integer` {
@@ -195,7 +198,7 @@ func (server *TOServer) Read(db *sqlx.DB, params map[string]string, user auth.Cu
 	return returnable, nil, tc.NoError
 }
 
-func getServers(params map[string]string, db *sqlx.DB, privLevel int) ([]tc.ServerNullable, []error, tc.ApiErrorType) {
+func getServers(params map[string]string, tx *sqlx.Tx, privLevel int) ([]tc.ServerNullable, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 	var err error
 
@@ -221,7 +224,7 @@ func getServers(params map[string]string, db *sqlx.DB, privLevel int) ([]tc.Serv
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err = db.NamedQuery(query, queryValues)
+	rows, err = tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, []error{fmt.Errorf("querying: %v", err)}, tc.SystemError
 	}
@@ -313,26 +316,9 @@ JOIN type t ON s.type = t.id`
 //ParsePQUniqueConstraintError is used to determine if a cdn with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-
+func (server *TOServer) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with server: %++v", updateQuery(), server)
-	resultRows, err := tx.NamedQuery(updateQuery(), server)
+	resultRows, err := server.ReqInfo.Tx.NamedQuery(updateQuery(), server)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -369,12 +355,7 @@ func (server *TOServer) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	}
 	server.SetKeys(map[string]interface{}{"id": id})
 	server.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
@@ -424,30 +405,13 @@ WHERE id=:id RETURNING last_updated`
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted server and have
 //to be added to the struct
-func (server *TOServer) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-
+func (server *TOServer) Create() (error, tc.ApiErrorType) {
 	if server.XMPPID == nil || *server.XMPPID == "" {
 		hostName := *server.HostName
 		server.XMPPID = &hostName
 	}
 
-	resultRows, err := tx.NamedQuery(insertQuery(), server)
+	resultRows, err := server.ReqInfo.Tx.NamedQuery(insertQuery(), server)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -483,12 +447,7 @@ func (server *TOServer) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	}
 	server.SetKeys(map[string]interface{}{"id": id})
 	server.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
@@ -565,25 +524,9 @@ xmpp_passwd
 
 //The Server implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (server *TOServer) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (server *TOServer) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with server: %++v", deleteServerQuery(), server)
-	result, err := tx.NamedExec(deleteServerQuery(), server)
+	result, err := server.ReqInfo.Tx.NamedExec(deleteServerQuery(), server)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -599,12 +542,7 @@ func (server *TOServer) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 

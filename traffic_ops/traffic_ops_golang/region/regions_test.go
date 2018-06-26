@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -59,8 +59,6 @@ func TestReadRegions(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	refType := GetRefType()
-
 	testRegions := getTestRegions()
 	cols := test.ColsFromStructByTag("db", tc.Region{})
 	rows := sqlmock.NewRows(cols)
@@ -73,10 +71,14 @@ func TestReadRegions(t *testing.T) {
 			ts.Name,
 		)
 	}
+	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectCommit()
 	v := map[string]string{"id": "1"}
 
-	regions, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+	reqInfo := api.APIInfo{Tx:db.MustBegin(),CommitTx:util.BoolPtr(false)}
+
+	regions, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
 	if len(errs) > 0 {
 		t.Errorf("region.Read expected: no errors, actual: %v", errs)
 	}

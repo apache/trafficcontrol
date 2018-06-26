@@ -126,8 +126,8 @@ func GetXMLID(tx *sql.Tx, id int) (string, bool, error) {
 
 // IsTenantAuthorized checks that the user is authorized for both the delivery service's existing tenant, and the new tenant they're changing it to (if different).
 
-func (ds *TODeliveryServiceV12) IsTenantAuthorized(user *auth.CurrentUser, tx *sqlx.Tx) (bool, error) {
-	return isTenantAuthorized(user, tx, &ds.DeliveryServiceNullableV12)
+func (ds *TODeliveryServiceV12) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
+	return isTenantAuthorized(user, ds.ReqInfo.Tx, &ds.DeliveryServiceNullableV12)
 }
 
 

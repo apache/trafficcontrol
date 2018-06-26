@@ -28,7 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -37,13 +36,16 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOType tc.TypeNullable
+type TOType struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	tc.TypeNullable
+}
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOType(tc.TypeNullable{})
-
-func GetRefType() *TOType {
-	return &refType
+func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := TOType{reqInfo, tc.TypeNullable{}}
+		return &toReturn
+	}
 }
 
 func (typ TOType) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -77,7 +79,7 @@ func (typ *TOType) GetType() string {
 	return "type"
 }
 
-func (typ *TOType) Validate(db *sqlx.DB) []error {
+func (typ *TOType) Validate() []error {
 	errs := validation.Errors{
 		"name":         validation.Validate(typ.Name, validation.Required),
 		"description":  validation.Validate(typ.Description, validation.Required),
@@ -89,7 +91,7 @@ func (typ *TOType) Validate(db *sqlx.DB) []error {
 	return nil
 }
 
-func (typ *TOType) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (typ *TOType) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
 	// Query Parameters to Database Query column mappings
@@ -107,7 +109,7 @@ func (typ *TOType) Read(db *sqlx.DB, parameters map[string]string, user auth.Cur
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := typ.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Types: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -145,25 +147,9 @@ FROM type typ`
 //ParsePQUniqueConstraintError is used to determine if a type with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (typ *TOType) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (typ *TOType) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with type: %++v", updateQuery(), typ)
-	resultRows, err := tx.NamedQuery(updateQuery(), typ)
+	resultRows, err := typ.ReqInfo.Tx.NamedQuery(updateQuery(), typ)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -194,12 +180,7 @@ func (typ *TOType) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErro
 		}
 		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
@@ -210,24 +191,8 @@ func (typ *TOType) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErro
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted type and have
 //to be added to the struct
-func (typ *TOType) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	resultRows, err := tx.NamedQuery(insertQuery(), typ)
+func (typ *TOType) Create() (error, tc.ApiErrorType) {
+	resultRows, err := typ.ReqInfo.Tx.NamedQuery(insertQuery(), typ)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -264,36 +229,15 @@ func (typ *TOType) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErro
 
 	typ.SetKeys(map[string]interface{}{"id": id})
 	typ.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
 //The Type implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (typ *TOType) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (typ *TOType) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with type: %++v", deleteQuery(), typ)
-	result, err := tx.NamedExec(deleteQuery(), typ)
+	result, err := typ.ReqInfo.Tx.NamedExec(deleteQuery(), typ)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -309,12 +253,6 @@ func (typ *TOType) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErro
 		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
