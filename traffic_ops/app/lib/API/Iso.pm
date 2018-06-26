@@ -67,21 +67,71 @@ sub osversions {
 }
 
 sub generate {
-	my $self   = shift;
-	my $params = $self->req->json;
+#	my $self   = shift;
+#	my $params = $self->req->json;
+#
+#	if ( !&is_oper($self) ) {
+#		return $self->forbidden();
+#	}
+#
+#	my ( $is_valid, $result ) = $self->is_valid($params);
+#
+#	if ( !$is_valid ) {
+#		return $self->alert($result);
+#	}
+#
+#	my $response = $self->generate_iso($params);
+#	return $self->success( $response, "Generate ISO was successful." );
 
-	if ( !&is_oper($self) ) {
-		return $self->forbidden();
+	my $self = shift;
+
+#	&navbarpage($self);
+#	my %serverselect;
+#	my $rs_server = $self->db->resultset('Server')->search(undef,
+#		{ columns => [ qw/id host_name domain_name/ ], orderby => "host_name" });
+#
+#	while (my $row = $rs_server->next) {
+#		my $fqdn = $row->host_name . "." . $row->domain_name;
+#		$serverselect{$fqdn} = $row->id;
+#	}
+
+#	$self->stash(
+#		serverselect => \%serverselect,
+#		osversions   => \%osversions,
+#	);
+
+	my $hostname = $self->param('hostname');
+	if (defined($hostname)) {
+		$self->iso_download();
 	}
+}
 
-	my ( $is_valid, $result ) = $self->is_valid($params);
+sub iso_download {
+	my $self = shift;
+	my $params = {
+		hostName => $self->param('hostname'),
+		osversionDir => $self->param('osversion'),
+		rootPass => $self->param('rootpass'),
+		dhcp => $self->param('dhcp'),
+		ipAddress => $self->param('ipaddr'),
+		ipNetmask => $self->param('netmask'),
+		ipGateway => $self->param('gateway'),
+		ip6Address => $self->param('ip6_address'),
+		ip6Gateway => $self->param('ip6_gateway'),
+		interfaceName => $self->param('dev'),
+		interfaceMtu => $self->param('mtu'),
+		disk => $self->param('ondisk'),
+		mgmtIpAddress => $self->param('mgmt_ip_address'),
+		mgmtIpNetmask => $self->param('mgmt_ip_netmask'),
+		mgmtIpGateway => $self->param('mgmt_ip_gateway'),
+		mgmtInterface => $self->param('mgmt_interface'),
+		stream => $self->param('stream')
+	};
+	my $dl_res = $self->generate_iso($self, $params);
 
-	if ( !$is_valid ) {
-		return $self->alert($result);
-	}
-
-	my $response = $self->generate_iso($params);
-	return $self->success( $response, "Generate ISO was successful." );
+	# serverselect
+	$self->flash( message => "Download ISO here" );
+	return $dl_res->{isoName};
 }
 
 sub generate_iso {
@@ -250,10 +300,10 @@ sub generate_iso {
 		$self->res->headers->content_disposition("attachment; filename=\"$iso_file_name\"");
 		my $data = `$cmd`;
 		$self->render( data => $data );
-		$response = {
-			iso => $data,
-			name => $iso_file_name,
-		};
+		#$response = {
+		#	iso => $data,
+		#	name => $iso_file_name,
+		#};
 	}
 	return $response;
 }
