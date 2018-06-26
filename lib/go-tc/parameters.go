@@ -1,6 +1,18 @@
 package tc
 
-import "encoding/json"
+import (
+	"bytes"
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
+
+	"github.com/lib/pq"
+)
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -61,10 +73,66 @@ type ProfileParameterByName struct {
 }
 
 type ProfileParameterByNamePost struct {
-	ConfigFile string `json:"configFile"`
-	Name       string `json:"name"`
-	Secure     int    `json:"secure"`
-	Value      string `json:"value"`
+	ConfigFile *string `json:"configFile"`
+	Name       *string `json:"name"`
+	Secure     *int    `json:"secure"`
+	Value      *string `json:"value"`
+}
+
+func (p *ProfileParameterByNamePost) Validate(tx *sql.Tx) error {
+	errs := []string{}
+	if p.ConfigFile == nil || *p.ConfigFile == "" {
+		errs = append(errs, "configFile")
+	}
+	if p.Name == nil || *p.Name == "" {
+		errs = append(errs, "name")
+	}
+	if p.Secure == nil {
+		errs = append(errs, "secure")
+	}
+	if p.Value == nil {
+		errs = append(errs, "value")
+	}
+	if len(errs) > 0 {
+		return errors.New("required fields missing: " + strings.Join(errs, ", "))
+	}
+	return nil
+}
+
+// ProfileParametersByNamePost is the object posted to profile/name/parameter endpoints. This object may be posted as either a single JSON object, or an array of objects. Either will unmarshal into this object; a single object will unmarshal into an array of 1 element.
+type ProfileParametersByNamePost []ProfileParameterByNamePost
+
+func (pp *ProfileParametersByNamePost) UnmarshalJSON(bts []byte) error {
+	bts = bytes.TrimLeft(bts, " \n\t\r")
+	if len(bts) == 0 {
+		errors.New("no body")
+	}
+	if bts[0] == '[' {
+		ppArr := []ProfileParameterByNamePost{}
+		err := json.Unmarshal(bts, &ppArr)
+		*pp = ppArr
+		return err
+	}
+	p := ProfileParameterByNamePost{}
+	if err := json.Unmarshal(bts, &p); err != nil {
+		return err
+	}
+	*pp = append(*pp, p)
+	return nil
+}
+
+func (pp *ProfileParametersByNamePost) Validate(tx *sql.Tx) error {
+	errs := []string{}
+	ppArr := ([]ProfileParameterByNamePost)(*pp)
+	for i, profileParam := range ppArr {
+		if err := profileParam.Validate(tx); err != nil {
+			errs = append(errs, "object "+strconv.Itoa(i)+": "+err.Error())
+		}
+	}
+	if len(errs) > 0 {
+		return errors.New("validate errors: " + strings.Join(errs, "; "))
+	}
+	return nil
 }
 
 type ProfileParameterPostRespObj struct {
@@ -79,13 +147,112 @@ type ProfileParameterPostResp struct {
 }
 
 type PostProfileParam struct {
-	ProfileID int64   `json:"profileId"`
-	ParamIDs  []int64 `json:"paramIds"`
-	Replace   bool    `json:"replace"`
+	ProfileID *int64   `json:"profileId"`
+	ParamIDs  *[]int64 `json:"paramIds"`
+	Replace   *bool    `json:"replace"`
+}
+
+func (pp *PostProfileParam) Sanitize(tx *sql.Tx) {
+	if pp.Replace == nil {
+		pp.Replace = util.BoolPtr(false)
+	}
+}
+
+func (pp *PostProfileParam) Validate(tx *sql.Tx) error {
+	pp.Sanitize(tx)
+	errs := []string{}
+	if pp.ProfileID == nil {
+		errs = append(errs, "profileId missing")
+	} else if ok, err := ProfileExists(*pp.ProfileID, tx); err != nil {
+		errs = append(errs, "checking profile ID "+strconv.Itoa(int(*pp.ProfileID))+" existence: "+err.Error())
+	} else if !ok {
+		errs = append(errs, "no profile with ID "+strconv.Itoa(int(*pp.ProfileID))+" exists")
+	}
+	if pp.ParamIDs == nil {
+		errs = append(errs, "paramIds missing")
+	} else if ok, err := ParamsExist(*pp.ParamIDs, tx); err != nil {
+		errs = append(errs, fmt.Sprintf("checking parameter IDs %v existence: "+err.Error(), *pp.ParamIDs))
+	} else if !ok {
+		errs = append(errs, fmt.Sprintf("parameters with IDs %v don't all exist", *pp.ParamIDs))
+	}
+	if len(errs) > 0 {
+		return errors.New("validate errors: " + strings.Join(errs, ", "))
+	}
+	return nil
 }
 
 type PostParamProfile struct {
-	ParamID    int64   `json:"paramId"`
-	ProfileIDs []int64 `json:"profileIds"`
-	Replace    bool    `json:"replace"`
+	ParamID    *int64   `json:"paramId"`
+	ProfileIDs *[]int64 `json:"profileIds"`
+	Replace    *bool    `json:"replace"`
+}
+
+func (pp *PostParamProfile) Sanitize(tx *sql.Tx) {
+	if pp.Replace == nil {
+		pp.Replace = util.BoolPtr(false)
+	}
+}
+
+func (pp *PostParamProfile) Validate(tx *sql.Tx) error {
+	pp.Sanitize(tx)
+
+	errs := []string{}
+	if pp.ParamID == nil {
+		errs = append(errs, "paramId missing")
+	} else if ok, err := ParamExists(*pp.ParamID, tx); err != nil {
+		errs = append(errs, "checking param ID "+strconv.Itoa(int(*pp.ParamID))+" existence: "+err.Error())
+	} else if !ok {
+		errs = append(errs, "no parameter with ID "+strconv.Itoa(int(*pp.ParamID))+" exists")
+	}
+	if pp.ProfileIDs == nil {
+		errs = append(errs, "profileIds missing")
+	} else if ok, err := ProfilesExist(*pp.ProfileIDs, tx); err != nil {
+		errs = append(errs, fmt.Sprintf("checking profiles IDs %v existence: "+err.Error(), *pp.ProfileIDs))
+	} else if !ok {
+		errs = append(errs, fmt.Sprintf("profiles with IDs %v don't all exist", *pp.ProfileIDs))
+	}
+	if len(errs) > 0 {
+		return errors.New("validate errors: " + strings.Join(errs, ", "))
+	}
+	return nil
+}
+
+// ParamExists returns whether a parameter with the given id exists, and any error.
+// TODO move to helper package.
+func ParamExists(id int64, tx *sql.Tx) (bool, error) {
+	count := 0
+	if err := tx.QueryRow(`SELECT count(*) from parameter where id = $1`, id).Scan(&count); err != nil {
+		return false, errors.New("querying param existence from id: " + err.Error())
+	}
+	return count > 0, nil
+}
+
+// ProfilesExist returns whether profiles exist for all the given ids, and any error.
+// TODO move to helper package.
+func ProfilesExist(ids []int64, tx *sql.Tx) (bool, error) {
+	count := 0
+	if err := tx.QueryRow(`SELECT count(*) from profile where id = ANY($1)`, pq.Array(ids)).Scan(&count); err != nil {
+		return false, errors.New("querying profiles existence from id: " + err.Error())
+	}
+	return count == len(ids), nil
+}
+
+// ProfileExists returns whether a profile with the given id exists, and any error.
+// TODO move to helper package.
+func ProfileExists(id int64, tx *sql.Tx) (bool, error) {
+	count := 0
+	if err := tx.QueryRow(`SELECT count(*) from profile where id = $1`, id).Scan(&count); err != nil {
+		return false, errors.New("querying profile existence from id: " + err.Error())
+	}
+	return count > 0, nil
+}
+
+// ParamsExist returns whether parameters exist for all the given ids, and any error.
+// TODO move to helper package.
+func ParamsExist(ids []int64, tx *sql.Tx) (bool, error) {
+	count := 0
+	if err := tx.QueryRow(`SELECT count(*) from parameter where id = ANY($1)`, pq.Array(ids)).Scan(&count); err != nil {
+		return false, errors.New("querying parameters existence from id: " + err.Error())
+	}
+	return count == len(ids), nil
 }
