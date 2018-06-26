@@ -31,7 +31,7 @@ RUN	yum -y install \
 
 ### traffic_monitor specific requirements
 RUN	yum -y install \
-		golang && \
+		golang-1.9.4 && \
 	yum -y clean all
 ###
 

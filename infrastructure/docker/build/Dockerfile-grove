@@ -33,7 +33,7 @@ RUN	yum -y install \
 
 ### grove specific requirements
 RUN	yum -y install \
-		golang && \
+		golang-1.9.4 && \
 	yum -y clean all
 ###
 
