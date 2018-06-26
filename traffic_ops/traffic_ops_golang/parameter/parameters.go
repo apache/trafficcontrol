@@ -49,57 +49,59 @@ var (
 )
 
 //we need a type alias to define functions on
-type TOParameter tc.ParameterNullable
-
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOParameter(tc.ParameterNullable{})
-
-func GetRefType() *TOParameter {
-	return &refType
+type TOParameter struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	tc.ParameterNullable
 }
 
-func (parameter TOParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
+func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := TOParameter{reqInfo, tc.ParameterNullable{}}
+		return &toReturn
+	}
+}
+
+func (param TOParameter) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{IDQueryParam, api.GetIntKey}}
 }
 
 //Implementation of the Identifier, Validator interface functions
-func (parameter TOParameter) GetKeys() (map[string]interface{}, bool) {
-	if parameter.ID == nil {
+func (param TOParameter) GetKeys() (map[string]interface{}, bool) {
+	if param.ID == nil {
 		return map[string]interface{}{IDQueryParam: 0}, false
 	}
-	return map[string]interface{}{IDQueryParam: *parameter.ID}, true
+	return map[string]interface{}{IDQueryParam: *param.ID}, true
 }
 
-func (parameter *TOParameter) SetKeys(keys map[string]interface{}) {
+func (param *TOParameter) SetKeys(keys map[string]interface{}) {
 	i, _ := keys[IDQueryParam].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
-	parameter.ID = &i
+	param.ID = &i
 }
 
-func (parameter *TOParameter) GetAuditName() string {
-	if parameter.Name != nil {
-		return *parameter.Name
+func (param *TOParameter) GetAuditName() string {
+	if param.Name != nil {
+		return *param.Name
 	}
-	if parameter.ID != nil {
-		return strconv.Itoa(*parameter.ID)
+	if param.ID != nil {
+		return strconv.Itoa(*param.ID)
 	}
 	return "unknown"
 }
 
-func (parameter *TOParameter) GetType() string {
-	return "parameter"
+func (param *TOParameter) GetType() string {
+	return "param"
 }
 
 // Validate fulfills the api.Validator interface
-func (parameter TOParameter) Validate(db *sqlx.DB) []error {
-
+func (param TOParameter) Validate() []error {
 	// Test
 	// - Secure Flag is always set to either 1/0
 	// - Admin rights only
 	// - Do not allow duplicate parameters by name+config_file+value
 	errs := validation.Errors{
-		NameQueryParam:       validation.Validate(parameter.Name, validation.Required),
-		ConfigFileQueryParam: validation.Validate(parameter.ConfigFile, validation.Required),
-		ValueQueryParam:      validation.Validate(parameter.Value, validation.Required),
+		NameQueryParam:       validation.Validate(param.Name, validation.Required),
+		ConfigFileQueryParam: validation.Validate(param.ConfigFile, validation.Required),
+		ValueQueryParam:      validation.Validate(param.Value, validation.Required),
 	}
 
 	return tovalidate.ToErrors(errs)
@@ -112,24 +114,8 @@ func (parameter TOParameter) Validate(db *sqlx.DB) []error {
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted parameter and have
 //to be added to the struct
-func (pl *TOParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	resultRows, err := tx.NamedQuery(insertQuery(), pl)
+func (param *TOParameter) Create() (error, tc.ApiErrorType) {
+	resultRows, err := param.ReqInfo.Tx.NamedQuery(insertQuery(), param)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -164,14 +150,9 @@ func (pl *TOParameter) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 		return tc.DBError, tc.SystemError
 	}
 
-	pl.SetKeys(map[string]interface{}{IDQueryParam: id})
-	pl.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+	param.SetKeys(map[string]interface{}{IDQueryParam: id})
+	param.LastUpdated = &lastUpdated
+
 	return nil, tc.NoError
 }
 
@@ -188,10 +169,10 @@ secure) VALUES (
 	return query
 }
 
-func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (param *TOParameter) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
-	privLevel := user.PrivLevel
+	privLevel := param.ReqInfo.User.PrivLevel
 
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
@@ -210,7 +191,7 @@ func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, us
 	query := selectQuery() + where + ParametersGroupBy() + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := param.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Parameters: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -244,25 +225,9 @@ func (parameter *TOParameter) Read(db *sqlx.DB, parameters map[string]string, us
 //ParsePQUniqueConstraintError is used to determine if a parameter with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (pl *TOParameter) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	log.Debugf("about to run exec query: %s with parameter: %++v", updateQuery(), pl)
-	resultRows, err := tx.NamedQuery(updateQuery(), pl)
+func (param *TOParameter) Update() (error, tc.ApiErrorType) {
+	log.Debugf("about to run exec query: %s with parameter: %++v", updateQuery(), param)
+	resultRows, err := param.ReqInfo.Tx.NamedQuery(updateQuery(), param)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -287,43 +252,22 @@ func (pl *TOParameter) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 		}
 	}
 	log.Debugf("lastUpdated: %++v", lastUpdated)
-	pl.LastUpdated = &lastUpdated
+	param.LastUpdated = &lastUpdated
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
 			return errors.New("no parameter found with this id"), tc.DataMissingError
 		}
 		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
 //The Parameter implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (pl *TOParameter) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	log.Debugf("about to run exec query: %s with parameter: %++v", deleteQuery(), pl)
-	result, err := tx.NamedExec(deleteQuery(), pl)
+func (param *TOParameter) Delete() (error, tc.ApiErrorType) {
+	log.Debugf("about to run exec query: %s with parameter: %++v", deleteQuery(), param)
+	result, err := param.ReqInfo.Tx.NamedExec(deleteQuery(), param)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -339,12 +283,6 @@ func (pl *TOParameter) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Api
 		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 

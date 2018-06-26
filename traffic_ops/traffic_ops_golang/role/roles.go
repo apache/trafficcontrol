@@ -29,7 +29,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -38,13 +37,16 @@ import (
 )
 
 //we need a type alias to define functions on
-type TORole v13.Role
+type TORole struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	v13.Role
+}
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TORole{}
-
-func GetRefType() *TORole {
-	return &refType
+func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := TORole{reqInfo, v13.Role{}}
+		return &toReturn
+	}
 }
 
 func (role TORole) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -79,7 +81,7 @@ func (role *TORole) SetKeys(keys map[string]interface{}) {
 }
 
 // Validate fulfills the api.Validator interface
-func (role TORole) Validate(db *sqlx.DB) []error {
+func (role TORole) Validate() []error {
 	errs := validation.Errors{
 		"name":        validation.Validate(role.Name, validation.Required),
 		"description": validation.Validate(role.Description, validation.Required),
@@ -88,8 +90,8 @@ func (role TORole) Validate(db *sqlx.DB) []error {
 	errsToReturn := tovalidate.ToErrors(errs)
 	checkCaps := `SELECT cap FROM UNNEST($1::text[]) AS cap WHERE NOT cap =  ANY(ARRAY(SELECT c.name FROM capability AS c WHERE c.name = ANY($1)))`
 	var badCaps []string
-	if db != nil {
-		err := db.Select(&badCaps, checkCaps, pq.Array(role.Capabilities))
+	if role.ReqInfo.Tx != nil {
+		err := role.ReqInfo.Tx.Select(&badCaps, checkCaps, pq.Array(role.Capabilities))
 		if err != nil {
 			log.Errorf("got error from selecting bad capabilities: %v", err)
 			return []error{tc.DBError}
@@ -108,27 +110,11 @@ func (role TORole) Validate(db *sqlx.DB) []error {
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted role and have
 //to be added to the struct
-func (role *TORole) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	if *role.PrivLevel > user.PrivLevel {
+func (role *TORole) Create() (error, tc.ApiErrorType) {
+	if *role.PrivLevel > role.ReqInfo.User.PrivLevel {
 		return errors.New("can not create a role with a higher priv level than your own"), tc.ForbiddenError
 	}
-	resultRows, err := tx.NamedQuery(insertQuery(), role)
+	resultRows, err := role.ReqInfo.Tx.NamedQuery(insertQuery(), role)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -163,17 +149,11 @@ func (role *TORole) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 	}
 	role.SetKeys(map[string]interface{}{"id": id})
 	//after we have role ID we can associate the capabilities:
-	err, errType := role.createRoleCapabilityAssociations(tx)
+	err, errType := role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
 	if err != nil {
 		return err, errType
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
@@ -209,7 +189,7 @@ func (role *TORole) deleteRoleCapabilityAssociations(tx *sqlx.Tx) (error, tc.Api
 	return nil, tc.NoError
 }
 
-func (role *TORole) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (role *TORole) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
 	// Query Parameters to Database Query column mappings
@@ -226,7 +206,7 @@ func (role *TORole) Read(db *sqlx.DB, parameters map[string]string, user auth.Cu
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := role.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Roles: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -253,30 +233,13 @@ func (role *TORole) Read(db *sqlx.DB, parameters map[string]string, user auth.Cu
 //ParsePQUniqueConstraintError is used to determine if a role with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (role *TORole) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-
-	if *role.PrivLevel > user.PrivLevel {
+func (role *TORole) Update() (error, tc.ApiErrorType) {
+	if *role.PrivLevel > role.ReqInfo.User.PrivLevel {
 		return errors.New("can not create a role with a higher priv level than your own"), tc.ForbiddenError
 	}
 
 	log.Debugf("about to run exec query: %s with role: %++v\n", updateQuery(), role)
-	result, err := tx.NamedExec(updateQuery(), role)
+	result, err := role.ReqInfo.Tx.NamedExec(updateQuery(), role)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -303,46 +266,24 @@ func (role *TORole) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 		}
 	}
 	//remove associations
-	err, errType := role.deleteRoleCapabilityAssociations(tx)
+	err, errType := role.deleteRoleCapabilityAssociations(role.ReqInfo.Tx)
 	if err != nil {
 		return err, errType
 	}
 	//create new associations
-	err, errType = role.createRoleCapabilityAssociations(tx)
+	err, errType = role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
 	if err != nil {
 		return err, errType
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
 //The Role implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (role *TORole) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (role *TORole) Delete() (error, tc.ApiErrorType) {
 	assignedUsers := 0
-	err = tx.Get(&assignedUsers, "SELECT COUNT(id) FROM tm_user WHERE role=$1", role.ID)
+	err := role.ReqInfo.Tx.Get(&assignedUsers, "SELECT COUNT(id) FROM tm_user WHERE role=$1", role.ID)
 	if err != nil {
 		log.Errorf("received error: %++v from assigned users check", err)
 		return tc.DBError, tc.SystemError
@@ -352,7 +293,7 @@ func (role *TORole) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 	}
 
 	log.Debugf("about to run exec query: %s with role: %++v", deleteQuery(), role)
-	result, err := tx.NamedExec(deleteQuery(), role)
+	result, err := role.ReqInfo.Tx.NamedExec(deleteQuery(), role)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -369,17 +310,11 @@ func (role *TORole) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErr
 		}
 	}
 	//remove associations
-	err, errType := role.deleteRoleCapabilityAssociations(tx)
+	err, errType := role.deleteRoleCapabilityAssociations(role.ReqInfo.Tx)
 	if err != nil {
 		return err, errType
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 

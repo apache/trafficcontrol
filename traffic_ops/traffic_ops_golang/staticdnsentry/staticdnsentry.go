@@ -22,16 +22,23 @@ package staticdnsentry
 import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/jmoiron/sqlx"
 )
 
-type TOStaticDNSEntry tc.StaticDNSEntry
+type TOStaticDNSEntry struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	tc.StaticDNSEntry
+}
 
-func GetRefType() *TOStaticDNSEntry { return &TOStaticDNSEntry{} }
+func GetReaderSingleton() func(reqInfo *api.APIInfo)api.Reader {
+	return func(reqInfo *api.APIInfo)api.Reader {
+		toReturn := TOStaticDNSEntry{reqInfo, tc.StaticDNSEntry{}}
+		return &toReturn
+	}
+}
 
-func (staticDNSEntry *TOStaticDNSEntry) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (staticDNSEntry *TOStaticDNSEntry) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"deliveryservice": dbhelpers.WhereColumnInfo{"deliveryservice", nil}, // order by
 	}
@@ -42,7 +49,7 @@ func (staticDNSEntry *TOStaticDNSEntry) Read(db *sqlx.DB, parameters map[string]
 	}
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := staticDNSEntry.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying StaticDNSEntries: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError

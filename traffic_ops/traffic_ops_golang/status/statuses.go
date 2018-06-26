@@ -28,7 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -37,13 +36,16 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOStatus tc.StatusNullable
+type TOStatus struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	tc.StatusNullable
+}
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOStatus(tc.StatusNullable{})
-
-func GetRefType() *TOStatus {
-	return &refType
+func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := TOStatus{reqInfo, tc.StatusNullable{}}
+		return &toReturn
+	}
 }
 
 func (status TOStatus) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -77,14 +79,14 @@ func (status TOStatus) GetType() string {
 	return "status"
 }
 
-func (status TOStatus) Validate(db *sqlx.DB) []error {
+func (status TOStatus) Validate() []error {
 	errs := validation.Errors{
 		"name": validation.Validate(status.Name, validation.NotNil, validation.Required),
 	}
 	return tovalidate.ToErrors(errs)
 }
 
-func (status *TOStatus) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (status *TOStatus) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
 	// Query Parameters to Database Query column mappings
@@ -102,7 +104,7 @@ func (status *TOStatus) Read(db *sqlx.DB, parameters map[string]string, user aut
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := status.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Status: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -139,25 +141,9 @@ FROM status s`
 //ParsePQUniqueConstraintError is used to determine if a status with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (status *TOStatus) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (status *TOStatus) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with status: %++v", updateQuery(), status)
-	resultRows, err := tx.NamedQuery(updateQuery(), status)
+	resultRows, err := status.ReqInfo.Tx.NamedQuery(updateQuery(), status)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -190,12 +176,7 @@ func (status *TOStatus) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
@@ -206,24 +187,8 @@ func (status *TOStatus) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted status and have
 //to be added to the struct
-func (status *TOStatus) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	resultRows, err := tx.NamedQuery(insertQuery(), status)
+func (status *TOStatus) Create() (error, tc.ApiErrorType) {
+	resultRows, err := status.ReqInfo.Tx.NamedQuery(insertQuery(), status)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -259,36 +224,15 @@ func (status *TOStatus) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	}
 	status.SetKeys(map[string]interface{}{"id": id})
 	status.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
 //The Status implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (status *TOStatus) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (status *TOStatus) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with status: %++v", deleteQuery(), status)
-	result, err := tx.NamedExec(deleteQuery(), status)
+	result, err := status.ReqInfo.Tx.NamedExec(deleteQuery(), status)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -304,12 +248,7 @@ func (status *TOStatus) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 

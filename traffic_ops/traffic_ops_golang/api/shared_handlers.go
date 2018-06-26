@@ -162,6 +162,52 @@ func ReadHandler(typeFactory func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
 	}
 }
 
+//this creates a handler function from the pointer to a struct implementing the Reader interface
+//      this handler retrieves the user from the context
+//      combines the path and query parameters
+//      produces the proper status code based on the error code returned
+//      marshals the structs returned into the proper response json
+func ReadOnlyHandler(typeFactory func(reqInfo *APIInfo) Reader) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		//create error function with ResponseWriter and Request
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
+
+		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
+		if userErr != nil || sysErr != nil {
+			HandleErr(w, r, errCode, userErr, sysErr)
+			return
+		}
+		defer inf.Close()
+
+		// Load the PathParams into the query parameters for pass through
+		params, err := GetCombinedParams(r)
+		if err != nil {
+			log.Errorf("unable to get parameters from request: %s", err)
+			handleErrs(http.StatusInternalServerError, err)
+		}
+
+		reader := typeFactory(inf)
+
+		results, errs, errType := reader.Read(params)
+		if len(errs) > 0 {
+			tc.HandleErrorsWithType(errs, errType, handleErrs)
+			return
+		}
+		resp := struct {
+			Response []interface{} `json:"response"`
+		}{results}
+
+		respBts, err := json.Marshal(resp)
+		if err != nil {
+			handleErrs(http.StatusInternalServerError, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, "%s", respBts)
+	}
+}
+
 //this creates a handler function from the pointer to a struct implementing the Updater interface
 //it must be immediately assigned to a local variable
 //   this generic handler encapsulates the logic for handling:

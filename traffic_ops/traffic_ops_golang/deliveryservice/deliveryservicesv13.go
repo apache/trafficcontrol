@@ -579,8 +579,8 @@ func (ds *TODeliveryServiceV13) Delete() (error, tc.ApiErrorType) {
 }
 
 // IsTenantAuthorized implements the Tenantable interface to ensure the user is authorized on the deliveryservice tenant
-func (ds *TODeliveryServiceV13) IsTenantAuthorized(user *auth.CurrentUser, tx *sqlx.Tx) (bool, error) {
-	return ds.V12().IsTenantAuthorized(user, tx)
+func (ds *TODeliveryServiceV13) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
+	return ds.V12().IsTenantAuthorized(user)
 }
 
 func filterAuthorized(dses []tc.DeliveryServiceNullableV13, user *auth.CurrentUser, db *sqlx.DB) ([]tc.DeliveryServiceNullableV13, error) {

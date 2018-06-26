@@ -26,20 +26,22 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
 //we need a type alias to define functions on
-type TORegion tc.Region
+type TORegion struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	tc.Region
+}
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TORegion(tc.Region{})
-
-func GetRefType() *TORegion {
-	return &refType
+func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := TORegion{reqInfo, tc.Region{}}
+		return &toReturn
+	}
 }
 
 func (region TORegion) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -64,7 +66,7 @@ func (region *TORegion) GetType() string {
 	return "region"
 }
 
-func (region *TORegion) Validate(db *sqlx.DB) []error {
+func (region *TORegion) Validate() []error {
 	errs := []error{}
 	if len(region.Name) < 1 {
 		errs = append(errs, errors.New(`Region 'name' is required.`))
@@ -72,7 +74,7 @@ func (region *TORegion) Validate(db *sqlx.DB) []error {
 	return errs
 }
 
-func (region *TORegion) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (region *TORegion) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
 	// Query Parameters to Database Query column mappings
@@ -90,7 +92,7 @@ func (region *TORegion) Read(db *sqlx.DB, parameters map[string]string, user aut
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := region.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Regions: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -128,25 +130,9 @@ JOIN division d ON r.division = d.id`
 //ParsePQUniqueConstraintError is used to determine if a region with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (region *TORegion) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (region *TORegion) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with region: %++v", updateQuery(), region)
-	resultRows, err := tx.NamedQuery(updateQuery(), region)
+	resultRows, err := region.ReqInfo.Tx.NamedQuery(updateQuery(), region)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -177,12 +163,7 @@ func (region *TORegion) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		}
 		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
@@ -193,24 +174,8 @@ func (region *TORegion) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted region and have
 //to be added to the struct
-func (region *TORegion) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	resultRows, err := tx.NamedQuery(insertQuery(), region)
+func (region *TORegion) Create() (error, tc.ApiErrorType) {
+	resultRows, err := region.ReqInfo.Tx.NamedQuery(insertQuery(), region)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -246,36 +211,15 @@ func (region *TORegion) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 	}
 	region.SetKeys(map[string]interface{}{"id": id})
 	region.LastUpdated = lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
 //The Region implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (region *TORegion) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (region *TORegion) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with region: %++v", deleteQuery(), region)
-	result, err := tx.NamedExec(deleteQuery(), region)
+	result, err := region.ReqInfo.Tx.NamedExec(deleteQuery(), region)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -291,12 +235,6 @@ func (region *TORegion) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.Ap
 		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 

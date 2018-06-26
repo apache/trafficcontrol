@@ -28,7 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -37,13 +36,16 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOPhysLocation tc.PhysLocationNullable
+type TOPhysLocation struct{
+	ReqInfo *api.APIInfo `json:"-"`
+	tc.PhysLocationNullable
+}
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TOPhysLocation(tc.PhysLocationNullable{})
-
-func GetRefType() *TOPhysLocation {
-	return &refType
+func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
+	return func(reqInfo *api.APIInfo)api.CRUDer {
+		toReturn := TOPhysLocation{reqInfo, tc.PhysLocationNullable{}}
+		return &toReturn
+	}
 }
 
 func (pl TOPhysLocation) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -77,7 +79,7 @@ func (pl *TOPhysLocation) GetType() string {
 	return "physLocation"
 }
 
-func (pl *TOPhysLocation) Validate(db *sqlx.DB) []error {
+func (pl *TOPhysLocation) Validate() []error {
 	errs := validation.Errors{
 		"address":   validation.Validate(pl.Address, validation.Required),
 		"city":      validation.Validate(pl.City, validation.Required),
@@ -93,7 +95,7 @@ func (pl *TOPhysLocation) Validate(db *sqlx.DB) []error {
 	return nil
 }
 
-func (pl *TOPhysLocation) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (pl *TOPhysLocation) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
 	// Query Parameters to Database Query column mappings
@@ -111,7 +113,7 @@ func (pl *TOPhysLocation) Read(db *sqlx.DB, parameters map[string]string, user a
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := pl.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying PhysLocations: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -160,25 +162,9 @@ JOIN region r ON pl.region = r.id`
 //ParsePQUniqueConstraintError is used to determine if a phys_location with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (pl *TOPhysLocation) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (pl *TOPhysLocation) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with phys_location: %++v", updateQuery(), pl)
-	resultRows, err := tx.NamedQuery(updateQuery(), pl)
+	resultRows, err := pl.ReqInfo.Tx.NamedQuery(updateQuery(), pl)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -210,12 +196,6 @@ func (pl *TOPhysLocation) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 		}
 		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
@@ -226,24 +206,8 @@ func (pl *TOPhysLocation) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted phys_location and have
 //to be added to the struct
-func (pl *TOPhysLocation) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	resultRows, err := tx.NamedQuery(insertQuery(), pl)
+func (pl *TOPhysLocation) Create() (error, tc.ApiErrorType) {
+	resultRows, err := pl.ReqInfo.Tx.NamedQuery(insertQuery(), pl)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -280,36 +244,16 @@ func (pl *TOPhysLocation) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 
 	pl.SetKeys(map[string]interface{}{"id": id})
 	pl.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
 //The PhysLocation implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (pl *TOPhysLocation) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
+func (pl *TOPhysLocation) Delete() (error, tc.ApiErrorType) {
 
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
 	log.Debugf("about to run exec query: %s with phys_location: %++v", deleteQuery(), pl)
-	result, err := tx.NamedExec(deleteQuery(), pl)
+	result, err := pl.ReqInfo.Tx.NamedExec(deleteQuery(), pl)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -325,12 +269,6 @@ func (pl *TOPhysLocation) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.
 		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 

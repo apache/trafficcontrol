@@ -25,8 +25,8 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
@@ -78,10 +78,15 @@ func TestGetProfileParameters(t *testing.T) {
 			ts.ParameterID,
 		)
 	}
+	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectCommit()
 	v := map[string]string{"profile": "1"}
 
-	pps, errs, _ := refType.Read(db, v, auth.CurrentUser{})
+	reqInfo := api.APIInfo{Tx:db.MustBegin(),CommitTx:util.BoolPtr(false)}
+
+
+	pps, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
 	if len(errs) > 0 {
 		t.Errorf("profileparameter.Read expected: no errors, actual: %v", errs)
 	}
