@@ -98,6 +98,20 @@ services:
       - db
       - trafficops-perl
 
+  # trafficops-init is a small container that uses admin credentials to add needed data to trafficops
+  # after it has successfully started
+  trafficops-init:
+    build:
+      context: traffic_ops
+      dockerfile: Dockerfile-init
+    depends_on:
+      - trafficops
+    domainname: cdn.local
+    env_file:
+      - variables.env
+    networks:
+      - tcnet
+
   trafficportal:
     build:
       context: traffic_portal

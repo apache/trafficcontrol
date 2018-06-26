@@ -1,0 +1,15 @@
+[
+    {
+        "email": "tmonitor@cdn.example.com",
+        "fullName": "Traffic Monitor",
+        "gid": 0,
+        "localPasswd": "jhdslvhdfsuklvfhsuvlhs",
+        "confirmLocalPasswd": "jhdslvhdfsuklvfhsuvlhs",
+        "role": 4,
+        "rolename": "admin",
+        "tenant": "root",
+        "tenantId": 1,
+        "uid": 0,
+        "username": "tmon"
+    }
+]

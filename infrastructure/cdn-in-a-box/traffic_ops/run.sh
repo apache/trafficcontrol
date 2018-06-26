@@ -68,6 +68,7 @@ cd $TO_DIR && \
 	./db/admin.pl --env=production reset && \
 	./db/admin.pl --env=production seed || echo "db setup failed!"
 
+# Add admin user -- all other users should be created using API
 /adduser.pl $TO_ADMIN_USER $TO_ADMIN_PASSWORD admin | psql -U$DB_USER -h$DB_SERVER $DB_NAME || echo "adding traffic_ops admin user failed!"
 
 cd $TO_DIR && $TO_DIR/local/bin/hypnotoad script/cdn
