@@ -113,7 +113,7 @@ func CheckID(tx *sql.Tx, user *auth.CurrentUser, dsID int) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-// GetUserTenantList returns a Tenant list that the specified user has access too.
+// GetUserTenantList returns a Tenant list that the specified user has access to.
 // NOTE: This method does not use the use_tenancy parameter and if this method is being used
 // to control tenancy the parameter must be checked. The method IsResourceAuthorizedToUser checks the use_tenancy parameter
 // and should be used for this purpose in most cases.
@@ -314,7 +314,7 @@ func (ten TOTenant) GetID() (int, bool) {
 
 // GetKeyFieldsInfo identifies types of the key fields
 func (ten TOTenant) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
 // GetKeys returns values of keys
@@ -352,9 +352,10 @@ func (ten *TOTenant) SetKeys(keys map[string]interface{}) {
 // Validate fulfills the api.Validator interface
 func (ten TOTenant) Validate() error {
 	errs := validation.Errors{
-		"name":     validation.Validate(ten.Name, validation.Required),
-		"active":   validation.Validate(ten.Active), // only validate it's boolean
-		"parentId": validation.Validate(ten.ParentID, validation.Required, validation.Min(1)),
+		"name":       validation.Validate(ten.Name, validation.Required),
+		"active":     validation.Validate(ten.Active), // only validate it's boolean
+		"parentId":   validation.Validate(ten.ParentID, validation.Required, validation.Min(1)),
+		"parentName": nil,
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
@@ -413,18 +414,18 @@ func (ten *TOTenant) Read(parameters map[string]string) ([]interface{}, []error,
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"active":      dbhelpers.WhereColumnInfo{Column: "t.active", Checker: nil},
-		"id":          dbhelpers.WhereColumnInfo{Column: "t.id", Checker: api.IsInt},
-		"name":        dbhelpers.WhereColumnInfo{Column: "t.name", Checker: nil},
-		"parent_id":   dbhelpers.WhereColumnInfo{Column: "t.parentID", Checker: api.IsInt},
-		"parent_name": dbhelpers.WhereColumnInfo{Column: "p.name", Checker: api.IsInt},
+		"active":      dbhelpers.WhereColumnInfo{Column: "q.active", Checker: nil},
+		"id":          dbhelpers.WhereColumnInfo{Column: "q.id", Checker: api.IsInt},
+		"name":        dbhelpers.WhereColumnInfo{Column: "q.name", Checker: nil},
+		"parent_id":   dbhelpers.WhereColumnInfo{Column: "q.parentID", Checker: api.IsInt},
+		"parent_name": dbhelpers.WhereColumnInfo{Column: "t.name", Checker: nil},
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		return nil, errs, tc.DataConflictError
 	}
 
-	query := selectQuery() + where + orderBy
+	query := selectQuery(user.TenantID) + where + orderBy
 	log.Debugln("Query is ", query)
 
 	rows, err := ten.ReqInfo.Tx.NamedQuery(query, queryValues)
@@ -435,19 +436,44 @@ func (ten *TOTenant) Read(parameters map[string]string) ([]interface{}, []error,
 	defer rows.Close()
 
 	tenants := []interface{}{}
+	tenantNames := make(map[int]*string)
 	for rows.Next() {
-		var s TOTenant
-		if err = rows.StructScan(&s); err != nil {
+		var t TOTenant
+		if err = rows.StructScan(&t); err != nil {
 			log.Errorf("error parsing Tenant rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
-		tenants = append(tenants, s)
+		if t.ID == nil || t.Name == nil {
+			log.Errorf("tenant with no id and/or name: %v", err)
+			return nil, []error{tc.DBError}, tc.SystemError
+		}
+
+		tenantNames[*t.ID] = t.Name
+		tenants = append(tenants, t)
+	}
+	// fill in parent names
+	for _, i := range tenants {
+		t := i.(TOTenant)
+		if t.ParentID == nil || tenantNames[*t.ParentID] == nil {
+			// root tenant has no parent
+			continue
+		}
+		p := *tenantNames[*t.ParentID]
+		t.ParentName = &p
 	}
 
 	return tenants, []error{}, tc.NoError
 }
 
-//The TOTenant implementation of the Updater interface
+// IsTenantAuthorized implements the Tenantable interface for TOTenant
+func (ten *TOTenant) IsTenantAuthorized(user auth.CurrentUser, db *sqlx.DB) (bool, error) {
+	if ten == nil || ten.ID == nil {
+		return false, nil
+	}
+	return IsResourceAuthorizedToUser(*ten.ID, user, db)
+}
+
+//Update implements the Updater interface.
 //all implementations of Updater should use transactions and return the proper errorType
 //ParsePQUniqueConstraintError is used to determine if a tenant with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
@@ -542,18 +568,17 @@ func (ten *TOTenant) Delete() (error, tc.ApiErrorType) {
 	return nil, tc.NoError
 }
 
-func selectQuery() string {
-	query := `SELECT
-t.active AS active,
-t.name AS name,
-t.id AS id,
-t.last_updated AS last_updated,
-t.parent_id AS parent_id,
-p.name AS parent_name
+// selectQuery returns a query on the tenant table that limits to tenants within the realm of the tenantID.  It's intended
+// to be extensible by adding WHERE/ORDERBY/etc clauses at the end to further refine the query.
+func selectQuery(tenantID int) string {
+	query := `
+WITH RECURSIVE q AS (
+SELECT id, name, active, parent_id, last_updated FROM tenant WHERE id = ` + strconv.Itoa(tenantID) + `
+UNION SELECT t.id, t.name, t.active, t.parent_id, t.last_updated FROM tenant t JOIN q ON q.id = t.parent_id)
+SELECT q.id AS id, q.name AS name, q.active AS active, q.parent_id AS parent_id, q.last_updated AS last_updated,
+p.name AS parent_name FROM q JOIN tenant p ON q.parent_id = p.id
+`
 
-FROM tenant AS t
-LEFT OUTER JOIN tenant AS p
-ON t.parent_id = p.id`
 	return query
 }
 
