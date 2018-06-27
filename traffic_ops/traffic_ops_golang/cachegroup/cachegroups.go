@@ -289,10 +289,10 @@ func (cg *TOCacheGroup) Read(parameters map[string]string) ([]interface{}, []err
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id":        dbhelpers.WhereColumnInfo{"cg.id", api.IsInt},
-		"name":      dbhelpers.WhereColumnInfo{"cg.name", nil},
+		"id":        dbhelpers.WhereColumnInfo{"cachegroup.id", api.IsInt},
+		"name":      dbhelpers.WhereColumnInfo{"cachegroup.name", nil},
 		"shortName": dbhelpers.WhereColumnInfo{"short_name", nil},
-		"type":      dbhelpers.WhereColumnInfo{"cg.type", nil},
+		"type":      dbhelpers.WhereColumnInfo{"cachegroup.type", nil},
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
