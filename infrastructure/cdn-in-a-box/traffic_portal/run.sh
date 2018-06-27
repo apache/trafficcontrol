@@ -40,6 +40,8 @@ sed -i -e "/^\s*base_url:/ s@'.*'@'https://$TO_HOST:6443/api/'@" /etc/traffic_po
 props=/opt/traffic_portal/public/traffic_portal_properties.json
 tmp=$(mktemp)
 
+echo "TO_HOST: $TO_HOST"
+
 jq --arg TO_HOST $TO_HOST '.properties.api.baseUrl = "https://"+$TO_HOST' <$props >$tmp
 mv $tmp $props
 
