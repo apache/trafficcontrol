@@ -25,6 +25,7 @@ use JSON;
 use MIME::Base64;
 use UI::DeliveryService;
 use Data::Dumper;
+use Validate::Tiny ':all';
 
 sub add {
 	my $self     = shift;
@@ -79,17 +80,25 @@ sub add {
 #named like this because there is a plugin called generate_ssl_keys in Mojoplugins/SslKeys.pm
 sub generate {
 	my $self         = shift;
+	my $params = $self->req->json;
+
+	my ( $is_valid, $result ) = $self->is_valid( $params );
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+
 	my $key_type     = "ssl";
-	my $key          = $self->req->json->{key};
-	my $version      = $self->req->json->{version};        # int
-	my $hostname     = $self->req->json->{hostname};
-	my $country      = $self->req->json->{country};
-	my $state        = $self->req->json->{state};
-	my $city         = $self->req->json->{city};
-	my $org          = $self->req->json->{organization};
-	my $unit         = $self->req->json->{businessUnit};
-	my $cdn = $self->req->json->{cdn};
-	my $deliveryservice = $self->req->json->{deliveryservice};
+	my $key          = $params->{key};
+	my $version      = $params->{version};        # int
+	my $hostname     = $params->{hostname};
+	my $country      = $params->{country};
+	my $state        = $params->{state};
+	my $city         = $params->{city};
+	my $org          = $params->{organization};
+	my $unit         = $params->{businessUnit};
+	my $cdn          = $params->{cdn};
+	my $deliveryservice = $params->{deliveryservice};
 	my $tmp_location = "/var/tmp";
 
 	if ( !&is_oper($self) ) {
@@ -130,6 +139,30 @@ sub generate {
 	}
 	else {
 		return $self->alert( $response->{_content} );
+	}
+}
+
+sub is_valid {
+	my $self   = shift;
+	my $params = shift;
+
+	my $rules = {
+		fields => [ qw/cdn deliveryservice key version hostname country state city organization businessUnit/ ],
+
+		# Validation checks to perform
+		checks => [
+			deliveryservice	=> [ is_required("is required") ],
+		]
+	};
+
+	# Validate the input against the rules
+	my $result = validate( $params, $rules );
+
+	if ( $result->{success} ) {
+		return ( 1, $result->{data} );
+	}
+	else {
+		return ( 0, $result->{error} );
 	}
 }
 
