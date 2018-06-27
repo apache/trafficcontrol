@@ -27,6 +27,9 @@ Environment=CATALINA_OUT=/opt/tomcat/logs/catalina.log
 EnvironmentFile=/opt/traffic_router/conf/startup.properties
 ExecStart=/opt/tomcat/bin/startup.sh
 ExecStop=/opt/tomcat/bin/shutdown.sh
+LimitNOFILE=500000
+LimitNPROC=773537
+LimitSIGPENDING=1031613
 
 User=root
 Group=root
