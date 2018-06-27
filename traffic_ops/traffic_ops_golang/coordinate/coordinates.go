@@ -43,7 +43,7 @@ type TOCoordinate struct {
 	v13.CoordinateNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOCoordinate{reqInfo, v13.CoordinateNullable{}}
 		return &toReturn

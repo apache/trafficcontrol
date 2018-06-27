@@ -54,7 +54,7 @@ type TOParameter struct {
 	tc.ParameterNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOParameter{reqInfo, tc.ParameterNullable{}}
 		return &toReturn

@@ -41,7 +41,7 @@ type TOStatus struct {
 	tc.StatusNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOStatus{reqInfo, tc.StatusNullable{}}
 		return &toReturn

@@ -42,7 +42,7 @@ type TOCacheGroup struct {
 	v13.CacheGroupNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOCacheGroup{reqInfo, v13.CacheGroupNullable{}}
 		return &toReturn

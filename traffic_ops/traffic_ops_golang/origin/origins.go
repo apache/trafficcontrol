@@ -46,7 +46,7 @@ type TOOrigin struct {
 	v13.Origin
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOOrigin{reqInfo, v13.Origin{}}
 		return &toReturn

@@ -46,7 +46,7 @@ type TOASNV11 struct {
 	tc.ASNNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOASNV11{reqInfo, tc.ASNNullable{}}
 		return &toReturn

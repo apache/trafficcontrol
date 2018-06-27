@@ -37,7 +37,7 @@ type TORegion struct {
 	tc.Region
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TORegion{reqInfo, tc.Region{}}
 		return &toReturn
