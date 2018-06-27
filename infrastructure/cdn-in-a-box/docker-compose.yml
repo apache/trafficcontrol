@@ -103,8 +103,6 @@ services:
       context: traffic_portal
       args:
         TRAFFIC_PORTAL_RPM: traffic_portal.rpm
-    depends_on:
-      - trafficops
     domainname: cdn.local
     env_file:
       - variables.env

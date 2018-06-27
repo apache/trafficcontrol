@@ -28,6 +28,8 @@ RUN curl -sL https://rpm.nodesource.com/setup_6.x | bash -
 ARG TRAFFIC_PORTAL_RPM=traffic_portal.rpm
 ADD $TRAFFIC_PORTAL_RPM /
 
+ARG TO_HOST=$TO_HOST
+
 # Install and delete the TRAFFIC_PORTAL_RPM when finished
 RUN yum install -y \
     epel-release && \
