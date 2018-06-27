@@ -156,8 +156,8 @@ func SetupTenants(db *sql.DB) error {
 	// TODO: root tenant must be present in initial database.  "badtenant" is needed for now so tests can be done
 	// with a tenant outside the user's tenant.  That should be removed once User API tests are in place rather than the SetupUsers defined above.
 	sqlStmt := `
-INSERT INTO tenant (id, name, active, parent_id, last_updated) VALUES (1, 'root', true, null, '2018-01-19 19:01:21.327262');
-INSERT INTO tenant (id, name, active, parent_id, last_updated) VALUES (2, 'badtenant', true, 1, '2018-01-19 19:01:21.327262');
+INSERT INTO tenant (name, active, parent_id, last_updated) VALUES ('root', true, null, '2018-01-19 19:01:21.327262');
+INSERT INTO tenant (name, active, parent_id, last_updated) VALUES ('badtenant', true, 1, '2018-01-19 19:01:21.327262');
 `
 	err := execSQL(db, sqlStmt, "tenant")
 	if err != nil {
@@ -363,6 +363,7 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM snapshot;
 	DELETE FROM cdn;
 	DELETE FROM tenant;
+	ALTER SEQUENCE tenant_id_seq RESTART WITH 1;
 `
 	err := execSQL(db, sqlStmt, "Tearing down")
 	if err != nil {

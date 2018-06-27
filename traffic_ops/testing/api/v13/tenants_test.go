@@ -22,7 +22,6 @@ import (
 )
 
 func TestTenants(t *testing.T) {
-
 	CreateTestTenants(t)
 	UpdateTestTenants(t)
 	GetTestTenants(t)
@@ -120,7 +119,7 @@ func DeleteTestTenants(t *testing.T) {
 	if err == nil {
 		t.Errorf("%s has child tenants -- should not be able to delete", t1)
 	}
-	expected := "Tenant 'tenant1' has child tenants"
+	expected := `Tenant '`+ strconv.Itoa(tenant1.ID) + `' has child tenants. Please update these child tenants and retry.`
 	if !strings.Contains(err.Error(), expected) {
 		t.Errorf("expected error: %s;  got %s", expected, err.Error())
 	}
