@@ -53,10 +53,14 @@ public class CertificateRegistry {
 	public void importCertificateDataList(final List<CertificateData> certificateDataList) {
 		final Map<String, HandshakeData> map = new HashMap<>();
 		for (final CertificateData certificateData : certificateDataList) {
-			final HandshakeData handshakeData = certificateDataConverter.toHandshakeData(certificateData);
-			final String alias = handshakeData.getHostname().replaceFirst("\\*\\.", "");
-			log.warn("Imported handshake data with alias " + alias);
-			map.put(alias, handshakeData);
+			try {
+				final HandshakeData handshakeData = certificateDataConverter.toHandshakeData(certificateData);
+				final String alias = handshakeData.getHostname().replaceFirst("\\*\\.", "");
+				log.warn("Imported handshake data with alias " + alias);
+				map.put(alias, handshakeData);
+			} catch (Exception e) {
+				log.error("Failed to import certificate data for delivery service: '" + certificateData.getDeliveryservice() + "', hostname: '" + certificateData.getHostname() + "'");
+			}
 		}
 
 		handshakeDataMap = map;
