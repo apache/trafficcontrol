@@ -41,7 +41,7 @@ type TODeliveryServiceRequestComment struct {
 	tc.DeliveryServiceRequestCommentNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TODeliveryServiceRequestComment{reqInfo, tc.DeliveryServiceRequestCommentNullable{}}
 		return &toReturn

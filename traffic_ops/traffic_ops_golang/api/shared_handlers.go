@@ -120,7 +120,7 @@ func decodeAndValidateRequestBody(r *http.Request, v Validator) []error {
 //      combines the path and query parameters
 //      produces the proper status code based on the error code returned
 //      marshals the structs returned into the proper response json
-func ReadHandler(typeFactory func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
+func ReadHandler(typeFactory CRUDFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//create error function with ResponseWriter and Request
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
@@ -216,7 +216,7 @@ func ReadOnlyHandler(typeFactory func(reqInfo *APIInfo) Reader) http.HandlerFunc
 //   *decoding and validating the struct
 //   *change log entry
 //   *forming and writing the body over the wire
-func UpdateHandler(typeFactory func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
+func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//create error function with ResponseWriter and Request
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
@@ -332,7 +332,7 @@ func UpdateHandler(typeFactory func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
 //   *current user
 //   *change log entry
 //   *forming and writing the body over the wire
-func DeleteHandler(typeFactory func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
+func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 
@@ -422,7 +422,7 @@ func DeleteHandler(typeFactory func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
 //   *decoding and validating the struct
 //   *change log entry
 //   *forming and writing the body over the wire
-func CreateHandler(typeConstructor func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
+func CreateHandler(typeConstructor CRUDFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
 

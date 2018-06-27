@@ -298,7 +298,7 @@ type TOTenant struct {
 	tc.TenantNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOTenant{reqInfo, tc.TenantNullable{}}
 		return &toReturn

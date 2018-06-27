@@ -47,7 +47,7 @@ type TOProfileParameter struct {
 	v13.ProfileParameterNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOProfileParameter{reqInfo, v13.ProfileParameterNullable{}}
 		return &toReturn

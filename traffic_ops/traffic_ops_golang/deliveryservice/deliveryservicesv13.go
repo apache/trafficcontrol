@@ -60,7 +60,7 @@ func (ds *TODeliveryServiceV13) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, ds.DeliveryServiceNullableV13)
 }
 
-func GetTypeV13Factory() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeV13Factory() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TODeliveryServiceV13{reqInfo, tc.DeliveryServiceNullableV13{}}
 		return &toReturn

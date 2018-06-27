@@ -44,7 +44,7 @@ type TOServer struct {
 	v13.ServerNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOServer{reqInfo, v13.ServerNullable{}}
 		return &toReturn

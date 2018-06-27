@@ -41,7 +41,7 @@ type TODeliveryServiceRequest struct {
 	tc.DeliveryServiceRequestNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TODeliveryServiceRequest{reqInfo, tc.DeliveryServiceRequestNullable{}}
 		return &toReturn
@@ -447,7 +447,7 @@ WHERE id=:id`
 ////////////////////////////////////////////////////////////////
 // Assignment change
 
-func GetAssignmentTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetAssignmentTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := deliveryServiceRequestAssignment{TODeliveryServiceRequest{reqInfo, tc.DeliveryServiceRequestNullable{}}}
 		return &toReturn
@@ -537,7 +537,7 @@ type deliveryServiceRequestStatus struct {
 	TODeliveryServiceRequest
 }
 
-func GetStatusTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetStatusTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := deliveryServiceRequestStatus{TODeliveryServiceRequest{reqInfo, tc.DeliveryServiceRequestNullable{}}}
 		return &toReturn

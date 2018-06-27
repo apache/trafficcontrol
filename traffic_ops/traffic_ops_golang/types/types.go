@@ -41,7 +41,7 @@ type TOType struct {
 	tc.TypeNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOType{reqInfo, tc.TypeNullable{}}
 		return &toReturn

@@ -41,7 +41,7 @@ type TODivision struct {
 	tc.DivisionNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TODivision{reqInfo, tc.DivisionNullable{}}
 		return &toReturn

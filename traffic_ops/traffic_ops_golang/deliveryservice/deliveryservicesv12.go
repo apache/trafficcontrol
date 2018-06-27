@@ -41,7 +41,7 @@ type TODeliveryServiceV12 struct {
 	tc.DeliveryServiceNullableV12
 }
 
-func GetTypeV12Factory() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeV12Factory() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TODeliveryServiceV12{reqInfo, tc.DeliveryServiceNullableV12{}}
 		return &toReturn

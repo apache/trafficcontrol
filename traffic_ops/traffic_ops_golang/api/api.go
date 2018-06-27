@@ -44,6 +44,8 @@ const DBContextKey = "db"
 const ConfigContextKey = "context"
 const ReqIDContextKey = "reqid"
 
+type CRUDFactory func(reqInfo *APIInfo) CRUDer
+
 // WriteResp takes any object, serializes it as JSON, and writes that to w. Any errors are logged and written to w via tc.GetHandleErrorsFunc.
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func WriteResp(w http.ResponseWriter, r *http.Request, v interface{}) {

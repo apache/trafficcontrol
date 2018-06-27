@@ -42,7 +42,7 @@ type TORole struct {
 	v13.Role
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TORole{reqInfo, v13.Role{}}
 		return &toReturn
