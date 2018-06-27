@@ -75,7 +75,7 @@ func TestGetDivisions(t *testing.T) {
 	mock.ExpectCommit()
 	v := map[string]string{"dsId": "1"}
 
-	reqInfo := api.APIInfo{Tx:db.MustBegin(),CommitTx:util.BoolPtr(false)}
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false)}
 	servers, errs, errType := GetTypeSingleton()(&reqInfo).Read(v)
 	if len(errs) > 0 {
 		t.Errorf("getDivisions expected: no errors, actual: %v with error type: %s", errs, errType.String())

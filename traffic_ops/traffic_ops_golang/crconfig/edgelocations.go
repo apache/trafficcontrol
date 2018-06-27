@@ -70,7 +70,6 @@ and cachegroup_fallbacks.primary_cg = $1 order by cachegroup_fallbacks.set_order
 			}
 			defer dbRows.Close()
 
-
 			if fallbackToClosest == nil {
 				fallbackToClosest = new(bool)
 				*fallbackToClosest = true

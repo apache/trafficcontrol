@@ -36,13 +36,13 @@ import (
 )
 
 //we need a type alias to define functions on
-type TODivision struct{
+type TODivision struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.DivisionNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
-	return func(reqInfo *api.APIInfo)api.CRUDer {
+func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TODivision{reqInfo, tc.DivisionNullable{}}
 		return &toReturn
 	}

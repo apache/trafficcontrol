@@ -38,13 +38,13 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOCoordinate struct{
+type TOCoordinate struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	v13.CoordinateNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
-	return func(reqInfo *api.APIInfo)api.CRUDer {
+func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOCoordinate{reqInfo, v13.CoordinateNullable{}}
 		return &toReturn
 	}

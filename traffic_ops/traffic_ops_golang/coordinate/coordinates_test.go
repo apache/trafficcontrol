@@ -26,9 +26,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
@@ -87,7 +87,7 @@ func TestReadCoordinates(t *testing.T) {
 	mock.ExpectCommit()
 	v := map[string]string{"id": "1"}
 
-	reqInfo := api.APIInfo{Tx:db.MustBegin(),CommitTx:util.BoolPtr(false)}
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false)}
 	coordinates, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
 	if len(errs) > 0 {
 		t.Errorf("coordinate.Read expected: no errors, actual: %v", errs)
@@ -141,10 +141,10 @@ func TestValidate(t *testing.T) {
 	la := -190.0
 	lo := -190.0
 	lu := tc.TimeNoMod{Time: time.Now()}
-	c := TOCoordinate{ CoordinateNullable: v13.CoordinateNullable{ID: &id,
-		Name: &nm,
-		Latitude: &la,
-		Longitude: &lo,
+	c := TOCoordinate{CoordinateNullable: v13.CoordinateNullable{ID: &id,
+		Name:        &nm,
+		Latitude:    &la,
+		Longitude:   &lo,
 		LastUpdated: &lu,
 	}}
 	errs := test.SortErrors(c.Validate())
@@ -163,10 +163,10 @@ func TestValidate(t *testing.T) {
 	nm = "This.is.2.a-Valid---Coordinate."
 	la = 90.0
 	lo = 90.0
-	c = TOCoordinate{ CoordinateNullable: v13.CoordinateNullable{ID: &id,
-		Name: &nm,
-		Latitude: &la,
-		Longitude: &lo,
+	c = TOCoordinate{CoordinateNullable: v13.CoordinateNullable{ID: &id,
+		Name:        &nm,
+		Latitude:    &la,
+		Longitude:   &lo,
 		LastUpdated: &lu,
 	}}
 	expectedErrs = []error{}

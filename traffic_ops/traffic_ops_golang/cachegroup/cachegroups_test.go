@@ -79,7 +79,6 @@ func TestReadCacheGroups(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-
 	testCGs := getTestCacheGroups()
 	cols := test.ColsFromStructByTag("db", v13.CacheGroup{})
 	rows := sqlmock.NewRows(cols)
@@ -103,7 +102,7 @@ func TestReadCacheGroups(t *testing.T) {
 	mock.ExpectCommit()
 	v := map[string]string{"id": "1"}
 
-	reqInfo := api.APIInfo{Tx:db.MustBegin(),CommitTx:util.BoolPtr(false)}
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false)}
 	cachegroups, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
 	if len(errs) > 0 {
 		t.Errorf("cdn.Read expected: no errors, actual: %v", errs)

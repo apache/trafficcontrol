@@ -41,13 +41,13 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOOrigin struct{
+type TOOrigin struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	v13.Origin
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
-	return func(reqInfo *api.APIInfo)api.CRUDer {
+func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOOrigin{reqInfo, v13.Origin{}}
 		return &toReturn
 	}

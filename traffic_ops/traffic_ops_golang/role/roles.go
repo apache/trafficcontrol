@@ -37,13 +37,13 @@ import (
 )
 
 //we need a type alias to define functions on
-type TORole struct{
+type TORole struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	v13.Role
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
-	return func(reqInfo *api.APIInfo)api.CRUDer {
+func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TORole{reqInfo, v13.Role{}}
 		return &toReturn
 	}

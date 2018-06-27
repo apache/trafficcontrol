@@ -32,13 +32,13 @@ import (
 )
 
 //we need a type alias to define functions on
-type TORegion struct{
+type TORegion struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.Region
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
-	return func(reqInfo *api.APIInfo)api.CRUDer {
+func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TORegion{reqInfo, tc.Region{}}
 		return &toReturn
 	}

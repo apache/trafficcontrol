@@ -49,13 +49,13 @@ var (
 )
 
 //we need a type alias to define functions on
-type TOParameter struct{
+type TOParameter struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.ParameterNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
-	return func(reqInfo *api.APIInfo)api.CRUDer {
+func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOParameter{reqInfo, tc.ParameterNullable{}}
 		return &toReturn
 	}

@@ -38,9 +38,6 @@ import (
 	"github.com/lib/pq"
 )
 
-// TOTenant provides a local type against which to define methods
-type TOTenant tc.TenantNullable
-
 // DeliveryServiceTenantInfo provides only deliveryservice info needed here
 type DeliveryServiceTenantInfo tc.DeliveryServiceNullable
 
@@ -295,10 +292,18 @@ func IsResourceAuthorizedToUserTx(resourceTenantID int, user *auth.CurrentUser, 
 	}
 }
 
-// GetRefType allows shared handlers to decode JSON to the tenant type
-// Part of the Identifier interface
-func GetRefType() *TOTenant {
-	return &TOTenant{}
+
+// TOTenant provides a local type against which to define methods
+type TOTenant struct {
+	ReqInfo *api.APIInfo `json:"-"`
+	tc.TenantNullable
+}
+
+func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+	return func(reqInfo *api.APIInfo) api.CRUDer {
+		toReturn := TOTenant{reqInfo, tc.TenantNullable{}}
+		return &toReturn
+	}
 }
 
 // GetID wraps the ID member with null checking

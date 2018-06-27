@@ -20,16 +20,17 @@ package systeminfo
  */
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"context"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
-	"github.com/jmoiron/sqlx"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
 func Handler(db *sqlx.DB) http.HandlerFunc {
@@ -80,9 +81,9 @@ p.last_updated,
 p.value
 FROM parameter p
 WHERE p.config_file='global'`
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second * 10)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
-	rows, err := db.QueryxContext(ctx,query)
+	rows, err := db.QueryxContext(ctx, query)
 
 	if err != nil {
 		return nil, fmt.Errorf("querying: %v", err)

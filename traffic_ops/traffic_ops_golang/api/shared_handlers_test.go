@@ -42,7 +42,7 @@ type tester struct {
 	errorType tc.ApiErrorType //only for testing
 }
 
-func GetTypeSingleton() func(apiInfo *APIInfo) CRUDer{
+func GetTypeSingleton() func(apiInfo *APIInfo) CRUDer {
 	return func(apiInfo *APIInfo) CRUDer {
 		tester := tester{}
 		return &tester
@@ -129,12 +129,12 @@ func TestCreateHandler(t *testing.T) {
 	ctx = context.WithValue(ctx, DBContextKey, db)
 	ctx = context.WithValue(ctx, ConfigContextKey, &cfg)
 	ctx = context.WithValue(ctx, ReqIDContextKey, uint64(0))
-	ctx = context.WithValue(ctx, PathParamsKey, map[string]string{"id":"1"})
+	ctx = context.WithValue(ctx, PathParamsKey, map[string]string{"id": "1"})
 
 	// Add our context to the request
 	r = r.WithContext(ctx)
 
-	typeRef := tester{ID:1}
+	typeRef := tester{ID: 1}
 
 	createFunc := CreateHandler(GetTypeSingleton())
 
@@ -221,7 +221,7 @@ func TestUpdateHandler(t *testing.T) {
 	// Add our context to the request
 	r = r.WithContext(ctx)
 
-	typeRef := tester{ID:1}
+	typeRef := tester{ID: 1}
 	updateFunc := UpdateHandler(GetTypeSingleton())
 
 	//verifies we get the right changelog insertion
@@ -265,7 +265,7 @@ func TestDeleteHandler(t *testing.T) {
 	// Add our context to the request
 	r = r.WithContext(ctx)
 
-	typeRef := tester{ID:1}
+	typeRef := tester{ID: 1}
 	deleteFunc := DeleteHandler(GetTypeSingleton())
 
 	//verifies we get the right changelog insertion

@@ -30,8 +30,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 
-	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func getTestASNs() []tc.ASNNullable {
@@ -80,7 +80,7 @@ func TestGetASNs(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 	v := map[string]string{"dsId": "1"}
-	reqInfo := api.APIInfo{Tx:db.MustBegin(),CommitTx:util.BoolPtr(false)}
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false)}
 	asns, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
 
 	if len(errs) > 0 {
@@ -116,7 +116,7 @@ func TestInterfaces(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	i := -99
-	asn := TOASNV11{nil,tc.ASNNullable{ASN: &i, CachegroupID: &i}}
+	asn := TOASNV11{nil, tc.ASNNullable{ASN: &i, CachegroupID: &i}}
 
 	errs := test.SortErrors(asn.Validate())
 	expected := []error{

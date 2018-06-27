@@ -36,13 +36,13 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOPhysLocation struct{
+type TOPhysLocation struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.PhysLocationNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
-	return func(reqInfo *api.APIInfo)api.CRUDer {
+func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOPhysLocation{reqInfo, tc.PhysLocationNullable{}}
 		return &toReturn
 	}

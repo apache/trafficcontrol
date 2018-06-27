@@ -26,13 +26,13 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 )
 
-type TOStaticDNSEntry struct{
+type TOStaticDNSEntry struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.StaticDNSEntry
 }
 
-func GetReaderSingleton() func(reqInfo *api.APIInfo)api.Reader {
-	return func(reqInfo *api.APIInfo)api.Reader {
+func GetReaderSingleton() func(reqInfo *api.APIInfo) api.Reader {
+	return func(reqInfo *api.APIInfo) api.Reader {
 		toReturn := TOStaticDNSEntry{reqInfo, tc.StaticDNSEntry{}}
 		return &toReturn
 	}

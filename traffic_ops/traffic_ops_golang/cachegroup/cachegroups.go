@@ -37,10 +37,10 @@ import (
 	"github.com/lib/pq"
 )
 
-type TOCacheGroup struct{
+type TOCacheGroup struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	v13.CacheGroupNullable
-	}
+}
 
 func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
 	return func(reqInfo *api.APIInfo) api.CRUDer {

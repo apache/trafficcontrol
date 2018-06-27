@@ -98,7 +98,7 @@ func TestGetProfiles(t *testing.T) {
 	mock.ExpectCommit()
 	v := map[string]string{"name": "1"}
 
-	reqInfo := api.APIInfo{Tx:db.MustBegin(),CommitTx:util.BoolPtr(false)}
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false)}
 
 	profiles, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
 	if len(errs) > 0 {

@@ -42,13 +42,13 @@ const (
 )
 
 //we need a type alias to define functions on
-type TOProfileParameter struct{
+type TOProfileParameter struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	v13.ProfileParameterNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
-	return func(reqInfo *api.APIInfo)api.CRUDer {
+func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOProfileParameter{reqInfo, v13.ProfileParameterNullable{}}
 		return &toReturn
 	}
