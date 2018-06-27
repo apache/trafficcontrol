@@ -45,6 +45,8 @@ my $city     = "Denver";
 my $org      = "KableTown";
 my $unit     = "CDN_Eng";
 my $hostname = "foober.com";
+my $cdn = "cdn1";
+my $deliveryservice = "test-ds1";
 
 # PORTAL
 #NEGATIVE TESTING -- No Privs
@@ -57,6 +59,7 @@ ok $t->post_ok(
 	json => {
 		key     => $key,
 		version => $version,
+		deliveryservice => $deliveryservice,
 	}
 	)->status_is(403)
 	->or( sub { diag $t->tx->res->content->asset->{content}; } );
@@ -110,6 +113,7 @@ ok $t->post_ok(
 		key          => $key,
 		version      => $version,
 		hostname     => $hostname,
+		deliveryservice     => $deliveryservice, 
 		country      => $country,
 		state        => $state,
 		city         => $city,
@@ -237,6 +241,8 @@ ok $t->post_ok(
 		city         => $city,
 		organization => $org,
 		businessUnit => $unit,
+		cdn             => $cdn,
+		deliveryservice => $deliveryservice,
 	}
 	)->status_is(400)->or( sub { diag $t->tx->res->content->asset->{content}; } )->json_is( "/alerts/0/level" => "error" )
 	->json_like( "/alerts/0/text" => qr/^No RIAK servers/ ),
