@@ -47,13 +47,13 @@ const (
 )
 
 //we need a type alias to define functions on
-type TOProfile struct{
+type TOProfile struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	v13.ProfileNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
-	return func(reqInfo *api.APIInfo)api.CRUDer {
+func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOProfile{reqInfo, v13.ProfileNullable{}}
 		return &toReturn
 	}
@@ -127,27 +127,32 @@ func (prof *TOProfile) Read(parameters map[string]string) ([]interface{}, []erro
 	}
 	defer rows.Close()
 
-	profiles := []interface{}{}
+	profiles := []v13.ProfileNullable{}
+
 	for rows.Next() {
 		var p v13.ProfileNullable
 		if err = rows.StructScan(&p); err != nil {
 			log.Errorf("error parsing Profile rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
-
+		profiles = append(profiles, p)
+	}
+	rows.Close()
+	profileInterfaces := []interface{}{}
+	for _, profile := range profiles {
 		// Attach Parameters if the 'id' parameter is sent
 		if _, ok := parameters[IDQueryParam]; ok {
-			params, err := ReadParameters(prof.ReqInfo.Tx, parameters, prof.ReqInfo.User, p)
-			p.Parameters = params
+			params, err := ReadParameters(prof.ReqInfo.Tx, parameters, prof.ReqInfo.User, profile)
+			profile.Parameters = params
 			if len(errs) > 0 {
 				log.Errorf("Error getting Parameters: %v", err)
 				return nil, []error{tc.DBError}, tc.SystemError
 			}
 		}
-		profiles = append(profiles, p)
+		profileInterfaces = append(profileInterfaces, profile)
 	}
 
-	return profiles, []error{}, tc.NoError
+	return profileInterfaces, []error{}, tc.NoError
 
 }
 
