@@ -79,7 +79,7 @@ type ProfileParameterByNamePost struct {
 	Value      *string `json:"value"`
 }
 
-func (p *ProfileParameterByNamePost) Validate(tx *sql.Tx) error {
+func (p *ProfileParameterByNamePost) Validate(tx *sql.Tx) []error {
 	errs := []string{}
 	if p.ConfigFile == nil || *p.ConfigFile == "" {
 		errs = append(errs, "configFile")
@@ -94,7 +94,7 @@ func (p *ProfileParameterByNamePost) Validate(tx *sql.Tx) error {
 		errs = append(errs, "value")
 	}
 	if len(errs) > 0 {
-		return errors.New("required fields missing: " + strings.Join(errs, ", "))
+		return []error{errors.New("required fields missing: " + strings.Join(errs, ", "))}
 	}
 	return nil
 }
@@ -121,16 +121,18 @@ func (pp *ProfileParametersByNamePost) UnmarshalJSON(bts []byte) error {
 	return nil
 }
 
-func (pp *ProfileParametersByNamePost) Validate(tx *sql.Tx) error {
-	errs := []string{}
+func (pp *ProfileParametersByNamePost) Validate(tx *sql.Tx) []error {
+	errs := []error{}
 	ppArr := ([]ProfileParameterByNamePost)(*pp)
 	for i, profileParam := range ppArr {
-		if err := profileParam.Validate(tx); err != nil {
-			errs = append(errs, "object "+strconv.Itoa(i)+": "+err.Error())
+		if ppErrs := profileParam.Validate(tx); len(ppErrs) > 0 {
+			for _, err := range ppErrs {
+				errs = append(errs, errors.New("object "+strconv.Itoa(i)+": "+err.Error()))
+			}
 		}
 	}
 	if len(errs) > 0 {
-		return errors.New("validate errors: " + strings.Join(errs, "; "))
+		return errs
 	}
 	return nil
 }
@@ -158,25 +160,25 @@ func (pp *PostProfileParam) Sanitize(tx *sql.Tx) {
 	}
 }
 
-func (pp *PostProfileParam) Validate(tx *sql.Tx) error {
+func (pp *PostProfileParam) Validate(tx *sql.Tx) []error {
 	pp.Sanitize(tx)
-	errs := []string{}
+	errs := []error{}
 	if pp.ProfileID == nil {
-		errs = append(errs, "profileId missing")
+		errs = append(errs, errors.New("profileId missing"))
 	} else if ok, err := ProfileExists(*pp.ProfileID, tx); err != nil {
-		errs = append(errs, "checking profile ID "+strconv.Itoa(int(*pp.ProfileID))+" existence: "+err.Error())
+		errs = append(errs, errors.New("checking profile ID "+strconv.Itoa(int(*pp.ProfileID))+" existence: "+err.Error()))
 	} else if !ok {
-		errs = append(errs, "no profile with ID "+strconv.Itoa(int(*pp.ProfileID))+" exists")
+		errs = append(errs, errors.New("no profile with ID "+strconv.Itoa(int(*pp.ProfileID))+" exists"))
 	}
 	if pp.ParamIDs == nil {
-		errs = append(errs, "paramIds missing")
+		errs = append(errs, errors.New("paramIds missing"))
 	} else if ok, err := ParamsExist(*pp.ParamIDs, tx); err != nil {
-		errs = append(errs, fmt.Sprintf("checking parameter IDs %v existence: "+err.Error(), *pp.ParamIDs))
+		errs = append(errs, errors.New(fmt.Sprintf("checking parameter IDs %v existence: "+err.Error(), *pp.ParamIDs)))
 	} else if !ok {
-		errs = append(errs, fmt.Sprintf("parameters with IDs %v don't all exist", *pp.ParamIDs))
+		errs = append(errs, errors.New(fmt.Sprintf("parameters with IDs %v don't all exist", *pp.ParamIDs)))
 	}
 	if len(errs) > 0 {
-		return errors.New("validate errors: " + strings.Join(errs, ", "))
+		return errs
 	}
 	return nil
 }
@@ -193,26 +195,26 @@ func (pp *PostParamProfile) Sanitize(tx *sql.Tx) {
 	}
 }
 
-func (pp *PostParamProfile) Validate(tx *sql.Tx) error {
+func (pp *PostParamProfile) Validate(tx *sql.Tx) []error {
 	pp.Sanitize(tx)
 
-	errs := []string{}
+	errs := []error{}
 	if pp.ParamID == nil {
-		errs = append(errs, "paramId missing")
+		errs = append(errs, errors.New("paramId missing"))
 	} else if ok, err := ParamExists(*pp.ParamID, tx); err != nil {
-		errs = append(errs, "checking param ID "+strconv.Itoa(int(*pp.ParamID))+" existence: "+err.Error())
+		errs = append(errs, errors.New("checking param ID "+strconv.Itoa(int(*pp.ParamID))+" existence: "+err.Error()))
 	} else if !ok {
-		errs = append(errs, "no parameter with ID "+strconv.Itoa(int(*pp.ParamID))+" exists")
+		errs = append(errs, errors.New("no parameter with ID "+strconv.Itoa(int(*pp.ParamID))+" exists"))
 	}
 	if pp.ProfileIDs == nil {
-		errs = append(errs, "profileIds missing")
+		errs = append(errs, errors.New("profileIds missing"))
 	} else if ok, err := ProfilesExist(*pp.ProfileIDs, tx); err != nil {
-		errs = append(errs, fmt.Sprintf("checking profiles IDs %v existence: "+err.Error(), *pp.ProfileIDs))
+		errs = append(errs, errors.New(fmt.Sprintf("checking profiles IDs %v existence: "+err.Error(), *pp.ProfileIDs)))
 	} else if !ok {
-		errs = append(errs, fmt.Sprintf("profiles with IDs %v don't all exist", *pp.ProfileIDs))
+		errs = append(errs, errors.New(fmt.Sprintf("profiles with IDs %v don't all exist", *pp.ProfileIDs)))
 	}
 	if len(errs) > 0 {
-		return errors.New("validate errors: " + strings.Join(errs, ", "))
+		return errs
 	}
 	return nil
 }

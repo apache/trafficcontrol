@@ -117,7 +117,7 @@ func CheckID(tx *sql.Tx, user *auth.CurrentUser, dsID int) (error, error, int) {
 // NOTE: This method does not use the use_tenancy parameter and if this method is being used
 // to control tenancy the parameter must be checked. The method IsResourceAuthorizedToUser checks the use_tenancy parameter
 // and should be used for this purpose in most cases.
-func GetUserTenantList(user auth.CurrentUser, db *sqlx.DB) ([]TOTenant, error) {
+func GetUserTenantList(user auth.CurrentUser, db *sqlx.DB) ([]tc.TenantNullable, error) {
 	query := `WITH RECURSIVE q AS (SELECT id, name, active, parent_id, last_updated FROM tenant WHERE id = $1
 	UNION SELECT t.id, t.name, t.active, t.parent_id, t.last_updated  FROM tenant t JOIN q ON q.id = t.parent_id)
 	SELECT id, name, active, parent_id, last_updated FROM q;`
@@ -136,14 +136,14 @@ func GetUserTenantList(user auth.CurrentUser, db *sqlx.DB) ([]TOTenant, error) {
 	}
 	defer rows.Close()
 
-	tenants := []TOTenant{}
+	tenants := []tc.TenantNullable{}
 
 	for rows.Next() {
 		if err := rows.Scan(&tenantID, &name, &active, &parentID, &lastUpdated); err != nil {
 			return nil, err
 		}
 
-		tenants = append(tenants, TOTenant{ID: &tenantID, Name: &name, Active: &active, ParentID: &parentID})
+		tenants = append(tenants, tc.TenantNullable{ID: &tenantID, Name: &name, Active: &active, ParentID: &parentID})
 	}
 
 	return tenants, nil
@@ -292,7 +292,6 @@ func IsResourceAuthorizedToUserTx(resourceTenantID int, user *auth.CurrentUser, 
 	}
 }
 
-
 // TOTenant provides a local type against which to define methods
 type TOTenant struct {
 	ReqInfo *api.APIInfo `json:"-"`
@@ -353,7 +352,7 @@ func (ten *TOTenant) SetKeys(keys map[string]interface{}) {
 }
 
 // Validate fulfills the api.Validator interface
-func (ten TOTenant) Validate(db *sqlx.DB) []error {
+func (ten TOTenant) Validate() []error {
 	errs := validation.Errors{
 		"name":     validation.Validate(ten.Name, validation.Required),
 		"active":   validation.Validate(ten.Active), // only validate it's boolean
@@ -369,24 +368,8 @@ func (ten TOTenant) Validate(db *sqlx.DB) []error {
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted tenant and have
 //to be added to the struct
-func (ten *TOTenant) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	resultRows, err := tx.NamedQuery(insertQuery(), ten)
+func (ten *TOTenant) Create() (error, tc.ApiErrorType) {
+	resultRows, err := ten.ReqInfo.Tx.NamedQuery(insertQuery(), ten)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -421,17 +404,12 @@ func (ten *TOTenant) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiEr
 	}
 	ten.SetKeys(map[string]interface{}{"id": id})
 	ten.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
 // Read implements the tc.Reader interface
-func (ten *TOTenant) Read(db *sqlx.DB, parameters map[string]string, user auth.CurrentUser) ([]interface{}, []error, tc.ApiErrorType) {
+func (ten *TOTenant) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
 	// Query Parameters to Database Query column mappings
@@ -451,7 +429,7 @@ func (ten *TOTenant) Read(db *sqlx.DB, parameters map[string]string, user auth.C
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := db.NamedQuery(query, queryValues)
+	rows, err := ten.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying tenants: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -476,25 +454,9 @@ func (ten *TOTenant) Read(db *sqlx.DB, parameters map[string]string, user auth.C
 //ParsePQUniqueConstraintError is used to determine if a tenant with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (ten *TOTenant) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (ten *TOTenant) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with tenant: %++v", updateQuery(), ten)
-	resultRows, err := tx.NamedQuery(updateQuery(), ten)
+	resultRows, err := ten.ReqInfo.Tx.NamedQuery(updateQuery(), ten)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -525,41 +487,19 @@ func (ten *TOTenant) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiEr
 		}
 		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
 //Delete implements the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (ten *TOTenant) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
+func (ten *TOTenant) Delete() (error, tc.ApiErrorType) {
 	if ten.ID == nil {
 		// should never happen...
 		return errors.New("invalid tenant: id is nil"), tc.SystemError
 	}
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
 
 	log.Debugf("about to run exec query: %s with tenant: %++v", deleteQuery(), ten)
-	result, err := tx.NamedExec(deleteQuery(), ten)
+	result, err := ten.ReqInfo.Tx.NamedExec(deleteQuery(), ten)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err = fmt.Errorf("pqErr is %++v\n", pqErr)
@@ -579,7 +519,7 @@ func (ten *TOTenant) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiEr
 
 			// another query to get tenant name for the error message
 			name := strconv.Itoa(*ten.ID)
-			if err := db.QueryRow(`SELECT name FROM tenant WHERE id = $1`, *ten.ID).Scan(&name); err != nil {
+			if err := ten.ReqInfo.Tx.QueryRow(`SELECT name FROM tenant WHERE id = $1`, *ten.ID).Scan(&name); err != nil {
 				// use ID as a backup for name the error -- this should never happen
 				log.Debugf("error getting tenant name: %++v", err)
 			}
@@ -600,12 +540,7 @@ func (ten *TOTenant) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiEr
 		}
 		return fmt.Errorf("this delete affected too many rows: %d", rowsAffected), tc.SystemError
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
+
 	return nil, tc.NoError
 }
 
@@ -667,4 +602,3 @@ func getDSTenantIDByIDTx(tx *sql.Tx, id int) (*int, bool, error) {
 	}
 	return tenantID, true, nil
 }
-
