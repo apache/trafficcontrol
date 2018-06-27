@@ -183,7 +183,7 @@ func GetUserTenantIDList(user auth.CurrentUser, db *sqlx.DB) ([]int, error) {
 	return tenants, nil
 }
 
-func GetUserTenantIDListTx(user auth.CurrentUser, tx *sqlx.Tx) ([]int, error) {
+func GetUserTenantIDListTx(user *auth.CurrentUser, tx *sqlx.Tx) ([]int, error) {
 	query := `WITH RECURSIVE q AS (SELECT id, name, active, parent_id FROM tenant WHERE id = $1
 	UNION SELECT t.id, t.name, t.active, t.parent_id  FROM tenant t JOIN q ON q.id = t.parent_id)
 	SELECT id FROM q;`
