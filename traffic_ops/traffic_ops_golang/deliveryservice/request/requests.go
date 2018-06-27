@@ -102,6 +102,15 @@ func (req *TODeliveryServiceRequest) Read(parameters map[string]string) ([]inter
 	if len(errs) > 0 {
 		return nil, errs, tc.DataConflictError
 	}
+	if tenant.IsTenancyEnabledTx(req.ReqInfo.Tx) {
+		log.Debugln("Tenancy is enabled")
+		tenantIDs, err := tenant.GetUserTenantIDListTx(req.ReqInfo.User, req.ReqInfo.Tx)
+		if err != nil {
+			log.Errorln("received error querying for user's tenants: " + err.Error())
+			return nil, []error{tc.DBError}, tc.SystemError
+		}
+		where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "r.deliveryservice->>'tenantId", tenantIDs)
+	}
 
 	query := selectDeliveryServiceRequestsQuery() + where + orderBy
 	log.Debugln("Query is ", query)
@@ -120,16 +129,7 @@ func (req *TODeliveryServiceRequest) Read(parameters map[string]string) ([]inter
 			log.Errorf("error parsing DeliveryServiceRequest rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
-
-		// TODO: combine tenancy with the query above so there's a single db call
-		t, err := s.IsTenantAuthorized(req.ReqInfo.User)
-		if err != nil {
-			log.Errorf("error checking tenancy: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
-		}
-		if t {
-			deliveryServiceRequests = append(deliveryServiceRequests, s)
-		}
+		deliveryServiceRequests = append(deliveryServiceRequests, s)
 	}
 
 	return deliveryServiceRequests, []error{}, tc.NoError

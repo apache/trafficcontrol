@@ -216,7 +216,7 @@ func CreateV12() http.HandlerFunc {
 
 	func(ds *TODeliveryServiceV12) Read(params map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	returnable := []interface{}{}
-	dses, errs, errType := readGetDeliveryServices(params, ds.ReqInfo.Tx, *ds.ReqInfo.User)
+	dses, errs, errType := readGetDeliveryServices(params, ds.ReqInfo.Tx, ds.ReqInfo.User)
 	if len(errs) > 0 {
 	for _, err := range errs {
 	if err.Error() == `id cannot parse to integer` {
