@@ -36,13 +36,13 @@ import (
 )
 
 //we need a type alias to define functions on
-type TODeliveryServiceRequestComment struct{
+type TODeliveryServiceRequestComment struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.DeliveryServiceRequestCommentNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
-	return func(reqInfo *api.APIInfo)api.CRUDer {
+func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TODeliveryServiceRequestComment{reqInfo, tc.DeliveryServiceRequestCommentNullable{}}
 		return &toReturn
 	}
@@ -222,7 +222,7 @@ func (comment *TODeliveryServiceRequestComment) Update() (error, tc.ApiErrorType
 func (comment *TODeliveryServiceRequestComment) Delete() (error, tc.ApiErrorType) {
 
 	var current TODeliveryServiceRequestComment
-	err :=comment.ReqInfo.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
+	err := comment.ReqInfo.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequestComments: %v", err)
 		return err, tc.SystemError

@@ -304,7 +304,7 @@ func UpdateHandler(typeFactory func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
 		//auditing here
 		err = CreateChangeLog(ApiChange, Updated, u, inf.User, inf.Tx)
 		if err != nil {
-			HandleErr(w,r,http.StatusInternalServerError,tc.DBError,errors.New("inserting changelog: " + err.Error()))
+			HandleErr(w, r, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
 		*inf.CommitTx = true
@@ -342,7 +342,6 @@ func DeleteHandler(typeFactory func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
 			return
 		}
 		defer inf.Close()
-
 
 		d := typeFactory(inf)
 
@@ -395,7 +394,7 @@ func DeleteHandler(typeFactory func(reqInfo *APIInfo) CRUDer) http.HandlerFunc {
 		log.Debugf("changelog for delete on object")
 		err = CreateChangeLog(ApiChange, Deleted, d, inf.User, inf.Tx)
 		if err != nil {
-			HandleErr(w,r,http.StatusInternalServerError,tc.DBError,errors.New("inserting changelog: " + err.Error()))
+			HandleErr(w, r, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
 		*inf.CommitTx = true
@@ -467,7 +466,7 @@ func CreateHandler(typeConstructor func(reqInfo *APIInfo) CRUDer) http.HandlerFu
 
 		err = CreateChangeLog(ApiChange, Created, i, inf.User, inf.Tx)
 		if err != nil {
-			HandleErr(w,r,http.StatusInternalServerError,tc.DBError,errors.New("inserting changelog: " + err.Error()))
+			HandleErr(w, r, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
 		*inf.CommitTx = true

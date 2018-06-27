@@ -21,8 +21,8 @@ package deliveryservice
 
 import (
 	"database/sql"
-	"errors"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -50,7 +50,7 @@ type TODeliveryServiceV13 struct {
 }
 
 func (ds *TODeliveryServiceV13) V12() *TODeliveryServiceV12 {
-	return &TODeliveryServiceV12{ReqInfo:ds.ReqInfo, DeliveryServiceNullableV12: ds.DeliveryServiceNullableV12}
+	return &TODeliveryServiceV12{ReqInfo: ds.ReqInfo, DeliveryServiceNullableV12: ds.DeliveryServiceNullableV12}
 }
 
 func (ds TODeliveryServiceV13) MarshalJSON() ([]byte, error) {
@@ -60,8 +60,8 @@ func (ds *TODeliveryServiceV13) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, ds.DeliveryServiceNullableV13)
 }
 
-func GetTypeV13Factory() func(reqInfo *api.APIInfo)api.CRUDer {
-	return func(reqInfo *api.APIInfo)api.CRUDer{
+func GetTypeV13Factory() func(reqInfo *api.APIInfo) api.CRUDer {
+	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TODeliveryServiceV13{reqInfo, tc.DeliveryServiceNullableV13{}}
 		return &toReturn
 	}
@@ -94,7 +94,7 @@ func (ds *TODeliveryServiceV13) Validate() []error {
 }
 
 // unimplemented, needed to satisfy CRUDer, since the framework doesn't allow a create to return an array of one
-func(ds *TODeliveryServiceV13) Create() (error, tc.ApiErrorType) {
+func (ds *TODeliveryServiceV13) Create() (error, tc.ApiErrorType) {
 	return errors.New("The Create method is not implemented"), http.StatusNotImplemented
 }
 
@@ -236,7 +236,7 @@ func create(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 	}
 
 	ds.LastUpdated = &lastUpdated
-	if err := api.CreateChangeLogRawErr(api.ApiChange, "Created ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err!= nil {
+	if err := api.CreateChangeLogRawErr(api.ApiChange, "Created ds: "+*ds.XMLID+" id: "+strconv.Itoa(*ds.ID), user, tx); err != nil {
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("error writing to audit log: " + err.Error())
 	}
 	return ds, http.StatusOK, nil, nil
@@ -378,7 +378,7 @@ func getTypeFromID(id int, tx *sql.Tx) (tc.DSType, error) {
 }
 
 // unimplemented, needed to satisfy CRUDer, since the framework doesn't allow an update to return an array of one
-func(ds *TODeliveryServiceV13) Update() (error, tc.ApiErrorType) {
+func (ds *TODeliveryServiceV13) Update() (error, tc.ApiErrorType) {
 	return errors.New("The Update method is not implemented"), http.StatusNotImplemented
 }
 
@@ -536,7 +536,6 @@ func update(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds *tc.Delive
 		ds.MatchList = &ml
 	}
 
-
 	if newDSType.HasSSLKeys() && oldHostName != newHostName {
 		if err := updateSSLKeys(ds, newHostName, tx, cfg); err != nil {
 			return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("updating delivery service " + *ds.XMLID + ": updating SSL keys: " + err.Error())
@@ -684,7 +683,6 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 
 	return dses, nil, tc.NoError
 }
-
 
 func updateSSLKeys(ds *tc.DeliveryServiceNullableV13, hostName string, tx *sql.Tx, cfg config.Config) error {
 	if ds.XMLID == nil {

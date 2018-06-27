@@ -25,9 +25,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 func TestFuncs(t *testing.T) {

@@ -21,6 +21,7 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -28,7 +29,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/jmoiron/sqlx"
-	"errors"
 )
 
 type ChangeLog struct {
@@ -77,10 +77,10 @@ func CreateChangeLogBuildMsg(level string, action string, user *auth.CurrentUser
 }
 
 func CreateChangeLogRawErr(level string, msg string, user *auth.CurrentUser, tx *sql.Tx) error {
-	 if _, err := tx.Exec(`INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`, level, msg, user.ID); err != nil {
-		 return errors.New("Inserting change log level '" + level + "' message '" + msg + "' user '" + user.UserName + "': " + err.Error())
-	 }
-	 return nil
+	if _, err := tx.Exec(`INSERT INTO log (level, message, tm_user) VALUES ($1, $2, $3)`, level, msg, user.ID); err != nil {
+		return errors.New("Inserting change log level '" + level + "' message '" + msg + "' user '" + user.UserName + "': " + err.Error())
+	}
+	return nil
 }
 
 func CreateChangeLogRaw(level string, msg string, user *auth.CurrentUser, db *sql.DB) {

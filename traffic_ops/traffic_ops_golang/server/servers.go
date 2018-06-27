@@ -39,13 +39,13 @@ import (
 )
 
 //we need a type alias to define functions on
-type TOServer struct{
+type TOServer struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	v13.ServerNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
-	return func(reqInfo *api.APIInfo)api.CRUDer {
+func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOServer{reqInfo, v13.ServerNullable{}}
 		return &toReturn
 	}

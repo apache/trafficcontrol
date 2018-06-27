@@ -63,6 +63,5 @@ func (req *TODeliveryServiceRequest) Validate() []error {
 
 	errs = append(errs, e...)
 
-
 	return errs
 }

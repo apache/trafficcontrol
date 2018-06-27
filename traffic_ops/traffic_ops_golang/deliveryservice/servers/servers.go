@@ -713,13 +713,13 @@ func dssSelectQuery() string {
 	return selectStmt
 }
 
-type TODSSDeliveryService struct{
+type TODSSDeliveryService struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.DSSDeliveryService
 }
 
-func GetDSSDeliveryServiceReaderSingleton() func(reqInfo *api.APIInfo)api.Reader {
-	return func(reqInfo *api.APIInfo)api.Reader {
+func GetDSSDeliveryServiceReaderSingleton() func(reqInfo *api.APIInfo) api.Reader {
+	return func(reqInfo *api.APIInfo) api.Reader {
 		toReturn := TODSSDeliveryService{reqInfo, tc.DSSDeliveryService{}}
 		return &toReturn
 	}

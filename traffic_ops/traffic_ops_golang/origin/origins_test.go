@@ -204,7 +204,7 @@ func TestValidate(t *testing.T) {
 	port := 65535
 	pro := "http"
 	lu := tc.TimeNoMod{Time: time.Now()}
-	c = TOOrigin{Origin:v13.Origin{ID: &id,
+	c = TOOrigin{Origin: v13.Origin{ID: &id,
 		Name:              &nm,
 		DeliveryServiceID: &id,
 		FQDN:              &fqdn,

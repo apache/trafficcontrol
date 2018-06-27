@@ -41,13 +41,13 @@ import (
 const ASNsPrivLevel = 10
 
 //we need a type alias to define functions on
-type TOASNV11 struct{
+type TOASNV11 struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.ASNNullable
 }
 
-func GetTypeSingleton() func(reqInfo *api.APIInfo)api.CRUDer {
-	return func(reqInfo *api.APIInfo)api.CRUDer {
+func GetTypeSingleton() func(reqInfo *api.APIInfo) api.CRUDer {
+	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOASNV11{reqInfo, tc.ASNNullable{}}
 		return &toReturn
 	}
@@ -156,7 +156,6 @@ func (asn *TOASNV11) Read(parameters map[string]string) ([]interface{}, []error,
 	}
 	return iasns, err, errType
 }
-
 
 // V11ReadAll implements the asns 1.1 route, which is different from the 1.1 route for a single ASN and from 1.2+ routes, in that it wraps the content in an additional "asns" object.
 func V11ReadAll() http.HandlerFunc {

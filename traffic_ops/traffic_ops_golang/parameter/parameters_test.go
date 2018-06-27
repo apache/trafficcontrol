@@ -31,8 +31,8 @@ import (
 
 	"encoding/json"
 
-	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func getTestParameters() []tc.ParameterNullable {
@@ -95,9 +95,9 @@ func TestGetParameters(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 	v := map[string]string{"name": "1"}
-	user := auth.CurrentUser{PrivLevel:30}
+	user := auth.CurrentUser{PrivLevel: 30}
 
-	reqInfo := api.APIInfo{Tx:db.MustBegin(),CommitTx:util.BoolPtr(false),User:&user}
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false), User: &user}
 	pps, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
 	if len(errs) > 0 {
 		t.Errorf("parameter.Read expected: no errors, actual: %v", errs)
