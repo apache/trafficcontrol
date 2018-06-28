@@ -28,16 +28,13 @@ import (
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
 	"github.com/lib/pq"
 )
-
-type CachegroupPostDSReq struct {
-	DeliveryServices []int64 `json:"deliveryServices"`
-}
 
 func DSPostHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
@@ -47,7 +44,7 @@ func DSPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	req := CachegroupPostDSReq{}
+	req := tc.CachegroupPostDSReq{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
@@ -58,48 +55,42 @@ func DSPostHandler(w http.ResponseWriter, r *http.Request) {
 	api.RespWriterVals(w, r, inf.Tx.Tx, vals)(postDSes(inf.Tx.Tx, inf.User, int64(inf.IntParams["id"]), req.DeliveryServices))
 }
 
-type CacheGroupPostDSResp struct {
-	ID               int64          `json:"id"`
-	ServerNames      []tc.CacheName `json:"serverNames"`
-	DeliveryServices []int64        `json:"deliveryServices"`
-}
-
-func postDSes(tx *sql.Tx, user *auth.CurrentUser, cgID int64, dsIDs []int64) (CacheGroupPostDSResp, error) {
+func postDSes(tx *sql.Tx, user *auth.CurrentUser, cgID int64, dsIDs []int64) (tc.CacheGroupPostDSResp, error) {
 	cdnName, err := getCachegroupCDN(tx, cgID)
 	if err != nil {
-		return CacheGroupPostDSResp{}, errors.New("getting cachegroup CDN: " + err.Error())
+		return tc.CacheGroupPostDSResp{}, errors.New("getting cachegroup CDN: " + err.Error())
 	}
 
 	tenantIDs, err := getDSTenants(tx, dsIDs)
 	if err != nil {
-		return CacheGroupPostDSResp{}, errors.New("getting delivery service tennat IDs: " + err.Error())
+		return tc.CacheGroupPostDSResp{}, errors.New("getting delivery service tennat IDs: " + err.Error())
 	}
 	for _, tenantID := range tenantIDs {
 		ok, err := tenant.IsResourceAuthorizedToUserTx(int(tenantID), user, tx)
 		if err != nil {
-			return CacheGroupPostDSResp{}, errors.New("checking tenancy: " + err.Error())
+			return tc.CacheGroupPostDSResp{}, errors.New("checking tenancy: " + err.Error())
 		}
 		if !ok {
-			return CacheGroupPostDSResp{}, errors.New("not authorized for delivery service tenant " + strconv.FormatInt(tenantID, 10))
+			return tc.CacheGroupPostDSResp{}, errors.New("not authorized for delivery service tenant " + strconv.FormatInt(tenantID, 10))
 		}
 	}
 
 	if err := verifyDSesCDN(tx, dsIDs, cdnName); err != nil {
-		return CacheGroupPostDSResp{}, errors.New("verifying delivery service CDNs match cachegroup server CDNs: " + err.Error())
+		return tc.CacheGroupPostDSResp{}, errors.New("verifying delivery service CDNs match cachegroup server CDNs: " + err.Error())
 	}
 	cgServers, err := getCachegroupServers(tx, cgID)
 	if err != nil {
-		return CacheGroupPostDSResp{}, errors.New("getting cachegroup server names " + err.Error())
+		return tc.CacheGroupPostDSResp{}, errors.New("getting cachegroup server names " + err.Error())
 	}
 	if err := insertCachegroupDSes(tx, cgID, dsIDs); err != nil {
-		return CacheGroupPostDSResp{}, errors.New("inserting cachegroup delivery services: " + err.Error())
+		return tc.CacheGroupPostDSResp{}, errors.New("inserting cachegroup delivery services: " + err.Error())
 	}
 
 	if err := updateParams(tx, dsIDs); err != nil {
-		return CacheGroupPostDSResp{}, errors.New("updating delivery service parameters: " + err.Error())
+		return tc.CacheGroupPostDSResp{}, errors.New("updating delivery service parameters: " + err.Error())
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, fmt.Sprintf("assign servers in cache group %v to deliveryservices %v", cgID, dsIDs), user, tx)
-	return CacheGroupPostDSResp{ID: cgID, ServerNames: cgServers, DeliveryServices: dsIDs}, nil
+	return tc.CacheGroupPostDSResp{ID: util.JSONIntStr(cgID), ServerNames: cgServers, DeliveryServices: dsIDs}, nil
 }
 
 func insertCachegroupDSes(tx *sql.Tx, cgID int64, dsIDs []int64) error {
