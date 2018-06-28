@@ -79,7 +79,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	}
 
 	found := false
-	for _, dss := range dsServers {
+	for _, dss := range dsServers.Response {
 		if *dss.DeliveryService == ds.ID && *dss.Server == server.ID {
 			found = true
 			break
@@ -89,7 +89,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 		t.Fatalf("POST delivery service servers returned success, but ds-server not in GET")
 	}
 
-	if err := TOSession.DeleteDeliveryServiceServer(ds.ID, server.ID); err != nil {
+	if _, _, err := TOSession.DeleteDeliveryServiceServer(ds.ID, server.ID); err != nil {
 		t.Fatalf("DELETE delivery service server: %v\n", err)
 	}
 
@@ -99,7 +99,7 @@ func DeleteTestDeliveryServiceServers(t *testing.T) {
 	}
 
 	found = false
-	for _, dss := range dsServers {
+	for _, dss := range dsServers.Response {
 		if *dss.DeliveryService == ds.ID && *dss.Server == server.ID {
 			found = true
 			break
