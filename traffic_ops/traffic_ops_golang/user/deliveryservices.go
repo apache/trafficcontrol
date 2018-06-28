@@ -94,7 +94,7 @@ func filterAuthorized(db *sqlx.DB, dses []tc.DeliveryServiceNullableV13, user *a
 		if ds.TenantID == nil {
 			continue
 		}
-		authorized, err := tenant.IsResourceAuthorizedToUser(*ds.TenantID, *user, db)
+		authorized, err := tenant.IsResourceAuthorizedToUser(*ds.TenantID, user, db)
 		if err != nil {
 			return nil, errors.New("checking delivery service tenancy authorization: " + err.Error())
 		}
@@ -112,7 +112,7 @@ func filterAvailableAuthorized(db *sqlx.DB, dses []tc.UserAvailableDS, user *aut
 		if ds.TenantID == nil {
 			continue
 		}
-		authorized, err := tenant.IsResourceAuthorizedToUser(*ds.TenantID, *user, db)
+		authorized, err := tenant.IsResourceAuthorizedToUser(*ds.TenantID, user, db)
 		if err != nil {
 			return nil, errors.New("checking delivery service tenancy authorization: " + err.Error())
 		}
@@ -163,7 +163,10 @@ ds.mid_header_rewrite,
 COALESCE(ds.miss_lat, 0.0),
 COALESCE(ds.miss_long, 0.0),
 ds.multi_site_origin,
-ds.org_server_fqdn,
+(SELECT o.protocol::text || '://' || o.fqdn || rtrim(concat(':', o.port::text), ':')
+  FROM origin o
+  WHERE o.deliveryservice = ds.id
+  AND o.is_primary) as org_server_fqdn,
 ds.origin_shield,
 ds.profile as profileID,
 profile.name as profile_name,
