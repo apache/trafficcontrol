@@ -14,14 +14,11 @@
 # limitations under the License.
 #
 
-GO_BINARY=/usr/local/go/bin/go
-
 echo "Now installing goose"
 export GOPATH=/opt/traffic_ops/go
 mkdir -p $GOPATH
 
-echo "GO_BINARY: $GO_BINARY"
-$GO_BINARY get bitbucket.org/liamstask/goose/cmd/goose
-$GO_BINARY get github.com/lib/pq
+go get bitbucket.org/liamstask/goose/cmd/goose
+go get github.com/lib/pq
 
 echo "Successfully installed goose to $GOPATH/bin/goose"
