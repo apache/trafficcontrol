@@ -19,6 +19,10 @@ package tc
  * under the License.
  */
 
+import (
+	"time"
+)
+
 // UsersResponse ...
 type UsersResponse struct {
 	Response []User `json:"response"`
@@ -44,4 +48,45 @@ type User struct {
 type UserCredentials struct {
 	Username string `json:"u"`
 	Password string `json:"p"`
+}
+
+// TODO reconcile APIUser and User
+
+type APIUser struct {
+	AddressLine1     *string    `json:"addressLine1", db:"address_line1"`
+	AddressLine2     *string    `json:"addressLine2" db:"address_line2"`
+	City             *string    `json:"city" db:"city"`
+	Company          *string    `json:"company,omitempty" db:"company"`
+	Country          *string    `json:"country" db:"country"`
+	Email            *string    `json:"email" db:"email"`
+	FullName         *string    `json:"fullName" db:"full_name"`
+	GID              *int       `json:"gid" db:"gid"`
+	ID               *int       `json:"id" db:"id"`
+	LastUpdated      *time.Time `json:"lastUpdated" db:"last_updated"`
+	NewUser          *bool      `json:"newUser" db:"new_user"`
+	PhoneNumber      *string    `json:"phoneNumber" db:"phone_number"`
+	PostalCode       *string    `json:"postalCode" db:"postal_code"`
+	PublicSSHKey     *string    `json:"publicSshKey" db:"public_ssh_key"`
+	RegistrationSent *time.Time `json:"registrationSent" db:"registration_sent"`
+	Role             *int       `json:"role" db:"role"`
+	RoleName         *string    `json:"rolename"`
+	StateOrProvince  *string    `json:"stateOrProvince" db:"state_or_province"`
+	Tenant           *string    `json:"tenant"`
+	TenantID         *int       `json:"tenantId" db:"tenant_id"`
+	UID              *int       `json:"uid" db:"uid"`
+	UserName         *string    `json:"username" db:"username"`
+}
+
+type APIUserPost struct {
+	APIUser
+	ConfirmLocalPassword *string `json:"confirmLocalPassword" db:"confirm_local_passwd"`
+	LocalPassword        *string `json:"localPassword" db:"local_passwd"`
+}
+
+type APIUsersResponse struct {
+	Response []APIUser `json:"response"`
+}
+
+type UserDeliveryServiceDeleteResponse struct {
+	Alerts []Alert `json:"alerts"`
 }
