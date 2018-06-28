@@ -40,10 +40,11 @@ RUN yum install -y perl-DBIx-Connector
 # Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
 ARG TRAFFIC_OPS_RPM=traffic_ops.rpm
 ADD $TRAFFIC_OPS_RPM /
-RUN yum install -y /$(basename $TRAFFIC_OPS_RPM)
-
-# once installed, remove rpm to lower image size
-RUN rm /$(basename $TRAFFIC_OPS_RPM) && \
+RUN yum install -y \
+        /$(basename $TRAFFIC_OPS_RPM) \
+        git \
+        golang && \
+    rm /$(basename $TRAFFIC_OPS_RPM) && \
     yum clean all
 
 # if local.tar.gz exists, untar to .../app/local to keep carton from reinstalling the Perl universe
@@ -57,8 +58,7 @@ RUN [ -f /tmp/local.tar.gz ] && \
      POSTGRES_HOME=/usr/pgsql-9.6 carton && \
      rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz
 
-RUN /opt/traffic_ops/install/bin/install_go.sh && \
-    /opt/traffic_ops/install/bin/install_goose.sh
+RUN /opt/traffic_ops/install/bin/install_goose.sh
 
 RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/install/lib/ \
 	&& export TERM=xterm \
