@@ -534,11 +534,11 @@ func (ds *TODeliveryServiceV13) Delete(db *sqlx.DB, user auth.CurrentUser) (erro
 	}
 	xmlID, ok, err := ds.V12().GetXMLID(tx)
 	if err != nil {
-		log.Errorln("TODeliveryServiceV13.Delete ID '" + string(*ds.ID) + "' loading XML ID: " + err.Error())
+		log.Errorln("TODeliveryServiceV13.Delete ID '" + strconv.Itoa(*ds.ID) + "' loading XML ID: " + err.Error())
 		return tc.DBError, tc.SystemError
 	}
 	if !ok {
-		log.Errorln("TODeliveryServiceV13.Delete ID '" + string(*ds.ID) + "' had no delivery service!")
+		log.Errorln("TODeliveryServiceV13.Delete ID '" + strconv.Itoa(*ds.ID) + "' had no delivery service!")
 		return tc.DBError, tc.DataMissingError
 	}
 	ds.XMLID = &xmlID
