@@ -143,7 +143,7 @@ func rangeReqHandleBeforeCacheLookup(icfg interface{}, d BeforeCacheLookUpData) 
 		}
 		newKey := d.DefaultCacheKey + sep + cfg.CacheKeyString + "=" + d.Req.Header.Get("Range")
 		d.CacheKeyOverrideFunc(newKey)
-		log.Debugf("range_req_handler: store_ranges default key:%s, new key:%s\n", d.DefaultCacheKey, newKey)
+		//log.Debugf("range_req_handler: store_ranges default key:%s, new key:%s\n", d.DefaultCacheKey, newKey)
 	}
 
 	if cfg.Mode == "slice" { // not needed for the last one, but makes things more readable.
@@ -283,11 +283,14 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 	ctx, ok := (*ictx).(*RequestInfo)
 	if !ok {
 		log.Errorf("Invalid context: %v\n", ictx)
+		*d.Body, *d.Body, *d.Code = nil, nil, http.StatusInternalServerError
+		return
 	}
 
 	cfg, ok := icfg.(*rangeRequestConfig)
 	if !ok {
 		log.Errorf("range_req_handler config '%v' type '%T' expected *rangeRequestConfig\n", icfg, icfg)
+		*d.Body, *d.Body, *d.Code = nil, nil, http.StatusInternalServerError
 		return
 	}
 	if cfg.Mode == "store_ranges" {
@@ -317,10 +320,7 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 			cachedObject, ok := d.Cache.Peek(cacheKey) // use Peek here, we already moved in the LRU and updated hitCount when we looked it up in beforeCacheLookup
 			if !ok {
 				log.Errorf("SLICE ERROR %s is not available in beforeRespond - this should not be possible, unless your cache is rolling _very_ fast!!!\n", cacheKey)
-				*d.Body = nil
-				d.Hdr.Del("Content-Range")
-				d.Hdr.Del("Content-Length")
-				*d.Code = http.StatusInternalServerError
+				*d.Body, *d.Body, *d.Code = nil, nil, http.StatusInternalServerError
 				return
 			}
 			sliceBody = append(sliceBody, cachedObject.Body...)
@@ -331,6 +331,8 @@ func rangeReqHandleBeforeRespond(icfg interface{}, d BeforeRespondData) {
 		ctx.TotalContentLength, err = strconv.ParseInt(d.Hdr.Get("Content-Length"), 10, 64)
 		if err != nil {
 			log.Errorf("Invalid Content-Length header: %v\n", d.Hdr.Get("Content-Length"))
+			*d.Body, *d.Body, *d.Code = nil, nil, http.StatusInternalServerError
+			return
 		}
 	}
 
