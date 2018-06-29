@@ -97,9 +97,9 @@ Installing the ORT script
 
         https://builds.apache.org/view/S-Z/view/TrafficControl/
 
-    Sample command: ::
+    Sample command (NOTE that the example name used here most likely no longer exists): ::
 
-        sudo wget https://builds.apache.org/view/S-Z/view/TrafficControl/job/incubator-trafficcontrol-2.1.x-build/lastSuccessfulBuild/artifact/dist/traffic_ops_ort-2.1.0-6807.1dcd512f.el7.x86_64.rpm
+        sudo wget https://builds.apache.org/job/trafficcontrol-2.1.x-build/lastSuccessfulBuild/artifact/dist/traffic_ops_ort-2.1.0-6807.1dcd512f.el7.x86_64.rpm
         sudo yum install traffic_ops_ort*.rpm
 
 #.  Install modules required by ORT if needed: ``sudo yum -y install perl-JSON perl-Crypt-SSLeay``

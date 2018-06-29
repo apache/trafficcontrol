@@ -52,4 +52,4 @@ What is Twelve Monkeys?
 
 What license is Traffic Control released under?
 ===============================================
-	See the `LICENSE file <https://github.com/apache/incubator-trafficcontrol/blob/master/LICENSE>`_
+	See the `LICENSE file <https://github.com/apache/trafficcontrol/blob/master/LICENSE>`_
