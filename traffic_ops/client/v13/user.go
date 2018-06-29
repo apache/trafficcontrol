@@ -18,7 +18,7 @@ package v13
 import (
 	"encoding/json"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // Users gets an array of Users.
@@ -43,4 +43,15 @@ func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
 	}
 
 	return data.Response, reqInf, nil
+}
+
+// GetUserCurrent gets information about the current user
+func (to *Session) GetUserCurrent() (*tc.UserCurrent, ReqInf, error) {
+	url := apiBase + `/user/current`
+	resp := tc.UserCurrentResponse{}
+	reqInf, err := get(to, url, &resp)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	return &resp.Response, reqInf, nil
 }
