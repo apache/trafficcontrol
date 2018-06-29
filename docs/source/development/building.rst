@@ -91,4 +91,4 @@ Usage
     traffic_ops-2.1.0-6396.07033d6d.el7.x86_64.rpm
     traffic_ops_ort-2.1.0-6396.07033d6d.el7.src.rpm
     traffic_ops_ort-2.1.0-6396.07033d6d.el7.x86_64.rpm
-    trafficcontrol-incubating-2.1.0.tar.gz
+    apache-trafficcontrol-2.1.0.tar.gz
