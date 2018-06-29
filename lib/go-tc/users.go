@@ -116,3 +116,7 @@ type UserCurrent struct {
 	UID             *int    `json:"uid,omitempty"`
 	UserName        *string `json:"username,omitempty"`
 }
+
+type UserCurrentResponse struct {
+	Response UserCurrent `json:"response"`
+}
