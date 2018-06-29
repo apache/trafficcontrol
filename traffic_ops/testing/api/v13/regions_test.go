@@ -28,6 +28,7 @@ func TestRegions(t *testing.T) {
 	CreateTestRegions(t)
 	UpdateTestRegions(t)
 	GetTestRegions(t)
+	GetTestRegionsByNamePath(t)
 	DeleteTestRegions(t)
 	DeleteTestDivisions(t)
 
@@ -94,6 +95,16 @@ func GetTestRegions(t *testing.T) {
 		resp, _, err := TOSession.GetRegionByName(region.Name)
 		if err != nil {
 			t.Errorf("cannot GET Region by region: %v - %v\n", err, resp)
+		}
+	}
+}
+
+func GetTestRegionsByNamePath(t *testing.T) {
+	log.Debugln("GetTestRegionsByNamePath")
+	for _, region := range testData.Regions {
+		_, _, err := TOSession.GetRegionByNamePath(region.Name)
+		if err != nil {
+			t.Fatalf("cannot GET Region by name: %v - %v\n", region.Name, err)
 		}
 	}
 }

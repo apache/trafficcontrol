@@ -34,12 +34,16 @@ type Region struct {
 }
 
 type RegionName struct {
-	ID           int       `json:"id"`
-	Name         string    `json:"name"`
+	ID       int                `json:"id"`
+	Name     string             `json:"name"`
 	Division RegionNameDivision `json:"division"`
 }
 
 type RegionNameDivision struct {
-	ID     int       `json:"id"`
-	Name string    `json:"name"`
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+type RegionNameResponse struct {
+	Response []RegionName `json:"response"`
 }
