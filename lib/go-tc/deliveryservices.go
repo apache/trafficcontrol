@@ -533,6 +533,10 @@ type DeliveryServicePatterns struct {
 	DSName   DeliveryServiceName `json:"dsName"`
 }
 
+type DeliveryServiceMatchesResponse struct {
+	Response []DeliveryServicePatterns `json:"response"`
+}
+
 // DeliveryServiceRoutingResponse ...
 type DeliveryServiceRoutingResponse struct {
 	Response DeliveryServiceRouting `json:"response"`

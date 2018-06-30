@@ -251,3 +251,13 @@ func (to *Session) GetDeliveryServiceSSLKeysByHostname(hostname string) (*tc.Del
 
 	return &data.Response, reqInf, nil
 }
+
+func (to *Session) GetDeliveryServiceMatches() ([]tc.DeliveryServicePatterns, ReqInf, error) {
+	uri := apiBase + `/deliveryservice_matches`
+	resp := tc.DeliveryServiceMatchesResponse{}
+	reqInf, err := get(to, uri, &resp)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	return resp.Response, reqInf, nil
+}
