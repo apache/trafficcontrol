@@ -551,3 +551,7 @@ type DeliveryServiceAvailableInfo struct {
 	ID          int    `json:"id"`
 	DisplayName string `json:"displayName"`
 }
+
+type DeliveryServiceAvailableInfoResp struct {
+	Response []DeliveryServiceAvailableInfo `json:"response"`
+}
