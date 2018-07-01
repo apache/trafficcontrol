@@ -1653,7 +1653,7 @@
             "routerPortName": "",
             "status": "REPORTED",
             "tcpPort": 81,
-            "type": "TRAFFIC_MONITOR",
+            "typeName": "RASCAL",
             "updPending": true,
             "xmppId": "",
             "xmppPasswd": "X"
@@ -1694,6 +1694,38 @@
             "updPending": true,
             "xmppId": "",
             "xmppPasswd": ""
+        },
+        {
+            "domainName": "kabletown.net",
+            "guid": null,
+            "hostName": "traffic-router-01",
+            "httpsPort": null,
+            "iloIpAddress": "",
+            "iloIpGateway": "",
+            "iloIpNetmask": "",
+            "iloPassword": "",
+            "iloUsername": "",
+            "interfaceMtu": 9000,
+            "interfaceName": "bond0",
+            "ip6Address": "2345:1234:12:c::11/64",
+            "ip6Gateway": "2345:1234:12:c::11",
+            "ipAddress": "127.0.0.5",
+            "ipGateway": "127.0.0.5",
+            "ipNetmask": "255.255.255.252",
+            "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
+            "mgmtIpAddress": "",
+            "mgmtIpGateway": "",
+            "mgmtIpNetmask": "",
+            "offlineReason": null,
+            "rack": "RR 119.02",
+            "revalPending": false,
+            "routerHostName": "",
+            "routerPortName": "",
+            "tcpPort": 3333,
+            "typeName": "CCR",
+            "updPending": true,
+            "xmppId": "",
+            "xmppPasswd": "X"
         }
     ],
     "staticdnsentries": [
@@ -1963,7 +1995,7 @@
         {
             "description": "Traffic Monitor (Rascal)",
             "lastUpdated": "2018-03-02T19:13:46.832327+00:00",
-            "name": "TRAFFIC_MONITOR",
+            "name": "RASCAL",
             "useInTable": "server"
         }
     ],

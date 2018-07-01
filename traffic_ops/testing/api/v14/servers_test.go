@@ -36,7 +36,7 @@ func CreateTestServers(t *testing.T) {
 		resp, _, err := TOSession.CreateServer(server)
 		log.Debugln("Response: ", server.HostName, " ", resp)
 		if err != nil {
-			t.Errorf("could not CREATE servers: %v\n", err)
+			t.Errorf("could not CREATE server %v: %v\n", server.HostName, err)
 		}
 	}
 
