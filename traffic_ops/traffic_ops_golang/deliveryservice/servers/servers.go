@@ -143,8 +143,8 @@ func (dss *TODeliveryServiceServer) readDSS(db *sqlx.DB, params map[string]strin
 	pagestr := params["page"]
 	orderby := params["orderby"]
 	limit := 20
-	offset := 1
-	page := 1
+	offset := 0
+	page := 0
 	var err error = nil
 
 	if limitstr != "" {
