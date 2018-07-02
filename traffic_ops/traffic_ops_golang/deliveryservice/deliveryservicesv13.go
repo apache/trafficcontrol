@@ -615,7 +615,13 @@ func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.C
 		return nil, errs, tc.DataConflictError
 	}
 
-	if tenant.IsTenancyEnabledTx(tx) {
+	tenancyEnabled, err := tenant.IsTenancyEnabledTx(tx.Tx)
+	if err != nil {
+		log.Errorln("checking if tenancy is enabled: " + err.Error())
+		return nil, []error{tc.DBError}, tc.SystemError
+	}
+
+	if tenancyEnabled {
 		log.Debugln("Tenancy is enabled")
 		tenantIDs, err := tenant.GetUserTenantIDListTx(user, tx)
 		if err != nil {

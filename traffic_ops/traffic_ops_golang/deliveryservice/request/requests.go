@@ -101,7 +101,12 @@ func (req *TODeliveryServiceRequest) Read(parameters map[string]string) ([]inter
 	if len(errs) > 0 {
 		return nil, errs, tc.DataConflictError
 	}
-	if tenant.IsTenancyEnabledTx(req.ReqInfo.Tx) {
+	tenancyEnabled, err := tenant.IsTenancyEnabledTx(req.ReqInfo.Tx.Tx)
+	if err != nil {
+		log.Errorln("checking if tenancy is enabled: " + err.Error())
+		return nil, []error{tc.DBError}, tc.SystemError
+	}
+	if tenancyEnabled {
 		log.Debugln("Tenancy is enabled")
 		tenantIDs, err := tenant.GetUserTenantIDListTx(req.ReqInfo.User, req.ReqInfo.Tx)
 		if err != nil {
