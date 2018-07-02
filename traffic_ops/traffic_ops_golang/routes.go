@@ -21,11 +21,14 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"runtime"
 	"time"
 
 	tclog "github.com/apache/trafficcontrol/lib/go-log"
@@ -61,6 +64,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/types"
 
 	"github.com/basho/riak-go-client"
+	"github.com/jmoiron/sqlx"
 )
 
 // Authenticated ...
@@ -352,9 +356,55 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{http.MethodGet, `tools/write_crconfig/{cdn}/?$`, crconfig.SnapshotOldGUIHandler(d.DB, d.Config), auth.PrivLevelOperations, Authenticated, nil},
 		// DEPRECATED - use GET /api/1.2/cdns/{cdn}/snapshot
 		{http.MethodGet, `CRConfig-Snapshots/{cdn}/CRConfig.json?$`, crconfig.SnapshotOldGetHandler(d.DB, d.Config), auth.PrivLevelReadOnly, Authenticated, nil},
+		// USED FOR Debugging
+		{http.MethodGet, `admin/memory-stats`, memoryStatsHandler(d.Profiling), auth.PrivLevelOperations, Authenticated, nil},
+		{http.MethodGet, `admin/db-stats`, dbStatsHandler(d.Profiling, d.DB), auth.PrivLevelOperations, Authenticated, nil},
 	}
 
 	return routes, rawRoutes, proxyHandler, nil
+}
+
+func memoryStatsHandler(profiling *bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
+		if *profiling {
+			stats := runtime.MemStats{}
+			runtime.ReadMemStats(&stats)
+
+			bytes, err := json.Marshal(stats)
+			if err != nil {
+				tclog.Errorln("unable to marshal stats: " + err.Error())
+				handleErrs(http.StatusInternalServerError, errors.New("marshalling error"))
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(bytes)
+		} else {
+			handleErrs(http.StatusPreconditionFailed, errors.New("profiling is not enabled"))
+			return
+		}
+	}
+}
+
+func dbStatsHandler(profiling *bool, db *sqlx.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleErrs := tc.GetHandleErrorsFunc(w, r)
+		if *profiling {
+			stats := db.DB.Stats()
+
+			bytes, err := json.Marshal(stats)
+			if err != nil {
+				tclog.Errorln("unable to marshal stats: " + err.Error())
+				handleErrs(http.StatusInternalServerError, errors.New("marshalling error"))
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(bytes)
+		} else {
+			handleErrs(http.StatusPreconditionFailed, errors.New("profiling is not enabled"))
+			return
+		}
+	}
 }
 
 // RootHandler returns the / handler for the service, which reverse-proxies the old Perl Traffic Ops

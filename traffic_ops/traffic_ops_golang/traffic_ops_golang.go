@@ -25,14 +25,19 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"runtime/pprof"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 
+	"os/signal"
+	"path/filepath"
+
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"golang.org/x/sys/unix"
 )
 
 // set the version at build time: `go build -X "main.version=..."`
@@ -117,7 +122,9 @@ func main() {
 
 	db.SetMaxOpenConns(cfg.MaxDBConnections)
 
-	if err := RegisterRoutes(ServerData{DB: db, Config: cfg}); err != nil {
+	profiling := cfg.ProfilingEnabled
+
+	if err := RegisterRoutes(ServerData{DB: db, Config: cfg, Profiling: &profiling}); err != nil {
 		log.Errorf("registering routes: %v\n", err)
 		return
 	}
@@ -134,8 +141,84 @@ func main() {
 		ErrorLog:          log.Error,
 	}
 
-	if err := server.ListenAndServeTLS(cfg.CertPath, cfg.KeyPath); err != nil {
-		log.Errorf("stopping server: %v\n", err)
-		return
+	go func() {
+		if err := server.ListenAndServeTLS(cfg.CertPath, cfg.KeyPath); err != nil {
+			log.Errorf("stopping server: %v\n", err)
+			panic(err)
+		}
+	}()
+
+	profilingLocation := os.TempDir()
+
+	if cfg.LogLocationError != "" && cfg.LogLocationError != "stdout" {
+		errorDir := filepath.Dir(cfg.LogLocationError)
+
+		if _, err := os.Stat(errorDir); err == nil {
+			profilingLocation = errorDir
+		}
+	}
+
+	profilingLocation = filepath.Join(profilingLocation, "profiling")
+	if cfg.ProfilingLocation != "" {
+		profilingLocation = cfg.ProfilingLocation
+	} else {
+		//if it isn't a provided location create the profiling directory under the default temp location
+		err = os.Mkdir(profilingLocation, 0755)
+		if err != nil {
+			log.Errorf("unable to create profiling location: %s\n", err.Error())
+		}
+	}
+
+	reloadProfilingConfig := func() {
+		log.Debugln("received SIGHUP")
+		newCfg, err := config.LoadCdnConfig(*configFileName)
+		if err != nil {
+			log.Errorln("reloading config: ", err.Error())
+		}
+		profiling = newCfg.ProfilingEnabled
+		if newCfg.ProfilingLocation != "" {
+			profilingLocation = cfg.ProfilingLocation
+			log.Infof("profiling location: %s\n", profilingLocation)
+		}
+		if profiling {
+			log.Infoln("profiling enabled")
+		}
+	}
+
+	log.Infof("profiling location: %s\n", profilingLocation)
+	if profiling {
+		log.Infoln("profiling enabled")
+	}
+	continuousProfile(&profiling, &profilingLocation, cfg.Version)
+
+	signalReloader(unix.SIGHUP, reloadProfilingConfig)
+}
+
+func continuousProfile(profiling *bool, profilingDir *string, version string) {
+	go func() {
+		for {
+			if *profiling {
+				now := time.Now().UTC()
+				filename := filepath.Join(*profilingDir, fmt.Sprintf("tocpu-%s-%s.pprof", version, now.Format(time.RFC3339)))
+				f, err := os.Create(filename)
+				if err != nil {
+					log.Errorf("creating profile: %v\n", err)
+					os.Exit(1)
+				}
+
+				pprof.StartCPUProfile(f)
+				time.Sleep(time.Minute)
+				pprof.StopCPUProfile()
+				f.Close()
+			}
+		}
+	}()
+}
+
+func signalReloader(sig os.Signal, f func()) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, sig)
+	for range c {
+		f()
 	}
 }

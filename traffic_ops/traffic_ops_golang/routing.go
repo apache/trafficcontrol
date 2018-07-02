@@ -74,6 +74,7 @@ func getDefaultMiddleware(secret string) []Middleware {
 type ServerData struct {
 	config.Config
 	DB *sqlx.DB
+	Profiling *bool // Yes this is a field in the config but we want to live reload this value and NOT the entire config
 }
 
 // CompiledRoute ...
