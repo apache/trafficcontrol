@@ -27,6 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
@@ -79,7 +80,7 @@ func (pl *TOPhysLocation) GetType() string {
 	return "physLocation"
 }
 
-func (pl *TOPhysLocation) Validate() []error {
+func (pl *TOPhysLocation) Validate() error {
 	errs := validation.Errors{
 		"address":   validation.Validate(pl.Address, validation.Required),
 		"city":      validation.Validate(pl.City, validation.Required),
@@ -90,7 +91,7 @@ func (pl *TOPhysLocation) Validate() []error {
 		"zip":       validation.Validate(pl.Zip, validation.Required),
 	}
 	if errs != nil {
-		return tovalidate.ToErrors(errs)
+		return util.JoinErrs(tovalidate.ToErrors(errs))
 	}
 	return nil
 }

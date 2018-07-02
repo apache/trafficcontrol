@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
@@ -146,7 +147,7 @@ func IsValidParentCachegroupID(id *int) bool {
 }
 
 // Validate fulfills the api.Validator interface
-func (cg TOCacheGroup) Validate() []error {
+func (cg TOCacheGroup) Validate() error {
 	validName := validation.NewStringRule(IsValidCacheGroupName, "invalid characters found - Use alphanumeric . or - or _ .")
 	validShortName := validation.NewStringRule(IsValidCacheGroupName, "invalid characters found - Use alphanumeric . or - or _ .")
 	latitudeErr := "Must be a floating point number within the range +-90"
@@ -159,7 +160,7 @@ func (cg TOCacheGroup) Validate() []error {
 		"parentCacheGroupID":          validation.Validate(cg.ParentCachegroupID, validation.Min(1)),
 		"secondaryParentCachegroupID": validation.Validate(cg.SecondaryParentCachegroupID, validation.Min(1)),
 	}
-	return tovalidate.ToErrors(errs)
+	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
 // looks up the parent_cachegroup_id and the secondary_cachegroup_id

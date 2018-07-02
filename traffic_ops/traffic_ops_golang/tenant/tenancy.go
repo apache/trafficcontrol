@@ -352,13 +352,13 @@ func (ten *TOTenant) SetKeys(keys map[string]interface{}) {
 }
 
 // Validate fulfills the api.Validator interface
-func (ten TOTenant) Validate() []error {
+func (ten TOTenant) Validate() error {
 	errs := validation.Errors{
 		"name":     validation.Validate(ten.Name, validation.Required),
 		"active":   validation.Validate(ten.Active), // only validate it's boolean
 		"parentId": validation.Validate(ten.ParentID, validation.Required, validation.Min(1)),
 	}
-	return tovalidate.ToErrors(errs)
+	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
 // Create implements the Creator interface

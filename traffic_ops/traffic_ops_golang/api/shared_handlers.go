@@ -106,11 +106,11 @@ func GetCombinedParams(r *http.Request) (map[string]string, error) {
 //      we lose the ability to unmarshal the struct if a struct implementing the interface is passed in,
 //      because when when it is de-referenced it is a pointer to an interface. A new copy is created so that
 //      there are no issues with concurrent goroutines
-func decodeAndValidateRequestBody(r *http.Request, v Validator) []error {
+func decodeAndValidateRequestBody(r *http.Request, v Validator) error {
 	defer r.Body.Close()
 
 	if err := json.NewDecoder(r.Body).Decode(v); err != nil {
-		return []error{err}
+		return err
 	}
 	return v.Validate()
 }
@@ -248,9 +248,9 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		//create local instance of the shared typeRef pointer
 		//no operations should be made on the typeRef
 		//decode the body and validate the request struct
-		errs := decodeAndValidateRequestBody(r, u)
-		if len(errs) > 0 {
-			handleErrs(http.StatusBadRequest, errs...)
+		err = decodeAndValidateRequestBody(r, u)
+		if err != nil {
+			handleErrs(http.StatusBadRequest, err)
 			return
 		}
 
@@ -435,10 +435,10 @@ func CreateHandler(typeConstructor CRUDFactory) http.HandlerFunc {
 
 		i := typeConstructor(inf)
 		//decode the body and validate the request struct
-		errs := decodeAndValidateRequestBody(r, i)
+		err := decodeAndValidateRequestBody(r, i)
 
-		if len(errs) > 0 {
-			handleErrs(http.StatusBadRequest, errs...)
+		if err != nil {
+			handleErrs(http.StatusBadRequest, err)
 			return
 		}
 

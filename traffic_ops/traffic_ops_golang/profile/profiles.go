@@ -28,6 +28,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -90,7 +91,7 @@ func (prof *TOProfile) GetType() string {
 	return "profile"
 }
 
-func (prof *TOProfile) Validate() []error {
+func (prof *TOProfile) Validate() error {
 	errs := validation.Errors{
 		NameQueryParam:        validation.Validate(prof.Name, validation.Required),
 		DescriptionQueryParam: validation.Validate(prof.Description, validation.Required),
@@ -98,7 +99,7 @@ func (prof *TOProfile) Validate() []error {
 		TypeQueryParam:        validation.Validate(prof.Type, validation.Required),
 	}
 	if errs != nil {
-		return tovalidate.ToErrors(errs)
+		return util.JoinErrs(tovalidate.ToErrors(errs))
 	}
 	return nil
 }

@@ -220,7 +220,7 @@ func AllParams(req *http.Request, required []string, ints []string) (map[string]
 }
 
 type ParseValidator interface {
-	Validate(tx *sql.Tx) []error
+	Validate(tx *sql.Tx) error
 }
 
 // Decode decodes a JSON object from r into the given v, validating and sanitizing the input. This helper should be used in API endpoints, rather than the json package, to safely decode and validate PUT and POST requests.
@@ -229,8 +229,8 @@ func Parse(r io.Reader, tx *sql.Tx, v ParseValidator) error {
 	if err := json.NewDecoder(r).Decode(&v); err != nil {
 		return errors.New("decoding: " + err.Error())
 	}
-	if errs := v.Validate(tx); len(errs) > 0 {
-		return errors.New("validating: " + util.JoinErrs(errs).Error())
+	if err := v.Validate(tx); err != nil {
+		return errors.New("validating: " + err.Error())
 	}
 	return nil
 }

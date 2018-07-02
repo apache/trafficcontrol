@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -88,7 +89,7 @@ func (origin *TOOrigin) GetType() string {
 	return "origin"
 }
 
-func (origin *TOOrigin) Validate() []error {
+func (origin *TOOrigin) Validate() error {
 
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 	validProtocol := validation.NewStringRule(tovalidate.IsOneOfStringICase("http", "https"), "must be http or https")
@@ -107,7 +108,7 @@ func (origin *TOOrigin) Validate() []error {
 		"protocol":          validation.Validate(origin.Protocol, validation.Required, validProtocol),
 		"tenantId":          validation.Validate(origin.TenantID, validation.Min(1)),
 	}
-	return tovalidate.ToErrors(validateErrs)
+	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
 }
 
 // GetTenantID returns a pointer to the Origin's tenant ID from the Tx and any error encountered

@@ -28,6 +28,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
@@ -95,14 +96,14 @@ func (pp *TOProfileParameter) SetKeys(keys map[string]interface{}) {
 }
 
 // Validate fulfills the api.Validator interface
-func (pp *TOProfileParameter) Validate() []error {
+func (pp *TOProfileParameter) Validate() error {
 
 	errs := validation.Errors{
 		"profile":   validation.Validate(pp.ProfileID, validation.Required),
 		"parameter": validation.Validate(pp.ParameterID, validation.Required),
 	}
 
-	return tovalidate.ToErrors(errs)
+	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
 //The TOProfileParameter implementation of the Creator interface

@@ -27,6 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -93,7 +94,7 @@ func (param *TOParameter) GetType() string {
 }
 
 // Validate fulfills the api.Validator interface
-func (param TOParameter) Validate() []error {
+func (param TOParameter) Validate() error {
 	// Test
 	// - Secure Flag is always set to either 1/0
 	// - Admin rights only
@@ -104,7 +105,7 @@ func (param TOParameter) Validate() []error {
 		ValueQueryParam:      validation.Validate(param.Value, validation.Required),
 	}
 
-	return tovalidate.ToErrors(errs)
+	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
 //The TOParameter implementation of the Creator interface

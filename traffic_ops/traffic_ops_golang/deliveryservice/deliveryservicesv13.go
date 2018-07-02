@@ -89,7 +89,7 @@ func (ds *TODeliveryServiceV13) GetType() string {
 	return ds.V12().GetType()
 }
 
-func (ds *TODeliveryServiceV13) Validate() []error {
+func (ds *TODeliveryServiceV13) Validate() error {
 	return ds.DeliveryServiceNullableV13.Validate(ds.ReqInfo.Tx.Tx)
 }
 
@@ -127,8 +127,8 @@ func CreateV13() http.HandlerFunc {
 		if ds.RoutingName == nil || *ds.RoutingName == "" {
 			ds.RoutingName = util.StrPtr("cdn")
 		}
-		if errs := ds.Validate(inf.Tx.Tx); len(errs) > 0 {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("invalid request: "+util.JoinErrs(errs).Error()), nil)
+		if err := ds.Validate(inf.Tx.Tx); err != nil {
+			api.HandleErr(w, r, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
 			return
 		}
 		if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
@@ -401,8 +401,8 @@ func UpdateV13() http.HandlerFunc {
 		}
 		ds.ID = &id
 
-		if errs := ds.Validate(inf.Tx.Tx); len(errs) > 0 {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("invalid request: "+util.JoinErrs(errs).Error()), nil)
+		if err := ds.Validate(inf.Tx.Tx); err != nil {
+			api.HandleErr(w, r, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
 			return
 		}
 

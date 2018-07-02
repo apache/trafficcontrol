@@ -121,7 +121,7 @@ func (pp *ProfileParametersByNamePost) UnmarshalJSON(bts []byte) error {
 	return nil
 }
 
-func (pp *ProfileParametersByNamePost) Validate(tx *sql.Tx) []error {
+func (pp *ProfileParametersByNamePost) Validate(tx *sql.Tx) error {
 	errs := []error{}
 	ppArr := ([]ProfileParameterByNamePost)(*pp)
 	for i, profileParam := range ppArr {
@@ -132,7 +132,7 @@ func (pp *ProfileParametersByNamePost) Validate(tx *sql.Tx) []error {
 		}
 	}
 	if len(errs) > 0 {
-		return errs
+		return util.JoinErrs(errs)
 	}
 	return nil
 }
@@ -160,7 +160,7 @@ func (pp *PostProfileParam) Sanitize(tx *sql.Tx) {
 	}
 }
 
-func (pp *PostProfileParam) Validate(tx *sql.Tx) []error {
+func (pp *PostProfileParam) Validate(tx *sql.Tx) error {
 	pp.Sanitize(tx)
 	errs := []error{}
 	if pp.ProfileID == nil {
@@ -178,7 +178,7 @@ func (pp *PostProfileParam) Validate(tx *sql.Tx) []error {
 		errs = append(errs, errors.New(fmt.Sprintf("parameters with IDs %v don't all exist", *pp.ParamIDs)))
 	}
 	if len(errs) > 0 {
-		return errs
+		return util.JoinErrs(errs)
 	}
 	return nil
 }
@@ -195,7 +195,7 @@ func (pp *PostParamProfile) Sanitize(tx *sql.Tx) {
 	}
 }
 
-func (pp *PostParamProfile) Validate(tx *sql.Tx) []error {
+func (pp *PostParamProfile) Validate(tx *sql.Tx) error {
 	pp.Sanitize(tx)
 
 	errs := []error{}
@@ -214,7 +214,7 @@ func (pp *PostParamProfile) Validate(tx *sql.Tx) []error {
 		errs = append(errs, errors.New(fmt.Sprintf("profiles with IDs %v don't all exist", *pp.ProfileIDs)))
 	}
 	if len(errs) > 0 {
-		return errs
+		return util.JoinErrs(errs)
 	}
 	return nil
 }
