@@ -291,10 +291,10 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodDelete, `tenants/{id}$`, api.DeleteHandler(tenant.GetRefType(), d.DB), auth.PrivLevelOperations, Authenticated, nil},
 
 		//CRConfig
-		{1.1, http.MethodGet, `cdns/{cdn}/snapshot/?$`, crconfig.SnapshotGetHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
-		{1.1, http.MethodGet, `cdns/{cdn}/snapshot/new/?$`, crconfig.Handler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
-		{1.1, http.MethodPut, `cdns/{id}/snapshot/?$`, crconfig.SnapshotHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
-		{1.1, http.MethodPut, `snapshot/{cdn}/?$`, crconfig.SnapshotHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
+		{1.1, http.MethodGet, `cdns/{cdn}/snapshot/?$`, crconfig.SnapshotGetHandler(d.DB, d.Config), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `cdns/{cdn}/snapshot/new/?$`, crconfig.Handler(d.DB, d.Config), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPut, `cdns/{id}/snapshot/?$`, crconfig.SnapshotHandler(d.DB, d.Config), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodPut, `snapshot/{cdn}/?$`, crconfig.SnapshotHandler(d.DB, d.Config), auth.PrivLevelOperations, Authenticated, nil},
 
 		//SSLKeys deliveryservice endpoints here that are marked  marked as '-wip' need to have tenancy checks added
 		{1.3, http.MethodGet, `deliveryservices-wip/xmlId/{xmlID}/sslkeys$`, getDeliveryServiceSSLKeysByXMLIDHandler, auth.PrivLevelAdmin, Authenticated, nil},
@@ -320,9 +320,9 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 	// rawRoutes are served at the root path. These should be almost exclusively old Perl pre-API routes, which have yet to be converted in all clients. New routes should be in the versioned API path.
 	rawRoutes := []RawRoute{
 		// DEPRECATED - use PUT /api/1.2/snapshot/{cdn}
-		{http.MethodGet, `tools/write_crconfig/{cdn}/?$`, crconfig.SnapshotOldGUIHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
+		{http.MethodGet, `tools/write_crconfig/{cdn}/?$`, crconfig.SnapshotOldGUIHandler(d.DB, d.Config), auth.PrivLevelOperations, Authenticated, nil},
 		// DEPRECATED - use GET /api/1.2/cdns/{cdn}/snapshot
-		{http.MethodGet, `CRConfig-Snapshots/{cdn}/CRConfig.json?$`, crconfig.SnapshotOldGetHandler(d.DB, d.Config), crconfig.PrivLevel, Authenticated, nil},
+		{http.MethodGet, `CRConfig-Snapshots/{cdn}/CRConfig.json?$`, crconfig.SnapshotOldGetHandler(d.DB, d.Config), auth.PrivLevelReadOnly, Authenticated, nil},
 	}
 
 	return routes, rawRoutes, proxyHandler, nil
