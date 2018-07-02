@@ -75,6 +75,8 @@ type ConfigTrafficOpsGolang struct {
 	Insecure               bool           `json:"insecure"`
 	MaxDBConnections       int            `json:"max_db_connections"`
 	BackendMaxConnections  map[string]int `json:"backend_max_connections"`
+	ProfilingEnabled       bool           `json:"profiling_enabled"`
+	ProfilingLocation      string         `json:"profiling_location"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file
@@ -127,20 +129,32 @@ func (c Config) EventLog() log.LogLocation {
 const BlockStartup = true
 const AllowStartup = false
 
-// LoadConfig - reads the config file into the Config struct
 
-func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appVersion string) (Config, []error, bool) {
+
+func LoadCdnConfig(cdnConfPath string) (Config, error) {
 	// load json from cdn.conf
 	confBytes, err := ioutil.ReadFile(cdnConfPath)
 	if err != nil {
-		return Config{}, []error{fmt.Errorf("reading CDN conf '%s': %v", cdnConfPath, err)}, BlockStartup
+		return Config{}, fmt.Errorf("reading CDN conf '%s': %v", cdnConfPath, err)
 	}
 
-	cfg := Config{Version: appVersion}
+	cfg := Config{}
 	err = json.Unmarshal(confBytes, &cfg)
 	if err != nil {
-		return Config{}, []error{fmt.Errorf("unmarshalling '%s': %v", cdnConfPath, err)}, BlockStartup
+		return Config{}, fmt.Errorf("unmarshalling '%s': %v", cdnConfPath, err)
 	}
+	return cfg, nil
+}
+
+// LoadConfig - reads the config file into the Config struct
+
+func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appVersion string) (Config, []error, bool) {
+	// load cdn.conf
+	cfg, err := LoadCdnConfig(cdnConfPath)
+	if err != nil {
+		return Config{}, []error{fmt.Errorf("Loading cdn config from '%s': %v", cdnConfPath, err)}, BlockStartup
+	}
+	cfg.Version = appVersion
 
 	// load json from database.conf
 	dbConfBytes, err := ioutil.ReadFile(dbConfPath)
