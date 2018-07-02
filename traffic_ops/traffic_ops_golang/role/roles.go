@@ -28,6 +28,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
@@ -81,7 +82,7 @@ func (role *TORole) SetKeys(keys map[string]interface{}) {
 }
 
 // Validate fulfills the api.Validator interface
-func (role TORole) Validate() []error {
+func (role TORole) Validate() error {
 	errs := validation.Errors{
 		"name":        validation.Validate(role.Name, validation.Required),
 		"description": validation.Validate(role.Description, validation.Required),
@@ -94,13 +95,13 @@ func (role TORole) Validate() []error {
 		err := role.ReqInfo.Tx.Select(&badCaps, checkCaps, pq.Array(role.Capabilities))
 		if err != nil {
 			log.Errorf("got error from selecting bad capabilities: %v", err)
-			return []error{tc.DBError}
+			return tc.DBError
 		}
 		if len(badCaps) > 0 {
 			errsToReturn = append(errsToReturn, fmt.Errorf("can not add non-existent capabilities: %v", badCaps))
 		}
 	}
-	return errsToReturn
+	return util.JoinErrs(errsToReturn)
 }
 
 //The TORole implementation of the Creator interface

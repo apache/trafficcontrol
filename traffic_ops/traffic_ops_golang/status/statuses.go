@@ -27,6 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
@@ -79,11 +80,11 @@ func (status TOStatus) GetType() string {
 	return "status"
 }
 
-func (status TOStatus) Validate() []error {
+func (status TOStatus) Validate() error {
 	errs := validation.Errors{
 		"name": validation.Validate(status.Name, validation.NotNil, validation.Required),
 	}
-	return tovalidate.ToErrors(errs)
+	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
 func (status *TOStatus) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {

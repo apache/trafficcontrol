@@ -27,6 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
@@ -76,12 +77,12 @@ func (comment TODeliveryServiceRequestComment) GetType() string {
 	return "deliveryservice_request_comment"
 }
 
-func (comment TODeliveryServiceRequestComment) Validate() []error {
+func (comment TODeliveryServiceRequestComment) Validate() error {
 	errs := validation.Errors{
 		"deliveryServiceRequestId": validation.Validate(comment.DeliveryServiceRequestID, validation.NotNil),
 		"value":                    validation.Validate(comment.Value, validation.NotNil),
 	}
-	return tovalidate.ToErrors(errs)
+	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
 func (comment *TODeliveryServiceRequestComment) Create() (error, tc.ApiErrorType) {

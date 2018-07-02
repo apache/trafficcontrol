@@ -54,7 +54,7 @@ type Deleter interface {
 }
 
 type Validator interface {
-	Validate() []error
+	Validate() error
 }
 
 type Tenantable interface {

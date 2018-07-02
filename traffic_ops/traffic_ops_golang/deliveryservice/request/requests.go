@@ -514,7 +514,7 @@ func (req *deliveryServiceRequestAssignment) Update() (error, tc.ApiErrorType) {
 	return nil, tc.NoError
 }
 
-func (req deliveryServiceRequestAssignment) Validate() []error {
+func (req deliveryServiceRequestAssignment) Validate() error {
 	return nil
 }
 
@@ -596,7 +596,7 @@ func (req *deliveryServiceRequestStatus) Update() (error, tc.ApiErrorType) {
 }
 
 // Validate is not needed when only Status is updated
-func (req deliveryServiceRequestStatus) Validate() []error {
+func (req deliveryServiceRequestStatus) Validate() error {
 	return nil
 }
 

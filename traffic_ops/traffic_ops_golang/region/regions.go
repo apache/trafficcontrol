@@ -66,12 +66,11 @@ func (region *TORegion) GetType() string {
 	return "region"
 }
 
-func (region *TORegion) Validate() []error {
-	errs := []error{}
+func (region *TORegion) Validate() error {
 	if len(region.Name) < 1 {
-		errs = append(errs, errors.New(`Region 'name' is required.`))
+		return errors.New(`Region 'name' is required.`)
 	}
-	return errs
+	return nil
 }
 
 func (region *TORegion) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {

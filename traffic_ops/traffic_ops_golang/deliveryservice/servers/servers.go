@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -91,14 +92,14 @@ func (dss *TODeliveryServiceServer) SetKeys(keys map[string]interface{}) {
 }
 
 // Validate fulfills the api.Validator interface
-func (dss *TODeliveryServiceServer) Validate(db *sqlx.DB) []error {
+func (dss *TODeliveryServiceServer) Validate(db *sqlx.DB) error {
 
 	errs := validation.Errors{
 		"deliveryservice": validation.Validate(dss.DeliveryService, validation.Required),
 		"server":          validation.Validate(dss.Server, validation.Required),
 	}
 
-	return tovalidate.ToErrors(errs)
+	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
 // ReadDSSHandler list all of the Deliveryservice Servers in response to requests to api/1.1/deliveryserviceserver$

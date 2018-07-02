@@ -27,6 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
@@ -79,14 +80,14 @@ func (typ *TOType) GetType() string {
 	return "type"
 }
 
-func (typ *TOType) Validate() []error {
+func (typ *TOType) Validate() error {
 	errs := validation.Errors{
 		"name":         validation.Validate(typ.Name, validation.Required),
 		"description":  validation.Validate(typ.Description, validation.Required),
 		"use_in_table": validation.Validate(typ.UseInTable, validation.Required),
 	}
 	if errs != nil {
-		return tovalidate.ToErrors(errs)
+		return util.JoinErrs(tovalidate.ToErrors(errs))
 	}
 	return nil
 }

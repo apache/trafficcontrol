@@ -28,6 +28,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -82,7 +83,7 @@ func (server *TOServer) GetType() string {
 	return "server"
 }
 
-func (server *TOServer) Validate() []error {
+func (server *TOServer) Validate() error {
 
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 
@@ -104,22 +105,20 @@ func (server *TOServer) Validate() []error {
 	}
 	errs := tovalidate.ToErrors(validateErrs)
 	if len(errs) > 0 {
-		return errs
+		return util.JoinErrs(errs)
 	}
 
 	rows, err := server.ReqInfo.Tx.Query("select use_in_table from type where id=$1", server.TypeID)
 	if err != nil {
 		log.Error.Printf("could not execute select use_in_table from type: %s\n", err)
-		errs = append(errs, tc.DBError)
-		return errs
+		return tc.DBError
 	}
 	defer rows.Close()
 	var useInTable string
 	for rows.Next() {
 		if err := rows.Scan(&useInTable); err != nil {
 			log.Error.Printf("could not scan use_in_table from type: %s\n", err)
-			errs = append(errs, tc.DBError)
-			return errs
+			return tc.DBError
 		}
 	}
 	if useInTable != "server" {
@@ -130,7 +129,7 @@ func (server *TOServer) Validate() []error {
 	if err != nil {
 		log.Error.Printf("could not execute select cdnID from profile: %s\n", err)
 		errs = append(errs, tc.DBError)
-		return errs
+		return util.JoinErrs(errs)
 	}
 	defer rows.Close()
 	var cdnID int
@@ -138,14 +137,14 @@ func (server *TOServer) Validate() []error {
 		if err := rows.Scan(&cdnID); err != nil {
 			log.Error.Printf("could not scan cdnID from profile: %s\n", err)
 			errs = append(errs, tc.DBError)
-			return errs
+			return util.JoinErrs(errs)
 		}
 	}
 	log.Infof("got cdn id: %d from profile and cdn id: %d from server", cdnID, *server.CDNID)
 	if cdnID != *server.CDNID {
 		errs = append(errs, errors.New(fmt.Sprintf("CDN id '%d' for profile '%d' does not match Server CDN '%d'", cdnID, *server.ProfileID, *server.CDNID)))
 	}
-	return errs
+	return util.JoinErrs(errs)
 }
 
 // ChangeLogMessage implements the api.ChangeLogger interface for a custom log message

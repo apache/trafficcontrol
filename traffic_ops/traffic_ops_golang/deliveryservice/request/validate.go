@@ -26,18 +26,19 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"github.com/go-ozzo/ozzo-validation"
 )
 
 // Validate ensures all required fields are present and in correct form.  Also checks request JSON is complete and valid
-func (req *TODeliveryServiceRequest) Validate() []error {
+func (req *TODeliveryServiceRequest) Validate() error {
 	fromStatus := tc.RequestStatusDraft
 	if req.ID != nil && *req.ID > 0 {
 		err := req.ReqInfo.Tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(*req.ID)).Scan(&fromStatus)
 
 		if err != nil {
-			return []error{err}
+			return err
 		}
 	}
 
@@ -61,7 +62,7 @@ func (req *TODeliveryServiceRequest) Validate() []error {
 	// ensure the deliveryservice requested is valid
 	e := req.DeliveryService.Validate(req.ReqInfo.Tx.Tx)
 
-	errs = append(errs, e...)
+	errs = append(errs, e)
 
-	return errs
+	return util.JoinErrs(errs)
 }

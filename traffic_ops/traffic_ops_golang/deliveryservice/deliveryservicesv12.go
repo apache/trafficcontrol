@@ -170,7 +170,7 @@ func isTenantAuthorized(user *auth.CurrentUser, tx *sqlx.Tx, ds *tc.DeliveryServ
 	return true, nil
 }
 
-func (ds *TODeliveryServiceV12) Validate() []error {
+func (ds *TODeliveryServiceV12) Validate() error {
 	return ds.DeliveryServiceNullableV12.Validate(ds.ReqInfo.Tx.Tx)
 }
 
