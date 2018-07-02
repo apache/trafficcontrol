@@ -159,45 +159,43 @@ func (asn *TOASNV11) Read(parameters map[string]string) ([]interface{}, []error,
 }
 
 // V11ReadAll implements the asns 1.1 route, which is different from the 1.1 route for a single ASN and from 1.2+ routes, in that it wraps the content in an additional "asns" object.
-func V11ReadAll() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
+func V11ReadAll(w http.ResponseWriter, r *http.Request) {
+	handleErrs := tc.GetHandleErrorsFunc(w, r)
 
-		inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		defer inf.Close()
-
-		params, err := api.GetCombinedParams(r)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		asns, errs, errType := read(inf.Tx, params)
-		if len(errs) > 0 {
-			tc.HandleErrorsWithType(errs, errType, handleErrs)
-			return
-		}
-		*inf.CommitTx = true
-		resp := struct {
-			Response struct {
-				ASNs []tc.ASNNullable `json:"asns"`
-			} `json:"response"`
-		}{Response: struct {
-			ASNs []tc.ASNNullable `json:"asns"`
-		}{ASNs: asns}}
-
-		respBts, err := json.Marshal(resp)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", respBts)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	params, err := api.GetCombinedParams(r)
+	if err != nil {
+		handleErrs(http.StatusInternalServerError, err)
+		return
+	}
+
+	asns, errs, errType := read(inf.Tx, params)
+	if len(errs) > 0 {
+		tc.HandleErrorsWithType(errs, errType, handleErrs)
+		return
+	}
+	*inf.CommitTx = true
+	resp := struct {
+		Response struct {
+			ASNs []tc.ASNNullable `json:"asns"`
+		} `json:"response"`
+	}{Response: struct {
+		ASNs []tc.ASNNullable `json:"asns"`
+	}{ASNs: asns}}
+
+	respBts, err := json.Marshal(resp)
+	if err != nil {
+		handleErrs(http.StatusInternalServerError, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, "%s", respBts)
 }
 
 func read(tx *sqlx.Tx, parameters map[string]string) ([]tc.ASNNullable, []error, tc.ApiErrorType) {

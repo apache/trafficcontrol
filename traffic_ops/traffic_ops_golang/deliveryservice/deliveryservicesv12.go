@@ -174,7 +174,7 @@ func (ds *TODeliveryServiceV12) Validate() error {
 	return ds.DeliveryServiceNullableV12.Validate(ds.ReqInfo.Tx.Tx)
 }
 
-// unimplemented, needed to satisfy CRUDer, since the framework doesn't allow a create to return an array of one
+// Create is unimplemented, needed to satisfy CRUDer, since the framework doesn't allow a create to return an array of one
 func (ds *TODeliveryServiceV12) Create() (error, tc.ApiErrorType) {
 	return errors.New("The Create method is not implemented"), http.StatusNotImplemented
 }
@@ -228,7 +228,7 @@ func (ds *TODeliveryServiceV12) Read(params map[string]string) ([]interface{}, [
 	return returnable, nil, tc.NoError
 }
 
-//The DeliveryService implementation of the Deleter interface
+//Delete is the DeliveryService implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
 func (ds *TODeliveryServiceV12) Delete() (error, tc.ApiErrorType) {
 	log.Debugln("TODeliveryServiceV12.Delete calling id '%v' xmlid '%v'\n", ds.ID, ds.XMLID)
@@ -291,7 +291,7 @@ func (ds *TODeliveryServiceV12) Delete() (error, tc.ApiErrorType) {
 	return nil, tc.NoError
 }
 
-// unimplemented, needed to satisfy CRUDer, since the framework doesn't allow an update to return an array of one
+// Update is unimplemented, needed to satisfy CRUDer, since the framework doesn't allow an update to return an array of one
 func (ds *TODeliveryServiceV12) Update() (error, tc.ApiErrorType) {
 	return errors.New("The Update method is not implemented"), http.StatusNotImplemented
 }

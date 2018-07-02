@@ -35,7 +35,7 @@ import (
 )
 
 func getTestASNs() []tc.ASNNullable {
-	ASNs := []tc.ASNNullable{}
+	asns := []tc.ASNNullable{}
 	i := 1
 	c := "Yukon"
 	testCase := tc.ASNNullable{
@@ -45,13 +45,13 @@ func getTestASNs() []tc.ASNNullable {
 		ID:           &i,
 		LastUpdated:  &tc.TimeNoMod{Time: time.Now()},
 	}
-	ASNs = append(ASNs, testCase)
+	asns = append(asns, testCase)
 
 	testCase2 := testCase
 	*testCase2.ASN = 2
-	ASNs = append(ASNs, testCase2)
+	asns = append(asns, testCase2)
 
-	return ASNs
+	return asns
 }
 
 func TestGetASNs(t *testing.T) {

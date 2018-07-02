@@ -93,20 +93,11 @@ func (ds *TODeliveryServiceV13) Validate() error {
 	return ds.DeliveryServiceNullableV13.Validate(ds.ReqInfo.Tx.Tx)
 }
 
-// unimplemented, needed to satisfy CRUDer, since the framework doesn't allow a create to return an array of one
+// Create is unimplemented, needed to satisfy CRUDer, since the framework doesn't allow a create to return an array of one
 func (ds *TODeliveryServiceV13) Create() (error, tc.ApiErrorType) {
 	return errors.New("The Create method is not implemented"), http.StatusNotImplemented
 }
 
-// Create implements the Creator interface.
-//all implementations of Creator should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a ds with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-//The insert sql returns the id and lastUpdated values of the newly inserted ds and have
-//to be added to the struct
-// func (ds *TODeliveryServiceV13) Create(db *sqlx.Tx, user auth.CurrentUser) (error, tc.ApiErrorType) { //
-//
 // 	TODO allow users to post names (type, cdn, etc) and get the IDs from the names. This isn't trivial to do in a single query, without dynamically building the entire insert query, and ideally inserting would be one query. But it'd be much more convenient for users. Alternatively, remove IDs from the database entirely and use real candidate keys.
 func CreateV13() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -148,8 +139,7 @@ func CreateV13() http.HandlerFunc {
 	}
 }
 
-// create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status cdoe, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
-
+// create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
 func create(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds tc.DeliveryServiceNullableV13) (tc.DeliveryServiceNullableV13, int, error, error) {
 	// TODO change DeepCachingType to implement sql.Valuer and sql.Scanner, so sqlx struct scan can be used.
 	deepCachingType := tc.DeepCachingType("").String()
@@ -377,7 +367,7 @@ func getTypeFromID(id int, tx *sql.Tx) (tc.DSType, error) {
 	return tc.DSTypeFromString(name), nil
 }
 
-// unimplemented, needed to satisfy CRUDer, since the framework doesn't allow an update to return an array of one
+// Update is unimplemented, needed to satisfy CRUDer, since the framework doesn't allow an update to return an array of one
 func (ds *TODeliveryServiceV13) Update() (error, tc.ApiErrorType) {
 	return errors.New("The Update method is not implemented"), http.StatusNotImplemented
 }
@@ -567,7 +557,7 @@ func update(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds *tc.Delive
 	return *ds, http.StatusOK, nil, nil
 }
 
-//The DeliveryService implementation of the Deleter interface
+// Delete is the DeliveryService implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
 func (ds *TODeliveryServiceV13) Delete() (error, tc.ApiErrorType) {
 	return ds.V12().Delete()

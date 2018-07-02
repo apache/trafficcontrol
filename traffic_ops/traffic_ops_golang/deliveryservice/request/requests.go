@@ -35,7 +35,7 @@ import (
 	"github.com/lib/pq"
 )
 
-//we need a type alias to define functions on
+// TODeliveryServiceRequest is the type alias to define functions on
 type TODeliveryServiceRequest struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.DeliveryServiceRequestNullable
@@ -52,7 +52,6 @@ func (req TODeliveryServiceRequest) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
 }
 
-//Implementation of the Identifier, Validator interface functions
 func (req TODeliveryServiceRequest) GetKeys() (map[string]interface{}, bool) {
 	if req.ID == nil {
 		return map[string]interface{}{"id": 0}, false

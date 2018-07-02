@@ -102,10 +102,7 @@ func GetCombinedParams(r *http.Request) (map[string]string, error) {
 	return combinedParams, nil
 }
 
-//decodes and validates a pointer to a struct implementing the Validator interface
-//      we lose the ability to unmarshal the struct if a struct implementing the interface is passed in,
-//      because when when it is de-referenced it is a pointer to an interface. A new copy is created so that
-//      there are no issues with concurrent goroutines
+// decodeAndValidateRequestBody decodes and validates a pointer to a struct implementing the Validator interface
 func decodeAndValidateRequestBody(r *http.Request, v Validator) error {
 	defer r.Body.Close()
 
@@ -115,7 +112,7 @@ func decodeAndValidateRequestBody(r *http.Request, v Validator) error {
 	return v.Validate()
 }
 
-//this creates a handler function from the pointer to a struct implementing the Reader interface
+// ReadHandler creates a handler function from the pointer to a struct implementing the Reader interface
 //      this handler retrieves the user from the context
 //      combines the path and query parameters
 //      produces the proper status code based on the error code returned
@@ -162,7 +159,7 @@ func ReadHandler(typeFactory CRUDFactory) http.HandlerFunc {
 	}
 }
 
-//this creates a handler function from the pointer to a struct implementing the Reader interface
+// ReadOnlyHandler creates a handler function from the pointer to a struct implementing the Reader interface
 //      this handler retrieves the user from the context
 //      combines the path and query parameters
 //      produces the proper status code based on the error code returned
@@ -208,8 +205,7 @@ func ReadOnlyHandler(typeFactory func(reqInfo *APIInfo) Reader) http.HandlerFunc
 	}
 }
 
-//this creates a handler function from the pointer to a struct implementing the Updater interface
-//it must be immediately assigned to a local variable
+// UpdateHandler creates a handler function from the pointer to a struct implementing the Updater interface
 //   this generic handler encapsulates the logic for handling:
 //   *fetching the id from the path parameter
 //   *current user
@@ -245,8 +241,6 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 			return
 		}
 
-		//create local instance of the shared typeRef pointer
-		//no operations should be made on the typeRef
 		//decode the body and validate the request struct
 		err = decodeAndValidateRequestBody(r, u)
 		if err != nil {
@@ -302,8 +296,7 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 			return
 		}
 		//auditing here
-		err = CreateChangeLog(ApiChange, Updated, u, inf.User, inf.Tx)
-		if err != nil {
+		if err := CreateChangeLog(ApiChange, Updated, u, inf.User, inf.Tx); err != nil {
 			HandleErr(w, r, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
@@ -325,8 +318,7 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 	}
 }
 
-//this creates a handler function from the pointer to a struct implementing the Deleter interface
-//it must be immediately assigned to a local variable
+// DeleteHandler creates a handler function from the pointer to a struct implementing the Deleter interface
 //   this generic handler encapsulates the logic for handling:
 //   *fetching the id from the path parameter
 //   *current user
@@ -392,8 +384,7 @@ func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		}
 		//audit here
 		log.Debugf("changelog for delete on object")
-		err = CreateChangeLog(ApiChange, Deleted, d, inf.User, inf.Tx)
-		if err != nil {
+		if err = CreateChangeLog(ApiChange, Deleted, d, inf.User, inf.Tx); err != nil {
 			HandleErr(w, r, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
@@ -414,8 +405,7 @@ func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 	}
 }
 
-//this creates a handler function from the pointer to a struct implementing the Creator interface
-//it must be immediately assigned to a local variable
+// CreateHandler creates a handler function from the pointer to a struct implementing the Creator interface
 //   this generic handler encapsulates the logic for handling:
 //   *fetching the id from the path parameter
 //   *current user
@@ -464,8 +454,7 @@ func CreateHandler(typeConstructor CRUDFactory) http.HandlerFunc {
 			return
 		}
 
-		err = CreateChangeLog(ApiChange, Created, i, inf.User, inf.Tx)
-		if err != nil {
+		if err = CreateChangeLog(ApiChange, Created, i, inf.User, inf.Tx); err != nil {
 			HandleErr(w, r, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
