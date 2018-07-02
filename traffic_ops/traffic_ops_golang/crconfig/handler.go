@@ -36,8 +36,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const PrivLevel = auth.PrivLevelAdmin
-
 // Handler creates and serves the CRConfig from the raw SQL data.
 // This MUST only be used for debugging or previewing, the raw un-snapshotted data MUST NOT be used by any component of the CDN.
 func Handler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
