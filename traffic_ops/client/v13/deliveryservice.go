@@ -251,3 +251,13 @@ func (to *Session) GetDeliveryServiceSSLKeysByHostname(hostname string) (*tc.Del
 
 	return &data.Response, reqInf, nil
 }
+
+func (to *Session) GetUserDeliveryServicesAvailable(userID int) ([]tc.DeliveryServiceAvailableInfo, ReqInf, error) {
+	uri := apiBase + `/user/` + strconv.Itoa(userID) + `/deliveryservices/available`
+	resp := tc.DeliveryServiceAvailableInfoResp{}
+	reqInf, err := get(to, uri, &resp)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	return resp.Response, reqInf, nil
+}
