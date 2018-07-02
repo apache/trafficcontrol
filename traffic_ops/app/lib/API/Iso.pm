@@ -66,72 +66,62 @@ sub osversions {
 
 }
 
-sub generate {
-#	my $self   = shift;
-#	my $params = $self->req->json;
-#
-#	if ( !&is_oper($self) ) {
-#		return $self->forbidden();
-#	}
-#
-#	my ( $is_valid, $result ) = $self->is_valid($params);
-#
-#	if ( !$is_valid ) {
-#		return $self->alert($result);
-#	}
-#
-#	my $response = $self->generate_iso($params);
-#	return $self->success( $response, "Generate ISO was successful." );
+sub generate_from_form {
 
 	my $self = shift;
 
-#	&navbarpage($self);
-#	my %serverselect;
-#	my $rs_server = $self->db->resultset('Server')->search(undef,
-#		{ columns => [ qw/id host_name domain_name/ ], orderby => "host_name" });
-#
-#	while (my $row = $rs_server->next) {
-#		my $fqdn = $row->host_name . "." . $row->domain_name;
-#		$serverselect{$fqdn} = $row->id;
-#	}
-
-#	$self->stash(
-#		serverselect => \%serverselect,
-#		osversions   => \%osversions,
-#	);
-
-	my $hostname = $self->param('hostname');
-	if (defined($hostname)) {
-		$self->iso_download();
-	}
-}
-
-sub iso_download {
-	my $self = shift;
 	my $params = {
-		hostName => $self->param('hostname'),
-		osversionDir => $self->param('osversion'),
-		rootPass => $self->param('rootpass'),
+		hostName => $self->param('hostName'),
+		domainName => $self->param('domainName'),
+		osversionDir => $self->param('osversionDir'),
+		rootPass => $self->param('rootPass'),
 		dhcp => $self->param('dhcp'),
-		ipAddress => $self->param('ipaddr'),
-		ipNetmask => $self->param('netmask'),
-		ipGateway => $self->param('gateway'),
-		ip6Address => $self->param('ip6_address'),
-		ip6Gateway => $self->param('ip6_gateway'),
-		interfaceName => $self->param('dev'),
-		interfaceMtu => $self->param('mtu'),
-		disk => $self->param('ondisk'),
-		mgmtIpAddress => $self->param('mgmt_ip_address'),
-		mgmtIpNetmask => $self->param('mgmt_ip_netmask'),
-		mgmtIpGateway => $self->param('mgmt_ip_gateway'),
-		mgmtInterface => $self->param('mgmt_interface'),
+		ipAddress => $self->param('ipAddress'),
+		ipNetmask => $self->param('ipNetmask'),
+		ipGateway => $self->param('ipGateway'),
+		ip6Address => $self->param('ip6Address'),
+		ip6Gateway => $self->param('ip6Gateway'),
+		interfaceName => $self->param('interfaceName'),
+		interfaceMtu => $self->param('interfaceMtu'),
+		disk => $self->param('disk'),
+		mgmtIpAddress => $self->param('mgmtIpAddress'),
+		mgmtIpNetmask => $self->param('mgmtIpNetmask'),
+		mgmtIpGateway => $self->param('mgmtIpGateway'),
+		mgmtInterface => $self->param('mgmtInterface'),
 		stream => $self->param('stream')
 	};
-	my $dl_res = $self->generate_iso($self, $params);
+
+	my ( $is_valid, $result ) = $self->is_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+
+	my $dl_res = $self->generate_iso($params);
 
 	# serverselect
 	$self->flash( message => "Download ISO here" );
-	return $dl_res->{isoName};
+	#return $dl_res->{isoName};
+	return $self->render( data => "SUCCESS" );
+
+}
+
+sub generate {
+	my $self   = shift;
+	my $params = $self->req->json;
+
+	if ( !&is_oper($self) ) {
+		return $self->forbidden();
+	}
+
+	my ( $is_valid, $result ) = $self->is_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+
+	my $response = $self->generate_iso($params);
+	return $self->success( $response, "Generate ISO was successful." );
 }
 
 sub generate_iso {
@@ -299,7 +289,19 @@ sub generate_iso {
 		$self->res->headers->content_type("application/download");
 		$self->res->headers->content_disposition("attachment; filename=\"$iso_file_name\"");
 		my $data = `$cmd`;
+#		my $ok = open my $fh, '-|', $cmd;
+#
+#		if (! $ok ) {
+#			$self->internal_server_error( { Error => "Error generating ISO" } );
+#			return;
+#		}
+#
+#		undef $/;
+#		my $data = <$fh>;
+
 		$self->render( data => $data );
+
+#		close $fh;
 		#$response = {
 		#	iso => $data,
 		#	name => $iso_file_name,
