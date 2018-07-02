@@ -23,6 +23,8 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // Extract the tag annotations from a struct into a string array
@@ -59,4 +61,16 @@ func (s sortableErrors) Less(i, j int) bool {
 func SortErrors(p []error) []error {
 	sort.Sort(sortableErrors(p))
 	return p
+}
+
+func SplitErrors(err error) []error {
+	if err == nil {
+		return []error{}
+	}
+	strs := strings.Split(err.Error(), ", ")
+	errs := []error{}
+	for _, str := range strs {
+		errs = append(errs, errors.New(str))
+	}
+	return errs
 }

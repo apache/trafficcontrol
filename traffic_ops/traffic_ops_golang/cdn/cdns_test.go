@@ -134,12 +134,12 @@ func TestValidate(t *testing.T) {
 	// invalid name, empty domainname
 	n := "not_a_valid_cdn"
 	c := TOCDN{CDNNullable: v13.CDNNullable{Name: &n}}
-	errs := test.SortErrors(c.Validate())
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(c.Validate())))
 
-	expectedErrs := []error{
+	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'domainName' cannot be blank`),
 		errors.New(`'name' invalid characters found - Use alphanumeric . or - .`),
-	}
+	})
 
 	if !reflect.DeepEqual(expectedErrs, errs) {
 		t.Errorf("expected %s, got %s", expectedErrs, errs)
@@ -149,9 +149,8 @@ func TestValidate(t *testing.T) {
 	n = "This.is.2.a-Valid---CDNNAME."
 	d := `awesome-cdn.example.net`
 	c = TOCDN{CDNNullable: v13.CDNNullable{Name: &n, DomainName: &d}}
-	expectedErrs = []error{}
-	errs = c.Validate()
-	if !reflect.DeepEqual(expectedErrs, errs) {
-		t.Errorf("expected %s, got %s", expectedErrs, errs)
+	err := c.Validate()
+	if err != nil {
+		t.Errorf("expected nil, got %s", err)
 	}
 }

@@ -182,14 +182,14 @@ func TestValidate(t *testing.T) {
 		FQDN:              nil,
 		Protocol:          nil,
 	}}
-	errs := test.SortErrors(c.Validate())
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(c.Validate())))
 
-	expectedErrs := []error{
+	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'deliveryServiceId' is required`),
 		errors.New(`'fqdn' cannot be blank`),
 		errors.New(`'name' cannot be blank`),
 		errors.New(`'protocol' cannot be blank`),
-	}
+	})
 
 	if !reflect.DeepEqual(expectedErrs, errs) {
 		t.Errorf("expected %s, got %s", expectedErrs, errs)
@@ -214,10 +214,9 @@ func TestValidate(t *testing.T) {
 		Protocol:          &pro,
 		LastUpdated:       &lu,
 	}}
-	expectedErrs = []error{}
-	errs = c.Validate()
-	if !reflect.DeepEqual(expectedErrs, errs) {
-		t.Errorf("expected %s, got %s", expectedErrs, errs)
+	err := c.Validate()
+	if err != nil {
+		t.Errorf("expected nil, got %s", err)
 	}
 
 	type testCase struct {
@@ -320,9 +319,9 @@ func TestValidate(t *testing.T) {
 				c.IP6Address = &tc.Str
 				value = tc.Str
 			}
-			errs = test.SortErrors(c.Validate())
-			if !reflect.DeepEqual(tc.ExpectedErrors, errs) {
-				t.Errorf("given: '%v', expected %s, got %s", value, tc.ExpectedErrors, errs)
+			errStr := util.JoinErrsStr(test.SortErrors(test.SplitErrors(c.Validate())))
+			if !reflect.DeepEqual(util.JoinErrsStr(tc.ExpectedErrors), errStr) {
+				t.Errorf("given: '%v', expected %s, got %s", value, tc.ExpectedErrors, errStr)
 			}
 		}
 	}

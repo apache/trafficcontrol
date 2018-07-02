@@ -122,12 +122,12 @@ func TestInterfaces(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	p := TOType{}
-	errs := test.SortErrors(p.Validate())
-	expected := test.SortErrors([]error{
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(p.Validate())))
+	expected := util.JoinErrsStr(test.SortErrors([]error{
 		errors.New("'name' cannot be blank"),
 		errors.New("'description' cannot be blank"),
 		errors.New("'use_in_table' cannot be blank"),
-	})
+	}))
 
 	if !reflect.DeepEqual(expected, errs) {
 		t.Errorf("expected %++v,  got %++v", expected, errs)

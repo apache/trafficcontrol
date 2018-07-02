@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 )
@@ -98,12 +99,12 @@ func TestValidate(t *testing.T) {
 	n := "not_a_valid_role"
 	reqInfo := api.APIInfo{}
 	r := TORole{ReqInfo: &reqInfo, Role: v13.Role{Name: &n}}
-	errs := test.SortErrors(r.Validate())
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(r.Validate())))
 
-	expectedErrs := []error{
+	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'description' cannot be blank`),
 		errors.New(`'privLevel' cannot be blank`),
-	}
+	})
 
 	if !reflect.DeepEqual(expectedErrs, errs) {
 		t.Errorf("expected %s, got %s", expectedErrs, errs)
@@ -111,10 +112,9 @@ func TestValidate(t *testing.T) {
 
 	//  name,  domainname both valid
 	r = TORole{ReqInfo: &reqInfo, Role: v13.Role{Name: stringAddr("this is a valid name"), Description: stringAddr("this is a description"), PrivLevel: intAddr(30)}}
-	expectedErrs = []error{}
-	errs = r.Validate()
-	if !reflect.DeepEqual(expectedErrs, errs) {
-		t.Errorf("expected %s, got %s", expectedErrs, errs)
+	err := r.Validate()
+	if err != nil {
+		t.Errorf("expected nil, got %s", err)
 	}
 
 }
