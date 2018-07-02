@@ -133,8 +133,8 @@ func TestInterfaces(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	p := TOPhysLocation{}
-	errs := test.SortErrors(p.Validate())
-	expected := test.SortErrors([]error{
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(p.Validate())))
+	expected := util.JoinErrsStr(test.SortErrors([]error{
 		errors.New("'state' cannot be blank"),
 		errors.New("'zip' cannot be blank"),
 		errors.New("'address' cannot be blank"),
@@ -142,7 +142,7 @@ func TestValidate(t *testing.T) {
 		errors.New("'name' cannot be blank"),
 		errors.New("'regionId' cannot be blank"),
 		errors.New("'shortName' cannot be blank"),
-	})
+	}))
 
 	if !reflect.DeepEqual(expected, errs) {
 		t.Errorf("expected %++v,  got %++v", expected, errs)

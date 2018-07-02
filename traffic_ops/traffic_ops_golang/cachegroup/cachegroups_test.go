@@ -168,14 +168,14 @@ func TestValidate(t *testing.T) {
 		TypeID:      &ti,
 		LastUpdated: &lu,
 	}}
-	errs := test.SortErrors(c.Validate())
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(c.Validate())))
 
-	expectedErrs := []error{
+	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'latitude' Must be a floating point number within the range +-90`),
 		errors.New(`'longitude' Must be a floating point number within the range +-180`),
 		errors.New(`'name' invalid characters found - Use alphanumeric . or - or _ .`),
 		errors.New(`'shortName' invalid characters found - Use alphanumeric . or - or _ .`),
-	}
+	})
 
 	if !reflect.DeepEqual(expectedErrs, errs) {
 		t.Errorf("expected %s, got %s", expectedErrs, errs)
@@ -195,9 +195,8 @@ func TestValidate(t *testing.T) {
 		TypeID:      &ti,
 		LastUpdated: &lu,
 	}}
-	expectedErrs = []error{}
-	errs = c.Validate()
-	if !reflect.DeepEqual(expectedErrs, errs) {
-		t.Errorf("expected %s, got %s", expectedErrs, errs)
+	err := c.Validate()
+	if err != nil {
+		t.Errorf("expected nil, got %s", err)
 	}
 }

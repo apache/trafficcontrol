@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 )
@@ -68,12 +69,12 @@ func TestInterfaces(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	c := TODeliveryServiceRequestComment{}
-	errs := test.SortErrors(c.Validate())
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(c.Validate())))
 
-	expectedErrs := []error{
+	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'deliveryServiceRequestId' is required`),
 		errors.New(`'value' is required`),
-	}
+	})
 
 	if !reflect.DeepEqual(expectedErrs, errs) {
 		t.Errorf("expected %s, got %s", expectedErrs, errs)
@@ -82,10 +83,10 @@ func TestValidate(t *testing.T) {
 	v := "the comment value"
 	d := 1
 	c = TODeliveryServiceRequestComment{DeliveryServiceRequestCommentNullable: tc.DeliveryServiceRequestCommentNullable{DeliveryServiceRequestID: &d, Value: &v}}
-	expectedErrs = []error{}
-	errs = c.Validate()
-	if !reflect.DeepEqual(expectedErrs, errs) {
-		t.Errorf("expected %s, got %s", expectedErrs, errs)
+
+	err := c.Validate()
+	if err != nil {
+		t.Errorf("expected nil, got %s", err)
 	}
 
 }

@@ -118,11 +118,11 @@ func TestValidate(t *testing.T) {
 	i := -99
 	asn := TOASNV11{nil, tc.ASNNullable{ASN: &i, CachegroupID: &i}}
 
-	errs := test.SortErrors(asn.Validate())
-	expected := []error{
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(asn.Validate())))
+	expected := util.JoinErrsStr([]error{
 		errors.New(`'asn' must be no less than 0`),
 		errors.New(`'cachegroupId' must be no less than 0`),
-	}
+	})
 	if !reflect.DeepEqual(expected, errs) {
 		t.Errorf(`expected %v,  got %v`, expected, errs)
 	}
