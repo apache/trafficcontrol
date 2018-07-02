@@ -20,11 +20,10 @@ package test
  */
 
 import (
+	"errors"
 	"reflect"
 	"sort"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 // Extract the tag annotations from a struct into a string array

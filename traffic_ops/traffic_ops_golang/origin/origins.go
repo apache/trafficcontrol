@@ -131,8 +131,11 @@ func (origin *TOOrigin) IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
 	if err != nil {
 		return false, err
 	}
-
-	if currentTenantID != nil && tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx) {
+	tenancyEnabled, err := tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx.Tx)
+	if err != nil {
+		return false, err
+	}
+	if currentTenantID != nil && tenancyEnabled {
 		return tenant.IsResourceAuthorizedToUserTx(*currentTenantID, user, origin.ReqInfo.Tx.Tx)
 	}
 
@@ -178,7 +181,11 @@ func (origin *TOOrigin) Read(params map[string]string) ([]interface{}, []error, 
 	}
 
 	var err error
-	if tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx) {
+	tenancyEnabled, err := tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx.Tx)
+	if err != nil {
+		return nil, []error{errors.New("Error checking if tenancy enabled.")}, tc.SystemError
+	}
+	if tenancyEnabled {
 		origins, err = filterAuthorized(origins, origin.ReqInfo.User, origin.ReqInfo.Tx)
 		if err != nil {
 			log.Errorln("Checking tenancy: " + err.Error())
@@ -271,7 +278,11 @@ LEFT JOIN tenant t ON o.tenant = t.id`
 }
 
 func checkTenancy(originTenantID, deliveryserviceID *int, tx *sqlx.Tx, user *auth.CurrentUser) (error, tc.ApiErrorType) {
-	if tenant.IsTenancyEnabledTx(tx) {
+	tenancyEnabled, err := tenant.IsTenancyEnabledTx(tx.Tx)
+	if err != nil {
+		return errors.New("Error checking if tenancy enabled."), tc.SystemError
+	}
+	if tenancyEnabled {
 		if originTenantID == nil {
 			return tc.NilTenantError, tc.ForbiddenError
 		}
