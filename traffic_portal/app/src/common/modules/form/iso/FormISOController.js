@@ -47,11 +47,7 @@ var FormISOController = function(servers, osversions, $scope, $anchorScroll, for
 	};
 
 	$scope.generate = function(iso) {
-		toolsService.generateISO(iso)
-			.then(function(result) {
-				$anchorScroll(); // scrolls window to top
-				messageModel.setMessages([ { level: 'success', text: 'ISO created at ' + result.isoURL } ], false);
-			});
+		toolsService.generateISO(iso);
 	};
 
 	$scope.hasError = formUtils.hasError;
