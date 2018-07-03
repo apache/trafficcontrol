@@ -264,6 +264,10 @@ For the jquery.tree component:
 @traffic_ops/app/public/*/jquery.tree.min.*
 ./licenses/MIT-jquery_tree
 
+For the downloadjs component:
+@traffic_portal/app/src/assets/js/downloadjs-min_v4.21.js
+./licenses/MIT-downloadjs
+
 For the angular-loading-bar component:
 @traffic_portal/app/src/styles/loading.scss
 @traffic_portal/v1/app/src/styles/loading.scss
