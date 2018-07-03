@@ -38,10 +38,19 @@ var ToolsService = function($http, $q, Restangular, locationUtils, messageModel,
 	this.generateISO = function(iso) {
 		var request = $q.defer();
 
-		$http.post(ENV.api['root'] + "isos", iso)
+
+		var respType = 'json';
+		if (iso.stream == 'yes') {
+			respType = 'arraybuffer';
+		}
+
+		$http.post(ENV.api['root'] + "isos", iso, { responseType:respType })
 			.then(
 				function(result) {
 					request.resolve(result.data.response);
+					if (iso.stream == 'yes') {
+						download(result.data, "myiso.iso");
+					}
 				},
 				function(fault) {
 					messageModel.setMessages(fault.data.alerts, false);

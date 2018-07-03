@@ -28,7 +28,6 @@ require('angular-resource');
 require('angular-route');
 require('angular-sanitize');
 require('angular-ui-router');
-require('angular-file-saver');
 
 // angular jwt
 require('angular-jwt');
@@ -57,4 +56,3 @@ require('jquery-flot-axislabels');
 // misc
 require('es5-shim');
 require('json3');
-require('js-base64');

@@ -38,7 +38,6 @@ var trafficPortal = angular.module('trafficPortal', [
         'app.templates',
         'angular-jwt',
         'angular-loading-bar',
-        'ngFileSaver',
 
         // public modules
         require('./modules/public').name,

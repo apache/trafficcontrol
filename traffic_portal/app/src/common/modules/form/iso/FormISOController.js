@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormISOController = function(servers, osversions, $scope, $anchorScroll, formUtils, toolsService, messageModel, FileSaver, Blob) {
+var FormISOController = function(servers, osversions, $scope, $anchorScroll, formUtils, toolsService, messageModel) {
 
 	$scope.servers = servers;
 
@@ -54,20 +54,6 @@ var FormISOController = function(servers, osversions, $scope, $anchorScroll, for
 				if (iso.stream != 'yes') {
                     messageModel.setMessages([{level: 'success', text: 'ISO created at ' + result.isoURL}], false);
                 }
-                else {
-					//var isoStr = result.iso.replace(/\n/g, "");
-					//var decodedIso = Base64.atob(result.iso);
-					//isoStr += '=';
-					//alert(isoStr.length)
-                    //var decodedIso = $base64.atob(result.iso);
-					var decodedIso = atob(result.iso);
-					var newData = new Blob([decodedIso], { type: 'application/x-iso9660-image' } );
-					//var encodedIso = new Blob([result.iso], { type: 'application/x-iso9660-image' } );
-					//var file = new File([decodedIso], result.name, { type: 'application/x-iso9660-image' } );
-					//alert(newData.size + " : " + encodedIso.size);
-
-					FileSaver.saveAs(newData, result.name);
-				}
 			});
 	};
 
@@ -75,13 +61,7 @@ var FormISOController = function(servers, osversions, $scope, $anchorScroll, for
 
 	$scope.hasPropertyError = formUtils.hasPropertyError;
 
-    // function b64DecodeUnicode(str) {
-    //     return decodeURIComponent(Array.prototype.map.call(atob(str), function(c) {
-    //         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-    //     }).join(''))
-    // }
-
 };
 
-FormISOController.$inject = ['servers', 'osversions', '$scope', '$anchorScroll', 'formUtils', 'toolsService', 'messageModel', 'FileSaver', 'Blob'];
+FormISOController.$inject = ['servers', 'osversions', '$scope', '$anchorScroll', 'formUtils', 'toolsService', 'messageModel'];
 module.exports = FormISOController;
