@@ -36,20 +36,12 @@ var ToolsService = function($http, $q, Restangular, locationUtils, messageModel,
 	};
 
 	this.generateISO = function(iso) {
-		var request = $q.defer();
-
 		$http.post(ENV.api['root'] + "isos", iso)
 			.then(
 				function(result) {
-					request.resolve(result.data.response);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, false);
-					request.reject();
+					download(result.data, "dlText.txt", "text/plain");
 				}
 			);
-
-		return request.promise;
 	};
 
 };

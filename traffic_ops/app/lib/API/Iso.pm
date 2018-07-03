@@ -80,8 +80,27 @@ sub generate {
 		return $self->alert($result);
 	}
 
-	my $response = $self->generate_iso($params);
-	return $self->success( $response, "Generate ISO was successful." );
+	# path relative to /opt/traffic_ops/app
+	my $filename = 'foo.txt';
+
+	my $ok = open my $fh, '<', $filename;
+	if (!$ok) {
+		$self->internal_server_error( { Error => "Error getting file $filename" } );
+		return;
+	}
+
+	# slurp it in..
+	local $/;
+	my $data = <$fh>;
+
+	$self->res->headers->content_type("application/download");
+	$self->res->headers->content_disposition( "attachment; filename=\"" . $filename . "\"" );
+	$self->render( data => $data );
+	close $fh;
+#
+#
+#	my $response = $self->generate_iso($params);
+#	return $self->success( $response, "Generate ISO was successful." );
 }
 
 sub generate_iso {
