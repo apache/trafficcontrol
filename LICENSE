@@ -299,8 +299,8 @@ For the jwt-go component:
 
 For the pq component:
 @traffic_ops/experimental/traffic_ops_auth/vendor/github.com/lib/pq/*
-@traffic_ops/vendor/github.com/lib/pq/*
-./traffic_ops/experimental/traffic_ops_auth/vendor/github.com/lib/pq/LICENSE.md
+@vendor/github.com/lib/pq/*
+./vendor/github.com/lib/pq/LICENSE.md
 
 For the influxdb component:
 @traffic_stats/vendor/github.com/influxdata/influxdb/*
