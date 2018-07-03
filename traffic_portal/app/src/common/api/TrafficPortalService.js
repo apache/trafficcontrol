@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TrafficPortalService = function($http, $q, $window, propertiesModel) {
+var TrafficPortalService = function($http, $q, ENV) {
 
     this.getReleaseVersionInfo = function() {
         var deferred = $q.defer();
@@ -47,10 +47,19 @@ var TrafficPortalService = function($http, $q, $window, propertiesModel) {
     };
 
     this.dbDump = function() {
-        $window.open(propertiesModel.properties.api.baseUrl + '1.3/dbdump', '_blank');
+        /*
+        responseType=arraybuffer is important if you want to create a blob of your data
+        See: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Sending_and_Receiving_Binary_Data
+        */
+        $http.get(ENV.api['root'] + 'dbdump', { responseType:'arraybuffer' } )
+            .then(
+                function(result) {
+                    download(result.data, moment().format() + '.pg_dump');
+                }
+            );
     };
 
 };
 
-TrafficPortalService.$inject = ['$http', '$q', '$window', 'propertiesModel'];
+TrafficPortalService.$inject = ['$http', '$q', 'ENV'];
 module.exports = TrafficPortalService;
