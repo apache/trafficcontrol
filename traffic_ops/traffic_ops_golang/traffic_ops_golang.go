@@ -25,15 +25,14 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
+	"path/filepath"
 	"runtime/pprof"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-
-	"os/signal"
-	"path/filepath"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -148,56 +147,79 @@ func main() {
 		}
 	}()
 
+	profilingLocation, err  := getProcessedProfilingLocation(cfg.ProfilingLocation,cfg.LogLocationError)
+	if err != nil {
+		log.Errorln("unable to determine profiling location: " + err.Error())
+	}
+
+	log.Infof("profiling location: %s\n", profilingLocation)
+	log.Infof("profiling enabled set to %t\n", profiling)
+
+	continuousProfile(&profiling, &profilingLocation, cfg.Version)
+
+	reloadProfilingConfig := func() {
+		SetNewProfilingInfo(*configFileName,&profiling,&profilingLocation)
+	}
+	signalReloader(unix.SIGHUP, reloadProfilingConfig)
+}
+
+func SetNewProfilingInfo(configFileName string, currentProfilingEnabled *bool, currentProfilingLocation *string) {
+	newProfilingEnabled, newProfilingLocation, err := reloadProfilingInfo(configFileName)
+	if err != nil {
+		log.Errorln("reloading config: ", err.Error())
+		return
+	}
+	if *currentProfilingEnabled != newProfilingEnabled {
+		log.Infof("profiling enabled set to %t\n",newProfilingEnabled)
+		*currentProfilingEnabled = newProfilingEnabled
+	}
+	if newProfilingLocation != "" && *currentProfilingLocation != newProfilingLocation {
+		*currentProfilingLocation = newProfilingLocation
+		log.Infof("profiling location set to: %s\n", *currentProfilingLocation)
+	}
+}
+
+func getProcessedProfilingLocation(rawProfilingLocation string, errorLogLocation string) (string, error) {
 	profilingLocation := os.TempDir()
 
-	if cfg.LogLocationError != "" && cfg.LogLocationError != "stdout" {
-		errorDir := filepath.Dir(cfg.LogLocationError)
-
+	if errorLogLocation != "" && errorLogLocation != log.LogLocationNull && errorLogLocation !=  log.LogLocationStderr && errorLogLocation != log.LogLocationStdout {
+		errorDir := filepath.Dir(errorLogLocation)
 		if _, err := os.Stat(errorDir); err == nil {
 			profilingLocation = errorDir
 		}
 	}
 
 	profilingLocation = filepath.Join(profilingLocation, "profiling")
-	if cfg.ProfilingLocation != "" {
-		profilingLocation = cfg.ProfilingLocation
+	if rawProfilingLocation != "" {
+		profilingLocation = rawProfilingLocation
 	} else {
-		//if it isn't a provided location create the profiling directory under the default temp location
-		err = os.Mkdir(profilingLocation, 0755)
-		if err != nil {
-			log.Errorf("unable to create profiling location: %s\n", err.Error())
+		//if it isn't a provided location create the profiling directory under the default temp location if it doesn't exist
+		if _, err := os.Stat(profilingLocation); err != nil {
+			err = os.Mkdir(profilingLocation, 0755)
+			if err != nil {
+				return "", fmt.Errorf("unable to create profiling location: %s\n", err.Error())
+			}
 		}
 	}
+	return profilingLocation, nil
+}
 
-	reloadProfilingConfig := func() {
-		log.Debugln("received SIGHUP")
-		newCfg, err := config.LoadCdnConfig(*configFileName)
-		if err != nil {
-			log.Errorln("reloading config: ", err.Error())
-		}
-		profiling = newCfg.ProfilingEnabled
-		if newCfg.ProfilingLocation != "" {
-			profilingLocation = cfg.ProfilingLocation
-			log.Infof("profiling location: %s\n", profilingLocation)
-		}
-		if profiling {
-			log.Infoln("profiling enabled")
-		}
+func reloadProfilingInfo(configFileName string) (bool, string, error) {
+	cfg, err := config.LoadCdnConfig(configFileName)
+	if err != nil {
+		return false, "", err
 	}
-
-	log.Infof("profiling location: %s\n", profilingLocation)
-	if profiling {
-		log.Infoln("profiling enabled")
+	profilingLocation, err := getProcessedProfilingLocation(cfg.ProfilingLocation,cfg.LogLocationError)
+	if err != nil {
+		return false, "", err
 	}
-	continuousProfile(&profiling, &profilingLocation, cfg.Version)
-
-	signalReloader(unix.SIGHUP, reloadProfilingConfig)
+	return cfg.ProfilingEnabled, profilingLocation, nil
 }
 
 func continuousProfile(profiling *bool, profilingDir *string, version string) {
 	go func() {
 		for {
-			if *profiling {
+			if *profiling && *profilingDir != "" {
 				now := time.Now().UTC()
 				filename := filepath.Join(*profilingDir, fmt.Sprintf("tocpu-%s-%s.pprof", version, now.Format(time.RFC3339)))
 				f, err := os.Create(filename)
@@ -219,6 +241,7 @@ func signalReloader(sig os.Signal, f func()) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, sig)
 	for range c {
+		log.Debugln("received SIGHUP")
 		f()
 	}
 }
