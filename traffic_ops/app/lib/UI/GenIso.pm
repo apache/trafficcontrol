@@ -47,7 +47,6 @@ sub geniso {
 		$serverselect{$fqdn} = $row->id;
 	}
 
-
 	my $osversionsdir;
 	# my $ksdir = $self->db->resultset('Parameter')->search( {  and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
 	my $ksdir = $self->db->resultset('Parameter')->search( { -and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
@@ -75,8 +74,10 @@ sub geniso {
 	my $hostname = $self->param('hostname');
 	if (defined($hostname)){
 		my $iso_file_name = $self->iso_download();
-		$self->stash( iso_file_name => $iso_file_name);
-		return $self->render('gen_iso/geniso');
+		if ( $self->param('stream') ne 'yes' ) {
+			$self->stash(iso_file_name => $iso_file_name);
+			return $self->render('gen_iso/geniso');
+		}
 	}
 }
 
@@ -98,7 +99,8 @@ sub iso_download {
 		mgmtIpAddress => $self->param('mgmt_ip_address'),
 		mgmtIpNetmask => $self->param('mgmt_ip_netmask'),
 		mgmtIpGateway => $self->param('mgmt_ip_gateway'),
-		mgmtInterface => $self->param('mgmt_interface')
+		mgmtInterface => $self->param('mgmt_interface'),
+		stream => $self->param('stream')
 	};
 	my $dl_res = &API::Iso::generate_iso($self, $params);
 

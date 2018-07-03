@@ -645,6 +645,7 @@ sub api_routes {
 	# -- ISO
 	$r->get("/api/$version/osversions")->over( authenticated => 1, not_ldap => 1 )->to( 'Iso#osversions', namespace => $namespace );
 	$r->post("/api/$version/isos")->over( authenticated => 1, not_ldap => 1 )->to( 'Iso#generate', namespace => $namespace );
+	$r->post("/api/$version/isos_form")->over( authenticated => 1, not_ldap => 1 )->to( 'Iso#generate_from_form', namespace => $namespace );
 
 	# -- JOBS (CURRENTLY LIMITED TO INVALIDATE CONTENT (PURGE) JOBS)
 	$r->get("/api/$version/jobs")->over( authenticated => 1, not_ldap => 1 )->to( 'Job#index', namespace => $namespace );

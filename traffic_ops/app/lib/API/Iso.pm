@@ -66,6 +66,46 @@ sub osversions {
 
 }
 
+sub generate_from_form {
+
+	my $self = shift;
+
+	my $params = {
+		hostName => $self->param('hostName'),
+		domainName => $self->param('domainName'),
+		osversionDir => $self->param('osversionDir'),
+		rootPass => $self->param('rootPass'),
+		dhcp => $self->param('dhcp'),
+		ipAddress => $self->param('ipAddress'),
+		ipNetmask => $self->param('ipNetmask'),
+		ipGateway => $self->param('ipGateway'),
+		ip6Address => $self->param('ip6Address'),
+		ip6Gateway => $self->param('ip6Gateway'),
+		interfaceName => $self->param('interfaceName'),
+		interfaceMtu => $self->param('interfaceMtu'),
+		disk => $self->param('disk'),
+		mgmtIpAddress => $self->param('mgmtIpAddress'),
+		mgmtIpNetmask => $self->param('mgmtIpNetmask'),
+		mgmtIpGateway => $self->param('mgmtIpGateway'),
+		mgmtInterface => $self->param('mgmtInterface'),
+		stream => $self->param('stream')
+	};
+
+	my ( $is_valid, $result ) = $self->is_valid($params);
+
+	if ( !$is_valid ) {
+		return $self->alert($result);
+	}
+
+	my $dl_res = $self->generate_iso($params);
+
+	# serverselect
+	$self->flash( message => "Download ISO here" );
+	#return $dl_res->{isoName};
+	return $self->render( data => "SUCCESS" );
+
+}
+
 sub generate {
 	my $self   = shift;
 	my $params = $self->req->json;
@@ -105,6 +145,7 @@ sub generate_iso {
 	my $mgmt_ip_netmask = $params->{mgmtIpNetmask};
 	my $mgmt_ip_gateway = $params->{mgmtIpGateway};
 	my $mgmt_interface 	= $params->{mgmtInterface};
+	my $stream          = $params->{stream};
 
 	#The API has hostname and domainName, the UI does not
 	my $fqdn = $hostname;
@@ -203,6 +244,11 @@ sub generate_iso {
 
 	my $cmd =
 		"mkisofs -o $iso_file_path -joliet-long -input-charset utf-8 -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -v -T $dir";
+
+	if ( $stream eq 'yes' ) {
+		$cmd = "mkisofs -joliet-long -input-charset utf-8 -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -v -T $dir";
+	}
+
 	my $type = "default";
 	my $custom_cmd = sprintf( "%s/%s", $dir, "generate" );
 
@@ -223,19 +269,44 @@ sub generate_iso {
 	print STUF "$cmd\n";
 	close STUF;
 
-	$self->app->log->info( "Writing ISO: " . $iso_file_path );
-	my $output = `$cmd 2>&1` || die("Error executing $cmd:");
-	$self->app->log->info($output);
+	my $response = {};
 
-	&log( $self, "ISO created [ " . $osversion_dir . " ] for " . $fqdn, "APICHANGE" );
+	if ( $stream ne 'yes' ) {
+		$self->app->log->info("Writing ISO: " . $iso_file_path);
+		my $output = `$cmd 2>&1` || die("Error executing $cmd:");
+		$self->app->log->info($output);
 
-	my $iso_url = join( "/", $config->{'to'}{'base_url'}, $iso_dir, $iso_file_name );
+		&log($self, "ISO created [ " . $osversion_dir . " ] for " . $fqdn, "APICHANGE");
 
-	my $response = {
-		isoName => $iso_file_name,
-		isoURL => $iso_url,
-	};
+		my $iso_url = join("/", $config->{'to'}{'base_url'}, $iso_dir, $iso_file_name);
 
+		$response = {
+			isoName => $iso_file_name,
+			isoURL  => $iso_url,
+		};
+	}
+	else {
+		$self->res->headers->content_type("application/download");
+		$self->res->headers->content_disposition("attachment; filename=\"$iso_file_name\"");
+		my $data = `$cmd`;
+#		my $ok = open my $fh, '-|', $cmd;
+#
+#		if (! $ok ) {
+#			$self->internal_server_error( { Error => "Error generating ISO" } );
+#			return;
+#		}
+#
+#		undef $/;
+#		my $data = <$fh>;
+
+		$self->render( data => $data );
+
+#		close $fh;
+		#$response = {
+		#	iso => $data,
+		#	name => $iso_file_name,
+		#};
+	}
 	return $response;
 }
 
