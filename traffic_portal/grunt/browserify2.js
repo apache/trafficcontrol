@@ -103,9 +103,7 @@ module.exports = {
                                 'es5-shim/es5-shim.js',
                                 'jquery/jquery.js',
                                 'json3/lib/json3.js',
-                                'restangular/dist/restangular.js',
-                                'angular-file-saver/dist/angular-file-saver.bundle.js',
-                                'js-base64/base64.js'
+                                'restangular/dist/restangular.js'
                             ]
                     },
                     {

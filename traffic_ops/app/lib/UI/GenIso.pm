@@ -107,6 +107,13 @@ sub iso_download {
 	};
 	my $dl_res = &API::Iso::generate_iso($self, $params);
 
+	if ( $params->{stream} eq 'yes' ) {
+		$self->res->headers->content_type("application/download");
+		$self->res->headers->content_disposition("attachment; filename=\"$dl_res->{name}\"");
+
+		return $self->render( data => $dl_res->{iso} );
+	}
+
 	# serverselect
 	$self->flash( message => "Download ISO here" );
 	return $dl_res->{isoName};

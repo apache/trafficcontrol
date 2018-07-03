@@ -190,8 +190,8 @@ $(function () {
 									<td>Stream ISO:</td>
 									<td>
 										<select id="stream" name=stream>
-											<option>yes</option>
 											<option>no</option>
+											<option>yes</option>
 										</select>
 									</td>
 									<td>If no, download link will be provided</td>
