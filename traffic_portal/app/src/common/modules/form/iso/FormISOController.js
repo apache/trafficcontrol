@@ -52,8 +52,10 @@ var FormISOController = function(servers, osversions, $scope, $anchorScroll, for
 			.then(function(result) {
 				$anchorScroll(); // scrolls window to top
 				if (iso.stream != 'yes') {
-                    messageModel.setMessages([{level: 'success', text: 'ISO created at ' + result.isoURL}], false);
-                }
+					messageModel.setMessages([{level: 'success', text: 'ISO created at ' + result.isoURL}], false);
+				} else {
+					messageModel.setMessages([{level: 'success', text: 'ISO successfully downloaded'}], false);
+				}
 			});
 	};
 
