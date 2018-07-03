@@ -40,23 +40,20 @@ sub geniso {
 
 	&navbarpage($self);
 	my %serverselect;
-	my $rs_server = $self->db->resultset('Server')->search(undef,
-		{ columns => [ qw/id host_name domain_name/ ], orderby => "host_name" });
+	my $rs_server = $self->db->resultset('Server')->search( undef, { columns => [qw/id host_name domain_name/], orderby => "host_name" } );
 
-	while (my $row = $rs_server->next) {
+	while ( my $row = $rs_server->next ) {
 		my $fqdn = $row->host_name . "." . $row->domain_name;
 		$serverselect{$fqdn} = $row->id;
 	}
 
 	my $osversionsdir;
 	# my $ksdir = $self->db->resultset('Parameter')->search( {  and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
-	my $ksdir = $self->db->resultset('Parameter')->search({ -and =>
-		[ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] })->get_column('value')->single();
+	my $ksdir = $self->db->resultset('Parameter')->search( { -and => [ name => $ksfiles_parm_name, config_file => $ksfiles_configfile_name ] } )->get_column('value')->single();
 
 	if (defined $ksdir && $ksdir ne "") {
 		$osversionsdir = $ksdir;
-	}
-	else {
+	} else {
 		$osversionsdir = $filebasedir;
 	}
 
@@ -75,7 +72,7 @@ sub geniso {
 	);
 
 	my $hostname = $self->param('hostname');
-	if (defined($hostname)) {
+	if (defined($hostname)){
 		my $iso_file_name = $self->iso_download();
 		if ( $self->param('stream') ne 'yes' ) {
 			$self->stash(iso_file_name => $iso_file_name);
@@ -109,14 +106,14 @@ sub iso_download {
 
 	if ( $params->{stream} eq 'yes' ) {
 		$self->res->headers->content_type("application/download");
-		$self->res->headers->content_disposition("attachment; filename=\"$dl_res->{name}\"");
+		$self->res->headers->content_disposition("attachment; filename=\"$dl_res->{isoName}\"");
 
 		return $self->render( data => $dl_res->{iso} );
+	} else {
+		# serverselect
+		$self->flash(message => "Download ISO here");
+		return $dl_res->{isoName};
 	}
-
-	# serverselect
-	$self->flash( message => "Download ISO here" );
-	return $dl_res->{isoName};
 }
 
 sub find_conf_path {

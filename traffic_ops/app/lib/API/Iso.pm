@@ -83,9 +83,9 @@ sub generate {
 
 	my $response = $self->generate_iso($params);
 
-	if ( index( $params->{stream}, "yes" ) != -1 ) {
+	if ( $params->{stream} eq 'yes' ) {
 		$self->res->headers->content_type("application/download");
-		$self->res->headers->content_disposition("attachment; filename=\"$response->{name}\"");
+		$self->res->headers->content_disposition("attachment; filename=\"$response->{isoName}\"");
 
 		return $self->render( data => $response->{iso} );
 	} else {
@@ -248,19 +248,17 @@ sub generate_iso {
 
 		&log($self, "ISO created [ " . $osversion_dir . " ] for " . $fqdn, "APICHANGE");
 
-		#my $iso_url = join("/", $config->{'to'}{'base_url'}, $iso_dir, $iso_file_name);
-		my $iso_url = join("/", "https://" . hostfqdn(), $iso_dir, $iso_file_name);
+		my $iso_url = join("/", "https://" . lc hostfqdn(), $iso_dir, $iso_file_name);
 
 		$response = {
 			isoName => $iso_file_name,
 			isoURL  => $iso_url,
 		};
-	}
-	else {
+	} else {
 		my $data = `$cmd`;
 		$response = {
 			iso => $data,
-			name => $iso_file_name,
+			isoName => $iso_file_name,
 		};
 	}
 	return $response;

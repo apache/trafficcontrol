@@ -49,7 +49,8 @@ var ToolsService = function($http, $q, Restangular, locationUtils, messageModel,
 				function(result) {
 					request.resolve(result.data.response);
 					if (iso.stream == 'yes') {
-						download(result.data, "myiso.iso");
+						var isoName = iso.hostName + "." + iso.domainName + "-" + iso.osversionDir + ".iso";
+						download(result.data, isoName);
 					}
 				},
 				function(fault) {
