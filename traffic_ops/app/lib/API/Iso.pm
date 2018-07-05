@@ -248,7 +248,9 @@ sub generate_iso {
 
 		&log($self, "ISO created [ " . $osversion_dir . " ] for " . $fqdn, "APICHANGE");
 
-		my $iso_url = join("/", "https://" . lc hostfqdn(), $iso_dir, $iso_file_name);
+		# parse out http / https from to.base_url config; use local fqdn for download link
+		my @protocol = split( '://', $config->{'to'}{'base_url'} );
+		my $iso_url = join( '/', $protocol[0] . ':/', lc hostfqdn(), $iso_dir, $iso_file_name );
 
 		$response = {
 			isoName => $iso_file_name,
@@ -256,6 +258,21 @@ sub generate_iso {
 		};
 	} else {
 		my $data = `$cmd`;
+		if ( $type eq 'custom' ) {
+			my $ok = open my $fh, "<$iso_file_path";
+			if (! $ok ) {
+				$self->internal_server_error( { Error => "Error reading $iso_file_path" } );
+				return;
+			}
+
+			# slurp it in..
+			undef $/;
+			$data = <$fh>;
+
+			close $fh;
+			unlink $iso_file_path;
+		}
+
 		$response = {
 			iso => $data,
 			isoName => $iso_file_name,
