@@ -1,5 +1,9 @@
 package v13
 
+import (
+	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+)
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,28 +19,11 @@ package v13
    limitations under the License.
 */
 
-import (
-	"testing"
-
-	log "github.com/apache/trafficcontrol/lib/go-log"
-)
-
-func GetTestDomains(t *testing.T) {
-	resp, _, err := TOSession.GetDomains()
-	log.Debugln("Response: ", resp)
+func (to *Session) GetDomains() ([]v13.Domain, ReqInf, error) {
+	var data v13.DomainsResponse
+	inf, err := get(to, "/api/1.3/cdns/domains", &data)
 	if err != nil {
-		t.Errorf("could not GET domains: %v\n", err)
+		return nil, inf, err
 	}
-}
-
-func TestDomains(t *testing.T) {
-	CreateTestCDNs(t)
-	CreateTestTypes(t)
-	CreateTestProfiles(t)
-	CreateTestStatuses(t)
-	GetTestDomains(t)
-	DeleteTestStatuses(t)
-	DeleteTestProfiles(t)
-	DeleteTestTypes(t)
-	DeleteTestCDNs(t)
+	return data.Response, inf, nil
 }
