@@ -36,6 +36,7 @@ jwt\-go(?:                           MIT. Properly documented in LICENSE ){0}
 pq(?:                                MIT. Properly documented in LICENSE ){0}
 bootstrap(?:-theme)?\.(?:css|js)(?:  MIT. Properly documented in LICENSE ){0}
 j[mM]enu(?:\.jquery)?\.(?:css|js)(?: MIT. Properly documented in LICENSE ){0}
+downloadjs\-min.*\.js(?:             MIT. Properly documented in LICENSE ){0}
 jquery\-ui\..*(?:                    MIT. Properly documented in LICENSE ){0}
 jquery\.dataTables\..*(?:            MIT. Properly documented in LICENSE ){0}
 .*underscore.*(?:                    MIT. Properly documented in LICENSE ){0}
