@@ -230,13 +230,17 @@ func continuousProfile(profiling *bool, profilingDir *string, version string) {
 				f, err := os.Create(filename)
 				if err != nil {
 					log.Errorf("creating profile: %v\n", err)
-					os.Exit(1)
+					log.Infof("Exiting profiling")
+					break
 				}
 
 				pprof.StartCPUProfile(f)
 				time.Sleep(time.Minute)
 				pprof.StopCPUProfile()
 				f.Close()
+				if !*profiling {
+					break
+				}
 			}
 		}()
 	}

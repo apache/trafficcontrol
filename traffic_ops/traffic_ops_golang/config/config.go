@@ -129,8 +129,6 @@ func (c Config) EventLog() log.LogLocation {
 const BlockStartup = true
 const AllowStartup = false
 
-
-
 func LoadCdnConfig(cdnConfPath string) (Config, error) {
 	// load json from cdn.conf
 	confBytes, err := ioutil.ReadFile(cdnConfPath)
