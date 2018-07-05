@@ -166,7 +166,7 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 	}
 
 	expected := []string{
-		"not authorized on this tenant",
+		"deliveryservice_request was created.",
 		//"'xmlId' the length must be between 1 and 48",
 	}
 
