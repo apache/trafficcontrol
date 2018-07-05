@@ -219,25 +219,6 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 	var ok = false
 	var err error
 
-	defer func() {
-		var id, parent int
-		var name string
-		if ten.ID != nil {
-			id = *ten.ID
-		}
-		if ten.ParentID != nil {
-			parent = *ten.ParentID
-		}
-		if ten.Name != nil {
-			name = *ten.Name
-		}
-		fmt.Printf(`
-		*** Tenant is %++v
-		id: %d
-		parent: %d
-		name: %s
-`, ten, id, parent, name)
-	}()
 	if ten == nil {
 		// should never happen
 		return ok, err
