@@ -201,38 +201,6 @@ func getParentCachegroupIDs(tx *sqlx.Tx, cachegroup *TOCacheGroup) error {
 	return nil
 }
 
-// looks up the parent and secondary cachegroup names by cachegroup ID.
-//  the names are set on the struct.
-//
-// used by Read()
-func getParentCacheGroupNames(tx *sqlx.Tx, cachegroup *TOCacheGroup) error {
-	query1 := `SELECT name FROM cachegroup where id=$1`
-	var primaryName string
-	var secondaryName string
-
-	// primary parent lookup
-	if cachegroup.ParentCachegroupID != nil {
-		err := tx.QueryRow(query1, *cachegroup.ParentCachegroupID).Scan(&primaryName)
-		if err != nil {
-			log.Errorf("received error: %++v from query execution", err)
-			return err
-		}
-		cachegroup.ParentName = &primaryName
-	}
-
-	// secondary parent lookup
-	if cachegroup.SecondaryParentCachegroupID != nil {
-		err := tx.QueryRow(query1, *cachegroup.SecondaryParentCachegroupID).Scan(&secondaryName)
-		if err != nil {
-			log.Errorf("received error: %++v from query execution", err)
-			return err
-		}
-		cachegroup.SecondaryParentName = &secondaryName
-	}
-
-	return nil
-}
-
 //The TOCacheGroup implementation of the Creator interface
 //all implementations of Creator should use transactions and return the proper errorType
 //ParsePQUniqueConstraintError is used to determine if a cachegroup with conflicting values exists
@@ -317,7 +285,6 @@ func (cg *TOCacheGroup) Read(parameters map[string]string) ([]interface{}, []err
 			log.Errorf("error parsing CacheGroup rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
-		getParentCacheGroupNames(cg.ReqInfo.Tx, &s)
 		CacheGroups = append(CacheGroups, s)
 	}
 
@@ -445,12 +412,16 @@ cachegroup.short_name,
 cachegroup.latitude,
 cachegroup.longitude,
 cachegroup.parent_cachegroup_id,
+cgp.name AS parent_cachegroup_name,
 cachegroup.secondary_parent_cachegroup_id,
+cgs.name AS secondary_parent_cachegroup_name,
 type.name AS type_name,
 cachegroup.type AS type_id,
 cachegroup.last_updated
 FROM cachegroup
-INNER JOIN type ON cachegroup.type = type.id`
+INNER JOIN type ON cachegroup.type = type.id
+LEFT JOIN cachegroup AS cgp ON cachegroup.parent_cachegroup_id = cgp.id
+LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.id`
 	return query
 }
 

@@ -36,11 +36,11 @@ type CacheGroup struct {
 	ShortName                   string       `json:"shortName" db:"short_name"`
 	Latitude                    float64      `json:"latitude" db:"latitude"`
 	Longitude                   float64      `json:"longitude" db:"longitude"`
-	ParentName                  string       `json:"parentCachegroupName"`
+	ParentName                  string       `json:"parentCachegroupName" db:"parent_cachegroup_name"`
 	ParentCachegroupID          int          `json:"parentCachegroupId" db:"parent_cachegroup_id"`
-	SecondaryParentName         string       `json:"secondaryParentCachegroupName"`
+	SecondaryParentName         string       `json:"secondaryParentCachegroupName" db:"secondary_parent_cachegroup_name"`
 	SecondaryParentCachegroupID int          `json:"secondaryParentCachegroupId" db:"secondary_parent_cachegroup_id"`
-	FallbackToClosest           bool         `json:"fallbackToClosest" db:"fallback_to_closest`
+	FallbackToClosest           bool         `json:"fallbackToClosest" db:"fallback_to_closest"`
 	Type                        string       `json:"typeName" db:"type_name"` // aliased to type_name to disambiguate struct scans due to join on 'type' table
 	TypeID                      int          `json:"typeId" db:"type_id"`     // aliased to type_id to disambiguate struct scans due join on 'type' table
 	LastUpdated                 tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
@@ -52,9 +52,9 @@ type CacheGroupNullable struct {
 	ShortName                   *string       `json:"shortName" db:"short_name"`
 	Latitude                    *float64      `json:"latitude" db:"latitude"`
 	Longitude                   *float64      `json:"longitude"db:"longitude"`
-	ParentName                  *string       `json:"parentCachegroupName"`
+	ParentName                  *string       `json:"parentCachegroupName" db:"parent_cachegroup_name"`
 	ParentCachegroupID          *int          `json:"parentCachegroupId" db:"parent_cachegroup_id"`
-	SecondaryParentName         *string       `json:"secondaryParentCachegroupName"`
+	SecondaryParentName         *string       `json:"secondaryParentCachegroupName" db:"secondary_parent_cachegroup_name"`
 	SecondaryParentCachegroupID *int          `json:"secondaryParentCachegroupId" db:"secondary_parent_cachegroup_id"`
 	FallbackToClosest           *bool         `json:"fallbackToClosest" db:"fallback_to_closest"`
 	Type                        *string       `json:"typeName" db:"type_name"` // aliased to type_name to disambiguate struct scans due to join on 'type' table
