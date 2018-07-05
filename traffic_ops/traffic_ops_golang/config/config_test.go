@@ -197,9 +197,9 @@ func TestLoadConfig(t *testing.T) {
 
 	// test bad paths
 	_, errs, blockStartup := LoadConfig(badPath, badPath, badPath, version)
-	exp = fmt.Sprintf("reading CDN conf '%s'", badPath)
+	exp = fmt.Sprintf("got Loading cdn config from '%s'", badPath)
 	if !strings.HasPrefix(errs[0].Error(), exp) {
-		t.Error("expected", exp, "got", err)
+		t.Error("expected", exp, "got", errs[0].Error())
 	}
 	if blockStartup != true {
 		t.Error("expected blockStartup to be true but it was ", blockStartup)
@@ -207,9 +207,9 @@ func TestLoadConfig(t *testing.T) {
 
 	// bad json in cdn.conf
 	_, errs, blockStartup = LoadConfig(badCfg, badCfg, badPath, version)
-	exp = fmt.Sprintf("unmarshalling '%s'", badCfg)
+	exp = fmt.Sprintf("got Loading cdn config from '%s': unmarshalling '%s'", badCfg, badCfg)
 	if !strings.HasPrefix(errs[0].Error(), exp) {
-		t.Error("expected", exp, "got", err)
+		t.Error("expected", exp, "got", errs[0].Error())
 	}
 	if blockStartup != true {
 		t.Error("expected blockStartup to be true but it was ", blockStartup)
@@ -219,7 +219,7 @@ func TestLoadConfig(t *testing.T) {
 	_, errs, blockStartup = LoadConfig(goodCfg, badPath, badPath, version)
 	exp = fmt.Sprintf("reading db conf '%s'", badPath)
 	if !strings.HasPrefix(errs[0].Error(), exp) {
-		t.Error("expected", exp, "got", err)
+		t.Error("expected", exp, "got", errs[0].Error())
 	}
 	if blockStartup != true {
 		t.Error("expected blockStartup to be true but it was ", blockStartup)
@@ -229,7 +229,7 @@ func TestLoadConfig(t *testing.T) {
 	_, errs, blockStartup = LoadConfig(goodCfg, badCfg, badPath, version)
 	exp = fmt.Sprintf("unmarshalling '%s'", badCfg)
 	if !strings.HasPrefix(errs[0].Error(), exp) {
-		t.Error("expected", exp, "got", err)
+		t.Error("expected", exp, "got", errs[0].Error())
 	}
 	if blockStartup != true {
 		t.Error("expected blockStartup to be true but it was ", blockStartup)
@@ -238,7 +238,7 @@ func TestLoadConfig(t *testing.T) {
 	// good cdn.conf,  good database.conf
 	cfg, errs, blockStartup = LoadConfig(goodCfg, goodDbCfg, goodRiakCfg, version)
 	if len(errs) != 0 {
-		t.Error("Good config -- unexpected error ", err)
+		t.Error("Good config -- unexpected errors: ", errs)
 	}
 	if blockStartup != false {
 		t.Error("expected blockStartup to be false but it was ", blockStartup)
