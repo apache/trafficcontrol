@@ -20,78 +20,78 @@ package cdn
  */
 
 import (
-  "net/http"
-  //"database/sql"
-  //"github.com/jmoiron/sqlx" //sql extra
-  "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"fmt"
+	"net/http"
+
+	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/jmoiron/sqlx"
 )
 
-func DomainsHandler (w http.ResponseWriter, r *http.Request) {
+// GetDomainsList gathers a list of domains, except for the domain name.
+// There seems to be an issue nesting queries (performing a query while
+// rows.Next still needs to iterate). https://github.com/lib/pq/issues/81
+func getDomainsList(tx *sqlx.Tx) ([]v13.Domain, []int, error) {
 
-  // inf is of type APIInfo
-  inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-  if userErr != nil || sysErr != nil {
-    api.HandleErr(w, r, errCode, userErr, sysErr)
-    return
-  }
-  defer inf.Close()
+	var (
+		cdn  int
+		id   int
+		name string
+		desc string
+	)
 
-  var (
-    cdn         int
-    id          int
-    name        string
-    description string
-    domain_name string
-    resp []interface{} //really not sure about this
-  )
+	domains := []v13.Domain{}
+	cdn_ids := []int{}
 
-  //how to prefetch 'cdn'?
-  q := `SELECT cdn, id, name, description FROM 'Profile' WHERE name LIKE 'CCR%'`
-  rows, err := inf.Tx.Query(q)
-  if err != nil {
-    //TODO change errCode, userErr, and sysErr
-    //which one is errors.New("Error: " + err.Error()?
-    //api.HandleErr(w, r, errCode, userErr, sysErr)
-    return
-  }
-  defer rows.Close()
+	q := `SELECT cdn, id, name, description FROM Profile WHERE name LIKE 'CCR%'`
+	rows, err := tx.Query(q)
+	if err != nil {
+		return nil, nil, fmt.Errorf("querying for profile: %s", err)
+	}
+	defer rows.Close()
 
-  for rows.Next() {
+	for rows.Next() {
+		if err := rows.Scan(&cdn, &id, &name, &desc); err != nil {
+			return nil, nil, fmt.Errorf("getting profile: %s", err)
+		}
 
-    //Do I even need to check for errors here since the perl doesn't?
-    if err := rows.Scan(&cdn, &id, &name, &description); err != nil {
-      //api.HandleErr(w, r, HTTP CODE,
-      //  errors.New("Error scanning ...: " + err.Error())  user or system error?
-    }
+		elem := v13.Domain{
+			ProfileID:          id,
+			ParameterID:        -1,
+			ProfileName:        name,
+			ProfileDescription: desc,
+		}
 
-    err = inf.Tx.QueryRow("SELECT DOMAIN_NAME FROM CDN WHERE id = $1", 1).Scan(&domain_name)
-    if err != nil {
-      //api.HandleErr(w, r, HTTP CODE,
-      //  errors.New("Error scanning ...: " + err.Error()") user or system error?
-    }
+		cdn_ids = append(cdn_ids, cdn)
+		domains = append(domains, elem)
+	}
 
-    data := struct {
-      domain_name string
-      param_id    int
-      id          int
-      name        string
-      description string
-    } {
-      domain_name,
-      -1, // it's not a parameter anymore
-      id,
-      name,
-      description,
-    }
-    resp = append(resp, data)
-  }
+	return domains, cdn_ids, nil
+}
 
-  api.WriteResp(w, r, resp)
-  /* {
-    "domainName"         => $row->cdn->domain_name,
-    "parameterId"        => -1,  # it's not a parameter anymore
-    "profileId"          => $row->id,
-    "profileName"        => $row->name,
-    "profileDescription" => $row->description,
-  } */
+func DomainsHandler(w http.ResponseWriter, r *http.Request) {
+
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	domains, cdn_ids, err := getDomainsList(inf.Tx)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, err)
+		return
+	}
+
+	for i, cdn := range cdn_ids {
+		row := inf.Tx.QueryRow(`SELECT DOMAIN_NAME FROM CDN WHERE id = $1`, cdn)
+		err := row.Scan(&domains[i].DomainName)
+		if err != nil {
+			api.HandleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("getting domain name of cdn: %s", err))
+			return
+		}
+	}
+
+	api.WriteResp(w, r, domains)
 }
