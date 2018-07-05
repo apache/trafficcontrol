@@ -30,15 +30,17 @@ if ($#ARGV < 2) {
 my $username = shift // 'admin';
 my $password = shift or die "Password is required\n";
 my $role = shift // 'admin';
+my $tenant = shift // 'root';
 
 # Skip the insert if the admin 'username' is already there.
 my $hashed_passwd = hash_pass( $password );
 print <<"ADMIN";
-insert into tm_user (username, role, local_passwd, confirm_local_passwd)
+insert into tm_user (username, role, local_passwd, confirm_local_passwd, tenant_id)
     values  ('$username',
             (select id from role where name = '$role'),
             '$hashed_passwd',
-            '$hashed_passwd' )
+            '$hashed_passwd',
+            (SELECT id FROM tenant WHERE name='$tenant'))
     ON CONFLICT (username) DO NOTHING;
 ADMIN
 
