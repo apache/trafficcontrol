@@ -19,46 +19,21 @@ package v13
  * under the License.
  */
 
-/*
-TODO: Adapt the comments to be better used by swagger. I am writing comments
-that look similar to others in `go-tc/cdns.go`, but I'm unsure how it will
-end up looking. Note: I also made a few assumptions with the "required" field
-*/
-
-// A List of Domains Response
-// swagger:response DomainsResponse
-// in: body
 type DomainsResponse struct {
-	// in: body
 	Response []Domain `json:"response"`
 }
 
-// Domain ...
 type Domain struct {
 
-	// Profile ID
-	//
-	// required: true
 	ProfileID int `json:"profileId" db:"profile_id"`
 
-	// Parameter ID
-	//
-	// required: false
 	ParameterID int `json:"parameterId" db:"parameter_id"`
 
-	// Profile Name
-	//
-	// required: true
 	ProfileName string `json:"profileName" db:"profile_name"`
 
-	// Profile Description
-	//
-	// required: true
 	ProfileDescription string `json:"profileDescription" db:"profile_description"`
 
 	// DomainName of the CDN
-	//
-	// required: true
 	DomainName string `json:"domainName" db:"domain_name"`
 }
 

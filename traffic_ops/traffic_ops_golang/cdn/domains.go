@@ -22,51 +22,37 @@ package cdn
 import (
 	"fmt"
 	"net/http"
-
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/jmoiron/sqlx"
 )
 
-// GetDomainsList gathers a list of domains, except for the domain name.
-// There seems to be an issue nesting queries (performing a query while
-// rows.Next still needs to iterate). https://github.com/lib/pq/issues/81
-func getDomainsList(tx *sqlx.Tx) ([]v13.Domain, []int, error) {
+const RouterProfilePrefix = "CCR"
 
-	var (
-		cdn  int
-		id   int
-		name string
-		desc string
-	)
+func getDomainsList(tx *sqlx.Tx) ([]v13.Domain, error) {
 
 	domains := []v13.Domain{}
-	cdn_ids := []int{}
 
-	q := `SELECT cdn, id, name, description FROM Profile WHERE name LIKE 'CCR%'`
+	q := `SELECT p.id, p.name, p.description, domain_name FROM profile AS p
+	JOIN cdn ON p.cdn = cdn.id WHERE p.name LIKE '` + RouterProfilePrefix + `%'`;
+
 	rows, err := tx.Query(q)
 	if err != nil {
-		return nil, nil, fmt.Errorf("querying for profile: %s", err)
+		return nil, fmt.Errorf("querying for profile: %s", err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		if err := rows.Scan(&cdn, &id, &name, &desc); err != nil {
-			return nil, nil, fmt.Errorf("getting profile: %s", err)
-		}
 
-		elem := v13.Domain{
-			ProfileID:          id,
-			ParameterID:        -1,
-			ProfileName:        name,
-			ProfileDescription: desc,
+		d := v13.Domain{ParameterID: -1}
+		err := rows.Scan(&d.ProfileID, &d.ProfileName, &d.ProfileDescription, &d.DomainName)
+		if err != nil {
+			return nil, fmt.Errorf("getting profile: %s", err)
 		}
-
-		cdn_ids = append(cdn_ids, cdn)
-		domains = append(domains, elem)
+		domains = append(domains, d)
 	}
 
-	return domains, cdn_ids, nil
+	return domains, nil
 }
 
 func DomainsHandler(w http.ResponseWriter, r *http.Request) {
@@ -78,19 +64,10 @@ func DomainsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	domains, cdn_ids, err := getDomainsList(inf.Tx)
+	domains, err := getDomainsList(inf.Tx)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, http.StatusInternalServerError, err, err)
 		return
-	}
-
-	for i, cdn := range cdn_ids {
-		row := inf.Tx.QueryRow(`SELECT DOMAIN_NAME FROM CDN WHERE id = $1`, cdn)
-		err := row.Scan(&domains[i].DomainName)
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, fmt.Errorf("getting domain name of cdn: %s", err))
-			return
-		}
 	}
 
 	api.WriteResp(w, r, domains)
