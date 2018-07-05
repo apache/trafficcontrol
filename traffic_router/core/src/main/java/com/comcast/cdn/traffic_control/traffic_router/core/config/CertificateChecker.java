@@ -60,6 +60,7 @@ public class CertificateChecker {
 			.isPresent();
 	}
 
+    @SuppressWarnings("PMD.CyclomaticComplexity")
 	private Boolean deliveryServiceHasValidCertificates(final List<CertificateData> certificateDataList, final JsonNode deliveryServicesJson, final String deliveryServiceId) {
 		final JsonNode deliveryServiceJson = deliveryServicesJson.get(deliveryServiceId);
 		final JsonNode protocolJson = deliveryServiceJson.get("protocol");
@@ -86,8 +87,8 @@ public class CertificateChecker {
 			}
 
 			for (final CertificateData certificateData : certificateDataList) {
-				String certificateDeliveryServiceId = certificateData.getDeliveryservice();
-				if (deliveryServiceId == null) {
+				final String certificateDeliveryServiceId = certificateData.getDeliveryservice();
+				if ((deliveryServiceId == null) || deliveryServiceId.equals("")) {
 					LOGGER.error("Delivery Service name is blank for hostname '" +  certificateData.getHostname() + "', skipping.");
 				} else if ((certificateDeliveryServiceId != null) && (deliveryServiceId != null) && (certificateDeliveryServiceId.equals(deliveryServiceId))) {
 					LOGGER.debug("Delivery Service " + deliveryServiceId + " has certificate data for https");
