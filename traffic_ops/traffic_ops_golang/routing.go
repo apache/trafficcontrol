@@ -32,6 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -74,6 +75,7 @@ type ServerData struct {
 	config.Config
 	DB        *sqlx.DB
 	Profiling *bool // Yes this is a field in the config but we want to live reload this value and NOT the entire config
+	Plugins   plugin.Plugins
 }
 
 // CompiledRoute ...
@@ -170,7 +172,16 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 }
 
 // Handler - generic handler func used by the Handlers hooking into the routes
-func Handler(routes map[string][]CompiledRoute, catchall http.Handler, db *sqlx.DB, cfg *config.Config, getReqID func() uint64, w http.ResponseWriter, r *http.Request) {
+func Handler(
+	routes map[string][]CompiledRoute,
+	catchall http.Handler,
+	db *sqlx.DB,
+	cfg *config.Config,
+	getReqID func() uint64,
+	plugins plugin.Plugins,
+	w http.ResponseWriter,
+	r *http.Request,
+) {
 	reqID := getReqID()
 
 	reqIDStr := strconv.FormatUint(reqID, 10)
@@ -179,6 +190,11 @@ func Handler(routes map[string][]CompiledRoute, catchall http.Handler, db *sqlx.
 	defer func() {
 		log.Infoln(r.Method + " " + r.URL.Path + " handled (reqid " + reqIDStr + ") in " + time.Since(start).String())
 	}()
+
+	onReqData := plugin.OnRequestData{Data: plugin.Data{RequestID: reqID}, W: w, R: r}
+	if handled := plugins.OnRequest(onReqData); handled {
+		return
+	}
 
 	requested := r.URL.Path[1:]
 	mRoutes, ok := routes[r.Method]
@@ -221,7 +237,7 @@ func RegisterRoutes(d ServerData) error {
 	compiledRoutes := CompileRoutes(routes)
 	getReqID := nextReqIDGetter()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		Handler(compiledRoutes, catchall, d.DB, &d.Config, getReqID, w, r)
+		Handler(compiledRoutes, catchall, d.DB, &d.Config, getReqID, d.Plugins, w, r)
 	})
 	return nil
 }
