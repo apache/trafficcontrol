@@ -35,6 +35,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/plugin"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -131,6 +132,8 @@ func main() {
 	db.SetMaxIdleConns(cfg.DBMaxIdleConnections)
 	db.SetConnMaxLifetime(time.Duration(cfg.DBConnMaxLifetimeSeconds) * time.Second)
 
+	// TODO combine
+	plugins := plugin.Get(cfg)
 	profiling := cfg.ProfilingEnabled
 
 	pprofMux := http.DefaultServeMux
@@ -146,10 +149,12 @@ func main() {
 		log.Errorln(debugServer.ListenAndServe())
 	}()
 
-	if err := RegisterRoutes(ServerData{DB: db, Config: cfg, Profiling: &profiling}); err != nil {
+	if err := RegisterRoutes(ServerData{DB: db, Config: cfg, Profiling: &profiling, Plugins: plugins}); err != nil {
 		log.Errorf("registering routes: %v\n", err)
 		return
 	}
+
+	plugins.OnStartup(plugin.StartupData{Data: plugin.Data{SharedCfg: cfg.PluginSharedConfig}, AppCfg: cfg})
 
 	log.Infof("Listening on " + cfg.Port)
 
