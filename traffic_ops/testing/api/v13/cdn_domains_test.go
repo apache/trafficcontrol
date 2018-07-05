@@ -18,7 +18,7 @@ package v13
 import (
 	"testing"
 
-	log "github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 func GetTestDomains(t *testing.T) {

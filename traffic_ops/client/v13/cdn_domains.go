@@ -21,7 +21,7 @@ import (
 
 func (to *Session) GetDomains() ([]v13.Domain, ReqInf, error) {
 	var data v13.DomainsResponse
-	inf, err := get(to, "/api/1.3/cdns/domains", &data)
+	inf, err := get(to, apiBase + "/cdns/domains", &data)
 	if err != nil {
 		return nil, inf, err
 	}
