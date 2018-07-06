@@ -49,7 +49,7 @@ func (dsInfo DeliveryServiceTenantInfo) IsTenantAuthorized(user *auth.CurrentUse
 	return IsResourceAuthorizedToUserTx(*dsInfo.TenantID, user, tx)
 }
 
-// returns tenant information for a deliveryservice
+// GetDeliveryServiceTenantInfo returns tenant information for a deliveryservice
 func GetDeliveryServiceTenantInfo(xmlID string, tx *sql.Tx) (*DeliveryServiceTenantInfo, error) {
 	ds := DeliveryServiceTenantInfo{XMLID: util.StrPtr(xmlID)}
 	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where xml_id = $1`, &ds.XMLID).Scan(&ds.TenantID); err != nil {
@@ -82,7 +82,7 @@ func Check(user *auth.CurrentUser, XMLID string, tx *sql.Tx) (error, error, int)
 	return nil, nil, http.StatusOK
 }
 
-// Check checks that the given user has access to the given delivery service. Returns a user error, a system error, and an HTTP error code. If both the user and system error are nil, the error code should be ignored.
+// CheckID checks that the given user has access to the given delivery service. Returns a user error, a system error, and an HTTP error code. If both the user and system error are nil, the error code should be ignored.
 func CheckID(tx *sql.Tx, user *auth.CurrentUser, dsID int) (error, error, int) {
 	ok, err := IsTenancyEnabledTx(tx)
 	if err != nil {
@@ -113,7 +113,7 @@ func CheckID(tx *sql.Tx, user *auth.CurrentUser, dsID int) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-// returns a Tenant list that the specified user has access too.
+// GetUserTenantList returns a Tenant list that the specified user has access too.
 // NOTE: This method does not use the use_tenancy parameter and if this method is being used
 // to control tenancy the parameter must be checked. The method IsResourceAuthorizedToUser checks the use_tenancy parameter
 // and should be used for this purpose in most cases.
@@ -132,7 +132,7 @@ func GetUserTenantList(user auth.CurrentUser, db *sqlx.DB) ([]tc.TenantNullable,
 	)
 	rows, err := db.Query(query, user.TenantID)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("querying user tenant list: " + err.Error())
 	}
 	defer rows.Close()
 
@@ -149,7 +149,7 @@ func GetUserTenantList(user auth.CurrentUser, db *sqlx.DB) ([]tc.TenantNullable,
 	return tenants, nil
 }
 
-// returns a TenantID list that the specified user has access too.
+// GetUserTenantIDList returns a TenantID list that the specified user has access too.
 // NOTE: This method does not use the use_tenancy parameter and if this method is being used
 // to control tenancy the parameter must be checked. The method IsResourceAuthorizedToUser checks the use_tenancy parameter
 // and should be used for this purpose in most cases.
@@ -164,7 +164,7 @@ func GetUserTenantIDList(user auth.CurrentUser, db *sqlx.DB) ([]int, error) {
 
 	rows, err := db.Query(query, user.TenantID)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("querying user tenantID list: " + err.Error())
 	}
 	defer rows.Close()
 
@@ -188,7 +188,7 @@ SELECT id FROM q;
 `
 	rows, err := tx.Query(query, userTenantID)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("querying user tenant ID list: " + err.Error())
 	}
 	defer rows.Close()
 
@@ -226,7 +226,7 @@ func IsTenancyEnabledTx(tx *sql.Tx) (bool, error) {
 	return useTenancy, nil
 }
 
-// returns a boolean value describing if the user has access to the provided resource tenant id and an error
+// IsResourceAuthorizedToUser returns a boolean value describing if the user has access to the provided resource tenant id and an error
 // if use_tenancy is set to false (0 in the db) this method will return true allowing access.
 func IsResourceAuthorizedToUser(resourceTenantID int, user *auth.CurrentUser, db *sqlx.DB) (bool, error) {
 	// $1 is the user tenant ID and $2 is the resource tenant ID
@@ -257,7 +257,7 @@ func IsResourceAuthorizedToUser(resourceTenantID int, user *auth.CurrentUser, db
 	}
 }
 
-// returns a boolean value describing if the user has access to the provided resource tenant id and an error
+// IsResourceAuthorizedToUserTx returns a boolean value describing if the user has access to the provided resource tenant id and an error
 // if use_tenancy is set to false (0 in the db) this method will return true allowing access.
 func IsResourceAuthorizedToUserTx(resourceTenantID int, user *auth.CurrentUser, tx *sql.Tx) (bool, error) {
 	// $1 is the user tenant ID and $2 is the resource tenant ID
