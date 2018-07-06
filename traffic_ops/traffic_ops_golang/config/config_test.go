@@ -197,7 +197,7 @@ func TestLoadConfig(t *testing.T) {
 
 	// test bad paths
 	_, errs, blockStartup := LoadConfig(badPath, badPath, badPath, version)
-	exp = fmt.Sprintf("got Loading cdn config from '%s'", badPath)
+	exp = fmt.Sprintf("Loading cdn config from '%s'", badPath)
 	if !strings.HasPrefix(errs[0].Error(), exp) {
 		t.Error("expected", exp, "got", errs[0].Error())
 	}
@@ -207,7 +207,7 @@ func TestLoadConfig(t *testing.T) {
 
 	// bad json in cdn.conf
 	_, errs, blockStartup = LoadConfig(badCfg, badCfg, badPath, version)
-	exp = fmt.Sprintf("got Loading cdn config from '%s': unmarshalling '%s'", badCfg, badCfg)
+	exp = fmt.Sprintf("Loading cdn config from '%s': unmarshalling '%s'", badCfg, badCfg)
 	if !strings.HasPrefix(errs[0].Error(), exp) {
 		t.Error("expected", exp, "got", errs[0].Error())
 	}
