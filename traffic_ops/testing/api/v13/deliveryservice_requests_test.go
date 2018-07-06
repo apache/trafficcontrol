@@ -171,6 +171,16 @@ func TestDeliveryServiceRequestTypeFields(t *testing.T) {
 	}
 
 	utils.Compare(t, expected, alerts.ToStrings())
+
+	dsrs, _, err := TOSession.GetDeliveryServiceRequestByXMLID(dsr.DeliveryService.XMLID)
+	if len(dsrs) != 1 {
+		t.Errorf("expected 1 deliveryservice_request with XMLID %s;  got %d", dsr.DeliveryService.XMLID, len(dsrs))
+	}
+	alert, _, err := TOSession.DeleteDeliveryServiceRequestByID(dsrs[0].ID)
+	if err != nil {
+		t.Errorf("cannot DELETE DeliveryServiceRequest by id: %d - %v - %v\n", dsrs[0].ID, err, alert)
+	}
+
 	DeleteTestParameters(t)
 	DeleteTestTypes(t)
 	DeleteTestCDNs(t)
