@@ -22,8 +22,10 @@ package cdn
 import (
 	"fmt"
 	"net/http"
+
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -34,7 +36,7 @@ func getDomainsList(tx *sqlx.Tx) ([]v13.Domain, error) {
 	domains := []v13.Domain{}
 
 	q := `SELECT p.id, p.name, p.description, domain_name FROM profile AS p
-	JOIN cdn ON p.cdn = cdn.id WHERE p.name LIKE '` + RouterProfilePrefix + `%'`;
+	JOIN cdn ON p.cdn = cdn.id WHERE p.name LIKE '` + RouterProfilePrefix + `%'`
 
 	rows, err := tx.Query(q)
 	if err != nil {

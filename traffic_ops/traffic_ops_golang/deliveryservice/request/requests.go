@@ -113,7 +113,7 @@ func (req *TODeliveryServiceRequest) Read(parameters map[string]string) ([]inter
 			log.Errorln("received error querying for user's tenants: " + err.Error())
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
-		where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "r.deliveryservice->>'tenantId", tenantIDs)
+		where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "CAST(r.deliveryservice->>'tenantId' AS bigint)", tenantIDs)
 	}
 
 	query := selectDeliveryServiceRequestsQuery() + where + orderBy
