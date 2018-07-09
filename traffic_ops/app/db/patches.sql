@@ -34,3 +34,8 @@ ALTER TABLE deliveryservice ALTER COLUMN routing_name SET NOT NULL;
 ALTER TABLE deliveryservice ALTER COLUMN routing_name SET DEFAULT 'cdn';
 ALTER TABLE deliveryservice DROP CONSTRAINT IF EXISTS routing_name_not_empty;
 ALTER TABLE deliveryservice ADD CONSTRAINT routing_name_not_empty CHECK (length(routing_name) > 0);
+-- This patch adds a new enum value to profile_type
+-- We need to add the enum directly with sql as postgres will not allow
+-- altering any enum values within a transaction block and by default
+-- goose runs migrations within a transaction.
+ALTER TYPE profile_type ADD VALUE IF NOT EXISTS 'GROVE_PROFILE';
