@@ -270,8 +270,8 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 				return
 			}
 
-			if kf.Field == "id" && paramValue != "" {
-				// ignore id provided in JSON -- overwrite with paramValue
+			if paramValue != "" {
+				// if key's value provided in params,  overwrite it and ignore that provided in JSON
 				keys[kf.Field] = paramValue
 				u.SetKeys(keys)
 				continue
