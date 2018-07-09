@@ -255,22 +255,29 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 			handleErrs(http.StatusBadRequest, errors.New("unable to parse required keys from request body"))
 			return // TODO verify?
 		}
-		for _, keyFieldInfo := range keyFields {
-			paramKey := params[keyFieldInfo.Field]
+		for _, kf := range keyFields {
+			paramKey := params[kf.Field]
 			if paramKey == "" {
-				log.Errorf("missing key: %s", keyFieldInfo.Field)
-				handleErrs(http.StatusBadRequest, errors.New("missing key: "+keyFieldInfo.Field))
+				log.Errorf("missing key: %s", kf.Field)
+				handleErrs(http.StatusBadRequest, errors.New("missing key: "+kf.Field))
 				return
 			}
 
-			paramValue, err := keyFieldInfo.Func(paramKey)
+			paramValue, err := kf.Func(paramKey)
 			if err != nil {
-				log.Errorf("failed to parse key %s: %s", keyFieldInfo.Field, err)
-				handleErrs(http.StatusBadRequest, errors.New("failed to parse key: "+keyFieldInfo.Field))
+				log.Errorf("failed to parse key %s: %s", kf.Field, err)
+				handleErrs(http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field))
 				return
 			}
 
-			if paramValue != keys[keyFieldInfo.Field] {
+			if kf.Field == "id" && paramValue != "" {
+				// ignore id provided in JSON -- overwrite with paramValue
+				keys[kf.Field] = paramValue
+				u.SetKeys(keys)
+				continue
+			}
+
+			if paramValue != keys[kf.Field] {
 				handleErrs(http.StatusBadRequest, errors.New("key in body does not match key in params"))
 				return
 			}
@@ -345,20 +352,20 @@ func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 
 		keyFields := d.GetKeyFieldsInfo() // expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a interface{} of the right type. in most that will be [{Field:"id",Func: func(s string)(interface{},error){return strconv.Atoi(s)}}]
 		keys := make(map[string]interface{})
-		for _, keyFieldInfo := range keyFields {
-			paramKey := params[keyFieldInfo.Field]
+		for _, kf := range keyFields {
+			paramKey := params[kf.Field]
 			if paramKey == "" {
-				log.Errorf("missing key: %s", keyFieldInfo.Field)
-				handleErrs(http.StatusBadRequest, errors.New("missing key: "+keyFieldInfo.Field))
+				log.Errorf("missing key: %s", kf.Field)
+				handleErrs(http.StatusBadRequest, errors.New("missing key: "+kf.Field))
 				return
 			}
 
-			paramValue, err := keyFieldInfo.Func(paramKey)
+			paramValue, err := kf.Func(paramKey)
 			if err != nil {
-				log.Errorf("failed to parse key %s: %s", keyFieldInfo.Field, err)
-				handleErrs(http.StatusBadRequest, errors.New("failed to parse key: "+keyFieldInfo.Field))
+				log.Errorf("failed to parse key %s: %s", kf.Field, err)
+				handleErrs(http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field))
 			}
-			keys[keyFieldInfo.Field] = paramValue
+			keys[kf.Field] = paramValue
 		}
 		d.SetKeys(keys) // if the type assertion of a key fails it will be should be set to the zero value of the type and the delete should fail (this means the code is not written properly no changes of user input should cause this.)
 
@@ -407,7 +414,6 @@ func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 
 // CreateHandler creates a handler function from the pointer to a struct implementing the Creator interface
 //   this generic handler encapsulates the logic for handling:
-//   *fetching the id from the path parameter
 //   *current user
 //   *decoding and validating the struct
 //   *change log entry

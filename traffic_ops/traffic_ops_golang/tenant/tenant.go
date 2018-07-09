@@ -284,7 +284,7 @@ func (ten *TOTenant) Update() (error, tc.ApiErrorType) {
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
+			log.Error.Printf("could not scan lastUpdated from update: %s\n", err)
 			return tc.DBError, tc.SystemError
 		}
 	}
