@@ -108,7 +108,35 @@ func UpdateTestCacheGroups(t *testing.T) {
 	cg = resp[0]
 	if cg.ShortName != expectedShortName {
 		t.Errorf("results do not match actual: %s, expected: %s\n", cg.ShortName, expectedShortName)
+		failed = true
 	}
+
+	// test coordinate updates
+	expectedLat := 7.0
+	expectedLong := 8.0
+	cg.Latitude = expectedLat
+	cg.Longitude = expectedLong
+	alert, _, err = TOSession.UpdateCacheGroupByID(cg.ID, cg)
+	if err != nil {
+		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v\n", err, alert)
+		failed = true
+	}
+
+	resp, _, err = TOSession.GetCacheGroupByID(cg.ID)
+	if err != nil {
+		t.Errorf("cannot GET CacheGroup by id: '%d', %v\n", cg.ID, err)
+		failed = true
+	}
+	cg = resp[0]
+	if cg.Latitude != expectedLat {
+		t.Errorf("failed to update latitude (expected = %f, actual = %f)\n", expectedLat, cg.Latitude)
+		failed = true
+	}
+	if cg.Longitude != expectedLong {
+		t.Errorf("failed to update longitude (expected = %f, actual = %f)\n", expectedLong, cg.Longitude)
+		failed = true
+	}
+
 	if !failed {
 		log.Debugln("UpdateTestCacheGroups() PASSED: ")
 	}
