@@ -39,3 +39,20 @@ ALTER TABLE deliveryservice ADD CONSTRAINT routing_name_not_empty CHECK (length(
 -- altering any enum values within a transaction block and by default
 -- goose runs migrations within a transaction.
 ALTER TYPE profile_type ADD VALUE IF NOT EXISTS 'GROVE_PROFILE';
+
+-- If tenancy is not needed, simply default to the root tenant.  This will help
+-- to eliminate the use_tenancy property
+INSERT INTO tenant (name, active, parent_id) VALUES ('root', true, NULL)
+ON CONFLICT DO NOTHING;
+
+UPDATE tm_user SET tenant_id = (SELECT id FROM tenant WHERE name = 'root')
+WHERE tenant_id IS NULL;
+ALTER TABLE tm_user ALTER COLUMN tenant_id SET NOT NULL;
+
+UPDATE deliveryservice SET tenant_id = (SELECT id FROM tenant WHERE name = 'root')
+WHERE tenant_id IS NULL;
+ALTER TABLE deliveryservice ALTER COLUMN tenant_id SET NOT NULL;
+
+UPDATE origin SET tenant = (SELECT id FROM tenant WHERE name = 'root')
+WHERE tenant IS NULL;
+ALTER TABLE origin ALTER COLUMN tenant SET NOT NULL;
