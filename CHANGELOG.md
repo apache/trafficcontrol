@@ -5,7 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
-- Backup Edge Cache group: If the matched group in the CZF is not available, this list of backup edge cache group configured via Traffic Ops API can be used as backup. In the event of all backup edge cache groups not available, GEO location can be optionally used as further backup. APIs detailed here [here](http://traffic-control-cdn.readthedocs.io/en/latest/development/traffic_ops_api/v12/cachegroup_fallbacks.html)
+- Backup Edge Cache group: If the matched group in the CZF is not available, this list of backup edge cache group configured via Traffic Ops API can be used as backup. In the event of all backup edge cache groups not available, GEO location can be optionally used as further backup. APIs detailed [here](http://traffic-control-cdn.readthedocs.io/en/latest/development/traffic_ops_api/v12/cachegroup_fallbacks.html)
+- Traffic Ops Golang Proxy Endpoints
+  - /api/1.3/origins `(GET,POST,PUT,DELETE)`
+  - /api/1.3/coordinates `(GET,POST,PUT,DELETE)`
+- Delivery Service Origins Refactor: The Delivery Service API now creates/updates an Origin entity on Delivery Service creates/updates, and the `org_server_fqdn` column in the `deliveryservice` table has been removed. The `org_server_fqdn` data is now computed from the Delivery Service's primary origin (note: the name of the primary origin is the `xml_id` of its delivery service).
+- Cachegroup-Coordinate Refactor: The Cachegroup API now creates/updates a Coordinate entity on Cachegroup creates/updates, and the `latitude` and `longitude` columns in the `cachegroup` table have been replaced with `coordinate` (a foreign key to Coordinate). Coordinates created from Cachegroups are given the name 'from_cachegroup_\<cachegroup name\>'.
+- Geolocation-based Client Steering: two new steering target types are available to use for CLIENT_STEERING delivery services: `STEERING_GEO_ORDER` and `STEERING_GEO_WEIGHT`. When targets of these types have an Origin with a Coordinate, Traffic Router will order and prioritize them based upon the shortest total distance from client -> edge -> origin. Co-located targets are grouped together and can be weighted or ordered within the same location using `STEERING_GEO_WEIGHT` or `STEERING_GEO_ORDER`, respectively.
 
 
 ## [2.2.0] - 2018-06-07
@@ -27,9 +33,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.3/deliveryservice_requests `(GET,POST,PUT,DELETE)`
   - /api/1.3/divisions `(GET,POST,PUT,DELETE)`
   - /api/1.3/hwinfos `(GET)`
-  - /api/1.3/coordinates `(GET,POST,PUT,DELETE)`
   - /api/1.3/login `(POST)`
-  - /api/1.3/origins `(GET,POST,PUT,DELETE)`
   - /api/1.3/parameters `(GET,POST,PUT,DELETE)`
   - /api/1.3/profileparameters `(GET,POST,PUT,DELETE)`
   - /api/1.3/phys_locations `(GET,POST,PUT,DELETE)`
@@ -46,7 +50,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.3/types `(GET,POST,PUT,DELETE)`
 - Fair Queuing Pacing: Using the FQ Pacing Rate parameter in Delivery Services allows operators to limit the rate of individual sessions to the edge cache. This feature requires a Trafficserver RPM containing the fq_pacing experimental plugin AND setting 'fq' as the default Linux qdisc in sysctl.
 - Traffic Ops rpm changed to remove world-read permission from configuration files.
-<
 
 ### Changed
 - Reformatted this CHANGELOG file to the keep-a-changelog format
