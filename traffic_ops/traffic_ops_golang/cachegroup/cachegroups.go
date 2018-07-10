@@ -175,6 +175,7 @@ func (cg TOCacheGroup) Validate() error {
 		"longitude":                   validation.Validate(cg.Longitude, validation.Min(-180.0).Error(longitudeErr), validation.Max(180.0).Error(longitudeErr)),
 		"parentCacheGroupID":          validation.Validate(cg.ParentCachegroupID, validation.Min(1)),
 		"secondaryParentCachegroupID": validation.Validate(cg.SecondaryParentCachegroupID, validation.Min(1)),
+		"localizationMethods":         validation.Validate(cg.LocalizationMethods, validation.By(tovalidate.IsPtrToSliceOfUniqueStringersICase("CZ", "DEEP_CZ", "GEO"))),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
@@ -236,8 +237,56 @@ func (cg *TOCacheGroup) Create() (error, tc.ApiErrorType) {
 		return tc.DBError, tc.SystemError
 	}
 	cg.SetID(id)
+	if err = cg.createLocalizationMethods(); err != nil {
+		log.Errorln("creating cachegroup: " + err.Error())
+		return tc.DBError, tc.SystemError
+	}
 	cg.LastUpdated = &lastUpdated
 	return nil, tc.NoError
+}
+
+func (cg *TOCacheGroup) createLocalizationMethods() error {
+	q := `DELETE FROM cachegroup_localization_method where cachegroup = $1`
+	if _, err := cg.ReqInfo.Tx.Exec(q, *cg.ID); err != nil {
+		return fmt.Errorf("unable to delete cachegroup_localization_methods for cachegroup %d: %s", *cg.ID, err.Error())
+	}
+	if cg.LocalizationMethods != nil {
+		q = `INSERT INTO cachegroup_localization_method (cachegroup, method) VALUES ($1, $2)`
+		for _, method := range *cg.LocalizationMethods {
+			if _, err := cg.ReqInfo.Tx.Exec(q, *cg.ID, method.String()); err != nil {
+				return fmt.Errorf("unable to insert cachegroup_localization_methods for cachegroup %d: %s", *cg.ID, err.Error())
+			}
+		}
+	}
+	return nil
+}
+
+func readGetLocalizationMethods(cacheGroups []TOCacheGroup, tx *sqlx.Tx) (map[int][]tc.LocalizationMethod, error) {
+	ids := make([]int, len(cacheGroups))
+	for i, cg := range cacheGroups {
+		ids[i] = *cg.ID
+	}
+	q := `SELECT cachegroup, method::text FROM cachegroup_localization_method WHERE cachegroup = ANY($1)`
+	rows, err := tx.Query(q, pq.Array(ids))
+	if err != nil {
+		return nil, errors.New("querying cachegroup localization methods: " + err.Error())
+	}
+	defer rows.Close()
+
+	methods := make(map[int][]tc.LocalizationMethod, len(cacheGroups))
+	for rows.Next() {
+		cg := 0
+		methodStr := ""
+		if err := rows.Scan(&cg, &methodStr); err != nil {
+			return nil, errors.New("scanning cachegroup localization methods: " + err.Error())
+		}
+		method := tc.LocalizationMethodFromString(methodStr)
+		if method == tc.LocalizationMethodInvalid {
+			return nil, errors.New("getting cachegroup localization methods: got invalid localization method: '" + methodStr + "'")
+		}
+		methods[cg] = append(methods[cg], method)
+	}
+	return methods, nil
 }
 
 func (cg *TOCacheGroup) createCoordinate() (*int, error) {
@@ -322,17 +371,30 @@ func (cg *TOCacheGroup) Read(parameters map[string]string) ([]interface{}, []err
 	}
 	defer rows.Close()
 
-	CacheGroups := []interface{}{}
+	cacheGroups := []TOCacheGroup{}
 	for rows.Next() {
 		var s TOCacheGroup
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorf("error parsing CacheGroup rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
-		CacheGroups = append(CacheGroups, s)
+		cacheGroups = append(cacheGroups, s)
 	}
 
-	return CacheGroups, []error{}, tc.NoError
+	returnable := make([]interface{}, len(cacheGroups))
+	cacheGroupsToLocalizationMethods, err := readGetLocalizationMethods(cacheGroups, cg.ReqInfo.Tx)
+	if err != nil {
+		log.Errorln(err.Error())
+		return nil, []error{tc.DBError}, tc.SystemError
+	}
+	for i, cacheGroup := range cacheGroups {
+		if localizationMethods, ok := cacheGroupsToLocalizationMethods[*cacheGroup.ID]; ok {
+			cacheGroup.LocalizationMethods = &localizationMethods
+		}
+		returnable[i] = cacheGroup
+	}
+
+	return returnable, []error{}, tc.NoError
 }
 
 //The TOCacheGroup implementation of the Updater interface
@@ -388,6 +450,10 @@ func (cg *TOCacheGroup) Update() (error, tc.ApiErrorType) {
 		} else {
 			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
+	}
+	if err = cg.createLocalizationMethods(); err != nil {
+		log.Errorln("updating cachegroup: " + err.Error())
+		return tc.DBError, tc.SystemError
 	}
 	return nil, tc.NoError
 }
