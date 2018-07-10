@@ -47,9 +47,6 @@ type SteeringTargetNullable struct {
 
 func (st SteeringTargetNullable) Validate(tx *sql.Tx) error {
 	errs := []string{}
-	if st.TargetID == nil {
-		errs = append(errs, "missing target")
-	}
 	if st.TypeID == nil {
 		errs = append(errs, "missing typeId")
 	}

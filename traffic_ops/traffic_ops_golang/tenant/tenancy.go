@@ -110,6 +110,32 @@ func CheckID(tx *sql.Tx, user *auth.CurrentUser, dsID int) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
+// GetUserTenantListTx returns a Tenant list that the specified user has access to.
+// NOTE: This method does not use the use_tenancy parameter and if this method is being used
+// to control tenancy the parameter must be checked. The method IsResourceAuthorizedToUser checks the use_tenancy parameter
+// and should be used for this purpose in most cases.
+func GetUserTenantListTx(user auth.CurrentUser, tx *sql.Tx) ([]tc.TenantNullable, error) {
+	query := `WITH RECURSIVE q AS (SELECT id, name, active, parent_id, last_updated FROM tenant WHERE id = $1
+	UNION SELECT t.id, t.name, t.active, t.parent_id, t.last_updated  FROM tenant t JOIN q ON q.id = t.parent_id)
+	SELECT id, name, active, parent_id, last_updated FROM q;`
+
+	rows, err := tx.Query(query, user.TenantID)
+	if err != nil {
+		return nil, errors.New("querying user tenant list: " + err.Error())
+	}
+	defer rows.Close()
+
+	tenants := []tc.TenantNullable{}
+	for rows.Next() {
+		t := tc.TenantNullable{}
+		if err := rows.Scan(&t.ID, &t.Name, &t.Active, &t.ParentID, &t.LastUpdated); err != nil {
+			return nil, err
+		}
+		tenants = append(tenants, t)
+	}
+	return tenants, nil
+}
+
 func GetUserTenantIDListTx(tx *sql.Tx, userTenantID int) ([]int, error) {
 	query := `
 WITH RECURSIVE q AS (SELECT id, name, active, parent_id FROM tenant WHERE id = $1
