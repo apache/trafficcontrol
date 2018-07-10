@@ -28,7 +28,7 @@ __PACKAGE__->result_source_instance->view_definition(" SELECT unnest(enum_range(
 =head2 value
 
   data_type: 'enum'
-  extra: {custom_type_name => "profile_type",list => ["ATS_PROFILE","TR_PROFILE","TM_PROFILE","TS_PROFILE","TP_PROFILE","INFLUXDB_PROFILE","RIAK_PROFILE","SPLUNK_PROFILE","DS_PROFILE","ORG_PROFILE","KAFKA_PROFILE","LOGSTASH_PROFILE","ES_PROFILE","UNK_PROFILE"]}
+  extra: {custom_type_name => "profile_type",list => ["ATS_PROFILE","TR_PROFILE","TM_PROFILE","TS_PROFILE","TP_PROFILE","INFLUXDB_PROFILE","RIAK_PROFILE","SPLUNK_PROFILE","DS_PROFILE","ORG_PROFILE","KAFKA_PROFILE","LOGSTASH_PROFILE","ES_PROFILE","UNK_PROFILE","GROVE_PROFILE"]}
   is_nullable: 1
 
 =cut
@@ -54,6 +54,7 @@ __PACKAGE__->add_columns(
         "LOGSTASH_PROFILE",
         "ES_PROFILE",
         "UNK_PROFILE",
+        "GROVE_PROFILE",
       ],
     },
     is_nullable => 1,
@@ -61,8 +62,8 @@ __PACKAGE__->add_columns(
 );
 
 
-# Created by DBIx::Class::Schema::Loader v0.07046 @ 2017-01-06 15:41:31
-# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:F1WD3vn6YZcU/YlHKVp8CA
+# Created by DBIx::Class::Schema::Loader v0.07049 @ 2018-07-09 22:32:39
+# DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:YGAQ8Wqg7vVCtrtfiBIcAw
 
 
 # You can replace this text with custom code or comments, and it will be preserved on regeneration
