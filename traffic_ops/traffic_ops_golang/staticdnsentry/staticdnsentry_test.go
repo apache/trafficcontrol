@@ -25,6 +25,7 @@ import (
 	"strings"
 	"testing"
 
+	util "github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 )
@@ -69,18 +70,21 @@ func TestInterfaces(t *testing.T) {
 func TestValidate(t *testing.T) {
 	// invalid name, empty domainname
 	ts := TOStaticDNSEntry{}
-	errs := test.SortErrors(ts.Validate(nil))
+	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(ts.Validate())))
 
-	expectedErrs := []error{
+	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'address' cannot be blank`),
 		errors.New(`'dsname' cannot be blank`),
 		errors.New(`'host' cannot be blank`),
 		errors.New(`'ttl' cannot be blank`),
 		errors.New(`'type' cannot be blank`),
-	}
+	})
 
 	if !reflect.DeepEqual(expectedErrs, errs) {
-		t.Errorf("expected %s, got %s", expectedErrs, errs)
+		t.Errorf("expected %s, GOT %s", expectedErrs, errs)
 	}
+	//if err != nil {
+	//t.Errorf("expected nil, got %s", err)
+	//}
 
 }
