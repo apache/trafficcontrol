@@ -109,7 +109,7 @@ func (staticDNSEntry *TOStaticDNSEntry) Read(parameters map[string]string) ([]in
 	defer rows.Close()
 	staticDNSEntries := []interface{}{}
 	for rows.Next() {
-		s := v13.StaticDNSEntry{}
+		s := v13.StaticDNSEntryNullable{}
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorln("error parsing StaticDNSEntry rows: " + err.Error())
 			return nil, []error{tc.DBError}, tc.SystemError
