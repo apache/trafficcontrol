@@ -72,3 +72,4 @@ bytefmt(?:                           Apache 2.0. Properly documented in LICENSE 
 siphash(?:                           CC0. Properly documented in LICENSE ){0}
 bbolt(?:                             MIT. Properly documented in LICENSE ){0}
 miekg(?:                             BSD 3-clause. Properly documented in LICENSE ){0}
+sizedwaitgroup(?:                    MIT. Properly documented in LICENSE ){0}
