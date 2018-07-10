@@ -404,7 +404,9 @@ insert into type (name, description, use_in_table) values ('STEERING_GEO_ORDER',
 insert into type (name, description, use_in_table) values ('STEERING_GEO_WEIGHT', 'Geo-weighted steering target', 'steering_target') ON CONFLICT (name) DO NOTHING;
 
 -- users
-insert into tm_user (username, role, full_name, token) values ('extension', (select id from role where name = 'operations'), 'Extension User, DO NOT DELETE', '91504CE6-8E4A-46B2-9F9F-FE7C15228498') ON CONFLICT DO NOTHING;
+insert into tm_user (username, role, full_name, token, tenant_id) values ('extension',
+    (select id from role where name = 'operations'), 'Extension User, DO NOT DELETE', '91504CE6-8E4A-46B2-9F9F-FE7C15228498',
+    (select id from tenant where name = 'root')) ON CONFLICT DO NOTHING;
 
 -- to extensions
 -- some of the old ones do not get a new place, and there will be 'gaps' in the column usage.... New to_extension add will have to take care of that.
