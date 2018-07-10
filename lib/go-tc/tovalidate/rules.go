@@ -15,6 +15,7 @@ package tovalidate
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -48,6 +49,52 @@ func IsOneOfStringICase(set ...string) func(string) bool {
 	}
 	return func(s string) bool {
 		return IsOneOfString(lowcased...)(strings.ToLower(s))
+	}
+}
+
+// IsPtrToSliceOfUniqueStringersICase returns a validator function which returns an error if the argument is a non-nil
+// pointer to a slice of Stringers whose String() values are not in the set of strings or there are duplicate strings
+func IsPtrToSliceOfUniqueStringersICase(set ...string) func(interface{}) error {
+	lowcased := make(map[string]bool, len(set))
+	for _, s := range set {
+		lowcased[strings.ToLower(s)] = true
+	}
+	return func(slicePtr interface{}) error {
+
+		rv := reflect.ValueOf(slicePtr)
+		if rv.Kind() != reflect.Ptr {
+			return fmt.Errorf("%T is not a pointer", slicePtr)
+		}
+
+		if rv.IsNil() {
+			return nil
+		}
+
+		slice := rv.Elem()
+		if slice.Kind() != reflect.Slice {
+			return fmt.Errorf("%T is not a slice", slicePtr)
+		}
+
+		seen := make(map[string]bool, len(set))
+
+		l := slice.Len()
+		for i := 0; i < l; i++ {
+			if item := slice.Index(i).Interface(); item != nil {
+				s, ok := item.(fmt.Stringer)
+				if !ok {
+					return fmt.Errorf("%T is not a pointer to a slice of Stringers", slicePtr)
+				}
+				lc := strings.ToLower(s.String())
+				if !lowcased[lc] {
+					return fmt.Errorf("'%s' is not one of %v", lc, set)
+				}
+				if _, ok := seen[lc]; ok {
+					return fmt.Errorf("duplicate value found: '%s'", lc)
+				}
+				seen[lc] = true
+			}
+		}
+		return nil
 	}
 }
 

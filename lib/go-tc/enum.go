@@ -186,6 +186,62 @@ func CacheStatusFromString(s string) CacheStatus {
 	}
 }
 
+// LocalizationMethod represents an enabled localization method for a cachegroup. The string values of this type should match the Traffic Ops values.
+type LocalizationMethod string
+
+const (
+	LocalizationMethodCZ      = LocalizationMethod("CZ")
+	LocalizationMethodDeepCZ  = LocalizationMethod("DEEP_CZ")
+	LocalizationMethodGeo     = LocalizationMethod("GEO")
+	LocalizationMethodInvalid = LocalizationMethod("INVALID")
+)
+
+// String returns a string representation of this localization method
+func (m LocalizationMethod) String() string {
+	switch m {
+	case LocalizationMethodCZ:
+		return string(m)
+	case LocalizationMethodDeepCZ:
+		return string(m)
+	case LocalizationMethodGeo:
+		return string(m)
+	default:
+		return "INVALID"
+	}
+}
+
+func LocalizationMethodFromString(s string) LocalizationMethod {
+	switch strings.ToLower(s) {
+	case "cz":
+		return LocalizationMethodCZ
+	case "deep_cz":
+		return LocalizationMethodDeepCZ
+	case "geo":
+		return LocalizationMethodGeo
+	default:
+		return LocalizationMethodInvalid
+	}
+}
+
+func (m *LocalizationMethod) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		return errors.New("LocalizationMethod cannot be null")
+	}
+	s, err := strconv.Unquote(string(data))
+	if err != nil {
+		return errors.New(string(data) + " JSON not quoted")
+	}
+	*m = LocalizationMethodFromString(s)
+	if *m == LocalizationMethodInvalid {
+		return errors.New(s + " is not a LocalizationMethod")
+	}
+	return nil
+}
+
+func (m LocalizationMethod) MarshalJSON() ([]byte, error) {
+	return json.Marshal(m.String())
+}
+
 // DeepCachingType represents a Delivery Service's deep caching type. The string values of this type should match the Traffic Ops values.
 type DeepCachingType string
 
