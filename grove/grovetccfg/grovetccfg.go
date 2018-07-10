@@ -752,7 +752,7 @@ func createRulesOld(
 			}
 		}
 
-		dsType := strings.ToLower(ds.Type)
+		dsType := strings.ToLower(string(ds.Type))
 		if !strings.HasPrefix(dsType, "http") && !strings.HasPrefix(dsType, "dns") {
 			fmt.Printf(time.Now().Format(time.RFC3339Nano)+" createRules skipping deliveryservice %v - unknown type %v", ds.XMLID, ds.Type)
 			continue
