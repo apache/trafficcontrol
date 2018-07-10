@@ -22,31 +22,72 @@ package staticdnsentry
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/jmoiron/sqlx"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/lib/pq"
 )
 
 type TOStaticDNSEntry struct {
 	ReqInfo *api.APIInfo `json:"-"`
-	tc.StaticDNSEntry
+	v13.StaticDNSEntryNullable
 }
 
-func GetReaderSingleton() func(reqInfo *api.APIInfo) api.Reader {
-	return func(reqInfo *api.APIInfo) api.Reader {
-		toReturn := TOStaticDNSEntry{reqInfo, tc.StaticDNSEntry{}}
+func GetTypeSingleton() api.CRUDFactory {
+	return func(reqInfo *api.APIInfo) api.CRUDer {
+		toReturn := TOStaticDNSEntry{reqInfo, v13.StaticDNSEntryNullable{}}
 		return &toReturn
 	}
+}
+
+func (staticDNSEntry TOStaticDNSEntry) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{"id", api.GetIntKey}}
+}
+
+//Implementation of the Identifier, Validator interface functions
+func (staticDNSEntry TOStaticDNSEntry) GetKeys() (map[string]interface{}, bool) {
+	if staticDNSEntry.ID == nil {
+		return map[string]interface{}{"id": 0}, false
+	}
+	return map[string]interface{}{"id": *staticDNSEntry.ID}, true
+}
+
+func (staticDNSEntry TOStaticDNSEntry) GetAuditName() string {
+	if staticDNSEntry.Host != nil {
+		return *staticDNSEntry.Host
+	}
+	if staticDNSEntry.ID != nil {
+		return strconv.Itoa(*staticDNSEntry.ID)
+	}
+	return "0"
+}
+
+func (staticDNSEntry TOStaticDNSEntry) GetType() string {
+	return "staticDNSEntry"
 }
 
 func (staticDNSEntry *TOStaticDNSEntry) SetKeys(keys map[string]interface{}) {
 	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
 	staticDNSEntry.ID = &i
+}
+
+// Validate fulfills the api.Validator interface
+func (staticDNSEntry TOStaticDNSEntry) Validate() error {
+	errs := validation.Errors{
+		"host":    validation.Validate(staticDNSEntry.Host, validation.Required),
+		"address": validation.Validate(staticDNSEntry.Address, validation.Required),
+		"dsname":  validation.Validate(staticDNSEntry.DeliveryService, validation.Required),
+		"ttl":     validation.Validate(staticDNSEntry.TTL, validation.Required),
+		"type":    validation.Validate(staticDNSEntry.Type, validation.Required),
+	}
+	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
 func (staticDNSEntry *TOStaticDNSEntry) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
@@ -68,7 +109,7 @@ func (staticDNSEntry *TOStaticDNSEntry) Read(parameters map[string]string) ([]in
 	defer rows.Close()
 	staticDNSEntries := []interface{}{}
 	for rows.Next() {
-		s := tc.StaticDNSEntry{}
+		s := v13.StaticDNSEntry{}
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorln("error parsing StaticDNSEntry rows: " + err.Error())
 			return nil, []error{tc.DBError}, tc.SystemError
@@ -85,25 +126,8 @@ func (staticDNSEntry *TOStaticDNSEntry) Read(parameters map[string]string) ([]in
 //generic error message returned
 //The insert sql returns the id and lastUpdated values of the newly inserted staticDNSEntry and have
 //to be added to the struct
-func (staticDNSEntry *TOStaticDNSEntry) Create(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-	// make sure that staticDNSEntry.DomainName is lowercase
-	resultRows, err := tx.NamedQuery(insertQuery(), staticDNSEntry)
+func (staticDNSEntry *TOStaticDNSEntry) Create() (error, tc.ApiErrorType) {
+	resultRows, err := staticDNSEntry.ReqInfo.Tx.NamedQuery(insertQuery(), staticDNSEntry)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -139,12 +163,6 @@ func (staticDNSEntry *TOStaticDNSEntry) Create(db *sqlx.DB, user auth.CurrentUse
 	}
 	staticDNSEntry.SetKeys(map[string]interface{}{"id": id})
 	staticDNSEntry.LastUpdated = &lastUpdated
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
@@ -170,26 +188,9 @@ ttl) VALUES (
 //ParsePQUniqueConstraintError is used to determine if a staticDNSEntry with conflicting values exists
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
-func (staticDNSEntry *TOStaticDNSEntry) Update(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	fmt.Printf("staticDNSEntry.DeliveryService ---> %v\n", *staticDNSEntry.DeliveryService)
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (staticDNSEntry *TOStaticDNSEntry) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with staticDNSEntry: %++v", updateQuery(), staticDNSEntry)
-	resultRows, err := tx.NamedQuery(updateQuery(), staticDNSEntry)
+	resultRows, err := staticDNSEntry.ReqInfo.Tx.NamedQuery(updateQuery(), staticDNSEntry)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -222,12 +223,6 @@ func (staticDNSEntry *TOStaticDNSEntry) Update(db *sqlx.DB, user auth.CurrentUse
 			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
 }
 
@@ -247,25 +242,9 @@ WHERE id=:id RETURNING last_updated`
 
 //The StaticDNSEntry implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (staticDNSEntry *TOStaticDNSEntry) Delete(db *sqlx.DB, user auth.CurrentUser) (error, tc.ApiErrorType) {
-	rollbackTransaction := true
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil || !rollbackTransaction {
-			return
-		}
-		err := tx.Rollback()
-		if err != nil {
-			log.Errorln(errors.New("rolling back transaction: " + err.Error()))
-		}
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v", err)
-		return tc.DBError, tc.SystemError
-	}
+func (staticDNSEntry *TOStaticDNSEntry) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with staticDNSEntry: %++v", deleteQuery(), staticDNSEntry)
-	result, err := tx.NamedExec(deleteQuery(), staticDNSEntry)
+	result, err := staticDNSEntry.ReqInfo.Tx.NamedExec(deleteQuery(), staticDNSEntry)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -281,13 +260,8 @@ func (staticDNSEntry *TOStaticDNSEntry) Delete(db *sqlx.DB, user auth.CurrentUse
 			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
-		log.Errorln("Could not commit transaction: ", err)
-		return tc.DBError, tc.SystemError
-	}
-	rollbackTransaction = false
 	return nil, tc.NoError
+
 }
 
 func selectQuery() string {
