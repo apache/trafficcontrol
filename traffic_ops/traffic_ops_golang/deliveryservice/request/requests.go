@@ -486,7 +486,7 @@ func (req *deliveryServiceRequestAssignment) Update() (error, tc.ApiErrorType) {
 
 	// Only assigneeID changes -- nothing else
 	assigneeID := req.AssigneeID
-	*req = deliveryServiceRequestAssignment{current}
+	req.DeliveryServiceRequestNullable = current.DeliveryServiceRequestNullable
 	req.AssigneeID = assigneeID
 
 	// LastEditedBy field should not change with status update
@@ -557,7 +557,7 @@ func (req *deliveryServiceRequestStatus) Update() (error, tc.ApiErrorType) {
 	// get original
 	var current TODeliveryServiceRequest
 	if req.ID == nil {
-		log.Errorf("error updating DeliveryServiceRequestStatus: ID is nil")
+		return errors.New("error updating DeliveryServiceRequestStatus: ID is nil"), tc.SystemError
 	}
 	err := req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery() + ` WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(&current)
 	if err != nil {
@@ -571,7 +571,7 @@ func (req *deliveryServiceRequestStatus) Update() (error, tc.ApiErrorType) {
 
 	// keep everything else the same -- only update status
 	st := req.Status
-	*req = deliveryServiceRequestStatus{current}
+	req.DeliveryServiceRequestNullable = current.DeliveryServiceRequestNullable
 	req.Status = st
 
 	// LastEditedBy field should not change with status update
