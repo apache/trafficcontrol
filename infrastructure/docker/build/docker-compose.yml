@@ -86,6 +86,14 @@ services:
     volumes:
       - ../../..:/trafficcontrol:z
 
+  grovetccfg_build:
+    image: grovetccfg_builder
+    build:
+      dockerfile: infrastructure/docker/build/Dockerfile-grovetccfg
+      context: ../../..
+    volumes:
+      - ../../..:/trafficcontrol:z
+
   weasel:
     image: licenseweasel/weasel:0.2
     volumes:
