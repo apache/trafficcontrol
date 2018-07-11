@@ -109,7 +109,7 @@ type UserCurrent struct {
 	PostalCode      *string `json:"postalCode"`
 	PublicSSHKey    *string `json:"publicSshKey,omitempty"`
 	Role            *int    `json:"role,omitempty"`
-	RoleName        *string `json:"rolename,omitempty"`
+	RoleName        *string `json:"roleName,omitempty"`
 	StateOrProvince *string `json:"stateOrProvince"`
 	Tenant          *string `json:"tenant"`
 	TenantID        *uint64 `json:"tenantId"`
