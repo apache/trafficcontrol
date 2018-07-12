@@ -44,7 +44,10 @@ Requires(postun): /usr/sbin/userdel
 %define PACKAGEDIR %{prefix}
 
 %description
-Installs Traffic Ops.
+Traffic Ops is the tool for administration (configuration and monitoring) of all components in a Traffic Control CDN.
+
+This package provides Traffic Ops with the following plugins:
+%{getenv:PLUGINS}
 
 Built: %(date) by %{getenv: USER}
 
