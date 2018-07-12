@@ -81,6 +81,7 @@ insert into role (name, description, priv_level) values ('disallowed', 'Block al
 
 -- tenants
 insert into tenant (name, active, parent_id) values ('root', true, null) ON CONFLICT DO NOTHING;
+insert into tenant (name, active, parent_id) values ('unassigned', true, (select id from tenant where name='root')) ON CONFLICT DO NOTHING;
 
 -- capabilities
 insert into capability (name, description) values ('all-read', 'Full read access') ON CONFLICT (name) DO NOTHING;

@@ -42,17 +42,33 @@ ALTER TYPE profile_type ADD VALUE IF NOT EXISTS 'GROVE_PROFILE';
 
 -- If tenancy is not needed, simply default to the root tenant.  This will help
 -- to eliminate the use_tenancy property
-INSERT INTO tenant (name, active, parent_id) VALUES ('root', true, NULL)
-ON CONFLICT DO NOTHING;
 
-UPDATE tm_user SET tenant_id = (SELECT id FROM tenant WHERE name = 'root')
-WHERE tenant_id IS NULL;
+DO
+$tenantnotnull$
+BEGIN
+    IF EXISTS (SELECT value FROM parameter WHERE name = 'use_tenancy' AND config_file = 'global' AND value = '1') THEN
+        -- tenancy turned ON -- anything without a tenant gets the "unassigned" tenant
+        UPDATE tm_user SET tenant_id = (SELECT id FROM tenant WHERE name = 'unassigned')
+        WHERE tenant_id IS NULL;
+        UPDATE deliveryservice SET tenant_id = (SELECT id FROM tenant WHERE name = 'unassigned')
+        WHERE tenant_id IS NULL;
+        UPDATE origin SET tenant = (SELECT id FROM tenant WHERE name = 'unassigned')
+        WHERE tenant IS NULL;
+    ELSE
+        -- tenancy turned OFF -- anything without a tenant gets the "root" tenant
+        UPDATE tm_user SET tenant_id = (SELECT id FROM tenant WHERE name = 'root')
+        WHERE tenant_id IS NULL;
+        UPDATE deliveryservice SET tenant_id = (SELECT id FROM tenant WHERE name = 'root')
+        WHERE tenant_id IS NULL;
+        UPDATE origin SET tenant = (SELECT id FROM tenant WHERE name = 'root')
+        WHERE tenant IS NULL;
+    END IF;
+END
+$tenantnotnull$;
+
+-- add constraints so we can depend on everything being assigned a tenant
 ALTER TABLE tm_user ALTER COLUMN tenant_id SET NOT NULL;
-
-UPDATE deliveryservice SET tenant_id = (SELECT id FROM tenant WHERE name = 'root')
-WHERE tenant_id IS NULL;
 ALTER TABLE deliveryservice ALTER COLUMN tenant_id SET NOT NULL;
-
-UPDATE origin SET tenant = (SELECT id FROM tenant WHERE name = 'root')
-WHERE tenant IS NULL;
 ALTER TABLE origin ALTER COLUMN tenant SET NOT NULL;
+-- get rid of the use_tenancy flag
+DELETE FROM parameter WHERE name = 'use_tenancy' AND config_file = 'global';
