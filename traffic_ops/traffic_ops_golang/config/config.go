@@ -166,7 +166,7 @@ func LoadConfig(cdnConfPath string, dbConfPath string, riakConfPath string, appV
 	}
 	cfg, err = ParseConfig(cfg)
 	if err != nil {
-		return Config{}, []error{fmt.Errorf("parsing config '%s': %v", dbConfPath, err)}, BlockStartup
+		return Config{}, []error{fmt.Errorf("parsing config '%s': %v", cdnConfPath, err)}, BlockStartup
 	}
 
 	if riakConfPath != "" {
@@ -256,15 +256,19 @@ func ParseConfig(cfg Config) (Config, error) {
 
 	invalidTOURLStr := ""
 	var err error
-	listen := cfg.Listen[0]
-	if cfg.URL, err = url.Parse(listen); err != nil {
-		invalidTOURLStr = fmt.Sprintf("invalid Traffic Ops URL '%s': %v", listen, err)
-	}
-	cfg.KeyPath = cfg.GetKeyPath()
-	cfg.CertPath = cfg.GetCertPath()
+	if len(cfg.Listen) < 1 {
+		missings += "listen, "
+	} else {
+		listen := cfg.Listen[0]
+		if cfg.URL, err = url.Parse(listen); err != nil {
+			invalidTOURLStr = fmt.Sprintf("invalid Traffic Ops URL '%s': %v", listen, err)
+		}
+		cfg.KeyPath = cfg.GetKeyPath()
+		cfg.CertPath = cfg.GetCertPath()
 
-	newURL := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
-	cfg.URL = &newURL
+		newURL := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
+		cfg.URL = &newURL
+	}
 
 	if len(missings) > 0 {
 		missings = "missing fields: " + missings[:len(missings)-2] // strip final `, `
