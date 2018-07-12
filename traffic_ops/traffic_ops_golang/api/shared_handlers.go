@@ -249,12 +249,9 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		}
 
 		keyFields := u.GetKeyFieldsInfo() //expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a {}interface of the right type. in most that will be [{Field:"id",Func: func(s string)({}interface,error){return strconv.Atoi(s)}}]
-		keys, ok := u.GetKeys()           // a map of keyField to keyValue where keyValue is an {}interface
-		if !ok {
-			log.Errorf("unable to parse keys from request: %++v", u)
-			handleErrs(http.StatusBadRequest, errors.New("unable to parse required keys from request body"))
-			return // TODO verify?
-		}
+		// ignoring ok value -- will be checked after param processing
+
+		keys := make(map[string]interface{}) // a map of keyField to keyValue where keyValue is an {}interface
 		for _, kf := range keyFields {
 			paramKey := params[kf.Field]
 			if paramKey == "" {
@@ -273,14 +270,16 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 			if paramValue != "" {
 				// if key's value provided in params,  overwrite it and ignore that provided in JSON
 				keys[kf.Field] = paramValue
-				u.SetKeys(keys)
-				continue
 			}
+		}
 
-			if paramValue != keys[kf.Field] {
-				handleErrs(http.StatusBadRequest, errors.New("key in body does not match key in params"))
-				return
-			}
+		// check that all keys were properly filled in
+		u.SetKeys(keys)
+		_, ok := u.GetKeys()
+		if !ok {
+			log.Errorf("unable to parse keys from request: %++v", u)
+			handleErrs(http.StatusBadRequest, errors.New("unable to parse required keys from request body"))
+			return // TODO verify?
 		}
 
 		// if the object has tenancy enabled, check that user is able to access the tenant
