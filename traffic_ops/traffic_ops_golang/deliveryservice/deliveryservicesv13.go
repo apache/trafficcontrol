@@ -472,7 +472,7 @@ func update(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds *tc.Delive
 		}
 		return tc.DeliveryServiceNullableV13{}, http.StatusInternalServerError, nil, errors.New("query updating delivery service: " + err.Error())
 	}
-	resultRows.Close()
+	defer resultRows.Close()
 	if !resultRows.Next() {
 		return tc.DeliveryServiceNullableV13{}, http.StatusNotFound, errors.New("no delivery service found with this id"), nil
 	}
