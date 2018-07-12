@@ -521,10 +521,13 @@ func GetCreateHandler(db *sqlx.DB) http.HandlerFunc {
 		// the same transaction
 		for serverIds.Next() {
 			var serverId int
-			err := serverIds.Scan(&serverId)
+			if err := serverIds.Scan(&serverId); err != nil {
+				log.Errorln("scanning for create delivery service servers: " + err.Error())
+				handleErrs(http.StatusInternalServerError, errors.New("scanning for create delivery service servers: "+err.Error()))
+				return
+			}
 			dtos := map[string]interface{}{"id": dsId, "server": serverId}
-			resultRows, err := tx.NamedQuery(insertIdsQuery(), dtos)
-			if err != nil {
+			if _, err := tx.NamedExec(insertIdsQuery(), dtos); err != nil {
 				if pqErr, ok := err.(*pq.Error); ok {
 					err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
 					log.Errorln("could not begin transaction: %v", err)
@@ -538,7 +541,6 @@ func GetCreateHandler(db *sqlx.DB) http.HandlerFunc {
 				log.Errorf("received non pq error: %++v from create execution", err)
 				return
 			}
-			resultRows.Next()
 		}
 
 		err = tx.Commit()

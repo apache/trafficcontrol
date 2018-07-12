@@ -58,6 +58,7 @@ JOIN type as rt ON r.type = rt.id
 			handleErrs(http.StatusInternalServerError, errors.New("querying: "+err.Error()))
 			return
 		}
+		defer rows.Close()
 		dsRegexes := map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex{}
 		for rows.Next() {
 			// if (!$tenant_utils->is_ds_resource_accessible($tenants_data, $ds->tenant_id)) {
@@ -141,6 +142,7 @@ ORDER BY dsr.set_number ASC
 			handleErrs(http.StatusInternalServerError, errors.New("querying: "+err.Error()))
 			return
 		}
+		defer rows.Close()
 		regexes := []tc.DeliveryServiceIDRegex{}
 		for rows.Next() {
 			dsTenantID := 0
@@ -233,6 +235,7 @@ ORDER BY dsr.set_number ASC
 			handleErrs(http.StatusInternalServerError, errors.New("querying: "+err.Error()))
 			return
 		}
+		defer rows.Close()
 		regexes := []tc.DeliveryServiceIDRegex{}
 		for rows.Next() {
 			dsTenantID := 0
