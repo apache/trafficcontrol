@@ -118,14 +118,8 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 
 	if replace {
 		//delete currently assigned dses from server
-		deleteCurrent, err := tx.Prepare("DELETE FROM deliveryservice_server WHERE server = $1")
-		if err != nil {
-			log.Error.Printf("could not prepare deliveryservice_server delete statement: %s\n", err)
-			return nil, tc.DBError
-		}
-		_, err = deleteCurrent.Exec(server)
-		if err != nil {
-			log.Error.Printf("could not delete old deliveryservice_server associations for server: %s\n", err)
+		if _, err = tx.Exec(`DELETE FROM deliveryservice_server WHERE server = $1`, server); err != nil {
+			log.Errorf("could not delete old deliveryservice_server associations for server: %s\n", err)
 			return nil, tc.DBError
 		}
 	}
@@ -142,18 +136,15 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 	// UNNEST is used to turn the array of ds values into, essentially, * FROM ( VALUES (1),(2),(3) )
 	// this allows for a single insert query instead of a loop over the dses.
 	// This pattern is used for the other bulk inserts as well.
-	bulkInsert, err := tx.Prepare(`INSERT INTO deliveryservice_server (deliveryservice, server)
+	q := `
+INSERT INTO deliveryservice_server (deliveryservice, server)
 	WITH
 	q1 AS (SELECT UNNEST($1::bigint[])),
 	q2 AS ( SELECT * FROM (VALUES ($2::bigint)) AS server )
-	SELECT * FROM q1,q2 ON CONFLICT DO NOTHING`)
-	if err != nil {
-		log.Error.Printf("could not prepare deliveryservice_server bulk insert: %s\n", err)
-		return nil, tc.DBError
-	}
-	_, err = bulkInsert.Exec(dsPqArray, server)
-	if err != nil {
-		log.Error.Printf("could not execute deliveryservice_server bulk insert: %s\n", err)
+	SELECT * FROM q1,q2 ON CONFLICT DO NOTHING
+`
+	if _, err = tx.Exec(q, dsPqArray, server); err != nil {
+		log.Errorf("could not execute deliveryservice_server bulk insert: %s\n", err)
 		return nil, tc.DBError
 	}
 
@@ -166,12 +157,7 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 	}
 
 	//we need dses: xmlids and edge_header_rewrite, regex_remap, and cache_url
-	selectDsFieldsQuery, err := tx.Prepare("SELECT xml_id, edge_header_rewrite, regex_remap, cacheurl FROM deliveryservice WHERE id = ANY($1::bigint[])")
-	if err != nil {
-		log.Error.Printf("could not prepare ds fields query: %s\n", err)
-		return nil, tc.DBError
-	}
-	rows, err := selectDsFieldsQuery.Query(dsPqArray)
+	rows, err := tx.Query(`SELECT xml_id, edge_header_rewrite, regex_remap, cacheurl FROM deliveryservice WHERE id = ANY($1::bigint[])`, dsPqArray)
 	if err != nil {
 		log.Error.Printf("could not execute ds fields select query: %s\n", err)
 		return nil, tc.DBError
@@ -221,29 +207,22 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 	}
 
 	//insert the parameters we selected above:
-	insertParams, err := tx.Prepare(`INSERT INTO parameter (config_file, name, value)
+	q = `
+INSERT INTO parameter (config_file, name, value)
 	WITH
 	q1 AS (SELECT UNNEST($1::text[]) AS config_file),
 	q2 AS (SELECT * FROM (VALUES ($2) ) AS name),
 	q3 AS (SELECT * FROM (VALUES ($3) ) AS value)
-	 SELECT * FROM q1,q2,q3 ON CONFLICT DO NOTHING`)
-	if err != nil {
-		log.Error.Printf("could not prepare parameter bulk insert query: %s\n", err)
-		return nil, tc.DBError
-	}
+	 SELECT * FROM q1,q2,q3 ON CONFLICT DO NOTHING
+`
 	fileNamePqArray := pq.Array(insert)
-	if _, err = insertParams.Exec(fileNamePqArray, "location", atsConfigLocation); err != nil {
+	if _, err = tx.Exec(q, fileNamePqArray, "location", atsConfigLocation); err != nil {
 		log.Error.Printf("could not execute parameter bulk insert: %s\n", err)
 		return nil, tc.DBError
 	}
 
 	//select the ids associated with the parameters we created above (may be able to get them from insert above to optimize)
-	selectParameterIds, err := tx.Prepare("SELECT id FROM parameter WHERE name = 'location' AND config_file IN ($1)")
-	if err != nil {
-		log.Error.Printf("could not prepare parameter id select query: %s\n", err)
-		return nil, tc.DBError
-	}
-	rows, err = selectParameterIds.Query(fileNamePqArray)
+	rows, err = tx.Query(`SELECT id FROM parameter WHERE name = 'location' AND config_file IN ($1)`, fileNamePqArray)
 	if err != nil {
 		log.Error.Printf("could not execute parameter id select query: %s\n", err)
 		return nil, tc.DBError
@@ -261,28 +240,21 @@ func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sq
 	}
 
 	//associate all parameter ids with the profiles associated with all servers associated with assigned dses.
-	insertProfileParams, err := tx.Prepare(`INSERT INTO profile_parameter (profile, parameter)
+	q = `
+INSERT INTO profile_parameter (profile, parameter)
 	WITH
 	q1 AS ( SELECT DISTINCT profile FROM server LEFT JOIN deliveryservice_server ON server.id = deliveryservice_server.server WHERE deliveryservice_server.deliveryservice = ANY($1::bigint[]) ),
 	q2 AS (SELECT UNNEST($2::bigint[]) AS parameter)
 	SELECT * FROM q1,q2
-	ON CONFLICT DO NOTHING`)
-	if err != nil {
-		log.Error.Printf("could not prepare profile_parameter bulk insert: %s\n", err)
-		return nil, tc.DBError
-	}
-	if _, err = insertProfileParams.Exec(dsPqArray, pq.Array(parameterIds)); err != nil {
+	ON CONFLICT DO NOTHING
+`
+	if _, err = tx.Exec(q, dsPqArray, pq.Array(parameterIds)); err != nil {
 		log.Error.Printf("could not execute profile_parameter bulk insert: %s\n", err)
 		return nil, tc.DBError
 	}
 
 	//process delete list
-	deleteTx, err := tx.Prepare(`DELETE FROM parameter WHERE name = 'location' AND config_file = ANY($1)`)
-	if err != nil {
-		log.Error.Printf("could not prepare parameter delete query: %s\n", err)
-		return nil, tc.DBError
-	}
-	if _, err = deleteTx.Exec(pq.Array(delete)); err != nil {
+	if _, err = tx.Exec(`DELETE FROM parameter WHERE name = 'location' AND config_file = ANY($1)`, pq.Array(delete)); err != nil {
 		log.Error.Printf("could not execute parameter delete query: %s\n", err)
 		return nil, tc.DBError
 	}
