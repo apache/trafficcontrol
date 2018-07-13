@@ -1,0 +1,14 @@
+
+Do not remove this file or the docker build will fail as docker
+will not copy an empty direcotry.
+
+A postgresql backup file created with pg_dump may be included here
+and the run.sh script will load it if PG_DUMP is defined in 
+variables.env and the file it points too, is in this directory.
+
+In variables.env: 
+
+  PG_DUMP=to.pg_dump
+
+'to.pg_dump' is installed in this directory.
+
