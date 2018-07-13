@@ -94,6 +94,11 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 			}
 
 			username := oldCookie.AuthData
+			if username == "" {
+				handleErr(http.StatusUnauthorized, errors.New("Unauthorized, please log in."))
+				return
+			}
+
 			currentUserInfo := auth.GetCurrentUserFromDB(a.getCurrentUserInfoStmt, username)
 			if currentUserInfo.PrivLevel < privLevelRequired {
 				handleErr(http.StatusForbidden, errors.New("Forbidden."))
