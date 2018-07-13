@@ -281,7 +281,7 @@ sub copy {
 		return $self->alert("profile_copy_from $profile_copy_from_name doesn't exist.");
 	}
 	my $profile_copy_from_id = $row1->id;
-	my $description          = "";
+	my $description          = $row1->description;
 
 	my $cdn = $row1->cdn;
 	my $type = $row1->type;
