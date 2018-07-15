@@ -29,6 +29,7 @@ type TrafficControl struct {
 	DeliveryServiceRequestComments []v12.DeliveryServiceRequestComment `json:"deliveryServiceRequestComments"`
 	DeliveryServices               []v12.DeliveryServiceV13            `json:"deliveryservices"`
 	Divisions                      []v12.Division                      `json:"divisions"`
+	Federations                    []v13.CDNFederation                 `json:"federations"`
 	Coordinates                    []v13.Coordinate                    `json:"coordinates"`
 	Origins                        []v13.Origin                        `json:"origins"`
 	Profiles                       []v13.Profile                       `json:"profiles"`
