@@ -320,6 +320,18 @@
             "name": "division2"
         }
     ],
+    "federations": [
+        {
+            "cname": "the.cname.com.",
+            "ttl": 48,
+            "description": "the description"
+        },
+        {
+            "cname": "booya.com.",
+            "ttl": 34,
+            "description": "fooya"
+        }
+    ],
     "coordinates": [
         {
             "latitude": 1.1,
