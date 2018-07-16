@@ -16,25 +16,23 @@
 # under the License.
 
 ############################################################
-# Dockerfile to build Traffic Ops container images
+# Dockerfile to build Mid-Tier Cache container images for
+# Apache Traffic Control
 # Based on CentOS 7.2
 ############################################################
 
+FROM alpine:latest
 
-FROM centos:7
-RUN yum -y install nmap-ncat openssl
+RUN apk add --no-cache lighttpd
 
-RUN mkdir -p /opt/traffic_ops/app/bin /opt/traffic_ops/app/conf/production /opt/traffic_ops/app/db
-COPY --from=trafficops-perl /opt/traffic_ops/app/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang
+RUN rm /etc/lighttpd/lighttpd.conf
+RUN rm -rf /var/www/localhost/
+RUN mkdir -p /var/www/html/
 
-EXPOSE 6443
-WORKDIR /opt/traffic_ops/app
+ADD lighttpd.conf /etc/lighttpd/lighttpd.conf
+ADD index.html /var/www/html/index.html
+ADD tc_logo.svg /var/www/html/tc_logo.svg
 
-ADD config.sh /
-ADD run-go.sh /
-ADD setup.sh /
-ADD cdns.json /
-ADD deliveryservices.json /
-ADD cachegroup.json /
-ADD phys_location.json /
-CMD /run-go.sh
+EXPOSE 80
+
+CMD lighttpd -t -f /etc/lighttpd/lighttpd.conf && lighttpd -D -f /etc/lighttpd/lighttpd.conf

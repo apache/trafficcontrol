@@ -1,0 +1,5 @@
+{
+	"dnssecEnabled": false,
+	"domainName": "cdn.local",
+	"name": "CDN-in-a-Box"
+}

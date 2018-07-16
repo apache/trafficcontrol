@@ -16,25 +16,27 @@
 # under the License.
 
 ############################################################
-# Dockerfile to build Traffic Ops container images
+# Dockerfile to build Mid-Tier Cache container images for
+# Apache Traffic Control
 # Based on CentOS 7.2
 ############################################################
 
-
 FROM centos:7
-RUN yum -y install nmap-ncat openssl
 
-RUN mkdir -p /opt/traffic_ops/app/bin /opt/traffic_ops/app/conf/production /opt/traffic_ops/app/db
-COPY --from=trafficops-perl /opt/traffic_ops/app/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang
+ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.2-4.el7.centos.x86_64.rpm /trafficserver-7.1.2-4.el7.centos.x86_64.rpm
 
-EXPOSE 6443
-WORKDIR /opt/traffic_ops/app
+RUN yum install -y /trafficserver-7.1.2-4.el7.centos.x86_64.rpm iproute net-tools nmap-ncat && yum clean all
 
-ADD config.sh /
-ADD run-go.sh /
-ADD setup.sh /
-ADD cdns.json /
-ADD deliveryservices.json /
-ADD cachegroup.json /
-ADD phys_location.json /
-CMD /run-go.sh
+RUN chown -R ats:ats /etc/trafficserver/
+RUN mkdir -p /var/trafficserver/cache
+RUN chown -R ats:ats /var/trafficserver/
+RUN mkdir -p /opt/ort
+RUN chown ats:ats /opt/ort
+ADD mid_parameters.json /mid_parameters.json
+ADD mid_profile.json /mid_profile.json
+ADD server.json /server.json
+ADD setup.sh /setup.sh
+
+EXPOSE 80
+
+CMD /setup.sh

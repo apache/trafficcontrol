@@ -6,9 +6,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -61,7 +61,15 @@ ls -l bin
 CDNCONF=/opt/traffic_ops/app/conf/cdn.conf
 DBCONF=/opt/traffic_ops/app/conf/production/database.conf
 mkdir -p /var/log/traffic_ops
-./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF
+touch /var/log/traffic_ops.log
+./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF >>/var/log/traffic_ops.log 2>>/var/log/traffic_ops.log &
+
+while ! nc localhost 6443 </dev/null; do
+	echo "waiting for traffic_ops_golang:6443"
+	sleep 3
+done
+
+/setup.sh
 
 cat /var/log/traffic_ops/*
-tail -f /dev/null
+exec tail -f /var/log/traffic_ops.log
