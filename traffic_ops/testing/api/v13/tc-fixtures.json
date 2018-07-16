@@ -38,6 +38,11 @@
             "parentCachegroupName": "parentCachegroup",
             "secondaryParentCachegroupName": "secondaryCachegroup",
             "shortName": "cg1",
+            "localizationMethods": [
+                "CZ",
+                "DEEP_CZ",
+                "GEO"
+            ],
             "typeName": "EDGE_LOC"
         },
         {
