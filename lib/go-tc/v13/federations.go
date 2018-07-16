@@ -44,32 +44,19 @@ type DeleteCDNFederationResponse struct {
 }
 
 type CDNFederation struct {
-	ID                  int    `json:"id"`
-	CName               string `json:"cname"`
-	Ttl                 int    `json:"ttl"`
-	Description         string `json:"description"`
-	*DeliveryServiceIDs `json:"deliveryService,omitempty"`
-}
-
-type CDNFederationNullable struct {
 	ID          *int    `json:"id" db:"id"`
 	CName       *string `json:"cname" db:"cname"`
 	Ttl         *int    `json:"ttl" db:"ttl"`
 	Description *string `json:"description" db:"description"`
 
 	//omitempty only works with primitive types and pointers
-	*DeliveryServiceIDsNullable `json:"deliveryService,omitempty"`
+	*DeliveryServiceIDs `json:"deliveryService,omitempty"`
 
 	//Extra datapoint for ease in Read function (cannot Scan after StructScan)
 	Name *string `json:"-" db:"cdn_name"`
 }
 
 type DeliveryServiceIDs struct {
-	ID    int    `json:"id,omitempty"`
-	XmlId string `json:"xmlId,omitempty"`
-}
-
-type DeliveryServiceIDsNullable struct {
 	ID    *int    `json:"id,omitempty" db:"ds_id"`
 	XmlId *string `json:"xmlId,omitempty" db:"xml_id"`
 }

@@ -55,7 +55,11 @@ func CreateTestCDNFederations(t *testing.T) {
 		log.Debugf("POST Response: %s\n", bytes)
 
 		//need to save the ids, otherwise the other tests won't be able to reference the federations
-		fed_ids = append(fed_ids, data.Response.ID)
+		if data.Response.ID == nil {
+			t.Errorf("Federation id is nil after posting\n")
+		} else {
+			fed_ids = append(fed_ids, *data.Response.ID)
+		}
 	}
 }
 
@@ -68,7 +72,7 @@ func UpdateTestCDNFederations(t *testing.T) {
 		}
 
 		expectedCName := "new.cname."
-		fed.Response[0].CName = expectedCName
+		fed.Response[0].CName = &expectedCName
 		resp, _, err := TOSession.UpdateCDNFederationsByID(fed.Response[0], "foo", id)
 		if err != nil {
 			t.Errorf("cannot PUT federation by id: %v", err)
@@ -83,8 +87,10 @@ func UpdateTestCDNFederations(t *testing.T) {
 		bytes, err = json.Marshal(resp2)
 		log.Debugf("GET Response: %s\n", bytes)
 
-		if resp2.Response[0].CName != expectedCName {
-			t.Errorf("results do not match actual: %s, expected: %s\n", resp2.Response[0].CName, expectedCName)
+		if resp2.Response[0].CName == nil {
+			log.Errorf("CName is nil after updating\n")
+		} else if *resp2.Response[0].CName != expectedCName {
+			t.Errorf("results do not match actual: %s, expected: %s\n", *resp2.Response[0].CName, expectedCName)
 		}
 
 	}
