@@ -39,3 +39,25 @@ ALTER TABLE deliveryservice ADD CONSTRAINT routing_name_not_empty CHECK (length(
 -- altering any enum values within a transaction block and by default
 -- goose runs migrations within a transaction.
 ALTER TYPE profile_type ADD VALUE IF NOT EXISTS 'GROVE_PROFILE';
+
+-- not enough to make boolean default false -- enforce that API can't set it to NULL
+UPDATE cachegroup
+    SET fallback_to_closest = true WHERE fallback_to_closest IS NULL;
+ALTER TABLE cachegroup
+    ALTER COLUMN fallback_to_closest SET NOT NULL;
+UPDATE deliveryservice
+    SET ipv6_routing_enabled = false WHERE ipv6_routing_enabled IS NULL;
+UPDATE deliveryservice
+    SET multi_site_origin = false WHERE multi_site_origin IS NULL;
+UPDATE deliveryservice
+    SET regional_geo_blocking = false WHERE regional_geo_blocking IS NULL;
+UPDATE deliveryservice
+    SET logs_enabled = false WHERE logs_enabled IS NULL;
+UPDATE deliveryservice
+    SET anonymous_blocking_enabled = false WHERE anonymous_blocking_enabled IS NULL;
+ALTER TABLE deliveryservice
+    ALTER COLUMN ipv6_routing_enabled SET NOT NULL,
+    ALTER COLUMN multi_site_origin SET NOT NULL,
+    ALTER COLUMN regional_geo_blocking SET NOT NULL,
+    ALTER COLUMN logs_enabled SET NOT NULL,
+    ALTER COLUMN anonymous_blocking_enabled SET NOT NULL;
