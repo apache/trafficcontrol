@@ -35,3 +35,5 @@ traffic_router/*.log
 *.pyc
 bin/docker-compose
 /.m2
+# local storage for cdn-in-a-box Carton packages
+local.tar.gz

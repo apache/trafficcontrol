@@ -20,7 +20,7 @@
 # trafficcontrol/infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
 #
 #      cd trafficcontrol/infrastructure/cdn-in-a-box
-#  
+#
 # Adjust the settings in `variables.env` to suit your needs.
 #
 #      docker-compose up -d
@@ -55,7 +55,7 @@ services:
     env_file:
       - variables.env
     # TODO: change to expose: "5432" to limit to containers
-    ports: 
+    ports:
       - "5432:5432"
 
   trafficops-perl:
@@ -73,7 +73,7 @@ services:
     networks:
       - tcnet
     # TODO: change to expose: "60443" to limit to containers
-    ports: 
+    ports:
       - "60443:60443"
 
   trafficops:
@@ -91,7 +91,7 @@ services:
     image: trafficops-go
     networks:
       - tcnet
-    ports: 
+    ports:
       - "6443:6443"
     build:
       context: traffic_ops
@@ -143,3 +143,23 @@ services:
       - tcnet
     ports:
       - "80:80"
+
+  mid:
+    build:
+      context: mid
+    domainname: cdn.local
+    hostname: mid
+    networks:
+      - tcnet
+    ports:
+      - "8081:80"
+
+  origin:
+    build:
+      context: origin
+    domainname: cdn.local
+    hostname: origin
+    networks:
+      - tcnet
+    ports:
+      - "9080:80"
