@@ -24,6 +24,7 @@ import (
 	"errors"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/lib/pq"
 )
 
 func makeLocations(cdn string, db *sql.DB) (map[string]tc.CRConfigLatitudeLongitude, map[string]tc.CRConfigLatitudeLongitude, error) {
@@ -32,7 +33,9 @@ func makeLocations(cdn string, db *sql.DB) (map[string]tc.CRConfigLatitudeLongit
 
 	// TODO test whether it's faster to do a single query, joining lat/lon into servers
 	q := `
-select cg.name, cg.id, t.name as type, co.latitude, co.longitude, cg.fallback_to_closest from cachegroup as cg
+select cg.name, cg.id, t.name as type, co.latitude, co.longitude, cg.fallback_to_closest,
+(SELECT array_agg(method::text) FROM cachegroup_localization_method WHERE cachegroup = cg.id)
+from cachegroup as cg
 left join coordinate as co on co.id = cg.coordinate
 inner join server as s on s.cachegroup = cg.id
 inner join type as t on t.id = s.type
@@ -54,8 +57,12 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 		ttype := ""
 		var fallbackToClosest *bool
 		latlon := tc.CRConfigLatitudeLongitude{}
-		if err := rows.Scan(&cachegroup, &primaryCacheID, &ttype, &latlon.Lat, &latlon.Lon, &fallbackToClosest); err != nil {
+		if err := rows.Scan(&cachegroup, &primaryCacheID, &ttype, &latlon.Lat, &latlon.Lon, &fallbackToClosest, pq.Array(&latlon.LocalizationMethods)); err != nil {
 			return nil, nil, errors.New("Error scanning cachegroup: " + err.Error())
+		}
+		if len(latlon.LocalizationMethods) == 0 {
+			// to keep current default behavior when localizationMethods is unset/empty, enable all current localization methods
+			latlon.LocalizationMethods = []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodCZ, tc.LocalizationMethodDeepCZ}
 		}
 		if ttype == RouterTypeName {
 			routerLocs[cachegroup] = latlon
