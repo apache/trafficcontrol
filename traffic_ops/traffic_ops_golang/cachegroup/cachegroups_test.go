@@ -46,6 +46,11 @@ func getTestCacheGroups() []v13.CacheGroup {
 		Longitude:                   90.7,
 		ParentCachegroupID:          2,
 		SecondaryParentCachegroupID: 2,
+		LocalizationMethods: []tc.LocalizationMethod{
+			tc.LocalizationMethodDeepCZ,
+			tc.LocalizationMethodCZ,
+			tc.LocalizationMethodGeo,
+		},
 		Type:        "EDGE_LOC",
 		TypeID:      6,
 		LastUpdated: tc.TimeNoMod{Time: time.Now()},
@@ -60,9 +65,10 @@ func getTestCacheGroups() []v13.CacheGroup {
 		Longitude:                   90.7,
 		ParentCachegroupID:          1,
 		SecondaryParentCachegroupID: 1,
-		Type:        "MID_LOC",
-		TypeID:      7,
-		LastUpdated: tc.TimeNoMod{Time: time.Now()},
+		LocalizationMethods:         []tc.LocalizationMethod{},
+		Type:                        "MID_LOC",
+		TypeID:                      7,
+		LastUpdated:                 tc.TimeNoMod{Time: time.Now()},
 	}
 	cgs = append(cgs, testCG2)
 
@@ -83,6 +89,8 @@ func TestReadCacheGroups(t *testing.T) {
 	cols := test.ColsFromStructByTag("db", v13.CacheGroup{})
 	rows := sqlmock.NewRows(cols)
 
+	methodsRows := sqlmock.NewRows([]string{"cachegroup", "method"})
+
 	for _, ts := range testCGs {
 		rows = rows.AddRow(
 			ts.ID,
@@ -99,9 +107,13 @@ func TestReadCacheGroups(t *testing.T) {
 			ts.TypeID,
 			ts.LastUpdated,
 		)
+		for _, m := range ts.LocalizationMethods {
+			methodsRows.AddRow(ts.ID, m)
+		}
 	}
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WillReturnRows(methodsRows)
 	mock.ExpectCommit()
 	v := map[string]string{"id": "1"}
 
@@ -177,22 +189,26 @@ func TestValidate(t *testing.T) {
 	sn := "not!a!valid!shortname"
 	la := -190.0
 	lo := -190.0
+	lm := []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodInvalid}
 	ty := "EDGE_LOC"
 	ti := 6
 	lu := tc.TimeNoMod{Time: time.Now()}
-	c := TOCacheGroup{ReqInfo: &reqInfo, CacheGroupNullable: v13.CacheGroupNullable{ID: &id,
-		Name:        &nm,
-		ShortName:   &sn,
-		Latitude:    &la,
-		Longitude:   &lo,
-		Type:        &ty,
-		TypeID:      &ti,
-		LastUpdated: &lu,
+	c := TOCacheGroup{ReqInfo: &reqInfo, CacheGroupNullable: v13.CacheGroupNullable{
+		ID:                  &id,
+		Name:                &nm,
+		ShortName:           &sn,
+		Latitude:            &la,
+		Longitude:           &lo,
+		LocalizationMethods: &lm,
+		Type:                &ty,
+		TypeID:              &ti,
+		LastUpdated:         &lu,
 	}}
 	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(c.Validate())))
 
 	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'latitude' Must be a floating point number within the range +-90`),
+		errors.New(`'localizationMethods' 'invalid' is not one of [CZ DEEP_CZ GEO]`),
 		errors.New(`'longitude' Must be a floating point number within the range +-180`),
 		errors.New(`'name' invalid characters found - Use alphanumeric . or - or _ .`),
 		errors.New(`'shortName' invalid characters found - Use alphanumeric . or - or _ .`),
@@ -210,14 +226,17 @@ func TestValidate(t *testing.T) {
 	sn = `awesome-cachegroup`
 	la = 90.0
 	lo = 90.0
-	c = TOCacheGroup{ReqInfo: &reqInfo, CacheGroupNullable: v13.CacheGroupNullable{ID: &id,
-		Name:        &nm,
-		ShortName:   &sn,
-		Latitude:    &la,
-		Longitude:   &lo,
-		Type:        &ty,
-		TypeID:      &ti,
-		LastUpdated: &lu,
+	lm = []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodCZ, tc.LocalizationMethodDeepCZ}
+	c = TOCacheGroup{ReqInfo: &reqInfo, CacheGroupNullable: v13.CacheGroupNullable{
+		ID:                  &id,
+		Name:                &nm,
+		ShortName:           &sn,
+		Latitude:            &la,
+		Longitude:           &lo,
+		LocalizationMethods: &lm,
+		Type:                &ty,
+		TypeID:              &ti,
+		LastUpdated:         &lu,
 	}}
 	err = c.Validate()
 	if err != nil {
