@@ -43,8 +43,8 @@ func TestAssignDsesToServer(t *testing.T) {
 	pqNewDses := pq.Array(newDses)
 
 	mock.ExpectBegin()
-	mock.ExpectPrepare("DELETE").ExpectExec().WithArgs(100).WillReturnResult(sqlmock.NewResult(1, 3))
-	mock.ExpectPrepare("INSERT").ExpectExec().WithArgs(pqNewDses, 100).WillReturnResult(sqlmock.NewResult(1, 3))
+	mock.ExpectExec("DELETE").WithArgs(100).WillReturnResult(sqlmock.NewResult(1, 3))
+	mock.ExpectExec("INSERT").WithArgs(pqNewDses, 100).WillReturnResult(sqlmock.NewResult(1, 3))
 
 	//fetch remap config location
 	remapConfigLocation := "a/path/to/a/remap.config"
@@ -57,7 +57,7 @@ func TestAssignDsesToServer(t *testing.T) {
 	dsFieldRows.AddRow("ds1", nil, "regexRemapPlaceholder", "cacheurlPlaceholder")
 	dsFieldRows.AddRow("ds2", "edgeHeaderRewritePlaceholder2", "regexRemapPlaceholder", "cacheurlPlaceholder")
 	dsFieldRows.AddRow("ds3", "", nil, "cacheurlPlaceholder")
-	mock.ExpectPrepare("SELECT").ExpectQuery().WithArgs(pqNewDses).WillReturnRows(dsFieldRows)
+	mock.ExpectQuery("SELECT").WithArgs(pqNewDses).WillReturnRows(dsFieldRows)
 
 	//prepare the insert and delete parameter slices as they should be constructed in the function
 	headerRewritePrefix := "hdr_rw_"
@@ -68,7 +68,7 @@ func TestAssignDsesToServer(t *testing.T) {
 	delete := []string{headerRewritePrefix + "ds1" + configPostfix, headerRewritePrefix + "ds3" + configPostfix, regexRemapPrefix + "ds3" + configPostfix}
 	fileNamesPq := pq.Array(insert)
 	//insert the parameters
-	mock.ExpectPrepare("INSERT").ExpectExec().WithArgs(fileNamesPq, "location", remapConfigLocation).WillReturnResult(sqlmock.NewResult(1, 6))
+	mock.ExpectExec("INSERT").WithArgs(fileNamesPq, "location", remapConfigLocation).WillReturnResult(sqlmock.NewResult(1, 6))
 
 	//select out the parameterIDs we just inserted
 	parameterIDRows := sqlmock.NewRows([]string{"id"})
@@ -76,13 +76,13 @@ func TestAssignDsesToServer(t *testing.T) {
 	for _, i := range parameterIDs {
 		parameterIDRows.AddRow(i)
 	}
-	mock.ExpectPrepare("SELECT").ExpectQuery().WithArgs(fileNamesPq).WillReturnRows(parameterIDRows)
+	mock.ExpectQuery("SELECT").WithArgs(fileNamesPq).WillReturnRows(parameterIDRows)
 
 	//insert those ids as profile_parameters
-	mock.ExpectPrepare("INSERT").ExpectExec().WithArgs(pqNewDses, pq.Array(parameterIDs)).WillReturnResult(sqlmock.NewResult(6, 6))
+	mock.ExpectExec("INSERT").WithArgs(pqNewDses, pq.Array(parameterIDs)).WillReturnResult(sqlmock.NewResult(6, 6))
 
 	//delete the parameters in the delete list
-	mock.ExpectPrepare("DELETE").ExpectExec().WithArgs(pq.Array(delete)).WillReturnResult(sqlmock.NewResult(1, 3))
+	mock.ExpectExec("DELETE").WithArgs(pq.Array(delete)).WillReturnResult(sqlmock.NewResult(1, 3))
 	mock.ExpectCommit()
 
 	result, err := assignDeliveryServicesToServer(100, newDses, true, db)
