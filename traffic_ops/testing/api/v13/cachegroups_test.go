@@ -17,6 +17,7 @@ package v13
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -154,6 +155,26 @@ func UpdateTestCacheGroups(t *testing.T) {
 	}
 	if *cg.Longitude != expectedLong {
 		t.Errorf("failed to update longitude (expected = %f, actual = %f)\n", expectedLong, *cg.Longitude)
+		failed = true
+	}
+
+	// test localizationMethods
+	expectedMethods := []tc.LocalizationMethod{tc.LocalizationMethodGeo}
+	cg.LocalizationMethods = expectedMethods
+	alert, _, err = TOSession.UpdateCacheGroupByID(cg.ID, cg)
+	if err != nil {
+		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v\n", err, alert)
+		failed = true
+	}
+
+	resp, _, err = TOSession.GetCacheGroupByID(cg.ID)
+	if err != nil {
+		t.Errorf("cannot GET CacheGroup by id: '%d', %v\n", cg.ID, err)
+		failed = true
+	}
+	cg = resp[0]
+	if !reflect.DeepEqual(expectedMethods, cg.LocalizationMethods) {
+		t.Errorf("failed to update localizationMethods (expected = %v, actual = %v\n", expectedMethods, cg.LocalizationMethods)
 		failed = true
 	}
 
