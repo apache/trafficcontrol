@@ -21,13 +21,13 @@ import (
 //we need a type alias to define functions on
 type TOCDNFederation struct {
 	ReqInfo *api.APIInfo `json:"-"`
-	v13.CDNFederationNullable
+	v13.CDNFederation
 }
 
 //Used for all CRUD routes
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOCDNFederation{reqInfo, v13.CDNFederationNullable{}}
+		toReturn := TOCDNFederation{reqInfo, v13.CDNFederation{}}
 		return &toReturn
 	}
 }
@@ -174,7 +174,7 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 	cdnFound := false
 	federations := []interface{}{}
 	for rows.Next() {
-		var fed v13.CDNFederationNullable
+		var fed v13.CDNFederation
 		if err = rows.StructScan(&fed); err != nil {
 			log.Errorf("error parsing federation rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
@@ -185,9 +185,9 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 			cdnFound = true
 
 			//if we are getting by id, there may not be an attached deliveryservice
-			//DeliveryServiceIDsNullable will not be nil itself, due to the struct scan
-			if ok_id && fed.DeliveryServiceIDsNullable.ID == nil {
-				fed.DeliveryServiceIDsNullable = nil
+			//DeliveryServiceIDs will not be nil itself, due to the struct scan
+			if ok_id && fed.DeliveryServiceIDs.ID == nil {
+				fed.DeliveryServiceIDs = nil
 			}
 
 			//Never return cnd and deliveryService only information. Just federation data.
