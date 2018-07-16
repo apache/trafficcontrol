@@ -29,8 +29,10 @@ package tc
  */
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -240,6 +242,27 @@ func (m *LocalizationMethod) UnmarshalJSON(data []byte) error {
 
 func (m LocalizationMethod) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m.String())
+}
+
+func (m *LocalizationMethod) Scan(value interface{}) error {
+	if value == nil {
+		return errors.New("LocalizationMethod cannot be null")
+	}
+	sv, err := driver.String.ConvertValue(value)
+	if err != nil {
+		return errors.New("failed to scan LocalizationMethod: " + err.Error())
+	}
+
+	switch v := sv.(type) {
+	case []byte:
+		*m = LocalizationMethodFromString(string(v))
+		if *m == LocalizationMethodInvalid {
+			return errors.New(string(v) + " is not a valid LocalizationMethod")
+		}
+		return nil
+	default:
+		return fmt.Errorf("failed to scan LocalizationMethod, unknown input type: %T", value)
+	}
 }
 
 // DeepCachingType represents a Delivery Service's deep caching type. The string values of this type should match the Traffic Ops values.
