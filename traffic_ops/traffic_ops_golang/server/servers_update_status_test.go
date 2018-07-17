@@ -20,6 +20,7 @@ package server
  */
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -43,7 +44,7 @@ func TestGetServerUpdateStatus(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").WillReturnRows(serverStatusRow)
 
-	result, err := getServerUpdateStatus("host_name_1", db)
+	result, err := getServerUpdateStatus("host_name_1", db, context.Background())
 	if err != nil {
 		t.Errorf("getServerUpdateStatus: %v", err)
 	}

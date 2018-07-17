@@ -116,6 +116,14 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 	}
 }
 
+func timeOutWrapper(timeout time.Duration) Middleware {
+	return func(h http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			http.TimeoutHandler(h, timeout, "server timed out").ServeHTTP(w, r)
+		}
+	}
+}
+
 func wrapHeaders(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -164,7 +172,6 @@ func wrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 
 // gzipResponse takes a function which cannot error and returns only bytes, and wraps it as a http.HandlerFunc. The errContext is logged if the write fails, and should be enough information to trace the problem (function name, endpoint, request parameters, etc).
 func gzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
-
 	bytes, err := gzipIfAccepts(r, w, bytes)
 	if err != nil {
 		log.Errorf("gzipping request '%v': %v\n", r.URL.EscapedPath(), err)
@@ -175,6 +182,7 @@ func gzipResponse(w http.ResponseWriter, r *http.Request, bytes []byte) {
 		}
 		return
 	}
+
 	ctx := r.Context()
 	val := ctx.Value(tc.StatusKey)
 	status, ok := val.(int)

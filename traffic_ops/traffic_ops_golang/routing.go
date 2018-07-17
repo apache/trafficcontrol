@@ -66,8 +66,8 @@ type RawRoute struct {
 	Middlewares       []Middleware
 }
 
-func getDefaultMiddleware(secret string) []Middleware {
-	return []Middleware{getWrapAccessLog(secret), wrapHeaders}
+func getDefaultMiddleware(secret string, requestTimeout time.Duration) []Middleware {
+	return []Middleware{getWrapAccessLog(secret), timeOutWrapper(requestTimeout), wrapHeaders}
 }
 
 // ServerData ...
@@ -104,9 +104,13 @@ type PathHandler struct {
 }
 
 // CreateRouteMap returns a map of methods to a slice of paths and handlers; wrapping the handlers in the appropriate middleware. Uses Semantic Versioning: routes are added to every subsequent minor version, but not subsequent major versions. For example, a 1.2 route is added to 1.3 but not 2.1. Also truncates '2.0' to '2', creating succinct major versions.
-func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase) map[string][]PathHandler {
+func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase, reqTimeOutSeconds int) map[string][]PathHandler {
 	// TODO strong types for method, path
 	versions := getSortedRouteVersions(rs)
+	requestTimeout := time.Second * time.Duration(60)
+	if reqTimeOutSeconds > 0 {
+		requestTimeout = time.Second * time.Duration(reqTimeOutSeconds)
+	}
 	m := map[string][]PathHandler{}
 	for _, r := range rs {
 		versionI := sort.SearchFloat64s(versions, r.Version)
@@ -117,22 +121,22 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase) map[str
 			}
 			vstr := strconv.FormatFloat(version, 'f', -1, 64)
 			path := RoutePrefix + "/" + vstr + "/" + r.Path
-			middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel)
+			middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout)
 			m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: use(r.Handler, middlewares)})
 			log.Infof("adding route %v %v\n", r.Method, path)
 		}
 	}
 	for _, r := range rawRoutes {
-		middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel)
+		middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout)
 		m[r.Method] = append(m[r.Method], PathHandler{Path: r.Path, Handler: use(r.Handler, middlewares)})
 		log.Infof("adding raw route %v %v\n", r.Method, r.Path)
 	}
 	return m
 }
 
-func getRouteMiddleware(middlewares []Middleware, authBase AuthBase, authenticated bool, privLevel int) []Middleware {
+func getRouteMiddleware(middlewares []Middleware, authBase AuthBase, authenticated bool, privLevel int, requestTimeout time.Duration) []Middleware {
 	if middlewares == nil {
-		middlewares = getDefaultMiddleware(authBase.secret)
+		middlewares = getDefaultMiddleware(authBase.secret, requestTimeout)
 	}
 	if authenticated { // a privLevel of zero is an unauthenticated endpoint.
 		authWrapper := authBase.GetWrapper(privLevel)
@@ -219,7 +223,7 @@ func RegisterRoutes(d ServerData) error {
 	}
 
 	authBase := AuthBase{secret: d.Config.Secrets[0], getCurrentUserInfoStmt: userInfoStmt, override: nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
-	routes := CreateRouteMap(routeSlice, rawRoutes, authBase)
+	routes := CreateRouteMap(routeSlice, rawRoutes, authBase, d.RequestTimeout)
 	compiledRoutes := CompileRoutes(routes)
 	getReqID := nextReqIDGetter()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

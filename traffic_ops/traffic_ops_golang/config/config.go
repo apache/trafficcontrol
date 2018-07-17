@@ -64,6 +64,7 @@ type ConfigTrafficOpsGolang struct {
 	ProxyTLSTimeout        int            `json:"proxy_tls_timeout"`
 	ProxyReadHeaderTimeout int            `json:"proxy_read_header_timeout"`
 	ReadTimeout            int            `json:"read_timeout"`
+	RequestTimeout         int            `json:"request_timeout"`
 	ReadHeaderTimeout      int            `json:"read_header_timeout"`
 	WriteTimeout           int            `json:"write_timeout"`
 	IdleTimeout            int            `json:"idle_timeout"`

@@ -20,10 +20,12 @@ package server
  */
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -42,7 +44,7 @@ func GetServerUpdateStatusHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 		hostName := params["host_name"]
 
-		serverUpdateStatus, err := getServerUpdateStatus(hostName, db)
+		serverUpdateStatus, err := getServerUpdateStatus(hostName, db, r.Context())
 		if err != nil {
 			handleErrs(http.StatusInternalServerError, err)
 			return
@@ -59,7 +61,7 @@ func GetServerUpdateStatusHandler(db *sqlx.DB) http.HandlerFunc {
 	}
 }
 
-func getServerUpdateStatus(hostName string, db *sqlx.DB) ([]tc.ServerUpdateStatus, error) {
+func getServerUpdateStatus(hostName string, db *sqlx.DB, ctx context.Context) ([]tc.ServerUpdateStatus, error) {
 	baseSelectStatement :=
 		`WITH parentservers AS (SELECT ps.id, ps.cachegroup, ps.cdn_id, ps.upd_pending, ps.reval_pending FROM server ps
          LEFT JOIN status AS pstatus ON pstatus.id = ps.status
@@ -73,17 +75,20 @@ func getServerUpdateStatus(hostName string, db *sqlx.DB) ([]tc.ServerUpdateStatu
 
 	groupBy := ` GROUP BY s.id, s.host_name, type.name, server_reval_pending, use_reval_pending.value, s.upd_pending, status.name ORDER BY s.id;`
 
+	dbCtx, dbClose := context.WithTimeout(ctx, time.Second*10)
+	defer dbClose()
+
 	updateStatuses := []tc.ServerUpdateStatus{}
 	var rows *sql.Rows
 	var err error
 	if hostName == "all" {
-		rows, err = db.Query(baseSelectStatement + groupBy)
+		rows, err = db.QueryContext(dbCtx, baseSelectStatement+groupBy)
 		if err != nil {
 			log.Error.Printf("could not execute select server update status query: %s\n", err)
 			return nil, tc.DBError
 		}
 	} else {
-		rows, err = db.Query(baseSelectStatement+` WHERE s.host_name = $1`+groupBy, hostName)
+		rows, err = db.QueryContext(dbCtx, baseSelectStatement+` WHERE s.host_name = $1`+groupBy, hostName)
 		if err != nil {
 			log.Error.Printf("could not execute select server update status by hostname query: %s\n", err)
 			return nil, tc.DBError
