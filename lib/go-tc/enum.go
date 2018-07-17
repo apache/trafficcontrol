@@ -261,7 +261,7 @@ func (m *LocalizationMethod) Scan(value interface{}) error {
 		}
 		return nil
 	default:
-		return fmt.Errorf("failed to scan LocalizationMethod, unknown input type: %T", value)
+		return fmt.Errorf("failed to scan LocalizationMethod, unsupported input type: %T", value)
 	}
 }
 

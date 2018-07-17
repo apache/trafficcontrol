@@ -30,22 +30,38 @@ import (
 
 func ExpectedMakeLocations() (map[string]tc.CRConfigLatitudeLongitude, map[string]tc.CRConfigLatitudeLongitude) {
 	return map[string]tc.CRConfigLatitudeLongitude{
-			"cache0": tc.CRConfigLatitudeLongitude{Lat: *randFloat64(), Lon: *randFloat64()},
-			"cache1": tc.CRConfigLatitudeLongitude{Lat: *randFloat64(), Lon: *randFloat64()},
+			"cache0": tc.CRConfigLatitudeLongitude{
+				Lat:                 *randFloat64(),
+				Lon:                 *randFloat64(),
+				LocalizationMethods: []tc.LocalizationMethod{tc.LocalizationMethodCZ},
+			},
+			"cache1": tc.CRConfigLatitudeLongitude{
+				Lat:                 *randFloat64(),
+				Lon:                 *randFloat64(),
+				LocalizationMethods: []tc.LocalizationMethod{tc.LocalizationMethodCZ},
+			},
 		},
 		map[string]tc.CRConfigLatitudeLongitude{
-			"router0": tc.CRConfigLatitudeLongitude{Lat: *randFloat64(), Lon: *randFloat64()},
-			"router1": tc.CRConfigLatitudeLongitude{Lat: *randFloat64(), Lon: *randFloat64()},
+			"router0": tc.CRConfigLatitudeLongitude{
+				Lat:                 *randFloat64(),
+				Lon:                 *randFloat64(),
+				LocalizationMethods: []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodCZ, tc.LocalizationMethodDeepCZ},
+			},
+			"router1": tc.CRConfigLatitudeLongitude{
+				Lat:                 *randFloat64(),
+				Lon:                 *randFloat64(),
+				LocalizationMethods: []tc.LocalizationMethod{tc.LocalizationMethodGeo, tc.LocalizationMethodCZ, tc.LocalizationMethodDeepCZ},
+			},
 		}
 }
 
 func MockMakeLocations(mock sqlmock.Sqlmock, expectedEdgeLocs map[string]tc.CRConfigLatitudeLongitude, expectedRouterLocs map[string]tc.CRConfigLatitudeLongitude, cdn string) {
-	rows := sqlmock.NewRows([]string{"name", "id", "type", "latitude", "longitude", "fallback_to_closest"})
+	rows := sqlmock.NewRows([]string{"name", "id", "type", "latitude", "longitude", "fallback_to_closest", "localization_methods"})
 	for s, l := range expectedEdgeLocs {
-		rows = rows.AddRow(s, 1, EdgeTypePrefix, l.Lat, l.Lon, false)
+		rows = rows.AddRow(s, 1, EdgeTypePrefix, l.Lat, l.Lon, false, []byte("{CZ}"))
 	}
 	for s, l := range expectedRouterLocs {
-		rows = rows.AddRow(s, 1, RouterTypeName, l.Lat, l.Lon, false)
+		rows = rows.AddRow(s, 1, RouterTypeName, l.Lat, l.Lon, false, nil)
 	}
 	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
 
