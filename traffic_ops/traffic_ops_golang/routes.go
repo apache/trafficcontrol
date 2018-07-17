@@ -147,8 +147,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//Login
 		{1.1, http.MethodGet, `users/{id}/deliveryservices/?(\.json)?$`, user.GetDSes(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodGet, `user/{id}/deliveryservices/available/?(\.json)?$`, user.GetAvailableDSes(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.2, http.MethodPost, `user/login/?$`, wrapAccessLog(d.Secrets[0], auth.LoginHandler(d.DB, d.Config)), 0, NoAuth, nil},
-		{1.3, http.MethodPost, `user/login/?$`, wrapAccessLog(d.Secrets[0], auth.LoginHandler(d.DB, d.Config)), 0, NoAuth, nil},
+		{1.1, http.MethodPost, `user/login/?$`, auth.LoginHandler(d.DB, d.Config), 0, NoAuth, nil},
 
 		{1.1, http.MethodGet, `user/current/?(\.json)?$`, user.Current, auth.PrivLevelReadOnly, Authenticated, nil},
 
@@ -448,6 +447,7 @@ func rootHandler(d ServerData) http.Handler {
 		}).DialContext,
 		TLSHandshakeTimeout:   time.Duration(d.Config.ProxyTLSTimeout) * time.Second,
 		ResponseHeaderTimeout: time.Duration(d.Config.ProxyReadHeaderTimeout) * time.Second,
+		//IdleConnTimeout: time.Duration(d.Config.ProxyIdleConnTimeout) * time.Second,
 		//Other knobs we can turn: ExpectContinueTimeout,IdleConnTimeout
 	}
 	rp := httputil.NewSingleHostReverseProxy(d.URL)

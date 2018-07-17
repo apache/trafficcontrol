@@ -69,7 +69,7 @@ func TestCreateRouteMap(t *testing.T) {
 	}
 
 	rawRoutes := []RawRoute{}
-	routeMap := CreateRouteMap(routes, rawRoutes, authBase)
+	routeMap := CreateRouteMap(routes, rawRoutes, authBase, 60)
 
 	route1Handler := routeMap["GET"][0].Handler
 
