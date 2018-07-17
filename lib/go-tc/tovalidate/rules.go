@@ -46,7 +46,9 @@ func IsOneOfStringICase(set ...string) func(string) bool {
 	for _, s := range set {
 		lowcased = append(lowcased, strings.ToLower(s))
 	}
-	return IsOneOfString(lowcased...)
+	return func(s string) bool {
+		return IsOneOfString(lowcased...)(strings.ToLower(s))
+	}
 }
 
 func IsGreaterThanZero(value interface{}) error {
