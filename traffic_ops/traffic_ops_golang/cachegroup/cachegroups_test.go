@@ -65,10 +65,14 @@ func getTestCacheGroups() []v13.CacheGroup {
 		Longitude:                   90.7,
 		ParentCachegroupID:          1,
 		SecondaryParentCachegroupID: 1,
-		LocalizationMethods:         []tc.LocalizationMethod{},
-		Type:                        "MID_LOC",
-		TypeID:                      7,
-		LastUpdated:                 tc.TimeNoMod{Time: time.Now()},
+		LocalizationMethods: []tc.LocalizationMethod{
+			tc.LocalizationMethodDeepCZ,
+			tc.LocalizationMethodCZ,
+			tc.LocalizationMethodGeo,
+		},
+		Type:        "MID_LOC",
+		TypeID:      7,
+		LastUpdated: tc.TimeNoMod{Time: time.Now()},
 	}
 	cgs = append(cgs, testCG2)
 
@@ -86,10 +90,21 @@ func TestReadCacheGroups(t *testing.T) {
 	defer db.Close()
 
 	testCGs := getTestCacheGroups()
-	cols := test.ColsFromStructByTag("db", v13.CacheGroup{})
-	rows := sqlmock.NewRows(cols)
-
-	methodsRows := sqlmock.NewRows([]string{"cachegroup", "method"})
+	rows := sqlmock.NewRows([]string{
+		"id",
+		"name",
+		"short_name",
+		"latitude",
+		"longitude",
+		"localization_methods",
+		"parent_cachegroup_id",
+		"parent_cachegroup_name",
+		"secondary_parent_cachegroup_id",
+		"secondary_parent_cachegroup_name",
+		"type_name",
+		"type_id",
+		"last_updated",
+	})
 
 	for _, ts := range testCGs {
 		rows = rows.AddRow(
@@ -98,22 +113,18 @@ func TestReadCacheGroups(t *testing.T) {
 			ts.ShortName,
 			ts.Latitude,
 			ts.Longitude,
-			ts.ParentName,
+			[]byte("{DEEP_CZ,CZ,GEO}"),
 			ts.ParentCachegroupID,
-			ts.SecondaryParentName,
+			ts.ParentName,
 			ts.SecondaryParentCachegroupID,
-			ts.FallbackToClosest,
+			ts.SecondaryParentName,
 			ts.Type,
 			ts.TypeID,
 			ts.LastUpdated,
 		)
-		for _, m := range ts.LocalizationMethods {
-			methodsRows.AddRow(ts.ID, m)
-		}
 	}
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
-	mock.ExpectQuery("SELECT").WillReturnRows(methodsRows)
 	mock.ExpectCommit()
 	v := map[string]string{"id": "1"}
 

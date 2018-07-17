@@ -261,34 +261,6 @@ func (cg *TOCacheGroup) createLocalizationMethods() error {
 	return nil
 }
 
-func readGetLocalizationMethods(cacheGroups []TOCacheGroup, tx *sqlx.Tx) (map[int][]tc.LocalizationMethod, error) {
-	ids := make([]int, len(cacheGroups))
-	for i, cg := range cacheGroups {
-		ids[i] = *cg.ID
-	}
-	q := `SELECT cachegroup, method::text FROM cachegroup_localization_method WHERE cachegroup = ANY($1)`
-	rows, err := tx.Query(q, pq.Array(ids))
-	if err != nil {
-		return nil, errors.New("querying cachegroup localization methods: " + err.Error())
-	}
-	defer rows.Close()
-
-	methods := make(map[int][]tc.LocalizationMethod, len(cacheGroups))
-	for rows.Next() {
-		cg := 0
-		methodStr := ""
-		if err := rows.Scan(&cg, &methodStr); err != nil {
-			return nil, errors.New("scanning cachegroup localization methods: " + err.Error())
-		}
-		method := tc.LocalizationMethodFromString(methodStr)
-		if method == tc.LocalizationMethodInvalid {
-			return nil, errors.New("getting cachegroup localization methods: got invalid localization method: '" + methodStr + "'")
-		}
-		methods[cg] = append(methods[cg], method)
-	}
-	return methods, nil
-}
-
 func (cg *TOCacheGroup) createCoordinate() (*int, error) {
 	var coordinateID *int
 	if cg.Latitude != nil && cg.Longitude != nil {
@@ -371,30 +343,33 @@ func (cg *TOCacheGroup) Read(parameters map[string]string) ([]interface{}, []err
 	}
 	defer rows.Close()
 
-	cacheGroups := []TOCacheGroup{}
+	cacheGroups := []interface{}{}
 	for rows.Next() {
 		var s TOCacheGroup
-		if err = rows.StructScan(&s); err != nil {
+		lms := make([]tc.LocalizationMethod, 0)
+		if err = rows.Scan(
+			&s.ID,
+			&s.Name,
+			&s.ShortName,
+			&s.Latitude,
+			&s.Longitude,
+			pq.Array(&lms),
+			&s.ParentCachegroupID,
+			&s.ParentName,
+			&s.SecondaryParentCachegroupID,
+			&s.SecondaryParentName,
+			&s.Type,
+			&s.TypeID,
+			&s.LastUpdated,
+		); err != nil {
 			log.Errorf("error parsing CacheGroup rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
+		s.LocalizationMethods = &lms
 		cacheGroups = append(cacheGroups, s)
 	}
 
-	returnable := make([]interface{}, len(cacheGroups))
-	cacheGroupsToLocalizationMethods, err := readGetLocalizationMethods(cacheGroups, cg.ReqInfo.Tx)
-	if err != nil {
-		log.Errorln(err.Error())
-		return nil, []error{tc.DBError}, tc.SystemError
-	}
-	for i, cacheGroup := range cacheGroups {
-		if localizationMethods, ok := cacheGroupsToLocalizationMethods[*cacheGroup.ID]; ok {
-			cacheGroup.LocalizationMethods = &localizationMethods
-		}
-		returnable[i] = cacheGroup
-	}
-
-	return returnable, []error{}, tc.NoError
+	return cacheGroups, []error{}, tc.NoError
 }
 
 //The TOCacheGroup implementation of the Updater interface
@@ -573,6 +548,7 @@ cachegroup.name,
 cachegroup.short_name,
 coordinate.latitude,
 coordinate.longitude,
+(SELECT array_agg(CAST(method as text)) AS localization_methods FROM cachegroup_localization_method clm WHERE clm.cachegroup = cachegroup.id),
 cachegroup.parent_cachegroup_id,
 cgp.name AS parent_cachegroup_name,
 cachegroup.secondary_parent_cachegroup_id,
