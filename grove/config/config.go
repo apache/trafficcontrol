@@ -60,6 +60,9 @@ type Config struct {
 	CacheFiles           map[string][]CacheFile `json:"cache_files"`
 	// FileMemBytes is the amount of memory to use as an LRU in front of each name in CacheFiles, that is, each named group of files. E.g. if there are 10 files, the amount of memory used will be 10*FileMemBytes+CacheSizeBytes.
 	FileMemBytes int `json:"file_mem_bytes"`
+
+	// if set to true, grove will use the github.com/spamcemonkeygo/openssl library instead of golang/tls
+	UseOpenSSL bool `json:"use_openssl"`
 }
 
 type CacheFile struct {
@@ -107,6 +110,7 @@ var DefaultConfig = Config{
 	ServerWriteTimeoutMS:   3 * MSPerSec,
 	ServerReadTimeoutMS:    3 * MSPerSec,
 	FileMemBytes:           bytesPerMebibyte * 100,
+	UseOpenSSL:				false,
 }
 
 // LoadConfig loads the given config file. If an empty string is passed, the default config is returned.
