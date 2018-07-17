@@ -441,14 +441,14 @@ func (ds *DeliveryServiceNullableV13) Validate(tx *sql.Tx) error {
 
 // Value implements the driver.Valuer interface
 // marshals struct to json to pass back as a json.RawMessage
-func (d *DeliveryServiceNullable) Value() (driver.Value, error) {
+func (d *DeliveryServiceNullableV13) Value() (driver.Value, error) {
 	b, err := json.Marshal(d)
 	return b, err
 }
 
 // Scan implements the sql.Scanner interface
 // expects json.RawMessage and unmarshals to a deliveryservice struct
-func (d *DeliveryServiceNullable) Scan(src interface{}) error {
+func (d *DeliveryServiceNullableV13) Scan(src interface{}) error {
 	b, ok := src.([]byte)
 	if !ok {
 		return fmt.Errorf("expected deliveryservice in byte array form; got %T", src)
