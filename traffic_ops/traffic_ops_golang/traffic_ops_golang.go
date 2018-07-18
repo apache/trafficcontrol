@@ -29,6 +29,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"runtime/pprof"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -51,6 +52,7 @@ func init() {
 
 func main() {
 	showVersion := flag.Bool("version", false, "Show version and exit")
+	showPlugins := flag.Bool("plugins", false, "Show the list of plugins and exit")
 	configFileName := flag.String("cfg", "", "The config file path")
 	dbConfigFileName := flag.String("dbcfg", "", "The db config file path")
 	riakConfigFileName := flag.String("riakcfg", "", "The riak config file path")
@@ -58,6 +60,10 @@ func main() {
 
 	if *showVersion {
 		fmt.Println(about.About.RPMVersion)
+		os.Exit(0)
+	}
+	if *showPlugins {
+		fmt.Println(strings.Join(plugin.List(), "\n"))
 		os.Exit(0)
 	}
 	if len(os.Args) < 2 {
