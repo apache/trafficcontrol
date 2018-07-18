@@ -66,6 +66,11 @@ echo
 
 # Gets the location ID
 location=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/phys_locations | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
+while [[ -z "$location" ]]; do
+	echo "Waiting for location setup"
+	sleep 3
+	location=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/phys_locations | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
+done
 
 # Gets the id of a MID server type
 TYPE=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/types | jq '.response|.[]|select(.name=="MID")|.id')

@@ -157,6 +157,15 @@ services:
       - tcnet
     ports:
       - "8010:80"
+  edge:
+    build:
+      context: edge
+    domainname: cdn.local
+    hostname: edge
+    networks:
+      - tcnet
+    ports:
+      - "8080:80"
 
   mid:
     build:
