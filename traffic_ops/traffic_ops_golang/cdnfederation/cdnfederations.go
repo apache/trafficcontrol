@@ -12,7 +12,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/lib/pq"
@@ -104,10 +103,6 @@ func parseQueryError(parseErr error, method string) (error, tc.ApiErrorType) {
 //Note: cdns and deliveryservies have a 1-1 relationship
 func (fed *TOCDNFederation) Create() (error, tc.ApiErrorType) {
 
-	if fed.ReqInfo.User.PrivLevel < auth.PrivLevelAdmin {
-		return errors.New("Forbidden"), tc.ForbiddenError
-	}
-
 	// Boilerplate code below
 	resultRows, err := fed.ReqInfo.Tx.NamedQuery(insertQuery(), fed)
 	if err != nil {
@@ -138,11 +133,10 @@ func (fed *TOCDNFederation) Create() (error, tc.ApiErrorType) {
 	return nil, tc.NoError
 }
 
-//Concerning efficiency, maybe it would be better to conditionally run different queries?
-//This way the handler wouldn't be doing a full outer join for every query.
 func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 
-	_, ok_id := parameters["id"]
+	var query string
+	_, id := parameters["id"]
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		//db tag                                         symbol from query
 		"id":          dbhelpers.WhereColumnInfo{Column: "federation.id", Checker: api.IsInt},
@@ -151,9 +145,12 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 		"description": dbhelpers.WhereColumnInfo{Column: "description", Checker: nil},
 		"xmlId":       dbhelpers.WhereColumnInfo{Column: "xml_id", Checker: nil},
 		"ds_id":       dbhelpers.WhereColumnInfo{Column: "deliveryservice.id", Checker: api.IsInt},
-
-		//"name":     dbhelpers.WhereColumnInfo{Column: "cdn.name", Checker: nil}, //would narrow scope of search
-		"cdn_name": dbhelpers.WhereColumnInfo{Column: "cdn.name", Checker: nil}, //used to verify cdn name exists
+	}
+	if id {
+		query = selectByID()
+	} else { //searching by name
+		queryParamsToQueryCols["name"] = dbhelpers.WhereColumnInfo{Column: "cdn.name", Checker: nil}
+		query = selectByCDNName()
 	}
 
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
@@ -161,7 +158,7 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 		return nil, errs, tc.DataConflictError
 	}
 
-	query := selectQuery() + where + orderBy
+	query += where + orderBy
 	log.Debugln("Query is ", query)
 
 	rows, err := fed.ReqInfo.Tx.NamedQuery(query, queryValues)
@@ -171,44 +168,44 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 	}
 	defer rows.Close()
 
-	cdnFound := false
 	federations := []interface{}{}
 	for rows.Next() {
 		var fed v13.CDNFederation
+
 		if err = rows.StructScan(&fed); err != nil {
 			log.Errorf("error parsing federation rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
 
-		//if we have an id, the cdn name is fooable
-		if ok_id || fed.Name != nil && *fed.Name == parameters["name"] {
-			cdnFound = true
-
-			//if we are getting by id, there may not be an attached deliveryservice
-			//DeliveryServiceIDs will not be nil itself, due to the struct scan
-			if ok_id && fed.DeliveryServiceIDs.ID == nil {
-				fed.DeliveryServiceIDs = nil
-			}
-
-			//Never return cnd and deliveryService only information. Just federation data.
-			if fed.ID != nil {
-				federations = append(federations, fed)
-			}
+		//if we are getting by id, there may not be an attached deliveryservice
+		//DeliveryServiceIDs will not be nil itself, due to the struct scan
+		if id && fed.DeliveryServiceIDs.ID == nil {
+			fed.DeliveryServiceIDs = nil
 		}
+
+		federations = append(federations, fed)
 	}
 
-	if !cdnFound {
-		return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError
+	//if federations yields "response": []
+	if len(federations) == 0 {
+
+		if id {
+			return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError
+		}
+
+		if yes, err := dbhelpers.CDNExists(parameters["name"], fed.ReqInfo.Tx); yes {
+			return federations, []error{}, tc.NoError
+		} else if err != nil { //internal server error
+			return nil, []error{tc.DBError}, tc.SystemError
+		} else { //the query ran as expected and the cdn does not exist
+			return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError
+		}
 	}
 
 	return federations, []error{}, tc.NoError
 }
 
 func (fed *TOCDNFederation) Update() (error, tc.ApiErrorType) {
-
-	if fed.ReqInfo.User.PrivLevel < auth.PrivLevelAdmin {
-		return errors.New("Forbidden"), tc.ForbiddenError
-	}
 
 	result, err := fed.ReqInfo.Tx.NamedExec(updateQuery(), fed)
 	if err != nil {
@@ -234,10 +231,6 @@ func (fed *TOCDNFederation) Update() (error, tc.ApiErrorType) {
 //:name is a real cdn that exists. This mimicks the perl behavior.
 func (fed *TOCDNFederation) Delete() (error, tc.ApiErrorType) {
 
-	if fed.ReqInfo.User.PrivLevel < auth.PrivLevelAdmin {
-		return errors.New("Forbidden"), tc.ForbiddenError
-	}
-
 	log.Debugf("about to run exec query: %s with federation: %++v", deleteQuery(), fed)
 	result, err := fed.ReqInfo.Tx.NamedExec(deleteQuery(), fed)
 	if err != nil {
@@ -258,14 +251,21 @@ func (fed *TOCDNFederation) Delete() (error, tc.ApiErrorType) {
 	return nil, tc.NoError
 }
 
-//Full outer joins are used so that we can get a federation without an attached deliveryservice (fetching by id)
-//and so that we can retrieve all cdn names to determine if the requested cdn exists.
-func selectQuery() string {
+func selectByID() string {
 	return `
-  SELECT federation.id as id, cname, ttl, description, deliveryservice.id as ds_id, xml_id, cdn.name as cdn_name FROM federation
-  FULL OUTER JOIN federation_deliveryservice as fd ON federation.id = fd.federation
-  FULL OUTER JOIN deliveryservice ON deliveryservice.id = fd.deliveryservice
-  FULL OUTER JOIN cdn ON cdn.id = cdn_id`
+	SELECT federation.id as id, cname, ttl, description, ds.id as ds_id, xml_id FROM federation
+	LEFT JOIN federation_deliveryservice as fd ON federation.id = fd.federation
+	LEFT JOIN deliveryservice as ds ON ds.id = fd.deliveryservice`
+	//WHERE federation.id = :id (determined by dbhelper)
+}
+
+func selectByCDNName() string {
+	return `
+	SELECT federation.id as id, cname, ttl, description, ds.id as ds_id, xml_id FROM federation
+  JOIN federation_deliveryservice as fd ON federation.id = fd.federation
+  JOIN deliveryservice as ds ON ds.id = fd.deliveryservice
+	JOIN cdn ON cdn.id = cdn_id`
+	//WHERE cdn.name = :cdn_name (determined by dbhelper)
 }
 
 func updateQuery() string {

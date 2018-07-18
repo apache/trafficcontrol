@@ -1,5 +1,7 @@
 package v13
 
+import tc "github.com/apache/trafficcontrol/lib/go-tc"
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,28 +21,22 @@ package v13
  * under the License.
  */
 
-// Other endpoints define their own alert. Why not just use tc.Alert?
-type FederationAlert struct {
-	Level string `json:"level"`
-	Text  string `json:"text"`
-}
-
 type CDNFederationResponse struct {
 	Response []CDNFederation `json:"response"`
 }
 
 type CreateCDNFederationResponse struct {
-	Response CDNFederation     `json:"response"`
-	Alerts   []FederationAlert `json:"alerts"`
+	Response CDNFederation `json:"response"`
+	Alerts   []tc.Alert    `json:"alerts"`
 }
 
 type UpdateCDNFederationResponse struct {
-	Reponse CDNFederation     `json:"response"`
-	Alerts  []FederationAlert `json:"alerts"`
+	Response CDNFederation `json:"response"`
+	Alerts   []tc.Alert    `json:"alerts"`
 }
 
 type DeleteCDNFederationResponse struct {
-	Alerts []FederationAlert `json:"alerts"`
+	Alerts []tc.Alert `json:"alerts"`
 }
 
 type CDNFederation struct {
@@ -51,9 +47,6 @@ type CDNFederation struct {
 
 	//omitempty only works with primitive types and pointers
 	*DeliveryServiceIDs `json:"deliveryService,omitempty"`
-
-	//Extra datapoint for ease in Read function (cannot Scan after StructScan)
-	Name *string `json:"-" db:"cdn_name"`
 }
 
 type DeliveryServiceIDs struct {
