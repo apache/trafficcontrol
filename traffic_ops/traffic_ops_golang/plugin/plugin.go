@@ -29,6 +29,15 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 )
 
+// List returns the list of plugins compiled into the calling executable.
+func List() []string {
+	l := []string{}
+	for _, p := range initPlugins {
+		l = append(l, p.name)
+	}
+	return l
+}
+
 func Get(appCfg config.Config) Plugins {
 	log.Infof("plugin.Get given: %+v\n", appCfg.Plugins)
 	pluginSlice := getEnabled(appCfg.Plugins)
