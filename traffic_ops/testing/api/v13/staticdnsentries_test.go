@@ -72,12 +72,12 @@ func CreateTestStaticDNSEntries(t *testing.T) {
 		staticDNSEntry.DeliveryServiceID = respDS.ID
 
 		// GET Cachegroup to associate
-		respGroups, _, err := TOSession.GetCacheGroupByName(staticDNSEntry.CacheGroupName)
+		respGroups, _, err := TOSession.GetCacheGroupNullableByName(staticDNSEntry.CacheGroupName)
 		if err != nil {
 			t.Errorf("cannot GET CacheGroup by Name: %v\n", err)
 		}
 		respGroup := respGroups[0]
-		staticDNSEntry.CacheGroupID = respGroup.ID
+		staticDNSEntry.CacheGroupID = *respGroup.ID
 
 		resp, _, err := TOSession.CreateStaticDNSEntry(staticDNSEntry)
 		log.Debugln("Response: ", resp)

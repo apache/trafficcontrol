@@ -164,44 +164,6 @@ func (cg TOCacheGroup) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-// looks up the parent_cachegroup_id and the secondary_cachegroup_id
-// if the respective names are defined in the cachegroup struct.  A
-// sucessful lookup sets the two ids on the struct.
-//
-// used by Create()
-func getParentCachegroupIDs(tx *sqlx.Tx, cachegroup *TOCacheGroup) error {
-	query := `SELECT id FROM cachegroup where name=$1`
-	var parentID int
-	var secondaryParentID int
-
-	if cachegroup.ParentName != nil && *cachegroup.ParentName != "" {
-		err := tx.QueryRow(query, *cachegroup.ParentName).Scan(&parentID)
-		if err != nil {
-			log.Errorf("received error: %++v from query execution", err)
-			return err
-		}
-		cachegroup.ParentCachegroupID = &parentID
-	}
-	// not using 'omitempty' on the CacheGroup struct so a '0' is really an empty field, so set the pointer to nil
-	if cachegroup.ParentCachegroupID != nil && *cachegroup.ParentCachegroupID == 0 {
-		cachegroup.ParentCachegroupID = nil
-	}
-
-	if cachegroup.SecondaryParentName != nil && *cachegroup.SecondaryParentName != "" {
-		err := tx.QueryRow(query, *cachegroup.SecondaryParentName).Scan(&secondaryParentID)
-		if err != nil {
-			log.Errorf("received error: %++v from query execution", err)
-			return err
-		}
-		cachegroup.SecondaryParentCachegroupID = &secondaryParentID
-	}
-	// not using 'omitempty' on the CacheGroup struct so a '0' is really an empty field, so set the pointer to nil
-	if cachegroup.SecondaryParentCachegroupID != nil && *cachegroup.SecondaryParentCachegroupID == 0 {
-		cachegroup.SecondaryParentCachegroupID = nil
-	}
-	return nil
-}
-
 //The TOCacheGroup implementation of the Creator interface
 //all implementations of Creator should use transactions and return the proper errorType
 //ParsePQUniqueConstraintError is used to determine if a cachegroup with conflicting values exists
@@ -210,12 +172,6 @@ func getParentCachegroupIDs(tx *sqlx.Tx, cachegroup *TOCacheGroup) error {
 //The insert sql returns the id and lastUpdated values of the newly inserted cachegroup and have
 //to be added to the struct
 func (cg *TOCacheGroup) Create() (error, tc.ApiErrorType) {
-	err := getParentCachegroupIDs(cg.ReqInfo.Tx, cg)
-	if err != nil {
-		log.Error.Printf("failure looking up parent cache groups %v", err)
-		return tc.DBError, tc.SystemError
-	}
-
 	coordinateID, err := cg.createCoordinate()
 	if err != nil {
 		log.Errorf("creating cachegroup: %v", err)
@@ -370,13 +326,6 @@ func (cg *TOCacheGroup) Read(parameters map[string]string) ([]interface{}, []err
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 func (cg *TOCacheGroup) Update() (error, tc.ApiErrorType) {
-	// fix up parent ids.
-	err := getParentCachegroupIDs(cg.ReqInfo.Tx, cg)
-	if err != nil {
-		log.Error.Printf("failure looking up parent cache groups %v", err)
-		return tc.DBError, tc.SystemError
-	}
-
 	coordinateID, err, errType := cg.handleCoordinateUpdate()
 	if err != nil {
 		return err, errType

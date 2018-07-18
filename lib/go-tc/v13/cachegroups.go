@@ -29,6 +29,16 @@ type CacheGroupsResponse struct {
 	Response []CacheGroup `json:"response"`
 }
 
+type CacheGroupsNullableResponse struct {
+	Response []CacheGroupNullable `json:"response"`
+}
+
+// CacheGroupDetailResponse is the JSON object returned for a single CacheGroup
+type CacheGroupDetailResponse struct {
+	Response CacheGroupNullable `json:"response"`
+	tc.Alerts
+}
+
 // CacheGroup contains information about a given Cachegroup in Traffic Ops.
 type CacheGroup struct {
 	ID                          int          `json:"id" db:"id"`

@@ -64,7 +64,7 @@ func CreateTestOrigins(t *testing.T) {
 	respProfile := respProfiles[0]
 
 	// GET originCachegroup cachegroup
-	respCacheGroups, _, err := TOSession.GetCacheGroupByName("originCachegroup")
+	respCacheGroups, _, err := TOSession.GetCacheGroupNullableByName("originCachegroup")
 	if err != nil {
 		t.Errorf("cannot GET CacheGroup by name: originCachegroup - %v\n", err)
 		failed = true
@@ -92,7 +92,7 @@ func CreateTestOrigins(t *testing.T) {
 
 	// loop through origins, assign FKs and create
 	for _, origin := range testData.Origins {
-		origin.CachegroupID = &respCacheGroup.ID
+		origin.CachegroupID = respCacheGroup.ID
 		origin.CoordinateID = &respCoordinate.ID
 		origin.ProfileID = &respProfile.ID
 		origin.DeliveryServiceID = &respDeliveryServices[0].ID

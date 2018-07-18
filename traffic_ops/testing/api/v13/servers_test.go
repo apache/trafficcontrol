@@ -71,7 +71,7 @@ func CreateTestServers(t *testing.T) {
 	respPhysLocation := respPhysLocations[0]
 
 	// GET cachegroup1 cachegroup
-	respCacheGroups, _, err := TOSession.GetCacheGroupByName("cachegroup1")
+	respCacheGroups, _, err := TOSession.GetCacheGroupNullableByName("cachegroup1")
 	if err != nil {
 		t.Errorf("cannot GET CacheGroup by name: cachegroup1 - %v\n", err)
 	}
@@ -91,7 +91,7 @@ func CreateTestServers(t *testing.T) {
 		server.TypeID = respType.ID
 		server.StatusID = respStatus.ID
 		server.PhysLocationID = respPhysLocation.ID
-		server.CachegroupID = respCacheGroup.ID
+		server.CachegroupID = *respCacheGroup.ID
 
 		resp, _, err := TOSession.CreateServer(server)
 		log.Debugln("Response: ", server.HostName, " ", resp)
