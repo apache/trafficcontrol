@@ -28,17 +28,16 @@ echo
 #... and a delivery service
 curl -skb cookie.jar -d @/deliveryservices.json https://localhost:$TO_PORT/api/1.3/deliveryservices
 echo
-#... and a cachegroup
-# MID_LOC_ID=$(curl -skb cookie.jar https://localhost:$TO_PORT/api/1.3/types | sed -re 's/\},\{/\n/g' | grep MID_LOC | tr ',' '\n' | grep '"id"' | cut -d : -f2)
+#... and two cachegroup
 MID_LOC_ID=$(curl -skb cookie.jar https://localhost:$TO_PORT/api/1.3/types | jq '.response|.[]|select(.name=="MID_LOC")|.id')
-# I have literally no idea why this is happening and it's so infuriating
-if [[ -f '/cachegroup.jsone' ]]; then
-	mv /cachegroup.jsone /cachegroup.json
-fi
+EDGE_LOC_ID=$(curl -skb cookie.jar https://localhost:$TO_PORT/api/1.3/types | jq '.response|.[]|select(.name=="EDGE_LOC")|.id')
 
 
-sed -ie "s/MID_LOC_ID/${MID_LOC_ID}/g" /cachegroup.json
-curl -skb cookie.jar -d @/cachegroup.json https://localhost:$TO_PORT/api/1.3/cachegroups
+sed -ie "s/MID_LOC_ID/${MID_LOC_ID}/g" /mid_cachegroup.json
+sed -ie "s/EDGE_LOC_ID/${EDGE_LOC_ID}/g" /edge_cachegroup.json
+curl -skb cookie.jar -d @/mid_cachegroup.json https://localhost:$TO_PORT/api/1.3/cachegroups
+echo
+curl -skb cookie.jar -d @/edge_cachegroup.json https://localhost:$TO_PORT/api/1.3/cachegroups
 echo
 #... and a division
 curl -skb cookie.jar -d '{"name":"CDN_in_a_Box"}' https://localhost:$TO_PORT/api/1.3/divisions
