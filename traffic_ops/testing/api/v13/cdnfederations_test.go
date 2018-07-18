@@ -22,7 +22,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
-var fed_ids []int
+var fedIDs []int
 
 func TestCDNFederations(t *testing.T) {
 	CreateTestCDNs(t)
@@ -51,21 +51,21 @@ func CreateTestCDNFederations(t *testing.T) {
 		if err != nil {
 			t.Errorf("could not POST federations: " + err.Error())
 		}
-		bytes, err := json.Marshal(data)
+		bytes, _ := json.Marshal(data)
 		log.Debugf("POST Response: %s\n", bytes)
 
 		//need to save the ids, otherwise the other tests won't be able to reference the federations
 		if data.Response.ID == nil {
 			t.Errorf("Federation id is nil after posting\n")
 		} else {
-			fed_ids = append(fed_ids, *data.Response.ID)
+			fedIDs = append(fedIDs, *data.Response.ID)
 		}
 	}
 }
 
 func UpdateTestCDNFederations(t *testing.T) {
 
-	for _, id := range fed_ids {
+	for _, id := range fedIDs {
 		fed, _, err := TOSession.GetCDNFederationsByID("foo", id)
 		if err != nil {
 			t.Errorf("cannot GET federation by id: %v", err)
@@ -77,14 +77,14 @@ func UpdateTestCDNFederations(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot PUT federation by id: %v", err)
 		}
-		bytes, err := json.Marshal(resp)
+		bytes, _ := json.Marshal(resp)
 		log.Debugf("PUT Response: %s\n", bytes)
 
 		resp2, _, err := TOSession.GetCDNFederationsByID("foo", id)
 		if err != nil {
 			t.Errorf("cannot GET federation by id after PUT: %v", err)
 		}
-		bytes, err = json.Marshal(resp2)
+		bytes, _ = json.Marshal(resp2)
 		log.Debugf("GET Response: %s\n", bytes)
 
 		if resp2.Response[0].CName == nil {
@@ -101,21 +101,21 @@ func GetTestCDNFederations(t *testing.T) {
 	//TOSession.GetCDNFederationsByName can't be tested until
 	//POST /api/1.2/federations/:id/deliveryservices has been
 	//created. (DELETE cdns/:name/federations/:id may need to
-	//clean up fed_ds connection?)
+	//clean up fedIDs connection?)
 
-	for _, id := range fed_ids {
+	for _, id := range fedIDs {
 		data, _, err := TOSession.GetCDNFederationsByID("foo", id)
 		if err != nil {
 			t.Errorf("could not GET federations: " + err.Error())
 		}
-		bytes, err := json.Marshal(data)
+		bytes, _ := json.Marshal(data)
 		log.Debugf("GET Response: %s\n", bytes)
 	}
 }
 
 func DeleteTestCDNFederations(t *testing.T) {
 
-	for _, id := range fed_ids {
+	for _, id := range fedIDs {
 		resp, _, err := TOSession.DeleteCDNFederationByID("foo", id)
 		if err != nil {
 			t.Errorf("cannot DELETE federation by id: '%d' %v\n", id, err)
@@ -124,11 +124,8 @@ func DeleteTestCDNFederations(t *testing.T) {
 		log.Debugf("DELETE Response: %s\n", bytes)
 
 		data, _, err := TOSession.GetCDNFederationsByID("foo", id)
-		if data.Response != nil {
-			t.Errorf("expected federation id '%d' to be deleted\n", id)
-		} else {
-			log.Debugf("%s\n", err) //Resource not found is expected
+		if len(data.Response) != 0 {
+			t.Errorf("expected federation to be deleted")
 		}
 	}
-
 }

@@ -230,3 +230,15 @@ func GetProfileIDFromName(name string, tx *sql.Tx) (int, bool, error) {
 	}
 	return id, true, nil
 }
+
+//Returns true if the cdn exists
+func CDNExists(cdnName string, tx *sqlx.Tx) (bool, error) {
+	var id int
+	if err := tx.QueryRow(`select id from cdn where name = $1`, cdnName).Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, errors.New("Error querying CDN name: " + err.Error())
+	}
+	return true, nil
+}

@@ -293,12 +293,11 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.3, http.MethodDelete, `deliveryservices/{xmlID}/urisignkeys$`, removeDeliveryServiceURIKeysHandler, auth.PrivLevelAdmin, Authenticated, nil},
 
 		// Federations by CDN (the actual table for `federation')
-		//Should this be 1.2 or 1.1?
-		{1.2, http.MethodGet, `cdns/{name}/federations/?(\.json)?$`, api.ReadHandler(cdnfederation.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.2, http.MethodGet, `cdns/{name}/federations/{id}$`, api.ReadHandler(cdnfederation.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.2, http.MethodPost, `cdns/{name}/federations/?(\.json)?$`, api.CreateHandler(cdnfederation.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
-		{1.2, http.MethodPut, `cdns/{name}/federations/?(\.json)?$`, api.UpdateHandler(cdnfederation.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
-		{1.2, http.MethodDelete, `cdns/{name}/federations/{id}$`, api.DeleteHandler(cdnfederation.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `cdns/{name}/federations/?(\.json)?$`, api.ReadHandler(cdnfederation.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `cdns/{name}/federations/{id}$`, api.ReadHandler(cdnfederation.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPost, `cdns/{name}/federations/?(\.json)?$`, api.CreateHandler(cdnfederation.GetTypeSingleton()), auth.PrivLevelAdmin, Authenticated, nil},
+		{1.1, http.MethodPut, `cdns/{name}/federations/{id}$`, api.UpdateHandler(cdnfederation.GetTypeSingleton()), auth.PrivLevelAdmin, Authenticated, nil},
+		{1.1, http.MethodDelete, `cdns/{name}/federations/{id}$`, api.DeleteHandler(cdnfederation.GetTypeSingleton()), auth.PrivLevelAdmin, Authenticated, nil},
 
 		//Origins
 		{1.3, http.MethodGet, `origins/?(\.json)?$`, api.ReadHandler(origin.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
