@@ -159,6 +159,25 @@ func (ten *TOTenant) Create() (error, tc.ApiErrorType) {
 func (ten *TOTenant) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
+	tenantID := ten.ReqInfo.User.TenantID
+	if tenantID == auth.TenantIDInvalid {
+		// NOTE: work around issue where user has no tenancy assigned.  If tenancy turned off, there
+		// should be no tenancy restrictions.  This should be removed once tenant_id NOT NULL constraints
+		// are in place
+		enabled, err := IsTenancyEnabledTx(ten.ReqInfo.Tx.Tx)
+		if err != nil {
+			log.Infof("error checking tenancy: %v", err)
+			return nil, nil, tc.SystemError
+		}
+
+		if enabled {
+			// tenancy enabled, but user doesn't belong to one -- return empty list
+			return nil, nil, tc.NoError
+		}
+		// give it the root tenant -- since tenancy turned off,  does not matter what it is
+		tenantID = 1
+	}
+
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
@@ -173,7 +192,7 @@ func (ten *TOTenant) Read(parameters map[string]string) ([]interface{}, []error,
 		return nil, errs, tc.DataConflictError
 	}
 
-	query := selectQuery(ten.ReqInfo.User.TenantID) + where + orderBy
+	query := selectQuery(tenantID) + where + orderBy
 	log.Debugln("Query is ", query)
 
 	rows, err := ten.ReqInfo.Tx.NamedQuery(query, queryValues)
