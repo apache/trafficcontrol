@@ -368,14 +368,12 @@ func GetReplaceHandler(db *sqlx.DB) http.HandlerFunc {
 
 		if *payload.Replace {
 			// delete existing
-			rows, err := tx.Queryx("DELETE FROM deliveryservice_server WHERE deliveryservice = $1", *dsId)
+			_, err := tx.Exec("DELETE FROM deliveryservice_server WHERE deliveryservice = $1", *dsId)
 			if err != nil {
 				log.Errorf("unable to remove the existing servers assigned to the delivery service: %s", err)
 				handleErrs(http.StatusInternalServerError, err)
 				return
 			}
-
-			defer rows.Close()
 		}
 
 		i := 0
