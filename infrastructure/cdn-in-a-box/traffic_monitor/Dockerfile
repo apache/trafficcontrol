@@ -30,9 +30,18 @@ RUN yum install -y \
         initscripts && \
     yum install -y \
         jq \
+        nmap-ncat \
+        iproute \
+        net-tools \
         /$(basename $RPM) && \
     rm /$(basename $RPM) && \
     yum clean all
+
+ADD parameters.json /
+ADD profile.json /
+ADD server.json /
+RUN mkdir -p /opt/traffic_monitor/conf
+ADD traffic_monitor.cfg /opt/traffic_monitor/conf/
 
 EXPOSE 80
 ADD run.sh /
