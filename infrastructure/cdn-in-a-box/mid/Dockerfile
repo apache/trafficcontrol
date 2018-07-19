@@ -31,7 +31,7 @@ RUN yum install -y /trafficserver.rpm iproute jq net-tools nmap-ncat && yum clea
 
 RUN mkdir -p /var/trafficserver/cache /opt/ort && chown -R ats:ats /etc/trafficserver /var/trafficserver /opt/ort
 
-ADD mid_parameters.json mid_profile.json server.json setup.sh /
+ADD parameters.json profile.json server.json setup.sh /
 
 EXPOSE 80
 

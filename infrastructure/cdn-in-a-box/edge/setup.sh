@@ -42,11 +42,11 @@ done
 
 
 # Now we upload a profile for later use
-sed -ie "s;CDN_ID;$CDN;g" /edge_profile.json
-PROFILE=$(curl -ksb cookie.jar -d @/edge_profile.json https://trafficportal/api/1.3/profiles)
+sed -ie "s;CDN_ID;$CDN;g" /profile.json
+PROFILE=$(curl -ksb cookie.jar -d @/profile.json https://trafficportal/api/1.3/profiles)
 PROFILENAME=$(echo $PROFILE | tr ',' '\n' | grep '"name"' | cut -d : -f2 | tr -d '"')
 PROFILEID=$(echo $PROFILE | tr ',{' '\n' | grep '"id"' | cut -d : -f2)
-curl -ksb cookie.jar -d @/edge_parameters.json https://trafficportal/api/1.3/profiles/name/$PROFILENAME/parameters
+curl -ksb cookie.jar -d @/parameters.json https://trafficportal/api/1.3/profiles/name/$PROFILENAME/parameters
 echo
 
 # Gets the location ID

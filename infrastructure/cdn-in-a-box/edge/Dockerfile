@@ -32,8 +32,8 @@ RUN mkdir -p /var/trafficserver/cache
 RUN chown -R ats:ats /var/trafficserver/
 RUN mkdir -p /opt/ort
 RUN chown ats:ats /opt/ort
-ADD edge_parameters.json /edge_parameters.json
-ADD edge_profile.json /edge_profile.json
+ADD parameters.json /parameters.json
+ADD profile.json /profile.json
 ADD server.json /server.json
 ADD setup.sh /setup.sh
 
