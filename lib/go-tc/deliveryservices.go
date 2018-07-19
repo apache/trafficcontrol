@@ -586,7 +586,7 @@ type UserDeliveryServicesResponse struct {
 }
 
 type DSServerIDs struct {
-	DeliveryServiceID *int  `json:"dsId", db:"deliveryservice"`
+	DeliveryServiceID *int  `json:"dsId" db:"deliveryservice"`
 	ServerIDs         []int `json:"servers"`
 	Replace           *bool `json:"replace"`
 }

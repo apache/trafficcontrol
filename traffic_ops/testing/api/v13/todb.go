@@ -239,6 +239,7 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM regex;
 	DELETE FROM deliveryservice_server;
 	DELETE FROM deliveryservice;
+	DELETE FROM origin;
 	DELETE FROM server;
 	DELETE FROM phys_location;
 	DELETE FROM region;
@@ -247,6 +248,7 @@ func Teardown(db *sql.DB) error {
 	DELETE FROM parameter;
 	DELETE FROM profile_parameter;
 	DELETE FROM cachegroup;
+	DELETE FROM coordinate;
 	DELETE FROM type;
 	DELETE FROM status;
 	DELETE FROM snapshot;
