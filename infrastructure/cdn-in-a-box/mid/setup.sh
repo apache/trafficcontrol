@@ -57,11 +57,11 @@ done
 
 
 # Now we upload a profile for later use
-sed -ie "s;CDN_ID;$CDN;g" /mid_profile.json
-PROFILE=$(curl -ksb cookie.jar -d @/mid_profile.json https://$TP_HOST/api/1.3/profiles | jq '.response')
+sed -ie "s;CDN_ID;$CDN;g" /profile.json
+PROFILE=$(curl -ksb cookie.jar -d @/profile.json https://$TP_HOST/api/1.3/profiles | jq '.response')
 PROFILENAME=$(echo $PROFILE | jq '.name' | tr -d '"')
 PROFILEID=$(echo $PROFILE | jq '.id')
-curl -ksb cookie.jar -d @/mid_parameters.json https://$TP_HOST/api/1.3/profiles/name/$PROFILENAME/parameters
+curl -ksb cookie.jar -d @/parameters.json https://$TP_HOST/api/1.3/profiles/name/$PROFILENAME/parameters
 echo
 
 # Gets the location ID
