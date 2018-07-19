@@ -137,6 +137,7 @@ services:
     ports:
       - "80:80"
 
+
   # trafficvault runs a riak container to store private keys
   trafficvault:
     image: basho/riak-kv
@@ -164,8 +165,10 @@ services:
     build:
       context: edge
     domainname: cdn.local
+
     env_file:
       - variables.env
+
     hostname: edge
     networks:
       - tcnet
