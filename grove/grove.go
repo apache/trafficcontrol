@@ -146,7 +146,7 @@ func main() {
 				return
 			}
 		} else {
-			defaultCtx, _, err = grvssl.NewCtxFromFiles(cfg.CertFile, cfg.KeyFile)
+			defaultCtx, cname, err := grvssl.NewCtxFromFiles(cfg.CertFile, cfg.KeyFile)
 			if err != nil {
 				log.Errorf("creating openssl listener %v %v\n", cfg.HTTPSPort, err)
 				return
@@ -156,6 +156,7 @@ func main() {
 				log.Errorf("1: creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
 				return
 			}
+			grvssl.CtxStore.CtxMap[cname] = defaultCtx
 		}
 	}
 
