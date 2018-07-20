@@ -28,6 +28,8 @@ import (
 	util "github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+	"github.com/jmoiron/sqlx"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func TestFuncs(t *testing.T) {
@@ -68,8 +70,25 @@ func TestInterfaces(t *testing.T) {
 }
 
 func TestValidate(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	rows := sqlmock.NewRows([]string{"name", "use_in_table"})
+	rows.AddRow("A_RECORD", "staticdnsentry")
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	tx := db.MustBegin()
+
+	reqInfo := api.APIInfo{Tx: tx, CommitTx: util.BoolPtr(false)}
 	// invalid name, empty domainname
-	ts := TOStaticDNSEntry{}
+	ts := TOStaticDNSEntry{ReqInfo: &reqInfo}
 	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(ts.Validate())))
 
 	expectedErrs := util.JoinErrsStr([]error{
@@ -83,8 +102,4 @@ func TestValidate(t *testing.T) {
 	if !reflect.DeepEqual(expectedErrs, errs) {
 		t.Errorf("expected %s, GOT %s", expectedErrs, errs)
 	}
-	//if err != nil {
-	//t.Errorf("expected nil, got %s", err)
-	//}
-
 }

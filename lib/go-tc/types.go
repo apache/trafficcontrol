@@ -1,5 +1,10 @@
 package tc
 
+import (
+	"database/sql"
+	"errors"
+)
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -40,4 +45,41 @@ type TypeNullable struct {
 	Name        *string    `json:"name" db:"name"`
 	Description *string    `json:"description" db:"description"`
 	UseInTable  *string    `json:"useInTable" db:"use_in_table"`
+}
+
+// GetTypeData returns the type's name and use_in_table, true/false if the query returned data, and any error
+func GetTypeData(tx *sql.Tx, id int) (string, string, bool, error) {
+	name := ""
+	var useInTablePtr *string
+	if err := tx.QueryRow(`SELECT name, use_in_table from type where id=$1`, id).Scan(&name, &useInTablePtr); err != nil {
+		if err == sql.ErrNoRows {
+			return "", "", false, nil
+		}
+		return "", "", false, errors.New("querying type data: " + err.Error())
+	}
+	useInTable := ""
+	if useInTablePtr != nil {
+		useInTable = *useInTablePtr
+	}
+	return name, useInTable, true, nil
+}
+
+// ValidateTypeID validates that the typeID references a type with the expected use_in_table string and
+// returns "" and an error if the typeID is invalid. If valid, the type's name is returned.
+func ValidateTypeID(tx *sql.Tx, typeID *int, expectedUseInTable string) (string, error) {
+	if typeID == nil {
+		return "", errors.New("missing type")
+	}
+
+	typeName, useInTable, ok, err := GetTypeData(tx, *typeID)
+	if err != nil {
+		return "", errors.New("validating type: " + err.Error())
+	}
+	if !ok {
+		return "", errors.New("type not found")
+	}
+	if useInTable != expectedUseInTable {
+		return "", errors.New("type is not a valid " + expectedUseInTable + " type")
+	}
+	return typeName, nil
 }

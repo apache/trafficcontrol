@@ -33,7 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
-	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -108,24 +108,11 @@ func (server *TOServer) Validate() error {
 		return util.JoinErrs(errs)
 	}
 
-	rows, err := server.ReqInfo.Tx.Query("select use_in_table from type where id=$1", server.TypeID)
-	if err != nil {
-		log.Error.Printf("could not execute select use_in_table from type: %s\n", err)
-		return tc.DBError
-	}
-	defer rows.Close()
-	var useInTable string
-	for rows.Next() {
-		if err := rows.Scan(&useInTable); err != nil {
-			log.Error.Printf("could not scan use_in_table from type: %s\n", err)
-			return tc.DBError
-		}
-	}
-	if useInTable != "server" {
-		errs = append(errs, errors.New("invalid server type"))
+	if _, err := tc.ValidateTypeID(server.ReqInfo.Tx.Tx, server.TypeID, "server"); err != nil {
+		return err
 	}
 
-	rows, err = server.ReqInfo.Tx.Query("select cdn from profile where id=$1", server.ProfileID)
+	rows, err := server.ReqInfo.Tx.Query("select cdn from profile where id=$1", server.ProfileID)
 	if err != nil {
 		log.Error.Printf("could not execute select cdnID from profile: %s\n", err)
 		errs = append(errs, tc.DBError)

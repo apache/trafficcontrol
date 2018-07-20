@@ -80,6 +80,10 @@ func (staticDNSEntry *TOStaticDNSEntry) SetKeys(keys map[string]interface{}) {
 
 // Validate fulfills the api.Validator interface
 func (staticDNSEntry TOStaticDNSEntry) Validate() error {
+	if _, err := tc.ValidateTypeID(staticDNSEntry.ReqInfo.Tx.Tx, &staticDNSEntry.TypeID, "staticdnsentry"); err != nil {
+		return err
+	}
+
 	errs := validation.Errors{
 		"host":    validation.Validate(staticDNSEntry.Host, validation.Required),
 		"address": validation.Validate(staticDNSEntry.Address, validation.Required),
