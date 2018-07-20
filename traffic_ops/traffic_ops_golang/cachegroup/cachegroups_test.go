@@ -153,6 +153,24 @@ func TestInterfaces(t *testing.T) {
 }
 
 func TestValidate(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	rows := sqlmock.NewRows([]string{"name", "use_in_table"})
+	rows.AddRow("EDGE_LOC", "cachegroup")
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	tx := db.MustBegin()
+
+	reqInfo := api.APIInfo{Tx: tx, CommitTx: util.BoolPtr(false)}
+
 	// invalid name, shortname, loattude, and longitude
 	id := 1
 	nm := "not!a!valid!cachegroup"
@@ -162,7 +180,7 @@ func TestValidate(t *testing.T) {
 	ty := "EDGE_LOC"
 	ti := 6
 	lu := tc.TimeNoMod{Time: time.Now()}
-	c := TOCacheGroup{CacheGroupNullable: v13.CacheGroupNullable{ID: &id,
+	c := TOCacheGroup{ReqInfo: &reqInfo, CacheGroupNullable: v13.CacheGroupNullable{ID: &id,
 		Name:        &nm,
 		ShortName:   &sn,
 		Latitude:    &la,
@@ -184,12 +202,15 @@ func TestValidate(t *testing.T) {
 		t.Errorf("expected %s, got %s", expectedErrs, errs)
 	}
 
+	rows.AddRow("EDGE_LOC", "cachegroup")
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+
 	//  valid name, shortName latitude, longitude
 	nm = "This.is.2.a-Valid---Cachegroup."
 	sn = `awesome-cachegroup`
 	la = 90.0
 	lo = 90.0
-	c = TOCacheGroup{CacheGroupNullable: v13.CacheGroupNullable{ID: &id,
+	c = TOCacheGroup{ReqInfo: &reqInfo, CacheGroupNullable: v13.CacheGroupNullable{ID: &id,
 		Name:        &nm,
 		ShortName:   &sn,
 		Latitude:    &la,
@@ -198,7 +219,7 @@ func TestValidate(t *testing.T) {
 		TypeID:      &ti,
 		LastUpdated: &lu,
 	}}
-	err := c.Validate()
+	err = c.Validate()
 	if err != nil {
 		t.Errorf("expected nil, got %s", err)
 	}

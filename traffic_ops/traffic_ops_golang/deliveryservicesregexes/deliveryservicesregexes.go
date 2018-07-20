@@ -272,39 +272,29 @@ ORDER BY dsr.set_number ASC
 	}
 }
 
-func Post(dbx *sqlx.DB) http.HandlerFunc {
-	db := dbx.DB
+func Post() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+		paramList := []string{"dsid"}
+		inf, userErr, sysErr, errCode := api.NewInfo(r, paramList, paramList)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, errCode, userErr, sysErr)
+			return
+		}
+		defer inf.Close()
+		tx := inf.Tx.Tx
+
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
-		user, err := auth.GetCurrentUser(r.Context())
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, errors.New("unable to retrieve current user from context: "+err.Error()))
-			return
-		}
-		params, err := api.GetCombinedParams(r)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, errors.New("unable to get parameters from request: "+err.Error()))
-			return
-		}
-		dsIDStr, ok := params["dsid"]
-		if !ok {
-			handleErrs(http.StatusInternalServerError, errors.New("no deliveryservice ID"))
-			return
-		}
-		dsID, err := strconv.Atoi(dsIDStr)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, errors.New("deliveryservice ID not an integer"))
-			return
-		}
+		dsID := inf.IntParams["dsid"]
 		dsTenantID := 0
-		if err := db.QueryRow(`SELECT tenant_id from deliveryservice where id = $1`, dsID).Scan(&dsTenantID); err != nil {
+		if err := tx.QueryRow(`SELECT tenant_id from deliveryservice where id = $1`, dsID).Scan(&dsTenantID); err != nil {
 			if err != sql.ErrNoRows {
 				log.Errorln("getting deliveryservice name: " + err.Error())
 			}
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-		if ok, err := tenant.IsResourceAuthorizedToUser(dsTenantID, user, dbx); !ok {
+		if ok, err := tenant.IsResourceAuthorizedToUserTx(dsTenantID, inf.User, tx); !ok {
 			handleErrs(http.StatusInternalServerError, errors.New("unauthorized"))
 			return
 		} else if err != nil {
@@ -318,21 +308,26 @@ func Post(dbx *sqlx.DB) http.HandlerFunc {
 			return
 		}
 
+		if err := validateDSRegexType(tx, dsr.Type); err != nil {
+			handleErrs(http.StatusBadRequest, err)
+			return
+		}
+
 		regexID := 0
-		if err := db.QueryRow(`INSERT INTO regex (pattern, type) VALUES ($1, $2) RETURNING id`, dsr.Pattern, dsr.Type).Scan(&regexID); err != nil {
+		if err := tx.QueryRow(`INSERT INTO regex (pattern, type) VALUES ($1, $2) RETURNING id`, dsr.Pattern, dsr.Type).Scan(&regexID); err != nil {
 			log.Errorln("inserting regex: " + err.Error())
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
-		if _, err := db.Exec(`INSERT INTO deliveryservice_regex (deliveryservice, regex, set_number) values ($1, $2, $3)`, dsID, regexID, dsr.SetNumber); err != nil {
+		if _, err := tx.Exec(`INSERT INTO deliveryservice_regex (deliveryservice, regex, set_number) values ($1, $2, $3)`, dsID, regexID, dsr.SetNumber); err != nil {
 			log.Errorln("inserting deliveryservice_regex: " + err.Error())
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
 
 		typeName := ""
-		if err := db.QueryRow(`SELECT name from type where id = $1`, dsr.Type).Scan(&typeName); err != nil {
+		if err := tx.QueryRow(`SELECT name from type where id = $1`, dsr.Type).Scan(&typeName); err != nil {
 			if err != sql.ErrNoRows {
 				log.Errorln("getting regex type: " + err.Error())
 			}
@@ -347,66 +342,36 @@ func Post(dbx *sqlx.DB) http.HandlerFunc {
 			TypeName:  typeName,
 			SetNumber: dsr.SetNumber,
 		}
-		resp := struct {
-			Response tc.DeliveryServiceIDRegex `json:"response"`
-			tc.Alerts
-		}{respObj, tc.CreateAlerts(tc.SuccessLevel, "Delivery service regex creation was successful.")}
 
-		respBts, err := json.Marshal(&resp)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, errors.New("marshalling JSON: "+err.Error()))
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(respBts)
+		*inf.CommitTx = true
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 	}
 }
 
-func Put(dbx *sqlx.DB) http.HandlerFunc {
-	db := dbx.DB
+func Put() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		defer r.Body.Close()
+		paramList := []string{"dsid", "regexid"}
+		inf, userErr, sysErr, errCode := api.NewInfo(r, paramList, paramList)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, errCode, userErr, sysErr)
+			return
+		}
+		defer inf.Close()
+		tx := inf.Tx.Tx
+
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
-		user, err := auth.GetCurrentUser(r.Context())
-		if err != nil {
-			log.Errorf("unable to retrieve current user from context: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-		params, err := api.GetCombinedParams(r)
-		if err != nil {
-			log.Errorf("unable to get parameters from request: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-		dsIDStr, ok := params["dsid"]
-		if !ok {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-		dsID, err := strconv.Atoi(dsIDStr)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-		regexIDStr, ok := params["regexid"]
-		if !ok {
-			handleErrs(http.StatusInternalServerError, errors.New("no regex ID"))
-			return
-		}
-		regexID, err := strconv.Atoi(regexIDStr)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, errors.New("Regex ID '"+regexIDStr+"' not an integer"))
-			return
-		}
+		dsID := inf.IntParams["dsid"]
+		regexID := inf.IntParams["regexid"]
 		dsTenantID := 0
-		if err := db.QueryRow(`SELECT tenant_id from deliveryservice where id = $1`, dsID).Scan(&dsTenantID); err != nil {
+		if err := tx.QueryRow(`SELECT tenant_id from deliveryservice where id = $1`, dsID).Scan(&dsTenantID); err != nil {
 			if err != sql.ErrNoRows {
 				log.Errorln("getting deliveryservice name: " + err.Error())
 			}
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-		if ok, err := tenant.IsResourceAuthorizedToUser(dsTenantID, user, dbx); !ok {
+		if ok, err := tenant.IsResourceAuthorizedToUserTx(dsTenantID, inf.User, tx); !ok {
 			handleErrs(http.StatusInternalServerError, errors.New("unauthorized"))
 			return
 		} else if err != nil {
@@ -419,18 +384,24 @@ func Put(dbx *sqlx.DB) http.HandlerFunc {
 			handleErrs(http.StatusInternalServerError, err)
 			return
 		}
-		if _, err := db.Exec(`UPDATE regex SET pattern=$1, type=$2 WHERE id=$3`, dsr.Pattern, dsr.Type, regexID); err != nil {
+
+		if err := validateDSRegexType(tx, dsr.Type); err != nil {
+			handleErrs(http.StatusBadRequest, err)
+			return
+		}
+
+		if _, err := tx.Exec(`UPDATE regex SET pattern=$1, type=$2 WHERE id=$3`, dsr.Pattern, dsr.Type, regexID); err != nil {
 			log.Errorln("deliveryservicesregexes.Put: updating regex: " + err.Error())
 			handleErrs(http.StatusInternalServerError, errors.New("server error"))
 			return
 		}
-		if _, err := db.Exec(`UPDATE deliveryservice_regex SET set_number=$1 WHERE deliveryservice=$2 AND regex=$3`, dsr.SetNumber, dsID, regexID); err != nil {
+		if _, err := tx.Exec(`UPDATE deliveryservice_regex SET set_number=$1 WHERE deliveryservice=$2 AND regex=$3`, dsr.SetNumber, dsID, regexID); err != nil {
 			log.Errorln("deliveryservicesregexes.Put: updating deliveryservice_regex: " + err.Error())
 			handleErrs(http.StatusInternalServerError, errors.New("server error"))
 			return
 		}
 		typeName := ""
-		if err := db.QueryRow(`SELECT name from type where id = $1`, dsr.Type).Scan(&typeName); err != nil {
+		if err := tx.QueryRow(`SELECT name from type where id = $1`, dsr.Type).Scan(&typeName); err != nil {
 			if err != sql.ErrNoRows {
 				log.Errorln("getting regex type: " + err.Error())
 			}
@@ -444,18 +415,15 @@ func Put(dbx *sqlx.DB) http.HandlerFunc {
 			TypeName:  typeName,
 			SetNumber: dsr.SetNumber,
 		}
-		resp := struct {
-			Response tc.DeliveryServiceIDRegex `json:"response"`
-			tc.Alerts
-		}{respObj, tc.CreateAlerts(tc.SuccessLevel, "Delivery service regex creation was successful.")}
-		respBts, err := json.Marshal(&resp)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, errors.New("marshalling JSON: "+err.Error()))
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(respBts)
+
+		*inf.CommitTx = true
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery service regex creation was successful.", respObj)
 	}
+}
+
+func validateDSRegexType(tx *sql.Tx, typeID int) error {
+	_, err := tc.ValidateTypeID(tx, &typeID, "regex")
+	return err
 }
 
 func Delete(dbx *sqlx.DB) http.HandlerFunc {

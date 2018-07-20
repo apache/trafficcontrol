@@ -149,6 +149,11 @@ func IsValidParentCachegroupID(id *int) bool {
 
 // Validate fulfills the api.Validator interface
 func (cg TOCacheGroup) Validate() error {
+
+	if _, err := tc.ValidateTypeID(cg.ReqInfo.Tx.Tx, cg.TypeID, "cachegroup"); err != nil {
+		return err
+	}
+
 	validName := validation.NewStringRule(IsValidCacheGroupName, "invalid characters found - Use alphanumeric . or - or _ .")
 	validShortName := validation.NewStringRule(IsValidCacheGroupName, "invalid characters found - Use alphanumeric . or - or _ .")
 	latitudeErr := "Must be a floating point number within the range +-90"

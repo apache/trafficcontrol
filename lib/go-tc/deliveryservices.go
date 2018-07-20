@@ -244,23 +244,6 @@ func (ds *DeliveryServiceNullableV12) Sanitize() {
 	}
 }
 
-// getTypeData returns the type's name and use_in_table, true/false if the query returned data, and any error
-func getTypeData(tx *sql.Tx, id int) (string, string, bool, error) {
-	name := ""
-	var useInTablePtr *string
-	if err := tx.QueryRow(`SELECT name, use_in_table from type where id=$1`, id).Scan(&name, &useInTablePtr); err != nil {
-		if err == sql.ErrNoRows {
-			return "", "", false, nil
-		}
-		return "", "", false, errors.New("querying type data: " + err.Error())
-	}
-	useInTable := ""
-	if useInTablePtr != nil {
-		useInTable = *useInTablePtr
-	}
-	return name, useInTable, true, nil
-}
-
 func requiredIfMatchesTypeName(patterns []string, typeName string) func(interface{}) error {
 	return func(value interface{}) error {
 		switch v := value.(type) {
@@ -296,30 +279,20 @@ func requiredIfMatchesTypeName(patterns []string, typeName string) func(interfac
 	}
 }
 
-// util.JoinErrs(errs).Error()
-
 func (ds *DeliveryServiceNullableV12) validateTypeFields(tx *sql.Tx) error {
 	// Validate the TypeName related fields below
-	typeName := ""
 	err := error(nil)
 	DNSRegexType := "^DNS.*$"
 	HTTPRegexType := "^HTTP.*$"
 	SteeringRegexType := "^STEERING.*$"
 	latitudeErr := "Must be a floating point number within the range +-90"
 	longitudeErr := "Must be a floating point number within the range +-180"
-	if ds.TypeID == nil {
-		return errors.New("missing type")
-	}
-	typeName, useInTable, ok, err := getTypeData(tx, *ds.TypeID)
+
+	typeName, err := ValidateTypeID(tx, ds.TypeID, "deliveryservice")
 	if err != nil {
-		return errors.New("getting type name: " + err.Error())
+		return err
 	}
-	if !ok {
-		return errors.New("type not found")
-	}
-	if useInTable != "deliveryservice" {
-		return errors.New("type is not a valid deliveryservice type")
-	}
+
 	errs := validation.Errors{
 		"initialDispersion": validation.Validate(ds.InitialDispersion,
 			validation.By(requiredIfMatchesTypeName([]string{HTTPRegexType}, typeName)),
