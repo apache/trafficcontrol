@@ -257,7 +257,7 @@ func ParseConfig(cfg Config) (Config, error) {
 	invalidTOURLStr := ""
 	var err error
 	if len(cfg.Listen) < 1 {
-		missings += "listen, "
+		missings += `"listen", `
 	} else {
 		listen := cfg.Listen[0]
 		if cfg.URL, err = url.Parse(listen); err != nil {
