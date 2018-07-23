@@ -159,6 +159,11 @@ func (ten *TOTenant) Create() (error, tc.ApiErrorType) {
 func (ten *TOTenant) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 
+	if ten.ReqInfo == nil || ten.ReqInfo.User == nil {
+		// should never happen
+		return nil, []error{errors.New("missing request info")}, tc.SystemError
+	}
+
 	tenantID := ten.ReqInfo.User.TenantID
 	if tenantID == auth.TenantIDInvalid {
 		// NOTE: work around issue where user has no tenancy assigned.  If tenancy turned off, there
