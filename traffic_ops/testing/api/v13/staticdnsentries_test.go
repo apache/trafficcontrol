@@ -37,8 +37,8 @@ func TestStaticDNSEntries(t *testing.T) {
 	CreateTestStaticDNSEntries(t)
 	GetTestStaticDNSEntries(t)
 	UpdateTestStaticDNSEntries(t)
-	DeleteTestDeliveryServices(t)
 	DeleteTestStaticDNSEntries(t)
+	DeleteTestDeliveryServices(t)
 	DeleteTestServers(t)
 	DeleteTestCacheGroups(t)
 	DeleteTestPhysLocations(t)
@@ -140,10 +140,10 @@ func DeleteTestStaticDNSEntries(t *testing.T) {
 
 			_, _, err := TOSession.DeleteStaticDNSEntryByID(respStaticDNSEntry.ID)
 			if err != nil {
-				t.Errorf("cannot DELETE StaticDNSEntrie by name: '%s' %v\n", respStaticDNSEntry.Host, err)
+				t.Errorf("cannot DELETE StaticDNSEntry by name: '%s' %v\n", respStaticDNSEntry.Host, err)
 			}
 
-			// Retrieve the StaticDNSEntrie to see if it got deleted
+			// Retrieve the StaticDNSEntry to see if it got deleted
 			staticDNSEntries, _, err := TOSession.GetStaticDNSEntriesByHost(staticDNSEntry.Host)
 			if err != nil {
 				t.Errorf("error deleting StaticDNSEntrie name: %s\n", err.Error())

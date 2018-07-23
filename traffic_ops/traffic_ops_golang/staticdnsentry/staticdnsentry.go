@@ -92,7 +92,16 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 
 func (staticDNSEntry *TOStaticDNSEntry) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"deliveryservice": dbhelpers.WhereColumnInfo{"deliveryservice", nil}, // order by
+		"address":           dbhelpers.WhereColumnInfo{"sde.address", nil},
+		"cachegroup":        dbhelpers.WhereColumnInfo{"cg.name", nil},
+		"cachegroupId":      dbhelpers.WhereColumnInfo{"cg.id", nil},
+		"deliveryservice":   dbhelpers.WhereColumnInfo{"ds.xml_id", nil},
+		"deliveryserviceId": dbhelpers.WhereColumnInfo{"sde.deliveryservice", nil},
+		"host":              dbhelpers.WhereColumnInfo{"sde.host", nil},
+		"id":                dbhelpers.WhereColumnInfo{"sde.id", nil},
+		"ttl":               dbhelpers.WhereColumnInfo{"sde.ttl", nil},
+		"type":              dbhelpers.WhereColumnInfo{"tp.name", nil},
+		"typeId":            dbhelpers.WhereColumnInfo{"tp.id", nil},
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 	if len(errs) > 0 {
