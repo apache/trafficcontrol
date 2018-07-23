@@ -97,7 +97,7 @@ func UpdateTestStaticDNSEntries(t *testing.T) {
 		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v\n", firstStaticDNSEntry.Host, err)
 	}
 	remoteStaticDNSEntry := resp[0]
-	expectedAddress := "address2"
+	expectedAddress := "192.168.0.1"
 	remoteStaticDNSEntry.Address = expectedAddress
 	var alert tc.Alerts
 	alert, _, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
