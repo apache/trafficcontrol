@@ -32,6 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/lib/pq"
 )
 
@@ -82,7 +83,7 @@ func (staticDNSEntry *TOStaticDNSEntry) SetKeys(keys map[string]interface{}) {
 func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 	errs := validation.Errors{
 		"host":    validation.Validate(staticDNSEntry.Host, validation.Required),
-		"address": validation.Validate(staticDNSEntry.Address, validation.Required),
+		"address": validation.Validate(staticDNSEntry.Address, validation.Required, is.IP),
 		"dsname":  validation.Validate(staticDNSEntry.DeliveryService, validation.Required),
 		"ttl":     validation.Validate(staticDNSEntry.TTL, validation.Required),
 		"type":    validation.Validate(staticDNSEntry.Type, validation.Required),
