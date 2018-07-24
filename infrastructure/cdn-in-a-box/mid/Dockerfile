@@ -27,15 +27,9 @@ ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.2-4.el7.c
 
 RUN yum install -y /trafficserver-7.1.2-4.el7.centos.x86_64.rpm iproute net-tools nmap-ncat && yum clean all
 
-RUN chown -R ats:ats /etc/trafficserver/
-RUN mkdir -p /var/trafficserver/cache
-RUN chown -R ats:ats /var/trafficserver/
-RUN mkdir -p /opt/ort
-RUN chown ats:ats /opt/ort
-ADD mid_parameters.json /mid_parameters.json
-ADD mid_profile.json /mid_profile.json
-ADD server.json /server.json
-ADD setup.sh /setup.sh
+RUN mkdir -p /var/trafficserver/cache /opt/ort && chown -R ats:ats /etc/trafficserver /var/trafficserver /opt/ort
+
+ADD mid_parameters.json mid_profile.json server.json setup.sh /
 
 EXPOSE 80
 
