@@ -82,11 +82,11 @@ func (staticDNSEntry *TOStaticDNSEntry) SetKeys(keys map[string]interface{}) {
 // Validate fulfills the api.Validator interface
 func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 	errs := validation.Errors{
-		"host":    validation.Validate(staticDNSEntry.Host, validation.Required, is.DNSName),
-		"address": validation.Validate(staticDNSEntry.Address, validation.Required, is.Host),
-		"dsname":  validation.Validate(staticDNSEntry.DeliveryService, validation.Required),
-		"ttl":     validation.Validate(staticDNSEntry.TTL, validation.Required),
-		"type":    validation.Validate(staticDNSEntry.Type, validation.Required),
+		"host":              validation.Validate(staticDNSEntry.Host, validation.Required, is.DNSName),
+		"address":           validation.Validate(staticDNSEntry.Address, validation.Required, is.Host),
+		"deliveryserviceId": validation.Validate(staticDNSEntry.DeliveryServiceID, validation.Required),
+		"ttl":               validation.Validate(staticDNSEntry.TTL, validation.Required),
+		"typeId":            validation.Validate(staticDNSEntry.TypeID, validation.Required),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
