@@ -239,6 +239,9 @@ func (ds *DeliveryServiceNullableV12) Sanitize() {
 	if ds.RoutingName == nil || *ds.RoutingName == "" {
 		ds.RoutingName = util.StrPtr(DefaultRoutingName)
 	}
+	if ds.AnonymousBlockingEnabled == nil {
+		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	}
 }
 
 // getTypeData returns the type's name and use_in_table, true/false if the query returned data, and any error
