@@ -23,7 +23,7 @@ set -e
 curl -skc cookie.jar -d "{\"u\":\"$TO_ADMIN_USER\",\"p\":\"$TO_ADMIN_PASSWORD\"}" https://localhost:$TO_PORT/api/1.3/user/login
 echo
 # Now set up a new CDN...
-curl -skb cookie.jar -d @/cdns.json https://$TO_PORT:6443/api/1.3/cdns
+curl -skb cookie.jar -d @/cdns.json https://localhost:$TO_PORT/api/1.3/cdns
 echo
 #... and a delivery service
 curl -skb cookie.jar -d @/deliveryservices.json https://localhost:$TO_PORT/api/1.3/deliveryservices
