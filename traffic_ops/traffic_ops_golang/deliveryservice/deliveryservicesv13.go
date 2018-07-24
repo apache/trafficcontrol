@@ -135,7 +135,7 @@ func CreateV13() http.HandlerFunc {
 			return
 		}
 		*inf.CommitTx = true
-		api.WriteResp(w, r, []tc.DeliveryServiceNullableV13{ds})
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV13{ds})
 	}
 }
 
@@ -414,7 +414,7 @@ func UpdateV13() http.HandlerFunc {
 		}
 
 		*inf.CommitTx = true
-		api.WriteResp(w, r, []tc.DeliveryServiceNullableV13{ds})
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV13{ds})
 	}
 }
 
