@@ -200,6 +200,7 @@ func getServers(params map[string]string, tx *sqlx.Tx, privLevel int) ([]tc.Serv
 		"profileId":        dbhelpers.WhereColumnInfo{"s.profile", api.IsInt},
 		"status":           dbhelpers.WhereColumnInfo{"st.name", nil},
 		"type":             dbhelpers.WhereColumnInfo{"t.name", nil},
+		"dsId":             dbhelpers.WhereColumnInfo{"dss.deliveryservice", nil},
 	}
 
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
@@ -292,7 +293,8 @@ JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id`
+JOIN type t ON s.type = t.id
+FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id`
 
 	return selectStmt
 }
