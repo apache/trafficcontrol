@@ -23,9 +23,10 @@
 
 FROM centos:7
 
-ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.2-4.el7.centos.x86_64.rpm /trafficserver-7.1.2-4.el7.centos.x86_64.rpm
+ARG RPM=https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.2-4.el7.centos.x86_64.rpm
+ADD $RPM /trafficserver.rpm
 
-RUN yum install -y /trafficserver-7.1.2-4.el7.centos.x86_64.rpm iproute net-tools nmap-ncat && yum clean all
+RUN yum install -y /trafficserver.rpm iproute net-tools nmap-ncat && yum clean all
 
 RUN mkdir -p /var/trafficserver/cache /opt/ort && chown -R ats:ats /etc/trafficserver /var/trafficserver /opt/ort
 
