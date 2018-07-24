@@ -30,6 +30,6 @@ COPY --from=trafficops-perl /opt/traffic_ops/app/bin/traffic_ops_golang /opt/tra
 EXPOSE 6443
 WORKDIR /opt/traffic_ops/app
 
-ADD config.sh run-go.sh setup.sh
+ADD config.sh run-go.sh setup.sh /
 ADD cdns.json deliveryservices.json cachegroup.json phys_location.json /
 CMD /run-go.sh
