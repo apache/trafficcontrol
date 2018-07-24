@@ -148,6 +148,8 @@ services:
     build:
       context: mid
     domainname: cdn.local
+    env_file:
+      - variables.env
     hostname: mid
     networks:
       - tcnet
