@@ -74,10 +74,10 @@ func TestValidate(t *testing.T) {
 
 	expectedErrs := util.JoinErrsStr([]error{
 		errors.New(`'address' cannot be blank`),
-		errors.New(`'dsname' cannot be blank`),
+		errors.New(`'deliveryserviceId' cannot be blank`),
 		errors.New(`'host' cannot be blank`),
 		errors.New(`'ttl' cannot be blank`),
-		errors.New(`'type' cannot be blank`),
+		errors.New(`'typeId' cannot be blank`),
 	})
 
 	if !reflect.DeepEqual(expectedErrs, errs) {
