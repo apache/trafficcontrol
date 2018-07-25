@@ -392,6 +392,19 @@ func (t DSType) IsNational() bool {
 	return false
 }
 
+// UsesMidCache returns whether delivery services of this type use mid-tier caches
+func (t DSType) UsesMidCache() bool {
+	switch t {
+	case DSTypeDNSLive:
+		fallthrough
+	case DSTypeHTTPLive:
+		fallthrough
+	case DSTypeHTTPNoCache:
+		return true
+	}
+	return false
+}
+
 type DSMatchType string
 
 const (
