@@ -42,7 +42,7 @@ under the License.
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="s in ::staticDnsEntries">
+            <tr ng-click="editStaticDnsEntry(deliveryService.id, s.id)" ng-repeat="s in ::staticDnsEntries">
                 <td data-search="^{{::s.host}}$">{{::s.host}}</td>
                 <td data-search="^{{::s.address}}$">{{::s.address}}</td>
                 <td data-search="^{{::s.type}}$">{{::s.type}}</td>
