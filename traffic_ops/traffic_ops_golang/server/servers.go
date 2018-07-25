@@ -20,9 +20,11 @@ package server
  */
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -168,13 +170,15 @@ func (server *TOServer) Read(params map[string]string) ([]interface{}, []error, 
 	info := server.ReqInfo
 	privLevel := info.User.PrivLevel
 
+	limitToDS := 0 // no dsId specified
 	if dsIDStr, ok := params[`dsId`]; ok {
 		// don't allow query on ds outside user's tenant
-		dsID, err := strconv.Atoi(dsIDStr)
+		var err error
+		limitToDS, err = strconv.Atoi(dsIDStr)
 		if err != nil {
 			return nil, []error{errors.New("dsId must be an integer")}, tc.DataMissingError
 		}
-		userErr, sysErr, _ := tenant.CheckID(info.Tx.Tx, info.User, dsID)
+		userErr, sysErr, _ := tenant.CheckID(info.Tx.Tx, info.User, limitToDS)
 		if userErr != nil || sysErr != nil {
 			return nil, []error{errors.New("Forbidden")}, tc.ForbiddenError
 		}
@@ -194,7 +198,41 @@ func (server *TOServer) Read(params map[string]string) ([]interface{}, []error, 
 		returnable = append(returnable, server)
 	}
 
+	// if dsId param was specified, also need to add mids implicitly used by the DS
+	if limitToDS != 0 {
+		dsType, err := getDeliveryServiceType(limitToDS, info.Tx.Tx)
+		if err != nil {
+			return nil, []error{err}, tc.DataConflictError
+		}
+		if dsType.UsesMidCache() {
+			mids, errs, errType := getMidServers(servers, server.ReqInfo.Tx)
+			if len(errs) > 0 {
+				for _, err := range errs {
+					if err.Error() == `id cannot parse to integer` {
+						return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError //matches perl response
+					}
+				}
+				return nil, errs, errType
+			}
+			for _, server := range mids {
+				returnable = append(returnable, server)
+			}
+		}
+	}
+
 	return returnable, nil, tc.NoError
+}
+
+// getDeliveryServiceType returns the type of the deliveryservice
+func getDeliveryServiceType(dsID int, tx *sql.Tx) (tc.DSType, error) {
+	var dsType tc.DSType
+	if err := tx.QueryRow(`SELECT t.name FROM deliveryservice as ds JOIN type t ON ds.type = t.id WHERE ds.id=$1`, dsID).Scan(&dsType); err != nil {
+		if err == sql.ErrNoRows {
+			return tc.DSTypeInvalid, errors.New("a deliveryservice with id '" + strconv.Itoa(dsID) + "' was not found")
+		}
+		return tc.DSTypeInvalid, errors.New("querying type from delivery service: " + err.Error())
+	}
+	return dsType, nil
 }
 
 func getServers(params map[string]string, tx *sqlx.Tx, privLevel int) ([]tc.ServerNullable, []error, tc.ApiErrorType) {
@@ -246,6 +284,47 @@ func getServers(params map[string]string, tx *sqlx.Tx, privLevel int) ([]tc.Serv
 		servers = append(servers, s)
 	}
 	return servers, nil, tc.NoError
+}
+
+// getMidServers gets mids used by the servers in this ds
+// Original comment from the Perl code:
+// if the delivery service employs mids, we're gonna pull mid servers too by pulling the cachegroups of the edges and finding those cachegroups parent cachegroup...
+// then we see which servers have cachegroup in parent cachegroup list...that's how we find mids for the ds :)
+func getMidServers(servers []tc.ServerNullable, tx *sqlx.Tx) ([]tc.ServerNullable, []error, tc.ApiErrorType) {
+	if len(servers) == 0 {
+		return nil, nil, tc.NoError
+	}
+	var ids []string
+	for _, s := range servers {
+		ids = append(ids, strconv.Itoa(*s.ID))
+	}
+
+	edgeIDs := strings.Join(ids, ",")
+	// TODO: include secondary parent?
+	q := `
+	SELECT mid.*
+	FROM cachegroup cg
+	JOIN cachegroup pcg ON cg.id = cg.parent_cachegroup_id
+	JOIN server s ON s.cachegroup_id = cg.id
+	JOIN server mid ON (mid.cachegroup_id = pcg.id AND mid.type = (SELECT id FROM type WHERE name = 'MID'))
+	WHERE s.id IN (` + edgeIDs + `)`
+
+	rows, err := tx.Queryx(q)
+	if err != nil {
+		return nil, []error{err}, tc.DataConflictError
+	}
+	defer rows.Close()
+
+	var mids []tc.ServerNullable
+	for rows.Next() {
+		var s tc.ServerNullable
+		if err := rows.StructScan(&s); err != nil {
+			log.Error.Printf("could not scan mid servers: %s\n", err)
+			return nil, []error{err}, tc.SystemError
+		}
+		mids = append(mids, s)
+	}
+	return mids, nil, tc.NoError
 }
 
 func selectQuery() string {
