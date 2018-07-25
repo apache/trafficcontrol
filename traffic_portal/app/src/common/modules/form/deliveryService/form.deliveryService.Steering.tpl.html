@@ -163,7 +163,8 @@ under the License.
                     <span uib-popover-html="label('longDesc', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('longDesc', 'title')}}</span> *
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea name="longDesc" type="text" class="form-control" ng-model="deliveryService.longDesc" rows="3" autofocus></textarea>
+                    <textarea name="longDesc" type="text" class="form-control" ng-model="deliveryService.longDesc" rows="3" required autofocus></textarea>
+                    <small class="input-error" ng-show="hasPropertyError(deliveryService.longDesc, 'required')">Required</small>
                     <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.longDesc != dsCurrent.longDesc">Current Value: [ {{dsCurrent.longDesc}} ]</small>
                     <span ng-show="hasError(deliveryServiceForm.longDesc)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                 </div>
@@ -171,7 +172,7 @@ under the License.
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc1), 'has-feedback': hasError(deliveryServiceForm.longDesc1)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                    <span uib-popover-html="label('longDesc1', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('longDesc1', 'title')}}</span> *
+                    <span uib-popover-html="label('longDesc1', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('longDesc1', 'title')}}</span>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <textarea name="longDesc1" type="text" class="form-control" ng-model="deliveryService.longDesc1" rows="3" autofocus></textarea>
@@ -182,7 +183,7 @@ under the License.
 
             <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.longDesc2), 'has-feedback': hasError(deliveryServiceForm.longDesc2)}">
                 <label class="control-label col-md-2 col-sm-2 col-xs-12">
-                    <span uib-popover-html="label('longDesc2', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('longDesc2', 'title')}}</span> *
+                    <span uib-popover-html="label('longDesc2', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('longDesc2', 'title')}}</span>
                 </label>
                 <div class="col-md-10 col-sm-10 col-xs-12">
                     <textarea name="longDesc2" type="text" class="form-control" ng-model="deliveryService.longDesc2" rows="3" autofocus></textarea>
