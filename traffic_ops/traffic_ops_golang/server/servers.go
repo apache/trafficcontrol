@@ -33,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
@@ -164,8 +165,20 @@ func (server TOServer) ChangeLogMessage(action string) (string, error) {
 
 func (server *TOServer) Read(params map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	returnable := []interface{}{}
+	info := server.ReqInfo
+	privLevel := info.User.PrivLevel
 
-	privLevel := server.ReqInfo.User.PrivLevel
+	if dsIDStr, ok := params[`dsId`]; ok {
+		// don't allow query on ds outside user's tenant
+		dsID, err := strconv.Atoi(dsIDStr)
+		if err != nil {
+			return nil, []error{errors.New("dsId must be an integer")}, tc.DataMissingError
+		}
+		userErr, sysErr, _ := tenant.CheckID(info.Tx.Tx, info.User, dsID)
+		if userErr != nil || sysErr != nil {
+			return nil, []error{errors.New("Forbidden")}, tc.ForbiddenError
+		}
+	}
 
 	servers, errs, errType := getServers(params, server.ReqInfo.Tx, privLevel)
 	if len(errs) > 0 {
