@@ -22,10 +22,6 @@ var DeliveryServiceStaticDnsEntryService = function(Restangular) {
 	this.getStaticDnsEntries = function(queryParams) {
 		return Restangular.all('staticdnsentries').getList(queryParams);
 	};
-
-	this.getDeliveryServiceStaticDnsEntry = function(queryParams) {
-        return Restangular.all('staticdnsentries').one(queryParams);
-	};
 };
 
 DeliveryServiceStaticDnsEntryService.$inject = ['Restangular'];

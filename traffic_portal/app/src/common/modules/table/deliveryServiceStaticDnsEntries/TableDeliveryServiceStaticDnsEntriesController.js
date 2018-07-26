@@ -28,7 +28,7 @@ var TableDeliveryServiceStaticDnsEntriesController = function(deliveryService, s
 	};
 
     $scope.editStaticDnsEntry = function(dsId, staticDnsEntryId) {
-        locationUtils.navigateToPath('/delivery-services/' + dsId + '/static-dns-entry/' + staticDnsEntryId);
+        locationUtils.navigateToPath('/delivery-services/' + dsId + '/static-dns-entries/' + staticDnsEntryId);
     };
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
