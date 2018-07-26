@@ -29,8 +29,8 @@ echo
 curl -skb cookie.jar -d @/deliveryservices.json https://localhost:$TO_PORT/api/1.3/deliveryservices
 echo
 #... and a cachegroup
-MID_LOC_ID=$(curl -skb cookie.jar https://localhost:$TO_PORT/api/1.3/types | sed -re 's/\},\{/\n/g' | grep MID_LOC | tr ',' '\n' | grep '"id"' | cut -d : -f2)
-
+# MID_LOC_ID=$(curl -skb cookie.jar https://localhost:$TO_PORT/api/1.3/types | sed -re 's/\},\{/\n/g' | grep MID_LOC | tr ',' '\n' | grep '"id"' | cut -d : -f2)
+MID_LOC_ID=$(curl -skb cookie.jar https://localhost:$TO_PORT/api/1.3/types | jq '.response|.[]|select(.name=="MID_LOC")|.id')
 # I have literally no idea why this is happening and it's so infuriating
 if [[ -f '/cachegroup.jsone' ]]; then
 	mv /cachegroup.jsone /cachegroup.json
