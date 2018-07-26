@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
@@ -160,21 +161,21 @@ func UpdateTestCacheGroups(t *testing.T) {
 
 	// test localizationMethods
 	expectedMethods := []tc.LocalizationMethod{tc.LocalizationMethodGeo}
-	cg.LocalizationMethods = expectedMethods
-	alert, _, err = TOSession.UpdateCacheGroupByID(cg.ID, cg)
+	cg.LocalizationMethods = &expectedMethods
+	updResp, _, err = TOSession.UpdateCacheGroupNullableByID(*cg.ID, cg)
 	if err != nil {
-		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v\n", err, alert)
+		t.Errorf("cannot UPDATE CacheGroup by id: %v - %v\n", err, updResp)
 		failed = true
 	}
 
-	resp, _, err = TOSession.GetCacheGroupByID(cg.ID)
+	resp, _, err = TOSession.GetCacheGroupNullableByID(*cg.ID)
 	if err != nil {
-		t.Errorf("cannot GET CacheGroup by id: '%d', %v\n", cg.ID, err)
+		t.Errorf("cannot GET CacheGroup by id: '%d', %v\n", *cg.ID, err)
 		failed = true
 	}
 	cg = resp[0]
-	if !reflect.DeepEqual(expectedMethods, cg.LocalizationMethods) {
-		t.Errorf("failed to update localizationMethods (expected = %v, actual = %v\n", expectedMethods, cg.LocalizationMethods)
+	if !reflect.DeepEqual(expectedMethods, *cg.LocalizationMethods) {
+		t.Errorf("failed to update localizationMethods (expected = %v, actual = %v\n", expectedMethods, *cg.LocalizationMethods)
 		failed = true
 	}
 
