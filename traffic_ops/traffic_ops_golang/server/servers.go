@@ -167,24 +167,8 @@ func (server TOServer) ChangeLogMessage(action string) (string, error) {
 
 func (server *TOServer) Read(params map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	returnable := []interface{}{}
-	info := server.ReqInfo
-	privLevel := info.User.PrivLevel
 
-	limitToDS := 0 // no dsId specified
-	if dsIDStr, ok := params[`dsId`]; ok {
-		// don't allow query on ds outside user's tenant
-		var err error
-		limitToDS, err = strconv.Atoi(dsIDStr)
-		if err != nil {
-			return nil, []error{errors.New("dsId must be an integer")}, tc.DataMissingError
-		}
-		userErr, sysErr, _ := tenant.CheckID(info.Tx.Tx, info.User, limitToDS)
-		if userErr != nil || sysErr != nil {
-			return nil, []error{errors.New("Forbidden")}, tc.ForbiddenError
-		}
-	}
-
-	servers, errs, errType := getServers(params, server.ReqInfo.Tx, privLevel)
+	servers, errs, errType := getServers(params, server.ReqInfo.Tx, server.ReqInfo.User)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			if err.Error() == `id cannot parse to integer` {
@@ -196,28 +180,6 @@ func (server *TOServer) Read(params map[string]string) ([]interface{}, []error, 
 
 	for _, server := range servers {
 		returnable = append(returnable, server)
-	}
-
-	// if dsId param was specified, also need to add mids implicitly used by the DS
-	if limitToDS != 0 {
-		dsType, err := getDeliveryServiceType(limitToDS, info.Tx.Tx)
-		if err != nil {
-			return nil, []error{err}, tc.DataConflictError
-		}
-		if dsType.UsesMidCache() {
-			mids, errs, errType := getMidServers(servers, server.ReqInfo.Tx)
-			if len(errs) > 0 {
-				for _, err := range errs {
-					if err.Error() == `id cannot parse to integer` {
-						return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError //matches perl response
-					}
-				}
-				return nil, errs, errType
-			}
-			for _, server := range mids {
-				returnable = append(returnable, server)
-			}
-		}
 	}
 
 	return returnable, nil, tc.NoError
@@ -235,7 +197,7 @@ func getDeliveryServiceType(dsID int, tx *sql.Tx) (tc.DSType, error) {
 	return dsType, nil
 }
 
-func getServers(params map[string]string, tx *sqlx.Tx, privLevel int) ([]tc.ServerNullable, []error, tc.ApiErrorType) {
+func getServers(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.ServerNullable, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 	var err error
 
@@ -254,12 +216,36 @@ func getServers(params map[string]string, tx *sqlx.Tx, privLevel int) ([]tc.Serv
 		"dsId":             dbhelpers.WhereColumnInfo{"dss.deliveryservice", nil},
 	}
 
+	usesMids := false
+	queryAddition := ""
+	if dsIDStr, ok := params[`dsId`]; ok {
+		// don't allow query on ds outside user's tenant
+		dsID, err := strconv.Atoi(dsIDStr)
+		if err != nil {
+			return nil, []error{errors.New("dsId must be an integer")}, tc.DataMissingError
+		}
+		userErr, sysErr, _ := tenant.CheckID(tx.Tx, user, dsID)
+		if userErr != nil || sysErr != nil {
+			return nil, []error{errors.New("Forbidden")}, tc.ForbiddenError
+		}
+		// only if dsId is part of params: add join on deliveryservice_server table
+		queryAddition = `
+FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
+`
+		// depending on ds type, also need to add mids
+		dsType, err := getDeliveryServiceType(dsID, tx.Tx)
+		if err != nil {
+			return nil, []error{err}, tc.DataConflictError
+		}
+		usesMids = dsType.UsesMidCache()
+	}
+
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
 	if len(errs) > 0 {
 		return nil, errs, tc.DataConflictError
 	}
 
-	query := selectQuery() + where + orderBy
+	query := selectQuery() + queryAddition + where + orderBy
 	log.Debugln("Query is ", query)
 
 	rows, err = tx.NamedQuery(query, queryValues)
@@ -277,12 +263,29 @@ func getServers(params map[string]string, tx *sqlx.Tx, privLevel int) ([]tc.Serv
 		if err = rows.StructScan(&s); err != nil {
 			return nil, []error{fmt.Errorf("getting servers: %v", err)}, tc.SystemError
 		}
-		if privLevel < auth.PrivLevelAdmin {
+		if user.PrivLevel < auth.PrivLevelAdmin {
 			s.ILOPassword = &HiddenField
 			s.XMPPPasswd = &HiddenField
 		}
 		servers = append(servers, s)
 	}
+
+	// if ds requested uses mid-tier caches, add those to the list as well
+	if usesMids {
+		mids, errs, errType := getMidServers(servers, tx)
+		if len(errs) > 0 {
+			for _, err := range errs {
+				if err.Error() == `id cannot parse to integer` {
+					return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError //matches perl response
+				}
+			}
+			return nil, errs, errType
+		}
+		for _, server := range mids {
+			servers = append(servers, server)
+		}
+	}
+
 	return servers, nil, tc.NoError
 }
 
@@ -385,8 +388,7 @@ JOIN cdn cdn ON s.cdn_id = cdn.id
 JOIN phys_location pl ON s.phys_location = pl.id
 JOIN profile p ON s.profile = p.id
 JOIN status st ON s.status = st.id
-JOIN type t ON s.type = t.id
-FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id`
+JOIN type t ON s.type = t.id`
 
 	return selectStmt
 }
