@@ -59,7 +59,6 @@ function buildRpmTrafficRouter () {
 	export STARTUP_SCRIPT_LOC="../core/src/main/lib/systemd/system"
 
 	cd "$TR_DIR" || { echo "Could not cd to $TR_DIR: $?"; exit 1; }
-	export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
 	mvn -P rpm-build -Dmaven.test.skip=true -DminimumTPS=1 clean package ||  \
 		{ echo "RPM BUILD FAILED: $?"; exit 1; }
 
@@ -80,32 +79,26 @@ function buildRpmTrafficRouter () {
 
 
 #----------------------------------------
-function checkEnvironment() {
+function adaptEnvironment() {
 	echo "Verifying the build configuration environment."
-	local script=$(readlink -f "$0")
-	local scriptdir=$(dirname "$script")
-	export TR_DIR=$(dirname "$scriptdir")
-	export TC_DIR=$(dirname "$TR_DIR")
-	functions_sh="$TC_DIR/build/functions.sh"
-	if [[ ! -r $functions_sh ]]; then
-		echo "Error: Can't find $functions_sh"
-		exit 1
-	fi
-	. "$functions_sh"
-
-	# 
 	# get traffic_control src path -- relative to build_rpm.sh script
 	export PACKAGE="traffic_router"
 	export TC_VERSION=$(getVersion "$TC_DIR")
 	export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
+	export BUILD_LOCK=$(getBuildNumber).${RHEL_VERSION}
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
 	export RPMBUILD="$WORKSPACE/rpmbuild"
 	export DIST="$WORKSPACE/dist"
 	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
+	export TOMCAT_VERSION=8.5
+	export TOMCAT_RELEASE=30
 
 	echo "=================================================="
 	echo "WORKSPACE: $WORKSPACE"
 	echo "BUILD_NUMBER: $BUILD_NUMBER"
+	echo "BUILD_LOCK: $BUILD_LOCK"
+	echo "TOMCAT_VERSION=$TOMCAT_VERSION"
+	echo "TOMCAT_RELEASE=$TOMCAT_RELEASE"
 	echo "TC_VERSION: $TC_VERSION"
 	echo "RPM: $RPM"
 	echo "--------------------------------------------------"
@@ -142,6 +135,7 @@ function buildRpmTomcat () {
 
 importFunctions
 checkEnvironment
+adaptEnvironment
 initBuildArea
 buildRpmTrafficRouter
 buildRpmTomcat

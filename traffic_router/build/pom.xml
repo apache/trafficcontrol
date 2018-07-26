@@ -88,6 +88,9 @@
 							<rules>
 								<requireEnvironmentVariable>
 									<variableName>BUILD_NUMBER</variableName>
+									<variableName>BUILD_LOCK</variableName>
+									<variableName>TOMCAT_VERSION</variableName>
+									<variableName>TOMCAT_RELEASE</variableName>
 									<variableName>RHEL_VERSION</variableName>
 									<variableName>STARTUP_SCRIPT_DIR</variableName>
 									<variableName>STARTUP_SCRIPT_LOC</variableName>
@@ -217,7 +220,7 @@
 							</mappings>
 							<requires>
 								<require>jdk &gt;= 1.8</require>
-								<require>tomcat &gt;= 8.5.30</require>
+								<require>tomcat = ${env.TOMCAT_VERSION}.${env.TOMCAT_RELEASE}-${env.BUILD_LOCK}</require>
 								<require>apr &gt;= 1.4.8</require>
 								<require>tomcat-native &gt;= 1.2.16</require>
 							</requires>

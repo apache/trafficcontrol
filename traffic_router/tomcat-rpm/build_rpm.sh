@@ -32,10 +32,6 @@ function checkEnvironment() {
 	# 
 	# get traffic_control src path -- relative to build_rpm.sh script
 	export PACKAGE="tomcat"
-    export BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
-    export TC_VERSION=$(getVersion "$TC_DIR")
-	export TOMCAT_VERSION=8.5
-	export TOMCAT_RELEASE=30
 	export WORKSPACE=${WORKSPACE:-$TC_DIR}
 	export RPMBUILD="$WORKSPACE/rpmbuild"
 	export DIST="$WORKSPACE/dist"
@@ -43,9 +39,10 @@ function checkEnvironment() {
 
 	echo "=================================================="
 	echo "WORKSPACE: $WORKSPACE"
-	echo "TOMCAT_RELEASE: $TOMCAT_RELEASE"
-	echo "TOMCAT_VERSION: $TOMCAT_VERSION"
-	echo "BUILD_NUMBER: $BUILD_NUMBER"
+	echo "TOMCAT_RELEASE: $TOMCAT_RELEASE" 	#defined in traffic_router
+	echo "TOMCAT_VERSION: $TOMCAT_VERSION"	#defined in traffic_router
+	echo "BUILD_NUMBER: $BUILD_NUMBER"		#defined in traffic_router
+	echo "BUILD_LOCK: $BUILD_LOCK"			#defined in traffic_router
 	echo "RPM: $RPM"
 	echo "--------------------------------------------------"
 }
