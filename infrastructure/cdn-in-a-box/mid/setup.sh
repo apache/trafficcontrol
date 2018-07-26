@@ -79,11 +79,11 @@ TYPE=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/types | jq '.response|.[]|s
 REPORTED=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/statuses | jq '.response|.[]|select(.name=="REPORTED")|.id')
 
 # Gets the cachegroup ID
-CACHEGROUP=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cachegroups | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
+CACHEGROUP=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cachegroups | jq '.response|.[]|select(.name=="CDN_in_a_Box_Mid")|.id')
 while [[ -z CACHEGROUP ]]; do
 	echo "waiting for trafficops setup to complete..."
 	sleep 3
-	CACHEGROUP=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cachegroups | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
+	CACHEGROUP=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cachegroups | jq '.response|.[]|select(.name=="CDN_in_a_Box_Mid")|.id')
 done
 
 # Now put it all together and send it up

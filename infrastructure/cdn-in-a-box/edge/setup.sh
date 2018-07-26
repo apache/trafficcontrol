@@ -48,49 +48,43 @@ curl -ksc cookie.jar -d "{\"u\":\"$TO_ADMIN_USER\",\"p\":\"$TO_ADMIN_PASSWORD\"}
 echo
 
 # Gets our CDN ID
-CDN=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cdns)
-CDN=$(echo $CDN | tr '}' '\n' | grep CDN-in-a-Box | tr ',' '\n' | grep '"id"' | cut -d : -f2)
+CDN=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cdns | jq '.response|.[]|select(.name=="CDN-in-a-Box")|.id')
 while [[ -z "$CDN" ]]; do
 	echo "waiting for trafficops setup to complete..."
 	sleep 3
-	CDN=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cdns)
-	CDN=$(echo $CDN | tr '}' '\n' | grep CDN-in-a-Box | tr ',' '\n' | grep '"id"' | cut -d : -f2)
+	CDN=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cdns | jq '.response|.[]|select(.name=="CDN-in-a-Box")|.id')
 done
 
 
 # Now we upload a profile for later use
 sed -ie "s;CDN_ID;$CDN;g" /profile.json
-PROFILE=$(curl -ksb cookie.jar -d @/profile.json https://$TP_HOST/api/1.3/profiles)
-PROFILENAME=$(echo $PROFILE | tr ',' '\n' | grep '"name"' | cut -d : -f2 | tr -d '"')
-PROFILEID=$(echo $PROFILE | tr ',{' '\n' | grep '"id"' | cut -d : -f2)
+PROFILE=$(curl -ksb cookie.jar -d @/profile.json https://$TP_HOST/api/1.3/profiles | jq '.response')
+PROFILENAME=$(echo $PROFILE | jq '.name' | tr -d '"')
+PROFILEID=$(echo $PROFILE | jq '.id')
 curl -ksb cookie.jar -d @/parameters.json https://$TP_HOST/api/1.3/profiles/name/$PROFILENAME/parameters
 echo
 
 # Gets the location ID
-location=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/phys_locations)
-while [[ "$location" == '{"response":[]}' ]]; do
+location=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/phys_locations | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
+while [[ -z "$location" ]]; do
 	echo "Waiting for location setup"
 	sleep 3
-	location=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/phys_locations)
+	location=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/phys_locations | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
 done
-location=$(echo $location | tr ']' '\n' | grep CDN_in_a_Box | tr ',' '\n' | grep '"id"' | cut -d ':' -f2)
 
 # Gets the id of a MID server type
-TYPE=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/types)
-TYPE=$(echo $TYPE | tr '}' '\n' | grep '"EDGE"' | tr ',' '\n' | grep '"id"' | cut -d : -f2)
+TYPE=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/types | jq '.response|.[]|select(.name=="EDGE")|.id')
 
 # Gets the id of the 'REPORTED' status
-REPORTED=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/statuses)
-REPORTED=$(echo $REPORTED | tr '}' '\n' | grep REPORTED | tr ',' '\n' | grep '"id"' | cut -d : -f2)
+REPORTED=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/statuses | jq '.response|.[]|select(.name=="REPORTED")|.id')
 
 # Gets the cachegroup ID
-CACHEGROUP=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cachegroups)
-while [[ "$CACHEGROUP" == '{"response":[]}' ]]; do
+CACHEGROUP=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cachegroups | jq '.response|.[]|select(.name=="CDN_in_a_Box_Edge")|.id')
+while [[ -z "$CACHEGROUP" ]]; do
 	echo "waiting for trafficops setup to complete..."
 	sleep 3
-	CACHEGROUP=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cachegroups)
+	CACHEGROUP=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cachegroups | jq '.response|.[]|select(.name=="CDN_in_a_Box_Edge")|.id')
 done
-CACHEGROUP=$(echo $CACHEGROUP | tr '{' '\n' | grep CDN_in_a_Box_Edge | tr ',' '\n' | grep '"id"' | cut -d : -f2)
 
 # Now put it all together and send it up
 sed -ie "s;MY_LOCATION;$location;g" /server.json
@@ -100,18 +94,16 @@ sed -ie "s;REPORTED_ID;$REPORTED;g" /server.json
 sed -ie "s;CACHE_GROUP_ID;$CACHEGROUP;g" /server.json
 sed -ie "s;MY_PROFILE_ID;$PROFILEID;g" /server.json
 cat /server.json
-SERVER=$(curl -ksb cookie.jar -d @/server.json https://$TP_HOST/api/1.3/servers)
-SERVER=$(echo $SERVER | tr ',' '\n' | grep '"id"' | cut -d : -f2)
+SERVER=$(curl -ksb cookie.jar -d @/server.json https://$TP_HOST/api/1.3/servers | jq '.response.id')
 
 
 #finally, link this server to a delivery service
-DSID=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/deliveryservices)
-while [[ "$DSID" == '{"response":[]}' ]]; do
+DSID=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/deliveryservices | jq '.response|.[]|select(.displayName=="CDN in a Box")|.id')
+while [[ -z "$DSID" ]]; do
 	echo "Waiting for delivery service creation..."
 	sleep 3
-	DSID=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/deliveryservices)
+	DSID=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/deliveryservices | jq '.response|.[]|select(.displayName=="CDN in a Box")|.id')
 done
-DSID=$(echo $DSID | tr '{' '\n' | grep '"CDN in a Box"' | tr ',' '\n' | grep '"id"' | cut -d : -f2)
 
 curl -ksb cookie.jar -d "{\"dsId\":$DSID,\"servers\":[$SERVER],\"replace\":true}" https://$TP_HOST/api/1.2/deliveryserviceserver
 echo
