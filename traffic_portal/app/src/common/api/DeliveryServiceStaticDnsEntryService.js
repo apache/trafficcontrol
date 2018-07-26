@@ -17,13 +17,16 @@
  * under the License.
  */
 
-var StaticDnsEntryService = function(Restangular) {
+var DeliveryServiceStaticDnsEntryService = function(Restangular) {
 
 	this.getStaticDnsEntries = function(queryParams) {
 		return Restangular.all('staticdnsentries').getList(queryParams);
 	};
 
+	this.getDeliveryServiceStaticDnsEntry = function(queryParams) {
+        return Restangular.all('staticdnsentries').one(queryParams);
+	};
 };
 
-StaticDnsEntryService.$inject = ['Restangular'];
-module.exports = StaticDnsEntryService;
+DeliveryServiceStaticDnsEntryService.$inject = ['Restangular'];
+module.exports = DeliveryServiceStaticDnsEntryService;
