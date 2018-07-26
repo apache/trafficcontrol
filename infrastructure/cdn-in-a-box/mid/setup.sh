@@ -48,44 +48,38 @@ curl -ksc cookie.jar -d "{\"u\":\"$TO_ADMIN_USER\",\"p\":\"$TO_ADMIN_PASSWORD\"}
 echo
 
 # Gets our CDN ID
-CDN=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cdns)
-CDN=$(echo $CDN | tr '}' '\n' | grep CDN-in-a-Box | tr ',' '\n' | grep '"id"' | cut -d : -f2)
+CDN=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cdns | jq '.response|.[]|select(.name=="CDN-in-a-Box")|.id')
 while [[ -z "$CDN" ]]; do
 	echo "waiting for trafficops setup to complete..."
 	sleep 3
-	CDN=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cdns)
-	CDN=$(echo $CDN | tr '}' '\n' | grep CDN-in-a-Box | tr ',' '\n' | grep '"id"' | cut -d : -f2)
+	CDN=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cdns | jq '.response|.[]|select(.name=="CDN-in-a-Box")|.id')
 done
 
 
 # Now we upload a profile for later use
 sed -ie "s;CDN_ID;$CDN;g" /mid_profile.json
-PROFILE=$(curl -ksb cookie.jar -d @/mid_profile.json https://$TP_HOST/api/1.3/profiles)
-PROFILENAME=$(echo $PROFILE | tr ',' '\n' | grep '"name"' | cut -d : -f2 | tr -d '"')
-PROFILEID=$(echo $PROFILE | tr ',{' '\n' | grep '"id"' | cut -d : -f2)
+PROFILE=$(curl -ksb cookie.jar -d @/mid_profile.json https://$TP_HOST/api/1.3/profiles | jq '.response')
+PROFILENAME=$(echo $PROFILE | jq '.name' | tr -d '"')
+PROFILEID=$(echo $PROFILE | jq '.id')
 curl -ksb cookie.jar -d @/mid_parameters.json https://$TP_HOST/api/1.3/profiles/name/$PROFILENAME/parameters
 echo
 
 # Gets the location ID
-location=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/phys_locations)
-location=$(echo $location | tr ']' '\n' | grep CDN_in_a_Box | tr ',' '\n' | grep '"id"' | cut -d ':' -f2)
+location=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/phys_locations | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
 
 # Gets the id of a MID server type
-TYPE=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/types)
-TYPE=$(echo $TYPE | tr '}' '\n' | grep '"MID"' | tr ',' '\n' | grep '"id"' | cut -d : -f2)
+TYPE=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/types | jq '.response|.[]|select(.name=="MID")|.id')
 
 # Gets the id of the 'REPORTED' status
-REPORTED=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/statuses)
-REPORTED=$(echo $REPORTED | tr '}' '\n' | grep REPORTED | tr ',' '\n' | grep '"id"' | cut -d : -f2)
+REPORTED=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/statuses | jq '.response|.[]|select(.name=="REPORTED")|.id')
 
 # Gets the cachegroup ID
-CACHEGROUP=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cachegroups)
-while [[ CACHEGROUP == '{"response":[]}' ]]; do
+CACHEGROUP=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cachegroups | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
+while [[ -z CACHEGROUP ]]; do
 	echo "waiting for trafficops setup to complete..."
 	sleep 3
-	CACHEGROUP=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cachegroups)
+	CACHEGROUP=$(curl -ksb cookie.jar https://$TP_HOST/api/1.3/cachegroups | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
 done
-CACHEGROUP=$(echo $CACHEGROUP | tr '{' '\n' | grep CDN_in_a_Box | tr ',' '\n' | grep '"id"' | cut -d : -f2)
 
 # Now put it all together and send it up
 sed -ie "s;MY_LOCATION;$location;g" /server.json

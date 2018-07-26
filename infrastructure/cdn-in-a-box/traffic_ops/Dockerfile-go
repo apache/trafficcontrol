@@ -22,7 +22,8 @@
 
 
 FROM centos:7
-RUN yum -y install nmap-ncat openssl
+RUN yum -y install nmap-ncat openssl epel-release
+RUN yum -y install jq && yum clean all
 
 RUN mkdir -p /opt/traffic_ops/app/bin /opt/traffic_ops/app/conf/production /opt/traffic_ops/app/db
 COPY --from=trafficops-perl /opt/traffic_ops/app/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang
