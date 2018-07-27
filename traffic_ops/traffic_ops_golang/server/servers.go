@@ -238,6 +238,7 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 			return nil, []error{err}, tc.DataConflictError
 		}
 		usesMids = dsType.UsesMidCache()
+		log.Debugf("Servers for ds %d; uses mids? %v\n", dsID, usesMids)
 	}
 
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(params, queryParamsToSQLCols)
@@ -273,6 +274,8 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 	// if ds requested uses mid-tier caches, add those to the list as well
 	if usesMids {
 		mids, errs, errType := getMidServers(servers, tx)
+
+		log.Debugf("getting mids: %v, %v\n", errs, errType)
 		if len(errs) > 0 {
 			for _, err := range errs {
 				if err.Error() == `id cannot parse to integer` {
@@ -304,14 +307,16 @@ func getMidServers(servers []tc.ServerNullable, tx *sqlx.Tx) ([]tc.ServerNullabl
 
 	edgeIDs := strings.Join(ids, ",")
 	// TODO: include secondary parent?
-	q := `
-	SELECT mid.*
-	FROM cachegroup cg
-	JOIN cachegroup pcg ON cg.id = cg.parent_cachegroup_id
-	JOIN server s ON s.cachegroup_id = cg.id
-	JOIN server mid ON (mid.cachegroup_id = pcg.id AND mid.type = (SELECT id FROM type WHERE name = 'MID'))
-	WHERE s.id IN (` + edgeIDs + `)`
-
+	q := selectQuery() + `
+WHERE s.id IN (
+	SELECT mid.id FROM server mid
+	JOIN cachegroup cg ON cg.id IN (
+		SELECT cg.parent_cachegroup_id
+		FROM server s
+		JOIN cachegroup cg ON cg.id = s.cachegroup
+		WHERE s.id IN (` + edgeIDs + `))
+	JOIN type t ON mid.type = (SELECT id FROM type WHERE name = 'MID'))
+`
 	rows, err := tx.Queryx(q)
 	if err != nil {
 		return nil, []error{err}, tc.DataConflictError

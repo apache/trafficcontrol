@@ -400,9 +400,9 @@ func (t DSType) UsesMidCache() bool {
 	case DSTypeHTTPLive:
 		fallthrough
 	case DSTypeHTTPNoCache:
-		return true
+		return false
 	}
-	return false
+	return true
 }
 
 type DSMatchType string
