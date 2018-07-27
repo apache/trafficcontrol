@@ -111,6 +111,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/deliveryServices/regexes/new').name,
         require('./modules/private/deliveryServices/servers').name,
         require('./modules/private/deliveryServices/staticDnsEntries').name,
+        require('./modules/private/deliveryServices/staticDnsEntries/list').name,
         require('./modules/private/deliveryServices/targets').name,
         require('./modules/private/deliveryServices/targets/edit').name,
         require('./modules/private/deliveryServices/targets/list').name,

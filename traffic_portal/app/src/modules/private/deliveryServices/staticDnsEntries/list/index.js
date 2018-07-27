@@ -17,15 +17,23 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.private.deliveryServices.staticDnsEntries', [])
+module.exports = angular.module('trafficPortal.private.deliveryServices.staticDnsEntries.list', [])
 	.config(function($stateProvider, $urlRouterProvider) {
 		$stateProvider
-			.state('trafficPortal.private.deliveryServices.staticDnsEntries', {
-				url: '/{deliveryServiceId}/static-dns-entries',
-				abstract: true,
+			.state('trafficPortal.private.deliveryServices.staticDnsEntries.list', {
+				url: '',
 				views: {
-					deliveryServicesContent: {
-						templateUrl: 'modules/private/deliveryServices/staticDnsEntries/deliveryServiceStaticDnsEntries.tpl.html'
+					deliveryServiceStaticDnsEntriesContent: {
+						templateUrl: 'common/modules/table/deliveryServiceStaticDnsEntries/table.deliveryServiceStaticDnsEntries.tpl.html',
+						controller: 'TableDeliveryServiceStaticDnsEntriesController',
+						resolve: {
+							deliveryService: function($stateParams, deliveryServiceService) {
+								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
+							},
+							staticDnsEntries: function($stateParams, staticDnsEntryService) {
+								return staticDnsEntryService.getStaticDnsEntries($stateParams.deliveryServiceId);
+							}
+						}
 					}
 				}
 			})
