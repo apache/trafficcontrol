@@ -50,6 +50,6 @@ type CDNFederation struct {
 }
 
 type DeliveryServiceIDs struct {
-	ID    *int    `json:"id,omitempty" db:"ds_id"`
+	DsId  *int    `json:"id,omitempty" db:"ds_id"`
 	XmlId *string `json:"xmlId,omitempty" db:"xml_id"`
 }
