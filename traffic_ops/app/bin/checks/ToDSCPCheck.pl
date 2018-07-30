@@ -136,6 +136,8 @@ foreach my $server ( @{$jdataserver} ) {
    my $host_name  = trim($server->{hostName});
    my $fqdn       = $host_name.".".trim($server->{domainName});
    my $interface  = trim($server->{interfaceName});
+   my $http_port  = $server->{tcpPort};
+   my $https_port = $server->{httpsPort};
    my $status     = $server->{status};
    my $details    = $ext->get( '/api/1.1/servers/hostname/' . $host_name . '/details.json' );
    my $successful = 1; # assume all is good
@@ -189,7 +191,7 @@ foreach my $server ( @{$jdataserver} ) {
 
             ## check ipv4
             # TODO "http://" should be a var so that we can also check https
-            my $url = "http://".$ip.$ds->{checkPath};
+            my $url = "http://".$ip.":".$tcpPort.$ds->{checkPath};
 
             TRACE "About to check header: ".$header." url: ".$url;
 
@@ -234,7 +236,7 @@ foreach my $server ( @{$jdataserver} ) {
             ## check ipv6
             # TODO "http://" should be a var so that we can also check https
             # TODO "80" should be var when we add https
-            $url = "http://".$ip6.":80".$ds->{checkPath};
+            $url = "http://".$ip.":".$tcpPort.$ds->{checkPath};
 
             TRACE "About to check header: ".$header." url: ".$url;
 
@@ -324,7 +326,7 @@ sub get_dscp() {
             if ( $ip_obj->{src_ip} eq $ip && $ip_obj->{len} > $max_len && $ip_obj->{proto} == 6 ) {
                my $tcp_obj = NetPacket::TCP->decode( $ip_obj->{data} );
                TRACE " TCP2 $ip_obj->{src_ip}:$tcp_obj->{src_port} -> $ip_obj->{dest_ip}:$tcp_obj->{dest_port} $ip_obj->{proto} tos $ip_obj->{tos} len $ip_obj->{len}\n";
-               if ( ($tcp_obj->{src_port} == 80) && ($tcp_obj->{dest_port} == $src_port) ) {
+               if ( ($tcp_obj->{src_port} == $http_port) && ($tcp_obj->{dest_port} == $src_port) ) {
                   TRACE " TCP3 $ip_obj->{src_ip}:$tcp_obj->{src_port} -> $ip_obj->{dest_ip}:$tcp_obj->{dest_port} $ip_obj->{proto} tos $ip_obj->{tos} len $ip_obj->{len}\n";
                   $max_len = $ip_obj->{len};
                   $tos     = $ip_obj->{tos};
@@ -338,7 +340,7 @@ sub get_dscp() {
             if ( $ip_obj->{src_ip} eq $ip && $ip_obj->{plen} > $max_len && $ip_obj->{nxt} == 6 ) {
                my $tcp_obj = NetPacket::TCP->decode( $ip_obj->{data} );
                TRACE " TCP2 $ip_obj->{src_ip}:$tcp_obj->{src_port} -> $ip_obj->{dest_ip}:$tcp_obj->{dest_port} $ip_obj->{nxt} tos $ip_obj->{class} len $ip_obj->{plen}\n";
-               if ( $tcp_obj->{src_port} == 80 && $tcp_obj->{dest_port} == $src_port ) {
+               if ( $tcp_obj->{src_port} == $http_port && $tcp_obj->{dest_port} == $src_port ) {
                   TRACE " TCP3 $ip_obj->{src_ip}:$tcp_obj->{src_port} -> $ip_obj->{dest_ip}:$tcp_obj->{dest_port} $ip_obj->{nxt} tos $ip_obj->{class} len $ip_obj->{plen}\n";
                   $max_len = $ip_obj->{plen};
                   $tos     = $ip_obj->{class};
