@@ -120,6 +120,14 @@ under the License.
                     <small ng-show="cacheGroup.secondaryParentCachegroupId"><a href="/#!/cache-groups/{{cacheGroup.secondaryParentCachegroupId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                 </div>
             </div>
+            <div class="form-group">
+                <label class="control-label col-md-2 col-sm-2 col-xs-12">Enabled Localization Methods</label>
+                <div class="col-md-10 col-sm-10 col-xs-12">
+                    <input type="checkbox" name="CZEnabled" ng-model="localizationMethods.CZ"> Coverage Zone File</input><br>
+                    <input type="checkbox" name="DeepCZEnabled" ng-model="localizationMethods.DEEP_CZ"> Deep Coverage Zone File</input><br>
+                    <input type="checkbox" name="GeoEnabled" ng-model="localizationMethods.GEO"> Geo-IP Database</input>
+                </div>
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(cacheGroup)">Delete</button>
                 <button type="button" class="btn btn-success" ng-disabled="cacheGroupForm.$pristine || cacheGroupForm.$invalid" ng-click="save(cacheGroup)">{{settings.saveLabel}}</button>

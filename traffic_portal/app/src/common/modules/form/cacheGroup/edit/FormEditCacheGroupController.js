@@ -45,6 +45,7 @@ var FormEditCacheGroupController = function(cacheGroup, $scope, $controller, $ui
     };
 
     $scope.save = function(cacheGroup) {
+        $scope.setLocalizationMethods(cacheGroup);
         cacheGroupService.updateCacheGroup(cacheGroup).
             then(function() {
                 $scope.cacheGroupName = angular.copy(cacheGroup.name);
