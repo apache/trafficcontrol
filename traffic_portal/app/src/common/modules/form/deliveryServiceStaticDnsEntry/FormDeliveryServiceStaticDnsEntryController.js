@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormDeliveryServiceStaticDnsEntryController = function(deliveryService, staticDnsEntry, $scope, formUtils, locationUtils, typeService) {
+var FormDeliveryServiceStaticDnsEntryController = function(deliveryService, staticDnsEntry, $scope, formUtils, locationUtils, typeService, cacheGroupService) {
 
     var getTypes = function() {
         typeService.getTypes({ useInTable: 'staticdnsentry' })
@@ -26,9 +26,16 @@ var FormDeliveryServiceStaticDnsEntryController = function(deliveryService, stat
             });
     };
 
+    var getCacheGroups = function() {
+        cacheGroupService.getCacheGroups({ orderby: 'name' })
+            .then(function(result) {
+                $scope.cacheGroups = result;
+            });
+    };
+
     $scope.deliveryService = deliveryService;
 
-    $scope.staticDnsEntry = staticDnsEntry;
+    $scope.staticDnsEntry = staticDnsEntry[0];
 
     $scope.navigateToPath = locationUtils.navigateToPath;
 
@@ -38,10 +45,11 @@ var FormDeliveryServiceStaticDnsEntryController = function(deliveryService, stat
 
     var init = function () {
         getTypes();
+        getCacheGroups();
     };
     init();
 
 };
 
-FormDeliveryServiceStaticDnsEntryController.$inject = ['deliveryService', 'staticDnsEntry', '$scope', 'formUtils', 'locationUtils', 'typeService'];
+FormDeliveryServiceStaticDnsEntryController.$inject = ['deliveryService', 'staticDnsEntry', '$scope', 'formUtils', 'locationUtils', 'typeService', 'cacheGroupService'];
 module.exports = FormDeliveryServiceStaticDnsEntryController;
