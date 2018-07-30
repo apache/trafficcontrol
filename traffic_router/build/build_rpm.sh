@@ -91,7 +91,7 @@ function adaptEnvironment() {
 	export DIST="$WORKSPACE/dist"
 	export RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
 	export TOMCAT_VERSION=8.5
-	export TOMCAT_RELEASE=30
+	export TOMCAT_RELEASE=32
 
 	echo "=================================================="
 	echo "WORKSPACE: $WORKSPACE"
