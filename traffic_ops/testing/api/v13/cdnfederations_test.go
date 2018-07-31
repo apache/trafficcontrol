@@ -39,10 +39,10 @@ func TestCDNFederations(t *testing.T) {
 
 func CreateTestCDNFederations(t *testing.T) {
 
-	//Every federation is associated with a cdn
+	// Every federation is associated with a cdn
 	for i, f := range testData.Federations {
 
-		//CDNs test data and Federations test data are not naturally parallel
+		// CDNs test data and Federations test data are not naturally parallel
 		if i >= len(testData.CDNs) {
 			break
 		}
@@ -54,7 +54,7 @@ func CreateTestCDNFederations(t *testing.T) {
 		bytes, _ := json.Marshal(data)
 		log.Debugf("POST Response: %s\n", bytes)
 
-		//need to save the ids, otherwise the other tests won't be able to reference the federations
+		// need to save the ids, otherwise the other tests won't be able to reference the federations
 		if data.Response.ID == nil {
 			t.Errorf("Federation id is nil after posting\n")
 		} else {
@@ -98,10 +98,10 @@ func UpdateTestCDNFederations(t *testing.T) {
 
 func GetTestCDNFederations(t *testing.T) {
 
-	//TOSession.GetCDNFederationsByName can't be tested until
-	//POST /api/1.2/federations/:id/deliveryservices has been
-	//created. (DELETE cdns/:name/federations/:id may need to
-	//clean up fedIDs connection?)
+	// TOSession.GetCDNFederationsByName can't be tested until
+	// POST /api/1.2/federations/:id/deliveryservices has been
+	// created. (DELETE cdns/:name/federations/:id may need to
+	// clean up fedIDs connection?)
 
 	for _, id := range fedIDs {
 		data, _, err := TOSession.GetCDNFederationsByID("foo", id)

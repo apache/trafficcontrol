@@ -27,25 +27,25 @@ type CDNFederationResponse struct {
 
 type CreateCDNFederationResponse struct {
 	Response CDNFederation `json:"response"`
-	Alerts   []tc.Alert    `json:"alerts"`
+	tc.Alerts
 }
 
 type UpdateCDNFederationResponse struct {
 	Response CDNFederation `json:"response"`
-	Alerts   []tc.Alert    `json:"alerts"`
+	tc.Alerts
 }
 
 type DeleteCDNFederationResponse struct {
-	Alerts []tc.Alert `json:"alerts"`
+	tc.Alerts
 }
 
 type CDNFederation struct {
 	ID          *int    `json:"id" db:"id"`
 	CName       *string `json:"cname" db:"cname"`
-	Ttl         *int    `json:"ttl" db:"ttl"`
+	TTL         *int    `json:"ttl" db:"ttl"`
 	Description *string `json:"description" db:"description"`
 
-	//omitempty only works with primitive types and pointers
+	// omitempty only works with primitive types and pointers
 	*DeliveryServiceIDs `json:"deliveryService,omitempty"`
 }
 

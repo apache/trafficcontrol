@@ -292,7 +292,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.3, http.MethodPut, `deliveryservices/{xmlID}/urisignkeys$`, saveDeliveryServiceURIKeysHandler, auth.PrivLevelAdmin, Authenticated, nil},
 		{1.3, http.MethodDelete, `deliveryservices/{xmlID}/urisignkeys$`, removeDeliveryServiceURIKeysHandler, auth.PrivLevelAdmin, Authenticated, nil},
 
-		// Federations by CDN (the actual table for `federation')
+		// Federations by CDN (the actual table for federation)
 		{1.1, http.MethodGet, `cdns/{name}/federations/?(\.json)?$`, api.ReadHandler(cdnfederation.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/{name}/federations/{id}$`, api.ReadHandler(cdnfederation.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodPost, `cdns/{name}/federations/?(\.json)?$`, api.CreateHandler(cdnfederation.GetTypeSingleton()), auth.PrivLevelAdmin, Authenticated, nil},

@@ -15,17 +15,18 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/asaskevich/govalidator"
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/lib/pq"
 )
 
-//we need a type alias to define functions on
+// we need a type alias to define functions on
 type TOCDNFederation struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	v13.CDNFederation
 }
 
-//Used for all CRUD routes
+// Used for all CRUD routes
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TOCDNFederation{reqInfo, v13.CDNFederation{}}
@@ -33,12 +34,12 @@ func GetTypeSingleton() api.CRUDFactory {
 	}
 }
 
-//Fufills `Identifier' interface
+// Fufills `Identifier' interface
 func (fed TOCDNFederation) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
-//Fufills `Identifier' interface
+// Fufills `Identifier' interface
 func (fed TOCDNFederation) GetKeys() (map[string]interface{}, bool) {
 	if fed.ID == nil {
 		return map[string]interface{}{"id": 0}, false
@@ -46,7 +47,7 @@ func (fed TOCDNFederation) GetKeys() (map[string]interface{}, bool) {
 	return map[string]interface{}{"id": *fed.ID}, true
 }
 
-//Fufills `Identifier' interface
+// Fufills `Identifier' interface
 func (fed TOCDNFederation) GetAuditName() string {
 	if fed.CName != nil {
 		return *fed.CName
@@ -57,40 +58,41 @@ func (fed TOCDNFederation) GetAuditName() string {
 	return "unknown"
 }
 
-//Fufills `Identifier' interface
+// Fufills `Identifier' interface
 func (fed TOCDNFederation) GetType() string {
 	return "cdnfederation"
 }
 
-//Fufills `Create' interface
+// Fufills `Create' interface
 func (fed *TOCDNFederation) SetKeys(keys map[string]interface{}) {
-	i, _ := keys["id"].(int) //non-panicking type assertion
+	i, _ := keys["id"].(int) // non-panicking type assertion
 	fed.ID = &i
 }
 
-//Fulfills `Validate' interface
+// Fulfills `Validate' interface
 func (fed *TOCDNFederation) Validate() error {
 
-	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
+	isDNSName := validation.NewStringRule(govalidator.IsDNSName, "must be a valid hostname")
 	endsWithDot := validation.NewStringRule(
 		func(str string) bool {
 			return strings.HasSuffix(str, ".")
 		}, "must end with a period")
 
-	//cname regex: (^\S*\.$), ttl regex: (^\d+$)
+	// cname regex: (^\S*\.$), ttl regex: (^\d+$)
 	validateErrs := validation.Errors{
-		"cname": validation.Validate(fed.CName, validation.Required, endsWithDot, noSpaces),
-		"ttl":   validation.Validate(fed.Ttl, validation.Required),
+		"cname": validation.Validate(fed.CName, validation.Required, endsWithDot, isDNSName),
+		"ttl":   validation.Validate(fed.TTL, validation.Required, validation.Min(0)),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
 }
 
-//This separates out errors depending on whether or not some constraint prevented
-//the operation from occuring.
+// This separates out errors depending on whether or not some constraint prevented
+// the operation from occuring.
 func parseQueryError(parseErr error, method string) (error, tc.ApiErrorType) {
 	if pqErr, ok := parseErr.(*pq.Error); ok {
 		err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
 		if eType == tc.DataConflictError {
+			log.Errorf("data conflict error: %v", err)
 			return errors.New("a federation with " + err.Error()), eType
 		}
 		return err, eType
@@ -100,12 +102,12 @@ func parseQueryError(parseErr error, method string) (error, tc.ApiErrorType) {
 	}
 }
 
-//fed.ReqInfo.Params["name"] is not used on creation, rather the cdn name
-//is connected when the federations/:id/deliveryservice links a federation
-//Note: cdns and deliveryservies have a 1-1 relationship
+// fed.ReqInfo.Params["name"] is not used on creation, rather the cdn name
+// is connected when the federations/:id/deliveryservice links a federation
+// Note: cdns and deliveryservies have a 1-1 relationship
 func (fed *TOCDNFederation) Create() (error, tc.ApiErrorType) {
 
-	//Deliveryservice IDs should not be included on create.
+	// Deliveryservice IDs should not be included on create.
 	if fed.DeliveryServiceIDs != nil {
 		fed.DsId = nil
 		fed.XmlId = nil
@@ -144,8 +146,8 @@ func (fed *TOCDNFederation) Create() (error, tc.ApiErrorType) {
 
 func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 
-	//Cannot perform query on tenantID while "rows" aren't closed (limitation of
-	//psql), so we need to get the valid tenentIDs ahead of time.
+	// Cannot perform query on tenantID while "rows" aren't closed (limitation of
+	// psql), so we need to get the valid tenentIDs ahead of time.
 	tenantIDs, err := tenant.GetUserTenantIDListTx(fed.ReqInfo.Tx.Tx, fed.ReqInfo.User.TenantID)
 	if err != nil {
 		log.Errorf("getting tenant list for user: %v\n", err)
@@ -155,7 +157,7 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 	var query string
 	_, id := parameters["id"]
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		//db tag                                         symbol from query
+		// db tag                                         symbol from query
 		"id":          dbhelpers.WhereColumnInfo{Column: "federation.id", Checker: api.IsInt},
 		"cname":       dbhelpers.WhereColumnInfo{Column: "cname", Checker: nil},
 		"ttl":         dbhelpers.WhereColumnInfo{Column: "ttl", Checker: api.IsInt},
@@ -165,7 +167,7 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 	}
 	if id {
 		query = selectByID()
-	} else { //searching by name
+	} else { // searching by name
 		queryParamsToQueryCols["name"] = dbhelpers.WhereColumnInfo{Column: "cdn.name", Checker: nil}
 		query = selectByCDNName()
 	}
@@ -199,8 +201,8 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
 
-		//if we are getting by id, there may not be an attached deliveryservice
-		//DeliveryServiceIDs will not be nil itself, due to the struct scan
+		// if we are getting by id, there may not be an attached deliveryservice
+		// DeliveryServiceIDs will not be nil itself, due to the struct scan
 		if id && fed.DsId == nil {
 			fed.DeliveryServiceIDs = nil
 		}
@@ -208,7 +210,7 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 		federations = append(federations, fed)
 	}
 
-	//if federations yields "response": []
+	// if federations yields "response": []
 	if len(federations) == 0 {
 
 		if id {
@@ -217,10 +219,10 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 
 		if yes, err := dbhelpers.CDNExists(parameters["name"], fed.ReqInfo.Tx); yes {
 			return federations, []error{}, tc.NoError
-		} else if err != nil { //internal server error
+		} else if err != nil { // internal server error
 			log.Errorf("verifying cdn exists: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
-		} else { //the query ran as expected and the cdn does not exist
+		} else { // the query ran as expected and the cdn does not exist
 			return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError
 		}
 	}
@@ -237,7 +239,7 @@ func (fed *TOCDNFederation) Update() (error, tc.ApiErrorType) {
 		return tc.TenantUserNotAuthError, tc.ForbiddenError
 	}
 
-	//Deliveryservice IDs should not be included on update.
+	// Deliveryservice IDs should not be included on update.
 	if fed.DeliveryServiceIDs != nil {
 		fed.DsId = nil
 		fed.XmlId = nil
@@ -251,6 +253,7 @@ func (fed *TOCDNFederation) Update() (error, tc.ApiErrorType) {
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
+		log.Errorf("getting rows affected: %v", err)
 		return tc.DBError, tc.SystemError
 	}
 
@@ -264,8 +267,8 @@ func (fed *TOCDNFederation) Update() (error, tc.ApiErrorType) {
 	return nil, tc.NoError
 }
 
-//In the perl version, :name is ignored. It is not even verified whether or not
-//:name is a real cdn that exists. This mimicks the perl behavior.
+// In the perl version, :name is ignored. It is not even verified whether or not
+// :name is a real cdn that exists. This mimicks the perl behavior.
 func (fed *TOCDNFederation) Delete() (error, tc.ApiErrorType) {
 
 	if ok, err := fed.isTenantAuthorized(); err != nil {
@@ -298,29 +301,27 @@ func (fed *TOCDNFederation) Delete() (error, tc.ApiErrorType) {
 	return nil, tc.NoError
 }
 
-//Function not exported because although DELETE and UPDATE have normal tenacy check,
-//CREATE does not. No ds is associated on create. This isn't used for READ because
-//psql doesn't like nested queries.
+// Function not exported because although DELETE and UPDATE have normal tenacy check,
+// CREATE does not. No ds is associated on create. This isn't used for READ because
+// psql doesn't like nested queries within the same transaction.
 func (fed TOCDNFederation) isTenantAuthorized() (bool, error) {
 	if fed.ID == nil {
 		log.Errorf("unexpected nil id\n")
 	}
-	//Note: the tenantID is not found via a recursive search. The recursive search
-	//is done in IsResourceAuthorizedToUser below.
+
 	tenantID, err := getTenantIDFromFedID(*fed.ID, fed.ReqInfo.Tx.Tx)
 	if err != nil {
-		//If nobody has claimed a tenant, that federation is publicly visible.
-		//This logically follows /federations/:id/deliveryservices
+		// If nobody has claimed a tenant, that federation is publicly visible.
+		// This logically follows /federations/:id/deliveryservices
 		if err == sql.ErrNoRows {
-			log.Errorf("no tenacy")
 			return true, nil
 		}
-		log.Errorf("ran into error %v", err)
+		log.Errorf("getting tenant id from federation: %v", err)
 		return false, err
 	}
 
-	//After IsResourceAuthorizedToUserTx is updated to no longer have `use_tenancy`,
-	//that will probably be better to use. For now, use the list.
+	// TODO: After IsResourceAuthorizedToUserTx is updated to no longer have `use_tenancy`,
+	// that will probably be better to use. For now, use the list. Issue #2602
 	list, err := tenant.GetUserTenantIDListTx(fed.ReqInfo.Tx.Tx, fed.ReqInfo.User.ID)
 	if err != nil {
 		return false, err
@@ -336,10 +337,10 @@ func (fed TOCDNFederation) isTenantAuthorized() (bool, error) {
 func getTenantIDFromFedID(id int, tx *sql.Tx) (int, error) {
 	tenantID := 0
 	query := `
-	SELECT tenant_id from federation
-	JOIN federation_deliveryservice as fd ON federation.id = fd.federation
+	SELECT ds.tenant_id from federation as f
+	JOIN federation_deliveryservice as fd ON f.id = fd.federation
 	JOIN deliveryservice as ds ON ds.id = fd.deliveryservice
-	WHERE federation.id = $1`
+	WHERE f.id = $1`
 	err := tx.QueryRow(query, id).Scan(&tenantID)
 	return tenantID, err
 }
@@ -349,7 +350,7 @@ func selectByID() string {
 	SELECT federation.id as id, cname, ttl, description, ds.id as ds_id, xml_id FROM federation
 	LEFT JOIN federation_deliveryservice as fd ON federation.id = fd.federation
 	LEFT JOIN deliveryservice as ds ON ds.id = fd.deliveryservice`
-	//WHERE federation.id = :id (determined by dbhelper)
+	// WHERE federation.id = :id (determined by dbhelper)
 }
 
 func selectByCDNName() string {
@@ -358,7 +359,7 @@ func selectByCDNName() string {
 	JOIN federation_deliveryservice as fd ON federation.id = fd.federation
 	JOIN deliveryservice as ds ON ds.id = fd.deliveryservice
 	JOIN cdn ON cdn.id = cdn_id`
-	//WHERE cdn.name = :cdn_name (determined by dbhelper)
+	// WHERE cdn.name = :cdn_name (determined by dbhelper)
 }
 
 func updateQuery() string {
@@ -367,20 +368,19 @@ func updateQuery() string {
 	cname=:cname,
 	ttl=:ttl,
 	description=:description
-	WHERE id=:id
-	`
+	WHERE id=:id`
 }
 
 func insertQuery() string {
 	return `
 	INSERT INTO federation (
-		cname,
- 		ttl,
- 		description
+	cname,
+ 	ttl,
+ 	description
   ) VALUES (
- 		:cname,
-		:ttl,
-		:description
+ 	:cname,
+	:ttl,
+	:description
 	) RETURNING id`
 }
 
