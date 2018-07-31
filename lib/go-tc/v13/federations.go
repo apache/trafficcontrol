@@ -1,6 +1,6 @@
 package v13
 
-import tc "github.com/apache/trafficcontrol/lib/go-tc"
+import "github.com/apache/trafficcontrol/lib/go-tc"
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -40,10 +40,11 @@ type DeleteCDNFederationResponse struct {
 }
 
 type CDNFederation struct {
-	ID          *int    `json:"id" db:"id"`
-	CName       *string `json:"cname" db:"cname"`
-	TTL         *int    `json:"ttl" db:"ttl"`
-	Description *string `json:"description" db:"description"`
+	ID          *int          `json:"id" db:"id"`
+	CName       *string       `json:"cname" db:"cname"`
+	TTL         *int          `json:"ttl" db:"ttl"`
+	Description *string       `json:"description" db:"description"`
+	LastUpdated *tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 
 	// omitempty only works with primitive types and pointers
 	*DeliveryServiceIDs `json:"deliveryService,omitempty"`

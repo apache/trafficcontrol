@@ -122,11 +122,13 @@ func (fed *TOCDNFederation) Create() (error, tc.ApiErrorType) {
 	defer resultRows.Close()
 
 	var id int
+	var lastUpdated tc.TimeNoMod
+
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
-		if err = resultRows.Scan(&id); err != nil {
-			log.Error.Printf("could not scan id from insert: %s\n", err)
+		if err = resultRows.Scan(&id, &lastUpdated); err != nil {
+			log.Error.Printf("could not scan id and last_updated from insert: %s\n", err)
 			return tc.DBError, tc.SystemError
 		}
 	}
@@ -140,8 +142,23 @@ func (fed *TOCDNFederation) Create() (error, tc.ApiErrorType) {
 		return tc.DBError, tc.SystemError
 	}
 	fed.SetKeys(map[string]interface{}{"id": id})
+	fed.LastUpdated = &lastUpdated
 
 	return nil, tc.NoError
+}
+
+// returning true indicates the data related to the given tenantID should be visible
+// `tenantIDs` is presumed to be unsorted, and a nil tenantID is viewable by everyone
+func checkTenancy(tenantID *int, tenantIDs []int) bool {
+	if tenantID == nil {
+		return true
+	}
+	for _, id := range tenantIDs {
+		if id == *tenantID {
+			return true
+		}
+	}
+	return false
 }
 
 func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
@@ -157,24 +174,23 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 	var query string
 	_, id := parameters["id"]
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		// db tag                                         symbol from query
-		"id":          dbhelpers.WhereColumnInfo{Column: "federation.id", Checker: api.IsInt},
-		"cname":       dbhelpers.WhereColumnInfo{Column: "cname", Checker: nil},
-		"ttl":         dbhelpers.WhereColumnInfo{Column: "ttl", Checker: api.IsInt},
-		"description": dbhelpers.WhereColumnInfo{Column: "description", Checker: nil},
-		"xmlId":       dbhelpers.WhereColumnInfo{Column: "xml_id", Checker: nil},
-		"ds_id":       dbhelpers.WhereColumnInfo{Column: "deliveryservice.id", Checker: api.IsInt},
+		"id": dbhelpers.WhereColumnInfo{Column: "federation.id", Checker: api.IsInt},
 	}
+	if !id {
+		queryParamsToQueryCols["name"] = dbhelpers.WhereColumnInfo{Column: "cdn.name", Checker: nil}
+	}
+	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
+
 	if id {
+		// Can't use `AddTenancyCheck` for id because then we won't know what caused
+		// an empty response, so the tenancy check will be performed below.
 		query = selectByID()
 	} else { // searching by name
-		queryParamsToQueryCols["name"] = dbhelpers.WhereColumnInfo{Column: "cdn.name", Checker: nil}
 		query = selectByCDNName()
+		where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "(tenant_id", tenantIDs)
+		where += " OR tenant_id IS NULL)"
 	}
 
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
-	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "(tenant_id", tenantIDs)
-	where += " OR tenant_id IS NULL)"
 	if len(errs) > 0 {
 		return nil, errs, tc.DataConflictError
 	}
@@ -192,7 +208,9 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 	federations := []interface{}{}
 	for rows.Next() {
 
-		if err = rows.StructScan(&fed.CDNFederation); err != nil {
+		var tenantID *int
+		fed.DeliveryServiceIDs = &v13.DeliveryServiceIDs{}
+		if err = rows.Scan(&tenantID, &fed.ID, &fed.CName, &fed.TTL, &fed.Description, &fed.LastUpdated, &fed.DsId, &fed.XmlId); err != nil {
 			log.Errorf("parsing federation rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
@@ -202,19 +220,23 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 		}
 
 		// if we are getting by id, there may not be an attached deliveryservice
-		// DeliveryServiceIDs will not be nil itself, due to the struct scan
 		if id && fed.DsId == nil {
 			fed.DeliveryServiceIDs = nil
 		}
 
-		federations = append(federations, fed)
+		// append if by cdn or if tenancy check for id passes
+		if !id || checkTenancy(tenantID, tenantIDs) {
+			federations = append(federations, *fed)
+		} else { // id is true and the tenacy check failed
+			return nil, []error{errors.New("user not authorized for requested federation")}, tc.ForbiddenError
+		}
 	}
 
 	// if federations yields "response": []
 	if len(federations) == 0 {
 
 		if id {
-			return nil, []error{tc.TenantDSUserNotAuthError}, tc.ForbiddenError
+			return nil, []error{errors.New("resource not found")}, tc.DataMissingError
 		}
 
 		if yes, err := dbhelpers.CDNExists(parameters["name"], fed.ReqInfo.Tx); yes {
@@ -222,9 +244,9 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 		} else if err != nil { // internal server error
 			log.Errorf("verifying cdn exists: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
-		} else { // the query ran as expected and the cdn does not exist
-			return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError
 		}
+		// the query ran as expected and the cdn does not exist
+		return nil, []error{errors.New("resource not found")}, tc.DataMissingError
 	}
 
 	return federations, []error{}, tc.NoError
@@ -246,16 +268,22 @@ func (fed *TOCDNFederation) Update() (error, tc.ApiErrorType) {
 		fed.DeliveryServiceIDs = nil
 	}
 
-	result, err := fed.ReqInfo.Tx.NamedExec(updateQuery(), fed)
+	resultRows, err := fed.ReqInfo.Tx.NamedQuery(updateQuery(), fed)
+	defer resultRows.Close()
 	if err != nil {
 		return parseQueryError(err, "update")
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		log.Errorf("getting rows affected: %v", err)
-		return tc.DBError, tc.SystemError
+	var lastUpdated tc.TimeNoMod
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&lastUpdated); err != nil {
+			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
+			return tc.DBError, tc.SystemError
+		}
 	}
+	fed.LastUpdated = &lastUpdated
 
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
@@ -294,9 +322,8 @@ func (fed *TOCDNFederation) Delete() (error, tc.ApiErrorType) {
 	if rowsAffected != 1 {
 		if rowsAffected < 1 {
 			return errors.New("no federation with that id found"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this delete affected too many rows: %d", rowsAffected), tc.SystemError
 		}
+		return fmt.Errorf("this delete affected too many rows: %d", rowsAffected), tc.SystemError
 	}
 	return nil, tc.NoError
 }
@@ -305,9 +332,6 @@ func (fed *TOCDNFederation) Delete() (error, tc.ApiErrorType) {
 // CREATE does not. No ds is associated on create. This isn't used for READ because
 // psql doesn't like nested queries within the same transaction.
 func (fed TOCDNFederation) isTenantAuthorized() (bool, error) {
-	if fed.ID == nil {
-		log.Errorf("unexpected nil id\n")
-	}
 
 	tenantID, err := getTenantIDFromFedID(*fed.ID, fed.ReqInfo.Tx.Tx)
 	if err != nil {
@@ -347,7 +371,7 @@ func getTenantIDFromFedID(id int, tx *sql.Tx) (int, error) {
 
 func selectByID() string {
 	return `
-	SELECT federation.id as id, cname, ttl, description, ds.id as ds_id, xml_id FROM federation
+	SELECT tenant_id, federation.id as id, cname, ttl, description, federation.last_updated as last_updated, ds.id as ds_id, xml_id FROM federation
 	LEFT JOIN federation_deliveryservice as fd ON federation.id = fd.federation
 	LEFT JOIN deliveryservice as ds ON ds.id = fd.deliveryservice`
 	// WHERE federation.id = :id (determined by dbhelper)
@@ -355,7 +379,7 @@ func selectByID() string {
 
 func selectByCDNName() string {
 	return `
-	SELECT federation.id as id, cname, ttl, description, ds.id as ds_id, xml_id FROM federation
+	SELECT tenant_id, federation.id as id, cname, ttl, description, federation.last_updated as last_updated, ds.id as ds_id, xml_id FROM federation
 	JOIN federation_deliveryservice as fd ON federation.id = fd.federation
 	JOIN deliveryservice as ds ON ds.id = fd.deliveryservice
 	JOIN cdn ON cdn.id = cdn_id`
@@ -368,7 +392,8 @@ func updateQuery() string {
 	cname=:cname,
 	ttl=:ttl,
 	description=:description
-	WHERE id=:id`
+	WHERE id=:id
+	RETURNING last_updated`
 }
 
 func insertQuery() string {
@@ -381,7 +406,7 @@ func insertQuery() string {
  	:cname,
 	:ttl,
 	:description
-	) RETURNING id`
+	) RETURNING id, last_updated`
 }
 
 func deleteQuery() string {
