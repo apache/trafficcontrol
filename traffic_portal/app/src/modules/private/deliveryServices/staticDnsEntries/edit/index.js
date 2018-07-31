@@ -31,7 +31,7 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.staticDn
 								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
 							},
 							staticDnsEntry: function($stateParams, staticDnsEntryService) {
-								return staticDnsEntryService.getStaticDnsEntries({ deliveryserviceId: $stateParams.deliveryServiceId, id: $stateParams.staticDnsEntryId });
+								return staticDnsEntryService.getStaticDnsEntry($stateParams.staticDnsEntryId);
 							}
 						}
 					}

@@ -23,29 +23,44 @@ var StaticDnsEntryService = function($http, $q, Restangular, locationUtils, mess
 		return Restangular.all('staticdnsentries').getList(queryParams);
 	};
 
+	this.getStaticDnsEntry = function(id) {
+        return Restangular.one('staticdnsentries?id=' + id).get();
+    };
+
     this.createDeliveryServiceStaticDnsEntry = function(staticDnsEntry) {
-        return Restangular.service('staticdnsentries').post(staticDnsEntry)
+        var request = $q.defer();
+
+        $http.post(ENV.api['root'] + "staticdnsentries", staticDnsEntry)
             .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Static DNS Entry created' } ], true);
+                function(response) {
+                    messageModel.setMessages(response.data.alerts, true);
                     locationUtils.navigateToPath('/delivery-services/' + staticDnsEntry.deliveryServiceId + '/static-dns-entries');
+                    request.resolve(response);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false)
+                    request.reject(fault);
+                }
+            );
+
+        return request.promise;
+    };
+
+    this.deleteDeliveryServiceStaticDnsEntry = function(id) {
+        var deferred = $q.defer();
+
+        $http.delete(ENV.api['root'] + "staticdnsentries?id=" + id)
+            .then(
+                function(response) {
+                    messageModel.setMessages(response.data.alerts, true);
+                    deferred.resolve(response);
                 },
                 function(fault) {
                     messageModel.setMessages(fault.data.alerts, false);
+                    deferred.reject(fault);
                 }
             );
-    };
-
-    this.deleteDeliveryServiceStaticDnsEntry = function(queryParams) {
-        return Restangular.all('staticdnsentries').remove(queryParams)
-            .then(
-                function() {
-                    messageModel.setMessages([ { level: 'success', text: 'Static DNS Entry deleted' } ], true);
-                },
-                function(fault) {
-                    messageModel.setMessages(fault.data.alerts, true);
-                }
-            );
+        return deferred.promise;
     };
 
     this.updateDeliveryServiceStaticDnsEntry = function(id, staticDnsEntry) {
