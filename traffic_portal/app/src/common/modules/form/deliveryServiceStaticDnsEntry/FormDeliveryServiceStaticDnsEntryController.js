@@ -35,7 +35,7 @@ var FormDeliveryServiceStaticDnsEntryController = function(deliveryService, stat
 
     $scope.deliveryService = deliveryService;
 
-    $scope.staticDnsEntry = staticDnsEntry[0];
+    $scope.staticDnsEntry = staticDnsEntry;
 
     $scope.navigateToPath = locationUtils.navigateToPath;
 

@@ -17,13 +17,25 @@
  * under the License.
  */
 
-var StaticDnsEntryService = function(Restangular) {
+var StaticDnsEntryService = function(Restangular, locationUtils, messageModel) {
 
 	this.getStaticDnsEntries = function(queryParams) {
 		return Restangular.all('staticdnsentries').getList(queryParams);
 	};
 
+    this.createDeliveryServiceStaticDnsEntry = function(staticDnsEntry) {
+        return Restangular.service('staticdnsentries').post(staticDnsEntry)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Static DNS Entry created' } ], true);
+                    locationUtils.navigateToPath('/delivery-services/' + staticDnsEntry.deliveryServiceId + '/static-dns-entries');
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                }
+            );
+    };
 };
 
-StaticDnsEntryService.$inject = ['Restangular'];
+StaticDnsEntryService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
 module.exports = StaticDnsEntryService;

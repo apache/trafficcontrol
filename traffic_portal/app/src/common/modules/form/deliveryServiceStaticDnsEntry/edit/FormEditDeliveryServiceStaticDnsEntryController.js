@@ -29,7 +29,8 @@ var FormEditDeliveryServiceStaticDnsEntryController = function(deliveryService, 
     //         });
     // };
 
-    //$scope.regexPattern = angular.copy(regex.pattern);
+    $scope.staticDnsEntry = staticDnsEntry[0];
+    $scope.host = angular.copy($scope.staticDnsEntry.host);
 
     $scope.settings = {
         isNew: false,
