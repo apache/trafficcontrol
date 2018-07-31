@@ -22,12 +22,12 @@ var FormEditDeliveryServiceStaticDnsEntryController = function(deliveryService, 
     // extends the FormDeliveryServiceController to inherit common methods
     angular.extend(this, $controller('FormDeliveryServiceStaticDnsEntryController', { deliveryService: deliveryService, staticDnsEntry: staticDnsEntry, $scope: $scope }));
 
-    // var deleteDeliveryServiceRegex = function(dsId, regexId) {
-    //     deliveryServiceRegexService.deleteDeliveryServiceRegex(dsId, regexId)
-    //         .then(function() {
-    //             locationUtils.navigateToPath('/delivery-services/' + dsId + '/regexes');
-    //         });
-    // };
+    var deleteDeliveryServiceStaticDnsEntry = function(dsId, staticDnsEntryId) {
+        staticDnsEntryService.deleteDeliveryServiceStaticDnsEntry({ id: staticDnsEntryId })
+            .then(function() {
+                locationUtils.navigateToPath('/delivery-services/' + dsId + '/static-dns-entries');
+            });
+    };
 
     $scope.staticDnsEntry = staticDnsEntry[0];
     $scope.host = angular.copy($scope.staticDnsEntry.host);
@@ -37,35 +37,35 @@ var FormEditDeliveryServiceStaticDnsEntryController = function(deliveryService, 
         saveLabel: 'Update'
     };
 
-    // $scope.save = function(dsId, regex) {
-    //     deliveryServiceRegexService.updateDeliveryServiceRegex(regex).
-    //     then(function() {
-    //         $scope.regexPattern = angular.copy(regex.pattern);
-    //         $anchorScroll(); // scrolls window to top
-    //     });
-    // };
+    $scope.save = function(dsId, staticDnsEntry) {
+        staticDnsEntryService.updateDeliveryServiceStaticDnsEntry(staticDnsEntry.id, staticDnsEntry).
+        then(function() {
+            $scope.host = angular.copy(staticDnsEntry.host);
+            $anchorScroll(); // scrolls window to top
+        });
+    };
 
-    // $scope.confirmDelete = function(regex) {
-    //     var params = {
-    //         title: 'Delete Delivery Service Regex: ' + regex.pattern,
-    //         key: regex.pattern
-    //     };
-    //     var modalInstance = $uibModal.open({
-    //         templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
-    //         controller: 'DialogDeleteController',
-    //         size: 'md',
-    //         resolve: {
-    //             params: function () {
-    //                 return params;
-    //             }
-    //         }
-    //     });
-    //     modalInstance.result.then(function() {
-    //         deleteDeliveryServiceRegex(deliveryService.id, regex.id);
-    //     }, function () {
-    //         // do nothing
-    //     });
-    // };
+    $scope.confirmDelete = function(staticDnsEntry) {
+        var params = {
+            title: 'Delete Delivery Service StaticDnsEntry on host: ' + staticDnsEntry.host + ' with address: ' + staticDnsEntry.address,
+            key: staticDnsEntry.host
+        };
+        var modalInstance = $uibModal.open({
+            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+            controller: 'DialogDeleteController',
+            size: 'md',
+            resolve: {
+                params: function () {
+                    return params;
+                }
+            }
+        });
+        modalInstance.result.then(function() {
+            deleteDeliveryServiceStaticDnsEntry(deliveryService.id, staticDnsEntry.id);
+        }, function () {
+            // do nothing
+        });
+    };
 
 };
 

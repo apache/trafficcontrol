@@ -75,7 +75,7 @@ under the License.
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(regex)">Delete</button>
+                <button type="button" class="btn btn-danger" ng-show="!settings.isNew" ng-click="confirmDelete(staticDnsEntry)">Delete</button>
                 <button type="button" class="btn btn-success" ng-disabled="dsStaticDnsEntryForm.$pristine || dsStaticDnsEntryForm.$invalid" ng-click="save(deliveryService.id, staticDnsEntry)">{{settings.saveLabel}}</button>
             </div>
         </form>

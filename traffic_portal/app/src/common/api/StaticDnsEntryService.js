@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var StaticDnsEntryService = function(Restangular, locationUtils, messageModel) {
+var StaticDnsEntryService = function($http, $q, Restangular, locationUtils, messageModel, ENV) {
 
 	this.getStaticDnsEntries = function(queryParams) {
 		return Restangular.all('staticdnsentries').getList(queryParams);
@@ -35,7 +35,36 @@ var StaticDnsEntryService = function(Restangular, locationUtils, messageModel) {
                 }
             );
     };
+
+    this.deleteDeliveryServiceStaticDnsEntry = function(queryParams) {
+        return Restangular.all('staticdnsentries').remove(queryParams)
+            .then(
+                function() {
+                    messageModel.setMessages([ { level: 'success', text: 'Static DNS Entry deleted' } ], true);
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, true);
+                }
+            );
+    };
+
+    this.updateDeliveryServiceStaticDnsEntry = function(id, staticDnsEntry) {
+        var request = $q.defer();
+
+        $http.put(ENV.api['root'] + "staticdnsentries?id=" + id, staticDnsEntry)
+            .then(
+                function(response) {
+                    messageModel.setMessages(response.data.alerts, false);
+                    request.resolve();
+                },
+                function(fault) {
+                    messageModel.setMessages(fault.data.alerts, false);
+                    request.reject();
+                }
+            );
+        return request.promise;
+    };
 };
 
-StaticDnsEntryService.$inject = ['Restangular', 'locationUtils', 'messageModel'];
+StaticDnsEntryService.$inject = ['$http', '$q', 'Restangular', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = StaticDnsEntryService;
