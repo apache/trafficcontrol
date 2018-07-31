@@ -92,29 +92,47 @@ func (cg *TOCacheGroup) SetID(i int) {
 	cg.ID = &i
 }
 
-// checks if a cachegroup with the given ID is in use as a parent or secondary parent.
-func isUsedByChildCache(tx *sqlx.Tx, ID int) (bool, error) {
-	pQuery := "SELECT count(*) from cachegroup WHERE parent_cachegroup_id=$1"
-	sQuery := "SELECT count(*) from cachegroup WHERE secondary_parent_cachegroup_id=$1"
-	count := 0
+// Is the cachegroup being used?
+func isUsed(tx *sqlx.Tx, ID int) (bool, error) {
 
-	err := tx.QueryRow(pQuery, ID).Scan(&count)
+	var servers int
+	var pid int
+	var pid2 int
+	var asns int
+
+	//Counts all the places you might find a cachegroup
+	query := `select
+		count(server.id),
+		count(c2.parent_cachegroup_id),
+		count(c2.secondary_parent_cachegroup_id),
+		count(asn.id)
+	from cachegroup as cg
+	left join server on cg.id = cachegroup
+	left join asn on cg.id = asn.cachegroup
+	left join cachegroup as c2
+	  on cg.id = c2.parent_cachegroup_id
+		or cg.id = c2.secondary_parent_cachegroup_id
+	where cg.id = $1 group by cg.id`
+
+	err := tx.QueryRow(query, ID).Scan(&servers, &pid, &pid2, &asns)
 	if err != nil {
 		log.Errorf("received error: %++v from query execution", err)
 		return false, err
 	}
-	if count > 0 {
+	//Only return the immediate error
+	if servers > 0 {
+		return true, errors.New("cache is in use by one or more servers")
+	}
+	if pid > 0 {
 		return true, errors.New("cache is in use as a parent cache")
 	}
-
-	err = tx.QueryRow(sQuery, ID).Scan(&count)
-	if err != nil {
-		log.Errorf("received error: %++v from query execution", err)
-		return false, err
-	}
-	if count > 0 {
+	if pid2 > 0 {
 		return true, errors.New("cache is in use as a secondary parent cache")
 	}
+	if asns > 0 {
+		return true, errors.New("cache is in use in one or more ASNs")
+	}
+
 	return false, nil
 }
 
@@ -425,7 +443,7 @@ func (cg *TOCacheGroup) getCoordinateID() (*int, error) {
 //The CacheGroup implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
 func (cg *TOCacheGroup) Delete() (error, tc.ApiErrorType) {
-	inUse, err := isUsedByChildCache(cg.ReqInfo.Tx, *cg.ID)
+	inUse, err := isUsed(cg.ReqInfo.Tx, *cg.ID)
 	log.Debugf("inUse: %d, err: %v", inUse, err)
 	if inUse == false && err != nil {
 		return tc.DBError, tc.SystemError
