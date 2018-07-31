@@ -23,13 +23,13 @@ var FormEditDeliveryServiceStaticDnsEntryController = function(deliveryService, 
     angular.extend(this, $controller('FormDeliveryServiceStaticDnsEntryController', { deliveryService: deliveryService, staticDnsEntry: staticDnsEntry, $scope: $scope }));
 
     var deleteDeliveryServiceStaticDnsEntry = function(dsId, staticDnsEntryId) {
-        staticDnsEntryService.deleteDeliveryServiceStaticDnsEntry({ id: staticDnsEntryId })
+        staticDnsEntryService.deleteDeliveryServiceStaticDnsEntry(staticDnsEntryId)
             .then(function() {
                 locationUtils.navigateToPath('/delivery-services/' + dsId + '/static-dns-entries');
             });
     };
 
-    $scope.staticDnsEntry = staticDnsEntry[0];
+    $scope.staticDnsEntry = staticDnsEntry;
     $scope.host = angular.copy($scope.staticDnsEntry.host);
 
     $scope.settings = {
@@ -47,7 +47,7 @@ var FormEditDeliveryServiceStaticDnsEntryController = function(deliveryService, 
 
     $scope.confirmDelete = function(staticDnsEntry) {
         var params = {
-            title: 'Delete Delivery Service StaticDnsEntry on host: ' + staticDnsEntry.host + ' with address: ' + staticDnsEntry.address,
+            title: 'Delete Delivery Service Static DNS Entry on host: ' + staticDnsEntry.host + ' with address: ' + staticDnsEntry.address,
             key: staticDnsEntry.host
         };
         var modalInstance = $uibModal.open({
