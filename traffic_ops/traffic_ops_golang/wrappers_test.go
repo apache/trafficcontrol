@@ -22,18 +22,19 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 	"github.com/jmoiron/sqlx"
-
-	"fmt"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -137,12 +138,9 @@ func TestWrapAuth(t *testing.T) {
 
 	rows := sqlmock.NewRows([]string{"priv_level", "username", "id", "tenant_id"})
 	rows.AddRow(30, "user1", 1, 1)
-	mock.ExpectPrepare("SELECT").ExpectQuery().WithArgs(userName).WillReturnRows(rows)
+	mock.ExpectQuery("SELECT").WithArgs(userName).WillReturnRows(rows)
 
-	sqlStatement, err := prepareUserInfoStmt(db)
-	if err != nil {
-		t.Fatalf("could not create priv statement: %v\n", err)
-	}
+	sqlStatement := getUserInfoStmt()
 
 	authBase := AuthBase{secret, sqlStatement, nil}
 
@@ -184,6 +182,8 @@ func TestWrapAuth(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to marshal: %v", err)
 	}
+
+	r = r.WithContext(context.WithValue(context.Background(), api.DBContextKey, db))
 
 	f(w, r)
 
