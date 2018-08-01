@@ -45,6 +45,10 @@ go build
 
 # Running
 
+You may use a trafficserver profile with your grove deployment but `grovetccfg` will only read the `allow_ip` and the `allow_ip6` parameters from a
+traffic server profile when constructing the remap_rules file.  A sample `grove_profile.traffic_ops` file is provided to get you started in creating  a GROVE_PROFILE
+type.  When you use a GROVE_PROFILE type, `grovetccfg` will read the settings from the profile and generate the `grove.cfg` file from the settings in that profile.
+
 The `grovetccfg` tool has an RPM, but no service or config files. It must be run manually, even after installing the RPM. Consider running the tool in a cron job.
 
 Example:
