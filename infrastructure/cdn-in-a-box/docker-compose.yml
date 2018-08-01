@@ -45,9 +45,11 @@ networks:
 
 services:
   db:
+    build:
+      context: traffic_ops
+      dockerfile: Dockerfile-db
     hostname: db
     domainname: cdn.local
-    image: postgres:9.6.6
     networks:
       - tcnet
     env_file:

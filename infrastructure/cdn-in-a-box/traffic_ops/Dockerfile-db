@@ -14,28 +14,11 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-CERT_CITY=Denver
-CERT_COMPANY=NotComcast
-CERT_COUNTRY=US
-CERT_STATE=CO
-DB_NAME=traffic_ops
-DB_PORT=5432
-DB_ROOT_PASS=twelve
-DB_SERVER=db
-DB_USER=traffic_ops
-DB_USER_PASS=twelve
-DBIC_TRACE=0
-DOMAIN=cdn.local
-PGPASSWORD=twelve
-POSTGRES_USER=traffic_ops
-POSTGRES_PASSWORD=twelve
-TM_PASSWORD=twelve
-TM_USER=tmonitor
-TO_ADMIN_PASSWORD=twelve
-TO_ADMIN_USER=admin
-TO_EMAIL=cdnadmin@example.com
-TO_HOST=trafficops
-TO_PORT=6443
-TO_SECRET=blahblah
-TP_EMAIL=none
-TP_HOST=trafficportal
+
+############################################################
+# Dockerfile for trafficops db
+############################################################
+
+FROM postgres:9.6.6
+
+COPY initdb.d /docker-entrypoint-initdb.d

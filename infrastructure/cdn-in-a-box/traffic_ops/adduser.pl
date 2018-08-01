@@ -34,15 +34,15 @@ my $tenant = shift // 'root';
 
 # Skip the insert if the admin 'username' is already there.
 my $hashed_passwd = hash_pass( $password );
-print <<"ADMIN";
-insert into tm_user (username, role, local_passwd, confirm_local_passwd, tenant_id)
-    values  ('$username',
-            (select id from role where name = '$role'),
+print <<"EOSQL";
+INSERT INTO tm_user (username, role, local_passwd, confirm_local_passwd, tenant_id)
+    VALUES  ('$username',
+            (SELECT id FROM role WHERE name = '$role'),
             '$hashed_passwd',
             '$hashed_passwd',
             (SELECT id FROM tenant WHERE name='$tenant'))
-    ON CONFLICT (username) DO NOTHING;
-ADMIN
+    ON CONFLICT (username) DO UPDATE SET local_passwd='$hashed_passwd', confirm_local_passwd='$hashed_passwd';
+EOSQL
 
 sub hash_pass {
     my $pass = shift;
