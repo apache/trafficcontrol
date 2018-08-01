@@ -32,10 +32,10 @@ To start it, install `docker-ce` and `docker-compose`.  Create an rpm for each
 component and copy into the respective directory with no version number, e.g.
 `traffic_ops/traffic_ops.rpm`, `traffic_portal/traffic_portal.rpm`.
     
-    cd infrastructure/cdn-in-a-box/traffic_ops
+    cd infrastructure/cdn-in-a-box
     docker-compose up --build
 
-The process creates containers for each with ports exposed on the host.  The
+The process creates containers for each component with ports exposed on the host.  The
 following should be available once the system is running:
    
     Traffic Portal: https://localhost    
