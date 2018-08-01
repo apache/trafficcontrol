@@ -28,12 +28,12 @@ var TableDeliveryServiceStaticDnsEntriesController = function(deliveryService, s
 	};
 
 	$scope.editDeliveryServiceStaticDnsEntry = function(dsId, sdeId) {
-        locationUtils.navigateToPath('/delivery-services/' + dsId + '/static-dns-entries/' + sdeId);
+		locationUtils.navigateToPath('/delivery-services/' + dsId + '/static-dns-entries/' + sdeId);
 	};
 
-    $scope.createStaticDnsEntry = function(dsId) {
-        locationUtils.navigateToPath('/delivery-services/' + dsId + '/static-dns-entries/new');
-    };
+	$scope.createStaticDnsEntry = function(dsId) {
+		locationUtils.navigateToPath('/delivery-services/' + dsId + '/static-dns-entries/new');
+	};
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 

@@ -81,13 +81,27 @@ func (staticDNSEntry *TOStaticDNSEntry) SetKeys(keys map[string]interface{}) {
 
 // Validate fulfills the api.Validator interface
 func (staticDNSEntry TOStaticDNSEntry) Validate() error {
-	if _, err := tc.ValidateTypeID(staticDNSEntry.ReqInfo.Tx.Tx, &staticDNSEntry.TypeID, "staticdnsentry"); err != nil {
+	typeStr, err := tc.ValidateTypeID(staticDNSEntry.ReqInfo.Tx.Tx, &staticDNSEntry.TypeID, "staticdnsentry");
+	if err != nil {
 		return err
+	}
+
+	addressErr := error(nil)
+
+	switch typeStr {
+	case "A_RECORD":
+		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required, is.IPv4)
+	case "AAAA_RECORD":
+		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required, is.IPv6)
+	case "CNAME_RECORD":
+		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required, is.DNSName)
+	default:
+		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required)
 	}
 
 	errs := validation.Errors{
 		"host":              validation.Validate(staticDNSEntry.Host, validation.Required, is.DNSName),
-		"address":           validation.Validate(staticDNSEntry.Address, validation.Required, is.Host),
+		"address":           addressErr,
 		"deliveryserviceId": validation.Validate(staticDNSEntry.DeliveryServiceID, validation.Required),
 		"ttl":               validation.Validate(staticDNSEntry.TTL, validation.Required),
 		"typeId":            validation.Validate(staticDNSEntry.TypeID, validation.Required),
