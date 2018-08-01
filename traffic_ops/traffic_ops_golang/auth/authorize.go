@@ -63,9 +63,9 @@ type key int
 const CurrentUserKey key = iota
 
 // GetCurrentUserFromDB  - returns the id and privilege level of the given user along with the username, or -1 as the id, - as the userName and PrivLevelInvalid if the user doesn't exist.
-func GetCurrentUserFromDB(CurrentUserStmt *sqlx.Stmt, user string) CurrentUser {
+func GetCurrentUserFromDB(DB *sqlx.DB, CurrentUserStmt, user string) CurrentUser {
 	var currentUserInfo CurrentUser
-	err := CurrentUserStmt.Get(&currentUserInfo, user)
+	err := DB.Get(&currentUserInfo, CurrentUserStmt, user)
 	switch {
 	case err == sql.ErrNoRows:
 		log.Errorf("checking user %v info: user not in database", user)
