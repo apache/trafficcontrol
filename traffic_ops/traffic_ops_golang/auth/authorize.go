@@ -65,6 +65,10 @@ const CurrentUserKey key = iota
 // GetCurrentUserFromDB  - returns the id and privilege level of the given user along with the username, or -1 as the id, - as the userName and PrivLevelInvalid if the user doesn't exist.
 func GetCurrentUserFromDB(DB *sqlx.DB, CurrentUserStmt, user string) CurrentUser {
 	var currentUserInfo CurrentUser
+	if DB == nil {
+		log.Errorf("no db provided to GetCurrentUserFromDB")
+		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}
+	}
 	err := DB.Get(&currentUserInfo, CurrentUserStmt, user)
 	switch {
 	case err == sql.ErrNoRows:
