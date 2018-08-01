@@ -36,6 +36,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 	"github.com/jmoiron/sqlx"
@@ -47,7 +48,7 @@ var ServerName = "traffic_ops_golang" + "/" + about.About.Version
 // AuthBase ...
 type AuthBase struct {
 	secret                 string
-	getCurrentUserInfoStmt *sqlx.Stmt
+	getCurrentUserInfoStmt string
 	override               Middleware
 }
 
@@ -98,8 +99,20 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 				handleErr(http.StatusUnauthorized, errors.New("Unauthorized, please log in."))
 				return
 			}
+			var DB *sqlx.DB
+			val := r.Context().Value(api.DBContextKey)
+			if val != nil {
+				switch v := val.(type) {
+				case *sqlx.DB:
+					DB = v
+				default:
+					handleErr(http.StatusInternalServerError, errors.New("No DB found"))
+				}
+			} else {
+				handleErr(http.StatusInternalServerError, errors.New("No DB found"))
+			}
 
-			currentUserInfo := auth.GetCurrentUserFromDB(a.getCurrentUserInfoStmt, username)
+			currentUserInfo := auth.GetCurrentUserFromDB(DB, a.getCurrentUserInfoStmt, username)
 			if currentUserInfo.PrivLevel < privLevelRequired {
 				handleErr(http.StatusForbidden, errors.New("Forbidden."))
 				return
