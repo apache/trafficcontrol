@@ -1029,14 +1029,6 @@
     ],
     "staticdnsentries": [
         {
-            "address": "this.is.a.hostname.",
-            "cachegroup": "cachegroup1",
-            "deliveryservice": "ds1",
-            "host": "host1",
-            "type": "AAAA_RECORD",
-            "ttl": 10
-        },
-        {
             "address": "192.168.0.1",
             "cachegroup": "cachegroup2",
             "deliveryservice": "ds1",
@@ -1045,12 +1037,20 @@
             "ttl": 10
         },
         {
+            "address": "this.is.a.hostname.",
+            "cachegroup": "cachegroup1",
+            "deliveryservice": "ds1",
+            "host": "host1",
+            "type": "CNAME_RECORD",
+            "ttl": 10
+        },
+        {
             "address": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
             "cachegroup": "cachegroup2",
             "deliveryservice": "ds1",
             "host": "host3",
             "ttl": 10,
-            "type": "CNAME_RECORD"
+            "type": "AAAA_RECORD"
         }
     ],
     "statuses": [
