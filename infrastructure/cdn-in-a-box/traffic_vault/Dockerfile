@@ -16,10 +16,27 @@
 # under the License.
 
 ############################################################
-# Dockerfile for trafficops db
+# Dockerfile to build Traffic Vault image
+# Based on CentOS 7.2
 ############################################################
+FROM centos:7
 
-FROM postgres:9.6.6
+ARG ADMIN_PASS
+ARG USER_PASS
 
-ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-COPY initdb.d /docker-entrypoint-initdb.d
+# download and install Riak
+RUN curl -s https://packagecloud.io/install/repositories/basho/riak/script.rpm.sh | bash
+RUN yum -y install \
+        epel-release && \
+    yum -y install \
+        initscripts \
+        jq \
+        nmap-ncat \
+        riak && \
+    yum -y clean all && \
+    rm -rf /var/yum/cache
+
+EXPOSE 8098 8087 8088
+ADD to-access.sh /
+ADD traffic_vault/run.sh /
+ENTRYPOINT [ "./run.sh", "/to-access.sh" ]

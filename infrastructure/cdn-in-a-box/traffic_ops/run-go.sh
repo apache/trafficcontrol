@@ -51,7 +51,7 @@ if [[ -x /config.sh ]]; then
 	/config.sh
 fi
 
-while ! nc trafficops-perl 60443 </dev/null; do # &>/dev/null; do
+while ! nc trafficops-perl 60443 </dev/null 2>/dev/null; do
         echo "waiting for trafficops-perl:60443"
         sleep 3
 done
