@@ -21,6 +21,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
@@ -104,6 +105,42 @@ func (to *Session) GetProfileByID(id int) ([]v13.Profile, ReqInf, error) {
 // GET a Profile by the Profile name
 func (to *Session) GetProfileByName(name string) ([]v13.Profile, ReqInf, error) {
 	URI := API_v13_Profiles + "?name=" + url.QueryEscape(name)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data v13.ProfilesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// GET a Profile by the Profile "param"
+func (to *Session) GetProfileByParameter(param string) ([]v13.Profile, ReqInf, error) {
+	URI := API_v13_Profiles + "?param=" + url.QueryEscape(param)
+	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data v13.ProfilesResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// GET a Profile by the Profile cdn id
+func (to *Session) GetProfileByCDNID(cdnID int) ([]v13.Profile, ReqInf, error) {
+	URI := API_v13_Profiles + "?cdn=" + strconv.Itoa(cdnID)
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
