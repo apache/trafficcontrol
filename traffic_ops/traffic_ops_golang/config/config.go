@@ -58,26 +58,28 @@ type ConfigHypnotoad struct {
 
 // ConfigTrafficOpsGolang carries settings specific to traffic_ops_golang server
 type ConfigTrafficOpsGolang struct {
-	Port                   string         `json:"port"`
-	ProxyTimeout           int            `json:"proxy_timeout"`
-	ProxyKeepAlive         int            `json:"proxy_keep_alive"`
-	ProxyTLSTimeout        int            `json:"proxy_tls_timeout"`
-	ProxyReadHeaderTimeout int            `json:"proxy_read_header_timeout"`
-	ReadTimeout            int            `json:"read_timeout"`
-	RequestTimeout         int            `json:"request_timeout"`
-	ReadHeaderTimeout      int            `json:"read_header_timeout"`
-	WriteTimeout           int            `json:"write_timeout"`
-	IdleTimeout            int            `json:"idle_timeout"`
-	LogLocationError       string         `json:"log_location_error"`
-	LogLocationWarning     string         `json:"log_location_warning"`
-	LogLocationInfo        string         `json:"log_location_info"`
-	LogLocationDebug       string         `json:"log_location_debug"`
-	LogLocationEvent       string         `json:"log_location_event"`
-	Insecure               bool           `json:"insecure"`
-	MaxDBConnections       int            `json:"max_db_connections"`
-	BackendMaxConnections  map[string]int `json:"backend_max_connections"`
-	ProfilingEnabled       bool           `json:"profiling_enabled"`
-	ProfilingLocation      string         `json:"profiling_location"`
+	Port                     string         `json:"port"`
+	ProxyTimeout             int            `json:"proxy_timeout"`
+	ProxyKeepAlive           int            `json:"proxy_keep_alive"`
+	ProxyTLSTimeout          int            `json:"proxy_tls_timeout"`
+	ProxyReadHeaderTimeout   int            `json:"proxy_read_header_timeout"`
+	ReadTimeout              int            `json:"read_timeout"`
+	RequestTimeout           int            `json:"request_timeout"`
+	ReadHeaderTimeout        int            `json:"read_header_timeout"`
+	WriteTimeout             int            `json:"write_timeout"`
+	IdleTimeout              int            `json:"idle_timeout"`
+	LogLocationError         string         `json:"log_location_error"`
+	LogLocationWarning       string         `json:"log_location_warning"`
+	LogLocationInfo          string         `json:"log_location_info"`
+	LogLocationDebug         string         `json:"log_location_debug"`
+	LogLocationEvent         string         `json:"log_location_event"`
+	Insecure                 bool           `json:"insecure"`
+	MaxDBConnections         int            `json:"max_db_connections"`
+	DBMaxIdleConnections     int            `json:"db_max_idle_connections"`
+	DBConnMaxLifetimeSeconds int            `json:"db_conn_max_lifetime_seconds"`
+	BackendMaxConnections    map[string]int `json:"backend_max_connections"`
+	ProfilingEnabled         bool           `json:"profiling_enabled"`
+	ProfilingLocation        string         `json:"profiling_location"`
 }
 
 // ConfigDatabase reflects the structure of the database.conf file
@@ -219,8 +221,9 @@ func (c Config) GetKeyPath() string {
 }
 
 const (
-	// MojoliciousConcurrentConnectionsDefault  ...
-	MojoliciousConcurrentConnectionsDefault = 12
+	MojoliciousConcurrentConnectionsDefault = 12 // MojoliciousConcurrentConnectionsDefault
+	DBMaxIdleConnectionsDefault             = 10 // if this is higher than MaxDBConnections it will be automatically adjusted below it by the db/sql library
+	DBConnMaxLifetimeSecondsDefault         = 60
 )
 
 // ParseConfig validates required fields, and parses non-JSON types
@@ -252,6 +255,12 @@ func ParseConfig(cfg Config) (Config, error) {
 	}
 	if cfg.BackendMaxConnections["mojolicious"] == 0 {
 		cfg.BackendMaxConnections["mojolicious"] = MojoliciousConcurrentConnectionsDefault
+	}
+	if cfg.DBMaxIdleConnections == 0 {
+		cfg.DBMaxIdleConnections = DBMaxIdleConnectionsDefault
+	}
+	if cfg.DBConnMaxLifetimeSeconds == 0 {
+		cfg.DBConnMaxLifetimeSeconds = DBConnMaxLifetimeSecondsDefault
 	}
 
 	invalidTOURLStr := ""
