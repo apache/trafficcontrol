@@ -119,7 +119,7 @@ func (prof *TOProfile) Read(parameters map[string]string) ([]interface{}, []erro
 
 	// Narrow down if the query parameter is 'param'
 	if _, ok := parameters[ParamQueryParam]; ok {
-		queryValues["profile_id"] = parameters[ParamQueryParam]
+		queryValues["parameter_id"] = parameters[ParamQueryParam]
 		if len(parameters[ParamQueryParam]) > 0 {
 			where += " LEFT JOIN profile_parameter pp ON prof.id  = pp.profile where pp.parameter=:parameter_id"
 		}
