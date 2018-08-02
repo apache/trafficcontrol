@@ -879,7 +879,7 @@ sub update_status {
 		# queue updates on child servers if server is ^EDGE or ^MID
 		if ( $server->type->name =~ m/^EDGE/ || $server->type->name =~ m/^MID/ ) {
 			my @cg_ids = $self->get_child_cachegroup_ids($server);
-			my $servers = $self->db->resultset('Server')->search( undef, { cachegroup => { -in => \@cg_ids }, cdn_id => $server->cdn_id } );
+			my $servers = $self->db->resultset('Server')->search( { cachegroup => { -in => \@cg_ids }, cdn_id => $server->cdn_id } );
 			$servers->update( { upd_pending => 1 } );
 			$msg .= " and queued updates on all child caches";
 		}
