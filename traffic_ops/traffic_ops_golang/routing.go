@@ -23,6 +23,7 @@ import (
 	"context"
 	"net/http"
 	"regexp"
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -103,7 +104,7 @@ type PathHandler struct {
 }
 
 // CreateRouteMap returns a map of methods to a slice of paths and handlers; wrapping the handlers in the appropriate middleware. Uses Semantic Versioning: routes are added to every subsequent minor version, but not subsequent major versions. For example, a 1.2 route is added to 1.3 but not 2.1. Also truncates '2.0' to '2', creating succinct major versions.
-func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase, reqTimeOutSeconds int) map[string][]PathHandler {
+func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase, reqTimeOutSeconds int, db *sqlx.DB) map[string][]PathHandler {
 	// TODO strong types for method, path
 	versions := getSortedRouteVersions(rs)
 	requestTimeout := time.Second * time.Duration(60)
@@ -120,28 +121,40 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase, reqTime
 			}
 			vstr := strconv.FormatFloat(version, 'f', -1, 64)
 			path := RoutePrefix + "/" + vstr + "/" + r.Path
-			middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout)
+
+			middlewares := getRouteMiddleware(r.Method, r.Path, r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout, db)
+
 			m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: use(r.Handler, middlewares)})
 			log.Infof("adding route %v %v\n", r.Method, path)
 		}
 	}
 	for _, r := range rawRoutes {
-		middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout)
+
+		middlewares := getRouteMiddleware(r.Method, r.Path, r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout, db)
+
 		m[r.Method] = append(m[r.Method], PathHandler{Path: r.Path, Handler: use(r.Handler, middlewares)})
 		log.Infof("adding raw route %v %v\n", r.Method, r.Path)
 	}
 	return m
 }
 
-func getRouteMiddleware(middlewares []Middleware, authBase AuthBase, authenticated bool, privLevel int, requestTimeout time.Duration) []Middleware {
+func getRouteMiddleware(routeMethod string, routePath string, middlewares []Middleware, authBase AuthBase, authenticated bool, privLevel int, requestTimeout time.Duration, db *sqlx.DB) []Middleware {
 	if middlewares == nil {
 		middlewares = getDefaultMiddleware(authBase.secret, requestTimeout)
 	}
 	if authenticated { // a privLevel of zero is an unauthenticated endpoint.
-		authWrapper := authBase.GetWrapper(privLevel)
+		requiredCap, err := GetRequiredCapabilityFromDB(routeMethod,routePath,db)
+		if err != nil || requiredCap == "" {
+			panic(fmt.Sprintf("unable to get required capability for route: %s %s received required capability: [%s] and error: %s",routeMethod,routePath,requiredCap,err.Error()))
+		}
+		authWrapper := authBase.GetWrapper(privLevel,requiredCap)
 		middlewares = append([]Middleware{authWrapper}, middlewares...)
 	}
 	return middlewares
+}
+
+func GetRequiredCapabilityFromDB(routeMethod string,routePath string, db *sqlx.DB) (string, error) {
+	return "", nil
 }
 
 // CompileRoutes - takes a map of methods to paths and handlers, and returns a map of methods to CompiledRoutes
@@ -217,7 +230,9 @@ func RegisterRoutes(d ServerData) error {
 	}
 
 	authBase := AuthBase{secret: d.Config.Secrets[0], override: nil} //we know d.Config.Secrets is a slice of at least one or start up would fail.
-	routes := CreateRouteMap(routeSlice, rawRoutes, authBase, d.RequestTimeout)
+
+	routes := CreateRouteMap(routeSlice, rawRoutes, authBase, d.RequestTimeout, d.DB)
+
 	compiledRoutes := CompileRoutes(routes)
 	getReqID := nextReqIDGetter()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
