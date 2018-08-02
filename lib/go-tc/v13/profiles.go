@@ -43,6 +43,7 @@ type Profile struct {
 	LastUpdated tc.TimeNoMod `json:"lastUpdated" db:"last_updated"`
 
 	Name            string              `json:"name"`
+	Parameter       string              `json:"param"`
 	Description     string              `json:"description"`
 	CDNName         string              `json:"cdnName"`
 	CDNID           int                 `json:"cdn"`
