@@ -24,6 +24,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/jmoiron/sqlx"
@@ -69,7 +70,10 @@ func GetCurrentUserFromDB(DB *sqlx.DB, CurrentUserStmt, user string) CurrentUser
 		log.Errorf("no db provided to GetCurrentUserFromDB")
 		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}
 	}
-	err := DB.Get(&currentUserInfo, CurrentUserStmt, user)
+	dbCtx, dbClose := context.WithTimeout(context.Background(), time.Second*20)
+	defer dbClose()
+
+	err := DB.GetContext(dbCtx, &currentUserInfo, CurrentUserStmt, user)
 	switch {
 	case err == sql.ErrNoRows:
 		log.Errorf("checking user %v info: user not in database", user)
