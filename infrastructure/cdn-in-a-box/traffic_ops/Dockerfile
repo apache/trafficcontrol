@@ -79,4 +79,5 @@ ENV MOJO_MODE production
 ADD adduser.pl /
 ADD config.sh /
 ADD run.sh /
+COPY pg_dump/* /pg_dump/
 CMD /run.sh

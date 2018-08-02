@@ -36,6 +36,7 @@
 # CERT_CITY
 # CERT_COMPANY
 # DOMAIN
+# PG_DUMP
 
 # TODO:  Unused -- should be removed?  TRAFFIC_VAULT_PASS
 
@@ -64,9 +65,29 @@ export PERL5LIB=$TO_DIR/lib:$TO_DIR/local/lib/perl5
 export PATH=/usr/local/go/bin:/opt/traffic_ops/go/bin:$PATH
 export GOPATH=/opt/traffic_ops/go
 
-cd $TO_DIR && \
-	./db/admin.pl --env=production reset && \
-	./db/admin.pl --env=production seed || echo "db setup failed!"
+# if  a pg_dump file exists at /pg_dump/${PG_DUMP}, load it.
+# otherwise create and seed the database.
+if [ ! -z ${PG_DUMP+x} ]  && [ -f "/pg_dump/${PG_DUMP}" ]; then
+  sleep 3
+  # create the database and owner
+  echo "CREATE USER $DB_USER WITH SUPERUSER PASSWORD '$DB_USER_PASS';" | psql -U postgres -h db postgres
+  echo "CREATE DATABASE $DB_NAME WITH OWNER=$DB_USER;" | psql -U postgres -h db postgres
+  # load the pg dump, need to run this twcie to to fk dependencies.
+  echo "loading the database from a backup: pg_dump/$PG_DUMP"
+  for i in 0 1; do
+      pg_restore --clean --no-acl --no-owner -h db -U $DB_USER -d $DB_NAME /pg_dump/${PG_DUMP} 2>&1 | tee /pg_load.log
+      sleep 3
+      rm /pg_load.log
+  done
+else 
+  cd $TO_DIR && \
+	  ./db/admin.pl --env=production reset && \
+	  ./db/admin.pl --env=production seed || echo "db setup failed!"
+fi
+
+if [ ! -z $TRAFFIC_VAULT_PASS ]; then
+  echo "{\"user\": \"riakuser\",\"password\": \"$TRAFFIC_VAULT_PASS\"}" > /opt/traffic_ops/app/conf/production/riak.conf
+fi
 
 # Add admin user -- all other users should be created using API
 /adduser.pl $TO_ADMIN_USER $TO_ADMIN_PASSWORD admin | psql -U$DB_USER -h$DB_SERVER $DB_NAME || echo "adding traffic_ops admin user failed!"
