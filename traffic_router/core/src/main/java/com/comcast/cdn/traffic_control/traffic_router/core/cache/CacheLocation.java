@@ -40,6 +40,13 @@ public class CacheLocation {
 	private final Map<String, Cache> caches;
 	private List<String> backupCacheGroups = null;
 	private boolean useClosestGeoOnBackupFailure = true;
+	private final Set<LocalizationMethod> enabledLocalizationMethods;
+
+	public enum LocalizationMethod {
+		DEEP_CZ,
+		CZ,
+		GEO
+	}
 
 	/**
 	 * Creates a CacheLocation with the specified ID at the specified location.
@@ -50,7 +57,7 @@ public class CacheLocation {
 	 *            the coordinates of this location
 	 */
 	public CacheLocation(final String id, final Geolocation geolocation) {
-		this(id, geolocation, null, true);
+		this(id, geolocation, null, true, null);
 	}
 
 	/**
@@ -67,11 +74,18 @@ public class CacheLocation {
 	 * @param useClosestGeoOnBackupFailure
 	 *            the backup fallback setting for this id
 	 */
-	public CacheLocation(final String id, final Geolocation geolocation, final List<String> backupCacheGroups, final boolean useClosestGeoOnBackupFailure) {
+	public CacheLocation(
+			final String id,
+			final Geolocation geolocation,
+			final List<String> backupCacheGroups,
+			final boolean useClosestGeoOnBackupFailure,
+			final Set<LocalizationMethod> enabledLocalizationMethods
+	) {
 		this.id = id;
 		this.geolocation = geolocation;
 		this.backupCacheGroups = backupCacheGroups;
 		this.useClosestGeoOnBackupFailure = useClosestGeoOnBackupFailure;
+		this.enabledLocalizationMethods = enabledLocalizationMethods;
 		caches = new HashMap<String, Cache>();
 	}
 
