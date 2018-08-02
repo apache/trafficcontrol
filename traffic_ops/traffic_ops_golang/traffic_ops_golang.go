@@ -120,6 +120,8 @@ func main() {
 	defer db.Close()
 
 	db.SetMaxOpenConns(cfg.MaxDBConnections)
+	db.SetMaxIdleConns(cfg.DBMaxIdleConnections)
+	db.SetConnMaxLifetime(time.Duration(cfg.DBConnMaxLifetimeSeconds) * time.Second)
 
 	profiling := cfg.ProfilingEnabled
 
