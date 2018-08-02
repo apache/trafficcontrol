@@ -41,9 +41,10 @@ import (
 
 const (
 	CDNQueryParam         = "cdn"
-	NameQueryParam        = "name"
-	IDQueryParam          = "id"
 	DescriptionQueryParam = "description"
+	IDQueryParam          = "id"
+	NameQueryParam        = "name"
+	ParamQueryParam       = "param"
 	TypeQueryParam        = "type"
 )
 
@@ -110,10 +111,17 @@ func (prof *TOProfile) Read(parameters map[string]string) ([]interface{}, []erro
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		CDNQueryParam:  dbhelpers.WhereColumnInfo{"c.id", nil},
 		NameQueryParam: dbhelpers.WhereColumnInfo{"prof.name", nil},
 		IDQueryParam:   dbhelpers.WhereColumnInfo{"prof.id", api.IsInt},
 	}
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
+
+	// Narrow down if the query parameter is 'param'
+	if _, ok := parameters[ParamQueryParam]; ok {
+		where = where + " LEFT JOIN profile_parameter pp ON prof.id  = pp.profile where pp.parameter = '" + parameters[ParamQueryParam] + "'"
+	}
+
 	if len(errs) > 0 {
 		return nil, errs, tc.DataConflictError
 	}
