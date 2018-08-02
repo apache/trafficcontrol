@@ -100,19 +100,23 @@ func isUsed(tx *sqlx.Tx, ID int) (bool, error) {
 	var pid2 int
 	var asns int
 
-	//Counts all the places you might find a cachegroup
-	query := `select
-		count(server.id),
-		count(c2.parent_cachegroup_id),
-		count(c2.secondary_parent_cachegroup_id),
-		count(asn.id)
-	from cachegroup as cg
-	left join server on cg.id = cachegroup
-	left join asn on cg.id = asn.cachegroup
-	left join cachegroup as c2
-	  on cg.id = c2.parent_cachegroup_id
-		or cg.id = c2.secondary_parent_cachegroup_id
-	where cg.id = $1 group by cg.id`
+	/* Table counts all the places you might find a single cachegroup being used.
+	 * servers | parents | secondary parents | asns
+	 * --------+---------+-------------------+------
+	 *      12 |       0 |                 2 |    0
+	 */
+	query := `
+	SELECT
+		COUNT(server.id) AS servers,
+		COUNT(c2.parent_cachegroup_id) AS p1,
+		COUNT(c3.secondary_parent_cachegroup_id) AS p2,
+		COUNT(asn.id) AS asns
+	FROM cachegroup AS cg
+	LEFT JOIN server ON cg.id = cachegroup
+	LEFT JOIN cachegroup AS c2 ON cg.id = c2.parent_cachegroup_id
+	LEFT JOIN cachegroup as c3 ON cg.id = c3.secondary_parent_cachegroup_id
+	LEFT JOIN asn ON cg.id = asn.cachegroup
+	WHERE cg.id = $1 GROUP BY cg.id`
 
 	err := tx.QueryRow(query, ID).Scan(&servers, &pid, &pid2, &asns)
 	if err != nil {
@@ -121,16 +125,16 @@ func isUsed(tx *sqlx.Tx, ID int) (bool, error) {
 	}
 	//Only return the immediate error
 	if servers > 0 {
-		return true, errors.New("cache is in use by one or more servers")
+		return true, errors.New("cachegroup is in use by one or more servers")
 	}
 	if pid > 0 {
-		return true, errors.New("cache is in use as a parent cache")
+		return true, errors.New("cachegroup is in use as a parent cachegroup")
 	}
 	if pid2 > 0 {
-		return true, errors.New("cache is in use as a secondary parent cache")
+		return true, errors.New("cachegroup is in use as a secondary parent cachegroup")
 	}
 	if asns > 0 {
-		return true, errors.New("cache is in use in one or more ASNs")
+		return true, errors.New("cachegroup is in use in one or more ASNs")
 	}
 
 	return false, nil

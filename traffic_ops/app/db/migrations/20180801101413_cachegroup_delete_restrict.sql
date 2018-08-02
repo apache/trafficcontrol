@@ -15,10 +15,10 @@
 
 -- +goose Up
 -- SQL in section 'Up' is executed when this migration is applied
-ALTER TABLE server drop CONSTRAINT fk_server_cachegroup1;
-ALTER TABLE server add CONSTRAINT fk_server_cachegroup1 FOREIGN KEY(cachegroup) REFERENCES cachegroup(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+ALTER TABLE server DROP CONSTRAINT fk_server_cachegroup1;
+ALTER TABLE server ADD CONSTRAINT fk_server_cachegroup1 FOREIGN KEY(cachegroup) REFERENCES cachegroup(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
-ALTER TABLE server drop CONSTRAINT fk_server_cachegroup1;
-ALTER TABLE server add CONSTRAINT fk_server_cachegroup1 FOREIGN KEY(cachegroup) REFERENCES cachegroup(id) ON UPDATE RESTRICT ON DELETE CASCADE;
+ALTER TABLE server DROP CONSTRAINT fk_server_cachegroup1;
+ALTER TABLE server ADD CONSTRAINT fk_server_cachegroup1 FOREIGN KEY(cachegroup) REFERENCES cachegroup(id) ON UPDATE RESTRICT ON DELETE CASCADE;
