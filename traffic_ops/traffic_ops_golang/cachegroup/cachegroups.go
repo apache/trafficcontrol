@@ -95,45 +95,33 @@ func (cg *TOCacheGroup) SetID(i int) {
 // Is the cachegroup being used?
 func isUsed(tx *sqlx.Tx, ID int) (bool, error) {
 
-	var servers int
-	var pid int
-	var pid2 int
-	var asns int
+	var usedByServer bool
+	var usedByParent bool
+	var usedBySecondaryParent bool
+	var usedByASN bool
 
-	/* Table counts all the places you might find a single cachegroup being used.
-	 * servers | parents | secondary parents | asns
-	 * --------+---------+-------------------+------
-	 *      12 |       0 |                 2 |    0
-	 */
-	query := `
-	SELECT
-		COUNT(server.id) AS servers,
-		COUNT(c2.parent_cachegroup_id) AS p1,
-		COUNT(c3.secondary_parent_cachegroup_id) AS p2,
-		COUNT(asn.id) AS asns
-	FROM cachegroup AS cg
-	LEFT JOIN server ON cg.id = cachegroup
-	LEFT JOIN cachegroup AS c2 ON cg.id = c2.parent_cachegroup_id
-	LEFT JOIN cachegroup as c3 ON cg.id = c3.secondary_parent_cachegroup_id
-	LEFT JOIN asn ON cg.id = asn.cachegroup
-	WHERE cg.id = $1 GROUP BY cg.id`
+	query := `SELECT
+    (SELECT id FROM server WHERE server.cachegroup = $1 LIMIT 1) IS NOT NULL,
+    (SELECT id FROM cachegroup WHERE cachegroup.parent_cachegroup_id = $1 LIMIT 1) IS NOT NULL,
+    (SELECT id FROM cachegroup WHERE cachegroup.secondary_parent_cachegroup_id = $1 LIMIT 1) IS NOT NULL,
+    (SELECT id FROM asn WHERE cachegroup = $1 LIMIT 1) IS NOT NULL;`
 
-	err := tx.QueryRow(query, ID).Scan(&servers, &pid, &pid2, &asns)
+	err := tx.QueryRow(query, ID).Scan(&usedByServer, &usedByParent, &usedBySecondaryParent, &usedByASN)
 	if err != nil {
 		log.Errorf("received error: %++v from query execution", err)
 		return false, err
 	}
 	//Only return the immediate error
-	if servers > 0 {
+	if usedByServer {
 		return true, errors.New("cachegroup is in use by one or more servers")
 	}
-	if pid > 0 {
+	if usedByParent {
 		return true, errors.New("cachegroup is in use as a parent cachegroup")
 	}
-	if pid2 > 0 {
+	if usedBySecondaryParent {
 		return true, errors.New("cachegroup is in use as a secondary parent cachegroup")
 	}
-	if asns > 0 {
+	if usedByASN {
 		return true, errors.New("cachegroup is in use in one or more ASNs")
 	}
 
