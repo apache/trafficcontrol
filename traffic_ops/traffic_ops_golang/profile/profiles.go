@@ -118,9 +118,9 @@ func (prof *TOProfile) Read(parameters map[string]string) ([]interface{}, []erro
 	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
 
 	// Narrow down if the query parameter is 'param'
-	if _, ok := parameters[ParamQueryParam]; ok {
-		queryValues["parameter_id"] = parameters[ParamQueryParam]
-		if len(parameters[ParamQueryParam]) > 0 {
+	if paramValue, ok := parameters[ParamQueryParam]; ok {
+		queryValues["parameter_id"] = paramValue
+		if len(paramValue) > 0 {
 			where += " LEFT JOIN profile_parameter pp ON prof.id  = pp.profile where pp.parameter=:parameter_id"
 		}
 	}
