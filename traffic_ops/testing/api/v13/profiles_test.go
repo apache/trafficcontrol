@@ -93,6 +93,16 @@ func GetTestProfiles(t *testing.T) {
 		if err != nil {
 			t.Errorf("cannot GET Profile by name: %v - %v\n", err, resp)
 		}
+
+		resp, _, err = TOSession.GetProfileByParameter(pr.Parameter)
+		if err != nil {
+			t.Errorf("cannot GET Profile by param: %v - %v\n", err, resp)
+		}
+
+		resp, _, err = TOSession.GetProfileByCDNID(pr.CDNID)
+		if err != nil {
+			t.Errorf("cannot GET Profile by cdn: %v - %v\n", err, resp)
+		}
 	}
 }
 func GetTestProfilesWithParameters(t *testing.T) {
