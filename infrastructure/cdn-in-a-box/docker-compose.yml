@@ -52,6 +52,8 @@ services:
     domainname: cdn.local
     networks:
       - tcnet
+    volumes:
+      - ./traffic_ops/data:/var/lib/postgresql/data
     env_file:
       - variables.env
     # TODO: change to expose: "5432" to limit to containers
@@ -79,8 +81,7 @@ services:
   trafficops:
     build:
       context: traffic_ops
-      args:
-        TRAFFIC_OPS_RPM: traffic_ops.rpm
+      dockerfile: Dockerfile-go
     depends_on:
       - db
       - trafficops-perl
@@ -93,26 +94,9 @@ services:
       - tcnet
     ports:
       - "6443:6443"
-    build:
-      context: traffic_ops
-      dockerfile: Dockerfile-go
     depends_on:
       - db
       - trafficops-perl
-
-  # trafficops-init is a small container that uses admin credentials to add needed data to trafficops
-  # after it has successfully started
-  trafficops-init:
-    build:
-      context: traffic_ops
-      dockerfile: Dockerfile-init
-    depends_on:
-      - trafficops
-    domainname: cdn.local
-    env_file:
-      - variables.env
-    networks:
-      - tcnet
 
   trafficportal:
     build:
@@ -133,12 +117,26 @@ services:
     build:
       context: traffic_monitor
       args:
-        TRAFFIC_PORTAL_RPM: traffic_monitor.rpm
+        TRAFFIC_MONITOR_RPM: traffic_monitor.rpm
     domainname: cdn.local
     env_file:
       - variables.env
     hostname: trafficmonitor
     image: trafficmonitor
+    networks:
+      - tcnet
+    ports:
+      - "80:80"
+
+  trafficvault:
+    build:
+      context: .
+      dockerfile: traffic_vault/Dockerfile
+    domainname: cdn.local
+    env_file:
+      - variables.env
+    hostname: trafficvault
+    image: trafficvault
     networks:
       - tcnet
     ports:

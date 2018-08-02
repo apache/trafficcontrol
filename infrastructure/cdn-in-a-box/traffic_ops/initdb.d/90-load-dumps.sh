@@ -27,5 +27,5 @@ for dump in "$d"/*.dump; do
     # convert to sql -- can't load a dump until db initialized,  but sql works
     echo "Restoring from $dump"
     pg_restore -f "$t" $dump
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <"$t"
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$DB_NAME" <"$t"
 done
