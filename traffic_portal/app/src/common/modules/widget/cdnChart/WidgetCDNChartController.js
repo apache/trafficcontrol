@@ -173,7 +173,7 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 
 	var plotChart = function() {
 		if (chartOptions && chartSeries) {
-			$.plot($("#bps-chart-" + $scope.cdn.id), chartSeries, chartOptions);
+			$.plot($("#cdn-chart-" + $scope.cdn.id), chartSeries, chartOptions);
 		}
 	};
 

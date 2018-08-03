@@ -27,7 +27,7 @@ var TableTenantDeliveryServicesController = function(tenant, tenantDeliveryServi
 
 	$scope.tenantDeliveryServices = tenantDeliveryServices;
 
-	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
+	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.customLink.show;
 
 	$scope.openCharts = deliveryServiceUtils.openCharts;
 

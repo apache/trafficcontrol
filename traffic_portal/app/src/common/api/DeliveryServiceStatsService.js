@@ -17,32 +17,28 @@
  * under the License.
  */
 
-var DeliveryServiceUtils = function($window, propertiesModel) {
+var DeliveryServiceStatsService = function($http, $q, ENV) {
 
-	this.protocols = {
-		0: "HTTP",
-		1: "HTTPS",
-		2: "HTTP AND HTTPS",
-		3: "HTTP TO HTTPS"
-	};
+	this.getBPS = function(xmlId, start, end) {
+		var request = $q.defer();
 
-	this.qstrings = {
-		0: "USE",
-		1: "IGNORE",
-		2: "DROP"
-	};
+		var url = ENV.api['root'] + "deliveryservice_stats",
+			params = { deliveryServiceName: xmlId, metricType: 'kbps', serverType: 'edge', startDate: start.seconds(00).format(), endDate: end.seconds(00).format(), interval: '60s' };
 
-	this.openCharts = function(ds, $event) {
-		if ($event) {
-			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		}
-		$window.open(
-			propertiesModel.properties.deliveryServices.charts.customLink.baseUrl + ds.xmlId,
-			'_blank'
-		);
+		$http.get(url, { params: params })
+			.then(
+				function(result) {
+					request.resolve(result.data.response);
+				},
+				function(fault) {
+					request.reject();
+				}
+			);
+
+		return request.promise;
 	};
 
 };
 
-DeliveryServiceUtils.$inject = ['$window', 'propertiesModel'];
-module.exports = DeliveryServiceUtils;
+DeliveryServiceStatsService.$inject = ['$http', '$q', 'ENV'];
+module.exports = DeliveryServiceStatsService;

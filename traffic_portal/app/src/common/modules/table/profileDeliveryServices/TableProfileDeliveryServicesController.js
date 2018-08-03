@@ -27,7 +27,7 @@ var TableProfileDeliveryServicesController = function(profile, deliveryServices,
 
 	$scope.deliveryServices = deliveryServices;
 
-	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
+	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.customLink.show;
 
 	$scope.openCharts = deliveryServiceUtils.openCharts;
 
