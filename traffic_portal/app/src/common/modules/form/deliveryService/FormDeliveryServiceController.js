@@ -197,7 +197,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     ];
 
     $scope.label = function(field, attribute) {
-        return propertiesModel.properties.defaults.deliveryservices.descriptions[field][attribute];
+        return propertiesModel.properties.deliveryServices.defaults.descriptions[field][attribute];
     };
 
     $scope.tenantLabel = function(tenant) {

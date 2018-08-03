@@ -38,11 +38,6 @@
         "context": 1000
       }
     },
-    "dsRequests": {
-      "_comments": "Should all delivery service changes go through the delivery service review process? You can also provide a role that will skip the process.",
-      "enabled": false,
-      "roleNeededToSkip": "admin"
-    },
     "cacheChecks": {
       "_comments": "These are configurable properties for the cache checks view. The data for the cache checks view is derived from TO extensions. The extensions array should include an entry for each of your extensions or you can check GET api/1.3/servers/checks to see which checks you have configured.",
       "show": true,
@@ -106,23 +101,8 @@
     },
     "deliveryServices": {
       "_comment": "Delivery service settings",
-      "charts": {
-        "_comment": "Do you want to show a charts button for each ds? If so, where can the charts be found? xml id will be appended to the provided url.",
-        "show": false,
-        "baseUrl": "https://trafficstats.domain.com/dashboard/script/traffic_ops_deliveryservice.js?which="
-      }
-    },
-    "servers": {
-      "_comment": "Server settings",
-      "charts": {
-        "_comment": "Do you want to show a charts button for each server? If so, where can the charts be found? xml id will be appended to the provided url.",
-        "show": false,
-        "baseUrl": "https://trafficstats.domain.com/dashboard/script/traffic_ops_server.js?which="
-      }
-    },
-    "defaults": {
-      "_comments": "These are default values used when creating resources",
-      "deliveryservices": {
+      "defaults": {
+        "_comments": "These are default values used when creating resources",
         "ANY_MAP": {
           "dscp": 0,
           "regionalGeoBlocking": false,
@@ -382,6 +362,24 @@
             "desc": "This id becomes a part of the CDN service domain in the form http://cdn.service-key.company.com/. Must be all lowercase, no spaces or special characters. May contain dashes."
           }
         }
+      },
+      "charts": {
+        "_comment": "Do you want to show a charts button for each ds? If so, where can the charts be found? xml id will be appended to the provided url.",
+        "show": false,
+        "baseUrl": "https://trafficstats.domain.com/dashboard/script/traffic_ops_deliveryservice.js?which="
+      }
+    },
+    "dsRequests": {
+      "_comments": "Should all delivery service changes go through the delivery service review process? You can also provide a role that will skip the process.",
+      "enabled": false,
+      "roleNeededToSkip": "admin"
+    },
+    "servers": {
+      "_comment": "Server settings",
+      "charts": {
+        "_comment": "Do you want to show a charts button for each server? If so, where can the charts be found? xml id will be appended to the provided url.",
+        "show": false,
+        "baseUrl": "https://trafficstats.domain.com/dashboard/script/traffic_ops_server.js?which="
       }
     },
     "customMenu": {
