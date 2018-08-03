@@ -97,6 +97,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/deliveryServiceRequests/list').name,
         require('./modules/private/deliveryServices').name,
         require('./modules/private/deliveryServices/clone').name,
+        require('./modules/private/deliveryServices/charts').name,
         require('./modules/private/deliveryServices/compare').name,
         require('./modules/private/deliveryServices/edit').name,
         require('./modules/private/deliveryServices/list').name,

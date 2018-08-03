@@ -49,7 +49,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
     $scope.origin = origin[0];
 
-    $scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
+    $scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.customLink.show;
 
     $scope.openCharts = deliveryServiceUtils.openCharts;
 
@@ -270,6 +270,10 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
     
     $scope.viewStaticDnsEntries = function() {
         $location.path($location.path() + '/static-dns-entries');
+    };
+
+    $scope.viewCharts = function() {
+        $location.path($location.path() + '/charts');
     };
 
     $scope.navigateToPath = locationUtils.navigateToPath;

@@ -29,7 +29,7 @@ var TableUserDeliveryServicesController = function(user, userDeliveryServices, u
 
 	$scope.useTenancy = useTenancy[0].value;
 
-	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.show;
+	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.customLink.show;
 
 	$scope.openCharts = deliveryServiceUtils.openCharts;
 

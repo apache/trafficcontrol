@@ -364,9 +364,14 @@
         }
       },
       "charts": {
-        "_comment": "Do you want to show a charts button for each ds? If so, where can the charts be found? xml id will be appended to the provided url.",
-        "show": false,
-        "baseUrl": "https://trafficstats.domain.com/dashboard/script/traffic_ops_deliveryservice.js?which="
+        "_comment": "Delivery Service Charts",
+        "autoRefresh": true,
+        "refreshRateInMS": 30000,
+        "customLink": {
+          "_comment": "Do you want to show a custom link to your own ds dashboards?",
+          "show": false,
+          "baseUrl": "https://trafficstats.domain.com/dashboard/script/traffic_ops_deliveryservice.js?which="
+        }
       }
     },
     "dsRequests": {

@@ -15,16 +15,31 @@
 
 */
 
-.cdn-chart-container {
+.ds-bps-chart-container {
   position: relative;
   text-align: center;
   background-color: transparent;
   padding: 30px 60px;
 
-  .cdn-chart {
+  .ds-bps-chart {
     width: 100%;
     height: 250px;
   }
 
 }
+
+.dashboard_graph small {
+  font-size: 13px;
+  color: #999;
+}
+
+.summary-metrics {
+
+  .total {
+    text-transform: uppercase;
+  }
+
+}
+
+
 
