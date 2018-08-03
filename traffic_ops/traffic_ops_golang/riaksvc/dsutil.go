@@ -143,7 +143,6 @@ func Ping(tx *sql.Tx, authOpts *riak.AuthOptions) (tc.RiakPingResp, error) {
 	if err != nil {
 		return tc.RiakPingResp{}, errors.New("getting riak servers: " + err.Error())
 	}
-	log.Errorf("DEBUG: GetRiakServers got: %+v\n", servers)
 	for _, server := range servers {
 		cluster, err := RiakServersToCluster([]ServerAddr{server}, authOpts)
 		if err != nil {
