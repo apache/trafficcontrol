@@ -214,8 +214,6 @@ func SnapshotOldGUIHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		log.Errorln("DEBUG calling crconfig.SnapshotOldGUIHandler CDN " + cdn)
-
 		ctx := r.Context()
 		user, err := auth.GetCurrentUser(ctx)
 		if err != nil {
