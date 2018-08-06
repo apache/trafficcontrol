@@ -32,7 +32,7 @@ type InterceptListener struct {
 	connMap      *ConnMap
 }
 
-func getConnStateCallback(connMap *ConnMap) func(net.Conn, http.ConnState) {
+func GetConnStateCallback(connMap *ConnMap) func(net.Conn, http.ConnState) {
 	return func(conn net.Conn, state http.ConnState) {
 		switch state {
 		case http.StateClosed:
@@ -63,7 +63,7 @@ func InterceptListen(network, laddr string) (net.Listener, *ConnMap, func(net.Co
 		return l, nil, nil, err
 	}
 	connMap := NewConnMap()
-	return &InterceptListener{realListener: l, connMap: connMap}, connMap, getConnStateCallback(connMap), nil
+	return &InterceptListener{realListener: l, connMap: connMap}, connMap, GetConnStateCallback(connMap), nil
 }
 
 // InterceptListenTLS is like InterceptListen but for serving HTTPS. It returns the tls.Config, which must be set on the http.Server using this listener for HTTP/2 to be set up.
@@ -80,7 +80,7 @@ func InterceptListenTLS(network string, laddr string, certs []tls.Certificate) (
 
 	interceptListener := &InterceptListener{realListener: l, connMap: connMap}
 	tlsListener := tls.NewListener(interceptListener, config)
-	return tlsListener, connMap, getConnStateCallback(connMap), config, nil
+	return tlsListener, connMap, GetConnStateCallback(connMap), config, nil
 }
 
 func (l *InterceptListener) Accept() (net.Conn, error) {

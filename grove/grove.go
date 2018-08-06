@@ -39,6 +39,7 @@ import (
 	"github.com/apache/trafficcontrol/grove/cache"
 	"github.com/apache/trafficcontrol/grove/config"
 	"github.com/apache/trafficcontrol/grove/diskcache"
+	"github.com/apache/trafficcontrol/grove/grvssl"
 	"github.com/apache/trafficcontrol/grove/icache"
 	"github.com/apache/trafficcontrol/grove/memcache"
 	"github.com/apache/trafficcontrol/grove/plugin"
@@ -47,11 +48,16 @@ import (
 	"github.com/apache/trafficcontrol/grove/stat"
 	"github.com/apache/trafficcontrol/grove/tiercache"
 	"github.com/apache/trafficcontrol/grove/web"
+	"github.com/spacemonkeygo/openssl"
 )
 
 const ShutdownTimeout = 60 * time.Second
 
 func main() {
+	var defaultCtx *openssl.Ctx
+	var certs []tls.Certificate
+	var tlsConfig *tls.Config
+
 	runtime.GOMAXPROCS(32) // DEBUG
 	configFileName := flag.String("cfg", "", "The config file path")
 	pprof := flag.Bool("pprof", false, "Whether to profile")
@@ -100,18 +106,26 @@ func main() {
 		os.Exit(1)
 	}
 
-	certs, err := loadCerts(remapper.Rules())
-	if err != nil {
-		log.Errorf("starting service: loading certificates: %v\n", err)
-		os.Exit(1)
-	}
-	defaultCert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
-	if err != nil {
-		log.Errorf("starting service: loading default certificate: %v\n", err)
-		os.Exit(1)
-	}
-	certs = append(certs, defaultCert)
+	if cfg.UseOpenSSL {
+		err = grvssl.CreateTlsCtxStore(remapper.Rules())
 
+		if err != nil {
+			log.Errorf("starting service: loading tls context store: %v\n", err)
+			os.Exit(1)
+		}
+	} else {
+		certs, err = loadCerts(remapper.Rules())
+		if err != nil {
+			log.Errorf("starting service: loading certificates: %v\n", err)
+			os.Exit(1)
+		}
+		defaultCert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
+		if err != nil {
+			log.Errorf("starting service: loading default certificate: %v\n", err)
+			os.Exit(1)
+		}
+		certs = append(certs, defaultCert)
+	}
 	httpListener, httpConns, httpConnStateCallback, err := web.InterceptListen("tcp", fmt.Sprintf(":%d", cfg.Port))
 	if err != nil {
 		log.Errorf("creating HTTP listener %v: %v\n", cfg.Port, err)
@@ -122,11 +136,27 @@ func main() {
 	httpsServer := (*http.Server)(nil)
 	httpsListener := net.Listener(nil)
 	httpsConnStateCallback := (func(net.Conn, http.ConnState))(nil)
-	tlsConfig := (*tls.Config)(nil)
+
+	tlsConfig = (*tls.Config)(nil)
+
 	if cfg.CertFile != "" && cfg.KeyFile != "" {
-		if httpsListener, httpsConns, httpsConnStateCallback, tlsConfig, err = web.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), certs); err != nil {
-			log.Errorf("creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
-			return
+		if !cfg.UseOpenSSL {
+			if httpsListener, httpsConns, httpsConnStateCallback, tlsConfig, err = web.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), certs); err != nil {
+				log.Errorf("creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
+				return
+			}
+		} else {
+			defaultCtx, cname, err := grvssl.NewCtxFromFiles(cfg.CertFile, cfg.KeyFile)
+			if err != nil {
+				log.Errorf("creating openssl listener %v %v\n", cfg.HTTPSPort, err)
+				return
+			}
+			defaultCtx.SetTLSExtServernameCallback(grvssl.SniCallback)
+			if httpsListener, httpsConns, httpsConnStateCallback, err = grvssl.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), defaultCtx); err != nil {
+				log.Errorf("1: creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
+				return
+			}
+			grvssl.CtxStore.CtxMap[cname] = defaultCtx
 		}
 	}
 
@@ -166,7 +196,11 @@ func main() {
 	httpServer := startServer(httpHandler, httpListener, httpConnStateCallback, nil, cfg.Port, idleTimeout, readTimeout, writeTimeout, "http")
 
 	if cfg.CertFile != "" && cfg.KeyFile != "" {
-		httpsServer = startServer(httpsHandler, httpsListener, httpsConnStateCallback, tlsConfig, cfg.HTTPSPort, idleTimeout, readTimeout, writeTimeout, "https")
+		if !cfg.UseOpenSSL {
+			httpsServer = startServer(httpsHandler, httpsListener, httpsConnStateCallback, tlsConfig, cfg.HTTPSPort, idleTimeout, readTimeout, writeTimeout, "https")
+		} else {
+			httpsServer = grvssl.StartServer(httpsHandler, httpsListener, httpsConnStateCallback, cfg.HTTPSPort, idleTimeout, readTimeout, writeTimeout, "https")
+		}
 	}
 
 	reloadConfig := func() {
@@ -214,8 +248,14 @@ func main() {
 		}
 
 		if cfg.HTTPSPort != oldCfg.HTTPSPort {
-			if httpsListener, httpsConns, httpsConnStateCallback, tlsConfig, err = web.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), certs); err != nil {
-				log.Errorf("creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
+			if !cfg.UseOpenSSL {
+				if httpsListener, httpsConns, httpsConnStateCallback, tlsConfig, err = web.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), certs); err != nil {
+					log.Errorf("2: creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
+				}
+			} else {
+				if httpsListener, httpsConns, httpsConnStateCallback, err = grvssl.InterceptListenTLS("tcp", fmt.Sprintf(":%d", cfg.HTTPSPort), defaultCtx); err != nil {
+					log.Errorf("2: creating HTTPS listener %v: %v\n", cfg.HTTPSPort, err)
+				}
 			}
 		}
 
@@ -286,7 +326,11 @@ func main() {
 				}
 			}
 
-			httpsServer = startServer(httpsHandler, httpsListener, httpsConnStateCallback, tlsConfig, cfg.HTTPSPort, idleTimeout, readTimeout, writeTimeout, "https")
+			if !cfg.UseOpenSSL {
+				httpsServer = startServer(httpsHandler, httpsListener, httpsConnStateCallback, tlsConfig, cfg.HTTPSPort, idleTimeout, readTimeout, writeTimeout, "https")
+			} else {
+				httpsServer = grvssl.StartServer(httpsHandler, httpsListener, httpsConnStateCallback, cfg.HTTPSPort, idleTimeout, readTimeout, writeTimeout, "https")
+			}
 		}
 	}
 
