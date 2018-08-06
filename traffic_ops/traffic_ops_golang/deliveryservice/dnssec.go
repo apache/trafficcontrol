@@ -95,7 +95,7 @@ func getDNSSECKeys(keyType string, dsName string, ttl time.Duration, inception t
 	key := tc.DNSSECKey{
 		InceptionDateUnix:  inception.Unix(),
 		ExpirationDateUnix: expiration.Unix(),
-		Name:               dsName + ".",
+		Name:               dsName,
 		TTLSeconds:         uint64(ttl / time.Second),
 		Status:             status,
 		EffectiveDateUnix:  effectiveDate.Unix(),
