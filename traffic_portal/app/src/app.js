@@ -98,6 +98,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/deliveryServices').name,
         require('./modules/private/deliveryServices/clone').name,
         require('./modules/private/deliveryServices/charts').name,
+        require('./modules/private/deliveryServices/charts/view').name,
         require('./modules/private/deliveryServices/compare').name,
         require('./modules/private/deliveryServices/edit').name,
         require('./modules/private/deliveryServices/list').name,
@@ -205,6 +206,8 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/custom').name,
 
         // common modules
+        require('./common/modules/chart/bps').name,
+        require('./common/modules/chart/tps').name,
         require('./common/modules/compare').name,
         require('./common/modules/dialog/compare').name,
         require('./common/modules/dialog/confirm').name,

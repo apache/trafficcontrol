@@ -17,25 +17,5 @@
  * under the License.
  */
 
-module.exports = angular.module('trafficPortal.private.deliveryServices.charts', [])
-	.controller('ChartsController', require('./ChartsController'))
-	.config(function($stateProvider, $urlRouterProvider) {
-		$stateProvider
-			.state('trafficPortal.private.deliveryServices.charts', {
-				url: '/{deliveryServiceId}/charts',
-				abstract: true,
-				views: {
-					deliveryServicesContent: {
-						templateUrl: 'modules/private/deliveryServices/charts/charts.tpl.html',
-						controller: 'ChartsController',
-						resolve: {
-							deliveryService: function($stateParams, deliveryServiceService) {
-								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
-							}
-						}
-					}
-				}
-			})
-		;
-		$urlRouterProvider.otherwise('/');
-	});
+module.exports = angular.module('trafficPortal.chart.tps', [])
+	.controller('ChartTPSController', require('./ChartTPSController'));

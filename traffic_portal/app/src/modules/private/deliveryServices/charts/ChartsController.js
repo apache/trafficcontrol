@@ -17,131 +17,9 @@
  * under the License.
  */
 
-var ChartsController = function(deliveryService, $scope, $state, $timeout, $filter, $q, $interval, deliveryServiceService, deliveryServiceStatsService, dateUtils, locationUtils, numberUtils, propertiesModel) {
-
-	var chartSeries,
-		chartOptions;
-
-	var chartInterval,
-		autoRefresh = propertiesModel.properties.deliveryServices.charts.autoRefresh;
-
-	var chartData = [];
-
-	var refreshBPS = function() {
-		registerResizeListener();
-		getChartData($scope.deliveryService.xmlId, moment().subtract(1, 'days'), moment().subtract(10, 'seconds'));
-	};
-
-	var getChartData = function(xmlId, start, end) {
-		var promises = [];
-
-		// get ds bps
-		promises.push(deliveryServiceStatsService.getBPS(xmlId, start, end));
-
-		$q.all(promises)
-			.then(
-				function(responses) {
-					// set date range text
-					$scope.dateRangeText = dateUtils.dateFormat(start.toDate(), "ddd mmm d yyyy h:MM tt (Z)") + ' to ' + dateUtils.dateFormat(end.toDate(), "ddd mmm d yyyy h:MM tt (Z)");
-					// set chart data
-					chartData = (responses[0].series) ? buildBandwidthChartData(responses[0].series, start) : chartData;
-					// set summary data
-					$scope.summaryData = responses[0].summary;
-
-					$timeout(function () {
-						buildChart(chartData);
-					}, 100);
-				},
-				function(fault) {
-					buildChart([]); // build an empty chart
-				});
-
-	};
-
-	var buildBandwidthChartData = function(series, start) {
-		var normalizedChartData = [];
-
-		if (angular.isDefined(series)) {
-			_.each(series.values, function(seriesItem) {
-				if (moment(seriesItem[0]).isSame(start) || moment(seriesItem[0]).isAfter(start)) {
-					normalizedChartData.push([ moment(seriesItem[0]).valueOf(), numberUtils.convertTo(seriesItem[1], $scope.unitSize) ]); // converts data to appropriate unit
-				}
-			});
-		}
-
-		return normalizedChartData;
-	};
-
-	var buildChart = function(bandwidthChartData) {
-
-		chartOptions = {
-			xaxis: {
-				mode: "time",
-				timezone: "utc",
-				twelveHourClock: false
-			},
-			yaxes: [
-				{
-					position: "left",
-					axisLabel: "Bandwidth (Gbps)",
-					axisLabelUseCanvas: true,
-					axisLabelFontSizePixels: 12,
-					axisLabelFontFamily: 'Verdana, Arial',
-					axisLabelPadding: 3
-				}
-			],
-			legend: {
-				position: "nw"
-			},
-			grid: {
-				hoverable: true,
-				axisMargin: 20
-			},
-			tooltip: {
-				show: true,
-				content: function(label, xval, yval, flotItem){
-					var tooltipString = dateUtils.dateFormat(xval, "UTC: ddd mmm d yyyy H:MM:ss tt (Z)") + '<br>';
-					tooltipString += '<span>' + label + ': ' + $filter('number')(yval, 2) + '</span><br>'
-					return tooltipString;
-				}
-			}
-		};
-
-		chartSeries = [
-			{ label: "Bandwidth", yaxis: 1, color: '#3498DB', data: bandwidthChartData }
-		];
-
-		plotChart();
-
-	};
-
-	var createIntervals = function() {
-		killIntervals();
-		chartInterval = $interval(function() { refreshBPS() }, propertiesModel.properties.deliveryServices.charts.refreshRateInMS );
-	};
-
-	var killIntervals = function() {
-		if (angular.isDefined(chartInterval)) {
-			$interval.cancel(chartInterval);
-			chartInterval = undefined;
-		}
-	};
-
-	var registerResizeListener = function() {
-		$(window).resize(plotChart);
-	};
-
-	var plotChart = function() {
-		if (chartOptions && chartSeries) {
-			$.plot($("#ds-bps-chart-" + $scope.deliveryService.id), chartSeries, chartOptions);
-		}
-	};
+var ChartsController = function(deliveryService, $scope, $state, locationUtils) {
 
 	$scope.deliveryService = deliveryService;
-
-	$scope.summaryData = {};
-
-	$scope.dateRangeText;
 
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
@@ -149,20 +27,7 @@ var ChartsController = function(deliveryService, $scope, $state, $timeout, $filt
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
-	$scope.unitSize = 'Gb';
-
-	$scope.$on("$destroy", function() {
-		killIntervals();
-	});
-
-	angular.element(document).ready(function () {
-		refreshBPS();
-		if (autoRefresh) {
-			createIntervals();
-		}
-	});
-
 };
 
-ChartsController.$inject = ['deliveryService', '$scope', '$state', '$timeout', '$filter', '$q', '$interval', 'deliveryServiceService', 'deliveryServiceStatsService', 'dateUtils', 'locationUtils', 'numberUtils', 'propertiesModel'];
+ChartsController.$inject = ['deliveryService', '$scope', '$state', 'locationUtils'];
 module.exports = ChartsController;
