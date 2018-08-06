@@ -24,10 +24,19 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.charts.v
 				url: '',
 				views: {
 					bpsChartContent: {
-						templateUrl: 'common/modules/widget/dsBPSChart/widget.dsBPSChart.tpl.html',
-						controller: 'WidgetDSBPSChartController',
+						templateUrl: 'common/modules/chart/bps/chart.bps.tpl.html',
+						controller: 'ChartBPSController',
 						resolve: {
-							ds: function($stateParams, deliveryServiceService) {
+							deliveryService: function($stateParams, deliveryServiceService) {
+								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
+							}
+						}
+					},
+					tpsChartContent: {
+						templateUrl: 'common/modules/chart/tps/chart.tps.tpl.html',
+						controller: 'ChartTPSController',
+						resolve: {
+							deliveryService: function($stateParams, deliveryServiceService) {
 								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
 							}
 						}

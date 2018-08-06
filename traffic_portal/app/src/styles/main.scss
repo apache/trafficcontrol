@@ -24,6 +24,7 @@ $fa-font-path: "../assets/fonts";
 @import "font-awesome/scss/font-awesome";
 
 // common
+@import "../common/modules/chart/chart ";
 @import "../common/modules/compare/compare ";
 @import "../common/modules/dialog/dialog";
 @import "../common/modules/dialog/import/dialog.import";
@@ -42,7 +43,6 @@ $fa-font-path: "../assets/fonts";
 
 // private
 @import "../modules/private/cdns/config/config";
-@import "../modules/private/deliveryServices/charts/charts";
 @import "../modules/private/deliveryServices/uriSigningKeys/uriSigningKeys";
 
 // custom

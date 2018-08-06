@@ -1,0 +1,44 @@
+<div class="dashboard_graph">
+    <div class="x_title">
+        <h3>Transactions <br><small>{{dateRangeText}}</small></h3>
+        <div class="clearfix"></div>
+    </div>
+    <div class="col-md-9 col-sm-9 col-xs-12">
+        <div class="ds-chart-container">
+            <div id="ds-tps-chart-{{::deliveryService.id}}" class="ds-chart"></div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-3 col-xs-12 bg-white summary-metrics">
+        <div class="x_title">
+            <h3>Summary Metrics</h3>
+            <div class="clearfix"></div>
+        </div>
+        <div class="col-md-12 col-sm-12 col-xs-6">
+            <table class="countries_list">
+                <tbody>
+                    <tr>
+                        <td>Total Transactions</td>
+                        <td class="fs15 fw700 text-right total">{{summaryData.totalTransactions | number:0}}</td>
+                    </tr>
+                    <tr>
+                        <td>95th percentile</td>
+                        <td class="fs15 fw700 text-right">{{summaryData.ninetyFifthPercentile | number:0}}</td>
+                    </tr>
+                    <tr>
+                        <td>Max</td>
+                        <td class="fs15 fw700 text-right">{{summaryData.max | number:0}}</td>
+                    </tr>
+                    <tr>
+                        <td>Min</td>
+                        <td class="fs15 fw700 text-right">{{summaryData.min | number:0}}</td>
+                    </tr>
+                    <tr>
+                        <td>Average</td>
+                        <td class="fs15 fw700 text-right">{{summaryData.average | number:0}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="clearfix"></div>
+</div>
