@@ -25,7 +25,6 @@
 # 
 # DB_SERVER
 # DB_PORT
-# DB_ROOT_PASS
 # DB_USER
 # DB_USER_PASS
 # DB_NAME
@@ -40,7 +39,7 @@
 # TODO:  Unused -- should be removed?  TRAFFIC_VAULT_PASS
 
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS CERT_COUNTRY CERT_STATE CERT_CITY CERT_COMPANY DOMAIN)
+envvars=( DB_SERVER DB_PORT DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS CERT_COUNTRY CERT_STATE CERT_CITY CERT_COMPANY DOMAIN)
 for v in $envvars
 do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
@@ -52,8 +51,14 @@ if [[ -r /config.sh ]]; then
 	. /config.sh
 fi
 
-while ! nc $DB_SERVER $DB_PORT </dev/null 2>/dev/null ; do
-        echo "waiting for $DB_SERVER $DB_PORT"
+pg_isready=$(rpm -ql postgresql96 | grep bin/pg_isready)
+if [[ ! -x $pg_isready ]] ; then
+    echo "Can't find pg_ready in postgresql96"
+    exit 1
+fi
+
+while ! $pg_isready -h$DB_SERVER -p$DB_PORT -d $DB_NAME; do
+        echo "waiting for db on $DB_SERVER $DB_PORT"
         sleep 3
 done
 
@@ -65,6 +70,7 @@ export PATH=/usr/local/go/bin:/opt/traffic_ops/go/bin:$PATH
 export GOPATH=/opt/traffic_ops/go
 
 cd $TO_DIR && \
+	./db/admin.pl --env=production reset && \
 	./db/admin.pl --env=production upgrade || echo "db upgrade failed!"
 
 # Add admin user -- all other users should be created using API
