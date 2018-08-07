@@ -20,6 +20,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"reflect"
 )
 
 func TestStaticDNSEntries(t *testing.T) {
@@ -37,6 +38,7 @@ func TestStaticDNSEntries(t *testing.T) {
 	CreateTestStaticDNSEntries(t)
 	GetTestStaticDNSEntries(t)
 	UpdateTestStaticDNSEntries(t)
+	UpdateTestStaticDNSEntriesInvalidAddress(t)
 	DeleteTestStaticDNSEntries(t)
 	DeleteTestDeliveryServices(t)
 	DeleteTestServers(t)
@@ -97,10 +99,12 @@ func UpdateTestStaticDNSEntries(t *testing.T) {
 		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v\n", firstStaticDNSEntry.Host, err)
 	}
 	remoteStaticDNSEntry := resp[0]
-	expectedAddress := "192.168.0.1"
+	expectedAddress := "192.168.0.2"
 	remoteStaticDNSEntry.Address = expectedAddress
 	var alert tc.Alerts
-	alert, _, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
+	var status int
+	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
+	log.Debugln("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
 	}
@@ -115,6 +119,70 @@ func UpdateTestStaticDNSEntries(t *testing.T) {
 		t.Errorf("results do not match actual: %s, expected: %s\n", respStaticDNSEntry.Address, expectedAddress)
 	}
 
+}
+
+func UpdateTestStaticDNSEntriesInvalidAddress(t *testing.T) {
+
+	expectedAlerts := []tc.Alerts{tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv4 address","error"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid DNS name","error"}}}, tc.Alerts{[]tc.Alert{tc.Alert{"'address' must be a valid IPv6 address","error"}}}}
+
+	// A_RECORD
+	firstStaticDNSEntry := testData.StaticDNSEntries[0]
+	// Retrieve the StaticDNSEntries by name so we can get the id for the Update
+	resp, _, err := TOSession.GetStaticDNSEntriesByHost(firstStaticDNSEntry.Host)
+	if err != nil {
+		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v\n", firstStaticDNSEntry.Host, err)
+	}
+	remoteStaticDNSEntry := resp[0]
+	expectedAddress := "test.testdomain.net."
+	remoteStaticDNSEntry.Address = expectedAddress
+	var alert tc.Alerts
+	var status int
+	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
+	log.Debugln("Status Code [expect 400]: ", status)
+	if err != nil {
+		log.Debugf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
+	}
+	if !reflect.DeepEqual(alert, expectedAlerts[0]) {
+		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[0])
+	}
+
+	// CNAME_RECORD
+	secondStaticDNSEntry := testData.StaticDNSEntries[1]
+	// Retrieve the StaticDNSEntries by name so we can get the id for the Update
+	resp, _, err = TOSession.GetStaticDNSEntriesByHost(secondStaticDNSEntry.Host)
+	if err != nil {
+		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v\n", secondStaticDNSEntry.Host, err)
+	}
+	remoteStaticDNSEntry = resp[0]
+	expectedAddress = "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+	remoteStaticDNSEntry.Address = expectedAddress
+	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
+	log.Debugln("Status Code [expect 400]: ", status)
+	if err != nil {
+		log.Debugf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
+	}
+	if !reflect.DeepEqual(alert, expectedAlerts[1]) {
+		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[1])
+	}
+
+	// AAAA_RECORD
+	thirdStaticDNSEntry := testData.StaticDNSEntries[2]
+	// Retrieve the StaticDNSEntries by name so we can get the id for the Update
+	resp, _, err = TOSession.GetStaticDNSEntriesByHost(thirdStaticDNSEntry.Host)
+	if err != nil {
+		t.Errorf("cannot GET StaticDNSEntries by name: '%s', %v\n", thirdStaticDNSEntry.Host, err)
+	}
+	remoteStaticDNSEntry = resp[0]
+	expectedAddress = "192.168.0.1"
+	remoteStaticDNSEntry.Address = expectedAddress
+	alert, _, status, err = TOSession.UpdateStaticDNSEntryByID(remoteStaticDNSEntry.ID, remoteStaticDNSEntry)
+	log.Debugln("Status Code [expect 400]: ", status)
+	if err != nil {
+		log.Debugf("cannot UPDATE StaticDNSEntries using url: %v - %v\n", err, alert)
+	}
+	if !reflect.DeepEqual(alert, expectedAlerts[2]) {
+		t.Errorf("got alerts: %v but expected alerts: %v", alert, expectedAlerts[2])
+	}
 }
 
 func GetTestStaticDNSEntries(t *testing.T) {
