@@ -157,6 +157,9 @@ services:
       - tcnet
     ports:
       - "8010:80"
+
+  # Apache Traffic Server (ATS) caches defined here
+  # edge cache
   edge:
     build:
       context: edge
@@ -169,6 +172,7 @@ services:
     ports:
       - "8080:80"
 
+  # mid cache
   mid:
     build:
       context: mid
@@ -181,6 +185,7 @@ services:
     ports:
       - "8081:80"
 
+  # origin provides the content to be distributed through the CDN caches
   origin:
     build:
       context: origin
