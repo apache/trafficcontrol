@@ -57,6 +57,25 @@ var DeliveryServiceStatsService = function($http, $q, ENV) {
 		return request.promise;
 	};
 
+	this.getHttpStatusByGroup = function(xmlId, httpStatus, start, end) {
+		var request = $q.defer();
+
+		var url = ENV.api['root'] + "deliveryservice_stats",
+			params = { deliveryServiceName: xmlId, metricType: 'tps_' + httpStatus, serverType: 'edge', startDate: start.seconds(00).format(), endDate: end.seconds(00).format(), interval: '60s' };
+
+		$http.get(url, { params: params })
+			.then(
+				function(result) {
+					request.resolve(result.data.response);
+				},
+				function(fault) {
+					request.reject();
+				}
+			);
+
+		return request.promise;
+	};
+
 };
 
 DeliveryServiceStatsService.$inject = ['$http', '$q', 'ENV'];

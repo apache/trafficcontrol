@@ -40,7 +40,16 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.charts.v
 								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
 							}
 						}
-					}
+					},
+					httpStatusByClassChartContent: {
+						templateUrl: 'common/modules/chart/httpStatus/chart.httpStatus.tpl.html',
+						controller: 'ChartHttpStatusController',
+						resolve: {
+							deliveryService: function($stateParams, deliveryServiceService) {
+								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
+							}
+						}
+					},
 				}
 			})
 		;

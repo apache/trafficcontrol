@@ -101,7 +101,7 @@ var ChartTPSController = function(deliveryService, $scope, $state, $timeout, $fi
 				show: true,
 				content: function(label, xval, yval, flotItem){
 					var tooltipString = dateUtils.dateFormat(xval, "UTC: ddd mmm d yyyy H:MM:ss tt (Z)") + '<br>';
-					tooltipString += '<span>' + label + ': ' + $filter('number')(yval, 2) + '</span><br>'
+					tooltipString += '<span>' + label + ': ' + $filter('number')(yval, 0) + '</span><br>'
 					return tooltipString;
 				}
 			}
