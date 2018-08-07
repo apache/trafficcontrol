@@ -207,6 +207,7 @@ var trafficPortal = angular.module('trafficPortal', [
 
         // common modules
         require('./common/modules/chart/bps').name,
+        require('./common/modules/chart/httpStatus').name,
         require('./common/modules/chart/tps').name,
         require('./common/modules/compare').name,
         require('./common/modules/dialog/compare').name,
