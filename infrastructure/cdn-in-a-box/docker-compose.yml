@@ -44,6 +44,8 @@ networks:
         - subnet: "fc01:9400:1000:8::/64"
 
 services:
+  # db is the Traffic Ops database running in postgresql.  Only trafficops and trafficops-perl need to have access to it.
+  # All other components access the database thru the Traffic Ops API
   db:
     build:
       context: traffic_ops
@@ -60,24 +62,9 @@ services:
     ports:
       - "5432:5432"
 
-  trafficops-perl:
-    build:
-      context: traffic_ops
-      args:
-        TRAFFIC_OPS_RPM: traffic_ops.rpm
-    depends_on:
-      - db
-    domainname: cdn.local
-    env_file:
-      - variables.env
-    hostname: trafficops-perl
-    image: trafficops-perl
-    networks:
-      - tcnet
-    # TODO: change to expose: "60443" to limit to containers
-    ports:
-      - "60443:60443"
-
+  # trafficops runs only the Go version of Traffic Ops in a container.  All Traffic Ops API endpoints that have
+  # been rewritten in Go will be handled here.  All that have not are passed to the trafficops-perl service
+  # defined below
   trafficops:
     build:
       context: traffic_ops
@@ -94,10 +81,31 @@ services:
       - tcnet
     ports:
       - "6443:6443"
+
+  # trafficops-perl runs the legacy Traffic Ops in Perl using the Mojolicious framework.  This remains
+  # in place until all API endpoints have been rewritten in Go
+  trafficops-perl:
+    build:
+      context: traffic_ops
+      args:
+        TRAFFIC_OPS_RPM: traffic_ops.rpm
     depends_on:
       - db
-      - trafficops-perl
+    domainname: cdn.local
+    env_file:
+      - variables.env
+    hostname: trafficops-perl
+    image: trafficops-perl
+    networks:
+      - tcnet
+    depends_on:
+      - db
+    # TODO: change to expose: "60443" to limit to containers
+    ports:
+      - "60443:60443"
 
+  # trafficportal defines the web interface for Traffic Ops.  It uses only the API exposed by Traffic Ops
+  # and passes any /api/... routes directly to Traffic Ops
   trafficportal:
     build:
       context: traffic_portal
@@ -113,6 +121,7 @@ services:
     ports:
       - "443:443"
 
+  # trafficmonitor is an HTTP service that monitors the caches in a CDN for a variety of metrics
   trafficmonitor:
     build:
       context: traffic_monitor
@@ -128,15 +137,22 @@ services:
     ports:
       - "80:80"
 
+  # trafficvault runs a riak container to store private keys
   trafficvault:
-    build:
-      context: .
-      dockerfile: traffic_vault/Dockerfile
+    image: basho/riak-kv
+    ports:
+      - "8087:8087"
+      - "8098:8098"
+    environment:
+      - CLUSTER_NAME=riakkv
+    labels:
+      - "com.basho.riak.cluster.name=trafficvault"
+    volumes:
+      - schemas:/etc/riak/schemas
     domainname: cdn.local
     env_file:
       - variables.env
     hostname: trafficvault
-    image: trafficvault
     networks:
       - tcnet
     ports:
@@ -163,3 +179,7 @@ services:
       - tcnet
     ports:
       - "9080:80"
+
+volumes:
+  schemas:
+    external: false
