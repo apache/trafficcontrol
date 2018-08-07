@@ -49,23 +49,25 @@ func (to *Session) CreateStaticDNSEntry(cdn v13.StaticDNSEntry) (tc.Alerts, ReqI
 }
 
 // Update a StaticDNSEntry by ID
-func (to *Session) UpdateStaticDNSEntryByID(id int, cdn v13.StaticDNSEntry) (tc.Alerts, ReqInf, error) {
+func (to *Session) UpdateStaticDNSEntryByID(id int, cdn v13.StaticDNSEntry) (tc.Alerts, ReqInf, int, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(cdn)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
-		return tc.Alerts{}, reqInf, err
+		return tc.Alerts{}, reqInf, 0, err
 	}
 	route := fmt.Sprintf("%s?id=%d", API_v13_StaticDNSEntries, id)
-	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
-	if err != nil {
-		return tc.Alerts{}, reqInf, err
+	resp, remoteAddr, errClient := to.rawRequest(http.MethodPut, route, reqBody)
+	if resp != nil {
+		defer resp.Body.Close()
+		var alerts tc.Alerts
+		if err = json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
+			return alerts, reqInf, resp.StatusCode, err
+		}
+		return alerts, reqInf, resp.StatusCode, errClient
 	}
-	defer resp.Body.Close()
-	var alerts tc.Alerts
-	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	return tc.Alerts{}, reqInf, 0, errClient
 }
 
 // Returns a list of StaticDNSEntrys
