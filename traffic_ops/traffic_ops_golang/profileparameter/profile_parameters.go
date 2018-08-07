@@ -195,7 +195,7 @@ func (pp *TOProfileParameter) Read(parameters map[string]string) ([]interface{},
 
 	params := []interface{}{}
 	for rows.Next() {
-		var p v13.ProfileParameterNullable
+		p := tc.ProfileParametersNullable{}
 		if err = rows.StructScan(&p); err != nil {
 			log.Errorf("error parsing pp rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
@@ -234,10 +234,8 @@ func selectQuery() string {
 
 	query := `SELECT
 pp.last_updated,
-pp.profile profile_id,
 pp.parameter parameter_id,
-prof.name profile,
-param.name parameter
+prof.name profile
 FROM profile_parameter pp
 JOIN profile prof ON prof.id = pp.profile
 JOIN parameter param ON param.id = pp.parameter`
