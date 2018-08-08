@@ -386,54 +386,41 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{http.MethodGet, `tools/write_crconfig/{cdn}/?$`, crconfig.SnapshotOldGUIHandler(d.DB, d.Config), auth.PrivLevelOperations, Authenticated, nil},
 		// DEPRECATED - use GET /api/1.2/cdns/{cdn}/snapshot
 		{http.MethodGet, `CRConfig-Snapshots/{cdn}/CRConfig.json?$`, crconfig.SnapshotOldGetHandler(d.DB, d.Config), auth.PrivLevelReadOnly, Authenticated, nil},
-		// USED FOR Debugging
-		{http.MethodGet, `admin/memory-stats`, memoryStatsHandler(d.Profiling), auth.PrivLevelOperations, Authenticated, nil},
-		{http.MethodGet, `admin/db-stats`, dbStatsHandler(d.Profiling, d.DB), auth.PrivLevelOperations, Authenticated, nil},
 	}
 
 	return routes, rawRoutes, proxyHandler, nil
 }
 
-func memoryStatsHandler(profiling *bool) http.HandlerFunc {
+func memoryStatsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
-		if *profiling {
-			stats := runtime.MemStats{}
-			runtime.ReadMemStats(&stats)
+		stats := runtime.MemStats{}
+		runtime.ReadMemStats(&stats)
 
-			bytes, err := json.Marshal(stats)
-			if err != nil {
-				tclog.Errorln("unable to marshal stats: " + err.Error())
-				handleErrs(http.StatusInternalServerError, errors.New("marshalling error"))
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(bytes)
-		} else {
-			handleErrs(http.StatusPreconditionFailed, errors.New("profiling is not enabled"))
+		bytes, err := json.Marshal(stats)
+		if err != nil {
+			tclog.Errorln("unable to marshal stats: " + err.Error())
+			handleErrs(http.StatusInternalServerError, errors.New("marshalling error"))
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(bytes)
 	}
 }
 
-func dbStatsHandler(profiling *bool, db *sqlx.DB) http.HandlerFunc {
+func dbStatsHandler(db *sqlx.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleErrs := tc.GetHandleErrorsFunc(w, r)
-		if *profiling {
-			stats := db.DB.Stats()
+		stats := db.DB.Stats()
 
-			bytes, err := json.Marshal(stats)
-			if err != nil {
-				tclog.Errorln("unable to marshal stats: " + err.Error())
-				handleErrs(http.StatusInternalServerError, errors.New("marshalling error"))
-				return
-			}
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(bytes)
-		} else {
-			handleErrs(http.StatusPreconditionFailed, errors.New("profiling is not enabled"))
+		bytes, err := json.Marshal(stats)
+		if err != nil {
+			tclog.Errorln("unable to marshal stats: " + err.Error())
+			handleErrs(http.StatusInternalServerError, errors.New("marshalling error"))
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(bytes)
 	}
 }
 
