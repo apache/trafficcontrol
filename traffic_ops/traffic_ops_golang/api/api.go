@@ -287,8 +287,8 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	if userErr != nil || sysErr != nil {
 		return nil, userErr, sysErr, errCode
 	}
-	dbCtx, _ := context.WithTimeout(r.Context(), time.Second*15) //only place we could call cancel here is in APIInfo.Close(), which already will rollback the transaction (which is all cancel will do.)
-	tx, err := db.BeginTxx(dbCtx, nil)                           // must be last, MUST not return an error if this succeeds, without closing the tx
+	dbCtx, _ := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second) //only place we could call cancel here is in APIInfo.Close(), which already will rollback the transaction (which is all cancel will do.)
+	tx, err := db.BeginTxx(dbCtx, nil)                                                                 // must be last, MUST not return an error if this succeeds, without closing the tx
 	if err != nil {
 		return nil, userErr, errors.New("could not begin transaction: " + err.Error()), http.StatusInternalServerError
 	}
@@ -334,6 +334,10 @@ func getConfig(ctx context.Context) (*config.Config, error) {
 		}
 	}
 	return nil, errors.New("No config found in Context")
+}
+
+func GetConfig(ctx context.Context) (*config.Config, error) {
+	return getConfig(ctx)
 }
 
 func getReqID(ctx context.Context) (uint64, error) {

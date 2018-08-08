@@ -93,7 +93,7 @@ func TestGetSystemInfo(t *testing.T) {
 	}
 
 	mock.ExpectQuery("SELECT.*WHERE p.config_file='global'").WillReturnRows(rows)
-	sysinfo, err := getSystemInfo(db, auth.PrivLevelReadOnly)
+	sysinfo, err := getSystemInfo(db, auth.PrivLevelReadOnly, 20*time.Second)
 	if err != nil {
 		t.Errorf("getSystemInfo expected: nil error, actual: %v", err)
 	}

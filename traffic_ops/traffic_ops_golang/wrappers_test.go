@@ -31,12 +31,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
-	"github.com/jmoiron/sqlx"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
@@ -184,6 +185,7 @@ func TestWrapAuth(t *testing.T) {
 	}
 
 	r = r.WithContext(context.WithValue(context.Background(), api.DBContextKey, db))
+	r = r.WithContext(context.WithValue(r.Context(), api.ConfigContextKey, &config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 20}}))
 
 	f(w, r)
 

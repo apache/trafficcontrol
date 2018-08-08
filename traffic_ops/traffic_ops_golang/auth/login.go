@@ -20,6 +20,7 @@ package auth
  */
 
 import (
+	"context"
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
@@ -56,12 +57,12 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		resp := struct {
 			tc.Alerts
 		}{}
-		userAllowed, err := CheckLocalUserIsAllowed(form, db)
+		userAllowed, err := CheckLocalUserIsAllowed(form, db, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 		if err != nil {
 			log.Errorf("error checking local user: %s\n", err.Error())
 		}
 		if userAllowed {
-			authenticated, err = checkLocalUserPassword(form, db)
+			authenticated, err = checkLocalUserPassword(form, db, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 			if err != nil {
 				log.Errorf("error checking local user password: %s\n", err.Error())
 			}
@@ -105,9 +106,12 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	}
 }
 
-func CheckLocalUserIsAllowed(form passwordForm, db *sqlx.DB) (bool, error) {
+func CheckLocalUserIsAllowed(form passwordForm, db *sqlx.DB, timeout time.Duration) (bool, error) {
 	var roleName string
-	err := db.Get(&roleName, "SELECT role.name FROM role INNER JOIN tm_user ON tm_user.role = role.id where username=$1", form.Username)
+	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
+	defer dbClose()
+
+	err := db.GetContext(dbCtx, &roleName, "SELECT role.name FROM role INNER JOIN tm_user ON tm_user.role = role.id where username=$1", form.Username)
 	if err != nil {
 		return false, err
 	}
@@ -119,9 +123,12 @@ func CheckLocalUserIsAllowed(form passwordForm, db *sqlx.DB) (bool, error) {
 	return false, nil
 }
 
-func checkLocalUserPassword(form passwordForm, db *sqlx.DB) (bool, error) {
+func checkLocalUserPassword(form passwordForm, db *sqlx.DB, timeout time.Duration) (bool, error) {
 	var hashedPassword string
-	err := db.Get(&hashedPassword, "SELECT local_passwd FROM tm_user WHERE username=$1", form.Username)
+	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
+	defer dbClose()
+
+	err := db.GetContext(dbCtx, &hashedPassword, "SELECT local_passwd FROM tm_user WHERE username=$1", form.Username)
 	if err != nil {
 		return false, err
 	}

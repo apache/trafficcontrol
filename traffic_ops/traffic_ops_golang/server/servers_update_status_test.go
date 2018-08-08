@@ -25,6 +25,8 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -44,7 +46,7 @@ func TestGetServerUpdateStatus(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").WillReturnRows(serverStatusRow)
 
-	result, err := getServerUpdateStatus("host_name_1", db, context.Background())
+	result, err := getServerUpdateStatus("host_name_1", db, context.WithValue(context.Background(), api.ConfigContextKey, &config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 20}}))
 	if err != nil {
 		t.Errorf("getServerUpdateStatus: %v", err)
 	}
