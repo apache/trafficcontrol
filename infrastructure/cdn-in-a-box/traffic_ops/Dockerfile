@@ -38,7 +38,7 @@ RUN cpanm Carton
 RUN yum install -y perl-DBIx-Connector
 
 # Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
-ARG TRAFFIC_OPS_RPM=traffic_ops.rpm
+ARG TRAFFIC_OPS_RPM=traffic_ops/traffic_ops.rpm
 ADD $TRAFFIC_OPS_RPM /
 RUN yum install -y \
         /$(basename $TRAFFIC_OPS_RPM) \
@@ -47,15 +47,14 @@ RUN yum install -y \
     rm /$(basename $TRAFFIC_OPS_RPM) && \
     yum clean all
 
-# if local.tar.gz exists, untar to .../app/local to keep carton from reinstalling the Perl universe
-# NOTE: copying Dockerfile so the COPY succeeds whether or not local.tar.gz exists
+# copy any dir structure in overrides to TO -- allows modification of the install and shortcut to get perl modules/goose installed
+COPY traffic_ops/overrides/ /opt/traffic_ops/.
+
 WORKDIR /opt/traffic_ops/app
-COPY Dockerfile local.tar.gz /tmp/
+
 
 # run carton whether or not local dir was installed
-RUN [ -f /tmp/local.tar.gz ] && \
-     tar xzvf /tmp/local.tar.gz || true && \
-     POSTGRES_HOME=/usr/pgsql-9.6 carton && \
+RUN POSTGRES_HOME=/usr/pgsql-9.6 carton && \
      rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz
 
 RUN /opt/traffic_ops/install/bin/install_goose.sh
@@ -76,7 +75,10 @@ EXPOSE 6443
 WORKDIR /opt/traffic_ops/app
 ENV MOJO_MODE production
 
-ADD adduser.pl /
-ADD config.sh /
-ADD run.sh /
+ADD traffic_ops/run.sh \
+    traffic_ops/config.sh \
+    traffic_ops/adduser.pl \
+    traffic_ops/to-access.sh \
+    /
+
 CMD /run.sh
