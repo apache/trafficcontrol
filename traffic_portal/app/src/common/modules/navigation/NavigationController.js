@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var NavigationController = function($scope, $log, $state, $location, $window, $timeout, $uibModal, authService, trafficPortalService, propertiesModel, userModel) {
+var NavigationController = function($scope, $log, $state, $location, $window, $timeout, $uibModal, permissionUtils, authService, trafficPortalService, propertiesModel, userModel) {
 
     $scope.appName = propertiesModel.properties.name;
 
@@ -41,9 +41,7 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
         isDisabled: false
     };
 
-    $scope.hasCapability = function(cap) {
-        return userModel.hasCapability(cap);
-    };
+    $scope.hasCapability = permissionUtils.hasCapability;
 
     $scope.navigateToPath = function(path) {
         $location.url(path);
@@ -165,5 +163,5 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
 
 };
 
-NavigationController.$inject = ['$scope', '$log', '$state', '$location', '$window', '$timeout', '$uibModal', 'authService', 'trafficPortalService', 'propertiesModel', 'userModel'];
+NavigationController.$inject = ['$scope', '$log', '$state', '$location', '$window', '$timeout', '$uibModal', 'permissionUtils', 'authService', 'trafficPortalService', 'propertiesModel', 'userModel'];
 module.exports = NavigationController;
