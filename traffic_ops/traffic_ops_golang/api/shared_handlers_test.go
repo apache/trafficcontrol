@@ -49,7 +49,7 @@ func GetTypeSingleton() func(apiInfo *APIInfo) CRUDer {
 	}
 }
 
-var cfg = config.Config{}
+var cfg = config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 20}}
 
 func (i tester) GetKeyFieldsInfo() []KeyFieldInfo {
 	return []KeyFieldInfo{{"id", GetIntKey}}

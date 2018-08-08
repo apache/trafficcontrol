@@ -64,13 +64,13 @@ type key int
 const CurrentUserKey key = iota
 
 // GetCurrentUserFromDB  - returns the id and privilege level of the given user along with the username, or -1 as the id, - as the userName and PrivLevelInvalid if the user doesn't exist.
-func GetCurrentUserFromDB(DB *sqlx.DB, CurrentUserStmt, user string) CurrentUser {
+func GetCurrentUserFromDB(DB *sqlx.DB, CurrentUserStmt, user string, timeout time.Duration) CurrentUser {
 	var currentUserInfo CurrentUser
 	if DB == nil {
 		log.Errorf("no db provided to GetCurrentUserFromDB")
 		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}
 	}
-	dbCtx, dbClose := context.WithTimeout(context.Background(), time.Second*20)
+	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
 	defer dbClose()
 
 	err := DB.GetContext(dbCtx, &currentUserInfo, CurrentUserStmt, user)

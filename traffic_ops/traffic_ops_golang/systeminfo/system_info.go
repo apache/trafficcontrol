@@ -22,13 +22,15 @@ package systeminfo
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
-
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
+	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -45,7 +47,13 @@ func Handler(db *sqlx.DB) http.HandlerFunc {
 		}
 		privLevel := user.PrivLevel
 
-		resp, err := getSystemInfoResponse(db, privLevel)
+		cfg, ctxErr := api.GetConfig(ctx)
+		if ctxErr != nil {
+			log.Errorln("unable to retrieve config from context: ", ctxErr)
+			handleErrs(http.StatusInternalServerError, errors.New("no config found in context"))
+		}
+
+		resp, err := getSystemInfoResponse(db, privLevel, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 		if err != nil {
 			handleErrs(http.StatusInternalServerError, err)
 			return
@@ -61,8 +69,8 @@ func Handler(db *sqlx.DB) http.HandlerFunc {
 		fmt.Fprintf(w, "%s", respBts)
 	}
 }
-func getSystemInfoResponse(db *sqlx.DB, privLevel int) (*tc.SystemInfoResponse, error) {
-	info, err := getSystemInfo(db, privLevel)
+func getSystemInfoResponse(db *sqlx.DB, privLevel int, timeout time.Duration) (*tc.SystemInfoResponse, error) {
+	info, err := getSystemInfo(db, privLevel, timeout)
 	if err != nil {
 		return nil, fmt.Errorf("getting SystemInfo: %v", err)
 	}
@@ -72,7 +80,7 @@ func getSystemInfoResponse(db *sqlx.DB, privLevel int) (*tc.SystemInfoResponse, 
 	return &resp, nil
 }
 
-func getSystemInfo(db *sqlx.DB, privLevel int) (map[string]string, error) {
+func getSystemInfo(db *sqlx.DB, privLevel int, timeout time.Duration) (map[string]string, error) {
 	// system info returns all global parameters
 	query := `SELECT
 p.name,
@@ -81,7 +89,7 @@ p.last_updated,
 p.value
 FROM parameter p
 WHERE p.config_file='global'`
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	rows, err := db.QueryxContext(ctx, query)
 

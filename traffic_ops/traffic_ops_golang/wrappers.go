@@ -112,7 +112,12 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 				handleErr(http.StatusInternalServerError, errors.New("No DB found"))
 			}
 
-			currentUserInfo := auth.GetCurrentUserFromDB(DB, a.getCurrentUserInfoStmt, username)
+			cfg, err := api.GetConfig(r.Context())
+			if err != nil {
+				handleErr(http.StatusInternalServerError, errors.New("No config found"))
+			}
+
+			currentUserInfo := auth.GetCurrentUserFromDB(DB, a.getCurrentUserInfoStmt, username, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 			if currentUserInfo.PrivLevel < privLevelRequired {
 				handleErr(http.StatusForbidden, errors.New("Forbidden."))
 				return

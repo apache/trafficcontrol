@@ -75,7 +75,13 @@ func getServerUpdateStatus(hostName string, db *sqlx.DB, ctx context.Context) ([
 
 	groupBy := ` GROUP BY s.id, s.host_name, type.name, server_reval_pending, use_reval_pending.value, s.upd_pending, status.name ORDER BY s.id;`
 
-	dbCtx, dbClose := context.WithTimeout(ctx, time.Second*10)
+	cfg, ctxErr := api.GetConfig(ctx)
+	if ctxErr != nil {
+		log.Errorln("unable to retrieve config from context")
+		return nil, ctxErr
+	}
+
+	dbCtx, dbClose := context.WithTimeout(ctx, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 	defer dbClose()
 
 	updateStatuses := []tc.ServerUpdateStatus{}

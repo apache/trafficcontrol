@@ -78,6 +78,7 @@ type ConfigTrafficOpsGolang struct {
 	DBMaxIdleConnections     int            `json:"db_max_idle_connections"`
 	DBConnMaxLifetimeSeconds int            `json:"db_conn_max_lifetime_seconds"`
 	BackendMaxConnections    map[string]int `json:"backend_max_connections"`
+	DBQueryTimeoutSeconds    int            `json:"db_query_timeout_seconds"`
 	ProfilingEnabled         bool           `json:"profiling_enabled"`
 	ProfilingLocation        string         `json:"profiling_location"`
 }
@@ -105,6 +106,7 @@ type ConfigLDAP struct {
 }
 
 const DefaultLDAPTimeoutSecs = 60
+const DefaultDBQueryTimeoutSecs = 20
 
 // ErrorLog - critical messages
 func (c Config) ErrorLog() log.LogLocation {
@@ -261,6 +263,9 @@ func ParseConfig(cfg Config) (Config, error) {
 	}
 	if cfg.DBConnMaxLifetimeSeconds == 0 {
 		cfg.DBConnMaxLifetimeSeconds = DBConnMaxLifetimeSecondsDefault
+	}
+	if cfg.DBQueryTimeoutSeconds == 0 {
+		cfg.DBQueryTimeoutSeconds = DefaultDBQueryTimeoutSecs
 	}
 
 	invalidTOURLStr := ""
