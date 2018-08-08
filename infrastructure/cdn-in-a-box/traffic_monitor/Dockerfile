@@ -37,12 +37,14 @@ RUN yum install -y \
     rm /$(basename $RPM) && \
     yum clean all
 
-ADD parameters.json /
-ADD profile.json /
-ADD server.json /
 RUN mkdir -p /opt/traffic_monitor/conf
-ADD traffic_monitor.cfg /opt/traffic_monitor/conf/
+ADD traffic_monitor/traffic_monitor.cfg /opt/traffic_monitor/conf/
+
+ADD traffic_monitor/parameters.json \
+    traffic_monitor/profile.json \
+    traffic_monitor/server.json \
+    /
 
 EXPOSE 80
-ADD run.sh /
+ADD traffic_monitor/run.sh /
 ENTRYPOINT /run.sh
