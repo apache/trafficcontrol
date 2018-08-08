@@ -24,6 +24,7 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -125,6 +126,19 @@ func main() {
 
 	profiling := cfg.ProfilingEnabled
 
+	pprofMux := http.DefaultServeMux
+	http.DefaultServeMux = http.NewServeMux() // this is so we don't serve pprof over 443.
+
+	pprofMux.Handle("/db-stats", dbStatsHandler(db))
+	pprofMux.Handle("/memory-stats", memoryStatsHandler())
+	go func() {
+		debugServer := http.Server{
+			Addr:    "localhost:6060",
+			Handler: pprofMux,
+		}
+		log.Errorln(debugServer.ListenAndServe())
+	}()
+
 	if err := RegisterRoutes(ServerData{DB: db, Config: cfg, Profiling: &profiling}); err != nil {
 		log.Errorf("registering routes: %v\n", err)
 		return
@@ -179,6 +193,7 @@ func SetNewProfilingInfo(configFileName string, currentProfilingEnabled *bool, c
 	}
 	if *currentProfilingEnabled != newProfilingEnabled {
 		log.Infof("profiling enabled set to %t\n", newProfilingEnabled)
+		log.Infof("profiling location set to: %s\n", *currentProfilingLocation)
 		*currentProfilingEnabled = newProfilingEnabled
 		if *currentProfilingEnabled {
 			continuousProfile(currentProfilingEnabled, currentProfilingLocation, version)
