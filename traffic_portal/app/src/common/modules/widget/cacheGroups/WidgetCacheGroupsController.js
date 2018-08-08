@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var WidgetCacheGroupsController = function(cacheGroupHealth, $scope, $interval, cacheGroupService, locationUtils, propertiesModel) {
+var WidgetCacheGroupsController = function($scope, $interval, cacheGroupService, locationUtils, propertiesModel) {
 
 	var interval,
 		autoRefresh = propertiesModel.properties.dashboard.autoRefresh;
@@ -56,10 +56,7 @@ var WidgetCacheGroupsController = function(cacheGroupHealth, $scope, $interval, 
 	});
 
 	var init = function() {
-		if (cacheGroupHealth) {
-			// only set this if it's passed in
-			$scope.cacheGroupHealth = cacheGroupHealth;
-		}
+		getCacheGroupHealth();
 		if (autoRefresh) {
 			createInterval();
 		}
@@ -68,5 +65,5 @@ var WidgetCacheGroupsController = function(cacheGroupHealth, $scope, $interval, 
 
 };
 
-WidgetCacheGroupsController.$inject = ['cacheGroupHealth', '$scope', '$interval', 'cacheGroupService', 'locationUtils', 'propertiesModel'];
+WidgetCacheGroupsController.$inject = ['$scope', '$interval', 'cacheGroupService', 'locationUtils', 'propertiesModel'];
 module.exports = WidgetCacheGroupsController;

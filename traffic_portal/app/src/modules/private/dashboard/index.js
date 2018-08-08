@@ -30,10 +30,8 @@ module.exports = angular.module('trafficPortal.private.dashboard', [])
                         controller: 'DashboardController',
                         resolve: {
                             cdns: function(cdnService) {
+                                // todo: need to check capabilities
                                 return cdnService.getCDNs();
-                            },
-                            serverCount: function(serverService) {
-                                return serverService.getEdgeStatusCount();
                             }
                         }
 

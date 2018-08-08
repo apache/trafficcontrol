@@ -23,15 +23,13 @@ module.exports = angular.module('trafficPortal.private.dashboard.view', [])
 			.state('trafficPortal.private.dashboard.view', {
 				url: '',
 				views: {
+					dashboardStatsContent: {
+						templateUrl: 'common/modules/widget/dashboardStats/widget.dashboardStats.tpl.html',
+						controller: 'WidgetDashboardStatsController'
+					},
 					cacheGroupsContent: {
 						templateUrl: 'common/modules/widget/cacheGroups/widget.cacheGroups.tpl.html',
-						controller: 'WidgetCacheGroupsController',
-						resolve: {
-							cacheGroupHealth: function() {
-								// this is already defined in a parent template that shares the $scope
-								return null;
-							}
-						}
+						controller: 'WidgetCacheGroupsController'
 					},
 					capacityContent: {
 						templateUrl: 'common/modules/widget/capacity/widget.capacity.tpl.html',
@@ -42,29 +40,19 @@ module.exports = angular.module('trafficPortal.private.dashboard.view', [])
 						controller: 'WidgetCDNChartController',
 						resolve: {
 							cdn: function() {
-								// the controller will take care of fetching the cdn
+								// the controller (WidgetCNDChartController) will take care of fetching the cdn
 								return null;
 							}
 						}
 					},
 					changeLogsContent: {
 						templateUrl: 'common/modules/widget/changeLogs/widget.changeLogs.tpl.html',
-						controller: 'WidgetChangeLogsController',
-						resolve: {
-							changeLogs: function(changeLogService) {
-								return changeLogService.getChangeLogs({ limit: 5 });
-							}
-						}
+						controller: 'WidgetChangeLogsController'
 					},
 					routingContent: {
 						templateUrl: 'common/modules/widget/routing/widget.routing.tpl.html',
-						controller: 'WidgetRoutingController',
-						resolve: {
-							routing: function() {
-								return [];
-							}
-						}
-					},
+						controller: 'WidgetRoutingController'
+					}
 				}
 			})
 		;
