@@ -67,8 +67,8 @@ services:
   # defined below
   trafficops:
     build:
-      context: traffic_ops
-      dockerfile: Dockerfile-go
+      context: .
+      dockerfile: traffic_ops/Dockerfile-go
     depends_on:
       - db
       - trafficops-perl
@@ -86,9 +86,10 @@ services:
   # in place until all API endpoints have been rewritten in Go
   trafficops-perl:
     build:
-      context: traffic_ops
+      context: .
+      dockerfile: traffic_ops/Dockerfile
       args:
-        TRAFFIC_OPS_RPM: traffic_ops.rpm
+        TRAFFIC_OPS_RPM: traffic_ops/traffic_ops.rpm
     depends_on:
       - db
     domainname: cdn.local
@@ -124,9 +125,10 @@ services:
   # trafficmonitor is an HTTP service that monitors the caches in a CDN for a variety of metrics
   trafficmonitor:
     build:
-      context: traffic_monitor
+      context: .
+      dockerfile: traffic_monitor/Dockerfile
       args:
-        TRAFFIC_MONITOR_RPM: traffic_monitor.rpm
+        TRAFFIC_MONITOR_RPM: traffic_monitor/traffic_monitor.rpm
     domainname: cdn.local
     env_file:
       - variables.env
