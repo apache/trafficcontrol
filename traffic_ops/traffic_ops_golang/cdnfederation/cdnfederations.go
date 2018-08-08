@@ -346,7 +346,7 @@ func (fed TOCDNFederation) isTenantAuthorized() (bool, error) {
 
 	// TODO: After IsResourceAuthorizedToUserTx is updated to no longer have `use_tenancy`,
 	// that will probably be better to use. For now, use the list. Issue #2602
-	list, err := tenant.GetUserTenantIDListTx(fed.ReqInfo.Tx.Tx, fed.ReqInfo.User.ID)
+	list, err := tenant.GetUserTenantIDListTx(fed.ReqInfo.Tx.Tx, fed.ReqInfo.User.TenantID)
 	if err != nil {
 		return false, err
 	}
