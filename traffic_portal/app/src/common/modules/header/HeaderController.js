@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel) {
+var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, permissionUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel) {
 
     $scope.isCollapsed = true;
 
@@ -32,9 +32,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
 
     $scope.changeLogs = [];
 
-    $scope.hasCapability = function(cap) {
-        return userModel.hasCapability(cap);
-    };
+    $scope.hasCapability = permissionUtils.hasCapability;
 
     $scope.isState = function(state) {
         return $state.current.name.indexOf(state) !== -1;
@@ -164,5 +162,5 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
     init();
 };
 
-HeaderController.$inject = ['$rootScope', '$scope', '$state', '$uibModal', '$location', '$anchorScroll', 'locationUtils', 'authService', 'trafficPortalService', 'changeLogService', 'cdnService', 'changeLogModel', 'userModel'];
+HeaderController.$inject = ['$rootScope', '$scope', '$state', '$uibModal', '$location', '$anchorScroll', 'locationUtils', 'permissionUtils', 'authService', 'trafficPortalService', 'changeLogService', 'cdnService', 'changeLogModel', 'userModel'];
 module.exports = HeaderController;
