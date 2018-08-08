@@ -22,7 +22,7 @@
 FROM centos/systemd
 
 # Default values for RPM -- override with `docker build --build-arg RPM=...'
-ARG RPM=traffic_monitor.rpm
+ARG RPM=traffic_monitor/traffic_monitor.rpm
 ADD $RPM /
 
 RUN yum install -y \
