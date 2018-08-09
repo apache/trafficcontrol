@@ -18,10 +18,10 @@ under the License.
 -->
 
 <div role="main">
-    <div ng-if="true" class="row tile_count">
+    <div ng-if="hasCapability('stats-read') && hasCapability('cdns-read')" class="row tile_count">
         <div ui-view="dashboardStatsContent"></div>
     </div>
-    <div ng-if="true" ng-repeat="cdn in ::cdns">
+    <div ng-if="hasCapability('cdns-read')" ng-repeat="cdn in ::cdns">
         <div class="row">
             <div class="col-md-12 col-sm-12 col-xs-12 chartContainer" data-cdnid="{{::cdn.id}}" ui-view="cdnChartContent"></div>
         </div>
@@ -29,14 +29,14 @@ under the License.
     </div>
     <div class="row">
         <div class="col-md-4 col-sm-4 col-xs-12">
-            <div ng-if="true" class="x_panel tile fixed_height_320" ui-view="capacityContent"></div>
-            <div ng-if="true" class="x_panel tile" ui-view="routingContent"></div>
+            <div ng-if="hasCapability('cdns-read')" class="x_panel tile fixed_height_320" ui-view="capacityContent"></div>
+            <div ng-if="hasCapability('cdns-read')" class="x_panel tile" ui-view="routingContent"></div>
         </div>
         <div class="col-md-8 col-sm-8 col-xs-12">
             <div class="row">
                 <div class="col-md-12 col-sm-12 col-xs-12">
-                    <div ng-if="true" class="x_panel" ui-view="cacheGroupsContent"></div>
-                    <div ng-if="true" class="x_panel" ui-view="changeLogsContent"></div>
+                    <div ng-if="hasCapability('cdns-read')" class="x_panel" ui-view="cacheGroupsContent"></div>
+                    <div ng-if="hasCapability('change-logs-read')" class="x_panel" ui-view="changeLogsContent"></div>
                 </div>
             </div>
         </div>
