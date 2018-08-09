@@ -307,7 +307,7 @@ cg.id as cachegroup_id,
 cg.name as cachegroup
 FROM staticdnsentry as sde
 JOIN type as tp on sde.type = tp.id
-JOIN cachegroup as cg ON sde.cachegroup = cg.id
+LEFT JOIN cachegroup as cg ON sde.cachegroup = cg.id
 JOIN deliveryservice as ds on sde.deliveryservice = ds.id
 `
 }

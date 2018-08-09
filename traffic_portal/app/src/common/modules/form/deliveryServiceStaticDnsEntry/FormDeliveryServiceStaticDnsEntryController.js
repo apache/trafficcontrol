@@ -26,13 +26,6 @@ var FormDeliveryServiceStaticDnsEntryController = function(deliveryService, stat
             });
     };
 
-    var getCacheGroups = function() {
-        cacheGroupService.getCacheGroups({ orderby: 'name' })
-            .then(function(result) {
-                $scope.cacheGroups = result;
-            });
-    };
-
     $scope.deliveryService = deliveryService;
 
     $scope.staticDnsEntry = staticDnsEntry;
@@ -45,7 +38,6 @@ var FormDeliveryServiceStaticDnsEntryController = function(deliveryService, stat
 
     var init = function () {
         getTypes();
-        getCacheGroups();
     };
     init();
 
