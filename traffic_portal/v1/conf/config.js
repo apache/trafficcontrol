@@ -18,17 +18,19 @@
 // see config-template.js for comments
 module.exports = {
     timeout: '120s',
-    useSSL: true,
+    useSSL: false,
     port: 8080,
-    sslPort: 8442,
+    sslPort: 8443,
     proxyPort: 8009,
     ssl: {
-        key:    '/etc/pki/tls/private/localhost.key',
-        cert:   '/etc/pki/tls/certs/localhost.crt',
-        ca:     [ '/etc/pki/tls/certs/ca-bundle.crt' ]
+        key:    '/path/to/ssl.key',
+        cert:   '/path/to/ssl.crt',
+        ca:     [
+            '/path/to/ssl-bundle.crt'
+        ]
     },
     api: {
-        base_url: 'https://localhost:8443/api/'
+        base_url: 'http://localhost:3000/api/'
     },
     files: {
         static: './app/dist/public/'
