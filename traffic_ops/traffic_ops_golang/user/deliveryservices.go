@@ -28,73 +28,61 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-
-	"github.com/jmoiron/sqlx"
 )
 
-func GetDSes(db *sqlx.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		user, err := auth.GetCurrentUser(r.Context())
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting current user: "+err.Error()))
-			return
-		}
-		_, intParams, userErr, sysErr, errCode := api.AllParams(r, []string{"id"}, []string{"id"})
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		dsUserID := intParams["id"]
-		dses, err := getUserDSes(db.DB, dsUserID)
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting user delivery services: "+err.Error()))
-			return
-		}
-
-		dses, err = filterAuthorized(db, dses, user)
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("filtering user-authorized delivery services: "+err.Error()))
-			return
-		}
-		api.WriteResp(w, r, dses)
+func GetDSes(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	dsUserID := inf.IntParams["id"]
+	dses, err := getUserDSes(inf.Tx.Tx, dsUserID)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting user delivery services: "+err.Error()))
+		return
+	}
+
+	dses, err = filterAuthorized(inf.Tx.Tx, dses, inf.User)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("filtering user-authorized delivery services: "+err.Error()))
+		return
+	}
+	api.WriteResp(w, r, dses)
 }
 
-func GetAvailableDSes(db *sqlx.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		user, err := auth.GetCurrentUser(r.Context())
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting current user: "+err.Error()))
-			return
-		}
-		_, intParams, userErr, sysErr, errCode := api.AllParams(r, []string{"id"}, []string{"id"})
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		dsUserID := intParams["id"]
-		dses, err := getUserAvailableDSes(db.DB, dsUserID)
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting user delivery services: "+err.Error()))
-			return
-		}
-
-		dses, err = filterAvailableAuthorized(db, dses, user)
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("filtering user-authorized delivery services: "+err.Error()))
-			return
-		}
-		api.WriteResp(w, r, dses)
+func GetAvailableDSes(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	dsUserID := inf.IntParams["id"]
+	dses, err := getUserAvailableDSes(inf.Tx.Tx, dsUserID)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting user delivery services: "+err.Error()))
+		return
+	}
+
+	dses, err = filterAvailableAuthorized(inf.Tx.Tx, dses, inf.User)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("filtering user-authorized delivery services: "+err.Error()))
+		return
+	}
+	api.WriteResp(w, r, dses)
 }
 
-func filterAuthorized(db *sqlx.DB, dses []tc.DeliveryServiceNullableV13, user *auth.CurrentUser) ([]tc.DeliveryServiceNullableV13, error) {
+func filterAuthorized(tx *sql.Tx, dses []tc.DeliveryServiceNullableV13, user *auth.CurrentUser) ([]tc.DeliveryServiceNullableV13, error) {
 	authorizedDSes := []tc.DeliveryServiceNullableV13{}
 	for _, ds := range dses {
 		if ds.TenantID == nil {
 			continue
 		}
-		authorized, err := tenant.IsResourceAuthorizedToUser(*ds.TenantID, user, db)
+		authorized, err := tenant.IsResourceAuthorizedToUserTx(*ds.TenantID, user, tx)
 		if err != nil {
 			return nil, errors.New("checking delivery service tenancy authorization: " + err.Error())
 		}
@@ -106,13 +94,13 @@ func filterAuthorized(db *sqlx.DB, dses []tc.DeliveryServiceNullableV13, user *a
 	return authorizedDSes, nil
 }
 
-func filterAvailableAuthorized(db *sqlx.DB, dses []tc.UserAvailableDS, user *auth.CurrentUser) ([]tc.UserAvailableDS, error) {
+func filterAvailableAuthorized(tx *sql.Tx, dses []tc.UserAvailableDS, user *auth.CurrentUser) ([]tc.UserAvailableDS, error) {
 	authorizedDSes := []tc.UserAvailableDS{}
 	for _, ds := range dses {
 		if ds.TenantID == nil {
 			continue
 		}
-		authorized, err := tenant.IsResourceAuthorizedToUser(*ds.TenantID, user, db)
+		authorized, err := tenant.IsResourceAuthorizedToUserTx(*ds.TenantID, user, tx)
 		if err != nil {
 			return nil, errors.New("checking delivery service tenancy authorization: " + err.Error())
 		}
@@ -124,7 +112,7 @@ func filterAvailableAuthorized(db *sqlx.DB, dses []tc.UserAvailableDS, user *aut
 	return authorizedDSes, nil
 }
 
-func getUserDSes(db *sql.DB, userID int) ([]tc.DeliveryServiceNullableV13, error) {
+func getUserDSes(tx *sql.Tx, userID int) ([]tc.DeliveryServiceNullableV13, error) {
 	q := `
 SELECT
 ds.active,
@@ -195,7 +183,7 @@ LEFT JOIN profile ON ds.profile = profile.id
 LEFT JOIN tenant ON ds.tenant_id = tenant.id
 WHERE dsu.tm_user_id = $1
 `
-	rows, err := db.Query(q, userID)
+	rows, err := tx.Query(q, userID)
 	if err != nil {
 		return nil, errors.New("querying user delivery services: " + err.Error())
 	}
@@ -215,7 +203,7 @@ WHERE dsu.tm_user_id = $1
 	return dses, nil
 }
 
-func getUserAvailableDSes(db *sql.DB, userID int) ([]tc.UserAvailableDS, error) {
+func getUserAvailableDSes(tx *sql.Tx, userID int) ([]tc.UserAvailableDS, error) {
 	q := `
 SELECT
 ds.id,
@@ -226,7 +214,7 @@ FROM deliveryservice as ds
 JOIN deliveryservice_tmuser dsu ON ds.id = dsu.deliveryservice
 WHERE dsu.tm_user_id = $1
 `
-	rows, err := db.Query(q, userID)
+	rows, err := tx.Query(q, userID)
 	if err != nil {
 		return nil, errors.New("querying user available delivery services: " + err.Error())
 	}
@@ -243,9 +231,9 @@ WHERE dsu.tm_user_id = $1
 	return dses, nil
 }
 
-func getUserTenantIDByID(db *sql.DB, id int) (*int, bool, error) {
+func getUserTenantIDByID(tx *sql.Tx, id int) (*int, bool, error) {
 	tenantID := (*int)(nil)
-	if err := db.QueryRow(`SELECT tenant_id FROM tm_user WHERE id = $1`, id).Scan(&tenantID); err != nil {
+	if err := tx.QueryRow(`SELECT tenant_id FROM tm_user WHERE id = $1`, id).Scan(&tenantID); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, false, nil
 		}

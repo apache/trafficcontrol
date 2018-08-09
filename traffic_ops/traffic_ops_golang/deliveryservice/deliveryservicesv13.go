@@ -572,26 +572,6 @@ func (ds *TODeliveryServiceV13) IsTenantAuthorized(user *auth.CurrentUser) (bool
 	return ds.V12().IsTenantAuthorized(user)
 }
 
-func filterAuthorized(dses []tc.DeliveryServiceNullableV13, user *auth.CurrentUser, db *sqlx.DB) ([]tc.DeliveryServiceNullableV13, error) {
-	newDSes := []tc.DeliveryServiceNullableV13{}
-	for _, ds := range dses {
-		// TODO add/use a helper func to make a single SQL call, for performance
-		ok, err := tenant.IsResourceAuthorizedToUser(*ds.TenantID, user, db)
-		if err != nil {
-			if ds.XMLID == nil {
-				return nil, errors.New("isResourceAuthorized for delivery service with nil XML ID: " + err.Error())
-			} else {
-				return nil, errors.New("isResourceAuthorized for '" + *ds.XMLID + "': " + err.Error())
-			}
-		}
-		if !ok {
-			continue
-		}
-		newDSes = append(newDSes, ds)
-	}
-	return newDSes, nil
-}
-
 func readGetDeliveryServices(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.DeliveryServiceNullableV13, []error, tc.ApiErrorType) {
 	if strings.HasSuffix(params["id"], ".json") {
 		params["id"] = params["id"][:len(params["id"])-len(".json")]

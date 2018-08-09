@@ -566,3 +566,9 @@ type DSServerIDs struct {
 	ServerIDs         []int `json:"servers"`
 	Replace           *bool `json:"replace"`
 }
+
+type AssignedDsResponse struct {
+	ServerID int   `json:"serverId"`
+	DSIds    []int `json:"dsIds"`
+	Replace  bool  `json:"replace"`
+}

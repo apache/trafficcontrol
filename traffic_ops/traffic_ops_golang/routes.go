@@ -50,6 +50,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservicesregexes"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/division"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/hwinfo"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/monitoring"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/parameter"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/physlocation"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ping"
@@ -99,20 +100,20 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodDelete, `asns/{id}$`, api.DeleteHandler(asn.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
 
 		//CacheGroup: CRUD
-		{1.1, http.MethodGet, `cachegroups/trimmed/?(\.json)?$`, cachegroup.TrimmedHandler(d.DB.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `cachegroups/trimmed/?(\.json)?$`, cachegroup.GetTrimmed, auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodGet, `cachegroups/?(\.json)?$`, api.ReadHandler(cachegroup.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodGet, `cachegroups/{id}$`, api.ReadHandler(cachegroup.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodPut, `cachegroups/{id}$`, api.UpdateHandler(cachegroup.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `cachegroups/?$`, api.CreateHandler(cachegroup.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodDelete, `cachegroups/{id}$`, api.DeleteHandler(cachegroup.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
 
-		{1.1, http.MethodPost, `cachegroups/{id}/queue_update$`, cachegroup.QueueUpdates(d.DB.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodPost, `cachegroups/{id}/queue_update$`, cachegroup.QueueUpdates, auth.PrivLevelOperations, Authenticated, nil},
 
 		//CDN
 		{1.1, http.MethodGet, `cdns/name/{name}/sslkeys/?(\.json)?$`, cdn.GetSSLKeys, auth.PrivLevelAdmin, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/metric_types`, notImplementedHandler, 0, NoAuth, nil}, // MUST NOT end in $, because the 1.x route is longer
 		{1.1, http.MethodGet, `cdns/capacity$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
-		{1.1, http.MethodGet, `cdns/configs/?(\.json)?$`, cdn.GetConfigs(d.DB.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `cdns/configs/?(\.json)?$`, cdn.GetConfigs, auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/domains/?(\.json)?$`, cdn.DomainsHandler, auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/health$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
 		{1.1, http.MethodGet, `cdns/routing$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
@@ -124,15 +125,15 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodPut, `cdns/{id}$`, api.UpdateHandler(cdn.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `cdns/?$`, api.CreateHandler(cdn.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodDelete, `cdns/{id}$`, api.DeleteHandler(cdn.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodDelete, `cdns/name/{name}$`, cdn.DeleteName(d.DB.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `cdns/name/{name}$`, cdn.DeleteName, auth.PrivLevelOperations, Authenticated, nil},
 
 		//CDN: queue updates
-		{1.1, http.MethodPost, `cdns/{id}/queue_update$`, cdn.Queue(d.DB.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodPost, `cdns/{id}/queue_update$`, cdn.Queue, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `cdns/dnsseckeys/generate(\.json)?$`, cdn.CreateDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil},
 		{1.1, http.MethodGet, `cdns/name/{name}/dnsseckeys/delete/?(\.json)?$`, cdn.DeleteDNSSECKeys, auth.PrivLevelAdmin, Authenticated, nil},
 
 		//CDN: Monitoring: Traffic Monitor
-		{1.1, http.MethodGet, `cdns/{name}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `cdns/{cdn}/configs/monitoring(\.json)?$`, monitoring.Get, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Division: CRUD
 		{1.1, http.MethodGet, `divisions/?(\.json)?$`, api.ReadHandler(division.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
@@ -143,11 +144,11 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodGet, `divisions/name/{name}/?(\.json)?$`, api.ReadHandler(division.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//HWInfo
-		{1.1, http.MethodGet, `hwinfo-wip/?(\.json)?$`, hwinfo.HWInfoHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `hwinfo-wip/?(\.json)?$`, hwinfo.Get, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Login
-		{1.1, http.MethodGet, `users/{id}/deliveryservices/?(\.json)?$`, user.GetDSes(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `user/{id}/deliveryservices/available/?(\.json)?$`, user.GetAvailableDSes(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `users/{id}/deliveryservices/?(\.json)?$`, user.GetDSes, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `user/{id}/deliveryservices/available/?(\.json)?$`, user.GetAvailableDSes, auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodPost, `user/login/?$`, auth.LoginHandler(d.DB, d.Config), 0, NoAuth, nil},
 
 		{1.1, http.MethodGet, `user/current/?(\.json)?$`, user.Current, auth.PrivLevelReadOnly, Authenticated, nil},
@@ -161,7 +162,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Phys_Location: CRUD
 		{1.1, http.MethodGet, `phys_locations/?(\.json)?$`, api.ReadHandler(physlocation.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `phys_locations/trimmed/?(\.json)?$`, physlocation.GetTrimmed(d.DB.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `phys_locations/trimmed/?(\.json)?$`, physlocation.GetTrimmed, auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodGet, `phys_locations/{id}$`, api.ReadHandler(physlocation.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodPut, `phys_locations/{id}$`, api.UpdateHandler(physlocation.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `phys_locations/?$`, api.CreateHandler(physlocation.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
@@ -174,7 +175,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		//Profile: CRUD
 		{1.1, http.MethodGet, `profiles/?(\.json)?$`, api.ReadHandler(profile.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `profiles/trimmed/?(\.json)?$`, profile.Trimmed(d.DB.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/trimmed/?(\.json)?$`, profile.Trimmed, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		{1.1, http.MethodGet, `profiles/{id}$`, api.ReadHandler(profile.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodPut, `profiles/{id}$`, api.UpdateHandler(profile.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
@@ -184,7 +185,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		//Region: CRUDs
 		{1.1, http.MethodGet, `regions/?(\.json)?$`, api.ReadHandler(region.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodGet, `regions/{id}$`, api.ReadHandler(region.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `regions/name/{name}/?(\.json)?$`, region.GetName(d.DB.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `regions/name/{name}/?(\.json)?$`, region.GetName, auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodPut, `regions/{id}$`, api.UpdateHandler(region.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `regions/?$`, api.CreateHandler(region.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodDelete, `regions/{id}$`, api.DeleteHandler(region.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
@@ -193,12 +194,12 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 
 		// get all edge servers associated with a delivery service (from deliveryservice_server table)
 
-		{1.1, http.MethodGet, `deliveryserviceserver$`, dsserver.ReadDSSHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPost, `deliveryserviceserver$`, dsserver.GetReplaceHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodPost, `deliveryservices/{xml_id}/servers$`, dsserver.GetCreateHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodGet, `servers/{id}/deliveryservices$`, api.ReadOnlyHandler(dsserver.GetDSSDeliveryServiceReaderSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `deliveryservices/{id}/servers$`, dsserver.GetReadHandler(d.DB, tc.Assigned), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `deliveryservices/{id}/unassigned_servers$`, dsserver.GetReadHandler(d.DB, tc.Unassigned), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `deliveryserviceserver$`, dsserver.ReadDSSHandler, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPost, `deliveryserviceserver$`, dsserver.GetReplaceHandler, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodPost, `deliveryservices/{xml_id}/servers$`, dsserver.GetCreateHandler, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `servers/{id}/deliveryservices$`, api.ReadOnlyHandler(dsserver.TypeSingleton), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `deliveryservices/{id}/servers$`, dsserver.GetReadAssigned, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `deliveryservices/{id}/unassigned_servers$`, dsserver.GetReadUnassigned, auth.PrivLevelReadOnly, Authenticated, nil},
 		//{1.1, http.MethodGet, `deliveryservices/{id}/servers/eligible$`, dsserver.GetReadHandler(d.Tx, tc.Eligible),auth.PrivLevelReadOnly, Authenticated, nil},
 
 		{1.1, http.MethodGet, `deliveryservice_matches/?(\.json)?$`, deliveryservice.GetMatches, auth.PrivLevelReadOnly, Authenticated, nil},
@@ -209,8 +210,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodGet, `servers/totals$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
 
 		//Server Details
-		{1.2, http.MethodGet, `servers/details/?(\.json)?$`, server.GetDetailParamHandler(d.DB.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.2, http.MethodGet, `servers/hostname/{hostName}/details/?(\.json)?$`, server.GetDetailHandler(d.DB.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.2, http.MethodGet, `servers/details/?(\.json)?$`, server.GetDetailParamHandler, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.2, http.MethodGet, `servers/hostname/{hostName}/details/?(\.json)?$`, server.GetDetailHandler, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Server: CRUD
 		{1.1, http.MethodGet, `servers/?(\.json)?$`, api.ReadHandler(server.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
@@ -227,7 +228,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodDelete, `statuses/{id}$`, api.DeleteHandler(status.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
 
 		//System
-		{1.1, http.MethodGet, `system/info/?(\.json)?$`, systeminfo.Handler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `system/info/?(\.json)?$`, systeminfo.Get, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Type: CRUD
 		{1.1, http.MethodGet, `types/?(\.json)?$`, api.ReadHandler(types.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
@@ -254,7 +255,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.2, http.MethodGet, `servers/totals$`, handlerToFunc(proxyHandler), 0, NoAuth, []Middleware{}},
 
 		//Monitoring
-		{1.2, http.MethodGet, `cdns/{name}/configs/monitoring(\.json)?$`, monitoringHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.2, http.MethodGet, `cdns/{name}/configs/monitoring(\.json)?$`, monitoring.Get, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//ASNs
 		{1.3, http.MethodGet, `asns/?(\.json)?$`, api.ReadHandler(asn.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
@@ -313,16 +314,16 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.3, http.MethodDelete, `roles/?$`, api.DeleteHandler(role.GetTypeSingleton()), auth.PrivLevelAdmin, Authenticated, nil},
 
 		//Delivery Services Regexes
-		{1.1, http.MethodGet, `deliveryservices_regexes/?(\.json)?$`, deliveryservicesregexes.Get(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `deliveryservices/{dsid}/regexes/?(\.json)?$`, deliveryservicesregexes.DSGet(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `deliveryservices/{dsid}/regexes/{regexid}?(\.json)?$`, deliveryservicesregexes.DSGetID(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPost, `deliveryservices/{dsid}/regexes/?(\.json)?$`, deliveryservicesregexes.Post(), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodPut, `deliveryservices/{dsid}/regexes/{regexid}?(\.json)?$`, deliveryservicesregexes.Put(), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodDelete, `deliveryservices/{dsid}/regexes/{regexid}?(\.json)?$`, deliveryservicesregexes.Delete(d.DB), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `deliveryservices_regexes/?(\.json)?$`, deliveryservicesregexes.Get, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `deliveryservices/{dsid}/regexes/?(\.json)?$`, deliveryservicesregexes.DSGet, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `deliveryservices/{dsid}/regexes/{regexid}?(\.json)?$`, deliveryservicesregexes.DSGetID, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPost, `deliveryservices/{dsid}/regexes/?(\.json)?$`, deliveryservicesregexes.Post, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodPut, `deliveryservices/{dsid}/regexes/{regexid}?(\.json)?$`, deliveryservicesregexes.Put, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `deliveryservices/{dsid}/regexes/{regexid}?(\.json)?$`, deliveryservicesregexes.Delete, auth.PrivLevelOperations, Authenticated, nil},
 
 		//Servers
-		{1.3, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler(d.DB), auth.PrivLevelOperations, Authenticated, nil},
-		{1.3, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.3, http.MethodPost, `servers/{id}/deliveryservices$`, server.AssignDeliveryServicesToServerHandler, auth.PrivLevelOperations, Authenticated, nil},
+		{1.3, http.MethodGet, `servers/{host_name}/update_status$`, server.GetServerUpdateStatusHandler, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//StaticDNSEntries
 		{1.1, http.MethodGet, `staticdnsentries/?(\.json)?$`, api.ReadHandler(staticdnsentry.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
@@ -332,10 +333,10 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.3, http.MethodDelete, `staticdnsentries/?$`, api.DeleteHandler(staticdnsentry.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
 
 		//ProfileParameters
-		{1.1, http.MethodGet, `profiles/{id}/parameters/?(\.json)?$`, profileparameter.GetProfileID(d.DB.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `profiles/{id}/unassigned_parameters/?(\.json)?$`, profileparameter.GetUnassigned(d.DB.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `profiles/name/{name}/parameters/?(\.json)?$`, profileparameter.GetProfileName(d.DB.DB), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `parameters/profile/{name}/?(\.json)?$`, profileparameter.GetProfileName(d.DB.DB), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{id}/parameters/?(\.json)?$`, profileparameter.GetProfileID, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/{id}/unassigned_parameters/?(\.json)?$`, profileparameter.GetUnassigned, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `profiles/name/{name}/parameters/?(\.json)?$`, profileparameter.GetProfileName, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `parameters/profile/{name}/?(\.json)?$`, profileparameter.GetProfileName, auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodPost, `profiles/name/{name}/parameters/?$`, profileparameter.PostProfileParamsByName, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodPost, `profiles/{id}/parameters/?$`, profileparameter.PostProfileParamsByID, auth.PrivLevelOperations, Authenticated, nil},
 		{1.1, http.MethodGet, `profileparameters/?(\.json)?$`, api.ReadHandler(profileparameter.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
@@ -352,10 +353,10 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodDelete, `tenants/{id}$`, api.DeleteHandler(tenant.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
 
 		//CRConfig
-		{1.1, http.MethodGet, `cdns/{cdn}/snapshot/?$`, crconfig.SnapshotGetHandler(d.DB, d.Config), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `cdns/{cdn}/snapshot/new/?$`, crconfig.Handler(d.DB, d.Config), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPut, `cdns/{id}/snapshot/?$`, crconfig.SnapshotHandler(d.DB, d.Config), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodPut, `snapshot/{cdn}/?$`, crconfig.SnapshotHandler(d.DB, d.Config), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `cdns/{cdn}/snapshot/?$`, crconfig.SnapshotGetHandler, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `cdns/{cdn}/snapshot/new/?$`, crconfig.Handler, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPut, `cdns/{id}/snapshot/?$`, crconfig.SnapshotHandler, auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodPut, `snapshot/{cdn}/?$`, crconfig.SnapshotHandler, auth.PrivLevelOperations, Authenticated, nil},
 
 		//SSLKeys deliveryservice endpoints here that are marked  marked as '-wip' need to have tenancy checks added
 
@@ -383,17 +384,14 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodGet, `deliveryservices/xmlId/{name}/urlkeys/?(\.json)?$`, deliveryservice.GetURLKeysByName, auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodGet, `deliveryservices/{id}/urlkeys/?(\.json)?$`, deliveryservice.GetURLKeysByID, auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodGet, `riak/bucket/{bucket}/key/{key}/values/?(\.json)?$`, apiriak.GetBucketKey, auth.PrivLevelAdmin, Authenticated, nil},
-
-		//System
-		{1.1, http.MethodGet, `system/info/?(\.json)?$`, systeminfo.Handler(d.DB), auth.PrivLevelReadOnly, Authenticated, nil},
 	}
 
 	// rawRoutes are served at the root path. These should be almost exclusively old Perl pre-API routes, which have yet to be converted in all clients. New routes should be in the versioned API path.
 	rawRoutes := []RawRoute{
 		// DEPRECATED - use PUT /api/1.2/snapshot/{cdn}
-		{http.MethodGet, `tools/write_crconfig/{cdn}/?$`, crconfig.SnapshotOldGUIHandler(d.DB, d.Config), auth.PrivLevelOperations, Authenticated, nil},
+		{http.MethodGet, `tools/write_crconfig/{cdn}/?$`, crconfig.SnapshotOldGUIHandler, auth.PrivLevelOperations, Authenticated, nil},
 		// DEPRECATED - use GET /api/1.2/cdns/{cdn}/snapshot
-		{http.MethodGet, `CRConfig-Snapshots/{cdn}/CRConfig.json?$`, crconfig.SnapshotOldGetHandler(d.DB, d.Config), auth.PrivLevelReadOnly, Authenticated, nil},
+		{http.MethodGet, `CRConfig-Snapshots/{cdn}/CRConfig.json?$`, crconfig.SnapshotOldGetHandler, auth.PrivLevelReadOnly, Authenticated, nil},
 	}
 
 	return routes, rawRoutes, proxyHandler, nil

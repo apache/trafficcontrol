@@ -34,18 +34,18 @@ const MonitorTypeName = "RASCAL"
 const EdgeTypePrefix = "EDGE"
 const MidTypePrefix = "MID"
 
-func makeCRConfigServers(cdn string, db *sql.DB, cdnDomain string) (
+func makeCRConfigServers(cdn string, tx *sql.Tx, cdnDomain string) (
 	map[string]tc.CRConfigTrafficOpsServer,
 	map[string]tc.CRConfigRouter,
 	map[string]tc.CRConfigMonitor,
 	error,
 ) {
-	allServers, err := getAllServers(cdn, db)
+	allServers, err := getAllServers(cdn, tx)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	serverDSes, err := getServerDSes(cdn, db, cdnDomain)
+	serverDSes, err := getServerDSes(cdn, tx, cdnDomain)
 	if err != nil {
 		return nil, nil, nil, errors.New("getting server deliveryservices: " + err.Error())
 	}
@@ -98,10 +98,10 @@ type ServerUnion struct {
 const DefaultWeightMultiplier = 1000.0
 const DefaultWeight = 0.999
 
-func getAllServers(cdn string, db *sql.DB) (map[string]ServerUnion, error) {
+func getAllServers(cdn string, tx *sql.Tx) (map[string]ServerUnion, error) {
 	servers := map[string]ServerUnion{}
 
-	serverParams, err := getServerParams(cdn, db)
+	serverParams, err := getServerParams(cdn, tx)
 	if err != nil {
 		return nil, errors.New("Error getting server params: " + err.Error())
 	}
@@ -117,7 +117,7 @@ inner join status as st ON st.id = s.status
 where cdn_id = (select id from cdn where name = $1)
 and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 `
-	rows, err := db.Query(q, cdn)
+	rows, err := tx.Query(q, cdn)
 	if err != nil {
 		return nil, errors.New("Error querying servers: " + err.Error())
 	}
@@ -184,7 +184,7 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 	return servers, nil
 }
 
-func getServerDSNames(cdn string, db *sql.DB) (map[tc.CacheName][]tc.DeliveryServiceName, error) {
+func getServerDSNames(cdn string, tx *sql.Tx) (map[tc.CacheName][]tc.DeliveryServiceName, error) {
 	q := `
 select s.host_name, ds.xml_id
 from deliveryservice_server as dss
@@ -197,7 +197,7 @@ and ds.active = true
 and p.routing_disabled = false
 and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 `
-	rows, err := db.Query(q, cdn)
+	rows, err := tx.Query(q, cdn)
 	if err != nil {
 		return nil, errors.New("Error querying server deliveryservice names: " + err.Error())
 	}
@@ -221,8 +221,8 @@ type DSRouteInfo struct {
 	Remap string
 }
 
-func getServerDSes(cdn string, db *sql.DB, domain string) (map[tc.CacheName]map[string][]string, error) {
-	serverDSNames, err := getServerDSNames(cdn, db)
+func getServerDSes(cdn string, tx *sql.Tx, domain string) (map[tc.CacheName]map[string][]string, error) {
+	serverDSNames, err := getServerDSNames(cdn, tx)
 	if err != nil {
 		return nil, errors.New("Error getting server deliveryservices: " + err.Error())
 	}
@@ -239,7 +239,7 @@ and ds.active = true
 and rt.name = 'HOST_REGEXP'
 order by dsr.set_number asc
 `
-	rows, err := db.Query(q, cdn)
+	rows, err := tx.Query(q, cdn)
 	if err != nil {
 		return nil, errors.New("Error server deliveryservices: " + err.Error())
 	}
@@ -301,7 +301,7 @@ type ServerParams struct {
 	WeightMultiplier *float64
 }
 
-func getServerParams(cdn string, db *sql.DB) (map[string]ServerParams, error) {
+func getServerParams(cdn string, tx *sql.Tx) (map[string]ServerParams, error) {
 	params := map[string]ServerParams{}
 
 	q := `
@@ -314,7 +314,7 @@ where s.cdn_id = (select id from cdn where name = $1)
 and ((p.config_file = 'CRConfig.json' and (p.name = 'weight' or p.name = 'weightMultiplier')) or (p.name = 'api.port'))
 and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 `
-	rows, err := db.Query(q, cdn)
+	rows, err := tx.Query(q, cdn)
 	if err != nil {
 		return nil, errors.New("Error querying server parameters: " + err.Error())
 	}
@@ -353,19 +353,19 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 }
 
 // getCDNInfo returns the CDN domain, and whether DNSSec is enabled
-func getCDNInfo(cdn string, db *sql.DB) (string, bool, error) {
+func getCDNInfo(cdn string, tx *sql.Tx) (string, bool, error) {
 	domain := ""
 	dnssec := false
-	if err := db.QueryRow(`select domain_name, dnssec_enabled from cdn where name = $1`, cdn).Scan(&domain, &dnssec); err != nil {
+	if err := tx.QueryRow(`select domain_name, dnssec_enabled from cdn where name = $1`, cdn).Scan(&domain, &dnssec); err != nil {
 		return "", false, errors.New("Error querying CDN domain name: " + err.Error())
 	}
 	return domain, dnssec, nil
 }
 
 // getCDNNameFromID returns the CDN name given the ID, false if the no CDN with the given ID exists, and an error if the database query fails.
-func getCDNNameFromID(id int, db *sql.DB) (string, bool, error) {
+func getCDNNameFromID(id int, tx *sql.Tx) (string, bool, error) {
 	name := ""
-	if err := db.QueryRow(`select name from cdn where id = $1`, id).Scan(&name); err != nil {
+	if err := tx.QueryRow(`select name from cdn where id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
 			return "", false, nil
 		}

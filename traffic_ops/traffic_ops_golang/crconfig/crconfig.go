@@ -26,31 +26,31 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-func Make(db *sql.DB, cdn, user, toHost, reqPath, toVersion string) (*tc.CRConfig, error) {
+func Make(tx *sql.Tx, cdn, user, toHost, reqPath, toVersion string) (*tc.CRConfig, error) {
 	crc := tc.CRConfig{}
 	err := error(nil)
 
-	cdnDomain, dnssecEnabled, err := getCDNInfo(cdn, db)
+	cdnDomain, dnssecEnabled, err := getCDNInfo(cdn, tx)
 	if err != nil {
 		return nil, errors.New("Error getting CDN info: " + err.Error())
 	}
 
-	if crc.Config, err = makeCRConfigConfig(cdn, db, dnssecEnabled, cdnDomain); err != nil {
+	if crc.Config, err = makeCRConfigConfig(cdn, tx, dnssecEnabled, cdnDomain); err != nil {
 		return nil, errors.New("Error getting Config: " + err.Error())
 	}
 
-	if crc.ContentServers, crc.ContentRouters, crc.Monitors, err = makeCRConfigServers(cdn, db, cdnDomain); err != nil {
+	if crc.ContentServers, crc.ContentRouters, crc.Monitors, err = makeCRConfigServers(cdn, tx, cdnDomain); err != nil {
 		return nil, errors.New("Error getting Servers: " + err.Error())
 	}
-	if crc.EdgeLocations, crc.RouterLocations, err = makeLocations(cdn, db); err != nil {
+	if crc.EdgeLocations, crc.RouterLocations, err = makeLocations(cdn, tx); err != nil {
 		return nil, errors.New("Error getting Edge Locations: " + err.Error())
 	}
-	if crc.DeliveryServices, err = makeDSes(cdn, cdnDomain, db); err != nil {
+	if crc.DeliveryServices, err = makeDSes(cdn, cdnDomain, tx); err != nil {
 		return nil, errors.New("Error getting Delivery Services: " + err.Error())
 	}
 
 	// TODO change to real reqPath, and verify everything works. Currently emulates the existing TO, in case anything relies on it
 	emulateOldPath := "/tools/write_crconfig/" + cdn
-	crc.Stats = makeStats(cdn, user, toHost, emulateOldPath, toVersion, db)
+	crc.Stats = makeStats(cdn, user, toHost, emulateOldPath, toVersion)
 	return &crc, nil
 }

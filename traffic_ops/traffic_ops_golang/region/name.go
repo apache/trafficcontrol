@@ -28,21 +28,21 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
-func GetName(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		params, _, userErr, sysErr, errCode := api.AllParams(r, []string{"name"}, nil)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		api.RespWriter(w, r)(getName(db, params["name"]))
+func GetName(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+	*inf.CommitTx = true
+	api.RespWriter(w, r)(getName(inf.Tx.Tx, inf.Params["name"]))
 }
 
 // getName returns a slice, even though only 1 region will ever be returned, because that's what the 1.x API responds with.
-func getName(db *sql.DB, name string) ([]tc.RegionName, error) {
+func getName(tx *sql.Tx, name string) ([]tc.RegionName, error) {
 	r := tc.RegionName{Name: name}
-	err := db.QueryRow(`SELECT r.id, d.id, d.name FROM region as r JOIN division as d ON r.division = d.id WHERE r.name = $1`, name).Scan(&r.ID, &r.Division.ID, &r.Division.Name)
+	err := tx.QueryRow(`SELECT r.id, d.id, d.name FROM region as r JOIN division as d ON r.division = d.id WHERE r.name = $1`, name).Scan(&r.ID, &r.Division.ID, &r.Division.Name)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return []tc.RegionName{}, nil

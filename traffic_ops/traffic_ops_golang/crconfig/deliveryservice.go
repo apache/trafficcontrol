@@ -42,7 +42,7 @@ const DefaultTLDTTLNS = 3600 * time.Second
 const GeoProviderMaxmindStr = "maxmindGeolocationService"
 const GeoProviderNeustarStr = "neustarGeolocationService"
 
-func makeDSes(cdn string, domain string, db *sql.DB) (map[string]tc.CRConfigDeliveryService, error) {
+func makeDSes(cdn string, domain string, tx *sql.Tx) (map[string]tc.CRConfigDeliveryService, error) {
 	dses := map[string]tc.CRConfigDeliveryService{}
 
 	admin := CDNSOAAdmin
@@ -70,22 +70,7 @@ func makeDSes(cdn string, domain string, db *sql.DB) (map[string]tc.CRConfigDeli
 	geoProvider1 := GeoProviderNeustarStr
 	geoProviderDefault := geoProvider0
 
-	q := `
-select d.xml_id, d.miss_lat, d.miss_long, d.protocol, d.ccr_dns_ttl as ttl, d.routing_name, d.geo_provider, t.name as type, d.geo_limit, d.geo_limit_countries, d.geolimit_redirect_url, d.initial_dispersion, d.regional_geo_blocking, d.tr_response_headers, d.max_dns_answers, p.name as profile, d.dns_bypass_ip, d.dns_bypass_ip6, d.dns_bypass_ttl, d.dns_bypass_cname, d.http_bypass_fqdn, d.ipv6_routing_enabled, d.deep_caching_type, d.tr_request_headers, d.tr_response_headers, d.anonymous_blocking_enabled
-from deliveryservice as d
-inner join type as t on t.id = d.type
-left outer join profile as p on p.id = d.profile
-where d.cdn_id = (select id from cdn where name = $1)
-and d.active = true
-`
-	q += fmt.Sprintf(" and t.name != '%s'", tc.DSTypeAnyMap)
-	rows, err := db.Query(q, cdn)
-	if err != nil {
-		return nil, errors.New("querying deliveryservices: " + err.Error())
-	}
-	defer rows.Close()
-
-	serverParams, err := getServerProfileParams(cdn, db)
+	serverParams, err := getServerProfileParams(cdn, tx)
 	if err != nil {
 		return nil, errors.New("getting deliveryservice parameters: " + err.Error())
 	}
@@ -95,15 +80,30 @@ and d.active = true
 		return nil, errors.New("getting deliveryservice server parameters: " + err.Error())
 	}
 
-	dsmatchsets, dsdomains, err := getDSRegexesDomains(cdn, domain, db)
+	dsmatchsets, dsdomains, err := getDSRegexesDomains(cdn, domain, tx)
 	if err != nil {
 		return nil, errors.New("getting regex matchsets: " + err.Error())
 	}
 
-	staticDNSEntries, err := getStaticDNSEntries(cdn, db)
+	staticDNSEntries, err := getStaticDNSEntries(cdn, tx)
 	if err != nil {
 		return nil, errors.New("getting static DNS entries: " + err.Error())
 	}
+
+	q := `
+select d.xml_id, d.miss_lat, d.miss_long, d.protocol, d.ccr_dns_ttl as ttl, d.routing_name, d.geo_provider, t.name as type, d.geo_limit, d.geo_limit_countries, d.geolimit_redirect_url, d.initial_dispersion, d.regional_geo_blocking, d.tr_response_headers, d.max_dns_answers, p.name as profile, d.dns_bypass_ip, d.dns_bypass_ip6, d.dns_bypass_ttl, d.dns_bypass_cname, d.http_bypass_fqdn, d.ipv6_routing_enabled, d.deep_caching_type, d.tr_request_headers, d.tr_response_headers, d.anonymous_blocking_enabled
+from deliveryservice as d
+inner join type as t on t.id = d.type
+left outer join profile as p on p.id = d.profile
+where d.cdn_id = (select id from cdn where name = $1)
+and d.active = true
+`
+	q += fmt.Sprintf(" and t.name != '%s'", tc.DSTypeAnyMap)
+	rows, err := tx.Query(q, cdn)
+	if err != nil {
+		return nil, errors.New("querying deliveryservices: " + err.Error())
+	}
+	defer rows.Close()
 
 	for rows.Next() {
 		ds := tc.CRConfigDeliveryService{
@@ -343,7 +343,7 @@ and d.active = true
 	return dses, nil
 }
 
-func getStaticDNSEntries(cdn string, db *sql.DB) (map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry, error) {
+func getStaticDNSEntries(cdn string, tx *sql.Tx) (map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry, error) {
 	entries := map[tc.DeliveryServiceName][]tc.CRConfigStaticDNSEntry{}
 
 	q := `
@@ -354,7 +354,7 @@ inner join type as t on t.id = e.type
 where d.cdn_id = (select id from cdn where name = $1)
 and d.active = true
 `
-	rows, err := db.Query(q, cdn)
+	rows, err := tx.Query(q, cdn)
 	if err != nil {
 		return nil, errors.New("querying static DNS entries: " + err.Error())
 	}
@@ -382,7 +382,7 @@ func getProtocolStr(dsType string) string {
 	return "HTTP"
 }
 
-func getDSRegexesDomains(cdn string, domain string, db *sql.DB) (map[string][]*tc.MatchSet, map[string][]string, error) {
+func getDSRegexesDomains(cdn string, domain string, tx *sql.Tx) (map[string][]*tc.MatchSet, map[string][]string, error) {
 	dsmatchsets := map[string][]*tc.MatchSet{}
 	domains := map[string][]string{}
 	patternToHostReplacer := strings.NewReplacer(`\`, ``, `.*`, ``, `.`, ``)
@@ -397,7 +397,7 @@ where d.cdn_id = (select id from cdn where name = $1)
 and d.active = true
 order by dr.set_number asc
 `
-	rows, err := db.Query(q, cdn)
+	rows, err := tx.Query(q, cdn)
 	if err != nil {
 		return nil, nil, errors.New("querying deliveryservices: " + err.Error())
 	}
@@ -479,7 +479,7 @@ func getDSParams(serverParams map[string]map[string]string) (map[string]string, 
 }
 
 // getDSProfileParams returns a map[dsname]map[paramname]paramvalue
-func getServerProfileParams(cdn string, db *sql.DB) (map[string]map[string]string, error) {
+func getServerProfileParams(cdn string, tx *sql.Tx) (map[string]map[string]string, error) {
 	q := `
 select parameter.name, parameter.value, profile.name as profile
 from profile
@@ -487,7 +487,7 @@ inner join profile_parameter as pp on pp.profile = profile.id
 inner join parameter on parameter.id = pp.parameter
 where profile.id in (select profile from server where server.cdn_id = (select id from cdn where name = $1))
 `
-	rows, err := db.Query(q, cdn)
+	rows, err := tx.Query(q, cdn)
 	if err != nil {
 		return nil, errors.New("querying deliveryservices: " + err.Error())
 	}

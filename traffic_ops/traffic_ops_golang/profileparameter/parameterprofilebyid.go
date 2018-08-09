@@ -28,18 +28,18 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
-func GetProfileID(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		_, intParams, userErr, sysErr, errCode := api.AllParams(r, []string{"id"}, []string{"id"})
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		api.RespWriter(w, r)(getParametersByProfileID(intParams["id"], db))
+func GetProfileID(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+	*inf.CommitTx = true
+	api.RespWriter(w, r)(getParametersByProfileID(inf.IntParams["id"], inf.Tx.Tx))
 }
 
-func getParametersByProfileID(profileID int, db *sql.DB) ([]tc.ProfileParameterByName, error) {
+func getParametersByProfileID(profileID int, tx *sql.Tx) ([]tc.ProfileParameterByName, error) {
 	q := `
 SELECT
 parameter.id, parameter.name, parameter.value, parameter.config_file, parameter.secure, parameter.last_updated
@@ -48,7 +48,7 @@ JOIN profile_parameter as pp ON pp.parameter = parameter.id
 JOIN profile on profile.id = pp.profile
 WHERE profile.id = $1
 `
-	rows, err := db.Query(q, profileID)
+	rows, err := tx.Query(q, profileID)
 	if err != nil {
 		return nil, errors.New("querying profile name parameters: " + err.Error())
 	}
