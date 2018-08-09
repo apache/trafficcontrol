@@ -188,7 +188,7 @@ Federation
             "deliveryService": {
                 "id": 61,
                 "xmlId": "the-xml-id"
-            }
+            },
             "lastUpdated": "2018-08-01 14:41:48+00"
         }
       ]
@@ -245,7 +245,7 @@ Federation
             "deliveryService": {
                 "id": 61,
                 "xmlId": "the-xml-id"
-            }
+            },
             "lastUpdated": "2018-08-01 14:41:48+00"
         }
       ]
