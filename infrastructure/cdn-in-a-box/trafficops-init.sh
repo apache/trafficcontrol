@@ -26,36 +26,25 @@ for v in TO_HOST TO_PORT TO_ADMIN_USER TO_ADMIN_PASSWORD; do
     exit 1
 done
 
+. /to-access.sh
+
 TO_URL="https://$TO_HOST:$TO_PORT"
 # wait until the ping endpoint succeeds
-while ! curl -k $TO_URL/api/1.3/ping; do
+while ! to-get api/1.3/ping 2>/dev/null; do
    echo waiting for trafficops
    sleep 3
 done
 
-export COOKIEJAR=/tmp/cookiejar.$(echo $TO_URL $TO_ADMIN_USER | md5sum | awk '{print $1}')
+cd /initialdata
 
-login() {
-    local datadir=$(mktemp -d)
-    local login="$datadir/login.json"
-    local url=$TO_URL/api/1.3/user/login
-    local datatype='Accept: application/json'
-    cat > "$login"  <<-CREDS
-    { "u" : "$TO_ADMIN_USER", "p" : "$TO_ADMIN_PASSWORD" }
-CREDS
-
-    res=$(curl -k -H "$datatype" --cookie "$COOKIEJAR" --cookie-jar "$COOKIEJAR" -X POST --data @"$login" "$url")
-    rm -rf "$datadir"
-    if [[ $res != *"Successfully logged in."* ]]; then
-        echo $res
-        return -1
-    fi
-}
-
-login
-
-# load json files using the API
-for f in */*.json; do
-    ep=$(dirname $f)
-    curl -k -s --cookie "$COOKIEJAR" -X POST --data @"$f" "$TO_URL/api/1.3/$ep"
+# load json files using the API -- order is important!
+endpoints="tenant user cdn server"
+for ep in $endpoints; do
+    [[ -d $ep ]] || continue
+    for f in $ep/*.json; do
+        [[ -r $f ]] || continue
+        t=$(mktemp $f-XXX.json)
+        envsubst <$f >$t
+        to-post api/1.3/$ep $t 
+    done
 done

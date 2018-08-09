@@ -77,4 +77,7 @@ cd $TO_DIR && \
 /adduser.pl $TO_ADMIN_USER $TO_ADMIN_PASSWORD admin | psql -U$DB_USER -h$DB_SERVER $DB_NAME || echo "adding traffic_ops admin user failed!"
 
 cd $TO_DIR && $TO_DIR/local/bin/hypnotoad script/cdn
+
+# Add initial data to traffic ops
+/trafficops-init.sh
 exec tail -f /var/log/traffic_ops/traffic_ops.log
