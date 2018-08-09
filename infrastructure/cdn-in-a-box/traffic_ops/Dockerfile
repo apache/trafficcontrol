@@ -80,6 +80,9 @@ ADD traffic_ops/run.sh \
     traffic_ops/config.sh \
     traffic_ops/adduser.pl \
     traffic_ops/to-access.sh \
+    trafficops-init.sh \
     /
+
+ADD traffic_ops_data /traffic_ops_data
 
 CMD /run.sh

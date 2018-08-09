@@ -35,16 +35,37 @@ while ! to-get api/1.3/ping 2>/dev/null; do
    sleep 3
 done
 
-cd /initialdata
-
-# load json files using the API -- order is important!
+# NOTE: order dependent on foreign key references, e.g. tenant must be defined before user
 endpoints="tenant user cdn server"
-for ep in $endpoints; do
-    [[ -d $ep ]] || continue
-    for f in $ep/*.json; do
-        [[ -r $f ]] || continue
-        t=$(mktemp $f-XXX.json)
-        envsubst <$f >$t
-        to-post api/1.3/$ep $t 
+
+load_data_from() {
+    local dir="$1"
+    if [[ ! -d $dir ]] ; then
+        echo "Failed to load data from '$dir': directory does not exist"
+    fi
+
+    for ep in $endpoints; do
+        d="$dir/$ep"
+        [[ -d $d ]] || continue
+        echo "Loading data from $d"
+        for f in "$d"/*.json; do
+            [[ -r $f ]] || continue
+            t=$(mktemp --tmpdir $ep-XXX.json)
+            envsubst <"$f" >"$t"
+            to-post api/1.3/"$ep" "$t"
+            rm "$t"
+        done
     done
-done
+}
+
+# First,  load required data at the top level
+load_data_from /traffic_ops_data
+
+# If TO_DATA is defined, load from subdirs with that name (space-separated)
+if [[ -n $TO_DATA ]]; then
+    for subdir in $TO_DATA; do
+        load_data_from /traffic_ops_data/$subdir
+    done
+fi
+
+
