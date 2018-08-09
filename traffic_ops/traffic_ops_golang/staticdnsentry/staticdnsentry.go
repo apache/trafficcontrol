@@ -86,7 +86,7 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 		return err
 	}
 
-	addressErr := error(nil)
+	var addressErr error
 
 	switch typeStr {
 	case "A_RECORD":
