@@ -32,7 +32,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/jmoiron/sqlx"
 )
 
 // DeliveryServiceTenantInfo provides only deliveryservice info needed here
@@ -110,73 +109,6 @@ func CheckID(tx *sql.Tx, user *auth.CurrentUser, dsID int) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-// GetUserTenantList returns a Tenant list that the specified user has access to.
-// NOTE: This method does not use the use_tenancy parameter and if this method is being used
-// to control tenancy the parameter must be checked. The method IsResourceAuthorizedToUser checks the use_tenancy parameter
-// and should be used for this purpose in most cases.
-func GetUserTenantList(user auth.CurrentUser, db *sqlx.DB) ([]tc.TenantNullable, error) {
-	query := `WITH RECURSIVE q AS (SELECT id, name, active, parent_id, last_updated FROM tenant WHERE id = $1
-	UNION SELECT t.id, t.name, t.active, t.parent_id, t.last_updated  FROM tenant t JOIN q ON q.id = t.parent_id)
-	SELECT id, name, active, parent_id, last_updated FROM q;`
-
-	log.Debugln("\nQuery: ", query)
-
-	var (
-		tenantID, parentID int
-		name               string
-		active             bool
-		lastUpdated        tc.TimeNoMod
-	)
-	rows, err := db.Query(query, user.TenantID)
-	if err != nil {
-		return nil, errors.New("querying user tenant list: " + err.Error())
-	}
-	defer rows.Close()
-
-	tenants := []tc.TenantNullable{}
-
-	for rows.Next() {
-		if err := rows.Scan(&tenantID, &name, &active, &parentID, &lastUpdated); err != nil {
-			return nil, err
-		}
-
-		tenants = append(tenants, tc.TenantNullable{ID: &tenantID, Name: &name, Active: &active, ParentID: &parentID})
-	}
-
-	return tenants, nil
-}
-
-// GetUserTenantIDList returns a TenantID list that the specified user has access too.
-// NOTE: This method does not use the use_tenancy parameter and if this method is being used
-// to control tenancy the parameter must be checked. The method IsResourceAuthorizedToUser checks the use_tenancy parameter
-// and should be used for this purpose in most cases.
-func GetUserTenantIDList(user auth.CurrentUser, db *sqlx.DB) ([]int, error) {
-	query := `WITH RECURSIVE q AS (SELECT id, name, active, parent_id FROM tenant WHERE id = $1
-	UNION SELECT t.id, t.name, t.active, t.parent_id  FROM tenant t JOIN q ON q.id = t.parent_id)
-	SELECT id FROM q;`
-
-	log.Debugln("\nQuery: ", query)
-
-	var tenantID int
-
-	rows, err := db.Query(query, user.TenantID)
-	if err != nil {
-		return nil, errors.New("querying user tenantID list: " + err.Error())
-	}
-	defer rows.Close()
-
-	tenants := []int{}
-
-	for rows.Next() {
-		if err := rows.Scan(&tenantID); err != nil {
-			return nil, err
-		}
-		tenants = append(tenants, tenantID)
-	}
-
-	return tenants, nil
-}
-
 func GetUserTenantIDListTx(tx *sql.Tx, userTenantID int) ([]int, error) {
 	query := `
 WITH RECURSIVE q AS (SELECT id, name, active, parent_id FROM tenant WHERE id = $1
@@ -200,18 +132,6 @@ SELECT id FROM q;
 	return tenants, nil
 }
 
-// IsTenancyEnabled returns true if tenancy is enabled or false otherwise
-func IsTenancyEnabled(db *sqlx.DB) bool {
-	query := `SELECT COALESCE(value::boolean,FALSE) AS value FROM parameter WHERE name = 'use_tenancy' AND config_file = 'global' UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY`
-	var useTenancy bool
-	err := db.QueryRow(query).Scan(&useTenancy)
-	if err != nil {
-		log.Errorf("Error checking if tenancy is enabled: %v", err)
-		return false
-	}
-	return useTenancy
-}
-
 // IsTenancyEnabledTx returns true if tenancy is enabled or false otherwise
 func IsTenancyEnabledTx(tx *sql.Tx) (bool, error) {
 	query := `SELECT COALESCE(value::boolean,FALSE) AS value FROM parameter WHERE name = 'use_tenancy' AND config_file = 'global' UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY`
@@ -221,37 +141,6 @@ func IsTenancyEnabledTx(tx *sql.Tx) (bool, error) {
 		return false, errors.New("checking if tenancy is enabled: " + err.Error())
 	}
 	return useTenancy, nil
-}
-
-// IsResourceAuthorizedToUser returns a boolean value describing if the user has access to the provided resource tenant id and an error
-// if use_tenancy is set to false (0 in the db) this method will return true allowing access.
-func IsResourceAuthorizedToUser(resourceTenantID int, user *auth.CurrentUser, db *sqlx.DB) (bool, error) {
-	// $1 is the user tenant ID and $2 is the resource tenant ID
-	query := `WITH RECURSIVE q AS (SELECT id, active FROM tenant WHERE id = $1
-	UNION SELECT t.id, t.active FROM TENANT t JOIN q ON q.id = t.parent_id),
-	tenancy AS (SELECT COALESCE(value::boolean,FALSE) AS value FROM parameter WHERE name = 'use_tenancy' AND config_file = 'global' UNION ALL SELECT FALSE FETCH FIRST 1 ROW ONLY)
-	SELECT id, active, tenancy.value AS use_tenancy FROM tenancy, q WHERE id = $2 UNION ALL SELECT -1, false, tenancy.value AS use_tenancy FROM tenancy FETCH FIRST 1 ROW ONLY;`
-
-	var tenantID int
-	var active bool
-	var useTenancy bool
-
-	log.Debugln("\nQuery: ", query)
-	err := db.QueryRow(query, user.TenantID, resourceTenantID).Scan(&tenantID, &active, &useTenancy)
-
-	switch {
-	case err != nil:
-		log.Errorf("Error checking user tenant %v access on resourceTenant  %v: %v", user.TenantID, resourceTenantID, err.Error())
-		return false, err
-	default:
-		if !useTenancy {
-			return true, nil
-		}
-		if active && tenantID == resourceTenantID {
-			return true, nil
-		}
-		return false, nil
-	}
 }
 
 // IsResourceAuthorizedToUserTx returns a boolean value describing if the user has access to the provided resource tenant id and an error

@@ -20,48 +20,33 @@ package server
  */
 
 import (
-	"context"
 	"database/sql"
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/jmoiron/sqlx"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 )
 
-func GetServerUpdateStatusHandler(db *sqlx.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
-
-		params, err := api.GetCombinedParams(r)
-		if err != nil {
-			log.Errorf("unable to get parameters from request: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-		}
-		hostName := params["host_name"]
-
-		serverUpdateStatus, err := getServerUpdateStatus(hostName, db, r.Context())
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		respBts, err := json.Marshal(serverUpdateStatus)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
-		fmt.Fprintf(w, "%s", respBts)
+func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"host_name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	serverUpdateStatus, err := getServerUpdateStatus(inf.Tx.Tx, inf.Config, inf.Params["host_name"])
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, err)
+		return
+	}
+	*inf.CommitTx = true
+	api.WriteRespRaw(w, r, serverUpdateStatus)
 }
 
-func getServerUpdateStatus(hostName string, db *sqlx.DB, ctx context.Context) ([]tc.ServerUpdateStatus, error) {
+func getServerUpdateStatus(tx *sql.Tx, cfg *config.Config, hostName string) ([]tc.ServerUpdateStatus, error) {
 	baseSelectStatement :=
 		`WITH parentservers AS (SELECT ps.id, ps.cachegroup, ps.cdn_id, ps.upd_pending, ps.reval_pending FROM server ps
          LEFT JOIN status AS pstatus ON pstatus.id = ps.status
@@ -75,26 +60,17 @@ func getServerUpdateStatus(hostName string, db *sqlx.DB, ctx context.Context) ([
 
 	groupBy := ` GROUP BY s.id, s.host_name, type.name, server_reval_pending, use_reval_pending.value, s.upd_pending, status.name ORDER BY s.id;`
 
-	cfg, ctxErr := api.GetConfig(ctx)
-	if ctxErr != nil {
-		log.Errorln("unable to retrieve config from context")
-		return nil, ctxErr
-	}
-
-	dbCtx, dbClose := context.WithTimeout(ctx, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
-	defer dbClose()
-
 	updateStatuses := []tc.ServerUpdateStatus{}
 	var rows *sql.Rows
 	var err error
 	if hostName == "all" {
-		rows, err = db.QueryContext(dbCtx, baseSelectStatement+groupBy)
+		rows, err = tx.Query(baseSelectStatement + groupBy)
 		if err != nil {
 			log.Error.Printf("could not execute select server update status query: %s\n", err)
 			return nil, tc.DBError
 		}
 	} else {
-		rows, err = db.QueryContext(dbCtx, baseSelectStatement+` WHERE s.host_name = $1`+groupBy, hostName)
+		rows, err = tx.Query(baseSelectStatement+` WHERE s.host_name = $1`+groupBy, hostName)
 		if err != nil {
 			log.Error.Printf("could not execute select server update status by hostname query: %s\n", err)
 			return nil, tc.DBError

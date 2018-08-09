@@ -30,10 +30,8 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 
 	"github.com/basho/riak-go-client"
-	"github.com/jmoiron/sqlx"
 )
 
 // RiakPort is the port RIAK is listening on.
@@ -250,90 +248,6 @@ func RiakServersToCluster(servers []ServerAddr, authOptions *riak.AuthOptions) (
 		return nil, errors.New("creating riak cluster: " + err.Error())
 	}
 	return RiakStorageCluster{Cluster: cluster}, nil
-}
-
-// returns a riak cluster of online riak nodes.
-func GetRiakCluster(db *sql.DB, authOptions *riak.AuthOptions) (StorageCluster, error) {
-	riakServerQuery := `
-		SELECT s.host_name, s.domain_name FROM server s
-		INNER JOIN type t on s.type = t.id
-		INNER JOIN status st on s.status = st.id
-		WHERE t.name = 'RIAK' AND st.name = 'ONLINE'
-		`
-
-	if authOptions == nil {
-		return nil, errors.New("ERROR: no riak auth information from riak.conf, cannot authenticate to any riak servers")
-	}
-
-	var nodes []*riak.Node
-	rows, err := db.Query(riakServerQuery)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var s tc.Server
-		if err := rows.Scan(&s.HostName, &s.DomainName); err != nil {
-			return nil, err
-		}
-		addr := fmt.Sprintf("%s.%s:%d", s.HostName, s.DomainName, RiakPort)
-		nodeOpts := &riak.NodeOptions{
-			RemoteAddress: addr,
-			AuthOptions:   authOptions,
-		}
-		nodeOpts.AuthOptions.TlsConfig.ServerName = fmt.Sprintf("%s.%s", s.HostName, s.DomainName)
-		n, err := riak.NewNode(nodeOpts)
-		if err != nil {
-			return nil, err
-		}
-		nodes = append(nodes, n)
-	}
-
-	if len(nodes) == 0 {
-		return nil, errors.New("ERROR: no available riak servers")
-	}
-
-	opts := &riak.ClusterOptions{
-		Nodes:             nodes,
-		ExecutionAttempts: MaxCommandExecutionAttempts,
-	}
-
-	cluster, err := riak.NewCluster(opts)
-
-	return RiakStorageCluster{Cluster: cluster}, err
-}
-
-func WithCluster(db *sql.DB, authOpts *riak.AuthOptions, f func(StorageCluster) error) error {
-	cluster, err := GetRiakCluster(db, authOpts)
-	if err != nil {
-		return errors.New("getting riak cluster: " + err.Error())
-	}
-	if err = cluster.Start(); err != nil {
-		return errors.New("starting riak cluster: " + err.Error())
-	}
-	defer func() {
-		if err := cluster.Stop(); err != nil {
-			log.Errorln("error stopping Riak cluster: " + err.Error())
-		}
-	}()
-	return f(cluster)
-}
-
-func WithClusterX(db *sqlx.DB, authOpts *riak.AuthOptions, f func(StorageCluster) error) error {
-	cluster, err := GetRiakCluster(db.DB, authOpts)
-	if err != nil {
-		return errors.New("getting riak cluster: " + err.Error())
-	}
-	if err = cluster.Start(); err != nil {
-		return errors.New("starting riak cluster: " + err.Error())
-	}
-	defer func() {
-		if err := cluster.Stop(); err != nil {
-			log.Errorln("error stopping Riak cluster: " + err.Error())
-		}
-	}()
-	return f(cluster)
 }
 
 func GetRiakClusterTx(tx *sql.Tx, authOptions *riak.AuthOptions) (StorageCluster, error) {

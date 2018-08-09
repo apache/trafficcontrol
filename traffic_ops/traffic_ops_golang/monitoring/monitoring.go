@@ -1,4 +1,4 @@
-package main
+package monitoring
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -21,42 +21,24 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+
+	"github.com/lib/pq"
 )
 
-// CacheMonitorConfigFile ...
 const CacheMonitorConfigFile = "rascal.properties"
-
-// MonitorType ...
 const MonitorType = "RASCAL"
-
-// RouterType ...
 const RouterType = "CCR"
-
-// MonitorProfilePrefix ...
 const MonitorProfilePrefix = "RASCAL"
-
-// MonitorConfigFile ...
 const MonitorConfigFile = "rascal-config.txt"
-
-// KilobitsPerMegabit ...
 const KilobitsPerMegabit = 1000
-
-// DeliveryServiceStatus ...
 const DeliveryServiceStatus = "REPORTED"
 
-// BasicServer ...
 type BasicServer struct {
 	Profile    string `json:"profile"`
 	Status     string `json:"status"`
@@ -68,12 +50,10 @@ type BasicServer struct {
 	FQDN       string `json:"fqdn"`
 }
 
-// Monitor ...
 type Monitor struct {
 	BasicServer
 }
 
-// Cache ...
 type Cache struct {
 	BasicServer
 	InterfaceName string `json:"interfacename"`
@@ -81,26 +61,22 @@ type Cache struct {
 	HashID        string `json:"hashid"`
 }
 
-// Cachegroup ...
 type Cachegroup struct {
 	Name        string      `json:"name"`
 	Coordinates Coordinates `json:"coordinates"`
 }
 
-// Coordinates ...
 type Coordinates struct {
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 }
 
-// Profile ...
 type Profile struct {
 	Name       string                 `json:"name"`
 	Type       string                 `json:"type"`
 	Parameters map[string]interface{} `json:"parameters"`
 }
 
-// Monitoring ...
 type Monitoring struct {
 	TrafficServers   []Cache                `json:"trafficServers"`
 	TrafficMonitors  []Monitor              `json:"trafficMonitors"`
@@ -110,18 +86,15 @@ type Monitoring struct {
 	Config           map[string]interface{} `json:"config"`
 }
 
-// MonitoringResponse ...
 type MonitoringResponse struct {
 	Response Monitoring `json:"response"`
 }
 
-// Router ...
 type Router struct {
 	Type    string
 	Profile string
 }
 
-// DeliveryService ...
 type DeliveryService struct {
 	XMLID              string  `json:"xmlId"`
 	TotalTPSThreshold  float64 `json:"totalTpsThreshold"`
@@ -129,37 +102,54 @@ type DeliveryService struct {
 	TotalKBPSThreshold float64 `json:"totalKbpsThreshold"`
 }
 
-// TODO change to use the PathParams, instead of parsing the URL
-func monitoringHandler(db *sqlx.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
-
-		params, err := api.GetCombinedParams(r)
-		if err != nil {
-			log.Errorf("unable to get parameters from request: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-		}
-
-		cdnName := params["name"]
-
-		resp, err, errType := getMonitoringJSON(cdnName, db)
-		if err != nil {
-			tc.HandleErrorsWithType([]error{err}, errType, handleErrs)
-			return
-		}
-
-		respBts, err := json.Marshal(resp)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, "%s", respBts)
+func Get(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+	*inf.CommitTx = true
+	api.RespWriter(w, r)(getMonitoringJSON(inf.Tx.Tx, inf.Params["cdn"]))
 }
 
-func getMonitoringServers(db *sqlx.DB, cdn string) ([]Monitor, []Cache, []Router, error) {
+func getMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {
+	monitors, caches, routers, err := getMonitoringServers(tx, cdnName)
+	if err != nil {
+		return nil, fmt.Errorf("error getting servers: %v", err)
+	}
+
+	cachegroups, err := getCachegroups(tx, cdnName)
+	if err != nil {
+		return nil, fmt.Errorf("error getting cachegroups: %v", err)
+	}
+
+	profiles, err := getProfiles(tx, caches, routers)
+	if err != nil {
+		return nil, fmt.Errorf("error getting profiles: %v", err)
+	}
+
+	deliveryServices, err := getDeliveryServices(tx, routers)
+	if err != nil {
+		return nil, fmt.Errorf("error getting deliveryservices: %v", err)
+	}
+
+	config, err := getConfig(tx)
+	if err != nil {
+		return nil, fmt.Errorf("error getting config: %v", err)
+	}
+
+	return &Monitoring{
+		TrafficServers:   caches,
+		TrafficMonitors:  monitors,
+		Cachegroups:      cachegroups,
+		Profiles:         profiles,
+		DeliveryServices: deliveryServices,
+		Config:           config,
+	}, nil
+}
+
+func getMonitoringServers(tx *sql.Tx, cdn string) ([]Monitor, []Cache, []Router, error) {
 	query := `SELECT
 me.host_name as hostName,
 CONCAT(me.host_name, '.', me.domain_name) as fqdn,
@@ -180,7 +170,7 @@ JOIN profile profile ON profile.id = me.profile
 JOIN cdn cdn ON cdn.id = me.cdn_id
 WHERE cdn.name = $1`
 
-	rows, err := db.Query(query, cdn)
+	rows, err := tx.Query(query, cdn)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -246,7 +236,7 @@ WHERE cdn.name = $1`
 	return monitors, caches, routers, nil
 }
 
-func getCachegroups(db *sqlx.DB, cdn string) ([]Cachegroup, error) {
+func getCachegroups(tx *sql.Tx, cdn string) ([]Cachegroup, error) {
 	query := `
 SELECT cg.name, co.latitude, co.longitude
 FROM cachegroup cg
@@ -255,7 +245,7 @@ WHERE cg.id IN
   (SELECT cachegroup FROM server WHERE server.cdn_id =
     (SELECT id FROM cdn WHERE name = $1));`
 
-	rows, err := db.Query(query, cdn)
+	rows, err := tx.Query(query, cdn)
 	if err != nil {
 		return nil, err
 	}
@@ -280,7 +270,7 @@ WHERE cg.id IN
 	return cachegroups, nil
 }
 
-func getProfiles(db *sqlx.DB, caches []Cache, routers []Router) ([]Profile, error) {
+func getProfiles(tx *sql.Tx, caches []Cache, routers []Router) ([]Profile, error) {
 	cacheProfileTypes := map[string]string{}
 	profiles := map[string]Profile{}
 	profileNames := []string{}
@@ -309,7 +299,7 @@ JOIN profile p ON p.name = ANY($1)
 JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
 WHERE pr.config_file = $2;
 `
-	rows, err := db.Query(query, pq.Array(profileNames), CacheMonitorConfigFile)
+	rows, err := tx.Query(query, pq.Array(profileNames), CacheMonitorConfigFile)
 	if err != nil {
 		return nil, err
 	}
@@ -346,7 +336,7 @@ WHERE pr.config_file = $2;
 	return profilesArr, nil
 }
 
-func getDeliveryServices(db *sqlx.DB, routers []Router) ([]DeliveryService, error) {
+func getDeliveryServices(tx *sql.Tx, routers []Router) ([]DeliveryService, error) {
 	profileNames := []string{}
 	for _, router := range routers {
 		profileNames = append(profileNames, router.Profile)
@@ -359,7 +349,7 @@ JOIN profile profile ON profile.id = ds.profile
 WHERE profile.name = ANY($1)
 AND ds.active = true
 `
-	rows, err := db.Query(query, pq.Array(profileNames))
+	rows, err := tx.Query(query, pq.Array(profileNames))
 	if err != nil {
 		return nil, err
 	}
@@ -384,7 +374,7 @@ AND ds.active = true
 	return dses, nil
 }
 
-func getConfig(db *sqlx.DB) (map[string]interface{}, error) {
+func getConfig(tx *sql.Tx) (map[string]interface{}, error) {
 	// TODO remove 'like' in query? Slow?
 	query := fmt.Sprintf(`
 SELECT pr.name, pr.value
@@ -394,7 +384,7 @@ JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
 WHERE pr.config_file = '%s'
 `, MonitorProfilePrefix, MonitorConfigFile)
 
-	rows, err := db.Query(query)
+	rows, err := tx.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -415,43 +405,4 @@ WHERE pr.config_file = '%s'
 		}
 	}
 	return cfg, nil
-}
-
-func getMonitoringJSON(cdnName string, db *sqlx.DB) (*MonitoringResponse, error, tc.ApiErrorType) {
-	monitors, caches, routers, err := getMonitoringServers(db, cdnName)
-	if err != nil {
-		return nil, fmt.Errorf("error getting servers: %v", err), tc.SystemError
-	}
-
-	cachegroups, err := getCachegroups(db, cdnName)
-	if err != nil {
-		return nil, fmt.Errorf("error getting cachegroups: %v", err), tc.SystemError
-	}
-
-	profiles, err := getProfiles(db, caches, routers)
-	if err != nil {
-		return nil, fmt.Errorf("error getting profiles: %v", err), tc.SystemError
-	}
-
-	deliveryServices, err := getDeliveryServices(db, routers)
-	if err != nil {
-		return nil, fmt.Errorf("error getting deliveryservices: %v", err), tc.SystemError
-	}
-
-	config, err := getConfig(db)
-	if err != nil {
-		return nil, fmt.Errorf("error getting config: %v", err), tc.SystemError
-	}
-
-	resp := MonitoringResponse{
-		Response: Monitoring{
-			TrafficServers:   caches,
-			TrafficMonitors:  monitors,
-			Cachegroups:      cachegroups,
-			Profiles:         profiles,
-			DeliveryServices: deliveryServices,
-			Config:           config,
-		},
-	}
-	return &resp, nil, tc.NoError
 }

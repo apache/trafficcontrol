@@ -28,46 +28,47 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
-func DeleteName(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		params, _, userErr, sysErr, errCode := api.AllParams(r, []string{"name"}, nil)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		cdnName := tc.CDNName(params["name"])
-		if ok, err := cdnExists(db, cdnName); err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking CDN existence: "+err.Error()))
-			return
-		} else if !ok {
-			api.HandleErr(w, r, http.StatusNotFound, nil, nil)
-			return
-		}
-		if ok, err := cdnUnused(db, cdnName); err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking CDN usage: "+err.Error()))
-			return
-		} else if !ok {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("Failed to delete cdn name = "+string(cdnName)+" has delivery services or servers"), nil)
-			return
-		}
-		if err := deleteCDNByName(db, tc.CDNName(cdnName)); err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("deleting CDN: "+err.Error()))
-			return
-		}
-		api.WriteRespAlert(w, r, tc.SuccessLevel, "cdn was deleted.")
+func DeleteName(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	cdnName := tc.CDNName(inf.Params["name"])
+	if ok, err := cdnExists(inf.Tx.Tx, cdnName); err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking CDN existence: "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, http.StatusNotFound, nil, nil)
+		return
+	}
+	if ok, err := cdnUnused(inf.Tx.Tx, cdnName); err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking CDN usage: "+err.Error()))
+		return
+	} else if !ok {
+		api.HandleErr(w, r, http.StatusBadRequest, errors.New("Failed to delete cdn name = "+string(cdnName)+" has delivery services or servers"), nil)
+		return
+	}
+	if err := deleteCDNByName(inf.Tx.Tx, tc.CDNName(cdnName)); err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("deleting CDN: "+err.Error()))
+		return
+	}
+	*inf.CommitTx = true
+	api.WriteRespAlert(w, r, tc.SuccessLevel, "cdn was deleted.")
 }
 
-func deleteCDNByName(db *sql.DB, name tc.CDNName) error {
-	if _, err := db.Exec(`DELETE FROM cdn WHERE name = $1`, name); err != nil {
+func deleteCDNByName(tx *sql.Tx, name tc.CDNName) error {
+	if _, err := tx.Exec(`DELETE FROM cdn WHERE name = $1`, name); err != nil {
 		return errors.New("deleting cdns: " + err.Error())
 	}
 	return nil
 }
 
-func cdnExists(db *sql.DB, name tc.CDNName) (bool, error) {
+func cdnExists(tx *sql.Tx, name tc.CDNName) (bool, error) {
 	id := 0
-	if err := db.QueryRow(`SELECT id FROM cdn WHERE name = $1`, name).Scan(&id); err != nil {
+	if err := tx.QueryRow(`SELECT id FROM cdn WHERE name = $1`, name).Scan(&id); err != nil {
 		if err == sql.ErrNoRows {
 			return false, nil
 		}
@@ -76,9 +77,9 @@ func cdnExists(db *sql.DB, name tc.CDNName) (bool, error) {
 	return true, nil
 }
 
-func cdnUnused(db *sql.DB, name tc.CDNName) (bool, error) {
+func cdnUnused(tx *sql.Tx, name tc.CDNName) (bool, error) {
 	useCount := 0
-	if err := db.QueryRow(`
+	if err := tx.QueryRow(`
 WITH cdn_id as (
   SELECT id as v FROM cdn WHERE name = $1
 )

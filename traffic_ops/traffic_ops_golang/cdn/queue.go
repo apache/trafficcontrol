@@ -26,7 +26,6 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
 type QueueReq struct {
@@ -38,38 +37,33 @@ type QueueResp struct {
 	CDNID  int64  `json:"cdnId"`
 }
 
-func Queue(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		user, err := auth.GetCurrentUser(r.Context())
-		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting user: "+err.Error()))
-			return
-		}
-		params, intParams, userErr, sysErr, errCode := api.AllParams(r, []string{"id"}, []string{"id"})
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		reqObj := QueueReq{}
-		if err := json.NewDecoder(r.Body).Decode(&reqObj); err != nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
-			return
-		}
-		if reqObj.Action != "queue" && reqObj.Action != "dequeue" {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("action must be 'queue' or 'dequeue'"), nil)
-			return
-		}
-		if err := queueUpdates(db, int64(intParams["id"]), reqObj.Action == "queue"); err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("CDN queueing updates: "+err.Error()))
-			return
-		}
-		api.WriteResp(w, r, QueueResp{Action: reqObj.Action, CDNID: int64(intParams["id"])})
-		api.CreateChangeLogRaw(api.ApiChange, "Server updates "+reqObj.Action+"d for cdn "+params["id"], user, db)
+func Queue(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+	reqObj := QueueReq{}
+	if err := json.NewDecoder(r.Body).Decode(&reqObj); err != nil {
+		api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		return
+	}
+	if reqObj.Action != "queue" && reqObj.Action != "dequeue" {
+		api.HandleErr(w, r, http.StatusBadRequest, errors.New("action must be 'queue' or 'dequeue'"), nil)
+		return
+	}
+	if err := queueUpdates(inf.Tx.Tx, int64(inf.IntParams["id"]), reqObj.Action == "queue"); err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("CDN queueing updates: "+err.Error()))
+		return
+	}
+	*inf.CommitTx = true
+	api.CreateChangeLogRawTx(api.ApiChange, "Server updates "+reqObj.Action+"d for cdn "+inf.Params["id"], inf.User, inf.Tx.Tx)
+	api.WriteResp(w, r, QueueResp{Action: reqObj.Action, CDNID: int64(inf.IntParams["id"])})
 }
 
-func queueUpdates(db *sql.DB, cdnID int64, queue bool) error {
-	if _, err := db.Exec(`UPDATE server SET upd_pending = $1 WHERE server.cdn_id = $2`, queue, cdnID); err != nil {
+func queueUpdates(tx *sql.Tx, cdnID int64, queue bool) error {
+	if _, err := tx.Exec(`UPDATE server SET upd_pending = $1 WHERE server.cdn_id = $2`, queue, cdnID); err != nil {
 		return errors.New("querying queue updates: " + err.Error())
 	}
 	return nil

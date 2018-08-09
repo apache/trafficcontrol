@@ -28,14 +28,19 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
-func Trimmed(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		api.RespWriter(w, r)(getTrimmedProfiles(db))
+func Trimmed(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+	*inf.CommitTx = true
+	api.RespWriter(w, r)(getTrimmedProfiles(inf.Tx.Tx))
 }
 
-func getTrimmedProfiles(db *sql.DB) ([]tc.ProfileTrimmed, error) {
-	rows, err := db.Query(`SELECT name FROM profile`)
+func getTrimmedProfiles(tx *sql.Tx) ([]tc.ProfileTrimmed, error) {
+	rows, err := tx.Query(`SELECT name FROM profile`)
 	if err != nil {
 		return nil, errors.New("querying trimmed profiles: " + err.Error())
 	}

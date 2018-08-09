@@ -27,13 +27,50 @@ import (
 	"github.com/lib/pq"
 )
 
-func makeLocations(cdn string, db *sql.DB) (map[string]tc.CRConfigLatitudeLongitude, map[string]tc.CRConfigLatitudeLongitude, error) {
+// getCachegroupFallbacks returns a map[primaryCacheGroupID][]fallbackCacheGroupName.
+func getCachegroupFallbacks(tx *sql.Tx) (map[int][]string, error) {
+	q := `
+SELECT
+  cachegroup_fallbacks.primary_cg,
+  cachegroup.name
+FROM
+  cachegroup_fallbacks
+  JOIN cachegroup on cachegroup_fallbacks.backup_cg = cachegroup.id
+ORDER BY cachegroup_fallbacks.set_order
+`
+	rows, err := tx.Query(q)
+	if err != nil {
+		return nil, errors.New("Error retrieving from cachegroup_fallbacks: " + err.Error())
+	}
+	defer rows.Close()
+
+	fallbacks := map[int][]string{} // map[primaryCacheGroupID][]fallbackCacheGroupName
+	for rows.Next() {
+		primaryCGID := 0
+		fallbackCG := ""
+		if err := rows.Scan(&primaryCGID, &fallbackCG); err != nil {
+			return nil, errors.New("scanning cachegroup_fallbacks: " + err.Error())
+		}
+		fallbacks[primaryCGID] = append(fallbacks[primaryCGID], fallbackCG)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, errors.New("cachegroup_fallbacks rows: " + err.Error())
+	}
+	return fallbacks, nil
+}
+
+func makeLocations(cdn string, tx *sql.Tx) (map[string]tc.CRConfigLatitudeLongitude, map[string]tc.CRConfigLatitudeLongitude, error) {
 	edgeLocs := map[string]tc.CRConfigLatitudeLongitude{}
 	routerLocs := map[string]tc.CRConfigLatitudeLongitude{}
 
+	fallbacks, err := getCachegroupFallbacks(tx)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	// TODO test whether it's faster to do a single query, joining lat/lon into servers
 	q := `
-select cg.name, cg.id, t.name as type, co.latitude, co.longitude, cg.fallback_to_closest,
+select cg.name, cg.id, t.name as type, co.latitude, co.longitude, COALESCE(cg.fallback_to_closest, TRUE),
 (SELECT array_agg(method::text) as localization_methods FROM cachegroup_localization_method WHERE cachegroup = cg.id)
 from cachegroup as cg
 left join coordinate as co on co.id = cg.coordinate
@@ -45,7 +82,7 @@ and (t.name like 'EDGE%' or t.name = 'CCR')
 and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 `
 	// TODO pass edge type prefix, router type name
-	rows, err := db.Query(q, cdn)
+	rows, err := tx.Query(q, cdn)
 	if err != nil {
 		return nil, nil, errors.New("Error querying cachegroups: " + err.Error())
 	}
@@ -55,7 +92,7 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 		cachegroup := ""
 		primaryCacheID := 0
 		ttype := ""
-		var fallbackToClosest *bool
+		fallbackToClosest := true
 		latlon := tc.CRConfigLatitudeLongitude{}
 		if err := rows.Scan(&cachegroup, &primaryCacheID, &ttype, &latlon.Lat, &latlon.Lon, &fallbackToClosest, pq.Array(&latlon.LocalizationMethods)); err != nil {
 			return nil, nil, errors.New("Error scanning cachegroup: " + err.Error())
@@ -67,38 +104,8 @@ and (st.name = 'REPORTED' or st.name = 'ONLINE' or st.name = 'ADMIN_DOWN')
 		if ttype == RouterTypeName {
 			routerLocs[cachegroup] = latlon
 		} else {
-			q := `select cachegroup.name from cachegroup_fallbacks
-join cachegroup on cachegroup_fallbacks.backup_cg = cachegroup.id
-and cachegroup_fallbacks.primary_cg = $1 order by cachegroup_fallbacks.set_order
-`
-			dbRows, err := db.Query(q, primaryCacheID)
-
-			if err != nil {
-				return nil, nil, errors.New("Error retrieving from cachegroup_fallbacks: " + err.Error())
-			}
-			defer dbRows.Close()
-
-			if fallbackToClosest == nil {
-				fallbackToClosest = new(bool)
-				*fallbackToClosest = true
-
-			}
-			latlon.BackupLocations.FallbackToClosest = *fallbackToClosest
-
-			index := 0
-			for dbRows.Next() {
-				backupName := ""
-				if err := dbRows.Scan(&backupName); err != nil {
-					return nil, nil, errors.New("Error while scanning from cachegroup_fallbacks: " + err.Error())
-				} else {
-					latlon.BackupLocations.List = append(latlon.BackupLocations.List, backupName)
-					index++
-				}
-			}
-
-			if err := dbRows.Err(); err != nil {
-				return nil, nil, errors.New("Error iterating cachegroup_fallbacks rows: " + err.Error())
-			}
+			latlon.BackupLocations.FallbackToClosest = fallbackToClosest
+			latlon.BackupLocations.List = fallbacks[primaryCacheID]
 			edgeLocs[cachegroup] = latlon
 		}
 	}

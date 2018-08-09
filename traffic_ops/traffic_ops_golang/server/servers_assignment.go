@@ -22,7 +22,7 @@ package server
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -31,96 +31,51 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/ats"
-	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
-func AssignDeliveryServicesToServerHandler(db *sqlx.DB) http.HandlerFunc {
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		handleErrs := tc.GetHandleErrorsFunc(w, r)
-
-		params, err := api.GetCombinedParams(r)
-		if err != nil {
-			log.Errorf("unable to get parameters from request: %s", err)
-			handleErrs(http.StatusInternalServerError, err)
-		}
-
-		var dsList []int
-
-		err = json.NewDecoder(r.Body).Decode(&dsList)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		replaceQueryParameter := params["replace"]
-		replace, err := strconv.ParseBool(replaceQueryParameter) //accepts 1, t, T, TRUE, true, True, 0, f, F, FALSE, false, False. for replace url parameter documentation
-		if err != nil {
-			handleErrs(http.StatusBadRequest, err)
-			return
-		}
-
-		serverPathParameter := params["id"]
-		server, err := strconv.Atoi(serverPathParameter)
-		if err != nil {
-			handleErrs(http.StatusBadRequest, err)
-			return
-		}
-
-		assignedDSes, err := assignDeliveryServicesToServer(server, dsList, replace, db)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		type AssignedDsResponse struct {
-			ServerID int   `json:"serverId"`
-			DSIds    []int `json:"dsIds"`
-			Replace  bool  `json:"replace"`
-		}
-
-		assignResp := AssignedDsResponse{server, assignedDSes, replace}
-
-		resp := struct {
-			Response AssignedDsResponse `json:"response"`
-			tc.Alerts
-		}{assignResp, tc.CreateAlerts(tc.SuccessLevel, "successfully assigned dses to server")}
-		respBts, err := json.Marshal(resp)
-		if err != nil {
-			handleErrs(http.StatusInternalServerError, err)
-			return
-		}
-
-		w.Header().Set(tc.ContentType, tc.ApplicationJson)
-		fmt.Fprintf(w, "%s", respBts)
+func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	dsList := []int{}
+	if err := json.NewDecoder(r.Body).Decode(&dsList); err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, err)
+		return
+	}
+
+	replaceQueryParameter := inf.Params["replace"]
+	replace, err := strconv.ParseBool(replaceQueryParameter) //accepts 1, t, T, TRUE, true, True, 0, f, F, FALSE, false, False. for replace url parameter documentation
+	if err != nil {
+		api.HandleErr(w, r, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	serverPathParameter := inf.Params["id"]
+	server, err := strconv.Atoi(serverPathParameter)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	assignedDSes, err := assignDeliveryServicesToServer(server, dsList, replace, inf.Tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, err)
+		return
+	}
+
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "successfully assigned dses to server", tc.AssignedDsResponse{server, assignedDSes, replace})
 }
 
-func assignDeliveryServicesToServer(server int, dses []int, replace bool, db *sqlx.DB) ([]int, error) {
-	//transaction rollback in this functions requires err to be set to the proper error or nil before returning
-	tx, err := db.Beginx()
-	defer func() {
-		if tx == nil {
-			return
-		}
-		if err != nil {
-			tx.Rollback()
-			return
-		}
-		tx.Commit()
-	}()
-
-	if err != nil {
-		log.Error.Printf("could not begin transaction: %v\n", err)
-		return nil, tc.DBError
-	}
-
+func assignDeliveryServicesToServer(server int, dses []int, replace bool, tx *sql.Tx) ([]int, error) {
 	if replace {
 		//delete currently assigned dses from server
-		if _, err = tx.Exec(`DELETE FROM deliveryservice_server WHERE server = $1`, server); err != nil {
-			log.Errorf("could not delete old deliveryservice_server associations for server: %s\n", err)
-			return nil, tc.DBError
+		if _, err := tx.Exec(`DELETE FROM deliveryservice_server WHERE server = $1`, server); err != nil {
+			return nil, errors.New("could not delete old deliveryservice_server associations for server: " + err.Error())
 		}
 	}
 
@@ -143,7 +98,7 @@ INSERT INTO deliveryservice_server (deliveryservice, server)
 	q2 AS ( SELECT * FROM (VALUES ($2::bigint)) AS server )
 	SELECT * FROM q1,q2 ON CONFLICT DO NOTHING
 `
-	if _, err = tx.Exec(q, dsPqArray, server); err != nil {
+	if _, err := tx.Exec(q, dsPqArray, server); err != nil {
 		log.Errorf("could not execute deliveryservice_server bulk insert: %s\n", err)
 		return nil, tc.DBError
 	}

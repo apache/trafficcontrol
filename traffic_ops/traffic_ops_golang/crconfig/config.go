@@ -26,8 +26,8 @@ import (
 	"strings"
 )
 
-func makeCRConfigConfig(cdn string, db *sql.DB, dnssecEnabled bool, domain string) (map[string]interface{}, error) {
-	configParams, err := getConfigParams(cdn, db)
+func makeCRConfigConfig(cdn string, tx *sql.Tx, dnssecEnabled bool, domain string) (map[string]interface{}, error) {
+	configParams, err := getConfigParams(cdn, tx)
 	if err != nil {
 		return nil, errors.New("Error getting router params: " + err.Error())
 	}
@@ -87,7 +87,7 @@ type CRConfigConfigParameter struct {
 	Value string
 }
 
-func getConfigParams(cdn string, db *sql.DB) ([]CRConfigConfigParameter, error) {
+func getConfigParams(cdn string, tx *sql.Tx) ([]CRConfigConfigParameter, error) {
 	// TODO change to []struct{string,string} ? Speed might matter.
 	q := `
 select name, value from parameter where id in (
@@ -99,7 +99,7 @@ select name, value from parameter where id in (
 )
 and config_file = 'CRConfig.json'
 `
-	rows, err := db.Query(q, cdn)
+	rows, err := tx.Query(q, cdn)
 	if err != nil {
 		return nil, errors.New("Error querying router params: " + err.Error())
 	}
