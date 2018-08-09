@@ -35,8 +35,8 @@ while ! to-get api/1.3/ping 2>/dev/null; do
    sleep 3
 done
 
-# NOTE: order dependent on foreign key references, e.g. tenant must be defined before user
-endpoints="tenant user cdn server"
+# NOTE: order dependent on foreign key references, e.g. tenants must be defined before users
+endpoints="tenants users cdns servers"
 
 load_data_from() {
     local dir="$1"
