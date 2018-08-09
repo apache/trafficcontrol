@@ -310,6 +310,9 @@ func GenerateURLSigKeys() (tc.URLSigKeys, error) {
 			if err != nil {
 				return nil, errors.New("generating crypto rand int: " + err.Error())
 			}
+			if !bi.IsInt64() {
+				return nil, fmt.Errorf("crypto rand int returned non-int64")
+			}
 			i := bi.Int64()
 			if i >= int64(len(chars)) {
 				return nil, fmt.Errorf("crypto rand int returned a number larger than requested")
