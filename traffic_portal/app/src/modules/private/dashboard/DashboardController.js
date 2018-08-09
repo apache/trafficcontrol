@@ -17,13 +17,15 @@
  * under the License.
  */
 
-var DashboardController = function(cdns, $scope, locationUtils) {
+var DashboardController = function(cdns, $scope, locationUtils, permissionUtils) {
 
 	$scope.cdns = cdns;
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
+	$scope.hasCapability = permissionUtils.hasCapability;
+
 };
 
-DashboardController.$inject = ['cdns', '$scope', 'locationUtils'];
+DashboardController.$inject = ['cdns', '$scope', 'locationUtils', 'permissionUtils'];
 module.exports = DashboardController;
