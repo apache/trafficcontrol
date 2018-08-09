@@ -227,7 +227,7 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 		// append if by cdn or if tenancy check for id passes
 		if !id || checkTenancy(tenantID, tenantIDs) {
 			federations = append(federations, *fed)
-		} else { // id is true and the tenacy check failed
+		} else { // id is true and the tenancy check failed
 			return nil, []error{errors.New("user not authorized for requested federation")}, tc.ForbiddenError
 		}
 	}
@@ -255,7 +255,7 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 func (fed *TOCDNFederation) Update() (error, tc.ApiErrorType) {
 
 	if ok, err := fed.isTenantAuthorized(); err != nil {
-		log.Errorf("checking tenacy: %v", err)
+		log.Errorf("checking tenancy: %v", err)
 		return tc.DBError, tc.SystemError
 	} else if !ok {
 		return tc.TenantUserNotAuthError, tc.ForbiddenError
@@ -300,7 +300,7 @@ func (fed *TOCDNFederation) Update() (error, tc.ApiErrorType) {
 func (fed *TOCDNFederation) Delete() (error, tc.ApiErrorType) {
 
 	if ok, err := fed.isTenantAuthorized(); err != nil {
-		log.Errorf("checking tenacy: %v", err)
+		log.Errorf("checking tenancy: %v", err)
 		return tc.DBError, tc.SystemError
 	} else if !ok {
 		return tc.TenantUserNotAuthError, tc.ForbiddenError
@@ -328,7 +328,7 @@ func (fed *TOCDNFederation) Delete() (error, tc.ApiErrorType) {
 	return nil, tc.NoError
 }
 
-// Function not exported because although DELETE and UPDATE have normal tenacy check,
+// Function not exported because although DELETE and UPDATE have normal tenancy check,
 // CREATE does not. No ds is associated on create. This isn't used for READ because
 // psql doesn't like nested queries within the same transaction.
 func (fed TOCDNFederation) isTenantAuthorized() (bool, error) {
@@ -361,9 +361,9 @@ func (fed TOCDNFederation) isTenantAuthorized() (bool, error) {
 func getTenantIDFromFedID(id int, tx *sql.Tx) (int, error) {
 	tenantID := 0
 	query := `
-	SELECT ds.tenant_id from federation as f
-	JOIN federation_deliveryservice as fd ON f.id = fd.federation
-	JOIN deliveryservice as ds ON ds.id = fd.deliveryservice
+	SELECT ds.tenant_id FROM federation AS f
+	JOIN federation_deliveryservice AS fd ON f.id = fd.federation
+	JOIN deliveryservice AS ds ON ds.id = fd.deliveryservice
 	WHERE f.id = $1`
 	err := tx.QueryRow(query, id).Scan(&tenantID)
 	return tenantID, err
@@ -371,17 +371,35 @@ func getTenantIDFromFedID(id int, tx *sql.Tx) (int, error) {
 
 func selectByID() string {
 	return `
-	SELECT tenant_id, federation.id as id, cname, ttl, description, federation.last_updated as last_updated, ds.id as ds_id, xml_id FROM federation
-	LEFT JOIN federation_deliveryservice as fd ON federation.id = fd.federation
-	LEFT JOIN deliveryservice as ds ON ds.id = fd.deliveryservice`
+	SELECT
+	ds.tenant_id,
+	federation.id AS id,
+	federation.cname,
+	federation.ttl,
+	federation.description,
+	federation.last_updated,
+	ds.id AS ds_id,
+	ds.xml_id
+	FROM federation
+	LEFT JOIN federation_deliveryservice AS fd ON federation.id = fd.federation
+	LEFT JOIN deliveryservice AS ds ON ds.id = fd.deliveryservice`
 	// WHERE federation.id = :id (determined by dbhelper)
 }
 
 func selectByCDNName() string {
 	return `
-	SELECT tenant_id, federation.id as id, cname, ttl, description, federation.last_updated as last_updated, ds.id as ds_id, xml_id FROM federation
-	JOIN federation_deliveryservice as fd ON federation.id = fd.federation
-	JOIN deliveryservice as ds ON ds.id = fd.deliveryservice
+	SELECT
+	ds.tenant_id,
+	federation.id AS id,
+	federation.cname,
+	federation.ttl,
+	federation.description,
+	federation.last_updated,
+	ds.id AS ds_id,
+	ds.xml_id
+	FROM federation
+	JOIN federation_deliveryservice AS fd ON federation.id = fd.federation
+	JOIN deliveryservice AS ds ON ds.id = fd.deliveryservice
 	JOIN cdn ON cdn.id = cdn_id`
 	// WHERE cdn.name = :cdn_name (determined by dbhelper)
 }
