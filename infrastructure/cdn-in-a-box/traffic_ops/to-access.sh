@@ -30,66 +30,86 @@ TO_URL=https://$TO_HOST:$TO_PORT
 login=$(mktemp -t XXXX.login)
 
 cleanup() {
-    rm -f "$COOKIEJAR" "$login"
+	rm -f "$COOKIEJAR" "$login"
 }
 
 trap cleanup EXIT
 
 cookie_current() {
-    local cookiefile=$1
-    [[ -s $cookiefile ]] || return 1
+	local cookiefile=$1
+	[[ -s $cookiefile ]] || return 1
 
-    # get expiration from cookiejar -- compare to current time
-    exp=$(awk '/mojolicious/ {print $5}' $cookiefile | tail -n 1)
-    cur=$(date +%s)
+	# get expiration from cookiejar -- compare to current time
+	exp=$(awk '/mojolicious/ {print $5}' $cookiefile | tail -n 1)
+	cur=$(date +%s)
 
-    # return value is the comparison itself
-    (( $exp > $cur ))
+	# return value is the comparison itself
+	(( $exp > $cur ))
 }
 
 to-auth() {
-    # These are required
-    if [[ -z $TO_URL || -z $TO_ADMIN_USER || -z $TO_ADMIN_PASSWORD ]]; then
-        echo TO_URL TO_ADMIN_USER TO_ADMIN_PASSWORD must all be set
-        return 1
-    fi
+	# These are required
+	if [[ -z $TO_URL || -z $TO_ADMIN_USER || -z $TO_ADMIN_PASSWORD ]]; then
+		echo TO_URL TO_ADMIN_USER TO_ADMIN_PASSWORD must all be set
+		return 1
+	fi
 
-    # if cookiejar is current, nothing to do..
-    cookie_current $COOKIEJAR && return
+	# if cookiejar is current, nothing to do..
+	cookie_current $COOKIEJAR && return
 
-    local url=$TO_URL/api/1.3/user/login
-    local datatype='Accept: application/json'
-    cat >"$login" <<-CREDS
+	local url=$TO_URL/api/1.3/user/login
+	local datatype='Accept: application/json'
+	cat >"$login" <<-CREDS
 { "u" : "$TO_ADMIN_USER", "p" : "$TO_ADMIN_PASSWORD" }
 CREDS
-    res=$(curl $CURLAUTH $CURLOPTS -H "$datatype" --cookie "$COOKIEJAR" --cookie-jar "$COOKIEJAR" -X POST --data @"$login" "$url")
-    if [[ $res != *"Successfully logged in."* ]]; then
-        echo "Login failed: $res"
-        return 1
-    fi
+	res=$(curl $CURLAUTH $CURLOPTS -H "$datatype" --cookie "$COOKIEJAR" --cookie-jar "$COOKIEJAR" -X POST --data @"$login" "$url")
+	if [[ $res != *"Successfully logged in."* ]]; then
+		echo "Login failed: $res"
+		return 1
+	fi
 }
 
 to-ping() {
-    # ping endpoint does not require authentication
-    curl $CURLAUTH $CURLOPTS -s -X GET "$TO_URL/api/1.3/ping"
+	# ping endpoint does not require authentication
+	curl $CURLAUTH $CURLOPTS -s -X GET "$TO_URL/api/1.3/ping"
 }
 
 to-get() {
-    to-auth && \
-        curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X GET "$TO_URL/$1"
+	to-auth && \
+		curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X GET "$TO_URL/$1"
 }
 
 to-post() {
-    to-auth && \
-        curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X POST --data @"$2" "$TO_URL/$1"
+	if [[ ! -z "$2" ]]; then
+		if [[ -f "$2" ]]; then
+			to-auth && \
+			    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X POST --data @"$2" "$TO_URL/$1"
+		else
+			to-auth && \
+			    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X POST --data "$2" "$TO_URL/$1"
+		fi
+	else
+		to-auth && \
+		    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X POST "$TO_URL/$1"
+	fi
 }
 
 to-put() {
-    to-auth && \
-        curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X PUT --data @"$2" "$TO_URL/$1"
+	if [[ ! -z "$2" ]]; then
+		if [[ -f "$2" ]]; then
+			to-auth && \
+			    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X PUT --data @"$2" "$TO_URL/$1"
+		else
+			to-auth && \
+			    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X PUT --data "$2" "$TO_URL/$1"
+		fi
+	else
+		to-auth && \
+		    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X PUT "$TO_URL/$1"
+	fi
 }
 
 to-delete() {
-    to-auth && \
-        curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X DELETE "$TO_URL/$1"
+	to-auth && \
+		curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X DELETE "$TO_URL/$1"
 }
