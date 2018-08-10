@@ -29,9 +29,6 @@ module.exports = angular.module('trafficPortal.private.roles.edit', [])
 						resolve: {
 							roles: function($stateParams, roleService) {
 								return roleService.getRoles({ id: $stateParams.roleId });
-							},
-							useCapabilities: function(parameterService) {
-								return parameterService.getParameters({ name: 'use_capabilities', configFile: 'global' });
 							}
 						}
 					}
