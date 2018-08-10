@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormEditRoleController = function(roles, useCapabilities, $scope, $controller, $uibModal, $anchorScroll, $location, locationUtils, roleService, messageModel) {
+var FormEditRoleController = function(roles, $scope, $controller, $uibModal, $anchorScroll, $location, locationUtils, roleService, messageModel, propertiesModel) {
 
 	// extends the FormRoleController to inherit common methods
 	angular.extend(this, $controller('FormRoleController', { roles: roles, $scope: $scope }));
@@ -39,7 +39,7 @@ var FormEditRoleController = function(roles, useCapabilities, $scope, $controlle
 			});
 	};
 
-	$scope.useCapabilities = (useCapabilities[0]) ? useCapabilities[0].value : 0;
+	$scope.enforceCapabilities = propertiesModel.properties.enforceCapabilities;
 
 	$scope.roleName = angular.copy($scope.role.name);
 
@@ -103,5 +103,5 @@ var FormEditRoleController = function(roles, useCapabilities, $scope, $controlle
 
 };
 
-FormEditRoleController.$inject = ['roles', 'useCapabilities', '$scope', '$controller', '$uibModal', '$anchorScroll', '$location', 'locationUtils', 'roleService', 'messageModel'];
+FormEditRoleController.$inject = ['roles', '$scope', '$controller', '$uibModal', '$anchorScroll', '$location', 'locationUtils', 'roleService', 'messageModel', 'propertiesModel'];
 module.exports = FormEditRoleController;
