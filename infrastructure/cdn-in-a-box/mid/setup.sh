@@ -38,53 +38,50 @@ sed -ie "s;MY_GATEWAY;$gateway;g" /server.json
 sed -ie "s;MY_NETMASK;$netmask;g" /server.json
 sed -ie "s;MY_IP;$myIP;g" /server.json
 
-TO_URL=https://$TO_HOST:$TO_PORT
-while ! curl -sk $TO_URL/api/1.3/ping </dev/null >/dev/null; do
+source /to-access.sh
+
+while ! to-ping >/dev/null; do
 	echo "waiting for Traffic Ops"
 	sleep 3
 done
 
-# Now network things. First need to authenticate
-curl -ksc cookie.jar -d "{\"u\":\"$TO_ADMIN_USER\",\"p\":\"$TO_ADMIN_PASSWORD\"}" $TO_URL/api/1.3/user/login
-echo
-
 # Gets our CDN ID
-CDN=$(curl -ksb cookie.jar $TO_URL/api/1.3/cdns | jq '.response|.[]|select(.name=="CDN-in-a-Box")|.id')
+CDN=$(to-get api/1.3/cdns | jq '.response|.[]|select(.name=="CDN-in-a-Box")|.id')
 while [[ -z "$CDN" ]]; do
 	echo "waiting for trafficops setup to complete..."
 	sleep 3
-	CDN=$(curl -ksb cookie.jar $TO_URL/api/1.3/cdns | jq '.response|.[]|select(.name=="CDN-in-a-Box")|.id')
+	CDN=$(to-get api/1.3/cdns | jq '.response|.[]|select(.name=="CDN-in-a-Box")|.id')
 done
 
 
 # Now we upload a profile for later use
 sed -ie "s;CDN_ID;$CDN;g" /profile.json
-PROFILE=$(curl -ksb cookie.jar -d @/profile.json $TO_URL/api/1.3/profiles | jq '.response')
+PROFILE=$(to-post api/1.3/profiles /profile.json | jq '.response')
 PROFILENAME=$(echo $PROFILE | jq '.name' | tr -d '"')
 PROFILEID=$(echo $PROFILE | jq '.id')
-curl -ksb cookie.jar -d @/parameters.json $TO_URL/api/1.3/profiles/name/$PROFILENAME/parameters
+to-post api/1.3/profiles/name/$PROFILENAME/parameters /parameters.json
 echo
 
 # Gets the location ID
-location=$(curl -ksb cookie.jar $TO_URL/api/1.3/phys_locations | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
+location=$(to-get api/1.3/phys_locations | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
 while [[ -z "$location" ]]; do
 	echo "Waiting for location setup"
 	sleep 3
-	location=$(curl -ksb cookie.jar $TO_URL/api/1.3/phys_locations | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
+	location=$(to-get api/1.3/phys_locations | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
 done
 
 # Gets the id of a MID server type
-TYPE=$(curl -ksb cookie.jar $TO_URL/api/1.3/types | jq '.response|.[]|select(.name=="MID")|.id')
+TYPE=$(to-get api/1.3/types | jq '.response|.[]|select(.name=="MID")|.id')
 
 # Gets the id of the 'REPORTED' status
-REPORTED=$(curl -ksb cookie.jar $TO_URL/api/1.3/statuses | jq '.response|.[]|select(.name=="REPORTED")|.id')
+REPORTED=$(to-get api/1.3/statuses | jq '.response|.[]|select(.name=="REPORTED")|.id')
 
 # Gets the cachegroup ID
-CACHEGROUP=$(curl -ksb cookie.jar $TO_URL/api/1.3/cachegroups | jq '.response|.[]|select(.name=="CDN_in_a_Box_Mid")|.id')
+CACHEGROUP=$(to-get api/1.3/cachegroups | jq '.response|.[]|select(.name=="CDN_in_a_Box_Mid")|.id')
 while [[ -z CACHEGROUP ]]; do
 	echo "waiting for trafficops setup to complete..."
 	sleep 3
-	CACHEGROUP=$(curl -ksb cookie.jar $TO_URL/api/1.3/cachegroups | jq '.response|.[]|select(.name=="CDN_in_a_Box_Mid")|.id')
+	CACHEGROUP=$(to-get api/1.3/cachegroups | jq '.response|.[]|select(.name=="CDN_in_a_Box_Mid")|.id')
 done
 
 # Now put it all together and send it up
@@ -95,7 +92,7 @@ sed -ie "s;REPORTED_ID;$REPORTED;g" /server.json
 sed -ie "s;CACHE_GROUP_ID;$CACHEGROUP;g" /server.json
 sed -ie "s;MY_PROFILE_ID;$PROFILEID;g" /server.json
 cat /server.json
-curl -ksb cookie.jar -d @/server.json $TO_URL/api/1.3/servers
+to-post api/1.3/servers /server.json
 echo
 
 fg

@@ -23,7 +23,9 @@
 
 FROM centos:7
 
+ARG TO_API_FUNCTIONS=to-access.sh
 ARG RPM=https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.2-4.el7.centos.x86_64.rpm
+ADD $TO_API_FUNCTIONS /to-access.sh
 ADD $RPM /trafficserver.rpm
 ADD traffic_ops_ort.rpm /
 
