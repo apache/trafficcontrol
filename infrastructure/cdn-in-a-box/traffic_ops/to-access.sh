@@ -69,6 +69,11 @@ CREDS
     fi
 }
 
+to-ping() {
+    # ping endpoint does not require authentication
+    curl $CURLAUTH $CURLOPTS -s -X GET "$TO_URL/api/1.3/ping"
+}
+
 to-get() {
     to-auth && \
         curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X GET "$TO_URL/$1"
