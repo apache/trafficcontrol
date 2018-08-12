@@ -20,10 +20,8 @@ package manager
  */
 
 import (
-	"crypto/tls"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/signal"
 
@@ -44,12 +42,8 @@ import (
 //
 // Start starts the poller and handler goroutines
 //
-func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticAppData, trafficMonitorConfigFileName string) error {
+func Start(opsConfigFile string, cfg config.Config, appData config.StaticAppData, trafficMonitorConfigFileName string) error {
 	toSession := towrap.ITrafficOpsSession(towrap.NewTrafficOpsSessionThreadsafe(nil, cfg.CRConfigHistoryCount))
-	sharedClient := &http.Client{
-		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
-		Timeout:   cfg.HTTPTimeout,
-	}
 
 	localStates := peer.NewCRStatesThreadsafe() // this is the local state as discoverer by this traffic_monitor
 	fetchCount := threadsafe.NewUint()          // note this is the number of individual caches fetched from, not the number of times all the caches were polled.
@@ -59,12 +53,12 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticA
 	toData := todata.NewThreadsafe()
 
 	cacheHealthHandler := cache.NewHandler()
-	cacheHealthPoller := poller.NewHTTP(cfg.CacheHealthPollingInterval, true, sharedClient, cacheHealthHandler, staticAppData.UserAgent)
+	cacheHealthPoller := poller.NewCache(cfg.CacheHealthPollingInterval, true, cacheHealthHandler, cfg, appData)
 	cacheStatHandler := cache.NewPrecomputeHandler(toData)
-	cacheStatPoller := poller.NewHTTP(cfg.CacheStatPollingInterval, false, sharedClient, cacheStatHandler, staticAppData.UserAgent)
+	cacheStatPoller := poller.NewCache(cfg.CacheStatPollingInterval, false, cacheStatHandler, cfg, appData)
 	monitorConfigPoller := poller.NewMonitorConfig(cfg.MonitorConfigPollingInterval)
 	peerHandler := peer.NewHandler()
-	peerPoller := poller.NewHTTP(cfg.PeerPollingInterval, false, sharedClient, peerHandler, staticAppData.UserAgent)
+	peerPoller := poller.NewCache(cfg.PeerPollingInterval, false, peerHandler, cfg, appData)
 
 	go monitorConfigPoller.Poll()
 	go cacheHealthPoller.Poll()
@@ -86,7 +80,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticA
 		monitorConfigPoller.IntervalChan,
 		cachesChanged,
 		cfg,
-		staticAppData,
+		appData,
 		toSession,
 		toData,
 	)
@@ -142,7 +136,7 @@ func Start(opsConfigFile string, cfg config.Config, staticAppData config.StaticA
 		lastKbpsStats,
 		dsStats,
 		events,
-		staticAppData,
+		appData,
 		cacheHealthPoller.Config.Interval,
 		lastHealthDurations,
 		fetchCount,
