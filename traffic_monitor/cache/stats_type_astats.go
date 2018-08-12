@@ -30,6 +30,7 @@ package cache
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -45,9 +46,13 @@ func init() {
 	AddStatsType("astats", astatsParse, astatsPrecompute)
 }
 
-func astatsParse(cache tc.CacheName, r io.Reader) (error, map[string]interface{}, AstatsSystem) {
+func astatsParse(cache tc.CacheName, rdr io.Reader) (error, map[string]interface{}, AstatsSystem) {
+	if rdr == nil {
+		log.Warnln(string(cache) + " handle reader nil")
+		return errors.New("handler got nil reader"), nil, AstatsSystem{}
+	}
 	astats := Astats{}
-	err := json.NewDecoder(r).Decode(&astats)
+	err := json.NewDecoder(rdr).Decode(&astats)
 	return err, astats.Ats, astats.System
 }
 
