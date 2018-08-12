@@ -27,8 +27,8 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/config"
 	"github.com/apache/trafficcontrol/traffic_monitor/cache"
+	"github.com/apache/trafficcontrol/traffic_monitor/config"
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
 	"github.com/apache/trafficcontrol/traffic_monitor/poller"
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
@@ -120,9 +120,9 @@ func StartMonitorConfigManager(
 	monitorConfigPollChan <-chan poller.MonitorCfg,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
-	statURLSubscriber chan<- poller.HttpPollerConfig,
-	healthURLSubscriber chan<- poller.HttpPollerConfig,
-	peerURLSubscriber chan<- poller.HttpPollerConfig,
+	statURLSubscriber chan<- poller.CachePollerConfig,
+	healthURLSubscriber chan<- poller.CachePollerConfig,
+	peerURLSubscriber chan<- poller.CachePollerConfig,
 	toIntervalSubscriber chan<- time.Duration,
 	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
@@ -190,9 +190,9 @@ func monitorConfigListen(
 	monitorConfigPollChan <-chan poller.MonitorCfg,
 	localStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
-	statURLSubscriber chan<- poller.HttpPollerConfig,
-	healthURLSubscriber chan<- poller.HttpPollerConfig,
-	peerURLSubscriber chan<- poller.HttpPollerConfig,
+	statURLSubscriber chan<- poller.CachePollerConfig,
+	healthURLSubscriber chan<- poller.CachePollerConfig,
+	peerURLSubscriber chan<- poller.CachePollerConfig,
 	toIntervalSubscriber chan<- time.Duration,
 	cachesChangeSubscriber chan<- struct{},
 	cfg config.Config,
@@ -261,6 +261,12 @@ func monitorConfigListen(
 				log.Infof("health.polling.format for '%v' is empty, using default '%v'", srv.HostName, format)
 			}
 
+			pollType := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingType
+			if pollType == "" {
+				pollType = poller.DefaultPollerType
+				log.Infof("health.polling.type for '%v' is empty, using default '%v'", srv.HostName, pollType)
+			}
+
 			r := strings.NewReplacer(
 				"${hostname}", srv.IP,
 				"${interface_name}", srv.InterfaceName,
@@ -275,10 +281,10 @@ func monitorConfigListen(
 				log.Warnln("profile " + srv.Profile + " health.connection.timeout Parameter is missing or zero, using default " + DefaultHealthConnectionTimeout.String())
 			}
 
-			healthURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN, Timeout: connTimeout, Format: format}
+			healthURLs[srv.HostName] = poller.PollConfig{URL: url, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
 			r = strings.NewReplacer("application=system", "application=")
 			statURL := r.Replace(url)
-			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Host: srv.FQDN, Timeout: connTimeout, Format: format}
+			statURLs[srv.HostName] = poller.PollConfig{URL: statURL, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
 		}
 
 		peerSet := map[tc.TrafficMonitorName]struct{}{}
@@ -295,9 +301,9 @@ func monitorConfigListen(
 			peerSet[tc.TrafficMonitorName(srv.HostName)] = struct{}{}
 		}
 
-		statURLSubscriber <- poller.HttpPollerConfig{Urls: statURLs, Interval: intervals.Stat, NoKeepAlive: intervals.StatNoKeepAlive}
-		healthURLSubscriber <- poller.HttpPollerConfig{Urls: healthURLs, Interval: intervals.Health, NoKeepAlive: intervals.HealthNoKeepAlive}
-		peerURLSubscriber <- poller.HttpPollerConfig{Urls: peerURLs, Interval: intervals.Peer, NoKeepAlive: intervals.PeerNoKeepAlive}
+		statURLSubscriber <- poller.CachePollerConfig{Urls: statURLs, Interval: intervals.Stat, NoKeepAlive: intervals.StatNoKeepAlive}
+		healthURLSubscriber <- poller.CachePollerConfig{Urls: healthURLs, Interval: intervals.Health, NoKeepAlive: intervals.HealthNoKeepAlive}
+		peerURLSubscriber <- poller.CachePollerConfig{Urls: peerURLs, Interval: intervals.Peer, NoKeepAlive: intervals.PeerNoKeepAlive}
 		toIntervalSubscriber <- intervals.TO
 		peerStates.SetTimeout((intervals.Peer + cfg.HTTPTimeout) * 2)
 		peerStates.SetPeers(peerSet)

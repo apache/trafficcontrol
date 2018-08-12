@@ -97,6 +97,7 @@ type TMParameters struct {
 	HealthConnectionTimeout int    `json:"health.connection.timeout"`
 	HealthPollingURL        string `json:"health.polling.url"`
 	HealthPollingFormat     string `json:"health.polling.format"`
+	HealthPollingType       string `json:"health.polling.type"`
 	HistoryCount            int    `json:"history.count"`
 	MinFreeKbps             int64
 	Thresholds              map[string]HealthThreshold `json:"health_threshold"`
@@ -147,6 +148,22 @@ func (params *TMParameters) UnmarshalJSON(bytes []byte) (err error) {
 			return fmt.Errorf("Unmarshalling TMParameters health.polling.url expected string, got %v", vi)
 		} else {
 			params.HealthPollingURL = v
+		}
+	}
+
+	if vi, ok := raw["health.polling.format"]; ok {
+		if v, ok := vi.(string); !ok {
+			return fmt.Errorf("Unmarshalling TMParameters health.polling.format expected string, got %v", vi)
+		} else {
+			params.HealthPollingFormat = v
+		}
+	}
+
+	if vi, ok := raw["health.polling.type"]; ok {
+		if v, ok := vi.(string); !ok {
+			return fmt.Errorf("Unmarshalling TMParameters health.polling.type expected string, got %v", vi)
+		} else {
+			params.HealthPollingType = v
 		}
 	}
 
