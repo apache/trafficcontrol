@@ -27,6 +27,10 @@ var TableDeliveryServiceStaticDnsEntriesController = function(deliveryService, s
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+    $scope.editStaticDnsEntry = function(dsId, staticDnsEntryId) {
+        locationUtils.navigateToPath('/delivery-services/' + dsId + '/static-dns-entries/' + staticDnsEntryId);
+    };
+
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
