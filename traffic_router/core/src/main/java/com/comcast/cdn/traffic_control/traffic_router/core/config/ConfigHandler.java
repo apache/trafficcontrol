@@ -690,7 +690,7 @@ public class ConfigHandler {
 
 			}
 
-			Set<CacheLocation.LocalizationMethod> enabledLocalizationMethods = parseLocalizationMethods(loc, jo);
+			final Set<CacheLocation.LocalizationMethod> enabledLocalizationMethods = parseLocalizationMethods(loc, jo);
 
 			try {
 				locations.add(
