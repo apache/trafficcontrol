@@ -311,3 +311,11 @@ a.disabled_button, .disabled_button{ -moz-border-bottom-colors: none; -moz-borde
 	color: white !important;
 }
 .ui-dialog .ui-dialog-titlebar-close span { display: block; }
+
+.deprecatedBar {
+    border-bottom: solid 2px #000;
+    padding: 3px 0;
+    text-align: left;
+    color: red;
+    font-size: 20px;
+}
