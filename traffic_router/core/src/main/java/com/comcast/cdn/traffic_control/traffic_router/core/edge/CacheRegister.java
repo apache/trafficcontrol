@@ -13,7 +13,12 @@
  * limitations under the License.
  */
 
-package com.comcast.cdn.traffic_control.traffic_router.core.cache;
+package com.comcast.cdn.traffic_control.traffic_router.core.edge;
+
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
+import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,19 +27,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
-import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
-import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
-import com.comcast.cdn.traffic_control.traffic_router.core.request.Request;
-
 @SuppressWarnings("PMD.LooseCoupling")
 public class CacheRegister implements CacheLocationManager {
 	private final Map<String, CacheLocation> configuredLocations;
 	private JsonNode trafficRouters;
 	private Map<String,Cache> allCaches;
-	private TreeSet<DeliveryServiceMatcher> dnsServiceMatchers;
-	private TreeSet<DeliveryServiceMatcher> httpServiceMatchers;
+	private TreeSet<DeliveryServiceMatcher> deliveryServiceMatchers;
 	private Map<String, DeliveryService> dsMap;
 	private JsonNode config;
 	private JsonNode stats;
@@ -56,9 +54,9 @@ public class CacheRegister implements CacheLocationManager {
 	}
 
 	public CacheLocation getCacheLocationById(final String id) {
-		for (final CacheLocation cacheLocation : configuredLocations.values()) {
-			if (id.equals(cacheLocation.getId())) {
-				return cacheLocation;
+		for (final CacheLocation location : configuredLocations.values()) {
+			if (id.equals(location.getId())) {
+				return location;
 			}
 		}
 
@@ -86,12 +84,8 @@ public class CacheRegister implements CacheLocationManager {
 		return allCaches;
 	}
 	
-	public void setDnsDeliveryServiceMatchers(final TreeSet<DeliveryServiceMatcher> dnsServices) {
-		this.dnsServiceMatchers = dnsServices;
-	}
-
-	public void setHttpDeliveryServiceMatchers(final TreeSet<DeliveryServiceMatcher> httpServices) {
-		this.httpServiceMatchers = httpServices;
+	public void setDeliveryServiceMatchers(final TreeSet<DeliveryServiceMatcher> dServices) {
+		this.deliveryServiceMatchers = dServices;
 	}
 
 	/**
@@ -102,11 +96,7 @@ public class CacheRegister implements CacheLocationManager {
 	 * @return the DeliveryService that matches the request
 	 */
 	public DeliveryService getDeliveryService(final Request request, final boolean isHttp) {
-		TreeSet<DeliveryServiceMatcher> matchers = dnsServiceMatchers;
-
-		if (isHttp) {
-			matchers = httpServiceMatchers;
-		}
+		final TreeSet<DeliveryServiceMatcher> matchers = deliveryServiceMatchers;
 
 		if (matchers == null) {
 			return null;
@@ -125,7 +115,7 @@ public class CacheRegister implements CacheLocationManager {
 		return dsMap.get(deliveryServiceId);
 	}
 
-	public List<CacheLocation> filterAvailableLocations(final String deliveryServiceId) {
+	public List<CacheLocation> filterAvailableCacheLocations(final String deliveryServiceId) {
 		final DeliveryService deliveryService = dsMap.get(deliveryServiceId);
 
 		if (deliveryService == null) {
@@ -165,4 +155,20 @@ public class CacheRegister implements CacheLocationManager {
 		this.stats = stats;
 	}
 
+	public TreeSet<DeliveryServiceMatcher> getDeliveryServiceMatchers() {
+		return deliveryServiceMatchers;
+	}
+
+	public void shallowCopy(final CacheRegister srcCr) {
+		this.config = srcCr.config;
+		this.stats = srcCr.stats;
+		this.trafficRouters = srcCr.trafficRouters;
+		this.allCaches = new HashMap<String, Cache>();
+		this.allCaches.putAll(srcCr.allCaches);
+		this.configuredLocations.putAll(srcCr.configuredLocations);
+		this.deliveryServiceMatchers = new TreeSet<>();
+		this.deliveryServiceMatchers.addAll(srcCr.deliveryServiceMatchers);
+		this.dsMap = new HashMap<>();
+		this.dsMap.putAll(srcCr.dsMap);
+	}
 }

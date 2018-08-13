@@ -15,12 +15,11 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation.LocalizationMethod;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.InetRecord;
-import com.comcast.cdn.traffic_control.traffic_router.core.config.CertificateChecker;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation.LocalizationMethod;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.InetRecord;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.Dispersion;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
@@ -34,6 +33,7 @@ import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Tr
 import com.comcast.cdn.traffic_control.traffic_router.core.util.CidrAddress;
 import org.junit.Before;
 import org.junit.Test;
+import org.xbill.DNS.Name;
 import org.xbill.DNS.Type;
 
 import java.util.ArrayList;
@@ -81,10 +81,10 @@ public class TrafficRouterTest {
         federationRegistry = mock(FederationRegistry.class);
         when(federationRegistry.findInetRecords(anyString(), any(CidrAddress.class))).thenReturn(inetRecords);
 
-        trafficRouter = mock(TrafficRouter.class);
 
         CacheRegister cacheRegister = mock(CacheRegister.class);
         when(cacheRegister.getDeliveryService(any(HTTPRequest.class), eq(true))).thenReturn(deliveryService);
+        trafficRouter = mock(TrafficRouter.class);
 
         setInternalState(trafficRouter, "cacheRegister", cacheRegister);
         setInternalState(trafficRouter, "federationRegistry", federationRegistry);
@@ -100,7 +100,8 @@ public class TrafficRouterTest {
 
     @Test
     public void itCreatesDnsResultsFromFederationMappingHit() throws Exception {
-        DNSRequest request = new DNSRequest();
+        final Name name = Name.fromString("edge.example.com");
+        DNSRequest request = new DNSRequest("example.com", name, Type.A);
         request.setClientIP("192.168.10.11");
         request.setHostname("edge.example.com");
 
@@ -194,13 +195,13 @@ public class TrafficRouterTest {
         assertThat(track.getResultLocation(), equalTo(new Geolocation(50, 50)));
 
         when(federationRegistry.findInetRecords(anyString(), any(CidrAddress.class))).thenReturn(null);
-        when(deliveryService.getRoutingName()).thenReturn("ccr");
+        when(deliveryService.getRoutingName()).thenReturn("edge");
+        when(deliveryService.isDns()).thenReturn(true);
 
-        DNSRequest dnsRequest = new DNSRequest();
-        dnsRequest.setClientIP("192.168.1.2");
+        final Name name = Name.fromString("edge.example.com");
+        DNSRequest dnsRequest = new DNSRequest("example.com", name, Type.A);
         dnsRequest.setClientIP("10.10.10.10");
-        dnsRequest.setHostname("ccr.example.com");
-        dnsRequest.setQtype(Type.A);
+        dnsRequest.setHostname(name.relativize(Name.root).toString());
 
         track = StatTracker.getTrack();
         trafficRouter.route(dnsRequest, track);

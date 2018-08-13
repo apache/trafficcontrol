@@ -15,27 +15,25 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.config.SnapshotEventsProcessor;
+import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseService;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
+
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.ds.SteeringRegistry;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
-import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.log4j.Logger;
-
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
-import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
-import com.comcast.cdn.traffic_control.traffic_router.geolocation.GeolocationService;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseService;
-
 public class TrafficRouterManager implements ApplicationListener<ContextRefreshedEvent> {
-	private static final Logger LOGGER = Logger.getLogger(TrafficRouterManager.class);
 
 	public static final int DEFAULT_API_PORT = 3333;
 	public static final int DEFAULT_SECURE_API_PORT = 0; // Must be set through server.xml properties
@@ -46,7 +44,7 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 	private GeolocationService geolocationService6;
 	private AnonymousIpDatabaseService anonymousIpService;
 	private StatTracker statTracker;
-	private static final Map<String, Long> timeTracker = new ConcurrentHashMap<String, Long>();
+	private static final Map<String, Long> timeTracker = new ConcurrentHashMap<>();
 	private NameServer nameServer;
 	private TrafficOpsUtils trafficOpsUtils;
 	private FederationRegistry federationRegistry;
@@ -59,7 +57,7 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 		return nameServer;
 	}
 
-	public static Map<String, Long> getTimeTracker() {
+	static Map<String, Long> getTimeTracker() {
 		return timeTracker;
 	}
 
@@ -96,23 +94,21 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 	}
 
 	public void setCacheRegister(final CacheRegister cacheRegister) throws IOException {
+		setCacheRegister(cacheRegister, null);
+	}
+
+	public void setCacheRegister(final CacheRegister cacheRegister, final SnapshotEventsProcessor snapshotEventsProcessor) throws IOException {
 		trackEvent("lastConfigCheck");
 
 		if (cacheRegister == null) {
 			return;
 		}
 
-		final TrafficRouter tr = new TrafficRouter(cacheRegister, geolocationService, geolocationService6, anonymousIpService, statTracker, trafficOpsUtils, federationRegistry, this);
+		final TrafficRouter tr = TrafficRouter.newInstance(cacheRegister, geolocationService, geolocationService6,
+				anonymousIpService, statTracker, trafficOpsUtils, federationRegistry,
+				this, snapshotEventsProcessor);
 		tr.setSteeringRegistry(steeringRegistry);
 		synchronized(this) {
-			if (state != null) {
-				try {
-					tr.setState(state);
-				} catch (UnknownHostException e) {
-					LOGGER.warn(e,e);
-				}
-			}
-
 			this.trafficRouter = tr;
 			if (applicationContext != null) {
 				this.trafficRouter.setApplicationContext(applicationContext);
@@ -173,5 +169,13 @@ public class TrafficRouterManager implements ApplicationListener<ContextRefreshe
 
 	public void setSecureApiPort(final int secureApiPort) {
 		this.secureApiPort = secureApiPort;
+	}
+
+	public SteeringRegistry getSteeringRegistry() {
+		return this.steeringRegistry;
+	}
+
+	JsonNode getState() {
+		return state;
 	}
 }

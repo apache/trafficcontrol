@@ -74,7 +74,7 @@ public class ComparableStringByLengthTest {
 		assertThat(abc.equals(new ComparableStringByLength("abc")), equalTo(true));
 		assertThat(abc.equals(null), equalTo(false));
 		assertThat(abc.equals(""), equalTo(false));
-		assertThat(abc.equals(new Long(1L)), equalTo(false));
+		assertThat(abc.equals(new Long(1)), equalTo(false));
 	}
 
 	@Test

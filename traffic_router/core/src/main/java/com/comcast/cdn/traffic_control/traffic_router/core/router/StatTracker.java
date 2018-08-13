@@ -15,59 +15,72 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
+import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.RouteType;
+import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.comcast.cdn.traffic_control.traffic_router.geolocation.Geolocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult;
-
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
-import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
-import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.ResultType;
-import com.comcast.cdn.traffic_control.traffic_router.core.router.StatTracker.Track.RouteType;
-
 @SuppressWarnings("PMD.ExcessivePublicCount")
 public class StatTracker {
+
 
 	public static class Tallies {
 
 		public int getCzCount() {
 			return czCount;
 		}
+
 		public void setCzCount(final int czCount) {
 			this.czCount = czCount;
 		}
+
 		public int getGeoCount() {
 			return geoCount;
 		}
+
 		public void setGeoCount(final int geoCount) {
 			this.geoCount = geoCount;
 		}
+
 		public int getDeepCzCount() {
 			return deepCzCount;
 		}
+
 		public void setDeepCzCount(final int deepCzCount) {
 			this.deepCzCount = deepCzCount;
 		}
+
 		public int getDsrCount() {
 			return dsrCount;
 		}
+
 		public int getMissCount() {
 			return missCount;
 		}
+
 		public void setMissCount(final int missCount) {
 			this.missCount = missCount;
 		}
+
 		public int getErrCount() {
 			return errCount;
 		}
+
 		public void setErrCount(final int errCount) {
 			this.errCount = errCount;
 		}
+
 		public int getStaticRouteCount() {
 			return staticRouteCount;
 		}
+
 		public void setStaticRouteCount(final int staticRouteCount) {
 			this.staticRouteCount = staticRouteCount;
 		}
@@ -83,12 +96,15 @@ public class StatTracker {
 		public int getRegionalDeniedCount() {
 			return regionalDeniedCount;
 		}
+
 		public void setRegionalDeniedCount(final int regionalDeniedCount) {
 			this.regionalDeniedCount = regionalDeniedCount;
 		}
+
 		public int getRegionalAlternateCount() {
 			return regionalAlternateCount;
 		}
+
 		public void setRegionalAlternateCount(final int regionalAlternateCount) {
 			this.regionalAlternateCount = regionalAlternateCount;
 		}
@@ -107,7 +123,7 @@ public class StatTracker {
 
 	public static class Track {
 		public static enum RouteType {
-			DNS,HTTP
+			DNS, HTTP
 		}
 
 		public static enum ResultType {
@@ -139,22 +155,28 @@ public class StatTracker {
 		public Track() {
 			start();
 		}
+
 		public String toString() {
-			return fqdn+" - "+result;
+			return fqdn + " - " + result;
 		}
+
 		public void setRouteType(final RouteType routeType, final String fqdn) {
 			this.routeType = routeType;
 			this.fqdn = fqdn;
 		}
+
 		public void setResult(final ResultType result) {
 			this.result = result;
 		}
+
 		public ResultType getResult() {
 			return result;
 		}
+
 		public void setResultDetails(final ResultDetails resultDetails) {
 			this.resultDetails = resultDetails;
 		}
+
 		public ResultDetails getResultDetails() {
 			return resultDetails;
 		}
@@ -186,6 +208,7 @@ public class StatTracker {
 		public void setRegionalGeoResult(final RegionalGeoResult regionalGeoResult) {
 			this.regionalGeoResult = regionalGeoResult;
 		}
+
 		public RegionalGeoResult getRegionalGeoResult() {
 			return regionalGeoResult;
 		}
@@ -201,6 +224,7 @@ public class StatTracker {
 		public final void start() {
 			time = System.currentTimeMillis();
 		}
+
 		public final void end() {
 			time = System.currentTimeMillis() - time;
 		}
@@ -212,29 +236,41 @@ public class StatTracker {
 
 	final private Map<String, Tallies> dnsMap = new HashMap<String, Tallies>();
 	final private Map<String, Tallies> httpMap = new HashMap<String, Tallies>();
+
 	public Map<String, Tallies> getDnsMap() {
 		return dnsMap;
 	}
+
 	public Map<String, Tallies> getHttpMap() {
 		return httpMap;
 	}
+
 	public int getTotalDnsCount() {
 		return totalDnsCount;
 	}
+
 	public long getAverageDnsTime() {
-		if(totalDnsCount==0) { return 0; }
-		return totalDnsTime/totalDnsCount;
+		if (totalDnsCount == 0) {
+			return 0;
+		}
+		return totalDnsTime / totalDnsCount;
 	}
+
 	public int getTotalHttpCount() {
 		return totalHttpCount;
 	}
+
 	public long getAverageHttpTime() {
-		if(totalHttpCount==0) { return 0; }
-		return totalHttpTime/totalHttpCount;
+		if (totalHttpCount == 0) {
+			return 0;
+		}
+		return totalHttpTime / totalHttpCount;
 	}
+
 	public int getTotalDsMissCount() {
 		return totalDsMissCount;
 	}
+
 	public void setTotalDsMissCount(final int totalDsMissCount) {
 		this.totalDsMissCount = totalDsMissCount;
 	}
@@ -244,14 +280,42 @@ public class StatTracker {
 	private int totalHttpCount;
 	private long totalHttpTime;
 	private int totalDsMissCount = 0;
-	public Map<String,Long> getUpdateTracker() {
+
+	public Map<String, Long> getUpdateTracker() {
 		return TrafficRouterManager.getTimeTracker();
 	}
+
 	public long getAppStartTime() {
 		return appStartTime;
 	}
 
 	private long appStartTime;
+
+	public void removeTracks(final DeliveryService ds, final List<String> aliases) {
+		if (ds != null) {
+			final List<Track> newTracks = createTracksForDs(ds, aliases);
+			newTracks.forEach(t->removeTrack(t));
+		}
+	}
+
+	public void removeTrack(final Track t) {
+		t.end();
+
+		synchronized (this) {
+			Map<String, Tallies> map;
+			if (t.routeType == RouteType.DNS) {
+				totalDnsCount--;
+				map = dnsMap;
+			} else {
+				totalHttpCount--;
+				map = httpMap;
+			}
+			final Tallies tallies = map.get(t.fqdn);
+			if (tallies != null) {
+				map.remove(t.fqdn);
+			}
+		}
+	}
 
 	public void saveTrack(final Track t) {
 		if (t.result == ResultType.DS_MISS) {
@@ -262,9 +326,9 @@ public class StatTracker {
 
 		t.end();
 
-		synchronized(this) {
-			Map<String,Tallies> map;
-			if(t.routeType == RouteType.DNS) {
+		synchronized (this) {
+			Map<String, Tallies> map;
+			if (t.routeType == RouteType.DNS) {
 				totalDnsCount++;
 				totalDnsTime += t.time;
 				map = dnsMap;
@@ -274,9 +338,9 @@ public class StatTracker {
 				map = httpMap;
 			}
 			Tallies tallies = map.get(t.fqdn);
-			if(tallies == null) {
+			if (tallies == null) {
 				tallies = new Tallies();
-				map.put((t.fqdn==null)?"null":t.fqdn, tallies);
+				map.put((t.fqdn == null) ? "null" : t.fqdn, tallies);
 			}
 			incTally(t, tallies);
 		}
@@ -284,39 +348,39 @@ public class StatTracker {
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")
 	private static void incTally(final Track t, final Tallies tallies) {
-		switch(t.result) {
-		case ERROR:
-			tallies.errCount++;
-			break;
-		case CZ:
-			tallies.czCount++;
-			break;
-		case GEO:
-			tallies.geoCount++;
-			break;
-		case DEEP_CZ:
-			tallies.deepCzCount++;
-			break;
-		case MISS:
-			tallies.missCount++;
-			break;
-		case DS_REDIRECT:
-			tallies.dsrCount++;
-			break;
-		case STATIC_ROUTE:
-			tallies.staticRouteCount++;
-			break;
-		case FED:
-			tallies.fedCount++;
-			break;
-		case RGDENY:
-			tallies.regionalDeniedCount++;
-			break;
-		case RGALT:
-			tallies.regionalAlternateCount++;
-			break;
-		default:
-			break;
+		switch (t.result) {
+			case ERROR:
+				tallies.errCount++;
+				break;
+			case CZ:
+				tallies.czCount++;
+				break;
+			case GEO:
+				tallies.geoCount++;
+				break;
+			case DEEP_CZ:
+				tallies.deepCzCount++;
+				break;
+			case MISS:
+				tallies.missCount++;
+				break;
+			case DS_REDIRECT:
+				tallies.dsrCount++;
+				break;
+			case STATIC_ROUTE:
+				tallies.staticRouteCount++;
+				break;
+			case FED:
+				tallies.fedCount++;
+				break;
+			case RGDENY:
+				tallies.regionalDeniedCount++;
+				break;
+			case RGALT:
+				tallies.regionalAlternateCount++;
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -330,30 +394,51 @@ public class StatTracker {
 			final DeliveryService ds = cacheRegister.getDeliveryService(dsId);
 
 			if (ds != null) {
-				for (int i = 0; i < dsNames.size(); i++) {
-					final Track t = getTrack();
-					final StringBuffer dsName = new StringBuffer(dsNames.get(i));
-					RouteType rt;
+				final List<Track> newTracks = createTracksForDs(ds, dsNames);
+				newTracks.forEach(t->saveTrack(t));
+			}
+		}
+	}
 
-					if (ds.isDns()) {
-						rt = RouteType.DNS;
+	public static List<Track> createTracksForDs(final DeliveryService ds, final List<String> dsNames) {
 
-						if (i == 0) {
-							dsName.insert(0, ds.getRoutingName() + ".");
-						} else {
-							continue;
-						}
-					} else {
-						rt = RouteType.HTTP;
-						dsName.insert(0, ds.getRoutingName() + ".");
-					}
+		final List<Track> retTracks = new ArrayList<>();
+		for (int i = 0; i < dsNames.size(); i++) {
+			final Track t = getTrack();
+			final StringBuffer dsName = new StringBuffer(dsNames.get(i));
+			RouteType rt;
 
-					t.setRouteType(rt, dsName.toString());
-					t.setResult(ResultType.INIT);
-					t.end();
+			if (ds.isDns()) {
+				rt = RouteType.DNS;
 
-					saveTrack(t);
+				if (i == 0) {
+					dsName.insert(0, ds.getRoutingName() + ".");
+				} else {
+					continue;
 				}
+			} else {
+				rt = RouteType.HTTP;
+				dsName.insert(0, ds.getRoutingName() + ".");
+			}
+
+			t.setRouteType(rt, dsName.toString());
+			t.setResult(ResultType.INIT);
+			t.end();
+
+			retTracks.add(t);
+		}
+
+		return retTracks;
+	}
+
+	public void purge(final Map<String, List<String>> initMap, final CacheRegister cacheRegister) {
+		for (final String dsId : initMap.keySet()) {
+			final List<String> dsNames = initMap.get(dsId);
+			final DeliveryService ds = cacheRegister.getDeliveryService(dsId);
+
+			if (ds != null) {
+				final List<Track> newTracks = createTracksForDs(ds, dsNames);
+				newTracks.forEach(t->removeTrack(t));
 			}
 		}
 	}

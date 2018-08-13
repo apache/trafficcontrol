@@ -15,6 +15,21 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager.ZoneCacheType;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.ProtectedFetcher;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.log4j.Logger;
+import org.xbill.DNS.DSRecord;
+import org.xbill.DNS.Name;
+import org.xbill.DNS.Record;
+import org.xbill.DNS.TextParseException;
+
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
@@ -29,23 +44,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.log4j.Logger;
-import org.xbill.DNS.DSRecord;
-import org.xbill.DNS.Name;
-import org.xbill.DNS.Record;
-import org.xbill.DNS.TextParseException;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
-import com.comcast.cdn.traffic_control.traffic_router.core.dns.ZoneManager.ZoneCacheType;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.TrafficOpsUtils;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.ProtectedFetcher;
 
-
-public final class SignatureManager {
+public class SignatureManager {
 	private static final Logger LOGGER = Logger.getLogger(SignatureManager.class);
 	private int expirationMultiplier;
 	private CacheRegister cacheRegister;
@@ -54,17 +54,24 @@ public final class SignatureManager {
 	private boolean dnssecEnabled = false;
 	private boolean expiredKeyAllowed = true;
 	private Map<String, List<DnsSecKeyPair>> keyMap;
+	private boolean signingInProcess = false;
 	private ProtectedFetcher fetcher = null;
 	private ZoneManager zoneManager;
 	private final TrafficRouterManager trafficRouterManager;
 
 	public SignatureManager(final ZoneManager zoneManager, final CacheRegister cacheRegister, final TrafficOpsUtils trafficOpsUtils, final TrafficRouterManager trafficRouterManager) {
 		this.trafficRouterManager = trafficRouterManager;
+		init(zoneManager, cacheRegister, trafficOpsUtils);
+	}
+
+	public final void init(final ZoneManager zoneManager, final CacheRegister cacheRegister,
+					 final TrafficOpsUtils trafficOpsUtils) {
 		this.setCacheRegister(cacheRegister);
 		this.setTrafficOpsUtils(trafficOpsUtils);
 		this.setZoneManager(zoneManager);
 		initKeyMap();
 	}
+
 
 	protected void destroy() {
 		if (keyMaintenanceExecutor != null) {
@@ -72,7 +79,15 @@ public final class SignatureManager {
 		}
 	}
 
-	private void initKeyMap() {
+	public void refreshKeyMap() {
+		updateKeyMap();
+	}
+
+	final void initKeyMap() {
+		updateKeyMap();
+	}
+
+	private final void updateKeyMap() {
 		synchronized(SignatureManager.class) {
 			final JsonNode config = cacheRegister.getConfig();
 
@@ -83,7 +98,9 @@ public final class SignatureManager {
 				setExpirationMultiplier(JsonUtils.optInt(config, "signaturemanager.expiration.multiplier", 5)); // signature validity is maxTTL * this
 				final ScheduledExecutorService me = Executors.newScheduledThreadPool(1);
 				final int maintenanceInterval = JsonUtils.optInt(config, "keystore.maintenance.interval", 300); // default 300 seconds, do we calculate based on the complimentary settings for key generation in TO?
-				me.scheduleWithFixedDelay(getKeyMaintenanceRunnable(cacheRegister), 0, maintenanceInterval, TimeUnit.SECONDS);
+				signingInProcess = true;
+				me.scheduleWithFixedDelay(getKeyMaintenanceRunnable(cacheRegister), 0, maintenanceInterval,
+						TimeUnit.SECONDS);
 
 				if (keyMaintenanceExecutor != null) {
 					keyMaintenanceExecutor.shutdownNow();
@@ -92,7 +109,7 @@ public final class SignatureManager {
 				keyMaintenanceExecutor = me;
 
 				try {
-					while (keyMap == null) {
+					while (signingInProcess || keyMap == null) {
 						LOGGER.info("Waiting for DNSSEC keyMap initialization to complete");
 						Thread.sleep(2000);
 					}
@@ -106,7 +123,7 @@ public final class SignatureManager {
 	}
 
 	@SuppressWarnings("PMD.CyclomaticComplexity")
-	private Runnable getKeyMaintenanceRunnable(final CacheRegister cacheRegister) {
+	private Runnable getKeyMaintenanceRunnable(final CacheRegister cacheRegister ) {
 		return new Runnable() {
 			public void run() {
 				try {
@@ -140,7 +157,6 @@ public final class SignatureManager {
 											final List<DnsSecKeyPair> keyList = newKeyMap.get(dkpw.getName());
 											keyList.add(dkpw);
 											newKeyMap.put(dkpw.getName(), keyList);
-
 											LOGGER.debug("Added " + dkpw.toString() + " to incoming keyList");
 										} catch (JsonUtilsException ex) {
 											LOGGER.fatal("JsonUtilsException caught while parsing key for " + keyPair, ex);
@@ -157,13 +173,23 @@ public final class SignatureManager {
 						if (keyMap == null) {
 							// initial startup
 							keyMap = newKeyMap;
-						} else if (hasNewKeys(keyMap, newKeyMap)) {
-							// incoming key map has new keys
-							LOGGER.debug("Found new keys in incoming keyMap; rebuilding zone caches");
-							trafficRouterManager.trackEvent("newDnsSecKeysFound");
-							keyMap = newKeyMap;
-							getZoneManager().rebuildZoneCache();
-						} // no need to overwrite the keymap if they're the same, so no else leg
+						} else {
+							final List<String> changedKeys = hasNewKeys(keyMap, newKeyMap);
+							if (!changedKeys.isEmpty()) {
+								// incoming key map has new keys
+								LOGGER.info("Found new keys in incoming keyMap; rebuilding zone caches");
+								trafficRouterManager.trackEvent("newDnsSecKeysFound");
+								keyMap = newKeyMap;
+								getZoneManager().updateZoneCache(changedKeys);
+							} else {
+								// The new keymap has no new or modified keys and removing DNSSec keys
+								// from TrafficVault is not supported so it safe to just keep using
+								// the old keyMap in this case. If this assumption ever changes then
+								// it may become neccessary to swap in the newKeyMap here and update
+								// the Zone cache.
+								LOGGER.info("No changes found in the DNSSec signing keys.");
+							}
+						}
 					} else {
 						LOGGER.fatal("Unable to read keyPairData: " + keyPairData);
 					}
@@ -172,14 +198,20 @@ public final class SignatureManager {
 				} catch (RuntimeException ex) {
 					LOGGER.fatal("RuntimeException caught while trying to maintain keyMap", ex);
 				}
+				finally{
+					signingInProcess = false;
+				}
 			}
 		};
 	}
 
-	private boolean hasNewKeys(final Map<String, List<DnsSecKeyPair>> keyMap, final Map<String, List<DnsSecKeyPair>> newKeyMap) {
+	List<String> hasNewKeys(final Map<String, List<DnsSecKeyPair>> keyMap,
+			final Map<String, List<DnsSecKeyPair>> newKeyMap) {
+		final List<String> changedKeys = new ArrayList<>();
 		for (final String key : newKeyMap.keySet()) {
 			if (!keyMap.containsKey(key)) {
-				return true;
+				changedKeys.add(key);
+				continue;
 			}
 
 			for (final DnsSecKeyPair newKeyPair : newKeyMap.get(key)) {
@@ -193,16 +225,15 @@ public final class SignatureManager {
 				}
 
 				if (!matched) {
-					LOGGER.info("Found new or changed key for " + newKeyPair.getName());
-					return true; // has a new key because we didn't find a match
+					changedKeys.add(key);
 				}
 			}
 		}
 
-		return false;
+		return changedKeys;
 	}
 
-	private JsonNode fetchKeyPairData(final CacheRegister cacheRegister) {
+	protected JsonNode fetchKeyPairData(final CacheRegister cacheRegister) {
 		if (!isDnssecEnabled()) {
 			return null;
 		}
@@ -479,7 +510,7 @@ public final class SignatureManager {
 					final ZoneSigner zoneSigner = new ZoneSignerImpl();
 
 					final DSRecord dsRecord = zoneSigner.calculateDSRecord(kp.getDNSKEYRecord(), DSRecord.SHA256_DIGEST_ID, dsTtl);
-					LOGGER.debug(name + ": adding DS record " + dsRecord);
+					LOGGER.info(name + ": adding DS record " + dsRecord);
 					records.add(dsRecord);
 				}
 			}
@@ -497,13 +528,13 @@ public final class SignatureManager {
 
 			if (kskPairs != null && zskPairs != null && !kskPairs.isEmpty() && !zskPairs.isEmpty()) {
 				for (final DnsSecKeyPair kp : kskPairs) {
-					LOGGER.debug(name + ": DNSKEY record " + kp.getDNSKEYRecord());
+					LOGGER.info(name + ": DNSKEY record " + kp.getDNSKEYRecord());
 					list.add(kp.getDNSKEYRecord());
 				}
 
 				for (final DnsSecKeyPair kp : zskPairs) {
 					// TODO: make adding zsk to parent zone configurable?
-					LOGGER.debug(name + ": DNSKEY record " + kp.getDNSKEYRecord());
+					LOGGER.info(name + ": DNSKEY record " + kp.getDNSKEYRecord());
 					list.add(kp.getDNSKEYRecord());
 				}
 			}
@@ -559,7 +590,7 @@ public final class SignatureManager {
 		this.expirationMultiplier = expirationMultiplier;
 	}
 
-	private ZoneManager getZoneManager() {
+	ZoneManager getZoneManager() {
 		return zoneManager;
 	}
 
@@ -577,5 +608,9 @@ public final class SignatureManager {
 
 	public void setExpiredKeyAllowed(final boolean expiredKeyAllowed) {
 		this.expiredKeyAllowed = expiredKeyAllowed;
+	}
+
+	Map<String, List<DnsSecKeyPair>> getKeyMap() {
+		return keyMap;
 	}
 }

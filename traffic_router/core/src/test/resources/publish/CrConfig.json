@@ -606,7 +606,7 @@
         "A": "3600",
         "NS": "3600"
       },
-      "ttl": "3600",
+      "ttl": "1800",
       "ip6RoutingEnabled": "false",
       "dispersion": {
         "limit": 1,

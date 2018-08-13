@@ -25,7 +25,6 @@ import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import com.comcast.cdn.traffic_control.traffic_router.shared.DeliveryServiceCertificatesMBean;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 
@@ -39,7 +38,6 @@ import java.util.concurrent.TimeUnit;
 
 public class CertificatesPublisher {
 	private final static Logger LOGGER = Logger.getLogger(CertificatesPublisher.class);
-	private JsonNode deliveryServicesJson;
 	private List<DeliveryService> deliveryServices = new ArrayList<>();
 	private boolean running = true;
 	final Thread worker;
@@ -56,7 +54,7 @@ public class CertificatesPublisher {
 						continue;
 					}
 
-					if (certificateChecker.certificatesAreValid(certificateDataList, deliveryServicesJson)) {
+					if (certificateChecker.certificatesAreValid(certificateDataList, deliveryServices)) {
 						deliveryServices.forEach(ds -> {
 							final boolean hasX509Cert = certificateChecker.hasCertificate(certificateDataList, ds.getId());
 							ds.setHasX509Cert(hasX509Cert);
@@ -88,14 +86,6 @@ public class CertificatesPublisher {
 		} catch (Exception e) {
 			LOGGER.error("Failed to add certificate data list as management MBean! " + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
 		}
-	}
-
-	public JsonNode getDeliveryServicesJson() {
-		return deliveryServicesJson;
-	}
-
-	public void setDeliveryServicesJson(final JsonNode deliveryServicesJson) {
-		this.deliveryServicesJson = deliveryServicesJson;
 	}
 
 	public List<DeliveryService> getDeliveryServices() {

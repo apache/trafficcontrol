@@ -1,5 +1,7 @@
 {
     "http-delivery-service": {
+        "coverageZoneOnly": "false",
+        "routingName": "tr",
         "matchsets": [
             {
                 "protocol": "HTTP",
@@ -19,6 +21,8 @@
         ]
     },
     "": {
+        "coverageZoneOnly": "false",
+        "routingName": "tr",
         "matchsets": [
             {
                 "protocol": "HTTP",
@@ -38,6 +42,8 @@
         ]
     },
     "dnssec-delivery-service": {
+        "coverageZoneOnly": "false",
+        "routingName": "tr",
         "matchsets": [
             {
                 "protocol": "DNS",

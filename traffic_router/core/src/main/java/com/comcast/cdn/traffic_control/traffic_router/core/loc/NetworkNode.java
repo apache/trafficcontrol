@@ -36,7 +36,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
 
 public class NetworkNode implements Comparable<NetworkNode> {
     private static final Logger LOGGER = Logger.getLogger(NetworkNode.class);

@@ -1,0 +1,178 @@
+{
+  "caches": {
+    "edge-cache-000": {"isAvailable": true},
+    "edge-cache-001": {"isAvailable": true},
+    "edge-cache-002": {"isAvailable": true},
+    "edge-cache-003": {"isAvailable": true},
+    "edge-cache-004": {"isAvailable": true},
+    "edge-cache-005": {"isAvailable": true},
+    "edge-cache-006": {"isAvailable": true},
+    "edge-cache-007": {"isAvailable": true},
+    "edge-cache-008": {"isAvailable": true},
+    "edge-cache-009": {"isAvailable": true},
+    "edge-cache-010": {"isAvailable": true},
+    "edge-cache-011": {"isAvailable": true},
+    "edge-cache-012": {"isAvailable": true},
+    "edge-cache-013": {"isAvailable": true},
+    "edge-cache-014": {"isAvailable": true},
+    "edge-cache-015": {"isAvailable": true},
+    "edge-cache-016": {"isAvailable": true},
+    "edge-cache-017": {"isAvailable": true},
+    "edge-cache-018": {"isAvailable": true},
+    "edge-cache-019": {"isAvailable": true},
+    "edge-cache-020": {"isAvailable": true},
+    "edge-cache-021": {"isAvailable": true},
+    "edge-cache-022": {"isAvailable": true},
+    "edge-cache-023": {"isAvailable": true},
+    "edge-cache-024": {"isAvailable": true},
+    "edge-cache-025": {"isAvailable": false},
+    "edge-cache-026": {"isAvailable": true},
+    "edge-cache-027": {"isAvailable": true},
+    "edge-cache-028": {"isAvailable": true},
+    "edge-cache-029": {"isAvailable": true},
+    "edge-cache-030": {"isAvailable": true},
+    "edge-cache-031": {"isAvailable": true},
+    "edge-cache-032": {"isAvailable": true},
+    "edge-cache-033": {"isAvailable": true},
+    "edge-cache-034": {"isAvailable": true},
+    "edge-cache-035": {"isAvailable": true},
+    "edge-cache-036": {"isAvailable": true},
+    "edge-cache-037": {"isAvailable": true},
+    "edge-cache-038": {"isAvailable": true},
+    "edge-cache-039": {"isAvailable": true},
+    "edge-cache-040": {"isAvailable": true},
+    "edge-cache-041": {"isAvailable": true},
+    "edge-cache-042": {"isAvailable": true},
+    "edge-cache-043": {"isAvailable": true},
+    "edge-cache-044": {"isAvailable": true},
+    "edge-cache-045": {"isAvailable": true},
+    "edge-cache-046": {"isAvailable": true},
+    "edge-cache-047": {"isAvailable": true},
+    "edge-cache-048": {"isAvailable": true},
+    "edge-cache-049": {"isAvailable": true},
+    "edge-cache-050": {"isAvailable": true},
+    "edge-cache-051": {"isAvailable": true},
+    "edge-cache-052": {"isAvailable": true},
+    "edge-cache-053": {"isAvailable": true},
+    "edge-cache-054": {"isAvailable": true},
+    "edge-cache-055": {"isAvailable": true},
+    "edge-cache-056": {"isAvailable": true},
+    "edge-cache-057": {"isAvailable": true},
+    "edge-cache-058": {"isAvailable": true},
+    "edge-cache-059": {"isAvailable": true},
+    "edge-cache-060": {"isAvailable": true},
+    "edge-cache-061": {"isAvailable": true},
+    "edge-cache-062": {"isAvailable": true},
+    "edge-cache-063": {"isAvailable": true},
+    "edge-cache-064": {"isAvailable": true},
+    "edge-cache-065": {"isAvailable": true},
+    "edge-cache-066": {"isAvailable": true},
+    "edge-cache-067": {"isAvailable": false},
+    "edge-cache-068": {"isAvailable": true},
+    "edge-cache-069": {"isAvailable": true},
+    "edge-cache-070": {"isAvailable": true},
+    "edge-cache-071": {"isAvailable": true},
+    "edge-cache-072": {"isAvailable": true},
+    "edge-cache-073": {"isAvailable": true},
+    "edge-cache-074": {"isAvailable": true},
+    "edge-cache-075": {"isAvailable": true},
+    "edge-cache-076": {"isAvailable": true},
+    "edge-cache-077": {"isAvailable": true},
+    "edge-cache-078": {"isAvailable": true},
+    "edge-cache-079": {"isAvailable": true},
+    "edge-cache-080": {"isAvailable": true},
+    "edge-cache-081": {"isAvailable": true},
+    "edge-cache-082": {"isAvailable": true},
+    "edge-cache-083": {"isAvailable": true},
+    "edge-cache-084": {"isAvailable": true},
+    "edge-cache-085": {"isAvailable": true},
+    "edge-cache-086": {"isAvailable": true},
+    "edge-cache-087": {"isAvailable": true},
+    "edge-cache-088": {"isAvailable": true},
+    "edge-cache-089": {"isAvailable": true},
+    "edge-cache-090": {"isAvailable": true},
+    "edge-cache-091": {"isAvailable": true},
+    "edge-cache-092": {"isAvailable": true},
+    "edge-cache-093": {"isAvailable": false},
+    "edge-cache-094": {"isAvailable": false},
+    "edge-cache-095": {"isAvailable": true},
+    "edge-cache-096": {"isAvailable": true},
+    "edge-cache-097": {"isAvailable": true},
+    "edge-cache-098": {"isAvailable": true},
+    "edge-cache-099": {"isAvailable": true}
+  },
+  "deliveryServices": {
+    "steering-test-1": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "steering-target-2": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "ds-07": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "federation-test": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "test": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "steering-target-1": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "steering-target-4": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "steering-target-3": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "ds-02": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "ds-01": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "dns-test": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "https-additional": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "client-steering-test-1": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "client-steering-test-2": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "client-steering-target-1": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "client-steering-target-2": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "client-steering-target-3": {
+      "disabledLocations": [],
+      "isAvailable": true
+    },
+    "client-steering-target-4": {
+      "disabledLocations": [],
+      "isAvailable": true
+    }
+  }
+}

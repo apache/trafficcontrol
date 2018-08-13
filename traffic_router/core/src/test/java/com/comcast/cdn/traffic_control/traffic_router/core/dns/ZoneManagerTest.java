@@ -48,9 +48,9 @@ import org.xbill.DNS.Type;
 import org.xbill.DNS.Zone;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.TestBase;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
@@ -103,10 +103,9 @@ public class ZoneManagerTest {
 				continue;
 			}
 
-			final JsonNode domains = ds.getDomains();
+			final String domain = ds.getDomain();
 
-			for (final JsonNode currDomain : domains) {
-				final String domain = currDomain.asText();
+			if (domain != null ) {
 				final Name edgeName = new Name(ds.getRoutingName() + "." + domain + ".");
 
 				for (CacheLocation location : cacheRegister.getCacheLocations()) {

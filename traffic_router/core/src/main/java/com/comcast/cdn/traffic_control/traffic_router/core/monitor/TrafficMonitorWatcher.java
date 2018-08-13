@@ -15,6 +15,18 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.monitor;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler;
+import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.AbstractUpdatable;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.PeriodicResourceUpdater;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.log4j.Logger;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ApplicationContextEvent;
+import org.springframework.context.event.ContextClosedEvent;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -25,19 +37,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-
-import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.log4j.Logger;
-
-import com.comcast.cdn.traffic_control.traffic_router.core.config.ConfigHandler;
-import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.AbstractUpdatable;
-import com.comcast.cdn.traffic_control.traffic_router.core.util.PeriodicResourceUpdater;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ApplicationContextEvent;
-import org.springframework.context.event.ContextClosedEvent;
 
 @SuppressWarnings("PMD.TooManyFields")
 public class TrafficMonitorWatcher implements ApplicationListener<ApplicationContextEvent> {
@@ -61,10 +60,10 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 	private String monitorProperties;
 	private static boolean bootstrapped = false;
 	private static boolean localConfig = false;
-	private static List<String> onlineMonitors = new ArrayList<String>();
+	private static List<String> onlineMonitors = new ArrayList<>();
 	private static String[] hosts;
-	private static Object hostSync = new Object();
-	private static Object monitorSync = new Object();
+	private static final Object hostSync = new Object();
+	private static final Object monitorSync = new Object();
 
 	private PeriodicResourceUpdater crUpdater;
 	private PeriodicResourceUpdater stateUpdater;
@@ -109,11 +108,13 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 	@SuppressWarnings("PMD.CyclomaticComplexity")
 	public void init() {
 		final AbstractUpdatable crHandler = new AbstractUpdatable() {
+			private String compareSource;
 			@Override
 			public boolean update(final String configStr) {
+				LOGGER.info("UPDATE");
 				try {
 					try {
-						return configHandler.processConfig(configStr);
+						return configHandler.processConfig(configStr, compareSource );
 					} catch (JsonUtilsException e) {
 						LOGGER.warn(e, e);
 					}
@@ -126,8 +127,9 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 			public String toString() {return "config listener";}
 			@Override
 			public boolean noChange() {
+				LOGGER.info("NOCHANGE");
 				try {
-					configHandler.processConfig(null);
+					configHandler.processConfig(null,null);
 				} catch (Exception e) {
 					LOGGER.warn(e, e);
 				}
@@ -138,6 +140,7 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 			public void complete() {
 				if (!isLocalConfig() && !isBootstrapped()) {
 					setBootstrapped(true);
+					compareSource = null;
 				}
 			}
 
@@ -145,8 +148,15 @@ public class TrafficMonitorWatcher implements ApplicationListener<ApplicationCon
 			public void cancelUpdate() {
 				configHandler.cancelProcessConfig();
 			}
+
+			@Override
+			public void setCompareSource(final String compStr)
+			{
+				compareSource = compStr;
+			}
 		};
 
+		LOGGER.info("ready processConfig");
 		processConfig();
 
 		crUpdater = new PeriodicResourceUpdater(crHandler, new TrafficMonitorResourceUrl(this, configUrl), databasesDirectory.resolve(configFile).toString(), configRefreshPeriod, true);

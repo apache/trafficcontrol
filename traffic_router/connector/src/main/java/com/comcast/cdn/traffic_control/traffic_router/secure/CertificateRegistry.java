@@ -69,7 +69,7 @@ public class CertificateRegistry {
 	}
 
 	@SuppressWarnings("PMD.UseArrayListInsteadOfVector")
-	private static HandshakeData createDefaultSsl() {
+	public static HandshakeData createDefaultSsl() {
 		try {
 			final CertificateExtensions extensions = new CertificateExtensions();
 			final KeyUsageExtension keyUsageExtension = new KeyUsageExtension();

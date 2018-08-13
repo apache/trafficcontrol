@@ -329,7 +329,6 @@ public class NameServer {
 		}
 
 		Zone zone = incomingZone;
-
 		// this allows us to locate zones for which we are authoritative
 		if (zone == null || !qname.subdomain(zone.getOrigin())) {
 			zone = trafficRouterManager.getTrafficRouter().getZone(qname, qtype, clientAddress, dnssecRequest, builder);

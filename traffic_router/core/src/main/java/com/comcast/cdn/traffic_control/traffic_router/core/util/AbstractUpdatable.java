@@ -33,4 +33,6 @@ public abstract class AbstractUpdatable {
 		this.lastUpdated = lastUpdated;
 	}
 	public void cancelUpdate() {}
+
+	public void setCompareSource(final String cmpSrc) {}
 }

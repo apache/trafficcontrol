@@ -17,15 +17,12 @@ package com.comcast.cdn.traffic_control.traffic_router.core.dns;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouter;
 import com.comcast.cdn.traffic_control.traffic_router.core.router.TrafficRouterManager;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
-import com.comcast.cdn.traffic_control.traffic_router.core.dns.DNSAccessRecord;
-import com.comcast.cdn.traffic_control.traffic_router.core.dns.NameServer;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
 
 import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.xbill.DNS.*;

@@ -15,6 +15,9 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.config;
 
+import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtils;
+import com.comcast.cdn.traffic_control.traffic_router.core.util.JsonUtilsException;
 import com.comcast.cdn.traffic_control.traffic_router.shared.Certificate;
 import com.comcast.cdn.traffic_control.traffic_router.shared.CertificateData;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -23,7 +26,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -52,6 +57,18 @@ public class CertificateCheckerTest {
 
 	}
 
+	private List<DeliveryService> createDsList(final JsonNode deliveryServicesJson) throws JsonUtilsException {
+		final List<DeliveryService> dsList = new ArrayList<>();
+		Iterator<String> idIter = deliveryServicesJson.fieldNames();
+		while (idIter.hasNext()) {
+			String dsId = idIter.next();
+			DeliveryService deliveryService = new DeliveryService(dsId, JsonUtils.getJsonNode(deliveryServicesJson,
+					dsId));
+			dsList.add(deliveryService);
+		}
+		return dsList;
+	}
+
 	@Test
 	public void itReturnsFalseWhenDeliveryServiceNameIsNull() throws Exception {
 		final File file = new File("src/test/resources/deliveryServices_missingDSName.json");
@@ -60,7 +77,7 @@ public class CertificateCheckerTest {
 		CertificateChecker certificateChecker = new CertificateChecker();
 		certificateData.setDeliveryservice(null);
 
-		assertThat(certificateChecker.certificatesAreValid(certificateDataList, deliveryServicesJson), equalTo(false));
+		assertThat(certificateChecker.certificatesAreValid(certificateDataList, createDsList(deliveryServicesJson)), equalTo(false));
 	}
 
 	@Test
@@ -71,7 +88,7 @@ public class CertificateCheckerTest {
 		CertificateChecker certificateChecker = new CertificateChecker();
 		certificateData.setDeliveryservice("");
 
-		assertThat(certificateChecker.certificatesAreValid(certificateDataList, deliveryServicesJson), equalTo(false));
+		assertThat(certificateChecker.certificatesAreValid(certificateDataList, createDsList(deliveryServicesJson)), equalTo(false));
 	}
 
 	@Test
@@ -81,7 +98,7 @@ public class CertificateCheckerTest {
 		deliveryServicesJson = mapper.readTree(file);
 		CertificateChecker certificateChecker = new CertificateChecker();
 
-		assertThat(certificateChecker.certificatesAreValid(certificateDataList, deliveryServicesJson), equalTo(true));
+		assertThat(certificateChecker.certificatesAreValid(certificateDataList, createDsList(deliveryServicesJson)), equalTo(true));
 	}
 
 	@Test
@@ -91,6 +108,6 @@ public class CertificateCheckerTest {
 		final ObjectMapper mapper = new ObjectMapper();
 		deliveryServicesJson = mapper.readTree(file);
 
-		assertThat(new CertificateChecker().certificatesAreValid(certificateDataList, deliveryServicesJson), equalTo(false));
+		assertThat(new CertificateChecker().certificatesAreValid(certificateDataList, createDsList(deliveryServicesJson)), equalTo(false));
 	}
 }

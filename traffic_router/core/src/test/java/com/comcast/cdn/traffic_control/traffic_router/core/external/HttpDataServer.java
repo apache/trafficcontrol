@@ -41,6 +41,7 @@ public class HttpDataServer implements HttpHandler {
 	private boolean receivedCrConfig2Post = false;
 	private boolean receivedCrConfig3Post = false;
 	private boolean receivedCrConfig4Post = false;
+	private boolean receivedDsSnapPost = false;
 
 // Useful for producing an access log
 //	static {
@@ -81,22 +82,30 @@ public class HttpDataServer implements HttpHandler {
 						receivedCertificatesPost = true;
 					}
 
-					if (!receivedCrConfig2Post && "/crconfig-2".equals(httpExchange.getRequestURI().getPath())) {
+					if (!receivedCrConfig2Post && httpExchange.getRequestURI().getPath().contains("/crconfig-2")) {
 						receivedCrConfig2Post = true;
 						receivedCrConfig3Post = false;
 						receivedCrConfig4Post = false;
 					}
 
-					if (!receivedCrConfig3Post && "/crconfig-3".equals(httpExchange.getRequestURI().getPath())) {
+					if (!receivedCrConfig3Post && httpExchange.getRequestURI().getPath().contains("/crconfig-3")) {
 						receivedCrConfig2Post = false;
 						receivedCrConfig3Post = true;
 						receivedCrConfig4Post = false;
 					}
 
-					if (!receivedCrConfig4Post && "/crconfig-4".equals(httpExchange.getRequestURI().getPath())) {
+					if (!receivedCrConfig4Post && httpExchange.getRequestURI().getPath().contains("/crconfig-4")) {
 						receivedCrConfig2Post = false;
 						receivedCrConfig3Post = false;
 						receivedCrConfig4Post = true;
+					}
+
+					if (!receivedDsSnapPost && httpExchange.getRequestURI().getPath().contains("/crconfig-dssnap")) {
+						receivedCrConfig2Post = false;
+						receivedCrConfig3Post = false;
+						receivedCrConfig4Post = false;
+						receivedCertificatesPost = false;
+						receivedDsSnapPost = true;
 					}
 
 					try {
@@ -104,6 +113,7 @@ public class HttpDataServer implements HttpHandler {
 					} catch (IOException e) {
 						System.out.println(">>>>> failed acknowledging post");
 					}
+					System.out.println("Processed path: "+httpExchange.getRequestURI().getPath());
 					return;
 				}
 
@@ -149,6 +159,11 @@ public class HttpDataServer implements HttpHandler {
 
 				if (path.contains("CrConfig") && receivedCrConfig4Post) {
 					path = path.replace("CrConfig", "CrConfig4");
+				}
+
+				if (path.contains("publish") && receivedDsSnapPost) {
+					path = path.replace("publish", "publish/DsSnap");
+					System.out.println(path);
 				}
 
 				InputStream inputStream = getClass().getClassLoader().getResourceAsStream(path);

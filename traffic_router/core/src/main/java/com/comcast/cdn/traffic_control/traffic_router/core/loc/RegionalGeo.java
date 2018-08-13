@@ -16,7 +16,10 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.loc;
 
 import java.io.File;
-import java.util.*;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -27,7 +30,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.log4j.Logger;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.Cache;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.Cache;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.RegionalGeoResult.RegionalGeoResultType;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
@@ -227,8 +230,6 @@ public final class RegionalGeo {
                     whiteListRoot = parseWhiteListJson(whiteListJson);
                 }
 
-
-
                 // add the rule
                 if (!regionalGeo.addRule(dsvcId, urlRegex, postalsType, postals, whiteListRoot, redirectUrl, isSteeringDS)) {
                     LOGGER.error("RegionalGeo ERR: add rule failed on parsing json file");
@@ -270,7 +271,6 @@ public final class RegionalGeo {
         LOGGER.debug("RegionalGeo: create instance from new json");
         return true;
     }
-
 
     public static RegionalGeoResult enforce(final String dsvcId, final String url,
         final String ip, final String postalCode) {
@@ -314,9 +314,9 @@ public final class RegionalGeo {
             result.setType(ALLOWED);
         } else {
             // For a disallowed client, if alternateUrl starts with "http://" or "https://"
-            // just redirect the client to this url without any cache selection;
+            // just redirect the client to this url without any edge selection;
             // if alternateUrl only has path and file name like "/path/abc.html",
-            // then cache selection process will be needed, and hostname will be
+            // then edge selection process will be needed, and hostname will be
             // added to make it like "http://cache01.example.com/path/abc.html" later.
             if (alternateUrl.toLowerCase().startsWith(HTTP_SCHEME) || alternateUrl.toLowerCase().startsWith(HTTPS_SCHEME)) {
                 result.setUrl(alternateUrl);
@@ -329,7 +329,7 @@ public final class RegionalGeo {
                     redirectUrl = "/" + alternateUrl;
                 }
 
-                LOGGER.debug("RegionalGeo: alternate with cache url " + redirectUrl);
+                LOGGER.debug("RegionalGeo: alternate with edge url " + redirectUrl);
                 result.setUrl(redirectUrl);
                 result.setType(ALTERNATE_WITH_CACHE);
             }

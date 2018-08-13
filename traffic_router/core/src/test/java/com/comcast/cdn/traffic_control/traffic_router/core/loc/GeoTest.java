@@ -66,7 +66,7 @@ public class GeoTest {
 	public void testIps() {
 		try {
 			final String testips[][] = {
-					{"40.40.40.40","cache-group-1"}
+					{"40.40.40.40","edge-group-1"}
 			};
 			for(int i = 0; i < testips.length; i++) {
 				Geolocation location = maxmindGeolocationService.location(testips[i][0]);

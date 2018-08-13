@@ -70,31 +70,31 @@ public class RouterTest {
 
 	private String deliveryServiceId;
 	private String deliveryServiceDomain;
-	private List<String> validLocations = new ArrayList<>();
+	private final List<String> validLocations = new ArrayList<>();
 
 	private final String httpsOnlyId = "https-only-test";
-	private String httpsOnlyDomain = httpsOnlyId + cdnDomain;
-	private List<String> httpsOnlyLocations = new ArrayList<>();
+	private final String httpsOnlyDomain = httpsOnlyId + cdnDomain;
+	private final List<String> httpsOnlyLocations = new ArrayList<>();
 
 	private final String httpsNoCertsId = "https-nocert";
-	private String httpsNoCertsDomain = httpsNoCertsId + cdnDomain;
-	private List<String> httpsNoCertsLocations = new ArrayList<>();
+	private final String httpsNoCertsDomain = httpsNoCertsId + cdnDomain;
+	private final List<String> httpsNoCertsLocations = new ArrayList<>();
 
 	private final String httpAndHttpsId = "http-and-https-test";
-	private String httpAndHttpsDomain = httpAndHttpsId + cdnDomain;
-	private List<String> httpAndHttpsLocations = new ArrayList<>();
+	private final String httpAndHttpsDomain = httpAndHttpsId + cdnDomain;
+	private final List<String> httpAndHttpsLocations = new ArrayList<>();
 
 	private final String httpToHttpsId = "http-to-https-test";
-	private String httpToHttpsDomain = httpToHttpsId + cdnDomain;
-	private List<String> httpToHttpsLocations = new ArrayList<>();
+	private final String httpToHttpsDomain = httpToHttpsId + cdnDomain;
+	private final List<String> httpToHttpsLocations = new ArrayList<>();
 
 	private final String httpOnlyId = "http-only-test";
 	private final String httpOnlyDomain = httpOnlyId + cdnDomain;
-	private List<String> httpOnlyLocations = new ArrayList<>();
+	private final List<String> httpOnlyLocations = new ArrayList<>();
 
-	private String routerHttpPort = System.getProperty("routerHttpPort", "8888");
-	private String routerSecurePort = System.getProperty("routerSecurePort", "8443");
-	private String testHttpPort = System.getProperty("testHttpServerPort", "8889");
+	private final String routerHttpPort = System.getProperty("routerHttpPort", "8888");
+	private final String routerSecurePort = System.getProperty("routerSecurePort", "8443");
+	private final String testHttpPort = System.getProperty("testHttpServerPort", "8889");
 	private KeyStore trustStore;
 
 	@Before
@@ -414,6 +414,21 @@ public class RouterTest {
 
 	@Test
 	public void itRejectsCrConfigWithMissingCert() throws Exception {
+		/* Test summary
+		- Already on default crconfig from initialization
+		- Do resolve httpOnly and get 302
+		- Do resolve httpsNoCert and get 500+
+		- Switch to crconfig2
+		- Do resolve httpOnly and get 302
+		- Switch to crconfig3
+		- Do resolve httpOnly and get 302
+		- Do resolve httpsNoCert and get 500+
+		- Switch to crconfig4
+		- Switch to sslkeys-missing-1.json (get /certificates)
+		- Do resolve https-additional and get 302
+		- Do resolve httpsNoCerts and get 302
+		- Do resolve httpOnly and get 302
+		 */
 		HttpGet httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + httpOnlyId + ".bar");
 
@@ -454,15 +469,22 @@ public class RouterTest {
 		httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + httpOnlyId + ".bar");
 
-		// verify we do not yet use the new configuration
 		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
 			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
 			String location = response.getFirstHeader("Location").getValue();
 			assertThat(location, not(isOneOf(
-				"http://edge-cache-010.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
-				"http://edge-cache-011.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
-				"http://edge-cache-012.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78"
+					"http://edge-cache-010.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
+					"http://edge-cache-011.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78",
+					"http://edge-cache-012.http-only-test.thecdn.example.com:8090/stuff?fakeClientIpAddress=12.34.56.78"
 			)));
+		}
+
+		httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
+		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
+
+		// verify we do not yet use the new configuration
+		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(503));
 		}
 
 
@@ -516,26 +538,33 @@ public class RouterTest {
 		httpPost = new HttpPost("http://localhost:"+ testHttpPort + "/certificates");
 		httpClient.execute(httpPost).close();
 
-		httpClient = HttpClientBuilder.create()
+		/*httpClient = HttpClientBuilder.create()
 				.setSSLSocketFactory(new ClientSslSocketFactory("https-additional"))
 				.setSSLHostnameVerifier(new TestHostnameVerifier())
 				.disableRedirectHandling()
-				.build();
+				.build();*/
 		// Our initial test cr config data sets cert poller to 10 seconds
 		Thread.sleep(25000L);
 
+		httpClient = HttpClientBuilder.create()
+				.setSSLSocketFactory(new ClientSslSocketFactory("https-additional.thecdn.example.com"))
+				.setSSLHostnameVerifier(new TestHostnameVerifier())
+				.disableRedirectHandling()
+				.build();
 		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + "https-additional" + ".bar");
 
 		try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
-			int code = response.getStatusLine().getStatusCode();
-			assertThat("Expected an server error code! But got: "+code,
-					code, equalTo(302));
-		} catch (SSLHandshakeException e) {
-
+			assertThat(response.getStatusLine().getStatusCode(), equalTo(302));
+	    } catch (SSLHandshakeException e) {
 			fail(e.getMessage());
-		}
+	    }
 
+		httpClient = HttpClientBuilder.create()
+				.setSSLSocketFactory(new ClientSslSocketFactory(httpsNoCertsDomain))
+				.setSSLHostnameVerifier(new TestHostnameVerifier())
+				.disableRedirectHandling()
+				.build();
 		httpGet = new HttpGet("https://localhost:" + routerSecurePort + "/stuff?fakeClientIpAddress=12.34.56.78");
 		httpGet.addHeader("Host", "tr." + httpsNoCertsId + ".bar");
 
@@ -547,6 +576,8 @@ public class RouterTest {
 				"https://edge-cache-091.https-nocert.thecdn.example.com/stuff?fakeClientIpAddress=12.34.56.78",
 				"https://edge-cache-092.https-nocert.thecdn.example.com/stuff?fakeClientIpAddress=12.34.56.78"
 			));
+		} catch (SSLHandshakeException e) {
+			fail(e.getMessage());
 		}
 
 		httpGet = new HttpGet("http://localhost:" + routerHttpPort + "/stuff?fakeClientIpAddress=12.34.56.78");
@@ -577,10 +608,8 @@ public class RouterTest {
 			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
 
 			assertThat(entity.getContent(), not(nullValue()));
-			System.out.println(entity.getContent());
 
 			JsonNode json = objectMapper.readTree(entity.getContent());
-			System.out.println(json);
 
 			assertThat(json.has("location"), equalTo(true));
 			assertThat(json.get("location").asText(), isIn(validLocations));

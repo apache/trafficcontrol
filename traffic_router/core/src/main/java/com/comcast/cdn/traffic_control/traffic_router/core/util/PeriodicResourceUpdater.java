@@ -15,6 +15,14 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.util;
 
+import com.ning.http.client.AsyncCompletionHandler;
+import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.AsyncHttpClientConfig;
+import com.ning.http.client.Request;
+import com.ning.http.client.Response;
+import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,15 +40,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
-
-import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.AsyncHttpClient;
-import com.ning.http.client.AsyncHttpClientConfig;
-import com.ning.http.client.Request;
-import com.ning.http.client.Response;
 
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
@@ -163,6 +162,9 @@ public class PeriodicResourceUpdater {
 		try {
 			if (newDB != null && !filesEqual(existingDB, newDB)) {
 				listener.cancelUpdate();
+				if (existingDB.exists()) {
+					listener.setCompareSource(IOUtils.toString(new FileReader(existingDB)));
+				}
 				if (listener.update(newDB)) {
 					copyDatabase(existingDB, newDB);
 					LOGGER.info("updated " + existingDB.getAbsolutePath());
@@ -189,7 +191,7 @@ public class PeriodicResourceUpdater {
 	/**
 	 * Sets executorService.
 	 * 
-	 * @param executorService
+	 * @param es
 	 *            the executorService to set
 	 */
 	public void setExecutorService(final ScheduledExecutorService es) {

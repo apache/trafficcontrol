@@ -47,7 +47,7 @@ public class SteeringGeolocationComparator implements Comparator<SteeringResult>
             return 0;
         }
 
-        // same cache and origin locations, prefer lower geoOrder
+        // same edge and origin locations, prefer lower geoOrder
         if (cacheGeo1.equals(cacheGeo2) && originGeo1.equals(originGeo2)) {
             return Integer.compare(result1.getSteeringTarget().getGeoOrder(), result2.getSteeringTarget().getGeoOrder());
         }
@@ -61,7 +61,7 @@ public class SteeringGeolocationComparator implements Comparator<SteeringResult>
         final double totalDistance1 = distanceFromClientToCache1 + distanceFromCacheToOrigin1;
         final double totalDistance2 = distanceFromClientToCache2 + distanceFromCacheToOrigin2;
 
-        // different cache and origin locations, prefer shortest total distance
+        // different edge and origin locations, prefer shortest total distance
         if (totalDistance1 != totalDistance2) {
             // TODO: if the difference is smaller than a certain threshold/ratio, still prefer the closer edge even though distance is greater?
             return Double.compare(totalDistance1, totalDistance2);

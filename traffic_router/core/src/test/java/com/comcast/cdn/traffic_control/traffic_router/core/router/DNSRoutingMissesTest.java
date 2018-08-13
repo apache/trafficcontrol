@@ -15,8 +15,8 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.router;
 
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation;
-import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheRegister;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheLocation;
+import com.comcast.cdn.traffic_control.traffic_router.core.edge.CacheRegister;
 import com.comcast.cdn.traffic_control.traffic_router.core.ds.DeliveryService;
 import com.comcast.cdn.traffic_control.traffic_router.core.loc.FederationRegistry;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.DNSRequest;
@@ -51,11 +51,11 @@ public class DNSRoutingMissesTest {
 
     @Before
     public void before() throws Exception {
-        request = new DNSRequest();
+        Name name = Name.fromString("edge.foo-img.kabletown.com");
+        request = new DNSRequest("foo-img.kabletown.com", name, Type.A);
 
         request.setClientIP("192.168.34.56");
-        request.setHostname(Name.fromString("edge.foo-img.kabletown.com").relativize(Name.root).toString());
-        request.setQtype(Type.A);
+        request.setHostname(name.relativize(Name.root).toString());
 
         FederationRegistry federationRegistry = mock(FederationRegistry.class);
         when(federationRegistry.findInetRecords(anyString(), any(CidrAddress.class))).thenReturn(null);
@@ -121,7 +121,7 @@ public class DNSRoutingMissesTest {
         DeliveryService deliveryService = mock(DeliveryService.class);
         doReturn(true).when(deliveryService).isAvailable();
         when(deliveryService.getRoutingName()).thenReturn("edge");
-
+        when(deliveryService.isDns()).thenReturn(true);
         when(deliveryService.isCoverageZoneOnly()).thenReturn(true);
 
         doReturn(deliveryService).when(trafficRouter).selectDeliveryService(any(Request.class), anyBoolean());

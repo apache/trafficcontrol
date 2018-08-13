@@ -53,6 +53,7 @@ import static org.springframework.util.SocketUtils.findAvailableUdpPort;
 	DeliveryServicesTest.class,
 	LocationsTest.class,
 	RouterTest.class,
+	DsSnapTest.class,
 	StatsTest.class,
 	ZonesTest.class
 })
@@ -145,10 +146,10 @@ public class ExternalTestSuite {
 		LogManager.getRootLogger().setLevel(Level.INFO);
 
 		// This one test the actual war that is output by the build process
-		catalinaTrafficRouter = new CatalinaTrafficRouter("src/main/conf/server.xml", "target/ROOT");
+		//catalinaTrafficRouter = new CatalinaTrafficRouter("src/main/conf/server.xml", "target/ROOT");
 
 		// Uncomment this configuration for a lot more logging but could contain changes or temporary configuration which won't be part of the final build
-		//catalinaTrafficRouter = new CatalinaTrafficRouter("src/main/conf/server.xml", "src/main/webapp");
+		catalinaTrafficRouter = new CatalinaTrafficRouter("src/main/conf/server.xml", "src/main/webapp");
 		System.out.println("catalinaTrafficRouter: "+catalinaTrafficRouter.toString());
 		catalinaTrafficRouter.start();
 	}

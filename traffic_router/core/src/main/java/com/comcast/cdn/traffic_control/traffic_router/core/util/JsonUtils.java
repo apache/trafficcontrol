@@ -16,6 +16,7 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Iterator;
 
 public class JsonUtils {
 
@@ -123,8 +124,65 @@ public class JsonUtils {
         if (jsonNode == null || !jsonNode.has(key)) {
             throwException(key);
         }
-
         return jsonNode.get(key);
+    }
+
+    public static boolean equalSubtrees(final JsonNode root1, final JsonNode root2, final String key) throws JsonUtilsException {
+        if (root1 == null || root2 == null) {
+            throwException(key);
+        }
+
+        final JsonNode sub1 = root1.get(key);
+        final JsonNode sub2 = root2.get(key);
+
+        if ((sub1==null && sub2 !=null) || (sub1!=null && sub2==null)) {
+            return false;
+        }
+        if (sub1==null) {
+            return true;
+        }
+        return sub1.equals(sub2);
+    }
+
+    public static boolean equalSubtreesExcept(final JsonNode root1,
+                                              final JsonNode root2,
+                                              final String key,
+                                              final String exceptKey) throws JsonUtilsException {
+        return equalSubtreesExcept(root1, root2, key, exceptKey, null);
+    }
+    @SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
+    public static boolean equalSubtreesExcept(final JsonNode root1,
+                                              final JsonNode root2,
+                                              final String key,
+                                              final String exceptKey1,
+                                              final String exceptKey2) throws JsonUtilsException {
+        if (root1 == null || root2 == null) {
+            throwException(key);
+        }
+        final JsonNode sub1 = root1.get(key);
+        final JsonNode sub2 = root2.get(key);
+
+        if ((sub1 == null && sub2 != null) || (sub1 != null && sub2 == null)) {
+            return false;
+        }
+        if (sub1 == null) {
+            return true;
+        }
+        Iterator<String> fields = sub1.fieldNames();
+        while (fields.hasNext()) {
+            final String field = fields.next();
+            if (!(field.equals(exceptKey1) || field.equals(exceptKey2)) && !sub1.get(field).equals(sub2.get(field))) {
+                return false;
+            }
+        }
+        fields = sub2.fieldNames();
+        while (fields.hasNext()) {
+            final String field = fields.next();
+            if (!(field.equals(exceptKey1) || field.equals(exceptKey2)) && !sub1.has(field)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static void throwException(final String key) throws JsonUtilsException {
