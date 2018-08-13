@@ -16,7 +16,9 @@
 package com.comcast.cdn.traffic_control.traffic_router.core.cache;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -57,7 +59,7 @@ public class CacheLocation {
 	 *            the coordinates of this location
 	 */
 	public CacheLocation(final String id, final Geolocation geolocation) {
-		this(id, geolocation, null, true, null);
+		this(id, geolocation, null, true, new HashSet<>());
 	}
 
 	/**
@@ -86,7 +88,14 @@ public class CacheLocation {
 		this.backupCacheGroups = backupCacheGroups;
 		this.useClosestGeoOnBackupFailure = useClosestGeoOnBackupFailure;
 		this.enabledLocalizationMethods = enabledLocalizationMethods;
+		if (this.enabledLocalizationMethods.isEmpty()) {
+			this.enabledLocalizationMethods.addAll(Arrays.asList(LocalizationMethod.values()));
+		}
 		caches = new HashMap<String, Cache>();
+	}
+
+	public boolean isEnabledFor(final LocalizationMethod localizationMethod) {
+		return enabledLocalizationMethods.contains(localizationMethod);
 	}
 
 	/**
