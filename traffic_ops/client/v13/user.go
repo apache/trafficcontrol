@@ -29,7 +29,7 @@ func (to *Session) Users() ([]tc.User, error) {
 }
 
 func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
-	url := "/api/1.2/users.json"
+	url := apiBase + "/users.json"
 	resp, remoteAddr, err := to.request("GET", url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
