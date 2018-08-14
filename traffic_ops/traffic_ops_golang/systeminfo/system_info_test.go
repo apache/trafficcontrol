@@ -20,17 +20,17 @@ package systeminfo
  */
 
 import (
+	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
-	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
-
-	"encoding/json"
-
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
+
+	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func TestGetSystemInfo(t *testing.T) {
@@ -92,13 +92,21 @@ func TestGetSystemInfo(t *testing.T) {
 		)
 	}
 
-	mock.ExpectQuery("SELECT.*WHERE p.config_file='global'").WillReturnRows(rows)
-	sysinfo, err := getSystemInfo(db, auth.PrivLevelReadOnly, 20*time.Second)
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT.*WHERE p.config_file = 'global'").WillReturnRows(rows)
+
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTxx(dbCtx, nil)
 	if err != nil {
-		t.Errorf("getSystemInfo expected: nil error, actual: %v", err)
+		t.Fatalf("creating transaction: %v", err)
 	}
 
-	if len(sysinfo) != 2 {
-		t.Errorf("getSystemInfo expected: len(sysinfo) == 2, actual: %v", len(sysinfo))
+	sysinfo, err := getSystemInfo(tx, auth.PrivLevelReadOnly, 20*time.Second)
+	if err != nil {
+		t.Fatalf("getSystemInfo expected: nil error, actual: %v", err)
+	}
+
+	if len(sysinfo.ParametersNullable) != 2 {
+		t.Fatalf("getSystemInfo expected: len(sysinfo) == 2, actual: %v", len(sysinfo.ParametersNullable))
 	}
 }

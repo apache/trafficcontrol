@@ -20,9 +20,11 @@ package crconfig
  */
 
 import (
+	"context"
 	"math/rand"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
@@ -111,10 +113,19 @@ func TestGetServerParams(t *testing.T) {
 
 	cdn := "mycdn"
 
+	mock.ExpectBegin()
 	expected := ExpectedGetServerParams()
 	MockGetServerParams(mock, expected, cdn)
+	mock.ExpectCommit()
 
-	actual, err := getServerParams(cdn, db)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actual, err := getServerParams(cdn, tx)
 	if err != nil {
 		t.Fatalf("getServerParams expected: nil error, actual: %v", err)
 	}
@@ -166,13 +177,22 @@ func TestGetAllServers(t *testing.T) {
 
 	cdn := "mycdn"
 
+	mock.ExpectBegin()
 	getServerParamsExpected := ExpectedGetServerParams()
 	MockGetServerParams(mock, getServerParamsExpected, cdn)
 
 	expected := ExpectedGetAllServers(getServerParamsExpected)
 	MockGetAllServers(mock, expected, cdn)
+	mock.ExpectCommit()
 
-	actual, err := getAllServers(cdn, db)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actual, err := getAllServers(cdn, tx)
 
 	if err != nil {
 		t.Fatalf("getAllServers expected: nil error, actual: %v", err)
@@ -220,10 +240,19 @@ func TestGetServerDSNames(t *testing.T) {
 
 	cdn := "mycdn"
 
+	mock.ExpectBegin()
 	expected := ExpectedGetServerDSNames()
 	MockGetServerDSNames(mock, expected, cdn)
+	mock.ExpectCommit()
 
-	actual, err := getServerDSNames(cdn, db)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actual, err := getServerDSNames(cdn, tx)
 
 	if err != nil {
 		t.Fatalf("getServerDSNames expected: nil error, actual: %v", err)
@@ -276,13 +305,22 @@ func TestGetServerDSes(t *testing.T) {
 	cdn := "mycdn"
 	domain := "mydomain"
 
+	mock.ExpectBegin()
 	expectedGetServerDSNames := ExpectedGetServerDSNames()
 	MockGetServerDSNames(mock, expectedGetServerDSNames, cdn)
 
 	expected := ExpectedGetServerDSes(expectedGetServerDSNames)
 	MockGetServerDSes(mock, expected, cdn)
+	mock.ExpectCommit()
 
-	actual, err := getServerDSes(cdn, db, domain)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actual, err := getServerDSes(cdn, tx, domain)
 
 	if err != nil {
 		t.Fatalf("getServerDSes expected: nil error, actual: %v", err)
@@ -312,10 +350,19 @@ func TestGetCDNInfo(t *testing.T) {
 
 	cdn := "mycdn"
 
+	mock.ExpectBegin()
 	expectedDomain, expectedDNSSECEnabled := ExpectedGetCDNInfo()
 	MockGetCDNInfo(mock, expectedDomain, expectedDNSSECEnabled, cdn)
+	mock.ExpectCommit()
 
-	actualDomain, actualDNSSECEnabled, err := getCDNInfo(cdn, db)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actualDomain, actualDNSSECEnabled, err := getCDNInfo(cdn, tx)
 	if err != nil {
 		t.Fatalf("getCDNInfo expected: nil error, actual: %v", err)
 	}
@@ -347,10 +394,19 @@ func TestGetCDNNameFromID(t *testing.T) {
 
 	cdnID := 42
 
+	mock.ExpectBegin()
 	expected := ExpectedGetCDNNameFromID()
 	MockGetCDNNameFromID(mock, expected, cdnID)
+	mock.ExpectCommit()
 
-	actual, exists, err := getCDNNameFromID(cdnID, db)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actual, exists, err := getCDNNameFromID(cdnID, tx)
 	if err != nil {
 		t.Fatalf("getCDNNameFromID expected: nil error, actual: %v", err)
 	}

@@ -20,6 +20,7 @@ package crconfig
  */
 
 import (
+	"context"
 	"database/sql/driver"
 	"encoding/json"
 	"reflect"
@@ -52,13 +53,23 @@ func TestGetSnapshot(t *testing.T) {
 
 	crc := &tc.CRConfig{}
 	crc.Stats.CDNName = &cdn
+
+	mock.ExpectBegin()
 	expected, err := ExpectedGetSnapshot(crc)
 	if err != nil {
 		t.Fatalf("GetSnapshot creating expected err expected: nil, actual: %v", err)
 	}
 	MockGetSnapshot(mock, expected, cdn)
+	mock.ExpectCommit()
 
-	actual, exists, err := GetSnapshot(db, cdn)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actual, exists, err := GetSnapshot(tx, cdn)
 	if err != nil {
 		t.Fatalf("GetSnapshot err expected: nil, actual: %v", err)
 	}
@@ -102,13 +113,22 @@ func TestSnapshot(t *testing.T) {
 	crc := &tc.CRConfig{}
 	crc.Stats.CDNName = &cdn
 
+	mock.ExpectBegin()
 	expected, err := ExpectedGetSnapshot(crc)
 	if err != nil {
 		t.Fatalf("GetSnapshot creating expected err expected: nil, actual: %v", err)
 	}
 	MockSnapshot(mock, expected, cdn)
+	mock.ExpectCommit()
 
-	if err := Snapshot(db, crc); err != nil {
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	if err := Snapshot(tx, crc); err != nil {
 		t.Fatalf("GetSnapshot err expected: nil, actual: %v", err)
 	}
 }
