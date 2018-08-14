@@ -38,7 +38,8 @@ function installDnsSec {
 	local dnssec="$dnssectools-$dnssecversion"
 	local dnssecurl=http://www.verisignlabs.com/dnssec-tools/packages/old-releases
 
-	curl -o "$dnssec".tar.gz "$dnssecurl/$dnssec".tar.gz || \
+	echo "Downloading $dnssec library..."
+	curl -fo "$dnssec".tar.gz "$dnssecurl/$dnssec".tar.gz || \
 		{ echo "Could not download required $dnssec library: $?"; exit 1; }
 	tar xzvf "$dnssec".tar.gz ||  \
 		{ echo "Could not extract required $dnssec library: $?"; exit 1; }

@@ -54,7 +54,9 @@ function initBuildArea() {
         export VERSION=$TOMCAT_VERSION
         export RELEASE=$TOMCAT_RELEASE
 
-        wget http://archive.apache.org/dist/tomcat/tomcat-8/v$VERSION.$RELEASE/bin/apache-tomcat-$VERSION.$RELEASE.tar.gz -O "$RPMBUILD"/SOURCES/apache-tomcat-$VERSION.$RELEASE.tar.gz
+        echo "Downloading Tomcat $VERSION.$RELEASE..."
+        curl -fo "$RPMBUILD"/SOURCES/apache-tomcat-$VERSION.$RELEASE.tar.gz http://archive.apache.org/dist/tomcat/tomcat-8/v$VERSION.$RELEASE/bin/apache-tomcat-$VERSION.$RELEASE.tar.gz || \
+        { echo "Could not download Tomcat $VERSION.$RELEASE: $?"; exit 1; }
 
         cp "$TR_DIR/tomcat-rpm/tomcat.service" "$RPMBUILD/SOURCES/" || { echo "Could not copy source files: $?"; exit 1; }
         cp "$TR_DIR/tomcat-rpm/tomcat.spec" "$RPMBUILD/SPECS/" || { echo "Could not copy spec files: $?"; exit 1; }
