@@ -292,7 +292,8 @@ func getDeliveryServiceTypes(crc CRConfig) (map[tc.DeliveryServiceName]tc.DSType
 		dsTypeStr := dsData.Matchsets[0].Protocol
 		dsType := tc.DSTypeCategoryFromString(dsTypeStr)
 		if dsType == tc.DSTypeCategoryInvalid {
-			return nil, fmt.Errorf("CRConfig unknowng protocol for '%s': '%s'", dsName, dsTypeStr)
+			log.Warnln("CRConfig invalid matchset protocol for delivery service '" + string(dsName) + "' matchset protocol '" + dsTypeStr + "'; skipping")
+			continue
 		}
 		dsTypes[dsName] = dsType
 	}
