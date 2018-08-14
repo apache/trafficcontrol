@@ -32,7 +32,7 @@ RUN	yum -y install \
 ### traffic_router specific requirements
 RUN	yum -y install \
 		which  \
-                wget && \
+                curl && \
 	yum -y clean all
 
 
