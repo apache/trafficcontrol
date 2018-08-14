@@ -29,9 +29,10 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/traffic_monitor/datareq"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
-	to "github.com/apache/trafficcontrol/traffic_ops/client"
+	to "github.com/apache/trafficcontrol/traffic_ops/client/v13"
 )
 
 const RequestTimeout = time.Second * time.Duration(30)
@@ -194,10 +195,10 @@ type CRConfigOrError struct {
 	Err      error
 }
 
-func GetMonitors(toClient *to.Session, includeOffline bool) ([]tc.Server, error) {
+func GetMonitors(toClient *to.Session, includeOffline bool) ([]v13.Server, error) {
 	trafficMonitorType := "RASCAL"
 	monitorTypeQuery := map[string][]string{"type": []string{trafficMonitorType}}
-	servers, err := toClient.ServersByType(monitorTypeQuery)
+	servers, _, err := toClient.GetServersByType(monitorTypeQuery)
 	if err != nil {
 		return nil, fmt.Errorf("getting monitors from Traffic Ops: %v", err)
 	}
@@ -260,8 +261,8 @@ func AllValidator(
 }
 
 // FilterOfflines returns only servers which are REPORTED or ONLINE
-func FilterOfflines(servers []tc.Server) []tc.Server {
-	onlineServers := []tc.Server{}
+func FilterOfflines(servers []v13.Server) []v13.Server {
+	onlineServers := []v13.Server{}
 	for _, server := range servers {
 		status := tc.CacheStatusFromString(server.Status)
 		if status != tc.CacheStatusOnline && status != tc.CacheStatusReported {
@@ -272,7 +273,7 @@ func FilterOfflines(servers []tc.Server) []tc.Server {
 	return onlineServers
 }
 
-func GetCDNs(servers []tc.Server) map[tc.CDNName]struct{} {
+func GetCDNs(servers []v13.Server) map[tc.CDNName]struct{} {
 	cdns := map[tc.CDNName]struct{}{}
 	for _, server := range servers {
 		cdns[tc.CDNName(server.CDNName)] = struct{}{}
@@ -283,7 +284,7 @@ func GetCDNs(servers []tc.Server) map[tc.CDNName]struct{} {
 func GetCRConfigs(cdns map[tc.CDNName]struct{}, toClient *to.Session) map[tc.CDNName]CRConfigOrError {
 	crConfigs := map[tc.CDNName]CRConfigOrError{}
 	for cdn, _ := range cdns {
-		crConfigBytes, err := toClient.CRConfigRaw(string(cdn))
+		crConfigBytes, _, err := toClient.GetCRConfig(string(cdn))
 		if err != nil {
 			crConfigs[cdn] = CRConfigOrError{Err: fmt.Errorf("getting CRConfig: %v", err)}
 			continue
