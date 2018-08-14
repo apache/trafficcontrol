@@ -60,13 +60,13 @@ func TestAvailableStatusesCopy(t *testing.T) {
 		b := a.Copy()
 
 		if !reflect.DeepEqual(a, b) {
-			t.Errorf("expected a and b DeepEqual, actual copied map not equal", a, b)
+			t.Errorf("expected a and b DeepEqual, actual copied map not equal: a: %v b: %v", a, b)
 		}
 
 		// verify a and b don't point to the same map
 		a[tc.CacheName(randStr())] = AvailableStatus{Available: randBool(), Status: randStr()}
 		if reflect.DeepEqual(a, b) {
-			t.Errorf("expected a != b, actual a and b point to the same map", a)
+			t.Errorf("expected a != b, actual a and b point to the same map: a: %+v", a)
 		}
 	}
 }
@@ -130,7 +130,7 @@ func randStatCacheStats() dsdata.StatCacheStats {
 		Tps3xx:      dsdata.StatFloat{Value: rand.Float64(), StatMeta: randStatMeta()},
 		Tps2xx:      dsdata.StatFloat{Value: rand.Float64(), StatMeta: randStatMeta()},
 		ErrorString: dsdata.StatString{Value: randStr(), StatMeta: randStatMeta()},
-		TpsTotal:    dsdata.StatInt{Value: rand.Int63(), StatMeta: randStatMeta()},
+		TpsTotal:    dsdata.StatFloat{Value: rand.Float64(), StatMeta: randStatMeta()},
 	}
 }
 
@@ -215,7 +215,6 @@ func randResult() Result {
 		PrecomputedData: randPrecomputedData(),
 		Available:       randBool(),
 	}
-
 }
 
 func randResultSlice() []Result {
@@ -236,6 +235,64 @@ func randResultHistory() ResultHistory {
 	return a
 }
 
+func randResultStatVal() ResultStatVal {
+	return ResultStatVal{
+		Val:  uint64(rand.Int63()),
+		Time: time.Now(),
+		Span: uint64(rand.Int63()),
+	}
+}
+
+func randResultStatValHistory() ResultStatValHistory {
+	a := ResultStatValHistory{}
+	num := 5
+	numSlice := 5
+	for i := 0; i < num; i++ {
+		cacheName := randStr()
+		for j := 0; j < numSlice; j++ {
+			a[cacheName] = append(a[cacheName], randResultStatVal())
+		}
+	}
+	return a
+}
+
+func randResultStatHistory() ResultStatHistory {
+	hist := ResultStatHistory{}
+
+	num := 5
+	for i := 0; i < num; i++ {
+		hist[tc.CacheName(randStr())] = randResultStatValHistory()
+	}
+	return hist
+}
+
+func randResultInfoHistory() ResultInfoHistory {
+	// type ResultInfoHistory map[tc.CacheName][]ResultInfo
+	hist := ResultInfoHistory{}
+
+	num := 5
+	infNum := 5
+	for i := 0; i < num; i++ {
+		cacheName := tc.CacheName(randStr())
+		for j := 0; j < infNum; j++ {
+			hist[cacheName] = append(hist[cacheName], randResultInfo())
+		}
+	}
+	return hist
+}
+
+func randResultInfo() ResultInfo {
+	return ResultInfo{
+		ID:          tc.CacheName(randStr()),
+		Error:       fmt.Errorf(randStr()),
+		Time:        time.Now(),
+		RequestTime: time.Millisecond * time.Duration(rand.Int()),
+		Vitals:      randVitals(),
+		PollID:      uint64(rand.Int63()),
+		Available:   randBool(),
+	}
+}
+
 func TestResultHistoryCopy(t *testing.T) {
 	num := 5
 	for i := 0; i < num; i++ {
@@ -243,13 +300,13 @@ func TestResultHistoryCopy(t *testing.T) {
 		b := a.Copy()
 
 		if !reflect.DeepEqual(a, b) {
-			t.Errorf("expected a and b DeepEqual, actual copied map not equal", a, b)
+			t.Errorf("expected a and b DeepEqual, actual copied map not equal: a: %+v b: %+v", a, b)
 		}
 
 		// verify a and b don't point to the same map
 		a[tc.CacheName(randStr())] = randResultSlice()
 		if reflect.DeepEqual(a, b) {
-			t.Errorf("expected a != b, actual a and b point to the same map", a)
+			t.Errorf("expected a != b, actual a and b point to the same map: %+v", a)
 		}
 	}
 }

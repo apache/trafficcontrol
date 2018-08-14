@@ -292,7 +292,7 @@ func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime t
 	statDecoder, ok := StatsTypeDecoders[format]
 	if !ok {
 		log.Errorf("Handler cache '%s' stat type '%s' not found! Returning handle error for this cache poll.\n", id, format)
-		result.Error = fmt.Errorf("handler stat type %s missing")
+		result.Error = fmt.Errorf("handler stat type %s missing", format)
 		handler.resultChan <- result
 		return
 	}
