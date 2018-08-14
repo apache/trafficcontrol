@@ -20,9 +20,11 @@ package riaksvc
  */
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/basho/riak-go-client"
 	"github.com/jmoiron/sqlx"
@@ -147,11 +149,22 @@ func TestGetRiakCluster(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	rows1 := sqlmock.NewRows([]string{"s.host_name", "s.domain_name"})
-	rows1.AddRow("www", "devnull.com")
+	mock.ExpectBegin()
+	rows1 := sqlmock.NewRows([]string{"fqdn"})
+	rows1.AddRow("www.devnull.com")
+
+	mock.ExpectQuery("SELECT").WillReturnError(errors.New("foo"))
+
 	mock.ExpectQuery("SELECT").WillReturnRows(rows1)
 
-	if _, err := GetRiakCluster(db.DB, nil); err == nil {
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTxx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	if _, err := GetRiakClusterTx(tx.Tx, nil); err == nil {
 		t.Errorf("expected an error due to nil RiakAuthoptions in the config but, go no error.")
 	}
 
@@ -161,14 +174,14 @@ func TestGetRiakCluster(t *testing.T) {
 		TlsConfig: &tls.Config{},
 	}
 
-	if _, err := GetRiakCluster(db.DB, &authOptions); err != nil {
+	if _, err := GetRiakClusterTx(tx.Tx, &authOptions); err != nil {
 		t.Errorf("expected no errors, actual: %s.", err)
 	}
 
 	rows2 := sqlmock.NewRows([]string{"s.host_name", "s.domain_name"})
 	mock.ExpectQuery("SELECT").WillReturnRows(rows2)
 
-	if _, err := GetRiakCluster(db.DB, &authOptions); err == nil {
+	if _, err := GetRiakClusterTx(tx.Tx, &authOptions); err == nil {
 		t.Errorf("expected an error due to no available riak servers.")
 	}
 }

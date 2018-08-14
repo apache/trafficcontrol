@@ -20,8 +20,10 @@ package crconfig
  */
 
 import (
+	"context"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
@@ -56,6 +58,10 @@ func ExpectedMakeLocations() (map[string]tc.CRConfigLatitudeLongitude, map[strin
 }
 
 func MockMakeLocations(mock sqlmock.Sqlmock, expectedEdgeLocs map[string]tc.CRConfigLatitudeLongitude, expectedRouterLocs map[string]tc.CRConfigLatitudeLongitude, cdn string) {
+
+	fallbackRows := sqlmock.NewRows([]string{"primary_cg", "name"})
+	mock.ExpectQuery("SELECT").WillReturnRows(fallbackRows)
+
 	rows := sqlmock.NewRows([]string{"name", "id", "type", "latitude", "longitude", "fallback_to_closest", "localization_methods"})
 	for s, l := range expectedEdgeLocs {
 		rows = rows.AddRow(s, 1, EdgeTypePrefix, l.Lat, l.Lon, false, []byte("{CZ}"))
@@ -63,12 +69,8 @@ func MockMakeLocations(mock sqlmock.Sqlmock, expectedEdgeLocs map[string]tc.CRCo
 	for s, l := range expectedRouterLocs {
 		rows = rows.AddRow(s, 1, RouterTypeName, l.Lat, l.Lon, false, nil)
 	}
-	mock.ExpectQuery("select").WithArgs(cdn).WillReturnRows(rows)
 
-	fallbackRows := sqlmock.NewRows([]string{"name"})
-	for range expectedEdgeLocs {
-		mock.ExpectQuery("select").WithArgs(1).WillReturnRows(fallbackRows)
-	}
+	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 }
 
 func TestMakeLocations(t *testing.T) {
@@ -80,10 +82,19 @@ func TestMakeLocations(t *testing.T) {
 
 	cdn := "mycdn"
 
+	mock.ExpectBegin()
 	expectedEdgeLocs, expectedRouterLocs := ExpectedMakeLocations()
 	MockMakeLocations(mock, expectedEdgeLocs, expectedRouterLocs, cdn)
+	mock.ExpectCommit()
 
-	actualEdgeLocs, actualRouterLocs, err := makeLocations(cdn, db)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actualEdgeLocs, actualRouterLocs, err := makeLocations(cdn, tx)
 	if err != nil {
 		t.Fatalf("makeLocations expected: nil error, actual: %v", err)
 	}

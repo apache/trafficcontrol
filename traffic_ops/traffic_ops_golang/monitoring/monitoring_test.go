@@ -1,4 +1,4 @@
-package main
+package monitoring
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,9 +20,11 @@ package main
  */
 
 import (
+	"context"
 	"reflect"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -75,6 +77,7 @@ func TestGetMonitoringServers(t *testing.T) {
 		Profile: "routerProfile",
 	}
 
+	mock.ExpectBegin()
 	rows := sqlmock.NewRows([]string{"hostName", "fqdn", "status", "cachegroup", "port", "ip", "ip6", "profile", "interfaceName", "type", "hashId"})
 	rows = rows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, monitor.IP, monitor.IP6, monitor.Profile, "noInterface", MonitorType, "noHash")
 	rows = rows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, cache.IP, cache.IP6, cache.Profile, cache.InterfaceName, cache.Type, cache.HashID)
@@ -82,7 +85,13 @@ func TestGetMonitoringServers(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 
-	monitors, caches, routers, err := getMonitoringServers(db, cdn)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTxx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+
+	monitors, caches, routers, err := getMonitoringServers(tx.Tx, cdn)
 	if err != nil {
 		t.Errorf("getMonitoringServers expected: nil error, actual: %v", err)
 	}
@@ -136,12 +145,19 @@ func TestGetCachegroups(t *testing.T) {
 		},
 	}
 
+	mock.ExpectBegin()
 	rows := sqlmock.NewRows([]string{"name", "latitude", "longitude"})
 	rows = rows.AddRow(cachegroup.Name, cachegroup.Coordinates.Latitude, cachegroup.Coordinates.Longitude)
 
 	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 
-	sqlCachegroups, err := getCachegroups(db, cdn)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTxx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+
+	sqlCachegroups, err := getCachegroups(tx.Tx, cdn)
 	if err != nil {
 		t.Errorf("getCachegroups expected: nil error, actual: %v", err)
 	}
@@ -294,6 +310,7 @@ func TestGetProfiles(t *testing.T) {
 		},
 	}
 
+	mock.ExpectBegin()
 	rows := sqlmock.NewRows([]string{"profile", "name", "value"})
 	for _, profile := range profiles {
 		for paramName, paramVal := range profile.Parameters {
@@ -308,7 +325,13 @@ func TestGetProfiles(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").WithArgs(pq.Array(profileNames), CacheMonitorConfigFile).WillReturnRows(rows)
 
-	sqlProfiles, err := getProfiles(db, caches, routers)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTxx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+
+	sqlProfiles, err := getProfiles(tx.Tx, caches, routers)
 	if err != nil {
 		t.Errorf("getProfiles expected: nil error, actual: %v", err)
 	}
@@ -365,6 +388,7 @@ func TestGetDeliveryServices(t *testing.T) {
 	deliveryservices := []DeliveryService{deliveryservice}
 	routers := []Router{router}
 
+	mock.ExpectBegin()
 	rows := sqlmock.NewRows([]string{"xml_id", "global_max_tps", "global_max_mbps"})
 	for _, deliveryservice := range deliveryservices {
 		rows = rows.AddRow(deliveryservice.XMLID, deliveryservice.TotalTPSThreshold, deliveryservice.TotalKBPSThreshold/KilobitsPerMegabit)
@@ -374,7 +398,13 @@ func TestGetDeliveryServices(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").WithArgs(pq.Array(profileNames)).WillReturnRows(rows)
 
-	sqlDeliveryservices, err := getDeliveryServices(db, routers)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTxx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+
+	sqlDeliveryservices, err := getDeliveryServices(tx.Tx, routers)
 	if err != nil {
 		t.Errorf("getProfiles expected: nil error, actual: %v", err)
 	}
@@ -410,6 +440,7 @@ func TestGetConfig(t *testing.T) {
 		"name1": "val1",
 	}
 
+	mock.ExpectBegin()
 	rows := sqlmock.NewRows([]string{"name", "value"})
 	for name, val := range config {
 		rows = rows.AddRow(name, val)
@@ -417,7 +448,13 @@ func TestGetConfig(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 
-	sqlConfig, err := getConfig(db)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTxx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+
+	sqlConfig, err := getConfig(tx.Tx)
 	if err != nil {
 		t.Errorf("getProfiles expected: nil error, actual: %v", err)
 	}
@@ -444,6 +481,7 @@ func TestGetMonitoringJSON(t *testing.T) {
 
 	cdn := "mycdn"
 
+	mock.ExpectBegin()
 	{
 		//
 		// getMonitoringServers
@@ -615,39 +653,45 @@ func TestGetMonitoringJSON(t *testing.T) {
 		resp.Response.Config = config
 	}
 
-	sqlResp, err, errType := getMonitoringJSON(cdn, db)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTxx(dbCtx, nil)
 	if err != nil {
-		t.Errorf("getMonitoringJSON expected: nil error, actual: %v with error type: %s", err, errType.String())
+		t.Fatalf("creating transaction: %v", err)
+	}
+
+	sqlResp, err := getMonitoringJSON(tx.Tx, cdn)
+	if err != nil {
+		t.Errorf("getMonitoringJSON expected: nil error, actual: %v", err)
 	}
 
 	resp.Response.TrafficServers = sortCaches(resp.Response.TrafficServers)
-	sqlResp.Response.TrafficServers = sortCaches(sqlResp.Response.TrafficServers)
+	sqlResp.TrafficServers = sortCaches(sqlResp.TrafficServers)
 	resp.Response.TrafficMonitors = sortMonitors(resp.Response.TrafficMonitors)
-	sqlResp.Response.TrafficMonitors = sortMonitors(sqlResp.Response.TrafficMonitors)
+	sqlResp.TrafficMonitors = sortMonitors(sqlResp.TrafficMonitors)
 	resp.Response.Cachegroups = sortCachegroups(resp.Response.Cachegroups)
-	sqlResp.Response.Cachegroups = sortCachegroups(sqlResp.Response.Cachegroups)
+	sqlResp.Cachegroups = sortCachegroups(sqlResp.Cachegroups)
 	resp.Response.Profiles = sortProfiles(resp.Response.Profiles)
-	sqlResp.Response.Profiles = sortProfiles(sqlResp.Response.Profiles)
+	sqlResp.Profiles = sortProfiles(sqlResp.Profiles)
 	resp.Response.DeliveryServices = sortDeliveryServices(resp.Response.DeliveryServices)
-	sqlResp.Response.DeliveryServices = sortDeliveryServices(sqlResp.Response.DeliveryServices)
+	sqlResp.DeliveryServices = sortDeliveryServices(sqlResp.DeliveryServices)
 
-	if !reflect.DeepEqual(sqlResp.Response.TrafficServers, resp.Response.TrafficServers) {
-		t.Errorf("getMonitoringJSON expected TrafficServers: %+v actual: %+v", resp.Response.TrafficServers, sqlResp.Response.TrafficServers)
+	if !reflect.DeepEqual(sqlResp.TrafficServers, resp.Response.TrafficServers) {
+		t.Errorf("getMonitoringJSON expected TrafficServers: %+v actual: %+v", resp.Response.TrafficServers, sqlResp.TrafficServers)
 	}
-	if !reflect.DeepEqual(sqlResp.Response.TrafficMonitors, resp.Response.TrafficMonitors) {
-		t.Errorf("getMonitoringJSON expected TrafficMonitors: %+v actual: %+v", resp.Response.TrafficMonitors, sqlResp.Response.TrafficMonitors)
+	if !reflect.DeepEqual(sqlResp.TrafficMonitors, resp.Response.TrafficMonitors) {
+		t.Errorf("getMonitoringJSON expected TrafficMonitors: %+v actual: %+v", resp.Response.TrafficMonitors, sqlResp.TrafficMonitors)
 	}
-	if !reflect.DeepEqual(sqlResp.Response.Cachegroups, resp.Response.Cachegroups) {
-		t.Errorf("getMonitoringJSON expected Cachegroups: %+v actual: %+v", resp.Response.Cachegroups, sqlResp.Response.Cachegroups)
+	if !reflect.DeepEqual(sqlResp.Cachegroups, resp.Response.Cachegroups) {
+		t.Errorf("getMonitoringJSON expected Cachegroups: %+v actual: %+v", resp.Response.Cachegroups, sqlResp.Cachegroups)
 	}
-	if !reflect.DeepEqual(sqlResp.Response.Profiles, resp.Response.Profiles) {
-		t.Errorf("getMonitoringJSON expected Profiles: %+v actual: %+v", resp.Response.Profiles, sqlResp.Response.Profiles)
+	if !reflect.DeepEqual(sqlResp.Profiles, resp.Response.Profiles) {
+		t.Errorf("getMonitoringJSON expected Profiles: %+v actual: %+v", resp.Response.Profiles, sqlResp.Profiles)
 	}
-	if !reflect.DeepEqual(sqlResp.Response.DeliveryServices, resp.Response.DeliveryServices) {
-		t.Errorf("getMonitoringJSON expected DeliveryServices: %+v actual: %+v", resp.Response.DeliveryServices, sqlResp.Response.DeliveryServices)
+	if !reflect.DeepEqual(sqlResp.DeliveryServices, resp.Response.DeliveryServices) {
+		t.Errorf("getMonitoringJSON expected DeliveryServices: %+v actual: %+v", resp.Response.DeliveryServices, sqlResp.DeliveryServices)
 	}
-	if !reflect.DeepEqual(sqlResp.Response.Config, resp.Response.Config) {
-		t.Errorf("getMonitoringJSON expected Config: %+v actual: %+v", resp.Response.Config, sqlResp.Response.Config)
+	if !reflect.DeepEqual(sqlResp.Config, resp.Response.Config) {
+		t.Errorf("getMonitoringJSON expected Config: %+v actual: %+v", resp.Response.Config, sqlResp.Config)
 	}
 
 }

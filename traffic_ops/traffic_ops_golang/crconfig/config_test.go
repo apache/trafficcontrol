@@ -20,9 +20,11 @@ package crconfig
  */
 
 import (
+	"context"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -54,11 +56,19 @@ func TestGetConfigParams(t *testing.T) {
 
 	cdn := "mycdn"
 	domain := "mycdn.invalid"
-
+	mock.ExpectBegin()
 	expected := ExpectedGetConfigParams(domain)
 	MockGetConfigParams(mock, expected, cdn)
+	mock.ExpectCommit()
 
-	actual, err := getConfigParams(cdn, db)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actual, err := getConfigParams(cdn, tx)
 	if err != nil {
 		t.Fatalf("getConfigParams err expected: nil, actual: %v", err)
 	}
@@ -107,12 +117,21 @@ func TestMakeCRConfigConfig(t *testing.T) {
 	domain := "mycdn.invalid"
 	dnssecEnabled := true
 
+	mock.ExpectBegin()
 	expectedGetConfigParams := ExpectedGetConfigParams(domain)
 	MockGetConfigParams(mock, expectedGetConfigParams, cdn)
 
 	expected := ExpectedMakeCRConfigConfig(expectedGetConfigParams, dnssecEnabled)
+	mock.ExpectCommit()
 
-	actual, err := makeCRConfigConfig(cdn, db, dnssecEnabled, domain)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actual, err := makeCRConfigConfig(cdn, tx, dnssecEnabled, domain)
 
 	if err != nil {
 		t.Fatalf("makeCRConfigConfig err expected: nil, actual: %v", err)

@@ -20,8 +20,10 @@ package server
  */
 
 import (
+	"context"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 
@@ -85,7 +87,14 @@ func TestAssignDsesToServer(t *testing.T) {
 	mock.ExpectExec("DELETE").WithArgs(pq.Array(delete)).WillReturnResult(sqlmock.NewResult(1, 3))
 	mock.ExpectCommit()
 
-	result, err := assignDeliveryServicesToServer(100, newDses, true, db)
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTxx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	result, err := assignDeliveryServicesToServer(100, newDses, true, tx.Tx)
 	if err != nil {
 		t.Errorf("error assigning deliveryservice: %v", err)
 	}

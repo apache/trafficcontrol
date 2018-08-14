@@ -20,12 +20,14 @@ package crconfig
  */
 
 import (
+	"context"
 	"encoding/json"
 	"math/rand"
 	"reflect"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 
@@ -173,22 +175,29 @@ func TestMakeDSes(t *testing.T) {
 	domain := "mycdn.invalid"
 
 	expected := ExpectedMakeDSes()
-	MockMakeDSes(mock, expected, cdn)
-
 	expectedParams := ExpectedGetServerProfileParams(expected)
-	MockGetServerProfileParams(mock, expectedParams, cdn)
-
 	expectedDSParams, err := getDSParams(expectedParams)
 	if err != nil {
 		t.Fatalf("getDSParams error expected: nil, actual: %v", err)
 	}
 	expectedMatchsets, expectedDomains := ExpectedGetDSRegexesDomains(expectedDSParams)
-	MockGetDSRegexesDomains(mock, expectedMatchsets, expectedDomains, cdn)
-
 	expectedStaticDNSEntries := ExpectedGetStaticDNSEntries(expected)
-	MockGetStaticDNSEntries(mock, expectedStaticDNSEntries, cdn)
 
-	actual, err := makeDSes(cdn, domain, db)
+	mock.ExpectBegin()
+	MockGetServerProfileParams(mock, expectedParams, cdn)
+	MockGetDSRegexesDomains(mock, expectedMatchsets, expectedDomains, cdn)
+	MockGetStaticDNSEntries(mock, expectedStaticDNSEntries, cdn)
+	MockMakeDSes(mock, expected, cdn)
+	mock.ExpectCommit()
+
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actual, err := makeDSes(cdn, domain, tx)
 	if err != nil {
 		t.Fatalf("makeDSes expected: nil error, actual: %v", err)
 	}
@@ -243,9 +252,19 @@ func TestGetServerProfileParams(t *testing.T) {
 
 	expectedMakeDSes := ExpectedMakeDSes()
 	expected := ExpectedGetServerProfileParams(expectedMakeDSes)
-	MockGetServerProfileParams(mock, expected, cdn)
 
-	actual, err := getServerProfileParams(cdn, db)
+	mock.ExpectBegin()
+	MockGetServerProfileParams(mock, expected, cdn)
+	mock.ExpectCommit()
+
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actual, err := getServerProfileParams(cdn, tx)
 	if err != nil {
 		t.Fatalf("getServerProfileParams expected: nil error, actual: %v", err)
 	}
@@ -321,9 +340,19 @@ func TestGetDSRegexesDomains(t *testing.T) {
 		t.Fatalf("getDSParams error expected: nil, actual: %v", err)
 	}
 	expectedMatchsets, expectedDomains := ExpectedGetDSRegexesDomains(expectedDSParams)
-	MockGetDSRegexesDomains(mock, expectedMatchsets, expectedDomains, cdn)
 
-	actualMatchsets, actualDomains, err := getDSRegexesDomains(cdn, domain, db)
+	mock.ExpectBegin()
+	MockGetDSRegexesDomains(mock, expectedMatchsets, expectedDomains, cdn)
+	mock.ExpectCommit()
+
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actualMatchsets, actualDomains, err := getDSRegexesDomains(cdn, domain, tx)
 	if err != nil {
 		t.Fatalf("getDSRegexesDomains expected: nil error, actual: %v", err)
 	}
@@ -374,9 +403,19 @@ func TestGetStaticDNSEntries(t *testing.T) {
 
 	expectedMakeDSes := ExpectedMakeDSes()
 	expected := ExpectedGetStaticDNSEntries(expectedMakeDSes)
-	MockGetStaticDNSEntries(mock, expected, cdn)
 
-	actual, err := getStaticDNSEntries(cdn, db)
+	mock.ExpectBegin()
+	MockGetStaticDNSEntries(mock, expected, cdn)
+	mock.ExpectCommit()
+
+	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
+	tx, err := db.BeginTx(dbCtx, nil)
+	if err != nil {
+		t.Fatalf("creating transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	actual, err := getStaticDNSEntries(cdn, tx)
 	if err != nil {
 		t.Fatalf("getStaticDNSEntries expected: nil error, actual: %v", err)
 	}
