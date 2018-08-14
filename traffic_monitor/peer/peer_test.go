@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"testing"
-
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 

@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	to "github.com/apache/trafficcontrol/traffic_ops/client"
+	to "github.com/apache/trafficcontrol/traffic_ops/client/v13"
 )
 
 // ValidateOfflineStates validates that no OFFLINE or ADMIN_DOWN caches in the given Traffic Ops' CRConfig are marked Available in the given Traffic Monitor's CRStates.
@@ -39,7 +39,7 @@ func ValidateOfflineStates(tmURI string, toClient *to.Session) error {
 
 // ValidateOfflineStatesWithCDN validates per ValidateOfflineStates, but saves an additional query if the Traffic Monitor's CDN is known.
 func ValidateOfflineStatesWithCDN(tmURI string, tmCDN string, toClient *to.Session) error {
-	crConfigBytes, err := toClient.CRConfigRaw(tmCDN)
+	crConfigBytes, _, err := toClient.GetCRConfig(tmCDN)
 	if err != nil {
 		return fmt.Errorf("getting CRConfig: %v", err)
 	}

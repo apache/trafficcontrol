@@ -37,7 +37,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
-	to "github.com/apache/trafficcontrol/traffic_ops/client"
+	to "github.com/apache/trafficcontrol/traffic_ops/client/v13"
 )
 
 // StartOpsConfigManager starts the ops config manager goroutine, returning the (threadsafe) variables which it sets.
@@ -178,7 +178,7 @@ func StartOpsConfigManager(
 // getMonitorCDN returns the CDN of a given Traffic Monitor.
 // TODO change to get by name, when Traffic Ops supports querying a single server.
 func getMonitorCDN(toc *to.Session, monitorHostname string) (string, error) {
-	servers, err := toc.Servers()
+	servers, _, err := toc.GetServers()
 	if err != nil {
 		return "", fmt.Errorf("getting monitor %s CDN: %v", monitorHostname, err)
 	}
