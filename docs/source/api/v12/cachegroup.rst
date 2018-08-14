@@ -60,6 +60,8 @@ Cache Group
   +-----------------------------------+--------+--------------------------------------------------------------------------+
   | ``secondaryParentCachegroupName`` | string | Secondary parent cachegroup name.                                        |
   +-----------------------------------+--------+--------------------------------------------------------------------------+
+  | ``localizationMethods``           | array  | Array of enabled localization methods (as strings)                       |
+  +-----------------------------------+--------+--------------------------------------------------------------------------+
   | ``shortName``                     | string | Abbreviation of the Cache Group Name                                     |
   +-----------------------------------+--------+--------------------------------------------------------------------------+
   | ``typeId``                        | string | Unique identifier for the 'Type' of Cache Group entry                    |
@@ -86,6 +88,11 @@ Cache Group
            "shortName": "dcchi",
            "typeName": "MID_LOC",
            "typeId": "4",
+           "localizationMethods": [
+             "DEEP_CZ",
+             "CZ",
+             "GEO"
+           ],
            "fallbackToClosest":true
         },
         {
@@ -101,6 +108,7 @@ Cache Group
            "shortName": "dcchi",
            "typeName": "MID_LOC",
            "typeId": "4",
+           "localizationMethods": null,
            "fallbackToClosest":false
         }
      ],
@@ -166,6 +174,8 @@ Cache Group
   +-----------------------------------+--------+--------------------------------------------------------------------------+
   | ``secondaryParentCachegroupName`` | string | Secondary parent cachegroup name.                                        |
   +-----------------------------------+--------+--------------------------------------------------------------------------+
+  | ``localizationMethods``           | array  | Array of enabled localization methods (as strings)                       |
+  +-----------------------------------+--------+--------------------------------------------------------------------------+
   | ``shortName``                     | string | Abbreviation of the Cache Group Name                                     |
   +-----------------------------------+--------+--------------------------------------------------------------------------+
   | ``typeId``                        | string | Unique identifier for the 'Type' of Cache Group entry                    |
@@ -189,6 +199,11 @@ Cache Group
            "parentCachegroupName": null,
            "secondaryParentCachegroupId": null,
            "secondaryParentCachegroupName": null,
+           "localizationMethods": [
+             "DEEP_CZ",
+             "CZ",
+             "GEO"
+           ],
            "shortName": "dcchi",
            "typeName": "MID_LOC",
            "typeId": "4",
@@ -453,6 +468,8 @@ Cache Group
   +---------------------------------+----------+-------------------------------------------------------------------+
   | ``secondaryParentCachegroup``   | no       | Name of Secondary Parent Cache Group entry.                       |
   +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``localizationMethods``         | no       | Array of enabled localization methods (as strings)                |
+  +---------------------------------+----------+-------------------------------------------------------------------+
   | ``typeId``                      | yes      | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
   +---------------------------------+----------+-------------------------------------------------------------------+
   | ``fallbackToClosest``           | no       | Behaviour on configured fallbacks failure, true / false           |
@@ -466,6 +483,10 @@ Cache Group
         "latitude": 12,
         "longitude": 45,
         "parentCachegroup": "cache_group_mid",
+        "localizationMethods": [
+          "CZ",
+          "GEO"
+        ],
         "typeId": 6,
         "fallbackToClosest":true
     }
@@ -493,6 +514,8 @@ Cache Group
   +------------------------------------+--------+-------------------------------------------------------------------+
   | ``secondaryParentCachegroupId``    | string | id of Secondary Parent Cache Group entry.                         |
   +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``localizationMethods``            | array  | Array of enabled localization methods (as strings)                |
+  +------------------------------------+--------+-------------------------------------------------------------------+
   | ``typeName``                       | string | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
   +------------------------------------+--------+-------------------------------------------------------------------+
   | ``fallbackToClosest``              | bool   | Behaviour during non-availability/failure of configured fallbacks |
@@ -516,18 +539,22 @@ Cache Group
                   }
           ],
         "response": {
-            'longitude' : '45',
-            'lastUpdated' : '2016-01-25 13:55:30',
-            'shortName' : 'cg_edge',
-            'name' : 'cache_group_edge',
-            'parentCachegroup' : 'cache_group_mid',
-            'secondaryParentCachegroup' : null,
-            'latitude' : '12',
-            'typeName' : 'EDGE_LOC',
-            'id' : '104',
-            'parentCachegroupId' : '103',
-            'secondaryParentCachegroupId' : null,
-            'fallbackToClosest':true
+            "longitude" : "45",
+            "lastUpdated" : "2016-01-25 13:55:30",
+            "shortName" : "cg_edge",
+            "name" : "cache_group_edge",
+            "parentCachegroup" : "cache_group_mid",
+            "secondaryParentCachegroup" : null,
+            "latitude" : "12",
+            "localizationMethods": [
+              "CZ",
+              "GEO"
+            ],
+            "typeName" : "EDGE_LOC",
+            "id" : "104",
+            "parentCachegroupId" : "103",
+            "secondaryParentCachegroupId" : null,
+            "fallbackToClosest":true
         }
     }
    
@@ -566,6 +593,8 @@ Cache Group
   +---------------------------------+----------+-------------------------------------------------------------------+
   | ``secondaryParentCachegroup``   | no       | Name of Secondary Parent Cache Group entry.                       |
   +---------------------------------+----------+-------------------------------------------------------------------+
+  | ``localizationMethods``         | no       | Array of enabled localization methods (as strings)                |
+  +---------------------------------+----------+-------------------------------------------------------------------+
   | ``typeName``                    | yes      | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
   +---------------------------------+----------+-------------------------------------------------------------------+
   | ``fallbackToClosest``           | no       | Behaviour on configured fallbacks failure, true / false           |
@@ -580,6 +609,11 @@ Cache Group
         "longitude": 45,
         "parentCachegroup": "cache_group_mid",
         "typeName": "EDGE_LOC",
+        "localizationMethods": [
+          "DEEP_CZ",
+          "CZ",
+          "GEO"
+        ],
         "fallbackToClosest":true
     }
 
@@ -606,6 +640,8 @@ Cache Group
   +------------------------------------+--------+-------------------------------------------------------------------+
   | ``secondaryParentCachegroupId``    | string | id of Secondary Parent Cache Group entry.                         |
   +------------------------------------+--------+-------------------------------------------------------------------+
+  | ``localizationMethods``            | array  | Array of enabled localization methods (as strings)                |
+  +------------------------------------+--------+-------------------------------------------------------------------+
   | ``typeName``                       | string | The type of Cache Group entry, "EDGE_LOC", "MID_LOC" or "ORG_LOC" |
   +------------------------------------+--------+-------------------------------------------------------------------+
   | ``fallbackToClosest``              | bool   | Behaviour during non-availability/failure of configured fallbacks |
@@ -629,18 +665,23 @@ Cache Group
                   }
           ],
         "response": {
-            'longitude' : '45',
-            'lastUpdated' : '2016-01-25 13:55:30',
-            'shortName' : 'cg_edge',
-            'name' : 'cache_group_edge',
-            'parentCachegroup' : 'cache_group_mid',
-            'secondaryParentCachegroup' : null,
-            'latitude' : '12',
-            'typeName' : 'EDGE_LOC',
-            'id' : '104',
-            'parentCachegroupId' : '103',
-            'secondaryParentCachegroupId' : null,
-            'fallbackToClosest':true
+            "longitude" : "45",
+            "lastUpdated" : "2016-01-25 13:55:30",
+            "shortName" : "cg_edge",
+            "name" : "cache_group_edge",
+            "parentCachegroup" : "cache_group_mid",
+            "secondaryParentCachegroup" : null,
+            "localizationMethods": [
+              "DEEP_CZ",
+              "CZ",
+              "GEO"
+            ],
+            "latitude" : "12",
+            "typeName" : "EDGE_LOC",
+            "id" : "104",
+            "parentCachegroupId" : "103",
+            "secondaryParentCachegroupId" : null,
+            "fallbackToClosest":true
         }
     }
 
