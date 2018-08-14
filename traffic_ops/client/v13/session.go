@@ -114,7 +114,7 @@ func (to *Session) login() (net.Addr, error) {
 		return nil, errors.New("creating login credentials: " + err.Error())
 	}
 
-	path := "/api/1.2/user/login"
+	path := apiBase + "/user/login"
 	resp, remoteAddr, err := to.rawRequest("POST", path, credentials)
 	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
 	if err != nil {
@@ -149,7 +149,7 @@ func (to *Session) logout() (net.Addr, error) {
 		return nil, errors.New("creating login credentials: " + err.Error())
 	}
 
-	path := "/api/1.2/user/logout"
+	path := apiBase + "/user/logout"
 	resp, remoteAddr, err := to.rawRequest("POST", path, credentials)
 	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
 	if err != nil {

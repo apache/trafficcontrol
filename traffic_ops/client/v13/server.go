@@ -23,6 +23,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"net/url"
 )
 
 const (
@@ -130,4 +131,21 @@ func (to *Session) DeleteServerByID(id int) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+func (to *Session) GetServersByType(qparams url.Values) ([]v13.Server, ReqInf, error) {
+	url := fmt.Sprintf("%s.json?%s", API_v13_Servers, qparams.Encode())
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data v13.ServersResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
 }
