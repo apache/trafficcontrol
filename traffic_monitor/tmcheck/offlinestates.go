@@ -65,8 +65,8 @@ func ValidateOfflineStatesWithCRConfig(tmURI string, crConfig *tc.CRConfig, toCl
 // ValidateCRStates validates that no OFFLINE or ADMIN_DOWN caches in the given CRConfig are marked Available in the given CRStates.
 func ValidateCRStates(crstates *tc.CRStates, crconfig *tc.CRConfig) error {
 	for cacheName, cacheInfo := range crconfig.ContentServers {
-		status := tc.CacheStatusFromString(string(*cacheInfo.Status))
-		if status != tc.CacheStatusAdminDown || status != tc.CacheStatusOffline {
+		status := tc.CacheStatusFromString(string(*cacheInfo.ServerStatus))
+		if status != tc.CacheStatusAdminDown && status != tc.CacheStatusOffline {
 			continue
 		}
 

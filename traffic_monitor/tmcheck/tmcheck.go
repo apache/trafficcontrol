@@ -194,7 +194,7 @@ type CRConfigOrError struct {
 	Err      error
 }
 
-func GetMonitors(toClient *to.Session, includeOffline bool) ([]to.Server, error) {
+func GetMonitors(toClient *to.Session, includeOffline bool) ([]tc.Server, error) {
 	trafficMonitorType := "RASCAL"
 	monitorTypeQuery := map[string][]string{"type": []string{trafficMonitorType}}
 	servers, err := toClient.ServersByType(monitorTypeQuery)
@@ -260,8 +260,8 @@ func AllValidator(
 }
 
 // FilterOfflines returns only servers which are REPORTED or ONLINE
-func FilterOfflines(servers []to.Server) []to.Server {
-	onlineServers := []to.Server{}
+func FilterOfflines(servers []tc.Server) []tc.Server {
+	onlineServers := []tc.Server{}
 	for _, server := range servers {
 		status := tc.CacheStatusFromString(server.Status)
 		if status != tc.CacheStatusOnline && status != tc.CacheStatusReported {
@@ -272,7 +272,7 @@ func FilterOfflines(servers []to.Server) []to.Server {
 	return onlineServers
 }
 
-func GetCDNs(servers []to.Server) map[tc.CDNName]struct{} {
+func GetCDNs(servers []tc.Server) map[tc.CDNName]struct{} {
 	cdns := map[tc.CDNName]struct{}{}
 	for _, server := range servers {
 		cdns[tc.CDNName(server.CDNName)] = struct{}{}
