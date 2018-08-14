@@ -47,6 +47,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Infof("CRConfig time to generate: %+v\n", time.Since(start))
+	*inf.CommitTx = true
 	api.WriteResp(w, r, crConfig)
 }
 
@@ -68,6 +69,7 @@ func SnapshotGetHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, http.StatusNotFound, errors.New("CDN not found"), nil)
 		return
 	}
+	*inf.CommitTx = true
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
 	w.Write([]byte(`{"response":` + snapshot + `}`))
 }
@@ -90,6 +92,7 @@ func SnapshotOldGetHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, http.StatusNotFound, errors.New("CDN not found"), nil)
 		return
 	}
+	*inf.CommitTx = true
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
 	w.Write([]byte(snapshot))
 }
@@ -133,6 +136,7 @@ func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig performed for "+cdn, inf.User, inf.Tx.Tx)
+	*inf.CommitTx = true
 	w.WriteHeader(http.StatusOK) // TODO change to 204 No Content in new version
 }
 
@@ -159,6 +163,7 @@ func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig performed for "+inf.Params["cdn"], inf.User, inf.Tx.Tx)
+	*inf.CommitTx = true
 	http.Redirect(w, r, "/tools/flash_and_close/"+url.PathEscape("Successfully wrote the CRConfig.json!"), http.StatusFound)
 }
 
