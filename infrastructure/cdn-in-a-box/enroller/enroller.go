@@ -18,6 +18,7 @@ package main
 // under the License.
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -63,7 +64,6 @@ func (s *session) inspectIPAddress(service string) (string, error) {
 }
 
 func (s *session) inspectPort(service string) (int, error) {
-
 	const inspectPortFormat = "{{range $p, $conf := .NetworkSettings.Ports}}{{(index $conf 0).HostPort}}{{end}}"
 	cmdArgs := []string{"inspect", "--format='" + inspectPortFormat + "'", service}
 	portBytes, err := runDockerCommand(cmdArgs)
@@ -71,15 +71,12 @@ func (s *session) inspectPort(service string) (int, error) {
 		fmt.Printf("cannot runDockerCommand: %s", cmdArgs)
 		return 0, err
 	}
-	fmt.Printf("portBytes ---> %v\n", string(portBytes))
 
 	portStr := string(portBytes)
 	portStr = strings.TrimSuffix(portStr, "\n")
 	portStr = trimQuotes(portStr)
 
 	port, err := strconv.Atoi(portStr)
-	fmt.Printf("err ---> %v\n", err)
-	fmt.Printf("port ---> %v\n", port)
 	if err != nil {
 		fmt.Printf("cannot convert portBytes to integer: %s\n", string(portBytes))
 		return 0, err
@@ -87,30 +84,141 @@ func (s *session) inspectPort(service string) (int, error) {
 	return port, err
 }
 
+// Matches service name (container) with type in traffic ops db
+var serviceTypes = map[string]string{
+	"db":               "TRAFFIC_OPS_DB",
+	"edge":             "EDGE",
+	"influxdb":         "INFLUXDB",
+	"mid":              "MID",
+	"origin":           "ORG",
+	"trafficanalytics": "TRAFFIC_ANALYTICS",
+	"trafficmonitor":   "RASCAL",
+	"trafficops":       "TRAFFIC_OPS",
+	"trafficportal":    "TRAFFIC_PORTAL",
+	"trafficrouter":    "CCR",
+	"trafficstats":     "TRAFFIC_STATS",
+	"trafficvault":     "RIAK",
+}
+
+func serverType(service string) string {
+	for s, t := range serviceTypes {
+		if strings.Contains(service, s) {
+			return t
+		}
+	}
+	// unknown -- let caller deal with it
+	return service
+}
+
+func (s *session) getTypeIDByName(typeName string) (int, error) {
+	types, _, err := s.GetTypeByName(typeName)
+	if err != nil {
+		fmt.Printf("unknown type %s\n", typeName)
+		return -1, err
+	}
+	return types[0].ID, err
+}
+
+func (s *session) getCDNID() (int, error) {
+	cdns, _, err := s.GetCDNs()
+	if err != nil {
+		fmt.Println("cannot get CDNS")
+		return -1, err
+	}
+	if len(cdns) < 1 {
+		panic(fmt.Sprintf("CDNS: %v;  err: %v", cdns, err))
+	}
+	return cdns[0].ID, err
+}
+
+func (s *session) getCachegroupID() (int, error) {
+	cgs, _, err := s.GetCacheGroups()
+	if err != nil {
+		fmt.Println("cannot get Cachegroup")
+		return -1, err
+	}
+	return cgs[0].ID, err
+}
+
+func (s *session) getPhysLocationID() (int, error) {
+	physLocs, _, err := s.GetPhysLocations()
+	if err != nil {
+		fmt.Println("cannot get physlocations")
+		return -1, err
+	}
+	return physLocs[0].ID, err
+}
+
+func (s *session) getProfileID() (int, error) {
+	profiles, _, err := s.GetProfiles()
+	if err != nil {
+		fmt.Println("cannot get profiles")
+		return -1, err
+	}
+	return profiles[0].ID, err
+}
+
+func (s *session) getStatusIDByName(cdnName string) (int, error) {
+	statuses, _, err := s.GetStatusByName(cdnName)
+	if err != nil {
+		fmt.Printf("unknown Status %s\n", cdnName)
+		return -1, err
+	}
+	return statuses[0].ID, err
+}
+
 func (s *session) enrollService(service string) (*v13.Server, error) {
-	IPAddress, err := s.inspectIPAddress(service)
+	server := v13.Server{
+		HostName: service,
+	}
+	var err error
+
+	server.TypeID, err = s.getTypeIDByName(serverType(service))
+	if err != nil {
+		fmt.Printf("cannot get type for %s", service)
+	}
+
+	server.StatusID, err = s.getStatusIDByName("PRE_PROD")
+	if err != nil {
+		fmt.Printf("cannot get status for %s", service)
+	}
+
+	server.CDNID, err = s.getCDNID()
+	if err != nil {
+		fmt.Printf("cannot get CDN for %s", service)
+	}
+
+	server.ProfileID, err = s.getProfileID()
+	if err != nil {
+		fmt.Printf("cannot get profile for %s", service)
+	}
+
+	server.CachegroupID, err = s.getCachegroupID()
+	if err != nil {
+		fmt.Printf("cannot get Cachegroup for %s", service)
+	}
+
+	server.PhysLocationID, err = s.getPhysLocationID()
+	if err != nil {
+		fmt.Printf("cannot get PhysLocation for %s", service)
+	}
+
+	server.IPAddress, err = s.inspectIPAddress(service)
 	if err != nil {
 		fmt.Printf("cannot lookup ipaddress: %v\n", err)
 	}
-	fmt.Printf("IPAddress ---> %v\n", IPAddress)
 
-	port, err := s.inspectPort(service)
+	server.TCPPort, err = s.inspectPort(service)
 	if err != nil {
 		fmt.Printf("cannot lookup port: %v", err)
+		return nil, err
 	}
-	fmt.Printf("port ---> %v\n", port)
 
-	server := v13.Server{
-		CDNID:          1,
-		CachegroupID:   1,
-		PhysLocationID: 1,
-		ProfileID:      1,
-		StatusID:       2,
-		TypeID:         1,
-		HostName:       service,
-		IPAddress:      IPAddress,
-		TCPPort:        port,
-	}
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetIndent(``, `  `)
+	enc.Encode(server)
+	fmt.Println("Server: ", buf.String())
 
 	resp, _, err := s.CreateServer(server)
 	fmt.Printf("Response: %s\n", resp)
@@ -127,18 +235,15 @@ func trimQuotes(s string) string {
 }
 
 func runDockerCommand(cmdArgs []string) ([]byte, error) {
-	var (
-		cmdOut []byte
-		err    error
-	)
 	dockerCmd, err := exec.LookPath("docker")
 	if err != nil {
 		fmt.Println("cannot find the docker executeable")
+		return nil, err
 	}
 	fmt.Printf("Executing: %s %v\n", dockerCmd, strings.Join(cmdArgs, " "))
-	if cmdOut, err = exec.Command(dockerCmd, cmdArgs...).Output(); err != nil {
+	cmdOut, err := exec.Command(dockerCmd, cmdArgs...).Output()
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "There was an error running %s: %v\n", dockerCmd, err)
-		os.Exit(1)
 	}
 	return cmdOut, err
 }
