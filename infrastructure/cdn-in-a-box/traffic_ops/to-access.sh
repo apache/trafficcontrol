@@ -80,33 +80,27 @@ to-get() {
 }
 
 to-post() {
-	if [[ ! -z "$2" ]]; then
-		if [[ -f "$2" ]]; then
-			to-auth && \
-			    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X POST --data @"$2" "$TO_URL/$1"
-		else
-			to-auth && \
-			    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X POST --data "$2" "$TO_URL/$1"
-		fi
+	if [[ -z "$2" ]]; then
+		data=""
+	elif [[ -f "$2" ]]; then
+		data="--data @$2"
 	else
-		to-auth && \
-		    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X POST "$TO_URL/$1"
+		data="--data $2"
 	fi
+	to-auth && \
+	    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X POST $data "$TO_URL/$1"
 }
 
 to-put() {
-	if [[ ! -z "$2" ]]; then
-		if [[ -f "$2" ]]; then
-			to-auth && \
-			    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X PUT --data @"$2" "$TO_URL/$1"
-		else
-			to-auth && \
-			    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X PUT --data "$2" "$TO_URL/$1"
-		fi
+	if [[ -z "$2" ]]; then
+		data=""
+	elif [[ -f "$2" ]]; then
+		data="--data @$2"
 	else
-		to-auth && \
-		    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X PUT "$TO_URL/$1"
+		data="--data '""$2""'"
 	fi
+	to-auth && \
+	    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X PUT $data "$TO_URL/$1"
 }
 
 to-delete() {
