@@ -70,8 +70,9 @@ $tenantnotnull$;
 ALTER TABLE tm_user ALTER COLUMN tenant_id SET NOT NULL;
 ALTER TABLE deliveryservice ALTER COLUMN tenant_id SET NOT NULL;
 ALTER TABLE origin ALTER COLUMN tenant SET NOT NULL;
--- get rid of the use_tenancy flag
-DELETE FROM parameter WHERE name = 'use_tenancy' AND config_file = 'global';
+-- set use_tenancy to 1 -- this should remain until code that depends on it is removed from both TO and TP
+-- NOTE that we know use_tenancy exists b/c it's inserted in seeds.sql
+UPDATE parameter SET value = '1' WHERE name = 'use_tenancy' AND config_file = 'global';
 
 -- never allow deep_caching_type to be NULL
 UPDATE deliveryservice SET deep_caching_type = 'NEVER' WHERE deep_caching_type IS NULL;
