@@ -97,7 +97,7 @@ to-put() {
 	elif [[ -f "$2" ]]; then
 		data="--data @$2"
 	else
-		data="--data '""$2""'"
+		data="--data $2"
 	fi
 	to-auth && \
 	    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X PUT $data "$TO_URL/$1"
