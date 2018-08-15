@@ -137,8 +137,3 @@ a very simple page sporting the Traffic Control logo.
 
 The process creates containers for each component with ports exposed on the host.  The
 following should be available once the system is running:
-
-	Traffic Portal: https://localhost
-	Traffic Ops (go): https://localhost:6443
-	Traffic Ops (perl): https://localhost:60443
-	Postgres: `psql -h localhost -p 5432 -U postgres`
