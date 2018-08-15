@@ -82,6 +82,10 @@ The API and legacy UI for the CDN
 	* Username: `admin`
 	* Password: `twelve`
 
+Note that the recommended way to access the Traffic Ops API is through the new Go endpoints.
+Not all endpoints have been implemented in Go, but the Go server will proxy requests it cannot
+service back to the legacy API.
+
 ### Traffic Portal
 The modern UI for the CDN
 * URL: [`https://localhost`](https://localhost)
