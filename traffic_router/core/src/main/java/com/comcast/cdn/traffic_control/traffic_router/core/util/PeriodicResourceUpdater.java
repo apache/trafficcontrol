@@ -290,12 +290,6 @@ public class PeriodicResourceUpdater {
 		@Override
 		public void onThrowable(final Throwable t){
 			LOGGER.warn("Failed request " + request.getUrl() + ": " + t, t);
-			if (asyncHttpClient!=null) {
-				while (!asyncHttpClient.isClosed()) {
-					asyncHttpClient.close();
-				}
-			}
-			asyncHttpClient = newAsyncClient();
 		}
 	};
 
