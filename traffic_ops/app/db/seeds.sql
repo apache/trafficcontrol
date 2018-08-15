@@ -48,6 +48,10 @@ BEGIN
                 insert into parameter (name, config_file, value) values ('use_tenancy', 'global', '0');
                 insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'use_tenancy' and config_file = 'global' and value = '0') ) ON CONFLICT (profile, parameter) DO NOTHING;
         END IF;
+        IF NOT EXISTS (SELECT id FROM PARAMETER WHERE name = 'maxRevalDurationDays' AND config_file = 'regex_revalidate.config') THEN
+                insert into parameter (name, config_file, value) values ('maxRevalDurationDays', 'regex_revalidate.config', '90');
+                insert into profile_parameter (profile, parameter) values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'maxRevalDurationDays' and config_file = 'regex_revalidate.config' and value = '90') ) ON CONFLICT (profile, parameter) DO NOTHING;
+        END IF;
 END
 $do$;
 
