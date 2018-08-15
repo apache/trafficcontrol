@@ -23,9 +23,7 @@
 
 FROM centos:7
 
-ARG TO_API_FUNCTIONS=to-access.sh
 ARG RPM=https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.2-4.el7.centos.x86_64.rpm
-ADD $TO_API_FUNCTIONS /to-access.sh
 ADD $RPM /trafficserver.rpm
 
 RUN yum install -y epel-release
@@ -33,7 +31,7 @@ RUN yum install -y /trafficserver.rpm iproute jq net-tools nmap-ncat && yum clea
 
 RUN mkdir -p /var/trafficserver/cache /opt/ort && chown -R ats:ats /etc/trafficserver /var/trafficserver /opt/ort
 
-ADD parameters.json profile.json server.json setup.sh /
+ADD mid/parameters.json mid/profile.json mid/server.json mid/setup.sh traffic_ops/to-access.sh /
 
 EXPOSE 80
 

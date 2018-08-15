@@ -49,14 +49,6 @@ respective component directories, such that their filenames are as follows:
 * `traffic_ops/traffic_ops.rpm`
 * `traffic_portal/traffic_portal.rpm`
 
-Also ensure that the edge- and mid-tier caches have copies of the
-[`traffic_ops/to-access.sh`](./traffic_ops/to-access) script in their own directories.
-From this directory, you can accomplish this by running:
-
-```bash
-cp -f traffic_ops/to-access.sh edge/to-access.sh && cp -f traffic_ops/to-access.sh mid/to-access.sh
-```
-
 Finally, run the test CDN using the command:
 
 ```bash

@@ -164,7 +164,8 @@ services:
   # edge cache
   edge:
     build:
-      context: edge
+      context: .
+      dockerfile: edge/Dockerfile
     domainname: cdn.local
     env_file:
       - variables.env
@@ -177,7 +178,8 @@ services:
   # mid cache
   mid:
     build:
-      context: mid
+      context: .
+      dockerfile: mid/Dockerfile
     domainname: cdn.local
     env_file:
       - variables.env
