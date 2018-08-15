@@ -99,10 +99,10 @@ func (param TOParameter) Validate() error {
 	// - Secure Flag is always set to either 1/0
 	// - Admin rights only
 	// - Do not allow duplicate parameters by name+config_file+value
+	// - Removed NOT NULL constraint on 'value' so removed it's validation as .Required
 	errs := validation.Errors{
 		NameQueryParam:       validation.Validate(param.Name, validation.Required),
 		ConfigFileQueryParam: validation.Validate(param.ConfigFile, validation.Required),
-		ValueQueryParam:      validation.Validate(param.Value, validation.Required),
 	}
 
 	return util.JoinErrs(tovalidate.ToErrors(errs))
