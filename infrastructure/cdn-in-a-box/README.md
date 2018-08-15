@@ -79,9 +79,10 @@ The API and legacy UI for the CDN
 	* New Go endpoints: [`https://localhost:6443`](https://localhost:6443)
 	* Limited, Legacy Perl endpoints: [`https://localhost:60443`](https://localhost:60443)
 * Login Credentials:
-	* Username: `admin`
-	* Password: `twelve`
+	* Username: Defined by `TO_ADMIN_USER` in [`variables.env`](./variables.env)
+	* Password: Defined by `TO_ADMIN_PASSWORD` in [`variables.env`](./variables.env)
 
+Login credentials will work for both sets of endpoints.
 Note that the recommended way to access the Traffic Ops API is through the new Go endpoints.
 Not all endpoints have been implemented in Go, but the Go server will proxy requests it cannot
 service back to the legacy API.
@@ -90,22 +91,28 @@ service back to the legacy API.
 The modern UI for the CDN
 * URL: [`https://localhost`](https://localhost)
 * Login Credentials:
-	* Username: `admin`
-	* Password: `twelve`
+	* Username: Defined by `TO_ADMIN_USER` in [`variables.env`](./variables.env)
+	* Password: Defined by `TO_ADMIN_PASSWORD` in [`variables.env`](./variables.env)
 
 ### Traffic Ops PostgreSQL Database
 This holds the configuration information for the entire CDN. It is normally accessed
 directly only by Traffic Ops.
 * URL: [`postgres://traffic_ops:twelve@localhost:5432/traffic_ops`](postgres://traffic_ops:twelve@localhost:5432/traffic_ops)
 * Login Credentials:
-	* Username: `traffic_ops`
-	* Password: `twelve`
+	* Username: Defined by `DB_USER` in [`variables.env`](./variables.env)
+	* Password: Defined by `DB_USER_PASS` in [`variables.env`](./variables.env)
 * Port: 5432
-* Database: `traffic_ops`
+* Database: Defined by `DB_NAME` in [`variables.env`](./variables.env)
 
 ### Traffic Vault
 A secure storage server for private keys used by Traffic Ops
 * Port: 8010
+
+### Traffic Monitor
+Traffic Monitor is responsible for monitoring and reporting the "health" of edge- and
+mid-tier caches (See [the documentation](http://traffic-control-cdn.readthedocs.io/en//latest/overview/traffic_monitor.html) for details).
+
+* URL: [`http://localhost`](http://localhost)
 
 ### Edge-Tier Cache
 An edge-tier cache sits at the outermost extremity of the CDN, typically serving content
@@ -120,15 +127,13 @@ made from an edge-tier cache and the mid serves content from its own cache, a pa
 mid-tier cache or directly from the origin. The management port is not exposed locally -
 however the main content port is.
 
-* URL: [`http://localhost:9080`](http://localhost:9080)
+* URL: [`http://localhost:9080`](http://localhost:8081)
 
 ### Origin Server
 An origin server simply serves HTTP(S) content. The CDN-in-a-box origin server serves up
 a very simple page sporting the Traffic Control logo.
 
-* URL: [`http://localhost`](http://localhost)
-
-* URL: [`http://localhost:8081`](http://localhost:8081)
+* URL: [`http://localhost:8081`](http://localhost:9080)
 
 The process creates containers for each component with ports exposed on the host.  The
 following should be available once the system is running:
