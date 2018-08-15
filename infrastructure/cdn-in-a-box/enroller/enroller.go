@@ -33,26 +33,48 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	clientv13 "github.com/apache/trafficcontrol/traffic_ops/client/v13"
-
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
+	dockertypes "github.com/docker/docker/api/types"
+	dockerclient "github.com/docker/docker/client"
 	"github.com/kelseyhightower/envconfig"
 )
 
 type session struct {
 	*clientv13.Session
+	*dockerclient.Client
 	addr net.Addr
 }
 
 func newSession(reqTimeout time.Duration, toURL string, toUser string, toPass string) (*session, error) {
 	s, addr, err := clientv13.LoginWithAgent(toURL, toUser, toPass, true, "cdn-in-a-box-enroller", true, reqTimeout)
+	if err != nil {
+		return nil, err
+	}
 
-	return &session{Session: s, addr: addr}, err
+	dockerCli, err := dockerclient.NewEnvClient()
+	if err != nil {
+		return nil, err
+	}
+
+	return &session{Session: s, addr: addr, Client: dockerCli}, err
 }
 
 //docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' trafficopsdb_db_1
 
+func printJSON(label string, b interface{}) {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetIndent(``, `  `)
+	enc.Encode(b)
+	fmt.Println(label, buf.String())
+}
+
 func (s *session) inspectIPAddress(service string) (string, error) {
+
+	networks, err := s.Client.NetworkList(context.Background(), dockertypes.NetworkListOptions{})
+	if err != nil {
+		return "", err
+	}
+	printJSON("Networks: ", networks)
 
 	const inspectIPAddressFormat = "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}"
 	cmdArgs := []string{"inspect", "--format='" + inspectIPAddressFormat + "'", service}
@@ -262,15 +284,9 @@ func (s *session) enrollerHandler() func(http.ResponseWriter, *http.Request) {
 		}
 		service := r.FormValue("service")
 
-		dockerCli, err := client.NewEnvClient()
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
 		switch r.Method {
 		case "GET":
-			containers, err := dockerCli.ContainerList(context.Background(), types.ContainerListOptions{})
+			containers, err := s.ContainerList(context.Background(), dockertypes.ContainerListOptions{})
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
