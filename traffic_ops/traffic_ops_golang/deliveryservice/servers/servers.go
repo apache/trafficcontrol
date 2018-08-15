@@ -307,8 +307,12 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var dsId int
-	if err := inf.Tx.Tx.QueryRow(selectDeliveryService(), inf.Params["xml_id"]).Scan(&dsId); err != nil {
+	dsID := 0
+	if err := inf.Tx.Tx.QueryRow(selectDeliveryService(), inf.Params["xml_id"]).Scan(&dsID); err != nil {
+		if err == sql.ErrNoRows {
+			api.HandleErr(w, r, http.StatusNotFound, nil, errors.New("delivery service not found"))
+			return
+		}
 		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("ds servers create scanning: "+err.Error()))
 		return
 	}
@@ -321,45 +325,31 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	payload.XmlId = inf.Params["xml_id"]
 	serverNames := payload.ServerNames
-	q, arg, err := sqlx.In(selectServerIds(), serverNames)
-	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("ds servers create making sqlx In: "+err.Error()))
-		return
-	}
-	q = sqlx.Rebind(sqlx.DOLLAR, q)
-	rows, err := inf.Tx.Query(q, arg...)
-	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("ds servers create selecting server IDs: "+err.Error()))
-		return
-	}
-	defer rows.Close()
 
-	// We have to get the server Ids and iterate through them because of a bug in the Go
-	// transaction which returns an error if you perform a Select after an Insert in
-	// the same transaction
-	for rows.Next() {
-		var serverId int
-		if err := rows.Scan(&serverId); err != nil {
-			log.Errorln("scanning for create delivery service servers: " + err.Error())
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("ds servers scanning for create delivery service servers: "+err.Error()))
-			return
-		}
-		dtos := map[string]interface{}{"id": dsId, "server": serverId}
-		if _, err := inf.Tx.NamedExec(insertIdsQuery(), dtos); err != nil {
-			if pqErr, ok := err.(*pq.Error); ok {
-				err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-				log.Errorln("could not begin transaction: %v", err)
-				if eType == tc.DataConflictError {
-					api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("ds servers inserting for create delivery service servers: "+err.Error()))
-					return
-				}
-				api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("ds servers inserting for create delivery service servers: "+err.Error()))
+	res, err := inf.Tx.Tx.Exec(`INSERT INTO deliveryservice_server (deliveryservice, server) SELECT $1, id FROM server WHERE host_name = ANY($2::text[])`, dsID, pq.Array(serverNames))
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
+			if eType == tc.DataConflictError {
+				api.HandleErr(w, r, http.StatusBadRequest, errors.New("a deliveryservice-server association with "+err.Error()), nil)
 				return
 			}
 			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("ds servers inserting for create delivery service servers: "+err.Error()))
 			return
 		}
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("ds servers inserting for create delivery service servers received non pq error: "+err.Error()))
+		return
 	}
+
+	if rowsAffected, err := res.RowsAffected(); err != nil {
+		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("ds servers inserting for create delivery service servers: getting rows affected: "+err.Error()))
+		return
+	} else if int(rowsAffected) != len(serverNames) {
+		// this happens when the names they gave don't exist
+		api.HandleErr(w, r, http.StatusNotFound, errors.New("servers not found"), nil)
+		return
+	}
+
 	*inf.CommitTx = true
 	api.WriteResp(w, r, tc.DeliveryServiceServers{payload.ServerNames, payload.XmlId})
 	return
@@ -371,7 +361,7 @@ func selectDeliveryService() string {
 }
 
 func insertIdsQuery() string {
-	query := `INSERT INTO deliveryservice_server (deliveryservice, server) 
+	query := `INSERT INTO deliveryservice_server (deliveryservice, server)
 VALUES (:id, :server )`
 	return query
 }
