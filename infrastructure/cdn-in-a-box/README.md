@@ -71,10 +71,12 @@ show you the default UI for interacting with the CDN - Traffic Portal.
 > warnings may be safely ignored via the e.g. `Add Exception` button (possibly hidden
 > behind e.g. `Advanced Options`).
 
+
+
 ### Traffic Ops
 The API and legacy UI for the CDN
 * URLs:
-	* New Golang endpoints: [`https://localhost:6443`](https://localhost:6443)
+	* New Go endpoints: [`https://localhost:6443`](https://localhost:6443)
 	* Limited, Legacy Perl endpoints: [`https://localhost:60443`](https://localhost:60443)
 * Login Credentials:
 	* Username: `admin`
