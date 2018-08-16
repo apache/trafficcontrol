@@ -36,7 +36,7 @@ while ! to-get api/1.3/ping 2>/dev/null; do
 done
 
 # NOTE: order dependent on foreign key references, e.g. tenants must be defined before users
-endpoints="tenants users cdns servers"
+endpoints="cdns divisions regions phys_locations tenants users cachegroups deliveryservices"
 
 load_data_from() {
     local dir="$1"
@@ -52,10 +52,18 @@ load_data_from() {
             [[ -r $f ]] || continue
             t=$(mktemp --tmpdir $ep-XXX.json)
             envsubst <"$f" >"$t"
-            to-post api/1.3/"$ep" "$t"
+            if ! to-post api/1.3/"$ep" "$t"; then
+                echo POST api/1.3/"$ep" "$t" failed
+                status=$?
+            fi
             rm "$t"
         done
     done
+    if [ $status -ne 0 ]; then
+        exit $status
+    fi
+
+
 }
 
 # First,  load required data at the top level

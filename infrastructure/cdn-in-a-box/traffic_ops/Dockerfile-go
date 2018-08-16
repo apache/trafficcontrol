@@ -33,11 +33,5 @@ WORKDIR /opt/traffic_ops/app
 
 ADD traffic_ops/config.sh \
     traffic_ops/run-go.sh \
-    traffic_ops/setup.sh \
-    traffic_ops/cdns.json \
-    traffic_ops/deliveryservices.json \
-    traffic_ops/mid_cachegroup.json \
-    traffic_ops/edge_cachegroup.json \
-    traffic_ops/phys_location.json \
     /
 CMD /run-go.sh

@@ -21,7 +21,7 @@
 
 
 export TO_URL TO_ADMIN_USER TO_ADMIN_PASSWORD
-export CURLOPTS=${CURLOPTS:--L}
+export CURLOPTS=${CURLOPTS:--L -f -s -S}
 export CURLAUTH=${CURLAUTH:--k}
 export COOKIEJAR=$(mktemp -t XXXX.cookie)
 
@@ -71,12 +71,12 @@ CREDS
 
 to-ping() {
 	# ping endpoint does not require authentication
-	curl $CURLAUTH $CURLOPTS -s -X GET "$TO_URL/api/1.3/ping"
+	curl $CURLAUTH $CURLOPTS -X GET "$TO_URL/api/1.3/ping"
 }
 
 to-get() {
 	to-auth && \
-		curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X GET "$TO_URL/$1"
+		curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X GET "$TO_URL/$1"
 }
 
 to-post() {
@@ -88,7 +88,7 @@ to-post() {
 		data="--data $2"
 	fi
 	to-auth && \
-	    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X POST $data "$TO_URL/$1"
+	    curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X POST $data "$TO_URL/$1"
 }
 
 to-put() {
@@ -100,10 +100,10 @@ to-put() {
 		data="--data $2"
 	fi
 	to-auth && \
-	    curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X PUT $data "$TO_URL/$1"
+	    curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X PUT $data "$TO_URL/$1"
 }
 
 to-delete() {
 	to-auth && \
-		curl $CURLAUTH $CURLOPTS -s --cookie "$COOKIEJAR" -X DELETE "$TO_URL/$1"
+		curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X DELETE "$TO_URL/$1"
 }

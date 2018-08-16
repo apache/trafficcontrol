@@ -57,19 +57,9 @@ while ! nc trafficops-perl 60443 </dev/null 2>/dev/null; do
 done
 
 cd /opt/traffic_ops/app
-ls -l bin
+
 CDNCONF=/opt/traffic_ops/app/conf/cdn.conf
 DBCONF=/opt/traffic_ops/app/conf/production/database.conf
 mkdir -p /var/log/traffic_ops
-touch /var/log/traffic_ops.log
-./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF >>/var/log/traffic_ops.log 2>>/var/log/traffic_ops.log &
-
-while ! nc localhost 6443 </dev/null; do
-	echo "waiting for traffic_ops_golang:6443"
-	sleep 3
-done
-
-/setup.sh
-
-cat /var/log/traffic_ops/*
-exec tail -f /var/log/traffic_ops.log
+touch /var/log/traffic_ops/traffic_ops.log
+./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF
