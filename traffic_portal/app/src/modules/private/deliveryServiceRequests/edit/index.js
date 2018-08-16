@@ -30,13 +30,13 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.e
 								template;
 
 							if (type.indexOf('ANY_MAP') != -1) {
-								template = 'common/modules/form/deliveryService/form.deliveryService.anyMap.tpl.html'
+								template = 'common/modules/form/deliveryService/form.deliveryService.anyMap.tpl.html';
 							} else if (type.indexOf('DNS') != -1) {
-								template = 'common/modules/form/deliveryService/form.deliveryService.DNS.tpl.html'
+								template = 'common/modules/form/deliveryService/form.deliveryService.DNS.tpl.html';
 							} else if (type.indexOf('HTTP') != -1) {
-								template = 'common/modules/form/deliveryService/form.deliveryService.HTTP.tpl.html'
+								template = 'common/modules/form/deliveryService/form.deliveryService.HTTP.tpl.html';
 							} else if (type.indexOf('STEERING') != -1) {
-								template = 'common/modules/form/deliveryService/form.deliveryService.Steering.tpl.html'
+								template = 'common/modules/form/deliveryService/form.deliveryService.Steering.tpl.html';
 							} else {
 
 							}
@@ -69,7 +69,19 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.e
 								return typeService.getTypes({ useInTable: 'deliveryservice' });
 							}
 						}
-					}
+					},
+                    deliveryServiceRequestsComments: {
+                        templateUrl: 'common/modules/table/deliveryServiceRequestComments/table.deliveryServiceRequestComments.tpl.html',
+                        controller: 'TableDeliveryServiceRequestCommentsController',
+                        resolve: {
+                            request: function($stateParams, deliveryServiceRequestService) {
+                                return deliveryServiceRequestService.getDeliveryServiceRequests({ id: $stateParams.deliveryServiceRequestId });
+                            },
+                            comments: function($stateParams, deliveryServiceRequestService) {
+                                return deliveryServiceRequestService.getDeliveryServiceRequestComments({ deliveryServiceRequestId: $stateParams.deliveryServiceRequestId, orderby: 'id' });
+                            }
+                        }
+                    }
 				}
 			})
 		;

@@ -17,11 +17,13 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<div class="row">
-    <div class="col-md-6 col-sm-6 col-xs-12">
-        <div ui-view="deliveryServiceRequestsContent"></div>
-    </div>
-    <div class="col-md-6 col-sm-6 col-xs-12">
-        <div ui-view="deliveryServiceRequestsComments"></div>
+<div id="deliveryServiceRequestsContainer">
+    <div class="row">
+        <div class="col-md-6 col-sm-6 col-xs-12">
+            <div ui-view="deliveryServiceRequestsEdit"></div>
+        </div>
+        <div class="col-md-6 col-sm-6 col-xs-12">
+            <div ui-view="deliveryServiceRequestsComments"></div>
+        </div>
     </div>
 </div>

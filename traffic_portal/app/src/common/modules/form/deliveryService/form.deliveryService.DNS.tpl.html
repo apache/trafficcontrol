@@ -36,7 +36,6 @@ under the License.
                     <li role="menuitem"><a ng-if="dsRequest.status == 'draft'" ng-click="editStatus('submitted')">Change status to: SUBMITTED</a></li>
                 </ul>
             </div>
-            <button class="btn btn-primary" title="View Comments" ng-click="viewComments()">View Comments</button>
         </div>
         <div class="pull-right" role="group" ng-show="!settings.isRequest && !settings.isNew">
             <button type="button" class="btn btn-primary" title="Delivery Service Charts" ng-if="showChartsButton" ng-click="openCharts(deliveryService)"><i class="fa fa-bar-chart fa-fw"></i></button>

@@ -140,10 +140,11 @@ var TableDeliveryServicesRequestsController = function(dsRequests, $scope, $stat
 		});
 	};
 
-	$scope.viewComments = function(request, $event) {
-		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		$location.path($location.path() + '/' + request.id + '/comments');
-	};
+	// Updated by cgillo000 08/16/18 - CDN-2347 - Commented out but slated for removal
+	// $scope.viewComments = function(request, $event) {
+	// 	$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+	// 	$location.path($location.path() + '/' + request.id + '/comments');
+	// };
 
 	$scope.rejectRequest = function(request, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
