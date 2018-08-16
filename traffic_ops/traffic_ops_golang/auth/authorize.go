@@ -75,7 +75,22 @@ type key int
 const CurrentUserKey key = iota
 
 // GetCurrentUserFromDB  - returns the id and privilege level of the given user along with the username, or -1 as the id, - as the userName and PrivLevelInvalid if the user doesn't exist, along with a user facing error, a system error to log, and an error code to return
-func GetCurrentUserFromDB(DB *sqlx.DB, CurrentUserStmt, user string, timeout time.Duration) (CurrentUser, error, error, int) {
+func GetCurrentUserFromDB(DB *sqlx.DB, user string, timeout time.Duration) (CurrentUser, error, error, int) {
+	qry := `
+SELECT
+  r.priv_level,
+  u.id,
+  u.username,
+  COALESCE(u.tenant_id, -1) AS tenant_id,
+  ARRAY(SELECT rc.cap_name FROM role_capability AS rc WHERE rc.role_id=r.id) AS capabilities
+FROM
+  tm_user AS u
+JOIN
+  role AS r ON u.role = r.id
+WHERE
+  u.username = $1
+`
+
 	var currentUserInfo CurrentUser
 	if DB == nil {
 		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}, nil, errors.New("no db provided to GetCurrentUserFromDB"), http.StatusInternalServerError
@@ -83,7 +98,7 @@ func GetCurrentUserFromDB(DB *sqlx.DB, CurrentUserStmt, user string, timeout tim
 	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
 	defer dbClose()
 
-	err := DB.GetContext(dbCtx, &currentUserInfo, CurrentUserStmt, user)
+	err := DB.GetContext(dbCtx, &currentUserInfo, qry, user)
 	switch {
 	case err == sql.ErrNoRows:
 		return CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, []string{}}, errors.New("user not found"), fmt.Errorf("checking user %v info: user not in database", user), http.StatusUnauthorized
