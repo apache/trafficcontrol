@@ -126,7 +126,7 @@ func (dss *TODeliveryServiceServer) readDSS(tx *sqlx.Tx, user *auth.CurrentUser,
 	offset := 0
 	page := 0
 	err := error(nil)
-	if plimit, ok := intParams["page"]; ok {
+	if plimit, ok := intParams["limit"]; ok {
 		limit = plimit
 	}
 	if ppage, ok := intParams["page"]; ok {
