@@ -47,9 +47,8 @@ var ServerName = "traffic_ops_golang" + "/" + about.About.Version
 
 // AuthBase ...
 type AuthBase struct {
-	secret                 string
-	getCurrentUserInfoStmt string
-	override               Middleware
+	secret   string
+	override Middleware
 }
 
 // GetWrapper ...
@@ -117,7 +116,7 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 				handleErr(http.StatusInternalServerError, errors.New("No config found"))
 			}
 
-			currentUserInfo, userErr, sysErr, code := auth.GetCurrentUserFromDB(DB, a.getCurrentUserInfoStmt, username, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+			currentUserInfo, userErr, sysErr, code := auth.GetCurrentUserFromDB(DB, username, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 			if userErr != nil || sysErr != nil {
 				api.HandleErr(w, r, code, userErr, sysErr)
 				return
