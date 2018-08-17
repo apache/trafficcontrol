@@ -26,14 +26,13 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/exec"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	clientv13 "github.com/apache/trafficcontrol/traffic_ops/client/v13"
 	dockertypes "github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/network"
 	dockerclient "github.com/docker/docker/client"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -58,8 +57,6 @@ func newSession(reqTimeout time.Duration, toURL string, toUser string, toPass st
 	return &session{Session: s, addr: addr, Client: dockerCli}, err
 }
 
-//docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' trafficopsdb_db_1
-
 func printJSON(label string, b interface{}) {
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
@@ -68,42 +65,28 @@ func printJSON(label string, b interface{}) {
 	fmt.Println(label, buf.String())
 }
 
-func (s *session) inspectIPAddress(service string) (string, error) {
-
-	networks, err := s.Client.NetworkList(context.Background(), dockertypes.NetworkListOptions{})
+func (s *session) getExposedPorts(containerName string) ([]int, error) {
+	c, err := s.Client.ContainerInspect(context.Background(), containerName)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	printJSON("Networks: ", networks)
 
-	const inspectIPAddressFormat = "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}"
-	cmdArgs := []string{"inspect", "--format='" + inspectIPAddressFormat + "'", service}
-	ipAddressBytes, err := runDockerCommand(cmdArgs)
-	ipAddress := string(ipAddressBytes)
-	ipAddress = strings.TrimSuffix(ipAddress, "\n")
-	ipAddress = trimQuotes(ipAddress)
-	return ipAddress, err
+	var ports []int
+	for port := range c.Config.ExposedPorts {
+		ports = append(ports, port.Int())
+	}
+	return ports, nil
 }
 
-func (s *session) inspectPort(service string) (int, error) {
-	const inspectPortFormat = "{{range $p, $conf := .NetworkSettings.Ports}}{{(index $conf 0).HostPort}}{{end}}"
-	cmdArgs := []string{"inspect", "--format='" + inspectPortFormat + "'", service}
-	portBytes, err := runDockerCommand(cmdArgs)
+func (s *session) getNetwork(containerName string) (*network.EndpointSettings, error) {
+	c, err := s.Client.ContainerInspect(context.Background(), containerName)
 	if err != nil {
-		fmt.Printf("cannot runDockerCommand: %s", cmdArgs)
-		return 0, err
+		return nil, err
 	}
 
-	portStr := string(portBytes)
-	portStr = strings.TrimSuffix(portStr, "\n")
-	portStr = trimQuotes(portStr)
-
-	port, err := strconv.Atoi(portStr)
-	if err != nil {
-		fmt.Printf("cannot convert portBytes to integer: %s\n", string(portBytes))
-		return 0, err
-	}
-	return port, err
+	networkName := c.HostConfig.NetworkMode.UserDefined()
+	net := c.NetworkSettings.Networks[networkName]
+	return net, err
 }
 
 // Matches service name (container) with type in traffic ops db
@@ -122,14 +105,14 @@ var serviceTypes = map[string]string{
 	"trafficvault":     "RIAK",
 }
 
-func serverType(service string) string {
+func serverType(serviceName string) string {
 	for s, t := range serviceTypes {
-		if strings.Contains(service, s) {
+		if s == serviceName {
 			return t
 		}
 	}
 	// unknown -- let caller deal with it
-	return service
+	return serviceName
 }
 
 func (s *session) getTypeIDByName(typeName string) (int, error) {
@@ -141,8 +124,8 @@ func (s *session) getTypeIDByName(typeName string) (int, error) {
 	return types[0].ID, err
 }
 
-func (s *session) getCDNID() (int, error) {
-	cdns, _, err := s.GetCDNs()
+func (s *session) getCDNIDByName(name string) (int, error) {
+	cdns, _, err := s.GetCDNByName(name)
 	if err != nil {
 		fmt.Println("cannot get CDNS")
 		return -1, err
@@ -189,51 +172,73 @@ func (s *session) getStatusIDByName(cdnName string) (int, error) {
 	return statuses[0].ID, err
 }
 
-func (s *session) enrollService(service string) (*v13.Server, error) {
+func getMask(m []byte) string {
+	return fmt.Sprintf("%d.%d.%d.%d", m[0], m[1], m[2], m[3])
+}
+
+func (s *session) enrollService(containerName string) (*v13.Server, error) {
+
+	split := strings.Split(containerName, `_`)
+	serviceName := containerName
+	if len(split) > 2 {
+		serviceName = split[1]
+	}
 	server := v13.Server{
-		HostName: service,
+		HostName:   serviceName,
+		DomainName: os.Getenv("DOMAINNAME"),
 	}
 	var err error
 
-	server.TypeID, err = s.getTypeIDByName(serverType(service))
+	fmt.Println("type is ", serverType(serviceName))
+	server.TypeID, err = s.getTypeIDByName(serverType(serviceName))
 	if err != nil {
-		fmt.Printf("cannot get type for %s", service)
+		fmt.Printf("cannot get type for %s", serviceName)
 	}
 
 	server.StatusID, err = s.getStatusIDByName("PRE_PROD")
 	if err != nil {
-		fmt.Printf("cannot get status for %s", service)
+		fmt.Printf("cannot get status for %s", serviceName)
 	}
 
-	server.CDNID, err = s.getCDNID()
+	server.CDNID, err = s.getCDNIDByName("ALL")
 	if err != nil {
-		fmt.Printf("cannot get CDN for %s", service)
+		fmt.Printf("cannot get CDN for %s", serviceName)
 	}
 
 	server.ProfileID, err = s.getProfileID()
 	if err != nil {
-		fmt.Printf("cannot get profile for %s", service)
+		fmt.Printf("cannot get profile for %s", serviceName)
 	}
 
 	server.CachegroupID, err = s.getCachegroupID()
 	if err != nil {
-		fmt.Printf("cannot get Cachegroup for %s", service)
+		fmt.Printf("cannot get Cachegroup for %s", containerName)
 	}
 
 	server.PhysLocationID, err = s.getPhysLocationID()
 	if err != nil {
-		fmt.Printf("cannot get PhysLocation for %s", service)
+		fmt.Printf("cannot get PhysLocation for %s", containerName)
 	}
 
-	server.IPAddress, err = s.inspectIPAddress(service)
+	dnet, err := s.getNetwork(containerName)
 	if err != nil {
-		fmt.Printf("cannot lookup ipaddress: %v\n", err)
-	}
-
-	server.TCPPort, err = s.inspectPort(service)
-	if err != nil {
-		fmt.Printf("cannot lookup port: %v", err)
+		fmt.Printf("cannot get network: %v\n", err)
 		return nil, err
+	}
+
+	server.IPAddress = dnet.IPAddress
+	server.IPNetmask = getMask(net.CIDRMask(dnet.IPPrefixLen, net.IPv4len*8))
+	server.IPGateway = dnet.Gateway
+
+	ports, err := s.getExposedPorts(containerName)
+	if err != nil {
+		fmt.Printf("cannot get exposed ports: %v\n", err)
+		return nil, err
+	}
+
+	if len(ports) > 0 {
+		// TODO: for now, assuming there's only 1
+		server.TCPPort = ports[0]
 	}
 
 	var buf bytes.Buffer
@@ -245,29 +250,6 @@ func (s *session) enrollService(service string) (*v13.Server, error) {
 	resp, _, err := s.CreateServer(server)
 	fmt.Printf("Response: %s\n", resp)
 	return &server, err
-}
-
-func trimQuotes(s string) string {
-	if len(s) >= 2 {
-		if c := s[len(s)-1]; s[0] == c && (c == '"' || c == '\'') {
-			return s[1 : len(s)-1]
-		}
-	}
-	return s
-}
-
-func runDockerCommand(cmdArgs []string) ([]byte, error) {
-	dockerCmd, err := exec.LookPath("docker")
-	if err != nil {
-		fmt.Println("cannot find the docker executeable")
-		return nil, err
-	}
-	fmt.Printf("Executing: %s %v\n", dockerCmd, strings.Join(cmdArgs, " "))
-	cmdOut, err := exec.Command(dockerCmd, cmdArgs...).Output()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "There was an error running %s: %v\n", dockerCmd, err)
-	}
-	return cmdOut, err
 }
 
 var to struct {
@@ -282,7 +264,7 @@ func (s *session) enrollerHandler() func(http.ResponseWriter, *http.Request) {
 			fmt.Fprintf(w, "ParseForm() err: %v", err)
 			return
 		}
-		service := r.FormValue("service")
+		containerName := r.FormValue("containerName")
 
 		switch r.Method {
 		case "GET":
@@ -300,12 +282,12 @@ func (s *session) enrollerHandler() func(http.ResponseWriter, *http.Request) {
 				names = append(names, name)
 			}
 			enc := json.NewEncoder(w)
-			enc.Encode(map[string][]string{service: names})
+			enc.Encode(map[string][]string{containerName: names})
 			return
 
 		case "POST":
-			fmt.Println("enrolling ", service)
-			server, err := s.enrollService(service)
+			fmt.Println("enrolling ", containerName)
+			server, err := s.enrollService(containerName)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
