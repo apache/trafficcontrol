@@ -27,7 +27,7 @@ insert into job_status (name, description) values ('PENDING', 'Job is queued, bu
 
 -- parameters
 -- Moved into postinstall global parameters
-insert into profile (name, description, type) values ('GLOBAL', 'Global Traffic Ops profile, DO NOT DELETE', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type, cdn) values ('GLOBAL', 'Global Traffic Ops profile, DO NOT DELETE', 'UNK_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
 
 ---------------------------------
 
@@ -57,13 +57,13 @@ $do$;
 
 -- profiles
 ---------------------------------
-insert into profile (name, description, type) values ('TRAFFIC_ANALYTICS', 'Traffic Analytics profile', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
-insert into profile (name, description, type) values ('TRAFFIC_OPS', 'Traffic Ops profile', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
-insert into profile (name, description, type) values ('TRAFFIC_OPS_DB', 'Traffic Ops DB profile', 'UNK_PROFILE') ON CONFLICT (name) DO NOTHING;
-insert into profile (name, description, type) values ('TRAFFIC_PORTAL', 'Traffic Portal profile', 'TP_PROFILE') ON CONFLICT (name) DO NOTHING;
-insert into profile (name, description, type) values ('TRAFFIC_STATS', 'Traffic Stats profile', 'TS_PROFILE') ON CONFLICT (name) DO NOTHING;
-insert into profile (name, description, type) values ('INFLUXDB', 'InfluxDb profile', 'INFLUXDB_PROFILE') ON CONFLICT (name) DO NOTHING;
-insert into profile (name, description, type) values ('RIAK_ALL', 'Riak profile for all CDNs', 'RIAK_PROFILE') ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type, cdn) values ('TRAFFIC_ANALYTICS', 'Traffic Analytics profile', 'UNK_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type, cdn) values ('TRAFFIC_OPS', 'Traffic Ops profile', 'UNK_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type, cdn) values ('TRAFFIC_OPS_DB', 'Traffic Ops DB profile', 'UNK_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type, cdn) values ('TRAFFIC_PORTAL', 'Traffic Portal profile', 'TP_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type, cdn) values ('TRAFFIC_STATS', 'Traffic Stats profile', 'TS_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type, cdn) values ('INFLUXDB', 'InfluxDb profile', 'INFLUXDB_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
+insert into profile (name, description, type, cdn) values ('RIAK_ALL', 'Riak profile for all CDNs', 'RIAK_PROFILE', (SELECT id FROM cdn WHERE name='ALL')) ON CONFLICT (name) DO NOTHING;
 
 -- statuses
 insert into status (name, description) values ('OFFLINE', 'Server is Offline. Not active in any configuration.') ON CONFLICT (name) DO NOTHING;
