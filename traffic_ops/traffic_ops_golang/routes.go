@@ -156,6 +156,19 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodGet, `user/{id}/deliveryservices/available/?(\.json)?$`, user.GetAvailableDSes, auth.PrivLevelReadOnly, Authenticated, nil},
 		{1.1, http.MethodPost, `user/login/?$`, login.LoginHandler(d.DB, d.Config), 0, NoAuth, nil},
 
+		//User: CRUD (1.4 then 1.1)
+		//Incrementing version for users because change to Nullable struct. Delete is completely new.
+		{1.4, http.MethodGet, `users/?(\.json)?$`, api.ReadHandler(user.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.4, http.MethodGet, `users/{id}?(\.json)?$`, api.ReadHandler(user.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.4, http.MethodPut, `users/{id}?(\.json)?$`, api.UpdateHandler(user.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
+		{1.4, http.MethodPost, `users/?(\.json)?$`, api.CreateHandler(user.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
+		//{1.4, http.MethodDelete, `users/{id}?(\.json)?$`, api.DeleteHandler(user.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
+
+		{1.1, http.MethodGet, `users/?(\.json)?$`, handlerToFunc(proxyHandler), auth.PrivLevelReadOnly, Authenticated, []Middleware{}},
+		{1.1, http.MethodGet, `users/{id}?(\.json)?$`, handlerToFunc(proxyHandler), auth.PrivLevelReadOnly, Authenticated, []Middleware{}},
+		{1.1, http.MethodPut, `users/{id}?(\.json)?$`, handlerToFunc(proxyHandler), auth.PrivLevelReadOnly, Authenticated, []Middleware{}},
+		{1.1, http.MethodPost, `users/?(\.json)?$`, handlerToFunc(proxyHandler), auth.PrivLevelReadOnly, Authenticated, []Middleware{}},
+
 		{1.1, http.MethodGet, `user/current/?(\.json)?$`, user.Current, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		//Parameter: CRUD
