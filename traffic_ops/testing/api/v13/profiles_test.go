@@ -20,12 +20,16 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 )
 
 func TestProfiles(t *testing.T) {
 
 	CreateTestCDNs(t)
 	CreateTestTypes(t)
+
+	// attempt to create profiles with missing info
+	CreateBadProfiles(t)
 	CreateTestProfiles(t)
 	CreateTestParameters(t)
 	CreateTestProfileParameters(t)
@@ -37,7 +41,29 @@ func TestProfiles(t *testing.T) {
 	DeleteTestProfiles(t)
 	DeleteTestTypes(t)
 	DeleteTestCDNs(t)
+}
 
+// CreateBadProfiles ensures that profiles can't be created with bad values
+func CreateBadProfiles(t *testing.T) {
+
+	// blank profile
+	prs := []v13.Profile{
+		v13.Profile{Type: "", Name: "", Description: "", CDNID: 0},
+		v13.Profile{Type: "ATS_PROFILE", Name: "badprofile", Description: "description", CDNID: 0},
+		v13.Profile{Type: "ATS_PROFILE", Name: "badprofile", Description: "", CDNID: 1},
+		v13.Profile{Type: "ATS_PROFILE", Name: "", Description: "description", CDNID: 1},
+		v13.Profile{Type: "", Name: "badprofile", Description: "description", CDNID: 1},
+	}
+
+	for _, pr := range prs {
+		resp, _, err := TOSession.CreateProfile(pr)
+
+		if err == nil {
+			t.Errorf("Creating bad profile succeeded: %+v\nResponse is %+v", pr, resp)
+		} else {
+			log.Debugf("bad profile creation failed appropriately")
+		}
+	}
 }
 
 func CreateTestProfiles(t *testing.T) {
@@ -54,7 +80,6 @@ func CreateTestProfiles(t *testing.T) {
 			t.Errorf("could not CREATE profiles with name: %s %v\n", pr.Name, err)
 		}
 	}
-
 }
 
 func UpdateTestProfiles(t *testing.T) {
