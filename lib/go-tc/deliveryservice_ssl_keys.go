@@ -156,11 +156,11 @@ type CDNDNSSECGenerateReq struct {
 	// Key is the CDN name, as documented in the API documentation.
 	Key *string `json:"key"`
 	// Name is the CDN domain, as documented in the API documentation.
-	Name              *string `json:"name"`
-	TTL               *uint64 `json:"ttl,string"`
-	KSKExpirationDays *uint64 `json:"kskExpirationDays,string"`
-	ZSKExpirationDays *uint64 `json:"zskExpirationDays,string"`
-	EffectiveDateUnix *int64  `json:"effectiveDate"`
+	Name              *string          `json:"name"`
+	TTL               *util.JSONIntStr `json:"ttl"`
+	KSKExpirationDays *util.JSONIntStr `json:"kskExpirationDays"`
+	ZSKExpirationDays *util.JSONIntStr `json:"zskExpirationDays"`
+	EffectiveDateUnix *util.JSONIntStr `json:"effectiveDate"`
 }
 
 func (r CDNDNSSECGenerateReq) Validate(tx *sql.Tx) error {
