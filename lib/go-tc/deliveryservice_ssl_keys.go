@@ -61,7 +61,7 @@ type DeliveryServiceSSLKeysReq struct {
 	State           *string `json:"state,omitempty"`
 	// Key is the XMLID of the delivery service
 	Key         *string                            `json:"key"`
-	Version     *string                            `json:"version"`
+	Version     *util.JSONNumAsStr                 `json:"version"`
 	Certificate *DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
 }
 
@@ -75,7 +75,8 @@ func (r *DeliveryServiceSSLKeysReq) Sanitize() {
 		r.Key = &k
 	}
 	if r.Version == nil {
-		r.Version = util.StrPtr("")
+		numStr := util.JSONNumAsStr("")
+		r.Version = &numStr
 	}
 }
 

@@ -65,7 +65,7 @@ func generatePutRiakKeys(req tc.DeliveryServiceSSLKeysReq, tx *sql.Tx, cfg *conf
 		Country:         *req.Country,
 		State:           *req.State,
 		Key:             *req.Key,
-		Version:         *req.Version,
+		Version:         string(*req.Version),
 	}
 	if req.Certificate != nil {
 		dsSSLKeys.Certificate = *req.Certificate
