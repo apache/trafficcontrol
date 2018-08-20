@@ -51,10 +51,11 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if req.EffectiveDateUnix == nil {
-		req.EffectiveDateUnix = util.Int64Ptr(time.Now().Unix())
+		now := util.JSONIntStr(time.Now().Unix())
+		req.EffectiveDateUnix = &now
 	}
 	cdnName := *req.Key
-	if err := generateStoreDNSSECKeys(inf.Tx.Tx, inf.Config, cdnName, *req.TTL, *req.KSKExpirationDays, *req.ZSKExpirationDays, *req.EffectiveDateUnix); err != nil {
+	if err := generateStoreDNSSECKeys(inf.Tx.Tx, inf.Config, cdnName, uint64(*req.TTL), uint64(*req.KSKExpirationDays), uint64(*req.ZSKExpirationDays), int64(*req.EffectiveDateUnix)); err != nil {
 		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("generating and storing DNSSEC CDN keys: "+err.Error()))
 		return
 	}
@@ -167,7 +168,7 @@ WHERE cdn.name = $1
 	for rows.Next() {
 		ds := CDNDS{}
 		dsTypeStr := ""
-		if err := rows.Scan(&ds.Name, &ds.Protocol, dsTypeStr, &ds.RoutingName, &cdnDomain); err != nil {
+		if err := rows.Scan(&ds.Name, &ds.Protocol, &dsTypeStr, &ds.RoutingName, &cdnDomain); err != nil {
 			return nil, "", errors.New("scanning cdn delivery services: " + err.Error())
 		}
 		dsType := tc.DSTypeFromString(dsTypeStr)
