@@ -45,9 +45,6 @@ while ! to-ping; do
 	sleep 3
 done
 
-# Now network things. First need to authenticate
-curl -ksc cookie.jar -d "{\"u\":\"$TO_ADMIN_USER\",\"p\":\"$TO_ADMIN_PASSWORD\"}" https://$TO_HOST:$TO_PORT/api/1.3/user/login
-echo
 
 # Gets our CDN ID
 CDN=$(to-get api/1.3/cdns | jq '.response|.[]|select(.name=="CDN-in-a-Box")|.id')
