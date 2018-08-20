@@ -17,10 +17,10 @@
  * under the License.
  */
 
-var DeliveryServiceRequestsController = function(isEditing, myid, $scope) {
+var DeliveryServiceRequestsController = function(isEditing, myId, $scope) {
 
 	$scope.isEdit = (isEditing == true) ? true : false;
-	$scope.thisid = myid;
+	$scope.thisid = myId;
 
 };
 
