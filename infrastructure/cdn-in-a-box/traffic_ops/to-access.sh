@@ -21,7 +21,7 @@
 
 
 export TO_URL TO_ADMIN_USER TO_ADMIN_PASSWORD
-export CURLOPTS=${CURLOPTS:--L -f -s -S}
+export CURLOPTS=${CURLOPTS:--LfsS}
 export CURLAUTH=${CURLAUTH:--k}
 export COOKIEJAR=$(mktemp -t XXXX.cookie)
 
