@@ -43,6 +43,7 @@ ADD traffic_monitor/traffic_monitor.cfg /opt/traffic_monitor/conf/
 ADD traffic_monitor/parameters.json \
     traffic_monitor/profile.json \
     traffic_monitor/server.json \
+    traffic_ops/to-access.sh \
     /
 
 EXPOSE 80
