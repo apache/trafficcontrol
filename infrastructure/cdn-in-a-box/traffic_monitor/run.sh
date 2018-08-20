@@ -59,64 +59,63 @@ sed -ie "s;MY_GATEWAY;$GATEWAY;g" /server.json
 sed -ie "s;MY_NETMASK;$NETMASK;g" /server.json
 sed -ie "s;MY_IP;$IP;g" /server.json
 
-while ! curl -sk $TO_URL/api/1.3/ping </dev/null; do
-	echo "waiting for $TO_HOST:$TO_PORT"
+source /to-access.sh
+
+while ! to-ping; do
+	echo "waiting for traffic_ops..."
 	sleep 3
 done
 
-RESPONSE=$(curl -sk -d '{ "u":"'"$TM_USER"'", "p":"'"$TM_PASSWORD"'" }' $TO_URL/api/1.3/user/login)
-while [[ "$RESPONSE" == '{"alerts":[{"text":"Invalid username or password.","level":"error"}]}' ]]; do
-	echo "Waiting for availability of $TM_USER login"
-	RESPONSE=$(curl -sk -d '{ "u":"'"$TM_USER"'", "p":"'"$TM_PASSWORD"'" }' $TO_URL/api/1.3/user/login)
+# There's a race condition with setting the TM credentials and TO actually creating
+# the TM user
+while [[ -z "$(to-get api/1.3/users | grep $TM_USER )" ]]; do
+	echo "waiting for TM_USER creation..."
 	sleep 3
 done
-curl -ksc cookie.jar -d "{\"u\":\"$TO_ADMIN_USER\",\"p\":\"${TO_ADMIN_PASSWORD}\"}" $TO_URL/api/1.3/user/login
-echo "Got Cookie: $(tail -n1 cookie.jar | tr '\t' ' ')"
+
+# Need to do this to get the to-access auth to use proper credentials
+export TO_ADMIN_USER="$TM_USER"
+export TO_ADMIN_PASSWORD="$TM_PASSWORD"
+
 
 # Gets our CDN ID
-CDN=$(curl -ksb cookie.jar $TO_URL/api/1.3/cdns)
-CDN=$(echo $CDN | tr '}' '\n' | grep CDN-in-a-Box | tr ',' '\n' | grep '"id"' | cut -d : -f2)
+CDN=$(to-get api/1.3/cdns | jq '.response|.[]|select(.name=="CDN-in-a-Box")|.id')
 while [[ -z "$CDN" ]]; do
-	echo "waiting for trafficops setup to complete..."
+	echo "waiting for traffic_ops setup to complete..."
 	sleep 3
-	CDN=$(curl -ksb cookie.jar $TO_URL/api/1.3/cdns)
-	CDN=$(echo $CDN | tr '}' '\n' | grep CDN-in-a-Box | tr ',' '\n' | grep '"id"' | cut -d : -f2)
+	CDN=$(to-get api/1.3/cdns | jq '.response|.[]|select(.name=="CDN-in-a-Box")|.id')
 done
 
 # Now we upload a profile for later use
 sed -ie "s;CDN_ID;$CDN;g" /profile.json
 cat /profile.json
-PROFILE=$(curl -ksb cookie.jar -d @/profile.json $TO_URL/api/1.3/profiles)
-PROFILENAME=$(echo $PROFILE | tr ',' '\n' | grep '"name"' | cut -d : -f2 | tr -d '"')
-PROFILEID=$(echo $PROFILE | tr ',{' '\n' | grep '"id"' | cut -d : -f2)
-curl -ksb cookie.jar -d @/parameters.json $TO_URL/api/1.3/profiles/name/$PROFILENAME/parameters
+PROFILE=$(to-post api/1.3/profiles /profile.json | jq '.response')
+PROFILENAME=$(echo $PROFILE | jq '.name' | tr -d '"')
+PROFILEID=$(echo $PROFILE | jq '.id')
+to-post api/1.3/profiles/name/$PROFILENAME/parameters /parameters.json
 echo
 
 # Gets the location ID
-location=$(curl -ksb cookie.jar $TO_URL/api/1.3/phys_locations)
-while [[ "$location" == '{"response":[]}' ]]; do
+location=$(to-get api/1.3/phys_locations | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
+while [[ -z "$location" ]]; do
 	echo "Waiting for location setup"
 	sleep 3
-	location=$(curl -ksb cookie.jar $TO_URL/api/1.3/phys_locations)
+	location=$(to-get api/1.3/phys_locations | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
 done
-location=$(echo $location | tr ']' '\n' | grep CDN_in_a_Box | tr ',' '\n' | grep '"id"' | cut -d ':' -f2)
 
 # Gets the id of a RASCAL server type
-TYPE=$(curl -ksb cookie.jar $TO_URL/api/1.3/types)
-TYPE=$(echo $TYPE | tr '}' '\n' | grep '"RASCAL"' | tr ',' '\n' | grep '"id"' | cut -d : -f2)
+TYPE=$(to-get api/1.3/types | jq '.response|.[]|select(.name=="RASCAL")|.id')
 
 # Gets the id of the 'ONLINE' status
-ONLINE=$(curl -ksb cookie.jar $TO_URL/api/1.3/statuses)
-ONLINE=$(echo $ONLINE | tr '}' '\n' | grep ONLINE | tr ',' '\n' | grep '"id"' | cut -d : -f2)
+ONLINE=$(to-get api/1.3/statuses | jq '.response|.[]|select(.name=="ONLINE")|.id')
 
 # Gets the cachegroup ID
-CACHEGROUP=$(curl -ksb cookie.jar $TO_URL/api/1.3/cachegroups)
-while [[ CACHEGROUP == '{"response":[]}' ]]; do
+CACHEGROUP=$(to-get api/1.3/cachegroups | jq '.response|.[]|select(.name=="CDN_in_a_Box_Mid")|.id')
+while [[ -z "$CACHEGROUP" ]]; do
 	echo "waiting for trafficops setup to complete..."
 	sleep 3
-	CACHEGROUP=$(curl -ksb cookie.jar $TO_URL/api/1.3/cachegroups)
+	CACHEGROUP=$(to-get api/1.3/cachegroups | jq '.response|.[]|select(.name=="CDN_in_a_Box_Mid")|.id')
 done
-CACHEGROUP=$(echo $CACHEGROUP | tr '{' '\n' | grep CDN_in_a_Box_Mid | tr ',' '\n' | grep '"id"' | cut -d : -f2)
 
 # Now put it all together and send it up
 sed -ie "s;MY_LOCATION;$location;g" /server.json
@@ -126,7 +125,7 @@ sed -ie "s;MY_STATUS;$ONLINE;g" /server.json
 sed -ie "s;CACHE_GROUP_ID;$CACHEGROUP;g" /server.json
 sed -ie "s;MY_PROFILE_ID;$PROFILEID;g" /server.json
 cat /server.json
-curl -ksb cookie.jar -d @/server.json $TO_URL/api/1.3/servers
+to-post api/1.3/servers /server.json
 echo
 
 touch /opt/traffic_monitor/var/log/traffic_monitor.log
