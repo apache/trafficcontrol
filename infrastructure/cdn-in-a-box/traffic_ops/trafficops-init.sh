@@ -44,6 +44,7 @@ load_data_from() {
         echo "Failed to load data from '$dir': directory does not exist"
     fi
 
+    local status=0
     for ep in $endpoints; do
         d="$dir/$ep"
         [[ -d $d ]] || continue
@@ -59,7 +60,7 @@ load_data_from() {
             rm "$t"
         done
     done
-    if [ $status -ne 0 ]; then
+    if [[ $status -ne 0 ]]; then
         exit $status
     fi
 
