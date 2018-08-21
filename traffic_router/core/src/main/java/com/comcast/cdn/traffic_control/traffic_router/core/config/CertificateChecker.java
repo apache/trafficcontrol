@@ -45,11 +45,18 @@ public class CertificateChecker {
 	public boolean certificatesAreValid(final List<CertificateData> certificateDataList, final JsonNode deliveryServicesJson) {
 
 		final Iterator<String> deliveryServiceIdIter = deliveryServicesJson.fieldNames();
+		boolean invalidConfig = false;
+
 		while (deliveryServiceIdIter.hasNext()) {
 			if (!deliveryServiceHasValidCertificates(certificateDataList, deliveryServicesJson, deliveryServiceIdIter.next())) {
-				return false;
+				invalidConfig = true; // individual DS errors are logged when deliveryServiceHasValidCertificates() is called
 			}
 		}
+
+		if (invalidConfig) {
+			return false;
+		}
+
 		return true;
 	}
 
@@ -61,7 +68,7 @@ public class CertificateChecker {
 	}
 
     @SuppressWarnings("PMD.CyclomaticComplexity")
-	private Boolean deliveryServiceHasValidCertificates(final List<CertificateData> certificateDataList, final JsonNode deliveryServicesJson, final String deliveryServiceId) {
+	private boolean deliveryServiceHasValidCertificates(final List<CertificateData> certificateDataList, final JsonNode deliveryServicesJson, final String deliveryServiceId) {
 		final JsonNode deliveryServiceJson = deliveryServicesJson.get(deliveryServiceId);
 		final JsonNode protocolJson = deliveryServiceJson.get("protocol");
 
