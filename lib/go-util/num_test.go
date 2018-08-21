@@ -17,6 +17,7 @@ package util
 // When adding symbols, document the RFC and section they correspond to.
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 )
@@ -176,5 +177,23 @@ func TestBytesLenSplit(t *testing.T) {
 		if !reflect.DeepEqual(expected, actual) {
 			t.Errorf("BytesLenSplit expected: %+v actual: %+v\n", expected, actual)
 		}
+	}
+}
+
+func TestJSONNumAsStrUnmarshalJSON(t *testing.T) {
+	type T struct {
+		V JSONNumAsStr `json:"v"`
+	}
+	jNum := `{"v":42}`
+	expected := T{V: "42"}
+	actual := T{}
+	json.Unmarshal([]byte(jNum), &actual)
+	if expected != actual {
+		t.Errorf("JSONNumAsStr number unmarshal expected %v actual %v", expected, actual)
+	}
+	jStr := `{"v":"42"}`
+	json.Unmarshal([]byte(jStr), &actual)
+	if expected != actual {
+		t.Errorf("JSONNumAsStr string unmarshal expected %v actual %v", expected, actual)
 	}
 }
