@@ -32,7 +32,7 @@ set -e
 set -x
 set -m
 
-envvars=( TO_HOST TO_PORT TM_USER TM_PASSWORD TO_ADMIN_USER TO_ADMIN_PASSWORD)
+envvars=( TO_HOST TO_PORT TM_USER TM_PASSWORD)
 for v in $envvars
 do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
@@ -61,22 +61,21 @@ sed -ie "s;MY_IP;$IP;g" /server.json
 
 source /to-access.sh
 
-while ! to-ping; do
+while ! to-ping 2>/dev/null; do
 	echo "waiting for traffic_ops..."
 	sleep 3
 done
 
 # There's a race condition with setting the TM credentials and TO actually creating
 # the TM user
-while [[ -z "$(to-get api/1.3/users | grep $TM_USER )" ]]; do
+while to-get api/1.3/users | grep -q "$TM_USER"; do
 	echo "waiting for TM_USER creation..."
 	sleep 3
 done
 
-# Need to do this to get the to-access auth to use proper credentials
-export TO_ADMIN_USER="$TM_USER"
-export TO_ADMIN_PASSWORD="$TM_PASSWORD"
-
+# now that TM_USER is available,  use that for all further operations
+export TO_USER="$TM_USER"
+export TO_PASSWORD="$TM_PASSWORD"
 
 # Gets our CDN ID
 CDN=$(to-get api/1.3/cdns | jq '.response|.[]|select(.name=="CDN-in-a-Box")|.id')

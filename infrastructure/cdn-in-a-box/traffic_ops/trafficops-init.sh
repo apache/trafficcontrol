@@ -30,7 +30,7 @@ done
 
 TO_URL="https://$TO_HOST:$TO_PORT"
 # wait until the ping endpoint succeeds
-while ! to-get api/1.3/ping 2>/dev/null; do
+while ! to-ping 2>/dev/null; do
    echo waiting for trafficops
    sleep 3
 done
