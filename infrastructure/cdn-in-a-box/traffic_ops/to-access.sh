@@ -20,12 +20,14 @@
 # Defines bash functions to consistently interact with the Traffic Ops API
 
 
-export TO_URL TO_ADMIN_USER TO_ADMIN_PASSWORD
+export TO_URL=${TO_URL:-https://$TO_HOST:$TO_PORT}
+export TO_USER=${TO_USER:-$TO_ADMIN_USER}
+export TO_PASSWORD=${TO_PASSWORD:-$TO_ADMIN_PASSWORD}
+
 export CURLOPTS=${CURLOPTS:--LfsS}
 export CURLAUTH=${CURLAUTH:--k}
 export COOKIEJAR=$(mktemp -t XXXX.cookie)
 
-TO_URL=https://$TO_HOST:$TO_PORT
 
 login=$(mktemp -t XXXX.login)
 
@@ -49,8 +51,8 @@ cookie_current() {
 
 to-auth() {
 	# These are required
-	if [[ -z $TO_URL || -z $TO_ADMIN_USER || -z $TO_ADMIN_PASSWORD ]]; then
-		echo TO_URL TO_ADMIN_USER TO_ADMIN_PASSWORD must all be set
+	if [[ -z $TO_URL || -z $TO_USER || -z $TO_PASSWORD ]]; then
+		echo TO_URL TO_USER TO_PASSWORD must all be set
 		return 1
 	fi
 
@@ -60,7 +62,7 @@ to-auth() {
 	local url=$TO_URL/api/1.3/user/login
 	local datatype='Accept: application/json'
 	cat >"$login" <<-CREDS
-{ "u" : "$TO_ADMIN_USER", "p" : "$TO_ADMIN_PASSWORD" }
+{ "u" : "$TO_USER", "p" : "$TO_PASSWORD" }
 CREDS
 	res=$(curl $CURLAUTH $CURLOPTS -H "$datatype" --cookie "$COOKIEJAR" --cookie-jar "$COOKIEJAR" -X POST --data @"$login" "$url")
 	if [[ $res != *"Successfully logged in."* ]]; then

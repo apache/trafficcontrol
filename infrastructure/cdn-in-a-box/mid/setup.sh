@@ -40,7 +40,7 @@ sed -ie "s;MY_IP;$myIP;g" /server.json
 
 source /to-access.sh
 
-while ! to-ping >/dev/null; do
+while ! to-ping 2>/dev/null; do
 	echo "waiting for Traffic Ops"
 	sleep 3
 done
