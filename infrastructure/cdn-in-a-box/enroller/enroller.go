@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -65,28 +66,24 @@ func printJSON(label string, b interface{}) {
 	fmt.Println(label, buf.String())
 }
 
-func (s *session) getExposedPorts(containerName string) ([]int, error) {
-	c, err := s.Client.ContainerInspect(context.Background(), containerName)
-	if err != nil {
-		return nil, err
-	}
-
+func (s *session) getExposedPorts(c dockertypes.ContainerJSON) []int {
 	var ports []int
 	for port := range c.Config.ExposedPorts {
 		ports = append(ports, port.Int())
 	}
-	return ports, nil
+	return ports
 }
 
-func (s *session) getNetwork(containerName string) (*network.EndpointSettings, error) {
-	c, err := s.Client.ContainerInspect(context.Background(), containerName)
-	if err != nil {
-		return nil, err
+func (s *session) getNetwork(c dockertypes.ContainerJSON) (*network.EndpointSettings, error) {
+	if c.NetworkSettings == nil {
+		return nil, errors.New("cannot get network from container")
 	}
-
-	networkName := c.HostConfig.NetworkMode.UserDefined()
-	net := c.NetworkSettings.Networks[networkName]
-	return net, err
+	mode := string(c.HostConfig.NetworkMode)
+	net, ok := c.NetworkSettings.Networks[mode]
+	if !ok {
+		return nil, errors.New("no network for " + mode)
+	}
+	return net, nil
 }
 
 // Matches service name (container) with type in traffic ops db
@@ -105,6 +102,17 @@ var serviceTypes = map[string]string{
 	"trafficvault":     "RIAK",
 }
 
+func containerName(c dockertypes.ContainerJSON) string {
+	return strings.Trim(c.Name, "/")
+}
+
+func serviceName(c dockertypes.ContainerJSON) string {
+	if s, ok := c.Config.Labels["com.docker.compose.service"]; ok {
+		return s
+	}
+	return containerName(c)
+}
+
 func serverType(serviceName string) string {
 	for s, t := range serviceTypes {
 		if s == serviceName {
@@ -117,10 +125,11 @@ func serverType(serviceName string) string {
 
 func (s *session) getTypeIDByName(typeName string) (int, error) {
 	types, _, err := s.GetTypeByName(typeName)
-	if err != nil {
+	if err != nil || len(types) == 0 {
 		fmt.Printf("unknown type %s\n", typeName)
 		return -1, err
 	}
+	fmt.Printf("type %s: %++v\n", typeName, types)
 	return types[0].ID, err
 }
 
@@ -176,51 +185,48 @@ func getMask(m []byte) string {
 	return fmt.Sprintf("%d.%d.%d.%d", m[0], m[1], m[2], m[3])
 }
 
-func (s *session) enrollService(containerName string) (*v13.Server, error) {
-
-	split := strings.Split(containerName, `_`)
-	serviceName := containerName
-	if len(split) > 2 {
-		serviceName = split[1]
-	}
+func (s *session) enrollContainer(c dockertypes.ContainerJSON) (*v13.Server, error) {
+	hostName := serviceName(c)
+	cName := containerName(c)
+	fmt.Printf("enrolling %s(%s)\n", cName, hostName)
 	server := v13.Server{
-		HostName:   serviceName,
+		HostName:   hostName,
 		DomainName: os.Getenv("DOMAINNAME"),
 	}
-	var err error
 
-	fmt.Println("type is ", serverType(serviceName))
-	server.TypeID, err = s.getTypeIDByName(serverType(serviceName))
+	fmt.Println("type is ", serverType(hostName))
+	fmt.Println("hostName is ", hostName)
+	var err error
+	server.TypeID, err = s.getTypeIDByName(serverType(hostName))
 	if err != nil {
-		fmt.Printf("cannot get type for %s", serviceName)
+		fmt.Printf("cannot get type for %s", hostName)
 	}
 
 	server.StatusID, err = s.getStatusIDByName("PRE_PROD")
 	if err != nil {
-		fmt.Printf("cannot get status for %s", serviceName)
+		fmt.Printf("cannot get status for %s", hostName)
 	}
 
 	server.CDNID, err = s.getCDNIDByName("ALL")
 	if err != nil {
-		fmt.Printf("cannot get CDN for %s", serviceName)
+		fmt.Printf("cannot get CDN for %s", hostName)
 	}
 
 	server.ProfileID, err = s.getProfileID()
 	if err != nil {
-		fmt.Printf("cannot get profile for %s", serviceName)
+		fmt.Printf("cannot get profile for %s", hostName)
 	}
 
 	server.CachegroupID, err = s.getCachegroupID()
 	if err != nil {
-		fmt.Printf("cannot get Cachegroup for %s", containerName)
+		fmt.Printf("cannot get Cachegroup for %s", cName)
 	}
 
 	server.PhysLocationID, err = s.getPhysLocationID()
 	if err != nil {
-		fmt.Printf("cannot get PhysLocation for %s", containerName)
+		fmt.Printf("cannot get PhysLocation for %s", cName)
 	}
-
-	dnet, err := s.getNetwork(containerName)
+	dnet, err := s.getNetwork(c)
 	if err != nil {
 		fmt.Printf("cannot get network: %v\n", err)
 		return nil, err
@@ -229,8 +235,10 @@ func (s *session) enrollService(containerName string) (*v13.Server, error) {
 	server.IPAddress = dnet.IPAddress
 	server.IPNetmask = getMask(net.CIDRMask(dnet.IPPrefixLen, net.IPv4len*8))
 	server.IPGateway = dnet.Gateway
+	server.IP6Address = dnet.GlobalIPv6Address
+	server.IP6Gateway = dnet.IPv6Gateway
 
-	ports, err := s.getExposedPorts(containerName)
+	ports := s.getExposedPorts(c)
 	if err != nil {
 		fmt.Printf("cannot get exposed ports: %v\n", err)
 		return nil, err
@@ -240,7 +248,6 @@ func (s *session) enrollService(containerName string) (*v13.Server, error) {
 		// TODO: for now, assuming there's only 1
 		server.TCPPort = ports[0]
 	}
-
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
 	enc.SetIndent(``, `  `)
@@ -264,39 +271,49 @@ func (s *session) enrollerHandler() func(http.ResponseWriter, *http.Request) {
 			fmt.Fprintf(w, "ParseForm() err: %v", err)
 			return
 		}
-		containerName := r.FormValue("containerName")
+
+		net, err := s.NetworkInspect(context.Background(), "cdn-in-a-box_tcnet")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		var names []string
+		var containers []dockertypes.ContainerJSON
+		for _, epr := range net.Containers {
+			c, err := s.ContainerInspect(context.Background(), epr.Name)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			fmt.Printf("including %s\n", c.Name)
+			names = append(names, c.Name)
+			containers = append(containers, c)
+		}
 
 		switch r.Method {
 		case "GET":
-			containers, err := s.ContainerList(context.Background(), dockertypes.ContainerListOptions{})
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			var names []string
-			for _, container := range containers {
-				name := container.ID
-				if len(container.Names) > 0 {
-					name = container.Names[0]
-				}
-				names = append(names, name)
-			}
+			// just list the container names
 			enc := json.NewEncoder(w)
-			enc.Encode(map[string][]string{containerName: names})
+			enc.Encode(names)
 			return
 
 		case "POST":
-			fmt.Println("enrolling ", containerName)
-			server, err := s.enrollService(containerName)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
+			// enroll each container
+			var servers []*v13.Server
+			for _, c := range containers {
+				server, err := s.enrollContainer(c)
+				if err != nil {
+					fmt.Printf("failed to enroll %s\n", containerName(c))
+					continue
+				}
+				servers = append(servers, server)
 			}
 			enc := json.NewEncoder(w)
-			if err := enc.Encode(server); err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+			if err := enc.Encode(servers); err != nil {
+				fmt.Println("failed to encode servers")
 			}
+			return
 
 		default:
 			http.Error(w, "unhandled method "+r.Method, http.StatusBadRequest)
