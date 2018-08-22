@@ -173,7 +173,7 @@ services:
     networks:
       - tcnet
     ports:
-      - "8080:80"
+      - "9000:80"
 
   # mid cache
   mid:
@@ -187,7 +187,7 @@ services:
     networks:
       - tcnet
     ports:
-      - "8081:80"
+      - "9100:80"
 
   # origin provides the content to be distributed through the CDN caches
   origin:
@@ -198,8 +198,23 @@ services:
     networks:
       - tcnet
     ports:
-      - "9080:80"
+      - "9200:80"
 
+  # enroller provides a way to register component instances with traffic_ops
+  enroller:
+    build:
+      context: ../..
+      dockerfile: infrastructure/cdn-in-a-box/enroller/Dockerfile
+    env_file:
+      - variables.env
+    hostname: enroller
+    networks:
+      - tcnet
+    ports:
+      - "8080:80"
+    volumes:  
+      - /var/run/docker.sock:/var/run/docker.sock
+      
 volumes:
   schemas:
     external: false
