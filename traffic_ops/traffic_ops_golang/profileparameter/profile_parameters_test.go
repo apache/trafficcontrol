@@ -66,15 +66,13 @@ func TestGetProfileParameters(t *testing.T) {
 	defer db.Close()
 
 	testPPs := getTestProfileParameters()
-	cols := test.ColsFromStructByTag("db", v13.ProfileParameterNullable{})
+	cols := test.ColsFromStructByTag("db", tc.ProfileParametersNullable{})
 	rows := sqlmock.NewRows(cols)
 
 	for _, ts := range testPPs {
 		rows = rows.AddRow(
 			ts.LastUpdated,
 			ts.Profile,
-			ts.ProfileID,
-			ts.Parameter,
 			ts.ParameterID,
 		)
 	}
