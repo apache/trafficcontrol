@@ -141,9 +141,7 @@ func TestWrapAuth(t *testing.T) {
 	rows.AddRow(30, "user1", 1, 1)
 	mock.ExpectQuery("SELECT").WithArgs(userName).WillReturnRows(rows)
 
-	sqlStatement := getUserInfoStmt()
-
-	authBase := AuthBase{secret, sqlStatement, nil}
+	authBase := AuthBase{secret, nil}
 
 	cookie := tocookie.New(userName, time.Now().Add(time.Minute), secret)
 
