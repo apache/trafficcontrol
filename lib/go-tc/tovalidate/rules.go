@@ -113,3 +113,19 @@ func IsGreaterThanZero(value interface{}) error {
 	}
 	return errors.New("must be greater than zero")
 }
+
+func IsValidPortNumber(value interface{}) error {
+	switch v := value.(type) {
+	case *int:
+		if v == nil || *v > 0 && *v <= 65535 {
+			return nil
+		}
+	case *float64:
+		if v == nil || *v > 0 && *v <= 65535 {
+			return nil
+		}
+	default:
+		return fmt.Errorf("IsValidPortNumber validation failure: unknown type %T", value)
+	}
+	return errors.New("must be a valid port number")
+}
