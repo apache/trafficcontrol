@@ -66,9 +66,12 @@ while ! to-ping 2>/dev/null; do
 	sleep 3
 done
 
+export TO_USER=$TO_ADMIN_USER
+export TO_PASSWORD=$TO_ADMIN_PASSWORD
+
 # There's a race condition with setting the TM credentials and TO actually creating
 # the TM user
-while to-get api/1.3/users | grep -q "$TM_USER"; do
+until to-get api/1.3/users?username="$TM_USER" | jq -c -e '.response[].username|length'; do
 	echo "waiting for TM_USER creation..."
 	sleep 3
 done
