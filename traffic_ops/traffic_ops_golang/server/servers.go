@@ -100,11 +100,14 @@ func (server *TOServer) Validate() error {
 		"ipAddress":      validation.Validate(server.IPAddress, validation.NotNil, is.IPv4),
 		"ipNetmask":      validation.Validate(server.IPNetmask, validation.NotNil),
 		"ipGateway":      validation.Validate(server.IPGateway, validation.NotNil),
+		"ip6Address":     validation.Validate(server.IP6Address, is.IPv6),
 		"physLocationId": validation.Validate(server.PhysLocationID, validation.NotNil),
 		"profileId":      validation.Validate(server.ProfileID, validation.NotNil),
 		"statusId":       validation.Validate(server.StatusID, validation.NotNil),
 		"typeId":         validation.Validate(server.TypeID, validation.NotNil),
 		"updPending":     validation.Validate(server.UpdPending, validation.NotNil),
+		"httpsPort":      validation.Validate(server.HTTPSPort, validation.By(tovalidate.IsValidPortNumber)),
+		"tcpPort":        validation.Validate(server.TCPPort, validation.By(tovalidate.IsValidPortNumber)),
 	}
 	errs := tovalidate.ToErrors(validateErrs)
 	if len(errs) > 0 {
@@ -126,7 +129,7 @@ func (server *TOServer) Validate() error {
 	for rows.Next() {
 		if err := rows.Scan(&cdnID); err != nil {
 			log.Error.Printf("could not scan cdnID from profile: %s\n", err)
-			errs = append(errs, tc.DBError)
+			errs = append(errs, errors.New("associated profile must have a cdn associated"))
 			return util.JoinErrs(errs)
 		}
 	}
@@ -404,6 +407,9 @@ JOIN type t ON s.type = t.id`
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 func (server *TOServer) Update() (error, tc.ApiErrorType) {
+	if server.IP6Address != nil && len(strings.TrimSpace(*server.IP6Address)) == 0 {
+		server.IP6Address = nil
+	}
 	log.Debugf("about to run exec query: %s with server: %++v", updateQuery(), server)
 	resultRows, err := server.ReqInfo.Tx.NamedQuery(updateQuery(), server)
 	if err != nil {
@@ -493,6 +499,9 @@ WHERE id=:id RETURNING last_updated`
 //The insert sql returns the id and lastUpdated values of the newly inserted server and have
 //to be added to the struct
 func (server *TOServer) Create() (error, tc.ApiErrorType) {
+	if server.IP6Address != nil && len(strings.TrimSpace(*server.IP6Address)) == 0 {
+		server.IP6Address = nil
+	}
 	if server.XMPPID == nil || *server.XMPPID == "" {
 		hostName := *server.HostName
 		server.XMPPID = &hostName
