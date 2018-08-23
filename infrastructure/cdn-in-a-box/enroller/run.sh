@@ -1,3 +1,4 @@
+#!/bin/bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,25 +15,21 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-############################################################
-# Dockerfile to build Traffic Ops container images
-# Based on CentOS 7.2
 ############################################################
 
+. ../traffic_ops/to-access.sh
+export TO_URL=https://$TO_HOST:$TO_PORT
+export TO_USER=$TO_ADMIN_USER
+export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
-FROM centos:7
-RUN yum -y install nmap-ncat openssl epel-release
-RUN yum -y install jq && yum clean all
+key=./server.key
+cert=./server.crt
+openssl req -newkey rsa:2048 -nodes -keyout $key -x509 -days 365 -out $cert -subj "/C=$CERT_COUNTRY/ST=$CERT_STATE/L=$CERT_CITY/O=$CERT_COMPANY"
 
-RUN mkdir -p /opt/traffic_ops/app/bin /opt/traffic_ops/app/conf/production /opt/traffic_ops/app/db
-COPY --from=trafficops-perl /opt/traffic_ops/app/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang
+# Traffic Ops must be accepting connections before enroller can start
+until to-ping; do
+    echo "Waiting for $TO_URL"
+    sleep 5
+done
 
-EXPOSE 6443
-WORKDIR /opt/traffic_ops/app
-
-ADD traffic_ops/config.sh \
-    traffic_ops/run-go.sh \
-    traffic_ops/to-access.sh \
-    /
-CMD /run-go.sh
+go run enroller.go || tail -f /dev/null

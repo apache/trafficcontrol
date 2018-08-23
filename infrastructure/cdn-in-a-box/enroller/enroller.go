@@ -96,6 +96,7 @@ var serviceTypes = map[string]string{
 	"trafficanalytics": "TRAFFIC_ANALYTICS",
 	"trafficmonitor":   "RASCAL",
 	"trafficops":       "TRAFFIC_OPS",
+	"trafficops-perl":  "TRAFFIC_OPS",
 	"trafficportal":    "TRAFFIC_PORTAL",
 	"trafficrouter":    "CCR",
 	"trafficstats":     "TRAFFIC_STATS",
@@ -271,8 +272,22 @@ func (s *session) enrollerHandler() func(http.ResponseWriter, *http.Request) {
 			fmt.Fprintf(w, "ParseForm() err: %v", err)
 			return
 		}
+		hostName := r.FormValue("host")
+		cName := r.FormValue("name")
 
-		net, err := s.NetworkInspect(context.Background(), "cdn-in-a-box_tcnet")
+		match := func(dockertypes.ContainerJSON) bool { return true }
+		switch {
+		case len(hostName) > 0:
+			match = func(c dockertypes.ContainerJSON) bool {
+				return hostName == c.Name
+			}
+		case len(cName) > 0:
+			match = func(c dockertypes.ContainerJSON) bool {
+				return cName == c.Config.Hostname
+			}
+		}
+
+		net, err := s.NetworkInspect(context.Background(), "cdn-in-a-box_tcnet", dockertypes.NetworkInspectOptions{})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -284,6 +299,11 @@ func (s *session) enrollerHandler() func(http.ResponseWriter, *http.Request) {
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
+			}
+
+			// check against any query params provided
+			if !match(c) {
+				continue
 			}
 
 			fmt.Printf("including %s\n", c.Name)
@@ -333,5 +353,5 @@ func main() {
 	fmt.Println("TO session established")
 	http.HandleFunc("/", toSession.enrollerHandler())
 
-	log.Fatal(http.ListenAndServeTLS(":8080", "./server.crt", "./server.key", nil))
+	log.Fatal(http.ListenAndServeTLS(":443", "./server.crt", "./server.key", nil))
 }

@@ -109,3 +109,14 @@ to-delete() {
 	to-auth && \
 		curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X DELETE "$TO_URL/$1"
 }
+
+to-enroll() {
+    local service=$1
+    until nc enroller 443 </dev/null >/dev/null 2>&1; do 
+        echo "waiting for enroller"
+        sleep 5
+    done
+
+    action=${service:+?name=$service}
+    curl -k -X POST https://enroller${action}
+}

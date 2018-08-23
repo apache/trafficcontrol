@@ -15,24 +15,19 @@
 # specific language governing permissions and limitations
 # under the License.
 
-############################################################
-# Dockerfile to build Traffic Ops container images
-# Based on CentOS 7.2
-############################################################
+FROM golang:1.10
 
+EXPOSE 443
 
-FROM centos:7
-RUN yum -y install nmap-ncat openssl epel-release
-RUN yum -y install jq && yum clean all
+COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
 
-RUN mkdir -p /opt/traffic_ops/app/bin /opt/traffic_ops/app/conf/production /opt/traffic_ops/app/db
-COPY --from=trafficops-perl /opt/traffic_ops/app/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang
+# enroller dependencies are here
+COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
+COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
+COPY ./traffic_ops/client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/client/
+COPY ./traffic_ops/vendor/ /go/src/github.com/apache/trafficcontrol/traffic_ops/vendor/
 
-EXPOSE 6443
-WORKDIR /opt/traffic_ops/app
+WORKDIR /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller
 
-ADD traffic_ops/config.sh \
-    traffic_ops/run-go.sh \
-    traffic_ops/to-access.sh \
-    /
-CMD /run-go.sh
+RUN go get -v
+CMD ./run.sh
