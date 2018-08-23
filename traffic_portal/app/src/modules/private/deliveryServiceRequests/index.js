@@ -28,14 +28,6 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests',
 					privateContent: {
 						templateUrl: 'modules/private/deliveryServiceRequests/deliveryServiceRequests.tpl.html',
                         controller: 'DeliveryServiceRequestsController',
-                        resolve: {
-                            isEditing: function($stateParams, deliveryServiceRequestService) {
-                                return deliveryServiceRequestService.getDeliveryServiceRequests({ id: $stateParams.deliveryServiceRequestId });
-                            },
-                            myId: function($stateParams, deliveryServiceRequestService) {
-                                return deliveryServiceRequestService.getDeliveryServiceRequestComments({ deliveryServiceRequestId: $stateParams.deliveryServiceRequestId, orderby: 'id' });
-                            }
-                        }
 					}
 				}
 			})
