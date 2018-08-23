@@ -99,7 +99,7 @@ func (param TOParameter) Validate() error {
 	// - Secure Flag is always set to either 1/0
 	// - Admin rights only
 	// - Do not allow duplicate parameters by name+config_file+value
-	// - Removed NOT NULL constraint on 'value' so removed it's validation as .Required
+	// - Client can send NOT NULL constraint on 'value' so removed it's validation as .Required
 	errs := validation.Errors{
 		NameQueryParam:       validation.Validate(param.Name, validation.Required),
 		ConfigFileQueryParam: validation.Validate(param.ConfigFile, validation.Required),
@@ -116,6 +116,10 @@ func (param TOParameter) Validate() error {
 //The insert sql returns the id and lastUpdated values of the newly inserted parameter and have
 //to be added to the struct
 func (param *TOParameter) Create() (error, tc.ApiErrorType) {
+	if param.Value == nil {
+		val := ""
+		param.Value = &val
+	}
 	resultRows, err := param.ReqInfo.Tx.NamedQuery(insertQuery(), param)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -227,6 +231,10 @@ func (param *TOParameter) Read(parameters map[string]string) ([]interface{}, []e
 //if so, it will return an errorType of DataConflict and the type should be appended to the
 //generic error message returned
 func (param *TOParameter) Update() (error, tc.ApiErrorType) {
+	if param.Value == nil {
+		val := ""
+		param.Value = &val
+	}
 	log.Debugf("about to run exec query: %s with parameter: %++v", updateQuery(), param)
 	resultRows, err := param.ReqInfo.Tx.NamedQuery(updateQuery(), param)
 	if err != nil {
