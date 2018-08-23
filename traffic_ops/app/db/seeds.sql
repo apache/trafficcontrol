@@ -453,7 +453,6 @@ insert into api_capability (http_method, route, capability) values ('GET', 'cdns
 insert into api_capability (http_method, route, capability) values ('GET', 'cdns/name/*/dnsseckeys', 'cdn-security-keys-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('POST', 'cdns/dnsseckeys/generate', 'cdn-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('GET', 'cdns/name/*/dnsseckeys/delete', 'cdn-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
-insert into api_capability (http_method, route, capability) values ('GET', 'cdns/dnsseckeys/refresh', 'cdn-security-keys-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 -- change logs
 insert into api_capability (http_method, route, capability) values ('GET', 'logs', 'change-logs-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('GET', 'logs/*/days', 'change-logs-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
@@ -639,8 +638,6 @@ insert into api_capability (http_method, route, capability) values ('GET', 'serv
 insert into api_capability (http_method, route, capability) values ('POST', 'servercheck', 'servers-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 -- stats
 insert into api_capability (http_method, route, capability) values ('GET', 'caches/stats', 'stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
-insert into api_capability (http_method, route, capability) values ('GET', 'daily_summary', 'stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
-insert into api_capability (http_method, route, capability) values ('GET', 'current_stats', 'stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('GET', 'stats_summary', 'stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('POST', 'stats_summary/create', 'stats-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('GET', 'traffic_monitor/stats', 'stats-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
@@ -652,10 +649,6 @@ insert into api_capability (http_method, route, capability) values ('PUT', 'stat
 insert into api_capability (http_method, route, capability) values ('DELETE', 'statuses/*', 'statuses-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 -- static dns entries
 insert into api_capability (http_method, route, capability) values ('GET', 'staticdnsentries', 'static-dns-entries-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
--- steering
-insert into api_capability (http_method, route, capability) values ('GET', 'steering', 'steering-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
-insert into api_capability (http_method, route, capability) values ('GET', 'steering/*', 'steering-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
-insert into api_capability (http_method, route, capability) values ('PUT', 'steering/*', 'steering-write') ON CONFLICT (http_method, route, capability) DO NOTHING;
 -- steering targets
 insert into api_capability (http_method, route, capability) values ('GET', 'steering/*/targets', 'steering-targets-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
 insert into api_capability (http_method, route, capability) values ('GET', 'steering/*/targets/*', 'steering-targets-read') ON CONFLICT (http_method, route, capability) DO NOTHING;
