@@ -62,4 +62,11 @@ CDNCONF=/opt/traffic_ops/app/conf/cdn.conf
 DBCONF=/opt/traffic_ops/app/conf/production/database.conf
 mkdir -p /var/log/traffic_ops
 touch /var/log/traffic_ops/traffic_ops.log
-./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF
+./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF &
+disown
+
+export TO_USER=$TO_ADMIN_USER
+export TO_PASSWORD=$TO_ADMIN_PASSWORD
+. /to-access.sh
+to-enroll $(hostname -s)
+

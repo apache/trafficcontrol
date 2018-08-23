@@ -130,6 +130,11 @@ cat /server.json
 to-post api/1.3/servers /server.json
 echo
 
+export TO_USER=$TO_ADMIN_USER
+export TO_PASSWORD=$TO_ADMIN_PASSWORD
+. /to-access.sh
+to-enroll $(hostname -s)
+
 touch /opt/traffic_monitor/var/log/traffic_monitor.log
 
 cd /opt/traffic_monitor
