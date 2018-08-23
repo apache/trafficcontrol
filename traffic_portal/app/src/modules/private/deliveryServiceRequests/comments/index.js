@@ -29,9 +29,6 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.c
 						resolve: {
 							request: function($stateParams, deliveryServiceRequestService) {
 								return deliveryServiceRequestService.getDeliveryServiceRequests({ id: $stateParams.deliveryServiceRequestId });
-							},
-							comments: function($stateParams, deliveryServiceRequestService) {
-								return deliveryServiceRequestService.getDeliveryServiceRequestComments({ deliveryServiceRequestId: $stateParams.deliveryServiceRequestId, orderby: 'id' });
 							}
 						}
 					}

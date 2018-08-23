@@ -17,16 +17,19 @@
  * under the License.
  */
 
-var TableDeliveryServicesRequestsController = function(request, comments, $scope, $state, $stateParams, $uibModal, dateUtils, locationUtils, deliveryServiceRequestService, messageModel) {
+var TableDeliveryServicesRequestsController = function(request, $scope, $state, $stateParams, $uibModal, dateUtils, locationUtils, deliveryServiceRequestService, messageModel) {
 
 	$scope.request = request[0];
 
-	$scope.comments = comments;
-
 	$scope.type = $stateParams.type;
 
-	$scope.refresh = function() {
-		$state.reload(); // reloads all the resolves for the view
+	$scope.getComments = function () {
+        deliveryServiceRequestService.getDeliveryServiceRequestComments({ deliveryServiceRequestId: $stateParams.deliveryServiceRequestId, orderby: 'id' }).
+			then(
+				function(comments) {
+					$scope.comments = comments;
+				}
+			);
 	};
 
 	$scope.createComment = function() {
@@ -54,7 +57,7 @@ var TableDeliveryServicesRequestsController = function(request, comments, $scope
 				then(
 					function() {
 						messageModel.setMessages([ { level: 'success', text: 'Delivery service request comment created' } ], false);
-						$scope.refresh();
+						$scope.getComments();
 					}
 			);
 		}, function () {
@@ -87,7 +90,7 @@ var TableDeliveryServicesRequestsController = function(request, comments, $scope
 				then(
 					function() {
 						messageModel.setMessages([ { level: 'success', text: 'Delivery service request comment updated' } ], false);
-						$scope.refresh();
+						$scope.getComments();
 					}
 				);
 		}, function () {
@@ -116,7 +119,7 @@ var TableDeliveryServicesRequestsController = function(request, comments, $scope
 				then(
 					function() {
 						messageModel.setMessages([ { level: 'success', text: 'Delivery service request comment deleted' } ], false);
-						$scope.refresh();
+						$scope.getComments();
 					}
 				);
 		}, function () {
@@ -139,7 +142,9 @@ var TableDeliveryServicesRequestsController = function(request, comments, $scope
 		});
 	});
 
+    $scope.getComments();
+
 };
 
-TableDeliveryServicesRequestsController.$inject = ['request', 'comments', '$scope', '$state', '$stateParams', '$uibModal', 'dateUtils', 'locationUtils', 'deliveryServiceRequestService', 'messageModel'];
+TableDeliveryServicesRequestsController.$inject = ['request', '$scope', '$state', '$stateParams', '$uibModal', 'dateUtils', 'locationUtils', 'deliveryServiceRequestService', 'messageModel'];
 module.exports = TableDeliveryServicesRequestsController;
