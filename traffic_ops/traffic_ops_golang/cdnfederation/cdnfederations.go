@@ -133,7 +133,7 @@ func (fed *TOCDNFederation) Create() (error, tc.ApiErrorType) {
 	}
 
 	// Boilerplate code below
-	resultRows, err := fed.ReqInfo.Tx.NamedQuery(insertQuery(), fed)
+	resultRows, err := fed.ReqInfo.Txx.NamedQuery(insertQuery(), fed)
 	if err != nil {
 		return parseQueryError(err, "create")
 	}
@@ -183,7 +183,7 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 
 	// Cannot perform query on tenantID while "rows" aren't closed (limitation of
 	// psql), so we need to get the valid tenentIDs ahead of time.
-	tenantIDs, err := tenant.GetUserTenantIDListTx(fed.ReqInfo.Tx.Tx, fed.ReqInfo.User.TenantID)
+	tenantIDs, err := tenant.GetUserTenantIDListTx(fed.ReqInfo.Tx, fed.ReqInfo.User.TenantID)
 	if err != nil {
 		log.Errorf("getting tenant list for user: %v\n", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -216,7 +216,7 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 	query += where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := fed.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := fed.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("querying federations: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -257,7 +257,7 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 			return nil, []error{errors.New("resource not found")}, tc.DataMissingError
 		}
 
-		if yes, err := dbhelpers.CDNExists(parameters["name"], fed.ReqInfo.Tx); yes {
+		if yes, err := dbhelpers.CDNExists(parameters["name"], fed.ReqInfo.Txx); yes {
 			return federations, []error{}, tc.NoError
 		} else if err != nil { // internal server error
 			log.Errorf("verifying cdn exists: %v", err)
@@ -286,7 +286,7 @@ func (fed *TOCDNFederation) Update() (error, tc.ApiErrorType) {
 		fed.DeliveryServiceIDs = nil
 	}
 
-	resultRows, err := fed.ReqInfo.Tx.NamedQuery(updateQuery(), fed)
+	resultRows, err := fed.ReqInfo.Txx.NamedQuery(updateQuery(), fed)
 	defer resultRows.Close()
 	if err != nil {
 		return parseQueryError(err, "update")
@@ -325,7 +325,7 @@ func (fed *TOCDNFederation) Delete() (error, tc.ApiErrorType) {
 	}
 
 	log.Debugf("about to run exec query: %s with federation: %++v", deleteQuery(), fed)
-	result, err := fed.ReqInfo.Tx.NamedExec(deleteQuery(), fed)
+	result, err := fed.ReqInfo.Txx.NamedExec(deleteQuery(), fed)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -351,7 +351,7 @@ func (fed *TOCDNFederation) Delete() (error, tc.ApiErrorType) {
 // psql doesn't like nested queries within the same transaction.
 func (fed TOCDNFederation) isTenantAuthorized() (bool, error) {
 
-	tenantID, err := getTenantIDFromFedID(*fed.ID, fed.ReqInfo.Tx.Tx)
+	tenantID, err := getTenantIDFromFedID(*fed.ID, fed.ReqInfo.Tx)
 	if err != nil {
 		// If nobody has claimed a tenant, that federation is publicly visible.
 		// This logically follows /federations/:id/deliveryservices
@@ -364,7 +364,7 @@ func (fed TOCDNFederation) isTenantAuthorized() (bool, error) {
 
 	// TODO: After IsResourceAuthorizedToUserTx is updated to no longer have `use_tenancy`,
 	// that will probably be better to use. For now, use the list. Issue #2602
-	list, err := tenant.GetUserTenantIDListTx(fed.ReqInfo.Tx.Tx, fed.ReqInfo.User.TenantID)
+	list, err := tenant.GetUserTenantIDListTx(fed.ReqInfo.Tx, fed.ReqInfo.User.TenantID)
 	if err != nil {
 		return false, err
 	}

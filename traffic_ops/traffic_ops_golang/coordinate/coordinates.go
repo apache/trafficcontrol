@@ -124,7 +124,7 @@ func (coordinate TOCoordinate) Validate() error {
 //The insert sql returns the id and lastUpdated values of the newly inserted coordinate and have
 //to be added to the struct
 func (coordinate *TOCoordinate) Create() (error, tc.ApiErrorType) {
-	resultRows, err := coordinate.ReqInfo.Tx.NamedQuery(insertQuery(), coordinate)
+	resultRows, err := coordinate.ReqInfo.Txx.NamedQuery(insertQuery(), coordinate)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -180,7 +180,7 @@ func (coordinate *TOCoordinate) Read(parameters map[string]string) ([]interface{
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := coordinate.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := coordinate.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Coordinate: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -207,7 +207,7 @@ func (coordinate *TOCoordinate) Read(parameters map[string]string) ([]interface{
 //generic error message returned
 func (coordinate *TOCoordinate) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with coordinate: %++v", updateQuery(), coordinate)
-	resultRows, err := coordinate.ReqInfo.Tx.NamedQuery(updateQuery(), coordinate)
+	resultRows, err := coordinate.ReqInfo.Txx.NamedQuery(updateQuery(), coordinate)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -247,7 +247,7 @@ func (coordinate *TOCoordinate) Update() (error, tc.ApiErrorType) {
 //all implementations of Deleter should use transactions and return the proper errorType
 func (coordinate *TOCoordinate) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with coordinate: %++v", deleteQuery(), coordinate)
-	result, err := coordinate.ReqInfo.Tx.NamedExec(deleteQuery(), coordinate)
+	result, err := coordinate.ReqInfo.Txx.NamedExec(deleteQuery(), coordinate)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError

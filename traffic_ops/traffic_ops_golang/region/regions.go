@@ -91,7 +91,7 @@ func (region *TORegion) Read(parameters map[string]string) ([]interface{}, []err
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := region.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := region.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Regions: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -131,7 +131,7 @@ JOIN division d ON r.division = d.id`
 //generic error message returned
 func (region *TORegion) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with region: %++v", updateQuery(), region)
-	resultRows, err := region.ReqInfo.Tx.NamedQuery(updateQuery(), region)
+	resultRows, err := region.ReqInfo.Txx.NamedQuery(updateQuery(), region)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -174,7 +174,7 @@ func (region *TORegion) Update() (error, tc.ApiErrorType) {
 //The insert sql returns the id and lastUpdated values of the newly inserted region and have
 //to be added to the struct
 func (region *TORegion) Create() (error, tc.ApiErrorType) {
-	resultRows, err := region.ReqInfo.Tx.NamedQuery(insertQuery(), region)
+	resultRows, err := region.ReqInfo.Txx.NamedQuery(insertQuery(), region)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -218,7 +218,7 @@ func (region *TORegion) Create() (error, tc.ApiErrorType) {
 //all implementations of Deleter should use transactions and return the proper errorType
 func (region *TORegion) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with region: %++v", deleteQuery(), region)
-	result, err := region.ReqInfo.Tx.NamedExec(deleteQuery(), region)
+	result, err := region.ReqInfo.Txx.NamedExec(deleteQuery(), region)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError

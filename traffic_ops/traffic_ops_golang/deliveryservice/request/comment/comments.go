@@ -89,7 +89,7 @@ func (comment *TODeliveryServiceRequestComment) Create() (error, tc.ApiErrorType
 	userID := tc.IDNoMod(comment.ReqInfo.User.ID)
 	comment.AuthorID = &userID
 
-	resultRows, err := comment.ReqInfo.Tx.NamedQuery(insertQuery(), comment)
+	resultRows, err := comment.ReqInfo.Txx.NamedQuery(insertQuery(), comment)
 
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
@@ -149,7 +149,7 @@ func (comment *TODeliveryServiceRequestComment) Read(parameters map[string]strin
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := comment.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := comment.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying delivery service request comments: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -172,7 +172,7 @@ func (comment *TODeliveryServiceRequestComment) Read(parameters map[string]strin
 func (comment *TODeliveryServiceRequestComment) Update() (error, tc.ApiErrorType) {
 
 	var current TODeliveryServiceRequestComment
-	err := comment.ReqInfo.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
+	err := comment.ReqInfo.Txx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequestComments: %v", err)
 		return err, tc.SystemError
@@ -184,7 +184,7 @@ func (comment *TODeliveryServiceRequestComment) Update() (error, tc.ApiErrorType
 	}
 
 	log.Debugf("about to run exec query: %s with comment: %++v", updateQuery(), comment)
-	resultRows, err := comment.ReqInfo.Tx.NamedQuery(updateQuery(), comment)
+	resultRows, err := comment.ReqInfo.Txx.NamedQuery(updateQuery(), comment)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -223,7 +223,7 @@ func (comment *TODeliveryServiceRequestComment) Update() (error, tc.ApiErrorType
 func (comment *TODeliveryServiceRequestComment) Delete() (error, tc.ApiErrorType) {
 
 	var current TODeliveryServiceRequestComment
-	err := comment.ReqInfo.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
+	err := comment.ReqInfo.Txx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequestComments: %v", err)
 		return err, tc.SystemError
@@ -235,7 +235,7 @@ func (comment *TODeliveryServiceRequestComment) Delete() (error, tc.ApiErrorType
 	}
 
 	log.Debugf("about to run exec query: %s with comment: %++v", deleteQuery(), comment)
-	result, err := comment.ReqInfo.Tx.NamedExec(deleteQuery(), comment)
+	result, err := comment.ReqInfo.Txx.NamedExec(deleteQuery(), comment)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError

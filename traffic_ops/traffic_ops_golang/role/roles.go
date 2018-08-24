@@ -90,8 +90,8 @@ func (role TORole) Validate() error {
 	errsToReturn := tovalidate.ToErrors(errs)
 	checkCaps := `SELECT cap FROM UNNEST($1::text[]) AS cap WHERE NOT cap =  ANY(ARRAY(SELECT c.name FROM capability AS c WHERE c.name = ANY($1)))`
 	var badCaps []string
-	if role.ReqInfo.Tx != nil {
-		err := role.ReqInfo.Tx.Select(&badCaps, checkCaps, pq.Array(role.Capabilities))
+	if role.ReqInfo.Txx != nil {
+		err := role.ReqInfo.Txx.Select(&badCaps, checkCaps, pq.Array(role.Capabilities))
 		if err != nil {
 			log.Errorf("got error from selecting bad capabilities: %v", err)
 			return tc.DBError
@@ -114,7 +114,7 @@ func (role *TORole) Create() (error, tc.ApiErrorType) {
 	if *role.PrivLevel > role.ReqInfo.User.PrivLevel {
 		return errors.New("can not create a role with a higher priv level than your own"), tc.ForbiddenError
 	}
-	resultRows, err := role.ReqInfo.Tx.NamedQuery(insertQuery(), role)
+	resultRows, err := role.ReqInfo.Txx.NamedQuery(insertQuery(), role)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -149,7 +149,7 @@ func (role *TORole) Create() (error, tc.ApiErrorType) {
 	}
 	role.SetKeys(map[string]interface{}{"id": id})
 	//after we have role ID we can associate the capabilities:
-	err, errType := role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
+	err, errType := role.createRoleCapabilityAssociations(role.ReqInfo.Txx)
 	if err != nil {
 		return err, errType
 	}
@@ -206,7 +206,7 @@ func (role *TORole) Read(parameters map[string]string) ([]interface{}, []error, 
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := role.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := role.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Roles: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -239,7 +239,7 @@ func (role *TORole) Update() (error, tc.ApiErrorType) {
 	}
 
 	log.Debugf("about to run exec query: %s with role: %++v\n", updateQuery(), role)
-	result, err := role.ReqInfo.Tx.NamedExec(updateQuery(), role)
+	result, err := role.ReqInfo.Txx.NamedExec(updateQuery(), role)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -266,12 +266,12 @@ func (role *TORole) Update() (error, tc.ApiErrorType) {
 		}
 	}
 	//remove associations
-	err, errType := role.deleteRoleCapabilityAssociations(role.ReqInfo.Tx)
+	err, errType := role.deleteRoleCapabilityAssociations(role.ReqInfo.Txx)
 	if err != nil {
 		return err, errType
 	}
 	//create new associations
-	err, errType = role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
+	err, errType = role.createRoleCapabilityAssociations(role.ReqInfo.Txx)
 	if err != nil {
 		return err, errType
 	}
@@ -283,7 +283,7 @@ func (role *TORole) Update() (error, tc.ApiErrorType) {
 //all implementations of Deleter should use transactions and return the proper errorType
 func (role *TORole) Delete() (error, tc.ApiErrorType) {
 	assignedUsers := 0
-	err := role.ReqInfo.Tx.Get(&assignedUsers, "SELECT COUNT(id) FROM tm_user WHERE role=$1", role.ID)
+	err := role.ReqInfo.Txx.Get(&assignedUsers, "SELECT COUNT(id) FROM tm_user WHERE role=$1", role.ID)
 	if err != nil {
 		log.Errorf("received error: %++v from assigned users check", err)
 		return tc.DBError, tc.SystemError
@@ -293,7 +293,7 @@ func (role *TORole) Delete() (error, tc.ApiErrorType) {
 	}
 
 	log.Debugf("about to run exec query: %s with role: %++v", deleteQuery(), role)
-	result, err := role.ReqInfo.Tx.NamedExec(deleteQuery(), role)
+	result, err := role.ReqInfo.Txx.NamedExec(deleteQuery(), role)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError
@@ -310,7 +310,7 @@ func (role *TORole) Delete() (error, tc.ApiErrorType) {
 		}
 	}
 	//remove associations
-	err, errType := role.deleteRoleCapabilityAssociations(role.ReqInfo.Tx)
+	err, errType := role.deleteRoleCapabilityAssociations(role.ReqInfo.Txx)
 	if err != nil {
 		return err, errType
 	}

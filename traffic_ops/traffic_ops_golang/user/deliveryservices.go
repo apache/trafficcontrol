@@ -33,21 +33,21 @@ import (
 func GetDSes(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	dsUserID := inf.IntParams["id"]
-	dses, err := getUserDSes(inf.Tx.Tx, dsUserID)
+	dses, err := getUserDSes(inf.Tx, dsUserID)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting user delivery services: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("getting user delivery services: "+err.Error()))
 		return
 	}
 
-	dses, err = filterAuthorized(inf.Tx.Tx, dses, inf.User)
+	dses, err = filterAuthorized(inf.Tx, dses, inf.User)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("filtering user-authorized delivery services: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("filtering user-authorized delivery services: "+err.Error()))
 		return
 	}
 	api.WriteResp(w, r, dses)
@@ -56,21 +56,21 @@ func GetDSes(w http.ResponseWriter, r *http.Request) {
 func GetAvailableDSes(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	dsUserID := inf.IntParams["id"]
-	dses, err := getUserAvailableDSes(inf.Tx.Tx, dsUserID)
+	dses, err := getUserAvailableDSes(inf.Tx, dsUserID)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting user delivery services: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("getting user delivery services: "+err.Error()))
 		return
 	}
 
-	dses, err = filterAvailableAuthorized(inf.Tx.Tx, dses, inf.User)
+	dses, err = filterAvailableAuthorized(inf.Tx, dses, inf.User)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("filtering user-authorized delivery services: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("filtering user-authorized delivery services: "+err.Error()))
 		return
 	}
 	api.WriteResp(w, r, dses)

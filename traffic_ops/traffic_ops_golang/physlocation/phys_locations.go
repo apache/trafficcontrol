@@ -114,7 +114,7 @@ func (pl *TOPhysLocation) Read(parameters map[string]string) ([]interface{}, []e
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := pl.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := pl.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying PhysLocations: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -165,7 +165,7 @@ JOIN region r ON pl.region = r.id`
 //generic error message returned
 func (pl *TOPhysLocation) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with phys_location: %++v", updateQuery(), pl)
-	resultRows, err := pl.ReqInfo.Tx.NamedQuery(updateQuery(), pl)
+	resultRows, err := pl.ReqInfo.Txx.NamedQuery(updateQuery(), pl)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -208,7 +208,7 @@ func (pl *TOPhysLocation) Update() (error, tc.ApiErrorType) {
 //The insert sql returns the id and lastUpdated values of the newly inserted phys_location and have
 //to be added to the struct
 func (pl *TOPhysLocation) Create() (error, tc.ApiErrorType) {
-	resultRows, err := pl.ReqInfo.Tx.NamedQuery(insertQuery(), pl)
+	resultRows, err := pl.ReqInfo.Txx.NamedQuery(insertQuery(), pl)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -254,7 +254,7 @@ func (pl *TOPhysLocation) Create() (error, tc.ApiErrorType) {
 func (pl *TOPhysLocation) Delete() (error, tc.ApiErrorType) {
 
 	log.Debugf("about to run exec query: %s with phys_location: %++v", deleteQuery(), pl)
-	result, err := pl.ReqInfo.Tx.NamedExec(deleteQuery(), pl)
+	result, err := pl.ReqInfo.Txx.NamedExec(deleteQuery(), pl)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError

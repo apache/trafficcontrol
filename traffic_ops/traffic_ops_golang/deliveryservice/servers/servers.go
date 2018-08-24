@@ -106,17 +106,16 @@ func (dss *TODeliveryServiceServer) Validate(tx *sql.Tx) error {
 func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	results, err := GetRefType().readDSS(inf.Tx, inf.User, inf.Params, inf.IntParams)
+	results, err := GetRefType().readDSS(inf.Txx, inf.User, inf.Params, inf.IntParams)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	*inf.CommitTx = true
 	api.WriteRespRaw(w, r, results)
 }
 
@@ -214,51 +213,51 @@ func createServersForDsIdRef() *TODSServerIds {
 func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"limit", "page"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	payload := DSServerIds{}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON"), nil)
+		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("malformed JSON"), nil)
 		return
 	}
 
 	servers := payload.Servers
 	dsId := payload.DsId
 	if servers == nil {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("servers must exist in post"), nil)
+		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("servers must exist in post"), nil)
 		return
 	}
 	if dsId == nil {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("dsid must exist in post"), nil)
+		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("dsid must exist in post"), nil)
 		return
 	}
 	if payload.Replace == nil {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("replace must exist in post"), nil)
+		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("replace must exist in post"), nil)
 		return
 	}
 
-	xmlID, ok, err := deliveryservice.GetXMLID(inf.Tx.Tx, *dsId)
+	xmlID, ok, err := deliveryservice.GetXMLID(inf.Tx, *dsId)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("deliveryserviceserver getting XMLID: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("deliveryserviceserver getting XMLID: "+err.Error()))
 		return
 	}
 	if !ok {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("no delivery service with that ID exists"), nil)
+		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("no delivery service with that ID exists"), nil)
 		return
 	}
-	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 		return
 	}
 
 	if *payload.Replace {
 		// delete existing
-		_, err := inf.Tx.Tx.Exec("DELETE FROM deliveryservice_server WHERE deliveryservice = $1", *dsId)
+		_, err := inf.Tx.Exec("DELETE FROM deliveryservice_server WHERE deliveryservice = $1", *dsId)
 		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("unable to remove the existing servers assigned to the delivery service: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("unable to remove the existing servers assigned to the delivery service: "+err.Error()))
 			return
 		}
 	}
@@ -266,23 +265,22 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 	respServers := []int{}
 	for _, server := range servers {
 		dtos := map[string]interface{}{"id": dsId, "server": server}
-		if _, err := inf.Tx.NamedExec(insertIdsQuery(), dtos); err != nil {
+		if _, err := inf.Txx.NamedExec(insertIdsQuery(), dtos); err != nil {
 			if pqErr, ok := err.(*pq.Error); ok {
 				err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
 				log.Errorln("could not begin transaction: %v", err)
 				if eType == tc.DataConflictError {
-					api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("inserting for delivery service servers replace: "+err.Error()))
+					api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("inserting for delivery service servers replace: "+err.Error()))
 					return
 				}
-				api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("inserting for delivery service servers replace: "+err.Error()))
+				api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("inserting for delivery service servers replace: "+err.Error()))
 				return
 			}
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("inserting for delivery service servers replace: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("inserting for delivery service servers replace: "+err.Error()))
 			return
 		}
 		respServers = append(respServers, server)
 	}
-	*inf.CommitTx = true
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "server assignements complete", tc.DSSMapResponse{*dsId, *payload.Replace, respServers})
 }
 
@@ -297,62 +295,59 @@ func createServersRef() *TODeliveryServiceServers {
 func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xml_id"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	if userErr, sysErr, errCode := tenant.Check(inf.User, inf.Params["xml_id"], inf.Tx.Tx); userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+	if userErr, sysErr, errCode := tenant.Check(inf.User, inf.Params["xml_id"], inf.Tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 		return
 	}
 
 	dsID := 0
-	if err := inf.Tx.Tx.QueryRow(selectDeliveryService(), inf.Params["xml_id"]).Scan(&dsID); err != nil {
+	if err := inf.Tx.QueryRow(selectDeliveryService(), inf.Params["xml_id"]).Scan(&dsID); err != nil {
 		if err == sql.ErrNoRows {
-			api.HandleErr(w, r, http.StatusNotFound, nil, errors.New("delivery service not found"))
+			api.HandleErr(w, r, inf.Tx, http.StatusNotFound, nil, errors.New("delivery service not found"))
 			return
 		}
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("ds servers create scanning: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("ds servers create scanning: "+err.Error()))
 		return
 	}
 
 	// get list of server Ids to insert
 	payload := tc.DeliveryServiceServers{}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON"), nil)
+		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("malformed JSON"), nil)
 		return
 	}
 	payload.XmlId = inf.Params["xml_id"]
 	serverNames := payload.ServerNames
 
-	res, err := inf.Tx.Tx.Exec(`INSERT INTO deliveryservice_server (deliveryservice, server) SELECT $1, id FROM server WHERE host_name = ANY($2::text[])`, dsID, pq.Array(serverNames))
+	res, err := inf.Tx.Exec(`INSERT INTO deliveryservice_server (deliveryservice, server) SELECT $1, id FROM server WHERE host_name = ANY($2::text[])`, dsID, pq.Array(serverNames))
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
 			if eType == tc.DataConflictError {
-				api.HandleErr(w, r, http.StatusBadRequest, errors.New("a deliveryservice-server association with "+err.Error()), nil)
+				api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("a deliveryservice-server association with "+err.Error()), nil)
 				return
 			}
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("ds servers inserting for create delivery service servers: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("ds servers inserting for create delivery service servers: "+err.Error()))
 			return
 		}
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("ds servers inserting for create delivery service servers received non pq error: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("ds servers inserting for create delivery service servers received non pq error: "+err.Error()))
 		return
 	}
 
 	if rowsAffected, err := res.RowsAffected(); err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("ds servers inserting for create delivery service servers: getting rows affected: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("ds servers inserting for create delivery service servers: getting rows affected: "+err.Error()))
 		return
 	} else if int(rowsAffected) != len(serverNames) {
 		// this happens when the names they gave don't exist
-		api.HandleErr(w, r, http.StatusNotFound, errors.New("servers not found"), nil)
+		api.HandleErr(w, r, inf.Tx, http.StatusNotFound, errors.New("servers not found"), nil)
 		return
 	}
-
-	*inf.CommitTx = true
 	api.WriteResp(w, r, tc.DeliveryServiceServers{payload.ServerNames, payload.XmlId})
-	return
 }
 
 func selectDeliveryService() string {
@@ -384,17 +379,16 @@ func GetReadUnassigned(w http.ResponseWriter, r *http.Request) {
 func getRead(w http.ResponseWriter, r *http.Request, unassigned bool) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	servers, err := read(inf.Tx, inf.IntParams["id"], inf.User, unassigned)
+	servers, err := read(inf.Txx, inf.IntParams["id"], inf.User, unassigned)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	*inf.CommitTx = true
 	api.WriteResp(w, r, servers)
 }
 
@@ -505,7 +499,7 @@ func (dss *TODSSDeliveryService) Read(params map[string]string) ([]interface{}, 
 	query := SDSSelectQuery()
 	log.Debugln("Query is ", query)
 
-	rows, err := dss.ReqInfo.Tx.Queryx(query, serverId)
+	rows, err := dss.ReqInfo.Txx.Queryx(query, serverId)
 	if err != nil {
 		log.Errorf("Error querying DeliveryserviceServers: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError

@@ -20,7 +20,6 @@ package asn
  */
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -103,7 +102,7 @@ func (asn TOASNV11) Validate() error {
 //The insert sql returns the id and lastUpdated values of the newly inserted asn and have
 //to be added to the struct
 func (asn *TOASNV11) Create() (error, tc.ApiErrorType) {
-	resultRows, err := asn.ReqInfo.Tx.NamedQuery(insertQuery(), asn)
+	resultRows, err := asn.ReqInfo.Txx.NamedQuery(insertQuery(), asn)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -146,11 +145,10 @@ func (asn *TOASNV11) Create() (error, tc.ApiErrorType) {
 // Note this does NOT correctly implement the 1.1 API for all ASNs, because that route is in a different format than the CRUD utilities and all other routes.
 // The /api/1.1/asns route MUST call V11ReadAll, not this function, to correctly implement the 1.1 API.
 func (asn *TOASNV11) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
-	asns, err, errType := read(asn.ReqInfo.Tx, parameters)
+	asns, err, errType := read(asn.ReqInfo.Txx, parameters)
 	if len(err) > 0 {
 		return nil, err, errType
 	}
-	*asn.ReqInfo.CommitTx = true
 	iasns := make([]interface{}, len(asns), len(asns))
 	for i, readASN := range asns {
 		iasns[i] = readASN
@@ -160,42 +158,21 @@ func (asn *TOASNV11) Read(parameters map[string]string) ([]interface{}, []error,
 
 // V11ReadAll implements the asns 1.1 route, which is different from the 1.1 route for a single ASN and from 1.2+ routes, in that it wraps the content in an additional "asns" object.
 func V11ReadAll(w http.ResponseWriter, r *http.Request) {
-	handleErrs := tc.GetHandleErrorsFunc(w, r)
-
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	params, err := api.GetCombinedParams(r)
-	if err != nil {
-		handleErrs(http.StatusInternalServerError, err)
+	asns, errs, errType := read(inf.Txx, inf.Params)
+	userErr, sysErr, errCode = api.TypeErrsToAPIErr(errs, errType)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 		return
 	}
 
-	asns, errs, errType := read(inf.Tx, params)
-	if len(errs) > 0 {
-		tc.HandleErrorsWithType(errs, errType, handleErrs)
-		return
-	}
-	*inf.CommitTx = true
-	resp := struct {
-		Response struct {
-			ASNs []tc.ASNNullable `json:"asns"`
-		} `json:"response"`
-	}{Response: struct {
-		ASNs []tc.ASNNullable `json:"asns"`
-	}{ASNs: asns}}
-
-	respBts, err := json.Marshal(resp)
-	if err != nil {
-		handleErrs(http.StatusInternalServerError, err)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(w, "%s", respBts)
+	api.WriteResp(w, r, tc.ASNsV11{asns})
 }
 
 func read(tx *sqlx.Tx, parameters map[string]string) ([]tc.ASNNullable, []error, tc.ApiErrorType) {
@@ -254,7 +231,7 @@ FROM asn a JOIN cachegroup c ON a.cachegroup = c.id`
 //generic error message returned
 func (asn *TOASNV11) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with asn: %++v", updateQuery(), asn)
-	resultRows, err := asn.ReqInfo.Tx.NamedQuery(updateQuery(), asn)
+	resultRows, err := asn.ReqInfo.Txx.NamedQuery(updateQuery(), asn)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -295,7 +272,7 @@ func (asn *TOASNV11) Update() (error, tc.ApiErrorType) {
 //all implementations of Deleter should use transactions and return the proper errorType
 func (asn *TOASNV11) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with asn: %++v", deleteQuery(), asn)
-	result, err := asn.ReqInfo.Tx.NamedExec(deleteQuery(), asn)
+	result, err := asn.ReqInfo.Txx.NamedExec(deleteQuery(), asn)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError

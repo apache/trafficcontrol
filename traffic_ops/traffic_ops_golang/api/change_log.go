@@ -27,8 +27,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type ChangeLog struct {
@@ -51,7 +49,7 @@ const (
 	Deleted   = "Deleted"
 )
 
-func CreateChangeLog(level string, action string, i Identifier, user *auth.CurrentUser, tx *sqlx.Tx) error {
+func CreateChangeLog(level string, action string, i Identifier, user *auth.CurrentUser, tx *sql.Tx) error {
 	t, ok := i.(ChangeLogger)
 	if !ok {
 		keys, _ := i.GetKeys()
@@ -63,17 +61,17 @@ func CreateChangeLog(level string, action string, i Identifier, user *auth.Curre
 		keys, _ := i.GetKeys()
 		return CreateChangeLogBuildMsg(level, action, user, tx, i.GetType(), i.GetAuditName(), keys)
 	}
-	return CreateChangeLogRawErr(level, msg, user, tx.Tx)
+	return CreateChangeLogRawErr(level, msg, user, tx)
 }
 
-func CreateChangeLogBuildMsg(level string, action string, user *auth.CurrentUser, tx *sqlx.Tx, objType string, auditName string, keys map[string]interface{}) error {
+func CreateChangeLogBuildMsg(level string, action string, user *auth.CurrentUser, tx *sql.Tx, objType string, auditName string, keys map[string]interface{}) error {
 	keyStr := "{ "
 	for key, value := range keys {
 		keyStr += key + ":" + fmt.Sprintf("%v", value) + " "
 	}
 	keyStr += "}"
 	msg := action + " " + objType + ": " + auditName + " keys: " + keyStr
-	return CreateChangeLogRawErr(level, msg, user, tx.Tx)
+	return CreateChangeLogRawErr(level, msg, user, tx)
 }
 
 func CreateChangeLogRawErr(level string, msg string, user *auth.CurrentUser, tx *sql.Tx) error {

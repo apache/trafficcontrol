@@ -105,7 +105,7 @@ func (status *TOStatus) Read(parameters map[string]string) ([]interface{}, []err
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := status.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := status.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Status: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -144,7 +144,7 @@ FROM status s`
 //generic error message returned
 func (status *TOStatus) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with status: %++v", updateQuery(), status)
-	resultRows, err := status.ReqInfo.Tx.NamedQuery(updateQuery(), status)
+	resultRows, err := status.ReqInfo.Txx.NamedQuery(updateQuery(), status)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -189,7 +189,7 @@ func (status *TOStatus) Update() (error, tc.ApiErrorType) {
 //The insert sql returns the id and lastUpdated values of the newly inserted status and have
 //to be added to the struct
 func (status *TOStatus) Create() (error, tc.ApiErrorType) {
-	resultRows, err := status.ReqInfo.Tx.NamedQuery(insertQuery(), status)
+	resultRows, err := status.ReqInfo.Txx.NamedQuery(insertQuery(), status)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -233,7 +233,7 @@ func (status *TOStatus) Create() (error, tc.ApiErrorType) {
 //all implementations of Deleter should use transactions and return the proper errorType
 func (status *TOStatus) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with status: %++v", deleteQuery(), status)
-	result, err := status.ReqInfo.Tx.NamedExec(deleteQuery(), status)
+	result, err := status.ReqInfo.Txx.NamedExec(deleteQuery(), status)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError

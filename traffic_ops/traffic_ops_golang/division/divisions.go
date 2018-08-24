@@ -95,7 +95,7 @@ func (division TODivision) Validate() error {
 //The insert sql returns the id and lastUpdated values of the newly inserted division and have
 //to be added to the struct
 func (division *TODivision) Create() (error, tc.ApiErrorType) {
-	resultRows, err := division.ReqInfo.Tx.NamedQuery(insertQuery(), division)
+	resultRows, err := division.ReqInfo.Txx.NamedQuery(insertQuery(), division)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -152,7 +152,7 @@ func (division *TODivision) Read(parameters map[string]string) ([]interface{}, [
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := division.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := division.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Divisions: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -179,7 +179,7 @@ func (division *TODivision) Read(parameters map[string]string) ([]interface{}, [
 //generic error message returned
 func (division *TODivision) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with division: %++v", updateQuery(), division)
-	resultRows, err := division.ReqInfo.Tx.NamedQuery(updateQuery(), division)
+	resultRows, err := division.ReqInfo.Txx.NamedQuery(updateQuery(), division)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -219,7 +219,7 @@ func (division *TODivision) Update() (error, tc.ApiErrorType) {
 //all implementations of Deleter should use transactions and return the proper errorType
 func (division *TODivision) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with division: %++v", deleteQuery(), division)
-	result, err := division.ReqInfo.Tx.NamedExec(deleteQuery(), division)
+	result, err := division.ReqInfo.Txx.NamedExec(deleteQuery(), division)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError

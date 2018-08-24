@@ -60,7 +60,7 @@ func (req *TODeliveryServiceRequest) Validate() error {
 	}
 	errs := tovalidate.ToErrors(errMap)
 	// ensure the deliveryservice requested is valid
-	e := req.DeliveryService.Validate(req.ReqInfo.Tx.Tx)
+	e := req.DeliveryService.Validate(req.ReqInfo.Tx)
 
 	errs = append(errs, e)
 

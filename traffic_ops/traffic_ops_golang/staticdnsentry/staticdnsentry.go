@@ -80,7 +80,7 @@ func (staticDNSEntry *TOStaticDNSEntry) SetKeys(keys map[string]interface{}) {
 
 // Validate fulfills the api.Validator interface
 func (staticDNSEntry TOStaticDNSEntry) Validate() error {
-	typeStr, err := tc.ValidateTypeID(staticDNSEntry.ReqInfo.Tx.Tx, &staticDNSEntry.TypeID, "staticdnsentry")
+	typeStr, err := tc.ValidateTypeID(staticDNSEntry.ReqInfo.Tx, &staticDNSEntry.TypeID, "staticdnsentry")
 	if err != nil {
 		return err
 	}
@@ -128,7 +128,7 @@ func (staticDNSEntry *TOStaticDNSEntry) Read(parameters map[string]string) ([]in
 	}
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
-	rows, err := staticDNSEntry.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := staticDNSEntry.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying StaticDNSEntries: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -154,7 +154,7 @@ func (staticDNSEntry *TOStaticDNSEntry) Read(parameters map[string]string) ([]in
 //The insert sql returns the id and lastUpdated values of the newly inserted staticDNSEntry and have
 //to be added to the struct
 func (staticDNSEntry *TOStaticDNSEntry) Create() (error, tc.ApiErrorType) {
-	resultRows, err := staticDNSEntry.ReqInfo.Tx.NamedQuery(insertQuery(), staticDNSEntry)
+	resultRows, err := staticDNSEntry.ReqInfo.Txx.NamedQuery(insertQuery(), staticDNSEntry)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -217,7 +217,7 @@ ttl) VALUES (
 //generic error message returned
 func (staticDNSEntry *TOStaticDNSEntry) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with staticDNSEntry: %++v", updateQuery(), staticDNSEntry)
-	resultRows, err := staticDNSEntry.ReqInfo.Tx.NamedQuery(updateQuery(), staticDNSEntry)
+	resultRows, err := staticDNSEntry.ReqInfo.Txx.NamedQuery(updateQuery(), staticDNSEntry)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -271,7 +271,7 @@ WHERE id=:id RETURNING last_updated`
 //all implementations of Deleter should use transactions and return the proper errorType
 func (staticDNSEntry *TOStaticDNSEntry) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with staticDNSEntry: %++v", deleteQuery(), staticDNSEntry)
-	result, err := staticDNSEntry.ReqInfo.Tx.NamedExec(deleteQuery(), staticDNSEntry)
+	result, err := staticDNSEntry.ReqInfo.Txx.NamedExec(deleteQuery(), staticDNSEntry)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError

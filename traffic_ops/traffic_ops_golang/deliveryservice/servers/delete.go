@@ -32,7 +32,7 @@ import (
 func Delete(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"serverid", "dsid"}, []string{"serverid", "dsid"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
@@ -40,22 +40,21 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	dsID := inf.IntParams["dsid"]
 	serverID := inf.IntParams["serverid"]
 
-	userErr, sysErr, errCode = tenant.CheckID(inf.Tx.Tx, inf.User, dsID)
+	userErr, sysErr, errCode = tenant.CheckID(inf.Tx, inf.User, dsID)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 		return
 	}
 
-	ok, err := deleteDSServer(inf.Tx.Tx, dsID, serverID)
+	ok, err := deleteDSServer(inf.Tx, dsID, serverID)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("deleting delivery service server: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("deleting delivery service server: "+err.Error()))
 		return
 	}
 	if !ok {
-		api.HandleErr(w, r, http.StatusNotFound, nil, nil)
+		api.HandleErr(w, r, inf.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
-	*inf.CommitTx = true
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Server unlinked from delivery service.")
 }
 

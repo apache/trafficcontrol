@@ -158,8 +158,7 @@ func IsValidParentCachegroupID(id *int) bool {
 
 // Validate fulfills the api.Validator interface
 func (cg TOCacheGroup) Validate() error {
-
-	if _, err := tc.ValidateTypeID(cg.ReqInfo.Tx.Tx, cg.TypeID, "cachegroup"); err != nil {
+	if _, err := tc.ValidateTypeID(cg.ReqInfo.Tx, cg.TypeID, "cachegroup"); err != nil {
 		return err
 	}
 
@@ -335,7 +334,7 @@ func (cg *TOCacheGroup) Read(parameters map[string]string) ([]interface{}, []err
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := cg.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := cg.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying CacheGroup: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -475,7 +474,7 @@ func (cg *TOCacheGroup) getCoordinateID() (*int, error) {
 //The CacheGroup implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
 func (cg *TOCacheGroup) Delete() (error, tc.ApiErrorType) {
-	inUse, err := isUsed(cg.ReqInfo.Tx, *cg.ID)
+	inUse, err := isUsed(cg.ReqInfo.Txx, *cg.ID)
 	log.Debugf("inUse: %d, err: %v", inUse, err)
 	if inUse == false && err != nil {
 		return tc.DBError, tc.SystemError
@@ -501,7 +500,7 @@ func (cg *TOCacheGroup) Delete() (error, tc.ApiErrorType) {
 	}
 
 	log.Debugf("about to run exec query: %s with cg: %++v", deleteQuery(), cg)
-	result, err := cg.ReqInfo.Tx.NamedExec(deleteQuery(), cg)
+	result, err := cg.ReqInfo.Txx.NamedExec(deleteQuery(), cg)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError

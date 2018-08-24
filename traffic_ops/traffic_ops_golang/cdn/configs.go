@@ -31,12 +31,11 @@ import (
 func GetConfigs(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
-	*inf.CommitTx = true
-	api.RespWriter(w, r)(getConfigs(inf.Tx.Tx))
+	api.RespWriter(w, r, inf.Tx)(getConfigs(inf.Tx))
 }
 
 func getConfigs(tx *sql.Tx) ([]tc.CDNConfig, error) {
