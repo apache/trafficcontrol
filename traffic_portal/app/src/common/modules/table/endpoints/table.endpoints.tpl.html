@@ -41,7 +41,7 @@ under the License.
             <tbody>
             <tr ng-click="editEndpoint(e.id)" ng-repeat="e in ::endpoints">
                 <td data-search="^{{::e.httpMethod}}$">{{::e.httpMethod}}</td>
-                <td data-search="^{{::e.httpRoute}}$">{{::e.httpRoute}}</td>
+                <td data-search="^/api/*/{{::e.httpRoute}}$">/api/*/{{::e.httpRoute}}</td>
                 <td data-search="^{{::e.capability}}$">{{::e.capability}}</td>
             </tr>
             </tbody>
