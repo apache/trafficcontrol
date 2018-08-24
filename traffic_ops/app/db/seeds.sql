@@ -79,8 +79,9 @@ insert into tenant (name, active, parent_id) values ('unassigned', true, (select
 
 -- roles
 -- out of the box, only 3 roles are defined. Other roles can be created by the admin as needed.
-insert into role (name, description, priv_level) values ('admin', 'super-user', 30) ON CONFLICT (name) DO NOTHING;
-insert into role (name, description, priv_level) values ('operations', 'group enabled for most operations', 20) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('admin', 'Has access to everything.', 30) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('operations', 'Has all reads and most write capabilities', 20) ON CONFLICT (name) DO NOTHING;
+insert into role (name, description, priv_level) values ('read-only', 'Has access to all read capabilities', 10) ON CONFLICT (name) DO NOTHING;
 insert into role (name, description, priv_level) values ('disallowed', 'Block all access', 0) ON CONFLICT (name) DO NOTHING;
 
 -- capabilities
