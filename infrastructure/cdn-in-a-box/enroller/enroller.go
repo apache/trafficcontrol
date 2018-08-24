@@ -50,7 +50,7 @@ func newSession(reqTimeout time.Duration, toURL string, toUser string, toPass st
 		return nil, err
 	}
 
-	dockerCli, err := dockerclient.NewEnvClient()
+	dockerCli, err := dockerclient.NewClientWithOpts(dockerclient.WithVersion("1.38"), dockerclient.FromEnv)
 	if err != nil {
 		return nil, err
 	}
