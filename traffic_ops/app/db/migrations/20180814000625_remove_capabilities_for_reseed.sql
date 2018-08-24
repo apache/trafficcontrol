@@ -14,7 +14,10 @@
 -- SQL in section 'Up' is executed when this migration is applied
 
 -- we are going to clean up capabilities for a reseed
-DELETE FROM api_capability WHERE capability = 'cdns-read' OR capability LIKE 'params%';
+-- it is really just a few, but I'm deleting everything just so I don't miss anything..
+DELETE FROM api_capability;
+DELETE FROM role_capability;
+DELETE FROM capability;
 
 -- +goose Down
 -- SQL section 'Down' is executed when this migration is rolled back
