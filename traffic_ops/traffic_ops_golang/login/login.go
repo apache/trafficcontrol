@@ -50,7 +50,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}{}
 		userAllowed, err, blockingErr := auth.CheckLocalUserIsAllowed(form, db, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 		if blockingErr != nil {
-			api.HandleErr(w, r, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user password: %s\n", blockingErr.Error()))
+			api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user password: %s\n", blockingErr.Error()))
 			return
 		}
 		if err != nil {
@@ -59,7 +59,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		if userAllowed {
 			authenticated, err, blockingErr = auth.CheckLocalUserPassword(form, db, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 			if blockingErr != nil {
-				api.HandleErr(w, r, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user password: %s\n", blockingErr.Error()))
+				api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user password: %s\n", blockingErr.Error()))
 				return
 			}
 			if err != nil {

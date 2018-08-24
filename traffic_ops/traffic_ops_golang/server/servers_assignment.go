@@ -37,38 +37,36 @@ import (
 func AssignDeliveryServicesToServerHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	dsList := []int{}
 	if err := json.NewDecoder(r.Body).Decode(&dsList); err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 
 	replaceQueryParameter := inf.Params["replace"]
 	replace, err := strconv.ParseBool(replaceQueryParameter) //accepts 1, t, T, TRUE, true, True, 0, f, F, FALSE, false, False. for replace url parameter documentation
 	if err != nil {
-		api.HandleErr(w, r, http.StatusBadRequest, err, nil)
+		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	serverPathParameter := inf.Params["id"]
 	server, err := strconv.Atoi(serverPathParameter)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusBadRequest, err, nil)
+		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
-	assignedDSes, err := assignDeliveryServicesToServer(server, dsList, replace, inf.Tx.Tx)
+	assignedDSes, err := assignDeliveryServicesToServer(server, dsList, replace, inf.Tx)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-
-	*inf.CommitTx = true
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "successfully assigned dses to server", tc.AssignedDsResponse{server, assignedDSes, replace})
 }
 

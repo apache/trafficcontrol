@@ -86,7 +86,7 @@ func TestReadCoordinates(t *testing.T) {
 	mock.ExpectCommit()
 	v := map[string]string{"id": "1"}
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false)}
+	reqInfo := api.APIInfo{Txx: db.MustBegin()}
 	coordinates, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
 	if len(errs) > 0 {
 		t.Errorf("coordinate.Read expected: no errors, actual: %v", errs)

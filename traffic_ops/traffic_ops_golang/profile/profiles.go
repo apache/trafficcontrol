@@ -131,7 +131,7 @@ func (prof *TOProfile) Read(parameters map[string]string) ([]interface{}, []erro
 	query := selectProfilesQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := prof.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := prof.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Profile: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -153,7 +153,7 @@ func (prof *TOProfile) Read(parameters map[string]string) ([]interface{}, []erro
 	for _, profile := range profiles {
 		// Attach Parameters if the 'id' parameter is sent
 		if _, ok := parameters[IDQueryParam]; ok {
-			params, err := ReadParameters(prof.ReqInfo.Tx, parameters, prof.ReqInfo.User, profile)
+			params, err := ReadParameters(prof.ReqInfo.Txx, parameters, prof.ReqInfo.User, profile)
 			profile.Parameters = params
 			if len(errs) > 0 {
 				log.Errorf("Error getting Parameters: %v", err)
@@ -241,7 +241,7 @@ WHERE pp.profile = :profile_id`
 //generic error message returned
 func (prof *TOProfile) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with profile: %++v", updateQuery(), prof)
-	resultRows, err := prof.ReqInfo.Tx.NamedQuery(updateQuery(), prof)
+	resultRows, err := prof.ReqInfo.Txx.NamedQuery(updateQuery(), prof)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -284,7 +284,7 @@ func (prof *TOProfile) Update() (error, tc.ApiErrorType) {
 //The insert sql returns the id and lastUpdated values of the newly inserted profile and have
 //to be added to the struct
 func (prof *TOProfile) Create() (error, tc.ApiErrorType) {
-	resultRows, err := prof.ReqInfo.Tx.NamedQuery(insertQuery(), prof)
+	resultRows, err := prof.ReqInfo.Txx.NamedQuery(insertQuery(), prof)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -329,7 +329,7 @@ func (prof *TOProfile) Create() (error, tc.ApiErrorType) {
 //all implementations of Deleter should use transactions and return the proper errorType
 func (prof *TOProfile) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with profile: %++v", deleteQuery(), prof)
-	result, err := prof.ReqInfo.Tx.NamedExec(deleteQuery(), prof)
+	result, err := prof.ReqInfo.Txx.NamedExec(deleteQuery(), prof)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError

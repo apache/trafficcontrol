@@ -101,14 +101,14 @@ func (req *TODeliveryServiceRequest) Read(parameters map[string]string) ([]inter
 	if len(errs) > 0 {
 		return nil, errs, tc.DataConflictError
 	}
-	tenancyEnabled, err := tenant.IsTenancyEnabledTx(req.ReqInfo.Tx.Tx)
+	tenancyEnabled, err := tenant.IsTenancyEnabledTx(req.ReqInfo.Tx)
 	if err != nil {
 		log.Errorln("checking if tenancy is enabled: " + err.Error())
 		return nil, []error{tc.DBError}, tc.SystemError
 	}
 	if tenancyEnabled {
 		log.Debugln("Tenancy is enabled")
-		tenantIDs, err := tenant.GetUserTenantIDListTx(req.ReqInfo.Tx.Tx, req.ReqInfo.User.TenantID)
+		tenantIDs, err := tenant.GetUserTenantIDListTx(req.ReqInfo.Tx, req.ReqInfo.User.TenantID)
 		if err != nil {
 			log.Errorln("received error querying for user's tenants: " + err.Error())
 			return nil, []error{tc.DBError}, tc.SystemError
@@ -119,7 +119,7 @@ func (req *TODeliveryServiceRequest) Read(parameters map[string]string) ([]inter
 	query := selectDeliveryServiceRequestsQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := req.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := req.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -176,7 +176,7 @@ func (req TODeliveryServiceRequest) IsTenantAuthorized(user *auth.CurrentUser) (
 		log.Debugf("tenantID is nil")
 		return false, errors.New("tenantID is nil")
 	}
-	return tenant.IsResourceAuthorizedToUserTx(*ds.TenantID, user, req.ReqInfo.Tx.Tx)
+	return tenant.IsResourceAuthorizedToUserTx(*ds.TenantID, user, req.ReqInfo.Tx)
 }
 
 // Update implements the tc.Updater interface.
@@ -190,7 +190,7 @@ func (req *TODeliveryServiceRequest) Update() (error, tc.ApiErrorType) {
 		log.Errorf("error updating DeliveryServiceRequest: ID is nil")
 		return errors.New("error updating DeliveryServiceRequest: ID is nil"), tc.DataMissingError
 	}
-	err := req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+`WHERE r.id=$1`, *req.ID).StructScan(&current)
+	err := req.ReqInfo.Txx.QueryRowx(selectDeliveryServiceRequestsQuery()+`WHERE r.id=$1`, *req.ID).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
@@ -214,7 +214,7 @@ func (req *TODeliveryServiceRequest) Update() (error, tc.ApiErrorType) {
 
 	userID := tc.IDNoMod(req.ReqInfo.User.ID)
 	req.LastEditedByID = &userID
-	resultRows, err := req.ReqInfo.Tx.NamedQuery(updateRequestQuery(), req)
+	resultRows, err := req.ReqInfo.Txx.NamedQuery(updateRequestQuery(), req)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -280,7 +280,7 @@ func (req *TODeliveryServiceRequest) Create() (error, tc.ApiErrorType) {
 		return errors.New("no xmlId associated with this request"), tc.DataMissingError
 	}
 	XMLID := *ds.XMLID
-	active, err := isActiveRequest(req.ReqInfo.Tx, XMLID)
+	active, err := isActiveRequest(req.ReqInfo.Txx, XMLID)
 	if err != nil {
 		return err, tc.SystemError
 	}
@@ -291,7 +291,7 @@ func (req *TODeliveryServiceRequest) Create() (error, tc.ApiErrorType) {
 	userID := tc.IDNoMod(req.ReqInfo.User.ID)
 	req.AuthorID = &userID
 	req.LastEditedByID = &userID
-	resultRows, err := req.ReqInfo.Tx.NamedQuery(insertRequestQuery(), req)
+	resultRows, err := req.ReqInfo.Txx.NamedQuery(insertRequestQuery(), req)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -465,7 +465,7 @@ func (req *deliveryServiceRequestAssignment) Update() (error, tc.ApiErrorType) {
 
 	// get original
 	var current TODeliveryServiceRequest
-	err := req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+`WHERE r.id = $1`, *req.ID).StructScan(&current)
+	err := req.ReqInfo.Txx.QueryRowx(selectDeliveryServiceRequestsQuery()+`WHERE r.id = $1`, *req.ID).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
@@ -501,7 +501,7 @@ func (req *deliveryServiceRequestAssignment) Update() (error, tc.ApiErrorType) {
 	}
 
 	// update req with current info
-	err = req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(req)
+	err = req.ReqInfo.Txx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(req)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
@@ -551,7 +551,7 @@ func (req *deliveryServiceRequestStatus) Update() (error, tc.ApiErrorType) {
 	if req.ID == nil {
 		return errors.New("error updating DeliveryServiceRequestStatus: ID is nil"), tc.SystemError
 	}
-	err := req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(&current)
+	err := req.ReqInfo.Txx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
@@ -580,7 +580,7 @@ func (req *deliveryServiceRequestStatus) Update() (error, tc.ApiErrorType) {
 	}
 
 	// update req with current info
-	err = req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(req)
+	err = req.ReqInfo.Txx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(req)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError

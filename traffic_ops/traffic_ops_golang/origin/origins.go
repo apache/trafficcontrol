@@ -126,16 +126,16 @@ func (origin *TOOrigin) GetTenantID(tx *sqlx.Tx) (*int, error) {
 }
 
 func (origin *TOOrigin) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
-	currentTenantID, err := origin.GetTenantID(origin.ReqInfo.Tx)
+	currentTenantID, err := origin.GetTenantID(origin.ReqInfo.Txx)
 	if err != nil {
 		return false, err
 	}
-	tenancyEnabled, err := tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx.Tx)
+	tenancyEnabled, err := tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx)
 	if err != nil {
 		return false, err
 	}
 	if currentTenantID != nil && tenancyEnabled {
-		return tenant.IsResourceAuthorizedToUserTx(*currentTenantID, user, origin.ReqInfo.Tx.Tx)
+		return tenant.IsResourceAuthorizedToUserTx(*currentTenantID, user, origin.ReqInfo.Tx)
 	}
 
 	return true, nil
@@ -174,18 +174,18 @@ func (origin *TOOrigin) Read(params map[string]string) ([]interface{}, []error, 
 
 	privLevel := origin.ReqInfo.User.PrivLevel
 
-	origins, errs, errType := getOrigins(params, origin.ReqInfo.Tx, privLevel)
+	origins, errs, errType := getOrigins(params, origin.ReqInfo.Txx, privLevel)
 	if len(errs) > 0 {
 		return nil, errs, errType
 	}
 
 	var err error
-	tenancyEnabled, err := tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx.Tx)
+	tenancyEnabled, err := tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx)
 	if err != nil {
 		return nil, []error{errors.New("Error checking if tenancy enabled.")}, tc.SystemError
 	}
 	if tenancyEnabled {
-		origins, err = filterAuthorized(origins, origin.ReqInfo.User, origin.ReqInfo.Tx)
+		origins, err = filterAuthorized(origins, origin.ReqInfo.User, origin.ReqInfo.Txx)
 		if err != nil {
 			log.Errorln("Checking tenancy: " + err.Error())
 			return nil, []error{errors.New("Error checking tenancy.")}, tc.SystemError
@@ -323,7 +323,7 @@ func checkTenancy(originTenantID, deliveryserviceID *int, tx *sqlx.Tx, user *aut
 //generic error message returned
 func (origin *TOOrigin) Update() (error, tc.ApiErrorType) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
-	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
+	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Txx, origin.ReqInfo.User)
 	if err != nil {
 		return err, errType
 	}
@@ -340,7 +340,7 @@ func (origin *TOOrigin) Update() (error, tc.ApiErrorType) {
 	}
 
 	log.Debugf("about to run exec query: %s with origin: %++v", updateQuery(), origin)
-	resultRows, err := origin.ReqInfo.Tx.NamedQuery(updateQuery(), origin)
+	resultRows, err := origin.ReqInfo.Txx.NamedQuery(updateQuery(), origin)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -405,12 +405,12 @@ WHERE id=:id RETURNING last_updated`
 //to be added to the struct
 func (origin *TOOrigin) Create() (error, tc.ApiErrorType) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
-	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
+	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Txx, origin.ReqInfo.User)
 	if err != nil {
 		return err, errType
 	}
 
-	resultRows, err := origin.ReqInfo.Tx.NamedQuery(insertQuery(), origin)
+	resultRows, err := origin.ReqInfo.Txx.NamedQuery(insertQuery(), origin)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -491,7 +491,7 @@ func (origin *TOOrigin) Delete() (error, tc.ApiErrorType) {
 	}
 
 	log.Debugf("about to run exec query: %s with origin: %++v", deleteQuery(), origin)
-	result, err := origin.ReqInfo.Tx.NamedExec(deleteQuery(), origin)
+	result, err := origin.ReqInfo.Txx.NamedExec(deleteQuery(), origin)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError

@@ -124,7 +124,7 @@ func (cdn TOCDN) Validate() error {
 func (cdn *TOCDN) Create() (error, tc.ApiErrorType) {
 	// make sure that cdn.DomainName is lowercase
 	*cdn.DomainName = strings.ToLower(*cdn.DomainName)
-	resultRows, err := cdn.ReqInfo.Tx.NamedQuery(insertQuery(), cdn)
+	resultRows, err := cdn.ReqInfo.Txx.NamedQuery(insertQuery(), cdn)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -180,7 +180,7 @@ func (cdn *TOCDN) Read(parameters map[string]string) ([]interface{}, []error, tc
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := cdn.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := cdn.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying CDNs: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -209,7 +209,7 @@ func (cdn *TOCDN) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with cdn: %++v", updateQuery(), cdn)
 	// make sure that cdn.DomainName is lowercase
 	*cdn.DomainName = strings.ToLower(*cdn.DomainName)
-	resultRows, err := cdn.ReqInfo.Tx.NamedQuery(updateQuery(), cdn)
+	resultRows, err := cdn.ReqInfo.Txx.NamedQuery(updateQuery(), cdn)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -249,7 +249,7 @@ func (cdn *TOCDN) Update() (error, tc.ApiErrorType) {
 //all implementations of Deleter should use transactions and return the proper errorType
 func (cdn *TOCDN) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with cdn: %++v", deleteQuery(), cdn)
-	result, err := cdn.ReqInfo.Tx.NamedExec(deleteQuery(), cdn)
+	result, err := cdn.ReqInfo.Txx.NamedExec(deleteQuery(), cdn)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError

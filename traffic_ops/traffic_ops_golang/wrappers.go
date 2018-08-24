@@ -118,7 +118,7 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 
 			currentUserInfo, userErr, sysErr, code := auth.GetCurrentUserFromDB(DB, username, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 			if userErr != nil || sysErr != nil {
-				api.HandleErr(w, r, code, userErr, sysErr)
+				api.HandleErr(w, r, nil, code, userErr, sysErr)
 				return
 			}
 			if currentUserInfo.PrivLevel < privLevelRequired {

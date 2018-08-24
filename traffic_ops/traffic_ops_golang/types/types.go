@@ -110,7 +110,7 @@ func (typ *TOType) Read(parameters map[string]string) ([]interface{}, []error, t
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := typ.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := typ.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Types: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -150,7 +150,7 @@ FROM type typ`
 //generic error message returned
 func (typ *TOType) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with type: %++v", updateQuery(), typ)
-	resultRows, err := typ.ReqInfo.Tx.NamedQuery(updateQuery(), typ)
+	resultRows, err := typ.ReqInfo.Txx.NamedQuery(updateQuery(), typ)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -193,7 +193,7 @@ func (typ *TOType) Update() (error, tc.ApiErrorType) {
 //The insert sql returns the id and lastUpdated values of the newly inserted type and have
 //to be added to the struct
 func (typ *TOType) Create() (error, tc.ApiErrorType) {
-	resultRows, err := typ.ReqInfo.Tx.NamedQuery(insertQuery(), typ)
+	resultRows, err := typ.ReqInfo.Txx.NamedQuery(insertQuery(), typ)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -238,7 +238,7 @@ func (typ *TOType) Create() (error, tc.ApiErrorType) {
 //all implementations of Deleter should use transactions and return the proper errorType
 func (typ *TOType) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with type: %++v", deleteQuery(), typ)
-	result, err := typ.ReqInfo.Tx.NamedExec(deleteQuery(), typ)
+	result, err := typ.ReqInfo.Txx.NamedExec(deleteQuery(), typ)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError

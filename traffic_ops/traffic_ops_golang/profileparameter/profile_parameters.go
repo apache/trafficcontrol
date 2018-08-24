@@ -113,7 +113,7 @@ func (pp *TOProfileParameter) Validate() error {
 //The insert sql returns the profile and lastUpdated values of the newly inserted profileparameter and have
 //to be added to the struct
 func (pp *TOProfileParameter) Create() (error, tc.ApiErrorType) {
-	resultRows, err := pp.ReqInfo.Tx.NamedQuery(insertQuery(), pp)
+	resultRows, err := pp.ReqInfo.Txx.NamedQuery(insertQuery(), pp)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -185,9 +185,10 @@ func (pp *TOProfileParameter) Read(parameters map[string]string) ([]interface{},
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := pp.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := pp.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Parameters: %v", err)
+		fmt.Println("Error querying Parameters:" + err.Error())
 		return nil, []error{tc.DBError}, tc.SystemError
 	}
 	defer rows.Close()
@@ -197,6 +198,7 @@ func (pp *TOProfileParameter) Read(parameters map[string]string) ([]interface{},
 		p := tc.ProfileParametersNullable{}
 		if err = rows.StructScan(&p); err != nil {
 			log.Errorf("error parsing pp rows: %v", err)
+			fmt.Printf("error parsing pp rows: %v\n", err)
 			return nil, []error{tc.DBError}, tc.SystemError
 		}
 		params = append(params, p)
@@ -210,7 +212,7 @@ func (pp *TOProfileParameter) Read(parameters map[string]string) ([]interface{},
 //all implementations of Deleter should use transactions and return the proper errorType
 func (pp *TOProfileParameter) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with parameter: %++v", deleteQuery(), pp)
-	result, err := pp.ReqInfo.Tx.NamedExec(deleteQuery(), pp)
+	result, err := pp.ReqInfo.Txx.NamedExec(deleteQuery(), pp)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError

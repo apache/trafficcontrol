@@ -116,7 +116,7 @@ func (ten TOTenant) Validate() error {
 //The insert sql returns the id and lastUpdated values of the newly inserted tenant and have
 //to be added to the struct
 func (ten *TOTenant) Create() (error, tc.ApiErrorType) {
-	resultRows, err := ten.ReqInfo.Tx.NamedQuery(insertQuery(), ten)
+	resultRows, err := ten.ReqInfo.Txx.NamedQuery(insertQuery(), ten)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -169,7 +169,7 @@ func (ten *TOTenant) Read(parameters map[string]string) ([]interface{}, []error,
 		// NOTE: work around issue where user has no tenancy assigned.  If tenancy turned off, there
 		// should be no tenancy restrictions.  This should be removed once tenant_id NOT NULL constraints
 		// are in place
-		enabled, err := IsTenancyEnabledTx(ten.ReqInfo.Tx.Tx)
+		enabled, err := IsTenancyEnabledTx(ten.ReqInfo.Tx)
 		if err != nil {
 			log.Infof("error checking tenancy: %v", err)
 			return nil, nil, tc.SystemError
@@ -200,7 +200,7 @@ func (ten *TOTenant) Read(parameters map[string]string) ([]interface{}, []error,
 	query := selectQuery(tenantID) + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := ten.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := ten.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying tenants: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -250,7 +250,7 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 
 	if ten.ID != nil && *ten.ID != 0 {
 		// modifying an existing tenant
-		ok, err = IsResourceAuthorizedToUserTx(*ten.ID, user, ten.ReqInfo.Tx.Tx)
+		ok, err = IsResourceAuthorizedToUserTx(*ten.ID, user, ten.ReqInfo.Tx)
 		if !ok || err != nil {
 			return ok, err
 		}
@@ -262,7 +262,7 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 
 		// get current parentID to check if it's being changed
 		var parentID int
-		tx := ten.ReqInfo.Tx.Tx
+		tx := ten.ReqInfo.Tx
 		err = tx.QueryRow(`SELECT parent_id FROM tenant WHERE id = ` + strconv.Itoa(*ten.ID)).Scan(&parentID)
 		if err != nil {
 			return false, err
@@ -279,7 +279,7 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 	}
 
 	// check if authorized on new parent tenant
-	return IsResourceAuthorizedToUserTx(*ten.ParentID, user, ten.ReqInfo.Tx.Tx)
+	return IsResourceAuthorizedToUserTx(*ten.ParentID, user, ten.ReqInfo.Tx)
 }
 
 //Update implements the Updater interface.
@@ -289,7 +289,7 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 //generic error message returned
 func (ten *TOTenant) Update() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with tenant: %++v", updateQuery(), ten)
-	resultRows, err := ten.ReqInfo.Tx.NamedQuery(updateQuery(), ten)
+	resultRows, err := ten.ReqInfo.Txx.NamedQuery(updateQuery(), ten)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -332,7 +332,7 @@ func (ten *TOTenant) Delete() (error, tc.ApiErrorType) {
 	}
 
 	log.Debugf("about to run exec query: %s with tenant: %++v", deleteQuery(), ten)
-	result, err := ten.ReqInfo.Tx.NamedExec(deleteQuery(), ten)
+	result, err := ten.ReqInfo.Txx.NamedExec(deleteQuery(), ten)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err = fmt.Errorf("pqErr is %++v\n", pqErr)

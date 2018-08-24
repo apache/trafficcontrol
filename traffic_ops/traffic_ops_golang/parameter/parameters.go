@@ -120,7 +120,7 @@ func (param *TOParameter) Create() (error, tc.ApiErrorType) {
 		val := ""
 		param.Value = &val
 	}
-	resultRows, err := param.ReqInfo.Tx.NamedQuery(insertQuery(), param)
+	resultRows, err := param.ReqInfo.Txx.NamedQuery(insertQuery(), param)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -196,7 +196,7 @@ func (param *TOParameter) Read(parameters map[string]string) ([]interface{}, []e
 	query := selectQuery() + where + ParametersGroupBy() + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := param.ReqInfo.Tx.NamedQuery(query, queryValues)
+	rows, err := param.ReqInfo.Txx.NamedQuery(query, queryValues)
 	if err != nil {
 		log.Errorf("Error querying Parameters: %v", err)
 		return nil, []error{tc.DBError}, tc.SystemError
@@ -236,7 +236,7 @@ func (param *TOParameter) Update() (error, tc.ApiErrorType) {
 		param.Value = &val
 	}
 	log.Debugf("about to run exec query: %s with parameter: %++v", updateQuery(), param)
-	resultRows, err := param.ReqInfo.Tx.NamedQuery(updateQuery(), param)
+	resultRows, err := param.ReqInfo.Txx.NamedQuery(updateQuery(), param)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -276,7 +276,7 @@ func (param *TOParameter) Update() (error, tc.ApiErrorType) {
 //all implementations of Deleter should use transactions and return the proper errorType
 func (param *TOParameter) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with parameter: %++v", deleteQuery(), param)
-	result, err := param.ReqInfo.Tx.NamedExec(deleteQuery(), param)
+	result, err := param.ReqInfo.Txx.NamedExec(deleteQuery(), param)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError

@@ -80,7 +80,8 @@ func TestGetProfileParameters(t *testing.T) {
 	mock.ExpectCommit()
 	v := map[string]string{"profile": "1"}
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false)}
+	txx := db.MustBegin()
+	reqInfo := api.APIInfo{Txx: txx, Tx: txx.Tx}
 
 	pps, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
 	if len(errs) > 0 {

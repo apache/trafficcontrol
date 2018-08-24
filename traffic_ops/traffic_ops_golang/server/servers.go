@@ -113,7 +113,7 @@ func (server *TOServer) Validate() error {
 		return util.JoinErrs(errs)
 	}
 
-	if _, err := tc.ValidateTypeID(server.ReqInfo.Tx.Tx, server.TypeID, "server"); err != nil {
+	if _, err := tc.ValidateTypeID(server.ReqInfo.Tx, server.TypeID, "server"); err != nil {
 		return err
 	}
 
@@ -170,7 +170,7 @@ func (server TOServer) ChangeLogMessage(action string) (string, error) {
 func (server *TOServer) Read(params map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	returnable := []interface{}{}
 
-	servers, errs, errType := getServers(params, server.ReqInfo.Tx, server.ReqInfo.User)
+	servers, errs, errType := getServers(params, server.ReqInfo.Txx, server.ReqInfo.User)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			if err.Error() == `id cannot parse to integer` {
@@ -410,7 +410,7 @@ func (server *TOServer) Update() (error, tc.ApiErrorType) {
 		server.IP6Address = nil
 	}
 	log.Debugf("about to run exec query: %s with server: %++v", updateQuery(), server)
-	resultRows, err := server.ReqInfo.Tx.NamedQuery(updateQuery(), server)
+	resultRows, err := server.ReqInfo.Txx.NamedQuery(updateQuery(), server)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -506,7 +506,7 @@ func (server *TOServer) Create() (error, tc.ApiErrorType) {
 		server.XMPPID = &hostName
 	}
 
-	resultRows, err := server.ReqInfo.Tx.NamedQuery(insertQuery(), server)
+	resultRows, err := server.ReqInfo.Txx.NamedQuery(insertQuery(), server)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
@@ -621,7 +621,7 @@ xmpp_passwd
 //all implementations of Deleter should use transactions and return the proper errorType
 func (server *TOServer) Delete() (error, tc.ApiErrorType) {
 	log.Debugf("about to run exec query: %s with server: %++v", deleteServerQuery(), server)
-	result, err := server.ReqInfo.Tx.NamedExec(deleteServerQuery(), server)
+	result, err := server.ReqInfo.Txx.NamedExec(deleteServerQuery(), server)
 	if err != nil {
 		log.Errorf("received error: %++v from delete execution", err)
 		return tc.DBError, tc.SystemError

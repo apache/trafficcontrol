@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
@@ -97,7 +96,7 @@ func TestGetParameters(t *testing.T) {
 	v := map[string]string{"name": "1"}
 	user := auth.CurrentUser{PrivLevel: 30}
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false), User: &user}
+	reqInfo := api.APIInfo{Txx: db.MustBegin(), User: &user}
 	pps, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
 	if len(errs) > 0 {
 		t.Errorf("parameter.Read expected: no errors, actual: %v", errs)

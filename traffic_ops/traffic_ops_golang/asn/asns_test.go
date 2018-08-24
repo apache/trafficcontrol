@@ -81,7 +81,7 @@ func TestGetASNs(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 	v := map[string]string{"dsId": "1"}
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false)}
+	reqInfo := api.APIInfo{Txx: db.MustBegin()}
 	asns, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
 
 	if len(errs) > 0 {

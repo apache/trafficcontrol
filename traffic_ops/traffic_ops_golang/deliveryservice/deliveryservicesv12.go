@@ -151,7 +151,7 @@ func GetXMLID(tx *sql.Tx, id int) (string, bool, error) {
 // IsTenantAuthorized checks that the user is authorized for both the delivery service's existing tenant, and the new tenant they're changing it to (if different).
 
 func (ds *TODeliveryServiceV12) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
-	return isTenantAuthorized(user, ds.ReqInfo.Tx, &ds.DeliveryServiceNullableV12)
+	return isTenantAuthorized(user, ds.ReqInfo.Txx, &ds.DeliveryServiceNullableV12)
 }
 
 // getTenantID returns the tenant Id of the given delivery service. Note it may return a nil id and nil error, if the tenant ID in the database is nil.
@@ -197,7 +197,7 @@ func isTenantAuthorized(user *auth.CurrentUser, tx *sqlx.Tx, ds *tc.DeliveryServ
 }
 
 func (ds *TODeliveryServiceV12) Validate() error {
-	return ds.DeliveryServiceNullableV12.Validate(ds.ReqInfo.Tx.Tx)
+	return ds.DeliveryServiceNullableV12.Validate(ds.ReqInfo.Tx)
 }
 
 // Create is unimplemented, needed to satisfy CRUDer, since the framework doesn't allow a create to return an array of one
@@ -205,40 +205,37 @@ func (ds *TODeliveryServiceV12) Create() (error, tc.ApiErrorType) {
 	return errors.New("The Create method is not implemented"), http.StatusNotImplemented
 }
 
-func CreateV12() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		defer inf.Close()
-		ds := tc.DeliveryServiceNullableV12{}
-		if err := api.Parse(r.Body, inf.Tx.Tx, &ds); err != nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
-			return
-		}
-		dsv13 := tc.NewDeliveryServiceNullableFromV12(ds)
-		if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds); err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
-			return
-		} else if !authorized {
-			api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
-			return
-		}
-		dsv13, errCode, userErr, sysErr = create(inf.Tx.Tx, *inf.Config, inf.User, dsv13)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		*inf.CommitTx = true
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV12{dsv13.DeliveryServiceNullableV12})
+func CreateV12(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+	ds := tc.DeliveryServiceNullableV12{}
+	if err := api.Parse(r.Body, inf.Tx, &ds); err != nil {
+		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+		return
+	}
+	dsv13 := tc.NewDeliveryServiceNullableFromV12(ds)
+	if authorized, err := isTenantAuthorized(inf.User, inf.Txx, &ds); err != nil {
+		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+		return
+	} else if !authorized {
+		api.HandleErr(w, r, inf.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+	dsv13, errCode, userErr, sysErr = create(inf.Tx, *inf.Config, inf.User, dsv13)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		return
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullableV12{dsv13.DeliveryServiceNullableV12})
 }
 
 func (ds *TODeliveryServiceV12) Read(params map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
 	returnable := []interface{}{}
-	dses, errs, errType := readGetDeliveryServices(params, ds.ReqInfo.Tx, ds.ReqInfo.User)
+	dses, errs, errType := readGetDeliveryServices(params, ds.ReqInfo.Txx, ds.ReqInfo.User)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			if err.Error() == `id cannot parse to integer` {
@@ -264,7 +261,7 @@ func (ds *TODeliveryServiceV12) Delete() (error, tc.ApiErrorType) {
 		log.Errorln("TODeliveryServiceV12.Delete called with nil ID")
 		return tc.DBError, tc.DataMissingError
 	}
-	xmlID, ok, err := ds.GetXMLID(ds.ReqInfo.Tx)
+	xmlID, ok, err := ds.GetXMLID(ds.ReqInfo.Txx)
 	if err != nil {
 		log.Errorln("TODeliveryServiceV12.Delete ID '" + string(*ds.ID) + "' loading XML ID: " + err.Error())
 		return tc.DBError, tc.SystemError
@@ -322,35 +319,32 @@ func (ds *TODeliveryServiceV12) Update() (error, tc.ApiErrorType) {
 	return errors.New("The Update method is not implemented"), http.StatusNotImplemented
 }
 
-func UpdateV12() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		defer inf.Close()
-
-		ds := tc.DeliveryServiceNullableV12{}
-		ds.ID = util.IntPtr(inf.IntParams["id"])
-		if err := api.Parse(r.Body, inf.Tx.Tx, &ds); err != nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
-			return
-		}
-		dsv13 := tc.NewDeliveryServiceNullableFromV12(ds)
-		if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds); err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
-			return
-		} else if !authorized {
-			api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
-			return
-		}
-		dsv13, errCode, userErr, sysErr = update(inf.Tx.Tx, *inf.Config, inf.User, &dsv13)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		*inf.CommitTx = true
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV12{dsv13.DeliveryServiceNullableV12})
+func UpdateV12(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	ds := tc.DeliveryServiceNullableV12{}
+	ds.ID = util.IntPtr(inf.IntParams["id"])
+	if err := api.Parse(r.Body, inf.Tx, &ds); err != nil {
+		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+		return
+	}
+	dsv13 := tc.NewDeliveryServiceNullableFromV12(ds)
+	if authorized, err := isTenantAuthorized(inf.User, inf.Txx, &ds); err != nil {
+		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+		return
+	} else if !authorized {
+		api.HandleErr(w, r, inf.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+	dsv13, errCode, userErr, sysErr = update(inf.Tx, *inf.Config, inf.User, &dsv13)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		return
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullableV12{dsv13.DeliveryServiceNullableV12})
 }

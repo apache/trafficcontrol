@@ -61,14 +61,14 @@ func DomainsHandler(w http.ResponseWriter, r *http.Request) {
 
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	domains, err := getDomainsList(inf.Tx)
+	domains, err := getDomainsList(inf.Txx)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, err, err)
+		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, err, err)
 		return
 	}
 
