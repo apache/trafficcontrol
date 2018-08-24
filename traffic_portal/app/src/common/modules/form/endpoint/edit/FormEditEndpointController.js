@@ -29,7 +29,7 @@ var FormEditEndpointController = function(endpoint, $scope, $controller, $uibMod
 			});
 	};
 
-	$scope.endpointName = angular.copy(endpoint.httpMethod) + ' ' + angular.copy(endpoint.httpRoute);
+	$scope.endpointName = angular.copy(endpoint.httpMethod) + ' /api/*/' + angular.copy(endpoint.httpRoute);
 
 	$scope.settings = {
 		isNew: false,
