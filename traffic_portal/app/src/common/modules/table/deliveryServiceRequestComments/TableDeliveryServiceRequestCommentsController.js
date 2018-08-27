@@ -17,29 +17,31 @@
  * under the License.
  */
 
-var TableDeliveryServicesRequestsController = function(request, $scope, $state, $stateParams, $uibModal, dateUtils, locationUtils, deliveryServiceRequestService, messageModel) {
+var TableDeliveryServicesRequestsController = function (request, $scope, $state, $stateParams, $uibModal, dateUtils, locationUtils, deliveryServiceRequestService, messageModel) {
 
 	$scope.request = request[0];
 	$scope.type = $stateParams.type;
-    $scope.defaultParams = {
-        placeholder: '',
-        text: null,
+	$scope.defaultParams = {
+		placeholder: '',
+		text: null,
 		buttonText: '',
-        type: 'default',
-        comment: null
-    };
-    $scope.params = angular.copy($scope.defaultParams);
+		type: 'default',
+		comment: null
+	};
+	$scope.params = angular.copy($scope.defaultParams);
 
 	$scope.getComments = function () {
-        deliveryServiceRequestService.getDeliveryServiceRequestComments({ deliveryServiceRequestId: $stateParams.deliveryServiceRequestId, orderby: 'id' }).
-			then(
-				function(comments) {
-					$scope.comments = comments;
-				}
-			);
+		deliveryServiceRequestService.getDeliveryServiceRequestComments({
+			deliveryServiceRequestId: $stateParams.deliveryServiceRequestId,
+			orderby: 'id'
+		}).then(
+			function (comments) {
+				$scope.comments = comments;
+			}
+		);
 	};
 
-	$scope.createComment = function() {
+	$scope.createComment = function () {
 		$scope.params = {
 			placeholder: 'Enter your new comment',
 			text: null,
@@ -49,55 +51,59 @@ var TableDeliveryServicesRequestsController = function(request, $scope, $state, 
 		};
 	};
 
-    $scope.editComment = function(comment) {
-        $scope.params = {
-            placeholder: '',
-            text: comment.value,
-            buttonText: 'Edit Comment',
-            type: 'edit',
-            comment: comment
-        };
-    };
+	$scope.editComment = function (comment) {
+		$scope.params = {
+			placeholder: '',
+			text: comment.value,
+			buttonText: 'Edit Comment',
+			type: 'edit',
+			comment: comment
+		};
+	};
 
-	$scope.submitComment = function() {
+	$scope.submitComment = function () {
 		switch ($scope.params.type) {
 			case 'add' :
-                var comment = {
-                    deliveryServiceRequestId: $scope.request.id,
-                    value: $scope.params.text
-                };
-                deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
-                then(
-                    function() {
-                        messageModel.setMessages([ { level: 'success', text: 'Delivery service request comment created' } ], false);
-                        $scope.updateCommentsView();
-                    }
-                );
+				var comment = {
+					deliveryServiceRequestId: $scope.request.id,
+					value: $scope.params.text
+				};
+				deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).then(
+					function () {
+						messageModel.setMessages([{
+							level: 'success',
+							text: 'Delivery service request comment created'
+						}], false);
+						$scope.updateCommentsView();
+					}
+				);
 				break;
 
 			case 'edit' :
-                var editedComment = {
-                    id: $scope.params.comment.id,
-                    deliveryServiceRequestId: $scope.params.comment.deliveryServiceRequestId,
-                    value: $scope.params.text
-                };
-                deliveryServiceRequestService.updateDeliveryServiceRequestComment(editedComment).
-                then(
-                    function() {
-                        messageModel.setMessages([ { level: 'success', text: 'Delivery service request comment updated' } ], false);
-                        $scope.updateCommentsView();
-                    }
-                );
+				var editedComment = {
+					id: $scope.params.comment.id,
+					deliveryServiceRequestId: $scope.params.comment.deliveryServiceRequestId,
+					value: $scope.params.text
+				};
+				deliveryServiceRequestService.updateDeliveryServiceRequestComment(editedComment).then(
+					function () {
+						messageModel.setMessages([{
+							level: 'success',
+							text: 'Delivery service request comment updated'
+						}], false);
+						$scope.updateCommentsView();
+					}
+				);
 				break;
 		}
-    };
-
-	$scope.updateCommentsView = function () {
-        $scope.getComments();
-        $scope.params = angular.copy($scope.defaultParams);
 	};
 
-	$scope.deleteComment = function(comment, $event) {
+	$scope.updateCommentsView = function () {
+		$scope.getComments();
+		$scope.params = angular.copy($scope.defaultParams);
+	};
+
+	$scope.deleteComment = function (comment, $event) {
 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
 		var params = {
 			title: 'Delete Comment',
@@ -113,22 +119,24 @@ var TableDeliveryServicesRequestsController = function(request, $scope, $state, 
 				}
 			}
 		});
-		modalInstance.result.then(function() {
-			deliveryServiceRequestService.deleteDeliveryServiceRequestComment(comment).
-				then(
-					function() {
-						messageModel.setMessages([ { level: 'success', text: 'Delivery service request comment deleted' } ], false);
-						$scope.getComments();
-					}
-				);
+		modalInstance.result.then(function () {
+			deliveryServiceRequestService.deleteDeliveryServiceRequestComment(comment).then(
+				function () {
+					messageModel.setMessages([{
+						level: 'success',
+						text: 'Delivery service request comment deleted'
+					}], false);
+					$scope.getComments();
+				}
+			);
 		}, function () {
 			// do nothing
 		});
 	};
 
-    $scope.cancel = function () {
-        $scope.params = angular.copy($scope.defaultParams);
-    };
+	$scope.cancel = function () {
+		$scope.params = angular.copy($scope.defaultParams);
+	};
 
 	$scope.getRelativeTime = dateUtils.getRelativeTime;
 
@@ -137,16 +145,16 @@ var TableDeliveryServicesRequestsController = function(request, $scope, $state, 
 	angular.element(document).ready(function () {
 		var table = $('#dsRequestCommentsTable').DataTable({
 			"searching": false,
-            "paging": false,
+			"paging": false,
 			"info": false,
 			"ordering": false,
 			"columnDefs": [
-				{ "width": "3%", "targets": 4 }
+				{"width": "3%", "targets": 4}
 			]
 		});
 	});
 
-    $scope.getComments();
+	$scope.getComments();
 };
 
 TableDeliveryServicesRequestsController.$inject = ['request', '$scope', '$state', '$stateParams', '$uibModal', 'dateUtils', 'locationUtils', 'deliveryServiceRequestService', 'messageModel'];

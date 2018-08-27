@@ -17,10 +17,10 @@
  * under the License.
  */
 
-var DeliveryServiceRequestsController = function($scope, $state) {
-    $scope.isState = function(state) {
-        return $state.current.name.indexOf(state) !== -1;
-    };
+var DeliveryServiceRequestsController = function ($scope, $state) {
+	$scope.isState = function (state) {
+		return $state.current.name.indexOf(state) !== -1;
+	};
 };
 
 DeliveryServiceRequestsController.$inject = ['$scope', '$state'];

@@ -18,8 +18,8 @@
  */
 
 module.exports = angular.module('trafficPortal.private.deliveryServiceRequests', [])
-    .controller('DeliveryServiceRequestsController', require('./DeliveryServiceRequestsController'))
-	.config(function($stateProvider, $urlRouterProvider) {
+	.controller('DeliveryServiceRequestsController', require('./DeliveryServiceRequestsController'))
+	.config(function ($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.deliveryServiceRequests', {
 				url: 'delivery-service-requests',
@@ -27,7 +27,7 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests',
 				views: {
 					privateContent: {
 						templateUrl: 'modules/private/deliveryServiceRequests/deliveryServiceRequests.tpl.html',
-                        controller: 'DeliveryServiceRequestsController',
+						controller: 'DeliveryServiceRequestsController',
 					}
 				}
 			})
