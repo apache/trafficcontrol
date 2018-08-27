@@ -125,12 +125,11 @@ func TestReadCacheGroups(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
-	v := map[string]string{"id": "1"}
 
-	reqInfo := api.APIInfo{Txx: db.MustBegin()}
-	cachegroups, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
-	if len(errs) > 0 {
-		t.Errorf("cdn.Read expected: no errors, actual: %v", errs)
+	reqInfo := api.APIInfo{Txx: db.MustBegin(), Params: map[string]string{"id": "1"}}
+	cachegroups, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
+	if userErr != nil || sysErr != nil {
+		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}
 
 	if len(cachegroups) != 2 {

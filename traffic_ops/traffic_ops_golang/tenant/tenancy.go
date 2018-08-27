@@ -190,3 +190,41 @@ func getDSTenantIDByIDTx(tx *sql.Tx, id int) (*int, bool, error) {
 	}
 	return tenantID, true, nil
 }
+
+type Tenanter interface {
+	TenantID() *int
+	Name() string
+	GetType() string
+}
+
+// FilterAuthorized takes a slice of objects, and returns only the objects the given user is authorized for.
+func FilterAuthorized(objs []Tenanter, user *auth.CurrentUser, tx *sql.Tx) ([]interface{}, error) {
+	tenancyEnabled, err := IsTenancyEnabledTx(tx)
+	if err != nil {
+		return nil, errors.New("Error checking if tenancy enabled.")
+	}
+	if !tenancyEnabled {
+		newObjs := []interface{}{}
+		for _, obj := range objs {
+			newObjs = append(newObjs, obj)
+		}
+		return newObjs, nil
+	}
+
+	newObjs := []interface{}{}
+	for _, obj := range objs {
+		if obj.TenantID() == nil {
+			return nil, fmt.Errorf("FilterAuthorized for %T %s %s: no tenant ID", obj, obj.Name(), obj.GetType())
+		}
+		// TODO add/use a helper func to make a single SQL call, for performance
+		ok, err := IsResourceAuthorizedToUserTx(*obj.TenantID(), user, tx)
+		if err != nil {
+			return nil, fmt.Errorf("FilterAuthorized for %T %s %s: no tenant ID", obj, obj.Name(), obj.GetType())
+		}
+		if !ok {
+			continue
+		}
+		newObjs = append(newObjs, obj)
+	}
+	return newObjs, nil
+}

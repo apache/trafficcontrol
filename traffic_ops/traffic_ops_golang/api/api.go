@@ -38,6 +38,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 const DBContextKey = "db"
@@ -259,10 +260,6 @@ type APIInfo struct {
 	Config    *config.Config
 }
 
-func (inf *APIInfo) Unwrap() (map[string]string, map[string]int, *auth.CurrentUser, uint64, *sqlx.Tx, *sql.Tx, *config.Config) {
-	return inf.Params, inf.IntParams, inf.User, inf.ReqID, inf.Txx, inf.Tx, inf.Config
-}
-
 // NewInfo get and returns the context info needed by handlers. It also returns any user error, any system error, and the status code which should be returned to the client if an error occurred.
 //
 // It is encouraged to call APIInfo.Tx.Commit() manually when all queries are finished, to release database resources early, and also to return an error to the user if the commit failed.
@@ -412,8 +409,35 @@ func TypeErrToAPIErr(err error, errType tc.ApiErrorType) (error, error, int) {
 		return err, nil, http.StatusBadRequest
 	case tc.DataMissingError:
 		return err, nil, http.StatusNotFound
+	case tc.ForbiddenError:
+		return err, nil, http.StatusForbidden
 	default:
 		log.Errorln("TypeErrToAPIErr received unknown ApiErrorType from read: " + errType.String())
 		return nil, err, http.StatusInternalServerError
 	}
+}
+
+// ParseDBErr parses pq errors for uniqueness constraint violations, and returns the (userErr, sysErr, httpCode) format expected by the API helpers.
+// The dataType is the name of the API object, e.g. 'coordinate' or 'delivery service', used to construct the error string.
+func ParseDBErr(ierr error, dataType string) (error, error, int) {
+	err, ok := ierr.(*pq.Error)
+	if !ok {
+		return nil, errors.New("database returned non pq error: " + err.Error()), http.StatusInternalServerError
+	}
+	if len(err.Constraint) > 0 && len(err.Detail) > 0 { //we only want to continue parsing if it is a constraint error with details
+		detail := err.Detail
+		if strings.HasPrefix(detail, "Key ") && strings.HasSuffix(detail, " already exists.") { //we only want to continue parsing if it is a uniqueness constraint error
+			detail = strings.TrimPrefix(detail, "Key ")
+			detail = strings.TrimSuffix(detail, " already exists.")
+			//should look like "(column)=(dupe value)" at this point
+			details := strings.Split(detail, "=")
+			if len(details) == 2 {
+				column := strings.Trim(details[0], "()")
+				dupValue := strings.Trim(details[1], "()")
+				return errors.New("a " + dataType + " with " + column + " " + dupValue + " already exists."), nil, http.StatusBadRequest
+			}
+		}
+	}
+	log.Errorln(dataType + " failed to parse unique constraint from pq error: " + err.Error())
+	return nil, err, http.StatusInternalServerError
 }

@@ -124,9 +124,9 @@ func ReadHandler(typeFactory CRUDFactory) http.HandlerFunc {
 			return
 		}
 		defer inf.Close()
+
 		reader := typeFactory(inf)
-		results, errs, errType := reader.Read(inf.Params)
-		userErr, sysErr, errCode = TypeErrsToAPIErr(errs, errType)
+		results, userErr, sysErr, errCode := reader.Read()
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 			return
@@ -150,9 +150,7 @@ func ReadOnlyHandler(typeFactory func(reqInfo *APIInfo) Reader) http.HandlerFunc
 		defer inf.Close()
 
 		reader := typeFactory(inf)
-
-		results, errs, errType := reader.Read(inf.Params)
-		userErr, sysErr, errCode = TypeErrsToAPIErr(errs, errType)
+		results, userErr, sysErr, errCode := reader.Read()
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 			return
@@ -227,9 +225,7 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 			}
 		}
 
-		//run the update and handle any error
-		err, errType := u.Update()
-		userErr, sysErr, errCode = TypeErrToAPIErr(err, errType)
+		userErr, sysErr, errCode = u.Update()
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 			return
@@ -291,15 +287,14 @@ func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		}
 
 		log.Debugf("calling delete on object: %++v", d) //should have id set now
-		err, errType := d.Delete()
-		userErr, sysErr, errCode = TypeErrToAPIErr(err, errType)
+		userErr, sysErr, errCode = d.Delete()
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 			return
 		}
 
 		log.Debugf("changelog for delete on object")
-		if err = CreateChangeLog(ApiChange, Deleted, d, inf.User, inf.Tx); err != nil {
+		if err := CreateChangeLog(ApiChange, Deleted, d, inf.User, inf.Tx); err != nil {
 			HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
@@ -344,8 +339,7 @@ func CreateHandler(typeConstructor CRUDFactory) http.HandlerFunc {
 			}
 		}
 
-		err, errType := i.Create()
-		userErr, sysErr, errCode = TypeErrToAPIErr(err, errType)
+		userErr, sysErr, errCode = i.Create()
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
 			return

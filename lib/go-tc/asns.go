@@ -88,5 +88,5 @@ type ASNNullable struct {
 }
 
 type ASNsV11 struct {
-	ASNs []ASNNullable `json:"asns"`
+	ASNs []interface{} `json:"asns"`
 }

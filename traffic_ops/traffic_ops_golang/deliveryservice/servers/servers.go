@@ -42,13 +42,14 @@ import (
 )
 
 // TODeliveryServiceRequest provides a type alias to define functions on
-type TODeliveryServiceServer tc.DeliveryServiceServer
+type TODeliveryServiceServer struct {
+	ReqInfo *api.APIInfo `json:"-"`
+	tc.DeliveryServiceServer
+}
 
-//the refType is passed into the handlers where a copy of its type is used to decode the json.
-var refType = TODeliveryServiceServer(tc.DeliveryServiceServer{})
-
-func GetRefType() *TODeliveryServiceServer {
-	return &refType
+func GetRefType(inf *api.APIInfo) *TODeliveryServiceServer {
+	s := TODeliveryServiceServer{ReqInfo: inf}
+	return &s
 }
 
 func (dss TODeliveryServiceServer) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -111,7 +112,7 @@ func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	results, err := GetRefType().readDSS(inf.Txx, inf.User, inf.Params, inf.IntParams)
+	results, err := GetRefType(inf).readDSS(inf.Txx, inf.User, inf.Params, inf.IntParams)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -482,16 +483,17 @@ type TODSSDeliveryService struct {
 	tc.DSSDeliveryService
 }
 
+func (dss *TODSSDeliveryService) APIInfo() *api.APIInfo {
+	return dss.ReqInfo
+}
+
 func TypeSingleton(reqInfo *api.APIInfo) api.Reader {
 	return &TODSSDeliveryService{reqInfo, tc.DSSDeliveryService{}}
 }
 
 // Read shows all of the delivery services associated with the specified server.
-func (dss *TODSSDeliveryService) Read(params map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
-	var err error = nil
-	orderby := params["orderby"]
-	serverId := params["id"]
-
+func (dss *TODSSDeliveryService) Read() ([]interface{}, error, error, int) {
+	orderby := dss.APIInfo().Params["orderby"]
 	if orderby == "" {
 		orderby = "deliveryService"
 	}
@@ -499,10 +501,10 @@ func (dss *TODSSDeliveryService) Read(params map[string]string) ([]interface{}, 
 	query := SDSSelectQuery()
 	log.Debugln("Query is ", query)
 
-	rows, err := dss.ReqInfo.Txx.Queryx(query, serverId)
+	rows, err := dss.APIInfo().Txx.Queryx(query, dss.APIInfo().Params["id"])
 	if err != nil {
 		log.Errorf("Error querying DeliveryserviceServers: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
+		return nil, nil, errors.New("dss querying: " + err.Error()), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
@@ -510,13 +512,12 @@ func (dss *TODSSDeliveryService) Read(params map[string]string) ([]interface{}, 
 	for rows.Next() {
 		var s tc.DSSDeliveryService
 		if err = rows.StructScan(&s); err != nil {
-			log.Errorf("error parsing dss rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
+			return nil, nil, errors.New("dss scanning: " + err.Error()), http.StatusInternalServerError
 		}
 		services = append(services, s)
 	}
 
-	return services, []error{}, tc.NoError
+	return services, nil, nil, http.StatusOK
 }
 
 func SDSSelectQuery() string {

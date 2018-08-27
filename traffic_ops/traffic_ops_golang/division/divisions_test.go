@@ -72,16 +72,14 @@ func TestGetDivisions(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
-	v := map[string]string{"dsId": "1"}
 
-	reqInfo := api.APIInfo{Txx: db.MustBegin()}
-	servers, errs, errType := GetTypeSingleton()(&reqInfo).Read(v)
-	if len(errs) > 0 {
-		t.Errorf("getDivisions expected: no errors, actual: %v with error type: %s", errs, errType.String())
+	reqInfo := api.APIInfo{Txx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
+	vals, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
+	if userErr != nil || sysErr != nil {
+		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}
-
-	if len(servers) != 2 {
-		t.Errorf("getDivisions expected: len(servers) == 1, actual: %v", len(servers))
+	if len(vals) != 2 {
+		t.Errorf("read expected: len(vals) == 1, actual: %v", len(vals))
 	}
 
 }
