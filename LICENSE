@@ -367,8 +367,8 @@ For the protobuf component:
 ./traffic_ops/vendor/github.com/golang/protobuf/LICENSE
 
 For the sqlx component:
-@traffic_ops/vendor/github.com/jmoiron/sqlx/*
-./traffic_ops/vendor/github.com/jmoiron/sqlx/LICENSE
+@vendor/github.com/jmoiron/sqlx/*
+./vendor/github.com/jmoiron/sqlx/LICENSE
 
 For the backoff component:
 @traffic_ops/vendor/github.com/basho/backoff/*
