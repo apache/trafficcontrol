@@ -20,8 +20,15 @@
 var TableDeliveryServicesRequestsController = function(request, $scope, $state, $stateParams, $uibModal, dateUtils, locationUtils, deliveryServiceRequestService, messageModel) {
 
 	$scope.request = request[0];
-
 	$scope.type = $stateParams.type;
+    $scope.defaultParams = {
+        placeholder: '',
+        text: null,
+		buttonText: '',
+        type: 'default',
+        comment: null
+    };
+    $scope.params = angular.copy($scope.defaultParams);
 
 	$scope.getComments = function () {
         deliveryServiceRequestService.getDeliveryServiceRequestComments({ deliveryServiceRequestId: $stateParams.deliveryServiceRequestId, orderby: 'id' }).
@@ -33,69 +40,61 @@ var TableDeliveryServicesRequestsController = function(request, $scope, $state, 
 	};
 
 	$scope.createComment = function() {
-		var params = {
-			title: 'Add Comment',
-			placeholder: "Enter comment...",
-			text: null
+		$scope.params = {
+			placeholder: 'Enter your new comment',
+			text: null,
+			buttonText: 'Add Comment',
+			callback: $scope.submitComment,
+			type: 'add'
 		};
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/textarea/dialog.textarea.tpl.html',
-			controller: 'DialogTextareaController',
-			size: 'md',
-			resolve: {
-				params: function () {
-					return params;
-				}
-			}
-		});
-		modalInstance.result.then(function(commentValue) {
-			var comment = {
-				deliveryServiceRequestId: $scope.request.id,
-				value: commentValue
-			};
-			deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
-				then(
-					function() {
-						messageModel.setMessages([ { level: 'success', text: 'Delivery service request comment created' } ], false);
-						$scope.getComments();
-					}
-			);
-		}, function () {
-			// do nothing
-		});
 	};
 
-	$scope.editComment = function(comment) {
-		var params = {
-			title: 'Edit Comment',
-			text: comment.value
-		};
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/textarea/dialog.textarea.tpl.html',
-			controller: 'DialogTextareaController',
-			size: 'md',
-			resolve: {
-				params: function () {
-					return params;
-				}
-			}
-		});
-		modalInstance.result.then(function(newValue) {
-			var editedComment = {
-				id: comment.id,
-				deliveryServiceRequestId: comment.deliveryServiceRequestId,
-				value: newValue
-			};
-			deliveryServiceRequestService.updateDeliveryServiceRequestComment(editedComment).
-				then(
-					function() {
-						messageModel.setMessages([ { level: 'success', text: 'Delivery service request comment updated' } ], false);
-						$scope.getComments();
-					}
-				);
-		}, function () {
-			// do nothing
-		});
+    $scope.editComment = function(comment) {
+        $scope.params = {
+            placeholder: '',
+            text: comment.value,
+            buttonText: 'Edit Comment',
+            type: 'edit',
+            comment: comment
+        };
+    };
+
+	$scope.submitComment = function() {
+		switch ($scope.params.type) {
+			case 'add' :
+                var comment = {
+                    deliveryServiceRequestId: $scope.request.id,
+                    value: $scope.params.text
+                };
+                deliveryServiceRequestService.createDeliveryServiceRequestComment(comment).
+                then(
+                    function() {
+                        messageModel.setMessages([ { level: 'success', text: 'Delivery service request comment created' } ], false);
+                        $scope.updateCommentsView();
+                    }
+                );
+				break;
+
+			case 'edit' :
+                var editedComment = {
+                    id: $scope.params.comment.id,
+                    deliveryServiceRequestId: $scope.params.comment.deliveryServiceRequestId,
+                    value: $scope.params.text
+                };
+                deliveryServiceRequestService.updateDeliveryServiceRequestComment(editedComment).
+                then(
+                    function() {
+                        messageModel.setMessages([ { level: 'success', text: 'Delivery service request comment updated' } ], false);
+                        $scope.updateCommentsView();
+                    }
+                );
+				break;
+		}
+    };
+
+	$scope.updateCommentsView = function () {
+        $scope.getComments();
+        $scope.params = angular.copy($scope.defaultParams);
 	};
 
 	$scope.deleteComment = function(comment, $event) {
@@ -127,23 +126,27 @@ var TableDeliveryServicesRequestsController = function(request, $scope, $state, 
 		});
 	};
 
+    $scope.cancel = function () {
+        $scope.params = angular.copy($scope.defaultParams);
+    };
+
 	$scope.getRelativeTime = dateUtils.getRelativeTime;
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
-		$('#dsRequestCommentsTable').dataTable({
-			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-			"iDisplayLength": -1,
+		var table = $('#dsRequestCommentsTable').DataTable({
+			"search": false,
+            "paging": false,
+			"info": false,
 			"ordering": false,
 			"columnDefs": [
-				{ "width": "3%", "targets": 3 }
+				{ "width": "3%", "targets": 4 }
 			]
 		});
 	});
 
     $scope.getComments();
-
 };
 
 TableDeliveryServicesRequestsController.$inject = ['request', '$scope', '$state', '$stateParams', '$uibModal', 'dateUtils', 'locationUtils', 'deliveryServiceRequestService', 'messageModel'];
