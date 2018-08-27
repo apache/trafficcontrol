@@ -19,24 +19,29 @@ under the License.
 
 <div class="x_panel">
     <div class="x_title">
-        <ol class="breadcrumb">
+        <ol class="breadcrumb pull-left">
             <li class="active">Comments</li>
         </ol>
         <div class="pull-right" role="group">
-            <button class="btn btn-primary" title="Create Comment" ng-click="createComment()"><i class="fa fa-plus"></i></button>
-            <button class="btn btn-default" title="Refresh" ng-click="getComments()"><i class="fa fa-refresh"></i></button>
+            <button class="btn btn-primary" title="Create Comment" ng-click="createComment()"><i class="fa fa-plus"></i>
+            </button>
+            <button class="btn btn-default" title="Refresh" ng-click="getComments()"><i class="fa fa-refresh"></i>
+            </button>
         </div>
         <div class="clearfix"></div>
     </div>
     <div class="commentContainer" ng-show="params.type == 'add' || params.type == 'edit'">
         <div class="modal-body">
             <form name="inputForm" novalidate>
-                <textarea name="text" rows="5" cols="17" style="margin-top: 10px;" placeholder="Enter your new comment" class="form-control" ng-model="params.text" required></textarea>
+                    <textarea name="text" rows="5" cols="17" style="margin-top: 10px;"
+                              placeholder="Enter your new comment" class="form-control" ng-model="params.text"
+                              required></textarea>
             </form>
         </div>
         <div class="modal-footer">
             <button class="btn btn-link" ng-click="cancel()">Cancel</button>
-            <button class="btn btn-primary" ng-disabled="inputForm.$invalid" ng-click="submitComment()">{{params.buttonText}}</button>
+            <button class="btn btn-primary" ng-disabled="inputForm.$invalid"
+                    ng-click="submitComment()">{{params.buttonText}}</button>
         </div>
     </div>
     <div class="x_content">
@@ -44,23 +49,25 @@ under the License.
         <table id="dsRequestCommentsTable" class="table responsive-utilities jambo_table">
             <thead>
             <tr class="headings">
-                <th>Author</th>
                 <th>Comment</th>
-                <th>Updated</th>
-                <th></th>
-                <th></th>
+                <th>Actions</th>
             </tr>
             </thead>
             <tbody>
             <tr ng-repeat="c in comments">
-                <td data-search="^{{c.author}}$">{{c.author}}</td>
-                <td data-search="^{{c.comment}}$">{{c.value}}</td>
-                <td data-search="^{{getRelativeTime(c.lastUpdated)}}$" data-order="{{c.lastUpdated}}">{{getRelativeTime(c.lastUpdated)}}</td>
-                <td><button type="button" class="btn btn-link pull-right" title="Delete Comment" ng-click="deleteComment(c, $event)"><i class="fa fa-trash-o"></i></button></td>
-                <td><button type="button" class="btn btn-link pull-right" title="Edit Comment" ng-click="editComment(c)"><i class="fa fa-edit"></i></button></td>
+                <td>
+                    <span class="ds-comment-bold">{{c.author}}:</span> {{c.value}}<br>
+                    <span class="ds-comment-italic">{{getRelativeTime(c.lastUpdated)}}</span>
+                </td>
+                <td style="text-align: right;">
+                    <a class="link action-link" title="Update Comment"
+                            ng-click="editComment(c)"><i class="fa fa-edit"></i></a>
+                    <a class="link action-link" title="Delete Comment"
+                            ng-click="deleteComment(c, $event)"><i class="fa fa-trash-o"></i></a>
+                </td>
             </tr>
             </tbody>
         </table>
-</div>
+    </div>
 </div>
 
