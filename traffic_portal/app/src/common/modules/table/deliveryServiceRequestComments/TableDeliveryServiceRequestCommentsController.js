@@ -136,7 +136,7 @@ var TableDeliveryServicesRequestsController = function(request, $scope, $state, 
 
 	angular.element(document).ready(function () {
 		var table = $('#dsRequestCommentsTable').DataTable({
-			"search": false,
+			"searching": false,
             "paging": false,
 			"info": false,
 			"ordering": false,
