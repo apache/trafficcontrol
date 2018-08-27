@@ -93,13 +93,15 @@ func TestGetParameters(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
-	v := map[string]string{"name": "1"}
-	user := auth.CurrentUser{PrivLevel: 30}
 
-	reqInfo := api.APIInfo{Txx: db.MustBegin(), User: &user}
-	pps, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
-	if len(errs) > 0 {
-		t.Errorf("parameter.Read expected: no errors, actual: %v", errs)
+	reqInfo := api.APIInfo{
+		Txx:    db.MustBegin(),
+		User:   &auth.CurrentUser{PrivLevel: 30},
+		Params: map[string]string{"name": "1"},
+	}
+	pps, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
+	if userErr != nil || sysErr != nil {
+		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}
 
 	if len(pps) != 2 {

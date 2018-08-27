@@ -21,10 +21,9 @@ package profileparameter
 
 import (
 	"errors"
-	"fmt"
+	"net/http"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -32,8 +31,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 )
 
 const (
@@ -46,6 +43,18 @@ type TOProfileParameter struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.ProfileParameterNullable
 }
+
+func (v *TOProfileParameter) APIInfo() *api.APIInfo   { return v.ReqInfo }
+func (v *TOProfileParameter) NewReadObj() interface{} { return &tc.ProfileParametersNullable{} }
+func (v *TOProfileParameter) SelectQuery() string     { return selectQuery() }
+func (v *TOProfileParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"profileId":   dbhelpers.WhereColumnInfo{"pp.profile", nil},
+		"parameterId": dbhelpers.WhereColumnInfo{"pp.parameter", nil},
+		"lastUpdated": dbhelpers.WhereColumnInfo{"pp.last_updated", nil},
+	}
+}
+func (v *TOProfileParameter) DeleteQuery() string { return deleteQuery() }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
@@ -112,18 +121,10 @@ func (pp *TOProfileParameter) Validate() error {
 //generic error message returned
 //The insert sql returns the profile and lastUpdated values of the newly inserted profileparameter and have
 //to be added to the struct
-func (pp *TOProfileParameter) Create() (error, tc.ApiErrorType) {
-	resultRows, err := pp.ReqInfo.Txx.NamedQuery(insertQuery(), pp)
+func (pp *TOProfileParameter) Create() (error, error, int) {
+	resultRows, err := pp.APIInfo().Txx.NamedQuery(insertQuery(), pp)
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a parameter with " + err.Error()), eType
-			}
-			return err, eType
-		}
-		log.Errorf("received non pq error: %++v from create execution", err)
-		return tc.DBError, tc.SystemError
+		return api.ParseDBErr(err, pp.GetType())
 	}
 	defer resultRows.Close()
 
@@ -134,102 +135,33 @@ func (pp *TOProfileParameter) Create() (error, tc.ApiErrorType) {
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&profile, &parameter, &lastUpdated); err != nil {
-			log.Error.Printf("could not scan profile from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
+			return nil, errors.New("profileparameter create scanning: " + err.Error()), http.StatusInternalServerError
 		}
 	}
 	if rowsAffected == 0 {
-		err = errors.New("no profile_parameter was inserted, no profile+parameter was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return nil, errors.New("profileparameter create returned no rows"), http.StatusInternalServerError
 	}
 	if rowsAffected > 1 {
-		err = errors.New("too many ids returned from parameter insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
+		return nil, errors.New("profileparameter create returned multiple rows"), http.StatusInternalServerError
 	}
 
 	pp.SetKeys(map[string]interface{}{ProfileIDQueryParam: profile, ParameterIDQueryParam: parameter})
-	return nil, tc.NoError
+	return nil, nil, http.StatusOK
 }
 
 func insertQuery() string {
-	query := `INSERT INTO profile_parameter (
+	return `INSERT INTO profile_parameter (
 profile,
 parameter) VALUES (
 :profile_id,
 :parameter_id) RETURNING profile, parameter, last_updated`
-	return query
 }
 
-func (pp *TOProfileParameter) Update() (error, tc.ApiErrorType) {
-	return errors.New("unimplemented"), tc.SystemError
+func (pp *TOProfileParameter) Update() (error, error, int) {
+	return nil, nil, http.StatusNotImplemented
 }
-
-func (pp *TOProfileParameter) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
-
-	// Query Parameters to Database Query column mappings
-	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"profileId":   dbhelpers.WhereColumnInfo{"pp.profile", nil},
-		"parameterId": dbhelpers.WhereColumnInfo{"pp.parameter", nil},
-		"lastUpdated": dbhelpers.WhereColumnInfo{"pp.last_updated", nil},
-	}
-
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
-	}
-
-	query := selectQuery() + where + orderBy
-	log.Debugln("Query is ", query)
-
-	rows, err := pp.ReqInfo.Txx.NamedQuery(query, queryValues)
-	if err != nil {
-		log.Errorf("Error querying Parameters: %v", err)
-		fmt.Println("Error querying Parameters:" + err.Error())
-		return nil, []error{tc.DBError}, tc.SystemError
-	}
-	defer rows.Close()
-
-	params := []interface{}{}
-	for rows.Next() {
-		p := tc.ProfileParametersNullable{}
-		if err = rows.StructScan(&p); err != nil {
-			log.Errorf("error parsing pp rows: %v", err)
-			fmt.Printf("error parsing pp rows: %v\n", err)
-			return nil, []error{tc.DBError}, tc.SystemError
-		}
-		params = append(params, p)
-	}
-
-	return params, []error{}, tc.NoError
-
-}
-
-//The Parameter implementation of the Deleter interface
-//all implementations of Deleter should use transactions and return the proper errorType
-func (pp *TOProfileParameter) Delete() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with parameter: %++v", deleteQuery(), pp)
-	result, err := pp.ReqInfo.Txx.NamedExec(deleteQuery(), pp)
-	if err != nil {
-		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected < 1 {
-		return errors.New("no parameter with that id found"), tc.DataMissingError
-	}
-	if rowsAffected > 1 {
-		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
-	}
-
-	return nil, tc.NoError
-}
+func (pp *TOProfileParameter) Read() ([]interface{}, error, error, int) { return api.GenericRead(pp) }
+func (pp *TOProfileParameter) Delete() (error, error, int)              { return api.GenericDelete(pp) }
 
 func selectQuery() string {
 
@@ -248,8 +180,8 @@ func updateQuery() string {
 profile_parameter SET
 profile=:profile_id,
 parameter=:parameter_id
-WHERE profile=:profile_id AND 
-      parameter = :parameter_id 
+WHERE profile=:profile_id AND
+      parameter = :parameter_id
       RETURNING last_updated`
 	return query
 }

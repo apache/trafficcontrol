@@ -36,6 +36,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apiriak"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/apitenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/asn"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/cachegroup"
@@ -63,7 +64,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/staticdnsentry"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/status"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/systeminfo"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/types"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/user"
 
@@ -347,11 +347,11 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodDelete, `profileparameters/{profileId}/{parameterId}$`, api.DeleteHandler(profileparameter.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
 
 		//Tenants
-		{1.1, http.MethodGet, `tenants/?(\.json)?$`, api.ReadHandler(tenant.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodGet, `tenants/{id}$`, api.ReadHandler(tenant.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
-		{1.1, http.MethodPut, `tenants/{id}$`, api.UpdateHandler(tenant.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodPost, `tenants/?$`, api.CreateHandler(tenant.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
-		{1.1, http.MethodDelete, `tenants/{id}$`, api.DeleteHandler(tenant.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodGet, `tenants/?(\.json)?$`, api.ReadHandler(apitenant.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `tenants/{id}$`, api.ReadHandler(apitenant.GetTypeSingleton()), auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodPut, `tenants/{id}$`, api.UpdateHandler(apitenant.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodPost, `tenants/?$`, api.CreateHandler(apitenant.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
+		{1.1, http.MethodDelete, `tenants/{id}$`, api.DeleteHandler(apitenant.GetTypeSingleton()), auth.PrivLevelOperations, Authenticated, nil},
 
 		//CRConfig
 		{1.1, http.MethodGet, `cdns/{cdn}/snapshot/?$`, crconfig.SnapshotGetHandler, auth.PrivLevelReadOnly, Authenticated, nil},
