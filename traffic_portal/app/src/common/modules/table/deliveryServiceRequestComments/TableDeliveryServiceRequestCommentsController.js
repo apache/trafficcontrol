@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServicesRequestsController = function (request, $scope, $state, $stateParams, $uibModal, dateUtils, locationUtils, deliveryServiceRequestService, messageModel) {
+var TableDeliveryServicesRequestsController = function (request, $scope, $state, $stateParams, $uibModal, $anchorScroll, dateUtils, locationUtils, deliveryServiceRequestService, messageModel) {
 
 	$scope.request = request[0];
 	$scope.type = $stateParams.type;
@@ -45,7 +45,7 @@ var TableDeliveryServicesRequestsController = function (request, $scope, $state,
 		$scope.params = {
 			placeholder: 'Enter your new comment',
 			text: null,
-			buttonText: 'Add Comment',
+			buttonText: 'Create Comment',
 			callback: $scope.submitComment,
 			type: 'add'
 		};
@@ -55,10 +55,11 @@ var TableDeliveryServicesRequestsController = function (request, $scope, $state,
 		$scope.params = {
 			placeholder: '',
 			text: comment.value,
-			buttonText: 'Edit Comment',
+			buttonText: 'Update Comment',
 			type: 'edit',
 			comment: comment
 		};
+		$anchorScroll();
 	};
 
 	$scope.submitComment = function () {
@@ -143,19 +144,17 @@ var TableDeliveryServicesRequestsController = function (request, $scope, $state,
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
 	angular.element(document).ready(function () {
-		var table = $('#dsRequestCommentsTable').DataTable({
+		var table = $('#dsRequestCommentsTable').dataTable({
 			"searching": false,
 			"paging": false,
 			"info": false,
 			"ordering": false,
-			"columnDefs": [
-				{"width": "3%", "targets": 4}
-			]
+
 		});
 	});
 
 	$scope.getComments();
 };
 
-TableDeliveryServicesRequestsController.$inject = ['request', '$scope', '$state', '$stateParams', '$uibModal', 'dateUtils', 'locationUtils', 'deliveryServiceRequestService', 'messageModel'];
+TableDeliveryServicesRequestsController.$inject = ['request', '$scope', '$state', '$stateParams', '$uibModal', '$anchorScroll', 'dateUtils', 'locationUtils', 'deliveryServiceRequestService', 'messageModel'];
 module.exports = TableDeliveryServicesRequestsController;
