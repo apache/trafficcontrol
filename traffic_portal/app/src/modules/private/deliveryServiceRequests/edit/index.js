@@ -19,7 +19,7 @@
 
 module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.edit', [])
 	.controller('FormEditDeliveryServiceRequestController', require('./FormEditDeliveryServiceRequestController'))
-	.config(function($stateProvider, $urlRouterProvider) {
+	.config(function ($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.deliveryServiceRequests.edit', {
 				url: '/{deliveryServiceRequestId:[0-9]{1,8}}?type&fulfill',
@@ -45,10 +45,10 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.e
 						},
 						controller: 'FormEditDeliveryServiceRequestController',
 						resolve: {
-							deliveryServiceRequest: function($stateParams, deliveryServiceRequestService) {
-								return deliveryServiceRequestService.getDeliveryServiceRequests({ id: $stateParams.deliveryServiceRequestId });
+							deliveryServiceRequest: function ($stateParams, deliveryServiceRequestService) {
+								return deliveryServiceRequestService.getDeliveryServiceRequests({id: $stateParams.deliveryServiceRequestId});
 							},
-							deliveryService: function(deliveryServiceRequest, deliveryServiceService) {
+							deliveryService: function (deliveryServiceRequest, deliveryServiceService) {
 								var dsRequest = deliveryServiceRequest[0];
 
 								if (dsRequest.changeType == 'update') {
@@ -59,29 +59,32 @@ module.exports = angular.module('trafficPortal.private.deliveryServiceRequests.e
 									return dsRequest.deliveryService;
 								}
 							},
-							origin: function() {
+							origin: function () {
 								return [{}];
 							},
-							type: function($stateParams) {
+							type: function ($stateParams) {
 								return $stateParams.type;
 							},
-							types: function(typeService) {
-								return typeService.getTypes({ useInTable: 'deliveryservice' });
+							types: function (typeService) {
+								return typeService.getTypes({useInTable: 'deliveryservice'});
 							}
 						}
 					},
-                    deliveryServiceRequestsComments: {
-                        templateUrl: 'common/modules/table/deliveryServiceRequestComments/table.deliveryServiceRequestComments.tpl.html',
-                        controller: 'TableDeliveryServiceRequestCommentsController',
-                        resolve: {
-                            request: function($stateParams, deliveryServiceRequestService) {
-                                return deliveryServiceRequestService.getDeliveryServiceRequests({ id: $stateParams.deliveryServiceRequestId });
-                            },
-                            comments: function($stateParams, deliveryServiceRequestService) {
-                                return deliveryServiceRequestService.getDeliveryServiceRequestComments({ deliveryServiceRequestId: $stateParams.deliveryServiceRequestId, orderby: 'id' });
-                            }
-                        }
-                    }
+					deliveryServiceRequestsComments: {
+						templateUrl: 'common/modules/table/deliveryServiceRequestComments/table.deliveryServiceRequestComments.tpl.html',
+						controller: 'TableDeliveryServiceRequestCommentsController',
+						resolve: {
+							request: function ($stateParams, deliveryServiceRequestService) {
+								return deliveryServiceRequestService.getDeliveryServiceRequests({id: $stateParams.deliveryServiceRequestId});
+							},
+							comments: function ($stateParams, deliveryServiceRequestService) {
+								return deliveryServiceRequestService.getDeliveryServiceRequestComments({
+									deliveryServiceRequestId: $stateParams.deliveryServiceRequestId,
+									orderby: 'id'
+								});
+							}
+						}
+					}
 				}
 			})
 		;
