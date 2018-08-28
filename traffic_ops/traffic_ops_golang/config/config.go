@@ -27,6 +27,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"strings"
+
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/basho/riak-go-client"
@@ -309,6 +311,22 @@ func GetLDAPConfig(LDAPConfPath string) (bool, *ConfigLDAP, error) {
 	if err != nil {
 		return false, LDAPconf, fmt.Errorf("parsing LDAP conf '%v': %v", LDAPConfBytes, err)
 	}
+	if strings.TrimSpace(LDAPconf.AdminPass) == "" {
+		return false, LDAPconf, fmt.Errorf("LDAP conf missing admin_pass field")
+	}
+	if strings.TrimSpace(LDAPconf.SearchBase) == "" {
+		return false, LDAPconf, fmt.Errorf("LDAP conf missing search_base field")
+	}
+	if strings.TrimSpace(LDAPconf.AdminDN) == "" {
+		return false, LDAPconf, fmt.Errorf("LDAP conf missing admin_dn field")
+	}
+	if strings.TrimSpace(LDAPconf.Host) == "" {
+		return false, LDAPconf, fmt.Errorf("LDAP conf missing host field")
+	}
+	if strings.TrimSpace(LDAPconf.SearchQuery) == "" {
+		return false, LDAPconf, fmt.Errorf("LDAP conf missing search_query field")
+	}
+
 	return true, LDAPconf, nil
 }
 
