@@ -35,6 +35,7 @@ Minimum Traffic Ops Profiles needed
    * TRAFFIC_MONITOR_PROFILE.traffic_ops
    * TRAFFIC_ROUTER_PROFILE.traffic_ops
    * TRAFFIC_STATS_PROFILE.traffic_ops
+   * EDGE_GROVE_PROFILE.traffic_ops
    
 
 
