@@ -152,6 +152,9 @@ func (s *session) getCachegroupID() (int, error) {
 		fmt.Println("cannot get Cachegroup")
 		return -1, err
 	}
+	if len(cgs) == 0 {
+		return -1, errors.New("No cachegroups found")
+	}
 	return cgs[0].ID, err
 }
 
