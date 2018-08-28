@@ -196,6 +196,7 @@ func (s *session) enrollContainer(c dockertypes.ContainerJSON) (*v13.Server, err
 	server := v13.Server{
 		HostName:   hostName,
 		DomainName: os.Getenv("DOMAINNAME"),
+		HTTPSPort:  443,
 	}
 
 	fmt.Println("type is ", serverType(hostName))
@@ -251,6 +252,7 @@ func (s *session) enrollContainer(c dockertypes.ContainerJSON) (*v13.Server, err
 	if len(ports) > 0 {
 		// TODO: for now, assuming there's only 1
 		server.TCPPort = ports[0]
+		server.HTTPSPort = ports[0]
 	}
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
