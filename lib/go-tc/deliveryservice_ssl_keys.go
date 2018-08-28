@@ -25,6 +25,10 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
+const DNSSECKSKType = "ksk"
+const DNSSECZSKType = "zsk"
+const DNSSECKeyStatusNew = "new"
+
 // DeliveryServiceSSLKeysResponse ...
 type DeliveryServiceSSLKeysResponse struct {
 	Response DeliveryServiceSSLKeys `json:"response"`

@@ -80,18 +80,18 @@ func CreateDNSSECKeys(tx *sql.Tx, cfg *config.Config, xmlID string, exampleURLs 
 
 	tld := false
 	effectiveDate := inception
-	zsk, err := getDNSSECKeys(dnssecZSKType, dsName, ttl, inception, zExpiration, dnssecKeyStatusNew, effectiveDate, tld)
+	zsk, err := GetDNSSECKeys(tc.DNSSECZSKType, dsName, ttl, inception, zExpiration, tc.DNSSECKeyStatusNew, effectiveDate, tld)
 	if err != nil {
 		return tc.DNSSECKeySet{}, errors.New("getting DNSSEC keys for ZSK: " + err.Error())
 	}
-	ksk, err := getDNSSECKeys(dnssecKSKType, dsName, ttl, inception, kExpiration, dnssecKeyStatusNew, effectiveDate, tld)
+	ksk, err := GetDNSSECKeys(tc.DNSSECKSKType, dsName, ttl, inception, kExpiration, tc.DNSSECKeyStatusNew, effectiveDate, tld)
 	if err != nil {
 		return tc.DNSSECKeySet{}, errors.New("getting DNSSEC keys for KSK: " + err.Error())
 	}
 	return tc.DNSSECKeySet{ZSK: []tc.DNSSECKey{zsk}, KSK: []tc.DNSSECKey{ksk}}, nil
 }
 
-func getDNSSECKeys(keyType string, dsName string, ttl time.Duration, inception time.Time, expiration time.Time, status string, effectiveDate time.Time, tld bool) (tc.DNSSECKey, error) {
+func GetDNSSECKeys(keyType string, dsName string, ttl time.Duration, inception time.Time, expiration time.Time, status string, effectiveDate time.Time, tld bool) (tc.DNSSECKey, error) {
 	key := tc.DNSSECKey{
 		InceptionDateUnix:  inception.Unix(),
 		ExpirationDateUnix: expiration.Unix(),
@@ -100,7 +100,7 @@ func getDNSSECKeys(keyType string, dsName string, ttl time.Duration, inception t
 		Status:             status,
 		EffectiveDateUnix:  effectiveDate.Unix(),
 	}
-	isKSK := keyType != dnssecZSKType
+	isKSK := keyType != tc.DNSSECZSKType
 	err := error(nil)
 	key.Public, key.Private, key.DSRecord, err = genKeys(dsName, isKSK, ttl, tld)
 	return key, err
@@ -153,9 +153,6 @@ func genKeys(dsName string, ksk bool, ttl time.Duration, tld bool) (string, stri
 
 // TODO change ttl to time.Duration
 
-const dnssecKSKType = "ksk"
-const dnssecZSKType = "zsk"
-
 func GetDSDomainName(dsExampleURLs []string) (string, error) {
 	// TODO move somewhere generic
 	if len(dsExampleURLs) == 0 {
@@ -174,14 +171,13 @@ func GetDSDomainName(dsExampleURLs []string) (string, error) {
 	return dsName, nil
 }
 
-const dnssecKeyStatusNew = "new"
 const dnssecDefaultKSKExpiration = time.Duration(365) * time.Hour * 24
 const dnssecDefaultZSKExpiration = time.Duration(30) * time.Hour * 24
 const dnssecDefaultTTL = 60
 
 func getKeyExpiration(keys []tc.DNSSECKey, defaultExpiration time.Duration) time.Duration {
 	for _, key := range keys {
-		if key.Status != dnssecKeyStatusNew {
+		if key.Status != tc.DNSSECKeyStatusNew {
 			continue
 		}
 		return time.Duration(key.ExpirationDateUnix-key.InceptionDateUnix) * time.Second
@@ -191,7 +187,7 @@ func getKeyExpiration(keys []tc.DNSSECKey, defaultExpiration time.Duration) time
 
 func getKeyTTL(keys []tc.DNSSECKey, defaultTTL time.Duration) time.Duration {
 	for _, key := range keys {
-		if key.Status != dnssecKeyStatusNew {
+		if key.Status != tc.DNSSECKeyStatusNew {
 			continue
 		}
 		return time.Duration(key.TTLSeconds) * time.Second
