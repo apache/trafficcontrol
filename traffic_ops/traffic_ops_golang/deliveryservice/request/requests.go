@@ -190,7 +190,7 @@ func (req *TODeliveryServiceRequest) Update() (error, tc.ApiErrorType) {
 		log.Errorf("error updating DeliveryServiceRequest: ID is nil")
 		return errors.New("error updating DeliveryServiceRequest: ID is nil"), tc.DataMissingError
 	}
-	err := req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery() + `WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(&current)
+	err := req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+`WHERE r.id=$1`, *req.ID).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
@@ -341,7 +341,7 @@ func (req *TODeliveryServiceRequest) Delete() (error, tc.ApiErrorType) {
 		return errors.New("cannot delete deliveryservice_request -- ID is nil"), tc.SystemError
 	}
 
-	err := req.ReqInfo.Tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(*req.ID)).Scan(&st)
+	err := req.ReqInfo.Tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id = $1`, *req.ID).Scan(&st)
 	if err != nil {
 		return err, tc.SystemError
 	}
@@ -350,10 +350,7 @@ func (req *TODeliveryServiceRequest) Delete() (error, tc.ApiErrorType) {
 		return fmt.Errorf("cannot delete a deliveryservice_request with state %s", string(st)), tc.DataConflictError
 	}
 
-	query := `DELETE FROM deliveryservice_request WHERE id=` + strconv.Itoa(*req.ID)
-	log.Debugf("about to run exec query: %s", query)
-
-	result, err := req.ReqInfo.Tx.Exec(query)
+	result, err := req.ReqInfo.Tx.Exec(`DELETE FROM deliveryservice_request WHERE id = $1`, *req.ID)
 	if err != nil {
 		log.Errorln("received error from delete execution: ", err.Error())
 		return tc.DBError, tc.SystemError
@@ -399,17 +396,13 @@ func (req TODeliveryServiceRequest) ChangeLogMessage(action string) (string, err
 }
 
 // isActiveRequest returns true if a request using this XMLID is currently in an active state
-func isActiveRequest(tx *sqlx.Tx, XMLID string) (bool, error) {
-	q := `SELECT EXISTS(SELECT 1 FROM deliveryservice_request
-WHERE deliveryservice->>'xmlId' = '` + XMLID + `'
-AND status IN ('draft', 'submitted', 'pending'))`
-	row := tx.QueryRow(q)
-	var active bool
-	err := row.Scan(&active)
-	if err != nil {
-		log.Debugln("ERROR: ", err, ";  QUERY:", q)
+func isActiveRequest(tx *sqlx.Tx, xmlID string) (bool, error) {
+	qry := `SELECT EXISTS(SELECT 1 FROM deliveryservice_request WHERE deliveryservice->>'xmlId' = $1 AND status IN ('draft', 'submitted', 'pending'))`
+	active := false
+	if err := tx.QueryRow(qry, xmlID).Scan(&active); err != nil {
+		return false, err
 	}
-	return active, err
+	return active, nil
 }
 
 func updateRequestQuery() string {
@@ -472,7 +465,7 @@ func (req *deliveryServiceRequestAssignment) Update() (error, tc.ApiErrorType) {
 
 	// get original
 	var current TODeliveryServiceRequest
-	err := req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery() + `WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(&current)
+	err := req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+`WHERE r.id = $1`, *req.ID).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
@@ -494,9 +487,8 @@ func (req *deliveryServiceRequestAssignment) Update() (error, tc.ApiErrorType) {
 	if req.AssigneeID != nil {
 		v = strconv.Itoa(*req.AssigneeID)
 	}
-	query := `UPDATE deliveryservice_request SET assignee_id = ` + v + ` WHERE id=` + strconv.Itoa(*req.ID)
-	_, err = req.ReqInfo.Tx.Exec(query)
-	if err != nil {
+
+	if _, err = req.ReqInfo.Tx.Exec(`UPDATE deliveryservice_request SET assignee_id = $1 WHERE id = $2`, v, *req.ID); err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
 			if eType == tc.DataConflictError {
@@ -509,7 +501,7 @@ func (req *deliveryServiceRequestAssignment) Update() (error, tc.ApiErrorType) {
 	}
 
 	// update req with current info
-	err = req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery() + ` WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(req)
+	err = req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(req)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
@@ -559,7 +551,7 @@ func (req *deliveryServiceRequestStatus) Update() (error, tc.ApiErrorType) {
 	if req.ID == nil {
 		return errors.New("error updating DeliveryServiceRequestStatus: ID is nil"), tc.SystemError
 	}
-	err := req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery() + ` WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(&current)
+	err := req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(&current)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
@@ -575,9 +567,7 @@ func (req *deliveryServiceRequestStatus) Update() (error, tc.ApiErrorType) {
 	req.Status = st
 
 	// LastEditedBy field should not change with status update
-	query := `UPDATE deliveryservice_request SET status = '` + string(*req.Status) + `' WHERE id=` + strconv.Itoa(*req.ID)
-	_, err = req.ReqInfo.Tx.Exec(query)
-	if err != nil {
+	if _, err = req.ReqInfo.Tx.Exec(`UPDATE deliveryservice_request SET status = $1 WHERE id = $2`, *req.Status, *req.ID); err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
 			if eType == tc.DataConflictError {
@@ -590,7 +580,7 @@ func (req *deliveryServiceRequestStatus) Update() (error, tc.ApiErrorType) {
 	}
 
 	// update req with current info
-	err = req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery() + ` WHERE r.id=` + strconv.Itoa(*req.ID)).StructScan(req)
+	err = req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(req)
 	if err != nil {
 		log.Errorf("Error querying DeliveryServiceRequests: %v", err)
 		return err, tc.SystemError
