@@ -78,7 +78,7 @@ systemctl daemon-reload
 
 echo "Tomcat for Traffic Router installed successfully."
 echo ""
-echo "Start with 'sudo systemctl start traffic_router'"
+echo "Start with 'systemctl start traffic_router'"
 
 %preun
 

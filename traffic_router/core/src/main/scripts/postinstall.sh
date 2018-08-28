@@ -30,5 +30,5 @@ fi
 echo "Traffic Router installed successfully."
 
 systemctl daemon-reload
-echo "Start with 'sudo systemctl start traffic_router'"
+echo "Start with 'systemctl start traffic_router'"
 

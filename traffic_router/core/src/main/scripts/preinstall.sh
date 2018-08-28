@@ -21,9 +21,9 @@ chkconfig --list tomcat >/dev/null
 if [ $? -eq 0 ]; then
   /sbin/service tomcat stop
 else
-  /usr/bin/sudo /usr/bin/systemctl list-unit-files traffic_router.service > /dev/null
+  /usr/bin/systemctl list-unit-files traffic_router.service > /dev/null
 
-  [ $? -eq 0 ] && /usr/bin/sudo /usr/bin/systemctl stop traffic_router
+  [ $? -eq 0 ] && /usr/bin/systemctl stop traffic_router
 fi
 
 # delete the expanded war files from the previous version

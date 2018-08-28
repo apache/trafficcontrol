@@ -13,4 +13,4 @@
 # limitations under the License.
 #
 
-/usr/bin/sudo /usr/bin/systemctl stop traffic_router
+/usr/bin/systemctl stop traffic_router
