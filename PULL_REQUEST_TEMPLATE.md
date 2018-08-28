@@ -25,7 +25,8 @@ Fixes #(issue_number)
 - [ ] This PR includes documentation updates
 - [ ] This PR includes an update to CHANGELOG.md
 - [ ] This PR includes all required license headers
-- [ ] This PR does *NOT* fix a serious security flaw. Read more: [www.apache.org/security](http://www.apache.org/security/)
+- [ ] This PR includes a database migration (ensure that migration sequence is correct)
+- [ ] This PR fixes a serious security flaw. Read more: [www.apache.org/security](http://www.apache.org/security/)
 
 <!--
     Licensed to the Apache Software Foundation (ASF) under one
