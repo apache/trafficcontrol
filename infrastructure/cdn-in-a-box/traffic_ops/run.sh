@@ -78,11 +78,12 @@ cd $TO_DIR && \
 
 cd $TO_DIR && $TO_DIR/local/bin/hypnotoad script/cdn
 
+# Add initial data to traffic ops
+/trafficops-init.sh
+
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
 . /to-access.sh
 to-enroll $(hostname -s)
 
-# Add initial data to traffic ops
-/trafficops-init.sh
 exec tail -f /var/log/traffic_ops/traffic_ops.log
