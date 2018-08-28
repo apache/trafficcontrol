@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -76,12 +77,35 @@ func generateStoreDNSSECKeys(
 	kExp := time.Duration(kExpDays) * time.Hour * 24
 	ttl := time.Duration(ttlSeconds) * time.Second
 
-	newKeys := tc.DNSSECKeys{}
-	// (tc.DNSSECKeys, bool, error) {
 	oldKeys, oldKeysExist, err := riaksvc.GetDNSSECKeys(cdnName, tx, cfg.RiakAuthOptions)
 	if err != nil {
 		return errors.New("getting old dnssec keys: " + err.Error())
 	}
+
+	dses, cdnDomain, err := getCDNDeliveryServices(tx, cdnName)
+	if err != nil {
+		return errors.New("getting cdn delivery services: " + err.Error())
+	}
+
+	cdnDNSDomain := cdnDomain
+	if !strings.HasSuffix(cdnDNSDomain, ".") {
+		cdnDNSDomain = cdnDNSDomain + "."
+	}
+
+	inception := time.Now()
+	newCDNZSK, err := deliveryservice.GetDNSSECKeys(tc.DNSSECZSKType, cdnDNSDomain, ttl, inception, inception.Add(zExp), tc.DNSSECKeyStatusNew, time.Unix(effectiveDateUnix, 0), false)
+	if err != nil {
+		return errors.New("creating zsk for cdn: " + err.Error())
+	}
+
+	newCDNKSK, err := deliveryservice.GetDNSSECKeys(tc.DNSSECKSKType, cdnDNSDomain, ttl, inception, inception.Add(kExp), tc.DNSSECKeyStatusNew, time.Unix(effectiveDateUnix, 0), true)
+	if err != nil {
+		return errors.New("creating ksk for cdn: " + err.Error())
+	}
+
+	newCDNZSKs := []tc.DNSSECKey{newCDNZSK}
+	newCDNKSKs := []tc.DNSSECKey{newCDNKSK}
+
 	if oldKeysExist {
 		oldKeyCDN, oldKeyCDNExists := oldKeys[cdnName]
 		if oldKeyCDNExists && len(oldKeyCDN.KSK) > 0 {
@@ -89,25 +113,22 @@ func generateStoreDNSSECKeys(
 			ksk.Status = DNSSECStatusExisting
 			ksk.TTLSeconds = uint64(ttl / time.Second)
 			ksk.ExpirationDateUnix = effectiveDateUnix
-			oldKeyCDN.KSK = append(oldKeyCDN.KSK, ksk)
+			newCDNKSKs = append(newCDNKSKs, ksk)
 		}
 		if oldKeyCDNExists && len(oldKeyCDN.ZSK) > 0 {
 			zsk := oldKeyCDN.ZSK[0]
 			zsk.Status = DNSSECStatusExisting
 			zsk.TTLSeconds = uint64(ttl / time.Second)
 			zsk.ExpirationDateUnix = effectiveDateUnix
-			oldKeyCDN.ZSK = append(oldKeyCDN.ZSK, zsk)
+			newCDNZSKs = append(newCDNZSKs, zsk)
 		}
-		newKeys[cdnName] = tc.DNSSECKeySet{oldKeyCDN.ZSK, oldKeyCDN.KSK}
-	} else {
-		// TODO create CDN keys if they don't exist?
-		return errors.New("getting DNSSec keys from Riak: no DNSSec keys for CDN")
 	}
+
+	newKeys := tc.DNSSECKeys{}
+	newKeys[cdnName] = tc.DNSSECKeySet{ZSK: newCDNZSKs, KSK: newCDNKSKs}
+
 	cdnKeys := newKeys[cdnName]
-	dses, cdnDomain, err := getCDNDeliveryServices(tx, cdnName)
-	if err != nil {
-		return errors.New("getting cdn delivery services: " + err.Error())
-	}
+
 	dsNames := []string{}
 	for _, ds := range dses {
 		dsNames = append(dsNames, ds.Name)
