@@ -142,12 +142,14 @@ services:
 
   # trafficvault runs a riak container to store private keys
   trafficvault:
-    image: basho/riak-kv
+    build:
+      context: .
+      dockerfile: traffic_vault/Dockerfile
     ports:
       - "8087:8087"
       - "8098:8098"
     environment:
-      - CLUSTER_NAME=riakkv
+      - CLUSTER_NAME=trafficvault
     labels:
       - "com.basho.riak.cluster.name=trafficvault"
     volumes:
@@ -158,8 +160,6 @@ services:
     hostname: trafficvault
     networks:
       - tcnet
-    ports:
-      - "8010:80"
 
   # Apache Traffic Server (ATS) caches defined here
   # edge cache
