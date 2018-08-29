@@ -308,6 +308,7 @@ def setStatusFile(statusDir:str, status:str, create:bool = False):
 		if MODE:
 			with open(os.path.join(statusDir, status), "x"):
 				pass
+
 #pylint: disable=R1710
 def startDaemon(args:typing.List[str], stdout:str='/dev/null', stderr:str='/dev/null') -> bool:
 	"""
@@ -369,6 +370,7 @@ def startDaemon(args:typing.List[str], stdout:str='/dev/null', stderr:str='/dev/
 	# If somehow we get down here, it's time to bail
 	exit(1)
 #pylint: enable=R1710
+
 def setATSStatus(status:bool, restart:bool = False) -> bool:
 	"""
 	Sets the status of the system's ATS process to on if `status` is True, else off.
