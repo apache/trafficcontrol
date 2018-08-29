@@ -15,35 +15,55 @@
 # limitations under the License.
 #
 
+set -ex
+
 #----------------------------------------
 function importFunctions() {
-	local script=$(readlink -f "$0")
-	local scriptdir=$(dirname "$script")
-	export TO_DIR=$(dirname "$scriptdir")
-	export TC_DIR=$(dirname "$TO_DIR")
-	functions_sh="$TC_DIR/build/functions.sh"
+	local script=$(readlink -f "$0");
+	local scriptdir=$(dirname "$script");
+	export ORT_DIR=$(dirname "$scriptdir");
+	export TC_DIR=$(dirname "$TO_DIR");
+	functions_sh="$TC_DIR/build/functions.sh";
 	if [[ ! -r $functions_sh ]]; then
-		echo "error: can't find $functions_sh"
-		exit 1
+		echo "error: can't find $functions_sh" >&2;
+		exit 1;
 	fi
-	. "$functions_sh"
+	. "$functions_sh";
 }
 
 #----------------------------------------
 function initBuildArea() {
-	echo "Initializing the build area for Traffic Ops ORT"
-	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
+	echo "Initializing the build area for Traffic Ops ORT";
+	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT}
 
-	local dest=$(createSourceDir traffic_ops_ort)
-	cp -p traffic_ops_ort.pl "$dest"
-	cp -p supermicro_udev_mapper.pl "$dest"
-	tar -czvf "$dest".tgz -C "$RPMBUILD"/SOURCES $(basename "$dest") || \
-	    { echo "Could not create tape archive $dest.tgz: $?"; exit 1; }
+	local dest=$(createSourceDir traffic_ops_ort);
+	cd "$ORT_DIR";
 
-	echo "The build area has been initialized."
+	echo "PATH: $PATH";
+	echo "GOPATH: $GOPATH";
+	go version;
+	go env;
+
+	go get -v golang.org/x/crypto/ed25519 golang.org/x/crypto/scrypt golang.org/x/net/ipv4 golang.org/x/net/ipv6 golang.org/x/sys/unix;
+
+	GC=(go build)
+	GFLAGS=(-v)
+	if [[ "$DEBUG_BUILD" == true ]]; then
+		echo "DEBUG_BUILD is enabled, building without optimization or inlining...";
+		GFLAGS+=(--gcflags 'all=-N -l');
+	fi;
+
+	cp -p traffic_ops_ort.pl "$dest";
+	cp -p supermicro_udev_mapper.pl "$dest";
+	mkdir -p "${dest}/atstccfg";
+	cp -Rp atstccfg/* "${dest}/atstccfg";
+	tar -czvf "$dest".tgz -C "$RPMBUILD"/SOURCES $(basename "$dest");
+
+	echo "The build area has been initialized.";
 }
 
 #----------------------------------------
-importFunctions
-initBuildArea
-buildRpm traffic_ops_ort
+importFunctions;
+checkEnvironment go;
+initBuildArea;
+buildRpm traffic_ops_ort;

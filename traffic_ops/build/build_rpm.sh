@@ -34,7 +34,7 @@ function initBuildArea() {
 	echo "Initializing the build area."
 	mkdir -p "$RPMBUILD"/{SPECS,SOURCES,RPMS,SRPMS,BUILD,BUILDROOT} || { echo "Could not create $RPMBUILD: $?"; exit 1; }
 
-	local to_dest=$(createSourceDir traffic_ops)
+	local dest=$(createSourceDir traffic_ops)
 	cd "$TO_DIR" || \
 		 { echo "Could not cd to $TO_DIR: $?"; exit 1; }
 
@@ -85,16 +85,6 @@ function initBuildArea() {
 	cp "$TO_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
 		 { echo "Could not copy spec files: $?"; exit 1; }
 
-	# Create traffic_ops_ort source area
-	to_ort_dest=$(createSourceDir traffic_ops_ort)
-	cp -p ort/traffic_ops_ort.pl "$to_ort_dest"
-	cp -p ort/supermicro_udev_mapper.pl "$to_ort_dest"
-	mkdir -p "${to_ort_dest}/atstccfg"
-	cp -R -p ort/atstccfg/* "${to_ort_dest}/atstccfg"
-
-	tar -czvf "$to_ort_dest".tgz -C "$RPMBUILD"/SOURCES $(basename "$to_ort_dest") || \
-		 { echo "Could not create tar archive $to_ort_dest: $?"; exit 1; }
-
 	export PLUGINS=$(grep -l -P '(?<!func )AddPlugin\(' ${TO_DIR}/traffic_ops_golang/plugin/*.go | xargs -I '{}' basename {} '.go')
 
 	echo "The build area has been initialized."
@@ -104,4 +94,4 @@ function initBuildArea() {
 importFunctions
 checkEnvironment go
 initBuildArea
-buildRpm traffic_ops traffic_ops_ort
+buildRpm traffic_ops
