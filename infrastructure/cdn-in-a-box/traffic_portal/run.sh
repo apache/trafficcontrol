@@ -45,11 +45,6 @@ echo "TO_HOST: $TO_HOST"
 jq --arg TO_HOST $TO_HOST '.properties.api.baseUrl = "https://"+$TO_HOST' <$props >$tmp
 mv $tmp $props
 
-export TO_USER=$TO_ADMIN_USER
-export TO_PASSWORD=$TO_ADMIN_PASSWORD
-. /to-access.sh
-to-enroll $(hostname -s)
-
 # Add node to the path for situations in which the environment is passed.
 PATH=$FOREVER_BIN_DIR:$NODE_BIN_DIR:$PATH
 forever \
