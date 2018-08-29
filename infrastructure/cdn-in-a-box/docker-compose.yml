@@ -160,6 +160,26 @@ services:
     ports:
       - "8010:80"
 
+  # trafficrouter
+  trafficrouter:
+    build:
+      context: .
+      dockerfile: traffic_router/Dockerfile
+      args:
+        TRAFFIC_ROUTER_RPM: traffic_router/traffic_router.rpm
+        TOMCAT_RPM: traffic_router/tomcat.rpm
+    domainname: cdn.local
+    env_file:
+      - variables.env
+    hostname: trafficrouter
+    networks:
+      - tcnet
+    ports:
+      - "3053:53"
+      - "3080:80"
+      - "3443:443"
+      - "3333:3333"
+
   # Apache Traffic Server (ATS) caches defined here
   # edge cache
   edge:
