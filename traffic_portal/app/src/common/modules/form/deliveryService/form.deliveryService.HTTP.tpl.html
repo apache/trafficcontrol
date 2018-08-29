@@ -456,8 +456,8 @@ under the License.
                         <span uib-popover-html="label('httpBypassFqdn', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('httpBypassFqdn', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
-                        <input name="httpBypassFqdn" type="text" class="form-control" ng-model="deliveryService.httpBypassFqdn" ng-pattern="/^(https?:\/\/)/" autofocus>
-                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.httpBypassFqdn, 'pattern')">Must start with http:// or https://</small>
+                        <input name="httpBypassFqdn" type="text" class="form-control" ng-model="deliveryService.httpBypassFqdn" ng-pattern="/^([a-zA-Z0-9_]{1}[a-zA-Z0-9_-]{0,62}){1}(\.[a-zA-Z0-9_]{1}[a-zA-Z0-9_-]{0,62})*$/" autofocus>
+                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.httpBypassFqdn, 'pattern')">Must be a valid FQDN</small>
                         <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.httpBypassFqdn != dsCurrent.httpBypassFqdn">Current Value: [ {{dsCurrent.httpBypassFqdn}} ]</small>
                         <span ng-show="hasError(deliveryServiceForm.httpBypassFqdn)" class="form-control-feedback"><i class="fa fa-times"></i></span>
                     </div>
