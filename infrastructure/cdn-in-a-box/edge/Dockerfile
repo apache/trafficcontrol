@@ -25,7 +25,6 @@ FROM centos:7
 
 ARG RPM=https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.2-4.el7.centos.x86_64.rpm
 ADD $RPM /trafficserver.rpm
-ADD edge/traffic_ops_ort.rpm /
 
 RUN yum install -y /trafficserver.rpm iproute net-tools nmap-ncat epel-release
 RUN yum install -y jq && yum clean all
@@ -33,6 +32,9 @@ RUN yum install -y jq && yum clean all
 RUN mkdir -p /var/trafficserver/cache /opt/ort && chown -R ats:ats /etc/trafficserver/ /var/trafficserver/ /opt/ort
 ADD edge/parameters.json edge/profile.json edge/server.json edge/run.sh traffic_ops/to-access.sh /
 
+ADD edge/traffic_ops_ort.py /opt/ort
+
 EXPOSE 80
 
 CMD /run.sh
+
