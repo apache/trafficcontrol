@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableUserDeliveryServicesController = function(user, userDeliveryServices, useTenancy, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, userService, propertiesModel) {
+var TableUserDeliveryServicesController = function (user, userDeliveryServices, $scope, $state, $uibModal, dateUtils, deliveryServiceUtils, locationUtils, userService, propertiesModel) {
 
 	var protocols = deliveryServiceUtils.protocols;
 
@@ -27,64 +27,21 @@ var TableUserDeliveryServicesController = function(user, userDeliveryServices, u
 
 	$scope.userDeliveryServices = userDeliveryServices;
 
-	$scope.useTenancy = useTenancy[0].value;
-
 	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.customLink.show;
 
 	$scope.openCharts = deliveryServiceUtils.openCharts;
 
-	$scope.protocol = function(ds) {
+	$scope.protocol = function (ds) {
 		return protocols[ds.protocol];
 	};
 
-	$scope.qstring = function(ds) {
+	$scope.qstring = function (ds) {
 		return qstrings[ds.qstringIgnore];
 	};
 
 	$scope.getRelativeTime = dateUtils.getRelativeTime;
 
-	$scope.removeDS = function(dsId, $event) {
-		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-
-		userService.deleteUserDeliveryService(user.id, dsId)
-			.then(
-				function() {
-					$scope.refresh();
-				}
-			);
-	};
-
-	$scope.selectDSs = function() {
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/table/userDeliveryServices/table.userDSUnassigned.tpl.html',
-			controller: 'TableUserDSUnassignedController',
-			size: 'lg',
-			resolve: {
-				user: function() {
-					return user;
-				},
-				deliveryServices: function(deliveryServiceService) {
-					return deliveryServiceService.getDeliveryServices();
-				},
-				userDeliveryServices: function() {
-					return userDeliveryServices;
-				}
-			}
-		});
-		modalInstance.result.then(function(selectedDSIds) {
-			console.log(selectedDSIds);
-			userService.assignUserDeliveryServices(user.id, selectedDSIds)
-				.then(
-					function() {
-						$scope.refresh();
-					}
-				);
-		}, function () {
-			// do nothing
-		});
-	};
-
-	$scope.refresh = function() {
+	$scope.refresh = function () {
 		$state.reload(); // reloads all the resolves for the view
 	};
 
@@ -100,5 +57,5 @@ var TableUserDeliveryServicesController = function(user, userDeliveryServices, u
 
 };
 
-TableUserDeliveryServicesController.$inject = ['user', 'userDeliveryServices', 'useTenancy', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils','locationUtils', 'userService', 'propertiesModel'];
+TableUserDeliveryServicesController.$inject = ['user', 'userDeliveryServices', '$scope', '$state', '$uibModal', 'dateUtils', 'deliveryServiceUtils', 'locationUtils', 'userService', 'propertiesModel'];
 module.exports = TableUserDeliveryServicesController;

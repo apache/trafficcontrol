@@ -18,7 +18,7 @@
  */
 
 module.exports = angular.module('trafficPortal.private.users.deliveryServices', [])
-	.config(function($stateProvider, $urlRouterProvider) {
+	.config(function ($stateProvider, $urlRouterProvider) {
 		$stateProvider
 			.state('trafficPortal.private.users.deliveryServices', {
 				url: '/{userId}/delivery-services',
@@ -27,14 +27,11 @@ module.exports = angular.module('trafficPortal.private.users.deliveryServices', 
 						templateUrl: 'common/modules/table/userDeliveryServices/table.userDeliveryServices.tpl.html',
 						controller: 'TableUserDeliveryServicesController',
 						resolve: {
-							user: function($stateParams, userService) {
+							user: function ($stateParams, userService) {
 								return userService.getUser($stateParams.userId);
 							},
-							userDeliveryServices: function($stateParams, deliveryServiceService) {
+							userDeliveryServices: function ($stateParams, deliveryServiceService) {
 								return deliveryServiceService.getUserDeliveryServices($stateParams.userId);
-							},
-							useTenancy: function(parameterService) {
-								return parameterService.getParameters({ name: 'use_tenancy', configFile: 'global' });
 							}
 						}
 					}
