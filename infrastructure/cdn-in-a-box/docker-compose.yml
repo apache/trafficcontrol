@@ -109,9 +109,10 @@ services:
   # and passes any /api/... routes directly to Traffic Ops
   trafficportal:
     build:
-      context: traffic_portal
+      context: .
+      dockerfile: traffic_portal/Dockerfile
       args:
-        TRAFFIC_PORTAL_RPM: traffic_portal.rpm
+        TRAFFIC_PORTAL_RPM: traffic_portal/traffic_portal.rpm
     domainname: cdn.local
     env_file:
       - variables.env
