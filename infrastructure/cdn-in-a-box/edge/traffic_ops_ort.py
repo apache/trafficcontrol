@@ -65,7 +65,7 @@ LOG_LEVELS = {"ALL":   logging.NOTSET,
               "WARN":  logging.WARNING,
               "ERROR": logging.ERROR,
               "FATAL": logging.CRITICAL}
-FMT = "%(levelname)s: %(filename)s line %(lineno)d in %(funcName)s: %(message)s"
+FMT = "%(levelname)s: %(lineno)d in %(funcName)s: %(message)s"
 
 HOSTNAME = platform.node().split('.')[0] # Not strictly accurate, but generally good enough
 
@@ -144,7 +144,7 @@ def installPythonPackages(packages:typing.List[str]) -> bool:
 				return False
 
 		urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-		globals()[DISTRO] = distro.LinuxDistribution().id()
+		globals()["DISTRO"] = distro.LinuxDistribution().id()
 
 	return not ret
 
@@ -213,24 +213,6 @@ def getJSONResponse(uri:str, expectedStatus:int = 200) -> object:
 
 	return response.json()
 
-def getConfigFiles() -> typing.List[str]:
-	"""
-	Gets the list of configuration files used by this server's profile
-	"""
-	global HOSTNAME
-
-	logging.info("Retrieving configuration files.")
-
-	files = getJSONResponse("/api/1.3/servers/%s/configfiles/ats" % (HOSTNAME,))
-
-	if not files:
-		logging.critical("Could not retrieve configuration files.")
-		return 1
-
-	logging.debug("Config Files raw response: %s", files)
-
-	return 0
-
 def setStatusFile(statusDir:str, status:str, create:bool = False):
 	"""
 	Removes all files in `statusDir` that aren't `status`, and creates `status`
@@ -290,13 +272,17 @@ def startDaemon(args:typing.List[str], stdout:str='/dev/null', stderr:str='/dev/
 		logging.debug("%s", e, exc_info=True, stack_info=True)
 		return False
 
-	if not pid:
+	if pid:
 		# This is the parent
 		return True
 
 	# De-couple from parent environment
 	os.chdir('/')
-	os.setsid()
+	try:
+		os.setsid()
+	except PermissionError:
+		logging.debug("Failure to `setsid`: pid=%d, pgid=%d", os.getpid(), os.getpgid(os.getpid()))
+		logging.debug("", exc_info=True, stack_info=True)
 	os.umask(0)
 	sys.stdin = open('/dev/null')
 	sys.stdout = open(stdout, 'w')
@@ -311,19 +297,19 @@ def startDaemon(args:typing.List[str], stdout:str='/dev/null', stderr:str='/dev/
 		logging.debug("", exc_info=True, stack_info=True)
 		exit(1)
 
-	if not pid:
+	if pid:
 		# This is the parent
 		exit(0)
 
 	# Now actually exec the program
-	sub = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-	out, err = sub.communicate()
+	try:
+		os.execvp(args[0], args[1:])
+	except OSError:
+		logging.critical("Failure to start %s", args[0])
+		logging.debug("", exc_info=True, stack_info=True)
 
-	if sub.returncode:
-		logging.debug("stdout: %s", out.decode())
-		logging.debug("stderr: %s", err.decode())
-
-	exit(sub.returncode)
+	# If somehow we get down here, it's time to bail
+	exit(1)
 
 def setATSStatus(status:bool) -> bool:
 	"""
@@ -421,7 +407,7 @@ def setTO_LOGIN(login:str) -> str:
 #####                         MAIN MODE ROUTINES                          #####
 #####                                                                     #####
 ###############################################################################
-def syncDSState() -> int:
+def syncDSState() -> bool:
 	"""
 	Queries Traffic Ops for the Delivery Service's sync state
 	"""
@@ -433,12 +419,12 @@ def syncDSState() -> int:
 		updateStatus = getJSONResponse("/api/1.3/servers/%s/update_status" % HOSTNAME)[0]
 	except IndexError:
 		logging.critical("Server not found in Traffic Ops config")
-		return 1
+		return False
 
 	try:
 		if not updateStatus['upd_pending']:
 			logging.info("No update pending.")
-			return 0
+			return True
 
 		statusDir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "status")
 		setStatusFile(statusDir, updateStatus['status'], create=True)
@@ -447,9 +433,9 @@ def syncDSState() -> int:
 		logging.error("%s", e)
 		logging.warning("%s", e, exc_info=True)
 		logging.debug("%s", e, stack_info=True)
-		return 1
+		return False
 
-	return 0
+	return True
 
 def revalidate() -> int:
 	"""
@@ -667,6 +653,65 @@ def processChkconfig() -> bool:
 
 ###############################################################################
 #####                                                                     #####
+#####                           CONFIGURATION                             #####
+#####                                                                     #####
+###############################################################################
+def getConfigFiles() -> typing.List[str]:
+	"""
+	Gets the list of configuration files used by this server's profile
+	"""
+	global HOSTNAME
+
+	logging.info("Retrieving configuration files.")
+
+	files = getJSONResponse("/api/1.3/servers/%s/configfiles/ats" % (HOSTNAME,))
+
+	if not files:
+		logging.critical("Could not retrieve configuration files.")
+		return 1
+
+	logging.debug("Config Files raw response: %s", files)
+
+	return 0
+
+def processConfigFile(file: str, value: object) -> bool:
+	"""
+	Process the passed file and value to apply a configuration.
+
+	Returns a boolean indicator of success
+	"""
+	logging.info("======== Start processing config file: %s ========", file)
+
+	# do stuff
+
+	logging.info("======== End processing config file: %s ========", file)
+
+	return True
+
+
+def processConfigFiles(files:dict) -> bool:
+	"""
+	processes the passed JSON object containing config file definitions
+
+	Returns a boolean indicator of success
+	"""
+	global MODE
+
+	for file, value in files.items():
+		if not processConfigFile(file, value):
+			logging.error("Failed to process config file '%s'", file)
+			logging.debug("value: %r", value)
+
+			if MODE != Modes.BADASS:
+				return False
+
+			logging.warning("We're in BADASS mode, attempting to continue")
+
+	return True
+
+
+###############################################################################
+#####                                                                     #####
 #####                             MAIN FLOW                               #####
 #####                                                                     #####
 ###############################################################################
@@ -678,6 +723,11 @@ def doMain() -> int:
 	global MODE
 
 	headerComment = getHeaderComment()
+
+	if not syncDSState():
+		logging.critical("DS Sync failed; aborting.")
+		return 1
+
 	myFiles = getConfigFiles()
 
 	if MODE == Modes.REVALIDATE:
@@ -693,6 +743,9 @@ def doMain() -> int:
 		if not processChkconfig():
 			logging.critical("Unrecoverable error occured when processing chkconfig.")
 			return 1
+		if not processConfigFiles(myFiles):
+			logging.critical("Unrecoverable error occurred when processing config files")
+			return 1
 	except ConnectionError:
 		logging.critical("Couldn't reach /ort/%s/* endpoints - "\
 		                 "ensure %s points to Traffic OPS not Traffic PORTAL",
@@ -700,7 +753,6 @@ def doMain() -> int:
 		                 TO_URL)
 		return 1
 
-	myFiles = getConfigFiles()
 	return 0
 
 def main() -> int:
@@ -763,9 +815,12 @@ def main() -> int:
 		print("Unrecognized/Unsupported log level:", args.Log_Level, file=sys.stderr)
 		return 1
 
-	logging.basicConfig(level=LOG_LEVELS[logLevel], format=FMT)
+	# logging.getLogger().handlers = []
+	# logging.basicConfig(level=LOG_LEVELS[logLevel], format=FMT)
+	logging.basicConfig(level=LOG_LEVELS[logLevel])
 	logging.getLogger().setLevel(LOG_LEVELS[logLevel])
 
+	logging.debug("test")
 	try:
 		MODE = Modes[args.Mode.upper()]
 	except KeyError as e:
