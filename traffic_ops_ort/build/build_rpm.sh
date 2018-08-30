@@ -58,6 +58,7 @@ function initBuildArea() {
 	mkdir -p "${dest}/atstccfg";
 	cp -Rp atstccfg/* "${dest}/atstccfg";
 	tar -czvf "$dest".tgz -C "$RPMBUILD"/SOURCES $(basename "$dest");
+	cp build/traffic_ops_ort.spec "$RPMBUILD"/SPECS/.;
 
 	echo "The build area has been initialized.";
 }
