@@ -31,10 +31,9 @@ RUN	yum -y install \
 		rpm-build && \
 	yum -y clean all
 
-### grove specific requirements
-RUN	yum -y install \
-		golang-1.9.4 && \
-	yum -y clean all
+### grovetccfg specific requirements
+RUN	 curl https://dl.google.com/go/go1.11.linux-amd64.tar.gz -o /tmp/go1.11.linux-amd64.tar.gz && \
+  tar xzvf /tmp/go1.11.linux-amd64.tar.gz -C /usr/local
 ###
 
 ADD infrastructure/docker/build/clean_build.sh /
