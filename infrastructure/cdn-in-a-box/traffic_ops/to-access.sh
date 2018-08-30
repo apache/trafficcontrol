@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -26,10 +26,10 @@ export TO_PASSWORD=${TO_PASSWORD:-$TO_ADMIN_PASSWORD}
 
 export CURLOPTS=${CURLOPTS:--LfsS}
 export CURLAUTH=${CURLAUTH:--k}
-export COOKIEJAR=$(mktemp -t XXXX.cookie)
+export COOKIEJAR=$(mktemp)
 
 
-login=$(mktemp -t XXXX.login)
+login=$(mktemp)
 
 cleanup() {
 	rm -f "$COOKIEJAR" "$login"
