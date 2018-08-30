@@ -25,19 +25,19 @@ import (
 )
 
 const (
-	API_v13_PHYS_LOCATIONS = apiBase + "/phys_locations"
+	API_v13_Divisions = apiBase + "/divisions"
 )
 
-// Create a PhysLocation
-func (to *Session) CreatePhysLocation(physLocation tc.PhysLocation) (tc.Alerts, ReqInf, error) {
+// Create a Division
+func (to *Session) CreateDivision(division tc.Division) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(physLocation)
+	reqBody, err := json.Marshal(division)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_PHYS_LOCATIONS, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Divisions, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -47,16 +47,16 @@ func (to *Session) CreatePhysLocation(physLocation tc.PhysLocation) (tc.Alerts, 
 	return alerts, reqInf, nil
 }
 
-// Update a PhysLocation by ID
-func (to *Session) UpdatePhysLocationByID(id int, physLocation tc.PhysLocation) (tc.Alerts, ReqInf, error) {
+// Update a Division by ID
+func (to *Session) UpdateDivisionByID(id int, division tc.Division) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(physLocation)
+	reqBody, err := json.Marshal(division)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v13_PHYS_LOCATIONS, id)
+	route := fmt.Sprintf("%s/%d", API_v13_Divisions, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -67,23 +67,23 @@ func (to *Session) UpdatePhysLocationByID(id int, physLocation tc.PhysLocation) 
 	return alerts, reqInf, nil
 }
 
-// Returns a list of physLocations
-func (to *Session) GetPhysLocations() ([]tc.PhysLocation, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_PHYS_LOCATIONS, nil)
+// Returns a list of Divisions
+func (to *Session) GetDivisions() ([]tc.Division, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_Divisions, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data tc.PhysLocationsResponse
+	var data tc.DivisionsResponse
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
 }
 
-// GET a PhysLocation by the PhysLocation id
-func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_PHYS_LOCATIONS, id)
+// GET a Division by the Division id
+func (to *Session) GetDivisionByID(id int) ([]tc.Division, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_Divisions, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -91,7 +91,7 @@ func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error
 	}
 	defer resp.Body.Close()
 
-	var data tc.PhysLocationsResponse
+	var data tc.DivisionsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -99,9 +99,9 @@ func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error
 	return data.Response, reqInf, nil
 }
 
-// GET a PhysLocation by the PhysLocation name
-func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_PHYS_LOCATIONS, name)
+// GET a Division by the Division name
+func (to *Session) GetDivisionByName(name string) ([]tc.Division, ReqInf, error) {
+	url := fmt.Sprintf("%s?name=%s", API_v13_Divisions, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -109,7 +109,7 @@ func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf
 	}
 	defer resp.Body.Close()
 
-	var data tc.PhysLocationsResponse
+	var data tc.DivisionsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -117,9 +117,23 @@ func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf
 	return data.Response, reqInf, nil
 }
 
-// DELETE a PhysLocation by ID
-func (to *Session) DeletePhysLocationByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_PHYS_LOCATIONS, id)
+// DELETE a Division by Division id
+func (to *Session) DeleteDivisionByID(id int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_Divisions, id)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
+}
+
+// DELETE a Division by Division name
+func (to *Session) DeleteDivisionByName(name string) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/name/%s", API_v13_Divisions, name)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

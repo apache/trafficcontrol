@@ -25,19 +25,19 @@ import (
 )
 
 const (
-	API_v13_PHYS_LOCATIONS = apiBase + "/phys_locations"
+	API_REGIONS = apiBase + "/regions"
 )
 
-// Create a PhysLocation
-func (to *Session) CreatePhysLocation(physLocation tc.PhysLocation) (tc.Alerts, ReqInf, error) {
+// Create a Region
+func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(physLocation)
+	reqBody, err := json.Marshal(region)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_PHYS_LOCATIONS, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_REGIONS, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -47,16 +47,16 @@ func (to *Session) CreatePhysLocation(physLocation tc.PhysLocation) (tc.Alerts, 
 	return alerts, reqInf, nil
 }
 
-// Update a PhysLocation by ID
-func (to *Session) UpdatePhysLocationByID(id int, physLocation tc.PhysLocation) (tc.Alerts, ReqInf, error) {
+// Update a Region by ID
+func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(physLocation)
+	reqBody, err := json.Marshal(region)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v13_PHYS_LOCATIONS, id)
+	route := fmt.Sprintf("%s/%d", API_REGIONS, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -67,23 +67,23 @@ func (to *Session) UpdatePhysLocationByID(id int, physLocation tc.PhysLocation) 
 	return alerts, reqInf, nil
 }
 
-// Returns a list of physLocations
-func (to *Session) GetPhysLocations() ([]tc.PhysLocation, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_PHYS_LOCATIONS, nil)
+// Returns a list of regions
+func (to *Session) GetRegions() ([]tc.Region, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_REGIONS, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data tc.PhysLocationsResponse
+	var data tc.RegionsResponse
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
 }
 
-// GET a PhysLocation by the PhysLocation id
-func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_PHYS_LOCATIONS, id)
+// GET a Region by the Region id
+func (to *Session) GetRegionByID(id int) ([]tc.Region, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_REGIONS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -91,7 +91,7 @@ func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error
 	}
 	defer resp.Body.Close()
 
-	var data tc.PhysLocationsResponse
+	var data tc.RegionsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -99,9 +99,9 @@ func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error
 	return data.Response, reqInf, nil
 }
 
-// GET a PhysLocation by the PhysLocation name
-func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_PHYS_LOCATIONS, name)
+// GET a Region by the Region name
+func (to *Session) GetRegionByName(name string) ([]tc.Region, ReqInf, error) {
+	url := fmt.Sprintf("%s?name=%s", API_REGIONS, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -109,7 +109,7 @@ func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf
 	}
 	defer resp.Body.Close()
 
-	var data tc.PhysLocationsResponse
+	var data tc.RegionsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -117,9 +117,9 @@ func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf
 	return data.Response, reqInf, nil
 }
 
-// DELETE a PhysLocation by ID
-func (to *Session) DeletePhysLocationByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_PHYS_LOCATIONS, id)
+// DELETE a Region by ID
+func (to *Session) DeleteRegionByID(id int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_REGIONS, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -129,4 +129,21 @@ func (to *Session) DeletePhysLocationByID(id int) (tc.Alerts, ReqInf, error) {
 	var alerts tc.Alerts
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
 	return alerts, reqInf, nil
+}
+
+// GetRegionByNamePath gets a region by name, using the /api/version/region/name path. This gets the same data as GetRegionByName, but uses a different API path to get the same data, and returns a slightly different format.
+func (to *Session) GetRegionByNamePath(name string) ([]tc.RegionName, ReqInf, error) {
+	url := apiBase + `/regions/name/` + name
+	reqResp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer reqResp.Body.Close()
+
+	resp := tc.RegionNameResponse{}
+	if err := json.NewDecoder(reqResp.Body).Decode(&resp); err != nil {
+		return nil, reqInf, err
+	}
+	return resp.Response, reqInf, nil
 }

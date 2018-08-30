@@ -25,19 +25,19 @@ import (
 )
 
 const (
-	API_v13_PHYS_LOCATIONS = apiBase + "/phys_locations"
+	API_Coordinates = apiBase + "/coordinates"
 )
 
-// Create a PhysLocation
-func (to *Session) CreatePhysLocation(physLocation tc.PhysLocation) (tc.Alerts, ReqInf, error) {
+// Create a Coordinate
+func (to *Session) CreateCoordinate(coordinate Coordinate) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(physLocation)
+	reqBody, err := json.Marshal(coordinate)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_PHYS_LOCATIONS, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_Coordinates, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -47,16 +47,16 @@ func (to *Session) CreatePhysLocation(physLocation tc.PhysLocation) (tc.Alerts, 
 	return alerts, reqInf, nil
 }
 
-// Update a PhysLocation by ID
-func (to *Session) UpdatePhysLocationByID(id int, physLocation tc.PhysLocation) (tc.Alerts, ReqInf, error) {
+// Update a Coordinate by ID
+func (to *Session) UpdateCoordinateByID(id int, coordinate Coordinate) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(physLocation)
+	reqBody, err := json.Marshal(coordinate)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v13_PHYS_LOCATIONS, id)
+	route := fmt.Sprintf("%s?id=%d", API_Coordinates, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -67,23 +67,23 @@ func (to *Session) UpdatePhysLocationByID(id int, physLocation tc.PhysLocation) 
 	return alerts, reqInf, nil
 }
 
-// Returns a list of physLocations
-func (to *Session) GetPhysLocations() ([]tc.PhysLocation, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_PHYS_LOCATIONS, nil)
+// Returns a list of Coordinates
+func (to *Session) GetCoordinates() ([]Coordinate, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_Coordinates, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data tc.PhysLocationsResponse
+	var data CoordinatesResponse
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
 }
 
-// GET a PhysLocation by the PhysLocation id
-func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_PHYS_LOCATIONS, id)
+// GET a Coordinate by the Coordinate id
+func (to *Session) GetCoordinateByID(id int) ([]Coordinate, ReqInf, error) {
+	route := fmt.Sprintf("%s?id=%d", API_Coordinates, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -91,7 +91,7 @@ func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error
 	}
 	defer resp.Body.Close()
 
-	var data tc.PhysLocationsResponse
+	var data CoordinatesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -99,9 +99,9 @@ func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error
 	return data.Response, reqInf, nil
 }
 
-// GET a PhysLocation by the PhysLocation name
-func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_PHYS_LOCATIONS, name)
+// GET a Coordinate by the Coordinate name
+func (to *Session) GetCoordinateByName(name string) ([]Coordinate, ReqInf, error) {
+	url := fmt.Sprintf("%s?name=%s", API_Coordinates, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -109,7 +109,7 @@ func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf
 	}
 	defer resp.Body.Close()
 
-	var data tc.PhysLocationsResponse
+	var data CoordinatesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -117,9 +117,9 @@ func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf
 	return data.Response, reqInf, nil
 }
 
-// DELETE a PhysLocation by ID
-func (to *Session) DeletePhysLocationByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_PHYS_LOCATIONS, id)
+// DELETE a Coordinate by ID
+func (to *Session) DeleteCoordinateByID(id int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s?id=%d", API_Coordinates, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

@@ -17,27 +17,28 @@ package client
 
 import (
 	"encoding/json"
-	"fmt"
 	"net"
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+
+	"fmt"
 )
 
 const (
-	API_v13_PHYS_LOCATIONS = apiBase + "/phys_locations"
+	API_DeliveryServiceRequestComments = apiBase + "/deliveryservice_request_comments"
 )
 
-// Create a PhysLocation
-func (to *Session) CreatePhysLocation(physLocation tc.PhysLocation) (tc.Alerts, ReqInf, error) {
+// Create a delivery service request comment
+func (to *Session) CreateDeliveryServiceRequestComment(comment tc.DeliveryServiceRequestComment) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(physLocation)
+	reqBody, err := json.Marshal(comment)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_PHYS_LOCATIONS, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_DeliveryServiceRequestComments, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -47,16 +48,16 @@ func (to *Session) CreatePhysLocation(physLocation tc.PhysLocation) (tc.Alerts, 
 	return alerts, reqInf, nil
 }
 
-// Update a PhysLocation by ID
-func (to *Session) UpdatePhysLocationByID(id int, physLocation tc.PhysLocation) (tc.Alerts, ReqInf, error) {
+// Update a delivery service request by ID
+func (to *Session) UpdateDeliveryServiceRequestCommentByID(id int, comment tc.DeliveryServiceRequestComment) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
-	reqBody, err := json.Marshal(physLocation)
+	reqBody, err := json.Marshal(comment)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v13_PHYS_LOCATIONS, id)
+	route := fmt.Sprintf("%s?id=%d", API_DeliveryServiceRequestComments, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -67,23 +68,23 @@ func (to *Session) UpdatePhysLocationByID(id int, physLocation tc.PhysLocation) 
 	return alerts, reqInf, nil
 }
 
-// Returns a list of physLocations
-func (to *Session) GetPhysLocations() ([]tc.PhysLocation, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_PHYS_LOCATIONS, nil)
+// Returns a list of delivery service request comments
+func (to *Session) GetDeliveryServiceRequestComments() ([]tc.DeliveryServiceRequestComment, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_DeliveryServiceRequestComments, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data tc.PhysLocationsResponse
+	var data tc.DeliveryServiceRequestCommentsResponse
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
 }
 
-// GET a PhysLocation by the PhysLocation id
-func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_PHYS_LOCATIONS, id)
+// GET a delivery service request comment by ID
+func (to *Session) GetDeliveryServiceRequestCommentByID(id int) ([]tc.DeliveryServiceRequestComment, ReqInf, error) {
+	route := fmt.Sprintf("%s?id=%d", API_DeliveryServiceRequestComments, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -91,7 +92,7 @@ func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error
 	}
 	defer resp.Body.Close()
 
-	var data tc.PhysLocationsResponse
+	var data tc.DeliveryServiceRequestCommentsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -99,27 +100,9 @@ func (to *Session) GetPhysLocationByID(id int) ([]tc.PhysLocation, ReqInf, error
 	return data.Response, reqInf, nil
 }
 
-// GET a PhysLocation by the PhysLocation name
-func (to *Session) GetPhysLocationByName(name string) ([]tc.PhysLocation, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_PHYS_LOCATIONS, name)
-	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
-
-	var data tc.PhysLocationsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, reqInf, err
-	}
-
-	return data.Response, reqInf, nil
-}
-
-// DELETE a PhysLocation by ID
-func (to *Session) DeletePhysLocationByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_PHYS_LOCATIONS, id)
+// DELETE a delivery service request comment by ID
+func (to *Session) DeleteDeliveryServiceRequestCommentByID(id int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s?id=%d", API_DeliveryServiceRequestComments, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
