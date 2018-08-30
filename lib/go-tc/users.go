@@ -30,18 +30,28 @@ type UsersResponse struct {
 
 // User contains information about a given user in Traffic Ops.
 type User struct {
-	Username     string `json:"username,omitempty"`
-	PublicSSHKey string `json:"publicSshKey,omitempty"`
-	Role         int    `json:"role,omitempty"`
-	RoleName     string `json:"rolename,omitempty"`
-	ID           int    `json:"id,omitempty"`
-	UID          int    `json:"uid,omitempty"`
-	GID          int    `json:"gid,omitempty"`
-	Company      string `json:"company,omitempty"`
-	Email        string `json:"email,omitempty"`
-	FullName     string `json:"fullName,omitempty"`
-	NewUser      bool   `json:"newUser,omitempty"`
-	LastUpdated  string `json:"lastUpdated,omitempty"`
+	Username         string    `json:"username,omitempty"`
+	PublicSSHKey     string    `json:"publicSshKey,omitempty"`
+	Role             int       `json:"role,omitempty"`
+	RoleName         string    `json:"rolename,omitempty"`
+	ID               int       `json:"id,omitempty"`
+	UID              int       `json:"uid,omitempty"`
+	GID              int       `json:"gid,omitempty"`
+	Company          string    `json:"company,omitempty"`
+	Email            string    `json:"email,omitempty"`
+	FullName         string    `json:"fullName,omitempty"`
+	NewUser          bool      `json:"newUser,omitempty"`
+	LastUpdated      string    `json:"lastUpdated,omitempty"`
+	AddressLine1     string    `json:"addressLine1"`
+	AddressLine2     string    `json:"addressLine2"`
+	City             string    `json:"city"`
+	Country          string    `json:"country"`
+	PhoneNumber      string    `json:"phoneNumber"`
+	PostalCode       string    `json:"postalCode"`
+	RegistrationSent time.Time `json:"registrationSent"`
+	StateOrProvince  string    `json:"stateOrProvince"`
+	Tenant           string    `json:"tenant"`
+	TenantID         int       `json:"tenantId"`
 }
 
 // Credentials contains Traffic Ops login credentials

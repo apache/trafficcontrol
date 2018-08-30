@@ -15,9 +15,9 @@ package v13
 */
 
 import (
-	"testing"
-
+	"encoding/json"
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"testing"
 )
 
 func TestUsers(t *testing.T) {
@@ -29,13 +29,12 @@ func TestUsers(t *testing.T) {
 	CreateTestRegions(t)
 	CreateTestPhysLocations(t)
 	CreateTestCacheGroups(t)
-	CreateTestServers(t)
 	CreateTestDeliveryServices(t)
 
+	GetTestUsers(t)
 	GetTestUserCurrent(t)
 
 	DeleteTestDeliveryServices(t)
-	DeleteTestServers(t)
 	DeleteTestCacheGroups(t)
 	DeleteTestPhysLocations(t)
 	DeleteTestRegions(t)
@@ -48,6 +47,23 @@ func TestUsers(t *testing.T) {
 }
 
 const SessionUserName = "admin" // TODO make dynamic?
+
+func GetTestUsers(t *testing.T) {
+
+	resp, _, err := TOSession.GetUsers()
+	if err != nil {
+		t.Fatalf("cannot GET users: %v\n", err)
+	}
+	if len(resp) == 0 {
+		t.Fatalf("no users, must have at least 1 user to test\n")
+	}
+
+	log.Debugf("Response: %s\n")
+	for _, user := range resp {
+		bytes, _ := json.Marshal(user)
+		log.Debugf("%s\n", bytes)
+	}
+}
 
 func GetTestUserCurrent(t *testing.T) {
 	log.Debugln("GetTestUserCurrent")
