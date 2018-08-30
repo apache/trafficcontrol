@@ -18,4 +18,10 @@
 
 . /to-access.sh
 
-to-enroll trafficvault
+TO_URL=https://${TO_HOST}:${TO_PORT}
+TO_USER=$TV_USER
+TO_PASSWORD=$TV_PASSWORD
+
+to-enroll $(hostname -s)
+
+${RIAK_HOME}/riak-cluster.sh
