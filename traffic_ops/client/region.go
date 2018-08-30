@@ -13,7 +13,7 @@
    limitations under the License.
 */
 
-package v13
+package client
 
 import (
 	"encoding/json"
@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	API_v13_REGIONS = "/api/1.3/regions"
+	API_REGIONS = "/api/1.3/regions"
 )
 
 // Create a Region
@@ -37,7 +37,7 @@ func (to *Session) CreateRegion(region tc.Region) (tc.Alerts, ReqInf, error) {
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_REGIONS, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_REGIONS, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -56,7 +56,7 @@ func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	route := fmt.Sprintf("%s/%d", API_v13_REGIONS, id)
+	route := fmt.Sprintf("%s/%d", API_REGIONS, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
@@ -69,7 +69,7 @@ func (to *Session) UpdateRegionByID(id int, region tc.Region) (tc.Alerts, ReqInf
 
 // Returns a list of regions
 func (to *Session) GetRegions() ([]tc.Region, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_REGIONS, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_REGIONS, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -83,7 +83,7 @@ func (to *Session) GetRegions() ([]tc.Region, ReqInf, error) {
 
 // GET a Region by the Region id
 func (to *Session) GetRegionByID(id int) ([]tc.Region, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_REGIONS, id)
+	route := fmt.Sprintf("%s/%d", API_REGIONS, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -101,7 +101,7 @@ func (to *Session) GetRegionByID(id int) ([]tc.Region, ReqInf, error) {
 
 // GET a Region by the Region name
 func (to *Session) GetRegionByName(name string) ([]tc.Region, ReqInf, error) {
-	url := fmt.Sprintf("%s?name=%s", API_v13_REGIONS, name)
+	url := fmt.Sprintf("%s?name=%s", API_REGIONS, name)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -119,7 +119,7 @@ func (to *Session) GetRegionByName(name string) ([]tc.Region, ReqInf, error) {
 
 // DELETE a Region by ID
 func (to *Session) DeleteRegionByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s/%d", API_v13_REGIONS, id)
+	route := fmt.Sprintf("%s/%d", API_REGIONS, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

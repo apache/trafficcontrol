@@ -13,7 +13,7 @@
    limitations under the License.
 */
 
-package v13
+package client
 
 import (
 	"encoding/json"
@@ -22,15 +22,14 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 )
 
 const (
-	API_v13_StaticDNSEntries = "/api/1.3/staticdnsentries"
+	API_StaticDNSEntries = "/api/1.3/staticdnsentries"
 )
 
 // Create a StaticDNSEntry
-func (to *Session) CreateStaticDNSEntry(cdn v13.StaticDNSEntry) (tc.Alerts, ReqInf, error) {
+func (to *Session) CreateStaticDNSEntry(cdn StaticDNSEntry) (tc.Alerts, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(cdn)
@@ -38,7 +37,7 @@ func (to *Session) CreateStaticDNSEntry(cdn v13.StaticDNSEntry) (tc.Alerts, ReqI
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_StaticDNSEntries, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_StaticDNSEntries, reqBody)
 	if err != nil {
 		return tc.Alerts{}, reqInf, err
 	}
@@ -49,7 +48,7 @@ func (to *Session) CreateStaticDNSEntry(cdn v13.StaticDNSEntry) (tc.Alerts, ReqI
 }
 
 // Update a StaticDNSEntry by ID
-func (to *Session) UpdateStaticDNSEntryByID(id int, cdn v13.StaticDNSEntry) (tc.Alerts, ReqInf, int, error) {
+func (to *Session) UpdateStaticDNSEntryByID(id int, cdn StaticDNSEntry) (tc.Alerts, ReqInf, int, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(cdn)
@@ -57,7 +56,7 @@ func (to *Session) UpdateStaticDNSEntryByID(id int, cdn v13.StaticDNSEntry) (tc.
 	if err != nil {
 		return tc.Alerts{}, reqInf, 0, err
 	}
-	route := fmt.Sprintf("%s?id=%d", API_v13_StaticDNSEntries, id)
+	route := fmt.Sprintf("%s?id=%d", API_StaticDNSEntries, id)
 	resp, remoteAddr, errClient := to.rawRequest(http.MethodPut, route, reqBody)
 	if resp != nil {
 		defer resp.Body.Close()
@@ -71,22 +70,22 @@ func (to *Session) UpdateStaticDNSEntryByID(id int, cdn v13.StaticDNSEntry) (tc.
 }
 
 // Returns a list of StaticDNSEntrys
-func (to *Session) GetStaticDNSEntries() ([]v13.StaticDNSEntry, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_StaticDNSEntries, nil)
+func (to *Session) GetStaticDNSEntries() ([]StaticDNSEntry, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_StaticDNSEntries, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data v13.StaticDNSEntriesResponse
+	var data StaticDNSEntriesResponse
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	return data.Response, reqInf, nil
 }
 
 // GET a StaticDNSEntry by the StaticDNSEntry ID
-func (to *Session) GetStaticDNSEntryByID(id int) ([]v13.StaticDNSEntry, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_v13_StaticDNSEntries, id)
+func (to *Session) GetStaticDNSEntryByID(id int) ([]StaticDNSEntry, ReqInf, error) {
+	route := fmt.Sprintf("%s?id=%d", API_StaticDNSEntries, id)
 	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -94,7 +93,7 @@ func (to *Session) GetStaticDNSEntryByID(id int) ([]v13.StaticDNSEntry, ReqInf, 
 	}
 	defer resp.Body.Close()
 
-	var data v13.StaticDNSEntriesResponse
+	var data StaticDNSEntriesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -103,8 +102,8 @@ func (to *Session) GetStaticDNSEntryByID(id int) ([]v13.StaticDNSEntry, ReqInf, 
 }
 
 // GET a StaticDNSEntry by the StaticDNSEntry hsot
-func (to *Session) GetStaticDNSEntriesByHost(host string) ([]v13.StaticDNSEntry, ReqInf, error) {
-	url := fmt.Sprintf("%s?host=%s", API_v13_StaticDNSEntries, host)
+func (to *Session) GetStaticDNSEntriesByHost(host string) ([]StaticDNSEntry, ReqInf, error) {
+	url := fmt.Sprintf("%s?host=%s", API_StaticDNSEntries, host)
 	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -112,7 +111,7 @@ func (to *Session) GetStaticDNSEntriesByHost(host string) ([]v13.StaticDNSEntry,
 	}
 	defer resp.Body.Close()
 
-	var data v13.StaticDNSEntriesResponse
+	var data StaticDNSEntriesResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -122,7 +121,7 @@ func (to *Session) GetStaticDNSEntriesByHost(host string) ([]v13.StaticDNSEntry,
 
 // DELETE a StaticDNSEntry by ID
 func (to *Session) DeleteStaticDNSEntryByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_v13_StaticDNSEntries, id)
+	route := fmt.Sprintf("%s?id=%d", API_StaticDNSEntries, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

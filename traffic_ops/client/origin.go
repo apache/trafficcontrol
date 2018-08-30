@@ -13,7 +13,7 @@
    limitations under the License.
 */
 
-package v13
+package client
 
 import (
 	"encoding/json"
@@ -22,15 +22,14 @@ import (
 	"net/http"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 )
 
 const (
-	API_v13_Origins = "/api/1.3/origins"
+	API_Origins = "/api/1.3/origins"
 )
 
 // Create an Origin
-func (to *Session) CreateOrigin(origin v13.Origin) (*v13.OriginDetailResponse, ReqInf, error) {
+func (to *Session) CreateOrigin(origin Origin) (*OriginDetailResponse, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(origin)
@@ -38,12 +37,12 @@ func (to *Session) CreateOrigin(origin v13.Origin) (*v13.OriginDetailResponse, R
 	if err != nil {
 		return nil, reqInf, err
 	}
-	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Origins, reqBody)
+	resp, remoteAddr, err := to.request(http.MethodPost, API_Origins, reqBody)
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
-	var originResp v13.OriginDetailResponse
+	var originResp OriginDetailResponse
 	if err = json.NewDecoder(resp.Body).Decode(&originResp); err != nil {
 		return nil, reqInf, err
 	}
@@ -51,7 +50,7 @@ func (to *Session) CreateOrigin(origin v13.Origin) (*v13.OriginDetailResponse, R
 }
 
 // Update an Origin by ID
-func (to *Session) UpdateOriginByID(id int, origin v13.Origin) (*v13.OriginDetailResponse, ReqInf, error) {
+func (to *Session) UpdateOriginByID(id int, origin Origin) (*OriginDetailResponse, ReqInf, error) {
 
 	var remoteAddr net.Addr
 	reqBody, err := json.Marshal(origin)
@@ -59,13 +58,13 @@ func (to *Session) UpdateOriginByID(id int, origin v13.Origin) (*v13.OriginDetai
 	if err != nil {
 		return nil, reqInf, err
 	}
-	route := fmt.Sprintf("%s?id=%d", API_v13_Origins, id)
+	route := fmt.Sprintf("%s?id=%d", API_Origins, id)
 	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
-	var originResp v13.OriginDetailResponse
+	var originResp OriginDetailResponse
 	if err = json.NewDecoder(resp.Body).Decode(&originResp); err != nil {
 		return nil, reqInf, err
 	}
@@ -73,8 +72,8 @@ func (to *Session) UpdateOriginByID(id int, origin v13.Origin) (*v13.OriginDetai
 }
 
 // GET a list of Origins by a query parameter string
-func (to *Session) GetOriginsByQueryParams(queryParams string) ([]v13.Origin, ReqInf, error) {
-	URI := API_v13_Origins + queryParams
+func (to *Session) GetOriginsByQueryParams(queryParams string) ([]Origin, ReqInf, error) {
+	URI := API_Origins + queryParams
 	resp, remoteAddr, err := to.request(http.MethodGet, URI, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -82,7 +81,7 @@ func (to *Session) GetOriginsByQueryParams(queryParams string) ([]v13.Origin, Re
 	}
 	defer resp.Body.Close()
 
-	var data v13.OriginsResponse
+	var data OriginsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
@@ -91,28 +90,28 @@ func (to *Session) GetOriginsByQueryParams(queryParams string) ([]v13.Origin, Re
 }
 
 // Returns a list of Origins
-func (to *Session) GetOrigins() ([]v13.Origin, ReqInf, error) {
+func (to *Session) GetOrigins() ([]Origin, ReqInf, error) {
 	return to.GetOriginsByQueryParams("")
 }
 
 // GET an Origin by the Origin ID
-func (to *Session) GetOriginByID(id int) ([]v13.Origin, ReqInf, error) {
+func (to *Session) GetOriginByID(id int) ([]Origin, ReqInf, error) {
 	return to.GetOriginsByQueryParams(fmt.Sprintf("?id=%d", id))
 }
 
 // GET an Origin by the Origin name
-func (to *Session) GetOriginByName(name string) ([]v13.Origin, ReqInf, error) {
+func (to *Session) GetOriginByName(name string) ([]Origin, ReqInf, error) {
 	return to.GetOriginsByQueryParams(fmt.Sprintf("?name=%s", name))
 }
 
 // GET a list of Origins by Delivery Service ID
-func (to *Session) GetOriginsByDeliveryServiceID(id int) ([]v13.Origin, ReqInf, error) {
+func (to *Session) GetOriginsByDeliveryServiceID(id int) ([]Origin, ReqInf, error) {
 	return to.GetOriginsByQueryParams(fmt.Sprintf("?deliveryservice=%d", id))
 }
 
 // DELETE an Origin by ID
 func (to *Session) DeleteOriginByID(id int) (tc.Alerts, ReqInf, error) {
-	route := fmt.Sprintf("%s?id=%d", API_v13_Origins, id)
+	route := fmt.Sprintf("%s?id=%d", API_Origins, id)
 	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

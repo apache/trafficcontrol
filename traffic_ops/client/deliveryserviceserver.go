@@ -13,7 +13,7 @@
    limitations under the License.
 */
 
-package v13
+package client
 
 import (
 	"encoding/json"

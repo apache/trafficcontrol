@@ -1,7 +1,7 @@
-package v13
+package client
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-tc/"
 )
 
 /*
@@ -19,9 +19,9 @@ import (
    limitations under the License.
 */
 
-func (to *Session) GetDomains() ([]v13.Domain, ReqInf, error) {
-	var data v13.DomainsResponse
-	inf, err := get(to, apiBase + "/cdns/domains", &data)
+func (to *Session) GetDomains() ([]Domain, ReqInf, error) {
+	var data DomainsResponse
+	inf, err := get(to, apiBase+"/cdns/domains", &data)
 	if err != nil {
 		return nil, inf, err
 	}
