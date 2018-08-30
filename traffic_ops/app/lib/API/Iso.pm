@@ -246,7 +246,11 @@ sub generate_iso {
 		my $output = `$cmd 2>&1` || die("Error executing $cmd:");
 		$self->app->log->info($output);
 
-		&log($self, "ISO created [ " . $osversion_dir . " ] for " . $fqdn, "APICHANGE");
+		if ( $fqdn eq "" ) {
+			&log($self, "ISO created [ " . $osversion_dir . " ] for unspecified hostname", "APICHANGE");
+		} else {
+			&log($self, "ISO created [ " . $osversion_dir . " ] for " . $fqdn, "APICHANGE");
+		}
 
 		# parse out http / https from to.base_url config; use local fqdn for download link
 		my @protocol = split( '://', $config->{'to'}{'base_url'} );
@@ -271,6 +275,12 @@ sub generate_iso {
 
 			close $fh;
 			unlink $iso_file_path;
+		}
+
+		if ( $fqdn eq "" ) {
+			&log($self, "ISO created [ " . $osversion_dir . " ] for unspecified hostname", "APICHANGE");
+		} else {
+			&log($self, "ISO created [ " . $osversion_dir . " ] for " . $fqdn, "APICHANGE");
 		}
 
 		$response = {
