@@ -76,13 +76,13 @@ function initBuildArea() {
                 { echo "Could not build atstccfg binary"; exit 1; }
 	popd
 
-	rsync -av etc install "$to_dest"/ || \
-		 { echo "Could not copy to $to_dest: $?"; exit 1; }
-	rsync -av app/{bin,conf,cpanfile,db,lib,public,script,templates} "$to_dest"/app/ || \
-		 { echo "Could not copy to $to_dest/app: $?"; exit 1; }
-	tar -czvf "$to_dest".tgz -C "$RPMBUILD"/SOURCES $(basename "$to_dest") || \
-		 { echo "Could not create tar archive $to_dest.tgz: $?"; exit 1; }
-	cp "$TO_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
+	rsync -av doc etc install "$dest"/ || \
+		 { echo "Could not copy to $dest: $?"; exit 1; }
+	rsync -av app/{bin,conf,cpanfile,db,lib,public,script,templates} "$dest"/app/ || \
+		 { echo "Could not copy to $dest/app: $?"; exit 1; }
+	tar -czvf "$dest".tgz -C "$RPMBUILD"/SOURCES $(basename "$dest") || \
+		 { echo "Could not create tar archive $dest.tgz: $?"; exit 1; }
+	cp "$TO_DIR"/build/traffic_ops.spec "$RPMBUILD"/SPECS/. || \
 		 { echo "Could not copy spec files: $?"; exit 1; }
 
 	export PLUGINS=$(grep -l -P '(?<!func )AddPlugin\(' ${TO_DIR}/traffic_ops_golang/plugin/*.go | xargs -I '{}' basename {} '.go')
