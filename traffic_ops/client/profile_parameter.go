@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	API_Profile_Parameters = "/api/1.3/profileparameters"
+	API_Profile_Parameters = apiBase + "/profileparameters"
 	ProfileIdQueryParam    = "profileId"
 	ParameterIdQueryParam  = "parameterId"
 )

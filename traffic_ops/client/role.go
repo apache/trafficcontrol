@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	API_ROLES = "/api/1.3/roles"
+	API_ROLES = apiBase + "/roles"
 )
 
 // Create a Role

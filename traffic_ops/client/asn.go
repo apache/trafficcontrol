@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	API_v2_ASNs = "/api/1.3/asns"
+	API_v2_ASNs = apiBase + "/asns"
 )
 
 // Create a ASN

@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	API_PING = "/api/1.3/ping"
+	API_PING = apiBase + "/ping"
 )
 
 // Ping returns a static json object to show that traffic_ops is responsive

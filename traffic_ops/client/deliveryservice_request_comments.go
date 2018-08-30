@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	API_DeliveryServiceRequestComments = "/api/1.3/deliveryservice_request_comments"
+	API_DeliveryServiceRequestComments = apiBase + "/deliveryservice_request_comments"
 )
 
 // Create a delivery service request comment

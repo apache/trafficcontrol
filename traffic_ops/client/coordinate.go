@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	API_Coordinates = "/api/1.3/coordinates"
+	API_Coordinates = apiBase + "/coordinates"
 )
 
 // Create a Coordinate

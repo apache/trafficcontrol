@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	API_v13_PHYS_LOCATIONS = "/api/1.3/phys_locations"
+	API_v13_PHYS_LOCATIONS = apiBase + "/phys_locations"
 )
 
 // Create a PhysLocation

@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	API_Origins = "/api/1.3/origins"
+	API_Origins = apiBase + "/origins"
 )
 
 // Create an Origin

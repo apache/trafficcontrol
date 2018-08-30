@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	API_StaticDNSEntries = "/api/1.3/staticdnsentries"
+	API_StaticDNSEntries = apiBase + "/staticdnsentries"
 )
 
 // Create a StaticDNSEntry

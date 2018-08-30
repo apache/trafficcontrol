@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	API_DS_REQUESTS = "/api/1.3/deliveryservice_requests"
+	API_DS_REQUESTS = apiBase + "/deliveryservice_requests"
 )
 
 // Create a Delivery Service Request

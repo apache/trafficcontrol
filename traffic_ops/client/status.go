@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	API_STATUSES = "/api/1.3/statuses"
+	API_STATUSES = apiBase + "/statuses"
 )
 
 // Create a Status

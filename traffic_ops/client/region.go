@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	API_REGIONS = "/api/1.3/regions"
+	API_REGIONS = apiBase + "/regions"
 )
 
 // Create a Region

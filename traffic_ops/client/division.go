@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	API_v13_Divisions = "/api/1.3/divisions"
+	API_v13_Divisions = apiBase + "/divisions"
 )
 
 // Create a Division
