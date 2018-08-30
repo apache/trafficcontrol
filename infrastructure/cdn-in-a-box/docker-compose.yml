@@ -193,8 +193,11 @@ services:
   # origin provides the content to be distributed through the CDN caches
   origin:
     build:
-      context: origin
+      context: .
+      dockerfile: origin/Dockerfile
     domainname: cdn.local
+    env_file:
+      - variables.env
     hostname: origin
     networks:
       - tcnet

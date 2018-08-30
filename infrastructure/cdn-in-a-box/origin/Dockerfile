@@ -23,16 +23,17 @@
 
 FROM alpine:latest
 
-RUN apk add --no-cache lighttpd
+RUN apk add --no-cache lighttpd bash curl
 
 RUN rm /etc/lighttpd/lighttpd.conf
 RUN rm -rf /var/www/localhost/
 RUN mkdir -p /var/www/html/
 
-ADD lighttpd.conf /etc/lighttpd/lighttpd.conf
-ADD index.html /var/www/html/index.html
-ADD tc_logo.svg /var/www/html/tc_logo.svg
+ADD origin/lighttpd.conf /etc/lighttpd/lighttpd.conf
+ADD origin/index.html /var/www/html/index.html
+ADD origin/tc_logo.svg /var/www/html/tc_logo.svg
+ADD origin/run.sh traffic_ops/to-access.sh /
 
 EXPOSE 80
 
-CMD lighttpd -t -f /etc/lighttpd/lighttpd.conf && lighttpd -D -f /etc/lighttpd/lighttpd.conf
+CMD /run.sh

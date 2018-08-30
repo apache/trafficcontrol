@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,30 +16,20 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-CERT_CITY=Denver
-CERT_COMPANY=NotComcast
-CERT_COUNTRY=US
-CERT_STATE=CO
-DB_NAME=traffic_ops
-DB_PORT=5432
-DB_SERVER=db
-DB_USER=traffic_ops
-DB_USER_PASS=twelve
-DBIC_TRACE=0
-DOMAIN=cdn.local
-PGPASSWORD=twelve
-POSTGRES_PASSWORD=twelve
-TM_EMAIL=tmonitor@example.com
-TM_PASSWORD=jhdslvhdfsuklvfhsuvlhs
-TM_USER=tmon
-TO_ADMIN_PASSWORD=twelve
-TO_ADMIN_USER=admin
-TO_EMAIL=cdnadmin@example.com
-TO_HOST=trafficops
-TO_PORT=6443
-TO_SECRET=blahblah
-TP_EMAIL=none
-TP_HOST=trafficportal
-TV_HOST=trafficvault
-TV_USER=tvault
-TV_PASSWORD=twelve
+
+set -e
+set -x
+set -m
+
+source /to-access.sh
+
+while ! to-ping 2>/dev/null; do
+	echo "waiting for Traffic Ops"
+	sleep 3
+done
+
+export TO_USER=$TO_ADMIN_USER
+export TO_PASSWORD=$TO_ADMIN_PASSWORD
+to-enroll $(hostname -s)
+
+lighttpd -t -f /etc/lighttpd/lighttpd.conf && lighttpd -D -f /etc/lighttpd/lighttpd.conf

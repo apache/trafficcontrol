@@ -31,8 +31,8 @@ RUN yum install -y /trafficserver.rpm iproute net-tools nmap-ncat epel-release
 RUN yum install -y jq && yum clean all
 
 RUN mkdir -p /var/trafficserver/cache /opt/ort && chown -R ats:ats /etc/trafficserver/ /var/trafficserver/ /opt/ort
-ADD edge/parameters.json edge/profile.json edge/server.json edge/setup.sh traffic_ops/to-access.sh /
+ADD edge/parameters.json edge/profile.json edge/server.json edge/run.sh traffic_ops/to-access.sh /
 
 EXPOSE 80
 
-CMD /setup.sh
+CMD /run.sh
