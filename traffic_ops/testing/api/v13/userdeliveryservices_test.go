@@ -29,7 +29,6 @@ func TestUsersDeliveryServices(t *testing.T) {
 	CreateTestRegions(t)
 	CreateTestPhysLocations(t)
 	CreateTestCacheGroups(t)
-	CreateTestServers(t)
 	CreateTestDeliveryServices(t)
 
 	CreateTestUsersDeliveryServices(t)
@@ -37,7 +36,6 @@ func TestUsersDeliveryServices(t *testing.T) {
 	DeleteTestUsersDeliveryServices(t)
 
 	DeleteTestDeliveryServices(t)
-	DeleteTestServers(t)
 	DeleteTestCacheGroups(t)
 	DeleteTestPhysLocations(t)
 	DeleteTestRegions(t)
