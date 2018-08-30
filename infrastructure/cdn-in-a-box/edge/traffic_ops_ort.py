@@ -65,9 +65,10 @@ LOG_LEVELS = {"ALL":   logging.NOTSET,
               "WARN":  logging.WARNING,
               "ERROR": logging.ERROR,
               "FATAL": logging.CRITICAL}
-FMT = "%(levelname)s: %(lineno)d in %(funcName)s: %(message)s"
+FMT = "%(levelname)s: %(message)s"
 
-HOSTNAME = platform.node().split('.')[0] # Not strictly accurate, but generally good enough
+# Not strictly accurate, but generally good enough
+HOSTNAME = (platform.node().split('.')[0], platform.node())
 
 class Modes(enum.IntEnum):
 	"""
@@ -213,6 +214,29 @@ def getJSONResponse(uri:str, expectedStatus:int = 200) -> object:
 
 	return response.json()
 
+def getRawResponse(uri:str, expectedStatus:int=200, TOrelative:bool=True, verify:bool=False) ->str:
+	"""
+	Returns the raw body of a GET request for the specified URI.
+	(actually encodes to utf-8 string)
+
+	Note that the behaviour of treating the uri as relative to TO_URL may be overridden, unlike
+	`getJSONResponse`.
+	"""
+	global TO_URL, TO_COOKIE
+
+	if TOrelative:
+		uri = TO_URL + uri
+
+	response = requests.get(uri, cookies=TO_COOKIE, verify=verify)
+	if response.status_code != expectedStatus:
+		logging.error("Failed to get a response from '%s': server returned status code %d",
+		              uri,
+		              response.status_code)
+		logging.debug("Response: %s\n%r\n%r", response, response.headers, response.content)
+		return None
+
+	return response.text
+
 def setStatusFile(statusDir:str, status:str, create:bool = False):
 	"""
 	Removes all files in `statusDir` that aren't `status`, and creates `status`
@@ -250,7 +274,7 @@ def setStatusFile(statusDir:str, status:str, create:bool = False):
 		if MODE:
 			with open(os.path.join(statusDir, status), "x"):
 				pass
-
+#pylint: disable=R1710
 def startDaemon(args:typing.List[str], stdout:str='/dev/null', stderr:str='/dev/null') -> bool:
 	"""
 	Starts a daemon process to execute the command line given by 'args'
@@ -310,7 +334,7 @@ def startDaemon(args:typing.List[str], stdout:str='/dev/null', stderr:str='/dev/
 
 	# If somehow we get down here, it's time to bail
 	exit(1)
-
+#pylint: enable=R1710
 def setATSStatus(status:bool) -> bool:
 	"""
 	Sets the status of the system's ATS process to on if `status` is True, else off.
@@ -416,7 +440,7 @@ def syncDSState() -> bool:
 	logging.info("starting syncDS State fetch")
 
 	try:
-		updateStatus = getJSONResponse("/api/1.3/servers/%s/update_status" % HOSTNAME)[0]
+		updateStatus = getJSONResponse("/api/1.3/servers/%s/update_status" % HOSTNAME[0])[0]
 	except IndexError:
 		logging.critical("Server not found in Traffic Ops config")
 		return False
@@ -446,7 +470,7 @@ def revalidate() -> int:
 	logging.info("starting revalidation")
 
 	try:
-		updateStatus = getJSONResponse("/api/1.3/servers/%s/update_status" % HOSTNAME)[0]
+		updateStatus = getJSONResponse("/api/1.3/servers/%s/update_status" % HOSTNAME[0])[0]
 	except IndexError:
 		logging.critical("Server not found in Traffic Ops config")
 		return 1
@@ -570,7 +594,7 @@ def processPackages() -> bool:
 	global HOSTNAME, DISTRO, MODE, packageIsInstalled, installPackage, packageConcat
 
 	logging.info("Fetching packages from Traffic Ops")
-	packages = getJSONResponse("/ort/%s/packages" % (HOSTNAME,))
+	packages = getJSONResponse("/ort/%s/packages" % (HOSTNAME[0],))
 	logging.info("Response: %s", packages)
 
 	if packages is None:
@@ -629,12 +653,12 @@ def processChkconfig() -> bool:
 	global HOSTNAME, MODE, DISTRO
 
 	logging.info("Processesing Chkconfig...")
-	chkconfig = getJSONResponse("/ort/%s/chkconfig" % HOSTNAME)
+	chkconfig = getJSONResponse("/ort/%s/chkconfig" % HOSTNAME[0])
 
 	if chkconfig is None:
 		raise ConnectionError("Server or server chkconfig not found on server!")
 
-	logging.info("chkconfig response: %r", chkconfig)
+	logging.debug("chkconfig response: %r", chkconfig)
 
 	for item in chkconfig:
 		logging.debug("Processing item: %r", item)
@@ -664,32 +688,221 @@ def getConfigFiles() -> typing.List[str]:
 
 	logging.info("Retrieving configuration files.")
 
-	files = getJSONResponse("/api/1.3/servers/%s/configfiles/ats" % (HOSTNAME,))
+	files = getJSONResponse("/api/1.3/servers/%s/configfiles/ats" % (HOSTNAME[0],))
 
 	if not files:
 		logging.critical("Could not retrieve configuration files.")
-		return 1
+		return None
 
 	logging.debug("Config Files raw response: %s", files)
 
-	return 0
+	return files
 
-def processConfigFile(file: str, value: object) -> bool:
+def initBackup() -> bool:
+	"""
+	Initializes a backup directory as a subdirectory of the directory containing
+	this ORT script.
+	"""
+	global MODE
+
+	here = os.path.abspath(os.path.dirname(__file__))
+	backupdir = os.path.join(here, "backup")
+
+	logging.info("Initializing backup dir %s", backupdir)
+
+	if not os.path.isdir(backupdir):
+		if MODE != Modes.REPORT:
+			try:
+				os.mkdir(backupdir)
+			except OSError:
+				logging.error("Couldn't create backup dir")
+				logging.warning("%s", e)
+				logging.debug("", exc_info=True, stack_info=True)
+				return False
+		else:
+			logging.error("Cannot create non-existent backup dir in REPORT mode!")
+			return True
+
+	logging.info("Backup dir already exists - nothing to do")
+	return True
+
+def mkbackup(fname:str, contents:str) -> bool:
+	"""
+	Creates a backup file named 'fname' with the contents `contents` and returns
+	True if the operation succeeded, else False.
+
+	Note: will always return True in REPORT mode.
+	"""
+	global MODE
+
+	if MODE == Modes.REPORT:
+		logging.info("REPORT mode - nothing to do")
+		return True
+
+	backupfile = os.path.join(os.path.abspath(os.path.dirname(__file__)), "backup", "fname")
+	if os.path.isfile(backupfile):
+		logging.warning("Clobbering existing backup file '%s'!", backupfile)
+
+	try:
+		with open(backupfile, 'w') as fd:
+			fd.write(contents)
+	except OSError as e:
+		logging.warning("Failed to write backup file: %s", e)
+		logging.debug("", exc_info=True, stack_info=True)
+		return False
+
+	logging.info("Backup of %s written to %s", fname, backupfile)
+	return True
+
+def updateConfig(file:str, contents:str) -> bool:
+	"""
+	Updates the config file specified by `file` to contain `contents`.
+
+	Returns a boolean indicator of success.
+	"Success" is defined as being able to write the file contents and create any necessary backups
+	if the mode is not BADASS - in which case failure to back the file up is 'acceptable'.
+
+	This will make a backup in the `backup` subdirectory of the directory
+	containing this script if the file on disk differs from `contents`.
+	"""
+	global MODE
+
+	logging.info("Udpating config file '%s'", file)
+
+	if not os.path.isfile(file):
+		if MODE != Modes.REPORT:
+			logging.info("File does not exist - creating")
+			try:
+				with open(file, 'w') as fd:
+					fd.write(contents)
+			except OSError as e:
+				logging.error("Couldn't write to file")
+				logging.warning("%s", e)
+				logging.debug("", exc_info=True, stack_info=True)
+				return False
+
+			logging.info("File written.")
+
+		return True
+
+	logging.debug("Reading in file on disk")
+	try:
+		with open(file) as fd:
+			diskContents = fd.read()
+	except OSError:
+		logging.warning("Couldn't read on-disk file: %s", e)
+		logging.debug("", exc_info=True, stack_info=True)
+		if MODE != Modes.BADASS:
+			return False
+
+	if diskContents.strip() == contents.strip():
+		logging.info("on-disk contents match Traffic Ops - nothing to do")
+		return True
+
+	if not mkbackup(os.path.basename(file), diskContents) and MODE != Modes.BADASS:
+		logging.error("Failed to create backup.")
+		return False
+
+	try:
+		with open(file, 'w') as fd:
+			fd.write(contents)
+	except OSError as e:
+		logging.error("Failed to update config file '%s'", file)
+		logging.warning("%s", e)
+		logging.debug("", exc_info=True, stack_info=True)
+		return False
+
+	logging.info("%s has been updated", file)
+	return True
+
+def sanitizeContents(contents:str) -> str:
+	"""
+	Sanitizes the input `contents` string to be a well-behaved config file.
+	"""
+	out = []
+	for line in contents.splitlines():
+		tmp=(" ".join(line.split())).strip() #squeezes spaces and trims leading and trailing spaces
+		tmp=tmp.replace("&amp;", '&') #de-encodes HTML-encoded ampersands
+		tmp=tmp.replace("&gt;", '>') #de-encodes HTML-encoded greater-than symbols
+		tmp=tmp.replace("&lt;", '<') #de-encodes HTML-encoded less-than symbols
+		out.append(tmp)
+
+	return "\n".join(out)
+
+def processConfigFile(file:dict, port:int, ip:str) -> bool:
 	"""
 	Process the passed file and value to apply a configuration.
 
 	Returns a boolean indicator of success
 	"""
-	logging.info("======== Start processing config file: %s ========", file)
+	global MODE, HOSTNAME, TO_URL
 
-	# do stuff
+	try:
+		fname = file['fnameOnDisk']
+		scope = file['scope']
+		location = file['location']
+		uri, contents = None, None
+		if 'apiUri' in file:
+			uri = TO_URL + file['apiUri']
+		elif 'url' in file:
+			uri = file['url']
+		else:
+			contents = file['contents']
+	except KeyError as e:
+		logging.error("Malformed config file")
+		logging.warning("%s", e)
+		logging.debug("", exc_info=True, stack_info=True)
+		return False
 
-	logging.info("======== End processing config file: %s ========", file)
+	logging.info("======== Start processing config file: %s ========", fname)
+
+	if not os.path.isdir(location):
+		if MODE != Modes.REPORT:
+			logging.debug("location '%s' doesn't exist; creating.")
+
+			try:
+				os.makedirs(location)
+			except OSError as e:
+				logging.error("Couldn't create directory %s", location)
+				logging.warning("%s", e)
+				logging.debug("", exc_info=True, stack_info=True)
+				return False
+		else:
+			# Even though nothing was done and an error gets reported, we return a success here
+			# because presumably everything would go fine were this not REPORT mode.
+			logging.error("Cannot create dirs in REPORT mode!")
+			return True
+
+	# `contents` should only be `None` if `uri` is defined
+	if contents is None:
+		contents = getRawResponse(uri, TOrelative=False)
+
+	if contents is None: #still...
+		return False
+
+	contents = contents.replace("__HOSTNAME__", HOSTNAME[0])
+	contents = contents.replace("__FULL_HOSTNAME__", HOSTNAME[1])
+	contents = contents.replace("__RETURN__", '\n')
+	contents = contents.replace("__CACHE_IPV4__", ip)
+
+	# Don't ask me why, but the reference ORT implementation just strips these ones out
+	# if the tcp port is 80.
+	contents = contents.replace("__SERVER_TCP_PORT__", str(port) if port != 80 else "")
+
+	contents = sanitizeContents(contents)
+
+	logging.debug("Sanitized file contents from Traffic Ops database:\n%s\n" % contents)
+
+	logging.warning("Skipping pre-requisite checks - plugins may not be installed!!")
+	logging.info("Dependent packages should be specified as profile parameters.")
+
+	updateConfig(os.path.join(location, fname), contents)
+
+	logging.info("======== End processing config file: %s ========", fname)
 
 	return True
 
-
-def processConfigFiles(files:dict) -> bool:
+def processConfigFiles(files:list, port:int, ip:str) -> bool:
 	"""
 	processes the passed JSON object containing config file definitions
 
@@ -697,10 +910,12 @@ def processConfigFiles(files:dict) -> bool:
 	"""
 	global MODE
 
-	for file, value in files.items():
-		if not processConfigFile(file, value):
+	if not initBackup():
+		return False
+
+	for file in files:
+		if not processConfigFile(file, port, ip):
 			logging.error("Failed to process config file '%s'", file)
-			logging.debug("value: %r", value)
 
 			if MODE != Modes.BADASS:
 				return False
@@ -729,6 +944,21 @@ def doMain() -> int:
 		return 1
 
 	myFiles = getConfigFiles()
+	if myFiles is None:
+		return 1
+	if "configFiles" not in myFiles or "info" not in myFiles:
+		logging.critical("Malformed response from configfiles/ats endpoint - unable to continue")
+		return 1
+
+	try:
+		# This is needed for templated responses from the config file API endpoints
+		tcpPort = myFiles["info"]["serverTcpPort"]
+		serverIpv4 = myFiles["info"]["serverIpv4"]
+	except KeyError:
+		logging.critical("Malformed response from configfiles/ats endpoint - unable to continue")
+		logging.debug("", exc_info=True, stack_info=True)
+		return 1
+
 
 	if MODE == Modes.REVALIDATE:
 		logging.info("======== Revalidating, no package processing needed ========")
@@ -743,13 +973,13 @@ def doMain() -> int:
 		if not processChkconfig():
 			logging.critical("Unrecoverable error occured when processing chkconfig.")
 			return 1
-		if not processConfigFiles(myFiles):
+		if not processConfigFiles(myFiles["configFiles"], tcpPort, serverIpv4):
 			logging.critical("Unrecoverable error occurred when processing config files")
 			return 1
 	except ConnectionError:
 		logging.critical("Couldn't reach /ort/%s/* endpoints - "\
 		                 "ensure %s points to Traffic OPS not Traffic PORTAL",
-		                 HOSTNAME,
+		                 HOSTNAME[0],
 		                 TO_URL)
 		return 1
 
@@ -815,9 +1045,7 @@ def main() -> int:
 		print("Unrecognized/Unsupported log level:", args.Log_Level, file=sys.stderr)
 		return 1
 
-	# logging.getLogger().handlers = []
-	# logging.basicConfig(level=LOG_LEVELS[logLevel], format=FMT)
-	logging.basicConfig(level=LOG_LEVELS[logLevel])
+	logging.basicConfig(level=LOG_LEVELS[logLevel], format=FMT)
 	logging.getLogger().setLevel(LOG_LEVELS[logLevel])
 
 	logging.debug("test")
@@ -846,7 +1074,7 @@ def main() -> int:
 
 	logging.info("Distro detected as '%s'", DISTRO)
 
-	logging.info("Hostname detected as '%s'", HOSTNAME)
+	logging.info("Hostname detected as '%s'", HOSTNAME[1])
 
 	TO_URL = args.Traffic_Ops_URL.rstrip('/')
 
