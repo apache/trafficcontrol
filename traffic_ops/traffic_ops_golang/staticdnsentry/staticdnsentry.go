@@ -27,7 +27,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -38,12 +37,12 @@ import (
 
 type TOStaticDNSEntry struct {
 	ReqInfo *api.APIInfo `json:"-"`
-	v13.StaticDNSEntryNullable
+	tc.StaticDNSEntryNullable
 }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOStaticDNSEntry{reqInfo, v13.StaticDNSEntryNullable{}}
+		toReturn := TOStaticDNSEntry{reqInfo, tc.StaticDNSEntryNullable{}}
 		return &toReturn
 	}
 }
@@ -137,7 +136,7 @@ func (staticDNSEntry *TOStaticDNSEntry) Read(parameters map[string]string) ([]in
 	defer rows.Close()
 	staticDNSEntries := []interface{}{}
 	for rows.Next() {
-		s := v13.StaticDNSEntryNullable{}
+		s := tc.StaticDNSEntryNullable{}
 		if err = rows.StructScan(&s); err != nil {
 			log.Errorln("error parsing StaticDNSEntry rows: " + err.Error())
 			return nil, []error{tc.DBError}, tc.SystemError

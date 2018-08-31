@@ -104,7 +104,7 @@ type ServerNullable struct {
 	IPAddress        *string              `json:"ipAddress" db:"ip_address"`
 	IPGateway        *string              `json:"ipGateway" db:"ip_gateway"`
 	IPNetmask        *string              `json:"ipNetmask" db:"ip_netmask"`
-	LastUpdated      TimeNoMod            `json:"lastUpdated" db:"last_updated"`
+	LastUpdated      *TimeNoMod           `json:"lastUpdated" db:"last_updated"`
 	MgmtIPAddress    *string              `json:"mgmtIpAddress" db:"mgmt_ip_address"`
 	MgmtIPGateway    *string              `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
 	MgmtIPNetmask    *string              `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`

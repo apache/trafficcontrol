@@ -21,7 +21,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 const queryParamFormat = "?profileId=%d&parameterId=%d"
@@ -59,7 +59,7 @@ func CreateTestProfileParameters(t *testing.T) {
 	profileID := profileResp[0].ID
 	parameterID := paramResp[0].ID
 
-	pp := v13.ProfileParameter{
+	pp := tc.ProfileParameter{
 		ProfileID:   profileID,
 		ParameterID: parameterID,
 	}
@@ -104,7 +104,7 @@ func DeleteTestProfileParameters(t *testing.T) {
 	}
 }
 
-func DeleteTestProfileParameter(t *testing.T, pp v13.ProfileParameter) {
+func DeleteTestProfileParameter(t *testing.T, pp tc.ProfileParameter) {
 
 	queryParams := fmt.Sprintf(queryParamFormat, pp.ProfileID, pp.ParameterID)
 	// Retrieve the PtofileParameter by profile so we can get the id for the Update

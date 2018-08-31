@@ -27,7 +27,6 @@ import (
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	tcv13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
@@ -39,7 +38,7 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	reqObj := tcv13.CachegroupQueueUpdatesRequest{}
+	reqObj := tc.CachegroupQueueUpdatesRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&reqObj); err != nil {
 		api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return

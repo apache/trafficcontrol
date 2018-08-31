@@ -22,7 +22,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 )
 
@@ -186,7 +185,7 @@ func UpdateTestCacheGroups(t *testing.T) {
 
 func DeleteTestCacheGroups(t *testing.T) {
 	failed := false
-	var mids []v13.CacheGroupNullable
+	var mids []tc.CacheGroupNullable
 
 	// delete the edge caches.
 	for _, cg := range testData.CacheGroups {

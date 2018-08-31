@@ -19,11 +19,114 @@ package tc
  * under the License.
  */
 
+type StaticDNSEntriesResponse struct {
+	Response []StaticDNSEntry `json:"response"`
+}
+
 type StaticDNSEntry struct {
-	Address         string `json:"address" db:"address"`
-	CacheGroup      string `json:"cachegroup" db:"cachegroup"`
+
+	// The static IP Address or fqdn of the static dns entry
+	//
+	// required: true
+	Address string `json:"address" db:"address"`
+
+	// The Cachegroup Name associated
+	//
+	CacheGroupName string `json:"cachegroup" db:"cachegroup"`
+
+	// The Cachegroup ID associated
+	//
+	CacheGroupID int `json:"cachegroupId" db:"cachegroup_id"`
+
+	// The DeliveryService associated
+	//
 	DeliveryService string `json:"deliveryservice" db:"dsname"`
-	Host            string `json:"host" db:"host"`
-	TTL             int64  `json:"ttl" db:"ttl"`
-	Type            string `json:"type" db:"type"`
+
+	// The DeliveryService associated
+	//
+	// required: true
+	DeliveryServiceID int `json:"deliveryserviceId" db:"deliveryservice_id"`
+
+	// The host of the static dns entry
+	//
+	// required: true
+	Host string `json:"host" db:"host"`
+
+	// ID of the StaticDNSEntry
+	//
+	// required: true
+	ID int `json:"id" db:"id"`
+
+	// LastUpdated
+	//
+	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
+
+	// The Time To Live for the static dns entry
+	//
+	// required: true
+	TTL int64 `json:"ttl" db:"ttl"`
+
+	// The type of the static DNS entry
+	//
+	// enum: ["A_RECORD", "AAAA_RECORD", "CNAME_RECORD"]
+	Type string `json:"type"`
+
+	// The type id of the static DNS entry
+	//
+	// required: true
+	TypeID int `json:"typeId" db:"type_id"`
+}
+
+type StaticDNSEntryNullable struct {
+
+	// The static IP Address or fqdn of the static dns entry
+	//
+	// required: true
+	Address *string `json:"address" db:"address"`
+
+	// The Cachegroup Name associated
+	//
+	CacheGroupName *string `json:"cachegroup" db:"cachegroup"`
+
+	// The Cachegroup ID associated
+	//
+	CacheGroupID *int `json:"cachegroupId" db:"cachegroup_id"`
+
+	// The DeliveryService Name associated
+	//
+	DeliveryService *string `json:"deliveryservice" db:"dsname"`
+
+	// DeliveryService ID of the StaticDNSEntry
+	//
+	// required: true
+	DeliveryServiceID *int `json:"deliveryserviceId" db:"deliveryservice_id"`
+
+	// The host of the static dns entry
+	//
+	// required: true
+	Host *string `json:"host" db:"host"`
+
+	// ID of the StaticDNSEntry
+	//
+	// required: true
+	ID *int `json:"id" db:"id"`
+
+	// LastUpdated
+	//
+	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
+
+	// The Time To Live for the static dns entry
+	//
+	// required: true
+	TTL *int64 `json:"ttl" db:"ttl"`
+
+	// The type of the static DNS entry
+	//
+	// enum: ["A_RECORD", "AAAA_RECORD", "CNAME_RECORD"]
+	Type *string `json:"type"`
+
+	// The type id of the static DNS entry
+	//
+	// required: true
+	TypeID int `json:"typeId" db:"type_id"`
 }

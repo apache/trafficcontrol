@@ -29,7 +29,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -42,13 +41,13 @@ import (
 // we need a type alias to define functions on
 type TOCDNFederation struct {
 	ReqInfo *api.APIInfo `json:"-"`
-	v13.CDNFederation
+	tc.CDNFederation
 }
 
 // Used for all CRUD routes
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOCDNFederation{reqInfo, v13.CDNFederation{}}
+		toReturn := TOCDNFederation{reqInfo, tc.CDNFederation{}}
 		return &toReturn
 	}
 }
@@ -228,7 +227,7 @@ func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, [
 	for rows.Next() {
 
 		var tenantID *int
-		fed.DeliveryServiceIDs = &v13.DeliveryServiceIDs{}
+		fed.DeliveryServiceIDs = &tc.DeliveryServiceIDs{}
 		if err = rows.Scan(&tenantID, &fed.ID, &fed.CName, &fed.TTL, &fed.Description, &fed.LastUpdated, &fed.DsId, &fed.XmlId); err != nil {
 			log.Errorf("parsing federation rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError

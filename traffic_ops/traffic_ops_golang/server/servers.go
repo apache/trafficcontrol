@@ -29,7 +29,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -45,12 +44,12 @@ import (
 //we need a type alias to define functions on
 type TOServer struct {
 	ReqInfo *api.APIInfo `json:"-"`
-	v13.ServerNullable
+	tc.ServerNullable
 }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOServer{reqInfo, v13.ServerNullable{}}
+		toReturn := TOServer{reqInfo, tc.ServerNullable{}}
 		return &toReturn
 	}
 }

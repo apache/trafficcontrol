@@ -29,7 +29,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -41,12 +40,12 @@ import (
 
 type TOCacheGroup struct {
 	ReqInfo *api.APIInfo `json:"-"`
-	v13.CacheGroupNullable
+	tc.CacheGroupNullable
 }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOCacheGroup{reqInfo, v13.CacheGroupNullable{}}
+		toReturn := TOCacheGroup{reqInfo, tc.CacheGroupNullable{}}
 		return &toReturn
 	}
 }
@@ -541,7 +540,7 @@ func selectQuery() string {
 	// the 'type_name' and 'type_id' aliases on the 'type.name'
 	// and cachegroup.type' fields are needed
 	// to disambiguate the struct scan, see also the
-	// v13.CacheGroupNullable struct 'db' metadata
+	// tc.CacheGroupNullable struct 'db' metadata
 	query := `SELECT
 cachegroup.id,
 cachegroup.name,
@@ -568,7 +567,7 @@ LEFT JOIN cachegroup AS cgs ON cachegroup.secondary_parent_cachegroup_id = cgs.i
 func updateQuery() string {
 	// to disambiguate struct scans, the named
 	// parameter 'type_id' is an alias to cachegroup.type
-	//see also the v13.CacheGroupNullable struct 'db' metadata
+	//see also the tc.CacheGroupNullable struct 'db' metadata
 	query := `UPDATE
 cachegroup SET
 name=$1,

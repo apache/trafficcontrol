@@ -19,15 +19,42 @@ package tc
  * under the License.
  */
 
+// A List of Statuses Response that depict the state of a server
+// swagger:response StatusesResponse
 type StatusesResponse struct {
+	// in: body
 	Response []Status `json:"response"`
 }
 
+// A Single Status Response for Update and Create to depict what changed
+// swagger:response StatusResponse
+// in: body
+type StatusResponse struct {
+	// in: body
+	Response Status `json:"response"`
+}
+
+// A Single Statuses Response for Update and Create to depict what changed
+// swagger:model Statuses
 type Status struct {
-	Description string    `json:"description" db:"description"`
-	ID          int       `json:"id" db:"id"`
+
+	// The Statuses to retrieve
+	//
+	// description of the status type
+	//
+	Description string `json:"description" db:"description"`
+
+	// ID of the Status
+	//
+	// required: true
+	ID int `json:"id" db:"id"`
+
+	// The Time / Date this server entry was last updated
+	//
 	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	Name        string    `json:"name" db:"name"`
+
+	// enum: ["OFFLINE", "ONLINE", "ADMIN_DOWN", "REPORTED", "CCR_IGNORE", "PRE_PROD"]
+	Name string `json:"name" db:"name"`
 }
 
 type StatusNullable struct {

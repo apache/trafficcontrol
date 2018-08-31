@@ -37,7 +37,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
-	to "github.com/apache/trafficcontrol/traffic_ops/client/v13"
+	to "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
 // StartOpsConfigManager starts the ops config manager goroutine, returning the (threadsafe) variables which it sets.

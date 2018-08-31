@@ -1,3 +1,5 @@
+package client
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +15,10 @@
    limitations under the License.
 */
 
-package client
-
 import (
 	"encoding/json"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // Users gets an array of Users.
@@ -29,7 +29,7 @@ func (to *Session) Users() ([]tc.User, error) {
 }
 
 func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
-	url := "/api/1.2/users.json"
+	url := apiBase + "/users.json"
 	resp, remoteAddr, err := to.request("GET", url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
@@ -43,4 +43,15 @@ func (to *Session) GetUsers() ([]tc.User, ReqInf, error) {
 	}
 
 	return data.Response, reqInf, nil
+}
+
+// GetUserCurrent gets information about the current user
+func (to *Session) GetUserCurrent() (*tc.UserCurrent, ReqInf, error) {
+	url := apiBase + `/user/current`
+	resp := tc.UserCurrentResponse{}
+	reqInf, err := get(to, url, &resp)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	return &resp.Response, reqInf, nil
 }

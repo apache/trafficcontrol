@@ -15,7 +15,11 @@
 
 package client
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+	"io/ioutil"
+)
 
 func get(to *Session, endpoint string, respStruct interface{}) (ReqInf, error) {
 	return makeReq(to, "GET", endpoint, nil, respStruct)
@@ -44,8 +48,13 @@ func makeReq(to *Session, method, endpoint string, body []byte, respStruct inter
 	}
 	defer resp.Body.Close()
 
-	if err := json.NewDecoder(resp.Body).Decode(respStruct); err != nil {
-		return reqInf, err
+	bts, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return reqInf, errors.New("reading body: " + err.Error())
+	}
+
+	if err := json.Unmarshal(bts, respStruct); err != nil {
+		return reqInf, errors.New("unmarshalling body '" + string(body) + "': " + err.Error())
 	}
 
 	return reqInf, nil

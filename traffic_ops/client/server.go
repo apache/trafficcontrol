@@ -17,12 +17,58 @@ package client
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net"
+	"net/http"
 	"net/url"
 	"strings"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
+
+const (
+	API_v13_Servers = "/api/1.3/servers"
+)
+
+// Create a Server
+func (to *Session) CreateServer(server tc.Server) (tc.Alerts, ReqInf, error) {
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(server)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_Servers, reqBody)
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
+}
+
+// Update a Server by ID
+func (to *Session) UpdateServerByID(id int, server tc.Server) (tc.Alerts, ReqInf, error) {
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(server)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	route := fmt.Sprintf("%s/%d", API_v13_Servers, id)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
+}
 
 // Servers gets an array of servers
 // Deprecated: use GetServers
@@ -31,9 +77,34 @@ func (to *Session) Servers() ([]tc.Server, error) {
 	return s, err
 }
 
+// Returns a list of Servers
 func (to *Session) GetServers() ([]tc.Server, ReqInf, error) {
-	url := "/api/1.2/servers.json"
-	resp, remoteAddr, err := to.request("GET", url, nil)
+	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_Servers, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.ServersResponse
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	return data.Response, reqInf, nil
+}
+
+// Server gets a server by hostname
+// Deprecated: use GetServer
+func (to *Session) Server(name string) (*tc.Server, error) {
+	s, _, err := to.GetServerByHostName(name)
+	if len(s) > 0 {
+		return &s[0], err
+	}
+	return nil, errors.New("not found")
+}
+
+// GET a Server by the Server ID
+func (to *Session) GetServerByID(id int) ([]tc.Server, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_Servers, id)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
@@ -48,39 +119,48 @@ func (to *Session) GetServers() ([]tc.Server, ReqInf, error) {
 	return data.Response, reqInf, nil
 }
 
-// Server gets a server by hostname
-// Deprecated: use GetServer
-func (to *Session) Server(name string) (*tc.Server, error) {
-	s, _, err := to.GetServer(name)
-	return s, err
-}
-
-func (to *Session) GetServer(name string) (*tc.Server, ReqInf, error) {
-	url := fmt.Sprintf("/api/1.2/servers/hostname/%s/details", name)
-	resp, remoteAddr, err := to.request("GET", url, nil)
+// GET a Server by the Server hostname
+func (to *Session) GetServerByHostName(hostName string) ([]tc.Server, ReqInf, error) {
+	url := fmt.Sprintf("%s?hostName=%s", API_v13_Servers, hostName)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	data := tc.ServersDetailResponse{}
+	var data tc.ServersResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
 
-	return &data.Response, reqInf, nil
+	return data.Response, reqInf, nil
+}
+
+// DELETE a Server by ID
+func (to *Session) DeleteServerByID(id int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_Servers, id)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
 }
 
 // ServersByType gets an array of serves of a specified type.
+// Deprecated: use GetServersByType
 func (to *Session) ServersByType(qparams url.Values) ([]tc.Server, error) {
 	ss, _, err := to.GetServersByType(qparams)
 	return ss, err
 }
 
 func (to *Session) GetServersByType(qparams url.Values) ([]tc.Server, ReqInf, error) {
-	url := fmt.Sprintf("/api/1.2/servers.json?%s", qparams.Encode())
-	resp, remoteAddr, err := to.request("GET", url, nil)
+	url := fmt.Sprintf("%s.json?%s", API_v13_Servers, qparams.Encode())
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err

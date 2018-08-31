@@ -18,28 +18,28 @@ package v13
 import (
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_ops/client/v13"
+	"github.com/apache/trafficcontrol/traffic_ops/client"
 	_ "github.com/lib/pq"
 )
 
 var (
-	TOSession       *v13.Session
-	NoAuthTOSession *v13.Session
+	TOSession       *client.Session
+	NoAuthTOSession *client.Session
 )
 
 func SetupSession(toReqTimeout time.Duration, toURL string, toUser string, toPass string) error {
 	var err error
 
 	toReqTimeout = time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	NoAuthTOSession = v13.NewNoAuthSession(toURL, true, "to-api-v13-client-tests", true, toReqTimeout)
-	TOSession, _, err = v13.LoginWithAgent(toURL, toUser, toPass, true, "to-api-v13-client-tests", true, toReqTimeout)
+	NoAuthTOSession = client.NewNoAuthSession(toURL, true, "to-api-v13-client-tests", true, toReqTimeout)
+	TOSession, _, err = client.LoginWithAgent(toURL, toUser, toPass, true, "to-api-v13-client-tests", true, toReqTimeout)
 	return err
 }
 
 func TeardownSession(toReqTimeout time.Duration, toURL string, toUser string, toPass string) error {
 	var err error
 	toReqTimeout = time.Second * time.Duration(Config.Default.Session.TimeoutInSecs)
-	TOSession, _, err = v13.LogoutWithAgent(toURL, toUser, toPass, true, "to-api-v13-client-tests", true, toReqTimeout)
+	TOSession, _, err = client.LogoutWithAgent(toURL, toUser, toPass, true, "to-api-v13-client-tests", true, toReqTimeout)
 
 	return err
 }

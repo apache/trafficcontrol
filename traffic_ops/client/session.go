@@ -114,7 +114,7 @@ func (to *Session) login() (net.Addr, error) {
 		return nil, errors.New("creating login credentials: " + err.Error())
 	}
 
-	path := "/api/1.2/user/login"
+	path := apiBase + "/user/login"
 	resp, remoteAddr, err := to.rawRequest("POST", path, credentials)
 	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
 	if err != nil {
@@ -137,6 +137,41 @@ func (to *Session) login() (net.Addr, error) {
 
 	if !success {
 		return remoteAddr, fmt.Errorf("Login failed, alerts string: %+v", alerts)
+	}
+
+	return remoteAddr, nil
+}
+
+// logout of Traffic Ops
+func (to *Session) logout() (net.Addr, error) {
+	credentials, err := loginCreds(to.UserName, to.Password)
+	if err != nil {
+		return nil, errors.New("creating login credentials: " + err.Error())
+	}
+
+	path := apiBase + "/user/logout"
+	resp, remoteAddr, err := to.rawRequest("POST", path, credentials)
+	resp, remoteAddr, err = to.ErrUnlessOK(resp, remoteAddr, err, path)
+	if err != nil {
+		return remoteAddr, errors.New("requesting: " + err.Error())
+	}
+	defer resp.Body.Close()
+
+	var alerts tc.Alerts
+	if err := json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
+		return remoteAddr, errors.New("decoding response JSON: " + err.Error())
+	}
+
+	success := false
+	for _, alert := range alerts.Alerts {
+		if alert.Level == "success" && alert.Text == "Successfully logged in." {
+			success = true
+			break
+		}
+	}
+
+	if !success {
+		return remoteAddr, fmt.Errorf("Logout failed, alerts string: %+v", alerts)
 	}
 
 	return remoteAddr, nil
@@ -170,6 +205,43 @@ func LoginWithAgent(toURL string, toUser string, toPasswd string, insecure bool,
 		return nil, remoteAddr, errors.New("logging in: " + err.Error())
 	}
 	return to, remoteAddr, nil
+}
+
+// Logout of traffic_ops
+func LogoutWithAgent(toURL string, toUser string, toPasswd string, insecure bool, userAgent string, useCache bool, requestTimeout time.Duration) (*Session, net.Addr, error) {
+	options := cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	}
+
+	jar, err := cookiejar.New(&options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	to := NewSession(toUser, toPasswd, toURL, userAgent, &http.Client{
+		Timeout: requestTimeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+		},
+		Jar: jar,
+	}, useCache)
+
+	remoteAddr, err := to.logout()
+	if err != nil {
+		return nil, remoteAddr, errors.New("logging out: " + err.Error())
+	}
+	return to, remoteAddr, nil
+}
+
+// NewNoAuthSession returns a new Session without logging in
+// this can be used for querying unauthenticated endpoints without requiring a login
+func NewNoAuthSession(toURL string, insecure bool, userAgent string, useCache bool, requestTimeout time.Duration) *Session {
+	return NewSession("", "", toURL, userAgent, &http.Client{
+		Timeout: requestTimeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+		},
+	}, useCache)
 }
 
 // ErrUnlessOk returns nil and an error if the given Response's status code is anything but 200 OK. This includes reading the Response.Body and Closing it. Otherwise, the given response and error are returned unchanged.

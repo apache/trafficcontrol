@@ -20,7 +20,6 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 )
 
 func TestProfiles(t *testing.T) {
@@ -47,12 +46,12 @@ func TestProfiles(t *testing.T) {
 func CreateBadProfiles(t *testing.T) {
 
 	// blank profile
-	prs := []v13.Profile{
-		v13.Profile{Type: "", Name: "", Description: "", CDNID: 0},
-		v13.Profile{Type: "ATS_PROFILE", Name: "badprofile", Description: "description", CDNID: 0},
-		v13.Profile{Type: "ATS_PROFILE", Name: "badprofile", Description: "", CDNID: 1},
-		v13.Profile{Type: "ATS_PROFILE", Name: "", Description: "description", CDNID: 1},
-		v13.Profile{Type: "", Name: "badprofile", Description: "description", CDNID: 1},
+	prs := []tc.Profile{
+		tc.Profile{Type: "", Name: "", Description: "", CDNID: 0},
+		tc.Profile{Type: "ATS_PROFILE", Name: "badprofile", Description: "description", CDNID: 0},
+		tc.Profile{Type: "ATS_PROFILE", Name: "badprofile", Description: "", CDNID: 1},
+		tc.Profile{Type: "ATS_PROFILE", Name: "", Description: "description", CDNID: 1},
+		tc.Profile{Type: "", Name: "badprofile", Description: "description", CDNID: 1},
 	}
 
 	for _, pr := range prs {

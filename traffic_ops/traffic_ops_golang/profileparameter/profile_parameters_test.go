@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
@@ -33,14 +32,14 @@ import (
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
-func getTestProfileParameters() []v13.ProfileParameterNullable {
-	pps := []v13.ProfileParameterNullable{}
+func getTestProfileParameters() []tc.ProfileParameterNullable {
+	pps := []tc.ProfileParameterNullable{}
 	lastUpdated := tc.TimeNoMod{}
 	lastUpdated.Scan(time.Now())
 	profileID := 1
 	parameterID := 1
 
-	pp := v13.ProfileParameterNullable{
+	pp := tc.ProfileParameterNullable{
 		LastUpdated: &lastUpdated,
 		ProfileID:   &profileID,
 		ParameterID: &parameterID,

@@ -17,31 +17,226 @@ package client
 
 import (
 	"encoding/json"
+	"fmt"
+	"net"
+	"net/http"
 
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-// CacheGroups gets the CacheGroups in an array of CacheGroup structs
-// (note CacheGroup used to be called location)
-// Deprecated: use GetCacheGroups.
-func (to *Session) CacheGroups() ([]v13.CacheGroup, error) {
-	cgs, _, err := to.GetCacheGroups()
-	return cgs, err
+const (
+	API_v13_CacheGroups = "/api/1.3/cachegroups"
+)
+
+// Create a CacheGroup
+func (to *Session) CreateCacheGroupNullable(cachegroup tc.CacheGroupNullable) (*tc.CacheGroupDetailResponse, ReqInf, error) {
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(cachegroup)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_CacheGroups, reqBody)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+	var cachegroupResp tc.CacheGroupDetailResponse
+	if err = json.NewDecoder(resp.Body).Decode(&cachegroupResp); err != nil {
+		return nil, reqInf, err
+	}
+	return &cachegroupResp, reqInf, nil
 }
 
-func (to *Session) GetCacheGroups() ([]v13.CacheGroup, ReqInf, error) {
-	url := "/api/1.2/cachegroups.json"
-	resp, remoteAddr, err := to.request("GET", url, nil) // TODO change to getBytesWithTTL, return CacheHitStatus
+// Create a CacheGroup
+// Deprecated: Use CreateCacheGroupNullable
+func (to *Session) CreateCacheGroup(cachegroup tc.CacheGroup) (tc.Alerts, ReqInf, error) {
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(cachegroup)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	resp, remoteAddr, err := to.request(http.MethodPost, API_v13_CacheGroups, reqBody)
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
+}
+
+// Update a CacheGroup by ID
+func (to *Session) UpdateCacheGroupNullableByID(id int, cachegroup tc.CacheGroupNullable) (*tc.CacheGroupDetailResponse, ReqInf, error) {
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(cachegroup)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	route := fmt.Sprintf("%s/%d", API_v13_CacheGroups, id)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+	var cachegroupResp tc.CacheGroupDetailResponse
+	if err = json.NewDecoder(resp.Body).Decode(&cachegroupResp); err != nil {
+		return nil, reqInf, err
+	}
+	return &cachegroupResp, reqInf, nil
+}
+
+// Update a CacheGroup by ID
+// Deprecated: use UpdateCachegroupNullableByID
+func (to *Session) UpdateCacheGroupByID(id int, cachegroup tc.CacheGroup) (tc.Alerts, ReqInf, error) {
+
+	var remoteAddr net.Addr
+	reqBody, err := json.Marshal(cachegroup)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	route := fmt.Sprintf("%s/%d", API_v13_CacheGroups, id)
+	resp, remoteAddr, err := to.request(http.MethodPut, route, reqBody)
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	err = json.NewDecoder(resp.Body).Decode(&alerts)
+	return alerts, reqInf, nil
+}
+
+// Returns a list of CacheGroups
+func (to *Session) GetCacheGroupsNullable() ([]tc.CacheGroupNullable, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_CacheGroups, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {
 		return nil, reqInf, err
 	}
 	defer resp.Body.Close()
 
-	var data v13.CacheGroupsResponse
+	var data tc.CacheGroupsNullableResponse
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+	return data.Response, reqInf, nil
+}
+
+// Returns a list of CacheGroups
+// Deprecated: use GetCacheGroupsNullable
+func (to *Session) GetCacheGroups() ([]tc.CacheGroup, ReqInf, error) {
+	resp, remoteAddr, err := to.request(http.MethodGet, API_v13_CacheGroups, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.CacheGroupsResponse
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	return data.Response, reqInf, nil
+}
+
+// CacheGroups gets the CacheGroups in an array of CacheGroup structs
+// (note CacheGroup used to be called location)
+// Deprecated: use GetCacheGroups.
+func (to *Session) CacheGroups() ([]tc.CacheGroup, error) {
+	cgs, _, err := to.GetCacheGroups()
+	return cgs, err
+}
+
+// GET a CacheGroup by the CacheGroup id
+func (to *Session) GetCacheGroupNullableByID(id int) ([]tc.CacheGroupNullable, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_CacheGroups, id)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.CacheGroupsNullableResponse
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return nil, reqInf, err
 	}
 
 	return data.Response, reqInf, nil
+}
+
+// GET a CacheGroup by the CacheGroup id
+// Deprecated: use GetCacheGroupNullableByID
+func (to *Session) GetCacheGroupByID(id int) ([]tc.CacheGroup, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_CacheGroups, id)
+	resp, remoteAddr, err := to.request(http.MethodGet, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.CacheGroupsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// GET a CacheGroup by the CacheGroup name
+func (to *Session) GetCacheGroupNullableByName(name string) ([]tc.CacheGroupNullable, ReqInf, error) {
+	url := fmt.Sprintf("%s?name=%s", API_v13_CacheGroups, name)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.CacheGroupsNullableResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// GET a CacheGroup by the CacheGroup name
+// Deprecated: use GetCachegroupNullableByName
+func (to *Session) GetCacheGroupByName(name string) ([]tc.CacheGroup, ReqInf, error) {
+	url := fmt.Sprintf("%s?name=%s", API_v13_CacheGroups, name)
+	resp, remoteAddr, err := to.request(http.MethodGet, url, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return nil, reqInf, err
+	}
+	defer resp.Body.Close()
+
+	var data tc.CacheGroupsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+// DELETE a CacheGroup by ID
+func (to *Session) DeleteCacheGroupByID(id int) (tc.Alerts, ReqInf, error) {
+	route := fmt.Sprintf("%s/%d", API_v13_CacheGroups, id)
+	resp, remoteAddr, err := to.request(http.MethodDelete, route, nil)
+	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+	if err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	defer resp.Body.Close()
+	var alerts tc.Alerts
+	if err = json.NewDecoder(resp.Body).Decode(&alerts); err != nil {
+		return tc.Alerts{}, reqInf, err
+	}
+	return alerts, reqInf, nil
 }

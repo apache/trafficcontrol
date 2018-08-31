@@ -28,7 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -41,12 +40,12 @@ import (
 //we need a type alias to define functions on
 type TOCDN struct {
 	ReqInfo *api.APIInfo `json:"-"`
-	v13.CDNNullable
+	tc.CDNNullable
 }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOCDN{reqInfo, v13.CDNNullable{}}
+		toReturn := TOCDN{reqInfo, tc.CDNNullable{}}
 		return &toReturn
 	}
 }
@@ -190,7 +189,7 @@ func (cdn *TOCDN) Read(parameters map[string]string) ([]interface{}, []error, tc
 
 	CDNs := []interface{}{}
 	for rows.Next() {
-		var cdn v13.CDNNullable
+		var cdn tc.CDNNullable
 		if err = rows.StructScan(&cdn); err != nil {
 			log.Errorf("error parsing CDN rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
