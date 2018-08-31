@@ -27,7 +27,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -45,12 +44,12 @@ const (
 //we need a type alias to define functions on
 type TOProfileParameter struct {
 	ReqInfo *api.APIInfo `json:"-"`
-	v13.ProfileParameterNullable
+	tc.ProfileParameterNullable
 }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOProfileParameter{reqInfo, v13.ProfileParameterNullable{}}
+		toReturn := TOProfileParameter{reqInfo, tc.ProfileParameterNullable{}}
 		return &toReturn
 	}
 }

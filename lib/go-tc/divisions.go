@@ -19,14 +19,36 @@ package tc
  * under the License.
  */
 
+// A List of Divisions Response
+// swagger:response DivisionsResponse
 type DivisionsResponse struct {
+	// in: body
 	Response []Division `json:"response"`
 }
 
+// A Single Division Response for Update and Create to depict what changed
+// swagger:response DivisionResponse
+// in: body
+type DivisionResponse struct {
+	// in: body
+	Response Division `json:"response"`
+}
+
+// Division ...
 type Division struct {
-	ID          int       `json:"id" db:"id"`
+
+	// Division ID
+	//
+	ID int `json:"id" db:"id"`
+
+	// LastUpdated
+	//
 	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	Name        string    `json:"name" db:"name"`
+
+	// Division Name
+	//
+	// required: true
+	Name string `json:"name" db:"name"`
 }
 
 type DivisionNullable struct {

@@ -23,42 +23,172 @@ type PhysLocationsResponse struct {
 	Response []PhysLocation `json:"response"`
 }
 
+type PhysLocationResponse struct {
+	Response PhysLocationNullable `json:"response"`
+}
+
 type PhysLocation struct {
-	Address     string    `json:"address" db:"address"`
-	City        string    `json:"city" db:"city"`
-	Comments    string    `json:"comments" db:"comments"`
-	Email       string    `json:"email" db:"email"`
-	ID          int       `json:"id" db:"id"`
+
+	//
+	// The Street Address of the physical location
+	//
+	// required: true
+	Address string `json:"address" db:"address"`
+
+	//
+	// The Address of the physical location
+	//
+	// required: true
+	City string `json:"city" db:"city"`
+
+	//
+	// comments are additional details about the physical location
+	//
+	Comments string `json:"comments" db:"comments"`
+
+	//
+	// The email address for the Point of Contact at the physical location
+	//
+	Email string `json:"email" db:"email"`
+
+	//
+	// The name of the physical location
+	//
+	// required: true
+	ID int `json:"id" db:"id"`
+
+	// Timestamp of the last time this row was updated
+	//
 	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	Name        string    `json:"name" db:"name"`
-	Phone       string    `json:"phone" db:"phone"`
-	POC         string    `json:"poc" db:"poc"`
-	RegionID    int       `json:"regionId" db:"region"`
-	RegionName  string    `json:"region" db:"region_name"`
-	ShortName   string    `json:"shortName" db:"short_name"`
-	State       string    `json:"state" db:"state"`
-	Zip         string    `json:"zip" db:"zip"`
+
+	//
+	// The name of the physical location
+	//
+	// required: true
+	Name string `json:"name" db:"name"`
+
+	//
+	// The phone number of the physical location
+	//
+	// required: true
+	Phone string `json:"phone" db:"phone"`
+
+	//
+	// The Point Of Contact at the physical location
+	//
+	// required: true
+	POC string `json:"poc" db:"poc"`
+
+	//
+	// The RegionID associated to this physical location
+	//
+	// required: true
+	RegionID int `json:"regionId" db:"region"`
+
+	//
+	// The Region Name for the region associated to this physical location
+	//
+	RegionName string `json:"region" db:"region_name"`
+
+	//
+	// The shortName for the physical location (like an alias)
+	//
+	// required: true
+	ShortName string `json:"shortName" db:"short_name"`
+
+	//
+	// The State for the physical location
+	//
+	// required: true
+	State string `json:"state" db:"state"`
+
+	//
+	// The Zipcode for the physical location
+	//
+	// required: true
+	Zip string `json:"zip" db:"zip"`
 }
 
 // PhysLocationNullable - a struct version that allows for all fields to be null
 type PhysLocationNullable struct {
 	//
-	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
+	// The Street Address of the physical location
 	//
-	Address     *string    `json:"address" db:"address"`
-	City        *string    `json:"city" db:"city"`
-	Comments    *string    `json:"comments" db:"comments"`
-	Email       *string    `json:"email" db:"email"`
-	ID          *int       `json:"id" db:"id"`
+	// required: true
+	Address *string `json:"address" db:"address"`
+
+	//
+	// The Address of the physical location
+	//
+	// required: true
+	City *string `json:"city" db:"city"`
+
+	//
+	// comments are additional details about the physical location
+	//
+	Comments *string `json:"comments" db:"comments"`
+
+	//
+	// The email address for the Point of Contact at the physical location
+	//
+	Email *string `json:"email" db:"email"`
+
+	//
+	// The name of the physical location
+	//
+	// required: true
+	ID *int `json:"id" db:"id"`
+
+	// Timestamp of the last time this row was updated
+	//
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
-	Name        *string    `json:"name" db:"name"`
-	Phone       *string    `json:"phone" db:"phone"`
-	POC         *string    `json:"poc" db:"poc"`
-	RegionID    *int       `json:"regionId" db:"region"`
-	RegionName  *string    `json:"region" db:"region_name"`
-	ShortName   *string    `json:"shortName" db:"short_name"`
-	State       *string    `json:"state" db:"state"`
-	Zip         *string    `json:"zip" db:"zip"`
+
+	//
+	// The name of the physical location
+	//
+	// required: true
+	Name *string `json:"name" db:"name"`
+
+	//
+	// The phone number of the physical location
+	//
+	// required: true
+	Phone *string `json:"phone" db:"phone"`
+
+	//
+	// The Point Of Contact at the physical location
+	//
+	// required: true
+	POC *string `json:"poc" db:"poc"`
+
+	//
+	// The RegionID associated to this physical location
+	//
+	// required: true
+	RegionID *int `json:"regionId" db:"region"`
+
+	//
+	// The Region Name for the region associated to this physical location
+	//
+	RegionName *string `json:"region" db:"region_name"`
+
+	//
+	// The shortName for the physical location (like an alias)
+	//
+	// required: true
+	ShortName *string `json:"shortName" db:"short_name"`
+
+	//
+	// The State for the physical location
+	//
+	// required: true
+	State *string `json:"state" db:"state"`
+
+	//
+	// The Zipcode for the physical location
+	//
+	// required: true
+	Zip *string `json:"zip" db:"zip"`
 }
 
 type PhysLocationTrimmed struct {

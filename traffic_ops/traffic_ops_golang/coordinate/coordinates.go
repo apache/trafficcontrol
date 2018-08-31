@@ -28,7 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
@@ -41,12 +40,12 @@ import (
 //we need a type alias to define functions on
 type TOCoordinate struct {
 	ReqInfo *api.APIInfo `json:"-"`
-	v13.CoordinateNullable
+	tc.CoordinateNullable
 }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOCoordinate{reqInfo, v13.CoordinateNullable{}}
+		toReturn := TOCoordinate{reqInfo, tc.CoordinateNullable{}}
 		return &toReturn
 	}
 }

@@ -29,8 +29,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
-	client "github.com/apache/trafficcontrol/traffic_ops/client/v13"
+	"github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
 // ITrafficOpsSession provides an interface to the Traffic Ops client, so it may be wrapped or mocked.
@@ -41,11 +40,11 @@ type ITrafficOpsSession interface {
 	Set(session *client.Session)
 	URL() (string, error)
 	User() (string, error)
-	Servers() ([]v13.Server, error)
-	Profiles() ([]v13.Profile, error)
+	Servers() ([]tc.Server, error)
+	Profiles() ([]tc.Profile, error)
 	Parameters(profileName string) ([]tc.Parameter, error)
 	DeliveryServices() ([]tc.DeliveryServiceV13, error)
-	CacheGroups() ([]v13.CacheGroupNullable, error)
+	CacheGroups() ([]tc.CacheGroupNullable, error)
 	CRConfigHistory() []CRConfigStat
 }
 
@@ -419,7 +418,7 @@ func CreateMonitorConfig(crConfig tc.CRConfig, mc *tc.TrafficMonitorConfigMap) (
 	return mc, nil
 }
 
-func (s TrafficOpsSessionThreadsafe) Servers() ([]v13.Server, error) {
+func (s TrafficOpsSessionThreadsafe) Servers() ([]tc.Server, error) {
 	ss := s.get()
 	if ss == nil {
 		return nil, ErrNilSession
@@ -428,7 +427,7 @@ func (s TrafficOpsSessionThreadsafe) Servers() ([]v13.Server, error) {
 	return servers, error
 }
 
-func (s TrafficOpsSessionThreadsafe) Profiles() ([]v13.Profile, error) {
+func (s TrafficOpsSessionThreadsafe) Profiles() ([]tc.Profile, error) {
 	ss := s.get()
 	if ss == nil {
 		return nil, ErrNilSession
@@ -455,7 +454,7 @@ func (s TrafficOpsSessionThreadsafe) DeliveryServices() ([]tc.DeliveryServiceV13
 	return deliveryServices, error
 }
 
-func (s TrafficOpsSessionThreadsafe) CacheGroups() ([]v13.CacheGroupNullable, error) {
+func (s TrafficOpsSessionThreadsafe) CacheGroups() ([]tc.CacheGroupNullable, error) {
 	ss := s.get()
 	if ss == nil {
 		return nil, ErrNilSession

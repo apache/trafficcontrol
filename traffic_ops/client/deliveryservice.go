@@ -19,18 +19,18 @@ import (
 	"encoding/json"
 	"strconv"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 // DeliveryServices gets an array of DeliveryServices
 // Deprecated: use GetDeliveryServices
-func (to *Session) DeliveryServices() ([]tc.DeliveryService, error) {
+func (to *Session) DeliveryServices() ([]tc.DeliveryServiceV13, error) {
 	dses, _, err := to.GetDeliveryServices()
 	return dses, err
 }
 
-func (to *Session) GetDeliveryServices() ([]tc.DeliveryService, ReqInf, error) {
-	var data tc.GetDeliveryServiceResponse
+func (to *Session) GetDeliveryServices() ([]tc.DeliveryServiceV13, ReqInf, error) {
+	var data tc.DeliveryServicesResponse
 	reqInf, err := get(to, deliveryServicesEp(), &data)
 	if err != nil {
 		return nil, reqInf, err
@@ -41,14 +41,24 @@ func (to *Session) GetDeliveryServices() ([]tc.DeliveryService, ReqInf, error) {
 
 // DeliveryServicesByServer gets an array of all DeliveryServices with the given server ID assigend.
 // Deprecated: use GetDeliveryServicesByServer
-func (to *Session) DeliveryServicesByServer(id int) ([]tc.DeliveryService, error) {
+func (to *Session) DeliveryServicesByServer(id int) ([]tc.DeliveryServiceV13, error) {
 	dses, _, err := to.GetDeliveryServicesByServer(id)
 	return dses, err
 }
 
-func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryService, ReqInf, error) {
-	var data tc.GetDeliveryServiceResponse
+func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryServiceV13, ReqInf, error) {
+	var data tc.DeliveryServicesResponse
 	reqInf, err := get(to, deliveryServicesByServerEp(strconv.Itoa(id)), &data)
+	if err != nil {
+		return nil, reqInf, err
+	}
+
+	return data.Response, reqInf, nil
+}
+
+func (to *Session) GetDeliveryServiceByXMLID(XMLID string) ([]tc.DeliveryService, ReqInf, error) {
+	var data tc.GetDeliveryServiceResponse
+	reqInf, err := get(to, deliveryServicesByXMLID(XMLID), &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
@@ -58,23 +68,25 @@ func (to *Session) GetDeliveryServicesByServer(id int) ([]tc.DeliveryService, Re
 
 // DeliveryService gets the DeliveryService for the ID it's passed
 // Deprecated: use GetDeliveryService
-func (to *Session) DeliveryService(id string) (*tc.DeliveryService, error) {
+func (to *Session) DeliveryService(id string) (*tc.DeliveryServiceV13, error) {
 	ds, _, err := to.GetDeliveryService(id)
 	return ds, err
 }
 
-func (to *Session) GetDeliveryService(id string) (*tc.DeliveryService, ReqInf, error) {
-	var data tc.GetDeliveryServiceResponse
+func (to *Session) GetDeliveryService(id string) (*tc.DeliveryServiceV13, ReqInf, error) {
+	var data tc.DeliveryServicesResponse
 	reqInf, err := get(to, deliveryServiceEp(id), &data)
 	if err != nil {
 		return nil, reqInf, err
 	}
-
+	if len(data.Response) == 0 {
+		return nil, reqInf, nil
+	}
 	return &data.Response[0], reqInf, nil
 }
 
 // CreateDeliveryService creates the DeliveryService it's passed
-func (to *Session) CreateDeliveryService(ds *tc.DeliveryService) (*tc.CreateDeliveryServiceResponse, error) {
+func (to *Session) CreateDeliveryService(ds *tc.DeliveryServiceV13) (*tc.CreateDeliveryServiceResponse, error) {
 	var data tc.CreateDeliveryServiceResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {
@@ -90,7 +102,7 @@ func (to *Session) CreateDeliveryService(ds *tc.DeliveryService) (*tc.CreateDeli
 
 // UpdateDeliveryService updates the DeliveryService matching the ID it's passed with
 // the DeliveryService it is passed
-func (to *Session) UpdateDeliveryService(id string, ds *tc.DeliveryService) (*tc.UpdateDeliveryServiceResponse, error) {
+func (to *Session) UpdateDeliveryService(id string, ds *tc.DeliveryServiceV13) (*tc.UpdateDeliveryServiceResponse, error) {
 	var data tc.UpdateDeliveryServiceResponse
 	jsonReq, err := json.Marshal(ds)
 	if err != nil {
@@ -253,6 +265,18 @@ func (to *Session) GetDeliveryServiceSSLKeysByHostname(hostname string) (*tc.Del
 func (to *Session) GetDeliveryServiceMatches() ([]tc.DeliveryServicePatterns, ReqInf, error) {
 	uri := apiBase + `/deliveryservice_matches`
 	resp := tc.DeliveryServiceMatchesResponse{}
+	reqInf, err := get(to, uri, &resp)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	return resp.Response, reqInf, nil
+}
+
+func (to *Session) GetDeliveryServicesEligible(dsID int) ([]tc.DSServer, ReqInf, error) {
+	resp := struct {
+		Response []tc.DSServer `json:"response"`
+	}{Response: []tc.DSServer{}}
+	uri := apiBase + `/deliveryservices/` + strconv.Itoa(dsID) + `/servers/eligible`
 	reqInf, err := get(to, uri, &resp)
 	if err != nil {
 		return nil, reqInf, err

@@ -27,7 +27,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -51,12 +50,12 @@ const (
 //we need a type alias to define functions on
 type TOProfile struct {
 	ReqInfo *api.APIInfo `json:"-"`
-	v13.ProfileNullable
+	tc.ProfileNullable
 }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOProfile{reqInfo, v13.ProfileNullable{}}
+		toReturn := TOProfile{reqInfo, tc.ProfileNullable{}}
 		return &toReturn
 	}
 }
@@ -139,10 +138,10 @@ func (prof *TOProfile) Read(parameters map[string]string) ([]interface{}, []erro
 	}
 	defer rows.Close()
 
-	profiles := []v13.ProfileNullable{}
+	profiles := []tc.ProfileNullable{}
 
 	for rows.Next() {
-		var p v13.ProfileNullable
+		var p tc.ProfileNullable
 		if err = rows.StructScan(&p); err != nil {
 			log.Errorf("error parsing Profile rows: %v", err)
 			return nil, []error{tc.DBError}, tc.SystemError
@@ -185,7 +184,7 @@ LEFT JOIN cdn c ON prof.cdn = c.id`
 	return query
 }
 
-func ReadParameters(tx *sqlx.Tx, parameters map[string]string, user *auth.CurrentUser, profile v13.ProfileNullable) ([]v13.ParameterNullable, []error) {
+func ReadParameters(tx *sqlx.Tx, parameters map[string]string, user *auth.CurrentUser, profile tc.ProfileNullable) ([]tc.ParameterNullable, []error) {
 
 	var rows *sqlx.Rows
 	privLevel := user.PrivLevel
@@ -200,9 +199,9 @@ func ReadParameters(tx *sqlx.Tx, parameters map[string]string, user *auth.Curren
 	}
 	defer rows.Close()
 
-	var params []v13.ParameterNullable
+	var params []tc.ParameterNullable
 	for rows.Next() {
-		var param v13.ParameterNullable
+		var param tc.ParameterNullable
 
 		if err = rows.StructScan(&param); err != nil {
 			log.Errorf("error parsing parameter rows: %v", err)

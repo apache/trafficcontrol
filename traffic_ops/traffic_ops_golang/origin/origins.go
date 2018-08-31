@@ -28,7 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
@@ -44,12 +43,12 @@ import (
 //we need a type alias to define functions on
 type TOOrigin struct {
 	ReqInfo *api.APIInfo `json:"-"`
-	v13.Origin
+	tc.Origin
 }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOOrigin{reqInfo, v13.Origin{}}
+		toReturn := TOOrigin{reqInfo, tc.Origin{}}
 		return &toReturn
 	}
 }
@@ -143,8 +142,8 @@ func (origin *TOOrigin) IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
 }
 
 // filterAuthorized will filter a slice of Origins based upon tenant. It assumes that tenancy is enabled
-func filterAuthorized(origins []v13.Origin, user *auth.CurrentUser, tx *sqlx.Tx) ([]v13.Origin, error) {
-	newOrigins := []v13.Origin{}
+func filterAuthorized(origins []tc.Origin, user *auth.CurrentUser, tx *sqlx.Tx) ([]tc.Origin, error) {
+	newOrigins := []tc.Origin{}
 	for _, origin := range origins {
 		if origin.TenantID == nil {
 			if origin.ID == nil {
@@ -200,7 +199,7 @@ func (origin *TOOrigin) Read(params map[string]string) ([]interface{}, []error, 
 	return returnable, nil, tc.NoError
 }
 
-func getOrigins(params map[string]string, tx *sqlx.Tx, privLevel int) ([]v13.Origin, []error, tc.ApiErrorType) {
+func getOrigins(params map[string]string, tx *sqlx.Tx, privLevel int) ([]tc.Origin, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 	var err error
 
@@ -231,10 +230,10 @@ func getOrigins(params map[string]string, tx *sqlx.Tx, privLevel int) ([]v13.Ori
 	}
 	defer rows.Close()
 
-	origins := []v13.Origin{}
+	origins := []tc.Origin{}
 
 	for rows.Next() {
-		var s v13.Origin
+		var s tc.Origin
 		if err = rows.StructScan(&s); err != nil {
 			return nil, []error{fmt.Errorf("getting origins: %v", err)}, tc.SystemError
 		}

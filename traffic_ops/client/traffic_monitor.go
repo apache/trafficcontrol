@@ -3,8 +3,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
 /*
@@ -53,7 +52,7 @@ func (to *Session) TrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig, e
 }
 
 func (to *Session) GetTrafficMonitorConfig(cdn string) (*tc.TrafficMonitorConfig, ReqInf, error) {
-	url := fmt.Sprintf("/api/1.2/cdns/%s/configs/monitoring.json", cdn)
+	url := fmt.Sprintf("/api/1.3/cdns/%s/configs/monitoring.json", cdn)
 	resp, remoteAddr, err := to.request("GET", url, nil)
 	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
 	if err != nil {

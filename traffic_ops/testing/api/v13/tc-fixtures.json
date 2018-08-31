@@ -683,7 +683,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
-            "typeName": "EDGE",
+            "type": "EDGE",
             "updPending": true,
             "xmppId": "atlanta-edge-01\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -715,7 +715,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 8086,
-            "typeName": "EDGE",
+            "type": "EDGE",
             "updPending": true,
             "xmppId": "",
             "xmppPasswd": ""
@@ -747,7 +747,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
-            "typeName": "EDGE",
+            "type": "EDGE",
             "updPending": true,
             "xmppId": "atlanta-router-01\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -779,7 +779,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
-            "typeName": "EDGE",
+            "type": "EDGE",
             "updPending": true,
             "xmppId": "atlanta-edge-03\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -811,7 +811,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
-            "typeName": "EDGE",
+            "type": "EDGE",
             "updPending": true,
             "xmppId": "atlanta-edge-14\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -843,7 +843,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
-            "typeName": "EDGE",
+            "type": "EDGE",
             "updPending": true,
             "xmppId": "atlanta-edge-15\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -875,7 +875,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
-            "typeName": "MID",
+            "type": "MID",
             "updPending": true,
             "xmppId": "atlanta-mid-16\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -907,7 +907,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
-            "typeName": "EDGE",
+            "type": "EDGE",
             "updPending": true,
             "xmppId": "atlanta-org-1\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -939,7 +939,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
-            "typeName": "EDGE",
+            "type": "EDGE",
             "updPending": true,
             "xmppId": "atlanta-org-1\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -971,7 +971,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 80,
-            "typeName": "MID",
+            "type": "MID",
             "updPending": true,
             "xmppId": "atlanta-mid-01\\\\@ocdn.kabletown.net",
             "xmppPasswd": "X"
@@ -1003,7 +1003,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 81,
-            "typeName": "TRAFFIC_MONITOR",
+            "type": "TRAFFIC_MONITOR",
             "updPending": true,
             "xmppId": "",
             "xmppPasswd": "X"
@@ -1035,7 +1035,7 @@
             "routerHostName": "",
             "routerPortName": "",
             "tcpPort": 8088,
-            "typeName": "RIAK",
+            "type": "RIAK",
             "updPending": true,
             "xmppId": "",
             "xmppPasswd": ""
