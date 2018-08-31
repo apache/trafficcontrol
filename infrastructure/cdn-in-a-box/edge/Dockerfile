@@ -26,13 +26,11 @@ FROM centos:7
 EXPOSE 80
 
 ARG RPM=https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.2-4.el7.centos.x86_64.rpm
+ADD $RPM /trafficserver.rpm
+# ADD edge/traffic_ops_ort.rpm /
 
 RUN yum install -y /trafficserver.rpm iproute net-tools nmap-ncat epel-release
-
-# You need to do this because the RPM in the ATS archives is just all kinds of messed-up
-RUN mkdir -p /var/trafficserver/cache /opt/ort && chown -R ats:ats /etc/trafficserver/ /var/trafficserver/ /opt/ort && chmod 755 /usr/lib64/trafficserver /etc/trafficserver/body_factory /etc/trafficserver/body_factory/default
-
-RUN yum install -y jq /traffic_ops_ort.rpm python34 python34-setuptools python34-pip python34-typing python34-psutil && yum clean all
+RUN yum install -y jq /traffic_ops_ort.rpm python34-psutil python34-typing python34-setuptools python34-pip && yum clean all
 RUN pip3 install --upgrade pip && pip3 install requests urllib3 distro
 
 RUN mkdir -p /var/trafficserver/cache /opt/ort && chown -R ats:ats /etc/trafficserver/ /var/trafficserver/ /opt/ort
