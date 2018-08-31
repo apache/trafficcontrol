@@ -19,6 +19,7 @@ import typing
 import logging
 import enum
 import subprocess
+import time
 
 needInstall = []
 
@@ -89,6 +90,17 @@ class Modes(enum.IntEnum):
 # Current Run Mode
 MODE = None
 
+
+#This is the set of files which will require an ATS restart upon changes
+ATS_FILES = {"records.config",
+             "remap.config",
+             "parent.config",
+             "cache.config",
+             "hosting.config",
+             "astats.config",
+             "logs_xml.config",
+             "ssl_multicert.config"}
+ATS_NEEDS_RESTART = False
 
 ###############################################################################
 #####                                                                     #####
@@ -374,6 +386,22 @@ def setATSStatus(status:bool) -> bool:
 		return startDaemon([os.path.join(TS_ROOT, "bin", "traffic_server"), arg],
 		                   stdout=os.path.join(TS_ROOT, "var", "log", "trafficserver", "traffic.out"),
 		                   stderr=os.path.join(TS_ROOT, "var", "log", "trafficserver", "error.log"))
+
+		logging.info("Waiting for applied changes...")
+		for i in range(3):
+			time.sleep(3)
+			found = False
+			for process in psutil.process_iter():
+				if process.name() == "[TS_MAIN]":
+					found = True
+					break
+
+			if found == status:
+				logging.info("Done.")
+				break
+		else:
+			logging.error("Changes could not be applied to ATS process")
+			return False
 
 	return True
 
@@ -739,7 +767,7 @@ def mkbackup(fname:str, contents:str) -> bool:
 		logging.info("REPORT mode - nothing to do")
 		return True
 
-	backupfile = os.path.join(os.path.abspath(os.path.dirname(__file__)), "backup", "fname")
+	backupfile = os.path.join(os.path.abspath(os.path.dirname(__file__)), "backup", fname)
 	if os.path.isfile(backupfile):
 		logging.warning("Clobbering existing backup file '%s'!", backupfile)
 
@@ -754,7 +782,7 @@ def mkbackup(fname:str, contents:str) -> bool:
 	logging.info("Backup of %s written to %s", fname, backupfile)
 	return True
 
-def updateConfig(file:str, contents:str) -> bool:
+def updateConfig(directory:str, fname:str, contents:str) -> bool:
 	"""
 	Updates the config file specified by `file` to contain `contents`.
 
@@ -765,7 +793,9 @@ def updateConfig(file:str, contents:str) -> bool:
 	This will make a backup in the `backup` subdirectory of the directory
 	containing this script if the file on disk differs from `contents`.
 	"""
-	global MODE
+	global MODE, ATS_FILES, ATS_NEEDS_RESTART
+
+	file = os.path.join(directory, fname)
 
 	logging.info("Udpating config file '%s'", file)
 
@@ -812,6 +842,10 @@ def updateConfig(file:str, contents:str) -> bool:
 		logging.debug("", exc_info=True, stack_info=True)
 		return False
 
+	# If update was needed and successful, then check if ats should be restarted
+	if fname in ATS_FILES:
+		ATS_NEEDS_RESTART = True
+
 	logging.info("%s has been updated", file)
 	return True
 
@@ -822,9 +856,9 @@ def sanitizeContents(contents:str) -> str:
 	out = []
 	for line in contents.splitlines():
 		tmp=(" ".join(line.split())).strip() #squeezes spaces and trims leading and trailing spaces
-		tmp=tmp.replace("&amp;", '&') #de-encodes HTML-encoded ampersands
-		tmp=tmp.replace("&gt;", '>') #de-encodes HTML-encoded greater-than symbols
-		tmp=tmp.replace("&lt;", '<') #de-encodes HTML-encoded less-than symbols
+		tmp=tmp.replace("&amp;", '&') #decodes HTML-encoded ampersands
+		tmp=tmp.replace("&gt;", '>') #decodes HTML-encoded greater-than symbols
+		tmp=tmp.replace("&lt;", '<') #decodes HTML-encoded less-than symbols
 		out.append(tmp)
 
 	return "\n".join(out)
@@ -896,7 +930,7 @@ def processConfigFile(file:dict, port:int, ip:str) -> bool:
 	logging.warning("Skipping pre-requisite checks - plugins may not be installed!!")
 	logging.info("Dependent packages should be specified as profile parameters.")
 
-	updateConfig(os.path.join(location, fname), contents)
+	updateConfig(location, fname, contents)
 
 	logging.info("======== End processing config file: %s ========", fname)
 
@@ -935,7 +969,7 @@ def doMain() -> int:
 	Performs operations based on the run mode.
 	This can be thought of as the "true" main function.
 	"""
-	global MODE
+	global MODE, ATS_NEEDS_RESTART
 
 	headerComment = getHeaderComment()
 
@@ -982,6 +1016,12 @@ def doMain() -> int:
 		                 HOSTNAME[0],
 		                 TO_URL)
 		return 1
+
+	if ATS_NEEDS_RESTART:
+		logging.info("Restarting ATS")
+		if not setATSStatus(False) or setATSStatus(True):
+			logging.critical("Failed to restart ATS")
+			return 1
 
 	return 0
 
