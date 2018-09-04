@@ -1132,6 +1132,7 @@ def main() -> int:
 	"""
 	global TO_COOKIE, TO_LOGIN, TO_URL, LOG_LEVELS, MODE, needInstall, DISTRO, TS_ROOT, FMT
 
+	# I have no idea why, but the old ORT script does this on every run.
 	print(datetime.datetime.utcnow().strftime("%a %b %d %H:%M:%S UTC %Y"))
 
 	parser = argparse.ArgumentParser(description="A Python-based TO_ORT implementation",
