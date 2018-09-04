@@ -744,7 +744,6 @@ def processPackages() -> bool:
 
 	if not MODE == Modes.REPORT:
 
-		if MODE == Modes.INTERACTIVE
 		logging.info("Installing packages...")
 		if install:
 			if MODE == INTERACTIVE and not getYesNoResponse("Would you like to install the following packages: %s ?"%", ".join(install)):
@@ -1190,7 +1189,6 @@ def main() -> int:
 	logging.basicConfig(level=LOG_LEVELS[logLevel], format=FMT)
 	logging.getLogger().setLevel(LOG_LEVELS[logLevel])
 
-	logging.debug("test")
 	try:
 		MODE = Modes[args.Mode.upper()]
 	except KeyError as e:
