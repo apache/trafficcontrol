@@ -113,7 +113,7 @@ func GetTestDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot GET DeliveryServices: %v - %v\n", err, actualDSes)
 		failed = true
 	}
-	actualDSMap := map[string]tc.DeliveryServiceV13{}
+	actualDSMap := map[string]tc.DeliveryService{}
 	for _, ds := range actualDSes {
 		actualDSMap[ds.XMLID] = ds
 	}
@@ -138,7 +138,7 @@ func UpdateTestDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot GET Delivery Services: %v\n", err)
 	}
 
-	remoteDS := tc.DeliveryServiceV13{}
+	remoteDS := tc.DeliveryService{}
 	found := false
 	for _, ds := range dses {
 		if ds.XMLID == firstDS.XMLID {
@@ -190,7 +190,7 @@ func DeleteTestDeliveryServices(t *testing.T) {
 		t.Fatalf("cannot GET Servers: %v\n", err)
 	}
 	for _, testDS := range testData.DeliveryServices {
-		ds := tc.DeliveryServiceV13{}
+		ds := tc.DeliveryService{}
 		found := false
 		for _, realDS := range dses {
 			if realDS.XMLID == testDS.XMLID {

@@ -80,7 +80,7 @@ func CreateTestServers(t *testing.T) {
 	// loop through servers, assign FKs and create
 	for _, server := range testData.Servers {
 		// GET EDGE type
-		respTypes, _, err := TOSession.GetTypeByName(server.TypeName)
+		respTypes, _, err := TOSession.GetTypeByName(server.Type)
 		if err != nil {
 			t.Errorf("cannot GET Division by name: EDGE - %v\n", err)
 		}

@@ -71,6 +71,7 @@ func TestGetASNs(t *testing.T) {
 	for _, ts := range testCase {
 		rows = rows.AddRow(
 			*ts.ASN,
+			*ts.Cachegroup,
 			*ts.CachegroupID,
 			*ts.ID,
 			*ts.LastUpdated,

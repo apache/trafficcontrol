@@ -23,9 +23,9 @@ import (
 )
 
 // GetUserDeliveryServices gets the delivery services associated with the given user.
-func (to *Session) GetUserDeliveryServices(userID int) (*tc.UserDeliveryServicesResponse, ReqInf, error) {
+func (to *Session) GetUserDeliveryServices(userID int) (*tc.UserDeliveryServicesNullableResponse, ReqInf, error) {
 	uri := apiBase + `/users/` + strconv.Itoa(userID) + `/deliveryservices`
-	resp := tc.UserDeliveryServicesResponse{}
+	resp := tc.UserDeliveryServicesNullableResponse{}
 	reqInf, err := get(to, uri, &resp)
 	if err != nil {
 		return nil, reqInf, err

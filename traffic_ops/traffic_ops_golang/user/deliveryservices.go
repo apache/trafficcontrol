@@ -76,8 +76,8 @@ func GetAvailableDSes(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, dses)
 }
 
-func filterAuthorized(tx *sql.Tx, dses []tc.DeliveryServiceNullableV13, user *auth.CurrentUser) ([]tc.DeliveryServiceNullableV13, error) {
-	authorizedDSes := []tc.DeliveryServiceNullableV13{}
+func filterAuthorized(tx *sql.Tx, dses []tc.DeliveryServiceNullable, user *auth.CurrentUser) ([]tc.DeliveryServiceNullable, error) {
+	authorizedDSes := []tc.DeliveryServiceNullable{}
 	for _, ds := range dses {
 		if ds.TenantID == nil {
 			continue
@@ -112,7 +112,7 @@ func filterAvailableAuthorized(tx *sql.Tx, dses []tc.UserAvailableDS, user *auth
 	return authorizedDSes, nil
 }
 
-func getUserDSes(tx *sql.Tx, userID int) ([]tc.DeliveryServiceNullableV13, error) {
+func getUserDSes(tx *sql.Tx, userID int) ([]tc.DeliveryServiceNullable, error) {
 	q := `
 SELECT
 ds.active,
@@ -189,9 +189,9 @@ WHERE dsu.tm_user_id = $1
 		return nil, errors.New("querying user delivery services: " + err.Error())
 	}
 	defer rows.Close()
-	dses := []tc.DeliveryServiceNullableV13{}
+	dses := []tc.DeliveryServiceNullable{}
 	for rows.Next() {
-		ds := tc.DeliveryServiceNullableV13{}
+		ds := tc.DeliveryServiceNullable{}
 		err := rows.Scan(&ds.Active, &ds.AnonymousBlockingEnabled, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CDNName, &ds.CheckPath, &ds.DeepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.ID, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LastUpdated, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OrgServerFQDN, &ds.OriginShield, &ds.ProfileID, &ds.ProfileName, &ds.ProfileDesc, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.Tenant, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.Type, &ds.TypeID, &ds.XMLID)
 		if err != nil {
 			return nil, errors.New("scanning user delivery services : " + err.Error())

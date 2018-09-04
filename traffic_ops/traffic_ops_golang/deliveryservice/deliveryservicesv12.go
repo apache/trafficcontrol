@@ -218,7 +218,7 @@ func CreateV12() http.HandlerFunc {
 			api.HandleErr(w, r, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
 			return
 		}
-		dsv13 := tc.NewDeliveryServiceNullableV13FromV12(ds)
+		dsv13 := tc.NewDeliveryServiceNullableFromV12(ds)
 		if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds); err != nil {
 			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 			return
@@ -337,7 +337,7 @@ func UpdateV12() http.HandlerFunc {
 			api.HandleErr(w, r, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
 			return
 		}
-		dsv13 := tc.NewDeliveryServiceNullableV13FromV12(ds)
+		dsv13 := tc.NewDeliveryServiceNullableFromV12(ds)
 		if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds); err != nil {
 			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 			return

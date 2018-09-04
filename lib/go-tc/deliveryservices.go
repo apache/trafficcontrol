@@ -40,7 +40,7 @@ type GetDeliveryServiceResponse struct {
 
 // DeliveryServicesResponse ...
 type DeliveryServicesResponse struct {
-	Response []DeliveryServiceV13 `json:"response"`
+	Response []DeliveryService `json:"response"`
 }
 
 // CreateDeliveryServiceResponse ...
@@ -66,9 +66,23 @@ type DeleteDeliveryServiceResponse struct {
 	Alerts []DeliveryServiceAlert `json:"alerts"`
 }
 
+type DeliveryService struct {
+	DeliveryServiceV12
+	DeepCachingType   DeepCachingType `json:"deepCachingType"`
+	FQPacingRate      int             `json:"fqPacingRate,omitempty"`
+	SigningAlgorithm  string          `json:"signingAlgorithm" db:"signing_algorithm"`
+	TenantName        string          `json:"tenantName,omitempty"`
+	TRRequestHeaders  string          `json:"trRequestHeaders,omitempty"`
+	TRResponseHeaders string          `json:"trResponseHeaders,omitempty"`
+}
+
+type DeliveryServiceV12 struct {
+	DeliveryServiceV11
+}
+
 // DeliveryService ...
 // TODO move contents to DeliveryServiceV12, fix references, and remove
-type DeliveryService struct {
+type DeliveryServiceV11 struct {
 	Active                   bool                   `json:"active"`
 	AnonymousBlockingEnabled bool                   `json:"anonymousBlockingEnabled"`
 	CacheURL                 string                 `json:"cacheurl"`
@@ -125,23 +139,23 @@ type DeliveryService struct {
 	XMLID                    string                 `json:"xmlId"`
 }
 
-type DeliveryServiceV12 struct {
-	DeliveryService
+type DeliveryServiceNullable struct {
+	DeliveryServiceNullableV12
+	DeepCachingType   *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
+	FQPacingRate      *int             `json:"fqPacingRate,omitempty"`
+	SigningAlgorithm  *string          `json:"signingAlgorithm" db:"signing_algorithm"`
+	Tenant            *string          `json:"tenant,omitempty"`
+	TRResponseHeaders *string          `json:"trResponseHeaders,omitempty"`
+	TRRequestHeaders  *string          `json:"trRequestHeaders,omitempty"`
 }
 
-type DeliveryServiceV13 struct {
-	DeliveryServiceV12
-	DeepCachingType   DeepCachingType `json:"deepCachingType"`
-	FQPacingRate      int             `json:"fqPacingRate,omitempty"`
-	SigningAlgorithm  string          `json:"signingAlgorithm" db:"signing_algorithm"`
-	TenantName        string          `json:"tenantName,omitempty"`
-	TRRequestHeaders  string          `json:"trRequestHeaders,omitempty"`
-	TRResponseHeaders string          `json:"trResponseHeaders,omitempty"`
+type DeliveryServiceNullableV12 struct {
+	DeliveryServiceNullableV11
 }
 
 // DeliveryServiceNullable - a version of the deliveryservice that allows for all fields to be null
 // TODO move contents to DeliveryServiceNullableV12, fix references, and remove
-type DeliveryServiceNullable struct {
+type DeliveryServiceNullableV11 struct {
 	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
 	//
 	Active                   *bool                   `json:"active" db:"active"`
@@ -202,23 +216,9 @@ type DeliveryServiceNullable struct {
 	ExampleURLs              []string                `json:"exampleURLs"`
 }
 
-type DeliveryServiceNullableV12 struct {
-	DeliveryServiceNullable
-}
-
-type DeliveryServiceNullableV13 struct {
-	DeliveryServiceNullableV12
-	DeepCachingType   *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
-	FQPacingRate      *int             `json:"fqPacingRate,omitempty"`
-	SigningAlgorithm  *string          `json:"signingAlgorithm" db:"signing_algorithm"`
-	Tenant            *string          `json:"tenant,omitempty"`
-	TRResponseHeaders *string          `json:"trResponseHeaders,omitempty"`
-	TRRequestHeaders  *string          `json:"trRequestHeaders,omitempty"`
-}
-
-// NewDeliveryServiceNullableV13FromV12 creates a new V13 DS from a V12 DS, filling new fields with appropriate defaults.
-func NewDeliveryServiceNullableV13FromV12(ds DeliveryServiceNullableV12) DeliveryServiceNullableV13 {
-	newDS := DeliveryServiceNullableV13{DeliveryServiceNullableV12: ds}
+// NewDeliveryServiceNullableFromV12 creates a new V13 DS from a V12 DS, filling new fields with appropriate defaults.
+func NewDeliveryServiceNullableFromV12(ds DeliveryServiceNullableV12) DeliveryServiceNullable {
+	newDS := DeliveryServiceNullable{DeliveryServiceNullableV12: ds}
 	newDS.Sanitize()
 	return newDS
 }
@@ -383,7 +383,7 @@ func (ds *DeliveryServiceNullableV12) Validate(tx *sql.Tx) error {
 	return nil
 }
 
-func (ds *DeliveryServiceNullableV13) Sanitize() {
+func (ds *DeliveryServiceNullable) Sanitize() {
 	ds.DeliveryServiceNullableV12.Sanitize()
 	signedAlgorithm := "url_sig"
 	if ds.Signed && (ds.SigningAlgorithm == nil || *ds.SigningAlgorithm == "") {
@@ -399,7 +399,7 @@ func (ds *DeliveryServiceNullableV13) Sanitize() {
 	*ds.DeepCachingType = DeepCachingTypeFromString(string(*ds.DeepCachingType))
 }
 
-func (ds *DeliveryServiceNullableV13) Validate(tx *sql.Tx) error {
+func (ds *DeliveryServiceNullable) Validate(tx *sql.Tx) error {
 	ds.Sanitize()
 	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
 		"must be one of 'NEVER' or 'ALWAYS'")
@@ -417,14 +417,14 @@ func (ds *DeliveryServiceNullableV13) Validate(tx *sql.Tx) error {
 
 // Value implements the driver.Valuer interface
 // marshals struct to json to pass back as a json.RawMessage
-func (d *DeliveryServiceNullableV13) Value() (driver.Value, error) {
+func (d *DeliveryServiceNullable) Value() (driver.Value, error) {
 	b, err := json.Marshal(d)
 	return b, err
 }
 
 // Scan implements the sql.Scanner interface
 // expects json.RawMessage and unmarshals to a deliveryservice struct
-func (d *DeliveryServiceNullableV13) Scan(src interface{}) error {
+func (d *DeliveryServiceNullable) Scan(src interface{}) error {
 	b, ok := src.([]byte)
 	if !ok {
 		return fmt.Errorf("expected deliveryservice in byte array form; got %T", src)
@@ -549,16 +549,8 @@ type UserDeliveryServicePostResponse struct {
 	Response DeliveryServiceUserPost `json:"response"`
 }
 
-type UserDeliveryServicesResponseV13 struct {
-	Response []DeliveryServiceV13 `json:"response"`
-}
-
-type UserDeliveryServicesResponseV12 struct {
-	Response []DeliveryServiceV13 `json:"response"`
-}
-
-type UserDeliveryServicesResponse struct {
-	Response []DeliveryServiceNullableV13 `json:"response"`
+type UserDeliveryServicesNullableResponse struct {
+	Response []DeliveryServiceNullable `json:"response"`
 }
 
 type DSServerIDs struct {

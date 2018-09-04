@@ -62,7 +62,7 @@ func TestDeepCachingType(t *testing.T) {
 	}
 
 	// make sure we get the right default when marshalled within a new delivery service
-	var ds DeliveryServiceV13
+	var ds DeliveryService
 	_, err := json.MarshalIndent(ds, ``, `  `)
 	if err != nil {
 		t.Errorf(err.Error())
