@@ -1150,27 +1150,27 @@ def main() -> int:
 	                    type=str)
 	parser.add_argument("Traffic_Ops_Login",
 	                    help="Example: 'username:password'")
-	parser.add_argument("-dispersion",
+	parser.add_argument("--dispersion",
 	                    help="wait a random number between 0 and <dispersion> before starting.",
 	                    type=int,
 	                    default=300)
-	parser.add_argument("-login_dispersion",
+	parser.add_argument("--login_dispersion",
 	                    help="wait a random number between 0 and <login_dispersion> before login.",
 	                    type=int,
 	                    default=0)
-	parser.add_argument("-retries",
+	parser.add_argument("--retries",
 	                    help="retry connection to Traffic Ops URL <retries> times.",
 	                    type=int,
 	                    default=3)
-	parser.add_argument("-wait_for_parents",
+	parser.add_argument("--wait_for_parents",
 	                    help="do not update if parent_pending = 1 in the update json.",
 	                    type=int,
 	                    default=1)
-	parser.add_argument("-rev_proxy_disabled",
+	parser.add_argument("--rev_proxy_disabled",
 	                    help="bypass the reverse proxy even if one has been configured.",
 	                    type=int,
 	                    default=0)
-	parser.add_argument("-ts_root",
+	parser.add_argument("--ts_root",
 	                    help="Specify the root directory at which Apache Traffic Server is installed"\
 	                         " (e.g. '/opt/trafficserver')",
 	                    type=str,
