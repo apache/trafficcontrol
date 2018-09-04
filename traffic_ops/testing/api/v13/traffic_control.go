@@ -26,7 +26,7 @@ type TrafficControl struct {
 	CacheGroups                    []tc.CacheGroupNullable            `json:"cachegroups"`
 	DeliveryServiceRequests        []tc.DeliveryServiceRequest        `json:"deliveryServiceRequests"`
 	DeliveryServiceRequestComments []tc.DeliveryServiceRequestComment `json:"deliveryServiceRequestComments"`
-	DeliveryServices               []tc.DeliveryServiceV13            `json:"deliveryservices"`
+	DeliveryServices               []tc.DeliveryService               `json:"deliveryservices"`
 	Divisions                      []tc.Division                      `json:"divisions"`
 	Federations                    []tc.CDNFederation                 `json:"federations"`
 	Coordinates                    []tc.Coordinate                    `json:"coordinates"`

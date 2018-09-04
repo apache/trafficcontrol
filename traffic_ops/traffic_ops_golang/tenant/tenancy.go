@@ -47,7 +47,8 @@ func (dsInfo DeliveryServiceTenantInfo) IsTenantAuthorized(user *auth.CurrentUse
 
 // GetDeliveryServiceTenantInfo returns tenant information for a deliveryservice
 func GetDeliveryServiceTenantInfo(xmlID string, tx *sql.Tx) (*DeliveryServiceTenantInfo, error) {
-	ds := DeliveryServiceTenantInfo{XMLID: util.StrPtr(xmlID)}
+	ds := DeliveryServiceTenantInfo{}
+	ds.XMLID = util.StrPtr(xmlID)
 	if err := tx.QueryRow(`SELECT tenant_id FROM deliveryservice where xml_id = $1`, &ds.XMLID).Scan(&ds.TenantID); err != nil {
 		if err == sql.ErrNoRows {
 			return &ds, errors.New("a deliveryservice with xml_id '" + xmlID + "' was not found")

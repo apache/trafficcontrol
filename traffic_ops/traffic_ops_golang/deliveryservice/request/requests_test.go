@@ -61,9 +61,9 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 	r := &TODeliveryServiceRequest{DeliveryServiceRequestNullable: tc.DeliveryServiceRequestNullable{
 		ChangeType: &u,
 		Status:     &st,
-		DeliveryService: &tc.DeliveryServiceNullableV13{
+		DeliveryService: &tc.DeliveryServiceNullable{
 			DeliveryServiceNullableV12: tc.DeliveryServiceNullableV12{
-				DeliveryServiceNullable: tc.DeliveryServiceNullable{
+				DeliveryServiceNullableV11: tc.DeliveryServiceNullableV11{
 					XMLID:       &s,
 					CDNID:       &i,
 					LogsEnabled: &b,
@@ -77,14 +77,14 @@ func TestGetDeliveryServiceRequest(t *testing.T) {
 	}}
 
 	expectedErrors := []string{
-	/*
-		`'regionalGeoBlocking' is required`,
-		`'xmlId' cannot contain spaces`,
-		`'dscp' is required`,
-		`'displayName' cannot be blank`,
-		`'geoProvider' is required`,
-		`'typeId' is required`,
-	*/
+		/*
+			`'regionalGeoBlocking' is required`,
+			`'xmlId' cannot contain spaces`,
+			`'dscp' is required`,
+			`'displayName' cannot be blank`,
+			`'geoProvider' is required`,
+			`'typeId' is required`,
+		*/
 	}
 
 	r.SetKeys(map[string]interface{}{"id": 10})
