@@ -66,7 +66,7 @@ LOG_LEVELS = {"ALL":   logging.NOTSET,
               "WARN":  logging.WARNING,
               "ERROR": logging.ERROR,
               "FATAL": logging.CRITICAL}
-FMT = "%(levelname)s: %(message)s"
+FMT = "%(levelname)s: line %(lineno)d in %(module)s.%(funcName)s: %(message)s"
 
 # Not strictly accurate, but generally good enough
 HOSTNAME = (platform.node().split('.')[0], platform.node())
@@ -86,6 +86,11 @@ class Modes(enum.IntEnum):
 		Implements `str(self)` by returning enum member's name
 		"""
 		return self.name
+
+class ORTException(Exception):
+	"""Represents an error while processing ORT API responses, etc."""
+	pass
+
 
 # Current Run Mode
 MODE = None
@@ -347,9 +352,11 @@ def startDaemon(args:typing.List[str], stdout:str='/dev/null', stderr:str='/dev/
 	# If somehow we get down here, it's time to bail
 	exit(1)
 #pylint: enable=R1710
-def setATSStatus(status:bool) -> bool:
+def setATSStatus(status:bool, restart:bool = False) -> bool:
 	"""
 	Sets the status of the system's ATS process to on if `status` is True, else off.
+	If `restart` is True, then ATS will be restarted if already running.
+	(`restart` has no effect if `status` is False)
 
 	Returns a boolean indicator of success.
 	"""
@@ -365,7 +372,10 @@ def setATSStatus(status:bool) -> bool:
 			logging.debug("ATS process found (pid: %d)", process.pid)
 			ATSAlreadyRunning = process.status() in {psutil.STATUS_RUNNING, psutil.STATUS_SLEEPING}
 
-			if status and ATSAlreadyRunning:
+			if status and ATSAlreadyRunning and restart:
+				logging.info("ATS process found; restarting")
+				arg = "restart"
+			elif status and ATSAlreadyRunning:
 				logging.info("ATS already running; nothing to do.")
 			elif status:
 				logging.warning("ATS process is running, but status is '%s' - restarting", process.status())
@@ -386,22 +396,6 @@ def setATSStatus(status:bool) -> bool:
 		return startDaemon([os.path.join(TS_ROOT, "bin", "traffic_server"), arg],
 		                   stdout=os.path.join(TS_ROOT, "var", "log", "trafficserver", "traffic.out"),
 		                   stderr=os.path.join(TS_ROOT, "var", "log", "trafficserver", "error.log"))
-
-		logging.info("Waiting for applied changes...")
-		for i in range(3):
-			time.sleep(3)
-			found = False
-			for process in psutil.process_iter():
-				if process.name() == "[TS_MAIN]":
-					found = True
-					break
-
-			if found == status:
-				logging.info("Done.")
-				break
-		else:
-			logging.error("Changes could not be applied to ATS process")
-			return False
 
 	return True
 
@@ -453,6 +447,21 @@ def setTO_LOGIN(login:str) -> str:
 
 	return login
 
+def getYesNoResponse(prmpt:str, default:str = None) -> bool:
+	"""
+	Utility function to get an interactive yes/no response to the prompt `prmpt`
+	"""
+	if default:
+		prmpt = prmpt.rstrip().rstrip(':') + '['+default+"]:"
+	while True:
+		choice = input(prmpt).lower()
+
+		if choice in {'y', 'yes'}:
+			return True
+		elif choice in {'n', 'no'}:
+			return False
+
+		print("Please enter a yes/no response.", file=sys.stderr)
 
 ###############################################################################
 #####                                                                     #####
@@ -461,7 +470,11 @@ def setTO_LOGIN(login:str) -> str:
 ###############################################################################
 def syncDSState() -> bool:
 	"""
-	Queries Traffic Ops for the Delivery Service's sync state
+	Queries Traffic Ops for the Delivery Service's sync state.
+
+	Returns True if an update is needed, False if it isn't.
+	If something goes wrong, it'll raise an ORTException containing the error
+	message.
 	"""
 	global HOSTNAME
 
@@ -471,21 +484,21 @@ def syncDSState() -> bool:
 		updateStatus = getJSONResponse("/api/1.3/servers/%s/update_status" % HOSTNAME[0])[0]
 	except IndexError:
 		logging.critical("Server not found in Traffic Ops config")
-		return False
+		logging.debug("%s", e, exc_info=True, stack_info=True)
+		raise ORTException("Failed to contact API endpoint.")
 
 	try:
 		if not updateStatus['upd_pending']:
 			logging.info("No update pending.")
-			return True
+			return False
 
 		statusDir = os.path.join(os.path.abspath(os.path.dirname(__file__)), "status")
 		setStatusFile(statusDir, updateStatus['status'], create=True)
 	except (KeyError, AttributeError) as e:
 		logging.critical("Unsupported Traffic Ops version.")
-		logging.error("%s", e)
 		logging.warning("%s", e, exc_info=True)
-		logging.debug("%s", e, stack_info=True)
-		return False
+		logging.debug("", stack_info=True)
+		raise ORTException("Traffic Ops version not supported")
 
 	return True
 
@@ -973,8 +986,10 @@ def doMain() -> int:
 
 	headerComment = getHeaderComment()
 
-	if not syncDSState():
-		logging.critical("DS Sync failed; aborting.")
+	try:
+		DSUpdateNeeded = syncDSState()
+	except ORTException as e:
+		logging.critical("Failed to get Update Pending from Traffic Ops: %s", e)
 		return 1
 
 	myFiles = getConfigFiles()
@@ -1019,7 +1034,7 @@ def doMain() -> int:
 
 	if ATS_NEEDS_RESTART:
 		logging.info("Restarting ATS")
-		if not setATSStatus(False) or setATSStatus(True):
+		if not setATSStatus(True, restart=True):
 			logging.critical("Failed to restart ATS")
 			return 1
 
