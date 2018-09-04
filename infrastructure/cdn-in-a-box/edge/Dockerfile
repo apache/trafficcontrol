@@ -28,5 +28,8 @@ RUN mkdir -p /var/trafficserver/cache /opt/ort && chown -R ats:ats /etc/traffics
 ADD edge/run.sh traffic_ops/to-access.sh enroller/server_template.json /
 ADD edge/traffic_ops_ort.py /opt/ort
 
+# You need to do this because the RPM in the ATS archives is just all kinds of messed-up
+RUN chmod 755 /usr/lib64/trafficserver /etc/trafficserver/body_factory /etc/trafficserver/body_factory/default
+
 CMD /run.sh
 
