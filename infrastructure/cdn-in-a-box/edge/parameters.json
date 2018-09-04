@@ -6,7 +6,7 @@
 		"secure": 0
 	},
 	{
-		"value": "STRING /etc/trafficserver",
+		"value": "STRING /usr/etc/trafficserver",
 		"name": "CONFIG proxy.config.config_dir",
 		"configFile": "records.config",
 		"secure": 0
@@ -1014,49 +1014,49 @@
 		"secure": 0
 	},
 	{
-		"value": "/etc/trafficserver/",
+		"value": "/usr/etc/trafficserver/",
 		"name": "location",
 		"configFile": "cache.config",
 		"secure": 0
 	},
 	{
-		"value": "/etc/trafficserver/",
+		"value": "/usr/etc/trafficserver/",
 		"name": "location",
 		"configFile": "hosting.config",
 		"secure": 0
 	},
 	{
-		"value": "/etc/trafficserver/",
+		"value": "/usr/etc/trafficserver/",
 		"name": "location",
 		"configFile": "parent.config",
 		"secure": 0
 	},
 	{
-		"value": "/etc/trafficserver/",
+		"value": "/usr/etc/trafficserver/",
 		"name": "location",
 		"configFile": "plugin.config",
 		"secure": 0
 	},
 	{
-		"value": "/etc/trafficserver/",
+		"value": "/usr/etc/trafficserver/",
 		"name": "location",
 		"configFile": "records.config",
 		"secure": 0
 	},
 	{
-		"value": "/etc/trafficserver/",
+		"value": "/usr/etc/trafficserver/",
 		"name": "location",
 		"configFile": "remap.config",
 		"secure": 0
 	},
 	{
-		"value": "/etc/trafficserver/",
+		"value": "/usr/etc/trafficserver/",
 		"name": "location",
 		"configFile": "storage.config",
 		"secure": 0
 	},
 	{
-		"value": "/etc/trafficserver/",
+		"value": "/usr/etc/trafficserver/",
 		"name": "location",
 		"configFile": "volume.config",
 		"secure": 0
@@ -1134,7 +1134,7 @@
 		"secure": 0
 	},
 	{
-		"value": "/opt/trafficserver/etc/trafficserver",
+		"value": "/usr/etc/trafficserver",
 		"name": "location",
 		"configFile": "logs_xml.config",
 		"secure": 0
@@ -1236,7 +1236,7 @@
 		"secure": 0
 	},
 	{
-		"value": "/etc/trafficserver",
+		"value": "/usr/etc/trafficserver",
 		"name": "location",
 		"configFile": "regex_revalidate.config",
 		"secure": 0
@@ -1362,7 +1362,7 @@
 		"secure": 0
 	},
 	{
-		"value": "/etc/trafficserver",
+		"value": "/usr/etc/trafficserver",
 		"name": "location",
 		"configFile": "astats.config",
 		"secure": 0
@@ -1470,7 +1470,7 @@
 		"secure": 0
 	},
 	{
-		"value": "STRING /etc/trafficserver/body_factory",
+		"value": "STRING /usr/etc/trafficserver/body_factory",
 		"name": "CONFIG proxy.config.body_factory.template_sets_dir",
 		"configFile": "records.config",
 		"secure": 0
@@ -1566,13 +1566,13 @@
 		"secure": 0
 	},
 	{
-		"value": "/etc/trafficserver",
+		"value": "/usr/etc/trafficserver",
 		"name": "location",
 		"configFile": "ip_allow.config",
 		"secure": 0
 	},
 	{
-		"value": "/var/trafficserver",
+		"value": "/var/trafficserver/",
 		"name": "Drive_Prefix",
 		"configFile": "storage.config",
 		"secure": 0

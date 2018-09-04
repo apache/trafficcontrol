@@ -32,6 +32,6 @@ export TO_PASSWORD=$TO_ADMIN_PASSWORD
 to-enroll $(hostname -s)
 
 # Leaves the container hanging open in the event of a failure for debugging purposes
-/opt/ort/traffic_ops_ort.py BADASS ALL "https://$TO_HOST:$TO_PORT" "$TO_ADMIN_USER:$TO_ADMIN_PASSWORD" || { echo "Failed"; yes >/dev/null }
+/opt/ort/traffic_ops_ort.py --ts_root "/usr" BADASS ALL "https://$TO_HOST:$TO_PORT" "$TO_ADMIN_USER:$TO_ADMIN_PASSWORD" || { echo "Failed"; yes >/dev/null }
 
 tail -f /var/log/trafficserver/diags.log
