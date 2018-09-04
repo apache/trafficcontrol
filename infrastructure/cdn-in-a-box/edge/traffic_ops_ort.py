@@ -607,19 +607,92 @@ def RedHatUninstall(packages:typing.List[str]) -> bool:
 	logging.info("Successfully uninstalled packages: %s", ", ".join(packages))
 	return True
 
+########################
+###      Ubuntu      ###
+########################
+def UbuntuInstalled(package:str, version:str = None) -> typing.List[str]:
+	"""
+	Returns the list of packages installed by the name 'package',
+	optionally with a specific version.
+	"""
+	logging.debug("Checking for Ubuntu-like package %s", package)
+
+	sub = subprocess.Popen(["/usr/bin/dpkg", "-l", package], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	out, err = sub.communicate()
+
+	if sub.returncode:
+		logging.debug("dpkg stdout: %s", out.decode())
+		logging.debug("dpkg stderr: %s", err.decode())
+		return []
+
+	try:
+		out = [(p.split()[1], p.split()[2]) for p in out[5:].decode().splitlines() if p]
+
+		if version is not None:
+			# TODO - better version checking
+			out = [p for p in out if version in p[1]]
+
+		return [p[0] for p in out]
+	except IndexError:
+		logging.warning("Error encountered while processing installed Debian packages")
+		logging.debug("Package: %s", package, exc_info=True, stack_info=True)
+
+	return []
+
+def UbuntuInstall(packages:typing.List[str]) -> bool:
+	"""
+	Installs the packages in the `packages` list and
+	returns a boolean success indicator
+	"""
+	sub = subprocess.Popen(["/usr/bin/apt-get", "install", "-y"] + packages,
+	                       stdout=subprocess.PIPE,
+	                       stderr=subprocess.PIPE)
+	out, err = sub.communicate()
+
+	if sub.returncode:
+		logging.debug("apt-get stdout: %s", out.decode())
+		logging.debug("apt-get stderr: %s", err.decode())
+		return False
+
+	logging.info("Successfully installed packages: %s", ", ".join(packages))
+	return True
+
+def UbuntuUninstall(packages:typing.List[str]) -> bool:
+	"""
+	Uninstalls the packages in the `packages` list and returns a
+	boolean indicator of success.
+	"""
+	sub = subprocess.Popen(["/usr/bin/apt-get", "purge", "-y"] + packages,
+	                       stdout=subprocess.PIPE,
+	                       stderr=subprocess.PIPE)
+	out, err = subprocess.communicate()
+
+	if sub.returncode:
+		logging.debug("apt-get stdout: %s", out.decode())
+		logging.debug("apt-get stderr: %s", err.decode())
+		return False
+
+	logging.info("Successfully uninstalled packages: %s", ", ".join(packages))
+	return True
 
 ########################
 ### Platform Mapping ###
 ########################
 packageIsInstalled = {'centos': RedHatInstalled,
                       'fedora': RedHatInstalled,
-                      'rhel': RedHatInstalled}
+                      'rhel': RedHatInstalled,
+                      'ubuntu': UbuntuInstalled,
+                      'linuxmint': UbuntuInstalled}
 installPackage = {'centos': RedHatInstall,
                   'fedora': RedHatInstall,
-                  'rhel': RedHatInstall}
+                  'rhel': RedHatInstall,
+                  'ubuntu': UbuntuInstall,
+                  'linuxmint': UbuntuInstall}
 uninstallPackage = {'centos': RedHatUninstall,
                     'fedora': RedHatUninstall,
-                    'rhel': RedHatUninstall}
+                    'rhel': RedHatUninstall,
+                    'ubuntu': UbuntuUninstall,
+                    'linuxmint': UbuntuUninstall}
 packageConcat = {'centos': '-',
                  'fedora': '-',
                  'rhel': '-',
@@ -670,16 +743,30 @@ def processPackages() -> bool:
 	               len(install),               len(uninstall))
 
 	if not MODE == Modes.REPORT:
+
+		if MODE == Modes.INTERACTIVE
 		logging.info("Installing packages...")
-		if install and not installPackage[DISTRO](list(install)):
-			logging.critical("Failed to install packages, possibly permission denied?")
-			return False
+		if install:
+			if MODE == INTERACTIVE and not getYesNoResponse("Would you like to install the following packages: %s ?"%", ".join(install)):
+				logging.critical("User chose not to install packages - cannot continue!")
+				return False
+
+			if not installPackage[DISTRO](list(install)):
+				logging.critical("Failed to install packages, possibly permission denied?")
+				return False
 
 		logging.info("Done.")
+
+
 		logging.info("Uninstalling packages...")
-		if uninstall and not uninstallPackage[DISTRO](list(uninstall)):
-			logging.critical("Failed to uninstall packages, possibly permission denied?")
-			return False
+		if uninstall:
+			if MODE == INTERACTIVE and not getYesNoResponse("Would you like to remove the following packages: %s ?"%", ".join(uninstall)):
+				logging.critical("User chose not to remove packages - cannot continue!")
+				return False
+
+			if not uninstallPackage[DISTRO](list(uninstall)):
+				logging.critical("Failed to uninstall packages, possibly permission denied?")
+				return False
 
 		logging.info("Done.")
 
