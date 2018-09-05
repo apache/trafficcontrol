@@ -81,6 +81,8 @@ services:
       - tcnet
     ports:
       - "6443:6443"
+    volumes:
+      - enroller:${ENROLLER_DIR}
 
   # trafficops-perl runs the legacy Traffic Ops in Perl using the Mojolicious framework.  This remains
   # in place until all API endpoints have been rewritten in Go
@@ -104,6 +106,8 @@ services:
     # TODO: change to expose: "60443" to limit to containers
     ports:
       - "60443:60443"
+    volumes:
+      - enroller:${ENROLLER_DIR}
 
   # trafficportal defines the web interface for Traffic Ops.  It uses only the API exposed by Traffic Ops
   # and passes any /api/... routes directly to Traffic Ops
@@ -122,6 +126,8 @@ services:
       - tcnet
     ports:
       - "443:443"
+    volumes:
+      - enroller:${ENROLLER_DIR}
 
   # trafficmonitor is an HTTP service that monitors the caches in a CDN for a variety of metrics
   trafficmonitor:
@@ -139,6 +145,8 @@ services:
       - tcnet
     ports:
       - "80:80"
+    volumes:
+      - enroller:${ENROLLER_DIR}
 
   # trafficvault runs a riak container to store private keys
   trafficvault:
@@ -154,6 +162,7 @@ services:
       - "com.basho.riak.cluster.name=trafficvault"
     volumes:
       - schemas:/etc/riak/schemas
+      - enroller:${ENROLLER_DIR}
     domainname: cdn.local
     env_file:
       - variables.env
@@ -175,6 +184,8 @@ services:
       - tcnet
     ports:
       - "9000:80"
+    volumes:
+      - enroller:${ENROLLER_DIR}
 
   # mid cache
   mid:
@@ -189,6 +200,8 @@ services:
       - tcnet
     ports:
       - "9100:80"
+    volumes:
+      - enroller:${ENROLLER_DIR}
 
   # origin provides the content to be distributed through the CDN caches
   origin:
@@ -203,6 +216,8 @@ services:
       - tcnet
     ports:
       - "9200:80"
+    volumes:
+      - enroller:${ENROLLER_DIR}
 
   # enroller provides a way to register component instances with traffic_ops
   enroller:
@@ -214,11 +229,11 @@ services:
     hostname: enroller
     networks:
       - tcnet
-    ports:
-      - "7443:443"
-    volumes:  
-      - /var/run/docker.sock:/var/run/docker.sock
+    volumes:
+      - enroller:${ENROLLER_DIR}
       
 volumes:
   schemas:
+    external: false
+  to-enroll:
     external: false
