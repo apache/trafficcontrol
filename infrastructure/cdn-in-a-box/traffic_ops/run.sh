@@ -78,7 +78,7 @@ cd $TO_DIR && \
 
 cd $TO_DIR && $TO_DIR/local/bin/hypnotoad script/cdn
 
-until [[ -f /enroller/enroller-started ]]; do
+until [[ -f ${ENROLLER_DIR}/enroller-started ]]; do
     echo "waiting for enroller"
     sleep 3
 done
