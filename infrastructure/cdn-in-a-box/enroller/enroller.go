@@ -611,8 +611,11 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 // watch starts f when a new file is created in dir
 func (dw *dirWatcher) watch(dir string, f func(*session, string) error) {
 	if stat, err := os.Stat(dir); err != nil || !stat.IsDir() {
-		log.Println("cannot watch " + dir + ": not a directory")
-		return
+		// attempt to create dir
+		if err = os.Mkdir(dir, os.ModeDir); err != nil {
+			log.Println("cannot watch " + dir + ": not a directory")
+			return
+		}
 	}
 	log.Println("watching " + dir)
 	dw.Add(dir)
@@ -628,6 +631,9 @@ func main() {
 	}
 	if stat, err := os.Stat(watchDir); err != nil || !stat.IsDir() {
 		log.Fatalln("expected " + watchDir + " to be a directory")
+	}
+	if err := os.Chdir(watchDir); err != nil {
+		log.Fatalf("cannot chdir to %s: %s", watchDir, err)
 	}
 	envconfig.Process("", &to)
 
