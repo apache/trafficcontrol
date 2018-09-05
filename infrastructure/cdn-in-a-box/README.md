@@ -38,10 +38,12 @@ via the distribution's package manager under the names `docker-ce` and
 `docker-compose`, respectively (e.g. `sudo yum install docker-ce`).
 
 Each container (except the origin) requires an `.rpm` file to install the Traffic Control
-component for which it is responsible. You can either download these `*.rpm` files or
-create them yourself by using the [`pkg`](../../pkg) script at the root of the
-repository. Copy the `*.rpm`s without any version/architecture information to their
-respective component directories, such that their filenames are as follows:
+component for which it is responsible. You can download these `*.rpm` files from an archive
+(e.g. under "Releases"), use the provided [Makefile](./Makefile) to generate them (simply
+type `make` while in the `cdn-in-a-box` directory) or create them yourself by using the
+[`pkg`](../../pkg) script at the root of the repository. If you choose the latter, copy
+the `*.rpm`s without any version/architecture information to their respective component
+directories, such that their filenames are as follows:
 
 * `edge/traffic_ops_ort.rpm`
 * `mid/traffic_ops_ort.rpm`
