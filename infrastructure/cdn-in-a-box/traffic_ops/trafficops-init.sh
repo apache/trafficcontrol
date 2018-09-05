@@ -49,32 +49,12 @@ load_data_from() {
         d="$dir/$ep"
         [[ -d $d ]] || continue
         echo "Loading data from $d"
-        for f in "$d"/*.json; do
-            [[ -r $f ]] || continue
-            t=$(mktemp --tmpdir $ep-XXX.json)
-            envsubst <"$f" >"$t"
-            if ! to-post api/1.3/"$ep" "$t"; then
-                echo POST api/1.3/"$ep" "$t" failed
-                status=$?
-            fi
-            rm "$t"
-        done
+        cp -f "$d"/*.json /enroll/$d/.
     done
     if [[ $status -ne 0 ]]; then
         exit $status
     fi
-
-
 }
 
 # First,  load required data at the top level
 load_data_from /traffic_ops_data
-
-# If TO_DATA is defined, load from subdirs with that name (space-separated)
-if [[ -n $TO_DATA ]]; then
-    for subdir in $TO_DATA; do
-        load_data_from /traffic_ops_data/$subdir
-    done
-fi
-
-
