@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
@@ -117,6 +118,37 @@ var to struct {
 	Password string `envconfig:"TO_PASSWORD"`
 }
 
+// enrollType takes a json file and creates a Type object using the TO API
+func enrollType(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.Type
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateType(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
 // enrollCDN takes a json file and creates a CDN object using the TO API
 func enrollCDN(toSession *session, fn string) error {
 	fh, err := os.Open(fn)
@@ -148,8 +180,7 @@ func enrollCDN(toSession *session, fn string) error {
 	return err
 }
 
-// enrollProfile takes a json file and creates a Profile object using the TO API
-func enrollProfile(toSession *session, fn string) error {
+func enrollASN(toSession *session, fn string) error {
 	fh, err := os.Open(fn)
 	if err != nil {
 		return err
@@ -159,14 +190,104 @@ func enrollProfile(toSession *session, fn string) error {
 	}()
 
 	dec := json.NewDecoder(fh)
-	var s v13.Profile
+	var s tc.ASN
 	err = dec.Decode(&s)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
-	alerts, _, err := toSession.CreateProfile(s)
+	alerts, _, err := toSession.CreateASN(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+func enrollDeliveryService(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.DeliveryServiceV13
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, err := toSession.CreateDeliveryService(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+func enrollDivision(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.Division
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateDivision(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+func enrollOrigin(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s v13.Origin
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateOrigin(s)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -197,6 +318,157 @@ func enrollParameter(toSession *session, fn string) error {
 	}
 
 	alerts, _, err := toSession.CreateParameter(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+func enrollPhysLocation(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.PhysLocation
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreatePhysLocation(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+func enrollRegion(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.Region
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateRegion(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+func enrollStatus(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.Status
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateStatus(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+func enrollTenant(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.Tenant
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, err := toSession.CreateTenant(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+// enrollProfile takes a json file and creates a Profile object using the TO API
+func enrollProfile(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s v13.Profile
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateProfile(s)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -284,28 +556,48 @@ func enrollServer(toSession *session, fn string) error {
 	return err
 }
 
-// watch starts f when a new file is created in dir
-func watch(watcher *fsnotify.Watcher, toSession *session, dir string, f func(*session, string) error) {
+type dirWatcher struct {
+	*fsnotify.Watcher
+	TOSession *session
+	watched   map[string]func(toSession *session, fn string) error
+}
+
+func newDirWatcher(toSession *session) (*dirWatcher, error) {
+	var err error
+	var dw dirWatcher
+	dw.Watcher, err = fsnotify.NewWatcher()
+	if err != nil {
+		return nil, err
+	}
+	dw.watched = make(map[string]func(toSession *session, fn string) error)
 	go func() {
-		log.Println("started watching " + dir)
-		defer func() { log.Println("stopped watching " + dir) }()
 		for {
 			select {
-			case event, ok := <-watcher.Events:
+			case event, ok := <-dw.Events:
 				if !ok {
 					log.Printf("event not ok: %+v", event)
 					return
 				}
 				log.Println("event:", event)
 				if event.Op&fsnotify.Create == fsnotify.Create {
-					log.Println("new "+dir+" file:", event.Name)
-					err := f(toSession, event.Name)
-					if err != nil {
-						log.Print(err)
+					log.Println("new file :", event.Name)
+					p := strings.IndexRune(event.Name, '/')
+					if p == -1 {
 						continue
 					}
+					dir := event.Name[:p]
+					log.Printf("dir is %s\n", dir)
+					if f, ok := dw.watched[dir]; ok {
+						err := f(toSession, event.Name)
+						log.Printf("error creating %s from %s: %+v\n", dir, event.Name, err)
+					}
+					//err := f(toSession, event.Name)
+					//if err != nil {
+					//		log.Print(err)
+					//			continue
+					//			}
 				}
-			case err, ok := <-watcher.Errors:
+			case err, ok := <-dw.Errors:
 				if !ok {
 					log.Printf("error not ok: %+v", err)
 				}
@@ -313,15 +605,30 @@ func watch(watcher *fsnotify.Watcher, toSession *session, dir string, f func(*se
 			}
 		}
 	}()
+	return &dw, err
+}
+
+// watch starts f when a new file is created in dir
+func (dw *dirWatcher) watch(dir string, f func(*session, string) error) {
+	if stat, err := os.Stat(dir); err != nil || !stat.IsDir() {
+		log.Println("cannot watch " + dir + ": not a directory")
+		return
+	}
+	log.Println("watching " + dir)
+	dw.Add(dir)
+	dw.watched[dir] = f
 }
 
 const startedFile = "enroller-started"
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatalln("usage: enroller <dir> [<dir> ...]")
+	watchDir := "."
+	if len(os.Args) > 1 {
+		watchDir = os.Args[1]
 	}
-
+	if stat, err := os.Stat(watchDir); err != nil || !stat.IsDir() {
+		log.Fatalln("expected " + watchDir + " to be a directory")
+	}
 	envconfig.Process("", &to)
 
 	reqTimeout := time.Second * time.Duration(60)
@@ -334,16 +641,32 @@ func main() {
 	fmt.Println("TrafficOps session established")
 
 	// watch for file creation in directories
-	watcher, err := fsnotify.NewWatcher()
+	dw, err := newDirWatcher(&toSession)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("%v", err)
 	}
-	defer watcher.Close()
+	defer dw.Close()
 
-	watch(watcher, &toSession, "cdns", enrollCDN)
-	watch(watcher, &toSession, "profiles", enrollProfile)
-	watch(watcher, &toSession, "parameters", enrollParameter)
-	watch(watcher, &toSession, "servers", enrollServer)
+	dw.watch("types", enrollType)
+	dw.watch("cdns", enrollCDN)
+	dw.watch("profiles", enrollProfile)
+	dw.watch("parameters", enrollParameter)
+	dw.watch("servers", enrollServer)
+	dw.watch("asns", enrollASN)
+	dw.watch("deliveryservices", enrollDeliveryService)
+	dw.watch("divisions", enrollDivision)
+	dw.watch("origins", enrollOrigin)
+	dw.watch("physlocations", enrollPhysLocation)
+	dw.watch("regions", enrollRegion)
+	dw.watch("statuses", enrollStatus)
+	dw.watch("tenants", enrollTenant)
+
+	// create this file to indicate the enroller is ready
+	f, err := os.Create(startedFile)
+	if err != nil {
+		panic(err)
+	}
+	f.Close()
 
 	var waitforever chan struct{}
 	<-waitforever
