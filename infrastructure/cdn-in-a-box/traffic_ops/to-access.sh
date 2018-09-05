@@ -110,13 +110,49 @@ to-delete() {
 		curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X DELETE "$TO_URL/$1"
 }
 
+
+
 to-enroll() {
     local service=$1
-    until nc enroller 443 </dev/null >/dev/null 2>&1; do 
+    local cdn=$2
+    local cachegroup=$3
+    until [[ -f ${ENROLLER_DIR}/enroller-started ]]; do 
         echo "waiting for enroller"
         sleep 5
     done
 
-    action=${service:+?name=$service}
-    curl -k -X POST https://enroller${action}
+
+    declare -A server
+    server[domainName]="$DOMAINNAME"
+    server[hostName]="$service"
+    server[cachegroup]="$CACHEGROUP"
+    server[cdnName]="$CDN"
+    server[physLocation]="$PHYSLOCATION"
+    server[profile]="$PROFILE"
+    server[type]="$TYPE"
+    server[status]="REPORTED"
+    server[httpsPort]=443
+
+    server[ip6Address]=
+    server[ip6Gateway]=
+    server[ipAddress]=
+    server[ipGateway]=
+    server[ipNetmask]=
+    server[tcpPort]=
+
+    echo '{'
+
+    for k in "${!server[@]}"; do
+        printf "\t\"$key\": "
+        v=${server[$k]}
+        if [[ $k = *Port ]]; then
+            # json number
+           echo $v
+        else 
+            # json string
+            printf " \"$v\"\n"
+        fi
+    done
+    echo '}'
+
 }

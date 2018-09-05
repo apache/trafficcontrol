@@ -23,14 +23,15 @@ export TO_URL=https://$TO_HOST:$TO_PORT
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
-key=./server.key
-cert=./server.crt
-openssl req -newkey rsa:2048 -nodes -keyout $key -x509 -days 365 -out $cert -subj "/C=$CERT_COUNTRY/ST=$CERT_STATE/L=$CERT_CITY/O=$CERT_COMPANY"
-
 # Traffic Ops must be accepting connections before enroller can start
 until to-ping; do
     echo "Waiting for $TO_URL"
     sleep 5
 done
 
-go run enroller.go || tail -f /dev/null
+if [[ ! -d $ENROLLER_DIR ]]; then
+     echo "enroller dir ${ENROLLER_DIR} not found or not a directory"
+     exit 1
+ fi
+
+go run enroller.go "$ENROLLER_DIR" || tail -f /dev/null
