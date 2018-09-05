@@ -21,6 +21,7 @@ package main
 
 import (
 	"crypto/tls"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"io"
@@ -65,6 +66,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/status"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/steeringtargets"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/systeminfo"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/types"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/user"
 
@@ -88,7 +90,6 @@ func handlerToFunc(handler http.Handler) http.HandlerFunc {
 // Routes returns the API routes, raw non-API root level routes, and a catchall route for when no route matches.
 func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 	proxyHandler := rootHandler(d)
-
 	routes := []Route{
 		// 1.1 and 1.2 routes are simply a Go replacement for the equivalent Perl route. They may or may not conform with the API guidelines (https://cwiki.apache.org/confluence/display/TC/API+Guidelines).
 		// 1.3 routes exist only in a Go. There is NO equivalent Perl route. They should conform with the API guidelines (https://cwiki.apache.org/confluence/display/TC/API+Guidelines).
@@ -403,7 +404,121 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{http.MethodGet, `CRConfig-Snapshots/{cdn}/CRConfig.json?$`, crconfig.SnapshotOldGetHandler, auth.PrivLevelReadOnly, Authenticated, nil},
 	}
 
+	for _, r := range PerlRoutes(d) {
+		routes = append(routes, r)
+	}
+
 	return routes, rawRoutes, proxyHandler, nil
+}
+
+func PerlRoutes(d ServerData) []Route {
+	perlAPIHandler := getPerlAPIHandler(d)
+	return []Route{
+		{1.1, http.MethodGet, `caches/stats/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `cachegroup_fallbacks/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `cachegroup_fallbacks/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPut, `cachegroup_fallbacks/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodDelete, `cachegroup_fallbacks/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `cachegroups/{id}/deliveryservices/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `cdns/{name}/health/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `cdns/name/{name}/dnsseckeys/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `cdns/{name}/configs/routing/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `logs/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `logs/{days}/days/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `logs/newcount/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `servers/{id}/configfiles/ats/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `profiles/{id}/configfiles/ats/{filename}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `servers/{id}/configfiles/ats/{filename}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `cdns/{id}/configfiles/ats/{filename}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `dbdump/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPut, `deliveryservices/{id}/safe/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `deliveryservices/{id}/health/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `deliveryservices/{id}/capacity/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `deliveryservices/{id}/routing/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `deliveryservices/{id}/state/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `deliveryservices/request/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `steering/{id}/targets/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `steering/{id}/targets/{target_id}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `steering/{id}/targets/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPut, `steering/{id}/targets/{target_id}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodDelete, `steering/{id}/targets/{target_id}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `deliveryservices/xmlId/{xmlid}/sslkeys/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `deliveryservices/hostname/{hostname}/sslkeys/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `deliveryservices/sslkeys/add/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodDelete, `divisions/name/{name}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `federations/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `federations/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPut, `federations/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodDelete, `federations/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `federations/{fedId}/users/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `federations/{fedId}/users/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodDelete, `federations/{fedId}/users/{userId}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `federations/{fedId}/deliveryservices/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `federations/{fedId}/deliveryservices/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodDelete, `federations/{fedId}/deliveryservices/{dsId}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `federations/{fedId}/federation_resolvers/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `federations/{fedId}/federation_resolvers/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `federation_resolvers/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodDelete, `federation_resolvers/{id}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `hwinfo/dtdata/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `hwinfo/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `osversions/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `isos/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `jobs/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `jobs/{id}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `user/current/jobs/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `user/current/jobs/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `parameters/validate/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `cachegroups/{id}/parameters/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `cachegroups/{id}/unassigned_parameters/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `cachegroup/{parameter_id}/parameter/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `cachegroupparameters/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `cachegroupparameters/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodDelete, `cachegroupparameters/{cachegroup_id}/{parameter_id}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `cachegroups/{parameter_id}/parameter/available/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `regions/{region_name}/phys_locations/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `profiles/name/{profile_name}/copy/{profile_copy_from}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `profiles/{id}/export/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `profiles/import/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `parameters/{id}/profiles/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `parameters/{id}/unassigned_profiles/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `divisions/{division_name}/regions/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodDelete, `regions/name/{name}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `capabilities/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `capabilities/{name}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPut, `capabilities/{name}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `capabilities/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodDelete, `capabilities/{name}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `api_capabilities/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `api_capabilities/{id}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPut, `api_capabilities/{id}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `api_capabilities/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodDelete, `api_capabilities/{id}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `servers/{id}/queue_update/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPut, `servers/{id}/status/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `servercheck/aadata/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `servercheck/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `stats_summary/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `stats_summary/create/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `types/trimmed/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `users/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `users/{id}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPut, `users/{id}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `users/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `users/register/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `deliveryservice_user/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodDelete, `deliveryservice_user/{dsId}/{userId}/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPut, `user/current/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `user/current/update/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `user/login/token/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `user/logout/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `user/reset_password/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `riak/stats/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `to_extensions/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `to_extensions/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodPost, `to_extensions/{id}/delete/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+		{1.1, http.MethodGet, `traffic_monitor/stats/?(\.json)?$`, perlAPIHandler, 0, NoAuth, []Middleware{}},
+	}
 }
 
 func memoryStatsHandler() http.HandlerFunc {
@@ -436,6 +551,55 @@ func dbStatsHandler(db *sqlx.DB) http.HandlerFunc {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(bytes)
+	}
+}
+
+var ErrUnauthorized = errors.New("Unauthorized, please log in.")
+
+// getPerlAPIHandler checks the user's capabilities, and reverse-proxies to Perl iff the user's role has a capability with the "api capability" of the requested route.
+func getPerlAPIHandler(d ServerData) http.HandlerFunc {
+	rootHandle := rootHandler(d)
+	return func(w http.ResponseWriter, r *http.Request) {
+		noTx := (*sql.Tx)(nil)
+		// TODO make func
+		cookie, err := r.Cookie(tocookie.Name)
+		if err != nil {
+			api.HandleErr(w, r, noTx, http.StatusUnauthorized, ErrUnauthorized, errors.New("Getting cookie: "+err.Error()))
+			return
+		}
+		if cookie == nil {
+			api.HandleErr(w, r, noTx, http.StatusUnauthorized, ErrUnauthorized, nil)
+			return
+		}
+		toCookie, err := tocookie.Parse(d.Config.Secrets[0], cookie.Value)
+		if err != nil {
+			api.HandleErr(w, r, noTx, http.StatusUnauthorized, ErrUnauthorized, errors.New("Parsing cookie: "+err.Error()))
+			return
+		}
+		username := toCookie.AuthData
+		if username == "" {
+			api.HandleErr(w, r, noTx, http.StatusUnauthorized, ErrUnauthorized, nil)
+			return
+		}
+
+		dbTimeout := time.Duration(d.Config.DBQueryTimeoutSeconds) * time.Second
+		// MUST check the db, even though we only need the username, because the cookie could lie
+		user, userErr, sysErr, code := auth.GetCurrentUserFromDB(d.DB, username, dbTimeout)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, noTx, code, userErr, sysErr)
+			return
+		}
+
+		apiCapability, err := api.GetAPICapability(r.Context())
+		if err != nil {
+			api.HandleErr(w, r, noTx, http.StatusInternalServerError, nil, errors.New("No capability found in request context!"))
+			return
+		}
+		userErr, sysErr, errCode := CheckAPICapability(d.DB.DB, dbTimeout, &user, r.Method, apiCapability)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, noTx, errCode, userErr, sysErr)
+		}
+		rootHandle.ServeHTTP(w, r)
 	}
 }
 

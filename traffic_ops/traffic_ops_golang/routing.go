@@ -78,9 +78,10 @@ type ServerData struct {
 
 // CompiledRoute ...
 type CompiledRoute struct {
-	Handler http.HandlerFunc
-	Regex   *regexp.Regexp
-	Params  []string
+	Handler       http.HandlerFunc
+	Regex         *regexp.Regexp
+	Params        []string
+	APICapability string
 }
 
 func getSortedRouteVersions(rs []Route) []float64 {
@@ -98,7 +99,11 @@ func getSortedRouteVersions(rs []Route) []float64 {
 
 // PathHandler ...
 type PathHandler struct {
-	Path    string
+	// Path is the full path, including the API prefix and version, e.g. `/api/1.2/cdns/{id}`.
+	Path string
+	// RawPath is the path not including the API prefix and version, e.g. `cdns/{id}`.
+	RawPath string
+	// Handler is the HTTP handler function for this path.
 	Handler http.HandlerFunc
 }
 
@@ -121,7 +126,7 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase, reqTime
 			vstr := strconv.FormatFloat(version, 'f', -1, 64)
 			path := RoutePrefix + "/" + vstr + "/" + r.Path
 			middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout)
-			m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: use(r.Handler, middlewares)})
+			m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: use(r.Handler, middlewares), RawPath: r.Path})
 			log.Infof("adding route %v %v\n", r.Method, path)
 		}
 	}
@@ -150,7 +155,6 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 	for method, mRoutes := range routes {
 		for _, pathHandler := range mRoutes {
 			route := pathHandler.Path
-			handler := pathHandler.Handler
 			var params []string
 			for open := strings.Index(route, "{"); open > 0; open = strings.Index(route, "{") {
 				close := strings.Index(route, "}")
@@ -162,11 +166,31 @@ func CompileRoutes(routes map[string][]PathHandler) map[string][]CompiledRoute {
 				params = append(params, param)
 				route = route[:open] + `([^/]+)` + route[close+1:]
 			}
-			regex := regexp.MustCompile(route)
-			compiledRoutes[method] = append(compiledRoutes[method], CompiledRoute{Handler: handler, Regex: regex, Params: params})
+			compiledRoutes[method] = append(compiledRoutes[method], CompiledRoute{
+				Handler:       pathHandler.Handler,
+				Regex:         regexp.MustCompile(route),
+				Params:        params,
+				APICapability: MakeAPICapability(pathHandler.RawPath),
+			})
 		}
 	}
 	return compiledRoutes
+}
+
+// MakeAPICapability returns an route "api capability" string, from a route. This panics if route has mismatched braces.
+func MakeAPICapability(route string) string {
+	route = strings.Replace(route, `$`, ``, -1)
+	route = strings.Replace(route, `?`, ``, -1)
+	route = strings.Replace(route, `(\.json)`, ``, -1)
+	route = strings.TrimSuffix(route, `/`)
+	for open := strings.Index(route, "{"); open > 0; open = strings.Index(route, "{") {
+		close := strings.Index(route, "}")
+		if close < 0 {
+			panic("malformed route")
+		}
+		route = route[:open] + `*` + route[close+1:]
+	}
+	return route
 }
 
 // Handler - generic handler func used by the Handlers hooking into the routes
@@ -202,6 +226,7 @@ func Handler(routes map[string][]CompiledRoute, catchall http.Handler, db *sqlx.
 		ctx = context.WithValue(ctx, api.DBContextKey, db)
 		ctx = context.WithValue(ctx, api.ConfigContextKey, cfg)
 		ctx = context.WithValue(ctx, api.ReqIDContextKey, reqID)
+		ctx = context.WithValue(ctx, api.APICapabilityContextKey, compiledRoute.APICapability)
 		r = r.WithContext(ctx)
 		compiledRoute.Handler(w, r)
 		return
