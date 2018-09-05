@@ -38,9 +38,6 @@ do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
 done
 
-IP=$(ip addr | grep 'global' | grep -v "inet6" | head -n1 | awk '{print $2}' | cut -f1 -d'/')
-NETMASK=$(ifconfig eth0 | grep 'inet ' | tr -s ' ' | cut -d ' ' -f4)
-GATEWAY="$(ip route | grep default | awk '{print $3}')"
 TO_URL="https://$TO_HOST:$TO_PORT"
 cat > /opt/traffic_monitor/conf/traffic_ops.cfg <<- ENDOFMESSAGE
 {
@@ -52,12 +49,6 @@ cat > /opt/traffic_monitor/conf/traffic_ops.cfg <<- ENDOFMESSAGE
 	"httpListener": ":80"
 }
 ENDOFMESSAGE
-
-sed -ie "s;MY_HOSTNAME;$(hostname -s);g" /server.json
-sed -ie "s;MY_DOMAINNAME;$(dnsdomainname);g" /server.json
-sed -ie "s;MY_GATEWAY;$GATEWAY;g" /server.json
-sed -ie "s;MY_NETMASK;$NETMASK;g" /server.json
-sed -ie "s;MY_IP;$IP;g" /server.json
 
 source /to-access.sh
 
@@ -71,7 +62,7 @@ export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
 # There's a race condition with setting the TM credentials and TO actually creating
 # the TM user
-until to-get api/1.3/users?username="$TM_USER" | jq -c -e '.response[].username|length'; do
+until to-get api/1.3/users?username="$TM_USER" 2>/dev/null | jq -c -e '.response[].username|length'; do
 	echo "waiting for TM_USER creation..."
 	sleep 3
 done
@@ -79,56 +70,6 @@ done
 # now that TM_USER is available,  use that for all further operations
 export TO_USER="$TM_USER"
 export TO_PASSWORD="$TM_PASSWORD"
-
-# Gets our CDN ID
-CDN=$(to-get api/1.3/cdns | jq '.response|.[]|select(.name=="CDN-in-a-Box")|.id')
-while [[ -z "$CDN" ]]; do
-	echo "waiting for traffic_ops setup to complete..."
-	sleep 3
-	CDN=$(to-get api/1.3/cdns | jq '.response|.[]|select(.name=="CDN-in-a-Box")|.id')
-done
-
-# Now we upload a profile for later use
-sed -ie "s;CDN_ID;$CDN;g" /profile.json
-cat /profile.json
-PROFILE=$(to-post api/1.3/profiles /profile.json | jq '.response')
-PROFILENAME=$(echo $PROFILE | jq '.name' | tr -d '"')
-PROFILEID=$(echo $PROFILE | jq '.id')
-to-post api/1.3/profiles/name/$PROFILENAME/parameters /parameters.json
-echo
-
-# Gets the location ID
-location=$(to-get api/1.3/phys_locations | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
-while [[ -z "$location" ]]; do
-	echo "Waiting for location setup"
-	sleep 3
-	location=$(to-get api/1.3/phys_locations | jq '.response|.[]|select(.name=="CDN_in_a_Box")|.id')
-done
-
-# Gets the id of a RASCAL server type
-TYPE=$(to-get api/1.3/types | jq '.response|.[]|select(.name=="RASCAL")|.id')
-
-# Gets the id of the 'ONLINE' status
-ONLINE=$(to-get api/1.3/statuses | jq '.response|.[]|select(.name=="ONLINE")|.id')
-
-# Gets the cachegroup ID
-CACHEGROUP=$(to-get api/1.3/cachegroups | jq '.response|.[]|select(.name=="CDN_in_a_Box_Mid")|.id')
-while [[ -z "$CACHEGROUP" ]]; do
-	echo "waiting for trafficops setup to complete..."
-	sleep 3
-	CACHEGROUP=$(to-get api/1.3/cachegroups | jq '.response|.[]|select(.name=="CDN_in_a_Box_Mid")|.id')
-done
-
-# Now put it all together and send it up
-sed -ie "s;MY_LOCATION;$location;g" /server.json
-sed -ie "s;MY_TYPE;$TYPE;g" /server.json
-sed -ie "s;MY_CDN_ID;$CDN;g" /server.json
-sed -ie "s;MY_STATUS;$ONLINE;g" /server.json
-sed -ie "s;CACHE_GROUP_ID;$CACHEGROUP;g" /server.json
-sed -ie "s;MY_PROFILE_ID;$PROFILEID;g" /server.json
-cat /server.json
-to-post api/1.3/servers /server.json
-echo
 
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD

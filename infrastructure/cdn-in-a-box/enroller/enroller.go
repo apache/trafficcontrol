@@ -19,43 +19,28 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
-	"net"
-	"net/http"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
-	clientv13 "github.com/apache/trafficcontrol/traffic_ops/client/v13"
-	dockertypes "github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/network"
-	dockerclient "github.com/docker/docker/client"
+	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	v13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
+	client "github.com/apache/trafficcontrol/traffic_ops/client/v13"
 	"github.com/kelseyhightower/envconfig"
+	"gopkg.in/fsnotify.v1"
 )
 
 type session struct {
-	*clientv13.Session
-	*dockerclient.Client
-	addr net.Addr
+	*client.Session
 }
 
-func newSession(reqTimeout time.Duration, toURL string, toUser string, toPass string) (*session, error) {
-	s, addr, err := clientv13.LoginWithAgent(toURL, toUser, toPass, true, "cdn-in-a-box-enroller", true, reqTimeout)
-	if err != nil {
-		return nil, err
-	}
-
-	dockerCli, err := dockerclient.NewClientWithOpts(dockerclient.WithVersion("1.38"), dockerclient.FromEnv)
-	if err != nil {
-		return nil, err
-	}
-
-	return &session{Session: s, addr: addr, Client: dockerCli}, err
+func newSession(reqTimeout time.Duration, toURL string, toUser string, toPass string) (session, error) {
+	s, _, err := client.LoginWithAgent(toURL, toUser, toPass, true, "cdn-in-a-box-enroller", true, reqTimeout)
+	return session{s}, err
 }
 
 func printJSON(label string, b interface{}) {
@@ -66,76 +51,18 @@ func printJSON(label string, b interface{}) {
 	fmt.Println(label, buf.String())
 }
 
-func (s *session) getExposedPorts(c dockertypes.ContainerJSON) []int {
-	var ports []int
-	for port := range c.Config.ExposedPorts {
-		ports = append(ports, port.Int())
-	}
-	return ports
-}
-
-func (s *session) getNetwork(c dockertypes.ContainerJSON) (*network.EndpointSettings, error) {
-	if c.NetworkSettings == nil {
-		return nil, errors.New("cannot get network from container")
-	}
-	mode := string(c.HostConfig.NetworkMode)
-	net, ok := c.NetworkSettings.Networks[mode]
-	if !ok {
-		return nil, errors.New("no network for " + mode)
-	}
-	return net, nil
-}
-
-// Matches service name (container) with type in traffic ops db
-var serviceTypes = map[string]string{
-	"db":               "TRAFFIC_OPS_DB",
-	"edge":             "EDGE",
-	"influxdb":         "INFLUXDB",
-	"mid":              "MID",
-	"origin":           "ORG",
-	"trafficanalytics": "TRAFFIC_ANALYTICS",
-	"trafficmonitor":   "RASCAL",
-	"trafficops":       "TRAFFIC_OPS",
-	"trafficops-perl":  "TRAFFIC_OPS",
-	"trafficportal":    "TRAFFIC_PORTAL",
-	"trafficrouter":    "CCR",
-	"trafficstats":     "TRAFFIC_STATS",
-	"trafficvault":     "RIAK",
-}
-
-func containerName(c dockertypes.ContainerJSON) string {
-	return strings.Trim(c.Name, "/")
-}
-
-func serviceName(c dockertypes.ContainerJSON) string {
-	if s, ok := c.Config.Labels["com.docker.compose.service"]; ok {
-		return s
-	}
-	return containerName(c)
-}
-
-func serverType(serviceName string) string {
-	for s, t := range serviceTypes {
-		if s == serviceName {
-			return t
-		}
-	}
-	// unknown -- let caller deal with it
-	return serviceName
-}
-
-func (s *session) getTypeIDByName(typeName string) (int, error) {
-	types, _, err := s.GetTypeByName(typeName)
+func (s session) getTypeIDByName(n string) (int, error) {
+	types, _, err := s.GetTypeByName(n)
 	if err != nil || len(types) == 0 {
-		fmt.Printf("unknown type %s\n", typeName)
+		fmt.Printf("unknown type %s\n", n)
 		return -1, err
 	}
-	fmt.Printf("type %s: %++v\n", typeName, types)
+	fmt.Printf("type %s: %++v\n", n, types)
 	return types[0].ID, err
 }
 
-func (s *session) getCDNIDByName(name string) (int, error) {
-	cdns, _, err := s.GetCDNByName(name)
+func (s session) getCDNIDByName(n string) (int, error) {
+	cdns, _, err := s.GetCDNByName(n)
 	if err != nil {
 		fmt.Println("cannot get CDNS")
 		return -1, err
@@ -146,8 +73,8 @@ func (s *session) getCDNIDByName(name string) (int, error) {
 	return cdns[0].ID, err
 }
 
-func (s *session) getCachegroupID() (int, error) {
-	cgs, _, err := s.GetCacheGroups()
+func (s session) getCachegroupIDByName(n string) (int, error) {
+	cgs, _, err := s.GetCacheGroupByName(n)
 	if err != nil {
 		fmt.Println("cannot get Cachegroup")
 		return -1, err
@@ -158,8 +85,8 @@ func (s *session) getCachegroupID() (int, error) {
 	return cgs[0].ID, err
 }
 
-func (s *session) getPhysLocationID() (int, error) {
-	physLocs, _, err := s.GetPhysLocations()
+func (s session) getPhysLocationIDByName(n string) (int, error) {
+	physLocs, _, err := s.GetPhysLocationByName(n)
 	if err != nil {
 		fmt.Println("cannot get physlocations")
 		return -1, err
@@ -167,8 +94,8 @@ func (s *session) getPhysLocationID() (int, error) {
 	return physLocs[0].ID, err
 }
 
-func (s *session) getProfileID() (int, error) {
-	profiles, _, err := s.GetProfiles()
+func (s session) getProfileIDByName(n string) (int, error) {
+	profiles, _, err := s.GetProfileByName(n)
 	if err != nil {
 		fmt.Println("cannot get profiles")
 		return -1, err
@@ -176,91 +103,13 @@ func (s *session) getProfileID() (int, error) {
 	return profiles[0].ID, err
 }
 
-func (s *session) getStatusIDByName(cdnName string) (int, error) {
-	statuses, _, err := s.GetStatusByName(cdnName)
+func (s session) getStatusIDByName(n string) (int, error) {
+	statuses, _, err := s.GetStatusByName(n)
 	if err != nil {
-		fmt.Printf("unknown Status %s\n", cdnName)
+		fmt.Printf("unknown Status %s\n", n)
 		return -1, err
 	}
 	return statuses[0].ID, err
-}
-
-func getMask(m []byte) string {
-	return fmt.Sprintf("%d.%d.%d.%d", m[0], m[1], m[2], m[3])
-}
-
-func (s *session) enrollContainer(c dockertypes.ContainerJSON) (*v13.Server, error) {
-	hostName := serviceName(c)
-	cName := containerName(c)
-	fmt.Printf("enrolling %s(%s)\n", cName, hostName)
-	server := v13.Server{
-		HostName:   hostName,
-		DomainName: os.Getenv("DOMAINNAME"),
-	}
-
-	fmt.Println("type is ", serverType(hostName))
-	fmt.Println("hostName is ", hostName)
-	var err error
-	server.TypeID, err = s.getTypeIDByName(serverType(hostName))
-	if err != nil {
-		fmt.Printf("cannot get type for %s", hostName)
-	}
-
-	server.StatusID, err = s.getStatusIDByName("PRE_PROD")
-	if err != nil {
-		fmt.Printf("cannot get status for %s", hostName)
-	}
-
-	server.CDNID, err = s.getCDNIDByName("ALL")
-	if err != nil {
-		fmt.Printf("cannot get CDN for %s", hostName)
-	}
-
-	server.ProfileID, err = s.getProfileID()
-	if err != nil {
-		fmt.Printf("cannot get profile for %s", hostName)
-	}
-
-	server.CachegroupID, err = s.getCachegroupID()
-	if err != nil {
-		fmt.Printf("cannot get Cachegroup for %s", cName)
-	}
-
-	server.PhysLocationID, err = s.getPhysLocationID()
-	if err != nil {
-		fmt.Printf("cannot get PhysLocation for %s", cName)
-	}
-	dnet, err := s.getNetwork(c)
-	if err != nil {
-		fmt.Printf("cannot get network: %v\n", err)
-		return nil, err
-	}
-
-	server.IPAddress = dnet.IPAddress
-	server.IPNetmask = getMask(net.CIDRMask(dnet.IPPrefixLen, net.IPv4len*8))
-	server.IPGateway = dnet.Gateway
-	server.IP6Address = dnet.GlobalIPv6Address
-	server.IP6Gateway = dnet.IPv6Gateway
-
-	ports := s.getExposedPorts(c)
-	if err != nil {
-		fmt.Printf("cannot get exposed ports: %v\n", err)
-		return nil, err
-	}
-
-	if len(ports) > 0 {
-		// TODO: for now, assuming there's only 1
-		server.TCPPort = ports[0]
-	}
-	var buf bytes.Buffer
-	enc := json.NewEncoder(&buf)
-	enc.SetIndent(``, `  `)
-	enc.Encode(server)
-	fmt.Println("Server: ", buf.String())
-
-	resp, _, err := s.CreateServer(server)
-	fmt.Printf("Response: %s\n", resp)
-	return &server, err
 }
 
 var to struct {
@@ -269,92 +118,556 @@ var to struct {
 	Password string `envconfig:"TO_PASSWORD"`
 }
 
-func (s *session) enrollerHandler() func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := r.ParseForm(); err != nil {
-			fmt.Fprintf(w, "ParseForm() err: %v", err)
-			return
-		}
-		hostName := r.FormValue("host")
-		cName := r.FormValue("name")
-
-		match := func(dockertypes.ContainerJSON) bool { return true }
-		switch {
-		case len(hostName) > 0:
-			match = func(c dockertypes.ContainerJSON) bool {
-				return hostName == c.Name
-			}
-		case len(cName) > 0:
-			match = func(c dockertypes.ContainerJSON) bool {
-				return cName == c.Config.Hostname
-			}
-		}
-
-		net, err := s.NetworkInspect(context.Background(), "cdn-in-a-box_tcnet", dockertypes.NetworkInspectOptions{})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		var names []string
-		var containers []dockertypes.ContainerJSON
-		for _, epr := range net.Containers {
-			c, err := s.ContainerInspect(context.Background(), epr.Name)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-
-			// check against any query params provided
-			if !match(c) {
-				continue
-			}
-
-			fmt.Printf("including %s\n", c.Name)
-			names = append(names, c.Name)
-			containers = append(containers, c)
-		}
-
-		switch r.Method {
-		case "GET":
-			// just list the container names
-			enc := json.NewEncoder(w)
-			enc.Encode(names)
-			return
-
-		case "POST":
-			// enroll each container
-			var servers []*v13.Server
-			for _, c := range containers {
-				server, err := s.enrollContainer(c)
-				if err != nil {
-					fmt.Printf("failed to enroll %s\n", containerName(c))
-					continue
-				}
-				servers = append(servers, server)
-			}
-			enc := json.NewEncoder(w)
-			if err := enc.Encode(servers); err != nil {
-				fmt.Println("failed to encode servers")
-			}
-			return
-
-		default:
-			http.Error(w, "unhandled method "+r.Method, http.StatusBadRequest)
-			return
-		}
+// enrollType takes a json file and creates a Type object using the TO API
+func enrollType(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
 	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.Type
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateType(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
 }
 
+// enrollCDN takes a json file and creates a CDN object using the TO API
+func enrollCDN(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s v13.CDN
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateCDN(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+func enrollASN(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.ASN
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateASN(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+func enrollDeliveryService(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.DeliveryServiceV13
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, err := toSession.CreateDeliveryService(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+func enrollDivision(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.Division
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateDivision(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+func enrollOrigin(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s v13.Origin
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateOrigin(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+func enrollParameter(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.Parameter
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateParameter(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+func enrollPhysLocation(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.PhysLocation
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreatePhysLocation(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+func enrollRegion(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.Region
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateRegion(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+func enrollStatus(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.Status
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateStatus(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+func enrollTenant(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.Tenant
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, err := toSession.CreateTenant(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+// enrollProfile takes a json file and creates a Profile object using the TO API
+func enrollProfile(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s v13.Profile
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateProfile(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+// enrollServer takes a json file and creates a Server object using the TO API
+func enrollServer(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s v13.Server
+	err = dec.Decode(&s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	if s.Type != "" {
+		id, err := toSession.getTypeIDByName(s.Type)
+		if err != nil {
+			return err
+		}
+		s.TypeID = id
+	}
+
+	if s.Profile != "" {
+		id, err := toSession.getProfileIDByName(s.Profile)
+		if err != nil {
+			return err
+		}
+		s.ProfileID = id
+	}
+	if s.Status != "" {
+		id, err := toSession.getStatusIDByName(s.Status)
+		if err != nil {
+			return err
+		}
+		s.StatusID = id
+	}
+	if s.CDNName != "" {
+		id, err := toSession.getCDNIDByName(s.CDNName)
+		if err != nil {
+			return err
+		}
+		s.CDNID = id
+	}
+	if s.Cachegroup != "" {
+		id, err := toSession.getCachegroupIDByName(s.Cachegroup)
+		if err != nil {
+			return err
+		}
+		s.CachegroupID = id
+	}
+	if s.PhysLocation != "" {
+		id, err := toSession.getPhysLocationIDByName(s.Cachegroup)
+		if err != nil {
+			return err
+		}
+		s.PhysLocationID = id
+	}
+
+	alerts, _, err := toSession.CreateServer(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
+type dirWatcher struct {
+	*fsnotify.Watcher
+	TOSession *session
+	watched   map[string]func(toSession *session, fn string) error
+}
+
+func newDirWatcher(toSession *session) (*dirWatcher, error) {
+	var err error
+	var dw dirWatcher
+	dw.Watcher, err = fsnotify.NewWatcher()
+	if err != nil {
+		return nil, err
+	}
+	dw.watched = make(map[string]func(toSession *session, fn string) error)
+	go func() {
+		for {
+			select {
+			case event, ok := <-dw.Events:
+				if !ok {
+					log.Printf("event not ok: %+v", event)
+					return
+				}
+				log.Println("event:", event)
+				if event.Op&fsnotify.Create == fsnotify.Create {
+					log.Println("new file :", event.Name)
+					p := strings.IndexRune(event.Name, '/')
+					if p == -1 {
+						continue
+					}
+					dir := event.Name[:p]
+					log.Printf("dir is %s\n", dir)
+					if f, ok := dw.watched[dir]; ok {
+						err := f(toSession, event.Name)
+						log.Printf("error creating %s from %s: %+v\n", dir, event.Name, err)
+					}
+					//err := f(toSession, event.Name)
+					//if err != nil {
+					//		log.Print(err)
+					//			continue
+					//			}
+				}
+			case err, ok := <-dw.Errors:
+				if !ok {
+					log.Printf("error not ok: %+v", err)
+				}
+				log.Println("error:", err)
+			}
+		}
+	}()
+	return &dw, err
+}
+
+// watch starts f when a new file is created in dir
+func (dw *dirWatcher) watch(dir string, f func(*session, string) error) {
+	if stat, err := os.Stat(dir); err != nil || !stat.IsDir() {
+		log.Println("cannot watch " + dir + ": not a directory")
+		return
+	}
+	log.Println("watching " + dir)
+	dw.Add(dir)
+	dw.watched[dir] = f
+}
+
+const startedFile = "enroller-started"
+
 func main() {
+	watchDir := "."
+	if len(os.Args) > 1 {
+		watchDir = os.Args[1]
+	}
+	if stat, err := os.Stat(watchDir); err != nil || !stat.IsDir() {
+		log.Fatalln("expected " + watchDir + " to be a directory")
+	}
 	envconfig.Process("", &to)
+
 	reqTimeout := time.Second * time.Duration(60)
 
+	log.Println("Starting TrafficOps session")
 	toSession, err := newSession(reqTimeout, to.URL, to.User, to.Password)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Println("TrafficOps session established")
+
+	// watch for file creation in directories
+	dw, err := newDirWatcher(&toSession)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+	defer dw.Close()
+
+	dw.watch("types", enrollType)
+	dw.watch("cdns", enrollCDN)
+	dw.watch("profiles", enrollProfile)
+	dw.watch("parameters", enrollParameter)
+	dw.watch("servers", enrollServer)
+	dw.watch("asns", enrollASN)
+	dw.watch("deliveryservices", enrollDeliveryService)
+	dw.watch("divisions", enrollDivision)
+	dw.watch("origins", enrollOrigin)
+	dw.watch("physlocations", enrollPhysLocation)
+	dw.watch("regions", enrollRegion)
+	dw.watch("statuses", enrollStatus)
+	dw.watch("tenants", enrollTenant)
+
+	// create this file to indicate the enroller is ready
+	f, err := os.Create(startedFile)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("TO session established")
-	http.HandleFunc("/", toSession.enrollerHandler())
+	f.Close()
 
-	log.Fatal(http.ListenAndServeTLS(":443", "./server.crt", "./server.key", nil))
+	var waitforever chan struct{}
+	<-waitforever
 }

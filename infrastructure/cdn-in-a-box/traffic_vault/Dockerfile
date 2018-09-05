@@ -14,31 +14,8 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-CERT_CITY=Denver
-CERT_COMPANY=NotComcast
-CERT_COUNTRY=US
-CERT_STATE=CO
-DB_NAME=traffic_ops
-DB_PORT=5432
-DB_SERVER=db
-DB_USER=traffic_ops
-DB_USER_PASS=twelve
-DBIC_TRACE=0
-DOMAIN=cdn.local
-PGPASSWORD=twelve
-POSTGRES_PASSWORD=twelve
-TM_EMAIL=tmonitor@example.com
-TM_PASSWORD=jhdslvhdfsuklvfhsuvlhs
-TM_USER=tmon
-TO_ADMIN_PASSWORD=twelve
-TO_ADMIN_USER=admin
-TO_EMAIL=cdnadmin@example.com
-TO_HOST=trafficops
-TO_PORT=6443
-TO_SECRET=blahblah
-TP_EMAIL=none
-TP_HOST=trafficportal
-TV_HOST=trafficvault
-TV_USER=tvault
-TV_PASSWORD=twelve
-ENROLLER_DIR=/enroller
+FROM basho/riak-kv:ubuntu-2.2.3
+
+EXPOSE 8087 8098
+ADD traffic_vault/run.sh traffic_ops/to-access.sh /
+CMD /run.sh
