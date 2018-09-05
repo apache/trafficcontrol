@@ -137,3 +137,12 @@ a very simple page sporting the Traffic Control logo.
 
 The process creates containers for each component with ports exposed on the host.  The
 following should be available once the system is running:
+
+
+## Common Pitfalls
+
+> Everything's "waiting for Traffic Ops" forever and nothing seems to be working - what do?
+> If you scroll back through the output ( or use `docker compose logs trafficops-perl | grep "User defined signal 2"` ) and see a line that says something like `/run.sh: line 79: 118 User defined signal 2 $TO_DIR/local/bin/hypnotoad script/cdn` then you've hit a mysterious known error. We don't know what this is or why it happens, but your best bet is to send up a quick prayer and restart the stack.
+
+> I'm seeing a failure to open a socket and/or set a socket option
+> Try disabling SELinux or setting it to 'permissive'. SELinux hates letting containers bind to certain ports. You can also try re-labeling the `docker` executable if you feel comfortable.
