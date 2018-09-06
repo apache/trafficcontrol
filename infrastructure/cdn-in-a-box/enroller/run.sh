@@ -33,7 +33,8 @@ mkdir -p "$ENROLLER_DIR"
 if [[ ! -d $ENROLLER_DIR ]]; then
      echo "enroller dir ${ENROLLER_DIR} not found or not a directory"
      exit 1
- fi
+fi
+
 
 # clear out the enroller dir first so no files left from previous run
 rm -rf ${ENROLLER_DIR}/*
