@@ -1,5 +1,5 @@
 {
     "name": "tenant21",
     "active": true,
-    "parentId": 5
+    "parentName": "tenant2"
 }
