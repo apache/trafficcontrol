@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -53,22 +54,22 @@ func printJSON(label string, b interface{}) {
 
 func (s session) getTypeIDByName(n string) (int, error) {
 	types, _, err := s.GetTypeByName(n)
-	if err != nil || len(types) == 0 {
-		fmt.Printf("unknown type %s\n", n)
+	if err != nil {
 		return -1, err
 	}
-	fmt.Printf("type %s: %++v\n", n, types)
+	if len(types) == 0 {
+		return -1, errors.New("no type with name " + n)
+	}
 	return types[0].ID, err
 }
 
 func (s session) getCDNIDByName(n string) (int, error) {
 	cdns, _, err := s.GetCDNByName(n)
 	if err != nil {
-		fmt.Println("cannot get CDNS")
 		return -1, err
 	}
-	if len(cdns) < 1 {
-		panic(fmt.Sprintf("CDNS: %v;  err: %v", cdns, err))
+	if len(cdns) == 0 {
+		return -1, errors.New("no CDN with name " + n)
 	}
 	return cdns[0].ID, err
 }
@@ -76,11 +77,10 @@ func (s session) getCDNIDByName(n string) (int, error) {
 func (s session) getCachegroupIDByName(n string) (int, error) {
 	cgs, _, err := s.GetCacheGroupByName(n)
 	if err != nil {
-		fmt.Println("cannot get Cachegroup")
 		return -1, err
 	}
 	if len(cgs) == 0 {
-		return -1, errors.New("No cachegroups found")
+		return -1, errors.New("no cachegroups with name" + n)
 	}
 	return cgs[0].ID, err
 }
@@ -88,8 +88,10 @@ func (s session) getCachegroupIDByName(n string) (int, error) {
 func (s session) getPhysLocationIDByName(n string) (int, error) {
 	physLocs, _, err := s.GetPhysLocationByName(n)
 	if err != nil {
-		fmt.Println("cannot get physlocations")
 		return -1, err
+	}
+	if len(physLocs) == 0 {
+		return -1, errors.New("no physLocation with name " + n)
 	}
 	return physLocs[0].ID, err
 }
@@ -97,8 +99,10 @@ func (s session) getPhysLocationIDByName(n string) (int, error) {
 func (s session) getProfileIDByName(n string) (int, error) {
 	profiles, _, err := s.GetProfileByName(n)
 	if err != nil {
-		fmt.Println("cannot get profiles")
 		return -1, err
+	}
+	if len(profiles) == 0 {
+		return -1, errors.New("no profile with name " + n)
 	}
 	return profiles[0].ID, err
 }
@@ -106,8 +110,10 @@ func (s session) getProfileIDByName(n string) (int, error) {
 func (s session) getStatusIDByName(n string) (int, error) {
 	statuses, _, err := s.GetStatusByName(n)
 	if err != nil {
-		fmt.Printf("unknown Status %s\n", n)
 		return -1, err
+	}
+	if len(statuses) == 0 {
+		return -1, errors.New("no status with name " + n)
 	}
 	return statuses[0].ID, err
 }
@@ -131,7 +137,7 @@ func enrollType(toSession *session, fn string) error {
 	dec := json.NewDecoder(fh)
 	var s tc.Type
 	err = dec.Decode(&s)
-	if err != nil {
+	if err != io.EOF {
 		log.Println(err)
 		return err
 	}
