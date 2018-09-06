@@ -234,6 +234,30 @@ func enrollCachegroup(toSession *session, fn string) error {
 		return err
 	}
 
+	if s.Type != "" {
+		id, err := toSession.getTypeIDByName(s.Type)
+		if err != nil {
+			return err
+		}
+		s.TypeID = id
+	}
+
+	if s.ParentName != "" {
+		id, err := toSession.getCachegroupIDByName(s.ParentName)
+		if err != nil {
+			return err
+		}
+		s.ParentCachegroupID = id
+	}
+
+	if s.SecondaryParentName != "" {
+		id, err := toSession.getCachegroupIDByName(s.SecondaryParentName)
+		if err != nil {
+			return err
+		}
+		s.SecondaryParentCachegroupID = id
+	}
+
 	alerts, _, err := toSession.CreateCacheGroup(s)
 	if err != nil {
 		log.Printf("error creating from %s: %s\n", fn, err)
@@ -262,6 +286,14 @@ func enrollDeliveryService(toSession *session, fn string) error {
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
+	}
+
+	if s.Type != "" {
+		id, err := toSession.getTypeIDByName(s.Type.String())
+		if err != nil {
+			return err
+		}
+		s.TypeID = id
 	}
 
 	alerts, err := toSession.CreateDeliveryService(&s)
@@ -625,7 +657,7 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 					dir := event.Name[:p]
 					log.Printf("dir is %s\n", dir)
 					if f, ok := dw.watched[dir]; ok {
-						log.Printf("creating from %s using %+v\n", event.Name, f)
+						log.Printf("creating from %s\n", event.Name)
 						err := f(toSession, event.Name)
 						if err != nil {
 							log.Printf("error creating %s from %s: %+v\n", dir, event.Name, err)
