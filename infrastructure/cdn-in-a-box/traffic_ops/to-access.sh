@@ -117,9 +117,9 @@ to-enroll() {
 	local serverType="$1"
 
 	if [[ ! -z "$2" ]]; then
-		MY_CDN="$2"
+		export MY_CDN="$2"
 	else
-		MY_CDN="CDN-in-a-Box"
+		export MY_CDN="CDN-in-a-Box"
 	fi
 
 
@@ -133,41 +133,41 @@ to-enroll() {
 		return 0
 	fi
 
-	MY_HOSTNAME="$(hostname -s)"
-	MY_DOMAINNAME="$(dnsdomainname)"
-	MY_IP="$(ifconfig eth0 | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 2)"
-	MY_GATEWAY="$(route -n | grep eth0 | grep -E '^0\.0\.0\.0' | tr -s ' ' | cut -d ' ' -f2)"
-	MY_NETMASK="$(ifconfig eth0 | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 4)"
+	export MY_HOSTNAME="$(hostname -s)"
+	export MY_DOMAINNAME="$(dnsdomainname)"
+	export MY_IP="$(ifconfig eth0 | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 2)"
+	export MY_GATEWAY="$(route -n | grep eth0 | grep -E '^0\.0\.0\.0' | tr -s ' ' | cut -d ' ' -f2)"
+	export MY_NETMASK="$(ifconfig eth0 | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 4)"
 
 	case "$serverType" in
 		"edge" )
-			MY_TYPE="EDGE"
-			MY_PROFILE="ATS_EDGE_TIER_CACHE"
-			MY_STATUS="REPORTED"
+			export MY_TYPE="EDGE"
+			export MY_PROFILE="ATS_EDGE_TIER_CACHE"
+			export MY_STATUS="REPORTED"
 			if [[ ! -z "$3" ]]; then
-				MY_CACHEGROUP="$3"
+				export MY_CACHE_GROUP="$3"
 			else
-				MY_CACHEGROUP="CDN_in_a_Box_Edge"
+				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
 			fi
 			;;
 		"mid" )
-			MY_TYPE="MID"
-			MY_PROFILE="ATS_MID_TIER_CACHE"
-			MY_STATUS="REPORTED"
+			export MY_TYPE="MID"
+			export MY_PROFILE="ATS_MID_TIER_CACHE"
+			export MY_STATUS="REPORTED"
 			if [[ ! -z "$3" ]]; then
-				MY_CACHEGROUP="$3"
+				export MY_CACHE_GROUP="$3"
 			else
-				MY_CACHEGROUP="CDN_in_a_Box_Mid"
+				export MY_CACHE_GROUP="CDN_in_a_Box_Mid"
 			fi
 			;;
 		"tm" )
-			MY_TYPE="RASCAL"
-			MY_PROFILE="RASCAL-Traffic_Monitor"
-			MY_STATUS="ONLINE"
+			export MY_TYPE="RASCAL"
+			export MY_PROFILE="RASCAL-Traffic_Monitor"
+			export MY_STATUS="ONLINE"
 			if [[ ! -z "$3" ]]; then
-				MY_CACHEGROUP="$3"
+				export MY_CACHE_GROUP="$3"
 			else
-				MY_CACHEGROUP="CDN_in_a_Box_Edge"
+				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
 			fi
 			;;
 		* )
@@ -177,7 +177,7 @@ to-enroll() {
 			;;
 	esac
 
-	envsubst < "$ENROLLER_DIR/server_template.json" | xargs to-post api/1.3/server
+	envsubst < "/server_template.json" > "/enroller/servers/$HOSTNAME.json"
 
 
     # local service=$1

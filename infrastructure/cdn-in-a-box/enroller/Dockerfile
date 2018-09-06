@@ -28,6 +28,7 @@ WORKDIR /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enr
 RUN go get -v && go build
 
 COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
+COPY ./infrastructure/cdn-in-a-box/enroller/server_template.json /
 
 
 FROM debian:stretch
