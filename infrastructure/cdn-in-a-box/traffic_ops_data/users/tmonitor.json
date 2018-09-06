@@ -3,7 +3,7 @@
   "fullName": "Traffic Monitor",
   "localPasswd": "$TM_PASSWORD",
   "confirmLocalPasswd": "$TM_PASSWORD",
-  "role": 1,
-  "tenantId": 1,
+  "roleName": "ADMIN",
+  "tenant": "root",
   "username": "$TM_USER"
 }
