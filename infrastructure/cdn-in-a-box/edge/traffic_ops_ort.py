@@ -482,7 +482,7 @@ def syncDSState() -> bool:
 
 	try:
 		updateStatus = getJSONResponse("/api/1.3/servers/%s/update_status" % HOSTNAME[0])[0]
-	except IndexError:
+	except IndexError as e:
 		logging.critical("Server not found in Traffic Ops config")
 		logging.debug("%s", e, exc_info=True, stack_info=True)
 		raise ORTException("Failed to contact API endpoint.")
