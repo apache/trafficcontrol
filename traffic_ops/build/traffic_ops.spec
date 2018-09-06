@@ -33,7 +33,7 @@ URL:              https://github.com/apache/trafficcontrol/
 Vendor:           Apache Software Foundation
 Packager:         daniel_kirkwood at Cable dot Comcast dot com
 AutoReqProv:      no
-Requires:         cpanminus, expat-devel, gcc-c++, golang = 1.9.4, libcurl, libpcap-devel, mkisofs, tar
+Requires:         cpanminus, expat-devel, gcc-c++, golang = 1.9.4, libcurl, libpcap-devel, mkisofs, tar, cronie
 Requires:         openssl-devel, perl, perl-core, perl-DBD-Pg, perl-DBI, perl-Digest-SHA1
 Requires:         libidn-devel, libcurl-devel, libcap
 Requires:         postgresql96 >= 9.6.2 , postgresql96-devel >= 9.6.2
@@ -62,7 +62,7 @@ Built: %(date) by %{getenv: USER}
     echo "GOPATH: $GOPATH"
     go version
     go env
-    
+
     # Create build area with proper gopath structure
     mkdir -p src pkg bin || { echo "Could not create directories in $(pwd): $!"; exit 1; }
 
@@ -91,11 +91,11 @@ Built: %(date) by %{getenv: USER}
     }
     oldpwd=$(pwd)
     #copy in traffic_ops/vendor
-    vendordir=src/github.com/apache/trafficcontrol/traffic_ops/vendor 
+    vendordir=src/github.com/apache/trafficcontrol/traffic_ops/vendor
     ( mkdir -p "$vendordir" && \
       cd "$vendordir" && \
       cp -r "$TC_DIR"/traffic_ops/vendor/* . \
-    ) || { echo "could not copy traffic_ops/vendor directory"; exit 1; } 
+    ) || { echo "could not copy traffic_ops/vendor directory"; exit 1; }
 
     # build traffic_ops_golang binary
     godir=src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
@@ -190,7 +190,7 @@ Built: %(date) by %{getenv: USER}
     %__chmod +x /etc/init.d/traffic_ops
     %__chmod +x %{PACKAGEDIR}/install/bin/*
     /sbin/chkconfig --add traffic_ops
-	
+
     %__mkdir -p %{TRAFFIC_OPS_LOG_DIR}
 
     if [ -f /var/tmp/traffic_ops-backup.tar ]; then
@@ -230,7 +230,7 @@ if [ "$1" = "0" ]; then
 	# this is an uninstall
 	%__rm -rf %{PACKAGEDIR}
 	%__rm /etc/init.d/traffic_ops
-    /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/userdel %{TRAFFIC_OPS_USER} 
+    /usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/userdel %{TRAFFIC_OPS_USER}
     /usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupdel %{TRAFFIC_OPS_GROUP}
 fi
 
