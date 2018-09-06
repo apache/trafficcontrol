@@ -147,7 +147,7 @@ func (param *TOParameter) Read() ([]interface{}, error, error, int) {
 			return nil, nil, errors.New("scanning " + param.GetType() + ": " + err.Error()), http.StatusInternalServerError
 		}
 
-		if p.Secure != nil && *p.Secure && !param.ReqInfo.User.HasCapability(tc.ParameterSecureCapability) {
+		if p.Secure != nil && *p.Secure && !param.ReqInfo.User.HasCapability(tc.ParameterSecureCapability) && !param.ReqInfo.User.HasCapability(tc.AllReadCapability) {
 			p.Value = &HiddenField
 		}
 		params = append(params, p)

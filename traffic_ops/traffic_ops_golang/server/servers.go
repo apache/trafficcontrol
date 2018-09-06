@@ -277,7 +277,7 @@ FULL OUTER JOIN deliveryservice_server dss ON dss.server = s.id
 			return nil, []error{fmt.Errorf("getting servers: %v", err)}, tc.SystemError
 		}
 
-		if !user.HasCapability(tc.ServerSecureCapability) {
+		if !user.HasCapability(tc.ServerSecureCapability) && !user.HasCapability(tc.AllReadCapability) {
 			s.ILOPassword = &HiddenField
 			s.XMPPPasswd = &HiddenField
 		}
