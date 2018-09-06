@@ -227,38 +227,38 @@ func enrollCachegroup(toSession *session, fn string) error {
 	}()
 
 	dec := json.NewDecoder(fh)
-	var s v13.CacheGroup
+	var s v13.CacheGroupNullable
 	err = dec.Decode(&s)
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
-	if s.Type != "" {
-		id, err := toSession.getTypeIDByName(s.Type)
+	if s.Type != nil {
+		id, err := toSession.getTypeIDByName(*s.Type)
 		if err != nil {
 			return err
 		}
-		s.TypeID = id
+		s.TypeID = &id
 	}
 
-	if s.ParentName != "" {
-		id, err := toSession.getCachegroupIDByName(s.ParentName)
+	if s.ParentName != nil {
+		id, err := toSession.getCachegroupIDByName(*s.ParentName)
 		if err != nil {
 			return err
 		}
-		s.ParentCachegroupID = id
+		s.ParentCachegroupID = &id
 	}
 
-	if s.SecondaryParentName != "" {
-		id, err := toSession.getCachegroupIDByName(s.SecondaryParentName)
+	if s.SecondaryParentName != nil {
+		id, err := toSession.getCachegroupIDByName(*s.SecondaryParentName)
 		if err != nil {
 			return err
 		}
-		s.SecondaryParentCachegroupID = id
+		s.SecondaryParentCachegroupID = &id
 	}
 
-	alerts, _, err := toSession.CreateCacheGroup(s)
+	alerts, _, err := toSession.CreateCacheGroupNullable(s)
 	if err != nil {
 		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
