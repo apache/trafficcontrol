@@ -110,49 +110,82 @@ to-delete() {
 		curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X DELETE "$TO_URL/$1"
 }
 
-
-
+# Constructs a server's JSON definiton and places it into the enroller's structure for loading
+# args:
+#         serverType - the type of the server to be created; one of "edge", "mid", "tm", "origin"
 to-enroll() {
-    local service=$1
-    local cdn=$2
-    local cachegroup=$3
-    until [[ -f ${ENROLLER_DIR}/enroller-started ]]; do 
-        echo "waiting for enroller"
-        sleep 5
-    done
+	local serverType="$1"
+
+	if [[ ! -z "$2" ]]; then
+		MY_CDN="$2"
+	else
+		MY_CDN="CDN-in-a-Box"
+	fi
 
 
-    declare -A server
-    server[domainName]="$DOMAINNAME"
-    server[hostName]="$service"
-    server[cachegroup]="$CACHEGROUP"
-    server[cdnName]="$CDN"
-    server[physLocation]="$PHYSLOCATION"
-    server[profile]="$PROFILE"
-    server[type]="$TYPE"
-    server[status]="REPORTED"
-    server[httpsPort]=443
+	if [[ "$serverType" == "origin" ]]; then
+		to-post api/1.3/origin "{
+		                            \"deliveryServiceName\": \"ciab\",
+		                            \"fqdn\": \"$HOSTNAME\",
+		                            \"name\": \"origin\",
+		                            \"protocol\": \"http\",
+		                        }"
+		return 0
+	fi
 
-    server[ip6Address]=
-    server[ip6Gateway]=
-    server[ipAddress]=
-    server[ipGateway]=
-    server[ipNetmask]=
-    server[tcpPort]=
+	MY_HOSTNAME="$(hostname -s)"
+	MY_DOMAINNAME="$(dnsdomainname)"
+	MY_IP="$(ifconfig eth0 | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 2)"
+	MY_GATEWAY="$(route -n | grep eth0 | grep -E '^0\.0\.0\.0' | tr -s ' ' | cut -d ' ' -f2)"
+	MY_NETMASK="$(ifconfig eth0 | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 4)"
 
-    echo '{'
+	case "$serverType" in
+		"edge" )
+			MY_TYPE="EDGE"
+			MY_PROFILE="ATS_EDGE_TIER_CACHE"
+			MY_STATUS="REPORTED"
+			if [[ ! -z "$3" ]]; then
+				MY_CACHEGROUP="$3"
+			else
+				MY_CACHEGROUP="CDN_in_a_Box_Edge"
+			fi
+			;;
+		"mid" )
+			MY_TYPE="MID"
+			MY_PROFILE="ATS_MID_TIER_CACHE"
+			MY_STATUS="REPORTED"
+			if [[ ! -z "$3" ]]; then
+				MY_CACHEGROUP="$3"
+			else
+				MY_CACHEGROUP="CDN_in_a_Box_Mid"
+			fi
+			;;
+		"tm" )
+			MY_TYPE="RASCAL"
+			MY_PROFILE="RASCAL-Traffic_Monitor"
+			MY_STATUS="ONLINE"
+			if [[ ! -z "$3" ]]; then
+				MY_CACHEGROUP="$3"
+			else
+				MY_CACHEGROUP="CDN_in_a_Box_Edge"
+			fi
+			;;
+		* )
+			echo "Usage: to-enroll SERVER_TYPE" >&2
+			echo "(SERVER_TYPE must be a recognized server type)" >&2
+			return 1
+			;;
+	esac
 
-    for k in "${!server[@]}"; do
-        printf "\t\"$key\": "
-        v=${server[$k]}
-        if [[ $k = *Port ]]; then
-            # json number
-           echo $v
-        else 
-            # json string
-            printf " \"$v\"\n"
-        fi
-    done
-    echo '}'
+	envsubst < "$ENROLLER_DIR/server_template.json" | xargs to-post api/1.3/server
 
+
+    # local service=$1
+    # until nc enroller 443 </dev/null >/dev/null 2>&1; do
+    #     echo "waiting for enroller"
+    #     sleep 5
+    # done
+
+    # action=${service:+?name=$service}
+    # curl -k -X POST https://enroller${action}
 }
