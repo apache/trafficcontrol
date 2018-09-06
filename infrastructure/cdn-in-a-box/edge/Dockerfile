@@ -34,12 +34,8 @@ RUN yum install -y jq /traffic_ops_ort.rpm python34-psutil python34-typing pytho
 RUN pip3 install --upgrade pip && pip3 install requests urllib3 distro
 
 RUN mkdir -p /var/trafficserver/cache /opt/ort && chown -R ats:ats /etc/trafficserver/ /var/trafficserver/ /opt/ort
-ADD edge/parameters.json edge/profile.json edge/server.json edge/run.sh traffic_ops/to-access.sh /
+ADD edge/parameters.json edge/profile.json edge/run.sh traffic_ops/to-access.sh /
 ADD edge/traffic_ops_ort.py /opt/ort
-
-# You need to do this because the RPM in the ATS archives is just all kinds of messed-up
-RUN chmod 755 /usr/lib64/trafficserver /etc/trafficserver/body_factory /etc/trafficserver/body_factory/default
-
 
 CMD /run.sh
 
