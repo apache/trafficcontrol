@@ -216,6 +216,36 @@ func enrollASN(toSession *session, fn string) error {
 	return err
 }
 
+// enrollCachegroup takes a json file and creates a Cachegroup object using the TO API
+func enrollCachegroup(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s v13.CacheGroup
+	err = dec.Decode(&s)
+	if err != io.EOF {
+		log.Println(err)
+		return err
+	}
+
+	alerts, _, err := toSession.CreateCacheGroup(s)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
 func enrollDeliveryService(toSession *session, fn string) error {
 	fh, err := os.Open(fn)
 	if err != nil {
@@ -661,6 +691,7 @@ func main() {
 
 	dw.watch("types", enrollType)
 	dw.watch("cdns", enrollCDN)
+	dw.watch("cachegroups", enrollCachegroup)
 	dw.watch("profiles", enrollProfile)
 	dw.watch("parameters", enrollParameter)
 	dw.watch("servers", enrollServer)
