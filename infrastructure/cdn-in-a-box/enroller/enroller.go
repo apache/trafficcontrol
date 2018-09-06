@@ -74,6 +74,17 @@ func (s session) getCDNIDByName(n string) (int, error) {
 	return cdns[0].ID, err
 }
 
+func (s session) getDivisionIDByName(n string) (int, error) {
+	divisions, _, err := s.GetDivisionByName(n)
+	if err != nil {
+		return -1, err
+	}
+	if len(divisions) == 0 {
+		return -1, errors.New("no division with name " + n)
+	}
+	return divisions[0].ID, err
+}
+
 func (s session) getCachegroupIDByName(n string) (int, error) {
 	cgs, _, err := s.GetCacheGroupByName(n)
 	if err != nil {
@@ -444,6 +455,14 @@ func enrollRegion(toSession *session, fn string) error {
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
+	}
+
+	if s.DivisionName != "" {
+		id, err := toSession.getDivisionIDByName(s.DivisionName)
+		if err != nil {
+			return err
+		}
+		s.Division = id
 	}
 
 	alerts, _, err := toSession.CreateRegion(s)
