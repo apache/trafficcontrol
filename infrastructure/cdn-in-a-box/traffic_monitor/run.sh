@@ -60,9 +60,11 @@ done
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
+to-enroll $(hostname -s)
+
 # There's a race condition with setting the TM credentials and TO actually creating
 # the TM user
-until to-get api/1.3/users?username="$TM_USER" 2>/dev/null | jq -c -e '.response[].username|length'; do
+until to-get "api/1.3/users?username=$TM_USER" 2>/dev/null | jq -c -e '.response[].username|length'; do
 	echo "waiting for TM_USER creation..."
 	sleep 3
 done
@@ -73,8 +75,6 @@ export TO_PASSWORD="$TM_PASSWORD"
 
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
-. /to-access.sh
-to-enroll $(hostname -s)
 
 touch /opt/traffic_monitor/var/log/traffic_monitor.log
 
