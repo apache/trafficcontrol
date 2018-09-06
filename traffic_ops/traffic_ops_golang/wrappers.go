@@ -108,10 +108,12 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 				case *sqlx.DB:
 					DB = v
 				default:
-					handleErr(http.StatusInternalServerError, errors.New("No DB found"))
+					handleErr(http.StatusInternalServerError, fmt.Errorf("request context DB type '%T' unexpected", v))
+					return
 				}
 			} else {
 				handleErr(http.StatusInternalServerError, errors.New("No DB found"))
+				return
 			}
 
 			cfg, err := api.GetConfig(r.Context())

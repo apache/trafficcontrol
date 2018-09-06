@@ -44,6 +44,16 @@ type CurrentUser struct {
 	Capabilities pq.StringArray `json:"capabilities" db:"capabilities"`
 }
 
+// HasCapability returns whether this user has the given capability. Note capabilities are case-sensitive.
+func (u *CurrentUser) HasCapability(c string) bool {
+	for _, uc := range ([]string)(u.Capabilities) {
+		if uc == c {
+			return true
+		}
+	}
+	return false
+}
+
 type PasswordForm struct {
 	Username string `json:"u"`
 	Password string `json:"p"`

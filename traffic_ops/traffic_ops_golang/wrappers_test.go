@@ -141,6 +141,13 @@ func TestWrapAuth(t *testing.T) {
 	rows.AddRow(30, "user1", 1, 1)
 	mock.ExpectQuery("SELECT").WithArgs(userName).WillReturnRows(rows)
 
+	{
+		// capability query
+		rows := sqlmock.NewRows([]string{"count(*)"})
+		rows.AddRow(1)
+		mock.ExpectQuery("SELECT").WithArgs(userName, "GET", "").WillReturnRows(rows)
+	}
+
 	authBase := AuthBase{secret, nil}
 
 	cookie := tocookie.New(userName, time.Now().Add(time.Minute), secret)
@@ -184,6 +191,7 @@ func TestWrapAuth(t *testing.T) {
 
 	r = r.WithContext(context.WithValue(context.Background(), api.DBContextKey, db))
 	r = r.WithContext(context.WithValue(r.Context(), api.ConfigContextKey, &config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 20}}))
+	r = r.WithContext(context.WithValue(r.Context(), api.APICapabilityContextKey, ""))
 
 	f(w, r)
 

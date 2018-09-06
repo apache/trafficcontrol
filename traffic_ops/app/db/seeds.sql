@@ -192,6 +192,9 @@ insert into capability (name, description) values ('users-register', 'Ability to
 insert into capability (name, description) values ('users-read', 'Ability to view users') ON CONFLICT (name) DO NOTHING;
 insert into capability (name, description) values ('users-write', 'Ability to edit users') ON CONFLICT (name) DO NOTHING;
 
+INSERT INTO capability (name, description) values ('parameters-read-secure', 'Ability to view secure parameter values') ON CONFLICT (name) DO NOTHING;
+INSERT INTO capability (name, description) values ('servers-read-secure', 'Ability to view secure server values') ON CONFLICT (name) DO NOTHING;
+
 -- roles_capabilities
 -- out of the box, the admin role has ALL capabilities
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'auth') ON CONFLICT (role_id, cap_name) DO NOTHING;
@@ -264,6 +267,9 @@ insert into role_capability (role_id, cap_name) values ((select id from role whe
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'users-register') ON CONFLICT (role_id, cap_name) DO NOTHING;
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'users-read') ON CONFLICT (role_id, cap_name) DO NOTHING;
 insert into role_capability (role_id, cap_name) values ((select id from role where name='admin'), 'users-write') ON CONFLICT (role_id, cap_name) DO NOTHING;
+
+INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name = 'admin'), 'parameters-read-secure') ON CONFLICT (role_id, cap_name) DO NOTHING;
+INSERT INTO role_capability (role_id, cap_name) VALUES ((SELECT id FROM role WHERE name = 'admin'), 'servers-read-secure') ON CONFLICT (role_id, cap_name) DO NOTHING;
 
 -- Using role 'read-only'
 
