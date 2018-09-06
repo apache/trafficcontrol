@@ -3,5 +3,5 @@
   "longitude": -77.036574,
   "name": "TRAFFIC_STATS",
   "shortName": "TRAFFIC_STATS",
-  "typeName": "TL_LOC"
+  "typeName": "TC_LOC"
 }
