@@ -137,14 +137,14 @@ func enrollType(toSession *session, fn string) error {
 	dec := json.NewDecoder(fh)
 	var s tc.Type
 	err = dec.Decode(&s)
-	if err != io.EOF {
-		log.Println(err)
+	if err != nil && err != io.EOF {
+		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
 	alerts, _, err := toSession.CreateType(s)
 	if err != nil {
-		log.Println(err)
+		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
 
@@ -168,14 +168,14 @@ func enrollCDN(toSession *session, fn string) error {
 	dec := json.NewDecoder(fh)
 	var s v13.CDN
 	err = dec.Decode(&s)
-	if err != nil {
-		log.Println(err)
+	if err != nil && err != io.EOF {
+		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
 	alerts, _, err := toSession.CreateCDN(s)
 	if err != nil {
-		log.Println(err)
+		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
 
@@ -198,14 +198,14 @@ func enrollASN(toSession *session, fn string) error {
 	dec := json.NewDecoder(fh)
 	var s tc.ASN
 	err = dec.Decode(&s)
-	if err != nil {
-		log.Println(err)
+	if err != nil && err != io.EOF {
+		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
 	alerts, _, err := toSession.CreateASN(s)
 	if err != nil {
-		log.Println(err)
+		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
 
@@ -229,14 +229,14 @@ func enrollCachegroup(toSession *session, fn string) error {
 	dec := json.NewDecoder(fh)
 	var s v13.CacheGroup
 	err = dec.Decode(&s)
-	if err != io.EOF {
-		log.Println(err)
+	if err != nil && err != io.EOF {
+		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
 	alerts, _, err := toSession.CreateCacheGroup(s)
 	if err != nil {
-		log.Println(err)
+		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
 
@@ -246,6 +246,7 @@ func enrollCachegroup(toSession *session, fn string) error {
 
 	return err
 }
+
 func enrollDeliveryService(toSession *session, fn string) error {
 	fh, err := os.Open(fn)
 	if err != nil {
@@ -258,14 +259,14 @@ func enrollDeliveryService(toSession *session, fn string) error {
 	dec := json.NewDecoder(fh)
 	var s tc.DeliveryServiceV13
 	err = dec.Decode(&s)
-	if err != nil {
-		log.Println(err)
+	if err != nil && err != io.EOF {
+		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
 	alerts, err := toSession.CreateDeliveryService(&s)
 	if err != nil {
-		log.Println(err)
+		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
 
@@ -288,14 +289,14 @@ func enrollDivision(toSession *session, fn string) error {
 	dec := json.NewDecoder(fh)
 	var s tc.Division
 	err = dec.Decode(&s)
-	if err != nil {
-		log.Println(err)
+	if err != nil && err != io.EOF {
+		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
 	alerts, _, err := toSession.CreateDivision(s)
 	if err != nil {
-		log.Println(err)
+		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
 
@@ -318,14 +319,14 @@ func enrollOrigin(toSession *session, fn string) error {
 	dec := json.NewDecoder(fh)
 	var s v13.Origin
 	err = dec.Decode(&s)
-	if err != nil {
-		log.Println(err)
+	if err != nil && err != io.EOF {
+		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
 	alerts, _, err := toSession.CreateOrigin(s)
 	if err != nil {
-		log.Println(err)
+		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
 
@@ -348,14 +349,14 @@ func enrollParameter(toSession *session, fn string) error {
 	dec := json.NewDecoder(fh)
 	var s tc.Parameter
 	err = dec.Decode(&s)
-	if err != nil {
-		log.Println(err)
+	if err != nil && err != io.EOF {
+		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
 	alerts, _, err := toSession.CreateParameter(s)
 	if err != nil {
-		log.Println(err)
+		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
 
@@ -378,14 +379,14 @@ func enrollPhysLocation(toSession *session, fn string) error {
 	dec := json.NewDecoder(fh)
 	var s tc.PhysLocation
 	err = dec.Decode(&s)
-	if err != nil {
-		log.Println(err)
+	if err != nil && err != io.EOF {
+		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
 	alerts, _, err := toSession.CreatePhysLocation(s)
 	if err != nil {
-		log.Println(err)
+		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
 
@@ -408,14 +409,14 @@ func enrollRegion(toSession *session, fn string) error {
 	dec := json.NewDecoder(fh)
 	var s tc.Region
 	err = dec.Decode(&s)
-	if err != nil {
-		log.Println(err)
+	if err != nil && err != io.EOF {
+		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
 	alerts, _, err := toSession.CreateRegion(s)
 	if err != nil {
-		log.Println(err)
+		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
 
@@ -438,14 +439,14 @@ func enrollStatus(toSession *session, fn string) error {
 	dec := json.NewDecoder(fh)
 	var s tc.Status
 	err = dec.Decode(&s)
-	if err != nil {
-		log.Println(err)
+	if err != nil && err != io.EOF {
+		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
 	alerts, _, err := toSession.CreateStatus(s)
 	if err != nil {
-		log.Println(err)
+		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
 
@@ -468,14 +469,14 @@ func enrollTenant(toSession *session, fn string) error {
 	dec := json.NewDecoder(fh)
 	var s tc.Tenant
 	err = dec.Decode(&s)
-	if err != nil {
-		log.Println(err)
+	if err != nil && err != io.EOF {
+		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
 	alerts, err := toSession.CreateTenant(&s)
 	if err != nil {
-		log.Println(err)
+		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
 
@@ -499,14 +500,14 @@ func enrollProfile(toSession *session, fn string) error {
 	dec := json.NewDecoder(fh)
 	var s v13.Profile
 	err = dec.Decode(&s)
-	if err != nil {
-		log.Println(err)
+	if err != nil && err != io.EOF {
+		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
 	alerts, _, err := toSession.CreateProfile(s)
 	if err != nil {
-		log.Println(err)
+		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
 
@@ -530,8 +531,8 @@ func enrollServer(toSession *session, fn string) error {
 	dec := json.NewDecoder(fh)
 	var s v13.Server
 	err = dec.Decode(&s)
-	if err != nil {
-		log.Println(err)
+	if err != nil && err != io.EOF {
+		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
@@ -581,7 +582,7 @@ func enrollServer(toSession *session, fn string) error {
 
 	alerts, _, err := toSession.CreateServer(s)
 	if err != nil {
-		log.Println(err)
+		log.Printf("error creating from %s: %s\n", fn, err)
 		return err
 	}
 
@@ -624,6 +625,7 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 					dir := event.Name[:p]
 					log.Printf("dir is %s\n", dir)
 					if f, ok := dw.watched[dir]; ok {
+						log.Printf("creating from %s using %+v\n", event.Name, f)
 						err := f(toSession, event.Name)
 						if err != nil {
 							log.Printf("error creating %s from %s: %+v\n", dir, event.Name, err)
@@ -683,7 +685,7 @@ func main() {
 	log.Println("Starting TrafficOps session")
 	toSession, err := newSession(reqTimeout, to.URL, to.User, to.Password)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("error starting TrafficOps session: " + err.Error())
 	}
 	fmt.Println("TrafficOps session established")
 
