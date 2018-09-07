@@ -35,25 +35,27 @@ while ! to-ping 2>/dev/null; do
    sleep 3
 done
 
-# NOTE: order dependent on foreign key references, e.g. tenants must be defined before users
-endpoints="cdns divisions regions phys_locations tenants users cachegroups deliveryservices"
+# NOTE: order dependent on foreign key references, e.g. profiles must be loaded before parameters
+endpoints="cdns types divisions regions physlocations tenants users cachegroups deliveryservices profiles parameters"
 
 load_data_from() {
     local dir="$1"
     if [[ ! -d $dir ]] ; then
         echo "Failed to load data from '$dir': directory does not exist"
     fi
-
+    cd "$dir"
     local status=0
-    for ep in $endpoints; do
-        d="$dir/$ep"
+    for d in $endpoints; do
         [[ -d $d ]] || continue
-        echo "Loading data from $d"
-        cp -f "$d"/*.json /enroll/$d/.
+        for f in "$d"/*.json; do 
+            echo "Loading $f"
+            envsubst <$f  > "$ENROLLER_DIR"/$f
+        done
     done
     if [[ $status -ne 0 ]]; then
         exit $status
     fi
+    cd -
 }
 
 # First,  load required data at the top level
