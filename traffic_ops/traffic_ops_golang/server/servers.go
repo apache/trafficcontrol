@@ -100,7 +100,7 @@ func (server *TOServer) Validate() error {
 		"ipAddress":      validation.Validate(server.IPAddress, validation.NotNil, is.IPv4),
 		"ipNetmask":      validation.Validate(server.IPNetmask, validation.NotNil),
 		"ipGateway":      validation.Validate(server.IPGateway, validation.NotNil),
-		"ip6Address":     validation.Validate(server.IP6Address, is.IPv6),
+		"ip6Address":     validation.Validate(server.IP6Address, validation.By(tovalidate.IsValidIPv6CIDROrAddress)),
 		"physLocationId": validation.Validate(server.PhysLocationID, validation.NotNil),
 		"profileId":      validation.Validate(server.ProfileID, validation.NotNil),
 		"statusId":       validation.Validate(server.StatusID, validation.NotNil),

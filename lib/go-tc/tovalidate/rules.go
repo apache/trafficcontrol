@@ -15,6 +15,7 @@ package tovalidate
 import (
 	"errors"
 	"fmt"
+	"net"
 	"reflect"
 	"strings"
 )
@@ -128,4 +129,34 @@ func IsValidPortNumber(value interface{}) error {
 		return fmt.Errorf("IsValidPortNumber validation failure: unknown type %T", value)
 	}
 	return errors.New("must be a valid port number")
+}
+
+func IsValidIPv6CIDROrAddress(value interface{}) error {
+	switch v := value.(type) {
+	case *string:
+		if v == nil {
+			return nil
+		}
+		ip, _, err := net.ParseCIDR(*v)
+		if err == nil {
+			if ip.To4() == nil {
+				return nil
+			} else {
+				return fmt.Errorf("got IPv4 CIDR, IPv6 expected")
+			}
+		} else {
+			ip := net.ParseIP(*v)
+			if ip != nil {
+				if ip.To4() == nil {
+					return nil
+				} else {
+					return fmt.Errorf("got IPv4 address, IPv6 expected")
+				}
+			}
+		}
+		return fmt.Errorf("unable to parse an IPv6 address or CIDR from: %s", v)
+	default:
+		return fmt.Errorf("IsValidIPv6CIDROrAddress validation failure: unknown type %T", value)
+	}
+	return errors.New("must be a valid IPv6 address or CIDR")
 }
