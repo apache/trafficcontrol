@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -53,7 +54,7 @@ func printJSON(label string, b interface{}) {
 }
 
 func (s session) getTypeIDByName(n string) (int, error) {
-	types, _, err := s.GetTypeByName(n)
+	types, _, err := s.GetTypeByName(url.QueryEscape(n))
 	if err != nil {
 		return -1, err
 	}
@@ -64,7 +65,7 @@ func (s session) getTypeIDByName(n string) (int, error) {
 }
 
 func (s session) getCDNIDByName(n string) (int, error) {
-	cdns, _, err := s.GetCDNByName(n)
+	cdns, _, err := s.GetCDNByName(url.QueryEscape(n))
 	if err != nil {
 		return -1, err
 	}
@@ -74,8 +75,8 @@ func (s session) getCDNIDByName(n string) (int, error) {
 	return cdns[0].ID, err
 }
 
-func (s session) getDivisionIDByName(n string) (int, error) {
-	divisions, _, err := s.GetDivisionByName(n)
+func (s session) getRegionIDByName(n string) (int, error) {
+	divisions, _, err := s.GetRegionByName(url.QueryEscape(n))
 	if err != nil {
 		return -1, err
 	}
@@ -85,19 +86,19 @@ func (s session) getDivisionIDByName(n string) (int, error) {
 	return divisions[0].ID, err
 }
 
-func (s session) getCachegroupIDByName(n string) (int, error) {
-	cgs, _, err := s.GetCacheGroupByName(n)
+func (s session) getDivisionIDByName(n string) (int, error) {
+	divisions, _, err := s.GetDivisionByName(url.QueryEscape(n))
 	if err != nil {
 		return -1, err
 	}
-	if len(cgs) == 0 {
-		return -1, errors.New("no cachegroups with name" + n)
+	if len(divisions) == 0 {
+		return -1, errors.New("no division with name " + n)
 	}
-	return cgs[0].ID, err
+	return divisions[0].ID, err
 }
 
 func (s session) getPhysLocationIDByName(n string) (int, error) {
-	physLocs, _, err := s.GetPhysLocationByName(n)
+	physLocs, _, err := s.GetPhysLocationByName(url.QueryEscape(n))
 	if err != nil {
 		return -1, err
 	}
@@ -107,8 +108,19 @@ func (s session) getPhysLocationIDByName(n string) (int, error) {
 	return physLocs[0].ID, err
 }
 
+func (s session) getCachegroupIDByName(n string) (int, error) {
+	cgs, _, err := s.GetCacheGroupByName(url.QueryEscape(n))
+	if err != nil {
+		return -1, err
+	}
+	if len(cgs) == 0 {
+		return -1, errors.New("no cachegroups with name" + n)
+	}
+	return cgs[0].ID, err
+}
+
 func (s session) getProfileIDByName(n string) (int, error) {
-	profiles, _, err := s.GetProfileByName(n)
+	profiles, _, err := s.GetProfileByName(url.QueryEscape(n))
 	if err != nil {
 		return -1, err
 	}
@@ -119,7 +131,7 @@ func (s session) getProfileIDByName(n string) (int, error) {
 }
 
 func (s session) getStatusIDByName(n string) (int, error) {
-	statuses, _, err := s.GetStatusByName(n)
+	statuses, _, err := s.GetStatusByName(url.QueryEscape(n))
 	if err != nil {
 		return -1, err
 	}
@@ -127,6 +139,17 @@ func (s session) getStatusIDByName(n string) (int, error) {
 		return -1, errors.New("no status with name " + n)
 	}
 	return statuses[0].ID, err
+}
+
+func (s session) getTenantIDByName(n string) (int, error) {
+	tenant, _, err := s.TenantByName(url.QueryEscape(n))
+	if err != nil {
+		return -1, err
+	}
+	if tenant == nil {
+		return -1, errors.New("no tenant with name " + n)
+	}
+	return tenant.ID, err
 }
 
 var to struct {
@@ -427,6 +450,13 @@ func enrollPhysLocation(toSession *session, fn string) error {
 		return err
 	}
 
+	if s.RegionName != "" {
+		id, err := toSession.getRegionIDByName(s.RegionName)
+		if err != nil {
+			return err
+		}
+		s.RegionID = id
+	}
 	alerts, _, err := toSession.CreatePhysLocation(s)
 	if err != nil {
 		log.Printf("error creating from %s: %s\n", fn, err)
@@ -525,6 +555,14 @@ func enrollTenant(toSession *session, fn string) error {
 		return err
 	}
 
+	if s.ParentName != "" {
+		id, err := toSession.getTenantIDByName(s.ParentName)
+		if err != nil {
+			return err
+		}
+		s.ParentID = id
+	}
+
 	alerts, err := toSession.CreateTenant(&s)
 	if err != nil {
 		log.Printf("error creating from %s: %s\n", fn, err)
@@ -554,6 +592,14 @@ func enrollProfile(toSession *session, fn string) error {
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
+	}
+
+	if s.CDNName != "" {
+		id, err := toSession.getCDNIDByName(s.CDNName)
+		if err != nil {
+			return err
+		}
+		s.CDNID = id
 	}
 
 	alerts, _, err := toSession.CreateProfile(s)
@@ -668,6 +714,10 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 				}
 				log.Println("event:", event)
 				if event.Op&fsnotify.Create == fsnotify.Create {
+					if i, err := os.Stat(event.Name); err != nil || i.IsDir() {
+						log.Println("skipping " + event.Name)
+						continue
+					}
 					log.Println("new file :", event.Name)
 					p := strings.IndexRune(event.Name, '/')
 					if p == -1 {
