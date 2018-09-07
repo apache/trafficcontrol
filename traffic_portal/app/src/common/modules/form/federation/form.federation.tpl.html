@@ -26,7 +26,8 @@ under the License.
             <li class="active">{{cname}}</li>
         </ol>
         <div class="pull-right" ng-show="!settings.isNew">
-            <button class="btn btn-primary" title="Create Resolver" ng-click="createResolver()">Create Resolver</button>
+            <button class="btn btn-primary" title="Create New Resolver" ng-click="createResolver()"><i class="fa fa-plus"></i></button>
+            <button class="btn btn-primary" title="Link Resolvers to Federation" ng-click="selectResolvers()"><i class="fa fa-link"></i></button>
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
                 <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More&nbsp;
@@ -91,7 +92,9 @@ under the License.
             </fieldset>
             <div ng-if="!settings.isNew">
                 <fieldset>
-                    <legend>Federation Resolvers</legend>
+                    <legend>
+                        <div>Federation Resolvers</div>
+                    </legend>
                     <table class="table responsive-utilities jambo_table" ng-show="resolvers.length > 0">
                         <thead>
                         <tr class="headings">
@@ -104,7 +107,7 @@ under the License.
                         <tr ng-repeat="resolver in ::resolvers">
                             <td>{{::resolver.ipAddress}}</td>
                             <td>{{::resolver.type}}</td>
-                            <td style="width:20px"><button type="button" class="btn btn-link" title="Delete Federation Resolver" ng-click="confirmDeleteResolver(resolver)"><i class="fa fa-trash"></i></button></td>
+                            <td style="width:20px"><button type="button" class="btn btn-link" title="Remove Federation Resolver" ng-click="confirmRemoveResolver(resolver)"><i class="fa fa-chain-broken"></i></button></td>
                         </tr>
                         </tbody>
                     </table>

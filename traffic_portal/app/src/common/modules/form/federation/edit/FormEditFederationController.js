@@ -29,18 +29,11 @@ var FormEditFederationController = function(cdn, federation, resolvers, delivery
 			});
 	};
 
-	var deleteFederationResolver = function(fedRes) {
-		federationResolverService.deleteFederationResolver(fedRes.id)
-			.then(function() {
-				$state.reload(); // reloads all the resolves for the view
-			});
-	};
-
 	var createFederationResolver = function(fedRes) {
 		federationResolverService.createFederationResolver(fedRes)
 			.then(
 				function(result) {
-					assignFederationResolver(federation.id, result.id);
+					messageModel.setMessages(result.data.alerts, false);
 				},
 				function(fault) {
 					messageModel.setMessages(fault.data.alerts, false);
@@ -48,8 +41,8 @@ var FormEditFederationController = function(cdn, federation, resolvers, delivery
 			);
 	};
 
-	var assignFederationResolver = function(fedId, fedResId) {
-		federationResolverService.assignFederationResolvers(fedId, [ fedResId ], false)
+	var assignFederationResolvers = function(fedId, fedResIds) {
+		federationResolverService.assignFederationResolvers(fedId, fedResIds, true)
 			.then(function() {
 				$state.reload(); // reloads all the resolves for the view
 			});
@@ -97,10 +90,10 @@ var FormEditFederationController = function(cdn, federation, resolvers, delivery
 		});
 	};
 
-	$scope.confirmDeleteResolver = function(resolver) {
+	$scope.confirmRemoveResolver = function(resolverToRemove) {
 		var params = {
-			title: 'Delete Federation Resolver: ' + resolver.ipAddress,
-			message: 'Are you sure you want to delete this federation resolver and remove it from the ' + federation.cname + ' federation?'
+			title: 'Remove Federation Resolver: ' + resolverToRemove.ipAddress,
+			message: 'Are you sure you want to remove this federation resolver from the ' + federation.cname + ' federation?'
 		};
 		var modalInstance = $uibModal.open({
 			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
@@ -113,7 +106,9 @@ var FormEditFederationController = function(cdn, federation, resolvers, delivery
 			}
 		});
 		modalInstance.result.then(function() {
-			deleteFederationResolver(resolver);
+			var resolvers = _.filter($scope.resolvers, function(res){ return res.id != resolverToRemove.id; });
+			var resolverIds = _.pluck(resolvers, 'id');
+			assignFederationResolvers($scope.federation.id, resolverIds)
 		}, function () {
 			// do nothing
 		});
@@ -138,6 +133,31 @@ var FormEditFederationController = function(cdn, federation, resolvers, delivery
 		});
 		modalInstance.result.then(function(resolver) {
 			createFederationResolver(resolver);
+		}, function () {
+			// do nothing
+		});
+	};
+
+	$scope.selectResolvers = function() {
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/table/federationResolvers/table.assignFedResolvers.tpl.html',
+			controller: 'TableAssignFedResolversController',
+			size: 'lg',
+			resolve: {
+				federation: function() {
+					return federation;
+				},
+				resolvers: function(federationResolverService) {
+					return federationResolverService.getFederationResolvers();
+				},
+				assignedResolvers: function() {
+					return resolvers;
+				}
+			}
+		});
+		modalInstance.result.then(function(selectedResolverIds) {
+			debugger;
+			assignFederationResolvers($scope.federation.id, selectedResolverIds);
 		}, function () {
 			// do nothing
 		});

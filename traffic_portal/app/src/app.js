@@ -349,6 +349,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/table/divisions').name,
         require('./common/modules/table/divisionRegions').name,
         require('./common/modules/table/endpoints').name,
+        require('./common/modules/table/federationResolvers').name,
         require('./common/modules/table/jobs').name,
         require('./common/modules/table/origins').name,
         require('./common/modules/table/physLocations').name,

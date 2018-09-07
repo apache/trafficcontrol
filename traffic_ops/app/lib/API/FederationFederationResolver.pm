@@ -25,7 +25,7 @@ sub index {
     my $fed_id  = $self->param('fedId');
 
     my @data;
-    my $rs_data = $self->db->resultset("FederationFederationResolver")->search( { 'federation' => $fed_id }, { prefetch => [ 'federation_resolver' ] } );
+    my $rs_data = $self->db->resultset("FederationFederationResolver")->search( { 'federation' => $fed_id }, { prefetch => [ 'federation_resolver' ], order_by => 'federation_resolver.ip_address' } );
     while ( my $row = $rs_data->next ) {
         push(
             @data, {

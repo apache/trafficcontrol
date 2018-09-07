@@ -25,6 +25,22 @@ use Validate::Tiny ':all';
 use Net::CIDR;
 use Data::Validate::IP qw(is_ipv4 is_ipv6);
 
+sub index {
+    my $self = shift;
+    my @data;
+    my $rs_data = $self->db->resultset("FederationResolver")->search( undef, { prefetch => ['type'] } );
+    while ( my $row = $rs_data->next ) {
+        push(
+            @data, {
+                "id"        => $row->id,
+                "ipAddress" => $row->ip_address,
+                "type"      => $row->type->name
+            }
+        );
+    }
+    $self->success( \@data );
+}
+
 sub create {
     my $self        = shift;
     my $params      = $self->req->json;

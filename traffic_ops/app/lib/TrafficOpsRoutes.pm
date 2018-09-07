@@ -634,6 +634,7 @@ sub api_routes {
 	$r->post( "/api/$version/federations/:fedId/federation_resolvers" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationFederationResolver#assign_fed_resolver_to_federation', namespace => $namespace );
 
 	# -- FEDERATION RESOLVERS
+	$r->get( "/api/$version/federation_resolvers" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationResolver#index', namespace => $namespace );
 	$r->post( "/api/$version/federation_resolvers" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationResolver#create', namespace => $namespace );
 	$r->delete( "/api/$version/federation_resolvers/:id" => [ id => qr/\d+/ ] )->over( authenticated => 1, not_ldap => 1 )->to( 'FederationResolver#delete', namespace => $namespace );
 
