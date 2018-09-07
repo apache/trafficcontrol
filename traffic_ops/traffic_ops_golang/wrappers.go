@@ -154,12 +154,6 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 // CheckAPICapability checks whether the given user has access to the given method and route, and returns any user error, any system error, and an error code.
 // If the user has as role with a capability with the "api capability" for the given route, the returned user error and system error will both be nil.
 func CheckAPICapability(db *sql.DB, dbTimeout time.Duration, user *auth.CurrentUser, method string, route string) (error, error, int) {
-	if method == http.MethodGet && user.HasCapability(tc.AllReadCapability) {
-		return nil, nil, http.StatusOK
-	} else if (method == http.MethodPost || method == http.MethodPut || method == http.MethodDelete) && user.HasCapability(tc.AllWriteCapability) {
-		return nil, nil, http.StatusOK
-	}
-
 	count := 0
 	qry := `
 SELECT

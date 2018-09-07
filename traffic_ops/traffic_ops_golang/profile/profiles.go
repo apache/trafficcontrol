@@ -207,7 +207,7 @@ func ReadParameters(tx *sqlx.Tx, parameters map[string]string, user *auth.Curren
 		if param.Secure != nil {
 			isSecure = *param.Secure
 		}
-		if isSecure && !user.HasCapability(tc.ParameterSecureCapability) && !user.HasCapability(tc.AllReadCapability) {
+		if isSecure && !user.HasCapability(tc.ParameterSecureCapability) {
 			param.Value = &parameter.HiddenField
 		}
 		params = append(params, param)

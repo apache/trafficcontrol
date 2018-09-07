@@ -100,8 +100,6 @@ func CacheTypeFromString(s string) CacheType {
 	return CacheTypeInvalid
 }
 
-const AllReadCapability = `all-read`
-const AllWriteCapability = `all-write`
 const ParameterSecureCapability = `parameters-read-secure`
 const ServerSecureCapability = `servers-read-secure`
 
