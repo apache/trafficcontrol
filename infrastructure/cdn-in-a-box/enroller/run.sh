@@ -24,7 +24,7 @@ export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
 # Traffic Ops must be accepting connections before enroller can start
-until to-ping; do
+until nc -z $TO_HOST $TO_PORT </dev/null >/dev/null && to-ping; do
     echo "Waiting for $TO_URL"
     sleep 5
 done
@@ -33,5 +33,8 @@ if [[ ! -d $ENROLLER_DIR ]]; then
      echo "enroller dir ${ENROLLER_DIR} not found or not a directory"
      exit 1
  fi
+
+# clear out the enroller dir first so no files left from previous run
+rm -rf ${ENROLLER_DIR}/*
 
 go run enroller.go "$ENROLLER_DIR" || tail -f /dev/null

@@ -726,6 +726,8 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 					log.Printf("dir is %s\n", dir)
 					if f, ok := dw.watched[dir]; ok {
 						log.Printf("creating from %s\n", event.Name)
+						time.Sleep(100 * time.Millisecond)
+
 						err := f(toSession, event.Name)
 						if err != nil {
 							log.Printf("error creating %s from %s: %+v\n", dir, event.Name, err)
