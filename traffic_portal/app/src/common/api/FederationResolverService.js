@@ -19,13 +19,17 @@
 
 var FederationResolverService = function(Restangular, $http, $q, ENV, locationUtils, messageModel) {
 
+	this.getFederationResolvers = function(queryParams) {
+		return Restangular.all('federation_resolvers').getList(queryParams);
+	};
+
 	this.createFederationResolver = function(fedResolver) {
 		var deferred = $q.defer();
 
 		$http.post(ENV.api['root'] + 'federation_resolvers', fedResolver)
 			.then(
 				function(result) {
-					deferred.resolve(result.data.response);
+					deferred.resolve(result);
 				},
 				function(fault) {
 					deferred.reject(fault);
@@ -33,18 +37,6 @@ var FederationResolverService = function(Restangular, $http, $q, ENV, locationUt
 			);
 
 		return deferred.promise;
-	};
-
-	this.deleteFederationResolver = function(fedResId) {
-		return Restangular.one('federation_resolvers', fedResId).remove()
-			.then(
-				function() {
-					messageModel.setMessages([ { level: 'success', text: 'Federation resolver deleted' } ], false);
-				},
-				function(fault) {
-					messageModel.setMessages(fault.data.alerts, true);
-				}
-			);
 	};
 
 	this.assignFederationResolvers = function(fedId, fedResIds, replace) {
