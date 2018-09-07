@@ -18,7 +18,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-OUTPUT_DIR=/swagger2rst
+OUTPUT_DIR=./swagger2rst
 OUTPUT_FILE=v13_api_docs.rst
 RST_FILE=$OUTPUT_DIR/$OUTPUT_FILE
 swg2rst swagger.json -f rst -o $RST_FILE
