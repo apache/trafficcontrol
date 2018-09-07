@@ -30,8 +30,7 @@ import (
 	"time"
 
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	v13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
-	client "github.com/apache/trafficcontrol/traffic_ops/client/v13"
+	client "github.com/apache/trafficcontrol/traffic_ops/client"
 	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/fsnotify.v1"
 )
@@ -200,7 +199,7 @@ func enrollCDN(toSession *session, fn string) error {
 	}()
 
 	dec := json.NewDecoder(fh)
-	var s v13.CDN
+	var s tc.CDN
 	err = dec.Decode(&s)
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
@@ -261,7 +260,7 @@ func enrollCachegroup(toSession *session, fn string) error {
 	}()
 
 	dec := json.NewDecoder(fh)
-	var s v13.CacheGroupNullable
+	var s tc.CacheGroupNullable
 	err = dec.Decode(&s)
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
@@ -315,7 +314,7 @@ func enrollDeliveryService(toSession *session, fn string) error {
 	}()
 
 	dec := json.NewDecoder(fh)
-	var s tc.DeliveryServiceV13
+	var s tc.DeliveryService
 	err = dec.Decode(&s)
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
@@ -383,7 +382,7 @@ func enrollOrigin(toSession *session, fn string) error {
 	}()
 
 	dec := json.NewDecoder(fh)
-	var s v13.Origin
+	var s tc.Origin
 	err = dec.Decode(&s)
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
@@ -587,7 +586,7 @@ func enrollProfile(toSession *session, fn string) error {
 	}()
 
 	dec := json.NewDecoder(fh)
-	var s v13.Profile
+	var s tc.Profile
 	err = dec.Decode(&s)
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
@@ -626,7 +625,7 @@ func enrollServer(toSession *session, fn string) error {
 	}()
 
 	dec := json.NewDecoder(fh)
-	var s v13.Server
+	var s tc.Server
 	err = dec.Decode(&s)
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
