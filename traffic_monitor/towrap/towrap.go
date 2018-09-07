@@ -43,7 +43,7 @@ type ITrafficOpsSession interface {
 	Servers() ([]tc.Server, error)
 	Profiles() ([]tc.Profile, error)
 	Parameters(profileName string) ([]tc.Parameter, error)
-	DeliveryServices() ([]tc.DeliveryServiceV13, error)
+	DeliveryServices() ([]tc.DeliveryService, error)
 	CacheGroups() ([]tc.CacheGroupNullable, error)
 	CRConfigHistory() []CRConfigStat
 }
@@ -445,7 +445,7 @@ func (s TrafficOpsSessionThreadsafe) Parameters(profileName string) ([]tc.Parame
 	return parameters, error
 }
 
-func (s TrafficOpsSessionThreadsafe) DeliveryServices() ([]tc.DeliveryServiceV13, error) {
+func (s TrafficOpsSessionThreadsafe) DeliveryServices() ([]tc.DeliveryService, error) {
 	ss := s.get()
 	if ss == nil {
 		return nil, ErrNilSession
