@@ -31,7 +31,7 @@ services:
    swagger-ui:
      image: swaggerapi/swagger-ui
      ports:
-       - 7070:7070
+       - 8080:8080
      environment:
        - API_URL=http://localhost:8000/swaggerspec/swagger.json
 
