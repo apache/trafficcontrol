@@ -712,7 +712,7 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 					log.Printf("event not ok: %+v", event)
 					return
 				}
-				log.Println("event:", event)
+				//log.Println("event:", event)
 				if event.Op&fsnotify.Create == fsnotify.Create {
 					if i, err := os.Stat(event.Name); err != nil || i.IsDir() {
 						log.Println("skipping " + event.Name)
@@ -730,6 +730,11 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 						err := f(toSession, event.Name)
 						if err != nil {
 							log.Printf("error creating %s from %s: %+v\n", dir, event.Name, err)
+							continue
+						}
+						err = os.Remove(event.Name)
+						if err != nil {
+							log.Printf("error removing %s: %+v\n", event.Name, err)
 						}
 					} else {
 						log.Printf("no method for creating %s\n", dir)
@@ -807,7 +812,7 @@ func main() {
 	dw.watch("deliveryservices", enrollDeliveryService)
 	dw.watch("divisions", enrollDivision)
 	dw.watch("origins", enrollOrigin)
-	dw.watch("physlocations", enrollPhysLocation)
+	dw.watch("phys_locations", enrollPhysLocation)
 	dw.watch("regions", enrollRegion)
 	dw.watch("statuses", enrollStatus)
 	dw.watch("tenants", enrollTenant)
