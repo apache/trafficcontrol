@@ -1,6 +1,6 @@
 package v13
 
-import "github.com/apache/trafficcontrol/lib/go-tc/v13"
+import "github.com/apache/trafficcontrol/lib/go-tc"
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -27,7 +27,7 @@ import "github.com/apache/trafficcontrol/lib/go-tc/v13"
 type Regions struct {
 	// Region Response Body
 	// in: body
-	RegionsResponse v13.RegionsResponse `json:"response"`
+	RegionsResponse tc.RegionsResponse `json:"response"`
 }
 
 // Region -  RegionResponse to get the "response" top level key
@@ -36,7 +36,7 @@ type Regions struct {
 type Region struct {
 	// Region Response Body
 	// in: body
-	RegionResponse v13.RegionResponse
+	RegionResponse tc.RegionsResponse
 }
 
 // RegionQueryParams
@@ -69,7 +69,7 @@ type RegionPostParam struct {
 	//
 	// in: body
 	// required: true
-	Region v13.Region
+	Region tc.Region
 }
 
 // swagger:parameters GetRegionById DeleteRegion
@@ -112,7 +112,7 @@ type RegionPutParam struct {
 	//
 	// in: body
 	// required: true
-	Region v13.Region
+	Region tc.Region
 }
 
 // PutRegion swagger:route PUT /regions/{id} Region PutRegion

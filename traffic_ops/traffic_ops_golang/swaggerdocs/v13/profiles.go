@@ -19,7 +19,7 @@ package v13
  * under the License.
  */
 
-import v13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
+import "github.com/apache/trafficcontrol/lib/go-tc"
 
 // Profiles -  ProfilesResponse to get the "response" top level key
 // swagger:response Profiles
@@ -27,7 +27,7 @@ import v13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
 type Profiles struct {
 	// Profile Response Body
 	// in: body
-	ProfilesResponse v13.ProfilesResponse `json:"response"`
+	ProfilesResponse tc.ProfilesResponse `json:"response"`
 }
 
 // Profile -  ProfileResponse to get the "response" top level key
@@ -36,7 +36,7 @@ type Profiles struct {
 type Profile struct {
 	// Profile Response Body
 	// in: body
-	ProfileResponse v13.ProfileResponse
+	ProfileResponse tc.ProfileResponse
 }
 
 // ProfileQueryParams
@@ -73,7 +73,7 @@ type ProfilePostParam struct {
 	//
 	// in: body
 	// required: true
-	Profile v13.Profile
+	Profile tc.Profile
 }
 
 // swagger:parameters GetProfileById DeleteProfile
@@ -120,7 +120,7 @@ type ProfilePutParam struct {
 	//
 	// in: body
 	// required: true
-	Profile v13.Profile
+	Profile tc.Profile
 }
 
 // PutProfile swagger:route PUT /cdns/{id} Profile PutProfile
