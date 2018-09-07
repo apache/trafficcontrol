@@ -15,9 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM golang:1.10
+FROM golang:1.11
 
-EXPOSE 443
+RUN apt-get update && apt-get install -y netcat && apt-get clean
 
 # enroller source and dependencies
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
