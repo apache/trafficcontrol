@@ -53,7 +53,7 @@ Blow away only the local images (excluding remote ones) and bring down the conta
 Blow away all the images (including remote ones) and bring down the container:
 ```$ docker-compose down --rmi all```
 
-Once started navigate your browser to [http://localhost:7070](http://localhost:7070)
+Once started navigate your browser to [http://localhost:8080](http://localhost:8080)
 
 ### Converting the swaggerspec/swagger.json to .rst
 
