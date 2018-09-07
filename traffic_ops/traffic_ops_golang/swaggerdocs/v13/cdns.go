@@ -19,7 +19,7 @@ package v13
  * under the License.
  */
 
-import v13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
+import "github.com/apache/trafficcontrol/lib/go-tc"
 
 // CDNs -  CDNsResponse to get the "response" top level key
 // swagger:response CDNs
@@ -27,7 +27,7 @@ import v13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
 type CDNs struct {
 	// CDN Response Body
 	// in: body
-	CDNsResponse v13.CDNsResponse `json:"response"`
+	CDNsResponse tc.CDNsResponse `json:"response"`
 }
 
 // CDN -  CDNResponse to get the "response" top level key
@@ -36,7 +36,7 @@ type CDNs struct {
 type CDN struct {
 	// CDN Response Body
 	// in: body
-	CDNResponse v13.CDNResponse
+	CDNResponse tc.CDNResponse
 }
 
 // CDNQueryParams
@@ -73,7 +73,7 @@ type CDNPostParam struct {
 	//
 	// in: body
 	// required: true
-	CDN v13.CDN
+	CDN tc.CDN
 }
 
 // swagger:parameters GetCDNById DeleteCDN
@@ -120,7 +120,7 @@ type CDNPutParam struct {
 	//
 	// in: body
 	// required: true
-	CDN v13.CDN
+	CDN tc.CDN
 }
 
 // PutCDN swagger:route PUT /cdns/{id} CDN PutCDN

@@ -1,6 +1,6 @@
 package v13
 
-import v13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
+import "github.com/apache/trafficcontrol/lib/go-tc"
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -27,7 +27,7 @@ import v13 "github.com/apache/trafficcontrol/lib/go-tc/v13"
 type ProfileParameters struct {
 	// ProfileParameter Response Body
 	// in: body
-	ProfileParametersResponse v13.ProfileParametersResponse `json:"response"`
+	ProfileParametersResponse tc.ProfileParametersResponse `json:"response"`
 }
 
 // ProfileParameter -  ProfileParameterResponse to get the "response" top level key
@@ -36,7 +36,7 @@ type ProfileParameters struct {
 type ProfileParameter struct {
 	// ProfileParameter Response Body
 	// in: body
-	ProfileParameterResponse v13.ProfileParameterResponse
+	ProfileParameterResponse tc.ProfileParameterResponse
 }
 
 // ProfileParameterQueryParams
@@ -65,7 +65,7 @@ type ProfileParameterPostParam struct {
 	//
 	// in: body
 	// required: true
-	ProfileParameter v13.ProfileParameter
+	ProfileParameter tc.ProfileParameter
 }
 
 // PostProfileParameter swagger:route POST /profileparameters ProfileParameter PostProfileParameter

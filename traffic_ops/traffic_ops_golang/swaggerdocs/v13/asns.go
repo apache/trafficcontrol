@@ -1,6 +1,6 @@
 package v13
 
-import "github.com/apache/trafficcontrol/lib/go-tc/v13"
+import "github.com/apache/trafficcontrol/lib/go-tc"
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -27,7 +27,7 @@ import "github.com/apache/trafficcontrol/lib/go-tc/v13"
 type ASNs struct {
 	// ASN Response Body
 	// in: body
-	ASNsResponse v13.ASNsResponse `json:"response"`
+	ASNsResponse tc.ASNsResponse `json:"response"`
 }
 
 // ASN -  ASNResponse to get the "response" top level key
@@ -36,7 +36,7 @@ type ASNs struct {
 type ASN struct {
 	// ASN Response Body
 	// in: body
-	ASNResponse v13.ASNResponse
+	ASNResponse tc.ASNResponse
 }
 
 // ASNQueryParams
@@ -73,7 +73,7 @@ type ASNPostParam struct {
 	//
 	// in: body
 	// required: true
-	ASN v13.ASN
+	ASN tc.ASN
 }
 
 // swagger:parameters GetASNById DeleteASN
@@ -120,7 +120,7 @@ type ASNPutParam struct {
 	//
 	// in: body
 	// required: true
-	ASN v13.ASN
+	ASN tc.ASN
 }
 
 // PutASN swagger:route PUT /asns/{id} ASN PutASN
