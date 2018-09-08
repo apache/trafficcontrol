@@ -88,13 +88,13 @@ func TestAssignDsesToServer(t *testing.T) {
 	mock.ExpectCommit()
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
-	tx, err := db.BeginTxx(dbCtx, nil)
+	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
 	}
 	defer tx.Commit()
 
-	result, err := assignDeliveryServicesToServer(100, newDses, true, tx.Tx)
+	result, err := assignDeliveryServicesToServer(100, newDses, true, tx)
 	if err != nil {
 		t.Errorf("error assigning deliveryservice: %v", err)
 	}

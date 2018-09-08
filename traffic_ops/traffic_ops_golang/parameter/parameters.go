@@ -135,7 +135,7 @@ func (param *TOParameter) Read() ([]interface{}, error, error, int) {
 	}
 
 	query := selectQuery() + where + ParametersGroupBy() + orderBy
-	rows, err := param.ReqInfo.Txx.NamedQuery(query, queryValues)
+	rows, err := param.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, errors.New("querying " + param.GetType() + ": " + err.Error()), http.StatusInternalServerError
 	}

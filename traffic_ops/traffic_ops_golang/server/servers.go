@@ -119,11 +119,11 @@ func (server *TOServer) Validate() error {
 		return util.JoinErrs(errs)
 	}
 
-	if _, err := tc.ValidateTypeID(server.ReqInfo.Tx, server.TypeID, "server"); err != nil {
+	if _, err := tc.ValidateTypeID(server.ReqInfo.Tx.Tx, server.TypeID, "server"); err != nil {
 		return err
 	}
 
-	rows, err := server.ReqInfo.Tx.Query("select cdn from profile where id=$1", server.ProfileID)
+	rows, err := server.ReqInfo.Tx.Tx.Query("select cdn from profile where id=$1", server.ProfileID)
 	if err != nil {
 		log.Error.Printf("could not execute select cdnID from profile: %s\n", err)
 		errs = append(errs, tc.DBError)
@@ -176,7 +176,7 @@ func (server TOServer) ChangeLogMessage(action string) (string, error) {
 func (server *TOServer) Read() ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
 
-	servers, errs, errType := getServers(server.ReqInfo.Params, server.ReqInfo.Txx, server.ReqInfo.User)
+	servers, errs, errType := getServers(server.ReqInfo.Params, server.ReqInfo.Tx, server.ReqInfo.User)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			if err.Error() == `id cannot parse to integer` {

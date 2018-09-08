@@ -159,7 +159,7 @@ func IsValidParentCachegroupID(id *int) bool {
 
 // Validate fulfills the api.Validator interface
 func (cg TOCacheGroup) Validate() error {
-	if _, err := tc.ValidateTypeID(cg.ReqInfo.Tx, cg.TypeID, "cachegroup"); err != nil {
+	if _, err := tc.ValidateTypeID(cg.ReqInfo.Tx.Tx, cg.TypeID, "cachegroup"); err != nil {
 		return err
 	}
 
@@ -192,7 +192,7 @@ func (cg *TOCacheGroup) Create() (error, error, int) {
 		return nil, errors.New("cg create: creating coord:" + err.Error()), http.StatusInternalServerError
 	}
 
-	resultRows, err := cg.ReqInfo.Tx.Query(
+	resultRows, err := cg.ReqInfo.Tx.Tx.Query(
 		insertQuery(),
 		cg.Name,
 		cg.ShortName,
@@ -230,13 +230,13 @@ func (cg *TOCacheGroup) Create() (error, error, int) {
 
 func (cg *TOCacheGroup) createLocalizationMethods() error {
 	q := `DELETE FROM cachegroup_localization_method where cachegroup = $1`
-	if _, err := cg.ReqInfo.Tx.Exec(q, *cg.ID); err != nil {
+	if _, err := cg.ReqInfo.Tx.Tx.Exec(q, *cg.ID); err != nil {
 		return fmt.Errorf("unable to delete cachegroup_localization_methods for cachegroup %d: %s", *cg.ID, err.Error())
 	}
 	if cg.LocalizationMethods != nil {
 		q = `INSERT INTO cachegroup_localization_method (cachegroup, method) VALUES ($1, $2)`
 		for _, method := range *cg.LocalizationMethods {
-			if _, err := cg.ReqInfo.Tx.Exec(q, *cg.ID, method.String()); err != nil {
+			if _, err := cg.ReqInfo.Tx.Tx.Exec(q, *cg.ID, method.String()); err != nil {
 				return fmt.Errorf("unable to insert cachegroup_localization_methods for cachegroup %d: %s", *cg.ID, err.Error())
 			}
 		}
@@ -248,7 +248,7 @@ func (cg *TOCacheGroup) createCoordinate() (*int, error) {
 	var coordinateID *int
 	if cg.Latitude != nil && cg.Longitude != nil {
 		q := `INSERT INTO coordinate (name, latitude, longitude) VALUES ($1, $2, $3) RETURNING id`
-		if err := cg.ReqInfo.Tx.QueryRow(q, tc.CachegroupCoordinateNamePrefix+*cg.Name, *cg.Latitude, *cg.Longitude).Scan(&coordinateID); err != nil {
+		if err := cg.ReqInfo.Tx.Tx.QueryRow(q, tc.CachegroupCoordinateNamePrefix+*cg.Name, *cg.Latitude, *cg.Longitude).Scan(&coordinateID); err != nil {
 			return nil, fmt.Errorf("insert coordinate for cg '%s': %s", *cg.Name, err.Error())
 		}
 	}
@@ -258,7 +258,7 @@ func (cg *TOCacheGroup) createCoordinate() (*int, error) {
 func (cg *TOCacheGroup) updateCoordinate() error {
 	if cg.Latitude != nil && cg.Longitude != nil {
 		q := `UPDATE coordinate SET name = $1, latitude = $2, longitude = $3 WHERE id = (SELECT coordinate FROM cachegroup WHERE id = $4)`
-		result, err := cg.ReqInfo.Tx.Exec(q, tc.CachegroupCoordinateNamePrefix+*cg.Name, *cg.Latitude, *cg.Longitude, *cg.ID)
+		result, err := cg.ReqInfo.Tx.Tx.Exec(q, tc.CachegroupCoordinateNamePrefix+*cg.Name, *cg.Latitude, *cg.Longitude, *cg.ID)
 		if err != nil {
 			return fmt.Errorf("update coordinate for cg '%s': %s", *cg.Name, err.Error())
 		}
@@ -275,7 +275,7 @@ func (cg *TOCacheGroup) updateCoordinate() error {
 
 func (cg *TOCacheGroup) deleteCoordinate(coordinateID int) error {
 	q := `UPDATE cachegroup SET coordinate = NULL WHERE id = $1`
-	result, err := cg.ReqInfo.Tx.Exec(q, *cg.ID)
+	result, err := cg.ReqInfo.Tx.Tx.Exec(q, *cg.ID)
 	if err != nil {
 		return fmt.Errorf("updating cg %d coordinate to null: %s", *cg.ID, err.Error())
 	}
@@ -288,7 +288,7 @@ func (cg *TOCacheGroup) deleteCoordinate(coordinateID int) error {
 	}
 
 	q = `DELETE FROM coordinate WHERE id = $1`
-	result, err = cg.ReqInfo.Tx.Exec(q, coordinateID)
+	result, err = cg.ReqInfo.Tx.Tx.Exec(q, coordinateID)
 	if err != nil {
 		return fmt.Errorf("delete coordinate %d for cg %d: %s", coordinateID, *cg.ID, err.Error())
 	}
@@ -319,7 +319,7 @@ func (cg *TOCacheGroup) Read() ([]interface{}, error, error, int) {
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := cg.ReqInfo.Txx.NamedQuery(query, queryValues)
+	rows, err := cg.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, errors.New("cg read: querying: " + err.Error()), http.StatusInternalServerError
 	}
@@ -364,7 +364,7 @@ func (cg *TOCacheGroup) Update() (error, error, int) {
 		return api.TypeErrToAPIErr(err, errType)
 	}
 
-	resultRows, err := cg.ReqInfo.Tx.Query(
+	resultRows, err := cg.ReqInfo.Tx.Tx.Query(
 		updateQuery(),
 		cg.Name,
 		cg.ShortName,
@@ -436,7 +436,7 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, tc.ApiErrorType) 
 func (cg *TOCacheGroup) getCoordinateID() (*int, error) {
 	q := `SELECT coordinate FROM cachegroup WHERE id = $1`
 	var coordinateID *int
-	if err := cg.ReqInfo.Tx.QueryRow(q, *cg.ID).Scan(&coordinateID); err != nil {
+	if err := cg.ReqInfo.Tx.Tx.QueryRow(q, *cg.ID).Scan(&coordinateID); err != nil {
 		return nil, err
 	}
 	return coordinateID, nil
@@ -445,7 +445,7 @@ func (cg *TOCacheGroup) getCoordinateID() (*int, error) {
 //The CacheGroup implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
 func (cg *TOCacheGroup) Delete() (error, error, int) {
-	inUse, err := isUsed(cg.ReqInfo.Txx, *cg.ID)
+	inUse, err := isUsed(cg.ReqInfo.Tx, *cg.ID)
 	if err != nil {
 		return nil, errors.New("cg delete: checking use: " + err.Error()), http.StatusInternalServerError
 	}
@@ -467,7 +467,7 @@ func (cg *TOCacheGroup) Delete() (error, error, int) {
 		}
 	}
 
-	result, err := cg.ReqInfo.Txx.NamedExec(deleteQuery(), cg)
+	result, err := cg.ReqInfo.Tx.NamedExec(deleteQuery(), cg)
 	if err != nil {
 		return nil, errors.New("cg delete querying: " + err.Error()), http.StatusInternalServerError
 	}

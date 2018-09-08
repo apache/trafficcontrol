@@ -86,12 +86,12 @@ func TestGetMonitoringServers(t *testing.T) {
 	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
-	tx, err := db.BeginTxx(dbCtx, nil)
+	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
 	}
 
-	monitors, caches, routers, err := getMonitoringServers(tx.Tx, cdn)
+	monitors, caches, routers, err := getMonitoringServers(tx, cdn)
 	if err != nil {
 		t.Errorf("getMonitoringServers expected: nil error, actual: %v", err)
 	}
@@ -152,12 +152,12 @@ func TestGetCachegroups(t *testing.T) {
 	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
-	tx, err := db.BeginTxx(dbCtx, nil)
+	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
 	}
 
-	sqlCachegroups, err := getCachegroups(tx.Tx, cdn)
+	sqlCachegroups, err := getCachegroups(tx, cdn)
 	if err != nil {
 		t.Errorf("getCachegroups expected: nil error, actual: %v", err)
 	}
@@ -326,12 +326,12 @@ func TestGetProfiles(t *testing.T) {
 	mock.ExpectQuery("SELECT").WithArgs(pq.Array(profileNames), CacheMonitorConfigFile).WillReturnRows(rows)
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
-	tx, err := db.BeginTxx(dbCtx, nil)
+	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
 	}
 
-	sqlProfiles, err := getProfiles(tx.Tx, caches, routers)
+	sqlProfiles, err := getProfiles(tx, caches, routers)
 	if err != nil {
 		t.Errorf("getProfiles expected: nil error, actual: %v", err)
 	}
@@ -399,12 +399,12 @@ func TestGetDeliveryServices(t *testing.T) {
 	mock.ExpectQuery("SELECT").WithArgs(pq.Array(profileNames)).WillReturnRows(rows)
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
-	tx, err := db.BeginTxx(dbCtx, nil)
+	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
 	}
 
-	sqlDeliveryservices, err := getDeliveryServices(tx.Tx, routers)
+	sqlDeliveryservices, err := getDeliveryServices(tx, routers)
 	if err != nil {
 		t.Errorf("getProfiles expected: nil error, actual: %v", err)
 	}
@@ -449,12 +449,12 @@ func TestGetConfig(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
-	tx, err := db.BeginTxx(dbCtx, nil)
+	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
 	}
 
-	sqlConfig, err := getConfig(tx.Tx)
+	sqlConfig, err := getConfig(tx)
 	if err != nil {
 		t.Errorf("getProfiles expected: nil error, actual: %v", err)
 	}
@@ -654,12 +654,12 @@ func TestGetMonitoringJSON(t *testing.T) {
 	}
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
-	tx, err := db.BeginTxx(dbCtx, nil)
+	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
 	}
 
-	sqlResp, err := getMonitoringJSON(tx.Tx, cdn)
+	sqlResp, err := getMonitoringJSON(tx, cdn)
 	if err != nil {
 		t.Errorf("getMonitoringJSON expected: nil error, actual: %v", err)
 	}

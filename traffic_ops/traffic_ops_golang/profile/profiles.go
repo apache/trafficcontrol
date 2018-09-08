@@ -136,7 +136,7 @@ func (prof *TOProfile) Read() ([]interface{}, error, error, int) {
 	query := selectProfilesQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := prof.ReqInfo.Txx.NamedQuery(query, queryValues)
+	rows, err := prof.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, errors.New("profile read querying: " + err.Error()), http.StatusInternalServerError
 	}
@@ -156,7 +156,7 @@ func (prof *TOProfile) Read() ([]interface{}, error, error, int) {
 	for _, profile := range profiles {
 		// Attach Parameters if the 'id' parameter is sent
 		if _, ok := prof.APIInfo().Params[IDQueryParam]; ok {
-			profile.Parameters, err = ReadParameters(prof.ReqInfo.Txx, prof.APIInfo().Params, prof.ReqInfo.User, profile)
+			profile.Parameters, err = ReadParameters(prof.ReqInfo.Tx, prof.APIInfo().Params, prof.ReqInfo.User, profile)
 			if err != nil {
 				return nil, nil, errors.New("profile read reading parameters: " + err.Error()), http.StatusInternalServerError
 			}

@@ -120,7 +120,7 @@ func ReadHandler(typeFactory CRUDFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 		defer inf.Close()
@@ -128,7 +128,7 @@ func ReadHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		reader := typeFactory(inf)
 		results, userErr, sysErr, errCode := reader.Read()
 		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 		WriteResp(w, r, results)
@@ -144,7 +144,7 @@ func ReadOnlyHandler(typeFactory func(reqInfo *APIInfo) Reader) http.HandlerFunc
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 		defer inf.Close()
@@ -152,7 +152,7 @@ func ReadOnlyHandler(typeFactory func(reqInfo *APIInfo) Reader) http.HandlerFunc
 		reader := typeFactory(inf)
 		results, userErr, sysErr, errCode := reader.Read()
 		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 		WriteResp(w, r, results)
@@ -170,14 +170,14 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 		defer inf.Close()
 
 		u := typeFactory(inf)
 		if err := decodeAndValidateRequestBody(r, u); err != nil {
-			HandleErr(w, r, inf.Tx, http.StatusBadRequest, err, nil)
+			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 			return
 		}
 
@@ -188,13 +188,13 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		for _, kf := range keyFields {
 			paramKey := inf.Params[kf.Field]
 			if paramKey == "" {
-				HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil)
+				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil)
 				return
 			}
 
 			paramValue, err := kf.Func(paramKey)
 			if err != nil {
-				HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil)
+				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil)
 				return
 			}
 
@@ -208,7 +208,7 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		u.SetKeys(keys)
 		_, ok := u.GetKeys()
 		if !ok {
-			HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("unable to parse required keys from request body"), nil)
+			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("unable to parse required keys from request body"), nil)
 			return // TODO verify?
 		}
 
@@ -216,23 +216,23 @@ func UpdateHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		if t, ok := u.(Tenantable); ok {
 			authorized, err := t.IsTenantAuthorized(inf.User)
 			if err != nil {
-				HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
 				return
 			}
 			if !authorized {
-				HandleErr(w, r, inf.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+				HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 				return
 			}
 		}
 
 		userErr, sysErr, errCode = u.Update()
 		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 
-		if err := CreateChangeLog(ApiChange, Updated, u, inf.User, inf.Tx); err != nil {
-			HandleErr(w, r, inf.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
+		if err := CreateChangeLog(ApiChange, Updated, u, inf.User, inf.Tx.Tx); err != nil {
+			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
 		WriteRespAlertObj(w, r, tc.SuccessLevel, u.GetType()+" was updated.", u)
@@ -249,7 +249,7 @@ func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 		defer inf.Close()
@@ -261,13 +261,13 @@ func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		for _, kf := range keyFields {
 			paramKey := inf.Params[kf.Field]
 			if paramKey == "" {
-				HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil)
+				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil)
 				return
 			}
 
 			paramValue, err := kf.Func(paramKey)
 			if err != nil {
-				HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil)
+				HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil)
 				return
 			}
 			keys[kf.Field] = paramValue
@@ -277,11 +277,11 @@ func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		if t, ok := d.(Tenantable); ok {
 			authorized, err := t.IsTenantAuthorized(inf.User)
 			if err != nil {
-				HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
 				return
 			}
 			if !authorized {
-				HandleErr(w, r, inf.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+				HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 				return
 			}
 		}
@@ -289,13 +289,13 @@ func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 		log.Debugf("calling delete on object: %++v", d) //should have id set now
 		userErr, sysErr, errCode = d.Delete()
 		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 
 		log.Debugf("changelog for delete on object")
-		if err := CreateChangeLog(ApiChange, Deleted, d, inf.User, inf.Tx); err != nil {
-			HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("inserting changelog: "+err.Error()))
+		if err := CreateChangeLog(ApiChange, Deleted, d, inf.User, inf.Tx.Tx); err != nil {
+			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
 		WriteRespAlert(w, r, tc.SuccessLevel, d.GetType()+" was deleted.")
@@ -312,7 +312,7 @@ func CreateHandler(typeConstructor CRUDFactory) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, nil, nil)
 		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 		defer inf.Close()
@@ -320,7 +320,7 @@ func CreateHandler(typeConstructor CRUDFactory) http.HandlerFunc {
 		i := typeConstructor(inf)
 		err := decodeAndValidateRequestBody(r, i)
 		if err != nil {
-			HandleErr(w, r, inf.Tx, http.StatusBadRequest, err, nil)
+			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 			return
 		}
 
@@ -330,23 +330,23 @@ func CreateHandler(typeConstructor CRUDFactory) http.HandlerFunc {
 		if t, ok := i.(Tenantable); ok {
 			authorized, err := t.IsTenantAuthorized(inf.User)
 			if err != nil {
-				HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+				HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
 				return
 			}
 			if !authorized {
-				HandleErr(w, r, inf.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+				HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 				return
 			}
 		}
 
 		userErr, sysErr, errCode = i.Create()
 		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 			return
 		}
 
-		if err = CreateChangeLog(ApiChange, Created, i, inf.User, inf.Tx); err != nil {
-			HandleErr(w, r, inf.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
+		if err = CreateChangeLog(ApiChange, Created, i, inf.User, inf.Tx.Tx); err != nil {
+			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, tc.DBError, errors.New("inserting changelog: "+err.Error()))
 			return
 		}
 		WriteRespAlertObj(w, r, tc.SuccessLevel, i.GetType()+" was created.", i)

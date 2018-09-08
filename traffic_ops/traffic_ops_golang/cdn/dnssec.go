@@ -40,14 +40,14 @@ const DNSSECStatusExisting = "existing"
 func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	req := tc.CDNDNSSECGenerateReq{}
-	if err := api.Parse(r.Body, inf.Tx, &req); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
+	if err := api.Parse(r.Body, inf.Tx.Tx, &req); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
 		return
 	}
 	if req.EffectiveDateUnix == nil {
@@ -55,8 +55,8 @@ func CreateDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 		req.EffectiveDateUnix = &now
 	}
 	cdnName := *req.Key
-	if err := generateStoreDNSSECKeys(inf.Tx, inf.Config, cdnName, uint64(*req.TTL), uint64(*req.KSKExpirationDays), uint64(*req.ZSKExpirationDays), int64(*req.EffectiveDateUnix)); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("generating and storing DNSSEC CDN keys: "+err.Error()))
+	if err := generateStoreDNSSECKeys(inf.Tx.Tx, inf.Config, cdnName, uint64(*req.TTL), uint64(*req.KSKExpirationDays), uint64(*req.ZSKExpirationDays), int64(*req.EffectiveDateUnix)); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and storing DNSSEC CDN keys: "+err.Error()))
 		return
 	}
 	api.WriteResp(w, r, "Successfully created dnssec keys for "+cdnName)
@@ -203,28 +203,28 @@ WHERE cdn.name = $1
 func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	key := inf.Params["name"]
 
-	riakCluster, err := riaksvc.GetRiakClusterTx(inf.Tx, inf.Config.RiakAuthOptions)
+	riakCluster, err := riaksvc.GetRiakClusterTx(inf.Tx.Tx, inf.Config.RiakAuthOptions)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("getting riak cluster: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting riak cluster: "+err.Error()))
 		return
 	}
 	if err := riakCluster.Start(); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("starting riak cluster: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("starting riak cluster: "+err.Error()))
 		return
 	}
 	defer riaksvc.StopCluster(riakCluster)
 
 	if err := riaksvc.DeleteObject(key, CDNDNSSECKeyType, riakCluster); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("deleting cdn dnssec keys: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting cdn dnssec keys: "+err.Error()))
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "Deleted DNSSEC keys for CDN "+key, inf.User, inf.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "Deleted DNSSEC keys for CDN "+key, inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, "Successfully deleted "+CDNDNSSECKeyType+" for "+key)
 }

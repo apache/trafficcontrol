@@ -60,7 +60,7 @@ type GenericDeleter interface {
 
 // GenericCreate does a Create (POST) for the given GenericCreator object and type. This exists as a generic function, for the common use case of a single "id" key and a lastUpdated field.
 func GenericCreate(val GenericCreator) (error, error, int) {
-	resultRows, err := val.APIInfo().Txx.NamedQuery(val.InsertQuery(), val)
+	resultRows, err := val.APIInfo().Tx.NamedQuery(val.InsertQuery(), val)
 	if err != nil {
 		return ParseDBErr(err, val.GetType())
 	}
@@ -92,7 +92,7 @@ func GenericRead(val GenericReader) ([]interface{}, error, error, int) {
 	}
 
 	query := val.SelectQuery() + where + orderBy
-	rows, err := val.APIInfo().Txx.NamedQuery(query, queryValues)
+	rows, err := val.APIInfo().Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, errors.New("querying " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError
 	}
@@ -111,7 +111,7 @@ func GenericRead(val GenericReader) ([]interface{}, error, error, int) {
 
 // GenericUpdate handles the common update case, where the update returns the new last_modified time.
 func GenericUpdate(val GenericUpdater) (error, error, int) {
-	rows, err := val.APIInfo().Txx.NamedQuery(val.UpdateQuery(), val)
+	rows, err := val.APIInfo().Tx.NamedQuery(val.UpdateQuery(), val)
 	if err != nil {
 		return ParseDBErr(err, val.GetType())
 	}
@@ -133,7 +133,7 @@ func GenericUpdate(val GenericUpdater) (error, error, int) {
 
 // GenericDelete does a Delete (DELETE) for the given GenericDeleter object and type. This exists as a generic function, for the common use case of a simple delete with query parameters defined in the sqlx struct tags.
 func GenericDelete(val GenericDeleter) (error, error, int) {
-	result, err := val.APIInfo().Txx.NamedExec(val.DeleteQuery(), val)
+	result, err := val.APIInfo().Tx.NamedExec(val.DeleteQuery(), val)
 	if err != nil {
 		return nil, errors.New("deleting " + val.GetType() + ": " + err.Error()), http.StatusInternalServerError
 	}

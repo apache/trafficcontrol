@@ -112,7 +112,7 @@ func (comment *TODeliveryServiceRequestComment) Read() ([]interface{}, error, er
 
 func (comment *TODeliveryServiceRequestComment) Update() (error, error, int) {
 	current := TODeliveryServiceRequestComment{}
-	err := comment.ReqInfo.Txx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
+	err := comment.ReqInfo.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
 	if err != nil {
 		return api.ParseDBErr(err, comment.GetType())
 	}
@@ -127,7 +127,7 @@ func (comment *TODeliveryServiceRequestComment) Update() (error, error, int) {
 
 func (comment *TODeliveryServiceRequestComment) Delete() (error, error, int) {
 	var current TODeliveryServiceRequestComment
-	err := comment.ReqInfo.Txx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
+	err := comment.ReqInfo.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
 	if err != nil {
 		return nil, errors.New("querying DeliveryServiceRequestComments: " + err.Error()), http.StatusInternalServerError
 	}

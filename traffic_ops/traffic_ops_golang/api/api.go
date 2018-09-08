@@ -255,14 +255,13 @@ type APIInfo struct {
 	IntParams map[string]int
 	User      *auth.CurrentUser
 	ReqID     uint64
-	Txx       *sqlx.Tx
-	Tx        *sql.Tx // Tx is a convenience alias for Tx
+	Tx        *sqlx.Tx
 	Config    *config.Config
 }
 
 // NewInfo get and returns the context info needed by handlers. It also returns any user error, any system error, and the status code which should be returned to the client if an error occurred.
 //
-// It is encouraged to call APIInfo.Tx.Commit() manually when all queries are finished, to release database resources early, and also to return an error to the user if the commit failed.
+// It is encouraged to call APIInfo.Tx.Tx.Commit() manually when all queries are finished, to release database resources early, and also to return an error to the user if the commit failed.
 //
 // NewInfo guarantees the returned APIInfo.Tx is nil or valid, even if a returned error is not nil. Hence, it is safe to pass the Tx to HandleErr when this returns errors.
 //
@@ -272,18 +271,18 @@ type APIInfo struct {
 //  func handler(w http.ResponseWriter, r *http.Request) {
 //    inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 //    if userErr != nil || sysErr != nil {
-//      api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+//      api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 //      return
 //    }
 //    defer inf.Close()
 //
-//    respObj, err := finalDatabaseOperation(inf.Txx)
+//    respObj, err := finalDatabaseOperation(inf.Tx)
 //    if err != nil {
-//      api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("final db op: " + err.Error()))
+//      api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("final db op: " + err.Error()))
 //      return
 //    }
-//    if err := inf.Tx.Commit(); err != nil {
-//      api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("committing transaction: " + err.Error()))
+//    if err := inf.Tx.Tx.Commit(); err != nil {
+//      api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("committing transaction: " + err.Error()))
 //      return
 //    }
 //    api.WriteResp(w, r, respObj)
@@ -322,8 +321,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 		Params:    params,
 		IntParams: intParams,
 		User:      user,
-		Txx:       tx,
-		Tx:        tx.Tx,
+		Tx:        tx,
 	}, nil, nil, http.StatusOK
 }
 
@@ -331,7 +329,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 //
 // Close will commit the transaction, if it hasn't been rolled back.
 func (inf *APIInfo) Close() {
-	if err := inf.Tx.Commit(); err != nil && err != sql.ErrTxDone {
+	if err := inf.Tx.Tx.Commit(); err != nil && err != sql.ErrTxDone {
 		log.Errorln("committing transaction: " + err.Error())
 	}
 }

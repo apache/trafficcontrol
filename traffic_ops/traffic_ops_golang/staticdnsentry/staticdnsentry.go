@@ -96,7 +96,7 @@ func (staticDNSEntry *TOStaticDNSEntry) SetKeys(keys map[string]interface{}) {
 
 // Validate fulfills the api.Validator interface
 func (staticDNSEntry TOStaticDNSEntry) Validate() error {
-	typeStr, err := tc.ValidateTypeID(staticDNSEntry.ReqInfo.Tx, &staticDNSEntry.TypeID, "staticdnsentry")
+	typeStr, err := tc.ValidateTypeID(staticDNSEntry.ReqInfo.Tx.Tx, &staticDNSEntry.TypeID, "staticdnsentry")
 	if err != nil {
 		return err
 	}

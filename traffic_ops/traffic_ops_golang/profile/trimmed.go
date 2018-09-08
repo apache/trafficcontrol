@@ -31,11 +31,11 @@ import (
 func Trimmed(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
-	api.RespWriter(w, r, inf.Tx)(getTrimmedProfiles(inf.Tx))
+	api.RespWriter(w, r, inf.Tx.Tx)(getTrimmedProfiles(inf.Tx.Tx))
 }
 
 func getTrimmedProfiles(tx *sql.Tx) ([]tc.ProfileTrimmed, error) {

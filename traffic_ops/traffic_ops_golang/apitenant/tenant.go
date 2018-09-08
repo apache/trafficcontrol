@@ -135,7 +135,7 @@ func (ten *TOTenant) Read() ([]interface{}, error, error, int) {
 		// NOTE: work around issue where user has no tenancy assigned.  If tenancy turned off, there
 		// should be no tenancy restrictions.  This should be removed once tenant_id NOT NULL constraints
 		// are in place
-		enabled, err := tenant.IsTenancyEnabledTx(ten.APIInfo().Tx)
+		enabled, err := tenant.IsTenancyEnabledTx(ten.APIInfo().Tx.Tx)
 		if err != nil {
 			return nil, nil, errors.New("tenant checking tenancy: " + err.Error()), http.StatusInternalServerError
 		}
@@ -183,7 +183,7 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 
 	if ten.ID != nil && *ten.ID != 0 {
 		// modifying an existing tenant
-		ok, err = tenant.IsResourceAuthorizedToUserTx(*ten.ID, user, ten.APIInfo().Tx)
+		ok, err = tenant.IsResourceAuthorizedToUserTx(*ten.ID, user, ten.APIInfo().Tx.Tx)
 		if !ok || err != nil {
 			return ok, err
 		}
@@ -195,7 +195,7 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 
 		// get current parentID to check if it's being changed
 		var parentID int
-		tx := ten.APIInfo().Tx
+		tx := ten.APIInfo().Tx.Tx
 		err = tx.QueryRow(`SELECT parent_id FROM tenant WHERE id = ` + strconv.Itoa(*ten.ID)).Scan(&parentID)
 		if err != nil {
 			return false, err
@@ -211,15 +211,15 @@ func (ten *TOTenant) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 		return false, err
 	}
 
-	return tenant.IsResourceAuthorizedToUserTx(*ten.ParentID, user, ten.APIInfo().Tx)
+	return tenant.IsResourceAuthorizedToUserTx(*ten.ParentID, user, ten.APIInfo().Tx.Tx)
 }
 
 func (tn *TOTenant) Update() (error, error, int) { return api.GenericUpdate(tn) }
 
 func (ten *TOTenant) Delete() (error, error, int) {
-	result, err := ten.APIInfo().Txx.NamedExec(deleteQuery(), ten)
+	result, err := ten.APIInfo().Tx.NamedExec(deleteQuery(), ten)
 	if err != nil {
-		return parseDeleteErr(err, *ten.ID, ten.APIInfo().Tx) // this is why we can't use api.GenericDelete
+		return parseDeleteErr(err, *ten.ID, ten.APIInfo().Tx.Tx) // this is why we can't use api.GenericDelete
 	}
 
 	if rowsAffected, err := result.RowsAffected(); err != nil {

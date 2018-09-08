@@ -110,12 +110,12 @@ func (req *TODeliveryServiceRequest) Read() ([]interface{}, error, error, int) {
 	if len(errs) > 0 {
 		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
-	tenancyEnabled, err := tenant.IsTenancyEnabledTx(req.APIInfo().Tx)
+	tenancyEnabled, err := tenant.IsTenancyEnabledTx(req.APIInfo().Tx.Tx)
 	if err != nil {
 		return nil, nil, errors.New("dsr checking tenancy enabled: " + err.Error()), http.StatusInternalServerError
 	}
 	if tenancyEnabled {
-		tenantIDs, err := tenant.GetUserTenantIDListTx(req.APIInfo().Tx, req.APIInfo().User.TenantID)
+		tenantIDs, err := tenant.GetUserTenantIDListTx(req.APIInfo().Tx.Tx, req.APIInfo().User.TenantID)
 		if err != nil {
 			return nil, nil, errors.New("dsr getting tenant list: " + err.Error()), http.StatusInternalServerError
 		}
@@ -125,7 +125,7 @@ func (req *TODeliveryServiceRequest) Read() ([]interface{}, error, error, int) {
 	query := selectDeliveryServiceRequestsQuery() + where + orderBy
 	log.Debugln("Query is ", query)
 
-	rows, err := req.APIInfo().Txx.NamedQuery(query, queryValues)
+	rows, err := req.APIInfo().Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, nil, errors.New("dsr querying: " + err.Error()), http.StatusInternalServerError
 	}
@@ -180,7 +180,7 @@ func (req TODeliveryServiceRequest) IsTenantAuthorized(user *auth.CurrentUser) (
 		log.Debugf("tenantID is nil")
 		return false, errors.New("tenantID is nil")
 	}
-	return tenant.IsResourceAuthorizedToUserTx(*ds.TenantID, user, req.APIInfo().Tx)
+	return tenant.IsResourceAuthorizedToUserTx(*ds.TenantID, user, req.APIInfo().Tx.Tx)
 }
 
 // Update implements the tc.Updater interface.
@@ -194,7 +194,7 @@ func (req *TODeliveryServiceRequest) Update() (error, error, int) {
 	}
 
 	current := TODeliveryServiceRequest{}
-	err := req.ReqInfo.Txx.QueryRowx(selectDeliveryServiceRequestsQuery()+`WHERE r.id=$1`, *req.ID).StructScan(&current)
+	err := req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+`WHERE r.id=$1`, *req.ID).StructScan(&current)
 	if err != nil {
 		return nil, errors.New("dsr update querying: " + err.Error()), http.StatusInternalServerError
 	}
@@ -244,7 +244,7 @@ func (req *TODeliveryServiceRequest) Create() (error, error, int) {
 		return errors.New("no xmlId associated with this request"), nil, http.StatusBadRequest
 	}
 	XMLID := *ds.XMLID
-	active, err := isActiveRequest(req.APIInfo().Txx, XMLID)
+	active, err := isActiveRequest(req.APIInfo().Tx, XMLID)
 	if err != nil {
 		return errors.New("checking request active: " + err.Error()), nil, http.StatusInternalServerError
 	}
@@ -265,7 +265,7 @@ func (req *TODeliveryServiceRequest) Delete() (error, error, int) {
 	}
 
 	st := tc.RequestStatus(0)
-	if err := req.APIInfo().Tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=$1`, *req.ID).Scan(&st); err != nil {
+	if err := req.APIInfo().Tx.Tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=$1`, *req.ID).Scan(&st); err != nil {
 		return nil, errors.New("dsr delete querying status: " + err.Error()), http.StatusBadRequest
 	}
 	if st == tc.RequestStatusComplete || st == tc.RequestStatusPending || st == tc.RequestStatusRejected {
@@ -366,7 +366,7 @@ func (req *deliveryServiceRequestAssignment) Update() (error, error, int) {
 	}
 
 	current := TODeliveryServiceRequest{}
-	err := req.ReqInfo.Txx.QueryRowx(selectDeliveryServiceRequestsQuery()+`WHERE r.id = $1`, *req.ID).StructScan(&current)
+	err := req.ReqInfo.Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+`WHERE r.id = $1`, *req.ID).StructScan(&current)
 	if err != nil {
 		return nil, errors.New("dsr assignment querying existing: " + err.Error()), http.StatusInternalServerError
 	}
@@ -388,11 +388,11 @@ func (req *deliveryServiceRequestAssignment) Update() (error, error, int) {
 		v = strconv.Itoa(*req.AssigneeID)
 	}
 
-	if _, err = req.APIInfo().Tx.Exec(`UPDATE deliveryservice_request SET assignee_id = $1 WHERE id = $2`, v, *req.ID); err != nil {
+	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET assignee_id = $1 WHERE id = $2`, v, *req.ID); err != nil {
 		return api.ParseDBErr(err, req.GetType())
 	}
 
-	if err = req.APIInfo().Txx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(req); err != nil {
+	if err = req.APIInfo().Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(req); err != nil {
 		return nil, errors.New("dsr assignment querying: " + err.Error()), http.StatusInternalServerError
 	}
 
@@ -438,7 +438,7 @@ func (req *deliveryServiceRequestStatus) Update() (error, error, int) {
 	}
 
 	current := TODeliveryServiceRequest{}
-	err := req.APIInfo().Txx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(&current)
+	err := req.APIInfo().Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(&current)
 	if err != nil {
 		return nil, errors.New("dsr status querying existing: " + err.Error()), http.StatusInternalServerError
 	}
@@ -454,11 +454,11 @@ func (req *deliveryServiceRequestStatus) Update() (error, error, int) {
 
 	// LastEditedBy field should not change with status update
 
-	if _, err = req.APIInfo().Tx.Exec(`UPDATE deliveryservice_request SET status = $1 WHERE id = $2`, *req.Status, *req.ID); err != nil {
+	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET status = $1 WHERE id = $2`, *req.Status, *req.ID); err != nil {
 		return api.ParseDBErr(err, req.GetType())
 	}
 
-	if err = req.APIInfo().Txx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(req); err != nil {
+	if err = req.APIInfo().Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(req); err != nil {
 		return nil, errors.New("dsr status update querying: " + err.Error()), http.StatusInternalServerError
 	}
 

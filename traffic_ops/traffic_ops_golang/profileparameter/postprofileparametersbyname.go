@@ -34,28 +34,28 @@ import (
 func PostProfileParamsByName(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 	profParams := tc.ProfileParametersByNamePost{}
-	if err := api.Parse(r.Body, inf.Tx, &profParams); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("parse error: "+err.Error()), nil)
+	if err := api.Parse(r.Body, inf.Tx.Tx, &profParams); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parse error: "+err.Error()), nil)
 		return
 	}
 	profileName := inf.Params["name"]
-	profileID, profileExists, err := dbhelp.GetProfileIDFromName(profileName, inf.Tx)
+	profileID, profileExists, err := dbhelp.GetProfileIDFromName(profileName, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("getting profile '"+profileName+"' ID: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting profile '"+profileName+"' ID: "+err.Error()))
 		return
 	}
 	if !profileExists {
-		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("no profile with that name exists"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("no profile with that name exists"), nil)
 		return
 	}
-	insertedObjs, err := insertParametersForProfile(profileName, profParams, inf.Tx)
+	insertedObjs, err := insertParametersForProfile(profileName, profParams, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("posting profile parameters by name: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("posting profile parameters by name: "+err.Error()))
 		return
 	}
 	resp := tc.ProfileParameterPostResp{Parameters: insertedObjs, ProfileName: profileName, ProfileID: profileID}

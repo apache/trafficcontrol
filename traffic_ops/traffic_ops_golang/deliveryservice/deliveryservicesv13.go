@@ -92,7 +92,7 @@ func (ds *TODeliveryServiceV13) GetType() string {
 }
 
 func (ds *TODeliveryServiceV13) Validate() error {
-	return ds.DeliveryServiceNullable.Validate(ds.APIInfo().Tx)
+	return ds.DeliveryServiceNullable.Validate(ds.APIInfo().Tx.Tx)
 }
 
 // Create is unimplemented, needed to satisfy CRUDer, since the framework doesn't allow a create to return an array of one
@@ -104,34 +104,34 @@ func (ds *TODeliveryServiceV13) Create() (error, error, int) {
 func CreateV13(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	ds := tc.DeliveryServiceNullable{}
-	if err := api.Parse(r.Body, inf.Tx, &ds); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+	if err := api.Parse(r.Body, inf.Tx.Tx, &ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
 		return
 	}
 
 	if ds.RoutingName == nil || *ds.RoutingName == "" {
 		ds.RoutingName = util.StrPtr("cdn")
 	}
-	if err := ds.Validate(inf.Tx); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
+	if err := ds.Validate(inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
 		return
 	}
-	if authorized, err := isTenantAuthorized(inf.User, inf.Txx, &ds.DeliveryServiceNullableV12); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+	if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 		return
 	} else if !authorized {
-		api.HandleErr(w, r, inf.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 		return
 	}
-	ds, errCode, userErr, sysErr = create(inf.Tx, *inf.Config, inf.User, ds)
+	ds, errCode, userErr, sysErr = create(inf.Tx.Tx, *inf.Config, inf.User, ds)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullable{ds})
@@ -235,7 +235,7 @@ func create(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 
 func (ds *TODeliveryServiceV13) Read() ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
-	dses, errs, _ := readGetDeliveryServices(ds.APIInfo().Params, ds.APIInfo().Txx, ds.APIInfo().User)
+	dses, errs, _ := readGetDeliveryServices(ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			if err.Error() == `id cannot parse to integer` { // TODO create const for string
@@ -376,7 +376,7 @@ func (ds *TODeliveryServiceV13) Update() (error, error, int) {
 func UpdateV13(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
@@ -385,27 +385,27 @@ func UpdateV13(w http.ResponseWriter, r *http.Request) {
 
 	ds := tc.DeliveryServiceNullable{}
 	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
 	ds.ID = &id
 
-	if err := ds.Validate(inf.Tx); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
+	if err := ds.Validate(inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
 		return
 	}
 
-	if authorized, err := isTenantAuthorized(inf.User, inf.Txx, &ds.DeliveryServiceNullableV12); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+	if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 		return
 	} else if !authorized {
-		api.HandleErr(w, r, inf.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 		return
 	}
 
-	ds, errCode, userErr, sysErr = update(inf.Tx, *inf.Config, inf.User, &ds)
+	ds, errCode, userErr, sysErr = update(inf.Tx.Tx, *inf.Config, inf.User, &ds)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullable{ds})

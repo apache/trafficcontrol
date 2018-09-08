@@ -178,7 +178,7 @@ func (fed *TOCDNFederation) Read() ([]interface{}, error, error, int) {
 		fed.ID = util.IntPtr(id)
 	}
 
-	tenantIDs, err := tenant.GetUserTenantIDListTx(fed.APIInfo().Tx, fed.APIInfo().User.TenantID)
+	tenantIDs, err := tenant.GetUserTenantIDListTx(fed.APIInfo().Tx.Tx, fed.APIInfo().User.TenantID)
 	if err != nil {
 		return nil, nil, errors.New("getting tenant list for user: " + err.Error()), http.StatusInternalServerError
 	}
@@ -201,7 +201,7 @@ func (fed *TOCDNFederation) Read() ([]interface{}, error, error, int) {
 		if fed.ID == nil {
 			return nil, nil, nil, http.StatusNotFound
 		}
-		if ok, err := dbhelpers.CDNExists(fed.APIInfo().Params["name"], fed.APIInfo().Txx); err != nil {
+		if ok, err := dbhelpers.CDNExists(fed.APIInfo().Params["name"], fed.APIInfo().Tx); err != nil {
 			return nil, nil, errors.New("verifying CDN exists: " + err.Error()), http.StatusInternalServerError
 		} else if !ok {
 			return nil, nil, nil, http.StatusNotFound
@@ -236,7 +236,7 @@ func (fed *TOCDNFederation) Delete() (error, error, int) {
 }
 
 func (fed TOCDNFederation) isTenantAuthorized() (error, error, int) {
-	tenantID, err := getTenantIDFromFedID(*fed.ID, fed.APIInfo().Tx)
+	tenantID, err := getTenantIDFromFedID(*fed.ID, fed.APIInfo().Tx.Tx)
 	if err != nil {
 		// If nobody has claimed a tenant, that federation is publicly visible.
 		// This logically follows /federations/:id/deliveryservices
@@ -248,7 +248,7 @@ func (fed TOCDNFederation) isTenantAuthorized() (error, error, int) {
 
 	// TODO: After IsResourceAuthorizedToUserTx is updated to no longer have `use_tenancy`,
 	// that will probably be better to use. For now, use the list. Issue #2602
-	list, err := tenant.GetUserTenantIDListTx(fed.APIInfo().Tx, fed.APIInfo().User.TenantID)
+	list, err := tenant.GetUserTenantIDListTx(fed.APIInfo().Tx.Tx, fed.APIInfo().User.TenantID)
 	if err != nil {
 		return nil, errors.New("getting federation tenant list: " + err.Error()), http.StatusInternalServerError
 	}

@@ -31,28 +31,28 @@ import (
 func DeleteName(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	cdnName := tc.CDNName(inf.Params["name"])
-	if ok, err := cdnExists(inf.Tx, cdnName); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking CDN existence: "+err.Error()))
+	if ok, err := cdnExists(inf.Tx.Tx, cdnName); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking CDN existence: "+err.Error()))
 		return
 	} else if !ok {
-		api.HandleErr(w, r, inf.Tx, http.StatusNotFound, nil, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, nil, nil)
 		return
 	}
-	if ok, err := cdnUnused(inf.Tx, cdnName); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking CDN usage: "+err.Error()))
+	if ok, err := cdnUnused(inf.Tx.Tx, cdnName); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking CDN usage: "+err.Error()))
 		return
 	} else if !ok {
-		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("Failed to delete cdn name = "+string(cdnName)+" has delivery services or servers"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Failed to delete cdn name = "+string(cdnName)+" has delivery services or servers"), nil)
 		return
 	}
-	if err := deleteCDNByName(inf.Tx, tc.CDNName(cdnName)); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("deleting CDN: "+err.Error()))
+	if err := deleteCDNByName(inf.Tx.Tx, tc.CDNName(cdnName)); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting CDN: "+err.Error()))
 		return
 	}
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "cdn was deleted.")
