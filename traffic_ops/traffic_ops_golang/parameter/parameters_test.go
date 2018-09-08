@@ -95,7 +95,7 @@ func TestGetParameters(t *testing.T) {
 	mock.ExpectCommit()
 
 	reqInfo := api.APIInfo{
-		Txx:    db.MustBegin(),
+		Tx:    db.MustBegin(),
 		User:   &auth.CurrentUser{PrivLevel: 30},
 		Params: map[string]string{"name": "1"},
 	}

@@ -115,13 +115,13 @@ func (as *TOASNV11) Delete() (error, error, int)              { return api.Gener
 func V11ReadAll(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 	asns, userErr, sysErr, errCode := api.GenericRead(&TOASNV11{ReqInfo: inf})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	api.WriteResp(w, r, tc.ASNsV11{asns})

@@ -126,16 +126,16 @@ func (origin *TOOrigin) GetTenantID(tx *sqlx.Tx) (*int, error) {
 }
 
 func (origin *TOOrigin) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
-	currentTenantID, err := origin.GetTenantID(origin.ReqInfo.Txx)
+	currentTenantID, err := origin.GetTenantID(origin.ReqInfo.Tx)
 	if err != nil {
 		return false, err
 	}
-	tenancyEnabled, err := tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx)
+	tenancyEnabled, err := tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx.Tx)
 	if err != nil {
 		return false, err
 	}
 	if currentTenantID != nil && tenancyEnabled {
-		return tenant.IsResourceAuthorizedToUserTx(*currentTenantID, user, origin.ReqInfo.Tx)
+		return tenant.IsResourceAuthorizedToUserTx(*currentTenantID, user, origin.ReqInfo.Tx.Tx)
 	}
 
 	return true, nil
@@ -174,19 +174,19 @@ func (origin *TOOrigin) Read() ([]interface{}, error, error, int) {
 
 	privLevel := origin.ReqInfo.User.PrivLevel
 
-	origins, errs, errType := getOrigins(origin.ReqInfo.Params, origin.ReqInfo.Txx, privLevel)
+	origins, errs, errType := getOrigins(origin.ReqInfo.Params, origin.ReqInfo.Tx, privLevel)
 	if len(errs) > 0 {
 		userErr, sysErr, errCode := api.TypeErrsToAPIErr(errs, errType)
 		return nil, userErr, sysErr, errCode
 	}
 
 	var err error
-	tenancyEnabled, err := tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx)
+	tenancyEnabled, err := tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx.Tx)
 	if err != nil {
 		return nil, nil, errors.New("origin read: checking tenancy: " + err.Error()), http.StatusInternalServerError
 	}
 	if tenancyEnabled {
-		origins, err = filterAuthorized(origins, origin.ReqInfo.User, origin.ReqInfo.Txx)
+		origins, err = filterAuthorized(origins, origin.ReqInfo.User, origin.ReqInfo.Tx)
 		if err != nil {
 			return nil, nil, errors.New("origin read: filtering authorized: " + err.Error()), http.StatusInternalServerError
 		}
@@ -323,7 +323,7 @@ func checkTenancy(originTenantID, deliveryserviceID *int, tx *sqlx.Tx, user *aut
 //generic error message returned
 func (origin *TOOrigin) Update() (error, error, int) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
-	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Txx, origin.ReqInfo.User)
+	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
 	if err != nil {
 		return api.TypeErrToAPIErr(err, errType)
 	}
@@ -339,7 +339,7 @@ func (origin *TOOrigin) Update() (error, error, int) {
 	}
 
 	log.Debugf("about to run exec query: %s with origin: %++v", updateQuery(), origin)
-	resultRows, err := origin.ReqInfo.Txx.NamedQuery(updateQuery(), origin)
+	resultRows, err := origin.ReqInfo.Tx.NamedQuery(updateQuery(), origin)
 	if err != nil {
 		return api.ParseDBErr(err, origin.GetType())
 	}
@@ -390,12 +390,12 @@ WHERE id=:id RETURNING last_updated`
 //to be added to the struct
 func (origin *TOOrigin) Create() (error, error, int) {
 	// TODO: enhance tenancy framework to handle this in isTenantAuthorized()
-	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Txx, origin.ReqInfo.User)
+	err, errType := checkTenancy(origin.TenantID, origin.DeliveryServiceID, origin.ReqInfo.Tx, origin.ReqInfo.User)
 	if err != nil {
 		return api.TypeErrToAPIErr(err, errType)
 	}
 
-	resultRows, err := origin.ReqInfo.Txx.NamedQuery(insertQuery(), origin)
+	resultRows, err := origin.ReqInfo.Tx.NamedQuery(insertQuery(), origin)
 	if err != nil {
 		return api.ParseDBErr(err, origin.GetType())
 	}
@@ -460,7 +460,7 @@ func (origin *TOOrigin) Delete() (error, error, int) {
 		return errors.New("cannot delete a primary origin"), nil, http.StatusBadRequest
 	}
 
-	result, err := origin.ReqInfo.Txx.NamedExec(deleteQuery(), origin)
+	result, err := origin.ReqInfo.Tx.NamedExec(deleteQuery(), origin)
 	if err != nil {
 		return nil, errors.New("origin delete: query: " + err.Error()), http.StatusInternalServerError
 	}

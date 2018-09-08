@@ -49,13 +49,13 @@ func TestGetServerUpdateStatus(t *testing.T) {
 	mock.ExpectCommit()
 
 	dbCtx, _ := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
-	tx, err := db.BeginTxx(dbCtx, nil)
+	tx, err := db.BeginTx(dbCtx, nil)
 	if err != nil {
 		t.Fatalf("creating transaction: %v", err)
 	}
 	defer tx.Commit()
 
-	result, err := getServerUpdateStatus(tx.Tx, &config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 20}}, "host_name_1")
+	result, err := getServerUpdateStatus(tx, &config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 20}}, "host_name_1")
 	if err != nil {
 		t.Errorf("getServerUpdateStatus: %v", err)
 	}

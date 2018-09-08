@@ -37,56 +37,56 @@ import (
 func GetURLKeysByID(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured!"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured!"))
 		return
 	}
 
-	ds, ok, err := GetDSNameFromID(inf.Tx, inf.IntParams["id"])
+	ds, ok, err := GetDSNameFromID(inf.Tx.Tx, inf.IntParams["id"])
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from ID: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from ID: "+err.Error()))
 		return
 	}
 	if !ok {
-		api.HandleErr(w, r, inf.Tx, http.StatusNotFound, errors.New("delivery service "+inf.Params["id"]+" not found"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("delivery service "+inf.Params["id"]+" not found"), nil)
 		return
 	}
 
 	// TODO create a helper function to check all this in a single line.
-	ok, err = tenant.IsTenancyEnabledTx(inf.Tx)
+	ok, err = tenant.IsTenancyEnabledTx(inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenancy enabled: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenancy enabled: "+err.Error()))
 		return
 	}
 	if ok {
-		dsTenantID, ok, err := GetDSTenantIDByIDTx(inf.Tx, inf.IntParams["id"])
+		dsTenantID, ok, err := GetDSTenantIDByIDTx(inf.Tx.Tx, inf.IntParams["id"])
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 			return
 		}
 		if !ok {
-			api.HandleErr(w, r, inf.Tx, http.StatusNotFound, errors.New("delivery service "+inf.Params["id"]+" not found"), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("delivery service "+inf.Params["id"]+" not found"), nil)
 			return
 		}
 		if dsTenantID != nil {
-			if authorized, err := tenant.IsResourceAuthorizedToUserTx(*dsTenantID, inf.User, inf.Tx); err != nil {
-				api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+			if authorized, err := tenant.IsResourceAuthorizedToUserTx(*dsTenantID, inf.User, inf.Tx.Tx); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 				return
 			} else if !authorized {
-				api.HandleErr(w, r, inf.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 				return
 			}
 		}
 	}
 
-	keys, ok, err := riaksvc.GetURLSigKeys(inf.Tx, inf.Config.RiakAuthOptions, ds)
+	keys, ok, err := riaksvc.GetURLSigKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, ds)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("getting URL Sig keys from riak: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting URL Sig keys from riak: "+err.Error()))
 		return
 	}
 	if !ok {
@@ -99,48 +99,48 @@ func GetURLKeysByID(w http.ResponseWriter, r *http.Request) {
 func GetURLKeysByName(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured!"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured!"))
 		return
 	}
 
 	ds := tc.DeliveryServiceName(inf.Params["name"])
 
 	// TODO create a helper function to check all this in a single line.
-	ok, err := tenant.IsTenancyEnabledTx(inf.Tx)
+	ok, err := tenant.IsTenancyEnabledTx(inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenancy enabled: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenancy enabled: "+err.Error()))
 		return
 	}
 	if ok {
-		dsTenantID, ok, err := GetDSTenantIDByNameTx(inf.Tx, ds)
+		dsTenantID, ok, err := GetDSTenantIDByNameTx(inf.Tx.Tx, ds)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 			return
 		}
 		if !ok {
-			api.HandleErr(w, r, inf.Tx, http.StatusNotFound, errors.New("delivery service "+string(ds)+" not found"), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("delivery service "+string(ds)+" not found"), nil)
 			return
 		}
 		if dsTenantID != nil {
-			if authorized, err := tenant.IsResourceAuthorizedToUserTx(*dsTenantID, inf.User, inf.Tx); err != nil {
-				api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+			if authorized, err := tenant.IsResourceAuthorizedToUserTx(*dsTenantID, inf.User, inf.Tx.Tx); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 				return
 			} else if !authorized {
-				api.HandleErr(w, r, inf.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 				return
 			}
 		}
 	}
 
-	keys, ok, err := riaksvc.GetURLSigKeys(inf.Tx, inf.Config.RiakAuthOptions, ds)
+	keys, ok, err := riaksvc.GetURLSigKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, ds)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("getting URL Sig keys from riak: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting URL Sig keys from riak: "+err.Error()))
 		return
 	}
 	if !ok {
@@ -153,13 +153,13 @@ func GetURLKeysByName(w http.ResponseWriter, r *http.Request) {
 func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name", "copy-name"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured!"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured!"))
 		return
 	}
 
@@ -167,65 +167,65 @@ func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
 	copyDS := tc.DeliveryServiceName(inf.Params["copy-name"])
 
 	// TODO create a helper function to check all this in a single line.
-	ok, err := tenant.IsTenancyEnabledTx(inf.Tx)
+	ok, err := tenant.IsTenancyEnabledTx(inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenancy enabled: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenancy enabled: "+err.Error()))
 		return
 	}
 	if ok {
-		dsTenantID, ok, err := GetDSTenantIDByNameTx(inf.Tx, ds)
+		dsTenantID, ok, err := GetDSTenantIDByNameTx(inf.Tx.Tx, ds)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 			return
 		}
 		if !ok {
-			api.HandleErr(w, r, inf.Tx, http.StatusNotFound, errors.New("delivery service "+string(ds)+" not found"), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("delivery service "+string(ds)+" not found"), nil)
 			return
 		}
 		if dsTenantID != nil {
-			if authorized, err := tenant.IsResourceAuthorizedToUserTx(*dsTenantID, inf.User, inf.Tx); err != nil {
-				api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+			if authorized, err := tenant.IsResourceAuthorizedToUserTx(*dsTenantID, inf.User, inf.Tx.Tx); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 				return
 			} else if !authorized {
-				api.HandleErr(w, r, inf.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 				return
 			}
 		}
 
 		{
-			copyDSTenantID, ok, err := GetDSTenantIDByNameTx(inf.Tx, copyDS)
+			copyDSTenantID, ok, err := GetDSTenantIDByNameTx(inf.Tx.Tx, copyDS)
 			if err != nil {
-				api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 				return
 			}
 			if !ok {
-				api.HandleErr(w, r, inf.Tx, http.StatusNotFound, errors.New("delivery service "+string(ds)+" not found"), nil)
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("delivery service "+string(ds)+" not found"), nil)
 				return
 			}
 			if copyDSTenantID != nil {
-				if authorized, err := tenant.IsResourceAuthorizedToUserTx(*copyDSTenantID, inf.User, inf.Tx); err != nil {
-					api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+				if authorized, err := tenant.IsResourceAuthorizedToUserTx(*copyDSTenantID, inf.User, inf.Tx.Tx); err != nil {
+					api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 					return
 				} else if !authorized {
-					api.HandleErr(w, r, inf.Tx, http.StatusForbidden, errors.New("not authorized on this copy tenant"), nil)
+					api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this copy tenant"), nil)
 					return
 				}
 			}
 		}
 	}
 
-	keys, ok, err := riaksvc.GetURLSigKeys(inf.Tx, inf.Config.RiakAuthOptions, copyDS)
+	keys, ok, err := riaksvc.GetURLSigKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, copyDS)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("getting URL Sig keys from riak: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting URL Sig keys from riak: "+err.Error()))
 		return
 	}
 	if !ok {
-		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("Unable to retrieve keys from Delivery Service '"+string(copyDS)+"'"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("Unable to retrieve keys from Delivery Service '"+string(copyDS)+"'"), nil)
 		return
 	}
 
-	if err := riaksvc.PutURLSigKeys(inf.Tx, inf.Config.RiakAuthOptions, ds, keys); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("setting URL Sig keys for '"+string(ds)+" copied from "+string(copyDS)+": "+err.Error()))
+	if err := riaksvc.PutURLSigKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, ds, keys); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting URL Sig keys for '"+string(ds)+" copied from "+string(copyDS)+": "+err.Error()))
 		return
 	}
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully copied and stored keys")
@@ -247,40 +247,40 @@ func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured!"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured!"))
 		return
 	}
 
 	ds := tc.DeliveryServiceName(inf.Params["name"])
 
 	// TODO create a helper function to check all this in a single line.
-	ok, err := tenant.IsTenancyEnabledTx(inf.Tx)
+	ok, err := tenant.IsTenancyEnabledTx(inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenancy enabled: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenancy enabled: "+err.Error()))
 		return
 	}
 	if ok {
-		dsTenantID, ok, err := GetDSTenantIDByNameTx(inf.Tx, ds)
+		dsTenantID, ok, err := GetDSTenantIDByNameTx(inf.Tx.Tx, ds)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 			return
 		}
 		if !ok {
-			api.HandleErr(w, r, inf.Tx, http.StatusNotFound, errors.New("delivery service "+string(ds)+" not found"), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("delivery service "+string(ds)+" not found"), nil)
 			return
 		}
 		if dsTenantID != nil {
-			if authorized, err := tenant.IsResourceAuthorizedToUserTx(*dsTenantID, inf.User, inf.Tx); err != nil {
-				api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+			if authorized, err := tenant.IsResourceAuthorizedToUserTx(*dsTenantID, inf.User, inf.Tx.Tx); err != nil {
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
 				return
 			} else if !authorized {
-				api.HandleErr(w, r, inf.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+				api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 				return
 			}
 		}
@@ -288,11 +288,11 @@ func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
 
 	keys, err := GenerateURLSigKeys()
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("generating URL sig keys: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating URL sig keys: "+err.Error()))
 	}
 
-	if err := riaksvc.PutURLSigKeys(inf.Tx, inf.Config.RiakAuthOptions, ds, keys); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("setting URL Sig keys for '"+string(ds)+": "+err.Error()))
+	if err := riaksvc.PutURLSigKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, ds, keys); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("setting URL Sig keys for '"+string(ds)+": "+err.Error()))
 		return
 	}
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully generated and stored keys")

@@ -34,13 +34,13 @@ import (
 func GetSSLKeys(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
-	keys, err := getSSLKeys(inf.Tx, inf.Config.RiakAuthOptions, inf.Params["name"])
+	keys, err := getSSLKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Params["name"])
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn ssl keys: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn ssl keys: "+err.Error()))
 		return
 	}
 	api.WriteResp(w, r, keys)

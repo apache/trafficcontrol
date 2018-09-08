@@ -32,14 +32,14 @@ import (
 func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"host_name"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	serverUpdateStatus, err := getServerUpdateStatus(inf.Tx, inf.Config, inf.Params["host_name"])
+	serverUpdateStatus, err := getServerUpdateStatus(inf.Tx.Tx, inf.Config, inf.Params["host_name"])
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 	api.WriteRespRaw(w, r, serverUpdateStatus)

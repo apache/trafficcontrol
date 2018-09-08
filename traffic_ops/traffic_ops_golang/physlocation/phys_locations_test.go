@@ -96,7 +96,7 @@ func TestGetPhysLocations(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Txx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
 	physLocations, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)

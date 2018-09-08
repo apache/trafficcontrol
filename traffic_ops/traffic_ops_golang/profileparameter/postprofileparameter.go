@@ -34,18 +34,18 @@ import (
 func PostProfileParam(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	profileParam := tc.PostProfileParam{}
-	if err := api.Parse(r.Body, inf.Tx, &profileParam); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("parse error: "+err.Error()), nil)
+	if err := api.Parse(r.Body, inf.Tx.Tx, &profileParam); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parse error: "+err.Error()), nil)
 		return
 	}
-	if err := insertProfileParameter(profileParam, inf.Tx); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("posting profile parameter: "+err.Error()))
+	if err := insertProfileParameter(profileParam, inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("posting profile parameter: "+err.Error()))
 		return
 	}
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("%d parameters were assigned to the %d profile", len(*profileParam.ParamIDs), *profileParam.ProfileID), profileParam)

@@ -36,15 +36,15 @@ import (
 func Handler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	start := time.Now()
-	crConfig, err := Make(inf.Tx, inf.Params["cdn"], inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version)
+	crConfig, err := Make(inf.Tx.Tx, inf.Params["cdn"], inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 	log.Infof("CRConfig time to generate: %+v\n", time.Since(start))
@@ -55,18 +55,18 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 func SnapshotGetHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	snapshot, cdnExists, err := GetSnapshot(inf.Tx, inf.Params["cdn"])
+	snapshot, cdnExists, err := GetSnapshot(inf.Tx.Tx, inf.Params["cdn"])
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
 		return
 	}
 	if !cdnExists {
-		api.HandleErr(w, r, inf.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
 		return
 	}
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
@@ -77,18 +77,18 @@ func SnapshotGetHandler(w http.ResponseWriter, r *http.Request) {
 func SnapshotOldGetHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	snapshot, cdnExists, err := GetSnapshot(inf.Tx, inf.Params["cdn"])
+	snapshot, cdnExists, err := GetSnapshot(inf.Tx.Tx, inf.Params["cdn"])
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting snapshot: "+err.Error()))
 		return
 	}
 	if !cdnExists {
-		api.HandleErr(w, r, inf.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("CDN not found"), nil)
 		return
 	}
 	w.Header().Set(tc.ContentType, tc.ApplicationJson)
@@ -99,7 +99,7 @@ func SnapshotOldGetHandler(w http.ResponseWriter, r *http.Request) {
 func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
@@ -108,32 +108,32 @@ func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		id, ok := inf.IntParams["id"]
 		if !ok {
-			api.HandleErr(w, r, inf.Tx, http.StatusNotFound, errors.New("params missing CDN"), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("params missing CDN"), nil)
 			return
 		}
-		name, ok, err := getCDNNameFromID(id, inf.Tx)
+		name, ok, err := getCDNNameFromID(id, inf.Tx.Tx)
 		if err != nil {
-			api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("Error getting CDN name from ID: "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Error getting CDN name from ID: "+err.Error()))
 			return
 		}
 		if !ok {
-			api.HandleErr(w, r, inf.Tx, http.StatusNotFound, errors.New("No CDN found with that ID"), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("No CDN found with that ID"), nil)
 			return
 		}
 		cdn = name
 	}
 
-	crConfig, err := Make(inf.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version)
+	crConfig, err := Make(inf.Tx.Tx, cdn, inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, err)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 
-	if err := Snapshot(inf.Tx, crConfig); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" snaphsotting CRConfig: "+err.Error()))
+	if err := Snapshot(inf.Tx.Tx, crConfig); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(r.RemoteAddr+" snaphsotting CRConfig: "+err.Error()))
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig performed for "+cdn, inf.User, inf.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig performed for "+cdn, inf.User, inf.Tx.Tx)
 	w.WriteHeader(http.StatusOK) // TODO change to 204 No Content in new version
 }
 
@@ -141,22 +141,22 @@ func SnapshotHandler(w http.ResponseWriter, r *http.Request) {
 func SnapshotOldGUIHandler(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, _ := api.NewInfo(r, []string{"cdn"}, nil)
 	if userErr != nil || sysErr != nil {
-		writePerlHTMLErr(w, r, inf.Tx, errors.New(r.RemoteAddr+" unable to get info from request: "+sysErr.Error()), userErr)
+		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" unable to get info from request: "+sysErr.Error()), userErr)
 		return
 	}
 	defer inf.Close()
 
-	crConfig, err := Make(inf.Tx, inf.Params["cdn"], inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version)
+	crConfig, err := Make(inf.Tx.Tx, inf.Params["cdn"], inf.User.UserName, r.Host, r.URL.Path, inf.Config.Version)
 	if err != nil {
-		writePerlHTMLErr(w, r, inf.Tx, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), err)
+		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), err)
 		return
 	}
 
-	if err := Snapshot(inf.Tx, crConfig); err != nil {
-		writePerlHTMLErr(w, r, inf.Tx, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), err)
+	if err := Snapshot(inf.Tx.Tx, crConfig); err != nil {
+		writePerlHTMLErr(w, r, inf.Tx.Tx, errors.New(r.RemoteAddr+" making CRConfig: "+err.Error()), err)
 		return
 	}
-	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig performed for "+inf.Params["cdn"], inf.User, inf.Tx)
+	api.CreateChangeLogRawTx(api.ApiChange, "Snapshot of CRConfig performed for "+inf.Params["cdn"], inf.User, inf.Tx.Tx)
 	http.Redirect(w, r, "/tools/flash_and_close/"+url.PathEscape("Successfully wrote the CRConfig.json!"), http.StatusFound)
 }
 

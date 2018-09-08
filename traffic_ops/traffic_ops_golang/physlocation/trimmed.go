@@ -31,11 +31,11 @@ import (
 func GetTrimmed(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
-	api.RespWriter(w, r, inf.Tx)(getTrimmed(inf.Tx))
+	api.RespWriter(w, r, inf.Tx.Tx)(getTrimmed(inf.Tx.Tx))
 }
 
 func getTrimmed(tx *sql.Tx) ([]tc.PhysLocationTrimmed, error) {

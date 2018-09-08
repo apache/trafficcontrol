@@ -79,7 +79,7 @@ func TestGetProfileParameters(t *testing.T) {
 	mock.ExpectCommit()
 
 	txx := db.MustBegin()
-	reqInfo := api.APIInfo{Txx: txx, Tx: txx.Tx, Params: map[string]string{"profile": "1"}}
+	reqInfo := api.APIInfo{Tx: txx, Params: map[string]string{"profile": "1"}}
 	pps, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)

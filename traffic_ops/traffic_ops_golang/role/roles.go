@@ -105,8 +105,8 @@ func (role TORole) Validate() error {
 	errsToReturn := tovalidate.ToErrors(errs)
 	checkCaps := `SELECT cap FROM UNNEST($1::text[]) AS cap WHERE NOT cap =  ANY(ARRAY(SELECT c.name FROM capability AS c WHERE c.name = ANY($1)))`
 	var badCaps []string
-	if role.ReqInfo.Txx != nil {
-		err := role.ReqInfo.Txx.Select(&badCaps, checkCaps, pq.Array(role.Capabilities))
+	if role.ReqInfo.Tx != nil {
+		err := role.ReqInfo.Tx.Select(&badCaps, checkCaps, pq.Array(role.Capabilities))
 		if err != nil {
 			log.Errorf("got error from selecting bad capabilities: %v", err)
 			return tc.DBError
@@ -129,7 +129,7 @@ func (role *TORole) Create() (error, error, int) {
 	}
 
 	//after we have role ID we can associate the capabilities:
-	userErr, sysErr, errCode = role.createRoleCapabilityAssociations(role.ReqInfo.Txx)
+	userErr, sysErr, errCode = role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
@@ -185,16 +185,16 @@ func (role *TORole) Update() (error, error, int) {
 		return userErr, sysErr, errCode
 	}
 	// TODO cascade delete, to automatically do this in SQL?
-	userErr, sysErr, errCode = role.deleteRoleCapabilityAssociations(role.ReqInfo.Txx)
+	userErr, sysErr, errCode = role.deleteRoleCapabilityAssociations(role.ReqInfo.Tx)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
-	return role.createRoleCapabilityAssociations(role.ReqInfo.Txx)
+	return role.createRoleCapabilityAssociations(role.ReqInfo.Tx)
 }
 
 func (role *TORole) Delete() (error, error, int) {
 	assignedUsers := 0
-	if err := role.ReqInfo.Txx.Get(&assignedUsers, "SELECT COUNT(id) FROM tm_user WHERE role=$1", role.ID); err != nil {
+	if err := role.ReqInfo.Tx.Get(&assignedUsers, "SELECT COUNT(id) FROM tm_user WHERE role=$1", role.ID); err != nil {
 		return nil, errors.New("role delete counting assigned users: " + err.Error()), http.StatusInternalServerError
 	} else if assignedUsers != 0 {
 		return fmt.Errorf("can not delete a role with %d assigned users", assignedUsers), nil, http.StatusBadRequest
@@ -204,7 +204,7 @@ func (role *TORole) Delete() (error, error, int) {
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
-	return role.deleteRoleCapabilityAssociations(role.ReqInfo.Txx)
+	return role.deleteRoleCapabilityAssociations(role.ReqInfo.Tx)
 }
 
 func selectQuery() string {

@@ -122,7 +122,7 @@ func (pp *TOProfileParameter) Validate() error {
 //The insert sql returns the profile and lastUpdated values of the newly inserted profileparameter and have
 //to be added to the struct
 func (pp *TOProfileParameter) Create() (error, error, int) {
-	resultRows, err := pp.APIInfo().Txx.NamedQuery(insertQuery(), pp)
+	resultRows, err := pp.APIInfo().Tx.NamedQuery(insertQuery(), pp)
 	if err != nil {
 		return api.ParseDBErr(err, pp.GetType())
 	}

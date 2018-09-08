@@ -126,7 +126,7 @@ func TestReadCacheGroups(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Txx: db.MustBegin(), Params: map[string]string{"id": "1"}}
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"id": "1"}}
 	cachegroups, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
@@ -189,7 +189,7 @@ func TestValidate(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	tx := db.MustBegin()
-	reqInfo := api.APIInfo{Txx: tx, Tx: tx.Tx}
+	reqInfo := api.APIInfo{Tx: tx}
 
 	// invalid name, shortname, loattude, and longitude
 	id := 1

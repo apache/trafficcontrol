@@ -33,19 +33,19 @@ import (
 func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	req := tc.DeliveryServiceSSLKeysReq{}
-	if err := api.Parse(r.Body, inf.Tx, &req); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
+	if err := api.Parse(r.Body, inf.Tx.Tx, &req); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
 		return
 	}
 
-	if err := generatePutRiakKeys(req, inf.Tx, inf.Config); err != nil {
-		api.HandleErr(w, r, inf.Tx, http.StatusInternalServerError, nil, errors.New("generating and putting SSL keys: "+err.Error()))
+	if err := generatePutRiakKeys(req, inf.Tx.Tx, inf.Config); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and putting SSL keys: "+err.Error()))
 		return
 	}
 	api.WriteResp(w, r, "Successfully created ssl keys for "+*req.DeliveryService)
