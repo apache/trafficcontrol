@@ -52,7 +52,7 @@ type DeliveryServiceSSLKeys struct {
 	Country         string                            `json:"country,omitempty"`
 	State           string                            `json:"state,omitempty"`
 	Key             string                            `json:"key"`
-	Version         string                            `json:"version"`
+	Version         util.JSONNumAsStr                 `json:"version"`
 	Certificate     DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
 }
 
