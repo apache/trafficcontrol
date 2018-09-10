@@ -31,6 +31,10 @@ module.exports = angular.module('trafficPortal.private.dashboard.view', [])
 						templateUrl: 'common/modules/widget/cacheGroups/widget.cacheGroups.tpl.html',
 						controller: 'WidgetCacheGroupsController'
 					},
+					deliveryServicesContent: {
+						templateUrl: 'common/modules/widget/deliveryServices/widget.deliveryServices.tpl.html',
+						controller: 'WidgetDeliveryServicesController'
+					},
 					capacityContent: {
 						templateUrl: 'common/modules/widget/capacity/widget.capacity.tpl.html',
 						controller: 'WidgetCapacityController'
