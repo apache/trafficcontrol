@@ -402,6 +402,14 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{http.MethodGet, `tools/write_crconfig/{cdn}/?$`, crconfig.SnapshotOldGUIHandler, auth.PrivLevelOperations, Authenticated, nil},
 		// DEPRECATED - use GET /api/1.2/cdns/{cdn}/snapshot
 		{http.MethodGet, `CRConfig-Snapshots/{cdn}/CRConfig.json?$`, crconfig.SnapshotOldGetHandler, auth.PrivLevelReadOnly, Authenticated, nil},
+
+		// These handlers force /api/* calls which don't match routes to be denied (via a `` api_capability).
+		// This prevents nonmatching calls to be routed to Perl, which doesn't respect capabilities.
+		// These should be removed when Perl TO (and the reverse-proxy to it) are completely removed.
+		{http.MethodGet, `api`, handlerToFunc(proxyHandler), 0, Authenticated, nil},
+		{http.MethodPost, `api`, handlerToFunc(proxyHandler), 0, Authenticated, nil},
+		{http.MethodPut, `api`, handlerToFunc(proxyHandler), 0, Authenticated, nil},
+		{http.MethodDelete, `api`, handlerToFunc(proxyHandler), 0, Authenticated, nil},
 	}
 
 	for _, r := range PerlRoutes(d) {
@@ -411,6 +419,7 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 	return routes, rawRoutes, proxyHandler, nil
 }
 
+// PerlRoutes returns the API routes handled by the Perl Traffic Ops via reverse-proxy.
 func PerlRoutes(d ServerData) []Route {
 	perlAPIHandler := getPerlAPIHandler(d)
 	return []Route{
