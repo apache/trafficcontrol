@@ -29,6 +29,7 @@ until nc -z $TO_HOST $TO_PORT </dev/null >/dev/null && to-ping; do
     sleep 5
 done
 
+mkdir -p "$ENROLLER_DIR"
 if [[ ! -d $ENROLLER_DIR ]]; then
      echo "enroller dir ${ENROLLER_DIR} not found or not a directory"
      exit 1
