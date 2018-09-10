@@ -106,7 +106,7 @@ func PutDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, aut
 			ContentType:     "text/json",
 			Charset:         "utf-8",
 			ContentEncoding: "utf-8",
-			Key:             MakeDSSSLKeyKey(key.DeliveryService, key.Version),
+			Key:             MakeDSSSLKeyKey(key.DeliveryService, string(key.Version)),
 			Value:           []byte(keyJSON),
 		}
 		if err = SaveObject(obj, DeliveryServiceSSLKeysBucket, cluster); err != nil {
@@ -127,7 +127,7 @@ func PutDeliveryServiceSSLKeysObjTx(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, a
 			ContentType:     "text/json",
 			Charset:         "utf-8",
 			ContentEncoding: "utf-8",
-			Key:             MakeDSSSLKeyKey(key.DeliveryService, key.Version),
+			Key:             MakeDSSSLKeyKey(key.DeliveryService, string(key.Version)),
 			Value:           []byte(keyJSON),
 		}
 		if err = SaveObject(obj, DeliveryServiceSSLKeysBucket, cluster); err != nil {
