@@ -38,4 +38,4 @@ if [[ ! -d $ENROLLER_DIR ]]; then
 # clear out the enroller dir first so no files left from previous run
 rm -rf ${ENROLLER_DIR}/*
 
-go run enroller.go "$ENROLLER_DIR" || tail -f /dev/null
+./enroller "$ENROLLER_DIR" || tail -f /dev/null
