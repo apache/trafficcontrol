@@ -29,6 +29,3 @@ Features include:
 	- Cache Maintenance
 
 See :ref:`usingtrafficportal`
-
-
-
