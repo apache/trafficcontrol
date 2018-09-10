@@ -21,6 +21,11 @@ under the License.
     <div ng-if="hasCapability('stats-read') && hasCapability('cdns-read')" class="row tile_count">
         <div ui-view="dashboardStatsContent"></div>
     </div>
+    <div class="row">
+        <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="x_panel" ui-view="deliveryServicesContent"></div>
+        </div>
+    </div>
     <div ng-if="hasCapability('cdns-read')" ng-repeat="cdn in ::cdns">
         <div class="row">
             <div class="col-md-12 col-sm-12 col-xs-12 chartContainer" data-cdnid="{{::cdn.id}}" ui-view="cdnChartContent"></div>
