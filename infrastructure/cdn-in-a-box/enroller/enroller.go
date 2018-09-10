@@ -730,7 +730,11 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 
 						err := f(toSession, event.Name)
 						if err != nil {
-							log.Printf("error creating %s from %s: %+v\n", dir, event.Name, err)
+							log.Printf("error creating %s from %s: %s\n", dir, event.Name, err.Error())
+							err = os.Rename(event.Name, event.Name+".rej")
+							if err != nil {
+								log.Printf("error renaming %s to %s: %s\n", event.Name, event.Name+".rej", err.Error())
+							}
 							continue
 						}
 						err = os.Remove(event.Name)
