@@ -329,6 +329,30 @@ func enrollDeliveryService(toSession *session, fn string) error {
 		s.TypeID = id
 	}
 
+	if s.CDNName != "" {
+		id, err := toSession.getCDNIDByName(s.CDNName)
+		if err != nil {
+			return err
+		}
+		s.CDNID = id
+	}
+
+	if s.ProfileName != "" {
+		id, err := toSession.getProfileIDByName(s.ProfileName)
+		if err != nil {
+			return err
+		}
+		s.ProfileID = id
+	}
+
+	if s.TenantName != "" {
+		id, err := toSession.getTenantIDByName(s.TenantName)
+		if err != nil {
+			return err
+		}
+		s.TenantID = id
+	}
+
 	alerts, err := toSession.CreateDeliveryService(&s)
 	if err != nil {
 		log.Printf("error creating from %s: %s\n", fn, err)
@@ -575,6 +599,44 @@ func enrollTenant(toSession *session, fn string) error {
 	return err
 }
 
+func enrollUser(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+	var s tc.User
+	err = dec.Decode(&s)
+	if err != nil && err != io.EOF {
+		log.Printf("error decoding %s: %s\n", fn, err)
+		return err
+	}
+
+	if s.Tenant != "" {
+		id, err := toSession.getTenantIDByName(s.Tenant)
+		if err != nil {
+			return err
+		}
+		s.TenantID = id
+	}
+
+	alerts, _, err := toSession.CreateUser(&s)
+	if err != nil {
+		log.Printf("error creating from %s: %s\n", fn, err)
+		return err
+	}
+
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	err = enc.Encode(&alerts)
+
+	return err
+}
+
 // enrollProfile takes a json file and creates a Profile object using the TO API
 func enrollProfile(toSession *session, fn string) error {
 	fh, err := os.Open(fn)
@@ -647,6 +709,7 @@ func enrollServer(toSession *session, fn string) error {
 		}
 		s.ProfileID = id
 	}
+
 	if s.Status != "" {
 		id, err := toSession.getStatusIDByName(s.Status)
 		if err != nil {
@@ -722,7 +785,8 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 					if strings.HasSuffix(event.Name, processed) || strings.HasSuffix(event.Name, rejected) {
 						continue
 					}
-					if i, err := os.Stat(event.Name); err != nil || i.IsDir() {
+					i, err := os.Stat(event.Name)
+					if err != nil || i.IsDir() {
 						log.Println("skipping " + event.Name)
 						continue
 					}
@@ -732,10 +796,10 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 						continue
 					}
 					dir := event.Name[:p]
-					log.Printf("dir is %s\n", dir)
 					suffix := rejected
 					if f, ok := dw.watched[dir]; ok {
 						log.Printf("creating from %s\n", event.Name)
+						// TODO: ensure file content is there before attempting to read
 						time.Sleep(100 * time.Millisecond)
 
 						err := f(toSession, event.Name)
@@ -823,6 +887,7 @@ func main() {
 	dw.watch("regions", enrollRegion)
 	dw.watch("statuses", enrollStatus)
 	dw.watch("tenants", enrollTenant)
+	dw.watch("users", enrollUser)
 
 	// create this file to indicate the enroller is ready
 	f, err := os.Create(startedFile)
