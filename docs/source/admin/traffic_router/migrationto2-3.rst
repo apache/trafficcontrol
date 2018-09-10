@@ -51,14 +51,14 @@ The 'tomcat' package gets created when you build Traffic Router. You must either
 It is preferable that you add it to your Yum repository because then it will be installed automatically when you perform the Traffic Router update.
 
 Update the traffic_router Package
-------------------------------
+---------------------------------
 If openssl, apr, tomcat-native, jdk and tomcat_tr packages are all in an available repository then you just need to run: ``yum update traffic_router``.
-This will first cause the apr, tomcat-native, jdk and tomcat packages to be installed. When the 'tomcat' package runs, it will cause any older versions of traffic_router or tomcat to be uninstalled. This is because the previous versions of the traffic_router package included an untracked installation of tomcat. 
+This will first cause the apr, tomcat-native, jdk and tomcat packages to be installed. When the 'tomcat' package runs, it will cause any older versions of traffic_router or tomcat to be uninstalled. This is because the previous versions of the traffic_router package included an untracked installation of tomcat.
 
 
 Restore Property Files
 ------------------------------
-The install process does not override or replace any of the files in the /opt/traffic_router/conf directory. Previous versions of the traffic_ops.properties, traffic_monitor.properties and startup.properties should still be good. On a new install replace the Traffic Router properties files with the correct ones for the CDN. 
+The install process does not override or replace any of the files in the /opt/traffic_router/conf directory. Previous versions of the traffic_ops.properties, traffic_monitor.properties and startup.properties should still be good. On a new install replace the Traffic Router properties files with the correct ones for the CDN.
 
 Development Environment Upgrade
 ===============================

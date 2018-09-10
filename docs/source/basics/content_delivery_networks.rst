@@ -22,9 +22,6 @@ Content Delivery Networks
 =========================
 The vast majority of today's Internet traffic is media files (often video or audio) being sent from a single source (the *Content Provider*) to many thousands or even millions of destinations (the *Content Consumers*). Content Delivery Networks are the technology that make that one-to-many distribution possible in an economical way. A Content Delivery Network (CDN) is a distributed system of servers for delivering content over HTTP. These servers are deployed in multiple locations with the goal of optimizing the delivery of content to the end users, while minimizing the traffic on the network. A CDN typically consists of the following:
 
-<<<<<<< Updated upstream
-Caching Proxies
-=======
 Caching Proxies
 	The proxy (cache or caching proxy) is a server that both proxies the requests and caches the results for reusing.
 
@@ -32,7 +29,7 @@ Content Router
 	The Content Router ensures that the end user is connected to the optimal cache for the location of the end user and content availability.
 
 Health Protocol
-	The Health Protocol monitors the usage of the caches and tenants in the CDN:ref:`rl-health-proto`.
+	The :ref:`rl-health-proto` monitors the usage of the caches and tenants in the CDN.
 
 Configuration Management System
 	In many cases a CDN encompasses hundreds of servers across a large geographic area. The Configuration Management System allows an operator to manage these servers.

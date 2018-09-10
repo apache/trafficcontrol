@@ -27,15 +27,13 @@ Traffic Ops also runs a collection of periodic checks to determine the operation
 
 Traffic Ops is in the process of migrating from Perl to Go, and currently runs as two applications. The Go application serves all endpoints which have been rewritten in the Go language, and transparently proxies all other requests to the old Perl application. Both applications are installed by the RPM, and both run as a single service. When the project has fully migrated to Go, the Perl application will be removed, and the RPM and service will consist solely of the Go application.
 
-|
-
 .. _rl-trops-ext:
 
 |arrow| Traffic Ops Extension
 -----------------------------
-  Traffic Ops Extensions are a way to enhance the basic functionality of Traffic Ops in a custom manner. There are three types of extensions:
+	Traffic Ops Extensions are a way to enhance the basic functionality of Traffic Ops in a custom manner. There are three types of extensions:
 
-  * Check Extensions - Allows you to add custom checks to the "Health->Server Checks" view.
-  * Configuration Extension - Allows you to add custom configuration file generators.
-  * Data source Extensions - Allows you to add data sources for the graph views and usage APIs.
+	* Check Extensions - Allows you to add custom checks to the "Health->Server Checks" view.
+	* Configuration Extension - Allows you to add custom configuration file generators.
+	* Data source Extensions - Allows you to add data sources for the graph views and usage APIs.
 
