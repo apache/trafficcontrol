@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	to "github.com/apache/trafficcontrol/traffic_ops/client/v13"
+	to "github.com/apache/trafficcontrol/traffic_ops/client"
 )
 
 // ValidateOfflineStates validates that no OFFLINE or ADMIN_DOWN caches in the given Traffic Ops' CRConfig are marked Available in the given Traffic Monitor's CRStates.
