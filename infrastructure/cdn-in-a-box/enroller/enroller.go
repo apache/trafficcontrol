@@ -704,6 +704,11 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 	}
 	dw.watched = make(map[string]func(toSession *session, fn string) error)
 	go func() {
+		const (
+			processed = ".processed"
+			rejected  = ".rejected"
+		)
+
 		for {
 			select {
 			case event, ok := <-dw.Events:
@@ -711,8 +716,12 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 					log.Printf("event not ok: %+v", event)
 					return
 				}
+
 				//log.Println("event:", event)
 				if event.Op&fsnotify.Create == fsnotify.Create {
+					if strings.HasSuffix(event.Name, processed) || strings.HasSuffix(event.Name, rejected) {
+						continue
+					}
 					if i, err := os.Stat(event.Name); err != nil || i.IsDir() {
 						log.Println("skipping " + event.Name)
 						continue
@@ -724,6 +733,7 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 					}
 					dir := event.Name[:p]
 					log.Printf("dir is %s\n", dir)
+					suffix := rejected
 					if f, ok := dw.watched[dir]; ok {
 						log.Printf("creating from %s\n", event.Name)
 						time.Sleep(100 * time.Millisecond)
@@ -731,25 +741,17 @@ func newDirWatcher(toSession *session) (*dirWatcher, error) {
 						err := f(toSession, event.Name)
 						if err != nil {
 							log.Printf("error creating %s from %s: %s\n", dir, event.Name, err.Error())
-							err = os.Rename(event.Name, event.Name+".rej")
-							if err != nil {
-								log.Printf("error renaming %s to %s: %s\n", event.Name, event.Name+".rej", err.Error())
-							}
-							continue
-						}
-						err = os.Remove(event.Name)
-						if err != nil {
-							log.Printf("error removing %s: %+v\n", event.Name, err)
+						} else {
+							suffix = processed
 						}
 					} else {
 						log.Printf("no method for creating %s\n", dir)
 					}
-
-					//err := f(toSession, event.Name)
-					//if err != nil {
-					//		log.Print(err)
-					//			continue
-					//			}
+					// rename the file indicating if processed or rejected
+					err = os.Rename(event.Name, event.Name+suffix)
+					if err != nil {
+						log.Printf("error renaming %s to %s: %s\n", event.Name, event.Name+suffix, err.Error())
+					}
 				}
 			case err, ok := <-dw.Errors:
 				if !ok {
