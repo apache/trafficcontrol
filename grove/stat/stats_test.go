@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/grove/remap"
+	"github.com/apache/trafficcontrol/grove/remapdata"
 	"github.com/apache/trafficcontrol/grove/web"
 )
 
@@ -83,8 +83,8 @@ func TestStatsCount(t *testing.T) {
 		httpConns := web.NewConnMap()
 		httpsConns := web.NewConnMap()
 		addrs := []string{}
-		r := remap.RemapRule{RemapRuleBase: remap.RemapRuleBase{Name: "foo"}}
-		stats := New([]remap.RemapRule{r}, nil, 0, httpConns, httpsConns)
+		r := remapdata.RemapRule{RemapRuleBase: remapdata.RemapRuleBase{Name: "foo"}}
+		stats := New([]remapdata.RemapRule{r}, nil, 0, httpConns, httpsConns, "fakeversion")
 		expected := 10
 		StatsInc(httpConns, expected, &addrs)
 		if actual := stats.Connections(); actual != uint64(expected) {
@@ -95,8 +95,8 @@ func TestStatsCount(t *testing.T) {
 		httpConns := web.NewConnMap()
 		httpsConns := web.NewConnMap()
 		addrs := []string{}
-		r := remap.RemapRule{RemapRuleBase: remap.RemapRuleBase{Name: "foo"}}
-		stats := New([]remap.RemapRule{r}, nil, 0, httpConns, httpsConns)
+		r := remapdata.RemapRule{RemapRuleBase: remapdata.RemapRuleBase{Name: "foo"}}
+		stats := New([]remapdata.RemapRule{r}, nil, 0, httpConns, httpsConns, "fakeversion")
 		expected := 10
 		StatsInc(httpsConns, expected, &addrs)
 		if actual := stats.Connections(); actual != uint64(expected) {
@@ -107,8 +107,8 @@ func TestStatsCount(t *testing.T) {
 		httpConns := web.NewConnMap()
 		httpsConns := web.NewConnMap()
 		addrs := []string{}
-		r := remap.RemapRule{RemapRuleBase: remap.RemapRuleBase{Name: "foo"}}
-		stats := New([]remap.RemapRule{r}, nil, 0, httpConns, httpsConns)
+		r := remapdata.RemapRule{RemapRuleBase: remapdata.RemapRuleBase{Name: "foo"}}
+		stats := New([]remapdata.RemapRule{r}, nil, 0, httpConns, httpsConns, "fakeversion")
 		expected := 10
 		StatsInc(httpConns, expected, &addrs)
 		StatsInc(httpsConns, expected, &addrs)
@@ -121,8 +121,8 @@ func TestStatsCount(t *testing.T) {
 		httpConns := web.NewConnMap()
 		httpsConns := web.NewConnMap()
 		addrs := []string{}
-		r := remap.RemapRule{RemapRuleBase: remap.RemapRuleBase{Name: "foo"}}
-		stats := New([]remap.RemapRule{r}, nil, 0, httpConns, httpsConns)
+		r := remapdata.RemapRule{RemapRuleBase: remapdata.RemapRuleBase{Name: "foo"}}
+		stats := New([]remapdata.RemapRule{r}, nil, 0, httpConns, httpsConns, "fakeversion")
 		count := 10
 		StatsInc(httpConns, count, &addrs)
 		StatsDec(httpConns, count, &addrs)
@@ -134,8 +134,8 @@ func TestStatsCount(t *testing.T) {
 		httpConns := web.NewConnMap()
 		httpsConns := web.NewConnMap()
 		addrs := []string{}
-		r := remap.RemapRule{RemapRuleBase: remap.RemapRuleBase{Name: "foo"}}
-		stats := New([]remap.RemapRule{r}, nil, 0, httpConns, httpsConns)
+		r := remapdata.RemapRule{RemapRuleBase: remapdata.RemapRuleBase{Name: "foo"}}
+		stats := New([]remapdata.RemapRule{r}, nil, 0, httpConns, httpsConns, "fakeversion")
 		count := 10
 		StatsInc(httpsConns, count, &addrs)
 		StatsDec(httpsConns, count, &addrs)
@@ -147,8 +147,8 @@ func TestStatsCount(t *testing.T) {
 		httpConns := web.NewConnMap()
 		httpsConns := web.NewConnMap()
 		addrs := []string{}
-		r := remap.RemapRule{RemapRuleBase: remap.RemapRuleBase{Name: "foo"}}
-		stats := New([]remap.RemapRule{r}, nil, 0, httpConns, httpsConns)
+		r := remapdata.RemapRule{RemapRuleBase: remapdata.RemapRuleBase{Name: "foo"}}
+		stats := New([]remapdata.RemapRule{r}, nil, 0, httpConns, httpsConns, "fakeversion")
 		count := 10
 		StatsInc(httpConns, count, &addrs)
 		StatsInc(httpsConns, count, &addrs)
@@ -162,8 +162,8 @@ func TestStatsCount(t *testing.T) {
 		httpConns := web.NewConnMap()
 		httpsConns := web.NewConnMap()
 		addrs := []string{}
-		r := remap.RemapRule{RemapRuleBase: remap.RemapRuleBase{Name: "foo"}}
-		stats := New([]remap.RemapRule{r}, nil, 0, httpConns, httpsConns)
+		r := remapdata.RemapRule{RemapRuleBase: remapdata.RemapRuleBase{Name: "foo"}}
+		stats := New([]remapdata.RemapRule{r}, nil, 0, httpConns, httpsConns, "fakeversion")
 		count := 10
 		StatsInc(httpConns, count, &addrs)
 		StatsDec(httpConns, 1, &addrs)
