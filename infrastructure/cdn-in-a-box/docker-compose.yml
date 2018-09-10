@@ -71,6 +71,7 @@ services:
       dockerfile: traffic_ops/Dockerfile-go
     depends_on:
       - db
+      - enroller
       - trafficops-perl
     domainname: cdn.local
     env_file:
@@ -101,8 +102,6 @@ services:
     image: trafficops-perl
     networks:
       - tcnet
-    depends_on:
-      - db
     # TODO: change to expose: "60443" to limit to containers
     ports:
       - "60443:60443"
