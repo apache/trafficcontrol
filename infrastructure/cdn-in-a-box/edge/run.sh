@@ -29,6 +29,12 @@ done
 
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
+
+while [[ ! -d $ENROLLER_DIR/servers ]]; do
+	echo 'waiting for enroller setup'
+	sleep 3
+done
+
 to-enroll $(hostname -s)
 
 # Leaves the container hanging open in the event of a failure for debugging purposes
