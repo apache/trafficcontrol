@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _reference-label-tc-tm:
+.. _tc-tm:
 
 .. index::
 	Traffic Monitor - Overview
@@ -29,7 +29,7 @@ Traffic Monitors operate independently, but use the state of other Traffic Monit
 Traffic Monitor provides a view into CDN health using several RESTful JSON endpoints, which are consumed by other Traffic Monitors and upstream components such as Traffic Router. Traffic Monitor is also responsible for serving the overall CDN configuration to Traffic Router, which ensures that the configuration of these two critical components remain synchronized as operational and health related changes propagate through the CDN.
 
 
-.. _rl-astats:
+.. _astats:
 
 |arrow| Cache Monitoring
 -------------------------
@@ -50,7 +50,7 @@ If astats is unavailable due to a network related issue or the system statistics
 
 .. seealso:: For more information on ATS Statistics, see the `ATS documentation <https://docs.trafficserver.apache.org/en/latest/index.html>`_
 
-.. _rl-health-proto:
+.. _health-proto:
 
 |arrow| Health Protocol
 -----------------------

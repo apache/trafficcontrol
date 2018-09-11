@@ -1,25 +1,25 @@
-.. 
-.. 
+..
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
 ******************************
 Traffic Monitor Administration
 ******************************
 
-.. _rl-tm-golang:
+.. _tm-golang:
 
-* These instructions are for the Golang Traffic Monitor, for the legacy Java version, see :ref:`here <rl-tm-java>`.
+* These instructions are for the Golang Traffic Monitor, for the legacy Java version, see :ref:`here <tm-java>`.
 
 Installing Traffic Monitor
 ==========================
@@ -36,7 +36,7 @@ The following are requirements to ensure an accurate set up:
 1. Enter the Traffic Monitor server into Traffic Ops
 2. Make sure the FQDN of the Traffic Monitor is resolvable in DNS.
 3. Install Traffic Monitor: ``sudo yum -y install traffic_monitor``
-4. Configure Traffic Monitor. See :ref:`here <rl-tm-configure>`
+4. Configure Traffic Monitor. See :ref:`here <tm-configure>`
 5. Start the service: ``sudo service traffic_monitor start`` ::
 
     Starting traffic_monitor:
@@ -49,7 +49,7 @@ Configuring Traffic Monitor
 Configuration Overview
 ----------------------
 
-.. _rl-tm-configure:
+.. _tm-configure:
 
 Traffic Monitor is configured via two JSON configuration files, ``traffic_ops.cfg`` and ``traffic_monitor.cfg``, by default located in the ``conf`` directory in the install location.
 

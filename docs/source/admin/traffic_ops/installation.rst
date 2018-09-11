@@ -16,7 +16,7 @@
 .. index::
 	Traffic Ops - Installing
 
-.. _rl-to-install:
+.. _to-install:
 
 Traffic Ops - Installing
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -236,7 +236,7 @@ Installation
 Traffic Ops is now installed!
 
 
-**To complete the Traffic Ops Setup See:** :ref:`rl-to-default-profiles`
+**To complete the Traffic Ops Setup See:** :ref:`to-default-profiles`
 
 
 Upgrading Traffic Ops
@@ -248,6 +248,6 @@ To upgrade from older Traffic Ops versions, run the following commands as the ro
 	pushd /opt/traffic_ops/app/
 	PERL5LIB=/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5 ./db/admin.pl --env production upgrade
 
-After this completes, see :ref:`rl-to-install` to run the ``postinstall`` script.
+After this completes, see :ref:`to-install` to run the ``postinstall`` script.
 Once the ``postinstall`` script, has finished, run the following command as the root user (or with ``sudo``):
 ``systemctl start traffic_ops``

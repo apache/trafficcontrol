@@ -120,7 +120,7 @@ You will need to update the file ``/opt/traffic_ops/app/conf/cdn.conf`` with the
 Content Delivery Networks
 =========================
 
-.. _rl-param-prof:
+.. _param-prof:
 
 Profile Parameters
 ------------------
@@ -199,7 +199,7 @@ Below is a list of cache parameters that are likely to need changes from the def
 +--------------------------+-------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Drive_Letters            | storage.config    | The letter part of the disks, in the same example as above set this to ``a,b,c,d,e,f``                                                                             |
 +--------------------------+-------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| purge_allow_ip           | ip_allow.config   | The IP address range that is allowed to execute the PURGE method on the caches (not related to :ref:`rl-purge`)                                                    |
+| purge_allow_ip           | ip_allow.config   | The IP address range that is allowed to execute the PURGE method on the caches (not related to :ref:`purge`)                                                       |
 +--------------------------+-------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | coalesce_masklen_v4	   | ip_allow.config   | The mask length to use when coalescing IPv4 networks into one line using `the NetAddr\:\:IP Perl library. <http://search.cpan.org/~miker/NetAddr-IP-4.078/IP.pm>`_ |
 +--------------------------+-------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+

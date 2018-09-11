@@ -21,61 +21,61 @@ Glossary
 .. glossary::
 
 	302 content routing
-		:ref:`rl-http-cr`.
+		:ref:`http-cr`.
 
 	astats (stats_over_http)
-		An ATS plugin that allows you to monitor vitals of the ATS server. See :ref:`rl-astats`.
+		An ATS plugin that allows you to monitor vitals of the ATS server. See :ref:`astats`.
 
 	cache
-		A caching proxy server. See :ref:`rl-caching_proxy`.
+		A caching proxy server. See :ref:`caching_proxy`.
 
 	cachegroup
-		A group of caches that together create a combined larger cache using consistent hashing. See :ref:`rl-cachegroup`.
+		A group of caches that together create a combined larger cache using consistent hashing. See :ref:`cachegroup`.
 
 	consistent hashing
-		See `the Wikipedia article <http://en.wikipedia.org/wiki/Consistent_hashing>`_; Traffic Control uses consistent hashing when using :ref:`rl-http-cr` for the edge tier and when selecting parents in the mid tier.
+		See `the Wikipedia article <http://en.wikipedia.org/wiki/Consistent_hashing>`_; Traffic Control uses consistent hashing when using :ref:`http-cr` for the edge tier and when selecting parents in the mid tier.
 
 	content routing
-		Directing clients (or client systems) to a particular location or device in a location for optimal delivery of content See also :ref:`rl-http-cr` and :ref:`rl-dns-cr`.
+		Directing clients (or client systems) to a particular location or device in a location for optimal delivery of content See also :ref:`http-cr` and :ref:`dns-cr`.
 
 	coverage zone map
-		The coverage zone map (czm) or coverage zone file (zcf) is a file that maps network prefixes to cachegroups. See :ref:`rl-localization`.
+		The coverage zone map (czm) or coverage zone file (zcf) is a file that maps network prefixes to cachegroups. See :ref:`localization`.
 
 	delivery service
-		A grouping of content in the CDN, usually a determined by the URL hostname. See :ref:`rl-ds`.
+		A grouping of content in the CDN, usually a determined by the URL hostname. See :ref:`ds`.
 
 	edge (tier or cache)
-		Closest to the client or end-user. The edge tier is the tier that serves the client, edge caches are caches in the edge tier. In a Traffic Control CDN the basic function of the edge cache is that of a :ref:`rl-rev-proxy`.  See also :ref:`rl-cachegroup`.
+		Closest to the client or end-user. The edge tier is the tier that serves the client, edge caches are caches in the edge tier. In a Traffic Control CDN the basic function of the edge cache is that of a :ref:`rev-proxy`.  See also :ref:`cachegroup`.
 
-	(traffic ops) extension 
-		Using *extensions*, Traffic Ops be extended to use proprietary checks or monitoring sources. See :ref:`rl-trops-ext`.
+	(traffic ops) extension
+		Using *extensions*, Traffic Ops be extended to use proprietary checks or monitoring sources. See :ref:`trops-ext`.
 
 	forward proxy
-		A proxy that works that acts like it is the client to the origin. See :ref:`rl-fwd-proxy`.
+		A proxy that works that acts like it is the client to the origin. See :ref:`fwd-proxy`.
 
 	geo localization or geo routing
-		Localizing clients to the nearest caches using a geo database like the one from Maxmind. 
+		Localizing clients to the nearest caches using a geo database like the one from Maxmind.
 
  	health protocol
- 		The protocol to monitor the health of all the caches. See :ref:`rl-health-proto`. 
+ 		The protocol to monitor the health of all the caches. See :ref:`health-proto`.
 
  	localization
- 		Finding location on the network, or on planet earth. See :ref:`rl-localization`.
+ 		Finding location on the network, or on planet earth. See :ref:`localization`.
 
 	mid (tier or cache)
-		The tier above the edge tier. The mid tier does not directly serves the end-user and is used as an additional layer between the edge and the origin. In a Traffic Control CDN the basic function of the mid cache is that of a :ref:`rl-fwd-proxy`. See also :ref:`rl-cachegroup`.
+		The tier above the edge tier. The mid tier does not directly serves the end-user and is used as an additional layer between the edge and the origin. In a Traffic Control CDN the basic function of the mid cache is that of a :ref:`fwd-proxy`. See also :ref:`cachegroup`.
 
 	origin
 		The source of content for the CDN. Usually a redundant HTTP/1.1 webserver.
 
 	parent (cache or cachegroup)
-		The (group of) cache(s) in the higher tier.  See :ref:`rl-cachegroup`.
+		The (group of) cache(s) in the higher tier.  See :ref:`cachegroup`.
 
 	profile
-		A group of settings (parameters) that will be applied to a server. See :ref:`rl-profile`.
+		A group of settings (parameters) that will be applied to a server. See :ref:`profile`.
 
 	reverse proxy
-		A proxy that acts like it is the origin to the client. See :ref:`rl-rev-proxy`.
+		A proxy that acts like it is the origin to the client. See :ref:`rev-proxy`.
 
 
 
