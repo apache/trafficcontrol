@@ -17,10 +17,7 @@
  * under the License.
  */
 
-var WidgetDeliveryServicesController = function($scope, $interval, deliveryServiceService, locationUtils, propertiesModel) {
-
-	var interval,
-		autoRefresh = propertiesModel.properties.dashboard.autoRefresh;
+var WidgetDeliveryServicesController = function($scope, deliveryServiceService, locationUtils) {
 
 	var getDeliveryServices = function() {
 		deliveryServiceService.getDeliveryServices()
@@ -47,5 +44,5 @@ var WidgetDeliveryServicesController = function($scope, $interval, deliveryServi
 
 };
 
-WidgetDeliveryServicesController.$inject = ['$scope', '$interval', 'deliveryServiceService', 'locationUtils', 'propertiesModel'];
+WidgetDeliveryServicesController.$inject = ['$scope', 'deliveryServiceService', 'locationUtils'];
 module.exports = WidgetDeliveryServicesController;

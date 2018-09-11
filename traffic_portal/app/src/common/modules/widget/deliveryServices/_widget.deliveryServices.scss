@@ -25,6 +25,16 @@
       background-color: transparent;
     }
 
+    .widgetTable {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom:5px;
+
+        .thead {
+            vertical-align: bottom;
+        }
+    }
+
     .delivery-services-health {
       height: 45px;
 

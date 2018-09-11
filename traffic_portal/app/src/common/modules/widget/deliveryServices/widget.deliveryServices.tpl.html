@@ -30,7 +30,16 @@ under the License.
                         No matching delivery services
                     </div>
                     <div class="list-group">
-                        <a class="delivery-services-health list-group-item" ng-repeat="ds in deliveryServices">
+                        <table class="delivery-services-table widgetTable">
+                            <thead>
+                                <tr class="headings">
+                                    <th style="width:33%;">Display Nanme</th>
+                                    <th>Tenant</th>
+                                    <th>Origin</th>
+                                </tr>
+                            </thead>
+                        </table>
+                        <a class="delivery-services-health list-group-item" ng-repeat="ds in deliveryServices | filter:search:strict | offsetFilter:(currentDeliveryServicesPage-1)*deliveryServicesPerPage | limitTo:deliveryServicesPerPage">
                             <div class="row">
                                 <table class="delivery-services-table table">
                                     <tbody>
@@ -50,7 +59,7 @@ under the License.
                         <uib-pagination class="delivery-services-pagination pagination-md" boundary-links="true" max-size="2" total-items="(deliveryServices | filter:search:strict).length" items-per-page="deliveryServicesPerPage" ng-model="currentDeliveryServicesPage" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"></uib-pagination>
                     </div>
                     <div class="input-group delivery-services-search-form">
-                        <input type="text" class="filter-input form-control" placeholder="Filter delivery services..." ng-model="search.name">
+                        <input type="text" class="filter-input form-control" placeholder="Filter delivery services..." ng-model="search.displayName">
                         <span class="filter-input-group-btn input-group-btn">
                                 <button class="btn btn-default" type="button"><i class="fa fa-search"></i></button>
                             </span>
