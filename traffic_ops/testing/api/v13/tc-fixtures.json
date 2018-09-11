@@ -1436,5 +1436,13 @@
             "uid": 0,
             "username": "federationuser"
         }
+    ],
+    "steeringTargets": [
+        {
+            "deliveryService": "ds1",
+            "target": "ds2",
+            "value": 42,
+            "type": "STEERING_WEIGHT"
+        }
     ]
 }
