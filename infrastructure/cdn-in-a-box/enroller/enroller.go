@@ -140,6 +140,17 @@ func (s session) getStatusIDByName(n string) (int, error) {
 	return statuses[0].ID, err
 }
 
+func (s session) getRoleIDByName(n string) (int, error) {
+	roles, _, _, err := s.GetRoleByName(url.QueryEscape(n))
+	if err != nil {
+		return -1, err
+	}
+	if len(roles) == 0 || roles[0].ID == nil {
+		return -1, errors.New("no role with name " + n)
+	}
+	return *roles[0].ID, err
+}
+
 func (s session) getTenantIDByName(n string) (int, error) {
 	tenant, _, err := s.TenantByName(url.QueryEscape(n))
 	if err != nil {
@@ -609,19 +620,27 @@ func enrollUser(toSession *session, fn string) error {
 	}()
 
 	dec := json.NewDecoder(fh)
-	var s tc.User
+	var s tc.APIUserPost
 	err = dec.Decode(&s)
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
-	if s.Tenant != "" {
-		id, err := toSession.getTenantIDByName(s.Tenant)
+	if s.Tenant != nil && *s.Tenant != "" {
+		id, err := toSession.getTenantIDByName(*s.Tenant)
 		if err != nil {
 			return err
 		}
-		s.TenantID = id
+		s.TenantID = &id
+	}
+
+	if s.RoleName != nil && *s.RoleName != "" {
+		id, err := toSession.getRoleIDByName(*s.RoleName)
+		if err != nil {
+			return err
+		}
+		s.Role = &id
 	}
 
 	alerts, _, err := toSession.CreateUser(&s)
