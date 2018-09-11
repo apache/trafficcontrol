@@ -69,12 +69,16 @@ Traffic Router is inserted into the HTTP retrieval process by making it DNS auth
 
 |arrow| HTTP Content Routing
 ----------------------------
-	For an HTTP Delivery Service the client might receive a URL such as ``http://bar.dsname.cdn.com/fun/example.html``. The LDNS server resolves this ``bar.dsname.cdn.com`` to an IP address, but in this case Traffic Router returns its own IP address. The client opens a connection to port 80 on the Traffic Router's IP address, and sends: ::
+	For an HTTP Delivery Service the client might receive a URL such as ``http://bar.dsname.cdn.com/fun/example.html``. The LDNS server resolves this ``bar.dsname.cdn.com`` to an IP address, but in this case Traffic Router returns its own IP address. The client opens a connection to port 80 on the Traffic Router's IP address, and sends:
+
+	.. code-block:: http
 
 		GET /fun/example.html HTTP/1.1
 		Host: bar.dsname.cdn.com
 
-	Traffic Router uses an HTTP 302 to redirect the client to the best cache. For example: ::
+	Traffic Router uses an HTTP 302 to redirect the client to the best cache. For example:
+
+	.. code-block:: http
 
 		HTTP/1.1 302 Moved Temporarily
 		Server: Apache-Coyote/1.1
