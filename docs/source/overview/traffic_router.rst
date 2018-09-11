@@ -63,13 +63,13 @@ Traffic Router is inserted into the HTTP retrieval process by making it DNS auth
 
 |arrow| DNS Content Routing
 ---------------------------
-	For a DNS delivery service the client might receive a URL such as ``http://foo.dsname.cdn.com/fun/example.html``. When the Local Domain Name Server (LDNS) server is resolving this ``foo.dsname.cdn.com`` hostname to an IP address, it ends at Traffic Router because it is the authoritative DNS server for ``cdn.com`` and the domains below it, and subsequently responds with a list of IP addresses from the eligible caches based on the location of the LDNS server. When responding, Traffic Router does not know the actual client IP address or the path that the client is going to request. The decision on what cache IP address (or list of cache IP addresses) to return is solely based on the location of the LDNS server and the health of the caches. The client then connects to port 80 on the cache, and sends the ``Host: foo.dsname.cdn.com`` header. The configuration of the cache includes the remap rule ``http://foo.dsname.cdn.com http://origin.dsname.com`` to map the routed name to an origin hostname.
+	For a DNS Delivery Service the client might receive a URL such as ``http://foo.dsname.cdn.com/fun/example.html``. When the Local Domain Name Server (LDNS) server is resolving this ``foo.dsname.cdn.com`` hostname to an IP address, it ends at Traffic Router because it is the authoritative DNS server for ``cdn.com`` and the domains below it, and subsequently responds with a list of IP addresses from the eligible caches based on the location of the LDNS server. When responding, Traffic Router does not know the actual client IP address or the path that the client is going to request. The decision on what cache IP address (or list of cache IP addresses) to return is solely based on the location of the LDNS server and the health of the caches. The client then connects to port 80 on the cache, and sends the ``Host: foo.dsname.cdn.com`` header. The configuration of the cache includes the remap rule ``http://foo.dsname.cdn.com http://origin.dsname.com`` to map the routed name to an origin hostname.
 
 .. _http-cr:
 
 |arrow| HTTP Content Routing
 ----------------------------
-	For an HTTP delivery service the client might receive a URL such as ``http://bar.dsname.cdn.com/fun/example.html``. The LDNS server resolves this ``bar.dsname.cdn.com`` to an IP address, but in this case Traffic Router returns its own IP address. The client opens a connection to port 80 on the Traffic Router's IP address, and sends: ::
+	For an HTTP Delivery Service the client might receive a URL such as ``http://bar.dsname.cdn.com/fun/example.html``. The LDNS server resolves this ``bar.dsname.cdn.com`` to an IP address, but in this case Traffic Router returns its own IP address. The client opens a connection to port 80 on the Traffic Router's IP address, and sends: ::
 
 		GET /fun/example.html HTTP/1.1
 		Host: bar.dsname.cdn.com
