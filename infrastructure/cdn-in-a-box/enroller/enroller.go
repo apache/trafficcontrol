@@ -839,6 +839,7 @@ func enrollUser(toSession *session, fn string) error {
 	dec := json.NewDecoder(fh)
 	var s tc.User
 	err = dec.Decode(&s)
+	log.Printf("User is %++v\n", s)
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
