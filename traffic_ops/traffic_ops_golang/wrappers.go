@@ -29,6 +29,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"runtime"
 	"strings"
 	"time"
 	"unicode"
@@ -160,6 +161,29 @@ func wrapHeaders(h http.HandlerFunc) http.HandlerFunc {
 
 		gzipResponse(w, r, iw.Body())
 
+	}
+}
+
+func wrapPanicRecover(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				log.Errorf("panic: (err: %v) stacktrace:\n%s\n", err, stacktrace())
+			}
+		}()
+		h(w, r)
+	}
+}
+
+func stacktrace() []byte {
+	initialBufSize := 1024
+	buf := make([]byte, initialBufSize)
+	for {
+		n := runtime.Stack(buf, true)
+		if n < len(buf) {
+			return buf[:n]
+		}
+		buf = make([]byte, len(buf)*2)
 	}
 }
 
