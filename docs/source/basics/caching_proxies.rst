@@ -41,7 +41,7 @@ types of proxies in use on the Internet today:
 
 |arrow| Reverse Proxy
 ---------------------
-	A reverse proxy acts on behalf of the origin server. The client is mostly unaware it is communicating with a proxy and not the actual origin. All EDGE caches in a Traffic Control CDN are reverse proxies. To the end user a Traffic Control based CDN appears as a reverse proxy since it retrieves content from the origin server, acting on behalf of that origin server. The client requests a URL that has a hostname which resolves to the reverse proxy's IP address and, in compliance with the HTTP 1.1 specification, the client sends a ``Host:`` header to the reverse proxy that matches the hostname in the URL. The proxy looks up this hostname in a list of mappings to find the origin hostname; if the hostname of the ``Host:`` header is not found in the list, the proxy will send an error (``404 Not Found``) to the client. If the supplied hostname is found in this list of mappings, the proxy checks the cache, and when the content is not already present, connects to the origin the requested ``Host:`` maps to and requests the path of the original URL, providing the origin hostname in the ``Host`` header. The proxy then stores the URL in cache and serves the contents to the client. When there are subsequent requests for the same URL, a caching proxy serves the content out of cache thereby reducing latency and network traffic.
+A reverse proxy acts on behalf of the origin server. The client is mostly unaware it is communicating with a proxy and not the actual origin. All EDGE caches in a Traffic Control CDN are reverse proxies. To the end user a Traffic Control based CDN appears as a reverse proxy since it retrieves content from the origin server, acting on behalf of that origin server. The client requests a URL that has a hostname which resolves to the reverse proxy's IP address and, in compliance with the HTTP 1.1 specification, the client sends a ``Host:`` header to the reverse proxy that matches the hostname in the URL. The proxy looks up this hostname in a list of mappings to find the origin hostname; if the hostname of the ``Host:`` header is not found in the list, the proxy will send an error (``404 Not Found``) to the client. If the supplied hostname is found in this list of mappings, the proxy checks the cache, and when the content is not already present, connects to the origin the requested ``Host:`` maps to and requests the path of the original URL, providing the origin hostname in the ``Host`` header. The proxy then stores the URL in cache and serves the contents to the client. When there are subsequent requests for the same URL, a caching proxy serves the content out of cache thereby reducing latency and network traffic.
 
 .. seealso:: `ATS documentation on reverse proxy <https://docs.trafficserver.apache.org/en/latest/admin/reverse-proxy-http-redirects.en.html#http-reverse-proxy>`_.
 
@@ -52,7 +52,8 @@ from the cache and not from the origin server directly. For this example, the re
 cache is: ``http://www-origin-cache.cdn.com http://www.origin.com``.
 
 ..  Note:: In the previous example minimal headers were shown on both the request and response. In the examples that follow, the origin server response is more realistic.
-	::
+
+	.. code-block:: http
 
 		HTTP/1.1 200 OK
 		Date: Sun, 14 Dec 2014 23:22:44 GMT
@@ -82,12 +83,16 @@ The client is given the URL ``http://www-origin-cache.cdn.com/foo/bar/fun.html``
 
 6a. If the response is not in the cache:
 
-	1. The proxy uses DNS to get the IPv4 address for ``www.origin.com``, connect to it on port 80, and sends: ::
+	1. The proxy uses DNS to get the IPv4 address for ``www.origin.com``, connect to it on port 80, and sends:
 
-		GET /foo/bar/fun.html HTTP/1.1
-		Host: www.origin.com
+		.. code-block:: http
 
-	2. The origin server responds with the headers and content as shown: ::
+			GET /foo/bar/fun.html HTTP/1.1
+			Host: www.origin.com
+
+	2. The origin server responds with the headers and content as shown:
+
+		.. code-block:: http
 
 			HTTP/1.1 200 OK
 			Date: Sun, 14 Dec 2014 23:22:44 GMT
@@ -100,7 +105,9 @@ The client is given the URL ``http://www-origin-cache.cdn.com/foo/bar/fun.html``
 
 			<!DOCTYPE html><html><body>This is a fun file</body></html>
 
-	3. The proxy sends the origin response on to the client adding a ``Via:`` header (and maybe others): ::
+	3. The proxy sends the origin response on to the client adding a ``Via:`` header (and maybe others):
+
+		.. code-block:: http
 
 			HTTP/1.1 200 OK
 			Date: Sun, 14 Dec 2014 23:22:44 GMT
@@ -117,7 +124,9 @@ The client is given the URL ``http://www-origin-cache.cdn.com/foo/bar/fun.html``
 
 6b. If it *is* in the cache:
 
-	The proxy responds to the client with the previously retrieved result: ::
+	The proxy responds to the client with the previously retrieved result:
+
+	.. code-block:: http
 
 		HTTP/1.1 200 OK
 		Date: Sun, 14 Dec 2014 23:22:44 GMT
@@ -140,67 +149,55 @@ The client is given the URL ``http://www-origin-cache.cdn.com/foo/bar/fun.html``
 
 |arrow| Forward Proxy
 ---------------------
-	A forward proxy acts on behalf of the client. The origin server is mostly unaware of the proxy, the client requests the proxy to retrieve content from a particular origin server. All MID caches in a Traffic Control based CDN are forward proxies. In a forward proxy scenario, the client is explicitly configured to use the the proxy's IP address and port as a forward proxy. The client always connects to the forward proxy for content. The content provider does not have to change the URL the client obtains, and is unaware of the proxy in the middle.
+A forward proxy acts on behalf of the client. The origin server is mostly unaware of the proxy, the client requests the proxy to retrieve content from a particular origin server. All MID caches in a Traffic Control based CDN are forward proxies. In a forward proxy scenario, the client is explicitly configured to use the the proxy's IP address and port as a forward proxy. The client always connects to the forward proxy for content. The content provider does not have to change the URL the client obtains, and is unaware of the proxy in the middle.
 
-	..  seealso:: `ATS documentation on forward proxy <https://docs.trafficserver.apache.org/en/latest/admin/forward-proxy.en.html>`_.
+..  seealso:: `ATS documentation on forward proxy <https://docs.trafficserver.apache.org/en/latest/admin/forward-proxy.en.html>`_.
 
-	Below is an example of the client retrieving the URL ``http://www.origin.com/foo/bar/fun.html`` through a forward proxy:
+Below is an example of the client retrieving the URL ``http://www.origin.com/foo/bar/fun.html`` through a forward proxy:
 
-	1. The client requires configuration to use the proxy, as opposed to the reverse proxy example. Assume the client configuration is through preferences entries or other to use the proxy IP address 99.88.77.66 and proxy port 8080.
+1. The client requires configuration to use the proxy, as opposed to the reverse proxy example. Assume the client configuration is through preferences entries or other to use the proxy IP address 99.88.77.66 and proxy port 8080.
 
-	2. To retrieve ``http://www.origin.com/foo/bar/fun.html`` URL, the client connects to 99.88.77.66 on port 8080 and sends: ::
+2. To retrieve ``http://www.origin.com/foo/bar/fun.html`` URL, the client connects to 99.88.77.66 on port 8080 and sends:
+
+	.. code-block:: http
 
 		GET http://www.origin.com/foo/bar/fun.html HTTP/1.1
 		Host: www.origin.com
 
 
-	..  Note:: In this case, the client places the entire URL after ``GET``, including protocol and hostname (``http://www.origin.com``), but in the reverse proxy and direct-to-origin case it puts only the path portion of the URL (``/foo/bar/fun.html``) after the ``GET``.
+..  Note:: In this case, the client places the entire URL after ``GET``, including protocol and hostname (``http://www.origin.com``), but in the reverse proxy and direct-to-origin case it puts only the path portion of the URL (``/foo/bar/fun.html``) after the ``GET``.
 
-	3. The proxy verifies whether the response for ``http://www-origin-cache.cdn.com/foo/bar/fun.html`` is already in the cache.
+3. The proxy verifies whether the response for ``http://www-origin-cache.cdn.com/foo/bar/fun.html`` is already in the cache.
 
-	4a. If it is not in the cache:
+4a. If it is not in the cache:
 
-		1. The proxy uses DNS to obtain the IPv4 address for ``www.origin.com``, connects to it on port 80, and sends: ::
+	1. The proxy uses DNS to obtain the IPv4 address for ``www.origin.com``, connects to it on port 80, and sends:
 
+		.. code-block:: http
 
-				GET /foo/bar/fun.html HTTP/1.1
-				Host: www.origin.com
-
-
-		2. The origin server responds with the headers and content as shown below: ::
+			GET /foo/bar/fun.html HTTP/1.1
+			Host: www.origin.com
 
 
-				HTTP/1.1 200 OK
-				Date: Sun, 14 Dec 2014 23:22:44 GMT
-				Server: Apache/2.2.15 (Red Hat)
-				Last-Modified: Sun, 14 Dec 2014 23:18:51 GMT
-				ETag: "1aa008f-2d-50a3559482cc0"
-				Content-Length: 45
-				Connection: close
-				Content-Type: text/html; charset=UTF-8
+	2. The origin server responds with the headers and content as shown below:
 
-				<!DOCTYPE html><html><body>This is a fun file</body></html>
+		.. code-block:: http
 
+			HTTP/1.1 200 OK
+			Date: Sun, 14 Dec 2014 23:22:44 GMT
+			Server: Apache/2.2.15 (Red Hat)
+			Last-Modified: Sun, 14 Dec 2014 23:18:51 GMT
+			ETag: "1aa008f-2d-50a3559482cc0"
+			Content-Length: 45
+			Connection: close
+			Content-Type: text/html; charset=UTF-8
 
-		3. The proxy sends this on to the client adding a ``Via:`` header (and maybe others): ::
-
-				HTTP/1.1 200 OK
-				Date: Sun, 14 Dec 2014 23:22:44 GMT
-				Last-Modified: Sun, 14 Dec 2014 23:18:51 GMT
-				ETag: "1aa008f-2d-50a3559482cc0"
-				Content-Length: 45
-				Connection: close
-				Content-Type: text/html; charset=UTF-8
-				Age: 0
-				Via: http/1.1 cache01.cdn.kabletown.net (ApacheTrafficServer/4.2.1 [uScSsSfUpSeN:t cCSi p sS])
-				Server: ATS/4.2.1
-
-				<!DOCTYPE html><html><body>This is a fun file</body></html>
+			<!DOCTYPE html><html><body>This is a fun file</body></html>
 
 
-	4b. If it *is* in the cache:
+	3. The proxy sends this on to the client adding a ``Via:`` header (and maybe others):
 
-		The proxy responds to the client with the previously retrieved result: ::
+		.. code-block:: http
 
 			HTTP/1.1 200 OK
 			Date: Sun, 14 Dec 2014 23:22:44 GMT
@@ -209,8 +206,28 @@ The client is given the URL ``http://www-origin-cache.cdn.com/foo/bar/fun.html``
 			Content-Length: 45
 			Connection: close
 			Content-Type: text/html; charset=UTF-8
-			Age: 99711
+			Age: 0
 			Via: http/1.1 cache01.cdn.kabletown.net (ApacheTrafficServer/4.2.1 [uScSsSfUpSeN:t cCSi p sS])
 			Server: ATS/4.2.1
 
 			<!DOCTYPE html><html><body>This is a fun file</body></html>
+
+
+4b. If it *is* in the cache:
+
+	The proxy responds to the client with the previously retrieved result:
+
+	.. code-block:: http
+
+		HTTP/1.1 200 OK
+		Date: Sun, 14 Dec 2014 23:22:44 GMT
+		Last-Modified: Sun, 14 Dec 2014 23:18:51 GMT
+		ETag: "1aa008f-2d-50a3559482cc0"
+		Content-Length: 45
+		Connection: close
+		Content-Type: text/html; charset=UTF-8
+		Age: 99711
+		Via: http/1.1 cache01.cdn.kabletown.net (ApacheTrafficServer/4.2.1 [uScSsSfUpSeN:t cCSi p sS])
+		Server: ATS/4.2.1
+
+		<!DOCTYPE html><html><body>This is a fun file</body></html>

@@ -17,11 +17,11 @@
 	http/1.1
 	HTTP
 
-HTTP 1.1
+HTTP/1.1
 ========
-For a comprehensive look at Traffic Control, it is important to understand basic HTTP 1.1 protocol operations and how caches function. The example below illustrates the fulfillment of an HTTP 1.1 request in a situation without CDN or proxy, followed by viewing the changes after inserting different types of (caching) proxies. Several of the examples below are simplified for clarification of the essentials.
+For a comprehensive look at Traffic Control, it is important to understand basic HTTP/1.1 protocol operations and how caches function. The example below illustrates the fulfillment of an HTTP/1.1 request in a situation without CDN or proxy, followed by viewing the changes after inserting different types of (caching) proxies. Several of the examples below are simplified for clarification of the essentials.
 
-For complete details on HTTP 1.1 see `RFC 2616 - Hypertext Transfer Protocol -- HTTP/1.1 <https://www.ietf.org/rfc/rfc2616.txt>`_.
+For complete details on HTTP/1.1 see `RFC 2616 - Hypertext Transfer Protocol -- HTTP/1.1 <https://www.ietf.org/rfc/rfc2616.txt>`_.
 
 Below are the steps of a client retrieving the URL ``http://www.origin.com/foo/bar/fun.html`` using HTTP/1.1 without proxies:
 
@@ -31,18 +31,22 @@ Below are the steps of a client retrieving the URL ``http://www.origin.com/foo/b
 
 	.. Note:: While longer DNS TTLs of a day (86400 seconds) or more are quite common in other use cases, in CDN use cases DNS TTLs are often below a minute.
 
-3. The client opens a TCP connection from a random port locally to port 80 (the HTTP default) on 44.33.22.11, and sends this (showing the minimum HTTP 1.1 request, typically there are additional headers): ::
+3. The client opens a TCP connection from a random port locally to port 80 (the HTTP default) on 44.33.22.11, and sends this (showing the minimum HTTP 1.1 request, typically there are additional headers):
 
-	GET /foo/bar/fun.html HTTP/1.1
-	Host: www.origin.com
+	.. code-block:: http
 
-4. The server at ``www.origin.com`` looks up the Host: header to match that to a configuration section, usually referred to as a virtual host section. If the Host: header and configuration section match, the search continues for the content of the path ``/foo/bar/fun.html``, in the example, this is a file that contains ``<html><body>This is a fun file</body></html>``, so the server responds with the following: ::
+		GET /foo/bar/fun.html HTTP/1.1
+		Host: www.origin.com
 
-	HTTP/1.1 200 OK
-	Content-Type: text/html; charset=UTF-8
-	Content-Length: 45
+4. The server at ``www.origin.com`` looks up the Host: header to match that to a configuration section, usually referred to as a virtual host section. If the Host: header and configuration section match, the search continues for the content of the path ``/foo/bar/fun.html``, in the example, this is a file that contains ``<!DOCTYPE html><html><body>This is a fun file</body></html>``, so the server responds with the following:
 
-	<!DOCTYPE html><html><body>This is a fun file</body></html>
+	.. code-block:: http
+
+		HTTP/1.1 200 OK
+		Content-Type: text/html; charset=UTF-8
+		Content-Length: 45
+
+		<!DOCTYPE html><html><body>This is a fun file</body></html>
 
 
  At this point, HTTP transaction is complete.
