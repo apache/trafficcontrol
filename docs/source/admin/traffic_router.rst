@@ -41,7 +41,7 @@ The following are requirements to ensure an accurate set up:
 
 .. Note:: As of Traffic Control version 3.0, traffic router depends upon a package called 'tomcat'. This package should have been created when you built Traffic Router. If you get an error while installing the 'traffic_router' package make sure that the 'tomcat' package is in your package repository.
 
-5. Edit ``/opt/traffic_router/conf/traffic_monitor.properties`` and specify the correct online Traffic Monitor(s) for your CDN. See :ref:`rl-tr-config-files`
+5. Edit ``/opt/traffic_router/conf/traffic_monitor.properties`` and specify the correct online Traffic Monitor(s) for your CDN. See :ref:`tr-config-files`
 	# traffic_monitor.properties: url that should normally point to this file
 	traffic_monitor.properties=file:/opt/traffic_router/conf/traffic_monitor.properties
 
@@ -52,7 +52,7 @@ The following are requirements to ensure an accurate set up:
 6. Start Traffic Router: ``sudo systemctl start traffic_router``, and test lookups with dig and curl against that server.
 	To restart, ``sudo systemctl stop traffic_router``, kill the traffic router process, and ``sudo systemctl restart traffic_router``
 	Also, crconfig previously recieved will be cached, and needs to be removed manually to actually be reloaded /opt/traffic_router/db/cr-config.json
-7. Snapshot CRConfig; See :ref:`rl-snapshot-crconfig`
+7. Snapshot CRConfig; See :ref:`snapshot-crconfig`
 
 ..  Note:: Once the CRConfig is snapshotted, live traffic will be sent to the new Traffic Routers provided that their status is set to ``ONLINE``.
 
@@ -66,9 +66,9 @@ Configuring Traffic Router
 
 .. Note:: Pre-existing installations having configuration files in ``/opt/traffic_router/conf`` will still be used and honored for Traffic Router 1.5 and onward.
 
-For the most part, the configuration files and parameters that follow are used to get Traffic Router online and communicating with various Traffic Control components. Once Traffic Router is successfully communicating with Traffic Control, configuration is mostly performed in Traffic Ops, and is distributed throughout Traffic Control via the CRConfig snapshot process. See :ref:`rl-snapshot-crconfig` for more information. Please see the parameter documentation for Traffic Router in the Using Traffic Ops guide documented under :ref:`rl-ccr-profile` for parameters that influence the behavior of Traffic Router via the CRConfig.
+For the most part, the configuration files and parameters that follow are used to get Traffic Router online and communicating with various Traffic Control components. Once Traffic Router is successfully communicating with Traffic Control, configuration is mostly performed in Traffic Ops, and is distributed throughout Traffic Control via the CRConfig snapshot process. See :ref:`snapshot-crconfig` for more information. Please see the parameter documentation for Traffic Router in the Using Traffic Ops guide documented under :ref:`ccr-profile` for parameters that influence the behavior of Traffic Router via the CRConfig.
 
-.. _rl-tr-config-files:
+.. _tr-config-files:
 
 Configuration files
 -------------------
@@ -118,7 +118,7 @@ Configuration files
 |                            +-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
 |                            | cache.config.json.refresh.period          | The interval in milliseconds which Traffic Router will poll for a new CRConfig                      | 60000                                             |
 +----------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
-| startup.properties         | various parameters                        | This configuration is used by systemctl to set environment variables when the traffic_router        |                                                   | 
+| startup.properties         | various parameters                        | This configuration is used by systemctl to set environment variables when the traffic_router        |                                                   |
 |                            |                                           | service is started. It primarily consists of command line settings for the Java process.            | N/A                                               |
 +----------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
 | log4j.properties           | various parameters                        | Configuration of log4j is documented on their site; adjust as necessary based on needs              | N/A                                               |
@@ -128,7 +128,7 @@ Configuration files
 | web.xml                    | various parameters                        | Default settings for all Web Applications running in the Traffic Router instance of Tomcat.         | N/A                                               |
 +----------------------------+-------------------------------------------+-----------------------------------------------------------------------------------------------------+---------------------------------------------------+
 
-.. _rl-tr-dnssec:
+.. _tr-dnssec:
 
 DNSSEC
 ======
@@ -143,7 +143,7 @@ Traffic Router currently supports DNSSEC with NSEC, however, NSEC3 and more conf
 
 Operation
 ---------
-Upon startup or a configuration change, Traffic Router obtains keys from the keystore API in Traffic Ops which returns key signing keys (KSK) and zone signing keys (ZSK) for each delivery service that is a subdomain off the CDN's top level domain (TLD), in addition to the keys for the CDN TLD itself. Each key has timing information that allows Traffic Router to determine key validity (expiration, inception, and effective dates) in addition to the appropriate TTL to use for the DNSKEY record(s).  All TTLs are configurable parameters; see the :ref:`rl-ccr-profile` documentation for more information.
+Upon startup or a configuration change, Traffic Router obtains keys from the keystore API in Traffic Ops which returns key signing keys (KSK) and zone signing keys (ZSK) for each delivery service that is a subdomain off the CDN's top level domain (TLD), in addition to the keys for the CDN TLD itself. Each key has timing information that allows Traffic Router to determine key validity (expiration, inception, and effective dates) in addition to the appropriate TTL to use for the DNSKEY record(s).  All TTLs are configurable parameters; see the :ref:`ccr-profile` documentation for more information.
 
 Once Traffic Router obtains the key data from the API, it converts each public key into the appropriate record types (DNSKEY, DS) to place in zones and uses the private key to sign zones. DNSKEY records are added to each delivery service's zone (e.g.: mydeliveryservice.cdn.kabletown.net) for every valid key that exists, in addition to the CDN TLD's zone. A DS record is generated from each zone's KSK and is placed in the CDN TLD's zone (e.g.: cdn.kabletown.net); the DS record for the CDN TLD must be placed in its parent zone, which is not managed by Traffic Control.
 
@@ -359,7 +359,7 @@ Sample Message
 |      |                                                                     | NXDOMAIN (the domain/name requested does not exist) |
 +------+---------------------------------------------------------------------+-----------------------------------------------------+
 
-.. _rl-tr-ngb:
+.. _tr-ngb:
 
 GeoLimit Failure Redirect feature
 =================================
@@ -388,7 +388,7 @@ The URL has 3 kinds of formats, which have different meanings:
 3. URL with domain that doesn't match with the delivery service. For this URL, the router will return the configured url directly to the client.
 
 
-.. _rl-deep-cache:
+.. _deep-cache:
 
 Deep Caching - Deep Coverage Zone Topology
 ==========================================
@@ -414,8 +414,8 @@ Getting started
 What you need:
 
 #. Edge caches deployed in "deep" locations and registered in Traffic Ops
-#. A Deep Coverage Zone File (DCZF) mapping these deep cache hostnames to specific network prefixes (see :ref:`rl-deep-czf` for details)
-#. Deep caching parameters in the Traffic Router Profile (see :ref:`rl-ccr-profile` for details):
+#. A Deep Coverage Zone File (DCZF) mapping these deep cache hostnames to specific network prefixes (see :ref:`deep-czf` for details)
+#. Deep caching parameters in the Traffic Router Profile (see :ref:`ccr-profile` for details):
 
    * ``deepcoveragezone.polling.interval``
    * ``deepcoveragezone.polling.url``
@@ -435,7 +435,7 @@ client's request, Traffic Router will "fall back" to the regular CZF and
 continue regular CZF routing from there.
 
 
-.. _rl-tr-steering:
+.. _tr-steering:
 
 Steering feature
 ================
@@ -491,7 +491,7 @@ Starting with version 1.7 Traffic Router added the ability to allow https traffi
 
 The summary for setting up https is to:
 
-#. Select one of 'https', 'http and https', or 'http to https' for the delivery service 
+#. Select one of 'https', 'http and https', or 'http to https' for the delivery service
 #. Generate private keys for the delivery service using a wildcard domain such as ``*.my-delivery-service.my-cdn.example.com``
 #. Obtain and import signed certificate chain
 #. Snapshot CR Config
@@ -524,7 +524,7 @@ Traffic Router fetches certificates into memory:
 * Once an hour from whenever the most recent of the last of the above occurred
 
 .. Note::
-  To adjust the frequency when Traffic Router fetches certificates add the parameter 'certificates.polling.interval' to CR Config and 
+  To adjust the frequency when Traffic Router fetches certificates add the parameter 'certificates.polling.interval' to CR Config and
   setting it to the desired time in milliseconds.
 
 .. Note::
@@ -533,7 +533,7 @@ Traffic Router fetches certificates into memory:
 .. Warning::
   If a snapshot of CR Config is made that involves a delivery service missing its certificates, Traffic Router will ignore **ALL** changes in that CR-Config
   until one of the following occurs:
-  * It receives certificates for that delivery service 
+  * It receives certificates for that delivery service
   * Another snapshot of CR Config is created and the delivery service without certificates is changed so it's HTTP protocol is set to 'http'
 
 Certificate Chain Ordering
@@ -586,7 +586,7 @@ Tuning Recommendations
 The following is an example of the command line parameters set in /opt/traffic_router/conf/startup.properties that has been tested on a multi core server running under HTTPS load test requests.
 This is following the general recommendation to use the G1 garbage collector for JVM applications running on multi core machines.
 In addition to using the G1 garbage collector the InitiatingHeapOccupancyPercent was lowered to run garbage collection more frequently which
-improved overall throughput for Traffic Router and reduced 'Stop the World' garbage collection. Note that any environment variable settings in this file will override those 
+improved overall throughput for Traffic Router and reduced 'Stop the World' garbage collection. Note that any environment variable settings in this file will override those
 set in /lib/systemd/system/traffic_router.service.
 
   /opt/traffic_router/conf/startup.properties::

@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _rl-steering-qht:
+.. _steering-qht:
 
 ***********************************
 Configure Delivery Service Steering

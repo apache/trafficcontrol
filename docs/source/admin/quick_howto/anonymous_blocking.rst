@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _rl-anonymous_blocking-qht:
+.. _anonymous_blocking-qht:
 
 **************************************
 Configure Anonymous Blocking
@@ -33,14 +33,14 @@ Anonymous Blocking uses a configuration file in JSON format to define blocking r
        "name": "Anonymous IP Blocking Policy",
 
        "anonymousIp": { "blockAnonymousVPN": true,
-                        "blockHostingProvider": true, 
+                        "blockHostingProvider": true,
                         "blockPublicProxy": true,
                         "blockTorExitNode": true},
-                        
+
        "ip4Whitelist": ["192.168.30.0/24", "10.0.2.0/24", "10.1.1.1/32"],
-       
+
        "ip6Whitelist": ["2001:550:90a::/48", "::1/128"],
-       
+
        "redirectUrl": "http://youvebeenblocked.com"
     }
 
@@ -83,5 +83,5 @@ Anonymous Blocking extends the field of "rtype" and adds a new field "ANON_BLOCK
 
 If rtype=ANON_BLOCK then the client's IP was found in the Anonymous IP Database and was blocked.
 
-   
+
 

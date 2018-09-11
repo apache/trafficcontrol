@@ -1,25 +1,25 @@
-.. 
-.. 
+..
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
 ***************************************
 Traffic Monitor Administration (Legacy)
 ***************************************
 
-.. _rl-tm-java:
+.. _tm-java:
 
-* These instructions are for the legacy Java Traffic Monitor, for the new Golang version, see :ref:`here <rl-tm-golang>`.
+* These instructions are for the legacy Java Traffic Monitor, for the new Golang version, see :ref:`here <tm-golang>`.
 
 Installing Traffic Monitor
 ==========================
@@ -137,7 +137,7 @@ The following are requirements to ensure an accurate set up:
 #. Update the 'allow_ip' and 'allow_ip6' parameters in the profiles of all caches defined in traffic ops, both edge and mid,
    with the address of the traffic monitor being installed, so that the traffic servers will allow this Traffic Monitor
    to access the astats plugin.
-   For details see :ref:`rl-param-prof` in the *Configuring Traffic Ops* section.
+   For details see :ref:`param-prof` in the *Configuring Traffic Ops* section.
 
 #. Start Tomcat: ``sudo service tomcat start`` ::
 

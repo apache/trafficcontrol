@@ -1,26 +1,26 @@
-.. 
-.. 
+..
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
-.. _rl-federations-qht:
+.. _federations-qht:
 
 *********************
 Configure Federations
 *********************
 
-1)  Create a user with a federations role (Misc -> Users -> Add User).  This user will have the ability to perform the following actions: 
-		
+1)  Create a user with a federations role (Misc -> Users -> Add User).  This user will have the ability to perform the following actions:
+
 		- Edit the federation
 		- Delete the federation
 		- Add IPV4 resolvers
@@ -38,17 +38,17 @@ Configure Federations
 	:scale: 100%
 	:align: center
 
-4) 	After the Federation is added, Traffic Ops will display the Federation.  
+4) 	After the Federation is added, Traffic Ops will display the Federation.
 
-	Changes can be made at this time or the Federation can be deleted.  Notice that no resolvers have been added to the fedeation yet.  This can only be done by the federation user created in step 1. 
+	Changes can be made at this time or the Federation can be deleted.  Notice that no resolvers have been added to the fedeation yet.  This can only be done by the federation user created in step 1.
 
-	If no further action is necessary, the Close button will close the window and display the list of all Federations. 
+	If no further action is necessary, the Close button will close the window and display the list of all Federations.
 
 .. image:: federation03.png
 	:scale: 100%
 	:align: center
 
-	
+
 **The Federation user can now add resolvers to the Federation Mapping in Traffic Ops.**
 
 5)	The federation user logs to traffic ops and stores the mojolicious cookie.  The mojolicious cookie can be obtained manually using the debug tools on a web browser or via curl.
@@ -73,19 +73,19 @@ Configure Federations
 		{"alerts":[{"level":"success","text":"Successfully logged in."}]}
 
 6) The federation user sends a request to Traffic Ops to add IPV4 and/or IPV6 resolvers
-	
+
 
 	Example::
 
 		$ curl -ki -H "Cookie: mojolicious=eyJleHBpcmVzIjoxNDQ5MTA1MTI2LCJhdXRoX2RhdGEiOiJmZWRlcmF0aW9uX3VzZXIxIn0---06b4f870d809d82a91433e92eae8320875c3e8b0;" -XPUT 'http://localhost:3000/api/1.2/federations' -d '
-			{"federations": [ 
-				{   "deliveryService": "images-c1", 
-					"mappings": 
+			{"federations": [
+				{   "deliveryService": "images-c1",
+					"mappings":
 						{ "resolve4": [ "8.8.8.8/32", "8.8.4.4/32" ],
 						  "resolve6": ["2001:4860:4860::8888/128", "2001:4860:4860::8844"]
-						} 
-				} 
-			  ] 
+						}
+				}
+			  ]
 			}'
 
 		HTTP/1.1 200 OK
