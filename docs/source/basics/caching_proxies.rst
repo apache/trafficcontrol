@@ -16,7 +16,7 @@
 
 .. |arrow| image:: fwda.png
 
-.. _rl-caching_proxy:
+.. _caching_proxy:
 
 Caching Proxies
 ===============
@@ -37,7 +37,7 @@ types of proxies in use on the Internet today:
 .. index::
 	Reverse Proxy
 
-.. _rl-rev-proxy:
+.. _rev-proxy:
 
 |arrow| Reverse Proxy
 ---------------------
@@ -51,18 +51,19 @@ this origin. The content owner must inform the clients, by updating the URL, to 
 from the cache and not from the origin server directly. For this example, the remap rule on the
 cache is: ``http://www-origin-cache.cdn.com http://www.origin.com``.
 
-..  Note:: In the previous example minimal headers were shown on both the request and response. In the examples that follow, the origin server response is more realistic.::
+..  Note:: In the previous example minimal headers were shown on both the request and response. In the examples that follow, the origin server response is more realistic.
+	::
 
-	HTTP/1.1 200 OK
-	Date: Sun, 14 Dec 2014 23:22:44 GMT
-	Server: Apache/2.2.15 (Red Hat)
-	Last-Modified: Sun, 14 Dec 2014 23:18:51 GMT
-	ETag: "1aa008f-2d-50a3559482cc0"
-	Content-Length: 45
-	Connection: close
-	Content-Type: text/html; charset=UTF-8
+		HTTP/1.1 200 OK
+		Date: Sun, 14 Dec 2014 23:22:44 GMT
+		Server: Apache/2.2.15 (Red Hat)
+		Last-Modified: Sun, 14 Dec 2014 23:18:51 GMT
+		ETag: "1aa008f-2d-50a3559482cc0"
+		Content-Length: 45
+		Connection: close
+		Content-Type: text/html; charset=UTF-8
 
-	<!DOCTYPE html><html><body>This is a fun file</body></html>
+		<!DOCTYPE html><html><body>This is a fun file</body></html>
 
 The client is given the URL ``http://www-origin-cache.cdn.com/foo/bar/fun.html`` (note the different hostname) and when attempting to obtain that URL, the following occurs:
 
@@ -135,7 +136,7 @@ The client is given the URL ``http://www-origin-cache.cdn.com/foo/bar/fun.html``
 .. index::
 	Forward Proxy
 
-.. _rl-fwd-proxy:
+.. _fwd-proxy:
 
 |arrow| Forward Proxy
 ---------------------

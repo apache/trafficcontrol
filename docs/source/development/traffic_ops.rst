@@ -1,24 +1,24 @@
-.. 
-.. 
+..
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
 Traffic Ops
 ***********
 
 Introduction
 ============
-Traffic Ops uses a Postgres database to store the configuration information, and the `Mojolicious framework <http://mojolicio.us/>`_ to generate the user interface and REST APIs. 
+Traffic Ops uses a Postgres database to store the configuration information, and the `Mojolicious framework <http://mojolicio.us/>`_ to generate the user interface and REST APIs.
 
 Software Requirements
 =====================
@@ -37,7 +37,7 @@ To work on Traffic Ops you need a \*nix (MacOS and Linux are most commonly used)
 
 Addionally, the installation of the following RPMs (or equivalent) is required:
 
-* All RPMs listed in :ref:`rl-ps`
+* All RPMs listed in :ref:`ps`
 
 Traffic Ops Project Tree Overview
 =======================================
@@ -61,27 +61,27 @@ Traffic Ops Project Tree Overview
 
   * /API - Mojo Controllers for the /API area of the application.
   * /Common - Common Code between both the API and UI areas.
-  * /Extensions      
+  * /Extensions
   * Fixtures/ - Test Case fixture data for the 'to_test' database.
     * /Integration - Integration Tests.
   * /MojoPlugins - Mojolicious Plugins for Common Controller Code.
   * Schema/ - Database Schema area.
     * /Result - DBIx ORM related files.
-  * /Test - Common Test. 
+  * /Test - Common Test.
   * /UI - Mojo Controllers for the Traffic Ops UI itself.
-  * Utils/           
+  * Utils/
     * /Helper - Common utilities for the Traffic Ops application.
 
 * log/ - Log directory where the development and test files are written by the app.
 
 * public/
-             
+
  * css/ - Stylesheets.
  * images/ - Images.
  * js/ - Javascripts
 
 * script/ - Mojo Bootstrap scripts.
-   
+
 * t/ - Unit Tests for the UI.
 
  * api/ - Unit Tests for the API.
@@ -92,7 +92,7 @@ Traffic Ops Project Tree Overview
 
 
 
-Perl Formatting Conventions 
+Perl Formatting Conventions
 ===========================
 Perl tidy is for use in code formatting. See the following config file for formatting conventions.
 
@@ -126,7 +126,7 @@ Database Management
 ===================
 ..  Add db naming conventions
 
-The admin.pl script is for use in managing the Traffic Ops database tables. Below is an example of its usage. 
+The admin.pl script is for use in managing the Traffic Ops database tables. Below is an example of its usage.
 
 ``$ db/admin.pl``
 
@@ -177,10 +177,10 @@ To install the Traffic Ops Developer environment:
 
 3. Set up a role (user) in Postgres
 
-   See Postgres instructions on initdb https://wiki.postgresql.org/wiki/First_steps 
+   See Postgres instructions on initdb https://wiki.postgresql.org/wiki/First_steps
 
 
-4. Enter ``db/admin.pl --env=<enviroment name> setup`` to set up the traffic_ops database(s). 
+4. Enter ``db/admin.pl --env=<enviroment name> setup`` to set up the traffic_ops database(s).
 
    * Unit test database: ``$ db/admin.pl --env=test setup``
    * Development database: ``$ db/admin.pl --env=development setup``
@@ -222,16 +222,16 @@ To install the Traffic Ops Developer environment:
    Start up success includes the following:
 
   ::
-   
+
 
    [2015-02-24 10:44:34,991] [INFO] Listening at "http://*:3000".
-   
+
    Server available at http://127.0.0.1:3000.
 
 
 8. Using a browser, navigate to the given address: ``http://127.0.0.1:3000``
 9. For the initial log in:
-  
+
   * User name: admin
   * Password: password
 
@@ -248,11 +248,11 @@ The KableTown CDN example
 -------------------------
 The integration tests will load an example CDN with most of the features of Traffic Control being used. This is mostly for testing purposes, but can also be used as an example of how to configure certain features. To load the KableTown CDN example and access it:
 
-1. Run the integration tests 
+1. Run the integration tests
 2. Start morbo against the integration database: ``export MOJO_MODE=integration; ./bin/start.pl``
 3. Using a browser, navigate to the given address: ``http://127.0.0.1:3000``
 4. For the initial log in:
-  
+
   * User name: admin
   * Password: password
 
@@ -280,7 +280,7 @@ Check Extensions
 
 In other words, check extensions are scripts that, after registering with Traffic Ops, have a column reserved in the "Health->Server Checks" view and that usually run periodically out of cron.
 
-.. |checkmark| image:: ../_static/good.png 
+.. |checkmark| image:: ../_static/good.png
 
 .. |X| image:: ../_static/bad.png
 
@@ -289,7 +289,7 @@ It is the responsibility of the check extension script to iterate over the serve
 
 An example script might proceed by logging into the Traffic Ops server using the HTTPS base_url provided on the command line. The script is hardcoded with an auth token that is also provisioned in the Traffic Ops User database. This token allows the script to obtain a cookie used in later communications with the Traffic Ops API. The script then obtains a list of all caches to be polled by accessing Traffic Ops' ``/api/1.1/servers.json`` REST target. This list is walked, running a command to gather the stats from that cache. For some extensions, an HTTP GET request might be made to the ATS astats plugin, while for others the cache might be pinged, or a command run over SSH. The results are then compiled into a numeric or boolean result and the script POSTs tha result back to the Traffic Ops ``/api/1.1/servercheck/`` target.
 
-A check extension can have a column of |checkmark|'s and |X|'s (CHECK_EXTENSION_BOOL) or a column that shows a number (CHECK_EXTENSION_NUM).A simple example of a check extension of type CHECK_EXTENSION_NUM that will show 99.33 for all servers of type EDGE is shown below: :: 
+A check extension can have a column of |checkmark|'s and |X|'s (CHECK_EXTENSION_BOOL) or a column that shows a number (CHECK_EXTENSION_NUM).A simple example of a check extension of type CHECK_EXTENSION_NUM that will show 99.33 for all servers of type EDGE is shown below: ::
 
 
   Script here.
@@ -302,7 +302,7 @@ Currently, the following Check Extensions are available and installed by default
   This check shows how much of the available total cache disk is in use. A "warm" cache should show 100.00.
 
 **Cache Hit Ratio Check - CHR**
-  The cache hit ratio for the cache in the last 15 minutes (the interval is determined by the cron entry). 
+  The cache hit ratio for the cache in the last 15 minutes (the interval is determined by the cron entry).
 
 **DiffServe CodePoint Check - DSCP**
   Checks if the returning traffic from the cache has the correct DSCP value as assigned in the delivery service. (Some routers will overwrite DSCP)
@@ -311,23 +311,23 @@ Currently, the following Check Extensions are available and installed by default
   Checks if the Traffic Ops host (if that is the one running the check) can send and receive 8192 size packets to the ``ip_address`` of the server in the server table.
 
 **Operational Readiness Check - ORT**
-  See :ref:`reference-traffic-ops-ort` for more information on the ort script. The ORT column shows how many changes the traffic_ops_ort.pl script would apply if it was run. The number in this column should be 0. 
+  See :ref:`reference-traffic-ops-ort` for more information on the ort script. The ORT column shows how many changes the traffic_ops_ort.pl script would apply if it was run. The number in this column should be 0.
 
 **Ping Check - 10G, ILO, 10G6, FQDN**
   The bin/checks/ToPingCheck.pl is to check basic IP connectivity, and in the default setup it checks IP connectivity to the following:
-  
+
   10G
     Is the ``ip_address`` (the main IPv4 address) from the server table pingable?
   ILO
     Is the ``ilo_ip_address`` (the lights-out-mangement IPv4 address) from the server table pingable?
   10G6
     Is the ``ip6_address`` (the main IPv6 address) from the server table pingable?
-  FQDN 
+  FQDN
     Is the Fully Qualified Domain name (the concatenation of ``host_name`` and ``.`` and ``domain_name`` from the server table) pingable?
 
 **Traffic Router Check - RTR**
   Checks the state of each cache as perceived by all Traffic Monitors (via Traffic Router). This extension asks each Traffic Router for the state of the cache. A check failure is indicated if one or more monitors report an error for a cache. A cache is only marked as good if all reports are positive. (This is a pessimistic approach, opposite of how TM marks a cache as up, "the optimistic approach")
-  
+
 
 Configuration Extensions
 ------------------------

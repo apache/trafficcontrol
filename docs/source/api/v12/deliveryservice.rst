@@ -147,7 +147,7 @@ Delivery Service
   | ``missLong``                 | float  | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.                                |
   |                              |        | - e.g. -104.9847000 or null                                                                                                          |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``multiSiteOrigin``          | bool   | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
+  | ``multiSiteOrigin``          | bool   | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`multi-site-origin`                   |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``orgServerFqdn``            | string | The origin server base URL (FQDN when used in this instance, includes the                                                            |
   |                              |        | protocol (http:// or https://) for use in retrieving content from the origin server.                                                 |
@@ -401,7 +401,7 @@ Delivery Service
   | ``missLong``                 | float  | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.                                |
   |                              |        | - e.g. -104.9847000 or null                                                                                                          |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``multiSiteOrigin``          | bool   | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
+  | ``multiSiteOrigin``          | bool   | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`multi-site-origin`                   |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``orgServerFqdn``            | string | The origin server base URL (FQDN when used in this instance, includes the                                                            |
   |                              |        | protocol (http:// or https://) for use in retrieving content from the origin server.                                                 |
@@ -2360,7 +2360,7 @@ URL Sig Keys
   | ``missLong``                 | float  | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.                                |
   |                              |        | - e.g. -104.9847000 or null                                                                                                          |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``multiSiteOrigin``          | bool   | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
+  | ``multiSiteOrigin``          | bool   | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`multi-site-origin`                   |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``orgServerFqdn``            | string | The origin server base URL (FQDN when used in this instance, includes the                                                            |
   |                              |        | protocol (http:// or https://) for use in retrieving content from the origin server.                                                 |
@@ -2792,7 +2792,7 @@ URL Sig Keys
   | ``missLong``                 | float  | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.                                |
   |                              |        | - e.g. -104.9847000 or null                                                                                                          |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``multiSiteOrigin``          | bool   | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
+  | ``multiSiteOrigin``          | bool   | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`multi-site-origin`                   |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``orgServerFqdn``            | string | The origin server base URL (FQDN when used in this instance, includes the                                                            |
   |                              |        | protocol (http:// or https://) for use in retrieving content from the origin server.                                                 |
@@ -3072,7 +3072,7 @@ URL Sig Keys
   | ``missLong``                 | float  | The longitude as decimal degrees to use when the client cannot be found in the CZF or the Geo lookup.                                |
   |                              |        | - e.g. -104.9847000 or null                                                                                                          |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``multiSiteOrigin``          | bool   | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
+  | ``multiSiteOrigin``          | bool   | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`multi-site-origin`                   |
   +------------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``orgServerFqdn``            | string | The origin server base URL (FQDN when used in this instance, includes the                                                            |
   |                              |        | protocol (http:// or https://) for use in retrieving content from the origin server.                                                 |

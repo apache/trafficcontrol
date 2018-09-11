@@ -31,6 +31,4 @@ Traffic Vault is a keystore used for storing the following types of information:
 		- public key
 * URL Signing Keys
 
-As the name suggests, Traffic Vault is meant to be a "vault" of private keys that only certain users are allowed to access. In order to create, add, and retrieve keys a user must have administrative privileges. Keys can be created via the Traffic Ops UI, but they can only be retrieved via the Traffic Ops API. The keystore used by Traffic Vault is `Riak <http://basho.com/riak/>`_. Traffic ops accesses Riak via HTTPS on port 8088. Traffic ops uses Riak's REST API with username/password authentication. Information on the API can be found `here <http://docs.basho.com/riak/latest/dev/references/http/>`_.
-
-
+As the name suggests, Traffic Vault is meant to be a "vault" of private keys that only certain users are allowed to access. In order to create, add, and retrieve keys a user must have administrative privileges. Keys can be created via the Traffic Portal UI, but they can only be retrieved via the Traffic Ops API. The keystore used by Traffic Vault is `Riak <http://basho.com/riak/>`_. Traffic Ops accesses Riak via HTTPS on port 8088. Traffic ops uses Riak's REST API with username/password authentication. Information on the API can be found `here <http://docs.basho.com/riak/latest/dev/references/http/>`_.

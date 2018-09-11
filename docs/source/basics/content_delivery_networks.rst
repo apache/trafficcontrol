@@ -29,7 +29,7 @@ Content Router
 	The Content Router ensures that the end user is connected to the optimal cache for the location of the end user and content availability.
 
 Health Protocol
-	The :ref:`rl-health-proto` monitors the usage of the caches and tenants in the CDN.
+	The :ref:`health-proto` monitors the usage of the caches and tenants in the CDN.
 
 Configuration Management System
 	In many cases a CDN encompasses hundreds of servers across a large geographic area. The Configuration Management System allows an operator to manage these servers.

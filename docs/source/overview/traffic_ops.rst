@@ -27,7 +27,7 @@ Traffic Ops also runs a collection of periodic checks to determine the operation
 
 Traffic Ops is in the process of migrating from Perl to Go, and currently runs as two applications. The Go application serves all endpoints which have been rewritten in the Go language, and transparently proxies all other requests to the old Perl application. Both applications are installed by the RPM, and both run as a single service. When the project has fully migrated to Go, the Perl application will be removed, and the RPM and service will consist solely of the Go application.
 
-.. _rl-trops-ext:
+.. _trops-ext:
 
 |arrow| Traffic Ops Extension
 -----------------------------
