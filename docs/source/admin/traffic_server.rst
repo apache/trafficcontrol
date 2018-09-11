@@ -42,7 +42,7 @@ Installing Traffic Server
 		#. Complete the form. Be sure to fill out all fields marked 'Required'
 				* Set 'Interface Name' to the name of the network interface device from which Apache Traffic Server delivers content.
 				* Set 'Type' to 'MID' or 'EDGE'.
-				* If you wish for the server to immediately be polled by the :ref:`rl-health-proto`, set 'Status' to 'REPORTED'.
+				* If you wish for the server to immediately be polled by the :ref:`health-proto`, set 'Status' to 'REPORTED'.
 		#. Click on the 'Create' button to submit the form.
 		#. Verify that the server status is now listed as **Reported**
 

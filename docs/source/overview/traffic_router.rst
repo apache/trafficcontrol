@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _reference-label-tc-tr:
+.. _tc-tr:
 
 .. |arrow| image:: fwda.png
 
@@ -22,7 +22,7 @@
 
 Traffic Router
 ==============
-Traffic Router's function is to send clients to the most optimal cache. Optimal in this case is based on a number of factors:
+Traffic Router's function is to send clients to the most optimal cache. 'Optimal' in this case is based on a number of factors:
 
 * Distance between the cache and the client (not necessarily measured in meters, but quite often in layer 3 network hops). Less network distance between the client and cache yields better performance, and lower network load. Traffic Router helps clients connect to the best performing cache for their location at the lowest network cost.
 
@@ -32,7 +32,7 @@ Traffic Router's function is to send clients to the most optimal cache. Optimal 
 
 Traffic routing options are often configured at the Delivery Service level.
 
-.. _rl-ds:
+.. _ds:
 
 |arrow| Delivery Service
 ------------------------
@@ -41,31 +41,31 @@ Traffic routing options are often configured at the Delivery Service level.
 	* Cache in RAM, cache on disk, or do not cache at all.
 	* Use DNS or HTTP Content routing (see below).
 	* Limits on transactions per second and bandwidth.
-	* Protocol (http or https).
+	* Protocol (HTTP or HTTPS).
 	* Token based authentication settings.
 	* Header rewrite rules.
 
-	Since Traffic Control version 2.1 deliveryservices can optionally be linked to a :ref:`rl-profile`, and have parameters associated with them. The first feature that uses deliveryservice parameters is the :ref:`rl-multi-site-origin` configuration.
+	Since Traffic Control version 2.1 Delivery Services can optionally be linked to a :ref:`profile`, and have parameters associated with them. The first feature that uses Delivery Service parameters is the :ref:`multi-site-origin` configuration.
 	Delivery Services are also for use in allowing multi-tenants to coexist in the Traffic Control CDN without interfering with each other, and to keep information about their content separated.
 
-.. _rl-localization:
+.. _localization:
 
 |arrow| Localization
 --------------------
-	Traffic Router uses a JSON input file called the *coverage zone map* to determine what *cachegroup* is closest to the client. If the client IP address is not in this coverage zone map, it falls back to *geo*, using the maxmind database to find the client's location, and the geo coordinates from Traffic Ops for the cachegroup.
+	Traffic Router uses a JSON input file called the *coverage zone map* to determine what *Cache Group* is closest to the client. If the client IP address is not in this coverage zone map, it falls back to geographic mapping, using a GeoIP2 database to find the client's location, and the geographic coordinates from Traffic Ops for the Cache Group.
 
-Traffic Router is inserted into the HTTP retrieval process by making it DNS authoritative for the domain of the CDN delivery service. In the example of the reverse proxy, the client was given the ``http://www-origin-cache.cdn.com/foo/bar/fun.html`` url. In a Traffic Control CDN, URLs start with a routing name, which is configurable per-Delivery Service, e.g. ``http://foo.mydeliveryservice.cdn.com/fun/example.html`` with the chosen routing name ``foo``.
+Traffic Router is inserted into the HTTP retrieval process by making it DNS authoritative for the domain of the CDN delivery service. In the example of the reverse proxy, the client was given the ``http://www-origin-cache.cdn.com/foo/bar/fun.html`` URL. In a Traffic Control CDN, URLs start with a routing name, which is configurable per-Delivery Service, e.g. ``http://foo.mydeliveryservice.cdn.com/fun/example.html`` with the chosen routing name ``foo``.
 
 .. index::
 	Content Routing
 
-.. _rl-dns-cr:
+.. _dns-cr:
 
 |arrow| DNS Content Routing
 ---------------------------
-	For a DNS delivery service the client might receive a URL such as ``http://foo.dsname.cdn.com/fun/example.html``. When the LDNS server is resolving this ``foo.dsname.cdn.com`` hostname to an IP address, it ends at Traffic Router because it is the authoritative DNS server for ``cdn.com`` and the domains below it, and subsequently responds with a list of IP addresses from the eligible caches based on the location of the LDNS server. When responding, Traffic Router does not know the actual client IP address or the path that the client is going to request. The decision on what cache IP address (or list of cache IP addresses) to return is solely based on the location of the LDNS server and the health of the caches. The client then connects to port 80 on the cache, and sends the ``Host: foo.dsname.cdn.com`` header. The configuration of the cache includes the remap rule ``http://foo.dsname.cdn.com http://origin.dsname.com`` to map the routed name to an origin hostname.
+	For a DNS delivery service the client might receive a URL such as ``http://foo.dsname.cdn.com/fun/example.html``. When the Local Domain Name Server (LDNS) server is resolving this ``foo.dsname.cdn.com`` hostname to an IP address, it ends at Traffic Router because it is the authoritative DNS server for ``cdn.com`` and the domains below it, and subsequently responds with a list of IP addresses from the eligible caches based on the location of the LDNS server. When responding, Traffic Router does not know the actual client IP address or the path that the client is going to request. The decision on what cache IP address (or list of cache IP addresses) to return is solely based on the location of the LDNS server and the health of the caches. The client then connects to port 80 on the cache, and sends the ``Host: foo.dsname.cdn.com`` header. The configuration of the cache includes the remap rule ``http://foo.dsname.cdn.com http://origin.dsname.com`` to map the routed name to an origin hostname.
 
-.. _rl-http-cr:
+.. _http-cr:
 
 |arrow| HTTP Content Routing
 ----------------------------

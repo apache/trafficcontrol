@@ -16,16 +16,16 @@
 .. index::
 	Traffic Ops - Default Profiles
 
-.. _rl-to-default-profiles:
+.. _to-default-profiles:
 
 Traffic Ops - Default Profiles
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Traffic Ops has the concept of :ref:`rl-working-with-profiles`, which are an integral component of Traffic Ops. To get started, a set of default Traffic Ops profiles are provided. These can be imported into Traffic Ops, and are required by the Traffic Control components Traffic Router, Traffic Monitor, and Apache Traffic Server (Edge-tier and Mid-tier caches).
+Traffic Ops has the concept of :ref:`working-with-profiles`, which are an integral component of Traffic Ops. To get started, a set of default Traffic Ops profiles are provided. These can be imported into Traffic Ops, and are required by the Traffic Control components Traffic Router, Traffic Monitor, and Apache Traffic Server (Edge-tier and Mid-tier caches).
 
 `Download Default Profiles from here <http://trafficcontrol.apache.org/downloads/profiles/>`_
 
-.. _rl-to-profiles-min-needed:
+.. _to-profiles-min-needed:
 
 Minimum Traffic Ops Profiles needed
 -----------------------------------
@@ -53,4 +53,4 @@ Steps to Import a Profile
 
 #. Click 'Import'
 
-#. Continue these steps for each of the :ref:`rl-to-profiles-min-needed`.
+#. Continue these steps for each of the :ref:`to-profiles-min-needed`.

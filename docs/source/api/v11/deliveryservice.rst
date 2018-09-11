@@ -1,17 +1,17 @@
-.. 
-.. 
+..
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
 
 .. _to-api-v11-ds:
@@ -119,9 +119,9 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``missLong``             | string | The longitude to use when the client cannot be found in the CZF or the Geo lookup.                                                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``multiSiteOrigin``      |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
+  | ``multiSiteOrigin``      |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`multi-site-origin`                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``multiSiteOriginAlgor`` |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
+  | ``multiSiteOriginAlgor`` |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`multi-site-origin`                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``orgServerFqdn``        | string | The origin server base URL (FQDN when used in this instance, includes the                                                            |
   |                          |        | protocol (http:// or https://) for use in retrieving content from the origin server.                                                 |
@@ -351,9 +351,9 @@ Delivery Service
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``missLong``             | string | The longitude to use when the client cannot be found in the CZF or the Geo lookup.                                                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``multiSiteOrigin``      |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
+  | ``multiSiteOrigin``      |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`multi-site-origin`                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
-  | ``multiSiteOriginAlgor`` |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`rl-multi-site-origin`                |
+  | ``multiSiteOriginAlgor`` |  bool  | Is the Multi Site Origin feature enabled for this delivery service (0=false, 1=true). See :ref:`multi-site-origin`                   |
   +--------------------------+--------+--------------------------------------------------------------------------------------------------------------------------------------+
   | ``orgServerFqdn``        | string | The origin server base URL (FQDN when used in this instance, includes the                                                            |
   |                          |        | protocol (http:// or https://) for use in retrieving content from the origin server.                                                 |
@@ -897,7 +897,7 @@ SSL Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": {
         "certificate": {
           "crt": "crt",
@@ -966,7 +966,7 @@ SSL Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": {
         "certificate": {
           "crt": "crt",
@@ -1017,12 +1017,12 @@ SSL Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": "Successfully deleted ssl keys for <xml_id>"
     }
 
 |
-  
+
 **POST /api/1.1/deliveryservices/sslkeys/generate**
 
   Generates SSL crt, csr, and private key for a delivery service
@@ -1085,12 +1085,12 @@ SSL Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": "Successfully created ssl keys for ds-01"
     }
 
 |
-  
+
 **POST /api/1.1/deliveryservices/sslkeys/add**
 
   Allows user to add SSL crt, csr, and private key for a delivery service.
@@ -1141,7 +1141,7 @@ SSL Keys
 
   **Response Example** ::
 
-    {  
+    {
       "response": "Successfully added ssl keys for ds-01"
     }
 

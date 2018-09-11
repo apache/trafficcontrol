@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _rl-regionalgeo-qht:
+.. _regionalgeo-qht:
 
 **************************************
 Configure Regional Geo-blocking (RGB)
