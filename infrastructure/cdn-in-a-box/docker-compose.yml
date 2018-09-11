@@ -52,9 +52,14 @@ services:
       dockerfile: Dockerfile-db
     hostname: db
     domainname: cdn.local
+    depends_on:
+      - dns
     networks:
-      - tcnet
+      tcnet:
+        ipv4_address: 172.13.239.10
+        ipv6_address: "fc01:9400:1000:8::10"
     volumes:
+      - ./dns/container-resolv.conf:/etc/resolv.conf
       - ./traffic_ops/data:/var/lib/postgresql/data
     env_file:
       - variables.env
@@ -79,10 +84,13 @@ services:
     hostname: trafficops
     image: trafficops-go
     networks:
-      - tcnet
+      tcnet:
+        ipv4_address: 172.13.239.20
+        ipv6_address: "fc01:9400:1000:8::20"
     ports:
       - "6443:6443"
     volumes:
+      - ./dns/container-resolv.conf:/etc/resolv.conf
       - shared:/shared
 
   # trafficops-perl runs the legacy Traffic Ops in Perl using the Mojolicious framework.  This remains
@@ -101,11 +109,14 @@ services:
     hostname: trafficops-perl
     image: trafficops-perl
     networks:
-      - tcnet
+      tcnet:
+        ipv4_address: 172.13.239.21
+        ipv6_address: "fc01:9400:1000:8::21"
     # TODO: change to expose: "60443" to limit to containers
     ports:
       - "60443:60443"
     volumes:
+      - ./dns/container-resolv.conf:/etc/resolv.conf
       - shared:/shared
 
   # trafficportal defines the web interface for Traffic Ops.  It uses only the API exposed by Traffic Ops
@@ -122,10 +133,13 @@ services:
     hostname: trafficportal
     image: trafficportal
     networks:
-      - tcnet
+      tcnet:
+        ipv4_address: 172.13.239.30
+        ipv6_address: "fc01:9400:1000:8::30"
     ports:
       - "443:443"
     volumes:
+      - ./dns/container-resolv.conf:/etc/resolv.conf
       - shared:/shared
 
   # trafficmonitor is an HTTP service that monitors the caches in a CDN for a variety of metrics
@@ -141,10 +155,13 @@ services:
     hostname: trafficmonitor
     image: trafficmonitor
     networks:
-      - tcnet
+      tcnet:
+        ipv4_address: 172.13.239.40
+        ipv6_address: "fc01:9400:1000:8::40"
     ports:
       - "80:80"
     volumes:
+      - ./dns/container-resolv.conf:/etc/resolv.conf
       - shared:/shared
 
   # trafficvault runs a riak container to store private keys
@@ -160,6 +177,7 @@ services:
     labels:
       - "com.basho.riak.cluster.name=trafficvault"
     volumes:
+      - ./dns/container-resolv.conf:/etc/resolv.conf
       - schemas:/etc/riak/schemas
       - shared:/shared
     domainname: cdn.local
@@ -167,7 +185,9 @@ services:
       - variables.env
     hostname: trafficvault
     networks:
-      - tcnet
+      tcnet:
+        ipv4_address: 172.13.239.50
+        ipv6_address: "fc01:9400:1000:8::50"
 
   # Apache Traffic Server (ATS) caches defined here
   # edge cache
@@ -180,10 +200,13 @@ services:
       - variables.env
     hostname: edge
     networks:
-      - tcnet
+      tcnet:
+        ipv4_address: 172.13.239.100
+        ipv6_address: "fc01:9400:1000:8::100"
     ports:
       - "9000:80"
     volumes:
+      - ./dns/container-resolv.conf:/etc/resolv.conf
       - shared:/shared
 
   # mid cache
@@ -196,10 +219,13 @@ services:
       - variables.env
     hostname: mid
     networks:
-      - tcnet
+      tcnet:
+        ipv4_address: 172.13.239.120
+        ipv6_address: "fc01:9400:1000:8::120"
     ports:
       - "9100:80"
     volumes:
+      - ./dns/container-resolv.conf:/etc/resolv.conf
       - shared:/shared
 
   # origin provides the content to be distributed through the CDN caches
@@ -212,10 +238,13 @@ services:
       - variables.env
     hostname: origin
     networks:
-      - tcnet
+      tcnet:
+        ipv4_address: 172.13.239.140
+        ipv6_address: "fc01:9400:1000:8::140"
     ports:
       - "9200:80"
     volumes:
+      - ./dns/container-resolv.conf:/etc/resolv.conf
       - shared:/shared
 
   # enroller provides a way to register component instances with traffic_ops
@@ -227,10 +256,28 @@ services:
       - variables.env
     hostname: enroller
     networks:
-      - tcnet
+      tcnet:
+        ipv4_address: 172.13.239.200
+        ipv6_address: "fc01:9400:1000:8::200"
+    volumes:
+      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - shared:/shared
+
+  # Bind9 DNS services work in combination with the traffic router to route clients to the optimal cache
+  dns:
+    build:
+      context: dns
+    hostname: dns
+    domainname: cdn.local
+    networks:
+      tcnet:
+        ipv4_address: 172.13.239.254
+        ipv6_address: "fc01:9400:1000:8::254"
+    ports:
+      - "9353:53"
     volumes:
       - shared:/shared
-      
+
 volumes:
   schemas:
     external: false
