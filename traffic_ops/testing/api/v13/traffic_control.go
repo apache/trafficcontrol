@@ -42,4 +42,5 @@ type TrafficControl struct {
 	StaticDNSEntries               []tc.StaticDNSEntry                `json:"staticdnsentries"`
 	Tenants                        []tc.Tenant                        `json:"tenants"`
 	Types                          []tc.Type                          `json:"types"`
+	SteeringTargets                []tc.SteeringTargetNullable        `json:"steeringTargets"`
 }
