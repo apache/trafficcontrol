@@ -31,9 +31,15 @@ Traffic Ops is in the process of migrating from Perl to Go, and currently runs a
 
 |arrow| Traffic Ops Extension
 -----------------------------
-	Traffic Ops Extensions are a way to enhance the basic functionality of Traffic Ops in a custom manner. There are three types of extensions:
+Traffic Ops Extensions are a way to enhance the basic functionality of Traffic Ops in a custom manner. There are two types of extensions:
 
-	* Check Extensions - Allows you to add custom checks to the "Health->Server Checks" view.
-	* Configuration Extension - Allows you to add custom configuration file generators.
-	* Data source Extensions - Allows you to add data sources for the graph views and usage APIs.
+Check Extension
+	Allows you to add custom checks to the 'Monitor' -> 'Cache Checks' view.
 
+Data source Extensions
+	Allows you to add data sources for the graph views and usage APIs.
+
+
+.. These are listed as "in beta" as far back as TO 1.0, sooo
+.. Configuration Extension
+.. 	Allows you to add custom configuration file generators.
