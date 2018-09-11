@@ -261,7 +261,7 @@ A table of your delivery services with the following columns:
 +-------------------------------+-----------------------------------------------------------------------------------------------------------------------+
 | Active                        | When this is set to false, Traffic Router will not serve DNS or HTTP responses for this delivery service.             |
 +-------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| Type                          | The type of content routing this delivery service will use. See :ref:`ds-types`.                                   |
+| Type                          | The type of content routing this delivery service will use. See :ref:`ds-types`.                                      |
 +-------------------------------+-----------------------------------------------------------------------------------------------------------------------+
 | Protocol                      | The protocol to serve this delivery service to the clients with:                                                      |
 |                               |                                                                                                                       |
@@ -277,7 +277,7 @@ A table of your delivery services with the following columns:
 +-------------------------------+-----------------------------------------------------------------------------------------------------------------------+
 | DSCP                          | The DSCP value to mark IP packets to the client with.                                                                 |
 +-------------------------------+-----------------------------------------------------------------------------------------------------------------------+
-| Signing Algorithm             | See :ref:`signed-urls`.                                                                                            |
+| Signing Algorithm             | See :ref:`signed-urls`.                                                                                               |
 |                               | - None                                                                                                                |
 |                               | - URL Signature Keys                                                                                                  |
 |                               | - URI Signing Keys                                                                                                    |
@@ -290,9 +290,9 @@ A table of your delivery services with the following columns:
 |                               | - drop at edge (2 URLs that are the same except for  the query string will match, and cache HIT, while the origin     |
 |                               |   will not see original query string in the request.)                                                                 |
 |                               |                                                                                                                       |
-|                               | Dropping query strings at the edge will preclude the use of a Regex Remap Expression. See :ref:`regex-remap`.      |
+|                               | Dropping query strings at the edge will preclude the use of a Regex Remap Expression. See :ref:`regex-remap`.         |
 |                               |                                                                                                                       |
-|                               | To set the qstring without the use of regex remap, or for further options, see :ref:`qstring-handling`.            |
+|                               | To set the qstring without the use of regex remap, or for further options, see :ref:`qstring-handling`.               |
 +-------------------------------+-----------------------------------------------------------------------------------------------------------------------+
 | Last Updated                  | Timestamp when the delivery service was last updated.                                                                 |
 +-------------------------------+-----------------------------------------------------------------------------------------------------------------------+
