@@ -27,40 +27,40 @@ cdn.local   IN SOA  dns.cdn.local. hostmaster.cdn.local. (
 $ORIGIN cdn.local.
 @                 NS   dns.cdn.local.
 
-db                A    172.13.239.10
+db                A    172.16.239.10
 db								AAAA fc01:9400:1000:8::10
 
-trafficops        A    172.13.239.20
+trafficops        A    172.16.239.20
 trafficops        AAAA fc01:9400:1000:8::20
 
-trafficops-perl   A    172.13.239.21
+trafficops-perl   A    172.16.239.21
 trafficops-perl   AAAA fc01:9400:1000:8::21
 
-trafficportal     A    172.13.239.30
+trafficportal     A    172.16.239.30
 trafficportal     AAAA fc01:9400:1000:8::30
 
-trafficmonitor    A    172.13.239.40
+trafficmonitor    A    172.16.239.40
 trafficmonitor    AAAA fc01:9400:1000:8::40
 
-trafficvault      A    172.13.239.50
+trafficvault      A    172.16.239.50
 trafficvault      AAAA fc01:9400:1000:8::50
 
-trafficrouter     A    172.13.239.60
+trafficrouter     A    172.16.239.60
 trafficrouter     AAAA fc01:9400:1000:8::60
 
-edge              A    172.13.239.100
+edge              A    172.16.239.100
 edge              AAAA fc01:9400:1000:8::100
 
-mid               A    172.13.239.120
+mid               A    172.16.239.120
 mid               AAAA fc01:9400:1000:8::120
 
-origin            A    172.13.239.140
+origin            A    172.16.239.140
 origin            AAAA fc01:9400:1000:8::140
 
-enroller          A    172.13.239.200
+enroller          A    172.16.239.200
 enroller          AAAA fc01:9400:1000:8::200
 
-dns               A    172.13.239.254
+dns               A    172.16.239.254
 dns               AAAA fc01:9400:1000:8::254
 
 $ORIGIN ciab.cdn.local.

@@ -40,7 +40,7 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 172.13.239.0/24
+        - subnet: 172.16.239.0/24
         - subnet: "fc01:9400:1000:8::/64"
 
 services:
@@ -56,7 +56,7 @@ services:
       - dns
     networks:
       tcnet:
-        ipv4_address: 172.13.239.10
+        ipv4_address: 172.16.239.10
         ipv6_address: "fc01:9400:1000:8::10"
     volumes:
       - ./dns/container-resolv.conf:/etc/resolv.conf
@@ -85,7 +85,7 @@ services:
     image: trafficops-go
     networks:
       tcnet:
-        ipv4_address: 172.13.239.20
+        ipv4_address: 172.16.239.20
         ipv6_address: "fc01:9400:1000:8::20"
     ports:
       - "6443:6443"
@@ -110,7 +110,7 @@ services:
     image: trafficops-perl
     networks:
       tcnet:
-        ipv4_address: 172.13.239.21
+        ipv4_address: 172.16.239.21
         ipv6_address: "fc01:9400:1000:8::21"
     # TODO: change to expose: "60443" to limit to containers
     ports:
@@ -134,7 +134,7 @@ services:
     image: trafficportal
     networks:
       tcnet:
-        ipv4_address: 172.13.239.30
+        ipv4_address: 172.16.239.30
         ipv6_address: "fc01:9400:1000:8::30"
     ports:
       - "443:443"
@@ -156,7 +156,7 @@ services:
     image: trafficmonitor
     networks:
       tcnet:
-        ipv4_address: 172.13.239.40
+        ipv4_address: 172.16.239.40
         ipv6_address: "fc01:9400:1000:8::40"
     ports:
       - "80:80"
@@ -186,7 +186,7 @@ services:
     hostname: trafficvault
     networks:
       tcnet:
-        ipv4_address: 172.13.239.50
+        ipv4_address: 172.16.239.50
         ipv6_address: "fc01:9400:1000:8::50"
 
   # Apache Traffic Server (ATS) caches defined here
@@ -201,7 +201,7 @@ services:
     hostname: edge
     networks:
       tcnet:
-        ipv4_address: 172.13.239.100
+        ipv4_address: 172.16.239.100
         ipv6_address: "fc01:9400:1000:8::100"
     ports:
       - "9000:80"
@@ -220,7 +220,7 @@ services:
     hostname: mid
     networks:
       tcnet:
-        ipv4_address: 172.13.239.120
+        ipv4_address: 172.16.239.120
         ipv6_address: "fc01:9400:1000:8::120"
     ports:
       - "9100:80"
@@ -239,7 +239,7 @@ services:
     hostname: origin
     networks:
       tcnet:
-        ipv4_address: 172.13.239.140
+        ipv4_address: 172.16.239.140
         ipv6_address: "fc01:9400:1000:8::140"
     ports:
       - "9200:80"
@@ -257,7 +257,7 @@ services:
     hostname: enroller
     networks:
       tcnet:
-        ipv4_address: 172.13.239.200
+        ipv4_address: 172.16.239.200
         ipv6_address: "fc01:9400:1000:8::200"
     volumes:
       - ./dns/container-resolv.conf:/etc/resolv.conf
@@ -271,7 +271,7 @@ services:
     domainname: cdn.local
     networks:
       tcnet:
-        ipv4_address: 172.13.239.254
+        ipv4_address: 172.16.239.254
         ipv6_address: "fc01:9400:1000:8::254"
     ports:
       - "9353:53"
