@@ -751,7 +751,7 @@ func enrollServer(toSession *session, fn string) error {
 		s.CachegroupID = id
 	}
 	if s.PhysLocation != "" {
-		id, err := toSession.getPhysLocationIDByName(s.Cachegroup)
+		id, err := toSession.getPhysLocationIDByName(s.PhysLocation)
 		if err != nil {
 			return err
 		}
