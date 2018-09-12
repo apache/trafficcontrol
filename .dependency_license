@@ -64,7 +64,6 @@ cron\.d/[^/]*$, Apache
 ^misc/logos/page_logos/traffic_router_logo\.png, Apache
 ^misc/logos/page_logos/traffic_stats_logo\.png, Apache
 ^misc/logos/page_logos/traffic_stats_logo_red\.png, Apache
-^traffic_monitor_java/src/main/webapp/tune(-grey)?\.png, Apache
 ^traffic_ops/app/public/images/anchor\.gif, Apache
 ^traffic_ops/app/public/images/bad\.png, Apache
 ^traffic_ops/app/public/images/blank\.png, Apache
