@@ -25,10 +25,10 @@
 	word-wrap: break-word !important;
 }
 
-.wy-table-responsive {
+/*.wy-table-responsive {
     overflow: visible !important;
 }
-
+*/
 .wy-side-nav-search {
   background-color: #000000;
 }
@@ -40,7 +40,6 @@
 .wy-alert-info.danger, .rst-content .wy-alert-info.error, .rst-content .wy-alert-info.hint, .rst-content .wy-alert-info.important,
 .rst-content .wy-alert-info.tip, .rst-content .wy-alert-info.warning, .rst-content .seealso, .rst-content .wy-alert-info.admonition-todo {
   background: #edf0f2;
-  /*background-color: powderblue;*/
 }
 
 .wy-alert.wy-alert-info .wy-alert-title, .rst-content .note .wy-alert-title, .rst-content .wy-alert-info.attention .wy-alert-title,
@@ -65,7 +64,12 @@
 .wy-nav-content {
   padding:1.618em 3.236em;
   height:100%;
-  max-width:1100px;
-  /*max-width: 100%;*/
+  /*max-width:1100px;*/
+  max-width: none;
   /*margin:auto;*/
+}
+
+/*   Darker Table borders (they're hard to see imo)   */
+.wy-table-responsive > table, .wy-table-responsive > table th, .wy-table-responsive > table td {
+  border-color: #989898 !important;
 }
