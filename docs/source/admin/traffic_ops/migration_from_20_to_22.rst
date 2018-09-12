@@ -148,4 +148,4 @@ Usage example:
 	#. Review output messages and make manual updates as needed. If you have modified a default value which the script also wants to change, it will prompt you to make the update manually. You may either do this directly in the JSON file or through the Traffic Portal GUI after import.
 	#. Use Traffic Portal GUI to import the newly created profile ('Configure' -> 'Profiles' -> 'More' -> 'Import Profile')
 
-.. [1] Another previously-used name for HTTP Delivery Services was ``ccr``
+.. [1] Another name previously used for HTTP Delivery Services was ``ccr``
