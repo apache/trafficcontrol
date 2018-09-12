@@ -7,7 +7,6 @@
 	"ipNetmask": "$MY_NETMASK",
 	"ipGateway": "$MY_GATEWAY",
 	"interfaceMtu": 9000,
-	"physLocation": "CDN_in_a_Box",
 	"typeName": "$MY_TYPE",
 	"profileName": "$MY_PROFILE",
 	"cdnName": "$MY_CDN",
