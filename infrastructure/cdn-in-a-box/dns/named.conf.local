@@ -21,8 +21,8 @@ zone "cdn.local" {
   forwarders {};
 };
 
-zone "239.13.172.in-addr.arpa" IN {
+zone "239.16.172.in-addr.arpa" IN {
   type master;
-  file "/etc/bind/zone.239.13.172.in-addr.arpa";
+  file "/etc/bind/zone.239.16.172.in-addr.arpa";
   forwarders {};
 };
