@@ -30,7 +30,7 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/apache/trafficcontrol/lib/go-tc/v13"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/kelseyhightower/envconfig"
 	"golang.org/x/net/publicsuffix"
 )
@@ -191,7 +191,7 @@ func (to *Connect) getCDNNames() ([]string, error) {
 	}
 	fmt.Println(res)
 
-	var cdnResp v13.CDNsResponse
+	var cdnResp tc.CDNsResponse
 
 	err = json.Unmarshal([]byte(res), &cdnResp)
 	if err != nil {
@@ -295,7 +295,7 @@ func main() {
 		}
 		log.Printf("CDNNames are %+v", cdnNames)
 
-		wg.Add(2*len(cdnNames))
+		wg.Add(2 * len(cdnNames))
 		for _, cdnName := range cdnNames {
 			log.Print("CDN ", cdnName)
 			go func(c string) {
