@@ -33,7 +33,7 @@ COPY entrypoint.sh /sbin/entrypoint.sh
 COPY named.conf.local /etc/bind
 COPY named.conf.options /etc/bind
 COPY zone.cdn.local /etc/bind
-COPY zone.239.13.172.in-addr.arpa /etc/bind
+COPY zone.239.16.172.in-addr.arpa /etc/bind
 
 RUN chmod 755 /sbin/entrypoint.sh
 
