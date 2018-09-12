@@ -177,7 +177,7 @@ to-enroll() {
 			;;
 	esac
 
-	envsubst < "/server_template.json" > "/enroller/servers/$HOSTNAME.json"
+	envsubst < "/server_template.json" > "${ENROLLER_DIR}/servers/$HOSTNAME.json"
 
 
     # local service=$1
