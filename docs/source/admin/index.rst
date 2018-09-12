@@ -24,7 +24,7 @@ When installing a complete CDN from scratch, a sample recommended order is:
 #. Traffic Vault (Riak)
 #. Traffic Monitor
 #. Apache Traffic Server Mid-Tier Caches
-#. Apache Traffic Server Edge Caches
+#. Apache Traffic Server Edge-Tier Caches
 #. Traffic Router
 #. Traffic Stats
 #. Traffic Portal
