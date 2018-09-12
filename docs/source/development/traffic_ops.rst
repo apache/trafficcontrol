@@ -311,7 +311,7 @@ Currently, the following Check Extensions are available and installed by default
   Checks if the Traffic Ops host (if that is the one running the check) can send and receive 8192 size packets to the ``ip_address`` of the server in the server table.
 
 **Operational Readiness Check - ORT**
-  See :ref:`reference-traffic-ops-ort` for more information on the ort script. The ORT column shows how many changes the traffic_ops_ort.pl script would apply if it was run. The number in this column should be 0.
+  See :ref:`traffic-ops-ort` for more information on the ort script. The ORT column shows how many changes the traffic_ops_ort.pl script would apply if it was run. The number in this column should be 0.
 
 **Ping Check - 10G, ILO, 10G6, FQDN**
   The bin/checks/ToPingCheck.pl is to check basic IP connectivity, and in the default setup it checks IP connectivity to the following:
