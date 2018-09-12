@@ -53,7 +53,7 @@ type AuthBase struct {
 }
 
 // GetWrapper ...
-func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
+func (a AuthBase) GetWrapper(privLevelRequired int, requiredCapability string) Middleware {
 	if a.override != nil {
 		return a.override
 	}
@@ -125,6 +125,16 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 			if currentUserInfo.PrivLevel < privLevelRequired {
 				handleErr(http.StatusForbidden, errors.New("Forbidden."))
 				return
+			}
+			allowed := false
+			for _, cap := range currentUserInfo.Capabilities {
+				if requiredCapability == cap {
+					allowed = true
+					break
+				}
+			}
+			if !allowed {
+				handleErr(http.StatusForbidden, errors.New("missing required capability: " + requiredCapability))
 			}
 
 			newCookieVal := tocookie.Refresh(oldCookie, a.secret)
