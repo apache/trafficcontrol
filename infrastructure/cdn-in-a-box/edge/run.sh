@@ -21,7 +21,6 @@ set -e
 set -x
 set -m
 
-cdn=CDN-in-a-Box
 source /to-access.sh
 while ! to-ping 2>/dev/null; do
 	echo "waiting for Traffic Ops"
@@ -31,15 +30,17 @@ done
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
+CDN=CDN-in-a-Box
 # wait until the CDN has been registered
-while [[ "$cdn" != "CDN-in-a-Box" ]]; do
+found=
+while [[ -z $found ]]; do
     echo 'waiting for enroller setup'
     sleep 3
-    cdn=$(to-get api/1.3/cdns?name="$CDN" | jq '.response[].name')
+    found=$(to-get api/1.3/cdns?name="$CDN" | jq -r '.response[].name')
 done
 
 
-to-enroll edge $cdn
+to-enroll edge $CDN || tail -f /dev/null
 
 # Leaves the container hanging open in the event of a failure for debugging purposes
 /opt/ort/traffic_ops_ort.py BADASS ALL "https://$TO_HOST:$TO_PORT" "$TO_ADMIN_USER:$TO_ADMIN_PASSWORD" || {
