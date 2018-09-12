@@ -147,12 +147,13 @@ type DeliveryServiceV11 struct {
 
 type DeliveryServiceNullable struct {
 	DeliveryServiceNullableV12
-	DeepCachingType   *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
-	FQPacingRate      *int             `json:"fqPacingRate,omitempty"`
-	SigningAlgorithm  *string          `json:"signingAlgorithm" db:"signing_algorithm"`
-	Tenant            *string          `json:"tenant,omitempty"`
-	TRResponseHeaders *string          `json:"trResponseHeaders,omitempty"`
-	TRRequestHeaders  *string          `json:"trRequestHeaders,omitempty"`
+	DeepCachingType     *DeepCachingType `json:"deepCachingType" db:"deep_caching_type"`
+	FQPacingRate        *int             `json:"fqPacingRate,omitempty"`
+	SigningAlgorithm    *string          `json:"signingAlgorithm" db:"signing_algorithm"`
+	Tenant              *string          `json:"tenant,omitempty"`
+	TRResponseHeaders   *string          `json:"trResponseHeaders,omitempty"`
+	TRRequestHeaders    *string          `json:"trRequestHeaders,omitempty"`
+	ConsistentHashRegex *string          `json:"consistentHashRegex,omitempty"`
 }
 
 type DeliveryServiceNullableV12 struct {
