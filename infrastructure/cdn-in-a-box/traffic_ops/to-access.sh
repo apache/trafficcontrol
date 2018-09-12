@@ -114,6 +114,10 @@ to-delete() {
 # args:
 #         serverType - the type of the server to be created; one of "edge", "mid", "tm", "origin"
 to-enroll() {
+        if [[ ! -d ${ENROLLER_DIR}/servers ]]; then
+            echo "${ENROLLER_DIR}/servers not found -- contents:"
+            find ${ENROLLER_DIR} -ls
+        fi
 	local serverType="$1"
 
 	if [[ ! -z "$2" ]]; then
