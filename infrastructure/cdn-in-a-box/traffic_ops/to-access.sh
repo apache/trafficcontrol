@@ -135,9 +135,9 @@ to-enroll() {
 
 	export MY_HOSTNAME="$(hostname -s)"
 	export MY_DOMAINNAME="$(dnsdomainname)"
-	export MY_IP="$(ifconfig eth0 | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 2)"
+	export MY_IP="$(ifconfig eth0 | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 3)"
 	export MY_GATEWAY="$(route -n | grep eth0 | grep -E '^0\.0\.0\.0' | tr -s ' ' | cut -d ' ' -f2)"
-	export MY_NETMASK="$(ifconfig eth0 | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 4)"
+	export MY_NETMASK="$(ifconfig eth0 | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 5)"
 
 	case "$serverType" in
 		"edge" )
