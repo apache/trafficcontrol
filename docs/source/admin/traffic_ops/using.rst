@@ -19,8 +19,9 @@
 .. |X| image:: ../../_static/bad.png
 .. |clock| image:: ../../_static/clock-black.png
 
+*******************
 Traffic Ops - Using
-%%%%%%%%%%%%%%%%%%%
+*******************
 
 
 The Traffic Ops Menu
