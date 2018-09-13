@@ -276,15 +276,3 @@ WHERE deliveryservice.id = ANY($1)
 	}
 	return tenantIDs, nil
 }
-
-// FinishTx commits the transaction if commit is true when it's called, otherwise it rolls back the transaction. This is designed to be called in a defer.
-func FinishTx(tx *sql.Tx, commit *bool) {
-	if tx == nil {
-		return
-	}
-	if !*commit {
-		tx.Rollback()
-		return
-	}
-	tx.Commit()
-}
