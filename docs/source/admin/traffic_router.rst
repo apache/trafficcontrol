@@ -17,8 +17,8 @@
 Traffic Router Administration
 *****************************
 .. contents::
-  :depth: 2
-  :backlinks: top
+	:depth: 2
+	:backlinks: top
 
 Installing Traffic Router
 ==========================
@@ -54,7 +54,7 @@ The following are requirements to ensure an accurate set up:
 
 #. Snapshot CRConfig; See :ref:`snapshot-crconfig`
 
-	..  Note:: Once the CRConfig is 'snapshotted', live traffic will be sent to the new Traffic Routers provided that their status has been set to ``ONLINE``.
+	.. Note:: Once the CRConfig is 'snapshotted', live traffic will be sent to the new Traffic Routers provided that their status has been set to ``ONLINE``.
 
 #. Ensure that the parent domain (e.g.: ``cdn.local``) for the CDN's top level domain (e.g.: ``ciab.cdn.local``) contains a delegation (Name Server records) for the new Traffic Router, and that the value specified matches the FQDN used in above.
 
@@ -155,7 +155,7 @@ Traffic Router currently supports DNSSEC with NSEC, however, NSEC3 and more conf
 
 Operation
 ---------
-Upon startup or a configuration change, Traffic Router obtains keys from the 'keystore' API in Traffic Ops which returns key signing keys (KSK) and zone signing keys (ZSK) for each Delivery Service that is a sub-domain of the CDN's Top Level Domain (TLD) in addition to the keys for the CDN TLD itself. Each key has timing information that allows Traffic Router to determine key validity (expiration, inception, and effective dates) in addition to the appropriate Time To Live (TTL) to use for the DNSKEY record(s).  All TTLs are configurable parameters; see the :ref:`ccr-profile` documentation for more information.
+Upon startup or a configuration change, Traffic Router obtains keys from the 'keystore' API in Traffic Ops which returns key signing keys (KSK) and zone signing keys (ZSK) for each Delivery Service that is a sub-domain of the CDN's Top Level Domain (TLD) in addition to the keys for the CDN TLD itself. Each key has timing information that allows Traffic Router to determine key validity (expiration, inception, and effective dates) in addition to the appropriate Time To Live (TTL) to use for the DNSKEY record(s). All TTLs are configurable parameters; see the :ref:`ccr-profile` documentation for more information.
 
 Once Traffic Router obtains the key data from the API, it converts each public key into the appropriate record types (DNSKEY, DS) to place in zones and uses the private key to sign zones. DNSKEY records are added to each Delivery Service's zone (e.g.: mydeliveryservice.ciab.cdn.local) for every valid key that exists, in addition to the CDN TLD's zone. A DS record is generated from each zone's KSK and is placed in the CDN TLD's zone (e.g.: ciab.cdn.local); the DS record for the CDN TLD must be placed in its parent zone, which is not managed by Traffic Control.
 
@@ -435,15 +435,15 @@ Overview
 --------
 A Steering Delivery Service is a Delivery Service that is used to route a client to another Delivery Service. The Type of a Steering Delivery Service is either STEERING or CLIENT_STEERING. A Steering Delivery Service will have target Delivery Services configured for it with weights assigned to them. Traffic Router uses the weights to make a consistent hash ring which it then uses to make sure that requests are routed to a target based on the configured weights. This consistent hash ring is separate from the consistent hash ring used in cache selection.
 
-Special regular expressions - referred to as 'filters' - can also be configured for target Delivery Services to pin traffic to a specific Delivery Service. For example, if a filter called ``.*/news/.*`` for a target called 'target-ds-1' is created, any requests to Traffic Router with 'news' in them will be routed to 'target-ds-1'.  This will happen regardless of the configured weights.
+Special regular expressions - referred to as 'filters' - can also be configured for target Delivery Services to pin traffic to a specific Delivery Service. For example, if a filter called ``.*/news/.*`` for a target called 'target-ds-1' is created, any requests to Traffic Router with 'news' in them will be routed to 'target-ds-1'. This will happen regardless of the configured weights.
 
 A client can bypass the steering functionality by providing the ``X-TC-Steering-Option`` HTTP header with a value of the ``xml_id`` of the target Delivery Service to which they desire to be routed. When Traffic Router receives this header it will route to the requested target Delivery Service regardless of weight configuration.
 
 Some other points of interest:
 
 - Steering is currently only available for HTTP Delivery Services that are a part of the same CDN.
-- A new role called STEERING has been added to the Traffic Ops database.  Only users with Admin or Steering privileges can modify steering assignments for a Delivery Service.
-- A new API has been created in Traffic Ops under ``/internal``.  A Steering user can either directly access this API to modify assignments, or use the Traffic Portal UI ('View Targets' under the 'More' drop-down menu on a Steering Delivery Service's details page), however a filter can only be created via the API.
+- A new role called STEERING has been added to the Traffic Ops database. Only users with Admin or Steering privileges can modify steering assignments for a Delivery Service.
+- A new API has been created in Traffic Ops under ``/internal``. A Steering user can either directly access this API to modify assignments, or use the Traffic Portal UI ('View Targets' under the 'More' drop-down menu on a Steering Delivery Service's details page), however a filter can only be created via the API.
 - Traffic Router uses the steering API in Traffic Ops to poll for steering assignments, the assignments are then used when routing traffic.
 
 A couple simple use-cases for Steering are:
@@ -459,7 +459,7 @@ Configuration
 
 The following needs to be completed for Steering to work correctly:
 
-#. Two target Delivery Services are created in Traffic Ops.  They must both be HTTP Delivery Services part of the same CDN.
+#. Two target Delivery Services are created in Traffic Ops. They must both be HTTP Delivery Services part of the same CDN.
 #. A Delivery Service with type STEERING or CLIENT_STEERING is created in Traffic Portal.
 #. Target Delivery Services are assigned to the Steering Delivery Service using Traffic Portal.
 #. A user with the role of Steering is created.
