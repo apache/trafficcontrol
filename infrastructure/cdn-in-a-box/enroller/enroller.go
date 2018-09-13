@@ -63,6 +63,17 @@ func (s session) getTypeIDByName(n string) (int, error) {
 	return types[0].ID, err
 }
 
+func (s session) getCoordinateIDByName(n string) (int, error) {
+	coordinates, _, err := s.GetCoordinateByName(url.QueryEscape(n))
+	if err != nil {
+		return -1, err
+	}
+	if len(coordinates) == 0 {
+		return -1, errors.New("no coordinate with name " + n)
+	}
+	return coordinates[0].ID, err
+}
+
 func (s session) getCDNIDByName(n string) (int, error) {
 	cdns, _, err := s.GetCDNByName(url.QueryEscape(n))
 	if err != nil {
@@ -149,6 +160,17 @@ func (s session) getRoleIDByName(n string) (int, error) {
 		return -1, errors.New("no role with name " + n)
 	}
 	return *roles[0].ID, err
+}
+
+func (s session) getDeliveryserviceIDByXMLID(n string) (int, error) {
+	dses, _, err := s.GetDeliveryServiceByXMLID(url.QueryEscape(n))
+	if err != nil {
+		return -1, err
+	}
+	if len(dses) == 0 {
+		return -1, errors.New("no deliveryservice with name " + n)
+	}
+	return dses[0].ID, err
 }
 
 func (s session) getTenantIDByName(n string) (int, error) {
@@ -422,6 +444,46 @@ func enrollOrigin(toSession *session, fn string) error {
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
+	}
+
+	if s.Cachegroup != nil && *s.Cachegroup != "" {
+		id, err := toSession.getCachegroupIDByName(*s.Cachegroup)
+		if err != nil {
+			return err
+		}
+		s.CachegroupID = &id
+	}
+
+	if s.DeliveryService != nil && *s.DeliveryService != "" {
+		id, err := toSession.getDeliveryserviceIDByXMLID(*s.DeliveryService)
+		if err != nil {
+			return err
+		}
+		s.DeliveryServiceID = &id
+	}
+
+	if s.Profile != nil && *s.Profile != "" {
+		id, err := toSession.getProfileIDByName(*s.Profile)
+		if err != nil {
+			return err
+		}
+		s.ProfileID = &id
+	}
+
+	if s.Coordinate != nil && *s.Coordinate != "" {
+		id, err := toSession.getCoordinateIDByName(*s.Coordinate)
+		if err != nil {
+			return err
+		}
+		s.CoordinateID = &id
+	}
+
+	if s.Tenant != nil && *s.Tenant != "" {
+		id, err := toSession.getTenantIDByName(*s.Tenant)
+		if err != nil {
+			return err
+		}
+		s.TenantID = &id
 	}
 
 	alerts, _, err := toSession.CreateOrigin(s)

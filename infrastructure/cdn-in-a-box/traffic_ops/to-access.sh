@@ -91,15 +91,20 @@ to-get() {
 }
 
 to-post() {
+	local t
+	local data
 	if [[ -z "$2" ]]; then
 		data=""
 	elif [[ -f "$2" ]]; then
 		data="--data @$2"
 	else
-		data="--data $2"
+		t=$(mktemp)
+		echo $2 >$t
+		data="--data @$t"
 	fi
 	to-auth && \
 	    curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X POST $data "$TO_URL/$1"
+	[[ -z $t ]] && rm "$t"    
 }
 
 to-put() {
@@ -124,24 +129,22 @@ to-delete() {
 #         serverType - the type of the server to be created; one of "edge", "mid", "tm", "origin"
 to-enroll() {
 
-  while true
-  do 
-    [ -d "$ENROLLER_DIR" ] && break
-    echo "Waiting for $ENROLLER_DIR ..."
-    sleep 2
-  done
+	while true; do 
+		[ -d "$ENROLLER_DIR" ] && break
+		echo "Waiting for $ENROLLER_DIR ..."
+		sleep 2
+	done
 
-  while true
-  do 
-    [ "$serverType" = "to" ] && break
-    [ -f "$ENROLLER_DIR/initial-load-done" ] && break
-    echo "Waiting for traffic-ops to do initial load ..."
-    sleep 2
-  done
-        if [[ ! -d ${ENROLLER_DIR}/servers ]]; then
-            echo "${ENROLLER_DIR}/servers not found -- contents:"
-            find ${ENROLLER_DIR} -ls
-        fi
+	while true; do 
+		[ "$serverType" = "to" ] && break
+		[ -f "$ENROLLER_DIR/initial-load-done" ] && break
+		echo "Waiting for traffic-ops to do initial load ..."
+		sleep 2
+	done
+	if [[ ! -d ${ENROLLER_DIR}/servers ]]; then
+		echo "${ENROLLER_DIR}/servers not found -- contents:"
+		find ${ENROLLER_DIR} -ls
+	fi
 	local serverType="$1"
 
 	if [[ ! -z "$2" ]]; then
@@ -152,23 +155,25 @@ to-enroll() {
 
 
 	if [[ "$serverType" == "origin" ]]; then
-		to-post api/1.3/origin "{
-		                            \"deliveryServiceName\": \"ciab\",
-		                            \"fqdn\": \"$HOSTNAME\",
-		                            \"name\": \"origin\",
-		                            \"protocol\": \"http\",
-		                        }"
+		cat <<-EOORIGIN >"$ENROLLER_DIR/origins/$HOSTNAME.json"
+		{
+			"deliveryServiceName": "ciab",
+			"fqdn": "$HOSTNAME",
+			"name": "origin",
+			"protocol": "http",
+		}
+		EOORIGIN
 		return 0
 	fi
 
-  export MY_NET_INTERFACE='eth0'
+	export MY_NET_INTERFACE='eth0'
 	export MY_HOSTNAME="$(hostname -s)"
 	export MY_DOMAINNAME="$(dnsdomainname)"
 	export MY_IP="$(ifconfig $MY_NET_INTERFACE | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 3)"
 	export MY_GATEWAY="$(route -n | grep $MY_NET_INTERFACE | grep -E '^0\.0\.0\.0' | tr -s ' ' | cut -d ' ' -f2)"
 	export MY_NETMASK="$(ifconfig $MY_NET_INTERFACE | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 5)"
-  export MY_IP6_ADDRESS="$(ifconfig $MY_NET_INTERFACE | grep inet6 | grep global | awk '{ print $2 }')"
-  export MY_IP6_GATEWAY="$(route -n6 | grep UG | awk '{print $2}')"
+	export MY_IP6_ADDRESS="$(ifconfig $MY_NET_INTERFACE | grep inet6 | grep global | awk '{ print $2 }')"
+	export MY_IP6_GATEWAY="$(route -n6 | grep UG | awk '{print $2}')"
 
 	case "$serverType" in
 		"edge" )
@@ -201,7 +206,7 @@ to-enroll() {
 				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
 			fi
 			;;
-    "to" ) 
+		"to" ) 
 			export MY_TYPE="TRAFFIC_OPS"
 			export MY_PROFILE="TRAFFIC_OPS"
 			export MY_STATUS="ONLINE"
@@ -211,7 +216,7 @@ to-enroll() {
 				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
 			fi
 			;;
-    "tr" )
+		"tr" )
 			export MY_TYPE="CCR"
 			export MY_PROFILE="CCR_CIAB"
 			export MY_STATUS="ONLINE"
@@ -221,7 +226,7 @@ to-enroll() {
 				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
 			fi
 			;;
-    "tp" )
+		"tp" )
 			export MY_TYPE="TRAFFIC_PORTAL"
 			export MY_PROFILE="TRAFFIC_PORTAL"
 			export MY_STATUS="ONLINE"
@@ -231,7 +236,7 @@ to-enroll() {
 				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
 			fi
 			;;
-    "tv" )
+		"tv" )
 			export MY_TYPE="RIAK"
 			export MY_PROFILE="RIAK_ALL"
 			export MY_STATUS="ONLINE"
@@ -240,7 +245,7 @@ to-enroll() {
 			else
 				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
 			fi
-      ;;
+			;;
 		* )
 			echo "Usage: to-enroll SERVER_TYPE" >&2
 			echo "(SERVER_TYPE must be a recognized server type)" >&2
@@ -248,15 +253,8 @@ to-enroll() {
 			;;
 	esac
 
+	# replace env references in the file
 	envsubst < "/server_template.json" > "${ENROLLER_DIR}/servers/$HOSTNAME.json"
 
-  sleep 3
-    # local service=$1
-    # until nc enroller 443 </dev/null >/dev/null 2>&1; do
-    #     echo "waiting for enroller"
-    #     sleep 5
-    # done
-
-    # action=${service:+?name=$service}
-    # curl -k -X POST https://enroller${action}
+	sleep 3
 }
