@@ -55,4 +55,8 @@ forever \
     --spinSleepTime $SPIN_SLEEP_TIME \
     start $APPLICATION_PATH
 
+source /to-access.sh
+
+to-enroll "tp" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
+
 tail -f /dev/null

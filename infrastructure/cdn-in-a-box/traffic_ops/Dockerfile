@@ -76,7 +76,10 @@ EXPOSE 6443
 WORKDIR /opt/traffic_ops/app
 ENV MOJO_MODE production
 
-ADD traffic_ops/run.sh \
+RUN yum install -y bind-utils net-tools gettext perl-JSON-PP
+
+ADD enroller/server_template.json \
+    traffic_ops/run.sh \
     traffic_ops/config.sh \
     traffic_ops/adduser.pl \
     traffic_ops/to-access.sh \
