@@ -39,8 +39,7 @@ while [[ -z $found ]]; do
     found=$(to-get api/1.3/cdns?name="$CDN" | jq -r '.response[].name')
 done
 
-
-to-enroll edge $CDN || tail -f /dev/null
+to-enroll edge $CDN || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 # Leaves the container hanging open in the event of a failure for debugging purposes
 /opt/ort/traffic_ops_ort.py BADASS ALL "https://$TO_HOST:$TO_PORT" "$TO_ADMIN_USER:$TO_ADMIN_PASSWORD" || {

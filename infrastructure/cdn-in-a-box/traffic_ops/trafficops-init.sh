@@ -55,6 +55,8 @@ load_data_from() {
     if [[ $status -ne 0 ]]; then
         exit $status
     fi
+    # After done loading all data
+    touch "$ENROLLER_DIR/initial-load-done"
     cd -
 }
 
