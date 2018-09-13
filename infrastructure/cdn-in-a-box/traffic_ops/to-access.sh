@@ -124,6 +124,7 @@ to-enroll() {
 
   while true
   do 
+    [ "$serverType" = "to" ] && break
     [ -f "$ENROLLER_DIR/initial-load-done" ] && break
     echo "Waiting for traffic-ops to do initial load ..."
     sleep 2
@@ -191,6 +192,46 @@ to-enroll() {
 				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
 			fi
 			;;
+    "to" ) 
+			export MY_TYPE="TRAFFIC_OPS"
+			export MY_PROFILE="TRAFFIC_OPS"
+			export MY_STATUS="ONLINE"
+			if [[ ! -z "$3" ]]; then
+				export MY_CACHE_GROUP="$3"
+			else
+				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
+			fi
+			;;
+    "tr" )
+			export MY_TYPE="CCR"
+			export MY_PROFILE="CCR_CIAB"
+			export MY_STATUS="ONLINE"
+			if [[ ! -z "$3" ]]; then
+				export MY_CACHE_GROUP="$3"
+			else
+				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
+			fi
+			;;
+    "tp" )
+			export MY_TYPE="TRAFFIC_PORTAL"
+			export MY_PROFILE="TRAFFIC_PORTAL"
+			export MY_STATUS="ONLINE"
+			if [[ ! -z "$3" ]]; then
+				export MY_CACHE_GROUP="$3"
+			else
+				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
+			fi
+			;;
+    "tv" )
+			export MY_TYPE="RIAK"
+			export MY_PROFILE="RIAK_ALL"
+			export MY_STATUS="ONLINE"
+			if [[ ! -z "$3" ]]; then
+				export MY_CACHE_GROUP="$3"
+			else
+				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
+			fi
+      ;;
 		* )
 			echo "Usage: to-enroll SERVER_TYPE" >&2
 			echo "(SERVER_TYPE must be a recognized server type)" >&2
@@ -200,7 +241,7 @@ to-enroll() {
 
 	envsubst < "/server_template.json" > "${ENROLLER_DIR}/servers/$HOSTNAME.json"
 
-
+  sleep 3
     # local service=$1
     # until nc enroller 443 </dev/null >/dev/null 2>&1; do
     #     echo "waiting for enroller"

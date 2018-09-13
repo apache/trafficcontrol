@@ -17,5 +17,8 @@
 FROM basho/riak-kv:ubuntu-2.2.3
 
 EXPOSE 8087 8098
-ADD traffic_vault/run.sh traffic_ops/to-access.sh /
+ADD enroller/server_template.json \
+    traffic_vault/run.sh \
+    traffic_ops/to-access.sh \
+    /
 CMD /run.sh

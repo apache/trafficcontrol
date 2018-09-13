@@ -37,12 +37,16 @@ RUN yum install -y \
       jq \
       nodejs \
       openssl \
+      gettext \
+      bind-utils \
+      net-tools \
       /$(basename $TRAFFIC_PORTAL_RPM) && \
     rm /$(basename $TRAFFIC_PORTAL_RPM) && \
     yum clean all || \
     echo "ERROR INSTALLING PACKAGES"
 
-ADD traffic_portal/run.sh \
+ADD enroller/server_template.json \
+    traffic_portal/run.sh \
     traffic_ops/to-access.sh /
 
 CMD /run.sh

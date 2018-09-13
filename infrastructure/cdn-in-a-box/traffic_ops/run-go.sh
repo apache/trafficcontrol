@@ -63,10 +63,15 @@ DBCONF=/opt/traffic_ops/app/conf/production/database.conf
 mkdir -p /var/log/traffic_ops
 touch /var/log/traffic_ops/traffic_ops.log
 
-. /to-access.sh
 
 # enroll in the background so traffic_ops_golang can run in foreground
 TO_USER=$TO_ADMIN_USER TO_PASSWORD=$TO_ADMIN_PASSWORD to-enroll $(hostname -s) &
 
-./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF
+./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF &
 
+sleep 5
+
+. /to-access.sh
+to-enroll "to" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
+
+exec tail -f /dev/null

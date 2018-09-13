@@ -1,0 +1,7 @@
+{
+  "cdnName": "ALL",
+	"name": "BIND_ALL",
+	"type": "UNK_PROFILE",
+	"description": "Bind DNS Server V9 Profile for all CDNs",
+	"routingDisabled": false
+}

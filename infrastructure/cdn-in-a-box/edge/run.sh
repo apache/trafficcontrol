@@ -46,4 +46,4 @@ to-enroll edge $CDN || (while true; do echo "enroll failed."; sleep 3 ; done)
      echo "Failed"; yes >/dev/null
       }
 
-tail -f /var/log/trafficserver/diags.log
+tail -F /var/log/trafficserver/diags.log
