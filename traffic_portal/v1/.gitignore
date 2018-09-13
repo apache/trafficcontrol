@@ -1,9 +1,0 @@
-.tmp
-.sass-cache
-app/bower_components
-app/dist
-app/src/scripts/config.js
-node_modules
-rpm/rpmbuild
-rpm/*.rpm
-server/log/access.log
