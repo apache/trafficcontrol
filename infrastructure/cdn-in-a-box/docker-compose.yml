@@ -60,7 +60,8 @@ services:
         ipv6_address: "fc01:9400:1000:8::10"
     volumes:
       - ./dns/container-resolv.conf:/etc/resolv.conf
-      - ./traffic_ops/data:/var/lib/postgresql/data
+      - /var/lib/postgresql/data
+      - shared:/shared
     env_file:
       - variables.env
     # TODO: change to expose: "5432" to limit to containers
@@ -103,6 +104,7 @@ services:
         TRAFFIC_OPS_RPM: traffic_ops/traffic_ops.rpm
     depends_on:
       - db
+      - enroller
     domainname: cdn.local
     env_file:
       - variables.env
@@ -127,6 +129,8 @@ services:
       dockerfile: traffic_portal/Dockerfile
       args:
         TRAFFIC_PORTAL_RPM: traffic_portal/traffic_portal.rpm
+    depends_on:
+      - enroller
     domainname: cdn.local
     env_file:
       - variables.env
@@ -149,6 +153,11 @@ services:
       dockerfile: traffic_monitor/Dockerfile
       args:
         TRAFFIC_MONITOR_RPM: traffic_monitor/traffic_monitor.rpm
+    depends_on:
+      - enroller
+    volumes:
+      - shared:/shared
+      - ./dns/container-resolv.conf:/etc/resolv.conf
     domainname: cdn.local
     env_file:
       - variables.env
@@ -160,15 +169,14 @@ services:
         ipv6_address: "fc01:9400:1000:8::40"
     ports:
       - "80:80"
-    volumes:
-      - ./dns/container-resolv.conf:/etc/resolv.conf
-      - shared:/shared
 
   # trafficvault runs a riak container to store private keys
   trafficvault:
     build:
       context: .
       dockerfile: traffic_vault/Dockerfile
+    depends_on:
+      - enroller
     ports:
       - "8087:8087"
       - "8098:8098"
@@ -195,6 +203,8 @@ services:
     build:
       context: .
       dockerfile: edge/Dockerfile
+    depends_on:
+      - enroller
     domainname: cdn.local
     env_file:
       - variables.env
@@ -214,6 +224,8 @@ services:
     build:
       context: .
       dockerfile: mid/Dockerfile
+    depends_on:
+      - enroller
     domainname: cdn.local
     env_file:
       - variables.env
@@ -233,6 +245,8 @@ services:
     build:
       context: .
       dockerfile: origin/Dockerfile
+    depends_on:
+      - enroller
     domainname: cdn.local
     env_file:
       - variables.env
@@ -252,6 +266,8 @@ services:
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/enroller/Dockerfile
+    depends_on:
+      - dns
     env_file:
       - variables.env
     hostname: enroller
@@ -275,8 +291,6 @@ services:
         ipv6_address: "fc01:9400:1000:8::254"
     ports:
       - "9353:53"
-    volumes:
-      - shared:/shared
 
 volumes:
   schemas:
