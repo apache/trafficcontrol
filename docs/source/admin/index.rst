@@ -44,7 +44,6 @@ Once everything is installed, you will need to configure the servers to talk to 
 	traffic_portal/installation.rst
 	traffic_portal/usingtrafficportal.rst
 	traffic_monitor.rst
-	traffic_monitor_golang.rst
 	traffic_router.rst
 	traffic_router/migrationto2-3.rst
 	traffic_stats.rst
