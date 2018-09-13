@@ -1,0 +1,7 @@
+{
+  "cdnName": "CDN-in-a-Box",
+	"name": "CCR_CIAB",
+	"type": "TR_PROFILE",
+	"description": "Traffic Router for CDN-In-A-Box",
+	"routingDisabled": false
+}

@@ -1,0 +1,5 @@
+{
+  "description": "Bind V9 DNS Server for ALL CDNs",
+  "name": "BIND",
+  "useInTable": "server"
+}
