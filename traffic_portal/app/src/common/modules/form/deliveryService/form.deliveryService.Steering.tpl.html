@@ -343,6 +343,18 @@ under the License.
                     </div>
                 </div>
 
+                <div class="form-group" ng-class="{'has-error': hasError(deliveryServiceForm.consistentHashRegex), 'has-feedback': hasError(deliveryServiceForm.consistentHashRegex)}">
+                    <label class="control-label col-md-2 col-sm-2 col-xs-12">
+                        <span uib-popover-html="label('consistentHashRegex', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('consistentHashRegex', 'title')}}</span>
+                    </label>
+                    <div class="col-md-10 col-sm-10 col-xs-12">
+                        <input name="consistentHashRegex" type="text" class="form-control" ng-model="deliveryService.consistentHashRegex" ng-maxlength="1024" autofocus>
+                        <small class="input-error" ng-show="hasPropertyError(deliveryServiceForm.consistentHashRegex, 'maxlength')">Too Long</small>
+                        <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.consistentHashRegex != dsCurrent.consistentHashRegex">Current Value: [ {{dsCurrent.consistentHashRegex}} ]</small>
+                        <span ng-show="hasError(deliveryServiceForm.consistentHashRegex)" class="form-control-feedback"><i class="fa fa-times"></i></span>
+                    </div>
+                </div>
+
             </div>
 
             <div class="modal-footer">
