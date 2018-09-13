@@ -95,7 +95,6 @@ func TestGetParameters(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	v := map[string]string{"name": "1"}
 	user := auth.CurrentUser{Capabilities: pq.StringArray([]string{tc.ParameterSecureCapability})}
 
 	reqInfo := api.APIInfo{

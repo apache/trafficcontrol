@@ -45,24 +45,22 @@ type Middleware func(handlerFunc http.HandlerFunc) http.HandlerFunc
 // Route ...
 type Route struct {
 	// Order matters! Do not reorder this! Routes() uses positional construction for readability.
-	Version           float64
-	Method            string
-	Path              string
-	Handler           http.HandlerFunc
-	RequiredPrivLevel int
-	Authenticated     bool
-	Middlewares       []Middleware
+	Version       float64
+	Method        string
+	Path          string
+	Handler       http.HandlerFunc
+	Authenticated bool
+	Middlewares   []Middleware
 }
 
 // RawRoute is an HTTP route to be served at the root, rather than under /api/version. Raw Routes should be rare, and almost exclusively converted old Perl routes which have yet to be moved to an API path.
 type RawRoute struct {
 	// Order matters! Do not reorder this! Routes() uses positional construction for readability.
-	Method            string
-	Path              string
-	Handler           http.HandlerFunc
-	RequiredPrivLevel int
-	Authenticated     bool
-	Middlewares       []Middleware
+	Method        string
+	Path          string
+	Handler       http.HandlerFunc
+	Authenticated bool
+	Middlewares   []Middleware
 }
 
 func getDefaultMiddleware(secret string, requestTimeout time.Duration) []Middleware {
@@ -125,25 +123,25 @@ func CreateRouteMap(rs []Route, rawRoutes []RawRoute, authBase AuthBase, reqTime
 			}
 			vstr := strconv.FormatFloat(version, 'f', -1, 64)
 			path := RoutePrefix + "/" + vstr + "/" + r.Path
-			middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout)
+			middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, requestTimeout)
 			m[r.Method] = append(m[r.Method], PathHandler{Path: path, Handler: use(r.Handler, middlewares), RawPath: r.Path})
 			log.Infof("adding route %v %v\n", r.Method, path)
 		}
 	}
 	for _, r := range rawRoutes {
-		middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, r.RequiredPrivLevel, requestTimeout)
+		middlewares := getRouteMiddleware(r.Middlewares, authBase, r.Authenticated, requestTimeout)
 		m[r.Method] = append(m[r.Method], PathHandler{Path: r.Path, Handler: use(r.Handler, middlewares)})
 		log.Infof("adding raw route %v %v\n", r.Method, r.Path)
 	}
 	return m
 }
 
-func getRouteMiddleware(middlewares []Middleware, authBase AuthBase, authenticated bool, privLevel int, requestTimeout time.Duration) []Middleware {
+func getRouteMiddleware(middlewares []Middleware, authBase AuthBase, authenticated bool, requestTimeout time.Duration) []Middleware {
 	if middlewares == nil {
 		middlewares = getDefaultMiddleware(authBase.secret, requestTimeout)
 	}
-	if authenticated { // a privLevel of zero is an unauthenticated endpoint.
-		authWrapper := authBase.GetWrapper(privLevel)
+	if authenticated {
+		authWrapper := authBase.GetWrapper()
 		middlewares = append([]Middleware{authWrapper}, middlewares...)
 	}
 	return middlewares

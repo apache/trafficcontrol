@@ -54,7 +54,7 @@ type AuthBase struct {
 }
 
 // GetWrapper ...
-func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
+func (a AuthBase) GetWrapper() Middleware {
 	if a.override != nil {
 		return a.override
 	}
