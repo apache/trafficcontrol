@@ -30,6 +30,7 @@ done
 
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
-to-enroll $(hostname -s)
+
+to-enroll origin || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 lighttpd -t -f /etc/lighttpd/lighttpd.conf && lighttpd -D -f /etc/lighttpd/lighttpd.conf
