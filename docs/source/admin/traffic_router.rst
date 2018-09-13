@@ -437,8 +437,6 @@ A Steering Delivery Service is a Delivery Service that is used to route a client
 
 Special regular expressions - referred to as 'filters' - can also be configured for target Delivery Services to pin traffic to a specific Delivery Service. For example, if a filter called ``.*/news/.*`` for a target called 'target-ds-1' is created, any requests to Traffic Router with 'news' in them will be routed to 'target-ds-1'. This will happen regardless of the configured weights.
 
-A client can bypass the steering functionality by providing the ``X-TC-Steering-Option`` HTTP header with a value of the ``xml_id`` of the target Delivery Service to which they desire to be routed. When Traffic Router receives this header it will route to the requested target Delivery Service regardless of weight configuration.
-
 Some other points of interest:
 
 - Steering is currently only available for HTTP Delivery Services that are a part of the same CDN.
@@ -452,6 +450,11 @@ A couple simple use-cases for Steering are:
 - Trying out new functionality for a subset of traffic with an experimental Delivery Service.
 - Load balancing between Delivery Services.
 
+
+The Difference Between STEERING and CLIENT_STEERING
+---------------------------------------------------
+
+The only difference between the STEERING and CLIENT_STEERING Delivery Service Types is that CLIENT_STEERING explicitly allows a client to bypass Steering by choosing a destination Delivery Service. A client can accomplish this by providing the ``X-TC-Steering-Option`` HTTP header with a value of the ``xml_id`` of the target Delivery Service to which they desire to be routed. When Traffic Router receives this header it will route to the requested target Delivery Service regardless of weight configuration. This header is ignored by STEERING Delivery Services.
 
 
 Configuration
