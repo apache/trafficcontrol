@@ -33,6 +33,8 @@ RUN yum install -y \
         nmap-ncat \
         iproute \
         net-tools \
+        gettext \
+        bind-utils \
         /$(basename $RPM) && \
     rm /$(basename $RPM) && \
     yum clean all
@@ -40,7 +42,8 @@ RUN yum install -y \
 RUN mkdir -p /opt/traffic_monitor/conf
 ADD traffic_monitor/traffic_monitor.cfg /opt/traffic_monitor/conf/
 
-ADD traffic_monitor/parameters.json \
+ADD enroller/server_template.json \
+    traffic_monitor/parameters.json \
     traffic_monitor/profile.json \
     traffic_ops/to-access.sh \
     /
