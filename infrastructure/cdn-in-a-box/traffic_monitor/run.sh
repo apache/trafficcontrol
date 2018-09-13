@@ -50,6 +50,8 @@ cat > /opt/traffic_monitor/conf/traffic_ops.cfg <<- ENDOFMESSAGE
 }
 ENDOFMESSAGE
 
+CDN=CDN-in-a-Box
+
 source /to-access.sh
 
 while ! to-ping 2>/dev/null; do
@@ -60,7 +62,7 @@ done
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
-to-enroll $(hostname -s)
+to-enroll tm || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 # There's a race condition with setting the TM credentials and TO actually creating
 # the TM user

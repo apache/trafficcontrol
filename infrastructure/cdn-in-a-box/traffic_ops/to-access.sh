@@ -114,6 +114,20 @@ to-delete() {
 # args:
 #         serverType - the type of the server to be created; one of "edge", "mid", "tm", "origin"
 to-enroll() {
+
+  while true
+  do 
+    [ -d "$ENROLLER_DIR" ] && break
+    echo "Waiting for $ENROLLER_DIR ..."
+    sleep 2
+  done
+
+  while true
+  do 
+    [ -f "$ENROLLER_DIR/initial-load-done" ] && break
+    echo "Waiting for traffic-ops to do initial load ..."
+    sleep 2
+  done
         if [[ ! -d ${ENROLLER_DIR}/servers ]]; then
             echo "${ENROLLER_DIR}/servers not found -- contents:"
             find ${ENROLLER_DIR} -ls
@@ -137,11 +151,14 @@ to-enroll() {
 		return 0
 	fi
 
+  export MY_NET_INTERFACE='eth0'
 	export MY_HOSTNAME="$(hostname -s)"
 	export MY_DOMAINNAME="$(dnsdomainname)"
-	export MY_IP="$(ifconfig eth0 | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 3)"
-	export MY_GATEWAY="$(route -n | grep eth0 | grep -E '^0\.0\.0\.0' | tr -s ' ' | cut -d ' ' -f2)"
-	export MY_NETMASK="$(ifconfig eth0 | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 5)"
+	export MY_IP="$(ifconfig $MY_NET_INTERFACE | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 3)"
+	export MY_GATEWAY="$(route -n | grep $MY_NET_INTERFACE | grep -E '^0\.0\.0\.0' | tr -s ' ' | cut -d ' ' -f2)"
+	export MY_NETMASK="$(ifconfig $MY_NET_INTERFACE | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 5)"
+  export MY_IP6_ADDRESS="$(ifconfig $MY_NET_INTERFACE | grep inet6 | grep global | awk '{ print $2 }')"
+  export MY_IP6_GATEWAY="$(route -n6 | grep UG | awk '{print $2}')"
 
 	case "$serverType" in
 		"edge" )
