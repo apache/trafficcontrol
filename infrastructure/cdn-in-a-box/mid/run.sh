@@ -43,8 +43,6 @@ done
 to-enroll mid $CDN || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 # Leaves the container hanging open in the event of a failure for debugging purposes
-/opt/ort/traffic_ops_ort.py BADASS ALL "https://$TO_HOST:$TO_PORT" "$TO_ADMIN_USER:$TO_ADMIN_PASSWORD" || {
-     echo "Failed"; yes >/dev/null
-      }
+/opt/ort/traffic_ops_ort.py BADASS ALL "https://$TO_HOST:$TO_PORT" "$TO_ADMIN_USER:$TO_ADMIN_PASSWORD" || { echo "Failed"; tail -f /dev/null; }
 
 tail -F /var/log/trafficserver/diags.log
