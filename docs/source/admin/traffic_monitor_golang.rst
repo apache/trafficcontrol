@@ -19,29 +19,31 @@ Traffic Monitor Administration
 
 .. _tm-golang:
 
-* These instructions are for the Golang Traffic Monitor, for the legacy Java version, see :ref:`here <tm-java>`.
-
 Installing Traffic Monitor
 ==========================
 
-The following are requirements to ensure an accurate set up:
+The following are hard requirements requirements for Traffic Monitor to operate:
 
 * CentOS 6+
-* 8 vCPUs
-* 16GB RAM
-* Successful install of Traffic Ops
-* Administrative access to the Traffic Ops
-* Physical address of the site
+* Successful install of Traffic Ops (usually on a separate machine)
+* Administrative access to the Traffic Ops (usually on a separate machine)
 
-1. Enter the Traffic Monitor server into Traffic Ops
-2. Make sure the FQDN of the Traffic Monitor is resolvable in DNS.
-3. Install Traffic Monitor: ``sudo yum -y install traffic_monitor``
-4. Configure Traffic Monitor. See :ref:`here <tm-configure>`
-5. Start the service: ``sudo service traffic_monitor start`` ::
 
-    Starting traffic_monitor:
+These are the recommended hardware specifications for a production deployment of Traffic Monitor:
 
-6. Verify Traffic Monitor is running by pointing your browser to port 80 on the Traffic Monitor host.
+* 8 CPUs
+* 16GB of RAM
+* It is also recommended that you know the physical address of the site where the Traffic Monitor machine lives for optimal performance
+
+#. Enter the Traffic Monitor server into Traffic Portal
+
+	.. note:: For legacy compatibility reasons, the 'Type' field of a new Traffic Monitor server must be 'RASCAL'.
+
+#. Make sure the Fully Qualified Domain Name (FQDN) of the Traffic Monitor is resolvable in DNS.
+#. Install Traffic Monitor, either from source or by running the command ``yum install traffic_monitor`` as the root user, or with ``sudo``.
+#. Configure Traffic Monitor. See :ref:`here <tm-configure>`
+#. Start the service, usually by running the command ``systemctl start traffic_monitor`` as the root user, or with ``sudo``
+#. Verify Traffic Monitor is running by e.g. opening your preferred web browser to port 80 on the Traffic Monitor host.
 
 Configuring Traffic Monitor
 ===========================
@@ -51,15 +53,9 @@ Configuration Overview
 
 .. _tm-configure:
 
-Traffic Monitor is configured via two JSON configuration files, ``traffic_ops.cfg`` and ``traffic_monitor.cfg``, by default located in the ``conf`` directory in the install location.
-
-The ``traffic_ops.cfg`` config contains Traffic Ops connection information. Specify the URL, username, and password for the instance of Traffic Ops for which this Traffic Monitor is a member.
-
-The ``traffic_monitor.cfg`` config contains log file locations, as well as detailed application configuration variables, such as processing flush times and initial poll intervals.
-
-Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops and begins polling caches. Once every cache has been polled, health protocol state is available via RESTful JSON endpoints.
+Traffic Monitor is configured via two JSON configuration files, ``traffic_ops.cfg`` and ``traffic_monitor.cfg``, by default located in the ``conf`` directory in the install location. ``traffic_ops.cfg`` contains Traffic Ops connection information. Specify the URL, username, and password for the instance of Traffic Ops of which this Traffic Monitor is a member. ``traffic_monitor.cfg`` contains log file locations, as well as detailed application configuration variables such as processing flush times and initial poll intervals. Once started with the correct configuration, Traffic Monitor downloads its configuration from Traffic Ops and begins polling caches. Once every cache has been polled, :ref:`health-proto` state is available via RESTful JSON endpoints.
 
 
-Troubleshooting and log files
+Troubleshooting and Log Files
 =============================
 Traffic Monitor log files are in ``/opt/traffic_monitor/var/log/``.
