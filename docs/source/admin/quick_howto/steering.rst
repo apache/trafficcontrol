@@ -19,19 +19,19 @@
 Configure Delivery Service Steering
 ***********************************
 
-1)  Create two target delivery services in Traffic Ops.  They must both be HTTP delivery services that are part of the same CDN.
+#. Create two target Delivery Services in Traffic Ops. They must both be HTTP Delivery Services that are part of the same CDN.
 
 .. image:: steering01.png
 	:scale: 100%
 	:align: center
 
-2) Create a delivery service with type STEERING in Traffic Ops.
+2) Create a Delivery Service with Type STEERING or CLIENT_STEERING in Traffic Ops.
 
 .. image:: steering02.png
 	:scale: 100%
 	:align: center
 
-3) Click the 'Manage Steering Assignments' button on the delivery service screen to assign targets.
+3) Click the 'Manage Steering Assignments' button on the Delivery Service screen to assign targets.
 
 .. image:: steering03.png
 	:scale: 100%
@@ -43,7 +43,7 @@ Configure Delivery Service Steering
 	:scale: 100%
 	:align: center
 
-5) As the steering user, assign weights or orders to target delivery services.  Assignments must either have a value for weight or order, but not both.  The value of weight must be a positive integer, while the value of order can be any integer.  This will require logging in to Traffic Ops first via ``http://to.kabletown.net/api/1.2/user/login`` and storing the mojolicious cookie.
+5) As the steering user, assign weights or orders to target Delivery Services. Assignments must either have a value for weight or order, but not both. The value of weight must be a positive integer, while the value of order can be any integer. This will require logging in to Traffic Ops first via ``http://to.kabletown.net/api/1.2/user/login`` and storing the mojolicious cookie.
 
 	Sample cURL: ``curl -H "Cookie: mojolicious=xxxyyy" -XPUT "https://to.kabletown.net/internal/api/1.2/steering/steering-ds" -d @/tmp/steering.json``
 
@@ -51,28 +51,28 @@ Configure Delivery Service Steering
 
 ::
 
-   {
-    "targets": [
-     {
-       "weight": "1000",
-       "deliveryService": "target-deliveryservice-1"
-     },
-     {
-       "weight": "9000",
-       "deliveryService": "target-deliveryservice-2"
-     }
-     {
-       "order": -1,
-       "deliveryService": "target-deliveryservice-3"
-     }
-     {
-       "order": 3,
-       "deliveryService": "target-deliveryservice-4"
-     }
-    ]
-   }
+	 {
+		"targets": [
+		 {
+			 "weight": "1000",
+			 "deliveryService": "target-deliveryservice-1"
+		 },
+		 {
+			 "weight": "9000",
+			 "deliveryService": "target-deliveryservice-2"
+		 }
+		 {
+			 "order": -1,
+			 "deliveryService": "target-deliveryservice-3"
+		 }
+		 {
+			 "order": 3,
+			 "deliveryService": "target-deliveryservice-4"
+		 }
+		]
+	 }
 
-6) If desired, the steering user can create filters for the target delivery services.
+6) If desired, the steering user can create filters for the target Delivery Services.
 
 	Sample cURL: ``curl -H "Cookie: mojolicious=xxxyyy" -XPUT "https://to.kabletown.net/internal/api/1.2/steering/steering-ds" -d @/tmp/steering.json``
 
@@ -80,32 +80,31 @@ Configure Delivery Service Steering
 
 ::
 
-   {
-    "filters": [
-     {
-       "pattern": ".*\\gototarget1\\..*",
-       "deliveryService": "target-deliveryservice-1"
-     }
-    ],
-    "targets": [
-     {
-       "weight": "1000",
-       "deliveryService": "target-deliveryservice-1"
-     },
-     {
-       "weight": "9000",
-       "deliveryService": "target-deliveryservice-2"
-     }
-     {
-       "order": -1,
-       "deliveryService": "target-deliveryservice-3"
-     }
-     {
-       "order": 3,
-       "deliveryService": "target-deliveryservice-4"
-     }
-    ]
-   }
+	 {
+		"filters": [
+		 {
+			 "pattern": ".*\\gototarget1\\..*",
+			 "deliveryService": "target-deliveryservice-1"
+		 }
+		],
+		"targets": [
+		 {
+			 "weight": "1000",
+			 "deliveryService": "target-deliveryservice-1"
+		 },
+		 {
+			 "weight": "9000",
+			 "deliveryService": "target-deliveryservice-2"
+		 }
+		 {
+			 "order": -1,
+			 "deliveryService": "target-deliveryservice-3"
+		 }
+		 {
+			 "order": 3,
+			 "deliveryService": "target-deliveryservice-4"
+		 }
+		]
+	 }
 
-7) Any requests to Traffic Router for the steering delivery service should now be routed to target delivery services based on configured weight or order.  Example: ``curl -Lvs http://foo.steering-ds.cdn.kabletown.net/bar``
-
+7) Any requests to Traffic Router for the steering Delivery Service should now be routed to target Delivery Services based on configured weight or order. Example: ``curl -Lvs http://foo.steering-ds.cdn.kabletown.net/bar``
