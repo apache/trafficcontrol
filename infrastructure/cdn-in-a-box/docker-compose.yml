@@ -282,7 +282,12 @@ services:
   # Bind9 DNS services work in combination with the traffic router to route clients to the optimal cache
   dns:
     build:
-      context: dns
+      context: .
+      dockerfile: dns/Dockerfile
+    env_file:
+      - variables.env
+    volumes:
+      - shared:/shared
     hostname: dns
     domainname: cdn.local
     networks:

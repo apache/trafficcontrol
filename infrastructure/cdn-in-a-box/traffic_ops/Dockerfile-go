@@ -30,9 +30,13 @@ COPY --from=trafficops-perl /opt/traffic_ops/app/bin/traffic_ops_golang /opt/tra
 
 EXPOSE 6443
 WORKDIR /opt/traffic_ops/app
+RUN yum install -y bind-utils net-tools gettext perl-JSON-PP
 
-ADD traffic_ops/config.sh \
+
+ADD enroller/server_template.json \
+    traffic_ops/config.sh \
     traffic_ops/run-go.sh \
     traffic_ops/to-access.sh \
     /
+
 CMD /run-go.sh
