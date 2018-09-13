@@ -23,10 +23,10 @@
 
 FROM centos:7
 
-RUN yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm
-RUN yum install -y \
+RUN yum install -y epel-release && \
+    yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm && \
+    yum install -y \
 	    cpanminus \
-	    epel-release \
       bind-utils \ 
       net-tools \ 
 	    gettext \
@@ -35,8 +35,9 @@ RUN yum install -y \
 	    perl \
 	    perl-Crypt-ScryptKDF \
 	    perl-Test-CPAN-Meta \
-      perl-JSON-PP && \
-	  yum clean all
+      perl-JSON-PP \
+      git \ 
+      golang 
 
 RUN cpanm Carton
 RUN yum install -y perl-DBIx-Connector
@@ -46,9 +47,7 @@ ARG TRAFFIC_OPS_RPM=traffic_ops/traffic_ops.rpm
 ADD $TRAFFIC_OPS_RPM /
 RUN yum install -y \
         /$(basename $TRAFFIC_OPS_RPM) \
-        git \
-        golang && \
-    rm /$(basename $TRAFFIC_OPS_RPM) && \
+        rm /$(basename $TRAFFIC_OPS_RPM) && \
     yum clean all
 
 # copy any dir structure in overrides to TO -- allows modification of the install and shortcut to get perl modules/goose installed

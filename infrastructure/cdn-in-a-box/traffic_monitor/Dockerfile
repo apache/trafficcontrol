@@ -25,9 +25,7 @@ FROM centos/systemd
 ARG RPM=traffic_monitor/traffic_monitor.rpm
 ADD $RPM /
 
-RUN yum install -y \
-        epel-release \
-        initscripts && \
+RUN yum install -y epel-release && \
     yum install -y \
         jq \
         nmap-ncat \
@@ -35,7 +33,8 @@ RUN yum install -y \
         net-tools \
         gettext \
         bind-utils \
-        /$(basename $RPM) && \
+        initscripts && \
+    yum install -y  /$(basename $RPM) && \
     rm /$(basename $RPM) && \
     yum clean all
 
