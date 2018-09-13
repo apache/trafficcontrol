@@ -170,6 +170,33 @@ services:
     ports:
       - "80:80"
 
+  # trafficrouter routes clients to the most optimal cache
+  trafficrouter:
+    build:
+      context: .
+      dockerfile: traffic_router/Dockerfile
+      args:
+        TRAFFIC_ROUTER_RPM: traffic_router/traffic_router.rpm
+        TOMCAT_RPM: traffic_router/tomcat.rpm
+    depends_on:
+      - enroller
+    domainname: cdn.local
+    env_file:
+      - variables.env
+    hostname: trafficrouter
+    networks:
+      tcnet:
+        ipv4_address: 172.16.239.60
+        ipv6_address: "fc01:9400:1000:8::60"
+    ports:
+      - "3053:53"
+      - "3080:80"
+      - "3443:443"
+      - "3333:3333"
+    volumes:
+      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - shared:/shared
+
   # trafficvault runs a riak container to store private keys
   trafficvault:
     build:

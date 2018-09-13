@@ -18,16 +18,25 @@
 # under the License.
 #
 # Defines bash functions to consistently interact with the Traffic Ops API
+#
 
+# Build FQDNs
+export DB_FQDN="$DB_SERVER.$DOMAIN"
+export DNS_FQDN="$DNS_SERVER.$DOMAIN"
+export TO_FQDN="$TO_HOST.$DOMAIN"
+export TO_PERL_FQDN="$TO_PERL_HOST.$DOMAIN"
+export TM_FQDN="$TM_HOST.$DOMAIN"
+export TR_FQDN="$TR_HOST.$DOMAIN"
+export TS_FQDN="$TS_HOST.$DOMAIN"
+export TV_FQDN="$TV_HOST.$DOMAIN"
 
-export TO_URL=${TO_URL:-https://$TO_HOST:$TO_PORT}
+export TO_URL=${TO_URL:-https://$TO_FQDN:$TO_PORT}
 export TO_USER=${TO_USER:-$TO_ADMIN_USER}
 export TO_PASSWORD=${TO_PASSWORD:-$TO_ADMIN_PASSWORD}
 
 export CURLOPTS=${CURLOPTS:--LfsS}
 export CURLAUTH=${CURLAUTH:--k}
 export COOKIEJAR=$(mktemp)
-
 
 login=$(mktemp)
 

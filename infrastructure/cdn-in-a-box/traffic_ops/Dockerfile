@@ -25,15 +25,18 @@ FROM centos:7
 
 RUN yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-redhat96-9.6-3.noarch.rpm
 RUN yum install -y \
-	cpanminus \
-	epel-release \
-	gettext \
-	nmap-ncat \
-	openssl \
-	perl \
-	perl-Crypt-ScryptKDF \
-	perl-Test-CPAN-Meta && \
-	yum clean all
+	    cpanminus \
+	    epel-release \
+      bind-utils \ 
+      net-tools \ 
+	    gettext \
+	    nmap-ncat \
+	    openssl \
+	    perl \
+	    perl-Crypt-ScryptKDF \
+	    perl-Test-CPAN-Meta \
+      perl-JSON-PP && \
+	  yum clean all
 
 RUN cpanm Carton
 RUN yum install -y perl-DBIx-Connector
@@ -53,7 +56,6 @@ COPY traffic_ops/overrides/ /opt/traffic_ops/.
 
 WORKDIR /opt/traffic_ops/app
 
-
 # run carton whether or not local dir was installed
 RUN POSTGRES_HOME=/usr/pgsql-9.6 carton && \
      rm -rf $HOME/.cpan* /tmp/Dockerfile /tmp/local.tar.gz
@@ -66,17 +68,11 @@ RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/insta
 	&& /opt/traffic_ops/install/bin/download_web_deps -i || \
 	true # keep a failure here from failing all..
 
-# \todo add Drive Letters to postinstall input
-# RUN sed -i -- 's/"value": "b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"/"value": "0"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_edge.traffic_ops
-# RUN sed -i -- 's/"value": "b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y"/"value": "0"/g' /opt/traffic_ops/install/data/profiles/profile.trafficserver_mid.traffic_ops
-
 RUN echo "{\"user\": \"riakuser\",\"password\": \"$TRAFFIC_VAULT_PASS\"}" > /opt/traffic_ops/app/conf/production/riak.conf
 
 EXPOSE 6443
 WORKDIR /opt/traffic_ops/app
 ENV MOJO_MODE production
-
-RUN yum install -y bind-utils net-tools gettext perl-JSON-PP
 
 ADD enroller/server_template.json \
     traffic_ops/run.sh \
