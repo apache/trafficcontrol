@@ -23,7 +23,7 @@ under the License.
     </div>
     <div class="row">
         <div class="col-md-12 col-sm-12 col-xs-12">
-            <div class="x_panel" ui-view="deliveryServicesContent"></div>
+            <div ng-if="hasCapability('delivery-services')" class="x_panel" ui-view="deliveryServicesContent"></div>
         </div>
     </div>
     <div ng-if="hasCapability('cdns-read')" ng-repeat="cdn in ::cdns">
