@@ -29,6 +29,7 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 // Uses the in memory CertificateRegistry to provide dynamic key and certificate management for the router
 // The provided default implementation does not allow for the key store to change state
@@ -87,11 +88,19 @@ public class KeyManager extends X509ExtendedKeyManager implements X509KeyManager
 			final String sniString = new String(requestedName.getEncoded());
 			stringBuilder.append(sniString);
 
-			final Optional<String> optionalAlias = certificateRegistry.getAliases().stream().filter(sniString::contains).findFirst();
-			if (optionalAlias.isPresent()) {
-				log.info("KeyManager: FOUND certificate registry aliases matching " + optionalAlias.get());
-				return optionalAlias.get();
+			final List<String> partialAliasMatches = certificateRegistry.getAliases().stream().filter(sniString::contains).collect(Collectors.toList());
+			Optional<String> alias = partialAliasMatches.stream().filter(sniString::contentEquals).findFirst();
+			if (alias.isPresent()) {
+			    return alias.get();
 			}
+
+			// Not an exact match, some of the aliases may have had the leading zone removed
+			final String sniStringTrimmed = sniString.substring(sniString.indexOf('.') + 1);
+			alias = partialAliasMatches.stream().filter(sniStringTrimmed::contentEquals).findFirst();
+			if (alias.isPresent()) {
+			    return alias.get();
+			}
+
 		}
 
 		if (stringBuilder.length() > 0) {
@@ -101,6 +110,7 @@ public class KeyManager extends X509ExtendedKeyManager implements X509KeyManager
 		}
 		return null;
 	}
+
 
 	@Override
 	public X509Certificate[] getCertificateChain(final String alias) {
