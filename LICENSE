@@ -260,6 +260,18 @@ For the jsdiff component:
 @traffic_portal/app/src/assets/js/jsdiff-min_3.5.0.js
 ./licenses/BSD-jsdiff
 
+For the Chart.js component:
+@traffic_portal/app/src/assets/js/chartjs/Chart.js
+./licenses/MIT-chartjs
+
+For the angular-chart.js component:
+@traffic_portal/app/src/assets/js/chartjs/angular-chart.js
+./licenses/BSD-angular_chartjs
+
+For the tc-angular-chartjs.js component:
+@traffic_portal/app/src/assets/js/chartjs/tc-angular-chartjs.js
+./licenses/MIT-tc_angular_chartjs
+
 For the jquery.tree component:
 @traffic_ops/app/public/*/jquery.tree.min.*
 ./licenses/MIT-jquery_tree
