@@ -59,17 +59,18 @@ done
 
 source "$CERT_ENV_FILE"
 
+# Add the CA certificate to sysem TLS trust store
+cp $CERT_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
+update-ca-trust extract
+
 if [[ $TO_HOST = $(hostname -s) ]] ; then
     crt=$CERT_TRAFFICOPS_CERT
     key=$CERT_TRAFFICOPS_KEY
-    fqdn=$TO_FQDN
 elif [[ $TO_PERL_HOST = $(hostname -s) ]] ; then
     crt="$CERT_TRAFFICOPS_PERL_CERT"
     key="$CERT_TRAFFICOPS_PERL_KEY"
-    fqdn=$TO_PERL_FQDN
 fi
 
-echo "fqdn=$fqdn"
 echo "crt=$crt"
 echo "key=$key"
 
@@ -77,7 +78,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
 {
     "hypnotoad" : {
         "listen" : [
-            "https://$fqdn:$TO_PERL_PORT?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
+            "https://$TO_PERL_FQDN:$TO_PERL_PORT?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
         ],
         "user" : "trafops",
         "group" : "trafops",

@@ -1,0 +1,5 @@
+{
+  "description": "Enroller Service",
+  "name": "ENROLLER",
+  "useInTable": "server"
+}
