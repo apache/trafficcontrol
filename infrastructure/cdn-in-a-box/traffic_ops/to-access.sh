@@ -157,10 +157,11 @@ to-enroll() {
 	if [[ "$serverType" == "origin" ]]; then
 		cat <<-EOORIGIN >"$ENROLLER_DIR/origins/$HOSTNAME.json"
 		{
-			"deliveryServiceName": "ciab",
+			"deliveryService": "ciab",
 			"fqdn": "$HOSTNAME",
 			"name": "origin",
 			"protocol": "http",
+			"tenant": "root"
 		}
 		EOORIGIN
 		return 0
