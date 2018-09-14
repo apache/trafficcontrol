@@ -41,7 +41,7 @@ func (to *Session) CreateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts
 	defer resp.Body.Close()
 	alerts := tc.Alerts{}
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	return alerts, reqInf, err
 }
 
 func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts, ReqInf, error) {
@@ -65,7 +65,7 @@ func (to *Session) UpdateSteeringTarget(st tc.SteeringTargetNullable) (tc.Alerts
 	defer resp.Body.Close()
 	alerts := tc.Alerts{}
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	return alerts, reqInf, err
 }
 
 func (to *Session) GetSteeringTargets(dsID int) ([]tc.SteeringTargetNullable, ReqInf, error) {
@@ -80,7 +80,7 @@ func (to *Session) GetSteeringTargets(dsID int) ([]tc.SteeringTargetNullable, Re
 		Response []tc.SteeringTargetNullable `json:"response"`
 	}{}
 	err = json.NewDecoder(resp.Body).Decode(&data)
-	return data.Response, reqInf, nil
+	return data.Response, reqInf, err
 }
 
 func (to *Session) DeleteSteeringTarget(dsID int, targetID int) (tc.Alerts, ReqInf, error) {
@@ -92,5 +92,5 @@ func (to *Session) DeleteSteeringTarget(dsID int, targetID int) (tc.Alerts, ReqI
 	defer resp.Body.Close()
 	alerts := tc.Alerts{}
 	err = json.NewDecoder(resp.Body).Decode(&alerts)
-	return alerts, reqInf, nil
+	return alerts, reqInf, err
 }
