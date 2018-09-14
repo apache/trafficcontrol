@@ -140,6 +140,21 @@ func (s session) getProfileIDByName(n string) (int, error) {
 	return profiles[0].ID, err
 }
 
+func (s session) getParameterIDMatching(m tc.Parameter) (int, error) {
+	// get list matching name, then look for one matching configfile and value
+	parameters, _, err := s.GetParameterByName(url.QueryEscape(m.Name))
+	if err != nil {
+		return -1, err
+	}
+	for _, p := range parameters {
+		if p.ConfigFile == m.ConfigFile && p.Value == m.Value {
+			return p.ID, nil
+		}
+	}
+	return -1, fmt.Errorf("no parameter matching name %s, configFile %s, value %s", m.Name, m.ConfigFile, m.Value)
+
+}
+
 func (s session) getStatusIDByName(n string) (int, error) {
 	statuses, _, err := s.GetStatusByName(url.QueryEscape(n))
 	if err != nil {
@@ -515,13 +530,48 @@ func enrollParameter(toSession *session, fn string) error {
 		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
-
-	alerts, _, err := toSession.CreateParameter(s)
-	if err != nil {
-		log.Printf("error creating from %s: %s\n", fn, err)
-		return err
+	paramID, err := toSession.getParameterIDMatching(s)
+	var alerts tc.Alerts
+	if err == nil {
+		// existing param -- update
+		alerts, _, err = toSession.UpdateParameterByID(paramID, s)
+		if err != nil {
+			log.Printf("error updating parameter %d: %s with %+v ", paramID, err.Error(), s)
+		}
+	} else {
+		alerts, _, err = toSession.CreateParameter(s)
+		if err != nil {
+			log.Printf("error creating from %s: %s\n", fn, err)
+			return err
+		}
 	}
+	// link parameter with profiles
+	if len(s.Profiles) > 0 {
+		paramID, err := toSession.getParameterIDMatching(s)
+		if err != nil {
+			return err
+		}
 
+		var profiles []string
+		err = json.Unmarshal(s.Profiles, &profiles)
+		if err != nil {
+			log.Printf("%v", err)
+		}
+
+		for _, n := range profiles {
+			pid, err := toSession.getProfileIDByName(n)
+			if err != nil {
+				log.Printf("%v", err)
+				continue
+			}
+			pp := tc.ProfileParameter{ParameterID: paramID, ProfileID: pid}
+			_, _, err = toSession.CreateProfileParameter(pp)
+			if err != nil {
+				log.Printf("%v", err)
+				continue
+			}
+		}
+	}
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 	err = enc.Encode(&alerts)
