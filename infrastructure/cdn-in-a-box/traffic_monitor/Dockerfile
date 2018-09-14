@@ -33,6 +33,7 @@ RUN yum install -y epel-release && \
         net-tools \
         gettext \
         bind-utils \
+        openssl \
         initscripts && \
     yum install -y  /$(basename $RPM) && \
     rm /$(basename $RPM) && \

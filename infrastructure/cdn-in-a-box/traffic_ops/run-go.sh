@@ -60,8 +60,8 @@ if [[ -x /config.sh ]]; then
 	/config.sh
 fi
 
-while ! nc trafficops-perl 60443 </dev/null 2>/dev/null; do
-        echo "waiting for trafficops-perl:60443"
+while ! nc "$TO_PERL_FQDN" $TO_PERL_PORT </dev/null 2>/dev/null; do
+        echo "waiting for $TO_PERL_FQDN:$TO_PERL_PORT" 
         sleep 3
 done
 
