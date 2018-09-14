@@ -16,60 +16,59 @@
 */
 
 #delivery-services-outer-container {
-
-  #deliveryServicesContainer {
-    max-height: 452px;
-    margin-bottom: 0;
-
-    .list-group-item {
-      background-color: transparent;
-    }
-
-    .widgetTable {
-        width: 100%;
-        max-width: 100%;
-        margin-bottom:5px;
-
-        .thead {
-            vertical-align: bottom;
+    #deliveryServicesContainer {
+        max-height: 452px;
+        margin-bottom: 0;
+        .list-group-item {
+            background-color: transparent;
+        }
+        a {
+            background-color: #FFFFFF;
+        }
+        a:hover {
+            background-color: #F1FAF8;
+        }
+        .widgetTable {
+            width: 100%;
+            max-width: 100%;
+            margin-bottom: 5px;
+            .thead {
+                vertical-align: bottom;
+            }
+        }
+        .delivery-services-health {
+            height: 45px;
+            .delivery-services-table {
+                margin-top: -10px;
+                border-style: none;
+                td {
+                    border-top: none !important;
+                    padding: 12px 8px !important;
+                }
+            }
         }
     }
-
-    .delivery-services-health {
-      height: 45px;
-
-
-      .delivery-services-table {
-        margin-top: -10px;
-        border-style: none;
-
-        td {
-          border-top: none !important;
-          padding: 12px 8px !important;
-        }
-
-      }
+    .delivery-services-pagination {
+        margin: 0 0 10px 0;
+        float: left;
     }
-  }
+    .delivery-services-search-form {
+        float: right;
+        width: 250px;
+        margin-bottom: 10px;
+    }
+}
 
-  .delivery-services-pagination {
-    margin: 0 0 10px 0;
-    float: left;
-  }
+.dsWidgetMessages {
+    margin-left: 62px;
+    margin-bottom: 62px;
+}
 
-  .delivery-services-search-form {
-    float: right;
-    width: 250px;
-    margin-bottom: 10px;
-  }
-
+.dsWidgetButtonAlignFix {
+    margin-right: 16px;
 }
 
 #deliveryServicesLoadingContainer {
-  height: 555px;
-  background-color: transparent;
-}
-
-#delivery-services-chart-container {
-
+    height: 555px;
+    background-color: transparent;
 }
