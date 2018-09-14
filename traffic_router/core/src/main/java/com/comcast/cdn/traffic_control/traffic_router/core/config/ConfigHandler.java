@@ -167,7 +167,7 @@ public class ConfigHandler {
 				parseAnonymousIpConfig(jo);
 
 				final CacheRegister cacheRegister = new CacheRegister();
-				final JsonNode deliveryServicesJson = JsonUtils.getJsonNode(jo, "deliveryServices");
+				final JsonNode deliveryServicesJson = JsonUtils.getJsonNode(jo, deliveryServicesKey);
 				cacheRegister.setTrafficRouters(JsonUtils.getJsonNode(jo, "contentRouters"));
 				cacheRegister.setConfig(config);
 				cacheRegister.setStats(stats);
