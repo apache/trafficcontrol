@@ -28,7 +28,7 @@ RUN yum -y install jq && yum clean all
 RUN mkdir -p /opt/traffic_ops/app/bin /opt/traffic_ops/app/conf/production /opt/traffic_ops/app/db
 COPY --from=trafficops-perl /opt/traffic_ops/app/bin/traffic_ops_golang /opt/traffic_ops/app/bin/traffic_ops_golang
 
-EXPOSE 6443
+EXPOSE 443
 WORKDIR /opt/traffic_ops/app
 RUN yum install -y bind-utils net-tools gettext perl-JSON-PP
 
