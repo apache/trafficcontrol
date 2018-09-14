@@ -45,6 +45,12 @@ do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
 done
 
+# Source to-access functions and FQDN vars
+source /to-access.sh
+
+# Create SSL certificates and trust the shared CA.
+source /generate-certs.sh
+
 # Write config files
 set -x
 if [[ -r /config.sh ]]; then
@@ -88,7 +94,6 @@ done
 
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
-. /to-access.sh
 
 to-enroll "to" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
 

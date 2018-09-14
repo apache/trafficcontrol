@@ -33,23 +33,51 @@
 # CERT_STATE
 # CERT_CITY
 # CERT_COMPANY
+# CERT_DOMAIN
+# CERT_TRAFFICOPS_CERT
+# CERT_TRAFFICOPS_KEY
+# CERT_TRAFFICOPS_PERL_CERT
+# CERT_TRAFFICOPS_PERL_KEY
 # DOMAIN
-
+# TO_HOST
+# TO_PORT
+# TO_PERL_HOST
+# TO_PERL_PORT
+# TP_HOST
+#
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS CERT_COUNTRY CERT_STATE CERT_CITY CERT_COMPANY DOMAIN)
+envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN CERT_TRAFFICOPS_CERT CERT_TRAFFICOPS_KEY CERT_TRAFFICOPS_PERL_CERT CERT_TRAFFICOPS_PERL_KEY TO_PERL_HOST TO_PERL_PORT TO_HOST TO_PORT TP_HOST)
 for v in $envvars
 do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
 done
 
-key=/server.key
-crt=/server.crt
+until [ -f "$CERT_ENV_FILE" ] ; do
+  echo "Waiting on SSL certificate generation."
+  sleep 2
+done
+
+source "$CERT_ENV_FILE"
+
+if [[ $TO_HOST = $(hostname -s) ]] ; then
+    crt=$CERT_TRAFFICOPS_CERT
+    key=$CERT_TRAFFICOPS_KEY
+    fqdn=$TO_FQDN
+elif [[ $TO_PERL_HOST = $(hostname -s) ]] ; then
+    crt="$CERT_TRAFFICOPS_PERL_CERT"
+    key="$CERT_TRAFFICOPS_PERL_KEY"
+    fqdn=$TO_PERL_FQDN
+fi
+
+echo "fqdn=$fqdn"
+echo "crt=$crt"
+echo "key=$key"
 
 cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
 {
     "hypnotoad" : {
         "listen" : [
-            "https://trafficops-perl:60443?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
+            "https://$fqdn:$TO_PERL_PORT?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
         ],
         "user" : "trafops",
         "group" : "trafops",
@@ -59,7 +87,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
     },
     "traffic_ops_golang" : {
 	"insecure": true,
-        "port" : "6443",
+        "port" : "$TO_PORT",
         "proxy_timeout" : 60,
         "proxy_keep_alive" : 60,
         "proxy_tls_timeout" : 60,
@@ -82,18 +110,18 @@ cat <<-EOF >/opt/traffic_ops/app/conf/cdn.conf
         "access_control_allow_origin" : "*"
     },
     "to" : {
-        "base_url" : "https://$TO_HOST",
-        "email_from" : "no-reply@traffic-ops-domain.com",
+        "base_url" : "https://$TO_FQDN",
+        "email_from" : "no-reply@$DOMAIN",
         "no_account_found_msg" : "A Traffic Ops user account is required for access. Please contact your Traffic Ops user administrator."
     },
     "portal" : {
-        "base_url" : "https://$TP_HOST/!#/",
-        "email_from" : "no-reply@traffic-portal-domain.com",
+        "base_url" : "https://$TP_FQDN/!#/",
+        "email_from" : "no-reply@$DOMAIN",
         "pass_reset_path" : "user",
         "user_register_path" : "user"
     },
     "secrets" : [
-        "mONKEYDOmONKEYSEE."
+        "$TO_SECRET"
     ],
     "geniso" : {
         "iso_root_path" : "/opt/traffic_ops/app/public"
@@ -106,7 +134,7 @@ cat <<-EOF >/opt/traffic_ops/app/conf/production/database.conf
 {
         "description": "Local PostgreSQL database on port 5432",
         "dbname": "$DB_NAME",
-        "hostname": "$DB_SERVER",
+        "hostname": "$DB_FQDN",
         "user": "$DB_USER",
         "password": "$DB_USER_PASS",
         "port": "$DB_PORT",
@@ -121,11 +149,8 @@ name: dbconf.yml
 
 production:
   driver: postgres
-  open: host=$DB_SERVER port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=$DB_NAME sslmode=disable
+  open: host=$DB_FQDN port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=$DB_NAME sslmode=disable
 test:
   driver: postgres
-  open: host=$DB_SERVER port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=to_test sslmode=disable
+  open: host=$DB_FQDN port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=to_test sslmode=disable
 EOF
-
-openssl req -newkey rsa:2048 -nodes -keyout $key -x509 -days 365 -out $crt -subj "/C=$CERT_COUNTRY/ST=$CERT_STATE/L=$CERT_CITY/O=$CERT_COMPANY"
-chown trafops:trafops $key $crt
