@@ -69,7 +69,7 @@ RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/insta
 
 RUN echo "{\"user\": \"riakuser\",\"password\": \"$TRAFFIC_VAULT_PASS\"}" > /opt/traffic_ops/app/conf/production/riak.conf
 
-EXPOSE 6443
+EXPOSE 443
 WORKDIR /opt/traffic_ops/app
 ENV MOJO_MODE production
 

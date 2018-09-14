@@ -1,0 +1,7 @@
+{
+  "cdnName": "ALL",
+  "description": "Enroller Service Profile for all CDNs",
+  "name": "ENROLLER_ALL",
+  "routingDisabled": false,
+  "type": "UNK_PROFILE"
+}

@@ -89,7 +89,7 @@ services:
         ipv4_address: 172.16.239.20
         ipv6_address: "fc01:9400:1000:8::20"
     ports:
-      - "6443:6443"
+      - "6443:443"
     volumes:
       - ./dns/container-resolv.conf:/etc/resolv.conf
       - shared:/shared
@@ -116,7 +116,7 @@ services:
         ipv6_address: "fc01:9400:1000:8::21"
     # TODO: change to expose: "60443" to limit to containers
     ports:
-      - "60443:60443"
+      - "60443:443"
     volumes:
       - ./dns/container-resolv.conf:/etc/resolv.conf
       - shared:/shared

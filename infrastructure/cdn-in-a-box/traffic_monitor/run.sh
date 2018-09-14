@@ -32,30 +32,44 @@ set -e
 set -x
 set -m
 
-envvars=( TO_HOST TO_PORT TM_USER TM_PASSWORD)
+envvars=( TO_HOST TO_PORT TM_PORT TM_USER TM_PASSWORD)
 for v in $envvars
 do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
 done
 
-TO_URL="https://$TO_HOST:$TO_PORT"
+source /to-access.sh
+
+# Wait on SSL certificate generation
+until [ -f "$CERT_DONE_FILE" ] 
+do
+  echo "Waiting on Shared SSL certificate generation"
+  sleep 3
+done
+
+# Source the CIAB-CA shared SSL environment
+source $CERT_ENV_FILE
+
+# Trust the CIAB-CA at the System level
+cp $CERT_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
+update-ca-trust extract
+
+# Configure Traffic Monitor
+CDN=CDN-in-a-Box
+TO_URL="https://$TO_FQDN:$TO_PORT"
 cat > /opt/traffic_monitor/conf/traffic_ops.cfg <<- ENDOFMESSAGE
 {
 	"username": "$TM_USER",
 	"password": "$TM_PASSWORD",
 	"url": "$TO_URL",
 	"insecure": true,
-	"cdnName": "CDN-in-a-Box",
-	"httpListener": ":80"
+	"cdnName": "$CDN",
+	"httpListener": ":$TM_PORT"
 }
 ENDOFMESSAGE
 
-CDN=CDN-in-a-Box
-
-source /to-access.sh
-
 while ! to-ping 2>/dev/null; do
-	echo "waiting for traffic_ops..."
+	echo "waiting for trafficops ($TO_URL)..."
 	sleep 3
 done
 
