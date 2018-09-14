@@ -19,7 +19,8 @@
 ############################################################
 
 . ../traffic_ops/to-access.sh
-export TO_URL=https://$TO_HOST:$TO_PORT
+
+export TO_URL=https://$TO_FQDN:$TO_PORT
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
@@ -34,7 +35,6 @@ if [[ ! -d $ENROLLER_DIR ]]; then
      echo "enroller dir ${ENROLLER_DIR} not found or not a directory"
      exit 1
 fi
-
 
 # clear out the enroller dir first so no files left from previous run
 rm -rf ${ENROLLER_DIR}/*
