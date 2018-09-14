@@ -37,6 +37,8 @@ var trafficPortal = angular.module('trafficPortal', [
         'restangular',
         'app.templates',
         'angular-jwt',
+		'chart.js',
+		'tc.chartjs',
         'angular-loading-bar',
 
         // public modules

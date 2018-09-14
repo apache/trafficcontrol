@@ -33,20 +33,22 @@ under the License.
                         <table class="delivery-services-table widgetTable">
                             <thead>
                                 <tr class="headings">
-                                    <th style="width:33%;">Display Nanme</th>
-                                    <th>Tenant</th>
-                                    <th>Origin</th>
+                                    <th class="col-lg-6 col-md-6 col-sm-2">Delivery Service</th>
+                                    <th class="col-lg-2 col-md-2 col-sm-2">Type</th>
+                                    <th class="col-lg-3 col-md-3 col-sm-2">Tenant</th>
+                                    <th class="col-lg-1 col-md-1 col-sm-2"></th>
                                 </tr>
                             </thead>
                         </table>
-                        <a class="delivery-services-health list-group-item" ng-repeat="ds in deliveryServices | filter:search:strict | offsetFilter:(currentDeliveryServicesPage-1)*deliveryServicesPerPage | limitTo:deliveryServicesPerPage">
+                        <a class="delivery-services-health list-group-item" ng-repeat="ds in deliveryServices | filter:search:strict | offsetFilter:(currentDeliveryServicesPage-1)*deliveryServicesPerPage | limitTo:deliveryServicesPerPage track by $index" ng-click="getChartData(ds, $index)">
                             <div class="row">
-                                <table class="delivery-services-table table">
+                                <table class="delivery-services-table widgetTable">
                                     <tbody>
                                     <tr>
-                                        <td class="col-lg-4 col-md-4 col-sm-4">{{ds.displayName}}</td>
-                                        <td class="col-lg-4 col-md-4 col-sm-4">{{ds.tenant}}</td>
-                                        <td class="col-lg-4 col-md-4 col-sm-4">{{ds.orgServerFqdn}}</td>
+                                        <td class="col-lg-6 col-md-6 col-sm-2">{{ds.displayName}} <small>({{ds.xmlId}})</small></td>
+                                        <td class="col-lg-2 col-md-2 col-sm-2">{{ds.type}}</td>
+                                        <td class="col-lg-3 col-md-3 col-sm-2">{{ds.tenant}}</td>
+                                        <td class="col-lg-1 col-md-1 col-sm-2"><i class="fa fa-check" ng-show="$index == selectedIndex"></i></td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -68,7 +70,19 @@ under the License.
             </div>
         </div>
         <div class="col-md-6 col-sm-6 col-xs-12">
-            <div>Hello</div>
+            <div ng-show="!isRequested">Select a Delivery Service to view bandwidth chart.</div>
+            <div class="alert alert-info" ng-show="isLoading">Loading data for {{selectedDeliveryService.displayName}}</div>
+            <div class="alert alert-danger" ng-show="!hasChart && isRequested && !isLoading">No bandwidth data for {{selectedDeliveryService.displayName}}</div>
+            <div ng-show="hasChart && !isLoading" class="dsWidgetMessages">
+                <div class="pull-left">{{selectedDeliveryService.displayName}} - Bandwidth Per Second <br><small>{{dateRangeText}}</small></div>
+                <div class="pull-right dsWidgetButtonAlignFix" role="group">
+                    <button class="btn btn-primary" title="View Expanded Charts" ng-click="navigateToCharts()"><i class="fa fa-bar-chart"></i></button>
+                </div>
+            </div>
+            <canvas id="line" class="chart chart-line" chart-data="dsChart.data"
+                    chart-labels="dsChart.labels" chart-series="dsChart.series" chart-options="dsChart.options"
+                    chart-dataset-override="dsChart.datasetOverride" chart-click="onClick">
+            </canvas>
         </div>
     </div>
 </div>
