@@ -132,7 +132,7 @@ Services
 ========
 'Services' groups the functionality to modify Delivery Services - for those users with the necessary permissions - or make Requests for such changes - for uses without necessary permissions.
 
-.. figure:: ./images/ges/tp_table_ds_requests.png
+.. figure:: images/tp_table_ds_requests.png
 	:align: center
 	:alt: An example table of Delivery Service Requests
 
@@ -148,7 +148,7 @@ This page contains a table displaying all Delivery Services visible to the user.
 :Active: When this is set to 'false', Traffic Router will not serve DNS or HTTP responses for this Delivery Service
 :Type: The type of content routing this Delivery Service will use
 
-	.. seealso:: :ref:`rl-ds-types`
+	.. seealso:: :ref:`ds-types`
 
 :Protocol: The protocol which which this Delivery Service serves clients. Its value is one of:
 
@@ -164,7 +164,7 @@ This page contains a table displaying all Delivery Services visible to the user.
 :CDN: The CDN to which the Delivery Service belongs
 :IPv6 Enabled: When set to 'true', the Traffic Router will respond to AAAA DNS requests for the routed name of this Delivery Service, Otherwise, only A records will be served
 :DSCP: The Differentiated Services Code Point (DSCP) value with which to mark IP packets sent to the client
-:Signing Algorithm: See :ref:`rl-signed-urls`
+:Signing Algorithm: See :ref:`signed-urls`
 :Query String Handling: Describes how the Delivery Service treats query strings. It has one of the following possible values:
 
 	USE
@@ -174,7 +174,7 @@ This page contains a table displaying all Delivery Services visible to the user.
 	DROP
 		The query string is stripped from the request URL at the Edge-tier cache, and so is not used in the ATS 'cache key', and is not passed in requests to the origin
 
-	.. seealso:: :ref:`rl-qstring-handling`
+	.. seealso:: :ref:`qstring-handling`
 
 :Last Updated: Timestamp when the Delivery Service was last updated.                                                                 |
 
@@ -257,7 +257,7 @@ A table of all servers (of all kinds) across all Delivery Services visible to th
 :Domain: The server's domain. (The FQDN of the server is given by 'Host.Domain')
 :IP: The server's IPv4 address
 :IPv6: The server's IPv6 address
-:Status: The server's status (see `Health Protocol`_)
+:Status: The server's status (see :ref:`health-proto`)
 :Type: The type of server e.g. EDGE for an Edge-tier cache
 :Profile: The name of the server's profile
 :CDN: The name of the CDN to which this server is assigned (if any)
@@ -526,7 +526,7 @@ Interface Name
 		.. seealso:: `The Link aggregation Wikipedia Page <https://en.wikipedia.org/wiki/Link_aggregation>`_
 
 Stream ISO
-	If this is 'yes', then the download will start immediately as the ISO is written directly to the socket connection to Traffic Ops. If this is 'no', then the download will begin only *after* the ISO has finished being generated.
+	If this is 'yes', then the download will start immediately as the ISO is written directly to the socket connection to Traffic Ops. If this is 'no', then the download will begin only *after* the ISO has finished being generated. For almost all use cases, this should be 'yes'.
 
 
 User Admin
