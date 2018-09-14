@@ -3,7 +3,7 @@
     "displayName": "CDN in a Box",
     "tenantName": "root",
     "protocol": 0,
-    "orgServerFqdn": "http://origin",
+    "orgServerFqdn": "http://origin.cdn.local",
     "cdnName": "CDN-in-a-Box",
     "type": "HTTP",
     "active": true,

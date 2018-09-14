@@ -28,7 +28,7 @@ done
 
 . /to-access.sh
 
-TO_URL="https://$TO_HOST:$TO_PORT"
+TO_URL="https://$TO_FQDN:$TO_PORT"
 # wait until the ping endpoint succeeds
 while ! to-ping 2>/dev/null; do
    echo waiting for trafficops

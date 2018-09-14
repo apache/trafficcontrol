@@ -17,6 +17,9 @@
 # under the License.
 NAME="Traffic Router Application"
 
+# Global Vars for FQDNs, ports, etc
+source /to-access.sh
+
 CATALINA_HOME="/opt/tomcat"
 CATALINA_BASE="/opt/traffic_router"
 CATALINA_OUT="$CATALINA_HOME/logs/catalina.log"
@@ -47,8 +50,37 @@ export TO_PROPERTIES TM_PROPERTIES
 export CATALINA_HOME CATALINA_BASE CATALINA_OPTS CATALINA_OUT CATALINA_PID
 
 # Enroll Traffic Router
-source /to-access.sh
 to-enroll tr || (while true; do echo "enroll failed."; sleep 3 ; done)
+
+# Wait on SSL certificate generation
+until [ -f "$CERT_DONE_FILE" ] 
+do
+  echo "Waiting on Shared SSL certificate generation"
+  sleep 3
+done
+
+# Source the CIAB-CA shared SSL environment
+source $CERT_ENV_FILE
+
+# Copy the CIAB-CA certificate to the traffic_router conf so it can be added to the trust store
+cp $CERT_CA_CERT_FILE $CATALINA_BASE/conf
+
+# Add traffic 
+
+if [ -f "$CATALINA_BASE/conf/*.crt" ]; then
+  cd "$CATALINA_BASE/conf"
+  for file in *.crt; do
+    alias=$(echo $file |sed -e 's/.crt//g' |tr [:upper:] [:lower:])
+    cacerts=$(/bin/find $(dirname $(readlink -f $(which java)))/.. -name cacerts)
+    keytool=$(dirname $(readlink -f $(which java)))/keytool
+    $keytool -list -alias $alias -keystore $cacerts -storepass changeit -noprompt > /dev/null
+
+    if [ $? -ne 0 ]; then
+      echo "Installing certificate ${file}.."
+      $keytool -import -trustcacerts -file $file -alias $alias -keystore $cacerts -storepass changeit -noprompt
+    fi
+  done
+fi
 
 # Configure TO properties
 # File: /opt/traffic_router/conf/traffic_ops.properties
