@@ -49,8 +49,6 @@ export JAVA_HOME JAVA_OPTS
 export TO_PROPERTIES TM_PROPERTIES 
 export CATALINA_HOME CATALINA_BASE CATALINA_OPTS CATALINA_OUT CATALINA_PID
 
-# Enroll Traffic Router
-to-enroll tr || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 # Wait on SSL certificate generation
 until [ -f "$CERT_DONE_FILE" ] 
@@ -64,23 +62,26 @@ source $CERT_ENV_FILE
 
 # Copy the CIAB-CA certificate to the traffic_router conf so it can be added to the trust store
 cp $CERT_CA_CERT_FILE $CATALINA_BASE/conf
+cp $CERT_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
+update-ca-trust extract
+
+# Enroll Traffic Router
+to-enroll tr || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 # Add traffic 
+for crtfile in $(find $CATALINA_BASE/conf -name \*.crt -type f) 
+do 
+  alias=$(echo $crtfile |sed -e 's/.crt//g' |tr [:upper:] [:lower:]); 
+  cacerts=$(find $JAVA_HOME -follow -name cacerts); echo $cacerts; 
+  keytool=$JAVA_HOME/bin/keytool;  
+   
+  $keytool -list -alias $alias -keystore $cacerts -storepass changeit -noprompt > /dev/null;    
 
-if [ -f "$CATALINA_BASE/conf/*.crt" ]; then
-  cd "$CATALINA_BASE/conf"
-  for file in *.crt; do
-    alias=$(echo $file |sed -e 's/.crt//g' |tr [:upper:] [:lower:])
-    cacerts=$(/bin/find $(dirname $(readlink -f $(which java)))/.. -name cacerts)
-    keytool=$(dirname $(readlink -f $(which java)))/keytool
-    $keytool -list -alias $alias -keystore $cacerts -storepass changeit -noprompt > /dev/null
-
-    if [ $? -ne 0 ]; then
-      echo "Installing certificate ${file}.."
-      $keytool -import -trustcacerts -file $file -alias $alias -keystore $cacerts -storepass changeit -noprompt
-    fi
-  done
-fi
+  if [ $? -ne 0 ]; then     
+     echo "Installing certificate ${crtfile}..";     
+     $keytool -import -trustcacerts -file $crtfile -alias $alias -keystore $cacerts -storepass changeit -noprompt;   
+  fi; 
+done
 
 # Configure TO properties
 # File: /opt/traffic_router/conf/traffic_ops.properties
