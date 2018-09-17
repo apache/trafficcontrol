@@ -26,20 +26,20 @@ source /to-access.sh
 # Wait on SSL certificate generation
 until [ -f "$CERT_DONE_FILE" ] 
 do
-  echo "Waiting on Shared SSL certificate generation"
-  sleep 3
+     echo "Waiting on Shared SSL certificate generation"
+     sleep 3
 done
 
 # Source the CIAB-CA shared SSL environment
-source $CERT_ENV_FILE
+source "$CERT_ENV_FILE"
 
-# Trust the CIAB-CA at the System level
-cp $CERT_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
-update-ca-trust extract
+# Copy the CIAB-CA certificate to the traffic_router conf so it can be added to the trust store
+cp $CERT_CA_CERT_FILE /usr/local/share/ca-certificates
+update-ca-certificates
 
 while ! to-ping 2>/dev/null; do
-	echo "waiting for Traffic Ops"
-	sleep 3
+  echo "waiting for Traffic Ops"
+  sleep 3
 done
 
 export TO_USER=$TO_ADMIN_USER

@@ -20,7 +20,7 @@
     "qstringIgnore": 0,
     "rangeRequestHandling": 0,
     "regionalGeoBlocking": false,
-    "routingName": "cdn",
+    "routingName": "video",
     "anonymousBlockingEnabled": false,
     "signingAlgorithm": "url_sig"
 }
