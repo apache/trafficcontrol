@@ -80,6 +80,7 @@ ADD enroller/server_template.json \
     traffic_ops/to-access.sh \
     traffic_ops/generate-certs.sh \
     traffic_ops/trafficops-init.sh \
+    variables.env \
     /
 
 ADD traffic_ops_data /traffic_ops_data
