@@ -68,7 +68,7 @@ while ! $pg_isready -h$DB_SERVER -p$DB_PORT -d $DB_NAME; do
         sleep 3
 done
 
-TO_DIR=/opt/traffic_ops/app
+export TO_DIR=/opt/traffic_ops/app
 cat conf/production/database.conf
 
 export PERL5LIB=$TO_DIR/lib:$TO_DIR/local/lib/perl5
