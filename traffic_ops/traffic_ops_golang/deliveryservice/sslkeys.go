@@ -51,8 +51,6 @@ func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, "Successfully created ssl keys for "+*req.DeliveryService)
 }
 
-const DSSSLKeyVersionLatest = `latest`
-
 // generatePutRiakKeys generates a certificate, csr, and key from the given request, and insert it into the Riak key database.
 // The req MUST be validated, ensuring required fields exist.
 func generatePutRiakKeys(req tc.DeliveryServiceSSLKeysReq, tx *sql.Tx, cfg *config.Config) error {
@@ -81,7 +79,7 @@ func generatePutRiakKeys(req tc.DeliveryServiceSSLKeysReq, tx *sql.Tx, cfg *conf
 		return errors.New("putting riak keys: " + err.Error())
 	}
 
-	dsSSLKeys.Version = DSSSLKeyVersionLatest
+	dsSSLKeys.Version = riaksvc.DSSSLKeyVersionLatest
 	if err := riaksvc.PutDeliveryServiceSSLKeysObjTx(dsSSLKeys, tx, cfg.RiakAuthOptions); err != nil {
 		return errors.New("putting latest riak keys: " + err.Error())
 	}
