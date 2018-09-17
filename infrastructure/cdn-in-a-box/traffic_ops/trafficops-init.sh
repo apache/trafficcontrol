@@ -62,3 +62,7 @@ load_data_from() {
 
 # First,  load required data at the top level
 load_data_from /traffic_ops_data
+
+# Copy the free MaxMind GeoLite DB to TrafficOps public directory
+cp /GeoLiteCity.dat.gz $TO_DIR/public
+chown -R trafops:trafops $TO_DIR/public/GeoLiteCity.dat.gz
