@@ -1,7 +1,0 @@
-{
-  "cdnName": "CDN-in-a-Box",
-  "description": "Traffic Monitor for CDN-in-a-Box",
-  "name": "RASCAL-Traffic_Monitor",
-  "routingDisabled": false,
-  "type": "TM_PROFILE"
-}
