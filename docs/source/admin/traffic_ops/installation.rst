@@ -43,7 +43,9 @@ Installation
 	.. note:: For more information on installing PostgreSQL, see `their documentation <https://www.postgresql.org/docs/>`_.
 
 	For a production install it is best to install PostgreSQL on its own server/VM. To install PostgreSQL, on the PostgreSQL host (hostname ``pg`` in example),
-	run the following commands as the root user (or with ``sudo``) ::
+	run the following commands as the root user (or with ``sudo``):
+
+	.. code-block:: shell
 
 		yum update -y
 		yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm
@@ -55,38 +57,34 @@ Installation
 
 		host  all   all     99.33.99.1/32 md5
 
-	to the appropriate section of this file. Edit the ``/var/lib/pgsql/9.6/data/postgresql.conf`` file to add the appropriate listen_addresses or ``listen_addresses = '*'``, set ``timezone = 'UTC'``, and start the database: ::
+	to the appropriate section of this file. Edit the ``/var/lib/pgsql/9.6/data/postgresql.conf`` file to add the appropriate listen_addresses or ``listen_addresses = '*'``, set ``timezone = 'UTC'``, and start the database:
+
+	.. code-block:: shell
 
 		systemctl enable postgresql-9.6
 		systemctl start postgresql-9.6
 		systemctl status postgresql-9.6
 
 
-#. Build Traffic Ops
+#. Build a Traffic Ops ``.rpm`` file using the instructions under the :ref:`dev-building` page.
 
-	 Build a Traffic Ops ``.rpm`` file using the instructions under the :ref:`dev-building` page.
+#. Install PostgreSQL. To install the PostgreSQL 9.6 yum repository, run this command as the root user (or with ``sudo``):
 
-#. Install PostgreSQL
-
-	To install the PostgreSQL 9.6 yum repository, run this command as the root user (or with ``sudo``) ::
+	.. code-block:: shell
 
 		yum install -y https://download.postgresql.org/pub/repos/yum/9.6/redhat/rhel-7-x86_64/pgdg-centos96-9.6-3.noarch.rpm
 
-#. Install the Traffic Ops RPM
+#. Install the Traffic Ops RPM. The Traffic Ops RPM file should have been built in an earlier step. To install it, simply run the following command as the root user (or with ``sudo``):
 
-	.. note:: This will install the PostgreSQL client, ``psql`` as a dependency.
-
-	The Traffic Ops RPM file should have been built in an earlier step. To install it, simply run the following command as the root user (or with ``sudo``): ::
+	.. code-block:: shell
 
 		yum install -y ./dist/traffic_ops-2.0.0-xxxx.yyyyyyy.el7.x86_64.rpm
 
+	.. note:: This will install the PostgreSQL client, ``psql`` as a dependency.
 
-#. Install Additional Packages
+#. Install Additional Packages. Some packages on which Traffic Ops depends not have been installed as direct dependencies of the ``traffic_ops-<version stuff>.rpm``. To explicitly install these, run the following commands as the root user (or with ``sudo``):
 
-	.. note:: These are for the Traffic Control version 2.0.0 install, this may change, but the explicit installs won't hurt.
-
-	Some packages on which Traffic Ops depends not have been installed as direct dependencies of the ``traffic_ops-<version stuff>.rpm``. To explicitly install these,
-	run the following commands as the root user (or with ``sudo``): ::
+	.. code-block:: shell
 
 		yum install -y git
 		wget -q https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz -O go.tar.gz
@@ -94,10 +92,11 @@ Installation
 		PATH=$PATH:/usr/local/go/bin                    # go binaries are needed in the path for the 'postinstall' script
 		go get bitbucket.org/liamstask/goose/cmd/goose
 
+	.. note:: These are for the Traffic Control version 2.0.0 install, this may change, but the explicit installs won't hurt.
 
-#. Login to the Database from the Traffic Ops machine
+#. Login to the Database from the Traffic Ops machine. At this point you should be able to login from the Traffic Ops (hostname ``to`` in the example) host to the PostgreSQL (hostname ``pg`` in the example) host like so:
 
-	At this point you should be able to login from the Traffic Ops (hostname ``to`` in the example) host to the PostgreSQL (hostname ``pg`` in the example) host like so: ::
+	.. code-block:: psql
 
 		to-# psql -h 99.33.99.1 -U postgres
 		Password for user postgres:
@@ -107,9 +106,9 @@ Installation
 		postgres=#
 
 
-#. Create the User and Database
+#. Create the User and Database. In this example, we use user: ``traffic_ops``, password: ``tcr0cks``, database: ``traffic_ops``:
 
-	In this example, we use user: ``traffic_ops``, password: ``tcr0cks``, database: ``traffic_ops``: ::
+	.. code-block:: psql
 
 		to-# psql -U postgres -h 99.33.99.1 -c "CREATE USER traffic_ops WITH ENCRYPTED PASSWORD 'tcr0cks';"
 		Password for user postgres:
@@ -118,20 +117,9 @@ Installation
 		Password:
 		to-#
 
-#. Run the ``postinstall`` Script
+#. Run the ``postinstall`` Script. Now, run the following command as the root user (or with ``sudo``): ``/opt/traffic_ops/install/bin/postinstall``. The ``postinstall`` script will first get all packages needed from CPAN. This may take a while, expect up to 30 minutes on the first install. If there are any prompts in this phase, please just answer with the defaults (some CPAN installs can prompt for install questions). When this phase is complete, you will see ``Complete! Modules were installed into /opt/traffic_ops/app/local``. Some additional files will be installed, and then it will proceed with the next phase of the install, where it will ask you about the local environment for your CDN. Please make sure you remember all your answers and verify that the database answers match the information previously used to create the database. Example output:
 
-	Now, run the following command as root: ``/opt/traffic_ops/install/bin/postinstall``
-
-	The ``postinstall`` script will first get all packages needed from CPAN. This may take a while, expect up to 30 minutes on the first install.
-	If there are any prompts in this phase, please just answer with the defaults (some CPAN installs can prompt for install questions).
-
-	When this phase is complete, you will see::
-
-		Complete! Modules were installed into /opt/traffic_ops/app/local
-
-	Some additional files will be installed, and then it will proceed with the next phase of the install, where it will ask you about the local environment for your CDN. Please make sure you remember all your answers and verify that the database answers match the information previously used to create the database.
-
-	Example output::
+	.. code-block:: none
 
 		===========/opt/traffic_ops/app/conf/production/database.conf===========
 		Database type [Pg]:
@@ -198,7 +186,8 @@ Installation
 		Success! Postinstall complete.
 
 
-	Explanation of the information that needs to be provided:
+
+	.. table:: Explanation of the information that needs to be provided:
 
 		+----------------------------------------------------+----------------------------------------------------------------------------------------------+
 		| Field                                              | Description                                                                                  |
@@ -242,12 +231,14 @@ Traffic Ops is now installed!
 
 Upgrading Traffic Ops
 =====================
-To upgrade from older Traffic Ops versions, run the following commands as the root user (or with ``sudo``): ::
+To upgrade from older Traffic Ops versions, run the following commands as the root user (or with ``sudo``):
 
-	systemctl stop traffic_ops
-	yum upgrade traffic_ops
-	pushd /opt/traffic_ops/app/
-	PERL5LIB=/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5 ./db/admin.pl --env production upgrade
+	.. code-block:: shell
+
+		systemctl stop traffic_ops
+		yum upgrade traffic_ops
+		pushd /opt/traffic_ops/app/
+		PERL5LIB=/opt/traffic_ops/app/lib:/opt/traffic_ops/app/local/lib/perl5 ./db/admin.pl --env production upgrade
 
 After this completes, see :ref:`to-install` to run the ``postinstall`` script.
 Once the ``postinstall`` script, has finished, run the following command as the root user (or with ``sudo``):
