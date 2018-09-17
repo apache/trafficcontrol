@@ -32,7 +32,8 @@ import (
 
 const DeliveryServiceSSLKeysBucket = "ssl"
 const DNSSECKeysBucket = "dnssec"
-const DefaultDSSSLKeyVersion = "latest"
+const DSSSLKeyVersionLatest = "latest"
+const DefaultDSSSLKeyVersion = DSSSLKeyVersionLatest
 const URLSigKeysBucket = "url_sig_keys"
 
 func MakeDSSSLKeyKey(dsName, version string) string {
