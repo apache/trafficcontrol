@@ -18,9 +18,9 @@
 
 .. _ps:
 
+***************************************
 Traffic Ops - Migrating from 1.x to 2.x
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+***************************************
 In Traffic Ops 2.x the database used to store CDN information was changed from MySQL to PostgreSQL. PostgreSQL will remain the Traffic Ops database for the foreseeable future.
 A Docker-based migration tool was developed to help with the conversion process using an open-source PostgreSQL tool called `pgloader <http://pgloader.io/>`_.
 The following instructions will help configuring the Migration tool
@@ -35,18 +35,21 @@ The user must have the following for a successful minimal install:
 
 Setup the ``traffic_ops_db`` Directory
 --------------------------------------
-
 #. Modify the permissions of the ``/opt`` directory to make it writable by and owned by the ``postgres`` user and the ``postgres`` group. This can easily be accomplished by running the command ``chmod 755 /opt`` as the root user, or with ``sudo``.
 
-#. Download the Traffic Control 2.0.0 tarball like so::
+#. Download the Traffic Control 2.0.0 tarball like so
 
-	cd /opt
-	wget https://dist.apache.org/repos/dist/release/incubator/trafficcontrol/<tarball_version>
+	.. code-block:: shell
 
-#. Extract the **only** the ``traffic_ops_db`` directory to ``/opt/traffic_ops_db``::
+		cd /opt
+		wget https://dist.apache.org/repos/dist/release/incubator/trafficcontrol/<tarball_version>
 
-	tar -zxvf trafficcontrol-incubating-<version>.tar.gz --strip=1 trafficcontrol-incubating-<version>/traffic_ops_db
-	chown -R postgres:postgres /opt/traffic_ops_db
+#. Extract the **only** the ``traffic_ops_db`` directory to ``/opt/traffic_ops_db``
+
+	.. code-block:: shell
+
+		tar -zxvf trafficcontrol-incubating-<version>.tar.gz --strip=1 trafficcontrol-incubating-<version>/traffic_ops_db
+		chown -R postgres:postgres /opt/traffic_ops_db
 
 Migration Preparation
 ---------------------
@@ -55,14 +58,14 @@ Be sure there is connectivity between your MySQL server's IP address/port and yo
 Navigating the Database Migration
 ---------------------------------
 Begin the database migration after settings up the ``/opt/traffic_ops_db`` directory
-Switch to the postgres user, so that permissions remain intact.::
+Switch to the postgres user, so that permissions remain intact.
+
+.. code-block:: shell
 
 	su - postgres
 	cd /opt/traffic_ops_db/
 
-#. Configure the ``/opt/traffic_ops_db/pg-migration/mysql-to-postgres.env`` file for your source MySQL and target PostgresQL settings.
-
-	This part ought to be self-explanatory, given the names used in that file.
+#. Configure the ``/opt/traffic_ops_db/pg-migration/mysql-to-postgres.env`` file for your source MySQL and target PostgresQL settings. This part ought to be self-explanatory, given the names used in that file.
 
 #. Run the ``migrate.sh`` script, watching the console output for any errors (this may take some time).
 
