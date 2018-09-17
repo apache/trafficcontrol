@@ -22,31 +22,31 @@ Configure Multi Site Origin
 
 1) Create cachegroups for the origin locations, and assign the appropriate parent-child relationship between the mid and org cachegroups (click the image to see full size).  Each mid cachegroup can be assigned a primary and secondary origin parent cachegroup.  When the mid cache parent configuration is generated, origins in the primary cachegroups will be listed first, followed by origins in the secondary cachegroup. Origin servers assigned to the delivery service that are assigned to neither the primary nor secondary cachegroups will be listed last.
 
-.. image:: C5C4CD22-949A-48FD-8976-C673083E2177.png
+.. image:: multi_site/00.png
 	:scale: 100%
 	:align: center
 
 2) Create a profile to assign to each of the origins:
 
-.. image:: 19BB6EC1-B6E8-4D22-BFA0-B7D6A9708B42.png
+.. image:: multi_site/01.png
 	:scale: 100%
 	:align: center
 
 3) Create server entries for the origination vips:
 
-.. image:: D28614AA-9758-45ED-9EFD-3A284FC4218E.png
+.. image:: multi_site/02.png
 	:scale: 100%
 	:align: center
 
 4) Check the multi-site check box in the delivery service screen:
 
-.. image:: mso-enable.png
+.. image:: multi_site/mso-enable.png
 	:scale: 100%
 	:align: center
 
 5) Assign the org servers to the delivery service that will have the multi site feature.  Org servers assigned to a delivery service with multi-site checked will be assigned to be the origin servers for this DS.
 
-.. image:: 066CEF4F-C1A3-4A89-8B52-4F72B0531367.png
+.. image:: multi_site/03.png
 	:scale: 100%
 	:align: center
 
@@ -67,7 +67,7 @@ Configure Multi Site Origin
 
    a) Create a profile of the type DS_PROFILE for the delivery service in question.
 
-      .. image:: ds-profile.png
+      .. image:: multi_site/ds_profile.png
          :scale: 50%
          :align: center
 
@@ -96,7 +96,7 @@ Configure Multi Site Origin
       +----------------------------------------+------------------+--------------------------+-------------------------+
 
 
-      .. image:: ds_profile_parameters.png
+      .. image:: multi_site/ds_profile_parameters.png
          :scale: 100%
          :align: center
 

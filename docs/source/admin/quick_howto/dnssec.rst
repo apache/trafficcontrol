@@ -27,7 +27,7 @@ Configure DNSSEC
 
 #. Go to 'CDNs' and click on the desired CDN.
 
-	.. figure:: dnssec00.png
+	.. figure:: dnssec/00.png
 		:width: 60%
 		:align: center
 		:alt: Screenshot of the Traffic Portal UI depicting the CDNs page
@@ -36,7 +36,7 @@ Configure DNSSEC
 
 #. Click on 'Manage DNSSEC Keys' under the 'More' drop-down menu.
 
-	.. figure:: dnssec01.png
+	.. figure:: dnssec/01.png
 		:width: 60%
 		:align: center
 		:alt: Screenshot of the Traffic Portal UI depicting the CDN details page
@@ -45,7 +45,7 @@ Configure DNSSEC
 
 #. Click on the 'Generate DNSSEC Keys' button.
 
-	.. figure:: dnssec02.png
+	.. figure:: dnssec/02.png
 		:width: 60%
 		:align: center
 		:alt: Screenshot of the Traffic Portal UI depicting the CDN DNSSEC Key Management page
@@ -54,7 +54,7 @@ Configure DNSSEC
 
 #. A modal will pop up asking you to confirm that you want to proceed.
 
-	.. figure:: dnssec03.png
+	.. figure:: dnssec/03.png
 		:width: 30%
 		:align: center
 		:alt: Screenshot of the Traffic Portal UI depicting the CDN DNSSEC Key Generation confirmation modal
@@ -65,7 +65,7 @@ Configure DNSSEC
 
 	.. note:: Depending upon the number of Delivery Services in the CDN, generating DNSSEC keys may take several seconds.
 
-	.. figure:: dnssec04.png
+	.. figure:: dnssec/04.png
 		:width: 50%
 		:align: center
 		:alt: Screenshot of the Traffic Portal UI depicting the CDN DNSSEC Key Generation page
@@ -74,7 +74,7 @@ Configure DNSSEC
 
 #. You will be prompted to confirm the changes by typing the name of the CDN into a text box. After doing so, click on the red 'Confirm' button.
 
-	.. figure:: dnssec05.png
+	.. figure:: dnssec/05.png
 		:width: 30%
 		:align: center
 		:alt: Screenshot of the Traffic Portal UI depicting the confirmation modal for committing changes to DNSSEC Keys.
@@ -86,7 +86,7 @@ Configure DNSSEC
 
 #. Once DS Record information has been added to the parent zone, DNSSEC needs to be activated for the CDN so that Traffic Router will sign responses. Go back to the CDN details page for this CDN, and set the 'DNSSEC Enabled' field to 'true', then click the green 'Update' button.
 
-	.. figure:: dnssec06.png
+	.. figure:: dnssec/06.png
 		:width: 60%
 		:align: center
 		:alt: Screenshot of the Traffic Portal UI depicting the details page for a CDN when changing its 'DNSSEC Enabled' field
