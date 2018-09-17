@@ -16,57 +16,65 @@
 
 .. _to-api-v11-asn:
 
-***
-ASN
-***
+****
+ASNS
+****
 
 .. _to-api-v11-asns-route:
 
 ``/api/1.1/asns``
 =================
+List all ASNS
 
 ``GET``
 -------
-
-:Authentication Required: Yes
-
-:Role(s) Required: None
+:Auth. Required: Yes
+:Roles Required: None
+:Response Type:  Object
 
 .. table:: Response Properties
 
-	+------------------+--------+-------------------------------------------------------------------------+
-	|    Parameter     |  Type  |                               Description                               |
-	+==================+========+=========================================================================+
-	| ``asns``         | array  | A collection of asns                                                    |
-	+------------------+--------+-------------------------------------------------------------------------+
-	| ``>lastUpdated`` | string | The Time / Date this server entry was last updated                      |
-	+------------------+--------+-------------------------------------------------------------------------+
-	| ``>id``          | string | Local unique identifier for the ASN                                     |
-	+------------------+--------+-------------------------------------------------------------------------+
-	| ``>asn``         | string | Autonomous System Numbers per APNIC for identifying a service provider. |
-	+------------------+--------+-------------------------------------------------------------------------+
-	| ``>cachegroup``  | string | Related cachegroup name                                                 |
-	+------------------+--------+-------------------------------------------------------------------------+
+	+------------------+---------------------------+----------------------+
+	|        Key       |             Type          |     Description      |
+	+==================+===========================+======================+
+	| ``asns``         | array of ``asn`` objects  | A collection of asns |
+	+------------------+---------------------------+----------------------+
 
-Response Example
-""""""""""""""""
+.. table:: ``asn`` Properties
+
+	+------------------+---------+-------------------------------------------------------------------------+
+	|       Key        |  Type   |                           Description                                   |
+	+==================+=========+=========================================================================+
+	| ``lastUpdated``  | string  | The Time / Date this server entry was last updated                      |
+	+------------------+---------+-------------------------------------------------------------------------+
+	| ``id``           | integer | Local unique identifier for the ASN                                     |
+	+------------------+---------+-------------------------------------------------------------------------+
+	| ``asn``          | integer | Autonomous System Numbers per APNIC for identifying a service provider  |
+	+------------------+---------+-------------------------------------------------------------------------+
+	| ``cachegroup``   | string  | Related cachegroup name                                                 |
+	+------------------+---------+-------------------------------------------------------------------------+
+	| ``cachegroupId`` | integer | Related cachegroup name                                                 |
+	+------------------+---------+-------------------------------------------------------------------------+
+
 .. code-block:: json
-	:tab-width: 4
+	:caption: Response Example
 
 	{
 	 "response": {
 			"asns": [
 				 {
 						"lastUpdated": "2012-09-17 21:41:22",
-						"id": "27",
-						"asn": "7015",
-						"cachegroup": "us-ma-woburn"
+						"id": 27,
+						"asn": 7015,
+						"cachegroup": "us-ma-woburn",
+						"cachegroupId": 2
 				 },
 				 {
 						"lastUpdated": "2012-09-17 21:41:22",
-						"id": "28",
-						"asn": "7016",
-						"cachegroup": "us-pa-pittsburgh"
+						"id": 28,
+						"asn": 7016,
+						"cachegroup": "us-pa-pittsburgh",
+						"cachegroupID": 3
 				 }
 			]
 	 },
