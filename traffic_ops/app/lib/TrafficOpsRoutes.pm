@@ -67,149 +67,149 @@ sub ui_routes {
 	my $namespace = "UI";
 
 	# This route needs to be at the top to kick in first.
-	$r->get('/')->over( authenticated => 1, not_ldap => 1 )->to( 'RascalStatus#health', namespace => $namespace );
-	$r->get('/')->over( authenticated => 1 )->to( 'VisualStatus#daily_summary', namespace => $namespace );
+	# $r->get('/')->over( authenticated => 1, not_ldap => 1 )->to( 'RascalStatus#health', namespace => $namespace );
+	# $r->get('/')->over( authenticated => 1 )->to( 'VisualStatus#daily_summary', namespace => $namespace );
 
 	# ------------------------------------------------------------------------
 	# NOTE: Routes should be grouped by their controller
 	# ------------------------------------------------------------------------
 	# -- About
-	$r->get('/help/about')->over( authenticated => 1, not_ldap => 1 )->to( 'Help#about', namespace => $namespace );
-	$r->get('/help/releasenotes')->over( authenticated => 1, not_ldap => 1 )->to( 'Help#releasenotes', namespace => $namespace );
+	# $r->get('/help/about')->over( authenticated => 1, not_ldap => 1 )->to( 'Help#about', namespace => $namespace );
+	# $r->get('/help/releasenotes')->over( authenticated => 1, not_ldap => 1 )->to( 'Help#releasenotes', namespace => $namespace );
 
 	# -- Anomaly
-	$r->get('/anomaly/:host_name')->to( 'Anomaly#start', namespace => $namespace );
+	# $r->get('/anomaly/:host_name')->to( 'Anomaly#start', namespace => $namespace );
 
 	# -- BlueImpLoader
-	$r->get('/blueimp_uploader')->over( authenticated => 1, not_ldap => 1 )->to( 'blueimp_uploader#blueimp', namespace => $namespace );
+	# $r->get('/blueimp_uploader')->over( authenticated => 1, not_ldap => 1 )->to( 'blueimp_uploader#blueimp', namespace => $namespace );
 
 	# -- Cachegroup
 	# deprecated - see: /api/$version/location/:parameter_id/parameter
 	# $r->get('/availablelocation/:paramid')->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#availablelocation', namespace => $namespace );
-	$r->get('/misc')->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#index', namespace => $namespace );
-	$r->get('/cachegroups')->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#index', namespace => $namespace );
-	$r->get('/cachegroup/add')->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#add', namespace => $namespace );
-	$r->post('/cachegroup/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#create', namespace => $namespace );
-	$r->get('/cachegroup/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#delete', namespace => $namespace );
+	# $r->get('/misc')->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#index', namespace => $namespace );
+	# $r->get('/cachegroups')->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#index', namespace => $namespace );
+	# $r->get('/cachegroup/add')->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#add', namespace => $namespace );
+	# $r->post('/cachegroup/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#create', namespace => $namespace );
+	# $r->get('/cachegroup/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#delete', namespace => $namespace );
 
 	# mode is either 'edit' or 'view'.
-	$r->route('/cachegroup/:mode/:id')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#view', namespace => $namespace );
-	$r->post('/cachegroup/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#update', namespace => $namespace );
+	# $r->route('/cachegroup/:mode/:id')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#view', namespace => $namespace );
+	# $r->post('/cachegroup/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Cachegroup#update', namespace => $namespace );
 
 	# -- Cdn
-	$r->post('/login')->to( 'Cdn#login',         namespace => $namespace );
-	$r->get('/logout')->to( 'Cdn#logoutclicked', namespace => $namespace );
-	$r->get('/loginpage')->to( 'Cdn#loginpage', namespace => $namespace );
-	$r->get('/')->to( 'Cdn#loginpage', namespace => $namespace );
+	# $r->post('/login')->to( 'Cdn#login',         namespace => $namespace );
+	# $r->get('/logout')->to( 'Cdn#logoutclicked', namespace => $namespace );
+	# $r->get('/loginpage')->to( 'Cdn#loginpage', namespace => $namespace );
+	# $r->get('/')->to( 'Cdn#loginpage', namespace => $namespace );
 
 	# Cdn - Special JSON format for datatables widget
-	$r->get('/aadata/:table')->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#aadata', namespace => $namespace );
-	$r->get('/aadata/:table/:filter/#value')->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#aadata', namespace => $namespace );
+	# $r->get('/aadata/:table')->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#aadata', namespace => $namespace );
+	# $r->get('/aadata/:table/:filter/#value')->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#aadata', namespace => $namespace );
 
 	# -- Changelog
-	$r->get('/log')->over( authenticated => 1, not_ldap => 1 )->to( 'ChangeLog#changelog', namespace => $namespace );
-	$r->post('/create/log')->over( authenticated => 1, not_ldap => 1 )->to( 'ChangeLog#createlog',   namespace => $namespace );
+	# $r->get('/log')->over( authenticated => 1, not_ldap => 1 )->to( 'ChangeLog#changelog', namespace => $namespace );
+	# $r->post('/create/log')->over( authenticated => 1, not_ldap => 1 )->to( 'ChangeLog#createlog',   namespace => $namespace );
 	$r->get('/newlogcount')->over( authenticated => 1, not_ldap => 1 )->to( 'ChangeLog#newlogcount', namespace => $namespace );
 
 	# -- Configuredrac - Configure Dell DRAC settings (RAID, BIOS, etc)
-	$r->post('/configuredrac')->over( authenticated => 1, not_ldap => 1 )->to( 'Dell#configuredrac', namespace => $namespace );
+	# $r->post('/configuredrac')->over( authenticated => 1, not_ldap => 1 )->to( 'Dell#configuredrac', namespace => $namespace );
 
 	# -- Configfiles
 	$r->route('/genfiles/:mode/:id/#filename')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'ConfigFiles#genfiles', namespace => $namespace );
 
 	# -- Asn
-	$r->get('/asns')->over( authenticated => 1, not_ldap => 1 )->to( 'Asn#index', namespace => $namespace );
-	$r->get('/asns/add')->over( authenticated => 1, not_ldap => 1 )->to( 'Asn#add', namespace => $namespace );
-	$r->post('/asns/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Asn#create', namespace => $namespace );
-	$r->get('/asns/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Asn#delete', namespace => $namespace );
-	$r->post('/asns/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Asn#update', namespace => $namespace );
-	$r->route('/asns/:id/:mode')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Asn#view', namespace => $namespace );
+	# $r->get('/asns')->over( authenticated => 1, not_ldap => 1 )->to( 'Asn#index', namespace => $namespace );
+	# $r->get('/asns/add')->over( authenticated => 1, not_ldap => 1 )->to( 'Asn#add', namespace => $namespace );
+	# $r->post('/asns/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Asn#create', namespace => $namespace );
+	# $r->get('/asns/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Asn#delete', namespace => $namespace );
+	# $r->post('/asns/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Asn#update', namespace => $namespace );
+	# $r->route('/asns/:id/:mode')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Asn#view', namespace => $namespace );
 
 	# -- CDNs
-	$r->get('/cdns')->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#index', namespace => $namespace );
-	$r->get('/cdn/add')->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#add', namespace => $namespace );
-	$r->post('/cdn/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#create', namespace => $namespace );
-	$r->get('/cdn/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#delete', namespace => $namespace );
+	# $r->get('/cdns')->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#index', namespace => $namespace );
+	# $r->get('/cdn/add')->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#add', namespace => $namespace );
+	# $r->post('/cdn/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#create', namespace => $namespace );
+	# $r->get('/cdn/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#delete', namespace => $namespace );
 
 	# mode is either 'edit' or 'view'.
-	$r->route('/cdn/:mode/:id')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#view', namespace => $namespace );
-	$r->post('/cdn/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#update', namespace => $namespace );
+	# $r->route('/cdn/:mode/:id')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#view', namespace => $namespace );
+	# $r->post('/cdn/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Cdn#update', namespace => $namespace );
 
-	$r->get('/cdns/:cdn_name/dnsseckeys/add')->over( authenticated => 1, not_ldap => 1 )->to( 'DnssecKeys#add', namespace => $namespace );
-	$r->get('/cdns/:cdn_name/dnsseckeys/addksk')->over( authenticated => 1, not_ldap => 1 )->to( 'DnssecKeys#addksk', namespace => $namespace );
-	$r->post('/cdns/dnsseckeys/create')->over( authenticated => 1, not_ldap => 1 )->to( 'DnssecKeys#create', namespace => $namespace );
-	$r->post('/cdns/dnsseckeys/genksk')->over( authenticated => 1, not_ldap => 1 )->to( 'DnssecKeys#genksk', namespace => $namespace );
-	$r->get('/cdns/dnsseckeys')->to( 'DnssecKeys#index', namespace => $namespace );
-	$r->get('/cdns/:cdn_name/dnsseckeys/manage')->over( authenticated => 1, not_ldap => 1 )->to( 'DnssecKeys#manage', namespace => $namespace );
-	$r->post('/cdns/dnsseckeys/activate')->over( authenticated => 1, not_ldap => 1 )->to( 'DnssecKeys#activate', namespace => $namespace );
+	# $r->get('/cdns/:cdn_name/dnsseckeys/add')->over( authenticated => 1, not_ldap => 1 )->to( 'DnssecKeys#add', namespace => $namespace );
+	# $r->get('/cdns/:cdn_name/dnsseckeys/addksk')->over( authenticated => 1, not_ldap => 1 )->to( 'DnssecKeys#addksk', namespace => $namespace );
+	# $r->post('/cdns/dnsseckeys/create')->over( authenticated => 1, not_ldap => 1 )->to( 'DnssecKeys#create', namespace => $namespace );
+	# $r->post('/cdns/dnsseckeys/genksk')->over( authenticated => 1, not_ldap => 1 )->to( 'DnssecKeys#genksk', namespace => $namespace );
+	# $r->get('/cdns/dnsseckeys')->to( 'DnssecKeys#index', namespace => $namespace );
+	# $r->get('/cdns/:cdn_name/dnsseckeys/manage')->over( authenticated => 1, not_ldap => 1 )->to( 'DnssecKeys#manage', namespace => $namespace );
+	# $r->post('/cdns/dnsseckeys/activate')->over( authenticated => 1, not_ldap => 1 )->to( 'DnssecKeys#activate', namespace => $namespace );
 
 	# -- Dell - print boxes
-	$r->get('/dells')->over( authenticated => 1, not_ldap => 1 )->to( 'Dell#dells', namespace => $namespace );
+	# $r->get('/dells')->over( authenticated => 1, not_ldap => 1 )->to( 'Dell#dells', namespace => $namespace );
 
 	# -- Division
-	$r->get('/divisions')->over( authenticated => 1, not_ldap => 1 )->to( 'Division#index', namespace => $namespace );
-	$r->get('/division/add')->over( authenticated => 1, not_ldap => 1 )->to( 'Division#add', namespace => $namespace );
-	$r->post('/division/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Division#create', namespace => $namespace );
-	$r->get('/division/:id/edit')->over( authenticated => 1, not_ldap => 1 )->to( 'Division#edit', namespace => $namespace );
-	$r->post('/division/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Division#update', namespace => $namespace );
-	$r->get('/division/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Division#delete', namespace => $namespace );
+	# $r->get('/divisions')->over( authenticated => 1, not_ldap => 1 )->to( 'Division#index', namespace => $namespace );
+	# $r->get('/division/add')->over( authenticated => 1, not_ldap => 1 )->to( 'Division#add', namespace => $namespace );
+	# $r->post('/division/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Division#create', namespace => $namespace );
+	# $r->get('/division/:id/edit')->over( authenticated => 1, not_ldap => 1 )->to( 'Division#edit', namespace => $namespace );
+	# $r->post('/division/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Division#update', namespace => $namespace );
+	# $r->get('/division/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Division#delete', namespace => $namespace );
 
 	# -- DeliverysSrvice
-	$r->get('/ds/add')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryService#add',  namespace => $namespace );
-	$r->get('/ds/:id')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryService#edit', namespace => $namespace );
-	$r->post('/ds/create')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryService#create', namespace => $namespace );
-	$r->get('/ds/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryService#delete', namespace => $namespace );
-	$r->post('/ds/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryService#update', namespace => $namespace );
+	# $r->get('/ds/add')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryService#add',  namespace => $namespace );
+	# $r->get('/ds/:id')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryService#edit', namespace => $namespace );
+	# $r->post('/ds/create')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryService#create', namespace => $namespace );
+	# $r->get('/ds/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryService#delete', namespace => $namespace );
+	# $r->post('/ds/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryService#update', namespace => $namespace );
 
 	# -- Keys - SSL Key management
-	$r->get('/ds/:id/sslkeys/add')->to( 'SslKeys#add', namespace => $namespace );
-	$r->post('/ds/sslkeys/create')->over( authenticated => 1, not_ldap => 1 )->to( 'SslKeys#create', namespace => $namespace );
+	# $r->get('/ds/:id/sslkeys/add')->to( 'SslKeys#add', namespace => $namespace );
+	# $r->post('/ds/sslkeys/create')->over( authenticated => 1, not_ldap => 1 )->to( 'SslKeys#create', namespace => $namespace );
 
 	# -- Keys - URL Sig Key management
-	$r->get('/ds/:id/urlsigkeys/add')->to( 'UrlSigKeys#add', namespace => $namespace );
+	# $r->get('/ds/:id/urlsigkeys/add')->to( 'UrlSigKeys#add', namespace => $namespace );
 
 	# -- Steering DS assignment
-	$r->get('/ds/:id/steering')->to( 'Steering#index', namespace => $namespace );
-	$r->post('/ds/:id/steering/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Steering#update', namespace => $namespace );
+	# $r->get('/ds/:id/steering')->to( 'Steering#index', namespace => $namespace );
+	# $r->post('/ds/:id/steering/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Steering#update', namespace => $namespace );
 
 	# JvD: ded route?? # $r->get('/ds_by_id/:id')->over( authenticated => 1, not_ldap => 1 )->to('DeliveryService#ds_by_id', namespace => $namespace );
-	$r->get('/healthdatadeliveryservice')->to( 'DeliveryService#readdeliveryservice', namespace => $namespace );
-	$r->get('/delivery_services')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryService#index', namespace => $namespace );
+	# $r->get('/healthdatadeliveryservice')->to( 'DeliveryService#readdeliveryservice', namespace => $namespace );
+	# $r->get('/delivery_services')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryService#index', namespace => $namespace );
 
 	# -- DeliveryServiceserver
-	$r->post('/dss/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#assign_servers', namespace => $namespace )
-		;    # update and create are the same... ?
-	$r->post('/update/cpdss/:to_server')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#clone_server', namespace => $namespace );
-	$r->route('/dss/:id/edit')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#edit', namespace => $namespace );
-	$r->route('/cpdssiframe/:mode/:id')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#cpdss_iframe', namespace => $namespace );
-	$r->post('/create/dsserver')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#create', namespace => $namespace );
+	# $r->post('/dss/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#assign_servers', namespace => $namespace )
+	# 	;    # update and create are the same... ?
+	# $r->post('/update/cpdss/:to_server')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#clone_server', namespace => $namespace );
+	# $r->route('/dss/:id/edit')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#edit', namespace => $namespace );
+	# $r->route('/cpdssiframe/:mode/:id')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#cpdss_iframe', namespace => $namespace );
+	# $r->post('/create/dsserver')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceServer#create', namespace => $namespace );
 
 	# -- DeliveryServiceTmuser
-	$r->post('/dstmuser')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceTmUser#create', namespace => $namespace );
-	$r->get('/dstmuser/:ds/:tm_user_id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceTmUser#delete', namespace => $namespace );
+	# $r->post('/dstmuser')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceTmUser#create', namespace => $namespace );
+	# $r->get('/dstmuser/:ds/:tm_user_id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'DeliveryServiceTmUser#delete', namespace => $namespace );
 
 	# -- Federation
-	$r->get('/federation')->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#index', namespace => $namespace );
-	$r->get('/federation/:federation_id/delete')->name("federation_delete")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#delete', namespace => $namespace );
-	$r->get('/federation/:federation_id/edit')->name("federation_edit")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#edit', namespace => $namespace );
-	$r->get('/federation/add')->name('federation_add')->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#add', namespace => $namespace );
-	$r->post('/federation')->name('federation_create')->to( 'Federation#create', namespace => $namespace );
-	$r->post('/federation/:federation_id')->name('federation_update')->to( 'Federation#update', namespace => $namespace );
-	$r->get("/federation/resolvers")->to( 'Federation#resolvers', namespace => $namespace );
-	$r->get("/federation/users")->to( 'Federation#users', namespace => $namespace );
-	$r->get( "/federation/resolvers")->to( 'Federation#resolvers', namespace => $namespace );
-	$r->get( "/federation/users")->to( 'Federation#users',     namespace => $namespace );
+	# $r->get('/federation')->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#index', namespace => $namespace );
+	# $r->get('/federation/:federation_id/delete')->name("federation_delete")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#delete', namespace => $namespace );
+	# $r->get('/federation/:federation_id/edit')->name("federation_edit")->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#edit', namespace => $namespace );
+	# $r->get('/federation/add')->name('federation_add')->over( authenticated => 1, not_ldap => 1 )->to( 'Federation#add', namespace => $namespace );
+	# $r->post('/federation')->name('federation_create')->to( 'Federation#create', namespace => $namespace );
+	# $r->post('/federation/:federation_id')->name('federation_update')->to( 'Federation#update', namespace => $namespace );
+	# $r->get("/federation/resolvers")->to( 'Federation#resolvers', namespace => $namespace );
+	# $r->get("/federation/users")->to( 'Federation#users', namespace => $namespace );
+	# $r->get( "/federation/resolvers")->to( 'Federation#resolvers', namespace => $namespace );
+	# $r->get( "/federation/users")->to( 'Federation#users',     namespace => $namespace );
 
 	# -- Gendbdump - Get DB dump
 	$r->get('/dbdump')->over( authenticated => 1, not_ldap => 1 )->to( 'GenDbDump#dbdump', namespace => $namespace );
 
 	# -- Geniso - From the Tools tab:
-	$r->route('/geniso')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'GenIso#geniso', namespace => $namespace );
-	$r->route('/iso_download')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'GenIso#iso_download', namespace => $namespace );
+	# $r->route('/geniso')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'GenIso#geniso', namespace => $namespace );
+	# $r->route('/iso_download')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'GenIso#iso_download', namespace => $namespace );
 
 	# -- Hardware
-	$r->get('/hardware')->over( authenticated => 1, not_ldap => 1 )->to( 'Hardware#hardware', namespace => $namespace );
-	$r->get('/hardware/:filter/:byvalue')->over( authenticated => 1, not_ldap => 1 )->to( 'Hardware#hardware', namespace => $namespace );
+	# $r->get('/hardware')->over( authenticated => 1, not_ldap => 1 )->to( 'Hardware#hardware', namespace => $namespace );
+	# $r->get('/hardware/:filter/:byvalue')->over( authenticated => 1, not_ldap => 1 )->to( 'Hardware#hardware', namespace => $namespace );
 
 	# -- Health - Parameters for rascal
 	$r->get('/health')->to( 'Health#healthprofile', namespace => $namespace );
@@ -217,35 +217,35 @@ sub ui_routes {
 	$r->get('/health/:cdnname')->to( 'Health#rascal_config', namespace => $namespace );
 
 	# -- Job - These are for internal/agent job operations
-	$r->post('/job/external/new')->to( 'Job#newjob', namespace => $namespace );
-	$r->get('/job/external/view/:id')->to( 'Job#read_job_by_id', namespace => $namespace );
-	$r->post('/job/external/cancel/:id')->to( 'Job#canceljob', namespace => $namespace );
-	$r->get('/job/external/result/view/:id')->to( 'Job#readresult', namespace => $namespace );
-	$r->get('/job/external/status/view/all')->to( 'Job#readstatus', namespace => $namespace );
-	$r->get('/job/agent/viewpendingjobs/:id')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#viewagentjob', namespace => $namespace );
-	$r->post('/job/agent/new')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#newagent', namespace => $namespace );
-	$r->post('/job/agent/result/new')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#newresult', namespace => $namespace );
-	$r->get('/job/agent/statusupdate/:id')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#jobstatusupdate', namespace => $namespace );
-	$r->get('/job/agent/view/all')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#readagent', namespace => $namespace );
-	$r->get('/job/view/all')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#listjob', namespace => $namespace );
-	$r->get('/job/agent/new')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#addagent', namespace => $namespace );
-	$r->get('/job/new')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#addjob', namespace => $namespace );
-	$r->get('/jobs')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#jobs', namespace => $namespace );
+	# $r->post('/job/external/new')->to( 'Job#newjob', namespace => $namespace );
+	# $r->get('/job/external/view/:id')->to( 'Job#read_job_by_id', namespace => $namespace );
+	# $r->post('/job/external/cancel/:id')->to( 'Job#canceljob', namespace => $namespace );
+	# $r->get('/job/external/result/view/:id')->to( 'Job#readresult', namespace => $namespace );
+	# $r->get('/job/external/status/view/all')->to( 'Job#readstatus', namespace => $namespace );
+	# $r->get('/job/agent/viewpendingjobs/:id')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#viewagentjob', namespace => $namespace );
+	# $r->post('/job/agent/new')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#newagent', namespace => $namespace );
+	# $r->post('/job/agent/result/new')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#newresult', namespace => $namespace );
+	# $r->get('/job/agent/statusupdate/:id')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#jobstatusupdate', namespace => $namespace );
+	# $r->get('/job/agent/view/all')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#readagent', namespace => $namespace );
+	# $r->get('/job/view/all')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#listjob', namespace => $namespace );
+	# $r->get('/job/agent/new')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#addagent', namespace => $namespace );
+	# $r->get('/job/new')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#addjob', namespace => $namespace );
+	# $r->get('/jobs')->over( authenticated => 1, not_ldap => 1 )->to( 'Job#jobs', namespace => $namespace );
 
-	$r->get('/custom_charts')->over( authenticated => 1, not_ldap => 1 )->to( 'CustomCharts#custom', namespace => $namespace );
-	$r->get('/custom_charts_single')->over( authenticated => 1, not_ldap => 1 )->to( 'CustomCharts#custom_single_chart', namespace => $namespace );
-	$r->get('/custom_charts_single/cache/#cdn/#cdn_location/:cache/:stat')->over( authenticated => 1, not_ldap => 1 )
-		->to( 'CustomCharts#custom_single_chart', namespace => $namespace );
-	$r->get('/custom_charts_single/ds/#cdn/#cdn_location/:ds/:stat')->over( authenticated => 1, not_ldap => 1 )
-		->to( 'CustomCharts#custom_single_chart', namespace => $namespace );
-	$r->get('/uploadservercsv')->over( authenticated => 1, not_ldap => 1 )->to( 'UploadServerCsv#uploadservercsv', namespace => $namespace );
-	$r->get('/generic_uploader')->over( authenticated => 1, not_ldap => 1 )->to( 'GenericUploader#generic', namespace => $namespace );
-	$r->post('/upload_handler')->over( authenticated => 1, not_ldap => 1 )->to( 'UploadHandler#upload', namespace => $namespace );
-	$r->post('/uploadhandlercsv')->over( authenticated => 1, not_ldap => 1 )->to( 'UploadHandlerCsv#upload', namespace => $namespace );
+	# $r->get('/custom_charts')->over( authenticated => 1, not_ldap => 1 )->to( 'CustomCharts#custom', namespace => $namespace );
+	# $r->get('/custom_charts_single')->over( authenticated => 1, not_ldap => 1 )->to( 'CustomCharts#custom_single_chart', namespace => $namespace );
+	# $r->get('/custom_charts_single/cache/#cdn/#cdn_location/:cache/:stat')->over( authenticated => 1, not_ldap => 1 )
+	# 	->to( 'CustomCharts#custom_single_chart', namespace => $namespace );
+	# $r->get('/custom_charts_single/ds/#cdn/#cdn_location/:ds/:stat')->over( authenticated => 1, not_ldap => 1 )
+	# 	->to( 'CustomCharts#custom_single_chart', namespace => $namespace );
+	# $r->get('/uploadservercsv')->over( authenticated => 1, not_ldap => 1 )->to( 'UploadServerCsv#uploadservercsv', namespace => $namespace );
+	# $r->get('/generic_uploader')->over( authenticated => 1, not_ldap => 1 )->to( 'GenericUploader#generic', namespace => $namespace );
+	# $r->post('/upload_handler')->over( authenticated => 1, not_ldap => 1 )->to( 'UploadHandler#upload', namespace => $namespace );
+	# $r->post('/uploadhandlercsv')->over( authenticated => 1, not_ldap => 1 )->to( 'UploadHandlerCsv#upload', namespace => $namespace );
 
 	# -- Cachegroupparameter
-	$r->post('/cachegroupparameter/create')->over( authenticated => 1, not_ldap => 1 )->to( 'CachegroupParameter#create', namespace => $namespace );
-	$r->get('/cachegroupparameter/#cachegroup/#parameter/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'CachegroupParameter#delete', namespace => $namespace );
+	# $r->post('/cachegroupparameter/create')->over( authenticated => 1, not_ldap => 1 )->to( 'CachegroupParameter#create', namespace => $namespace );
+	# $r->get('/cachegroupparameter/#cachegroup/#parameter/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'CachegroupParameter#delete', namespace => $namespace );
 
 	# -- Options
 	$r->options('/')->to( 'Cdn#options', namespace => $namespace );
@@ -257,101 +257,101 @@ sub ui_routes {
 	$r->route('/ort/:hostname/chkconfig')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Ort#get_chkconfig', namespace => $namespace );
 
 	# -- Parameter
-	$r->post('/parameter/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Parameter#create', namespace => $namespace );
-	$r->get('/parameter/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Parameter#delete', namespace => $namespace );
-	$r->post('/parameter/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Parameter#update', namespace => $namespace );
-	$r->get('/parameters')->over( authenticated => 1, not_ldap => 1 )->to( 'Parameter#index', namespace => $namespace );
-	$r->get('/parameters/:filter/#byvalue')->over( authenticated => 1, not_ldap => 1 )->to( 'Parameter#index', namespace => $namespace );
-	$r->get('/parameter/add')->over( authenticated => 1, not_ldap => 1 )->to( 'Parameter#add', namespace => $namespace );
-	$r->route('/parameter/:id')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Parameter#view', namespace => $namespace );
+	# $r->post('/parameter/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Parameter#create', namespace => $namespace );
+	# $r->get('/parameter/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Parameter#delete', namespace => $namespace );
+	# $r->post('/parameter/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Parameter#update', namespace => $namespace );
+	# $r->get('/parameters')->over( authenticated => 1, not_ldap => 1 )->to( 'Parameter#index', namespace => $namespace );
+	# $r->get('/parameters/:filter/#byvalue')->over( authenticated => 1, not_ldap => 1 )->to( 'Parameter#index', namespace => $namespace );
+	# $r->get('/parameter/add')->over( authenticated => 1, not_ldap => 1 )->to( 'Parameter#add', namespace => $namespace );
+	# $r->route('/parameter/:id')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Parameter#view', namespace => $namespace );
 
 	# -- PhysLocation
-	$r->get('/phys_locations')->over( authenticated => 1, not_ldap => 1 )->to( 'PhysLocation#index', namespace => $namespace );
-	$r->post('/phys_location/create')->over( authenticated => 1, not_ldap => 1 )->to( 'PhysLocation#create', namespace => $namespace );
-	$r->get('/phys_location/add')->over( authenticated => 1, not_ldap => 1 )->to( 'PhysLocation#add', namespace => $namespace );
+	# $r->get('/phys_locations')->over( authenticated => 1, not_ldap => 1 )->to( 'PhysLocation#index', namespace => $namespace );
+	# $r->post('/phys_location/create')->over( authenticated => 1, not_ldap => 1 )->to( 'PhysLocation#create', namespace => $namespace );
+	# $r->get('/phys_location/add')->over( authenticated => 1, not_ldap => 1 )->to( 'PhysLocation#add', namespace => $namespace );
 
 	# mode is either 'edit' or 'view'.
-	$r->route('/phys_location/:id/edit')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'PhysLocation#edit', namespace => $namespace );
-	$r->get('/phys_location/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'PhysLocation#delete', namespace => $namespace );
-	$r->post('/phys_location/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'PhysLocation#update', namespace => $namespace );
+	# $r->route('/phys_location/:id/edit')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'PhysLocation#edit', namespace => $namespace );
+	# $r->get('/phys_location/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'PhysLocation#delete', namespace => $namespace );
+	# $r->post('/phys_location/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'PhysLocation#update', namespace => $namespace );
 
 	# -- Profile
-	$r->get('/profile/add')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#add', namespace => $namespace );
-	$r->get('/profile/edit/:id')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#edit', namespace => $namespace );
-	$r->route('/profile/:id/view')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#view', namespace => $namespace );
-	$r->route('/cmpprofile/:profile1/:profile2')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#compareprofile', namespace => $namespace );
-	$r->route('/cmpprofile/aadata/:profile1/:profile2')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#acompareprofile', namespace => $namespace );
-	$r->post('/profile/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#create', namespace => $namespace );
-	$r->get('/profile/import')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#import', namespace => $namespace );
-	$r->post('/profile/doImport')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#doImport', namespace => $namespace );
-	$r->get('/profile/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#delete', namespace => $namespace );
-	$r->post('/profile/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#update', namespace => $namespace );
+	# $r->get('/profile/add')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#add', namespace => $namespace );
+	# $r->get('/profile/edit/:id')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#edit', namespace => $namespace );
+	# $r->route('/profile/:id/view')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#view', namespace => $namespace );
+	# $r->route('/cmpprofile/:profile1/:profile2')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#compareprofile', namespace => $namespace );
+	# $r->route('/cmpprofile/aadata/:profile1/:profile2')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#acompareprofile', namespace => $namespace );
+	# $r->post('/profile/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#create', namespace => $namespace );
+	# $r->get('/profile/import')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#import', namespace => $namespace );
+	# $r->post('/profile/doImport')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#doImport', namespace => $namespace );
+	# $r->get('/profile/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#delete', namespace => $namespace );
+	# $r->post('/profile/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#update', namespace => $namespace );
 
 	# select available Profile, DS or Server
 	$r->get('/availableprofile/:paramid')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#availableprofile', namespace => $namespace );
 	$r->route('/profile/:id/export')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#export', namespace => $namespace );
-	$r->get('/profiles')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#index', namespace => $namespace );
+	# $r->get('/profiles')->over( authenticated => 1, not_ldap => 1 )->to( 'Profile#index', namespace => $namespace );
 
 	# -- Profileparameter
-	$r->post('/profileparameter/create')->over( authenticated => 1, not_ldap => 1 )->to( 'ProfileParameter#create', namespace => $namespace );
-	$r->get('/profileparameter/:profile/:parameter/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'ProfileParameter#delete', namespace => $namespace );
+	# $r->post('/profileparameter/create')->over( authenticated => 1, not_ldap => 1 )->to( 'ProfileParameter#create', namespace => $namespace );
+	# $r->get('/profileparameter/:profile/:parameter/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'ProfileParameter#delete', namespace => $namespace );
 
 	# -- Rascalstatus
-	$r->get('/edge_health')->over( authenticated => 1, not_ldap => 1 )->to( 'RascalStatus#health', namespace => $namespace );
-	$r->get('/rascalstatus')->over( authenticated => 1, not_ldap => 1 )->to( 'RascalStatus#health', namespace => $namespace );
+	# $r->get('/edge_health')->over( authenticated => 1, not_ldap => 1 )->to( 'RascalStatus#health', namespace => $namespace );
+	# $r->get('/rascalstatus')->over( authenticated => 1, not_ldap => 1 )->to( 'RascalStatus#health', namespace => $namespace );
 
 	# -- Region
-	$r->get('/regions')->over( authenticated => 1, not_ldap => 1 )->to( 'Region#index', namespace => $namespace );
-	$r->get('/region/add')->over( authenticated => 1, not_ldap => 1 )->to( 'Region#add', namespace => $namespace );
-	$r->post('/region/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Region#create', namespace => $namespace );
-	$r->get('/region/:id/edit')->over( authenticated => 1, not_ldap => 1 )->to( 'Region#edit', namespace => $namespace );
-	$r->post('/region/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Region#update', namespace => $namespace );
-	$r->get('/region/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Region#delete', namespace => $namespace );
+	# $r->get('/regions')->over( authenticated => 1, not_ldap => 1 )->to( 'Region#index', namespace => $namespace );
+	# $r->get('/region/add')->over( authenticated => 1, not_ldap => 1 )->to( 'Region#add', namespace => $namespace );
+	# $r->post('/region/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Region#create', namespace => $namespace );
+	# $r->get('/region/:id/edit')->over( authenticated => 1, not_ldap => 1 )->to( 'Region#edit', namespace => $namespace );
+	# $r->post('/region/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Region#update', namespace => $namespace );
+	# $r->get('/region/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Region#delete', namespace => $namespace );
 
 	# -- Server
-	$r->post('/server/:name/status/:state')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#rest_update_server_status', namespace => $namespace );
-	$r->get('/server/:name/status')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#get_server_status', namespace => $namespace );
-	$r->get('/servers')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#index', namespace => $namespace );
-	$r->get('/server/add')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#add', namespace => $namespace );
-	$r->post('/server/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#update', namespace => $namespace );
-	$r->get('/server/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#delete', namespace => $namespace );
-	$r->route('/server/:id/:mode')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#view', namespace => $namespace );
-	$r->post('/server/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#create', namespace => $namespace );
-	$r->post('/server/updatestatus')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#updatestatus', namespace => $namespace );
+	# $r->post('/server/:name/status/:state')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#rest_update_server_status', namespace => $namespace );
+	# $r->get('/server/:name/status')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#get_server_status', namespace => $namespace );
+	# $r->get('/servers')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#index', namespace => $namespace );
+	# $r->get('/server/add')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#add', namespace => $namespace );
+	# $r->post('/server/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#update', namespace => $namespace );
+	# $r->get('/server/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#delete', namespace => $namespace );
+	# $r->route('/server/:id/:mode')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#view', namespace => $namespace );
+	# $r->post('/server/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#create', namespace => $namespace );
+	# $r->post('/server/updatestatus')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#updatestatus', namespace => $namespace );
 
 	# -- Serverstatus
-	$r->get('/server_check')->over( not_ldap => 1 )->to( 'server_check#server_check', namespace => $namespace );
+	# $r->get('/server_check')->over( not_ldap => 1 )->to( 'server_check#server_check', namespace => $namespace );
 
 	# -- Staticdnsentry
-	$r->route('/staticdnsentry/:id/edit')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'StaticDnsEntry#edit', namespace => $namespace );
-	$r->post('/staticdnsentry/:dsid/update')->over( authenticated => 1, not_ldap => 1 )->to( 'StaticDnsEntry#update_assignments', namespace => $namespace );
-	$r->get('/staticdnsentry/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'StaticDnsEntry#delete', namespace => $namespace );
+	# $r->route('/staticdnsentry/:id/edit')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'StaticDnsEntry#edit', namespace => $namespace );
+	# $r->post('/staticdnsentry/:dsid/update')->over( authenticated => 1, not_ldap => 1 )->to( 'StaticDnsEntry#update_assignments', namespace => $namespace );
+	# $r->get('/staticdnsentry/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'StaticDnsEntry#delete', namespace => $namespace );
 
 	# -- Status
-	$r->post('/status/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Status#create', namespace => $namespace );
-	$r->get('/status/delete/:id')->over( authenticated => 1, not_ldap => 1 )->to( 'Status#delete', namespace => $namespace );
-	$r->post('/status/update/:id')->over( authenticated => 1, not_ldap => 1 )->to( 'Status#update', namespace => $namespace );
+	# $r->post('/status/create')->over( authenticated => 1, not_ldap => 1 )->to( 'Status#create', namespace => $namespace );
+	# $r->get('/status/delete/:id')->over( authenticated => 1, not_ldap => 1 )->to( 'Status#delete', namespace => $namespace );
+	# $r->post('/status/update/:id')->over( authenticated => 1, not_ldap => 1 )->to( 'Status#update', namespace => $namespace );
 
 	# -- Tools
-	$r->get('/tools')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#tools', namespace => $namespace );
-	$r->get('/tools/db_dump')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#db_dump', namespace => $namespace );
-	$r->get('/tools/queue_updates')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#queue_updates', namespace => $namespace );
-	$r->get('/tools/snapshot_crconfig')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#snapshot_crconfig', namespace => $namespace );
-	$r->get('/tools/diff_crconfig/:cdn_name')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#diff_crconfig_iframe', namespace => $namespace );
+	# $r->get('/tools')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#tools', namespace => $namespace );
+	# $r->get('/tools/db_dump')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#db_dump', namespace => $namespace );
+	# $r->get('/tools/queue_updates')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#queue_updates', namespace => $namespace );
+	# $r->get('/tools/snapshot_crconfig')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#snapshot_crconfig', namespace => $namespace );
+	# $r->get('/tools/diff_crconfig/:cdn_name')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#diff_crconfig_iframe', namespace => $namespace );
 	# flash_and_close is a helper for the traffic_ops_golang migration, to allow Go handlers to intercept GUI routes, do their work, then redirect to this to perform the GUI operation
 	$r->get('/tools/flash_and_close/:msg')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#flash_and_close', namespace => $namespace );
-	$r->get('/tools/invalidate_content/')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#invalidate_content', namespace => $namespace );
+	# $r->get('/tools/invalidate_content/')->over( authenticated => 1, not_ldap => 1 )->to( 'Tools#invalidate_content', namespace => $namespace );
 
 	# -- Topology - CCR Config, rewrote in json
 	$r->route('/genfiles/:mode/bycdnname/:cdnname/CRConfig')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Topology#ccr_config', namespace => $namespace );
 	$r->get('/CRConfig-Snapshots/:cdn_name/CRConfig.json')->over( authenticated => 1, not_ldap => 1 )->to( 'Snapshot#get_cdn_snapshot', namespace => $namespace );
 
-	$r->get('/types')->over( authenticated => 1, not_ldap => 1 )->to( 'Types#index', namespace => $namespace );
-	$r->route('/types/add')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Types#add', namespace => $namespace );
-	$r->route('/types/create')->via('POST')->over( authenticated => 1, not_ldap => 1 )->to( 'Types#create', namespace => $namespace );
-	$r->route('/types/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Types#update', namespace => $namespace );
-	$r->route('/types/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Types#delete', namespace => $namespace );
-	$r->route('/types/:id/:mode')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Types#view', namespace => $namespace );
+	# $r->get('/types')->over( authenticated => 1, not_ldap => 1 )->to( 'Types#index', namespace => $namespace );
+	# $r->route('/types/add')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Types#add', namespace => $namespace );
+	# $r->route('/types/create')->via('POST')->over( authenticated => 1, not_ldap => 1 )->to( 'Types#create', namespace => $namespace );
+	# $r->route('/types/:id/update')->over( authenticated => 1, not_ldap => 1 )->to( 'Types#update', namespace => $namespace );
+	# $r->route('/types/:id/delete')->over( authenticated => 1, not_ldap => 1 )->to( 'Types#delete', namespace => $namespace );
+	# $r->route('/types/:id/:mode')->via('GET')->over( authenticated => 1, not_ldap => 1 )->to( 'Types#view', namespace => $namespace );
 
 	# -- Update bit - Process updates - legacy stuff.
 	$r->get('/update/:host_name')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#readupdate', namespace => $namespace );
@@ -360,21 +360,21 @@ sub ui_routes {
 	$r->post('/postupdatequeue/:cdn/#cachegroup')->over( authenticated => 1, not_ldap => 1 )->to( 'Server#postupdatequeue', namespace => $namespace );
 
 	# -- User
-	$r->post('/user/register/send')->over( authenticated => 1, not_ldap => 1 )->name('user_register_send')->to( 'User#send_registration', namespace => $namespace );
-	$r->get('/users')->name("user_index")->over( authenticated => 1, not_ldap => 1 )->to( 'User#index', namespace => $namespace );
-	$r->get('/user/:id/edit')->name("user_edit")->over( authenticated => 1, not_ldap => 1 )->to( 'User#edit', namespace => $namespace );
-	$r->get('/user/add')->name('user_add')->over( authenticated => 1, not_ldap => 1 )->to( 'User#add', namespace => $namespace );
-	$r->get('/user/register')->name('user_register')->to( 'User#register', namespace => $namespace );
-	$r->post('/user/:id/reset_password')->name('user_reset_password')->to( 'User#reset_password', namespace => $namespace );
-	$r->post('/user')->name('user_create')->to( 'User#create', namespace => $namespace );
-	$r->post('/user/:id')->name('user_update')->to( 'User#update', namespace => $namespace );
+	# $r->post('/user/register/send')->over( authenticated => 1, not_ldap => 1 )->name('user_register_send')->to( 'User#send_registration', namespace => $namespace );
+	# $r->get('/users')->name("user_index")->over( authenticated => 1, not_ldap => 1 )->to( 'User#index', namespace => $namespace );
+	# $r->get('/user/:id/edit')->name("user_edit")->over( authenticated => 1, not_ldap => 1 )->to( 'User#edit', namespace => $namespace );
+	# $r->get('/user/add')->name('user_add')->over( authenticated => 1, not_ldap => 1 )->to( 'User#add', namespace => $namespace );
+	# $r->get('/user/register')->name('user_register')->to( 'User#register', namespace => $namespace );
+	# $r->post('/user/:id/reset_password')->name('user_reset_password')->to( 'User#reset_password', namespace => $namespace );
+	# $r->post('/user')->name('user_create')->to( 'User#create', namespace => $namespace );
+	# $r->post('/user/:id')->name('user_update')->to( 'User#update', namespace => $namespace );
 
 	# -- Utils
 	$r->get('/utils/close_fancybox')->over( authenticated => 1, not_ldap => 1 )->to( 'Utils#close_fancybox', namespace => $namespace );
 
 	# -- Visualstatus
-	$r->get('/visualstatus/:matchstring')->over( authenticated => 1, not_ldap => 1 )->to( 'VisualStatus#graphs', namespace => $namespace );
-	$r->get('/dailysummary')->over( authenticated => 1, not_ldap => 1 )->to( 'VisualStatus#daily_summary', namespace => $namespace );
+	# $r->get('/visualstatus/:matchstring')->over( authenticated => 1, not_ldap => 1 )->to( 'VisualStatus#graphs', namespace => $namespace );
+	# $r->get('/dailysummary')->over( authenticated => 1, not_ldap => 1 )->to( 'VisualStatus#daily_summary', namespace => $namespace );
 
 	# deprecated - see: /api/$version/servers and /api/1.1/servers/hostname/:host_name/details
 	# duplicate route
