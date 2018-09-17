@@ -35,7 +35,6 @@ Once everything is installed, you will need to configure the servers to talk to 
 	:maxdepth: 3
 
 	traffic_ops/installation.rst
-	traffic_ops/default_profiles.rst
 	traffic_ops/migration_from_10_to_20.rst
 	traffic_ops/migration_from_20_to_22.rst
 	traffic_ops/configuration.rst
@@ -43,6 +42,7 @@ Once everything is installed, you will need to configure the servers to talk to 
 	traffic_ops/extensions.rst
 	traffic_portal/installation.rst
 	traffic_portal/usingtrafficportal.rst
+	traffic_portal/default_profiles.rst
 	traffic_monitor.rst
 	traffic_router.rst
 	traffic_router/migrationto2-3.rst
