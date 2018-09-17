@@ -62,13 +62,13 @@ The two new parameters in following table are required to be added into CRConfig
 * "regional_geoblocking.polling.url": the HTTP URL of RGB configuration file. Traffic Router will fetch the file from this URL.
 * "regional_geoblocking.polling.interval": the interval that Traffic Router polls the RGB configuration file.
 
-.. image:: regionalgeo01.png
+.. image:: regionalgeo/01.png
 	:scale: 100%
 	:align: center
 
 3)	Enable RGB for a delivery service
 
-.. image:: regionalgeo02.png
+.. image:: regionalgeo/02.png
 	:scale: 100%
 	:align: center
 
@@ -76,7 +76,7 @@ The two new parameters in following table are required to be added into CRConfig
 
 Go to Tools->Snapshot CRConfig, perform “Diff CRConfig” and click "Write CRConfig".
 
-.. image:: regionalgeo03.png
+.. image:: regionalgeo/03.png
 	:scale: 70%
 	:align: center
 

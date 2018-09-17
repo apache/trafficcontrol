@@ -21,7 +21,7 @@ Configure Delivery Service Steering
 
 #. Create two target Delivery Services in Traffic Ops. They must both be HTTP Delivery Services that are part of the same CDN.
 
-	.. figure:: steering01.png
+	.. figure:: steering/01.png
 		:width: 80%
 		:align: center
 		:alt: Table of Target Delivery Services
@@ -30,7 +30,7 @@ Configure Delivery Service Steering
 
 #. Create a Delivery Service with Type STEERING or CLIENT_STEERING in Traffic Ops.
 
-	.. figure:: steering02.png
+	.. figure:: steering/02.png
 		:width: 50%
 		:align: center
 		:alt: Delivery Service Creation Page for STEERING Delivery Service
@@ -39,7 +39,7 @@ Configure Delivery Service Steering
 
 #. In the 'More' drop-down menu, click 'View Targets' and then use the blue '+' to assign targets.
 
-	.. figure:: steering03.png
+	.. figure:: steering/03.png
 		:width: 50%
 		:align: center
 		:alt: Table of STEERING Targets

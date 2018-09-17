@@ -26,7 +26,7 @@ Configure Federations
 		- Add IPV4 resolvers
 		- Add IPV6 resolvers
 
-.. image:: federation01.png
+.. image:: federations/01.png
 	:scale: 100%
 	:align: center
 
@@ -34,7 +34,7 @@ Configure Federations
 
 3)	Choose the Delivery Service for the federation to be mapped to and assign it to the Federation User; click Add.
 
-.. image:: federation02.png
+.. image:: federations/02.png
 	:scale: 100%
 	:align: center
 
@@ -44,7 +44,7 @@ Configure Federations
 
 	If no further action is necessary, the Close button will close the window and display the list of all Federations.
 
-.. image:: federation03.png
+.. image:: federations/03.png
 	:scale: 100%
 	:align: center
 
@@ -105,7 +105,7 @@ Configure Federations
 
 7) The resolvers added by the federation user will now visible in Traffic Ops.
 
-.. image:: federation04.png
+.. image:: federations/04.png
 	:scale: 100%
 	:align: center
 
