@@ -18,8 +18,9 @@
 
 .. _to-install:
 
+************************
 Traffic Ops - Installing
-%%%%%%%%%%%%%%%%%%%%%%%%
+************************
 
 System Requirements
 -------------------
@@ -236,7 +237,7 @@ Installation
 Traffic Ops is now installed!
 
 
-**To complete the Traffic Ops Setup See:** :ref:`to-default-profiles`
+**To complete the Traffic Ops Setup See:** :ref:`default-profiles`
 
 
 Upgrading Traffic Ops
