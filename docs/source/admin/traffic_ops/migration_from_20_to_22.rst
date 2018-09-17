@@ -13,8 +13,9 @@
 .. limitations under the License.
 ..
 
+***************************************
 Traffic Ops - Migrating from 2.0 to 2.2
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+***************************************
 
 Per-DeliveryService Routing Names
 ---------------------------------
@@ -24,14 +25,9 @@ Prior to Traffic Control 2.2, the HTTP routing name was configurable via the ``h
 
 #. In Traffic Portal (if possible, else use the legacy Traffic Ops UI), create the following profile parameter ('Configure' -> 'Parameters' -> '+'). Be sure to double-check for typos, trailing spaces, etc.
 
-	* name
-		upgrade_http_routing_name
-
-	* config_file
-		temp
-
-	* value
-		Whatever value is used for the affected CDN's ``http.routing.name``
+	:name: upgrade_http_routing_name
+	:config_file: temp
+	:value: Whatever value is used for the affected CDN's ``http.routing.name``
 
 #. Add this parameter to a single profile in the affected CDN
 
@@ -51,23 +47,23 @@ First, if you are currently using a regular expression for your Delivery Service
 
 Some common parameters are
 
-	static-prefix
-		This is used for a simple domain replacement.
+static-prefix
+	This is used for a simple domain replacement.
 
-	separator
-		Used by Cachekey and in general is always a single space.
+separator
+	Used by Cachekey and in general is always a single space.
 
-	remove-path
-		Removes path information from the URL.
+remove-path
+	Removes path information from the URL.
 
-	remove-all-params
-		Removes query parameters from the URL.
+remove-all-params
+	Removes query parameters from the URL.
 
-	capture-prefix-uri
-		This is usually used in concert with remove-path and remove-all-params parameters. Capture-prefix-uri will let you use your own, full regular expression for non-trivial cases.
+capture-prefix-uri
+	This is usually used in concert with remove-path and remove-all-params parameters. Capture-prefix-uri will let you use your own, full regular expression for non-trivial cases.
 
 Examples of Cacheurl to Cachekey Replacements
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------------------
 
 Static Prefix Example
 """""""""""""""""""""
@@ -141,11 +137,12 @@ When upgrading to ATS 7.x, the Traffic Ops EDGE and MID cache profiles must be m
 
 Most users of Traffic Control have enough profiles to make the task of making these modifications manually a tedious and time-consuming process. A new utility ``traffic_ops/install/bin/convert_profile/convert_profile`` is provided to automatically convert an ATS 6.x profile into an ATS 7.x profile. This utility can be reused in the future for converting ATS 7.x profiles into ATS 8.x profiles.
 
-Usage example:
-	#. Use Traffic Portal GUI to export profile to JSON ('Configure' -> 'Profiles' -> Desired profile -> 'More' -> 'Export Profile')
-	#. Modify the Traffic Server version numbers to match your current Traffic Server 6.x RPM version and planned Traffic Server 7.x RPM version
-	#. Run ``convert_profile -input_profile <exported_file> -rules convert622to713.json -out <new_profile_name>``
-	#. Review output messages and make manual updates as needed. If you have modified a default value which the script also wants to change, it will prompt you to make the update manually. You may either do this directly in the JSON file or through the Traffic Portal GUI after import.
-	#. Use Traffic Portal GUI to import the newly created profile ('Configure' -> 'Profiles' -> 'More' -> 'Import Profile')
+Usage Example
+"""""""""""""
+#. Use Traffic Portal GUI to export profile to JSON ('Configure' -> 'Profiles' -> Desired profile -> 'More' -> 'Export Profile')
+#. Modify the Traffic Server version numbers to match your current Traffic Server 6.x RPM version and planned Traffic Server 7.x RPM version
+#. Run ``convert_profile -input_profile <exported_file> -rules convert622to713.json -out <new_profile_name>``
+#. Review output messages and make manual updates as needed. If you have modified a default value which the script also wants to change, it will prompt you to make the update manually. You may either do this directly in the JSON file or through the Traffic Portal GUI after import.
+#. Use Traffic Portal GUI to import the newly created profile ('Configure' -> 'Profiles' -> 'More' -> 'Import Profile')
 
 .. [1] Another name previously used for HTTP Delivery Services was ``ccr``
