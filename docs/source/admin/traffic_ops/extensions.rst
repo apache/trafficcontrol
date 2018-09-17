@@ -21,6 +21,8 @@ Managing Traffic Ops Extensions
 
 Traffic Ops supports two types of extensions. 'Check Extensions' are analytics scripts that collect and display information as columns in the table under 'Monitor' -> 'Cache Checks' in Traffic Portal. 'Data Source Extensions' provide ways to add data to the graph views and usage APIs.
 
+.. _to-check-ext:
+
 Check Extensions
 ================
 Each extension is a separate bash script located in ``$TO_HOME/bin/checks/`` on the Traffic Ops server (though practically, they can be any executable). The extensions must be registered with Traffic Ops in order to display a column on the Cache Checks page. The currently registered extensions can be listed by running ``/opt/traffic_ops/app/bin/extensions -a``. Some extensions automatically registered with the Traffic Ops database (``to_extension`` table) at install time (see ``traffic_ops/app/db/seeds.sql``). However, cron must still be configured to run these checks periodically. The extensions are called like so:
@@ -33,6 +35,8 @@ Each extension is a separate bash script located in ``$TO_HOME/bin/checks/`` on 
 :traffic_ops_ip: The IP address or Fully Qualified Domain Name (FQDN) of the Traffic Ops server
 :check_name: The name of the check e.g. ``CDU``, ``CHR``, ``DSCP``, ``MTU``, etc...
 :log_level: A whole number between 1 and 4 (inclusive), with 4 being the most verbose. This field is optional
+
+.. _to-datasource-ext:
 
 Data Source Extensions
 ======================

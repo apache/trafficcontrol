@@ -31,11 +31,11 @@ Traffic Ops Extension
 ---------------------
 Traffic Ops Extensions are a way to enhance the basic functionality of Traffic Ops in a custom manner. There are two types of extensions:
 
-Check Extension
-	Allows you to add custom checks to the 'Monitor' -> 'Cache Checks' view.
+:ref:`to-check-ext`
+	Allow you to add custom checks to the 'Monitor' -> 'Cache Checks' view.
 
-Data source Extensions
-	Allows you to add data sources for the graph views and usage APIs.
+:ref:`to-datasource-ext`
+	Allow you to add data sources for the graph views and usage APIs.
 
 
 .. These are listed as "in beta" as far back as TO 1.0, sooo
