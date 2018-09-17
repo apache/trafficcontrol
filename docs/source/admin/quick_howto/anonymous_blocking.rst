@@ -59,13 +59,13 @@ The following three new parameters are required to be added into CRConfig.json:
 * "anonymousip.polling.url": the HTTP URL of the Anonymous IP Database. Traffic Router will fetch the file from this URL.
 * "anonymousip.polling.interval": the interval that Traffic Router polls the Anonymous Blocking configuration file and Anonymous IP Database.
 
-.. image:: anonymous_blocking01.png
+.. image:: anonymous_blocking/01.png
   :scale: 100%
   :align: center
 
 3)  Enable Anonmyous Blocking for a delivery service
 
-.. image:: anonymous_blocking02.png
+.. image:: anonymous_blocking/02.png
   :scale: 100%
   :align: center
 
@@ -73,7 +73,7 @@ The following three new parameters are required to be added into CRConfig.json:
 
 Go to Tools->Snapshot CRConfig, perform “Diff CRConfig” and click "Write CRConfig".
 
-.. image:: regionalgeo03.png
+.. image:: regionalgeo/03.png
   :scale: 70%
   :align: center
 
