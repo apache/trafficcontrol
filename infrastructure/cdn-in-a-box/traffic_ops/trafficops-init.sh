@@ -37,6 +37,7 @@ done
 
 # NOTE: order dependent on foreign key references, e.g. profiles must be loaded before parameters
 endpoints="cdns types divisions regions phys_locations tenants users cachegroups deliveryservices profiles parameters servers"
+vars=$(awk -F = '/^\w/ {printf "$%s ",$1}' /variables.env)
 
 load_data_from() {
     local dir="$1"
@@ -49,7 +50,7 @@ load_data_from() {
         [[ -d $d ]] || continue
         for f in "$d"/*.json; do 
             echo "Loading $f"
-            envsubst <$f  > "$ENROLLER_DIR"/$f
+            envsubst "$vars" <$f  > "$ENROLLER_DIR"/$f
         done
     done
     if [[ $status -ne 0 ]]; then

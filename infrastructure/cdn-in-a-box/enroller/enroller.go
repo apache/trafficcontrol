@@ -785,7 +785,7 @@ func enrollUser(toSession *session, fn string) error {
 	}()
 
 	dec := json.NewDecoder(fh)
-	var s tc.APIUserPost
+	var s tc.User
 	err = dec.Decode(&s)
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
@@ -811,7 +811,7 @@ func enrollUser(toSession *session, fn string) error {
 	alerts, _, err := toSession.CreateUser(&s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
-			log.Printf("user %s already exists\n", *s.UserName)
+			log.Printf("user %s already exists\n", *s.Username)
 			return nil
 		}
 		log.Printf("error creating from %s: %s\n", fn, err)
