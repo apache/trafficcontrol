@@ -1,6 +1,6 @@
    [
       {
-         "value" : "https://$TO_FQDN:$TO_PORT/",
+         "value" : "https://trafficops.cdn.local/",
          "name" : "tm.url",
          "config_file" : "global"
       },
@@ -15,14 +15,14 @@
          "value" : "CDN-In-A-Box"
       },
       {
-         "value" : "https://$TO_FQDN:TO_PORT/GeoLiteCity.dat.gz",
+         "value" : "https://trafficops.cdn.local/GeoLiteCity.dat.gz",
          "config_file" : "CRConfig.json",
          "name" : "geolocation.polling.url"
       },
       {
          "name" : "geolocation6.polling.url",
          "config_file" : "CRConfig.json",
-         "value" : "https://$TO_FQDN:TO_PORT/GeoLiteCity.dat.gz"
+         "value" : "https://trafficops.cdn.local/GeoLiteCity.dat.gz"
       },
       {
          "value" : "Traffic Ops",

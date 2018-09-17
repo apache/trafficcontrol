@@ -54,9 +54,12 @@ source $CERT_ENV_FILE
 cp $CERT_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
 update-ca-trust extract
 
-# Configure Traffic Monitor
+# Enroll with traffic ops
 CDN=CDN-in-a-Box
 TO_URL="https://$TO_FQDN:$TO_PORT"
+to-enroll tm $CDN || (while true; do echo "enroll failed."; sleep 3 ; done)
+
+# Configure Traffic Monitor
 cat > /opt/traffic_monitor/conf/traffic_ops.cfg <<- ENDOFMESSAGE
 {
 	"username": "$TM_USER",
@@ -73,10 +76,9 @@ while ! to-ping 2>/dev/null; do
 	sleep 3
 done
 
+
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
-
-to-enroll tm || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 # There's a race condition with setting the TM credentials and TO actually creating
 # the TM user
