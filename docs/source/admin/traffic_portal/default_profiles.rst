@@ -14,16 +14,14 @@
 ..
 
 .. index::
-	Traffic Ops - Default Profiles
+	Default Profiles
 
-.. _to-default-profiles:
+.. _default-profiles:
 
-Traffic Ops - Default Profiles
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-Traffic Ops has the concept of :ref:`working-with-profiles`, which are an integral component of Traffic Ops. To get started, a set of default Traffic Ops profiles are provided. These can be imported into Traffic Ops, and are required by the Traffic Control components Traffic Router, Traffic Monitor, and Apache Traffic Server (Edge-tier and Mid-tier caches).
-
-`Download Default Profiles from here <http://trafficcontrol.apache.org/downloads/profiles/>`_
+****************
+Default Profiles
+****************
+Traffic Ops has the concept of :ref:`working-with-profiles`, which are an integral component of Traffic Ops. To get started, a set of default Traffic Ops profiles are provided. These can be imported into Traffic Ops, and are required by the Traffic Control components Traffic Router, Traffic Monitor, and Apache Traffic Server (Edge-tier and Mid-tier caches). Download Default Profiles from `here <http://trafficcontrol.apache.org/downloads/profiles/>`_
 
 .. _to-profiles-min-needed:
 
@@ -44,13 +42,8 @@ Minimum Traffic Ops Profiles needed
 Steps to Import a Profile
 -------------------------
 #. Sign into Traffic Portal
-
 #. Under the 'Configure' menu, select 'Profiles'
-
 #. From the 'More' drop-down menu, click on 'Import Profile'
-
 #. Drag and drop your desired profile into the upload pane
-
 #. Click 'Import'
-
 #. Continue these steps for each of the :ref:`to-profiles-min-needed`.
