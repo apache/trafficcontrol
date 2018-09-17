@@ -258,7 +258,7 @@ Regions, Locations and Cache Groups
 ===================================
 All servers have to have a 'location', which is their physical location. Each location is part of a 'region', and each region is part of a 'division'. For Example, ``Denver`` could be a location in the ``Mile High`` region and that region could be part of the ``West`` division. The hierarchy between these terms is illustrated graphically below.
 
-.. figure:: topography.svg
+.. figure:: images/topography.svg
 	:align: center
 	:figwidth: 25%
 
