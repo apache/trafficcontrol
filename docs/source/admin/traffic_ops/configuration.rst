@@ -13,9 +13,9 @@
 .. limitations under the License.
 ..
 
-
+*************************
 Traffic Ops - Configuring
-%%%%%%%%%%%%%%%%%%%%%%%%%
+*************************
 
 Follow the steps below to configure the newly installed Traffic Ops Instance.
 
@@ -24,9 +24,11 @@ Installing the SSL Certificate
 By default, Traffic Ops runs as an SSL web server (that is, over HTTPS), and a certificate needs to be installed.
 
 Self-signed Certificate (Development)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------
 
-Example Procedure::
+Example Procedure
+
+.. code-block:: shell
 
 	$ openssl genrsa -des3 -passout pass:x -out localhost.pass.key 2048
 	Generating RSA private key, 2048 bit long modulus
@@ -65,11 +67,13 @@ Example Procedure::
 	$ sudo chown trafops:trafops /etc/pki/tls/private/localhost.key
 
 Certificate from Certificate Authority (Production)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------------------------
 
 .. Note:: You will need to know the appropriate answers when generating the certificate request file ``trafficopss.csr`` below.
 
-Example Procedure::
+Example Procedure
+
+.. code-block:: shell
 
 	$ openssl genrsa -des3 -passout pass:x -out trafficops.pass.key 2048
 	Generating RSA private key, 2048 bit long modulus
@@ -78,7 +82,9 @@ Example Procedure::
 	writing RSA key
 	$ rm localhost.pass.key
 
-Generate the Certificate Signing Request (CSR) file needed for Certificate Authority (CA) request::
+Generate the Certificate Signing Request (CSR) file needed for Certificate Authority (CA) request
+
+.. code-block:: shell
 
 	$ openssl req -new -key trafficops.key -out trafficops.csr
 	You are about to be asked to enter information that will be incorporated
@@ -103,15 +109,19 @@ Generate the Certificate Signing Request (CSR) file needed for Certificate Autho
 	$ sudo cp trafficops.key /etc/pki/tls/private
 	$ sudo chown trafops:trafops /etc/pki/tls/private/trafficops.key
 
-You must then take the output file ``trafficops.csr`` and submit a request to your Certificate Authority (CA).
-Once you get approved and receive your ``trafficops.crt`` file::
+You must then take the output file ``trafficops.csr`` and submit a request to your Certificate Authority (CA). Once you get approved and receive your ``trafficops.crt`` file
+
+.. code-block:: shell
 
 	$ sudo cp trafficops.crt /etc/pki/tls/certs
 	$ sudo chown trafops:trafops /etc/pki/tls/certs/trafficops.crt
 
 If necessary, install the CA certificate's ``.pem`` and ``.crt`` files in ``/etc/pki/tls/certs``.
 
-You will need to update the file ``/opt/traffic_ops/app/conf/cdn.conf`` with the any necessary changes. e.g. given trafficops.crt and trafficops.key::
+You will need to update the file ``/opt/traffic_ops/app/conf/cdn.conf`` with the any necessary changes. e.g. given trafficops.crt and trafficops.key
+
+.. code-block:: perl
+
 	'hypnotoad' => ...
 	    'listen' => 'https://[::]:443?cert=/etc/pki/tls/certs/trafficops.crt&key=/etc/pki/tls/private/trafficops.key&ca=/etc/pki/tls/certs/localhost.ca&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED'
 		 ...
@@ -292,28 +302,27 @@ Note that the TTL the adminstrator enters in the purge request should be longer 
 .. _Creating-CentOS-Kickstart:
 
 Creating the CentOS Kickstart File
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------
 The kickstart file is a text file, containing a list of items, each identified by a keyword. You can create it by using the Kickstart Configurator application, or writing it from scratch. The Red Hat Enterprise Linux installation program also creates a sample kickstart file based on the options that you selected during installation. It is written to the file ``/root/anaconda-ks.cfg``. This file is editable using most text editors that can save files as ASCII text.
 
 To generate ISO, the CentOS Kickstart is necessary:
 
-1. Create a kickstart file.
-2. Create a boot media with the kickstart file or make the kickstart file available on the network.
-3. Make the installation tree available.
-4. Start the kickstart installation.
+#. Create a kickstart file.
+#. Create a boot media with the kickstart file or make the kickstart file available on the network.
+#. Make the installation tree available.
+#. Start the kickstart installation.
 
 Create a ks.src file in the root of the selection location. See the example below:
 
-::
+.. code-block:: shell
 
-
- mkdir newdir
- cd newdir/
- cp -r ../centos65/* .
- vim ks.src
- vim isolinux/isolinux.cfg
- cd vim osversions.cfg
- vim osversions.cfg
+	mkdir newdir
+	cd newdir/
+	cp -r ../centos65/* .
+	vim ks.src
+	vim isolinux/isolinux.cfg
+	cd vim osversions.cfg
+	vim osversions.cfg
 
 
 This is a standard kickstart formatted file that the generate ISO process uses to create the kickstart (ks.cfg) file for the install. The generate ISO process uses the ks.src, overwriting any information set in the Generate ISO tab in Traffic Ops, creating ks.cfg.
