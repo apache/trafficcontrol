@@ -1,43 +1,43 @@
 .. raw:: html
 
-  <style>
-  table {
-      table-layout: fixed;
-      width: 100%;
-  }
+	<style>
+	table {
+			table-layout: fixed;
+			width: 100%;
+	}
 
-  td {
-      word-wrap:break-word;
-  }
-  table.docutils col:nth-child(1) {
-      width: 30%;
-  }
-  table.docutils col:nth-child(2) {
-      width: 30%;
-  }
-  table.docutils col:nth-child(3) {
-      width: 30%;
-  }
-  .wy-nav-content {
-      max-width: 1200px;
-      width: 90%;
-  }
-  </style>
+	td {
+			word-wrap:break-word;
+	}
+	table.docutils col:nth-child(1) {
+			width: 30%;
+	}
+	table.docutils col:nth-child(2) {
+			width: 30%;
+	}
+	table.docutils col:nth-child(3) {
+			width: 30%;
+	}
+	.wy-nav-content {
+			max-width: 1200px;
+			width: 90%;
+	}
+	</style>
 
-.. 
-.. 
+..
+..
 .. Licensed under the Apache License, Version 2.0 (the "License");
 .. you may not use this file except in compliance with the License.
 .. You may obtain a copy of the License at
-.. 
+..
 ..     http://www.apache.org/licenses/LICENSE-2.0
-.. 
+..
 .. Unless required by applicable law or agreed to in writing, software
 .. distributed under the License is distributed on an "AS IS" BASIS,
 .. WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 .. See the License for the specific language governing permissions and
 .. limitations under the License.
-.. 
+..
 
 
 .. _to-api-routes:
