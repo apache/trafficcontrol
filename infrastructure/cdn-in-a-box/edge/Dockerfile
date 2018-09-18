@@ -28,8 +28,8 @@ EXPOSE 80
 ARG RPM=https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.4-1.el7.x86_64.rpm
 ADD $RPM /trafficserver.rpm
 
-RUN yum install -y /trafficserver.rpm iproute net-tools nmap-ncat epel-release gettext
-RUN yum install -y jq python34-psutil python34-typing python34-setuptools python34-pip && yum clean all
+RUN yum install -y kyotocabinet-libs iproute net-tools nmap-ncat epel-release gettext
+RUN yum install -y /trafficserver.rpm jq python34-psutil python34-typing python34-setuptools python34-pip && yum clean all
 RUN pip3 install --upgrade pip && pip3 install requests urllib3 distro
 
 RUN mkdir -p /var/trafficserver/cache /opt/ort && chown -R ats:ats /etc/trafficserver/ /var/trafficserver/ /opt/ort
