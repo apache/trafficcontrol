@@ -225,6 +225,13 @@ services:
         ipv6_address: "fc01:9400:1000:8::50"
 
   # Apache Traffic Server (ATS) caches defined here
+  # base image from which all other caches inherit (builds and installs ATS+plugins)
+  tccache:
+    build:
+      context: ../..
+      dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
+    image: tccache:latest
+
   # edge cache
   edge:
     build:
@@ -232,6 +239,7 @@ services:
       dockerfile: edge/Dockerfile
     depends_on:
       - enroller
+      - tccache
     domainname: cdn.local
     env_file:
       - variables.env
@@ -253,6 +261,7 @@ services:
       dockerfile: mid/Dockerfile
     depends_on:
       - enroller
+      - tccache
     domainname: cdn.local
     env_file:
       - variables.env
