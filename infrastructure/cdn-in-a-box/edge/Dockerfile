@@ -25,7 +25,7 @@ FROM centos:7
 
 EXPOSE 80
 
-ARG RPM=https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.2-4.el7.centos.x86_64.rpm
+ARG RPM=https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.4-1.el7.x86_64.rpm
 ADD $RPM /trafficserver.rpm
 
 RUN yum install -y /trafficserver.rpm iproute net-tools nmap-ncat epel-release gettext
