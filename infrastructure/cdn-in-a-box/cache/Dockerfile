@@ -21,12 +21,22 @@
 # Based on CentOS 7.2
 ############################################################
 
-FROM tccache:latest
+FROM centos:7
 
+EXPOSE 80
 
-RUN mkdir -p /var/trafficserver/cache /opt/ort && chown -R ats:ats /etc/trafficserver/ /var/trafficserver/ /opt/ort
-ADD edge/run.sh traffic_ops/to-access.sh enroller/server_template.json /
-ADD edge/traffic_ops_ort.py /opt/ort
+ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.4-1.el7.x86_64.rpm /trafficserver.rpm
+ADD https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-devel-7.1.4-1.el7.x86_64.rpm /trafficserver-devel.rpm
 
-CMD /run.sh
+RUN yum install -y kyotocabinet-libs epel-release rpmdevtools iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ glibc-devel openssl-devel
+RUN yum install -y /trafficserver.rpm /trafficserver-devel.rpm jq python34-psutil python34-typing python34-setuptools python34-pip && yum clean all
+RUN pip3 install --upgrade pip && pip3 install requests urllib3 distro
 
+ADD traffic_server/plugins/astats_over_http/astats_over_http.c traffic_server/plugins/astats_over_http/Makefile.am /
+
+RUN tsxs -v -c astats_over_http.c -o astats_over_http.so
+RUN mkdir -p /usr/libexec/trafficserver && tsxs -v -o astats_over_http.so -i
+
+RUN yum remove -y gcc-c++ glibc-devel autoconf automake libtool && rm -f /astats_over_http.c /Makefile.am
+
+CMD tail -f /dev/null
