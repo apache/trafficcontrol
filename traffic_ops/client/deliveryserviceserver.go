@@ -37,7 +37,7 @@ func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, repla
 	resp := struct {
 		Response tc.DSServerIDs `json:"response"`
 	}{}
-	if err := post(to, path, jsonReq, &resp); err != nil {
+	if _, err := post(to, path, jsonReq, &resp); err != nil {
 		return nil, err
 	}
 	return &resp.Response, nil
