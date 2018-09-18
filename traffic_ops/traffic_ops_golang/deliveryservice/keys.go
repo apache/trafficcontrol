@@ -27,7 +27,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -35,6 +34,10 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+)
+
+const (
+	PemCertEndMarker = "-----END CERTIFICATE-----"
 )
 
 // AddSSLKeys adds the given ssl keys to the given delivery service.
@@ -46,7 +49,7 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 	if !inf.Config.RiakEnabled {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("adding Riak SSL keys for delivery service:: riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("adding SSL keys to Riak for delivery service: Riak is not configured"))
 		return
 	}
 	keysObj := tc.DeliveryServiceSSLKeys{}
@@ -58,22 +61,28 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	certChain, err := verifyAndEncodeCertificate(keysObj.Certificate.Crt, "")
+	certChain, err := verifyCertificate(keysObj.Certificate.Crt, "")
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("verifying certificate: "+err.Error()), nil)
 		return
 	}
 	keysObj.Certificate.Crt = certChain
+	base64EncodeCertificate(&keysObj.Certificate)
 	if err := riaksvc.PutDeliveryServiceSSLKeysObj(keysObj, inf.Tx.Tx, inf.Config.RiakAuthOptions); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, nil, errors.New("putting Riak SSL keys for delivery service '"+keysObj.DeliveryService+"': "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, nil, errors.New("putting SSL keys in Riak for delivery service '"+keysObj.DeliveryService+"': "+err.Error()))
 		return
 	}
-	api.WriteRespRaw(w, r, keysObj)
+	keysObj.Version = riaksvc.DSSSLKeyVersionLatest
+	if err := riaksvc.PutDeliveryServiceSSLKeysObj(keysObj, inf.Tx.Tx, inf.Config.RiakAuthOptions); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, nil, errors.New("putting latest SSL keys in Riak for delivery service '"+keysObj.DeliveryService+"': "+err.Error()))
+		return
+	}
+	api.WriteResp(w, r, "Successfully added ssl keys for "+keysObj.DeliveryService)
 }
 
 // GetSSLKeysByHostName fetches the ssl keys for a deliveryservice specified by the fully qualified hostname
 func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"hostName"}, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"hostname"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -81,12 +90,11 @@ func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("The RIAK service is unavailable"), errors.New("getting Riak SSL keys by host name: riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by host name: Riak is not configured"))
 		return
 	}
 
-	version := inf.Params["version"]
-	hostName := inf.Params["hostName"]
+	hostName := inf.Params["hostname"]
 	domainName := ""
 	hostRegex := ""
 	strArr := strings.Split(hostName, ".")
@@ -96,7 +104,7 @@ func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 			domainName += strArr[i] + "."
 		}
 		domainName += strArr[ln-1]
-		hostRegex = ".*\\." + strArr[1] + "\\..*"
+		hostRegex = `.*\.` + strArr[1] + `\..*`
 	}
 
 	// lookup the cdnID
@@ -120,36 +128,28 @@ func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(xmlID, version, inf.Tx.Tx, inf.Config.RiakAuthOptions)
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
-		return
-	}
-	if !ok {
-		api.WriteRespAlert(w, r, tc.InfoLevel, "no object found for the specified key")
-		return
-	}
-	api.WriteResp(w, r, keyObj)
+	getSSLKeysByXMLIDHelper(xmlID, inf, w, r)
 }
 
 // GetSSLKeysByXMLID fetches the deliveryservice ssl keys by the specified xmlID.
 func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlID"}, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("The RIAK service is unavailable"), errors.New("getting Riak SSL keys by xml id: riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("the Riak service is unavailable"), errors.New("getting SSL keys from Riak by xml id: Riak is not configured"))
 		return
 	}
+	xmlID := inf.Params["xmlid"]
+	getSSLKeysByXMLIDHelper(xmlID, inf, w, r)
+}
+
+func getSSLKeysByXMLIDHelper(xmlID string, inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	version := inf.Params["version"]
-	xmlID := inf.Params["xmlID"]
+	decode := inf.Params["decode"]
 	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -160,29 +160,65 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !ok {
-		api.WriteRespAlert(w, r, tc.InfoLevel, "no object found for the specified key")
+		api.WriteRespAlertObj(w, r, tc.InfoLevel, "no object found for the specified key", struct{}{}) // empty response object because Perl
 		return
+	}
+	if decode != "" && decode != "0" { // the Perl version checked the decode string as: if ( $decode )
+		err = base64DecodeCertificate(&keyObj.Certificate)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting SSL keys for XMLID '"+xmlID+"': "+err.Error()))
+			return
+		}
 	}
 	api.WriteResp(w, r, keyObj)
 }
 
+func base64DecodeCertificate(cert *tc.DeliveryServiceSSLKeysCertificate) error {
+	csrDec, err := base64.StdEncoding.DecodeString(cert.CSR)
+	if err != nil {
+		return errors.New("base64 decoding csr: " + err.Error())
+	}
+	cert.CSR = string(csrDec)
+	crtDec, err := base64.StdEncoding.DecodeString(cert.Crt)
+	if err != nil {
+		return errors.New("base64 decoding crt: " + err.Error())
+	}
+	cert.Crt = string(crtDec)
+	keyDec, err := base64.StdEncoding.DecodeString(cert.Key)
+	if err != nil {
+		return errors.New("base64 decoding key: " + err.Error())
+	}
+	cert.Key = string(keyDec)
+	return nil
+}
+
+func base64EncodeCertificate(cert *tc.DeliveryServiceSSLKeysCertificate) {
+	cert.CSR = base64.StdEncoding.EncodeToString([]byte(cert.CSR))
+	cert.Crt = base64.StdEncoding.EncodeToString([]byte(cert.Crt))
+	cert.Key = base64.StdEncoding.EncodeToString([]byte(cert.Key))
+}
+
 func DeleteSSLKeys(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlid"}, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured!"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured"))
 		return
 	}
-	ds := tc.DeliveryServiceName(inf.Params["name"])
-	if err := riaksvc.DeleteDSSSLKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, ds, inf.Params["version"]); err != nil {
+	xmlID := inf.Params["xmlid"]
+	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	if err := riaksvc.DeleteDSSSLKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, xmlID, inf.Params["version"]); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: deleting SSL keys: "+err.Error()))
 		return
 	}
-	api.WriteResp(w, r, "Successfully deleted ssl keys for "+string(ds))
+	api.WriteResp(w, r, "Successfully deleted ssl keys for "+xmlID)
 }
 
 // returns the cdn_id found by domainname.
@@ -216,86 +252,64 @@ WHERE r.pattern = $2
 }
 
 // verify the server certificate chain and return the
-// certificate and its chain in the proper order. Returns a  verified,
-// ordered, and base64 encoded certificate and CA chain.
-func verifyAndEncodeCertificate(certificate string, rootCA string) (string, error) {
-	var pemEncodedChain string
-	var b64crt string
-
-	// strip newlines from encoded crt and decode it from base64.
-	crtArr := strings.Split(certificate, "\\n")
-	for i := 0; i < len(crtArr); i++ {
-		b64crt += crtArr[i]
+// certificate and its chain in the proper order. Returns a verified
+// and ordered certificate and CA chain.
+func verifyCertificate(certificate string, rootCA string) (string, error) {
+	// decode, verify, and order certs for storage
+	certs := strings.SplitAfter(certificate, PemCertEndMarker)
+	if len(certs) <= 1 {
+		return "", errors.New("no certificate chain to verify")
 	}
-	pemCerts := make([]byte, base64.StdEncoding.EncodedLen(len(b64crt)))
-	_, err := base64.StdEncoding.Decode(pemCerts, []byte(b64crt))
+
+	// decode and verify the server certificate
+	block, _ := pem.Decode([]byte(certs[0]))
+	if block == nil {
+		return "", errors.New("could not decode pem-encoded server certificate")
+	}
+	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return "", fmt.Errorf("could not base64 decode the certificate %v", err)
+		return "", errors.New("could not parse the server certificate: " + err.Error())
+	}
+	if !(cert.KeyUsage&x509.KeyUsageKeyEncipherment > 0) {
+		return "", errors.New("no key encipherment usage for the server certificate")
+	}
+	bundle := ""
+	for i := 0; i < len(certs)-1; i++ {
+		bundle += certs[i]
 	}
 
-	// decode, verify, and order certs for storgae
-	var bundle string
-	certs := strings.SplitAfter(string(pemCerts), "-----END CERTIFICATE-----")
-	if len(certs) > 1 {
-		// decode and verify the server certificate
-		block, _ := pem.Decode([]byte(certs[0]))
-		cert, err := x509.ParseCertificate(block.Bytes)
-		if err != nil {
-			return "", fmt.Errorf("could not parse the server certificate %v", err)
-		}
-		if !(cert.KeyUsage&x509.KeyUsageKeyEncipherment > 0) {
-			return "", fmt.Errorf("no key encipherment usage for the server certificate")
-		}
-		for i := 0; i < len(certs)-1; i++ {
-			bundle += certs[i]
-		}
+	intermediatePool := x509.NewCertPool()
+	if !intermediatePool.AppendCertsFromPEM([]byte(bundle)) {
+		return "", errors.New("certificate CA bundle is empty")
+	}
 
-		var opts x509.VerifyOptions
-
+	opts := x509.VerifyOptions{
+		Intermediates: intermediatePool,
+	}
+	if rootCA != "" {
+		// verify the certificate chain.
 		rootPool := x509.NewCertPool()
-		if rootCA != "" {
-			if !rootPool.AppendCertsFromPEM([]byte(rootCA)) {
-				return "", fmt.Errorf("root  CA certificate is empty, %v", err)
-			}
+		if !rootPool.AppendCertsFromPEM([]byte(rootCA)) {
+			return "", errors.New("unable to parse root CA certificate")
 		}
-
-		intermediatePool := x509.NewCertPool()
-		if !intermediatePool.AppendCertsFromPEM([]byte(bundle)) {
-			return "", fmt.Errorf("certificate CA bundle is empty, %v", err)
-		}
-
-		if rootCA != "" {
-			// verify the certificate chain.
-			opts = x509.VerifyOptions{
-				Intermediates: intermediatePool,
-				Roots:         rootPool,
-			}
-		} else {
-			opts = x509.VerifyOptions{
-				Intermediates: intermediatePool,
-			}
-		}
-
-		chain, err := cert.Verify(opts)
-		if err != nil {
-			return "", fmt.Errorf("could verify the certificate chain %v", err)
-		}
-		if len(chain) > 0 {
-			for _, link := range chain[0] {
-				// Only print non-self signed elements of the chain
-				if link.AuthorityKeyId != nil && !bytes.Equal(link.AuthorityKeyId, link.SubjectKeyId) {
-					block := &pem.Block{Type: "CERTIFICATE", Bytes: link.Raw}
-					pemEncodedChain += string(pem.EncodeToMemory(block))
-				}
-			}
-		} else {
-			return "", fmt.Errorf("Can't find valid chain for cert in file in request")
-		}
-	} else {
-		return "", fmt.Errorf("ERROR: no certificate chain to verify")
+		opts.Roots = rootPool
 	}
 
-	base64EncodedStr := base64.StdEncoding.EncodeToString([]byte(pemEncodedChain))
+	chain, err := cert.Verify(opts)
+	if err != nil {
+		return "", errors.New("could not verify the certificate chain: " + err.Error())
+	}
+	if len(chain) < 1 {
+		return "", errors.New("can't find valid chain for cert in file in request")
+	}
+	pemEncodedChain := ""
+	for _, link := range chain[0] {
+		// Only print non-self signed elements of the chain
+		if link.AuthorityKeyId != nil && !bytes.Equal(link.AuthorityKeyId, link.SubjectKeyId) {
+			block := &pem.Block{Type: "CERTIFICATE", Bytes: link.Raw}
+			pemEncodedChain += string(pem.EncodeToMemory(block))
+		}
+	}
 
-	return base64EncodedStr, nil
+	return pemEncodedChain, nil
 }

@@ -56,35 +56,6 @@ func GetDeliveryServiceSSLKeysObj(xmlID string, version string, tx *sql.Tx, auth
 			return nil // not found
 		}
 		if err := json.Unmarshal(ro[0].Value, &key); err != nil {
-			return errors.New("unmarshalling Riak result: " + err.Error())
-		}
-		found = true
-		return nil
-	})
-	if err != nil {
-		return key, false, err
-	}
-	return key, found, nil
-}
-
-func GetDeliveryServiceSSLKeysObjTx(xmlID string, version string, tx *sql.Tx, authOpts *riak.AuthOptions) (tc.DeliveryServiceSSLKeys, bool, error) {
-	key := tc.DeliveryServiceSSLKeys{}
-	if version == "" {
-		xmlID += "-latest"
-	} else {
-		xmlID += "-" + version
-	}
-	found := false
-	err := WithClusterTx(tx, authOpts, func(cluster StorageCluster) error {
-		// get the deliveryservice ssl keys by xmlID and version
-		ro, err := FetchObjectValues(xmlID, DeliveryServiceSSLKeysBucket, cluster)
-		if err != nil {
-			return err
-		}
-		if len(ro) == 0 {
-			return nil // not found
-		}
-		if err := json.Unmarshal(ro[0].Value, &key); err != nil {
 			log.Errorf("failed at unmarshaling sslkey response: %s\n", err)
 			return errors.New("unmarshalling Riak result: " + err.Error())
 		}
@@ -98,27 +69,6 @@ func GetDeliveryServiceSSLKeysObjTx(xmlID string, version string, tx *sql.Tx, au
 }
 
 func PutDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, authOpts *riak.AuthOptions) error {
-	keyJSON, err := json.Marshal(&key)
-	if err != nil {
-		return errors.New("marshalling key: " + err.Error())
-	}
-	err = WithClusterTx(tx, authOpts, func(cluster StorageCluster) error {
-		obj := &riak.Object{
-			ContentType:     "text/json",
-			Charset:         "utf-8",
-			ContentEncoding: "utf-8",
-			Key:             MakeDSSSLKeyKey(key.DeliveryService, string(key.Version)),
-			Value:           []byte(keyJSON),
-		}
-		if err = SaveObject(obj, DeliveryServiceSSLKeysBucket, cluster); err != nil {
-			return errors.New("saving Riak object: " + err.Error())
-		}
-		return nil
-	})
-	return err
-}
-
-func PutDeliveryServiceSSLKeysObjTx(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, authOpts *riak.AuthOptions) error {
 	keyJSON, err := json.Marshal(&key)
 	if err != nil {
 		return errors.New("marshalling key: " + err.Error())
@@ -235,28 +185,14 @@ func GetBucketKey(tx *sql.Tx, authOpts *riak.AuthOptions, bucket string, key str
 	return val, found, nil
 }
 
-func DeleteDSSSLKeys(tx *sql.Tx, authOpts *riak.AuthOptions, ds tc.DeliveryServiceName, version string) error {
-	if version == "" {
-		version = "latest"
-	}
-	key := string(ds) + "-" + version
-
-	cluster, err := GetRiakClusterTx(tx, authOpts)
-	if err != nil {
-		return errors.New("getting riak cluster: " + err.Error())
-	}
-	if err = cluster.Start(); err != nil {
-		return errors.New("starting riak cluster: " + err.Error())
-	}
-	defer func() {
-		if err := cluster.Stop(); err != nil {
-			log.Errorln("stopping Riak cluster: " + err.Error())
+func DeleteDSSSLKeys(tx *sql.Tx, authOpts *riak.AuthOptions, xmlID string, version string) error {
+	err := WithClusterTx(tx, authOpts, func(cluster StorageCluster) error {
+		if err := DeleteObject(MakeDSSSLKeyKey(xmlID, version), DeliveryServiceSSLKeysBucket, cluster); err != nil {
+			return errors.New("deleting SSL keys: " + err.Error())
 		}
-	}()
-	if err := DeleteObject(key, DeliveryServiceSSLKeysBucket, cluster); err != nil {
-		return errors.New("deleting SSL keys: " + err.Error())
-	}
-	return nil
+		return nil
+	})
+	return err
 }
 
 // GetURLSigConfigFileName returns the filename of the Apache Traffic Server URLSig config file
