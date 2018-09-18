@@ -115,6 +115,12 @@ html_static_path = ['_static']
 #
 # html_sidebars = {}
 
+# Sets the favicon for the HTML pages
+html_favicon="favicon.ico"
+
+# Sets the sidebar logo for HTML pages
+html_logo="../../misc/logos/Traffic-Control-Logo-FINAL-White-Text.png"
+
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
@@ -171,3 +177,7 @@ texinfo_documents = [
 	 author, 'trafficcontrol', 'Traffic Control is an Open Source implementation of a Content Delivery Network.',
 	 'Miscellaneous'),
 ]
+
+# Hopefully this will cause tab expansion to use 4 spaces rather than the
+# (GNU-supported) default of 8.
+tab_width=4
