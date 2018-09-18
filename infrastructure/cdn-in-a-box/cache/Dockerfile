@@ -39,4 +39,4 @@ RUN mkdir -p /usr/libexec/trafficserver && tsxs -v -o astats_over_http.so -i
 
 RUN yum remove -y gcc-c++ glibc-devel autoconf automake libtool && rm -f /astats_over_http.c /Makefile.am
 
-CMD tail -f /dev/null
+CMD exit
