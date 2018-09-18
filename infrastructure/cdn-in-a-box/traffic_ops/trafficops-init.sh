@@ -65,5 +65,7 @@ load_data_from() {
 load_data_from /traffic_ops_data
 
 # Copy the free MaxMind GeoLite DB to TrafficOps public directory
-cp /GeoLiteCity.dat.gz $TO_DIR/public
-chown -R trafops:trafops $TO_DIR/public/GeoLiteCity.dat.gz
+tar -C /var/tmp -zxpvf /GeoLite2-City.tar.gz
+geo_dir=$(find /var/tmp -maxdepth 1 -type d -name GeoLite2-City\*)
+gzip -c "$geo_dir/GeoLite2-City.mmdb" > "$TO_DIR/public/GeoLite2-City.mmdb.gz"
+chown trafops:trafops "$TO_DIR/public/GeoLite2-City.mmdb.gz"
