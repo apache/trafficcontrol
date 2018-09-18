@@ -21,16 +21,7 @@
 # Based on CentOS 7.2
 ############################################################
 
-FROM centos:7
-
-EXPOSE 80
-
-ARG RPM=https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.2-4.el7.centos.x86_64.rpm
-ADD $RPM /trafficserver.rpm
-
-RUN yum install -y /trafficserver.rpm iproute net-tools nmap-ncat epel-release gettext
-RUN yum install -y jq python34-psutil python34-typing python34-setuptools python34-pip && yum clean all
-RUN pip3 install --upgrade pip && pip3 install requests urllib3 distro
+FROM tccache:latest
 
 RUN mkdir -p /var/trafficserver/cache /opt/ort && chown -R ats:ats /etc/trafficserver/ /var/trafficserver/ /opt/ort
 ADD mid/run.sh traffic_ops/to-access.sh enroller/server_template.json /
