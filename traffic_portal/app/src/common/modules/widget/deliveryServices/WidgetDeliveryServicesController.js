@@ -17,31 +17,44 @@
  * under the License.
  */
 
-var WidgetDeliveryServicesController = function ($scope, $timeout, $filter, $q, $interval, deliveryServiceService, deliveryServiceStatsService, locationUtils, dateUtils, numberUtils) {
+var WidgetDeliveryServicesController = function ($scope, $timeout, $filter, $q, $interval, deliveryServiceService, deliveryServiceStatsService, locationUtils, dateUtils, numberUtils, propertiesModel) {
+
+	var interval,
+		autoRefresh = propertiesModel.properties.dashboard.autoRefresh;
 
 	$scope.unitSize = 'Gb';
-	$scope.hasChart = false;
 	$scope.isRequested = false;
 	$scope.isLoading = false;
 	$scope.selectedIndex = 0;
 
-	$scope.getChartData = function (ds, idx, start, end) {
-		$scope.selectedIndex = idx;
-		$scope.isRequested = true;
-		$scope.isLoading = true;
-		$scope.resetChart();
-		if (start == undefined) {
-			start = moment().subtract(1, 'days');
+	var createInterval = function() {
+		killInterval();
+		interval = $interval(function() { $scope.getChartData($scope.selectedDeliveryService); }, propertiesModel.properties.dashboard.deliveryServiceGbps.refreshRateInMS );
+	};
+
+	var killInterval = function() {
+		if (angular.isDefined(interval)) {
+			$interval.cancel(interval);
+			interval = undefined;
 		}
-		if (end == undefined) {
-			end = moment().subtract(10, 'seconds');
+	};
+
+	$scope.getChartData = function (ds, idx) {
+		if (ds.xmlId != $scope.selectedDeliveryService.xmlId) {
+			$scope.selectedIndex = idx;
+			$scope.isRequested = true;
+			$scope.isLoading = true;
+			$scope.resetChart();
+			if (autoRefresh) {
+				createInterval();
+			}
 		}
+
+		var start = moment().subtract(1, 'days');
+		var end = moment().subtract(10, 'seconds');
 		$scope.selectedDeliveryService = ds;
 		$scope.dateRangeText = dateUtils.dateFormat(start.toDate(), "UTC: ddd mmm d yyyy H:MM:ss tt (Z)") + ' to ' + dateUtils.dateFormat(end.toDate(), "UTC: ddd mmm d yyyy H:MM:ss tt (Z)");
-		$scope.finalData = {
-			chart: [],
-			labels: []
-		};
+
 		var promises = [];
 		promises.push(deliveryServiceStatsService.getBPS(ds.xmlId, start, end));
 
@@ -49,8 +62,11 @@ var WidgetDeliveryServicesController = function ($scope, $timeout, $filter, $q, 
 			.then(
 				function (responses) {
 					if (responses[0].series) {
-						$scope.hasChart = true;
 						$scope.chartData = (responses[0].series) ? $scope.buildBandwidthChartData(responses[0].series, start) : $scope.chartData;
+						$scope.finalData = {
+							chart: [],
+							labels: []
+						};
 						for (var i = 0; i < $scope.chartData.length; i++) {
 							$scope.finalData.chart.push($scope.chartData[i][1]);
 							$scope.finalData.labels.push($scope.chartData[i][0]);
@@ -59,8 +75,13 @@ var WidgetDeliveryServicesController = function ($scope, $timeout, $filter, $q, 
 							$scope.buildChart();
 						}, 100);
 					} else {
-						$scope.hasChart = false;
 						$scope.isLoading = false;
+						$scope.finalData.chart = [0,0];
+						var d = new Date();
+						var c = new Date();
+						c.setDate(c.getDate()-1);
+						$scope.finalData.labels = [moment( c ).valueOf(), moment( d ).valueOf()];
+						$scope.buildChart();
 					}
 				},
 				function (fault) {
@@ -80,16 +101,17 @@ var WidgetDeliveryServicesController = function ($scope, $timeout, $filter, $q, 
 		return normalizedChartData;
 	};
 
-	$scope.navigateToCharts = function () {
-		locationUtils.navigateToPath('/delivery-services/' + $scope.selectedDeliveryService.id + '/charts?type=' + $scope.selectedDeliveryService.type);
-	};
-
 	$scope.buildChart = function () {
 		$scope.isLoading = false;
 		$scope.dsChart.labels = $scope.finalData.labels;
 		$scope.dsChart.series = ['Bandwidth'];
 		$scope.dsChart.data = $scope.finalData.chart;
 		$scope.dsChart.options = {
+			responsive: true,
+			maintainAspectRatio: false,
+			animation: {
+				duration: 0
+			},
 			elements: {
 				point: {
 					radius: 0
@@ -98,7 +120,7 @@ var WidgetDeliveryServicesController = function ($scope, $timeout, $filter, $q, 
 					fill: false,
 					tension: 0,
 					borderColor: '#3498DB',
-					borderWidth: 1
+					borderWidth: 2
 				},
 				rectangle: {
 					borderWidth: 2
@@ -122,7 +144,10 @@ var WidgetDeliveryServicesController = function ($scope, $timeout, $filter, $q, 
 				xAxes: [{
 					type: 'time',
 					time: {
-						parser: 'MM/DD/YYYY HH:mm',
+						displayFormats: {
+							minute: 'h:mm'
+						},
+						parser: 'h:mm',
 						tooltipFormat: 'll HH:mm'
 					}
 				}, {
@@ -171,15 +196,25 @@ var WidgetDeliveryServicesController = function ($scope, $timeout, $filter, $q, 
 			options: null
 		};
 		$scope.chartData = [];
-		$scope.selectedDeliveryService = null;
+		$scope.selectedDeliveryService = {
+			xmlId: ''
+		};
 	};
 
 	var getDeliveryServices = function () {
 		deliveryServiceService.getDeliveryServices()
 			.then(function (result) {
 				$scope.deliveryServices = result;
+				$scope.dsCount = $scope.deliveryServices.length;
+				for (var i = 0; i < $scope.deliveryServices.length; i++) {
+					$scope.deliveryServices[i].idx = i;
+				}
 				$scope.getChartData($scope.deliveryServices[0], 0);
 			});
+	};
+
+	$scope.navigateToCharts = function () {
+		locationUtils.navigateToPath('/delivery-services/' + $scope.selectedDeliveryService.id + '/charts?type=' + $scope.selectedDeliveryService.type);
 	};
 
 	// pagination
@@ -188,12 +223,19 @@ var WidgetDeliveryServicesController = function ($scope, $timeout, $filter, $q, 
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
 
+	$scope.$on("$destroy", function() {
+		killInterval();
+	});
+
 	var init = function () {
 		$scope.resetChart();
 		getDeliveryServices();
+		if (autoRefresh) {
+			createInterval();
+		}
 	};
 	init();
 };
 
-WidgetDeliveryServicesController.$inject = ['$scope', '$timeout', '$filter', '$q', '$interval', 'deliveryServiceService', 'deliveryServiceStatsService', 'locationUtils', 'dateUtils', 'numberUtils'];
+WidgetDeliveryServicesController.$inject = ['$scope', '$timeout', '$filter', '$q', '$interval', 'deliveryServiceService', 'deliveryServiceStatsService', 'locationUtils', 'dateUtils', 'numberUtils', 'propertiesModel'];
 module.exports = WidgetDeliveryServicesController;
