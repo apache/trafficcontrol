@@ -84,6 +84,6 @@ ADD enroller/server_template.json \
     /
 
 ADD traffic_ops_data /traffic_ops_data
-ADD http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz /GeoLiteCity.dat.gz
+ADD http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz /
 
 CMD /run.sh
