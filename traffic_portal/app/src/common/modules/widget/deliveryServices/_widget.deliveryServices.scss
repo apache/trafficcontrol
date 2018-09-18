@@ -17,7 +17,7 @@
 
 #delivery-services-outer-container {
     #deliveryServicesContainer {
-        max-height: 452px;
+        max-height: 552px;
         margin-bottom: 0;
         .list-group-item {
             background-color: transparent;
@@ -31,13 +31,16 @@
         .widgetTable {
             width: 100%;
             max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
             margin-bottom: 5px;
             .thead {
                 vertical-align: bottom;
             }
         }
         .delivery-services-health {
-            height: 45px;
+            height: 52px;
             .delivery-services-table {
                 margin-top: -10px;
                 border-style: none;
@@ -66,6 +69,9 @@
 
 .dsWidgetButtonAlignFix {
     margin-right: 16px;
+}
+.dsWidgetGray {
+    color: #efefef;
 }
 
 #deliveryServicesLoadingContainer {

@@ -18,37 +18,33 @@ under the License.
 -->
 
 <div class="x_title">
-    <h2>Delivery Services</h2>
+    <h2>Delivery Services ({{dsCount}})</h2>
     <div class="clearfix"></div>
 </div>
 <div class="x_content">
     <div class="row">
-        <div class="col-md-6 col-sm-6 col-xs-12">
-            <div id="delivery-services-outer-container" class="f">
+        <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
+            <div id="delivery-services-outer-container">
                 <div id="deliveryServicesContainer">
                     <div class="alert alert-info" ng-show="(deliveryServices | filter:search:strict).length == 0">
                         No matching delivery services
                     </div>
                     <div class="list-group">
-                        <table class="delivery-services-table widgetTable">
-                            <thead>
-                                <tr class="headings">
-                                    <th class="col-lg-6 col-md-6 col-sm-2">Delivery Service</th>
-                                    <th class="col-lg-2 col-md-2 col-sm-2">Type</th>
-                                    <th class="col-lg-3 col-md-3 col-sm-2">Tenant</th>
-                                    <th class="col-lg-1 col-md-1 col-sm-2"></th>
-                                </tr>
-                            </thead>
-                        </table>
-                        <a class="delivery-services-health list-group-item" ng-repeat="ds in deliveryServices | filter:search:strict | offsetFilter:(currentDeliveryServicesPage-1)*deliveryServicesPerPage | limitTo:deliveryServicesPerPage track by $index" ng-click="getChartData(ds, $index)">
+                        <a class="delivery-services-health list-group-item"
+                           ng-repeat="ds in deliveryServices | filter:search:strict | offsetFilter:(currentDeliveryServicesPage-1)*deliveryServicesPerPage | limitTo:deliveryServicesPerPage track by $index"
+                           ng-click="getChartData(ds, ds.idx)">
                             <div class="row">
                                 <table class="delivery-services-table widgetTable">
                                     <tbody>
                                     <tr>
-                                        <td class="col-lg-6 col-md-6 col-sm-2">{{ds.displayName}} <small>({{ds.xmlId}})</small></td>
-                                        <td class="col-lg-2 col-md-2 col-sm-2">{{ds.type}}</td>
-                                        <td class="col-lg-3 col-md-3 col-sm-2">{{ds.tenant}}</td>
-                                        <td class="col-lg-1 col-md-1 col-sm-2"><i class="fa fa-check" ng-show="$index == selectedIndex"></i></td>
+                                        <td class="col-lg-9 col-md-9 col-sm-12" style="width:70%;">{{ds.displayName}}
+                                            <small>({{ds.xmlId}})<br>{{ds.tenant}}</small>
+                                        </td>
+                                        <td class="col-lg-2 col-md-2 col-sm-12" style="width:30%;">{{ds.type}}</td>
+                                        <td class="col-lg-1 col-md-1 col-sm-12" style="width:10%;"><i
+                                                class="fa fa-check" ng-show="ds.idx == selectedIndex"></i><i
+                                                class="fa fa-square dsWidgetGray" ng-show="ds.idx != selectedIndex"></i>
+                                        </td>
                                     </tr>
                                     </tbody>
                                 </table>
@@ -58,10 +54,15 @@ under the License.
                 </div>
                 <div>
                     <div ng-show="(deliveryServices | filter:search:strict).length > 0">
-                        <uib-pagination class="delivery-services-pagination pagination-md" boundary-links="true" max-size="2" total-items="(deliveryServices | filter:search:strict).length" items-per-page="deliveryServicesPerPage" ng-model="currentDeliveryServicesPage" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"></uib-pagination>
+                        <uib-pagination class="delivery-services-pagination pagination-md" boundary-links="true"
+                                        max-size="2" total-items="(deliveryServices | filter:search:strict).length"
+                                        items-per-page="deliveryServicesPerPage" ng-model="currentDeliveryServicesPage"
+                                        previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;"
+                                        last-text="&raquo;"></uib-pagination>
                     </div>
                     <div class="input-group delivery-services-search-form">
-                        <input type="text" class="filter-input form-control" placeholder="Filter delivery services..." ng-model="search.displayName">
+                        <input type="text" class="filter-input form-control" placeholder="Filter delivery services..."
+                               ng-model="search.displayName">
                         <span class="filter-input-group-btn input-group-btn">
                                 <button class="btn btn-default" type="button"><i class="fa fa-search"></i></button>
                             </span>
@@ -69,20 +70,24 @@ under the License.
                 </div>
             </div>
         </div>
-        <div class="col-md-6 col-sm-6 col-xs-12">
+        <div class="col-lg-8 col-md-6 col-sm-6 col-xs-12">
             <div ng-show="!isRequested">Select a Delivery Service to view bandwidth chart.</div>
-            <div class="alert alert-info" ng-show="isLoading">Loading data for {{selectedDeliveryService.displayName}}</div>
-            <div class="alert alert-danger" ng-show="!hasChart && isRequested && !isLoading">No bandwidth data for {{selectedDeliveryService.displayName}}</div>
-            <div ng-show="hasChart && !isLoading" class="dsWidgetMessages">
-                <div class="pull-left">{{selectedDeliveryService.displayName}} - Bandwidth Per Second <br><small>{{dateRangeText}}</small></div>
+            <div class="alert alert-info" ng-show="isLoading">Loading data
+                for {{selectedDeliveryService.displayName}}</div>
+            <div ng-show="!isLoading" class="dsWidgetMessages">
+                <div class="pull-left">{{selectedDeliveryService.displayName}} - Bandwidth Per Second <br>
+                    <small>{{dateRangeText}}</small>
+                </div>
                 <div class="pull-right dsWidgetButtonAlignFix" role="group">
-                    <button class="btn btn-primary" title="View Expanded Charts" ng-click="navigateToCharts()"><i class="fa fa-bar-chart"></i></button>
+                    <button class="btn btn-primary" title="View Expanded Charts" ng-click="navigateToCharts()"><i
+                            class="fa fa-bar-chart"></i></button>
                 </div>
             </div>
-            <canvas id="line" class="chart chart-line" chart-data="dsChart.data"
-                    chart-labels="dsChart.labels" chart-series="dsChart.series" chart-options="dsChart.options"
-                    chart-dataset-override="dsChart.datasetOverride" chart-click="onClick">
-            </canvas>
+            <div style="position: relative; height: 50vh">
+                <canvas id="line" class="chart chart-line" chart-data="dsChart.data"
+                        chart-labels="dsChart.labels" chart-series="dsChart.series" chart-options="dsChart.options">
+                </canvas>
+            </div>
         </div>
     </div>
 </div>

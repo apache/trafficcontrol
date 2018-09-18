@@ -13,6 +13,9 @@
       "currentStats": {
         "refreshRateInMS": 30000
       },
+      "deliveryServiceGbps": {
+        "refreshRateInMS": 30000
+      },
       "healthyCacheCount": {
         "refreshRateInMS": 60000
       },
