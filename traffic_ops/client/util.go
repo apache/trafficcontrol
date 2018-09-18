@@ -25,19 +25,16 @@ func get(to *Session, endpoint string, respStruct interface{}) (ReqInf, error) {
 	return makeReq(to, "GET", endpoint, nil, respStruct)
 }
 
-func post(to *Session, endpoint string, body []byte, respStruct interface{}) error {
-	_, err := makeReq(to, "POST", endpoint, body, respStruct)
-	return err
+func post(to *Session, endpoint string, body []byte, respStruct interface{}) (ReqInf, error) {
+	return makeReq(to, "POST", endpoint, body, respStruct)
 }
 
-func put(to *Session, endpoint string, body []byte, respStruct interface{}) error {
-	_, err := makeReq(to, "PUT", endpoint, body, respStruct)
-	return err
+func put(to *Session, endpoint string, body []byte, respStruct interface{}) (ReqInf, error) {
+	return makeReq(to, "PUT", endpoint, body, respStruct)
 }
 
-func del(to *Session, endpoint string, respStruct interface{}) error {
-	_, err := makeReq(to, "DELETE", endpoint, nil, respStruct)
-	return err
+func del(to *Session, endpoint string, respStruct interface{}) (ReqInf, error) {
+	return makeReq(to, "DELETE", endpoint, nil, respStruct)
 }
 
 func makeReq(to *Session, method, endpoint string, body []byte, respStruct interface{}) (ReqInf, error) {

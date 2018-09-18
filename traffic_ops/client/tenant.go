@@ -70,7 +70,7 @@ func (to *Session) CreateTenant(t *tc.Tenant) (*tc.TenantResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = post(to, tenantsEp(), jsonReq, &data)
+	_, err = post(to, tenantsEp(), jsonReq, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (to *Session) UpdateTenant(id string, t *tc.Tenant) (*tc.TenantResponse, er
 	if err != nil {
 		return nil, err
 	}
-	err = put(to, tenantEp(id), jsonReq, &data)
+	_, err = put(to, tenantEp(id), jsonReq, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (to *Session) UpdateTenant(id string, t *tc.Tenant) (*tc.TenantResponse, er
 // DeleteTenant deletes the Tenant matching the ID it's passed
 func (to *Session) DeleteTenant(id string) (*tc.DeleteTenantResponse, error) {
 	var data tc.DeleteTenantResponse
-	err := del(to, tenantEp(id), &data)
+	_, err := del(to, tenantEp(id), &data)
 	if err != nil {
 		return nil, err
 	}

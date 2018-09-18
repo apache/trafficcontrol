@@ -42,7 +42,7 @@ func (to *Session) SetDeliveryServiceUser(userID int, dses []int, replace bool) 
 		return nil, err
 	}
 	resp := tc.UserDeliveryServicePostResponse{}
-	err = post(to, uri, jsonReq, &resp)
+	_, err = post(to, uri, jsonReq, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (to *Session) SetDeliveryServiceUser(userID int, dses []int, replace bool) 
 func (to *Session) DeleteDeliveryServiceUser(userID int, dsID int) (*tc.UserDeliveryServiceDeleteResponse, error) {
 	uri := apiBase + `/deliveryservice_user/` + strconv.Itoa(dsID) + `/` + strconv.Itoa(userID)
 	resp := tc.UserDeliveryServiceDeleteResponse{}
-	if err := del(to, uri, &resp); err != nil {
+	if _, err := del(to, uri, &resp); err != nil {
 		return nil, err
 	}
 	return &resp, nil
