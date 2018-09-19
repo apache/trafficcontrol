@@ -45,10 +45,10 @@ The following are requirements to ensure an accurate set up:
 
 #. Edit ``/opt/traffic_router/conf/traffic_monitor.properties`` and specify the correct online Traffic Monitor(s) for your CDN. See :ref:`tr-config-files`
 
-	:traffic_monitor.properties: URL that should normally point to this file. e.x. ``traffic_monitor.properties=file:/opt/traffic_router/conf/traffic_monitor.properties``
-
-	:traffic_monitor.properties.reload.period: Period to wait (in milliseconds) between reloading this file. e.x. ``traffic_monitor.properties.reload.period=60000``
-
+	``traffic_monitor.properties``
+		URL that should normally point to this file. e.x. ``traffic_monitor.properties=file:/opt/traffic_router/conf/traffic_monitor.properties``
+	``traffic_monitor.properties.reload.period``
+		Period to wait (in milliseconds) between reloading this file. e.x. ``traffic_monitor.properties.reload.period=60000``
 
 #. Start Traffic Router. This can be done by running ``systemctl start traffic_router`` as the root user (or with ``sudo``), and test DNS lookups against that server with e.g. ``dig`` or ``curl``. To restart Traffic Router, run ``systemctl restart traffic_router`` as the root user (or with ``sudo``). Also, because previously received CRConfigs will be cached, they need to be removed manually to actually be reloaded. This file should be located at ``/opt/traffic_router/db/cr-config.json``.
 
@@ -169,6 +169,8 @@ Traffic Router currently follows the zone signing key pre-publishing operational
 
 .. _section 4.1.1.1 of RFC 6781: https://tools.ietf.org/html/rfc6781#section-4.1.1.1
 
+.. _tr-logs:
+
 Troubleshooting and Log Files
 =============================
 Traffic Router log files can be found under ``/opt/traffic_router/var/log`` and ``/opt/tomcat/logs``. Initialization and shutdown logs are in ``/opt/tomcat/logs/catalina[date].out``. Application related logging is in ``/opt/traffic_router/var/log/traffic_router.log``, while access logs are written to ``/opt/traffic_router/var/log/access.log``.
@@ -230,61 +232,60 @@ Fields Always Present
 
 ``rtype`` Meanings
 ^^^^^^^^^^^^^^^^^^
-
-:"-":          The request was not redirected. This is usually a result of a DNS request to the Traffic Router or an explicit denial for that request
-
-:CZ:           The result was derived from Coverage Zone data based on the address in the ``chi`` field
-
-:DEEP_CZ:      The result was derived from Deep Coverage Zone data based on the address in the ``chi`` field
-
-:DS_MISS:      _*HTTP Only*_ No HTTP Delivery Service supports either this request's URL path or headers
-
-:DS_REDIRECT:  The result is using the Bypass Destination configured for the matched Delivery Service when that Delivery Service is unavailable or does not have the requested resource
-
-:ERROR:        An internal error occurred within Traffic Router, more details may be found in the ``rerr`` field
-
-:FED:          _*DNS Only*_ The result was obtained through federated coverage zone data outside of any Delivery Service
-
-:GEO:          The result was derived from geolocation service based on the address in the ``chi`` field
-
-:GEO_REDIRECT: The request was redirected (302) based on the National Geo blocking (Geo Limit Redirect URL) configured on the Delivery Service
-
-:MISS:         Traffic Router was unable to resolve a DNS request or find a cache for the requested resource
-
-:RGALT:        The request was redirected (302) to the Regional Geo blocking URL. Regional Geo blocking is enabled on the Delivery Service and is configured through the ``regional_geoblock.polling.url`` setting for the Traffic Router profile
-
-:RGDENY:       _*DNS Only*_ The result was obtained through federated coverage zone data outside of any Delivery Service The request was regionally blocked because there was no rule for the request made
-
-:STATIC_ROUTE: _*DNS Only*_ No DNS Delivery Service supports the hostname portion of the requested url
-
-
+``-``
+	The request was not redirected. This is usually a result of a DNS request to the Traffic Router or an explicit denial for that request
+ANON_BLOCK
+	The client's IP matched an `Anonymous Blocking <anonymous_blocking-qht>`_ rule and was blocked
+CZ
+	The result was derived from Coverage Zone data based on the address in the ``chi`` field
+DEEP_CZ
+	The result was derived from Deep Coverage Zone data based on the address in the ``chi`` field
+DS_MISS
+	_*HTTP Only*_ No HTTP Delivery Service supports either this request's URL path or headers
+DS_REDIRECT
+	The result is using the Bypass Destination configured for the matched Delivery Service when that Delivery Service is unavailable or does not have the requested resource
+ERROR
+	An internal error occurred within Traffic Router, more details may be found in the ``rerr`` field
+FED
+	_*DNS Only*_ The result was obtained through federated coverage zone data outside of any Delivery Service
+GEO
+	The result was derived from geolocation service based on the address in the ``chi`` field
+GEO_REDIRECT
+	The request was redirected (302) based on the National Geo blocking (Geo Limit Redirect URL) configured on the Delivery Service
+MISS
+	Traffic Router was unable to resolve a DNS request or find a cache for the requested resource
+RGALT
+	The request was redirected (302) to the Regional Geo blocking URL. Regional Geo blocking is enabled on the Delivery Service and is configured through the ``regional_geoblock.polling.url`` setting for the Traffic Router profile
+RGDENY
+	_*DNS Only*_ The result was obtained through federated coverage zone data outside of any Delivery Service The request was regionally blocked because there was no rule for the request made
+STATIC_ROUTE
+	_*DNS Only*_ No DNS Delivery Service supports the hostname portion of the requested url
 
 
 ``rdtl`` Meanings
 ^^^^^^^^^^^^^^^^^
-
-:"-":                                  The request was not redirected. This is usually a result of a DNS request to the Traffic Router or an explicit denial for that request
-
-:DS_BYPASS:                            Used Bypass Destination for Redirect of Delivery Service
-
-:DS_CLIENT_GEO_UNSUPPORTED:            Traffic Router did not find a resource supported by coverage zone data and was unable to determine the geographic location of the requesting client
-
-:DS_CZ_BACKUP_CG:                      Traffic Router found a backup cache via fall-back (CRconfig's ``edgeLocation``)  or via coordinates (CZF) configuration
-
-:DS_CZ_ONLY:                           The selected Delivery Service only supports resource lookup based on Coverage Zone data
-
-:DS_NO_BYPASS:                         No valid Bypass Destination is configured for the matched Delivery Service and the Delivery Service does not have the requested resource
-
-:DS_NOT_FOUND:                         Always goes with ``rtypes`` STATIC_ROUTE and DS_MISS
-
-:GEO_NO_CACHE_FOUND:                   Traffic Router could not find a resource via geographic location data based on the requesting client's location
-
-:NO_DETAILS:                           This entry is for a standard request
-
-:REGIONAL_GEO_ALTERNATE_WITHOUT_CACHE: This goes with the ``rtype`` RGDENY. The URL is being regionally blocked
-
-:REGIONAL_GEO_NO_RULE:                 The request was blocked because there was no rule in the Delivery Service for the request
-
+``-``
+	The request was not redirected. This is usually a result of a DNS request to the Traffic Router or an explicit denial for that request
+DS_BYPASS
+	Used Bypass Destination for Redirect of Delivery Service
+DS_CLIENT_GEO_UNSUPPORTED
+	Traffic Router did not find a resource supported by coverage zone data and was unable to determine the geographic location of the requesting client
+DS_CZ_BACKUP_CG
+	Traffic Router found a backup cache via fall-back (CRconfig's ``edgeLocation``)  or via coordinates (CZF) configuration
+DS_CZ_ONLY
+	The selected Delivery Service only supports resource lookup based on Coverage Zone data
+DS_NO_BYPASS
+	No valid Bypass Destination is configured for the matched Delivery Service and the Delivery Service does not have the requested resource
+DS_NOT_FOUND
+	Always goes with ``rtypes`` STATIC_ROUTE and DS_MISS
+GEO_NO_CACHE_FOUND
+	Traffic Router could not find a resource via geographic location data based on the requesting client's location
+NO_DETAILS
+	This entry is for a standard request
+REGIONAL_GEO_ALTERNATE_WITHOUT_CACHE
+	This goes with the ``rtype`` RGDENY. The URL is being regionally blocked
+REGIONAL_GEO_NO_RULE
+	The request was blocked because there was no rule in the Delivery Service for the request
 
 HTTP Specifics
 --------------
@@ -316,7 +317,6 @@ Sample Message
 	|rurl |The resulting URL of the resource requested by the client |A URL String|
 	+-----+----------------------------------------------------------+------------+
 
-------------
 
 DNS Specifics
 -------------
