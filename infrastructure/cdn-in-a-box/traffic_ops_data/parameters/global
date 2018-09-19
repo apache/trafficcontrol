@@ -1,6 +1,6 @@
    [
       {
-         "value" : "https://trafficops.cdn.local/",
+         "value" : "https://trafficops.cdn.local:443/",
          "name" : "tm.url",
          "config_file" : "global"
       },

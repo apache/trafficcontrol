@@ -18,10 +18,11 @@
 
 . /to-access.sh
 
-TO_URL=https://${TO_HOST}:${TO_PORT}
+TO_URL=https://${TO_FQDN}:${TO_PORT}
 TO_USER=$TV_USER
 TO_PASSWORD=$TV_PASSWORD
 
+# TODO: Fix Traffic Vault Enrollment
 #to-enroll "tv" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 ${RIAK_HOME}/riak-cluster.sh
