@@ -365,6 +365,36 @@ func (t SteeringType) String() string {
 	}
 }
 
+type FederationResolverType string
+
+const (
+	FederationResolverType4       = FederationResolverType("RESOLVE4")
+	FederationResolverType6       = FederationResolverType("RESOLVE6")
+	FederationResolverTypeInvalid = FederationResolverType("")
+)
+
+func (t FederationResolverType) String() string {
+	switch t {
+	case FederationResolverType4:
+		fallthrough
+	case FederationResolverType6:
+		return string(t)
+	default:
+		return "INVALID"
+	}
+}
+
+func FederationResolverTypeFromString(s string) FederationResolverType {
+	switch strings.ToLower(s) {
+	case "resolve4":
+		return FederationResolverType4
+	case "resolve6":
+		return FederationResolverType6
+	default:
+		return FederationResolverTypeInvalid
+	}
+}
+
 // DSType is the Delivery Service type.
 type DSType string
 
