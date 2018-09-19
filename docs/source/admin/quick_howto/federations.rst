@@ -19,43 +19,40 @@
 Configure Federations
 *********************
 
-1)  Create a user with a federations role (Misc -> Users -> Add User).  This user will have the ability to perform the following actions:
+#. Create a user with a federations role ('User Admin' -> 'Users' -> '+' button).  This user will have the ability to perform the following actions:
 
-		- Edit the federation
-		- Delete the federation
-		- Add IPV4 resolvers
-		- Add IPV6 resolvers
+	- Edit the federation
+	- Delete the federation
+	- Add IPV4 resolvers
+	- Add IPV6 resolvers
 
-.. image:: federations/01.png
-	:scale: 100%
-	:align: center
+	.. figure:: federations/01.png
+		:scale: 100%
+		:align: center
 
-2) 	As a user with admin priveleges, create a Federation Mapping by going to Delivery Services -> Federations and then clicking 'Add Federation Mapping'
+#. As a user with admin priveleges, create a Federation Mapping by going to 'Services' -> 'Delivery Services' -> 'Federations' under 'More' and then clicking 'Add Federation Mapping'
 
-3)	Choose the Delivery Service for the federation to be mapped to and assign it to the Federation User; click Add.
+#. Choose the Delivery Service to which the federation will be mapped and assign it to the Federation-role user; click Add.
 
-.. image:: federations/02.png
-	:scale: 100%
-	:align: center
+	.. figure:: federations/02.png
+		:scale: 100%
+		:align: center
 
-4) 	After the Federation is added, Traffic Ops will display the Federation.
+#. After the Federation is added, Traffic Ops will display the Federation. Changes can be made at this time or the Federation can be deleted. Notice that no resolvers have been added to the fedeation yet. This can only be done by the Federation-role user to whom the Fedarated Delivery Service was assigned. If no further action is necessary, the Close button will close the window and display the list of all Federations.
 
-	Changes can be made at this time or the Federation can be deleted.  Notice that no resolvers have been added to the fedeation yet.  This can only be done by the federation user created in step 1.
+	.. figure:: federations/03.png
+		:scale: 100%
+		:align: center
 
-	If no further action is necessary, the Close button will close the window and display the list of all Federations.
+#. The federation user logs into either the Traffic Ops API or the Traffic Portal UI and stores the Mojolicious cookie.  The Mojolicious cookie can be obtained manually using the debug tools on a web browser or via a command line utility like cURL.
 
-.. image:: federations/03.png
-	:scale: 100%
-	:align: center
+	.. code-block:: shell
+		:caption: Example cURL Command
 
+		curl -i -XPOST "http://localhost:3000/api/1.1/user/login" -H "Content-Type: application/json" -d '{ "u": "federation_user1", "p": "password" }'
 
-**The Federation user can now add resolvers to the Federation Mapping in Traffic Ops.**
-
-5)	The federation user logs to traffic ops and stores the mojolicious cookie.  The mojolicious cookie can be obtained manually using the debug tools on a web browser or via curl.
-
-	Example::
-
-		$ curl -i -XPOST "http://localhost:3000/api/1.1/user/login" -H "Content-Type: application/json" -d '{ "u": "federation_user1", "p": "password" }'
+	.. code-block:: http
+		:caption: Example API Response
 
 		HTTP/1.1 200 OK
 		Date: Wed, 02 Dec 2015 21:12:06 GMT
@@ -72,21 +69,24 @@ Configure Federations
 
 		{"alerts":[{"level":"success","text":"Successfully logged in."}]}
 
-6) The federation user sends a request to Traffic Ops to add IPV4 and/or IPV6 resolvers
+#. The federation user sends a request to Traffic Ops to add IPV4 and/or IPV6 resolvers
 
 
-	Example::
+	.. code-block:: shell
+		:caption: Example cURL Command
 
-		$ curl -ki -H "Cookie: mojolicious=eyJleHBpcmVzIjoxNDQ5MTA1MTI2LCJhdXRoX2RhdGEiOiJmZWRlcmF0aW9uX3VzZXIxIn0---06b4f870d809d82a91433e92eae8320875c3e8b0;" -XPUT 'http://localhost:3000/api/1.2/federations' -d '
-			{"federations": [
-				{   "deliveryService": "images-c1",
-					"mappings":
-						{ "resolve4": [ "8.8.8.8/32", "8.8.4.4/32" ],
-						  "resolve6": ["2001:4860:4860::8888/128", "2001:4860:4860::8844"]
-						}
+		curl -ki -H "Cookie: mojolicious=eyJleHBpcmVzIjoxNDQ5MTA1MTI2LCJhdXRoX2RhdGEiOiJmZWRlcmF0aW9uX3VzZXIxIn0---06b4f870d809d82a91433e92eae8320875c3e8b0;" -XPUT 'http://localhost:3000/api/1.2/federations' -d '
+		{"federations": [
+			{ "deliveryService": "images-c1",
+			  "mappings":
+				{ "resolve4": [ "8.8.8.8/32", "8.8.4.4/32" ],
+				  "resolve6": ["2001:4860:4860::8888/128", "2001:4860:4860::8844"]
 				}
-			  ]
-			}'
+			}
+		]}'
+
+	.. code-block:: http
+		:caption: Example API Response
 
 		HTTP/1.1 200 OK
 		Set-Cookie: mojolicious=eyJleHBpcmVzIjoxNDQ5MTA1OTQyLCJhdXRoX2RhdGEiOiJmZWRlcmF0aW9uX3VzZXIxIn0---b42be0749415cefd1d14e1a91bb214845b4de556; expires=Thu, 03 Dec 2015 01:25:42 GMT; path=/; HttpOnly
@@ -103,17 +103,21 @@ Configure Federations
 
 		{"response":"federation_user1 successfully created federation resolvers."}
 
-7) The resolvers added by the federation user will now visible in Traffic Ops.
+#. The resolvers added by the Federation-user will now visible in Traffic Portal.
 
-.. image:: federations/04.png
-	:scale: 100%
-	:align: center
+	.. figure:: federations/04.png
+		:scale: 100%
+		:align: center
 
-8) Any requests made from a client that resolves to one of the federation resolvers will now be given a CNAME from Traffic Router.
+Any requests made from a client that resolves to one of the federation resolvers will now be given a CNAME from Traffic Router.
 
-	Example::
+	.. code-block:: shell
+		:caption: Example DNS request (via ``dig``)
 
-		$ dig @tr.kabletown.net foo.images-c1.kabletown.net
+		dig @tr.kabletown.net foo.images-c1.kabletown.net
+
+	.. code-block:: DNS
+		:caption: Example Resolver Response
 
 		; <<>> DiG 9.7.3-RedHat-9.7.3-2.el6 <<>> @tr.kabletown.net foo.images-c1.kabletown.net
 		; (1 server found)
