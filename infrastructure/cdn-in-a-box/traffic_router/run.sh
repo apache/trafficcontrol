@@ -37,6 +37,7 @@ CATALINA_OPTS="\
 
 JAVA_HOME=/opt/java
 JAVA_OPTS="\
+  -Dcache.config.json.refresh.period=5000 \
   -Djava.awt.headless=true \
   -Djava.security.egd=file:/dev/./urandom"
 

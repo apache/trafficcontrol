@@ -69,13 +69,14 @@ cd /opt/traffic_ops/app
 
 CDNCONF=/opt/traffic_ops/app/conf/cdn.conf
 DBCONF=/opt/traffic_ops/app/conf/production/database.conf
+RIAKCONF=/opt/traffic_ops/app/conf/production/riak.conf
 mkdir -p /var/log/traffic_ops
 touch /var/log/traffic_ops/traffic_ops.log
 
 # enroll in the background so traffic_ops_golang can run in foreground
 TO_USER=$TO_ADMIN_USER TO_PASSWORD=$TO_ADMIN_PASSWORD to-enroll $(hostname -s) &
 
-./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF &
+./bin/traffic_ops_golang -cfg $CDNCONF -dbcfg $DBCONF -riakcfg $RIAKCONF &
 
 sleep 5
 
