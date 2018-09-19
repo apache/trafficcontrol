@@ -13,9 +13,9 @@
 .. limitations under the License.
 ..
 
-%%%%%%%%%%%%%%%
+***************
 Traffic Control
-%%%%%%%%%%%%%%%
+***************
 
 The vast majority of today's Internet traffic is media files being sent from a single source to many thousands or even millions of destinations. Content Delivery Networks make that one-to-many distribution possible in an economical way.
 
