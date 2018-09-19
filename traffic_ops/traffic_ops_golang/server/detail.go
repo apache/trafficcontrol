@@ -223,7 +223,7 @@ JOIN type t ON s.type = t.id
 		}
 
 		hiddenField := "********"
-		if user.PrivLevel < auth.PrivLevelAdmin {
+		if user.PrivLevel < auth.PrivLevelOperations {
 			s.ILOPassword = &hiddenField
 			s.XMPPPasswd = &hiddenField
 		}
