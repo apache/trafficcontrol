@@ -156,6 +156,8 @@ latex_documents = [
 	 'Apache Traffic Control', 'manual'),
 ]
 
+latex_logo = "../../Traffic-Control-Logo-FINAL-White-Text.png"
+
 
 # -- Options for manual page output ------------------------------------------
 
