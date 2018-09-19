@@ -280,9 +280,9 @@ Check Extensions
 
 In other words, check extensions are scripts that, after registering with Traffic Ops, have a column reserved in the "Health->Server Checks" view and that usually run periodically out of cron.
 
-.. |checkmark| image:: ../_static/good.png
+.. |checkmark| image:: ../admin/traffic_ops/images/good.png
 
-.. |X| image:: ../_static/bad.png
+.. |X| image:: ../admin/traffic_ops/images/bad.png
 
 
 It is the responsibility of the check extension script to iterate over the servers it wants to check and post the results.
