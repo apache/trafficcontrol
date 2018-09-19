@@ -296,11 +296,11 @@ def setStatusFile(statusDir:str, status:str, create:bool = False):
 			return
 
 		for stat in statuses:
-			fname = os.path.join(statusDir, stat)
+			fname = os.path.join(statusDir, stat["name"])
 			if stat != status and os.path.isfile(fname):
 				logging.info("Removing %s", fname)
 				if not MODE == Modes.REPORT:
-					os.remove(os.path.join(statusDir, stat))
+					os.remove(fname)
 
 	fname = os.path.join(statusDir, status)
 	if create and not os.path.isfile(fname):
@@ -412,7 +412,7 @@ def setATSStatus(status:bool, restart:bool = False) -> bool:
 			logging.info("ATS already not running; nothing to do.")
 
 	if arg and MODE != "REPORT":
-		return startDaemon([os.path.join(TS_ROOT, "bin", "traffic_server"), arg],
+		return startDaemon([os.path.join(TS_ROOT, "bin", "trafficserver"), arg],
 		                   stdout=os.path.join(TS_ROOT, "var", "log", "trafficserver", "traffic.out"),
 		                   stderr=os.path.join(TS_ROOT, "var", "log", "trafficserver", "error.log"))
 
@@ -479,6 +479,8 @@ def getYesNoResponse(prmpt:str, default:str = None) -> bool:
 			return True
 		elif choice in {'n', 'no'}:
 			return False
+		elif not choice and default is not None:
+			return default.lower() in {'y', 'yes'}
 
 		print("Please enter a yes/no response.", file=sys.stderr)
 
@@ -531,16 +533,17 @@ def revalidate() -> int:
 
 	try:
 		updateStatus = getJSONResponse("/api/1.3/servers/%s/update_status" % HOSTNAME[0])[0]
-	except IndexError:
+	except IndexError as e:
 		logging.critical("Server not found in Traffic Ops config")
-		return 1
+		logging.debug("%s", e, exc_info=True, stack_info=True)
+		return 2
 
 	logging.debug("updateStatus raw response: %s", updateStatus)
 
 	try:
 		if not updateStatus['reval_pending']:
 			logging.info("No revalidation pending.")
-			return 0
+			return 1
 
 		if updateStatus['parent_reval_pending']:
 			logging.critical("Parent revalidation is pending.")
@@ -552,9 +555,38 @@ def revalidate() -> int:
 		logging.critical("Unsupported Traffic Ops version")
 		logging.warning("%s", e, exc_info=True)
 		logging.debug("%s", e, stack_info=True)
-		return 1
+		return 2
 
 	return 0
+
+def updateOps() -> int:
+	"""
+	Updates Traffic Ops as needed, and returns an exit code for the main routine
+	"""
+	global MODE, HOSTNAME, TO_URL, TO_COOKIE
+
+	revalPending = revalidate() == 0
+
+	if (MODE==Modes.INTERACTIVE and getYesNoResponse("Update Traffic Ops?", 'Y'))\
+	   or MODE!=Modes.REVALIDATE:
+
+		logging.info("starting Traffic Ops update for upd_pending")
+		payload = {"updated": False, "reval_updated": False}
+		response = requests.post(TO_URL+"/update/%s" % HOSTNAME[0], cookies=TO_COOKIE, verify=False, data=payload)
+
+		logging.debug("Raw response from Traffic Ops: %s\n%s\n%s", response, response.headers, response.content)
+
+	elif MODE == Modes.REVALIDATE:
+		logging.info("starting Traffic Ops update for reval_pending")
+		payload = {"updated": False, "reval_updated": True}
+		response = requests.post(TO_URL+"/update/%s" % HOSTNAME[0], cookies=TO_COOKIE, verify=False, data=payload)
+
+		logging.debug("Raw response from Traffic Ops: %s\n%s\n%s", response, response.headers, response.content)
+
+	else:
+		logging.warning("Update will not be performed at this time; you should do this manually")
+	return 0
+
 
 HANDLERS = {"revalidate": revalidate,
             "syncds": lambda: None}
@@ -1114,19 +1146,24 @@ def doMain() -> int:
 		return 1
 
 
-	if MODE == Modes.REVALIDATE:
-		logging.info("======== Revalidating, no package processing needed ========")
-		return revalidate()
-
-	logging.info("======== Start processing packages ========")
 	try:
-		if not processPackages():
-			logging.critical("Unrecoverable error occured when processing packages.")
-			return 1
-		logging.info("======== Start processing services ========")
-		if not processChkconfig():
-			logging.critical("Unrecoverable error occured when processing chkconfig.")
-			return 1
+		if MODE == Modes.REVALIDATE:
+			logging.info("======== Revalidating, no package processing needed ========")
+			reval = revalidate()
+			if reval:
+				# Bail, possibly with an exit code
+				return reval - 1
+
+		else:
+			logging.info("======== Start processing packages ========")
+			if not processPackages():
+				logging.critical("Unrecoverable error occurred when processing packages.")
+				return 1
+			logging.info("======== Start processing services ========")
+			if not processChkconfig():
+				logging.critical("Unrecoverable error occurred when processing services.")
+				return 1
+
 		if not processConfigFiles(myFiles["configFiles"], tcpPort, serverIpv4):
 			logging.critical("Unrecoverable error occurred when processing config files")
 			return 1
@@ -1142,6 +1179,11 @@ def doMain() -> int:
 		if not setATSStatus(True, restart=True):
 			logging.critical("Failed to restart ATS")
 			return 1
+	else:
+		logging.info("ATS Restart unnecessary")
+
+	if MODE != Modes.REPORT and DSUpdateNeeded:
+		return updateOps()
 
 	return 0
 
