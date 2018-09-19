@@ -28,6 +28,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/lib/pq"
 )
@@ -40,7 +41,7 @@ func GetDetailHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	servers, err := getDetailServers(inf.Tx.Tx, inf.Params["hostName"], -1, "", 0)
+	servers, err := getDetailServers(inf.Tx.Tx, inf.User, inf.Params["hostName"], -1, "", 0)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting detail servers: "+err.Error()))
 		return
@@ -89,7 +90,7 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	servers, err := getDetailServers(inf.Tx.Tx, hostName, physLocationID, util.CamelToSnakeCase(orderBy), limit)
+	servers, err := getDetailServers(inf.Tx.Tx, inf.User, hostName, physLocationID, util.CamelToSnakeCase(orderBy), limit)
 	respVals := map[string]interface{}{
 		"orderby": orderBy,
 		"limit":   limit,
@@ -98,7 +99,7 @@ func GetDetailParamHandler(w http.ResponseWriter, r *http.Request) {
 	api.RespWriterVals(w, r, inf.Tx.Tx, respVals)(servers, err)
 }
 
-func getDetailServers(tx *sql.Tx, hostName string, physLocationID int, orderBy string, limit int) ([]tc.ServerDetail, error) {
+func getDetailServers(tx *sql.Tx, user *auth.CurrentUser, hostName string, physLocationID int, orderBy string, limit int) ([]tc.ServerDetail, error) {
 	allowedOrderByCols := map[string]string{
 		"":                 "",
 		"cachegroup":       "s.cachegroup",
@@ -220,6 +221,13 @@ JOIN type t ON s.type = t.id
 		if err := rows.Scan(&s.CacheGroup, &s.CDNName, pq.Array(&s.DeliveryServiceIDs), &s.DomainName, &s.GUID, &s.HostName, &s.HTTPSPort, &s.ID, &s.ILOIPAddress, &s.ILOIPGateway, &s.ILOIPNetmask, &s.ILOPassword, &s.ILOUsername, &s.InterfaceMTU, &s.InterfaceName, &s.IP6Address, &s.IP6Gateway, &s.IPAddress, &s.IPGateway, &s.IPNetmask, &s.MgmtIPAddress, &s.MgmtIPGateway, &s.MgmtIPNetmask, &s.OfflineReason, &s.PhysLocation, &s.Profile, &s.ProfileDesc, &s.Rack, &s.RouterHostName, &s.RouterPortName, &s.Status, &s.TCPPort, &s.Type, &s.XMPPID, &s.XMPPPasswd); err != nil {
 			return nil, errors.New("Error scanning detail server: " + err.Error())
 		}
+
+		hiddenField := "********"
+		if user.PrivLevel < auth.PrivLevelAdmin {
+			s.ILOPassword = &hiddenField
+			s.XMPPPasswd = &hiddenField
+		}
+
 		servers = append(servers, s)
 		sIDs = append(sIDs, *s.ID)
 	}
