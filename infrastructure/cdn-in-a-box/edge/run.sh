@@ -56,6 +56,8 @@ done
 
 to-enroll edge $CDN || (while true; do echo "enroll failed."; sleep 3 ; done)
 
+sleep 5 # Gives enough time for enrollment to complete
+
 # Leaves the container hanging open in the event of a failure for debugging purposes
 /opt/ort/traffic_ops_ort.py BADASS ALL "https://$TO_FQDN:$TO_PORT" "$TO_ADMIN_USER:$TO_ADMIN_PASSWORD" || { echo "Failed"; tail -f /dev/null; }
 
