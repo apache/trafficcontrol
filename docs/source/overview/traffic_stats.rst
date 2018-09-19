@@ -14,11 +14,10 @@
 ..
 
 .. _tc-ts:
-.. |arrow| image:: fwda.png
 
-
+*************
 Traffic Stats
-=============
+*************
 Traffic Stats is a program written in `Go <http://golang.org>`_ that is used to acquire and store statistics about CDNs controlled by Traffic Control. Traffic Stats mines metrics from Traffic Monitor's JSON APIs and stores the data in `InfluxDB <http://influxdb.com>`_. Data is typically stored in InfluxDB on a short-term basis (30 days or less). The data from InfluxDB is then used to drive graphs created by `Grafana <http://grafana.org>`_ - which are linked to from Traffic Ops - as well as provide data exposed through the Traffic Ops API. Traffic Stats performs two functions:
 
 - Gathers stat data for Edge Caches and Delivery Services at a configurable interval (10 second default) from the Traffic Monitor API's and stores the data in InfluxDB
@@ -26,23 +25,21 @@ Traffic Stats is a program written in `Go <http://golang.org>`_ that is used to 
 
 Stat data is stored in three different databases:
 
-	- ``cache_stats``: Stores data gathered from edge caches. The `measurements <https://influxdb.com/docs/v0.9/concepts/glossary.html#measurement>`_ stored by cache are: bandwidth, maxKbps, and ``client_connections`` (``ats.proxy.process.http.current_client_connections``). Cache Data is stored with `tags <https://influxdb.com/docs/v0.9/concepts/glossary.html#tag>`_ for hostname, Cache Group, and CDN. Data can be queried using tags.
+- ``cache_stats``: Stores data gathered from edge caches. The `measurements <https://influxdb.com/docs/v0.9/concepts/glossary.html#measurement>`_ stored by cache are: bandwidth, maxKbps, and ``client_connections`` (``ats.proxy.process.http.current_client_connections``). Cache Data is stored with `tags <https://influxdb.com/docs/v0.9/concepts/glossary.html#tag>`_ for hostname, Cache Group, and CDN. Data can be queried using tags.
 
-	- ``deliveryservice_stats``: Stores data for Delivery Services. The measurements stored by delivery service are:
+- ``deliveryservice_stats``: Stores data for Delivery Services. The measurements stored by delivery service are:
 
-		- ``kbps``
-		- ``status_4xx``
-		- ``status_5xx``
-		- ``tps_2xx``
-		- ``tps_3xx``
-		- ``tps_4xx``
-		- ``tps_5xx``
-		- ``tps_total``
+	- ``kbps``
+	- ``status_4xx``
+	- ``status_5xx``
+	- ``tps_2xx``
+	- ``tps_3xx``
+	- ``tps_4xx``
+	- ``tps_5xx``
+	- ``tps_total``
 
-		Delivery Service statistics are stored with tags for Cache Group, CDN, and Delivery Service ``xml_id``.
+	Delivery Service statistics are stored with tags for Cache Group, CDN, and Delivery Service ``xml_id``.
 
-	- ``daily_stats``: Stores summary data for daily activities. The statistics that are currently summarized are Max Bandwidth and Bytes Served and they are stored by CDN.
-
-------------
+- ``daily_stats``: Stores summary data for daily activities. The statistics that are currently summarized are Max Bandwidth and Bytes Served and they are stored by CDN.
 
 Traffic Stats does not influence overall CDN operation, but is required in order to display charts in Traffic Portal and the legacy Traffic Ops UI.
