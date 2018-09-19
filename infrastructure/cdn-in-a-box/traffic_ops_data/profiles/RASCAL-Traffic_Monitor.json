@@ -32,7 +32,7 @@
     {
       "configFile": "rascal-config.txt",
       "name": "heartbeat.polling.interval",
-      "value": "2000"
+      "value": "3000"
     },
     {
       "configFile": "rascal-config.txt",
@@ -42,7 +42,7 @@
     {
       "configFile": "rascal-config.txt",
       "name": "peers.polling.interval",
-      "value": "1000"
+      "value": "3000"
     },
     {
       "configFile": "rascal-config.txt",
@@ -62,7 +62,7 @@
     {
       "configFile": "rascal-config.txt",
       "name": "tm.polling.interval",
-      "value": "60000"
+      "value": "2000"
     }
   ]
 }
