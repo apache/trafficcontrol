@@ -155,3 +155,9 @@ test:
   driver: postgres
   open: host=$DB_FQDN port=$DB_PORT user=$DB_USER password=$DB_USER_PASS dbname=to_test sslmode=disable
 EOF
+
+cat <<-EOF >/opt/traffic_ops/app/conf/production/riak.conf
+{     "user": "$TV_RIAK_USER",
+  "password": "$TV_RIAK_PASSWORD"
+}
+EOF
