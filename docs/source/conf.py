@@ -32,6 +32,43 @@ ortPath = os.path.join(ortPath, '..', '..', 'infrastructure', 'cdn-in-a-box', 'e
 ortPath = os.path.abspath(ortPath)
 print("Looking for Python-based ORT in '", ortPath, ",", sep="")
 sys.path.insert(0, ortPath)
+# import os
+# import sys
+# sys.path.insert(0, os.path.abspath('.'))
+
+# -- Custom Lexical Analyzer for DNS -----------------------------------------
+
+from pygments.lexer import RegexLexer, bygroups
+from pygments.token import *
+from sphinx.highlighting import lexers
+
+class DNSLexer(RegexLexer):
+    name = 'DNS'
+    aliases = ['dns', 'dig']
+
+    tokens = {
+        'root': [
+            (r"^;( <<>> .*?| \((\d+|no) server(s)? found\)\s*|; global options:.*?|; Got answer:\s*)$", Comment.Singleline),
+            (r"^;;", Operator),
+            (r"^;\w.*?$", String),
+            (r"->>HEADER<<-", Keyword),
+            (r"(WARNING)(:)( )(.*?)$", bygroups(Generic.Subheading, Operator, Text, Error)),
+            (r"(WHEN)(:)( )(.*?)$", bygroups(Generic.Subheading, Operator, Text, Literal.Date)),
+            (r"(\w+)(:)(\s*)(\w+)(,)?", bygroups(Name.Variable, Operator, Text, String, Text)),
+            (r"(flags:)( )(?=(\w+)( )?)+", bygroups(Name.Entity, Text, String, Text)),
+            (r";", Keyword),
+            (r"[a-zA-Z]+ SECTION:", Generic.Heading),
+            (r"(\d+\.){3}\d+", String.Other),
+            (r"\d", Number),
+            (r"[\w\.\-#\(\)]+", String),
+            (r'\s', Text)
+        ]
+    }
+
+lexers['DNS'] = DNSLexer(startinline=True)
+
+
+
 
 # -- Project information -----------------------------------------------------
 
