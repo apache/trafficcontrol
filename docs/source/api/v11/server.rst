@@ -72,7 +72,7 @@ Server
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``iloIpNetmask``   | string | The IPv4 netmask of the lights-out-management port.                                                        |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``iloPassword``    | string | The password of the of the lights-out-management user (displays as ****** unless you are an 'admin' user). |
+  | ``iloPassword``    | string | The password of the of the lights-out-management user (displays as ****** unless 'ops' / 'admin' user).    |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``iloUsername``    | string | The user name for lights-out-management.                                                                   |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
@@ -228,7 +228,7 @@ Server
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``iloIpNetmask``   | string | The IPv4 netmask of the lights-out-management port.                                                        |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
-  | ``iloPassword``    | string | The password of the of the lights-out-management user (displays as ****** unless you are an 'admin' user). |
+  | ``iloPassword``    | string | The password of the of the lights-out-management user (displays as ****** unless 'ops' / 'admin' user).    |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
   | ``iloUsername``    | string | The user name for lights-out-management.                                                                   |
   +--------------------+--------+------------------------------------------------------------------------------------------------------------+
@@ -422,7 +422,7 @@ Server
   +----------------------+--------+-------------------------------------------------------------------------------------------------------------+
   | ``iloIpNetmask``     | string | The IPv4 netmask of the lights-out-management port.                                                         |
   +----------------------+--------+-------------------------------------------------------------------------------------------------------------+
-  | ``iloPassword``      | string | The password of the of the lights-out-management user  (displays as ****** unless you are an 'admin' user). |
+  | ``iloPassword``      | string | The password of the of the lights-out-management user (displays as ****** unless 'ops' / 'admin' user).     |
   +----------------------+--------+-------------------------------------------------------------------------------------------------------------+
   | ``iloUsername``      | string | The user name for lights-out-management.                                                                    |
   +----------------------+--------+-------------------------------------------------------------------------------------------------------------+
