@@ -15,38 +15,39 @@
 
 .. _regionalgeo-qht:
 
-**************************************
+*************************************
 Configure Regional Geo-blocking (RGB)
-**************************************
-
+*************************************
 .. Note:: RGB is only supported for HTTP delivery services.
 
-1)	Prepare RGB configuration file
+#. Prepare an RGB configuration file. RGB uses a configuration file in JSON format to define regional geographic blocking rules for Delivery Services. The file needs to be put on an HTTP server accessible to Traffic Router.
 
-RGB uses a configuration file in JSON format to define regional geo-blocking rules for delivery services. The file needs to be put on an HTTP server accessible to Traffic Router. An example of the JSON is as follows::
+	.. code-block:: json
+		:caption: Example Configuration File
 
-    {
-    "deliveryServices":
-        [
-            {
-                "deliveryServiceId": "hls-live",
-                "urlRegex": ".*live4\\.m3u8",
-                "geoLocation": {"includePostalCode":["N0H", "L9V", "L9W"]},
-                "redirectUrl": "http://third-party.com/blacked_out.html"
-            },
-            {
-                "deliveryServiceId": "hls-live",
-                "urlRegex": ".*live5\\.m3u8",
-                "ipWhiteList": [185.68.71.9/22","142.232.0.79/24"],
-                "geoLocation": {"excludePostalCode":["N0H", "L9V"]},
-                "redirectUrl": "/live5_low_bitrate.m3u8"
-            }
-        ]
-    }
+		{
+		"deliveryServices":
+			[
+				{
+					"deliveryServiceId": "hls-live",
+					"urlRegex": ".*live4\\.m3u8",
+					"geoLocation": {"includePostalCode":["N0H", "L9V", "L9W"]},
+					"redirectUrl": "http://third-party.com/blacked_out.html"
+				},
+				{
+					"deliveryServiceId": "hls-live",
+					"urlRegex": ".*live5\\.m3u8",
+					"ipWhiteList": ["185.68.71.9/22","142.232.0.79/24"],
+					"geoLocation": {"excludePostalCode":["N0H", "L9V"]},
+					"redirectUrl": "/live5_low_bitrate.m3u8"
+				}
+			]
+		}
 
-* The value of "deliveryServiceId" shall be equal to the “XML ID” field of the intended delivery service defined on Traffic Ops.
-
-* “urlRegex” is to match request URLs. The URLs matching the regex are applicable to the rule.
+	``deliveryServiceId``
+		Should be equal to the ``ID`` or ``xml_id`` field of the intended Delivery Service as configured in Traffic Portal
+	``urlRegex``
+		A regular expression to be used to determine
 
 * “geoLocation” currently supports “includePostalCode” and “excludePostalCode” attribute. When “includePostalCode” attribute is used, only the clients whose FSAs are in the “includePostalCode” list are able to view the content represented by “urlRegex”. When “excludePostalCode” is used, any client whose FSA are not in the “excludePostalCode” list are allowed to view the content. “includePostalCode” and “excludePostalCode” are mutually exclusive in one rule. (FSA: Forward Sortation Area, first three postal characters of Canadian postal codes)
 
@@ -88,7 +89,7 @@ For "rtype", RGALT indicates that a request is redirected to an alternate URL by
 
 For "rgb", when RGB is enabled, it will be non-empty with following format::
 
-    {FSA}:{allowed/disallowed}:{include/exclude postal}:{fallback config/current config}:{allowed by whitelist/otherwise}
+	{FSA}:{allowed/disallowed}:{include/exclude postal}:{fallback config/current config}:{allowed by whitelist/otherwise}
 
 
 * {FSA}: It is the client’s FSA part of its postal code, which is retrieved from geo-location database. If FSA is empty, dash (“-“) is filled in.
@@ -100,10 +101,10 @@ For "rgb", when RGB is enabled, it will be non-empty with following format::
 
 Example::
 
-    1446442214.685 qtype=HTTP chi=129.100.254.79 url="http://foo.geo2.cdn.com/live5.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=GEO rloc="-" rdtl=- rerr="-" rgb="N6G:1:X:0:0" pssc=302 ttms=3 rurl=http://cent6-44.geo2.cdn.com/live5.m3u8 rh="-"
+	1446442214.685 qtype=HTTP chi=129.100.254.79 url="http://foo.geo2.cdn.com/live5.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=GEO rloc="-" rdtl=- rerr="-" rgb="N6G:1:X:0:0" pssc=302 ttms=3 rurl=http://cent6-44.geo2.cdn.com/live5.m3u8 rh="-"
 
-    1446442219.181 qtype=HTTP chi=184.68.71.9 url="http://foo.geo2.cdn.com/live5.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=RGALT rloc="-" rdtl=- rerr="-" rgb="-:0:X:0:0" pssc=302 ttms=3 rurl=http://cent6-44.geo2.cdn.com/low_bitrate.m3u8 rh="-"
+	1446442219.181 qtype=HTTP chi=184.68.71.9 url="http://foo.geo2.cdn.com/live5.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=RGALT rloc="-" rdtl=- rerr="-" rgb="-:0:X:0:0" pssc=302 ttms=3 rurl=http://cent6-44.geo2.cdn.com/low_bitrate.m3u8 rh="-"
 
-    1446445521.677 qtype=HTTP chi=24.114.29.79 url="http://foo.geo2.cdn.com/live51.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=RGDENY rloc="-" rdtl=- rerr="-" rgb="L4S:0:-:0:0" pssc=520 ttms=3 rurl="-" rh="-"
+	1446445521.677 qtype=HTTP chi=24.114.29.79 url="http://foo.geo2.cdn.com/live51.m3u8" cqhm=GET cqhv=HTTP/1.1 rtype=RGDENY rloc="-" rdtl=- rerr="-" rgb="L4S:0:-:0:0" pssc=520 ttms=3 rurl="-" rh="-"
 
 
