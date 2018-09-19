@@ -13,11 +13,11 @@
 .. limitations under the License.
 ..
 
-.. |graph| image:: ../../_static/graph.png
-.. |info| image:: ../../_static//info.png
-.. |checkmark| image:: ../../_static/good.png
-.. |X| image:: ../../_static/bad.png
-.. |clock| image:: ../../_static/clock-black.png
+.. |graph| image:: images/graph.png
+.. |info| image:: images/info.png
+.. |checkmark| image:: images/good.png
+.. |X| image:: images/bad.png
+.. |clock| image:: images/clock-black.png
 
 *******************
 Traffic Ops - Using
