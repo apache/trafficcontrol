@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
   - /api/1.3/origins `(GET,POST,PUT,DELETE)`
   - /api/1.3/coordinates `(GET,POST,PUT,DELETE)`
   - /api/1.3/staticdnsentries `(GET,POST,PUT,DELETE)`
+  - /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys `GET`
+  - /api/1.1/deliveryservices/hostname/:hostname/sslkeys `GET`
+  - /api/1.1/deliveryservices/sslkeys/add `POST`
+  - /api/1.1/deliveryservices/xmlId/:xmlid/sslkeys/delete `GET`
 - Delivery Service Origins Refactor: The Delivery Service API now creates/updates an Origin entity on Delivery Service creates/updates, and the `org_server_fqdn` column in the `deliveryservice` table has been removed. The `org_server_fqdn` data is now computed from the Delivery Service's primary origin (note: the name of the primary origin is the `xml_id` of its delivery service).
 - Cachegroup-Coordinate Refactor: The Cachegroup API now creates/updates a Coordinate entity on Cachegroup creates/updates, and the `latitude` and `longitude` columns in the `cachegroup` table have been replaced with `coordinate` (a foreign key to Coordinate). Coordinates created from Cachegroups are given the name `from_cachegroup_\<cachegroup name\>`.
 - Geolocation-based Client Steering: two new steering target types are available to use for `CLIENT_STEERING` delivery services: `STEERING_GEO_ORDER` and `STEERING_GEO_WEIGHT`. When targets of these types have an Origin with a Coordinate, Traffic Router will order and prioritize them based upon the shortest total distance from client -> edge -> origin. Co-located targets are grouped together and can be weighted or ordered within the same location using `STEERING_GEO_WEIGHT` or `STEERING_GEO_ORDER`, respectively.
