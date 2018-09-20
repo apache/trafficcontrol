@@ -22,6 +22,8 @@ package dbhelpers
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -101,24 +103,45 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo
 	return criteria, queryValues, errs
 }
 
-//parses pq errors for uniqueness constraint violations
-func ParsePQUniqueConstraintError(err *pq.Error) (error, tc.ApiErrorType) {
-	if len(err.Constraint) > 0 && len(err.Detail) > 0 { //we only want to continue parsing if it is a constraint error with details
-		detail := err.Detail
-		if strings.HasPrefix(detail, "Key ") && strings.HasSuffix(detail, " already exists.") { //we only want to continue parsing if it is a uniqueness constraint error
-			detail = strings.TrimPrefix(detail, "Key ")
-			detail = strings.TrimSuffix(detail, " already exists.")
-			//should look like "(column)=(dupe value)" at this point
-			details := strings.Split(detail, "=")
-			if len(details) == 2 {
-				column := strings.Trim(details[0], "()")
-				dupValue := strings.Trim(details[1], "()")
-				return errors.New(column + " " + dupValue + " already exists."), tc.DataConflictError
-			}
+// small helper function to help with parsing below
+func toCamelCase(str string) string {
+	mutable := []byte(str)
+	for i := 0; i < len(str); i++ {
+		if mutable[i] == '_' && i+1 < len(str) {
+			mutable[i+1] = strings.ToUpper(string(str[i+1]))[0]
 		}
 	}
-	log.Error.Printf("failed to parse unique constraint from pq error: %v", err)
-	return tc.DBError, tc.SystemError
+	return strings.Replace(string(mutable[:]), "_", "", -1)
+}
+
+// parses pq errors for not null constraint
+func ParsePQNotNullConstraintError(err *pq.Error) (error, tc.ApiErrorType) {
+	pattern := regexp.MustCompile(`null value in column "(.+)" violates not-null constraint`)
+	match := pattern.FindStringSubmatch(err.Message)
+	if match == nil {
+		return nil, tc.NoError
+	}
+	return fmt.Errorf("%s is a required field", toCamelCase(match[1])), tc.DataConflictError
+}
+
+// parses pq errors for violated foreign key constraints
+func ParsePQPresentFKConstraintError(err *pq.Error) (error, tc.ApiErrorType) {
+	pattern := regexp.MustCompile(`Key \(.+\)=\(.+\) is not present in table "(.+)"`)
+	match := pattern.FindStringSubmatch(err.Detail)
+	if match == nil {
+		return nil, tc.NoError
+	}
+	return fmt.Errorf("%s not found", match[1]), tc.DataMissingError
+}
+
+// parses pq errors for uniqueness constraint violations
+func ParsePQUniqueConstraintError(err *pq.Error) (error, tc.ApiErrorType) {
+	pattern := regexp.MustCompile(`Key \((.+)\)=\((.+)\) already exists`)
+	match := pattern.FindStringSubmatch(err.Detail)
+	if match == nil {
+		return nil, tc.NoError
+	}
+	return fmt.Errorf("%s %s already exists.", match[1], match[2]), tc.DataConflictError
 }
 
 // FinishTx commits the transaction if commit is true when it's called, otherwise it rolls back the transaction. This is designed to be called in a defer.

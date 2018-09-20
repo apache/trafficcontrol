@@ -286,7 +286,6 @@ func DeleteHandler(typeFactory CRUDFactory) http.HandlerFunc {
 			}
 		}
 
-		log.Debugf("calling delete on object: %++v", d) //should have id set now
 		userErr, sysErr, errCode = d.Delete()
 		if userErr != nil || sysErr != nil {
 			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -323,9 +322,6 @@ func CreateHandler(typeConstructor CRUDFactory) http.HandlerFunc {
 			HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 			return
 		}
-
-		log.Debugf("%++v", i)
-		//now we have a validated local object to insert
 
 		if t, ok := i.(Tenantable); ok {
 			authorized, err := t.IsTenantAuthorized(inf.User)
