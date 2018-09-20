@@ -114,7 +114,7 @@ func (comment *TODeliveryServiceRequestComment) Update() (error, error, int) {
 	current := TODeliveryServiceRequestComment{}
 	err := comment.ReqInfo.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
 	if err != nil {
-		return api.ParseDBErr(err, comment.GetType())
+		return api.ParseDBError(err)
 	}
 
 	userID := tc.IDNoMod(comment.ReqInfo.User.ID)

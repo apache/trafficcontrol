@@ -389,7 +389,7 @@ func (req *deliveryServiceRequestAssignment) Update() (error, error, int) {
 	}
 
 	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET assignee_id = $1 WHERE id = $2`, v, *req.ID); err != nil {
-		return api.ParseDBErr(err, req.GetType())
+		return api.ParseDBError(err)
 	}
 
 	if err = req.APIInfo().Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(req); err != nil {
@@ -455,7 +455,7 @@ func (req *deliveryServiceRequestStatus) Update() (error, error, int) {
 	// LastEditedBy field should not change with status update
 
 	if _, err = req.APIInfo().Tx.Tx.Exec(`UPDATE deliveryservice_request SET status = $1 WHERE id = $2`, *req.Status, *req.ID); err != nil {
-		return api.ParseDBErr(err, req.GetType())
+		return api.ParseDBError(err)
 	}
 
 	if err = req.APIInfo().Tx.QueryRowx(selectDeliveryServiceRequestsQuery()+` WHERE r.id = $1`, *req.ID).StructScan(req); err != nil {

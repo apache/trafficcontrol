@@ -182,7 +182,7 @@ func (st *TOSteeringTargetV11) Create() (error, error, int) {
 
 	rows, err := st.ReqInfo.Tx.NamedQuery(insertQuery(), st)
 	if err != nil {
-		return api.ParseDBErr(err, st.GetType())
+		return api.ParseDBError(err)
 	}
 	defer rows.Close()
 
@@ -223,7 +223,7 @@ func (st *TOSteeringTargetV11) Update() (error, error, int) {
 
 	rows, err := st.ReqInfo.Tx.NamedQuery(updateQuery(), st)
 	if err != nil {
-		return api.ParseDBErr(err, st.GetType())
+		return api.ParseDBError(err)
 	}
 	defer rows.Close()
 
