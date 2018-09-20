@@ -26,7 +26,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -35,7 +34,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/asaskevich/govalidator"
 	"github.com/go-ozzo/ozzo-validation"
-	"github.com/lib/pq"
 )
 
 // we need a type alias to define functions on
@@ -124,22 +122,6 @@ func (fed *TOCDNFederation) Validate() error {
 		"ttl":   validation.Validate(fed.TTL, validation.Required, validation.Min(0)),
 	}
 	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
-}
-
-// This separates out errors depending on whether or not some constraint prevented
-// the operation from occuring.
-func parseQueryError(parseErr error, method string) (error, tc.ApiErrorType) {
-	if pqErr, ok := parseErr.(*pq.Error); ok {
-		err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-		if eType == tc.DataConflictError {
-			log.Errorf("data conflict error: %v", err)
-			return errors.New("a federation with " + err.Error()), eType
-		}
-		return err, eType
-	} else {
-		log.Errorf("received error: %++v from %s execution", parseErr, method)
-		return tc.DBError, tc.SystemError
-	}
 }
 
 // fedAPIInfo.Params["name"] is not used on creation, rather the cdn name

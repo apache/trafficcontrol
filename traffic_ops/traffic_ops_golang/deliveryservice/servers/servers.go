@@ -268,9 +268,9 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 		dtos := map[string]interface{}{"id": dsId, "server": server}
 		if _, err := inf.Tx.NamedExec(insertIdsQuery(), dtos); err != nil {
 			if pqErr, ok := err.(*pq.Error); ok {
-				err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
+				err, _, code := dbhelpers.ParsePQUniqueConstraintError(pqErr)
 				log.Errorln("could not begin transaction: %v", err)
-				if eType == tc.DataConflictError {
+				if code == http.StatusBadRequest {
 					api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("inserting for delivery service servers replace: "+err.Error()))
 					return
 				}
@@ -327,9 +327,10 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := inf.Tx.Tx.Exec(`INSERT INTO deliveryservice_server (deliveryservice, server) SELECT $1, id FROM server WHERE host_name = ANY($2::text[])`, dsID, pq.Array(serverNames))
 	if err != nil {
+
 		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
+			err, _, code := dbhelpers.ParsePQUniqueConstraintError(pqErr)
+			if code == http.StatusBadRequest {
 				api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("a deliveryservice-server association with "+err.Error()), nil)
 				return
 			}
