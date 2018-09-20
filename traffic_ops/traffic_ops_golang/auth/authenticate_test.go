@@ -20,6 +20,7 @@ package auth
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"testing"
 )
 
@@ -49,4 +50,22 @@ func TestScryptPasswordIsRequired(t *testing.T) {
 	if err == nil {
 		t.Errorf("scrypt password should be required")
 	}
+}
+
+func TestPasswordStrength(t *testing.T) {
+
+	passwords := []string{"password", "pa$$word"}
+	expected := []bool{true, false}
+	LoadPasswordBlacklist("app/conf/invalid_passwords.txt")
+
+	for i, password := range passwords {
+		if IsInvalidPassword(password) != expected[i] {
+			if expected[i] {
+				t.Errorf("%s should have been marked as an invalid password", password)
+			} else {
+				t.Errorf("%s should be an ok password", password)
+			}
+		}
+	}
+
 }
