@@ -60,6 +60,8 @@ func (ds *TODeliveryServiceV13) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, ds.DeliveryServiceNullable)
 }
 
+func (ds *TODeliveryServiceV13) APIInfo() *api.APIInfo { return ds.ReqInfo }
+
 func GetTypeV13Factory() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
 		toReturn := TODeliveryServiceV13{reqInfo, tc.DeliveryServiceNullable{}}
@@ -90,53 +92,49 @@ func (ds *TODeliveryServiceV13) GetType() string {
 }
 
 func (ds *TODeliveryServiceV13) Validate() error {
-	return ds.DeliveryServiceNullable.Validate(ds.ReqInfo.Tx.Tx)
+	return ds.DeliveryServiceNullable.Validate(ds.APIInfo().Tx.Tx)
 }
 
 // Create is unimplemented, needed to satisfy CRUDer, since the framework doesn't allow a create to return an array of one
-func (ds *TODeliveryServiceV13) Create() (error, tc.ApiErrorType) {
-	return errors.New("The Create method is not implemented"), http.StatusNotImplemented
+func (ds *TODeliveryServiceV13) Create() (error, error, int) {
+	return nil, nil, http.StatusNotImplemented
 }
 
 // 	TODO allow users to post names (type, cdn, etc) and get the IDs from the names. This isn't trivial to do in a single query, without dynamically building the entire insert query, and ideally inserting would be one query. But it'd be much more convenient for users. Alternatively, remove IDs from the database entirely and use real candidate keys.
-func CreateV13() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		defer inf.Close()
-
-		ds := tc.DeliveryServiceNullable{}
-		if err := api.Parse(r.Body, inf.Tx.Tx, &ds); err != nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
-			return
-		}
-
-		if ds.RoutingName == nil || *ds.RoutingName == "" {
-			ds.RoutingName = util.StrPtr("cdn")
-		}
-		if err := ds.Validate(inf.Tx.Tx); err != nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
-			return
-		}
-		if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
-			return
-		} else if !authorized {
-			api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
-			return
-		}
-		ds, errCode, userErr, sysErr = create(inf.Tx.Tx, *inf.Config, inf.User, ds)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		*inf.CommitTx = true
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullable{ds})
+func CreateV13(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	ds := tc.DeliveryServiceNullable{}
+	if err := api.Parse(r.Body, inf.Tx.Tx, &ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("decoding: "+err.Error()), nil)
+		return
+	}
+
+	if ds.RoutingName == nil || *ds.RoutingName == "" {
+		ds.RoutingName = util.StrPtr("cdn")
+	}
+	if err := ds.Validate(inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
+		return
+	}
+	if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+		return
+	} else if !authorized {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+	ds, errCode, userErr, sysErr = create(inf.Tx.Tx, *inf.Config, inf.User, ds)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice creation was successful.", []tc.DeliveryServiceNullable{ds})
 }
 
 // create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
@@ -235,22 +233,22 @@ func create(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 	return ds, http.StatusOK, nil, nil
 }
 
-func (ds *TODeliveryServiceV13) Read(params map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
+func (ds *TODeliveryServiceV13) Read() ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
-	dses, errs, errType := readGetDeliveryServices(params, ds.ReqInfo.Tx, ds.ReqInfo.User)
+	dses, errs, _ := readGetDeliveryServices(ds.APIInfo().Params, ds.APIInfo().Tx, ds.APIInfo().User)
 	if len(errs) > 0 {
 		for _, err := range errs {
 			if err.Error() == `id cannot parse to integer` { // TODO create const for string
-				return nil, []error{errors.New("Resource not found.")}, tc.DataMissingError //matches perl response
+				return nil, errors.New("Resource not found."), nil, http.StatusNotFound //matches perl response
 			}
 		}
-		return nil, errs, errType
+		return nil, nil, errors.New("reading dses: " + util.JoinErrsStr(errs)), http.StatusInternalServerError
 	}
 
 	for _, ds := range dses {
 		returnable = append(returnable, ds)
 	}
-	return returnable, nil, tc.NoError
+	return returnable, nil, nil, http.StatusOK
 }
 
 func createDefaultRegex(tx *sql.Tx, dsID int, xmlID string) error {
@@ -371,51 +369,46 @@ func getTypeFromID(id int, tx *sql.Tx) (tc.DSType, error) {
 }
 
 // Update is unimplemented, needed to satisfy CRUDer, since the framework doesn't allow an update to return an array of one
-func (ds *TODeliveryServiceV13) Update() (error, tc.ApiErrorType) {
-	return errors.New("The Update method is not implemented"), http.StatusNotImplemented
+func (ds *TODeliveryServiceV13) Update() (error, error, int) {
+	return nil, nil, http.StatusNotImplemented
 }
 
-func UpdateV13() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		defer r.Body.Close()
-		inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-		defer inf.Close()
-
-		id := inf.IntParams["id"]
-
-		ds := tc.DeliveryServiceNullable{}
-		if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
-			return
-		}
-		ds.ID = &id
-
-		if err := ds.Validate(inf.Tx.Tx); err != nil {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
-			return
-		}
-
-		if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
-			return
-		} else if !authorized {
-			api.HandleErr(w, r, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
-			return
-		}
-
-		ds, errCode, userErr, sysErr = update(inf.Tx.Tx, *inf.Config, inf.User, &ds)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, errCode, userErr, sysErr)
-			return
-		}
-
-		*inf.CommitTx = true
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullable{ds})
+func UpdateV13(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
 	}
+	defer inf.Close()
+
+	id := inf.IntParams["id"]
+
+	ds := tc.DeliveryServiceNullable{}
+	if err := json.NewDecoder(r.Body).Decode(&ds); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		return
+	}
+	ds.ID = &id
+
+	if err := ds.Validate(inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("invalid request: "+err.Error()), nil)
+		return
+	}
+
+	if authorized, err := isTenantAuthorized(inf.User, inf.Tx, &ds.DeliveryServiceNullableV12); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
+		return
+	} else if !authorized {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+		return
+	}
+
+	ds, errCode, userErr, sysErr = update(inf.Tx.Tx, *inf.Config, inf.User, &ds)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Deliveryservice update was successful.", []tc.DeliveryServiceNullable{ds})
 }
 
 func getDSType(tx *sql.Tx, xmlid string) (tc.DSType, bool, error) {
@@ -563,7 +556,7 @@ func update(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds *tc.Delive
 
 // Delete is the DeliveryService implementation of the Deleter interface
 //all implementations of Deleter should use transactions and return the proper errorType
-func (ds *TODeliveryServiceV13) Delete() (error, tc.ApiErrorType) {
+func (ds *TODeliveryServiceV13) Delete() (error, error, int) {
 	return ds.V12().Delete()
 }
 

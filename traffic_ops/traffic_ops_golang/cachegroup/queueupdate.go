@@ -33,32 +33,32 @@ import (
 func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	reqObj := tc.CachegroupQueueUpdatesRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&reqObj); err != nil {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
 	if reqObj.Action != "queue" && reqObj.Action != "dequeue" {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("action must be 'queue' or 'dequeue'"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("action must be 'queue' or 'dequeue'"), nil)
 		return
 	}
 	if reqObj.CDN == nil && reqObj.CDNID == nil {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("cdn does not exist"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdn does not exist"), nil)
 		return
 	}
 	if reqObj.CDN == nil || *reqObj.CDN == "" {
 		cdn, ok, err := getCDNNameFromID(inf.Tx.Tx, int64(*reqObj.CDNID))
 		if err != nil {
-			api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting CDN name from ID '"+strconv.Itoa(int(*reqObj.CDNID))+"': "+err.Error()))
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting CDN name from ID '"+strconv.Itoa(int(*reqObj.CDNID))+"': "+err.Error()))
 			return
 		}
 		if !ok {
-			api.HandleErr(w, r, http.StatusBadRequest, errors.New("cdn "+strconv.Itoa(int(*reqObj.CDNID))+" does not exist"), nil)
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cdn "+strconv.Itoa(int(*reqObj.CDNID))+" does not exist"), nil)
 			return
 		}
 		reqObj.CDN = &cdn
@@ -66,20 +66,20 @@ func QueueUpdates(w http.ResponseWriter, r *http.Request) {
 	cgID := int64(inf.IntParams["id"])
 	cgName, ok, err := getCGNameFromID(inf.Tx.Tx, cgID)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting cachegroup name from ID '"+inf.Params["id"]+"': "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cachegroup name from ID '"+inf.Params["id"]+"': "+err.Error()))
 		return
 	}
 	if !ok {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("cachegroup "+inf.Params["id"]+" does not exist"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("cachegroup "+inf.Params["id"]+" does not exist"), nil)
 		return
 	}
 	queue := reqObj.Action == "queue"
 	updatedCaches, err := queueUpdates(inf.Tx.Tx, cgID, *reqObj.CDN, queue)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("queueing updates: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("queueing updates: "+err.Error()))
 		return
 	}
-	*inf.CommitTx = true
+
 	api.WriteResp(w, r, QueueUpdatesResp{
 		CacheGroupName: cgName,
 		Action:         reqObj.Action,

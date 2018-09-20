@@ -35,12 +35,11 @@ import (
 func GetUnassigned(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
-	*inf.CommitTx = true
-	api.RespWriter(w, r)(getUnassignedParametersByProfileID(inf.Tx.Tx, inf.IntParams["id"]))
+	api.RespWriter(w, r, inf.Tx.Tx)(getUnassignedParametersByProfileID(inf.Tx.Tx, inf.IntParams["id"]))
 }
 
 func getUnassignedParametersByProfileID(tx *sql.Tx, profileID int) ([]tc.ProfileParameterByName, error) {

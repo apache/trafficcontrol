@@ -34,12 +34,11 @@ import (
 func Get(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
-	*inf.CommitTx = true
-	api.RespWriter(w, r)(getSystemInfo(inf.Tx, inf.User.PrivLevel, time.Duration(inf.Config.DBQueryTimeoutSeconds)*time.Second))
+	api.RespWriter(w, r, inf.Tx.Tx)(getSystemInfo(inf.Tx, inf.User.PrivLevel, time.Duration(inf.Config.DBQueryTimeoutSeconds)*time.Second))
 }
 
 func getSystemInfo(tx *sqlx.Tx, privLevel int, timeout time.Duration) (*tc.SystemInfo, error) {

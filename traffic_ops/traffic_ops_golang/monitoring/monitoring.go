@@ -105,12 +105,11 @@ type DeliveryService struct {
 func Get(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"cdn"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
-	*inf.CommitTx = true
-	api.RespWriter(w, r)(getMonitoringJSON(inf.Tx.Tx, inf.Params["cdn"]))
+	api.RespWriter(w, r, inf.Tx.Tx)(getMonitoringJSON(inf.Tx.Tx, inf.Params["cdn"]))
 }
 
 func getMonitoringJSON(tx *sql.Tx, cdnName string) (*Monitoring, error) {

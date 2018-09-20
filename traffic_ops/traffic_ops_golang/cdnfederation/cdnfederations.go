@@ -22,7 +22,7 @@ package cdnfederation
 import (
 	"database/sql"
 	"errors"
-	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -42,13 +42,35 @@ import (
 type TOCDNFederation struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.CDNFederation
+	TenantID *int `json:"-" db:"tenant_id"`
 }
+
+func (v *TOCDNFederation) APIInfo() *api.APIInfo         { return v.ReqInfo }
+func (v *TOCDNFederation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TOCDNFederation) InsertQuery() string           { return insertQuery() }
+func (v *TOCDNFederation) NewReadObj() interface{}       { return &TOCDNFederation{} }
+func (v *TOCDNFederation) SelectQuery() string {
+	if v.ID != nil {
+		return selectByID()
+	}
+	return selectByCDNName()
+}
+func (v *TOCDNFederation) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	cols := map[string]dbhelpers.WhereColumnInfo{
+		"id": dbhelpers.WhereColumnInfo{Column: "federation.id", Checker: api.IsInt},
+	}
+	if v.ID == nil {
+		cols["name"] = dbhelpers.WhereColumnInfo{Column: "cdn.name", Checker: nil}
+	}
+	return cols
+}
+func (v *TOCDNFederation) DeleteQuery() string { return deleteQuery() }
+func (v *TOCDNFederation) UpdateQuery() string { return updateQuery() }
 
 // Used for all CRUD routes
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
-		toReturn := TOCDNFederation{reqInfo, tc.CDNFederation{}}
-		return &toReturn
+		return &TOCDNFederation{reqInfo, tc.CDNFederation{}, nil}
 	}
 }
 
@@ -120,49 +142,17 @@ func parseQueryError(parseErr error, method string) (error, tc.ApiErrorType) {
 	}
 }
 
-// fed.ReqInfo.Params["name"] is not used on creation, rather the cdn name
+// fedAPIInfo.Params["name"] is not used on creation, rather the cdn name
 // is connected when the federations/:id/deliveryservice links a federation
 // Note: cdns and deliveryservies have a 1-1 relationship
-func (fed *TOCDNFederation) Create() (error, tc.ApiErrorType) {
-
+func (fed *TOCDNFederation) Create() (error, error, int) {
 	// Deliveryservice IDs should not be included on create.
 	if fed.DeliveryServiceIDs != nil {
 		fed.DsId = nil
 		fed.XmlId = nil
 		fed.DeliveryServiceIDs = nil
 	}
-
-	// Boilerplate code below
-	resultRows, err := fed.ReqInfo.Tx.NamedQuery(insertQuery(), fed)
-	if err != nil {
-		return parseQueryError(err, "create")
-	}
-	defer resultRows.Close()
-
-	var id int
-	var lastUpdated tc.TimeNoMod
-
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err = resultRows.Scan(&id, &lastUpdated); err != nil {
-			log.Error.Printf("could not scan id and last_updated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	if rowsAffected == 0 {
-		err = errors.New("no federation was inserted, no id was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	} else if rowsAffected > 1 {
-		err = errors.New("too many ids returned from fed insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-	fed.SetKeys(map[string]interface{}{"id": id})
-	fed.LastUpdated = &lastUpdated
-
-	return nil, tc.NoError
+	return api.GenericCreate(fed)
 }
 
 // returning true indicates the data related to the given tenantID should be visible
@@ -179,201 +169,95 @@ func checkTenancy(tenantID *int, tenantIDs []int) bool {
 	return false
 }
 
-func (fed *TOCDNFederation) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
-
-	// Cannot perform query on tenantID while "rows" aren't closed (limitation of
-	// psql), so we need to get the valid tenentIDs ahead of time.
-	tenantIDs, err := tenant.GetUserTenantIDListTx(fed.ReqInfo.Tx.Tx, fed.ReqInfo.User.TenantID)
-	if err != nil {
-		log.Errorf("getting tenant list for user: %v\n", err)
-		return nil, []error{tc.DBError}, tc.SystemError
-	}
-
-	var query string
-	_, id := parameters["id"]
-	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"id": dbhelpers.WhereColumnInfo{Column: "federation.id", Checker: api.IsInt},
-	}
-	if !id {
-		queryParamsToQueryCols["name"] = dbhelpers.WhereColumnInfo{Column: "cdn.name", Checker: nil}
-	}
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
-
-	if id {
-		// Can't use `AddTenancyCheck` for id because then we won't know what caused
-		// an empty response, so the tenancy check will be performed below.
-		query = selectByID()
-	} else { // searching by name
-		query = selectByCDNName()
-		where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "(tenant_id", tenantIDs)
-		where += " OR tenant_id IS NULL)"
-	}
-
-	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
-	}
-
-	query += where + orderBy
-	log.Debugln("Query is ", query)
-
-	rows, err := fed.ReqInfo.Tx.NamedQuery(query, queryValues)
-	if err != nil {
-		log.Errorf("querying federations: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
-	}
-	defer rows.Close()
-
-	federations := []interface{}{}
-	for rows.Next() {
-
-		var tenantID *int
-		fed.DeliveryServiceIDs = &tc.DeliveryServiceIDs{}
-		if err = rows.Scan(&tenantID, &fed.ID, &fed.CName, &fed.TTL, &fed.Description, &fed.LastUpdated, &fed.DsId, &fed.XmlId); err != nil {
-			log.Errorf("parsing federation rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
+func (fed *TOCDNFederation) Read() ([]interface{}, error, error, int) {
+	if idstr, ok := fed.APIInfo().Params["id"]; ok {
+		id, err := strconv.Atoi(idstr)
+		if err != nil {
+			return nil, errors.New("id must be an integer"), nil, http.StatusBadRequest
 		}
+		fed.ID = util.IntPtr(id)
+	}
+
+	tenantIDs, err := tenant.GetUserTenantIDListTx(fed.APIInfo().Tx.Tx, fed.APIInfo().User.TenantID)
+	if err != nil {
+		return nil, nil, errors.New("getting tenant list for user: " + err.Error()), http.StatusInternalServerError
+	}
+
+	federations, userErr, sysErr, errCode := api.GenericRead(fed)
+	if userErr != nil || sysErr != nil {
+		return nil, userErr, sysErr, errCode
+	}
+
+	filteredFederations := []interface{}{}
+	for _, ifederation := range federations {
+		federation := ifederation.(*TOCDNFederation)
+		if !checkTenancy(federation.TenantID, tenantIDs) {
+			return nil, errors.New("user not authorized for requested federation"), nil, http.StatusForbidden
+		}
+		filteredFederations = append(filteredFederations, federation.CDNFederation)
+	}
+
+	if len(filteredFederations) == 0 {
 		if fed.ID == nil {
-			log.Errorf("unexpected nil id")
-			return nil, []error{tc.DBError}, tc.SystemError
+			return nil, nil, nil, http.StatusNotFound
 		}
-
-		// if we are getting by id, there may not be an attached deliveryservice
-		if id && fed.DsId == nil {
-			fed.DeliveryServiceIDs = nil
-		}
-
-		// append if by cdn or if tenancy check for id passes
-		if !id || checkTenancy(tenantID, tenantIDs) {
-			federations = append(federations, *fed)
-		} else { // id is true and the tenancy check failed
-			return nil, []error{errors.New("user not authorized for requested federation")}, tc.ForbiddenError
+		if ok, err := dbhelpers.CDNExists(fed.APIInfo().Params["name"], fed.APIInfo().Tx); err != nil {
+			return nil, nil, errors.New("verifying CDN exists: " + err.Error()), http.StatusInternalServerError
+		} else if !ok {
+			return nil, nil, nil, http.StatusNotFound
 		}
 	}
-
-	// if federations yields "response": []
-	if len(federations) == 0 {
-
-		if id {
-			return nil, []error{errors.New("resource not found")}, tc.DataMissingError
-		}
-
-		if yes, err := dbhelpers.CDNExists(parameters["name"], fed.ReqInfo.Tx); yes {
-			return federations, []error{}, tc.NoError
-		} else if err != nil { // internal server error
-			log.Errorf("verifying cdn exists: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
-		}
-		// the query ran as expected and the cdn does not exist
-		return nil, []error{errors.New("resource not found")}, tc.DataMissingError
-	}
-
-	return federations, []error{}, tc.NoError
+	return filteredFederations, nil, nil, http.StatusOK
 }
 
-func (fed *TOCDNFederation) Update() (error, tc.ApiErrorType) {
-
-	if ok, err := fed.isTenantAuthorized(); err != nil {
-		log.Errorf("checking tenancy: %v", err)
-		return tc.DBError, tc.SystemError
-	} else if !ok {
-		return tc.TenantUserNotAuthError, tc.ForbiddenError
+func (fed *TOCDNFederation) Update() (error, error, int) {
+	userErr, sysErr, errCode := fed.isTenantAuthorized()
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
-
 	// Deliveryservice IDs should not be included on update.
 	if fed.DeliveryServiceIDs != nil {
 		fed.DsId = nil
 		fed.XmlId = nil
 		fed.DeliveryServiceIDs = nil
 	}
-
-	resultRows, err := fed.ReqInfo.Tx.NamedQuery(updateQuery(), fed)
-	defer resultRows.Close()
-	if err != nil {
-		return parseQueryError(err, "update")
-	}
-
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	fed.LastUpdated = &lastUpdated
-
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no federation found with this id"), tc.DataMissingError
-		}
-		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
-	}
-
-	return nil, tc.NoError
+	return api.GenericUpdate(fed)
 }
 
+// Delete implements the Deleter interface for TOCDNFederation.
 // In the perl version, :name is ignored. It is not even verified whether or not
 // :name is a real cdn that exists. This mimicks the perl behavior.
-func (fed *TOCDNFederation) Delete() (error, tc.ApiErrorType) {
-
-	if ok, err := fed.isTenantAuthorized(); err != nil {
-		log.Errorf("checking tenancy: %v", err)
-		return tc.DBError, tc.SystemError
-	} else if !ok {
-		return tc.TenantUserNotAuthError, tc.ForbiddenError
+func (fed *TOCDNFederation) Delete() (error, error, int) {
+	userErr, sysErr, errCode := fed.isTenantAuthorized()
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
 	}
-
-	log.Debugf("about to run exec query: %s with federation: %++v", deleteQuery(), fed)
-	result, err := fed.ReqInfo.Tx.NamedExec(deleteQuery(), fed)
-	if err != nil {
-		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		log.Errorf("getting rows affected: %v", err)
-		return tc.DBError, tc.SystemError
-	}
-
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no federation with that id found"), tc.DataMissingError
-		}
-		return fmt.Errorf("this delete affected too many rows: %d", rowsAffected), tc.SystemError
-	}
-	return nil, tc.NoError
+	return api.GenericDelete(fed)
 }
 
-// Function not exported because although DELETE and UPDATE have normal tenancy check,
-// CREATE does not. No ds is associated on create. This isn't used for READ because
-// psql doesn't like nested queries within the same transaction.
-func (fed TOCDNFederation) isTenantAuthorized() (bool, error) {
-
-	tenantID, err := getTenantIDFromFedID(*fed.ID, fed.ReqInfo.Tx.Tx)
+func (fed TOCDNFederation) isTenantAuthorized() (error, error, int) {
+	tenantID, err := getTenantIDFromFedID(*fed.ID, fed.APIInfo().Tx.Tx)
 	if err != nil {
 		// If nobody has claimed a tenant, that federation is publicly visible.
 		// This logically follows /federations/:id/deliveryservices
 		if err == sql.ErrNoRows {
-			return true, nil
+			return nil, nil, http.StatusOK
 		}
-		log.Errorf("getting tenant id from federation: %v", err)
-		return false, err
+		return nil, errors.New("getting tenant id from federation: " + err.Error()), http.StatusInternalServerError
 	}
 
 	// TODO: After IsResourceAuthorizedToUserTx is updated to no longer have `use_tenancy`,
 	// that will probably be better to use. For now, use the list. Issue #2602
-	list, err := tenant.GetUserTenantIDListTx(fed.ReqInfo.Tx.Tx, fed.ReqInfo.User.TenantID)
+	list, err := tenant.GetUserTenantIDListTx(fed.APIInfo().Tx.Tx, fed.APIInfo().User.TenantID)
 	if err != nil {
-		return false, err
+		return nil, errors.New("getting federation tenant list: " + err.Error()), http.StatusInternalServerError
 	}
 	for _, id := range list {
 		if id == tenantID {
-			return true, nil
+			return nil, nil, http.StatusOK
 		}
 	}
-	return false, nil
+	return errors.New("unauthorized for tenant"), nil, http.StatusForbidden
 }
 
 func getTenantIDFromFedID(id int, tx *sql.Tx) (int, error) {
@@ -424,12 +308,13 @@ func selectByCDNName() string {
 
 func updateQuery() string {
 	return `
-	UPDATE federation SET
-	cname=:cname,
-	ttl=:ttl,
-	description=:description
-	WHERE id=:id
-	RETURNING last_updated`
+UPDATE federation SET
+	cname = :cname,
+	ttl = :ttl,
+	description = :description
+WHERE
+  id=:id
+RETURNING last_updated`
 }
 
 func insertQuery() string {

@@ -86,3 +86,7 @@ type ASNNullable struct {
 	//
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
+
+type ASNsV11 struct {
+	ASNs []interface{} `json:"asns"`
+}

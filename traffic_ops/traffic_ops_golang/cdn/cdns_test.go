@@ -81,15 +81,14 @@ func TestReadCDNs(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	v := map[string]string{"dsId": "1"}
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), CommitTx: util.BoolPtr(false)}
-	servers, errs, _ := GetTypeSingleton()(&reqInfo).Read(v)
-	if len(errs) > 0 {
-		t.Errorf("cdn.Read expected: no errors, actual: %v", errs)
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
+	cdns, userErr, sysErr, _ := GetTypeSingleton()(&reqInfo).Read()
+	if userErr != nil || sysErr != nil {
+		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
 	}
 
-	if len(servers) != 2 {
-		t.Errorf("cdn.Read expected: len(servers) == 2, actual: %v", len(servers))
+	if len(cdns) != 2 {
+		t.Errorf("cdn.Read expected: len(cdns) == 2, actual: %v", len(cdns))
 	}
 }
 

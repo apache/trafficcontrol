@@ -15,8 +15,8 @@ package v13
 */
 
 import (
-	"encoding/json"
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"testing"
 )
 
@@ -31,8 +31,12 @@ func TestUsers(t *testing.T) {
 	CreateTestCacheGroups(t)
 	CreateTestDeliveryServices(t)
 
+	CreateTestUsers(t)
+	UpdateTestUsers(t)
 	GetTestUsers(t)
 	GetTestUserCurrent(t)
+	//Delete will be new functionality to 1.4, ignore for now
+	//DeleteTestUsers(t)
 
 	DeleteTestDeliveryServices(t)
 	DeleteTestCacheGroups(t)
@@ -48,25 +52,54 @@ func TestUsers(t *testing.T) {
 
 const SessionUserName = "admin" // TODO make dynamic?
 
-func GetTestUsers(t *testing.T) {
+func CreateTestUsers(t *testing.T) {
+	for _, user := range testData.Users {
 
-	resp, _, err := TOSession.GetUsers()
+		resp, _, err := TOSession.CreateUser(&user)
+		log.Debugln("Response: ", resp.Alerts)
+
+		if err != nil {
+			t.Errorf("could not CREATE user: %v\n", err)
+		}
+	}
+}
+
+func UpdateTestUsers(t *testing.T) {
+	firstUsername := *testData.Users[0].Username
+	resp, _, err := TOSession.GetUserByUsername(firstUsername)
+	if err != nil {
+		t.Errorf("cannot GET user by name: '%s', %v\n", firstUsername, err)
+	}
+	user := resp[0]
+	newCity := "kidz kable kown"
+	*user.City = newCity
+
+	var updateResp *tc.UpdateUserResponse
+	updateResp, _, err = TOSession.UpdateUserByID(*user.ID, &user)
+	if err != nil {
+		t.Errorf("cannot UPDATE user by id: %v - %v\n", err, updateResp.Alerts)
+	}
+
+	// Make sure it got updated
+	resp2, _, err := TOSession.GetUserByID(*user.ID)
+	updatedUser := resp2[0]
+
+	if err != nil {
+		t.Errorf("cannot GET user by id: '%d', %v\n", *user.ID, err)
+	}
+	if *updatedUser.City != newCity {
+		t.Errorf("results do not match actual: %s, expected: %s\n", *updatedUser.City, newCity)
+	}
+}
+
+func GetTestUsers(t *testing.T) {
+	_, _, err := TOSession.GetUsers()
 	if err != nil {
 		t.Fatalf("cannot GET users: %v\n", err)
-	}
-	if len(resp) == 0 {
-		t.Fatalf("no users, must have at least 1 user to test\n")
-	}
-
-	log.Debugf("Response: %s\n")
-	for _, user := range resp {
-		bytes, _ := json.Marshal(user)
-		log.Debugf("%s\n", bytes)
 	}
 }
 
 func GetTestUserCurrent(t *testing.T) {
-	log.Debugln("GetTestUserCurrent")
 	user, _, err := TOSession.GetUserCurrent()
 	if err != nil {
 		t.Fatalf("cannot GET current user: %v\n", err)
@@ -76,5 +109,33 @@ func GetTestUserCurrent(t *testing.T) {
 	}
 	if *user.UserName != SessionUserName {
 		t.Fatalf("current user expected: %v actual: %v\n", SessionUserName, *user.UserName)
+	}
+}
+
+func DeleteTestUsers(t *testing.T) {
+	for _, user := range testData.Users {
+
+		resp, _, err := TOSession.GetUserByUsername(*user.Username)
+		if err != nil {
+			t.Errorf("cannot GET user by name: %v - %v\n", *user.Username, err)
+		}
+
+		if resp != nil {
+			respUser := resp[0]
+
+			_, _, err := TOSession.DeleteUserByID(*respUser.ID)
+			if err != nil {
+				t.Errorf("cannot DELETE user by name: '%s' %v\n", *respUser.Username, err)
+			}
+
+			// Make sure it got deleted
+			resp, _, err := TOSession.GetUserByUsername(*user.Username)
+			if err != nil {
+				t.Errorf("error deleting user by name: %s\n", err.Error())
+			}
+			if len(resp) > 0 {
+				t.Errorf("expected user: %s to be deleted\n", *user.Username)
+			}
+		}
 	}
 }

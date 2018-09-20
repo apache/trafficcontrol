@@ -66,7 +66,7 @@ type RawRoute struct {
 }
 
 func getDefaultMiddleware(secret string, requestTimeout time.Duration) []Middleware {
-	return []Middleware{getWrapAccessLog(secret), timeOutWrapper(requestTimeout), wrapHeaders}
+	return []Middleware{getWrapAccessLog(secret), timeOutWrapper(requestTimeout), wrapHeaders, wrapPanicRecover}
 }
 
 // ServerData ...

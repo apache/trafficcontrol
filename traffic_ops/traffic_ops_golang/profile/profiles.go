@@ -21,7 +21,7 @@ package profile
 
 import (
 	"errors"
-	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -35,7 +35,6 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 )
 
 const (
@@ -52,6 +51,12 @@ type TOProfile struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.ProfileNullable
 }
+
+func (v *TOProfile) APIInfo() *api.APIInfo         { return v.ReqInfo }
+func (v *TOProfile) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TOProfile) InsertQuery() string           { return insertQuery() }
+func (v *TOProfile) UpdateQuery() string           { return updateQuery() }
+func (v *TOProfile) DeleteQuery() string           { return deleteQuery() }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
@@ -104,9 +109,7 @@ func (prof *TOProfile) Validate() error {
 	return nil
 }
 
-func (prof *TOProfile) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
-
+func (prof *TOProfile) Read() ([]interface{}, error, error, int) {
 	// Query Parameters to Database Query column mappings
 	// see the fields mapped in the SQL query
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
@@ -114,10 +117,12 @@ func (prof *TOProfile) Read(parameters map[string]string) ([]interface{}, []erro
 		NameQueryParam: dbhelpers.WhereColumnInfo{"prof.name", nil},
 		IDQueryParam:   dbhelpers.WhereColumnInfo{"prof.id", api.IsInt},
 	}
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
+	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(prof.APIInfo().Params, queryParamsToQueryCols)
 
 	// Narrow down if the query parameter is 'param'
-	if paramValue, ok := parameters[ParamQueryParam]; ok {
+
+	// TODO add generic where clause to api.GenericRead
+	if paramValue, ok := prof.APIInfo().Params[ParamQueryParam]; ok {
 		queryValues["parameter_id"] = paramValue
 		if len(paramValue) > 0 {
 			where += " LEFT JOIN profile_parameter pp ON prof.id  = pp.profile where pp.parameter=:parameter_id"
@@ -125,7 +130,7 @@ func (prof *TOProfile) Read(parameters map[string]string) ([]interface{}, []erro
 	}
 
 	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest
 	}
 
 	query := selectProfilesQuery() + where + orderBy
@@ -133,8 +138,7 @@ func (prof *TOProfile) Read(parameters map[string]string) ([]interface{}, []erro
 
 	rows, err := prof.ReqInfo.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		log.Errorf("Error querying Profile: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
+		return nil, nil, errors.New("profile read querying: " + err.Error()), http.StatusInternalServerError
 	}
 	defer rows.Close()
 
@@ -143,8 +147,7 @@ func (prof *TOProfile) Read(parameters map[string]string) ([]interface{}, []erro
 	for rows.Next() {
 		var p tc.ProfileNullable
 		if err = rows.StructScan(&p); err != nil {
-			log.Errorf("error parsing Profile rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
+			return nil, nil, errors.New("profile read scanning: " + err.Error()), http.StatusInternalServerError
 		}
 		profiles = append(profiles, p)
 	}
@@ -152,18 +155,16 @@ func (prof *TOProfile) Read(parameters map[string]string) ([]interface{}, []erro
 	profileInterfaces := []interface{}{}
 	for _, profile := range profiles {
 		// Attach Parameters if the 'id' parameter is sent
-		if _, ok := parameters[IDQueryParam]; ok {
-			params, err := ReadParameters(prof.ReqInfo.Tx, parameters, prof.ReqInfo.User, profile)
-			profile.Parameters = params
-			if len(errs) > 0 {
-				log.Errorf("Error getting Parameters: %v", err)
-				return nil, []error{tc.DBError}, tc.SystemError
+		if _, ok := prof.APIInfo().Params[IDQueryParam]; ok {
+			profile.Parameters, err = ReadParameters(prof.ReqInfo.Tx, prof.APIInfo().Params, prof.ReqInfo.User, profile)
+			if err != nil {
+				return nil, nil, errors.New("profile read reading parameters: " + err.Error()), http.StatusInternalServerError
 			}
 		}
 		profileInterfaces = append(profileInterfaces, profile)
 	}
 
-	return profileInterfaces, []error{}, tc.NoError
+	return profileInterfaces, nil, nil, http.StatusOK
 
 }
 
@@ -184,9 +185,7 @@ LEFT JOIN cdn c ON prof.cdn = c.id`
 	return query
 }
 
-func ReadParameters(tx *sqlx.Tx, parameters map[string]string, user *auth.CurrentUser, profile tc.ProfileNullable) ([]tc.ParameterNullable, []error) {
-
-	var rows *sqlx.Rows
+func ReadParameters(tx *sqlx.Tx, parameters map[string]string, user *auth.CurrentUser, profile tc.ProfileNullable) ([]tc.ParameterNullable, error) {
 	privLevel := user.PrivLevel
 	queryValues := make(map[string]interface{})
 	queryValues["profile_id"] = *profile.ID
@@ -194,8 +193,7 @@ func ReadParameters(tx *sqlx.Tx, parameters map[string]string, user *auth.Curren
 	query := selectParametersQuery()
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		log.Errorf("Error querying Parameter: %v", err)
-		return nil, []error{tc.DBError}
+		return nil, errors.New("querying: " + err.Error())
 	}
 	defer rows.Close()
 
@@ -204,8 +202,7 @@ func ReadParameters(tx *sqlx.Tx, parameters map[string]string, user *auth.Curren
 		var param tc.ParameterNullable
 
 		if err = rows.StructScan(&param); err != nil {
-			log.Errorf("error parsing parameter rows: %v", err)
-			return nil, []error{tc.DBError}
+			return nil, errors.New("scanning: " + err.Error())
 		}
 		var isSecure bool
 		if param.Secure != nil {
@@ -216,137 +213,24 @@ func ReadParameters(tx *sqlx.Tx, parameters map[string]string, user *auth.Curren
 		}
 		params = append(params, param)
 	}
-	return params, []error{}
+	return params, nil
 }
 
 func selectParametersQuery() string {
-
-	query := `SELECT
+	return `SELECT
 p.id,
 p.name,
 p.config_file,
 p.value,
 p.secure
 FROM parameter p
-JOIN profile_parameter pp ON pp.parameter = p.id 
+JOIN profile_parameter pp ON pp.parameter = p.id
 WHERE pp.profile = :profile_id`
-
-	return query
 }
 
-//The TOProfile implementation of the Updater interface
-//all implementations of Updater should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a profile with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-func (prof *TOProfile) Update() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with profile: %++v", updateQuery(), prof)
-	resultRows, err := prof.ReqInfo.Tx.NamedQuery(updateQuery(), prof)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a profile with " + err.Error()), eType
-			}
-			return err, eType
-		}
-		log.Errorf("received error: %++v from update execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	defer resultRows.Close()
-
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	log.Debugf("lastUpdated: %++v", lastUpdated)
-	prof.LastUpdated = &lastUpdated
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no profile found with this id"), tc.DataMissingError
-		}
-		return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
-	}
-
-	return nil, tc.NoError
-}
-
-//The TOProfile implementation of the Creator interface
-//all implementations of Creator should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a profile with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-//The insert sql returns the id and lastUpdated values of the newly inserted profile and have
-//to be added to the struct
-func (prof *TOProfile) Create() (error, tc.ApiErrorType) {
-	resultRows, err := prof.ReqInfo.Tx.NamedQuery(insertQuery(), prof)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a profile with " + err.Error()), eType
-			}
-			return err, eType
-		}
-		log.Errorf("received non pq error: %++v from create execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	defer resultRows.Close()
-
-	var id int
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	if rowsAffected == 0 {
-		err = errors.New("no profile was inserted, no id was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected > 1 {
-		err = errors.New("too many ids returned from profile insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-
-	prof.SetKeys(map[string]interface{}{IDQueryParam: id})
-	prof.LastUpdated = &lastUpdated
-
-	return nil, tc.NoError
-}
-
-//The Profile implementation of the Deleter interface
-//all implementations of Deleter should use transactions and return the proper errorType
-func (prof *TOProfile) Delete() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with profile: %++v", deleteQuery(), prof)
-	result, err := prof.ReqInfo.Tx.NamedExec(deleteQuery(), prof)
-	if err != nil {
-		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected < 1 {
-		return errors.New("no profile with that id found"), tc.DataMissingError
-	}
-	if rowsAffected > 1 {
-		return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
-	}
-
-	return nil, tc.NoError
-}
+func (pr *TOProfile) Update() (error, error, int) { return api.GenericUpdate(pr) }
+func (pr *TOProfile) Create() (error, error, int) { return api.GenericCreate(pr) }
+func (pr *TOProfile) Delete() (error, error, int) { return api.GenericDelete(pr) }
 
 func updateQuery() string {
 	query := `UPDATE
@@ -376,7 +260,5 @@ type) VALUES (
 }
 
 func deleteQuery() string {
-	query := `DELETE FROM profile
-WHERE id=:id`
-	return query
+	return `DELETE FROM profile WHERE id = :id`
 }

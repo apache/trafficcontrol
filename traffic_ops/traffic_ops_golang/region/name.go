@@ -31,12 +31,11 @@ import (
 func GetName(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
-	*inf.CommitTx = true
-	api.RespWriter(w, r)(getName(inf.Tx.Tx, inf.Params["name"]))
+	api.RespWriter(w, r, inf.Tx.Tx)(getName(inf.Tx.Tx, inf.Params["name"]))
 }
 
 // getName returns a slice, even though only 1 region will ever be returned, because that's what the 1.x API responds with.

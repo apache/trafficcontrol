@@ -58,6 +58,9 @@ func (s sortableErrors) Less(i, j int) bool {
 
 // SortErrors sorts the list of errors lexically
 func SortErrors(p []error) []error {
+	if p == nil {
+		return p
+	}
 	sort.Sort(sortableErrors(p))
 	return p
 }

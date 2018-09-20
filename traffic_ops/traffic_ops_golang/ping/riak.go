@@ -30,16 +30,15 @@ import (
 func Riak(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	pingResp, err := riaksvc.Ping(inf.Tx.Tx, inf.Config.RiakAuthOptions)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("error pinging Riak: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("error pinging Riak: "+err.Error()))
 		return
 	}
-	*inf.CommitTx = true
 	api.WriteResp(w, r, pingResp)
 }

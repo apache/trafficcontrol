@@ -559,6 +559,21 @@ type DSServerIDs struct {
 	Replace           *bool `json:"replace"`
 }
 
+type CachegroupPostDSReq struct {
+	DeliveryServices []int64 `json:"deliveryServices"`
+}
+
+type CacheGroupPostDSResp struct {
+	ID               util.JSONIntStr `json:"id"`
+	ServerNames      []CacheName     `json:"serverNames"`
+	DeliveryServices []int64         `json:"deliveryServices"`
+}
+
+type CacheGroupPostDSRespResponse struct {
+	Alerts
+	Response CacheGroupPostDSResp `json:"response"`
+}
+
 type AssignedDsResponse struct {
 	ServerID int   `json:"serverId"`
 	DSIds    []int `json:"dsIds"`

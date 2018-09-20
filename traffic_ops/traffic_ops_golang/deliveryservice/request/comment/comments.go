@@ -21,10 +21,9 @@ package comment
 
 import (
 	"errors"
-	"fmt"
+	"net/http"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -32,8 +31,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/go-ozzo/ozzo-validation"
-	"github.com/jmoiron/sqlx"
-	"github.com/lib/pq"
 )
 
 //we need a type alias to define functions on
@@ -41,6 +38,24 @@ type TODeliveryServiceRequestComment struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.DeliveryServiceRequestCommentNullable
 }
+
+func (v *TODeliveryServiceRequestComment) APIInfo() *api.APIInfo         { return v.ReqInfo }
+func (v *TODeliveryServiceRequestComment) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TODeliveryServiceRequestComment) InsertQuery() string           { return insertQuery() }
+func (v *TODeliveryServiceRequestComment) NewReadObj() interface{} {
+	return &tc.DeliveryServiceRequestCommentNullable{}
+}
+func (v *TODeliveryServiceRequestComment) SelectQuery() string { return selectQuery() }
+func (v *TODeliveryServiceRequestComment) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"authorId":                 dbhelpers.WhereColumnInfo{"dsrc.author_id", nil},
+		"author":                   dbhelpers.WhereColumnInfo{"a.username", nil},
+		"deliveryServiceRequestId": dbhelpers.WhereColumnInfo{"dsrc.deliveryservice_request_id", nil},
+		"id": dbhelpers.WhereColumnInfo{"dsrc.id", api.IsInt},
+	}
+}
+func (v *TODeliveryServiceRequestComment) UpdateQuery() string { return updateQuery() }
+func (v *TODeliveryServiceRequestComment) DeleteQuery() string { return deleteQuery() }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
@@ -85,173 +100,44 @@ func (comment TODeliveryServiceRequestComment) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (comment *TODeliveryServiceRequestComment) Create() (error, tc.ApiErrorType) {
-	userID := tc.IDNoMod(comment.ReqInfo.User.ID)
-	comment.AuthorID = &userID
-
-	resultRows, err := comment.ReqInfo.Tx.NamedQuery(insertQuery(), comment)
-
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a comment with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received non pq error: %++v from create execution", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	defer resultRows.Close()
-
-	var id int
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	if rowsAffected == 0 {
-		err = errors.New("no cdn was inserted, no id was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	} else if rowsAffected > 1 {
-		err = errors.New("too many ids returned from comment insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-	comment.SetKeys(map[string]interface{}{"id": id})
-	comment.LastUpdated = &lastUpdated
-
-	return nil, tc.NoError
+func (comment *TODeliveryServiceRequestComment) Create() (error, error, int) {
+	au := tc.IDNoMod(comment.ReqInfo.User.ID)
+	comment.AuthorID = &au
+	return api.GenericCreate(comment)
 }
 
-func (comment *TODeliveryServiceRequestComment) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
-	var rows *sqlx.Rows
-
-	// Query Parameters to Database Query column mappings
-	// see the fields mapped in the SQL query
-	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"authorId":                 dbhelpers.WhereColumnInfo{"dsrc.author_id", nil},
-		"author":                   dbhelpers.WhereColumnInfo{"a.username", nil},
-		"deliveryServiceRequestId": dbhelpers.WhereColumnInfo{"dsrc.deliveryservice_request_id", nil},
-		"id": dbhelpers.WhereColumnInfo{"dsrc.id", api.IsInt},
-	}
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		return nil, errs, tc.DataConflictError
-	}
-
-	query := selectQuery() + where + orderBy
-	log.Debugln("Query is ", query)
-
-	rows, err := comment.ReqInfo.Tx.NamedQuery(query, queryValues)
-	if err != nil {
-		log.Errorf("Error querying delivery service request comments: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
-	}
-	defer rows.Close()
-
-	comments := []interface{}{}
-	for rows.Next() {
-		var s tc.DeliveryServiceRequestCommentNullable
-		if err = rows.StructScan(&s); err != nil {
-			log.Errorf("error parsing delivery service request comment rows: %v", err)
-			return nil, []error{tc.DBError}, tc.SystemError
-		}
-		comments = append(comments, s)
-	}
-
-	return comments, []error{}, tc.NoError
+func (comment *TODeliveryServiceRequestComment) Read() ([]interface{}, error, error, int) {
+	return api.GenericRead(comment)
 }
 
-func (comment *TODeliveryServiceRequestComment) Update() (error, tc.ApiErrorType) {
-
-	var current TODeliveryServiceRequestComment
+func (comment *TODeliveryServiceRequestComment) Update() (error, error, int) {
+	current := TODeliveryServiceRequestComment{}
 	err := comment.ReqInfo.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
 	if err != nil {
-		log.Errorf("Error querying DeliveryServiceRequestComments: %v", err)
-		return err, tc.SystemError
+		return api.ParseDBErr(err, comment.GetType())
 	}
 
 	userID := tc.IDNoMod(comment.ReqInfo.User.ID)
 	if *current.AuthorID != userID {
-		return errors.New("Comments can only be updated by the author"), tc.DataConflictError
+		return errors.New("Comments can only be updated by the author"), nil, http.StatusBadRequest
 	}
 
-	log.Debugf("about to run exec query: %s with comment: %++v", updateQuery(), comment)
-	resultRows, err := comment.ReqInfo.Tx.NamedQuery(updateQuery(), comment)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a comment with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received error: %++v from update execution", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	defer resultRows.Close()
-
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	log.Debugf("lastUpdated: %++v", lastUpdated)
-	comment.LastUpdated = &lastUpdated
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no cdn found with this id"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
-		}
-	}
-	return nil, tc.NoError
+	return api.GenericUpdate(comment)
 }
 
-func (comment *TODeliveryServiceRequestComment) Delete() (error, tc.ApiErrorType) {
-
+func (comment *TODeliveryServiceRequestComment) Delete() (error, error, int) {
 	var current TODeliveryServiceRequestComment
 	err := comment.ReqInfo.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(*comment.ID)).StructScan(&current)
 	if err != nil {
-		log.Errorf("Error querying DeliveryServiceRequestComments: %v", err)
-		return err, tc.SystemError
+		return nil, errors.New("querying DeliveryServiceRequestComments: " + err.Error()), http.StatusInternalServerError
 	}
 
-	userID := tc.IDNoMod(comment.ReqInfo.User.ID)
-	if *current.AuthorID != userID {
-		return errors.New("Comments can only be deleted by the author"), tc.DataConflictError
+	if userID := tc.IDNoMod(comment.ReqInfo.User.ID); *current.AuthorID != userID {
+		// TODO determine if users should be able to delete sub-tenant users' comments? Else, a deleted user's comments can never be removed.
+		return errors.New("Comments can only be deleted by the author"), nil, http.StatusBadRequest
 	}
 
-	log.Debugf("about to run exec query: %s with comment: %++v", deleteQuery(), comment)
-	result, err := comment.ReqInfo.Tx.NamedExec(deleteQuery(), comment)
-	if err != nil {
-		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no comment with that id found"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this delete affected too many rows: %d", rowsAffected), tc.SystemError
-		}
-	}
-	return nil, tc.NoError
+	return api.GenericDelete(comment)
 }
 
 func insertQuery() string {
@@ -291,7 +177,5 @@ WHERE id=:id RETURNING last_updated`
 }
 
 func deleteQuery() string {
-	query := `DELETE FROM deliveryservice_request_comment
-WHERE id=:id`
-	return query
+	return `DELETE FROM deliveryservice_request_comment WHERE id = :id`
 }

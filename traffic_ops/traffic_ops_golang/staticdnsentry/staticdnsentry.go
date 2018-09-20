@@ -20,11 +20,8 @@ package staticdnsentry
  */
 
 import (
-	"errors"
-	"fmt"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -32,13 +29,34 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
-	"github.com/lib/pq"
 )
 
 type TOStaticDNSEntry struct {
 	ReqInfo *api.APIInfo `json:"-"`
 	tc.StaticDNSEntryNullable
 }
+
+func (v *TOStaticDNSEntry) APIInfo() *api.APIInfo         { return v.ReqInfo }
+func (v *TOStaticDNSEntry) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TOStaticDNSEntry) InsertQuery() string           { return insertQuery() }
+func (v *TOStaticDNSEntry) NewReadObj() interface{}       { return &tc.StaticDNSEntryNullable{} }
+func (v *TOStaticDNSEntry) SelectQuery() string           { return selectQuery() }
+func (v *TOStaticDNSEntry) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"address":           dbhelpers.WhereColumnInfo{"sde.address", nil},
+		"cachegroup":        dbhelpers.WhereColumnInfo{"cg.name", nil},
+		"cachegroupId":      dbhelpers.WhereColumnInfo{"cg.id", nil},
+		"deliveryservice":   dbhelpers.WhereColumnInfo{"ds.xml_id", nil},
+		"deliveryserviceId": dbhelpers.WhereColumnInfo{"sde.deliveryservice", nil},
+		"host":              dbhelpers.WhereColumnInfo{"sde.host", nil},
+		"id":                dbhelpers.WhereColumnInfo{"sde.id", nil},
+		"ttl":               dbhelpers.WhereColumnInfo{"sde.ttl", nil},
+		"type":              dbhelpers.WhereColumnInfo{"tp.name", nil},
+		"typeId":            dbhelpers.WhereColumnInfo{"tp.id", nil},
+	}
+}
+func (v *TOStaticDNSEntry) UpdateQuery() string { return updateQuery() }
+func (v *TOStaticDNSEntry) DeleteQuery() string { return deleteQuery() }
 
 func GetTypeSingleton() api.CRUDFactory {
 	return func(reqInfo *api.APIInfo) api.CRUDer {
@@ -69,9 +87,7 @@ func (staticDNSEntry TOStaticDNSEntry) GetAuditName() string {
 	return "0"
 }
 
-func (staticDNSEntry TOStaticDNSEntry) GetType() string {
-	return "staticDNSEntry"
-}
+func (staticDNSEntry TOStaticDNSEntry) GetType() string { return "staticDNSEntry" }
 
 func (staticDNSEntry *TOStaticDNSEntry) SetKeys(keys map[string]interface{}) {
 	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
@@ -86,7 +102,6 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 	}
 
 	var addressErr error
-
 	switch typeStr {
 	case "A_RECORD":
 		addressErr = validation.Validate(staticDNSEntry.Address, validation.Required, is.IPv4)
@@ -108,90 +123,10 @@ func (staticDNSEntry TOStaticDNSEntry) Validate() error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
-func (staticDNSEntry *TOStaticDNSEntry) Read(parameters map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
-	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"address":           dbhelpers.WhereColumnInfo{"sde.address", nil},
-		"cachegroup":        dbhelpers.WhereColumnInfo{"cg.name", nil},
-		"cachegroupId":      dbhelpers.WhereColumnInfo{"cg.id", nil},
-		"deliveryservice":   dbhelpers.WhereColumnInfo{"ds.xml_id", nil},
-		"deliveryserviceId": dbhelpers.WhereColumnInfo{"sde.deliveryservice", nil},
-		"host":              dbhelpers.WhereColumnInfo{"sde.host", nil},
-		"id":                dbhelpers.WhereColumnInfo{"sde.id", nil},
-		"ttl":               dbhelpers.WhereColumnInfo{"sde.ttl", nil},
-		"type":              dbhelpers.WhereColumnInfo{"tp.name", nil},
-		"typeId":            dbhelpers.WhereColumnInfo{"tp.id", nil},
-	}
-	where, orderBy, queryValues, errs := dbhelpers.BuildWhereAndOrderBy(parameters, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		log.Errorf("Data Conflict Error")
-		return nil, errs, tc.DataConflictError
-	}
-	query := selectQuery() + where + orderBy
-	log.Debugln("Query is ", query)
-	rows, err := staticDNSEntry.ReqInfo.Tx.NamedQuery(query, queryValues)
-	if err != nil {
-		log.Errorf("Error querying StaticDNSEntries: %v", err)
-		return nil, []error{tc.DBError}, tc.SystemError
-	}
-	defer rows.Close()
-	staticDNSEntries := []interface{}{}
-	for rows.Next() {
-		s := tc.StaticDNSEntryNullable{}
-		if err = rows.StructScan(&s); err != nil {
-			log.Errorln("error parsing StaticDNSEntry rows: " + err.Error())
-			return nil, []error{tc.DBError}, tc.SystemError
-		}
-		staticDNSEntries = append(staticDNSEntries, s)
-	}
-	return staticDNSEntries, []error{}, tc.NoError
-}
-
-//The TOStaticDNSEntry implementation of the Creator interface
-//all implementations of Creator should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a staticDNSEntry with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-//The insert sql returns the id and lastUpdated values of the newly inserted staticDNSEntry and have
-//to be added to the struct
-func (staticDNSEntry *TOStaticDNSEntry) Create() (error, tc.ApiErrorType) {
-	resultRows, err := staticDNSEntry.ReqInfo.Tx.NamedQuery(insertQuery(), staticDNSEntry)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a staticDNSEntry with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received non pq error: %++v from create execution", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	defer resultRows.Close()
-
-	var id int
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&id, &lastUpdated); err != nil {
-			log.Error.Printf("could not scan id from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	if rowsAffected == 0 {
-		err = errors.New("no staticDNSEntry was inserted, no id was returned")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	} else if rowsAffected > 1 {
-		err = errors.New("too many ids returned from staticDNSEntry insert")
-		log.Errorln(err)
-		return tc.DBError, tc.SystemError
-	}
-	staticDNSEntry.SetKeys(map[string]interface{}{"id": id})
-	staticDNSEntry.LastUpdated = &lastUpdated
-	return nil, tc.NoError
-}
+func (en *TOStaticDNSEntry) Read() ([]interface{}, error, error, int) { return api.GenericRead(en) }
+func (en *TOStaticDNSEntry) Create() (error, error, int)              { return api.GenericCreate(en) }
+func (en *TOStaticDNSEntry) Update() (error, error, int)              { return api.GenericUpdate(en) }
+func (en *TOStaticDNSEntry) Delete() (error, error, int)              { return api.GenericDelete(en) }
 
 func insertQuery() string {
 	query := `INSERT INTO staticdnsentry (
@@ -210,49 +145,6 @@ ttl) VALUES (
 	return query
 }
 
-//The TOStaticDNSEntry implementation of the Updater interface
-//all implementations of Updater should use transactions and return the proper errorType
-//ParsePQUniqueConstraintError is used to determine if a staticDNSEntry with conflicting values exists
-//if so, it will return an errorType of DataConflict and the type should be appended to the
-//generic error message returned
-func (staticDNSEntry *TOStaticDNSEntry) Update() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with staticDNSEntry: %++v", updateQuery(), staticDNSEntry)
-	resultRows, err := staticDNSEntry.ReqInfo.Tx.NamedQuery(updateQuery(), staticDNSEntry)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				return errors.New("a staticDNSEntry with " + err.Error()), eType
-			}
-			return err, eType
-		} else {
-			log.Errorf("received error: %++v from update execution", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	defer resultRows.Close()
-
-	var lastUpdated tc.TimeNoMod
-	rowsAffected := 0
-	for resultRows.Next() {
-		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
-			log.Error.Printf("could not scan lastUpdated from insert: %s\n", err)
-			return tc.DBError, tc.SystemError
-		}
-	}
-	log.Debugf("lastUpdated: %++v", lastUpdated)
-	staticDNSEntry.LastUpdated = &lastUpdated
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no staticDNSEntry found with this id"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this update affected too many rows: %d", rowsAffected), tc.SystemError
-		}
-	}
-	return nil, tc.NoError
-}
-
 func updateQuery() string {
 	query := `UPDATE
 staticdnsentry SET
@@ -265,30 +157,6 @@ type=:type_id,
 ttl=:ttl
 WHERE id=:id RETURNING last_updated`
 	return query
-}
-
-//The StaticDNSEntry implementation of the Deleter interface
-//all implementations of Deleter should use transactions and return the proper errorType
-func (staticDNSEntry *TOStaticDNSEntry) Delete() (error, tc.ApiErrorType) {
-	log.Debugf("about to run exec query: %s with staticDNSEntry: %++v", deleteQuery(), staticDNSEntry)
-	result, err := staticDNSEntry.ReqInfo.Tx.NamedExec(deleteQuery(), staticDNSEntry)
-	if err != nil {
-		log.Errorf("received error: %++v from delete execution", err)
-		return tc.DBError, tc.SystemError
-	}
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return tc.DBError, tc.SystemError
-	}
-	if rowsAffected != 1 {
-		if rowsAffected < 1 {
-			return errors.New("no staticDNSEntry with that id found"), tc.DataMissingError
-		} else {
-			return fmt.Errorf("this create affected too many rows: %d", rowsAffected), tc.SystemError
-		}
-	}
-	return nil, tc.NoError
-
 }
 
 func selectQuery() string {

@@ -270,7 +270,6 @@ For the downloadjs component:
 
 For the angular-loading-bar component:
 @traffic_portal/app/src/styles/loading.scss
-@traffic_portal/v1/app/src/styles/loading.scss
 ./licenses/MIT-angular_loading_bar
 
 For the gentelella admin theme:

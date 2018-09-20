@@ -29,6 +29,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"runtime"
 	"strings"
 	"time"
 	"unicode"
@@ -118,7 +119,7 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 
 			currentUserInfo, userErr, sysErr, code := auth.GetCurrentUserFromDB(DB, username, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 			if userErr != nil || sysErr != nil {
-				api.HandleErr(w, r, code, userErr, sysErr)
+				api.HandleErr(w, r, nil, code, userErr, sysErr)
 				return
 			}
 			if currentUserInfo.PrivLevel < privLevelRequired {
@@ -160,6 +161,29 @@ func wrapHeaders(h http.HandlerFunc) http.HandlerFunc {
 
 		gzipResponse(w, r, iw.Body())
 
+	}
+}
+
+func wrapPanicRecover(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				log.Errorf("panic: (err: %v) stacktrace:\n%s\n", err, stacktrace())
+			}
+		}()
+		h(w, r)
+	}
+}
+
+func stacktrace() []byte {
+	initialBufSize := 1024
+	buf := make([]byte, initialBufSize)
+	for {
+		n := runtime.Stack(buf, true)
+		if n < len(buf) {
+			return buf[:n]
+		}
+		buf = make([]byte, len(buf)*2)
 	}
 }
 

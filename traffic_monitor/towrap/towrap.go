@@ -196,8 +196,16 @@ func (s TrafficOpsSessionThreadsafe) CRConfigHistory() []CRConfigStat {
 }
 
 func (s *TrafficOpsSessionThreadsafe) CRConfigValid(crc *tc.CRConfig, cdn string) error {
+	if crc.Stats.CDNName == nil {
+		return errors.New("CRConfig.Stats.CDN missing")
+	}
+	if crc.Stats.DateUnixSeconds == nil {
+		return errors.New("CRConfig.Stats.Date missing")
+	}
+
 	// Note this intentionally takes intended CDN, rather than trusting crc.Stats
 	lastCrc, lastCrcTime, lastCrcStats := s.lastCRConfig.Get(cdn)
+
 	if lastCrc == nil {
 		return nil
 	}
@@ -205,11 +213,12 @@ func (s *TrafficOpsSessionThreadsafe) CRConfigValid(crc *tc.CRConfig, cdn string
 		log.Warnln("TrafficOpsSessionThreadsafe.CRConfigValid returning no error, but last CRConfig Date was missing!")
 		return nil
 	}
+	if lastCrcStats.CDNName == nil {
+		log.Warnln("TrafficOpsSessionThreadsafe.CRConfigValid returning no error, but last CRConfig CDN was missing!")
+		return nil
+	}
 	if *lastCrcStats.CDNName != *crc.Stats.CDNName {
 		return errors.New("CRConfig.Stats.CDN " + *crc.Stats.CDNName + " different than last received CRConfig.Stats.CDNName " + *lastCrcStats.CDNName + " received at " + lastCrcTime.Format(time.RFC3339Nano))
-	}
-	if crc.Stats.DateUnixSeconds == nil {
-		return errors.New("CRConfig.Stats.Date missing")
 	}
 	if *lastCrcStats.DateUnixSeconds > *crc.Stats.DateUnixSeconds {
 		return errors.New("CRConfig.Stats.Date " + strconv.FormatInt(*crc.Stats.DateUnixSeconds, 10) + " older than last received CRConfig.Stats.Date " + strconv.FormatInt(*lastCrcStats.DateUnixSeconds, 10) + " received at " + lastCrcTime.Format(time.RFC3339Nano))

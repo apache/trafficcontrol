@@ -24,12 +24,12 @@ type TrafficControl struct {
 	ASNs                           []tc.ASN                           `json:"asns"`
 	CDNs                           []tc.CDN                           `json:"cdns"`
 	CacheGroups                    []tc.CacheGroupNullable            `json:"cachegroups"`
+	Coordinates                    []tc.Coordinate                    `json:"coordinates"`
 	DeliveryServiceRequests        []tc.DeliveryServiceRequest        `json:"deliveryServiceRequests"`
 	DeliveryServiceRequestComments []tc.DeliveryServiceRequestComment `json:"deliveryServiceRequestComments"`
 	DeliveryServices               []tc.DeliveryService               `json:"deliveryservices"`
 	Divisions                      []tc.Division                      `json:"divisions"`
 	Federations                    []tc.CDNFederation                 `json:"federations"`
-	Coordinates                    []tc.Coordinate                    `json:"coordinates"`
 	Origins                        []tc.Origin                        `json:"origins"`
 	Profiles                       []tc.Profile                       `json:"profiles"`
 	Parameters                     []tc.Parameter                     `json:"parameters"`
@@ -42,4 +42,6 @@ type TrafficControl struct {
 	StaticDNSEntries               []tc.StaticDNSEntry                `json:"staticdnsentries"`
 	Tenants                        []tc.Tenant                        `json:"tenants"`
 	Types                          []tc.Type                          `json:"types"`
+	SteeringTargets                []tc.SteeringTargetNullable        `json:"steeringTargets"`
+	Users                          []tc.User                          `json:"users"`
 }

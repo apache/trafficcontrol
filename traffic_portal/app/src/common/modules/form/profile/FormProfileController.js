@@ -42,7 +42,8 @@ var FormProfileController = function(profile, Restangular, $scope, $location, $u
         { value: 'KAFKA_PROFILE' },
         { value: 'LOGSTASH_PROFILE' },
         { value: 'ES_PROFILE' },
-        { value: 'UNK_PROFILE' }
+        { value: 'UNK_PROFILE' },
+        { value: 'GROVE_PROFILE' }
     ];
 
     $scope.falseTrue = [

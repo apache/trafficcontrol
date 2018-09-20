@@ -60,5 +60,5 @@ type Role struct {
 	// Capabilities associated with the Role
 	//
 	// required: true
-	Capabilities *[]string `json:"capabilities" db:"capabilities"`
+	Capabilities *[]string `json:"capabilities" db:"-"`
 }

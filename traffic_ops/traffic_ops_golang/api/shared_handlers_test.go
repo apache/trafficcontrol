@@ -28,7 +28,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/jmoiron/sqlx"
@@ -37,15 +36,15 @@ import (
 )
 
 type tester struct {
-	ID        int
-	error     error           //only for testing
-	errorType tc.ApiErrorType //only for testing
+	ID      int
+	userErr error //only for testing
+	sysErr  error //only for testing
+	errCode int   //only for testing
 }
 
 func GetTypeSingleton() func(apiInfo *APIInfo) CRUDer {
 	return func(apiInfo *APIInfo) CRUDer {
-		tester := tester{}
-		return &tester
+		return &tester{}
 	}
 }
 
@@ -82,29 +81,30 @@ func (v *tester) Validate() error {
 }
 
 //Creator interface functions
-func (i *tester) Create() (error, tc.ApiErrorType) {
-	return i.error, i.errorType
+func (i *tester) Create() (error, error, int) {
+	return i.userErr, i.sysErr, i.errCode
 }
 
 //Reader interface functions
-func (i *tester) Read(v map[string]string) ([]interface{}, []error, tc.ApiErrorType) {
-	return []interface{}{tester{ID: 1}}, nil, tc.NoError
+func (i *tester) Read() ([]interface{}, error, error, int) {
+	return []interface{}{tester{ID: 1}}, nil, nil, http.StatusOK
 }
 
 //Updater interface functions
-func (i *tester) Update() (error, tc.ApiErrorType) {
-	return i.error, i.errorType
+func (i *tester) Update() (error, error, int) {
+	return i.userErr, i.sysErr, i.errCode
 }
 
 //Deleter interface functions
-func (i *tester) Delete() (error, tc.ApiErrorType) {
-	return i.error, i.errorType
+func (i *tester) Delete() (error, error, int) {
+	return i.userErr, i.sysErr, i.errCode
 }
 
 //used for testing purposes only
-func (t *tester) SetError(newError error, newErrorType tc.ApiErrorType) {
-	t.error = newError
-	t.errorType = newErrorType
+func (t *tester) SetError(userErr error, sysErr error, errCode int) {
+	t.userErr = userErr
+	t.sysErr = sysErr
+	t.errCode = errCode
 }
 
 func TestCreateHandler(t *testing.T) {
@@ -147,7 +147,7 @@ func TestCreateHandler(t *testing.T) {
 	createFunc(w, r)
 
 	//verifies the body is in the expected format
-	body := `{"response":{"ID":1},"alerts":[{"text":"tester was created.","level":"success"}]}`
+	body := `{"alerts":[{"text":"tester was created.","level":"success"}],"response":{"ID":1}}`
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}
@@ -233,7 +233,7 @@ func TestUpdateHandler(t *testing.T) {
 	updateFunc(w, r)
 
 	//verifies the body is in the expected format
-	body := `{"response":{"ID":1},"alerts":[{"text":"tester was updated.","level":"success"}]}`
+	body := `{"alerts":[{"text":"tester was updated.","level":"success"}],"response":{"ID":1}}`
 	if w.Body.String() != body {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}

@@ -110,6 +110,32 @@ func CheckID(tx *sql.Tx, user *auth.CurrentUser, dsID int) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
+// GetUserTenantListTx returns a Tenant list that the specified user has access to.
+// NOTE: This method does not use the use_tenancy parameter and if this method is being used
+// to control tenancy the parameter must be checked. The method IsResourceAuthorizedToUser checks the use_tenancy parameter
+// and should be used for this purpose in most cases.
+func GetUserTenantListTx(user auth.CurrentUser, tx *sql.Tx) ([]tc.TenantNullable, error) {
+	query := `WITH RECURSIVE q AS (SELECT id, name, active, parent_id, last_updated FROM tenant WHERE id = $1
+	UNION SELECT t.id, t.name, t.active, t.parent_id, t.last_updated  FROM tenant t JOIN q ON q.id = t.parent_id)
+	SELECT id, name, active, parent_id, last_updated FROM q;`
+
+	rows, err := tx.Query(query, user.TenantID)
+	if err != nil {
+		return nil, errors.New("querying user tenant list: " + err.Error())
+	}
+	defer rows.Close()
+
+	tenants := []tc.TenantNullable{}
+	for rows.Next() {
+		t := tc.TenantNullable{}
+		if err := rows.Scan(&t.ID, &t.Name, &t.Active, &t.ParentID, &t.LastUpdated); err != nil {
+			return nil, err
+		}
+		tenants = append(tenants, t)
+	}
+	return tenants, nil
+}
+
 func GetUserTenantIDListTx(tx *sql.Tx, userTenantID int) ([]int, error) {
 	query := `
 WITH RECURSIVE q AS (SELECT id, name, active, parent_id FROM tenant WHERE id = $1
@@ -189,4 +215,42 @@ func getDSTenantIDByIDTx(tx *sql.Tx, id int) (*int, bool, error) {
 		return nil, false, fmt.Errorf("querying tenant ID for delivery service ID '%v': %v", id, err)
 	}
 	return tenantID, true, nil
+}
+
+type Tenanter interface {
+	TenantID() *int
+	Name() string
+	GetType() string
+}
+
+// FilterAuthorized takes a slice of objects, and returns only the objects the given user is authorized for.
+func FilterAuthorized(objs []Tenanter, user *auth.CurrentUser, tx *sql.Tx) ([]interface{}, error) {
+	tenancyEnabled, err := IsTenancyEnabledTx(tx)
+	if err != nil {
+		return nil, errors.New("Error checking if tenancy enabled.")
+	}
+	if !tenancyEnabled {
+		newObjs := []interface{}{}
+		for _, obj := range objs {
+			newObjs = append(newObjs, obj)
+		}
+		return newObjs, nil
+	}
+
+	newObjs := []interface{}{}
+	for _, obj := range objs {
+		if obj.TenantID() == nil {
+			return nil, fmt.Errorf("FilterAuthorized for %T %s %s: no tenant ID", obj, obj.Name(), obj.GetType())
+		}
+		// TODO add/use a helper func to make a single SQL call, for performance
+		ok, err := IsResourceAuthorizedToUserTx(*obj.TenantID(), user, tx)
+		if err != nil {
+			return nil, fmt.Errorf("FilterAuthorized for %T %s %s: no tenant ID", obj, obj.Name(), obj.GetType())
+		}
+		if !ok {
+			continue
+		}
+		newObjs = append(newObjs, obj)
+	}
+	return newObjs, nil
 }

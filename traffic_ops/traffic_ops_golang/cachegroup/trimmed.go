@@ -31,12 +31,12 @@ import (
 func GetTrimmed(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
+
 	defer inf.Close()
-	*inf.CommitTx = true
-	api.RespWriter(w, r)(getCachegroupsTrimmed(inf.Tx.Tx))
+	api.RespWriter(w, r, inf.Tx.Tx)(getCachegroupsTrimmed(inf.Tx.Tx))
 }
 
 func getCachegroupsTrimmed(tx *sql.Tx) ([]tc.CachegroupTrimmedName, error) {

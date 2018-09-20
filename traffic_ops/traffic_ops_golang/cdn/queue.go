@@ -40,24 +40,23 @@ type QueueResp struct {
 func Queue(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 	reqObj := QueueReq{}
 	if err := json.NewDecoder(r.Body).Decode(&reqObj); err != nil {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON: "+err.Error()), nil)
 		return
 	}
 	if reqObj.Action != "queue" && reqObj.Action != "dequeue" {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("action must be 'queue' or 'dequeue'"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("action must be 'queue' or 'dequeue'"), nil)
 		return
 	}
 	if err := queueUpdates(inf.Tx.Tx, int64(inf.IntParams["id"]), reqObj.Action == "queue"); err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("CDN queueing updates: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("CDN queueing updates: "+err.Error()))
 		return
 	}
-	*inf.CommitTx = true
 	api.CreateChangeLogRawTx(api.ApiChange, "Server updates "+reqObj.Action+"d for cdn "+inf.Params["id"], inf.User, inf.Tx.Tx)
 	api.WriteResp(w, r, QueueResp{Action: reqObj.Action, CDNID: int64(inf.IntParams["id"])})
 }

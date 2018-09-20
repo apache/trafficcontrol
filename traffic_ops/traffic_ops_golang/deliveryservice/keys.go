@@ -41,34 +41,33 @@ import (
 func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 	if !inf.Config.RiakEnabled {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("adding Riak SSL keys for delivery service:: riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("adding Riak SSL keys for delivery service:: riak is not configured"))
 		return
 	}
 	keysObj := tc.DeliveryServiceSSLKeys{}
 	if err := json.NewDecoder(r.Body).Decode(&keysObj); err != nil {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("malformed JSON"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON"), nil)
 		return
 	}
 	if userErr, sysErr, errCode := tenant.Check(inf.User, keysObj.DeliveryService, inf.Tx.Tx); userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	certChain, err := verifyAndEncodeCertificate(keysObj.Certificate.Crt, "")
 	if err != nil {
-		api.HandleErr(w, r, http.StatusBadRequest, errors.New("verifying certificate: "+err.Error()), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("verifying certificate: "+err.Error()), nil)
 		return
 	}
 	keysObj.Certificate.Crt = certChain
 	if err := riaksvc.PutDeliveryServiceSSLKeysObj(keysObj, inf.Tx.Tx, inf.Config.RiakAuthOptions); err != nil {
-		api.HandleErr(w, r, http.StatusBadRequest, nil, errors.New("putting Riak SSL keys for delivery service '"+keysObj.DeliveryService+"': "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, nil, errors.New("putting Riak SSL keys for delivery service '"+keysObj.DeliveryService+"': "+err.Error()))
 		return
 	}
-	*inf.CommitTx = true
 	api.WriteRespRaw(w, r, keysObj)
 }
 
@@ -76,13 +75,13 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"hostName"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, http.StatusServiceUnavailable, errors.New("The RIAK service is unavailable"), errors.New("getting Riak SSL keys by host name: riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("The RIAK service is unavailable"), errors.New("getting Riak SSL keys by host name: riak is not configured"))
 		return
 	}
 
@@ -103,7 +102,7 @@ func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 	// lookup the cdnID
 	cdnID, ok, err := getCDNIDByDomainname(domainName, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting cdn id by domain name: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn id by domain name: "+err.Error()))
 		return
 	}
 	if !ok {
@@ -113,7 +112,7 @@ func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 	// now lookup the deliveryservice xmlID
 	xmlID, ok, err := getXMLID(cdnID, hostRegex, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting xml id: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting xml id: "+err.Error()))
 		return
 	}
 	if !ok {
@@ -122,19 +121,18 @@ func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(xmlID, version, inf.Tx.Tx, inf.Config.RiakAuthOptions)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
 		return
 	}
 	if !ok {
 		api.WriteRespAlert(w, r, tc.InfoLevel, "no object found for the specified key")
 		return
 	}
-	*inf.CommitTx = true
 	api.WriteResp(w, r, keyObj)
 }
 
@@ -142,47 +140,46 @@ func GetSSLKeysByHostName(w http.ResponseWriter, r *http.Request) {
 func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"xmlID"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, http.StatusServiceUnavailable, errors.New("The RIAK service is unavailable"), errors.New("getting Riak SSL keys by xml id: riak is not configured"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusServiceUnavailable, errors.New("The RIAK service is unavailable"), errors.New("getting Riak SSL keys by xml id: riak is not configured"))
 		return
 	}
 	version := inf.Params["version"]
 	xmlID := inf.Params["xmlID"]
 	if userErr, sysErr, errCode := tenant.Check(inf.User, xmlID, inf.Tx.Tx); userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(xmlID, version, inf.Tx.Tx, inf.Config.RiakAuthOptions)
 	if err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
 		return
 	}
 	if !ok {
 		api.WriteRespAlert(w, r, tc.InfoLevel, "no object found for the specified key")
 		return
 	}
-	*inf.CommitTx = true
 	api.WriteResp(w, r, keyObj)
 }
 
 func DeleteSSLKeys(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 	if inf.Config.RiakEnabled == false {
-		api.HandleErr(w, r, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured!"))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: Riak is not configured!"))
 		return
 	}
 	ds := tc.DeliveryServiceName(inf.Params["name"])
 	if err := riaksvc.DeleteDSSSLKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, ds, inf.Params["version"]); err != nil {
-		api.HandleErr(w, r, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: deleting SSL keys: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: deleting SSL keys: "+err.Error()))
 		return
 	}
 	api.WriteResp(w, r, "Successfully deleted ssl keys for "+string(ds))

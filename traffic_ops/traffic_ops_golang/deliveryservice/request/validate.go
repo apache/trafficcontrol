@@ -35,7 +35,7 @@ import (
 func (req *TODeliveryServiceRequest) Validate() error {
 	fromStatus := tc.RequestStatusDraft
 	if req.ID != nil && *req.ID > 0 {
-		err := req.ReqInfo.Tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(*req.ID)).Scan(&fromStatus)
+		err := req.APIInfo().Tx.Tx.QueryRow(`SELECT status FROM deliveryservice_request WHERE id=` + strconv.Itoa(*req.ID)).Scan(&fromStatus)
 
 		if err != nil {
 			return err
@@ -60,7 +60,7 @@ func (req *TODeliveryServiceRequest) Validate() error {
 	}
 	errs := tovalidate.ToErrors(errMap)
 	// ensure the deliveryservice requested is valid
-	e := req.DeliveryService.Validate(req.ReqInfo.Tx.Tx)
+	e := req.DeliveryService.Validate(req.APIInfo().Tx.Tx)
 
 	errs = append(errs, e)
 

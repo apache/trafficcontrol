@@ -31,12 +31,11 @@ import (
 func GetProfileID(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
-	*inf.CommitTx = true
-	api.RespWriter(w, r)(getParametersByProfileID(inf.IntParams["id"], inf.Tx.Tx))
+	api.RespWriter(w, r, inf.Tx.Tx)(getParametersByProfileID(inf.IntParams["id"], inf.Tx.Tx))
 }
 
 func getParametersByProfileID(profileID int, tx *sql.Tx) ([]tc.ProfileParameterByName, error) {
