@@ -74,8 +74,8 @@ func CreateTestUsersDeliveryServices(t *testing.T) {
 	userID := 0
 	foundUser := false
 	for _, user := range users {
-		if user.Username == TestUsersDeliveryServicesUser {
-			userID = user.ID
+		if *user.Username == TestUsersDeliveryServicesUser {
+			userID = *user.ID
 			foundUser = true
 			break
 		}
@@ -138,8 +138,8 @@ func GetTestUsersDeliveryServices(t *testing.T) {
 	userID := 0
 	foundUser := false
 	for _, user := range users {
-		if user.Username == TestUsersDeliveryServicesUser {
-			userID = user.ID
+		if *user.Username == TestUsersDeliveryServicesUser {
+			userID = *user.ID
 			foundUser = true
 			break
 		}
@@ -184,8 +184,8 @@ func DeleteTestUsersDeliveryServices(t *testing.T) {
 	userID := 0
 	foundUser := false
 	for _, user := range users {
-		if user.Username == TestUsersDeliveryServicesUser {
-			userID = user.ID
+		if *user.Username == TestUsersDeliveryServicesUser {
+			userID = *user.ID
 			foundUser = true
 			break
 		}
