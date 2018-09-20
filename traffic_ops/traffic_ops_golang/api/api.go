@@ -425,15 +425,15 @@ func ParseDBErr(ierr error, dataType string) (error, error, int) {
 		return nil, errors.New("database returned non pq error: " + err.Error()), http.StatusInternalServerError
 	}
 
-	if usrErr, sysErr, errCode := TypeErrToAPIErr(dbhelpers.ParsePQNotNullConstraintError(err)); errCode != http.StatusOK {
+	if usrErr, sysErr, errCode := dbhelpers.ParsePQNotNullConstraintError(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 
-	if usrErr, sysErr, errCode := TypeErrToAPIErr(dbhelpers.ParsePQPresentFKConstraintError(err)); errCode != http.StatusOK {
+	if usrErr, sysErr, errCode := dbhelpers.ParsePQPresentFKConstraintError(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 
-	if usrErr, sysErr, errCode := TypeErrToAPIErr(dbhelpers.ParsePQUniqueConstraintError(err)); errCode != http.StatusOK {
+	if usrErr, sysErr, errCode := dbhelpers.ParsePQUniqueConstraintError(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 

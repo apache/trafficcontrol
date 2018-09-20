@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/http"
 	"regexp"
 	"strings"
 
@@ -115,33 +116,33 @@ func toCamelCase(str string) string {
 }
 
 // parses pq errors for not null constraint
-func ParsePQNotNullConstraintError(err *pq.Error) (error, tc.ApiErrorType) {
+func ParsePQNotNullConstraintError(err *pq.Error) (error, error, int) {
 	pattern := regexp.MustCompile(`null value in column "(.+)" violates not-null constraint`)
 	match := pattern.FindStringSubmatch(err.Message)
 	if match == nil {
-		return nil, tc.NoError
+		return nil, nil, http.StatusOK
 	}
-	return fmt.Errorf("%s is a required field", toCamelCase(match[1])), tc.DataConflictError
+	return fmt.Errorf("%s is a required field", toCamelCase(match[1])), nil, http.StatusBadRequest
 }
 
 // parses pq errors for violated foreign key constraints
-func ParsePQPresentFKConstraintError(err *pq.Error) (error, tc.ApiErrorType) {
+func ParsePQPresentFKConstraintError(err *pq.Error) (error, error, int) {
 	pattern := regexp.MustCompile(`Key \(.+\)=\(.+\) is not present in table "(.+)"`)
 	match := pattern.FindStringSubmatch(err.Detail)
 	if match == nil {
-		return nil, tc.NoError
+		return nil, nil, http.StatusOK
 	}
-	return fmt.Errorf("%s not found", match[1]), tc.DataMissingError
+	return fmt.Errorf("%s not found", match[1]), nil, http.StatusNotFound
 }
 
 // parses pq errors for uniqueness constraint violations
-func ParsePQUniqueConstraintError(err *pq.Error) (error, tc.ApiErrorType) {
+func ParsePQUniqueConstraintError(err *pq.Error) (error, error, int) {
 	pattern := regexp.MustCompile(`Key \((.+)\)=\((.+)\) already exists`)
 	match := pattern.FindStringSubmatch(err.Detail)
 	if match == nil {
-		return nil, tc.NoError
+		return nil, nil, http.StatusOK
 	}
-	return fmt.Errorf("%s %s already exists.", match[1], match[2]), tc.DataConflictError
+	return fmt.Errorf("%s %s already exists.", match[1], match[2]), nil, http.StatusBadRequest
 }
 
 // FinishTx commits the transaction if commit is true when it's called, otherwise it rolls back the transaction. This is designed to be called in a defer.
