@@ -28,6 +28,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+
 	"github.com/lib/pq"
 )
 
@@ -37,57 +39,23 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	defer inf.Close()
-
-	if _, ok := inf.Params["all"]; ok {
-		GetAll(w, r, inf)
-		return
-	}
-
-	// TODO implement
-	api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotImplemented, nil, nil)
-}
-
-func GetAll(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
-	// TODO handle cdnName param
-
-	// if cdnName, ok := inf.Params["cdnName"]; ok {
-	// 	feds, err = getAllFederationsByCDN(inf.Tx.Tx, tc.CDNName(cdnName))
-	// 	if err != nil {
-	// 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.GetAll getting: "+err.Error()))
-	// 		return
-	// 	}
-	// 	api.WriteResp(w, r, feds)
-	// 	return
-	// }
-
-	feds := []FedInfo{}
-	err := error(nil)
 
 	allFederations := []tc.IAllFederation{}
-
-	if cdnParam, ok := inf.Params["cdnName"]; ok {
-		cdnName := tc.CDNName(cdnParam)
-		feds, err = getAllFederationsForCDN(inf.Tx.Tx, cdnName)
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.GetAll getting all federations: "+err.Error()))
-			return
-		}
-		allFederations = append(allFederations, tc.AllFederationCDN{CDNName: &cdnName})
-	} else {
-		feds, err = getAllFederations(inf.Tx.Tx)
-		if err != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.GetAll getting all federations by CDN: "+err.Error()))
-			return
-		}
-	}
-
-	fedsResolvers, err := getFederationResolvers(inf.Tx.Tx, fedInfoIDs(feds))
+	feds, err := getUserFederations(inf.Tx.Tx, inf.User)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.GetAll getting all federations resolvers: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.Get getting federations: "+err.Error()))
 		return
 	}
+	fedsResolvers, err := getFederationResolvers(inf.Tx.Tx, fedInfoIDs(feds))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.Get getting federations resolvers: "+err.Error()))
+		return
+	}
+	allFederations = addResolvers(allFederations, feds, fedsResolvers)
+	api.WriteResp(w, r, allFederations)
+}
 
+func addResolvers(allFederations []tc.IAllFederation, feds []FedInfo, fedsResolvers map[int][]FedResolverInfo) []tc.IAllFederation {
 	dsFeds := map[tc.DeliveryServiceName][]tc.AllFederationMapping{}
 	for _, fed := range feds {
 		mapping := tc.AllFederationMapping{}
@@ -100,17 +68,16 @@ func GetAll(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 			case tc.FederationResolverType6:
 				mapping.Resolve6 = append(mapping.Resolve6, resolver.IP)
 			default:
-				log.Errorln("federations.GetAll got invalid resolver type, skipping")
+				log.Warnf("federations addResolvers got invalid resolver type for federation '%v', skipping\n", fed.ID)
 			}
 		}
-		log.Errorf("DEBUG GetAll appending %+v %+v %+v\n", fed.DS, *mapping.CName, *mapping.TTL)
 		dsFeds[fed.DS] = append(dsFeds[fed.DS], mapping)
 	}
 
 	for ds, mappings := range dsFeds {
 		allFederations = append(allFederations, tc.AllFederation{DeliveryService: ds, Mappings: mappings})
 	}
-	api.WriteResp(w, r, allFederations)
+	return allFederations
 }
 
 func fedInfoIDs(feds []FedInfo) []int {
@@ -167,7 +134,7 @@ WHERE
 	return feds, nil
 }
 
-func getAllFederations(tx *sql.Tx) ([]FedInfo, error) {
+func getUserFederations(tx *sql.Tx, user *auth.CurrentUser) ([]FedInfo, error) {
 	qry := `
 SELECT
   fds.federation,
@@ -178,12 +145,16 @@ FROM
   federation_deliveryservice fds
   JOIN deliveryservice ds ON ds.id = fds.deliveryservice
   JOIN federation fd ON fd.id = fds.federation
+  JOIN federation_tmuser fu on fu.federation = fd.id
+  JOIN tm_user u on u.id = fu.tm_user
+WHERE
+  u.username = $1
 ORDER BY
   ds.xml_id
 `
-	rows, err := tx.Query(qry)
+	rows, err := tx.Query(qry, user.UserName)
 	if err != nil {
-		return nil, errors.New("all federations querying: " + err.Error())
+		return nil, errors.New("user federations querying: " + err.Error())
 	}
 	defer rows.Close()
 
@@ -191,61 +162,9 @@ ORDER BY
 	for rows.Next() {
 		f := FedInfo{}
 		if err := rows.Scan(&f.ID, &f.TTL, &f.CName, &f.DS); err != nil {
-			return nil, errors.New("all federations scanning: " + err.Error())
+			return nil, errors.New("user federations scanning: " + err.Error())
 		}
-		log.Errorf("DEBUG getAllFederations got %+v\n", f)
 		feds = append(feds, f)
 	}
 	return feds, nil
-}
-
-func getAllFederationsForCDN(tx *sql.Tx, cdn tc.CDNName) ([]FedInfo, error) {
-	qry := `
-SELECT
-  fds.federation,
-  fd.ttl,
-  fd.cname,
-  ds.xml_id
-FROM
-  federation_deliveryservice fds
-  JOIN deliveryservice ds ON ds.id = fds.deliveryservice
-  JOIN federation fd ON fd.id = fds.federation
-  JOIN cdn on cdn.id = ds.cdn_id
-WHERE
-  cdn.name = $1
-ORDER BY
-  ds.xml_id
-`
-	rows, err := tx.Query(qry, cdn)
-	if err != nil {
-		return nil, errors.New("all federations querying: " + err.Error())
-	}
-	defer rows.Close()
-
-	feds := []FedInfo{}
-	for rows.Next() {
-		f := FedInfo{}
-		if err := rows.Scan(&f.ID, &f.TTL, &f.CName, &f.DS); err != nil {
-			return nil, errors.New("all federations scanning: " + err.Error())
-		}
-		log.Errorf("DEBUG getAllFederations got %+v\n", f)
-		feds = append(feds, f)
-	}
-	return feds, nil
-}
-
-func federationsIDsQuery() string {
-	return `
-SELECT
-  fds.federation,
-  fds.deliveryservice
-FROM
-  federation_deliveryservice fds
-  JOIN deliveryservice ds ON ds.id = fds.deliveryservice
-  JOIN cdn on cdn.id = ds.cdn
-WHERE
-  fds.federation = ANY($1)
-ORDER BY
-  ds.xml_id
-`
 }

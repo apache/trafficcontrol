@@ -364,7 +364,8 @@ func Routes(d ServerData) ([]Route, []RawRoute, http.Handler, error) {
 		{1.1, http.MethodPut, `snapshot/{cdn}/?$`, crconfig.SnapshotHandler, auth.PrivLevelOperations, Authenticated, nil},
 
 		// Federations
-		{1.4, http.MethodGet, `federations/?(\.json)?$`, federations.Get, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.4, http.MethodGet, `federations/all/?(\.json)?$`, federations.GetAll, auth.PrivLevelReadOnly, Authenticated, nil},
+		{1.1, http.MethodGet, `federations/?(\.json)?$`, federations.Get, auth.PrivLevelReadOnly, Authenticated, nil},
 
 		////DeliveryServices
 		{1.3, http.MethodGet, `deliveryservices/?(\.json)?$`, api.ReadHandler(deliveryservice.GetTypeV13Factory()), auth.PrivLevelReadOnly, Authenticated, nil},
