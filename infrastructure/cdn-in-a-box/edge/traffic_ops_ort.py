@@ -412,9 +412,16 @@ def setATSStatus(status:bool, restart:bool = False) -> bool:
 			logging.info("ATS already not running; nothing to do.")
 
 	if arg and MODE != "REPORT":
-		return startDaemon([os.path.join(TS_ROOT, "bin", "trafficserver"), arg],
-		                   stdout=os.path.join(TS_ROOT, "var", "log", "trafficserver", "traffic.out"),
-		                   stderr=os.path.join(TS_ROOT, "var", "log", "trafficserver", "error.log"))
+		tsexe = os.path.join(TS_ROOT, "bin", "trafficserver")
+		sub = subprocess.Popen([tsexe, arg], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		out, err = sub.communicate()
+
+		if sub.returncode:
+			logging.error("Failed to start trafficserver!")
+			logging.warning("Is the 'trafficserver' script located at %s?", tsexe)
+			logging.debug(out.decode())
+			logging.debug(err.decode())
+			return False
 
 	return True
 
