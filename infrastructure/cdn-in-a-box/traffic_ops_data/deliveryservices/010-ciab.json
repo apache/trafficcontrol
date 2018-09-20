@@ -1,9 +1,9 @@
 {
-    "xmlId": "ciab",
-    "displayName": "CDN in a Box",
+    "xmlId": "demo1",
+    "displayName": "Demo 1",
     "tenantName": "root",
     "protocol": 0,
-    "orgServerFqdn": "http://origin.cdn.local",
+    "orgServerFqdn": "http://origin.infra.ciab.test",
     "cdnName": "CDN-in-a-Box",
     "type": "HTTP",
     "active": true,
