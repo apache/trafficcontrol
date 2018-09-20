@@ -14,25 +14,27 @@
 ; KIND, either express or implied.  See the License for the
 ; specific language governing permissions and limitations
 ; under the License.
-$ORIGIN 239.16.172.in-addr.arpa.
+$ORIGIN 0.0.0.0.0.0.0.0.0.0.0.0.0.8.0.0.0.0.0.0.1.0.0.4.9.1.0.c.f.ip6.arpa.
 $TTL 30 ; 30 seconds
-@   IN SOA  dns.cdn.local. admin.cdn.local. (
+@   IN SOA  dns.infra.ciab.test. admin.infra.ciab.test. (
         0000000001 ; serial
         7200       ; refresh
         3600       ; retry
         604800     ; expire
         38400      ; minimum
 )
-              IN NS    dns.cdn.local.
-10            IN PTR   db.cdn.local.
-20            IN PTR   trafficops.cdn.local.
-21            IN PTR   trafficops-perl.cdn.local.
-30            IN PTR   trafficportal.cdn.local.
-40            IN PTR   trafficmonitor.cdn.local.
-50            IN PTR   trafficvault.cdn.local.
-60            IN PTR   trafficrouter.cdn.local.
-100           IN PTR   edge.cdn.local.
-120           IN PTR   mid.cdn.local.
-140           IN PTR   origin.cdn.local.
-200           IN PTR   enroller.cdn.local.
-254           IN PTR   dns.cdn.local.
+              IN NS    dns.infra.ciab.test.
+1.0.0         IN PTR   gw.infra.ciab.test.
+0.1.0         IN PTR   db.infra.ciab.test.
+0.2.0         IN PTR   trafficops.infra.ciab.test.
+0.2.1         IN PTR   trafficops-perl.infra.ciab.test.
+0.3.0         IN PTR   trafficportal.infra.ciab.test.
+0.4.0         IN PTR   trafficmonitor.infra.ciab.test.
+0.5.0         IN PTR   trafficvault.infra.ciab.test.
+0.6.0         IN PTR   trafficrouter.infra.ciab.test.
+0.0.1         IN PTR   edge.infra.ciab.test.
+0.2.1         IN PTR   mid.infra.ciab.test.
+0.4.1         IN PTR   origin.infra.ciab.test.
+0.0.2         IN PTR   enroller.infra.ciab.test.
+0.5.2         IN PTR   client.infra.ciab.test.
+4.5.2         IN PTR   dns.infra.ciab.test.

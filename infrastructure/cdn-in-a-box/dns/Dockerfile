@@ -32,8 +32,9 @@ RUN echo 'APT::Install-Recommends 0;' >> /etc/apt/apt.conf.d/01norecommends \
 COPY dns/entrypoint.sh /sbin/entrypoint.sh
 COPY dns/named.conf.local /etc/bind
 COPY dns/named.conf.options /etc/bind
-COPY dns/zone.cdn.local /etc/bind
-COPY dns/zone.239.16.172.in-addr.arpa /etc/bind
+COPY dns/zone.ciab.test /etc/bind
+COPY dns/zone.ip4.arpa /etc/bind
+COPY dns/zone.ip6.arpa /etc/bind
 COPY traffic_ops/to-access.sh /
 COPY enroller/server_template.json /
 
