@@ -230,6 +230,16 @@ to-enroll() {
 			export MY_PROFILE="TRAFFIC_PORTAL"
 			export MY_STATUS="ONLINE"
 			;;
+		"ts" )
+			export MY_TYPE="TRAFFIC_STATS"
+			export MY_PROFILE="TRAFFIC_STATS"
+			export MY_STATUS="ONLINE"
+			if [[ ! -z "$3" ]]; then
+				export MY_CACHE_GROUP="$3"
+			else
+				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
+			fi
+			;;
 		"tv" )
 			export MY_TYPE="RIAK"
 			export MY_PROFILE="RIAK_ALL"
