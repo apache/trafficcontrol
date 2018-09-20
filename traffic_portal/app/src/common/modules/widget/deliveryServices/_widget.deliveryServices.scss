@@ -28,16 +28,18 @@
         a:hover {
             background-color: #F1FAF8;
         }
-        .widgetTable {
-            width: 100%;
-            max-width: 100%;
+        .widgetTableContainer {
+            margin-bottom:16px;
+        }
+        .whitespace {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            margin-bottom: 5px;
-            .thead {
-                vertical-align: bottom;
-            }
+        }
+        .widgetTable {
+            color: #73879C;
+            font-family: 'Lato', sans-serif;
+            font-size: 13px;
         }
         .delivery-services-health {
             height: 52px;
@@ -57,23 +59,29 @@
     }
     .delivery-services-search-form {
         float: right;
-        width: 250px;
+        width: 200px;
         margin-bottom: 10px;
     }
 }
-
+.dsWidgetPagination {
+    height: 60px;
+}
 .dsWidgetMessages {
     margin-left: 62px;
-    margin-bottom: 62px;
+    margin-bottom: 56px;
 }
-
 .dsWidgetButtonAlignFix {
     margin-right: 16px;
 }
 .dsWidgetGray {
     color: #efefef;
 }
-
+.dsWidgetGreen {
+    color: #32CD32;
+}
+.dsmin {
+    min-width: 422px;
+}
 #deliveryServicesLoadingContainer {
     height: 555px;
     background-color: transparent;

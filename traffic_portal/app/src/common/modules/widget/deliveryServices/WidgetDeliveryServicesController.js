@@ -145,11 +145,10 @@ var WidgetDeliveryServicesController = function ($scope, $timeout, $filter, $q, 
 					type: 'time',
 					time: {
 						displayFormats: {
-							minute: 'h:mm'
+							hour: 'HH:mm'
 						},
-						parser: 'h:mm',
 						tooltipFormat: 'll HH:mm'
-					}
+					},
 				}, {
 					position: 'top',
 					ticks: {
