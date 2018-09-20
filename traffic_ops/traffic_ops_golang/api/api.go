@@ -36,6 +36,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -418,24 +419,23 @@ func TypeErrToAPIErr(err error, errType tc.ApiErrorType) (error, error, int) {
 // ParseDBErr parses pq errors for uniqueness constraint violations, and returns the (userErr, sysErr, httpCode) format expected by the API helpers.
 // The dataType is the name of the API object, e.g. 'coordinate' or 'delivery service', used to construct the error string.
 func ParseDBErr(ierr error, dataType string) (error, error, int) {
+
 	err, ok := ierr.(*pq.Error)
 	if !ok {
 		return nil, errors.New("database returned non pq error: " + err.Error()), http.StatusInternalServerError
 	}
-	if len(err.Constraint) > 0 && len(err.Detail) > 0 { //we only want to continue parsing if it is a constraint error with details
-		detail := err.Detail
-		if strings.HasPrefix(detail, "Key ") && strings.HasSuffix(detail, " already exists.") { //we only want to continue parsing if it is a uniqueness constraint error
-			detail = strings.TrimPrefix(detail, "Key ")
-			detail = strings.TrimSuffix(detail, " already exists.")
-			//should look like "(column)=(dupe value)" at this point
-			details := strings.Split(detail, "=")
-			if len(details) == 2 {
-				column := strings.Trim(details[0], "()")
-				dupValue := strings.Trim(details[1], "()")
-				return errors.New("a " + dataType + " with " + column + " " + dupValue + " already exists."), nil, http.StatusBadRequest
-			}
-		}
+
+	if usrErr, sysErr, errCode := TypeErrToAPIErr(dbhelpers.ParsePQNotNullConstraintError(err)); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
 	}
-	log.Errorln(dataType + " failed to parse unique constraint from pq error: " + err.Error())
+
+	if usrErr, sysErr, errCode := TypeErrToAPIErr(dbhelpers.ParsePQPresentFKConstraintError(err)); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
+	if usrErr, sysErr, errCode := TypeErrToAPIErr(dbhelpers.ParsePQUniqueConstraintError(err)); errCode != http.StatusOK {
+		return usrErr, sysErr, errCode
+	}
+
 	return nil, err, http.StatusInternalServerError
 }
