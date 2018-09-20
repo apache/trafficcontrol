@@ -22,9 +22,6 @@ package dbhelpers
 import (
 	"database/sql"
 	"errors"
-	"fmt"
-	"net/http"
-	"regexp"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -102,47 +99,6 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo
 	criteria = strings.Join(criteriaArgs, " AND ")
 
 	return criteria, queryValues, errs
-}
-
-// small helper function to help with parsing below
-func toCamelCase(str string) string {
-	mutable := []byte(str)
-	for i := 0; i < len(str); i++ {
-		if mutable[i] == '_' && i+1 < len(str) {
-			mutable[i+1] = strings.ToUpper(string(str[i+1]))[0]
-		}
-	}
-	return strings.Replace(string(mutable[:]), "_", "", -1)
-}
-
-// parses pq errors for not null constraint
-func ParsePQNotNullConstraintError(err *pq.Error) (error, error, int) {
-	pattern := regexp.MustCompile(`null value in column "(.+)" violates not-null constraint`)
-	match := pattern.FindStringSubmatch(err.Message)
-	if match == nil {
-		return nil, nil, http.StatusOK
-	}
-	return fmt.Errorf("%s is a required field", toCamelCase(match[1])), nil, http.StatusBadRequest
-}
-
-// parses pq errors for violated foreign key constraints
-func ParsePQPresentFKConstraintError(err *pq.Error) (error, error, int) {
-	pattern := regexp.MustCompile(`Key \(.+\)=\(.+\) is not present in table "(.+)"`)
-	match := pattern.FindStringSubmatch(err.Detail)
-	if match == nil {
-		return nil, nil, http.StatusOK
-	}
-	return fmt.Errorf("%s not found", match[1]), nil, http.StatusNotFound
-}
-
-// parses pq errors for uniqueness constraint violations
-func ParsePQUniqueConstraintError(err *pq.Error) (error, error, int) {
-	pattern := regexp.MustCompile(`Key \((.+)\)=\((.+)\) already exists`)
-	match := pattern.FindStringSubmatch(err.Detail)
-	if match == nil {
-		return nil, nil, http.StatusOK
-	}
-	return fmt.Errorf("%s %s already exists.", match[1], match[2]), nil, http.StatusBadRequest
 }
 
 // FinishTx commits the transaction if commit is true when it's called, otherwise it rolls back the transaction. This is designed to be called in a defer.

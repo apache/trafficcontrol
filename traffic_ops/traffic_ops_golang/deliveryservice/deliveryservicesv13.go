@@ -147,7 +147,7 @@ func create(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds tc.Deliver
 
 	resultRows, err := tx.Query(insertQuery(), &ds.Active, &ds.AnonymousBlockingEnabled, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CheckPath, &deepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OriginShield, &ds.ProfileID, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.TypeID, &ds.XMLID)
 	if err != nil {
-		usrErr, sysErr, code := api.ParseDBErr(err, "delivery service")
+		usrErr, sysErr, code := api.ParseDBError(err)
 		return tc.DeliveryServiceNullable{}, code, usrErr, sysErr
 	}
 	defer resultRows.Close()
@@ -453,7 +453,7 @@ func update(tx *sql.Tx, cfg config.Config, user *auth.CurrentUser, ds *tc.Delive
 	resultRows, err := tx.Query(updateDSQuery(), &ds.Active, &ds.CacheURL, &ds.CCRDNSTTL, &ds.CDNID, &ds.CheckPath, &deepCachingType, &ds.DisplayName, &ds.DNSBypassCNAME, &ds.DNSBypassIP, &ds.DNSBypassIP6, &ds.DNSBypassTTL, &ds.DSCP, &ds.EdgeHeaderRewrite, &ds.GeoLimitRedirectURL, &ds.GeoLimit, &ds.GeoLimitCountries, &ds.GeoProvider, &ds.GlobalMaxMBPS, &ds.GlobalMaxTPS, &ds.FQPacingRate, &ds.HTTPBypassFQDN, &ds.InfoURL, &ds.InitialDispersion, &ds.IPV6RoutingEnabled, &ds.LogsEnabled, &ds.LongDesc, &ds.LongDesc1, &ds.LongDesc2, &ds.MaxDNSAnswers, &ds.MidHeaderRewrite, &ds.MissLat, &ds.MissLong, &ds.MultiSiteOrigin, &ds.OriginShield, &ds.ProfileID, &ds.Protocol, &ds.QStringIgnore, &ds.RangeRequestHandling, &ds.RegexRemap, &ds.RegionalGeoBlocking, &ds.RemapText, &ds.RoutingName, &ds.SigningAlgorithm, &ds.SSLKeyVersion, &ds.TenantID, &ds.TRRequestHeaders, &ds.TRResponseHeaders, &ds.TypeID, &ds.XMLID, &ds.AnonymousBlockingEnabled, &ds.ID)
 
 	if err != nil {
-		usrErr, sysErr, code := api.ParseDBErr(err, "delivery service")
+		usrErr, sysErr, code := api.ParseDBError(err)
 		return tc.DeliveryServiceNullable{}, code, usrErr, sysErr
 	}
 	defer resultRows.Close()

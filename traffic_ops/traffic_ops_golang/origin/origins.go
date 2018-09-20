@@ -341,7 +341,7 @@ func (origin *TOOrigin) Update() (error, error, int) {
 	log.Debugf("about to run exec query: %s with origin: %++v", updateQuery(), origin)
 	resultRows, err := origin.ReqInfo.Tx.NamedQuery(updateQuery(), origin)
 	if err != nil {
-		return api.ParseDBErr(err, origin.GetType())
+		return api.ParseDBError(err)
 	}
 	defer resultRows.Close()
 
@@ -397,7 +397,7 @@ func (origin *TOOrigin) Create() (error, error, int) {
 
 	resultRows, err := origin.ReqInfo.Tx.NamedQuery(insertQuery(), origin)
 	if err != nil {
-		return api.ParseDBErr(err, origin.GetType())
+		return api.ParseDBError(err)
 	}
 	defer resultRows.Close()
 

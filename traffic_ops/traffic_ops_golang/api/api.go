@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -36,7 +37,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -416,24 +416,64 @@ func TypeErrToAPIErr(err error, errType tc.ApiErrorType) (error, error, int) {
 	}
 }
 
-// ParseDBErr parses pq errors for uniqueness constraint violations, and returns the (userErr, sysErr, httpCode) format expected by the API helpers.
-// The dataType is the name of the API object, e.g. 'coordinate' or 'delivery service', used to construct the error string.
-func ParseDBErr(ierr error, dataType string) (error, error, int) {
+// small helper function to help with parsing below
+func toCamelCase(str string) string {
+	mutable := []byte(str)
+	for i := 0; i < len(str); i++ {
+		if mutable[i] == '_' && i+1 < len(str) {
+			mutable[i+1] = strings.ToUpper(string(str[i+1]))[0]
+		}
+	}
+	return strings.Replace(string(mutable[:]), "_", "", -1)
+}
+
+// parses pq errors for not null constraint
+func parseNotNullConstraintError(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`null value in column "(.+)" violates not-null constraint`)
+	match := pattern.FindStringSubmatch(err.Message)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("%s is a required field", toCamelCase(match[1])), nil, http.StatusBadRequest
+}
+
+// parses pq errors for violated foreign key constraints
+func parseNotPresentFKConstraintError(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`Key \(.+\)=\(.+\) is not present in table "(.+)"`)
+	match := pattern.FindStringSubmatch(err.Detail)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("%s not found", match[1]), nil, http.StatusNotFound
+}
+
+// parses pq errors for uniqueness constraint violations
+func parseUniqueConstraintError(err *pq.Error) (error, error, int) {
+	pattern := regexp.MustCompile(`Key \((.+)\)=\((.+)\) already exists`)
+	match := pattern.FindStringSubmatch(err.Detail)
+	if match == nil {
+		return nil, nil, http.StatusOK
+	}
+	return fmt.Errorf("%s %s already exists.", match[1], match[2]), nil, http.StatusBadRequest
+}
+
+// ParseDBError parses pq errors for uniqueness constraint violations, and returns the (userErr, sysErr, httpCode) format expected by the API helpers.
+func ParseDBError(ierr error) (error, error, int) {
 
 	err, ok := ierr.(*pq.Error)
 	if !ok {
 		return nil, errors.New("database returned non pq error: " + err.Error()), http.StatusInternalServerError
 	}
 
-	if usrErr, sysErr, errCode := dbhelpers.ParsePQNotNullConstraintError(err); errCode != http.StatusOK {
+	if usrErr, sysErr, errCode := parseNotNullConstraintError(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 
-	if usrErr, sysErr, errCode := dbhelpers.ParsePQPresentFKConstraintError(err); errCode != http.StatusOK {
+	if usrErr, sysErr, errCode := parseNotPresentFKConstraintError(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 
-	if usrErr, sysErr, errCode := dbhelpers.ParsePQUniqueConstraintError(err); errCode != http.StatusOK {
+	if usrErr, sysErr, errCode := parseUniqueConstraintError(err); errCode != http.StatusOK {
 		return usrErr, sysErr, errCode
 	}
 

@@ -124,7 +124,7 @@ func (pp *TOProfileParameter) Validate() error {
 func (pp *TOProfileParameter) Create() (error, error, int) {
 	resultRows, err := pp.APIInfo().Tx.NamedQuery(insertQuery(), pp)
 	if err != nil {
-		return api.ParseDBErr(err, pp.GetType())
+		return api.ParseDBError(err)
 	}
 	defer resultRows.Close()
 
