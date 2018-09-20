@@ -7,7 +7,7 @@
     {
       "configFile": "global",
       "name": "tm.url",
-      "value": "https://trafficops.cdn.local:443/"
+      "value": "https://trafficops.infra.ciab.test:443/"
     },
     {
       "configFile": "global",

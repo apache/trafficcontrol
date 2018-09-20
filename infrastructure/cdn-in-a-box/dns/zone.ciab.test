@@ -1,0 +1,74 @@
+; Licensed to the Apache Software Foundation (ASF) under one
+; or more contributor license agreements.  See the NOTICE file
+; distributed with this work for additional information
+; regarding copyright ownership.  The ASF licenses this file
+; to you under the Apache License, Version 2.0 (the
+; "License"); you may not use this file except in compliance
+; with the License.  You may obtain a copy of the License at
+;
+;   http://www.apache.org/licenses/LICENSE-2.0
+;
+; Unless required by applicable law or agreed to in writing,
+; software distributed under the License is distributed on an
+; "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+; KIND, either express or implied.  See the License for the
+; specific language governing permissions and limitations
+; under the License.
+
+$ORIGIN ciab.test.
+$TTL 30 
+@   IN SOA  dns.infra.ciab.test. hostmaster.ciab.test. (
+        0000000001; serial
+        7200      ; refresh (2 hours)
+        3600      ; retry (1 hour)
+        604800    ; expire (1 week)
+        38400     ; minimum (10 hours 40 minutes)
+        )
+									IN NS   dns.infra.ciab.test.
+
+$ORIGIN infra.ciab.test.
+
+gw                IN A    172.16.239.1
+gw								IN AAAA fc01:9400:1000:8::1
+
+db                IN A    172.16.239.10
+db								IN AAAA fc01:9400:1000:8::10
+
+trafficops        IN A    172.16.239.20
+trafficops        IN AAAA fc01:9400:1000:8::20
+
+trafficops-perl   IN A    172.16.239.21
+trafficops-perl   IN AAAA fc01:9400:1000:8::21
+
+trafficportal     IN A    172.16.239.30
+trafficportal     IN AAAA fc01:9400:1000:8::30
+
+trafficmonitor    IN A    172.16.239.40
+trafficmonitor    IN AAAA fc01:9400:1000:8::40
+
+trafficvault      IN A    172.16.239.50
+trafficvault      IN AAAA fc01:9400:1000:8::50
+
+trafficrouter     IN A    172.16.239.60
+trafficrouter     IN AAAA fc01:9400:1000:8::60
+
+edge              IN A    172.16.239.100
+edge              IN AAAA fc01:9400:1000:8::100
+
+mid               IN A    172.16.239.120
+mid               IN AAAA fc01:9400:1000:8::120
+
+origin            IN A    172.16.239.140
+origin            IN AAAA fc01:9400:1000:8::140
+
+enroller          IN A    172.16.239.200
+enroller          IN AAAA fc01:9400:1000:8::200
+
+client            IN A    172.16.239.250
+client            IN AAAA fc01:9400:1000:8::250
+
+dns               IN A    172.16.239.254
+dns               IN AAAA fc01:9400:1000:8::254
+
+$ORIGIN mycdn.ciab.test.
+@                 NS   trafficrouter.infra.ciab.test.
