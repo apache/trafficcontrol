@@ -228,6 +228,7 @@ Fields Always Present
 |rerr  |Message about internal Traffic Router Error                                      |String                                                                              |
 +------+---------------------------------------------------------------------------------+------------------------------------------------------------------------------------+
 
+.. seealso:: If `Regional Geo-Blocking <regionalgeo-qht>`_ is enabled on the Delivery Service, an additional field (``rgb``) will appear.
 
 ``rtype`` Meanings
 ^^^^^^^^^^^^^^^^^^
@@ -250,11 +251,11 @@ FED
 GEO
 	The result was derived from geolocation service based on the address in the ``chi`` field
 GEO_REDIRECT
-	The request was redirected (302) based on the National Geo blocking (Geo Limit Redirect URL) configured on the Delivery Service
+	The request was redirected based on the National Geo blocking (Geo Limit Redirect URL) configured on the Delivery Service
 MISS
 	Traffic Router was unable to resolve a DNS request or find a cache for the requested resource
 RGALT
-	The request was redirected (302) to the Regional Geo blocking URL. Regional Geo blocking is enabled on the Delivery Service and is configured through the ``regional_geoblock.polling.url`` setting for the Traffic Router profile
+	The request was redirected to the `Regional Geo-Blocking <regionalgeo-qht>`_ URL. Regional Geo blocking is enabled on the Delivery Service and is configured through the ``regional_geoblock.polling.url`` setting for the Traffic Router profile
 RGDENY
 	_*DNS Only*_ The result was obtained through federated coverage zone data outside of any Delivery Service The request was regionally blocked because there was no rule for the request made
 STATIC_ROUTE
