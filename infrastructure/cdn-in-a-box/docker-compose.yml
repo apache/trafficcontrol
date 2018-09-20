@@ -51,7 +51,7 @@ services:
       context: traffic_ops
       dockerfile: Dockerfile-db
     hostname: db
-    domainname: cdn.local
+    domainname: infra.ciab.test
     depends_on:
       - dns
     networks:
@@ -79,7 +79,7 @@ services:
       - db
       - enroller
       - trafficops-perl
-    domainname: cdn.local
+    domainname: infra.ciab.test
     env_file:
       - variables.env
     hostname: trafficops
@@ -105,7 +105,7 @@ services:
     depends_on:
       - db
       - enroller
-    domainname: cdn.local
+    domainname: infra.ciab.test
     env_file:
       - variables.env
     hostname: trafficops-perl
@@ -131,7 +131,7 @@ services:
         TRAFFIC_PORTAL_RPM: traffic_portal/traffic_portal.rpm
     depends_on:
       - enroller
-    domainname: cdn.local
+    domainname: infra.ciab.test
     env_file:
       - variables.env
     hostname: trafficportal
@@ -158,7 +158,7 @@ services:
     volumes:
       - shared:/shared
       - ./dns/container-resolv.conf:/etc/resolv.conf
-    domainname: cdn.local
+    domainname: infra.ciab.test
     env_file:
       - variables.env
     hostname: trafficmonitor
@@ -180,7 +180,7 @@ services:
         TOMCAT_RPM: traffic_router/tomcat.rpm
     depends_on:
       - enroller
-    domainname: cdn.local
+    domainname: infra.ciab.test
     env_file:
       - variables.env
     hostname: trafficrouter
@@ -215,7 +215,7 @@ services:
       - ./dns/container-resolv.conf:/etc/resolv.conf
       - schemas:/etc/riak/schemas
       - shared:/shared
-    domainname: cdn.local
+    domainname: infra.ciab.test
     env_file:
       - variables.env
     hostname: trafficvault
@@ -240,7 +240,7 @@ services:
     depends_on:
       - enroller
       - tccache
-    domainname: cdn.local
+    domainname: infra.ciab.test
     env_file:
       - variables.env
     hostname: edge
@@ -262,7 +262,7 @@ services:
     depends_on:
       - enroller
       - tccache
-    domainname: cdn.local
+    domainname: infra.ciab.test
     env_file:
       - variables.env
     hostname: mid
@@ -283,7 +283,7 @@ services:
       dockerfile: origin/Dockerfile
     depends_on:
       - enroller
-    domainname: cdn.local
+    domainname: infra.ciab.test
     env_file:
       - variables.env
     hostname: origin
@@ -325,7 +325,7 @@ services:
     volumes:
       - shared:/shared
     hostname: dns
-    domainname: cdn.local
+    domainname: infra.ciab.test
     networks:
       tcnet:
         ipv4_address: 172.16.239.254

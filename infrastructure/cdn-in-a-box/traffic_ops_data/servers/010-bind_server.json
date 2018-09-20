@@ -1,6 +1,6 @@
 {
   "hostName": "dns",
-  "domainName": "cdn.local",
+  "domainName": "infra.ciab.test",
   "cachegroup": "CDN_in_a_Box_Edge",
   "interfaceName": "eth0",
   "ipAddress": "172.16.239.254",

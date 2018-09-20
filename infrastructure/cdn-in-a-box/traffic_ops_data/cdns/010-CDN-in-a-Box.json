@@ -1,5 +1,5 @@
 {
 	"dnssecEnabled": false,
-	"domainName": "cdn.local",
+	"domainName": "mycdn.ciab.test",
 	"name": "CDN-in-a-Box"
 }

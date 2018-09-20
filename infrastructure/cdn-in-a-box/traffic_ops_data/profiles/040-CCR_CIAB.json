@@ -13,7 +13,7 @@
     {
       "configFile": "CRConfig.json",
       "name": "geolocation.polling.url",
-      "value": "https://trafficops.cdn.local:443/GeoLite2-City.mmdb.gz"
+      "value": "https://trafficops.infra.ciab.test:443/GeoLite2-City.mmdb.gz"
     },
     {
       "configFile": "CRConfig.json",
@@ -28,12 +28,12 @@
     {
       "configFile": "CRConfig.json",
       "name": "coveragezone.polling.url",
-      "value": "https://trafficops.cdn.local:443/coverage-zone.json"
+      "value": "https://trafficops.infra.ciab.test:443/coverage-zone.json"
     },
     {
       "configFile": "CRConfig.json",
       "name": "domain_name",
-      "value": "ciab.cdn.local"
+      "value": "mycdn.ciab.test"
     },
     {
       "configFile": "CRConfig.json",
@@ -133,7 +133,7 @@
     {
       "configFile": "CRConfig.json",
       "name": "neustar.polling.url",
-      "value": "https://trafficops.cdn.local:443/neustar.tar.gz"
+      "value": "https://trafficops.infra.ciab.test:443/neustar.tar.gz"
     },
     {
       "configFile": "CRConfig.json",
