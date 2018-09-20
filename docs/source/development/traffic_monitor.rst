@@ -13,31 +13,31 @@
 .. limitations under the License.
 ..
 
-Traffic Monitor Golang
-**********************
+***************
+Traffic Monitor
+***************
 Introduction
 ============
-Traffic Monitor is an HTTP service application that monitors caches, provides health state information to Traffic Router, and collects statistics for use in tools such as Traffic Ops and Traffic Stats. The health state provided by Traffic Monitor is used by Traffic Router to control which caches are available on the CDN.
+Traffic Monitor is an HTTP service application that monitors caches, provides health state information to Traffic Router, and collects statistics for use in tools such as Traffic Portal and Traffic Stats. The health state provided by Traffic Monitor is used by Traffic Router to control which caches are available on the CDN.
 
 Software Requirements
 =====================
-To work on Traffic Monitor you need a \*nix (MacOS and Linux are most commonly used) environment that has the following installed:
-
-* Golang
+To work on Traffic Monitor you need a Unix-like (MacOS and Linux are most commonly used) environment that has a working install of Go
 
 Project Tree Overview
 =====================================
 
-* ``traffic_control/traffic_monitor/`` - base directory for Traffic Monitor.
+``traffic_monitor/`` - base directory for Traffic Monitor.
 
 * ``cache/`` - Handler for processing cache results.
 * ``config/`` - Application configuration; in-memory objects from ``traffic_monitor.cfg``.
 * ``crconfig/`` - struct for deserlializing the CRConfig from JSON.
-* ``deliveryservice/`` - aggregates delivery service data from cache results.
-* ``deliveryservicedata/`` - deliveryservice structs. This exists separate from ``deliveryservice`` to avoid circular dependencies.
+* ``deliveryservice/`` - aggregates Delivery Service data from cache results.
+* ``deliveryservicedata/`` - Delivery Service structs. This exists separate from ``deliveryservice`` to avoid circular dependencies.
 * ``enum/`` - enumerations and name alias types.
 * ``health/`` - functions for calculating cache health, and creating health event objects.
 * ``manager/`` - manager goroutines (microthreads).
+
 	* ``health.go`` - Health request manager. Processes health results, from the health poller -> fetcher -> manager. The health poll is the "heartbeat" containing a small amount of stats, primarily to determine whether a cache is reachable as quickly as possible. Data is aggregated and inserted into shared threadsafe objects.
 	* ``manager.go`` - Contains ``Start`` function to start all pollers, handlers, and managers.
 	* ``monitorconfig.go`` - Monitor config manager. Gets data from the monitor config poller, which polls Traffic Ops for changes to which caches are monitored and how.
@@ -45,82 +45,42 @@ Project Tree Overview
 	* ``peer.go`` - Peer manager. Gets data from the peer poller -> fetcher -> handler and aggregates it into the shared threadsafe objects.
 	* ``stat.go`` - Stat request manager. Processes stat results, from the stat poller -> fetcher -> manager. The stat poll is the large statistics poll, containing all stats (such as HTTP codes, transactions, delivery service statistics, and more). Data is aggregated and inserted into shared threadsafe objects.
 	* ``statecombiner.go`` - Manager for combining local and peer states, into a single combined states threadsafe object, for serving the CrStates endpoint.
+
 * ``datareq/`` - HTTP routing, which has threadsafe health and stat objects populated by stat and health managers.
 * ``peer/`` - Manager for getting and populating peer data from other Traffic Monitors
 * ``srvhttp/`` - HTTP service. Given a map of endpoint functions, which are lambda closures containing aggregated data objects.
-* ``static/`` - Web GUI HTML and javascript files
+* ``static/`` - Web interface files (markup, styling and scripting)
 * ``threadsafe/`` - Threadsafe objects for storing aggregated data needed by multiple goroutines (typically the aggregator and HTTP server)
 * ``trafficopsdata/`` - Struct for fetching and storing Traffic Ops data needed from the CRConfig. This is primarily mappings, such as delivery service servers, and server types.
 * ``trafficopswrapper/`` - Threadsafe wrapper around the Traffic Ops client. The client used to not be threadsafe, however, it mostly (possibly entirely) is now. But, the wrapper also serves to overwrite the Traffic Ops ``monitoring.json`` values, which are live, with snapshotted CRConfig values.
 
 Architecture
 ============
-At the highest level, Traffic Monitor polls caches, aggregates their data and availability, and serves it at HTTP JSON endpoints.
+At the highest level, Traffic Monitor polls caches, aggregates their data and availability, and serves it at HTTP endpoints in JSON format.
 
-In the code, the data flows thru microthread (goroutine) pipelines. All stages of the pipeline are independent running microthreads [#f1]_ . The pipelines are:
+In the code, the data flows through microthread (goroutine) pipelines. All stages of the pipeline are independently running microthreads [#f1]_ . The pipelines are:
 
-* **stat poll** - polls caches for all statistics data. This should be a slower poll, which gets a lot of data.
-* **health poll** - polls caches for a tiny amount of data, typically system information. This poll is designed to be a heartbeat, determining quickly whether the cache is reachable. Since it's a small amount of data, it should poll more frequently.
-* **peer poll** - polls Traffic Monitor peers for their availability data, and aggregates it with its own availability results and that of all other peers.
-* **monitor config** - polls Traffic Ops for the list of Traffic Monitors and their info.
-* **ops config** - polls for changes to the ops config file ``traffic_ops.cfg``, and sends updates to other pollers when the config file has changed.
+stat poll
+	Polls caches for all statistics data. This should be a slower poll, which gets a lot of data.
+health poll
+	Polls caches for a tiny amount of data, typically system information. This poll is designed to be a heartbeat, determining quickly whether the cache is reachable. Since it's a small amount of data, it should poll more frequently.
+peer poll
+	Polls Traffic Monitor peers for their availability data, and aggregates it with its own availability results and that of all other peers.
+monitor config
+	Polls Traffic Ops for the list of Traffic Monitors and their info.
+ops config
+	Polls for changes to the ops config file ``traffic_ops.cfg``, and sends updates to other pollers when the config file has changed.
 
-  * The ops config manager also updates the shared Traffic Ops client, since it's the actor which becomes notified of config changes requiring a new client.
-
-  * The ops config manager also manages, creates, and recreates the HTTP server, since ops config changes necessitate restarting the HTTP server.
+	* The ops config manager also updates the shared Traffic Ops client, since it's the actor which becomes notified of config changes requiring a new client.
+	* The ops config manager also manages, creates, and recreates the HTTP server, since ops config changes necessitate restarting the HTTP server.
 
 All microthreads in the pipeline are started by ``manager/manager.go:Start()``.
 
-::
+.. figure:: traffic_monitor/Pipeline.*
+	:align: center
+	:width: 70%
 
-  --------------------     --------------------     --------------------
-  | ops config poller |-->| ops config handler |-->| ops config manager |-->-restart HTTP server-------------------------
-   -------------------     --------------------     -------------------- |                                              |
-                                                                         -->-ops config change subscriber-------------  |
-                                                                         |                                           |  |
-                                                                         -->-Traffic Ops client change subscriber--  |  |
-                                                                                                                  |  |  |
-      -------------------------------------------------------------------------------------------------------------  |  |
-      |                                                                                                              |  |
-      |   ------------------------------------------------------------------------------------------------------------  |
-      |   |                                                                                                             |
-      \/  \/                                                                                                            |
-     -----------------------     ------------------------                                                               |
-    | monitor config poller |-->| monitor config manager |-->-stat subscriber--------             -----------------------
-     -----------------------     ------------------------ |                         |             |
-                                                          |->-health subscriber---  |             \/                           _
-                                                          |                      |  |       -------------                    _( )._
-                                                          -->-peer subscriber--  |  |      | HTTP server |->-HTTP request-> (____)_)
-                                                                              |  |  |       -------------
-  -----------------------------------------------------------------------------  |  |              ^
-  |                                                                              |  |              |
-  |  -----------------------------------------------------------------------------  |              ------------------------
-  |  |                                                                              |                                     |
-  |  |  -----------------------------------------------------------------------------                                     |
-  |  |  |                                                                                                                 ^
-  |  |  |   -------------     --------------     --------------     --------------                            -----------------------
-  |  |  -->| stat poller |-->| stat fetcher |-->| stat handler |-->| stat manager |->--------set shared data->| shared data         |
-  |  |      ------------- |   --------------     --------------  |  --------------                            -----------------------
-  |  |                    |   --------------     --------------  |                                            | events              |
-  |  |                    |->| stat fetcher |-->| stat handler |-|                                            | toData              |
-  |  |                    |   --------------     --------------  |                                            | errorCount          |
-  |  |                    ...                                    ...                                          | healthIteration     |
-  |  |                                                                                                        | fetchCount          |
-  |  |     ---------------     ----------------     ----------------     ----------------                     | localStates         |
-  |  ---->| health poller |-->| health fetcher |-->| health handler |-->| health manager |->-set shared data->| toSession           |
-  |        --------------- |   ----------------     ----------------  |  ----------------                     | peerStates          |
-  |                        |   ----------------     ----------------  |                                       | monitorConfig       |
-  |                        |->| health fetcher |-->| health handler |-|                                       | combinedStates      |
-  |                        |   ----------------     ----------------  |                                       | statInfoHistory     |
-  |                        ...                                        ...                                     | statResultHistory   |
-  |                                                                                                           | statMaxKbpses       |
-  |       -------------     --------------     --------------     --------------                              | lastKbpsStats       |
-  ------>| peer poller |-->| peer fetcher |-->| peer handler |-->| peer manager |->----------set shared data->| dsStats             |
-          ------------- |   --------------     --------------  |  --------------                              | localCacheStatus    |
-                        |   --------------     --------------  |                                              | lastHealthDurations |
-                        |->| peer fetcher |-->| peer handler |-|                                              | healthHistory       |
-                        |   --------------     --------------  |                                              -----------------------
-                        ...                                    ...
+	Pipeline Overview
 
 .. [#f1] Technically, some stages which are one-to-one simply call the next stage as a function. For example, the Fetcher calls the Handler as a function in the same microthread. But this isn't architecturally significant.
 
@@ -130,13 +90,13 @@ Stat Pipeline
 
 ::
 
-  ---------     ---------     ---------     ---------
-  | poller |-->| fetcher |-->| handler |-->| manager |
-   -------- |   ---------     ---------  |  ---------
-            |   ---------     ---------  |
-            |->| fetcher |-->| handler |-|
-            |   ---------     ---------  |
-            ...                          ...
+	---------     ---------     ---------     ---------
+	| poller |-->| fetcher |-->| handler |-->| manager |
+	 -------- |   ---------     ---------  |  ---------
+						|   ---------     ---------  |
+						|->| fetcher |-->| handler |-|
+						|   ---------     ---------  |
+						...                          ...
 
 * **poller** - ``common/poller/poller.go:HttpPoller.Poll()``. Listens for config changes (from the ops config manager), and starts its own internal microthreads, one for each cache to poll. These internal microthreads call the Fetcher at each cache's poll interval.
 
@@ -153,13 +113,13 @@ Health Pipeline
 
 ::
 
-  ---------     ---------     ---------     ---------
-  | poller |-->| fetcher |-->| handler |-->| manager |
-   -------- |   ---------     ---------  |  ---------
-            |   ---------     ---------  |
-            |->| fetcher |-->| handler |-|
-            |   ---------     ---------  |
-            ...                          ...
+	---------     ---------     ---------     ---------
+	| poller |-->| fetcher |-->| handler |-->| manager |
+	 -------- |   ---------     ---------  |  ---------
+						|   ---------     ---------  |
+						|->| fetcher |-->| handler |-|
+						|   ---------     ---------  |
+						...                          ...
 
 * **poller** - ``common/poller/poller.go:HttpPoller.Poll()``. Same poller type as the Stat Poller pipeline, with a different handler object.
 
@@ -175,13 +135,13 @@ Peer Pipeline
 
 ::
 
-  ---------     ---------     ---------     ---------
-  | poller |-->| fetcher |-->| handler |-->| manager |
-   -------- |   ---------     ---------  |  ---------
-            |   ---------     ---------  |
-            |->| fetcher |-->| handler |-|
-            |   ---------     ---------  |
-            ...                          ...
+	---------     ---------     ---------     ---------
+	| poller |-->| fetcher |-->| handler |-->| manager |
+	 -------- |   ---------     ---------  |  ---------
+						|   ---------     ---------  |
+						|->| fetcher |-->| handler |-|
+						|   ---------     ---------  |
+						...                          ...
 
 * **poller** - ``common/poller/poller.go:HttpPoller.Poll()``. Same poller type as the Stat and Health Poller pipelines, with a different handler object. Its config changes come from the Monitor Config Manager, and it starts an internal microthread for each peer to poll.
 
@@ -197,12 +157,12 @@ Monitor Config Pipeline
 
 ::
 
-  ---------     ---------
-  | poller |-->| manager |--> stat subscriber (Stat pipeline Poller)
-   --------     --------- |
-                          |-> health subscriber (Health pipeline Poller)
-                          |
-                          --> peer subscriber (Peer pipeline Poller)
+	---------     ---------
+	| poller |-->| manager |--> stat subscriber (Stat pipeline Poller)
+	 --------     --------- |
+													|-> health subscriber (Health pipeline Poller)
+													|
+													--> peer subscriber (Peer pipeline Poller)
 
 * **poller** - ``common/poller/poller.go:MonitorConfigPoller.Poll()``. The Monitor Config poller, on its interval, polls Traffic Ops for the Monitor configuration, and writes the polled value to its result channel, which is read by the Manager.
 
@@ -213,10 +173,10 @@ Ops Config Pipeline
 -------------------
 ::
 
-  ---------     ---------     ---------
-  | poller |-->| handler |-->| manager |--> ops config change subscriber (Monitor Config Poller)
-   --------     ---------     --------- |
-                                        --> Traffic ops client change subscriber (Monitor Config Poller)
+	---------     ---------     ---------
+	| poller |-->| handler |-->| manager |--> ops config change subscriber (Monitor Config Poller)
+	 --------     ---------     --------- |
+																				--> Traffic ops client change subscriber (Monitor Config Poller)
 
 * **poller** - ``common/poller/poller.go:FilePoller.Poll()``. Polls for changes to the Traffic Ops config file ``traffic_ops.cfg``, and writes the changed config to its result channel, which is read by the Handler.
 
@@ -295,7 +255,7 @@ API
 :ref:`tm-api`
 
 .. toctree::
-  :hidden:
-  :maxdepth: 1
+	:hidden:
+	:maxdepth: 1
 
-  traffic_monitor/traffic_monitor_api
+	traffic_monitor/traffic_monitor_api
