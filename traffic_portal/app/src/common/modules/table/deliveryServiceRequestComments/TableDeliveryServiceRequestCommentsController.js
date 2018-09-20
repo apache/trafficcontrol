@@ -149,7 +149,7 @@ var TableDeliveryServicesRequestsController = function (request, $scope, $state,
 			"paging": false,
 			"info": false,
 			"ordering": false,
-
+			"zeroRecords": ' ',
 		});
 	});
 

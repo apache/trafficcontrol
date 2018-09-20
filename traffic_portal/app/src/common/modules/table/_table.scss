@@ -41,3 +41,8 @@ td span {
     font-style:italic;
     font-size:x-small;
 }
+#dsRequestCommentsTable {
+    .dataTables_empty {
+        display: none;
+    }
+}
