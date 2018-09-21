@@ -67,6 +67,8 @@ RUN export PERL5LIB=/opt/traffic_ops/app/local/lib/perl5/:/opt/traffic_ops/insta
 	&& /opt/traffic_ops/install/bin/download_web_deps -i || \
 	true # keep a failure here from failing all..
 
+ADD http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz /
+
 EXPOSE 443
 WORKDIR /opt/traffic_ops/app
 ENV MOJO_MODE production
@@ -82,6 +84,5 @@ ADD enroller/server_template.json \
     /
 
 ADD traffic_ops_data /traffic_ops_data
-ADD http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz /
 
 CMD /run.sh
