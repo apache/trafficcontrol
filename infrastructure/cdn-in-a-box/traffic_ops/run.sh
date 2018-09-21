@@ -30,16 +30,10 @@
 # DB_NAME
 # ADMIN_USER
 # ADMIN_PASS
-# CERT_COUNTRY
-# CERT_STATE
-# CERT_CITY
-# CERT_COMPANY
-# DOMAIN
-
 # TODO:  Unused -- should be removed?  TRAFFIC_VAULT_PASS
 
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS CERT_COUNTRY CERT_STATE CERT_CITY CERT_COMPANY DOMAIN)
+envvars=( DB_SERVER DB_PORT DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS X509_CA_DIR TLD_DOMAIN INFRA_SUBDOMAIN CDN_SUBDOMAIN DS_HOSTS)
 for v in $envvars
 do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
@@ -50,6 +44,14 @@ source /to-access.sh
 
 # Create SSL certificates and trust the shared CA.
 source /generate-certs.sh
+if x509v3_init; then
+		x509v3_create_cert "$INFRA_SUBDOMAIN" "$INFRA_FQDN"
+		for ds in $DS_HOSTS
+		do
+			x509v3_create_cert "$ds" "$ds.$CDN_FQDN"
+		done
+		x509v3_dump_env
+fi
 
 # Write config files
 set -x

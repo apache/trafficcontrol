@@ -41,17 +41,17 @@ done
 source /to-access.sh
 
 # Wait on SSL certificate generation
-until [ -f "$CERT_DONE_FILE" ] 
+until [ -f "$X509_CA_DONE_FILE" ] 
 do
   echo "Waiting on Shared SSL certificate generation"
   sleep 3
 done
 
 # Source the CIAB-CA shared SSL environment
-source $CERT_ENV_FILE
+source $X509_CA_ENV_FILE
 
 # Trust the CIAB-CA at the System level
-cp $CERT_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
+cp $X509_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
 update-ca-trust extract
 
 # Enroll with traffic ops
