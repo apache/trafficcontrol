@@ -13,7 +13,7 @@
     "initialDispersion": 1,
     "ipv6RoutingEnabled": true,
     "logsEnabled": true,
-    "longDescription": "Apachecon North America 2018",
+    "longDesc": "Apachecon North America 2018",
     "multiSiteOrigin": false,
     "missLat": 42.0,
     "missLong": -88.0,
