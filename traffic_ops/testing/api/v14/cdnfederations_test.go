@@ -128,4 +128,5 @@ func DeleteTestCDNFederations(t *testing.T) {
 			t.Errorf("expected federation to be deleted")
 		}
 	}
+	fedIDs = nil // reset the global variable for the next test
 }

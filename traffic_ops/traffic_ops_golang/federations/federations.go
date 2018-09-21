@@ -40,7 +40,6 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	allFederations := []tc.IAllFederation{}
 	feds, err := getUserFederations(inf.Tx.Tx, inf.User)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.Get getting federations: "+err.Error()))
@@ -51,7 +50,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.Get getting federations resolvers: "+err.Error()))
 		return
 	}
-	allFederations = addResolvers(allFederations, feds, fedsResolvers)
+	allFederations := addResolvers([]tc.IAllFederation{}, feds, fedsResolvers)
 	api.WriteResp(w, r, allFederations)
 }
 

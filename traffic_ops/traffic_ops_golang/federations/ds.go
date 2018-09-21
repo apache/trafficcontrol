@@ -55,10 +55,13 @@ func PostDSes(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := insertDSFeds(inf.Tx.Tx, fedID, post.DSIDs); err != nil {
-		userErr, sysErr, errCode := api.ParseDBError(err)
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
+	if len(post.DSIDs) > 0 {
+		// there might be no DSes, if the user is trying to clear the assignments
+		if err := insertDSFeds(inf.Tx.Tx, fedID, post.DSIDs); err != nil {
+			userErr, sysErr, errCode := api.ParseDBError(err)
+			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+			return
+		}
 	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, strconv.Itoa(len(post.DSIDs))+" delivery service(s) were assigned to the federation "+strconv.Itoa(fedID), post)
