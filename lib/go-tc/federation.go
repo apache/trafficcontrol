@@ -19,6 +19,11 @@ package tc
  * under the License.
  */
 
+import (
+	"database/sql"
+	"errors"
+)
+
 type CDNFederationResponse struct {
 	Response []CDNFederation `json:"response"`
 }
@@ -89,4 +94,16 @@ type AllFederationMapping struct {
 // Adds additional safety, allowing functions to only return one of the valid object types for the endpoint.
 type IAllFederation interface {
 	IsAllFederations() bool
+}
+
+type FederationDSPost struct {
+	DSIDs   []int `json:"dsIds"`
+	Replace *bool `json:"replace"`
+}
+
+func (f *FederationDSPost) Validate(tx *sql.Tx) error {
+	if len(f.DSIDs) == 0 {
+		return errors.New("no dsIds to assign")
+	}
+	return nil
 }
