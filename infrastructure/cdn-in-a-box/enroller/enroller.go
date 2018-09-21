@@ -179,7 +179,18 @@ func (s session) getRoleIDByName(n string) (int, error) {
 	return *roles[0].ID, err
 }
 
-func (s session) getDeliveryserviceIDByXMLID(n string) (int, error) {
+func (s session) getServerIDByHostName(n string) (int, error) {
+	servers, _, err := s.GetServerByHostName(url.QueryEscape(n))
+	if err != nil {
+		return -1, err
+	}
+	if len(servers) == 0 {
+		return -1, errors.New("no server with hostName " + n)
+	}
+	return servers[0].ID, err
+}
+
+func (s session) getDeliveryServiceIDByXMLID(n string) (int, error) {
 	dses, _, err := s.GetDeliveryServiceByXMLID(url.QueryEscape(n))
 	if err != nil {
 		return -1, err
@@ -436,6 +447,47 @@ func enrollDeliveryService(toSession *session, fn string) error {
 	return err
 }
 
+func enrollDeliveryServiceServer(toSession *session, fn string) error {
+	fh, err := os.Open(fn)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		fh.Close()
+	}()
+
+	dec := json.NewDecoder(fh)
+
+	// DeliveryServiceServers lists ds xmlid and array of server names.  Use that to create multiple DeliveryServiceServer objects
+	var dss tc.DeliveryServiceServers
+	err = dec.Decode(&dss)
+	if err != nil && err != io.EOF {
+		log.Printf("error decoding %s: %s\n", fn, err)
+		return err
+	}
+
+	dsID, err := toSession.getDeliveryServiceIDByXMLID(dss.XmlId)
+	if err != nil {
+		return err
+	}
+
+	var serverIDs []int
+	for _, sn := range dss.ServerNames {
+		id, err := toSession.getServerIDByHostName(sn)
+		if err != nil {
+			log.Println("error finding " + sn + ": " + err.Error())
+			continue
+		}
+		serverIDs = append(serverIDs, id)
+	}
+	_, err = toSession.CreateDeliveryServiceServers(dsID, serverIDs, true)
+	if err != nil {
+		log.Printf("error creating from %s: %s\n", fn, err)
+	}
+
+	return err
+}
+
 func enrollDivision(toSession *session, fn string) error {
 	fh, err := os.Open(fn)
 	if err != nil {
@@ -496,7 +548,7 @@ func enrollOrigin(toSession *session, fn string) error {
 	}
 
 	if s.DeliveryService != nil && *s.DeliveryService != "" {
-		id, err := toSession.getDeliveryserviceIDByXMLID(*s.DeliveryService)
+		id, err := toSession.getDeliveryServiceIDByXMLID(*s.DeliveryService)
 		if err != nil {
 			return err
 		}
@@ -1168,6 +1220,7 @@ func main() {
 	dw.watch("servers", enrollServer)
 	dw.watch("asns", enrollASN)
 	dw.watch("deliveryservices", enrollDeliveryService)
+	dw.watch("deliveryservice_servers", enrollDeliveryServiceServer)
 	dw.watch("divisions", enrollDivision)
 	dw.watch("origins", enrollOrigin)
 	dw.watch("phys_locations", enrollPhysLocation)
