@@ -390,7 +390,7 @@ under the License.
                         <span uib-popover-html="label('signingAlgorithm', 'desc')" popover-trigger="click" popover-placement="top" popover-append-to-body="true" popover-class="popover-class">{{label('signingAlgorithm', 'title')}}</span>
                     </label>
                     <div class="col-md-10 col-sm-10 col-xs-12">
-                        <select name="signingAlgorithm" class="form-control" ng-model="deliveryService.signingAlgorithm" ng-options="sa.value as sa.label for sa in signingAlgos">
+                        <select name="signingAlgorithm" class="form-control" ng-change="changeSigningAlgorithm(deliveryService.signingAlgorithm)" ng-model="deliveryService.signingAlgorithm" ng-options="sa.value as sa.label for sa in signingAlgos">
                             <option value="">Select...</option>
                         </select>
                         <small class="input-diff" ng-show="settings.isRequest && open() && deliveryService.signingAlgorithm != dsCurrent.signingAlgorithm">Current Value: [ {{magicNumberLabel(signingAlgos, dsCurrent.signingAlgorithm)}} ]</small>
