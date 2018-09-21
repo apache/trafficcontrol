@@ -21,6 +21,7 @@ package auth
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -29,16 +30,16 @@ import (
 )
 
 // A lookup table, bool will always be true
-var invalidPasswords map[string]bool
+var commonPasswords map[string]bool
 
 // Expects a relative path from the traffic_ops directory
 func LoadPasswordBlacklist(filePath string) error {
 
-	if invalidPasswords == nil {
-		invalidPasswords = make(map[string]bool)
-	} else {
-		return fmt.Errorf("Password blacklist is already loaded")
+	if commonPasswords != nil {
+		return errors.New("Password blacklist is already loaded")
 	}
+
+	commonPasswords = make(map[string]bool)
 
 	pwd, err := os.Getwd()
 	if err != nil {
@@ -55,40 +56,40 @@ func LoadPasswordBlacklist(filePath string) error {
 
 	scanner := bufio.NewScanner(in)
 	for scanner.Scan() {
-		invalidPasswords[scanner.Text()] = true
+		commonPasswords[scanner.Text()] = true
 	}
 
 	in.Close()
 	return scanner.Err()
 }
 
-func IsInvalidPassword(pw string) bool {
-	_, bad := invalidPasswords[pw]
-	return bad
+func IsCommonPassword(pw string) bool {
+	_, yes := commonPasswords[pw]
+	return yes
 }
 
-func IsGoodPassword(pw string, confirmPw string, username string) error {
+func IsGoodLoginPair(username string, password string) (bool, error) {
 
-	if pw == "" {
-		return nil
+	if username == "" {
+		return false, errors.New("Your username cannot be blank.")
 	}
 
-	if pw != confirmPw {
-		return fmt.Errorf("Passwords do not match.")
+	if username == password {
+		return false, errors.New("Your password cannot be your username.")
 	}
 
-	if pw == username {
-		return fmt.Errorf("Your password cannot be the same as your username.")
+	return IsGoodPassword(password)
+}
+
+func IsGoodPassword(password string) (bool, error) {
+
+	if len(password) < 8 {
+		return false, errors.New("Password must be greater than 7 characters.")
 	}
 
-	if len(pw) < 8 {
-		return fmt.Errorf("Password must be greater than 7 chars.")
+	if IsCommonPassword(password) {
+		return false, errors.New("Password is too common.")
 	}
 
-	if IsInvalidPassword(pw) {
-		return fmt.Errorf("Password is too common.")
-	}
-
-	// At this point we're happy with the password
-	return nil
+	return true, nil
 }
