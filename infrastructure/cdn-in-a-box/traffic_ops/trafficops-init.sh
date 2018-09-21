@@ -36,7 +36,7 @@ while ! to-ping 2>/dev/null; do
 done
 
 # NOTE: order dependent on foreign key references, e.g. profiles must be loaded before parameters
-endpoints="cdns types divisions regions phys_locations tenants users cachegroups deliveryservices profiles parameters servers"
+endpoints="cdns types divisions regions phys_locations tenants users cachegroups deliveryservices profiles parameters servers deliveryservice_servers"
 vars=$(awk -F = '/^\w/ {printf "$%s ",$1}' /variables.env)
 
 load_data_from() {
