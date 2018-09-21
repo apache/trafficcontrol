@@ -25,21 +25,21 @@ export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
 # Wait on SSL certificate generation
-until [ -f "$CERT_DONE_FILE" ] 
+until [ -f "$X509_CA_DONE_FILE" ] 
 do
      echo "Waiting on Shared SSL certificate generation"
      sleep 3
 done
 
 # Source the CIAB-CA shared SSL environment
-source "$CERT_ENV_FILE"
+source "$X509_CA_ENV_FILE"
  
 # Copy the CIAB-CA certificate to the traffic_router conf so it can be added to the trust store
-cp $CERT_CA_CERT_FILE /usr/local/share/ca-certificates
+cp "$X509_CA_CERT_FILE" /usr/local/share/ca-certificates
 update-ca-certificates
 
 # Traffic Ops must be accepting connections before enroller can start
-until nc -z $TO_HOST $TO_PORT </dev/null >/dev/null && to-ping; do
+until nc -z $TO_FQDN $TO_PORT </dev/null >/dev/null && to-ping; do
     echo "Waiting for $TO_URL"
     sleep 5
 done
