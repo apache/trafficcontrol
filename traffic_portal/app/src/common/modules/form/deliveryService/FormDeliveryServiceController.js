@@ -236,6 +236,14 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
         });
     };
 
+    $scope.changeSigningAlgorithm = function(signingAlgorithm) {
+        if (signingAlgorithm == null) {
+            deliveryService.signed = false;
+        } else {
+            deliveryService.signed = true;
+        }
+    };
+
     $scope.viewTargets = function() {
         $location.path($location.path() + '/targets');
     };
