@@ -29,10 +29,6 @@
 # DB_NAME
 # ADMIN_USER
 # ADMIN_PASS
-# CERT_COUNTRY
-# CERT_STATE
-# CERT_CITY
-# CERT_COMPANY
 # DOMAIN
 
 # TODO:  Unused -- should be removed?  TRAFFIC_VAULT_PASS
@@ -40,7 +36,7 @@
 # Check that env vars are set
 
 set -x
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS CERT_COUNTRY CERT_STATE CERT_CITY CERT_COMPANY DOMAIN)
+envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS)
 for v in $envvars
 do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
@@ -49,10 +45,9 @@ done
 # Source to-access functions and FQDN vars
 source /to-access.sh
 
-until [ -r "$CERT_DONE_FILE" ] 
-do
-  echo "Waiting for SSL certificate generation" 
-  sleep 3
+until [ -f "$X509_CA_DONE_FILE" ] ; do
+   echo "Waiting on SSL certificate generation."
+   sleep 2
 done
 
 # Write config files

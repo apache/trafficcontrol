@@ -29,16 +29,6 @@
 # DB_NAME
 # ADMIN_USER
 # ADMIN_PASS
-# CERT_COUNTRY
-# CERT_STATE
-# CERT_CITY
-# CERT_COMPANY
-# CERT_DOMAIN
-# CERT_TRAFFICOPS_CERT
-# CERT_TRAFFICOPS_KEY
-# CERT_TRAFFICOPS_PERL_CERT
-# CERT_TRAFFICOPS_PERL_KEY
-# DOMAIN
 # TO_HOST
 # TO_PORT
 # TO_PERL_HOST
@@ -46,30 +36,25 @@
 # TP_HOST
 #
 # Check that env vars are set
-envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN CERT_TRAFFICOPS_CERT CERT_TRAFFICOPS_KEY CERT_TRAFFICOPS_PERL_CERT CERT_TRAFFICOPS_PERL_KEY TO_PERL_HOST TO_PERL_PORT TO_HOST TO_PORT TP_HOST)
+envvars=( DB_SERVER DB_PORT DB_ROOT_PASS DB_USER DB_USER_PASS ADMIN_USER ADMIN_PASS DOMAIN TO_PERL_HOST TO_PERL_PORT TO_HOST TO_PORT TP_HOST)
 for v in $envvars
 do
 	if [[ -z $$v ]]; then echo "$v is unset"; exit 1; fi
 done
 
-until [ -f "$CERT_ENV_FILE" ] ; do
+until [ -f "$X509_CA_DONE_FILE" ] ; do
   echo "Waiting on SSL certificate generation."
   sleep 2
 done
 
-source "$CERT_ENV_FILE"
+source "$X509_CA_ENV_FILE"
 
 # Add the CA certificate to sysem TLS trust store
-cp $CERT_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
+cp $X509_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
 update-ca-trust extract
 
-if [[ $TO_HOST = $(hostname -s) ]] ; then
-    crt=$CERT_TRAFFICOPS_CERT
-    key=$CERT_TRAFFICOPS_KEY
-elif [[ $TO_PERL_HOST = $(hostname -s) ]] ; then
-    crt="$CERT_TRAFFICOPS_PERL_CERT"
-    key="$CERT_TRAFFICOPS_PERL_KEY"
-fi
+crt="$X509_INFRA_CERT_FILE"
+key="$X509_INFRA_KEY_FILE"
 
 echo "crt=$crt"
 echo "key=$key"
