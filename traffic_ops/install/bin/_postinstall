@@ -569,7 +569,7 @@ sub getDefaults {
                 "config_var"      => "tm.url"
             },
             {
-                "Human-readable CDN Name.  (No whitespace, please)" => "kabletownCdn",
+                "Human-readable CDN Name.  (No whitespace, please)" => "kabletown_cdn",
                 "config_var"                                        => "cdn_name"
             },
             {
