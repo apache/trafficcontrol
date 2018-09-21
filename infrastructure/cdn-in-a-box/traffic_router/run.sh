@@ -50,20 +50,19 @@ export JAVA_HOME JAVA_OPTS
 export TO_PROPERTIES TM_PROPERTIES 
 export CATALINA_HOME CATALINA_BASE CATALINA_OPTS CATALINA_OUT CATALINA_PID
 
-
 # Wait on SSL certificate generation
-until [ -f "$CERT_DONE_FILE" ] 
+until [ -f "$X509_CA_DONE_FILE" ] 
 do
   echo "Waiting on Shared SSL certificate generation"
   sleep 3
 done
 
 # Source the CIAB-CA shared SSL environment
-source $CERT_ENV_FILE
+source $X509_CA_ENV_FILE
 
 # Copy the CIAB-CA certificate to the traffic_router conf so it can be added to the trust store
-cp $CERT_CA_CERT_FILE $CATALINA_BASE/conf
-cp $CERT_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
+cp $X509_CA_CERT_FILE $CATALINA_BASE/conf
+cp $X509_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
 update-ca-trust extract
 
 # Enroll Traffic Router
