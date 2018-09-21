@@ -21,7 +21,6 @@ package tc
 
 import (
 	"database/sql"
-	"errors"
 )
 
 type CDNFederationResponse struct {
@@ -102,8 +101,5 @@ type FederationDSPost struct {
 }
 
 func (f *FederationDSPost) Validate(tx *sql.Tx) error {
-	if len(f.DSIDs) == 0 {
-		return errors.New("no dsIds to assign")
-	}
 	return nil
 }
