@@ -92,7 +92,7 @@ func (to *Session) CreateDeliveryService(ds *tc.DeliveryService) (*tc.CreateDeli
 	if err != nil {
 		return nil, err
 	}
-	err = post(to, deliveryServicesEp(), jsonReq, &data)
+	_, err = post(to, deliveryServicesEp(), jsonReq, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (to *Session) UpdateDeliveryService(id string, ds *tc.DeliveryService) (*tc
 	if err != nil {
 		return nil, err
 	}
-	err = put(to, deliveryServiceEp(id), jsonReq, &data)
+	_, err = put(to, deliveryServiceEp(id), jsonReq, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (to *Session) UpdateDeliveryService(id string, ds *tc.DeliveryService) (*tc
 // DeleteDeliveryService deletes the DeliveryService matching the ID it's passed
 func (to *Session) DeleteDeliveryService(id string) (*tc.DeleteDeliveryServiceResponse, error) {
 	var data tc.DeleteDeliveryServiceResponse
-	err := del(to, deliveryServiceEp(id), &data)
+	_, err := del(to, deliveryServiceEp(id), &data)
 	if err != nil {
 		return nil, err
 	}

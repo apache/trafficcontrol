@@ -32,7 +32,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 
@@ -267,17 +266,8 @@ func GetReplaceHandler(w http.ResponseWriter, r *http.Request) {
 	for _, server := range servers {
 		dtos := map[string]interface{}{"id": dsId, "server": server}
 		if _, err := inf.Tx.NamedExec(insertIdsQuery(), dtos); err != nil {
-			if pqErr, ok := err.(*pq.Error); ok {
-				err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-				log.Errorln("could not begin transaction: %v", err)
-				if eType == tc.DataConflictError {
-					api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("inserting for delivery service servers replace: "+err.Error()))
-					return
-				}
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("inserting for delivery service servers replace: "+err.Error()))
-				return
-			}
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("inserting for delivery service servers replace: "+err.Error()))
+			usrErr, sysErr, code := api.ParseDBError(err)
+			api.HandleErr(w, r, inf.Tx.Tx, code, usrErr, sysErr)
 			return
 		}
 		respServers = append(respServers, server)
@@ -327,16 +317,9 @@ func GetCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	res, err := inf.Tx.Tx.Exec(`INSERT INTO deliveryservice_server (deliveryservice, server) SELECT $1, id FROM server WHERE host_name = ANY($2::text[])`, dsID, pq.Array(serverNames))
 	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			err, eType := dbhelpers.ParsePQUniqueConstraintError(pqErr)
-			if eType == tc.DataConflictError {
-				api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("a deliveryservice-server association with "+err.Error()), nil)
-				return
-			}
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("ds servers inserting for create delivery service servers: "+err.Error()))
-			return
-		}
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("ds servers inserting for create delivery service servers received non pq error: "+err.Error()))
+
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, inf.Tx.Tx, code, usrErr, sysErr)
 		return
 	}
 

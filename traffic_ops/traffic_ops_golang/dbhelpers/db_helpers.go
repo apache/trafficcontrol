@@ -101,26 +101,6 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo
 	return criteria, queryValues, errs
 }
 
-//parses pq errors for uniqueness constraint violations
-func ParsePQUniqueConstraintError(err *pq.Error) (error, tc.ApiErrorType) {
-	if len(err.Constraint) > 0 && len(err.Detail) > 0 { //we only want to continue parsing if it is a constraint error with details
-		detail := err.Detail
-		if strings.HasPrefix(detail, "Key ") && strings.HasSuffix(detail, " already exists.") { //we only want to continue parsing if it is a uniqueness constraint error
-			detail = strings.TrimPrefix(detail, "Key ")
-			detail = strings.TrimSuffix(detail, " already exists.")
-			//should look like "(column)=(dupe value)" at this point
-			details := strings.Split(detail, "=")
-			if len(details) == 2 {
-				column := strings.Trim(details[0], "()")
-				dupValue := strings.Trim(details[1], "()")
-				return errors.New(column + " " + dupValue + " already exists."), tc.DataConflictError
-			}
-		}
-	}
-	log.Error.Printf("failed to parse unique constraint from pq error: %v", err)
-	return tc.DBError, tc.SystemError
-}
-
 // FinishTx commits the transaction if commit is true when it's called, otherwise it rolls back the transaction. This is designed to be called in a defer.
 func FinishTx(tx *sql.Tx, commit *bool) {
 	if tx == nil {

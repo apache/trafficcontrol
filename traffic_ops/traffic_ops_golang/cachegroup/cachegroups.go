@@ -202,7 +202,7 @@ func (cg *TOCacheGroup) Create() (error, error, int) {
 		cg.SecondaryParentCachegroupID,
 	)
 	if err != nil {
-		return api.ParseDBErr(err, cg.GetType())
+		return api.ParseDBError(err)
 	}
 	defer resultRows.Close()
 
@@ -375,7 +375,7 @@ func (cg *TOCacheGroup) Update() (error, error, int) {
 		cg.ID,
 	)
 	if err != nil {
-		return api.ParseDBErr(err, cg.GetType())
+		return api.ParseDBError(err)
 	}
 	defer resultRows.Close()
 

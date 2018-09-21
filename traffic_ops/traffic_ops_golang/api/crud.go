@@ -62,7 +62,7 @@ type GenericDeleter interface {
 func GenericCreate(val GenericCreator) (error, error, int) {
 	resultRows, err := val.APIInfo().Tx.NamedQuery(val.InsertQuery(), val)
 	if err != nil {
-		return ParseDBErr(err, val.GetType())
+		return ParseDBError(err)
 	}
 	defer resultRows.Close()
 
@@ -113,7 +113,7 @@ func GenericRead(val GenericReader) ([]interface{}, error, error, int) {
 func GenericUpdate(val GenericUpdater) (error, error, int) {
 	rows, err := val.APIInfo().Tx.NamedQuery(val.UpdateQuery(), val)
 	if err != nil {
-		return ParseDBErr(err, val.GetType())
+		return ParseDBError(err)
 	}
 	defer rows.Close()
 
