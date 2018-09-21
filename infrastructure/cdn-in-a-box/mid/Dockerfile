@@ -23,8 +23,6 @@
 
 FROM tccache:latest
 
-RUN mkdir -p /var/trafficserver/cache /opt/ort && chown -R ats:ats /etc/trafficserver/ /var/trafficserver/ /opt/ort
 ADD mid/run.sh traffic_ops/to-access.sh enroller/server_template.json /
-ADD edge/traffic_ops_ort.py /opt/ort
 
 CMD /run.sh
