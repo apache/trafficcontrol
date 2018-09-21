@@ -20,7 +20,6 @@ package auth
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"testing"
 )
 
@@ -52,18 +51,41 @@ func TestScryptPasswordIsRequired(t *testing.T) {
 	}
 }
 
-func TestPasswordStrength(t *testing.T) {
+// The purpose of this test is to show that all password requirements are being met
+func TestUsernamePassword(t *testing.T) {
+
+	passwords := []string{"username", "password", "pa$$word", "", "red"}
+	expected := []bool{false, false, true, false, false}
+	LoadPasswordBlacklist("app/conf/invalid_passwords.txt")
+
+	for i, password := range passwords {
+		if ok, err := IsGoodLoginPair("username", password); ok != expected[i] {
+			if expected[i] {
+				t.Errorf("\"%s\" should have been marked as an invalid password", password)
+			} else {
+				t.Errorf("\"%s\" should be an ok password, but got the error: %v", password, err)
+			}
+		}
+	}
+
+	if ok, _ := IsGoodLoginPair("", "GoOdPa$$woRd"); ok {
+		t.Errorf("An empty username should not pass")
+	}
+}
+
+// The purpose of this test is to show that the file is being read, and we can tell if a password is in the file
+func TestCommonPassword(t *testing.T) {
 
 	passwords := []string{"password", "pa$$word"}
 	expected := []bool{true, false}
 	LoadPasswordBlacklist("app/conf/invalid_passwords.txt")
 
 	for i, password := range passwords {
-		if IsInvalidPassword(password) != expected[i] {
+		if IsCommonPassword(password) != expected[i] {
 			if expected[i] {
-				t.Errorf("%s should have been marked as an invalid password", password)
+				t.Errorf("\"%s\" should have been marked as an invalid password", password)
 			} else {
-				t.Errorf("%s should be an ok password", password)
+				t.Errorf("\"%s\" should be an ok password", password)
 			}
 		}
 	}
