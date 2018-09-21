@@ -131,7 +131,7 @@ sub randomWord {
 sub sanitize{
     my ($promptString, $userInput) = @_;
     if (index($promptString, "Human-readable CDN Name") != -1){
-        if ($userInput =~ m/[^-a-zA-Z0-9]/){
+        if ($userInput =~ m/[^-a-zA-Z0-9_.]/){
             print "Invalid characters in user input. Try again.\n\n";
             return false;
         }
