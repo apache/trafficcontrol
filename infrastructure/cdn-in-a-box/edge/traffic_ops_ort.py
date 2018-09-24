@@ -1192,6 +1192,8 @@ def doMain() -> int:
 	if MODE != Modes.REPORT and DSUpdateNeeded:
 		return updateOps()
 
+	logging.info("Ops update unnecessary; exiting.")
+
 	return 0
 
 def main() -> int:
@@ -1295,7 +1297,13 @@ def main() -> int:
 		return 1
 
 	# Litmus test to make sure the server exists and can be reached
-	_ = requests.head(TO_URL, verify=False)
+	try:
+		_ = requests.head(TO_URL, verify=False)
+	except requests.exception as e:
+		logging.critical("Malformed or Invalid Traffic_Ops_URL")
+		logging.error("%s", e)
+		logging.debug("%s", e, exc_info=True, stack_info=True)
+		return 1
 
 	try:
 		TO_LOGIN = setTO_LOGIN(args.Traffic_Ops_Login)
