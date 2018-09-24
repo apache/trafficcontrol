@@ -234,6 +234,7 @@ services:
 
   # edge cache
   edge:
+    privileged: True
     build:
       context: .
       dockerfile: edge/Dockerfile
@@ -256,6 +257,7 @@ services:
 
   # mid cache
   mid:
+    privileged: True
     build:
       context: .
       dockerfile: mid/Dockerfile
