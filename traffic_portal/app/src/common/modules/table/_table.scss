@@ -34,6 +34,10 @@ td span {
   float: left;
 }
 
+.table {
+    margin-bottom: 0px !important;
+}
+
 .ds-comment-bold {
     font-weight:bold;
 }
@@ -41,8 +45,44 @@ td span {
     font-style:italic;
     font-size:x-small;
 }
-#dsRequestCommentsTable {
-    .dataTables_empty {
-        display: none;
+.dsComments-container {
+    border-bottom: 1px solid #111;
+    margin-top: -2px;
+}
+.ds-comment-cell {
+    line-height: 1.428571429;
+    vertical-align: top;
+    border-top: 1px solid #ddd;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding-bottom: 8px;
+    min-height: 52px;
+
+    &:hover {
+        background-color: #F1FAF8;
+    }
+
+    .cell-left {
+        padding-top: 8px;
+        margin-left: 8px;
+        width: 80%;
+    }
+    .cell-right {
+        padding-top: 8px;
+        margin-right: 8px;
     }
 }
+.ds-comment-nodata {
+    line-height: 1.428571429;
+    text-align: center;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding-top: 4px;
+    padding-bottom: 8px;
+    min-height: 30px;
+
+    &:hover {
+        background-color: #F1FAF8;
+    }
+}
+

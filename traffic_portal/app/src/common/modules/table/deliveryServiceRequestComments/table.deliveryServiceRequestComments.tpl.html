@@ -50,24 +50,26 @@ under the License.
             <thead>
             <tr class="headings">
                 <th>Comment</th>
-                <th>Actions</th>
+                <th style="text-align:end;">Actions</th>
             </tr>
             </thead>
-            <tbody>
-            <tr ng-repeat="c in comments">
-                <td>
+        </table>
+        <div class="dsComments-container">
+            <div class="ds-comment-cell" ng-repeat="c in comments">
+                <div class="pull-left cell-left">
                     <span class="ds-comment-bold">{{c.author}}:</span> {{c.value}}<br>
                     <span class="ds-comment-italic">{{getRelativeTime(c.lastUpdated)}}</span>
-                </td>
-                <td style="text-align: right;">
+                </div>
+                <div class="pull-right cell-right" style="text-align: right; vertical-align: top;">
                     <a class="link action-link" title="Update Comment"
                             ng-click="editComment(c)"><i class="fa fa-edit"></i></a>
                     <a class="link action-link" title="Delete Comment"
                             ng-click="deleteComment(c, $event)"><i class="fa fa-trash-o"></i></a>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="ds-comment-nodata" ng-show="comments.length <= 0">No matching records found</div>
+        </div>
     </div>
 </div>
 
