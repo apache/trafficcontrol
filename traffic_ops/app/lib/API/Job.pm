@@ -168,6 +168,10 @@ sub create_current_user_job {
 	if ( !defined($ds) ) {
 		return $self->not_found();
 	}
+	my $org_server_fqdn = UI::DeliveryService::compute_org_server_fqdn($self, $ds_id);
+	if ( !defined($org_server_fqdn) ) {
+		return $self->alert("cannot invalidate content: requested delivery service has no origin");
+	}
 
 	my $tenant_utils = Utils::Tenant->new($self);
 	my $tenants_data = $tenant_utils->create_tenants_data_from_db();
