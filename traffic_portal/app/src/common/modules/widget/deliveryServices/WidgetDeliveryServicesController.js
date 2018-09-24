@@ -138,17 +138,32 @@ var WidgetDeliveryServicesController = function ($scope, $timeout, $filter, $q, 
 				bodyFontColor: '#73879C',
 				borderColor: '#7d7d7d',
 				borderWidth: 1,
-				displayColors: false
+				displayColors: false,
+				callbacks: {
+					label: function (tooltipItems, val) {
+						return 'Bandwidth: ' + tooltipItems.yLabel + ' Gbps';
+					}
+				}
 			},
 			scales: {
 				xAxes: [{
 					type: 'time',
 					time: {
+						parser: function (utcMoment) {
+							return moment(utcMoment).utcOffset('+0000');
+						},
+						unit: 'hour',
 						displayFormats: {
 							hour: 'HH:mm'
 						},
-						tooltipFormat: 'll HH:mm'
+						tooltipFormat: 'ddd MMM D HH:mm:ss (UTC)'
 					},
+					ticks: {
+						callback: function (v) {
+							return '  ' + moment(v, 'HH:mm').utcOffset('+0000').format('HH:mm') + '  ';
+						},
+						autoSkip: true,
+					}
 				}, {
 					position: 'top',
 					ticks: {

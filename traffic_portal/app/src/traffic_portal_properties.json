@@ -14,7 +14,7 @@
         "refreshRateInMS": 30000
       },
       "deliveryServiceGbps": {
-        "refreshRateInMS": 30000
+        "refreshRateInMS": 60000
       },
       "healthyCacheCount": {
         "refreshRateInMS": 60000
