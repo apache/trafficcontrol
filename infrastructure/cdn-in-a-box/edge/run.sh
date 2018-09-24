@@ -42,10 +42,11 @@ while ! to-ping 2>/dev/null; do
 	sleep 5
 done
 
+CDN=CDN-in-a-Box
+
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
-CDN=CDN-in-a-Box
 # wait until the CDN has been registered
 found=
 while [[ -z $found ]]; do
@@ -56,9 +57,24 @@ done
 
 to-enroll edge $CDN || (while true; do echo "enroll failed."; sleep 3 ; done)
 
-sleep 5 # Gives enough time for enrollment to complete
+function testenrolled() {
+	local tmp="$(to-get	'api/1.3/servers?name=edge')"
+	tmp=$(echo $tmp | jq '.response[]|select(.hostName=="edge")')
+	echo "$tmp"
+}
+
+while [[ -z "$(testenrolled)" ]]; do
+	echo "waiting on enrollment"
+	sleep 3
+done
 
 # Leaves the container hanging open in the event of a failure for debugging purposes
-/opt/ort/traffic_ops_ort.py BADASS ALL "https://$TO_FQDN:$TO_PORT" "$TO_ADMIN_USER:$TO_ADMIN_PASSWORD" || { echo "Failed"; tail -f /dev/null; }
+/opt/ort/traffic_ops_ort.py BADASS ALL "https://$TO_FQDN:$TO_PORT" "$TO_ADMIN_USER:$TO_ADMIN_PASSWORD" || { echo "Failed"; }
 
+envsubst < "/etc/cron.d/traffic_ops_ort-cron-template" > "/var/spool/cron/root" && rm -f "/etc/cron.d/traffic_ops_ort-cron-template"
+crontab "/var/spool/cron/root"
+
+crond -im off
+
+touch /var/log/trafficserver/diags.log
 tail -F /var/log/trafficserver/diags.log
