@@ -37,6 +37,9 @@ var TableDeliveryServicesRequestsController = function (request, $scope, $state,
 		}).then(
 			function (comments) {
 				$scope.comments = comments;
+				if ($scope.comments.length <= 0) {
+
+				}
 			}
 		);
 	};
@@ -142,16 +145,6 @@ var TableDeliveryServicesRequestsController = function (request, $scope, $state,
 	$scope.getRelativeTime = dateUtils.getRelativeTime;
 
 	$scope.navigateToPath = locationUtils.navigateToPath;
-
-	angular.element(document).ready(function () {
-		var table = $('#dsRequestCommentsTable').dataTable({
-			"searching": false,
-			"paging": false,
-			"info": false,
-			"ordering": false,
-			"zeroRecords": ' ',
-		});
-	});
 
 	$scope.getComments();
 };
