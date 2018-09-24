@@ -118,6 +118,7 @@ jquery\.tree\.min\.css$, MIT
 jquery\.dataTables\..*\.(css|js)$, MIT
 github\.com/basho/backoff/.*, MIT
 github\.com/dchest/siphash/.*, CC0
+traffic_portal/app/src/assets/js/chartjs/angular-chart\..*, BSD
 
 # Ignored - Do not report.
 \.DS_Store, Ignore # Created automatically OSX.
