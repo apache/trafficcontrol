@@ -455,7 +455,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		runningConfig.CacheMap[server.HostName] = server
 	}
 
-	cacheStatPath := "/publish/CacheStats?hc=1&stats="
+	cacheStatPath := "/publish/CacheStats?hc=1&wildcard=1&stats="
 	dsStatPath := "/publish/DsStats?hc=1&wildcard=1&stats="
 	parameters, err := to.Parameters("TRAFFIC_STATS")
 	if err != nil {
