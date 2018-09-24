@@ -965,32 +965,31 @@ func createRulesOld(
 				}
 
 				rule.PluginsShared = map[string]json.RawMessage{}
-				for _, parent := range parents {
-					to, proxyURLStr := buildTo(parent, protocolStr.To, ds.OrgServerFQDN, dsType)
+				// if the delivery service skips the mid's ie, http_no_cache, http_live, and dns_live
+				// only add the url rule to the origin.
+				if dsTypeSkipsMid(dsType) {
+					var proxyURLStr = ""
 					proxyURL, err := url.Parse(proxyURLStr)
 					if err != nil {
-						return remap.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v parent %v proxy_url: %v", ds.XMLID, parent.HostName, proxyURLStr)
+						return remap.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v proxy_url: %v", ds.XMLID, proxyURLStr)
 					}
-
 					ruleTo := remapdata.RemapRuleTo{
 						RemapRuleToBase: remapdata.RemapRuleToBase{
-							URL:      to,
+							URL:      ds.OrgServerFQDN,
 							Weight:   &weight,
 							RetryNum: &retryNum,
 						},
-						ProxyURL:   proxyURL,
 						RetryCodes: DefaultRetryCodes(),
+						ProxyURL:   proxyURL,
 						Timeout:    &timeout,
 					}
 					rule.To = append(rule.To, ruleTo)
-					// TODO get from TO?
 					rule.RetryNum = &retryNum
 					rule.Timeout = &timeout
 					rule.RetryCodes = DefaultRetryCodes()
 					rule.QueryString = queryStringRule
 					rule.DSCP = ds.DSCP
 					rule.ConnectionClose = DefaultRuleConnectionClose
-					rule.ParentSelection = &parentSelection
 					rule.Allow = acl
 					rule.Plugins = map[string]interface{}{}
 					rule.Plugins["modify_headers"] = toClientHeaders
@@ -1000,6 +999,43 @@ func createRulesOld(
 						return remap.RemapRules{}, fmt.Errorf("parsing deliveryservice '%v' remap text '%v' marshalling JSON: %v", ds.XMLID, ds.RemapText, err)
 					}
 					rule.PluginsShared[web.RemapTextKey] = remapTextJSON
+				} else {
+					for _, parent := range parents {
+						to, proxyURLStr := buildTo(parent, protocolStr.To, ds.OrgServerFQDN, dsType)
+						proxyURL, err := url.Parse(proxyURLStr)
+						if err != nil {
+							return remap.RemapRules{}, fmt.Errorf("error parsing deliveryservice %v parent %v proxy_url: %v", ds.XMLID, parent.HostName, proxyURLStr)
+						}
+
+						ruleTo := remapdata.RemapRuleTo{
+							RemapRuleToBase: remapdata.RemapRuleToBase{
+								URL:      to,
+								Weight:   &weight,
+								RetryNum: &retryNum,
+							},
+							ProxyURL:   proxyURL,
+							RetryCodes: DefaultRetryCodes(),
+							Timeout:    &timeout,
+						}
+						rule.To = append(rule.To, ruleTo)
+						// TODO get from TO?
+						rule.RetryNum = &retryNum
+						rule.Timeout = &timeout
+						rule.RetryCodes = DefaultRetryCodes()
+						rule.QueryString = queryStringRule
+						rule.DSCP = ds.DSCP
+						rule.ConnectionClose = DefaultRuleConnectionClose
+						rule.ParentSelection = &parentSelection
+						rule.Allow = acl
+						rule.Plugins = map[string]interface{}{}
+						rule.Plugins["modify_headers"] = toClientHeaders
+						rule.Plugins["modify_parent_request_headers"] = toOriginHeaders
+						remapTextJSON, err := json.Marshal(ds.RemapText)
+						if err != nil {
+							return remap.RemapRules{}, fmt.Errorf("parsing deliveryservice '%v' remap text '%v' marshalling JSON: %v", ds.XMLID, ds.RemapText, err)
+						}
+						rule.PluginsShared[web.RemapTextKey] = remapTextJSON
+					}
 				}
 				rules = append(rules, rule)
 			}
