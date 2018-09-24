@@ -96,6 +96,12 @@ export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
 touch /opt/traffic_monitor/var/log/traffic_monitor.log
 
+# Do not start until there is a valid CRConfig available
+until [ $(to-get '/CRConfig-Snapshots/CDN-in-a-Box/CRConfig.json' 2>/dev/null | jq -c -e '.config|length') -gt 0 ] ; do 
+	echo "Waiting on valid CRConfig..."; 
+  	sleep 3; 
+done
+
 cd /opt/traffic_monitor
 /opt/traffic_monitor/bin/traffic_monitor -opsCfg /opt/traffic_monitor/conf/traffic_ops.cfg -config /opt/traffic_monitor/conf/traffic_monitor.cfg &
 disown
