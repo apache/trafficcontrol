@@ -37,9 +37,6 @@ var TableDeliveryServicesRequestsController = function (request, $scope, $state,
 		}).then(
 			function (comments) {
 				$scope.comments = comments;
-				if ($scope.comments.length <= 0) {
-
-				}
 			}
 		);
 	};
