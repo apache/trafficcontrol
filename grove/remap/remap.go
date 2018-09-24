@@ -141,10 +141,19 @@ var ErrNoMoreRetries = errors.New("retry num exceeded")
 
 // RequestURI returns the URI of the given request. This must be used, because Go does not populate the scheme of requests that come in from clients.
 func RequestURI(r *http.Request, scheme string) string {
-	return scheme + "://" + r.Host + r.RequestURI
+	newUrl,err := url.Parse(r.RequestURI)
+	if err != nil {
+		log.Errorf("parsing r.RequestURI: %v, error: %v", r.RequestURI, err)
+		return ""
+	}
+	newUrl.Scheme = scheme
+	newUrl.Host = r.Host
+	return newUrl.String()
 }
+
 func (hr simpleHTTPRequestRemapper) RemappingProducer(r *http.Request, scheme string) (*RemappingProducer, error) {
 	uri := RequestURI(r, scheme)
+	log.Debugf("remapped data r.Host: %v, r.RequestURI: %v, uri: %v", r.Host, r.RequestURI, uri)
 	rule, ok := hr.remapper.Remap(uri)
 	if !ok {
 		return nil, ErrRuleNotFound
