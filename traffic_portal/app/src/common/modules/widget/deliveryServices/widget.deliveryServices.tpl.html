@@ -49,11 +49,11 @@ under the License.
                         <a class="delivery-services-health list-group-item widgetTable"
                            ng-repeat="ds in deliveryServices | filter:search:strict | offsetFilter:(currentDeliveryServicesPage-1)*deliveryServicesPerPage | limitTo:deliveryServicesPerPage track by $index"
                            ng-click="getChartData(ds, ds.idx)">
-                            <div class="col-lg-8 col-md-8 col-sm-8 col-xs-8 whitespace">{{ds.displayName}}
+                            <div class="col-lg-8 col-md-8 col-sm-8 col-xs-8 whitespace" uib-popover="{{ds.displayName}} ({{ds.xmlId}})" popover-trigger="mouseenter">{{ds.displayName}}
                                 <small>({{ds.xmlId}})<br>{{ds.tenant}}</small>
                             </div>
-                            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 whitespace">{{ds.type}}</div>
-                            <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1 whitespace">
+                            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 whitespace" uib-popover="{{ds.type}}" popover-trigger="mouseenter">{{ds.type}}</div>
+                            <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1 whitespace" style="margin-top:8px;">
                                 <i class="fa fa-check pull-right dsWidgetGreen" ng-show="ds.idx == selectedIndex"></i>
                                 <i class="fa fa-square pull-right dsWidgetGray" ng-show="ds.idx != selectedIndex"></i>
                             </div>
