@@ -27,28 +27,44 @@ LOGFILE="/var/log/traffic_portal/traffic_portal.log"
 MIN_UPTIME="5000"
 SPIN_SLEEP_TIME="2000"
 
+source /to-access.sh
 
-key=/etc/pki/tls/private/localhost.key
-cert=/etc/pki/tls/certs/localhost.crt
+# Wait on SSL certificate generation
+until [ -f "$X509_CA_DONE_FILE" ] 
+do
+  echo "Waiting on Shared SSL certificate generation"
+  sleep 3
+done
+
+# Source the CIAB-CA shared SSL environment
+source $X509_CA_ENV_FILE
+
+# Trust the CIAB-CA at the System level
+cp $X509_CA_CERT_FILE /etc/pki/ca-trust/source/anchors
+update-ca-trust extract
+
+# Configuration of Traffic Portal
+key=$X509_INFRA_KEY_FILE
+cert=$X509_INFRA_CERT_FILE
 ca=/etc/pki/tls/certs/ca-bundle.crt
-openssl req -newkey rsa:2048 -nodes -keyout $key -x509 -days 365 -out $cert -subj "/C=$CERT_COUNTRY/ST=$CERT_STATE/L=$CERT_CITY/O=$CERT_COMPANY"
 
-
-# set configs to point to TO_HOST
-sed -i -e "/^\s*base_url:/ s@'.*'@'https://$TO_HOST:6443/api/'@" /etc/traffic_portal/conf/config.js
+# set configs to point to TO_FQDN
+sed -i -e "/^\s*base_url:/ s@'.*'@'https://$TO_FQDN:$TO_PORT/api/'@" /etc/traffic_portal/conf/config.js
+sed -i -e "/^\s*cert:/ s@'.*'@'$cert'@" /etc/traffic_portal/conf/config.js
+sed -i -e "/^\s*key:/ s@'.*'@'$key'@" /etc/traffic_portal/conf/config.js
 
 props=/opt/traffic_portal/public/traffic_portal_properties.json
 tmp=$(mktemp)
 
 echo "TO_HOST: $TO_HOST"
+echo "TO_HOST: $TO_PORT"
+echo "TO_FQDN: $TO_FQDN"
 
-jq --arg TO_HOST $TO_HOST '.properties.api.baseUrl = "https://"+$TO_HOST' <$props >$tmp
+jq --arg TO_FQDN "$TO_FQDN:$TO_PORT" '.properties.api.baseUrl = "https://"+$TO_FQDN' <$props >$tmp
 mv $tmp $props
 
-export TO_USER=$TO_ADMIN_USER
-export TO_PASSWORD=$TO_ADMIN_PASSWORD
-. /to-access.sh
-to-enroll $(hostname -s)
+# Enroll the Traffic Portal
+to-enroll "tp" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
 
 # Add node to the path for situations in which the environment is passed.
 PATH=$FOREVER_BIN_DIR:$NODE_BIN_DIR:$PATH

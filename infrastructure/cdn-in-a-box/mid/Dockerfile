@@ -21,18 +21,8 @@
 # Based on CentOS 7.2
 ############################################################
 
-FROM centos:7
+FROM tccache:latest
 
-ARG RPM=https://ci.trafficserver.apache.org/RPMS/CentOS7/trafficserver-7.1.2-4.el7.centos.x86_64.rpm
-ADD $RPM /trafficserver.rpm
+ADD mid/run.sh traffic_ops/to-access.sh enroller/server_template.json /
 
-RUN yum install -y epel-release
-RUN yum install -y /trafficserver.rpm iproute jq net-tools nmap-ncat && yum clean all
-
-RUN mkdir -p /var/trafficserver/cache /opt/ort && chown -R ats:ats /etc/trafficserver /var/trafficserver /opt/ort
-
-ADD mid/parameters.json mid/profile.json mid/server.json mid/setup.sh traffic_ops/to-access.sh /
-
-EXPOSE 80
-
-CMD /setup.sh
+CMD /run.sh

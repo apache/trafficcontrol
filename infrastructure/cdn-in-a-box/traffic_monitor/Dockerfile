@@ -25,24 +25,26 @@ FROM centos/systemd
 ARG RPM=traffic_monitor/traffic_monitor.rpm
 ADD $RPM /
 
-RUN yum install -y \
-        epel-release \
-        initscripts && \
+RUN yum install -y epel-release && \
     yum install -y \
         jq \
         nmap-ncat \
         iproute \
         net-tools \
-        /$(basename $RPM) && \
+        gettext \
+        bind-utils \
+        openssl \
+        initscripts && \
+    yum install -y  /$(basename $RPM) && \
     rm /$(basename $RPM) && \
     yum clean all
 
 RUN mkdir -p /opt/traffic_monitor/conf
 ADD traffic_monitor/traffic_monitor.cfg /opt/traffic_monitor/conf/
 
-ADD traffic_monitor/parameters.json \
+ADD enroller/server_template.json \
+    traffic_monitor/parameters.json \
     traffic_monitor/profile.json \
-    traffic_monitor/server.json \
     traffic_ops/to-access.sh \
     /
 

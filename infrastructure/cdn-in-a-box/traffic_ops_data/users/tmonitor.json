@@ -1,9 +1,0 @@
-{
-  "email": "$TM_EMAIL",
-  "fullName": "Traffic Monitor",
-  "localPasswd": "$TM_PASSWORD",
-  "confirmLocalPasswd": "$TM_PASSWORD",
-  "role": 1,
-  "tenantId": 1,
-  "username": "$TM_USER"
-}

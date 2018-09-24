@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -18,18 +19,38 @@
 ############################################################
 
 . ../traffic_ops/to-access.sh
-export TO_URL=https://$TO_HOST:$TO_PORT
+
+export TO_URL=https://$TO_FQDN:$TO_PORT
 export TO_USER=$TO_ADMIN_USER
 export TO_PASSWORD=$TO_ADMIN_PASSWORD
 
-key=./server.key
-cert=./server.crt
-openssl req -newkey rsa:2048 -nodes -keyout $key -x509 -days 365 -out $cert -subj "/C=$CERT_COUNTRY/ST=$CERT_STATE/L=$CERT_CITY/O=$CERT_COMPANY"
+# Wait on SSL certificate generation
+until [ -f "$X509_CA_DONE_FILE" ] 
+do
+     echo "Waiting on Shared SSL certificate generation"
+     sleep 3
+done
+
+# Source the CIAB-CA shared SSL environment
+source "$X509_CA_ENV_FILE"
+ 
+# Copy the CIAB-CA certificate to the traffic_router conf so it can be added to the trust store
+cp "$X509_CA_CERT_FILE" /usr/local/share/ca-certificates
+update-ca-certificates
 
 # Traffic Ops must be accepting connections before enroller can start
-until to-ping; do
+until nc -z $TO_FQDN $TO_PORT </dev/null >/dev/null && to-ping; do
     echo "Waiting for $TO_URL"
     sleep 5
 done
 
-go run enroller.go || tail -f /dev/null
+mkdir -p "$ENROLLER_DIR"
+if [[ ! -d $ENROLLER_DIR ]]; then
+     echo "enroller dir ${ENROLLER_DIR} not found or not a directory"
+     exit 1
+fi
+
+# clear out the enroller dir first so no files left from previous run
+rm -rf ${ENROLLER_DIR}/*
+
+./enroller "$ENROLLER_DIR" || tail -f /dev/null

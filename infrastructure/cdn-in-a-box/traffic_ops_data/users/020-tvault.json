@@ -1,0 +1,9 @@
+{
+  "email": "$TV_EMAIL",
+  "fullName": "Traffic Vault",
+  "localPasswd": "$TV_PASSWORD",
+  "confirmLocalPasswd": "$TV_PASSWORD",
+  "rolename": "operations",
+  "tenant": "root",
+  "username": "$TV_USER"
+}

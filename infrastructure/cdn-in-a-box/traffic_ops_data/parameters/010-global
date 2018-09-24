@@ -1,0 +1,53 @@
+   [
+      {
+         "value" : "https://trafficops.infra.ciab.test:443/",
+         "name" : "tm.url",
+         "config_file" : "global"
+      },
+      {
+         "value" : "/images/tc_logo.png",
+         "config_file" : "global",
+         "name" : "tm.logourl"
+      },
+      {
+         "config_file" : "global",
+         "name" : "tm.instance_name",
+         "value" : "CDN-In-A-Box"
+      },
+      {
+         "value" : "https://trafficops.infra.ciab.test/GeoLiteCity.dat.gz",
+         "config_file" : "CRConfig.json",
+         "name" : "geolocation.polling.url"
+      },
+      {
+         "name" : "geolocation6.polling.url",
+         "config_file" : "CRConfig.json",
+         "value" : "https://trafficops.infra.ciab.test/GeoLiteCity.dat.gz"
+      },
+      {
+         "value" : "Traffic Ops",
+         "config_file" : "global",
+         "name" : "tm.toolname"
+      },
+      {
+         "value" : "0",
+         "config_file" : "global",
+         "name" : "use_reval_pending"
+      },
+      {
+         "name" : "use_tenancy",
+         "config_file" : "global",
+         "value" : "1"
+      },
+      {
+         "name" : "default_geo_miss_latitude",
+         "config_file" : "global",
+         "value" : "0"
+      },
+      {
+         "name" : "default_geo_miss_longitude",
+         "config_file" : "global",
+         "value" : "-1"
+      }
+   ]
+

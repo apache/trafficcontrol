@@ -1,5 +1,5 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -28,53 +28,44 @@ done
 
 . /to-access.sh
 
-TO_URL="https://$TO_HOST:$TO_PORT"
+TO_URL="https://$TO_FQDN:$TO_PORT"
 # wait until the ping endpoint succeeds
 while ! to-ping 2>/dev/null; do
    echo waiting for trafficops
    sleep 3
 done
 
-# NOTE: order dependent on foreign key references, e.g. tenants must be defined before users
-endpoints="cdns divisions regions phys_locations tenants users cachegroups deliveryservices"
+# NOTE: order dependent on foreign key references, e.g. profiles must be loaded before parameters
+endpoints="cdns types divisions regions phys_locations tenants users cachegroups deliveryservices profiles parameters servers deliveryservice_servers"
+vars=$(awk -F = '/^\w/ {printf "$%s ",$1}' /variables.env)
 
 load_data_from() {
     local dir="$1"
     if [[ ! -d $dir ]] ; then
         echo "Failed to load data from '$dir': directory does not exist"
     fi
-
+    cd "$dir"
     local status=0
-    for ep in $endpoints; do
-        d="$dir/$ep"
+    for d in $endpoints; do
         [[ -d $d ]] || continue
-        echo "Loading data from $d"
-        for f in "$d"/*.json; do
-            [[ -r $f ]] || continue
-            t=$(mktemp --tmpdir $ep-XXX.json)
-            envsubst <"$f" >"$t"
-            if ! to-post api/1.3/"$ep" "$t"; then
-                echo POST api/1.3/"$ep" "$t" failed
-                status=$?
-            fi
-            rm "$t"
+        for f in "$d"/*.json; do 
+            echo "Loading $f"
+            envsubst "$vars" <$f  > "$ENROLLER_DIR"/$f
         done
     done
     if [[ $status -ne 0 ]]; then
         exit $status
     fi
-
-
+    # After done loading all data
+    touch "$ENROLLER_DIR/initial-load-done"
+    cd -
 }
 
 # First,  load required data at the top level
 load_data_from /traffic_ops_data
 
-# If TO_DATA is defined, load from subdirs with that name (space-separated)
-if [[ -n $TO_DATA ]]; then
-    for subdir in $TO_DATA; do
-        load_data_from /traffic_ops_data/$subdir
-    done
-fi
-
-
+# Copy the free MaxMind GeoLite DB to TrafficOps public directory
+tar -C /var/tmp -zxpvf /GeoLite2-City.tar.gz
+geo_dir=$(find /var/tmp -maxdepth 1 -type d -name GeoLite2-City\*)
+gzip -c "$geo_dir/GeoLite2-City.mmdb" > "$TO_DIR/public/GeoLite2-City.mmdb.gz"
+chown trafops:trafops "$TO_DIR/public/GeoLite2-City.mmdb.gz"
