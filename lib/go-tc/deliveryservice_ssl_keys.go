@@ -34,13 +34,6 @@ type DeliveryServiceSSLKeysResponse struct {
 	Response DeliveryServiceSSLKeys `json:"response"`
 }
 
-// DeliveryServiceSSLKeysCertificate ...
-type DeliveryServiceSSLKeysCertificate struct {
-	Crt string `json:"crt"`
-	Key string `json:"key"`
-	CSR string `json:"csr"`
-}
-
 // DeliveryServiceSSLKeys ...
 type DeliveryServiceSSLKeys struct {
 	CDN             string                            `json:"cdn,omitempty"`
@@ -71,6 +64,13 @@ type DeliveryServiceSSLKeysReq struct {
 	Certificate *DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
 }
 
+// DeliveryServiceSSLKeysCertificate ...
+type DeliveryServiceSSLKeysCertificate struct {
+	Crt string `json:"crt"`
+	Key string `json:"key"`
+	CSR string `json:"csr"`
+}
+
 func (r *DeliveryServiceSSLKeysReq) Sanitize() {
 	// DeliveryService and Key are the same value, so if the user sent one but not the other, set the missing one, in the principle of "be liberal in what you accept."
 	if r.DeliveryService == nil && r.Key != nil {
@@ -80,51 +80,90 @@ func (r *DeliveryServiceSSLKeysReq) Sanitize() {
 		k := *r.DeliveryService // sqlx fails with aliased pointers, so make a new one
 		r.Key = &k
 	}
-	if r.Version == nil {
-		numStr := util.JSONNumAsStr("")
-		r.Version = &numStr
-	}
 }
 
-func (r *DeliveryServiceSSLKeysReq) Validate(tx *sql.Tx) error {
-	r.Sanitize()
+// validateSharedRequiredRequestFields validates the request fields that are shared and required by both 'add' and 'generate' requests
+func (r *DeliveryServiceSSLKeysReq) validateSharedRequiredRequestFields() []string {
 	errs := []string{}
-	if r.CDN == nil {
+	if checkNilOrEmpty(r.CDN) {
 		errs = append(errs, "cdn required")
 	}
-	if r.Key == nil {
+	if r.Version == nil {
+		errs = append(errs, "version required")
+	} else if _, err := strconv.Atoi(string(*r.Version)); err != nil {
+		errs = append(errs, "version must parse to an integer")
+	}
+	if checkNilOrEmpty(r.Key) {
 		errs = append(errs, "key required")
 	}
-	if r.DeliveryService == nil {
+	if checkNilOrEmpty(r.DeliveryService) {
 		errs = append(errs, "deliveryservice required")
 	}
 	if r.Key != nil && r.DeliveryService != nil && *r.Key != *r.DeliveryService {
 		errs = append(errs, "deliveryservice and key must match")
 	}
-	if r.BusinessUnit == nil {
-		errs = append(errs, "businessUnit required")
-	}
-	if r.City == nil {
-		errs = append(errs, "city required")
-	}
-	if r.Organization == nil {
-		errs = append(errs, "organization required")
-	}
-	if r.HostName == nil {
+	if checkNilOrEmpty(r.HostName) {
 		errs = append(errs, "hostname required")
 	}
-	if r.Country == nil {
-		errs = append(errs, "country required")
+	return errs
+}
+
+type DeliveryServiceAddSSLKeysReq struct {
+	DeliveryServiceSSLKeysReq
+}
+
+func (r *DeliveryServiceAddSSLKeysReq) Validate(tx *sql.Tx) error {
+	r.Sanitize()
+	errs := r.validateSharedRequiredRequestFields()
+	if r.Certificate == nil {
+		errs = append(errs, "certificate required")
+	} else {
+		if r.Certificate.Key == "" {
+			errs = append(errs, "certificate.key required")
+		}
+		if r.Certificate.Crt == "" {
+			errs = append(errs, "certificate.crt required")
+		}
+		if r.Certificate.CSR == "" {
+			errs = append(errs, "certificate.csr required")
+		}
 	}
-	if r.State == nil {
-		errs = append(errs, "state required")
-	}
-	// version is optional
-	// certificate is optional
 	if len(errs) > 0 {
 		return errors.New("missing fields: " + strings.Join(errs, "; "))
 	}
 	return nil
+}
+
+type DeliveryServiceGenSSLKeysReq struct {
+	DeliveryServiceSSLKeysReq
+}
+
+func (r *DeliveryServiceGenSSLKeysReq) Validate(tx *sql.Tx) error {
+	r.Sanitize()
+	errs := r.validateSharedRequiredRequestFields()
+	if checkNilOrEmpty(r.BusinessUnit) {
+		errs = append(errs, "businessUnit required")
+	}
+	if checkNilOrEmpty(r.City) {
+		errs = append(errs, "city required")
+	}
+	if checkNilOrEmpty(r.Organization) {
+		errs = append(errs, "organization required")
+	}
+	if checkNilOrEmpty(r.Country) {
+		errs = append(errs, "country required")
+	}
+	if checkNilOrEmpty(r.State) {
+		errs = append(errs, "state required")
+	}
+	if len(errs) > 0 {
+		return errors.New("missing fields: " + strings.Join(errs, "; "))
+	}
+	return nil
+}
+
+func checkNilOrEmpty(s *string) bool {
+	return s == nil || *s == ""
 }
 
 type RiakPingResp struct {

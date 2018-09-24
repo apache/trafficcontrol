@@ -95,6 +95,17 @@ func (s *JSONNumAsStr) UnmarshalJSON(d []byte) error {
 	return nil
 }
 
+func (s *JSONNumAsStr) ToInt() (int, error) {
+	if s == nil {
+		return 0, errors.New("cannot parse nil JSONNumAsStr to int")
+	}
+	i, err := strconv.Atoi(string(*s))
+	if err != nil {
+		return 0, errors.New("parsing JSONNumAsStr to int: " + err.Error())
+	}
+	return i, nil
+}
+
 // BytesLenSplit splits the given byte array into an n-length arrays. If n > len(s), returns a slice with a single []byte containing all of s. If n <= 0, returns an empty slice.
 func BytesLenSplit(s []byte, n int) [][]byte {
 	ss := [][]byte{}

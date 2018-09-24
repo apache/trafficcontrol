@@ -84,6 +84,10 @@ func PutDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, aut
 		if err = SaveObject(obj, DeliveryServiceSSLKeysBucket, cluster); err != nil {
 			return errors.New("saving Riak object: " + err.Error())
 		}
+		obj.Key = MakeDSSSLKeyKey(key.DeliveryService, DSSSLKeyVersionLatest)
+		if err = SaveObject(obj, DeliveryServiceSSLKeysBucket, cluster); err != nil {
+			return errors.New("saving Riak object: " + err.Error())
+		}
 		return nil
 	})
 	return err

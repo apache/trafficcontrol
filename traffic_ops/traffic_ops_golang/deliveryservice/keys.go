@@ -24,7 +24,6 @@ import (
 	"crypto/x509"
 	"database/sql"
 	"encoding/base64"
-	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"net/http"
@@ -52,32 +51,44 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("adding SSL keys to Riak for delivery service: Riak is not configured"))
 		return
 	}
-	keysObj := tc.DeliveryServiceSSLKeys{}
-	if err := json.NewDecoder(r.Body).Decode(&keysObj); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("malformed JSON"), nil)
+	req := tc.DeliveryServiceAddSSLKeysReq{}
+	if err := api.Parse(r.Body, inf.Tx.Tx, &req); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("parsing request: "+err.Error()), nil)
 		return
 	}
-	if userErr, sysErr, errCode := tenant.Check(inf.User, keysObj.DeliveryService, inf.Tx.Tx); userErr != nil || sysErr != nil {
+	if userErr, sysErr, errCode := tenant.Check(inf.User, *req.DeliveryService, inf.Tx.Tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	certChain, err := verifyCertificate(keysObj.Certificate.Crt, "")
+	certChain, err := verifyCertificate(req.Certificate.Crt, "")
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("verifying certificate: "+err.Error()), nil)
 		return
 	}
-	keysObj.Certificate.Crt = certChain
-	base64EncodeCertificate(&keysObj.Certificate)
-	if err := riaksvc.PutDeliveryServiceSSLKeysObj(keysObj, inf.Tx.Tx, inf.Config.RiakAuthOptions); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, nil, errors.New("putting SSL keys in Riak for delivery service '"+keysObj.DeliveryService+"': "+err.Error()))
+	req.Certificate.Crt = certChain
+	base64EncodeCertificate(req.Certificate)
+	dsSSLKeys := tc.DeliveryServiceSSLKeys{
+		CDN:             *req.CDN,
+		DeliveryService: *req.DeliveryService,
+		Hostname:        *req.HostName,
+		Key:             *req.Key,
+		Version:         *req.Version,
+		Certificate:     *req.Certificate,
+	}
+	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, inf.Tx.Tx, inf.Config.RiakAuthOptions); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("putting SSL keys in Riak for delivery service '"+*req.DeliveryService+"': "+err.Error()))
 		return
 	}
-	keysObj.Version = riaksvc.DSSSLKeyVersionLatest
-	if err := riaksvc.PutDeliveryServiceSSLKeysObj(keysObj, inf.Tx.Tx, inf.Config.RiakAuthOptions); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, nil, errors.New("putting latest SSL keys in Riak for delivery service '"+keysObj.DeliveryService+"': "+err.Error()))
+	version, err := req.Version.ToInt()
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("adding SSL keys to delivery service '"+*req.DeliveryService+"': "+err.Error()), nil)
 		return
 	}
-	api.WriteResp(w, r, "Successfully added ssl keys for "+keysObj.DeliveryService)
+	if err := updateSSLKeyVersion(*req.DeliveryService, version, inf.Tx.Tx); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("adding SSL keys to delivery service '"+*req.DeliveryService+"': "+err.Error()))
+		return
+	}
+	api.WriteResp(w, r, "Successfully added ssl keys for "+*req.DeliveryService)
 }
 
 // GetSSLKeysByHostName fetches the ssl keys for a deliveryservice specified by the fully qualified hostname
@@ -219,6 +230,14 @@ func DeleteSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.WriteResp(w, r, "Successfully deleted ssl keys for "+xmlID)
+}
+
+func updateSSLKeyVersion(xmlID string, version int, tx *sql.Tx) error {
+	q := `UPDATE deliveryservice SET ssl_key_version = $1 WHERE xml_id = $2`
+	if _, err := tx.Exec(q, version, xmlID); err != nil {
+		return errors.New("updating delivery service ssl_key_version: " + err.Error())
+	}
+	return nil
 }
 
 // returns the cdn_id found by domainname.
