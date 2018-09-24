@@ -96,7 +96,7 @@ echo "traffic_monitor.properties.reload.period=60000" >> $TM_PROPERTIES
 
 # Wait for traffic monitor
 until nc $TM_FQDN $TM_PORT </dev/null >/dev/null 2>&1; do
-	echo "waiting for enroller"
+  echo "Waiting for Traffic Monitor to start..."
   sleep 3
 done
 
