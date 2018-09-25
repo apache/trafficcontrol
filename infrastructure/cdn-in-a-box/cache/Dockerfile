@@ -41,7 +41,10 @@ RUN yum remove -y gcc-c++ glibc-devel autoconf automake libtool && rm -f /astats
 
 # You need to do this because the RPM in the ATS archives is just all kinds of messed-up
 RUN chmod 755 /usr/lib64/trafficserver /etc/trafficserver/body_factory /etc/trafficserver/body_factory/default
-RUN mkdir -p /var/trafficserver/cache /opt/ort && chown -R ats:ats /etc/trafficserver/ /var/trafficserver/ /opt/ort /usr/lib64/trafficserver/
+RUN mkdir -p /var/trafficserver /opt/ort && \
+    dd if=/dev/zero bs=1M count=1000 of=/var/trafficserver/cache && \
+    chown -R ats:ats /etc/trafficserver/ /var/trafficserver/ /opt/ort /usr/lib64/trafficserver/
+
 RUN setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_server && setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_manager && setcap CAP_NET_BIND_SERVICE=+eip /bin/trafficserver && setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_cop
 
 ADD infrastructure/cdn-in-a-box/edge/traffic_ops_ort.py /opt/ort/
