@@ -191,7 +191,16 @@ func Handler(
 		log.Infoln(r.Method + " " + r.URL.Path + " handled (reqid " + reqIDStr + ") in " + time.Since(start).String())
 	}()
 
-	onReqData := plugin.OnRequestData{Data: plugin.Data{RequestID: reqID}, W: w, R: r}
+	ctx := r.Context()
+	ctx = context.WithValue(ctx, api.DBContextKey, db)
+	ctx = context.WithValue(ctx, api.ConfigContextKey, cfg)
+	ctx = context.WithValue(ctx, api.ReqIDContextKey, reqID)
+
+	// plugins have no pre-parsed path params, but add an empty map so they can use the api helper funcs that require it.
+	pluginCtx := context.WithValue(ctx, api.PathParamsKey, map[string]string{})
+	pluginReq := r.WithContext(pluginCtx)
+
+	onReqData := plugin.OnRequestData{Data: plugin.Data{RequestID: reqID, AppCfg: *cfg}, W: w, R: pluginReq}
 	if handled := plugins.OnRequest(onReqData); handled {
 		return
 	}
@@ -213,12 +222,8 @@ func Handler(
 			params[v] = match[i+1]
 		}
 
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, api.PathParamsKey, params)
-		ctx = context.WithValue(ctx, api.DBContextKey, db)
-		ctx = context.WithValue(ctx, api.ConfigContextKey, cfg)
-		ctx = context.WithValue(ctx, api.ReqIDContextKey, reqID)
-		r = r.WithContext(ctx)
+		routeCtx := context.WithValue(ctx, api.PathParamsKey, params)
+		r = r.WithContext(routeCtx)
 		compiledRoute.Handler(w, r)
 		return
 	}

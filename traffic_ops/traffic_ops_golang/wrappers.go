@@ -22,10 +22,8 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
-	"context"
 	"crypto/sha512"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -38,9 +36,7 @@ import (
 	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
-	"github.com/jmoiron/sqlx"
 )
 
 // ServerName - the server identifier
@@ -59,81 +55,16 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 	}
 	return func(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			// TODO remove, and make username available to wrapLogTime
-			iw := &Interceptor{w: w}
-			w = iw
-			handleErr := func(status int, err error) {
-				errBytes, jsonErr := json.Marshal(tc.CreateErrorAlerts(err))
-				if jsonErr != nil {
-					log.Errorf("failed to marshal error: %s\n", jsonErr)
-					w.WriteHeader(http.StatusInternalServerError)
-					fmt.Fprintf(w, http.StatusText(http.StatusInternalServerError))
-					return
-				}
-				w.Header().Set(tc.ContentType, tc.ApplicationJson)
-				w.WriteHeader(status)
-				fmt.Fprintf(w, "%s", errBytes)
-			}
-
-			cookie, err := r.Cookie(tocookie.Name)
-			if err != nil {
-				log.Errorf("error getting cookie: %s", err)
-				handleErr(http.StatusUnauthorized, errors.New("Unauthorized, please log in."))
-				return
-			}
-
-			if cookie == nil {
-				handleErr(http.StatusUnauthorized, errors.New("Unauthorized, please log in."))
-				return
-			}
-
-			oldCookie, err := tocookie.Parse(a.secret, cookie.Value)
-			if err != nil {
-				log.Errorf("error parsing cookie: %s", err)
-				handleErr(http.StatusUnauthorized, errors.New("Unauthorized, please log in."))
-				return
-			}
-
-			username := oldCookie.AuthData
-			if username == "" {
-				handleErr(http.StatusUnauthorized, errors.New("Unauthorized, please log in."))
-				return
-			}
-			var DB *sqlx.DB
-			val := r.Context().Value(api.DBContextKey)
-			if val != nil {
-				switch v := val.(type) {
-				case *sqlx.DB:
-					DB = v
-				default:
-					handleErr(http.StatusInternalServerError, errors.New("No DB found"))
-				}
-			} else {
-				handleErr(http.StatusInternalServerError, errors.New("No DB found"))
-			}
-
-			cfg, err := api.GetConfig(r.Context())
-			if err != nil {
-				handleErr(http.StatusInternalServerError, errors.New("No config found"))
-			}
-
-			currentUserInfo, userErr, sysErr, code := auth.GetCurrentUserFromDB(DB, username, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+			user, userErr, sysErr, errCode := api.GetUserFromReq(w, r, a.secret)
 			if userErr != nil || sysErr != nil {
-				api.HandleErr(w, r, nil, code, userErr, sysErr)
+				api.HandleErr(w, r, nil, errCode, userErr, sysErr)
 				return
 			}
-			if currentUserInfo.PrivLevel < privLevelRequired {
-				handleErr(http.StatusForbidden, errors.New("Forbidden."))
-				return
+			if user.PrivLevel < privLevelRequired {
+				api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
 			}
-
-			newCookieVal := tocookie.Refresh(oldCookie, a.secret)
-			http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
-
-			ctx := r.Context()
-			ctx = context.WithValue(ctx, auth.CurrentUserKey, currentUserInfo)
-
-			handlerFunc(w, r.WithContext(ctx))
+			r = api.AddUserToReq(r, user)
+			handlerFunc(w, r)
 		}
 	}
 }

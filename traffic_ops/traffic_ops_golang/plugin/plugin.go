@@ -97,7 +97,9 @@ func AddPlugin(priority uint64, funcs Funcs) {
 		fmt.Println(time.Now().Format(time.RFC3339Nano) + " Error plugin.AddPlugin: runtime.Caller failed, can't get plugin names") // print, because this is called in init, loggers don't exist yet
 		os.Exit(1)
 	}
+
 	pluginName := strings.TrimSuffix(path.Base(filename), ".go")
+	log.Debugln("AddPlugin adding " + pluginName)
 	initPlugins = append(initPlugins, pluginObj{funcs: funcs, priority: priority, name: pluginName})
 }
 
@@ -113,11 +115,11 @@ type Data struct {
 	Ctx       *interface{}
 	SharedCfg map[string]interface{}
 	RequestID uint64
+	AppCfg    config.Config
 }
 
 type StartupData struct {
 	Data
-	AppCfg config.Config
 }
 
 type OnRequestData struct {
@@ -173,12 +175,15 @@ func (ps plugins) OnStartup(d StartupData) {
 
 // OnRequest returns a boolean whether to immediately stop processing the request. If a plugin returns true, this is immediately returned with no further plugins processed.
 func (ps plugins) OnRequest(d OnRequestData) bool {
+	log.Debugln("DEBUG plugins.OnRequest calling %+v\n", len(ps.slice))
 	for _, p := range ps.slice {
 		if p.funcs.onRequest == nil {
+			log.Debugln("plugins.OnRequest plugging " + p.name + " - no onRequest func")
 			continue
 		}
 		d.Ctx = ps.ctx[p.name]
 		d.Cfg = ps.cfg[p.name]
+		log.Debugln("plugins.OnRequest plugging " + p.name)
 		if stop := p.funcs.onRequest(d); stop {
 			return true
 		}

@@ -37,6 +37,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -264,7 +265,7 @@ type APIInfo struct {
 //
 // It is encouraged to call APIInfo.Tx.Tx.Commit() manually when all queries are finished, to release database resources early, and also to return an error to the user if the commit failed.
 //
-// NewInfo guarantees the returned APIInfo.Tx is nil or valid, even if a returned error is not nil. Hence, it is safe to pass the Tx to HandleErr when this returns errors.
+// NewInfo guarantees the returned APIInfo.Tx is non-nil and APIInfo.Tx.Tx is nil or valid, even if a returned error is not nil. Hence, it is safe to pass the Tx.Tx to HandleErr when this returns errors.
 //
 // Close() must be called to free resources, and should be called in a defer immediately after NewInfo(), to finish the transaction.
 //
@@ -292,29 +293,29 @@ type APIInfo struct {
 func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (*APIInfo, error, error, int) {
 	db, err := getDB(r.Context())
 	if err != nil {
-		return &APIInfo{}, errors.New("getting db: " + err.Error()), nil, http.StatusInternalServerError
+		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting db: " + err.Error()), nil, http.StatusInternalServerError
 	}
 	cfg, err := getConfig(r.Context())
 	if err != nil {
-		return &APIInfo{}, errors.New("getting config: " + err.Error()), nil, http.StatusInternalServerError
+		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting config: " + err.Error()), nil, http.StatusInternalServerError
 	}
 	reqID, err := getReqID(r.Context())
 	if err != nil {
-		return &APIInfo{}, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
+		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
 	}
 
 	user, err := auth.GetCurrentUser(r.Context())
 	if err != nil {
-		return &APIInfo{}, errors.New("getting user: " + err.Error()), nil, http.StatusInternalServerError
+		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting user: " + err.Error()), nil, http.StatusInternalServerError
 	}
 	params, intParams, userErr, sysErr, errCode := AllParams(r, requiredParams, intParamNames)
 	if userErr != nil || sysErr != nil {
-		return &APIInfo{}, userErr, sysErr, errCode
+		return &APIInfo{Tx: &sqlx.Tx{}}, userErr, sysErr, errCode
 	}
 	dbCtx, _ := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second) //only place we could call cancel here is in APIInfo.Close(), which already will rollback the transaction (which is all cancel will do.)
 	tx, err := db.BeginTxx(dbCtx, nil)                                                                 // must be last, MUST not return an error if this succeeds, without closing the tx
 	if err != nil {
-		return &APIInfo{}, userErr, errors.New("could not begin transaction: " + err.Error()), http.StatusInternalServerError
+		return &APIInfo{Tx: &sqlx.Tx{}}, userErr, errors.New("could not begin transaction: " + err.Error()), http.StatusInternalServerError
 	}
 	return &APIInfo{
 		Config:    cfg,
@@ -478,4 +479,58 @@ func ParseDBError(ierr error) (error, error, int) {
 	}
 
 	return nil, err, http.StatusInternalServerError
+}
+
+// GetUserFromReq returns the current user, any user error, any system error, and an error code to be returned if either error was not nil.
+// This also uses the given ResponseWriter to refresh the cookie, if it was valid.
+func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth.CurrentUser, error, error, int) {
+	cookie, err := r.Cookie(tocookie.Name)
+	if err != nil {
+		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), errors.New("error getting cookie: " + err.Error()), http.StatusUnauthorized
+	}
+
+	if cookie == nil {
+		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), nil, http.StatusUnauthorized
+	}
+
+	oldCookie, err := tocookie.Parse(secret, cookie.Value)
+	if err != nil {
+		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), errors.New("error parsing cookie: " + err.Error()), http.StatusUnauthorized
+	}
+
+	username := oldCookie.AuthData
+	if username == "" {
+		return auth.CurrentUser{}, errors.New("Unauthorized, please log in."), nil, http.StatusUnauthorized
+	}
+	db := (*sqlx.DB)(nil)
+	val := r.Context().Value(DBContextKey)
+	if val == nil {
+		return auth.CurrentUser{}, nil, errors.New("request context db missing"), http.StatusInternalServerError
+	}
+	switch v := val.(type) {
+	case *sqlx.DB:
+		db = v
+	default:
+		return auth.CurrentUser{}, nil, fmt.Errorf("request context db unknown type %T", val), http.StatusInternalServerError
+	}
+
+	cfg, err := GetConfig(r.Context())
+	if err != nil {
+		return auth.CurrentUser{}, nil, errors.New("request context config missing"), http.StatusInternalServerError
+	}
+
+	user, userErr, sysErr, code := auth.GetCurrentUserFromDB(db, username, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
+	if userErr != nil || sysErr != nil {
+		return auth.CurrentUser{}, userErr, sysErr, code
+	}
+
+	newCookieVal := tocookie.Refresh(oldCookie, secret)
+	http.SetCookie(w, &http.Cookie{Name: tocookie.Name, Value: newCookieVal, Path: "/", HttpOnly: true})
+	return user, nil, nil, http.StatusOK
+}
+
+func AddUserToReq(r *http.Request, u auth.CurrentUser) *http.Request {
+	ctx := r.Context()
+	ctx = context.WithValue(ctx, auth.CurrentUserKey, u)
+	return r.WithContext(ctx)
 }
