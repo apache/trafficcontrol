@@ -37,6 +37,7 @@ import logging
 import enum
 import subprocess
 import time
+import re
 
 needInstall = []
 
@@ -939,6 +940,13 @@ def mkbackup(fname:str, contents:str) -> bool:
 	logging.info("Backup of %s written to %s", fname, backupfile)
 	return True
 
+def stripComments(contents) -> str:
+        """
+        Strips comments from a string
+        """
+        s = re.sub(r'(?m)^\s*^ *#.*\n?', '', contents)
+        return re.sub(r'(?m)^\s*^ *<!--.*\n?', '', s)
+
 def updateConfig(directory:str, fname:str, contents:str) -> bool:
 	"""
 	Updates the config file specified by `file` to contain `contents`.
@@ -982,7 +990,7 @@ def updateConfig(directory:str, fname:str, contents:str) -> bool:
 		if MODE != Modes.BADASS:
 			return False
 
-	if diskContents.strip() == contents.strip():
+	if stripComments(diskContents.strip()) == stripComments(contents.strip()):
 		logging.info("on-disk contents match Traffic Ops - nothing to do")
 		return True
 
