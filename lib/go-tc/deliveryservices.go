@@ -71,7 +71,7 @@ type DeliveryService struct {
 	DeepCachingType   DeepCachingType `json:"deepCachingType"`
 	FQPacingRate      int             `json:"fqPacingRate,omitempty"`
 	SigningAlgorithm  string          `json:"signingAlgorithm" db:"signing_algorithm"`
-	TenantName        string          `json:"tenantName,omitempty"`
+	Tenant            string          `json:"tenant,omitempty"`
 	TRRequestHeaders  string          `json:"trRequestHeaders,omitempty"`
 	TRResponseHeaders string          `json:"trResponseHeaders,omitempty"`
 }
