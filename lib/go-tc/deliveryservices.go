@@ -131,7 +131,7 @@ type DeliveryServiceV11 struct {
 	RegionalGeoBlocking      bool                   `json:"regionalGeoBlocking"`
 	RemapText                string                 `json:"remapText"`
 	RoutingName              string                 `json:"routingName"`
-	SigningAlgorithm         string                 `json:"signingAlgorithm" db:"signing_algorithm"`
+	Signed                   bool                   `json:"signed"`
 	TypeID                   int                    `json:"typeId"`
 	Type                     DSType                 `json:"type"`
 	TRResponseHeaders        string                 `json:"trResponseHeaders"`
