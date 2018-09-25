@@ -100,6 +100,21 @@ func (to *Session) CreateDeliveryService(ds *tc.DeliveryService) (*tc.CreateDeli
 	return &data, nil
 }
 
+// CreateDeliveryService creates the DeliveryService it's passed
+func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable) (*tc.CreateDeliveryServiceNullableResponse, error) {
+	var data tc.CreateDeliveryServiceNullableResponse
+	jsonReq, err := json.Marshal(ds)
+	if err != nil {
+		return nil, err
+	}
+	err = post(to, deliveryServicesEp(), jsonReq, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data, nil
+}
+
 // UpdateDeliveryService updates the DeliveryService matching the ID it's passed with
 // the DeliveryService it is passed
 func (to *Session) UpdateDeliveryService(id string, ds *tc.DeliveryService) (*tc.UpdateDeliveryServiceResponse, error) {
