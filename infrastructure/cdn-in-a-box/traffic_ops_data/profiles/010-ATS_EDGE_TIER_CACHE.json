@@ -1598,107 +1598,107 @@
     {
       "configFile": "set_dscp_0.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_10.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_12.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_14.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_18.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_20.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_22.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_26.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_28.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_30.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_34.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_36.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_38.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_8.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_16.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_24.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_32.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_40.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_48.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_56.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     },
     {
       "configFile": "set_dscp_37.config",
       "name": "location",
-      "value": "/opt/trafficserver/etc/trafficserver/dscp"
+      "value": "/etc/trafficserver/dscp"
     }
   ]
 }
