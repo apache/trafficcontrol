@@ -510,6 +510,7 @@ def setTO_LOGIN(login:str) -> str:
 		logging.critical("Bad Traffic_Ops_Login: '%s' - should be like 'username:password'", login)
 		raise ORTException()
 
+
 	logging.debug("TO_LOGIN: %s", login)
 
 	# Obtain login cookie
