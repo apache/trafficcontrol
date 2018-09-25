@@ -1,7 +1,7 @@
 {
     "xmlId": "demo1",
     "displayName": "Demo 1",
-    "tenantName": "root",
+    "tenant": "root",
     "protocol": 0,
     "orgServerFqdn": "http://origin.infra.ciab.test",
     "cdnName": "CDN-in-a-Box",
@@ -23,5 +23,5 @@
     "regionalGeoBlocking": false,
     "routingName": "video",
     "anonymousBlockingEnabled": false,
-    "signingAlgorithm": "url_sig"
+    "signingAlgorithm": null
 }
