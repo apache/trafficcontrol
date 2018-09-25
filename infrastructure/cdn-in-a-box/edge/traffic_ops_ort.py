@@ -19,7 +19,7 @@
 
 """
 This script aims to be a drop-in replacement for the aged
-`traffic_ops_ort.pl` script. Its primary purpose is for
+``traffic_ops_ort.pl`` script. Its primary purpose is for
 management of a cache server via configuration from
 Traffic Ops. This script will install/upgrade packages
 as necessary, will ensure services that ought to be running
@@ -74,47 +74,57 @@ except ImportError:
 
 __version__ = "0.1"
 
-# Holds the info needed to query Traffic Ops
-TO_URL, TO_LOGIN, TO_COOKIE, TS_ROOT = (None,)*4
+#: Holds the full URL including schema (e.g. 'http') and port that points at Traffic Ops
+TO_URL = None
 
-# Logging info
+#: Holds the Traffic Ops login information as a JSON-encoded string
+TO_LOGIN = None
+
+#: Holds the Mojolicious cookie returned by Traffic Ops on successful login, and needed for
+#: subsequent requests.
+TO_COOKIE = None
+
+#: An absolute path to the root installation directory of Apache Trafficserver
+TS_ROOT = None
+
+#: A map of command-line log level options to :mod:`logging` log level constants
 LOG_LEVELS = {"ALL":   logging.NOTSET,
               "DEBUG": logging.DEBUG,
               "INFO":  logging.INFO,
               "WARN":  logging.WARNING,
               "ERROR": logging.ERROR,
               "FATAL": logging.CRITICAL}
+
+#: A format specifier for logging output
 FMT = "%(levelname)s: line %(lineno)d in %(module)s.%(funcName)s: %(message)s"
 
-# Not strictly accurate, but generally good enough
+#: Contains the host's hostname as a tuple of ``(short_hostname, full_hostname)``
 HOSTNAME = (platform.node().split('.')[0], platform.node())
 
 class Modes(enum.IntEnum):
 	"""
 	Enumerated run modes
 	"""
-	REPORT = 0
-	INTERACTIVE = 1
-	REVALIDATE = 2
-	SYNCDS = 3
-	BADASS = 4
+	REPORT = 0      #: Do nothing, only report what would be done
+	INTERACTIVE = 1 #: Ask for user confirmation before modifying the system
+	REVALIDATE = 2  #: Only check for config file changes and content revalidations
+	SYNCDS = 3      #: Check for and apply Delivery Service changes
+	BADASS = 4      #: Apply all settings specified in Traffic Ops, and attempt to solve all problems
 
 	def __str__(self) -> str:
 		"""
-		Implements `str(self)` by returning enum member's name
+		Implements ``str(self)`` by returning enum member's name
 		"""
 		return self.name
+
+#: Stores the current Run Mode
+MODE = None
 
 class ORTException(Exception):
 	"""Represents an error while processing ORT API responses, etc."""
 	pass
 
-
-# Current Run Mode
-MODE = None
-
-
-#This is the set of files which will require an ATS restart upon changes
+#: This is the set of files which will require an ATS restart when changed
 ATS_FILES = {"records.config",
              "remap.config",
              "parent.config",
@@ -123,6 +133,8 @@ ATS_FILES = {"records.config",
              "astats.config",
              "logs_xml.config",
              "ssl_multicert.config"}
+
+#: Global state variable that tracks whether or not ATS should be restarted
 ATS_NEEDS_RESTART = False
 
 ###############################################################################
@@ -132,10 +144,12 @@ ATS_NEEDS_RESTART = False
 ###############################################################################
 def installPythonPackages(packages:typing.List[str]) -> bool:
 	"""
-	Attempts to install the packages listed in `packages` and
+	Attempts to install the packages listed in ``packages`` and
 	add them to the global scope.
 
-	Returns a truthy value indicating success.
+	:param packages: A list of missing Python dependencies
+
+	:return: a truthy value indicating success.
 	"""
 	logging.info("Attempting install of %s", ','.join(packages))
 
@@ -186,9 +200,14 @@ def installPythonPackages(packages:typing.List[str]) -> bool:
 
 def handleMissingPythonPackages(packages:typing.List[str]) -> bool:
 	"""
-	Handles the case of missing packages.
+	Handles the case of missing packages, by installing them in :attr:`Modes.BADASS` mode,
+	asking the user for confirmation in :attr:`Modes.INTERACTIVE` mode, and failing in all
+	other run modes.
 
-	Installs packages by calling `installPythonPackages`.
+	Installs packages by calling :func:`installPythonPackages`.
+
+	:param packages: A list of missing Python dependencies
+	:return: A boolean indicator of success regarding the installation of missing dependencies
 	"""
 	logging.info("Packages needed for this script but not installed: %s", ','.join(packages))
 
@@ -229,9 +248,15 @@ def handleMissingPythonPackages(packages:typing.List[str]) -> bool:
 #####                              UTILITIES                              #####
 #####                                                                     #####
 ###############################################################################
-def getJSONResponse(uri:str, expectedStatus:int = 200) -> object:
+def getJSONResponse(uri:str, expectedStatus:int = 200) -> typing.Optional[object]:
 	"""
-	Returns the JSON-encoded contents (as a `dict`) of the response for a GET request to `uri`
+	Gets a JSON-encoded response to a Traffic Ops API ``GET`` request
+
+	:param uri: The request URI, relative to :data:`TO_URL`
+	:param expectedStatus: The expected status code of the response. If the actual response doesn't
+		match, this function will return :const:`None`.
+
+	:returns: On success, a parsed JSON object - or :const:`None` on failure.
 	"""
 	global TO_URL, TO_COOKIE
 
@@ -249,13 +274,23 @@ def getJSONResponse(uri:str, expectedStatus:int = 200) -> object:
 
 	return response.json()
 
-def getRawResponse(uri:str, expectedStatus:int=200, TOrelative:bool=True, verify:bool=False) ->str:
+def getRawResponse(uri:str,
+                   expectedStatus:int = 200,
+                   TOrelative:bool = True,
+                   verify:bool = False) -> typing.Optional[str]:
 	"""
-	Returns the raw body of a GET request for the specified URI.
-	(actually encodes to utf-8 string)
+	Gets the raw response body of an HTTP ``GET`` request - optionally one that is relative to
+	:data:`TO_URL`.
 
-	Note that the behaviour of treating the uri as relative to TO_URL may be overridden, unlike
-	`getJSONResponse`.
+	.. note:: Actually encodes to utf-8 string
+
+	:param uri: The full (unless ``Torelative`` is :const:`True`) path to a resource for the request
+	:param expectedStatus: The expected status code of the response. If the actual response doesn't
+		match, this function will return :const:`None`
+	:param TOrelative: If true, the ``uri`` will be treated as relative to :data:`TO_URL`
+	:param verify: If true, the SSL keys used to communicate with the full URI will be verified
+
+	:return: The body of the response on success, :const:`None` on failure
 	"""
 	global TO_URL, TO_COOKIE
 
@@ -274,10 +309,13 @@ def getRawResponse(uri:str, expectedStatus:int=200, TOrelative:bool=True, verify
 
 def setStatusFile(statusDir:str, status:str, create:bool = False):
 	"""
-	Removes all files in `statusDir` that aren't `status`, and creates `status`
+	Removes all files in ``statusDir`` that aren't ``status``, and creates ``status``
 	if it doesn't exist and `create` is True.
 
-	Raises an OSError if that fails.
+	:param statusDir: The absolute path to the directory for Traffic Ops status files
+	:param status: The name of the status to be set
+	:param create: If :const:`True`, a non-existant ``statusDir/status`` file will be created
+	:raises OSError: when reading or writing to the status file fails
 	"""
 	global MODE
 
@@ -313,14 +351,19 @@ def setStatusFile(statusDir:str, status:str, create:bool = False):
 #pylint: disable=R1710
 def startDaemon(args:typing.List[str], stdout:str='/dev/null', stderr:str='/dev/null') -> bool:
 	"""
-	Starts a daemon process to execute the command line given by 'args'
-	and returns a boolean indicating success.
+	Starts a daemon process to execute an external command
 
-	Note that this can only indicate the success of the first fork.
+	.. note:: this can only indicate the success of the first fork.
 
 	The first fork will exit successfully as long as the second fork doesn't
 	raise an OSError. The second fork will exit with the same returncode as
 	the exec'd process.
+
+	:param args: The command line to be executed. ``args[0]`` should be the name of the executable
+	:param stdout: A filename to which the command's stdout will be re-directed
+	:param stderr: A filename to which the command's stderr will be re-directed
+
+	:returns: whether or not the fork succeeded
 	"""
 
 	logging.debug("Forking a process - argv: '%s'", ' '.join(args))
@@ -374,11 +417,14 @@ def startDaemon(args:typing.List[str], stdout:str='/dev/null', stderr:str='/dev/
 
 def setATSStatus(status:bool, restart:bool = False) -> bool:
 	"""
-	Sets the status of the system's ATS process to on if `status` is True, else off.
-	If `restart` is True, then ATS will be restarted if already running.
-	(`restart` has no effect if `status` is False)
+	Sets the status of the system's ATS process.
 
-	Returns a boolean indicator of success.
+	:param status: Specifies whether ATS should be running (:const:`True`) or not (:const:`False`)
+	:param restart: If this is :const:`True`, then ATS will be restarted if it is already running
+
+		.. note:: ``restart`` has no effect if ``status`` is :const:`False`
+
+	:returns: whether or not the status setting was successful (or unnecessary)
 	"""
 	global MODE, TS_ROOT
 
@@ -429,6 +475,8 @@ def setATSStatus(status:bool, restart:bool = False) -> bool:
 def getHeaderComment() -> str:
 	"""
 	Gets the header for the Traffic Ops system
+
+	:returns: The ``toolname`` field of the Traffic Ops header
 	"""
 	response = getJSONResponse("/api/1.3/system/info.json")
 	logging.debug("system/info.json response: %s", response)
@@ -447,17 +495,21 @@ def getHeaderComment() -> str:
 
 def setTO_LOGIN(login:str) -> str:
 	"""
-	Parses the passed login and returns a
-	JSON string used for login.
+	Parses and returns a JSON-encoded login string for the Traffic Ops API.
+	This will set :data:`TO_COOKIE` if login is successful.
 
-	Will test the login before returning, and
-	raise a `PermissionError` if credentials
-	are refused. Also sets the TO_COOKIE
-	global variable.
+	:param login: The raw login info as passed on the command line (e.g. 'username:password')
+	:raises PermissionError: if the provided credentials are refused
+	:returns: a JSON-encoded login object suitable for passing to the Traffic Ops API's login endpoint
 	"""
 	global TO_COOKIE
 
-	login = '{{"u": "{0}", "p": "{1}"}}'.format(*login.split(':'))
+	try:
+		login = '{{"u": "{0}", "p": "{1}"}}'.format(*login.split(':'))
+	except IndexError as e:
+		logging.critical("Bad Traffic_Ops_Login: '%s' - should be like 'username:password'", login)
+		raise ORTException()
+
 
 	logging.debug("TO_LOGIN: %s", login)
 
@@ -465,10 +517,11 @@ def setTO_LOGIN(login:str) -> str:
 	cookie = requests.post(TO_URL + '/api/1.3/user/login', data=login, verify=False)
 
 	if not cookie.cookies or 'mojolicious' not in cookie.cookies:
+		logging.critical("Login credentials rejected by Traffic Ops")
 		logging.error("Response code: %d", cookie.status_code)
 		logging.warning("Response Headers: %s", cookie.headers)
 		logging.debug("Response: %s", cookie.content)
-		raise PermissionError("Login credentials rejected by Traffic Ops")
+		raise ORTException()
 
 	TO_COOKIE = {"mojolicious": cookie.cookies["mojolicious"]}
 
@@ -477,6 +530,11 @@ def setTO_LOGIN(login:str) -> str:
 def getYesNoResponse(prmpt:str, default:str = None) -> bool:
 	"""
 	Utility function to get an interactive yes/no response to the prompt `prmpt`
+
+	:param prmpt: The prompt to display to users
+	:param default: The default response; should be one of ``'y'``, ``"yes"``, ``'n'`` or ``"no"``
+		(case insensitive)
+	:returns: the parsed response as a boolean
 	"""
 	if default:
 		prmpt = prmpt.rstrip().rstrip(':') + '['+default+"]:"
@@ -501,9 +559,8 @@ def syncDSState() -> bool:
 	"""
 	Queries Traffic Ops for the Delivery Service's sync state.
 
-	Returns True if an update is needed, False if it isn't.
-	If something goes wrong, it'll raise an ORTException containing the error
-	message.
+	:raises ORTException: All possible errors are coalesced to this with a suitable error message
+	:returns: :const:`True` if an update is needed, :const:`False` if it isn't.
 	"""
 	global HOSTNAME
 
@@ -534,6 +591,9 @@ def syncDSState() -> bool:
 def revalidate() -> int:
 	"""
 	Performs revalidation.
+
+	:returns: ``0`` indicates success, ``1`` indicates no revalidation was pending and ``2``
+		indicates failure
 	"""
 	global HOSTNAME
 
@@ -569,7 +629,9 @@ def revalidate() -> int:
 
 def updateOps() -> int:
 	"""
-	Updates Traffic Ops as needed, and returns an exit code for the main routine
+	Updates Traffic Ops as needed
+
+	:returns: An exit code for the main routine
 	"""
 	global MODE, HOSTNAME, TO_URL, TO_COOKIE
 
@@ -580,22 +642,34 @@ def updateOps() -> int:
 
 		logging.info("starting Traffic Ops update for upd_pending")
 		payload = {"updated": False, "reval_updated": False}
-		response = requests.post(TO_URL+"/update/%s" % HOSTNAME[0], cookies=TO_COOKIE, verify=False, data=payload)
+		response = requests.post(TO_URL+"/update/%s" % HOSTNAME[0],
+		                         cookies=TO_COOKIE,
+		                         verify=False,
+		                         data=payload)
 
-		logging.debug("Raw response from Traffic Ops: %s\n%s\n%s", response, response.headers, response.content)
+		logging.debug("Raw response from Traffic Ops: %s\n%s\n%s",
+		              response,
+		              response.headers,
+		              response.content)
 
 	elif MODE == Modes.REVALIDATE:
 		logging.info("starting Traffic Ops update for reval_pending")
 		payload = {"updated": False, "reval_updated": True}
-		response = requests.post(TO_URL+"/update/%s" % HOSTNAME[0], cookies=TO_COOKIE, verify=False, data=payload)
+		response = requests.post(TO_URL+"/update/%s" % HOSTNAME[0],
+		                         cookies=TO_COOKIE,
+		                         verify=False,
+		                         data=payload)
 
-		logging.debug("Raw response from Traffic Ops: %s\n%s\n%s", response, response.headers, response.content)
+		logging.debug("Raw response from Traffic Ops: %s\n%s\n%s",
+		              response,
+		              response.headers,
+		              response.content)
 
 	else:
 		logging.warning("Update will not be performed at this time; you should do this manually")
 	return 0
 
-
+#: run modes mapped to handler functions
 HANDLERS = {"revalidate": revalidate,
             "syncds": lambda: None}
 
@@ -611,8 +685,12 @@ HANDLERS = {"revalidate": revalidate,
 ########################
 def RedHatInstalled(package:str, version:str = None) -> typing.List[str]:
 	"""
-	Returns the list of packages installed by the name 'package',
-	optionally with a specific version.
+	RedHat-specific function to check for the existence of a package on the system
+
+	:param package: the package name for which to check
+	:param version: an optional version specification
+
+	:returns: the list of packages installed by the name ``package``
 	"""
 	logging.debug("Checking for RedHat-like package %s", package)
 	arg = package if not version else package + '-' + version
@@ -632,8 +710,10 @@ def RedHatInstalled(package:str, version:str = None) -> typing.List[str]:
 
 def RedHatInstall(packages:typing.List[str]) -> bool:
 	"""
-	Installs the packages in the `packages` list and
-	returns a boolean success indicator.
+	RedHat-specific function to install a list of packages.
+
+	:param packages: A list of package names (optionally concatenated with versions) to be installed
+	:returns: whether or not all packages could be successfully installed
 	"""
 	sub = subprocess.Popen(["/bin/yum", "install", "-y"] + packages,
 	                       stdout=subprocess.PIPE,
@@ -650,8 +730,10 @@ def RedHatInstall(packages:typing.List[str]) -> bool:
 
 def RedHatUninstall(packages:typing.List[str]) -> bool:
 	"""
-	Removes the packages in the `packages` list, and
-	returns a boolean indicator of success.
+	RedHat-specific function to uninstall a list of packages.
+
+	:param packages: A list of packages to be uninstalled
+	:returns: whether or not all packages could be successfully installed
 	"""
 	sub = subprocess.Popen(["/bin/yum", "remove", "-y"] + packages,
 	                       stdout=subprocess.PIPE,
@@ -671,12 +753,18 @@ def RedHatUninstall(packages:typing.List[str]) -> bool:
 ########################
 def UbuntuInstalled(package:str, version:str = None) -> typing.List[str]:
 	"""
-	Returns the list of packages installed by the name 'package',
-	optionally with a specific version.
+	Ubuntu-specific function to check for the existence of a package on the system
+
+	:param package: the package name for which to check
+	:param version: an optional version specification
+
+	:returns: the list of packages installed by the name ``package``
 	"""
 	logging.debug("Checking for Ubuntu-like package %s", package)
 
-	sub = subprocess.Popen(["/usr/bin/dpkg", "-l", package], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	sub = subprocess.Popen(["/usr/bin/dpkg", "-l", package],
+	                       stdout=subprocess.PIPE,
+	                       stderr=subprocess.PIPE)
 	out, err = sub.communicate()
 
 	if sub.returncode:
@@ -700,8 +788,10 @@ def UbuntuInstalled(package:str, version:str = None) -> typing.List[str]:
 
 def UbuntuInstall(packages:typing.List[str]) -> bool:
 	"""
-	Installs the packages in the `packages` list and
-	returns a boolean success indicator
+	Ubuntu-specific function to install a list of packages.
+
+	:param packages: A list of package names (optionally concatenated with versions) to be installed
+	:returns: whether or not all packages could be successfully installed
 	"""
 	sub = subprocess.Popen(["/usr/bin/apt-get", "install", "-y"] + packages,
 	                       stdout=subprocess.PIPE,
@@ -718,13 +808,15 @@ def UbuntuInstall(packages:typing.List[str]) -> bool:
 
 def UbuntuUninstall(packages:typing.List[str]) -> bool:
 	"""
-	Uninstalls the packages in the `packages` list and returns a
-	boolean indicator of success.
+	Ubuntu-specific function to uninstall a list of packages.
+
+	:param packages: A list of packages to be uninstalled
+	:returns: whether or not all packages could be successfully installed
 	"""
 	sub = subprocess.Popen(["/usr/bin/apt-get", "purge", "-y"] + packages,
 	                       stdout=subprocess.PIPE,
 	                       stderr=subprocess.PIPE)
-	out, err = subprocess.communicate()
+	out, err = sub.communicate()
 
 	if sub.returncode:
 		logging.debug("apt-get stdout: %s", out.decode())
@@ -737,21 +829,29 @@ def UbuntuUninstall(packages:typing.List[str]) -> bool:
 ########################
 ### Platform Mapping ###
 ########################
+#: Maps distro names to functions that check for the existence of packages on those distros
 packageIsInstalled = {'centos': RedHatInstalled,
                       'fedora': RedHatInstalled,
                       'rhel': RedHatInstalled,
                       'ubuntu': UbuntuInstalled,
                       'linuxmint': UbuntuInstalled}
+
+#: Maps distro names to functions that install packages on those distros
 installPackage = {'centos': RedHatInstall,
                   'fedora': RedHatInstall,
                   'rhel': RedHatInstall,
                   'ubuntu': UbuntuInstall,
                   'linuxmint': UbuntuInstall}
+
+#: Maps distro names to functions that uninstall packages on those distros
 uninstallPackage = {'centos': RedHatUninstall,
                     'fedora': RedHatUninstall,
                     'rhel': RedHatUninstall,
                     'ubuntu': UbuntuUninstall,
                     'linuxmint': UbuntuUninstall}
+
+#: Maps distro names to the symbols that concatenate package names with version semantics for said
+#: distros
 packageConcat = {'centos': '-',
                  'fedora': '-',
                  'rhel': '-',
@@ -762,7 +862,7 @@ def processPackages() -> bool:
 	"""
 	Manages the packages that Traffic Ops reports are required for this server.
 
-	Returns a boolean indication of success.
+	:returns: whether or not the package processing was successfully completed
 	"""
 	global HOSTNAME, DISTRO, MODE, packageIsInstalled, installPackage, packageConcat
 
@@ -805,7 +905,8 @@ def processPackages() -> bool:
 
 		logging.info("Installing packages...")
 		if install:
-			if MODE == INTERACTIVE and not getYesNoResponse("Would you like to install the following packages: %s ?"%", ".join(install)):
+			prompt = "Would you like to install the following packages: %s ?" % (", ".join(install))
+			if MODE == Modes.INTERACTIVE and not getYesNoResponse(prompt):
 				logging.critical("User chose not to install packages - cannot continue!")
 				return False
 
@@ -818,7 +919,8 @@ def processPackages() -> bool:
 
 		logging.info("Uninstalling packages...")
 		if uninstall:
-			if MODE == INTERACTIVE and not getYesNoResponse("Would you like to remove the following packages: %s ?"%", ".join(uninstall)):
+			prompt = "Would you like to remove the following packages: %s ?" % (", ".join(uninstall))
+			if MODE == Modes.INTERACTIVE and not getYesNoResponse(prompt):
 				logging.critical("User chose not to remove packages - cannot continue!")
 				return False
 
@@ -832,9 +934,11 @@ def processPackages() -> bool:
 
 def processChkconfig() -> bool:
 	"""
-	'Processes chkconfig' - whatever that means/is
+	Process the list of services Traffic Ops reports ought to be running on this system
 
-	Returns a boolean indicator of success.
+	:returns: whether or not all services could be processed
+
+	.. warning:: This actually only handles Apache Traffic Server at the moment
 	"""
 	global HOSTNAME, MODE, DISTRO
 
@@ -869,6 +973,8 @@ def processChkconfig() -> bool:
 def getConfigFiles() -> typing.List[str]:
 	"""
 	Gets the list of configuration files used by this server's profile
+
+	:returns: The list of configuration files used by this server as reported by Traffic Ops
 	"""
 	global HOSTNAME
 
@@ -888,6 +994,8 @@ def initBackup() -> bool:
 	"""
 	Initializes a backup directory as a subdirectory of the directory containing
 	this ORT script.
+
+	:returns: whether or not the backup directory was successfully initialized
 	"""
 	global MODE
 
@@ -914,10 +1022,13 @@ def initBackup() -> bool:
 
 def mkbackup(fname:str, contents:str) -> bool:
 	"""
-	Creates a backup file named 'fname' with the contents `contents` and returns
-	True if the operation succeeded, else False.
+	Creates a backup of a specific file with its original contents.
 
-	Note: will always return True in REPORT mode.
+	:param fname: The name of the file being backed up (basename only)
+	:param contents: The file's original contents
+	:returns: whether or not the backup succeeded
+
+		.. note: will always return :const:`True` in :attr:`Modes.REPORT` mode.
 	"""
 	global MODE
 
@@ -949,14 +1060,20 @@ def stripComments(contents) -> str:
 
 def updateConfig(directory:str, fname:str, contents:str) -> bool:
 	"""
-	Updates the config file specified by `file` to contain `contents`.
-
-	Returns a boolean indicator of success.
-	"Success" is defined as being able to write the file contents and create any necessary backups
-	if the mode is not BADASS - in which case failure to back the file up is 'acceptable'.
+	Updates a single configuration file
 
 	This will make a backup in the `backup` subdirectory of the directory
-	containing this script if the file on disk differs from `contents`.
+	containing this script if the file on disk differs from ``contents``.
+
+	:param directory: The directory which contains the configuration file
+	:param fname: The basename of the configuration file
+	:param contents: The contents which this file will hold
+	:returns: whether or not the update was successful
+
+		.. note:: "Success" is defined as being able to write the file contents and create any
+			necessary backups if the run mode is not :attr:`Modes.BADASS` - in which case failure
+			to back the file up is 'acceptable'.
+
 	"""
 	global MODE, ATS_FILES, ATS_NEEDS_RESTART
 
@@ -1030,9 +1147,12 @@ def sanitizeContents(contents:str) -> str:
 
 def processConfigFile(file:dict, port:int, ip:str) -> bool:
 	"""
-	Process the passed file and value to apply a configuration.
+	Process a given configuration file object to produce the specified contents
 
-	Returns a boolean indicator of success
+	:param file: An object representing a configuration file
+	:param port: This server's TCP port
+	:param ip: This server's IPv4 address
+	:returns: whether or not the update was successful
 	"""
 	global MODE, HOSTNAME, TO_URL
 
@@ -1103,9 +1223,12 @@ def processConfigFile(file:dict, port:int, ip:str) -> bool:
 
 def processConfigFiles(files:list, port:int, ip:str) -> bool:
 	"""
-	processes the passed JSON object containing config file definitions
+	Processes the passed JSON object containing configuration file definitions
 
-	Returns a boolean indicator of success
+	:param files: A list of configuration file objects
+	:param port: This server's TCP port
+	:param ip: This server's IPv4 address
+	:returns: whether or not all configuration files could be processed
 	"""
 	global MODE
 
@@ -1133,6 +1256,8 @@ def doMain() -> int:
 	"""
 	Performs operations based on the run mode.
 	This can be thought of as the "true" main function.
+
+	:returns: an exit code for the script
 	"""
 	global MODE, ATS_NEEDS_RESTART
 
@@ -1206,7 +1331,9 @@ def doMain() -> int:
 
 def main() -> int:
 	"""
-	Runs the program, returns an exit code
+	Runs the program
+
+	:returns: an exit code for the script
 	"""
 	global TO_COOKIE, TO_LOGIN, TO_URL, LOG_LEVELS, MODE, needInstall, DISTRO, TS_ROOT, FMT
 
@@ -1289,11 +1416,11 @@ def main() -> int:
 		return 1
 
 	TS_ROOT = args.ts_root
-	logging.info("Traffic Server root is at %s", TS_ROOT)
-
-	logging.info("Distro detected as '%s'", DISTRO)
-
-	logging.info("Hostname detected as '%s'", HOSTNAME[1])
+	logging.info(\
+	        "Traffic Server root is at %s\n\tDistro detected as '%s'\n\tHostname detected as '%s'",
+	        TS_ROOT,
+	        DISTRO,
+	        HOSTNAME[1])
 
 	TO_URL = args.Traffic_Ops_URL.rstrip('/')
 
@@ -1307,7 +1434,7 @@ def main() -> int:
 	# Litmus test to make sure the server exists and can be reached
 	try:
 		_ = requests.head(TO_URL, verify=False)
-	except requests.exception as e:
+	except requests.exceptions.RequestException as e:
 		logging.critical("Malformed or Invalid Traffic_Ops_URL")
 		logging.error("%s", e)
 		logging.debug("%s", e, exc_info=True, stack_info=True)
@@ -1315,11 +1442,7 @@ def main() -> int:
 
 	try:
 		TO_LOGIN = setTO_LOGIN(args.Traffic_Ops_Login)
-	except IndexError:
-		logging.critical("Bad Traffic_Ops_Login: '%s' - should be like 'username:password'")
-		return 1
-	except PermissionError:
-		logging.critical("Failed to obtain cookied from Traffic Ops")
+	except ORTException:
 		return 1
 
 	return doMain()
