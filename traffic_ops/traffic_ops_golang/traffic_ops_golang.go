@@ -160,7 +160,7 @@ func main() {
 		return
 	}
 
-	plugins.OnStartup(plugin.StartupData{Data: plugin.Data{SharedCfg: cfg.PluginSharedConfig}, AppCfg: cfg})
+	plugins.OnStartup(plugin.StartupData{Data: plugin.Data{SharedCfg: cfg.PluginSharedConfig, AppCfg: cfg}})
 
 	log.Infof("Listening on " + cfg.Port)
 
