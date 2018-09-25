@@ -33,7 +33,7 @@ COPY ./infrastructure/cdn-in-a-box/enroller/server_template.json /
 
 FROM debian:stretch
 
-RUN apt-get update && apt-get install -y netcat curl && apt-get clean
+RUN apt-get update && apt-get install -y netcat curl dnsutils net-tools vim && apt-get clean
 COPY --from=enroller-builder \
    /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box \
    /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box
