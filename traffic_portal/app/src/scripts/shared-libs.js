@@ -56,3 +56,7 @@ require('jquery-flot-axislabels');
 // misc
 require('es5-shim');
 require('json3');
+
+// ui ace
+require('ace');
+require('ui-ace');

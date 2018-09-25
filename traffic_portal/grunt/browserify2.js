@@ -28,6 +28,7 @@ module.exports = {
                         cwd: '<%= globalConfig.app %>/bower_components/',
                         src:
                             [
+                                'ace-builds/src-min-noconflict/ace.js',
                                 'angular/angular.min.js',
                                 'angular-animate/angular-animate.min.js',
                                 'angular-bootstrap/ui-bootstrap.min.js',
@@ -38,6 +39,7 @@ module.exports = {
                                 'angular-route/angular-route.min.js',
                                 'angular-sanitize/angular-sanitize.min.js',
                                 'angular-ui-router/release/angular-ui-router.min.js',
+                                'angular-ui-ace/ui-ace.min.js',
                                 'bootstrap-sass-official/assets/javascripts/bootstrap.min.js',
                                 'es5-shim/es5-shim.min.js',
                                 'jquery/jquery.min.js',
@@ -89,6 +91,7 @@ module.exports = {
                         cwd: '<%= globalConfig.app %>/bower_components/',
                         src:
                             [
+                                'ace-builds/src-min-noconflict/ace.js',
                                 'angular/angular.js',
                                 'angular-animate/angular-animate.js',
                                 'angular-bootstrap/ui-bootstrap.js',
@@ -99,6 +102,7 @@ module.exports = {
                                 'angular-route/angular-route.js',
                                 'angular-sanitize/angular-sanitize.js',
                                 'angular-ui-router/release/angular-ui-router.js',
+                                'angular-ui-ace/ui-ace.js',
                                 'bootstrap-sass-official/assets/javascripts/bootstrap.js',
                                 'es5-shim/es5-shim.js',
                                 'jquery/jquery.js',

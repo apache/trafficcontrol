@@ -38,6 +38,7 @@ var trafficPortal = angular.module('trafficPortal', [
         'app.templates',
         'angular-jwt',
         'angular-loading-bar',
+        'ui.ace',
 
         // public modules
         require('./modules/public').name,
