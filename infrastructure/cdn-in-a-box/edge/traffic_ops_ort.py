@@ -510,7 +510,6 @@ def setTO_LOGIN(login:str) -> str:
 		logging.critical("Bad Traffic_Ops_Login: '%s' - should be like 'username:password'", login)
 		raise ORTException()
 
-
 	logging.debug("TO_LOGIN: %s", login)
 
 	# Obtain login cookie
@@ -1055,7 +1054,6 @@ def stripComments(contents) -> str:
         """
         Strips comments from a string
         """
-        s = re.sub(r'(?m)^\s*^ *#.*\n?', '', contents)
         return re.sub(r'(?m)^\s*^ *<!--.*\n?', '', s)
 
 def updateConfig(directory:str, fname:str, contents:str) -> bool:
@@ -1079,7 +1077,7 @@ def updateConfig(directory:str, fname:str, contents:str) -> bool:
 
 	file = os.path.join(directory, fname)
 
-	logging.info("Udpating config file '%s'", file)
+	logging.info("Updating config file '%s'", file)
 
 	if not os.path.isfile(file):
 		if MODE != Modes.REPORT:
@@ -1100,12 +1098,19 @@ def updateConfig(directory:str, fname:str, contents:str) -> bool:
 	logging.debug("Reading in file on disk")
 	try:
 		with open(file) as fd:
-			diskContents = fd.read()
+			diskContents = ''.join([line for line in fd.readlines()\
+			                if line and not line.startswith("# DO NOT EDIT")\
+			                and not line.startswith("# TRAFFIC OPS NOTE:")])
 	except OSError:
 		logging.warning("Couldn't read on-disk file: %s", e)
 		logging.debug("", exc_info=True, stack_info=True)
 		if MODE != Modes.BADASS:
 			return False
+
+	# Certain headers from Traffic Ops shouldn't be considered when checking for equality
+	importantContents = '\n'.join([l for l in contents.split('\n')\
+	                     if l and not l.startswith("# DO NOT EDIT")\
+	                     and not l.startswith("# TRAFFIC OPS NOTE:")])
 
 	if stripComments(diskContents.strip()) == stripComments(contents.strip()):
 		logging.info("on-disk contents match Traffic Ops - nothing to do")
@@ -1117,7 +1122,7 @@ def updateConfig(directory:str, fname:str, contents:str) -> bool:
 
 	try:
 		with open(file, 'w') as fd:
-			fd.write(contents)
+			fd.write(contents + '\n' if not contents.endswith('\n') else contents)
 	except OSError as e:
 		logging.error("Failed to update config file '%s'", file)
 		logging.warning("%s", e)
