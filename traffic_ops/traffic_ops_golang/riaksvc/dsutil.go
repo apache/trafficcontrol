@@ -75,17 +75,17 @@ func PutDeliveryServiceSSLKeysObj(key tc.DeliveryServiceSSLKeys, tx *sql.Tx, aut
 	}
 	err = WithClusterTx(tx, authOpts, func(cluster StorageCluster) error {
 		obj := &riak.Object{
-			ContentType:     "text/json",
+			ContentType:     "application/json",
 			Charset:         "utf-8",
 			ContentEncoding: "utf-8",
-			Key:             MakeDSSSLKeyKey(key.DeliveryService, string(key.Version)),
+			Key:             MakeDSSSLKeyKey(key.DeliveryService, key.Version.String()),
 			Value:           []byte(keyJSON),
 		}
-		if err = SaveObject(obj, DeliveryServiceSSLKeysBucket, cluster); err != nil {
+		if err := SaveObject(obj, DeliveryServiceSSLKeysBucket, cluster); err != nil {
 			return errors.New("saving Riak object: " + err.Error())
 		}
 		obj.Key = MakeDSSSLKeyKey(key.DeliveryService, DSSSLKeyVersionLatest)
-		if err = SaveObject(obj, DeliveryServiceSSLKeysBucket, cluster); err != nil {
+		if err := SaveObject(obj, DeliveryServiceSSLKeysBucket, cluster); err != nil {
 			return errors.New("saving Riak object: " + err.Error())
 		}
 		return nil

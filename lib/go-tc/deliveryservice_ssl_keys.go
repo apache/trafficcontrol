@@ -45,7 +45,7 @@ type DeliveryServiceSSLKeys struct {
 	Country         string                            `json:"country,omitempty"`
 	State           string                            `json:"state,omitempty"`
 	Key             string                            `json:"key"`
-	Version         util.JSONNumAsStr                 `json:"version"`
+	Version         util.JSONIntStr                   `json:"version"`
 	Certificate     DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
 }
 
@@ -60,7 +60,7 @@ type DeliveryServiceSSLKeysReq struct {
 	State           *string `json:"state,omitempty"`
 	// Key is the XMLID of the delivery service
 	Key         *string                            `json:"key"`
-	Version     *util.JSONNumAsStr                 `json:"version"`
+	Version     *util.JSONIntStr                   `json:"version"`
 	Certificate *DeliveryServiceSSLKeysCertificate `json:"certificate,omitempty"`
 }
 
@@ -90,8 +90,6 @@ func (r *DeliveryServiceSSLKeysReq) validateSharedRequiredRequestFields() []stri
 	}
 	if r.Version == nil {
 		errs = append(errs, "version required")
-	} else if _, err := strconv.Atoi(string(*r.Version)); err != nil {
-		errs = append(errs, "version must parse to an integer")
 	}
 	if checkNilOrEmpty(r.Key) {
 		errs = append(errs, "key required")
