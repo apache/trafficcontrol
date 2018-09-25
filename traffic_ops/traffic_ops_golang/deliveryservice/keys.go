@@ -79,12 +79,7 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("putting SSL keys in Riak for delivery service '"+*req.DeliveryService+"': "+err.Error()))
 		return
 	}
-	version, err := req.Version.ToInt()
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("adding SSL keys to delivery service '"+*req.DeliveryService+"': "+err.Error()), nil)
-		return
-	}
-	if err := updateSSLKeyVersion(*req.DeliveryService, version, inf.Tx.Tx); err != nil {
+	if err := updateSSLKeyVersion(*req.DeliveryService, req.Version.ToInt64(), inf.Tx.Tx); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("adding SSL keys to delivery service '"+*req.DeliveryService+"': "+err.Error()))
 		return
 	}
@@ -232,7 +227,7 @@ func DeleteSSLKeys(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, "Successfully deleted ssl keys for "+xmlID)
 }
 
-func updateSSLKeyVersion(xmlID string, version int, tx *sql.Tx) error {
+func updateSSLKeyVersion(xmlID string, version int64, tx *sql.Tx) error {
 	q := `UPDATE deliveryservice SET ssl_key_version = $1 WHERE xml_id = $2`
 	if _, err := tx.Exec(q, version, xmlID); err != nil {
 		return errors.New("updating delivery service ssl_key_version: " + err.Error())

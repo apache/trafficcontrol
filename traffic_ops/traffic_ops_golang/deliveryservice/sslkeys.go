@@ -52,12 +52,7 @@ func GenerateSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating and putting SSL keys: "+err.Error()))
 		return
 	}
-	version, err := req.Version.ToInt()
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("generating SSL keys for delivery service '"+*req.DeliveryService+"': "+err.Error()), nil)
-		return
-	}
-	if err := updateSSLKeyVersion(*req.DeliveryService, version, inf.Tx.Tx); err != nil {
+	if err := updateSSLKeyVersion(*req.DeliveryService, req.Version.ToInt64(), inf.Tx.Tx); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("generating SSL keys for delivery service '"+*req.DeliveryService+"': "+err.Error()))
 		return
 	}

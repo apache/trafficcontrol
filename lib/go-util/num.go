@@ -80,6 +80,14 @@ func (i *JSONIntStr) UnmarshalJSON(d []byte) error {
 	return nil
 }
 
+func (i JSONIntStr) ToInt64() int64 {
+	return int64(i)
+}
+
+func (i JSONIntStr) String() string {
+	return strconv.FormatInt(int64(i), 10)
+}
+
 // JSONNumAsStr unmarshals JSON strings or numbers into strings
 // This is designed to handle backwards-compatibility for old Perl endpoints which accept both. Please do not use this for new endpoints or new APIs, APIs should be well-typed.
 type JSONNumAsStr string
@@ -93,17 +101,6 @@ func (s *JSONNumAsStr) UnmarshalJSON(d []byte) error {
 	}
 	*s = JSONNumAsStr(d)
 	return nil
-}
-
-func (s *JSONNumAsStr) ToInt() (int, error) {
-	if s == nil {
-		return 0, errors.New("cannot parse nil JSONNumAsStr to int")
-	}
-	i, err := strconv.Atoi(string(*s))
-	if err != nil {
-		return 0, errors.New("parsing JSONNumAsStr to int: " + err.Error())
-	}
-	return i, nil
 }
 
 // BytesLenSplit splits the given byte array into an n-length arrays. If n > len(s), returns a slice with a single []byte containing all of s. If n <= 0, returns an empty slice.
