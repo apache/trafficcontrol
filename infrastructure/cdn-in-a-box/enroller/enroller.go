@@ -391,46 +391,46 @@ func enrollDeliveryService(toSession *session, fn string) error {
 	}()
 
 	dec := json.NewDecoder(fh)
-	var s tc.DeliveryService
+	var s tc.DeliveryServiceNullable
 	err = dec.Decode(&s)
 	if err != nil && err != io.EOF {
 		log.Printf("error decoding %s: %s\n", fn, err)
 		return err
 	}
 
-	if s.Type != "" {
+	if s.Type != nil && *s.Type != "" {
 		id, err := toSession.getTypeIDByName(s.Type.String())
 		if err != nil {
 			return err
 		}
-		s.TypeID = id
+		s.TypeID = &id
 	}
 
-	if s.CDNName != "" {
-		id, err := toSession.getCDNIDByName(s.CDNName)
+	if s.CDNName != nil && *s.CDNName != "" {
+		id, err := toSession.getCDNIDByName(*s.CDNName)
 		if err != nil {
 			return err
 		}
-		s.CDNID = id
+		s.CDNID = &id
 	}
 
-	if s.ProfileName != "" {
-		id, err := toSession.getProfileIDByName(s.ProfileName)
+	if s.ProfileName != nil && *s.ProfileName != "" {
+		id, err := toSession.getProfileIDByName(*s.ProfileName)
 		if err != nil {
 			return err
 		}
-		s.ProfileID = id
+		s.ProfileID = &id
 	}
 
-	if s.TenantName != "" {
-		id, err := toSession.getTenantIDByName(s.TenantName)
+	if s.Tenant != nil && *s.Tenant != "" {
+		id, err := toSession.getTenantIDByName(*s.Tenant)
 		if err != nil {
 			return err
 		}
-		s.TenantID = id
+		s.TenantID = &id
 	}
 
-	alerts, err := toSession.CreateDeliveryService(&s)
+	alerts, err := toSession.CreateDeliveryServiceNullable(&s)
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			log.Printf("deliveryservice %s already exists\n", s.XMLID)
