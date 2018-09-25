@@ -1359,13 +1359,13 @@
       "configFile": "astats.config",
       "name": "allow_ip",
       "secure": false,
-      "value": "127.0.0.1,10.0.0.0/8"
+      "value": "127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
     },
     {
       "configFile": "astats.config",
       "name": "allow_ip6",
       "secure": false,
-      "value": "::1/128"
+      "value": "::1/128,fc01:9400:1000:8::/64"
     },
     {
       "configFile": "astats.config",
