@@ -18,6 +18,8 @@
         "font-awesome": "4.5.0",
         "jquery": "2.0.0",
         "json3": "3.3.2",
-        "restangular": "1.5.2"
+        "restangular": "1.5.2",
+        "chart.js": "2.7.2",
+        "angular-chart.js": "1.1.1"
     }
 }
