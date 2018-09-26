@@ -1050,7 +1050,7 @@ def mkbackup(fname:str, contents:str) -> bool:
 	logging.info("Backup of %s written to %s", fname, backupfile)
 	return True
 
-def stripComments(contents) -> str:
+def stripComments(s) -> str:
         """
         Strips comments from a string
         """
