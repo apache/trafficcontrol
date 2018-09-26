@@ -298,6 +298,7 @@ services:
     volumes:
       - ./dns/container-resolv.conf:/etc/resolv.conf
       - shared:/shared
+      - ./origin/content:/var/www/html
 
   # enroller provides a way to register component instances with traffic_ops
   enroller:
@@ -340,3 +341,4 @@ volumes:
     external: false
   shared:
     external: false
+  content:  

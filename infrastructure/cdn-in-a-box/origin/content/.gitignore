@@ -1,0 +1,6 @@
+# ignore all in this dir
+*
+
+# except these files
+!.gitignore
+!tc_logo.svg
