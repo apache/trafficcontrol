@@ -30,8 +30,6 @@ RUN rm -rf /var/www/localhost/
 RUN mkdir -p /var/www/html/
 
 ADD origin/lighttpd.conf /etc/lighttpd/lighttpd.conf
-ADD origin/index.html /var/www/html/index.html
-ADD origin/tc_logo.svg /var/www/html/tc_logo.svg
 ADD origin/run.sh traffic_ops/to-access.sh /
 
 EXPOSE 80
