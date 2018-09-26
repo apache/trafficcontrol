@@ -44,13 +44,35 @@ source /to-access.sh
 
 # Create SSL certificates and trust the shared CA.
 source /generate-certs.sh
-if x509v3_init; then
+
+# copy contents of /ca to /export/ssl
+# update the permissions 
+mkdir -p "$X509_CA_PERSIST_DIR" && chmod 777 "$X509_CA_PERSIST_DIR"
+find "$X509_CA_PERSIST_DIR" -type f -exec chmod a+rw '{}' \;
+
+if [ -r "$X509_CA_PERSIST_ENV_FILE" ] ; then
+  umask $X509_CA_UMASK 
+  mkdir -p "$X509_CA_DIR" && chmod 777 $X509_CA_DIR
+  rsync -a "$X509_CA_PERSIST_DIR/" "$X509_CA_DIR/"
+  sync
+  echo "PERSIST CERTS FROM $X509_CA_PERSIST_DIR to $X509_CA_DIR"
+  sleep 4
+  source "$X509_CA_ENV_FILE"
+elif x509v3_init; then
+    umask $X509_CA_UMASK 
 		x509v3_create_cert "$INFRA_SUBDOMAIN" "$INFRA_FQDN"
 		for ds in $DS_HOSTS
 		do
 			x509v3_create_cert "$ds" "$ds.$CDN_FQDN"
 		done
 		x509v3_dump_env
+    # Save newly generated certs for future restarts.
+    rsync -av "$X509_CA_DIR/" "$X509_CA_PERSIST_DIR/"
+    chmod 777 "$X509_CA_PERSIST_DIR"
+    sync
+    echo "GENERATE CERTS FROM $X509_CA_DIR to $X509_CA_PERSIST_DIR"
+    sleep 4
+    find "$X509_CA_PERSIST_DIR" -type f -exec chmod a+rw '{}' \;
 fi
 
 # Write config files
