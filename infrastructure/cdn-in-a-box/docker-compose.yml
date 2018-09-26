@@ -118,6 +118,7 @@ services:
     ports:
       - "60443:443"
     volumes:
+      - ./traffic_ops/ca:/ca
       - ./dns/container-resolv.conf:/etc/resolv.conf
       - shared:/shared
 
@@ -300,6 +301,7 @@ services:
       - shared:/shared
       - ./origin/content:/var/www/html
 
+
   # enroller provides a way to register component instances with traffic_ops
   enroller:
     build:
@@ -336,9 +338,23 @@ services:
     ports:
       - "9353:53"
 
+  client:
+    image: wernight/dante
+    hostname: client
+    domainname: infra.ciab.test
+    networks:
+      tcnet:
+        ipv4_address: 172.16.239.250
+        ipv6_address: "fc01:9400:1000:8::250"
+    ports:
+      - "9080:1080"
+    
 volumes:
   schemas:
     external: false
   shared:
     external: false
   content:  
+    external: false
+  ca:
+    external: false 
