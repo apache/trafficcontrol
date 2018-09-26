@@ -42,7 +42,9 @@ module.exports = {
                                 'es5-shim/es5-shim.min.js',
                                 'jquery/jquery.min.js',
                                 'json3/lib/json3.min.js',
-                                'restangular/dist/restangular.min.js'
+                                'restangular/dist/restangular.min.js',
+                                'chart.js/dist/Chart.min.js',
+                                'angular-chart.js/dist/angular-chart.min.js'
                             ]
                     },
                     {
@@ -103,7 +105,9 @@ module.exports = {
                                 'es5-shim/es5-shim.js',
                                 'jquery/jquery.js',
                                 'json3/lib/json3.js',
-                                'restangular/dist/restangular.js'
+                                'restangular/dist/restangular.js',
+                                'chart.js/dist/Chart.min.js',
+                                'angular-chart.js/dist/angular-chart.min.js'
                             ]
                     },
                     {
