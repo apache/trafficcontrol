@@ -934,7 +934,7 @@ Users
 
 **POST/api/1.2/user/current/jobs**
 
-Invalidating content on the CDN is sometimes necessary when the origin was mis-configured and something is cached in the CDN that needs to be removed. Given the size of a typical Traffic Control CDN and the amount of content that can be cached in it, removing the content from all the caches may take a long time. To speed up content invalidation, Traffic Ops will not try to remove the content from the caches, but it makes the content inaccessible using the *regex_revalidate* ATS plugin. This forces a *revalidation* of the content, rather than a new get.
+Invalidating content on the CDN is sometimes necessary when the origin was mis-configured and something is cached in the CDN that needs to be removed. Given the size of a typical Traffic Control CDN and the amount of content that can be cached in it, removing the content from all the caches may take a long time. To speed up content invalidation, Traffic Ops will not try to remove the content from the caches, but it makes the content inaccessible using the *regex_revalidate* ATS plugin (https://docs.trafficserver.apache.org/en/latest/admin-guide/plugins/regex_revalidate.en.html). This forces a *revalidation* of the content, rather than a new get.
 
 .. Note:: This method forces a HTTP *revalidation* of the content, and not a new *GET* - the origin needs to support revalidation according to the HTTP/1.2 specification, and send a ``200 OK`` or ``304 Not Modified`` as applicable.
 
@@ -957,11 +957,15 @@ Role(s) Required: None
   |                      |        | revalidation is an expensive operation for     |
   |                      |        | many origins, and a simple ``/.*`` can cause   |
   |                      |        | an overload condition of the origin.           |
+  |                      |        |                                                |
+  |                      |        | Examples:                                      |
+  |                      |        | ``/path/to/content/.*``                        |
+  |                      |        | ``/path/to/content/.*\.jpg``                   |
   +----------------------+--------+------------------------------------------------+
-  |``startTime``         | string | Start Time is the time when the revalidation   |
+  |``startTime``         | string | Start Time is the UTC time when revalidation   |
   |                      |        | rule will be made active. Populate             |
   |                      |        | with the current time to schedule ASAP. This   |
-  |                      |        | value cannot be more than 2 days before now.   |
+  |                      |        | value cannot be more than 2 days in the future.|
   +----------------------+--------+------------------------------------------------+
   |``ttl``               | int    | Time To Live is how long the revalidation rule |
   |                      |        | will be active for in hours. It usually makes  |
@@ -976,8 +980,8 @@ Role(s) Required: None
   **Request Example** ::
 
     {
-           "dsId": "9999",
-           "regex": "/path/to/content.jpg",
+           "dsId": 9999,
+           "regex": "/path/to/content/.*\.jpg",
            "startTime": "2015-01-27 11:08:37",
            "ttl": 54
     }
@@ -1005,7 +1009,7 @@ Role(s) Required: None
                   [
                       {
                             "level": "success",
-                            "text": "Successfully created purge job for: ."
+                            "text": "Invalidate content request submitted for my-ds [ http://my-cdn-origin.foo.net/path/to/content/.*\.jpg - TTL:54h ]"
                       }
                   ],
     }
