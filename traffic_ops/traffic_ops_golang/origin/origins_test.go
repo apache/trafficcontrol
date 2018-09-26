@@ -87,10 +87,10 @@ func TestReadOrigins(t *testing.T) {
 
 	testOrigins := getTestOrigins()
 	cols := test.ColsFromStructByTag("db", tc.Origin{})
-	rows := sqlmock.NewRows(cols)
+	originRows := sqlmock.NewRows(cols)
 
 	for _, to := range testOrigins {
-		rows = rows.AddRow(
+		originRows = originRows.AddRow(
 			to.Cachegroup,
 			to.CachegroupID,
 			to.Coordinate,
@@ -112,11 +112,17 @@ func TestReadOrigins(t *testing.T) {
 			to.TenantID,
 		)
 	}
+
+	tenantRows := sqlmock.NewRows([]string{"id"})
+	tenantRows.AddRow(1)
+
 	mock.ExpectBegin()
-	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectQuery("WITH").WillReturnRows(tenantRows)
+	mock.ExpectQuery("SELECT").WillReturnRows(originRows)
 	v := map[string]string{}
 
-	origins, errs, errType := getOrigins(v, db.MustBegin(), auth.PrivLevelAdmin)
+	testUser := auth.CurrentUser{TenantID: 1}
+	origins, errs, errType := getOrigins(v, db.MustBegin(), &testUser)
 	log.Debugln("%v-->", origins)
 	if len(errs) > 0 {
 		t.Errorf("getOrigins expected: no errors, actual: %v with error type: %s", errs, errType.String())

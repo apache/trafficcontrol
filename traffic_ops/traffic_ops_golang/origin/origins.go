@@ -141,55 +141,13 @@ func (origin *TOOrigin) IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
 	return true, nil
 }
 
-// filterAuthorized will filter a slice of Origins based upon tenant. It assumes that tenancy is enabled
-func filterAuthorized(origins []tc.Origin, user *auth.CurrentUser, tx *sqlx.Tx) ([]tc.Origin, error) {
-	newOrigins := []tc.Origin{}
-	for _, origin := range origins {
-		if origin.TenantID == nil {
-			if origin.ID == nil {
-				return nil, errors.New("isResourceAuthorized for origin with nil ID: no tenant ID")
-			} else {
-				return nil, fmt.Errorf("isResourceAuthorized for origin %d: no tenant ID", *origin.ID)
-			}
-		}
-		// TODO add/use a helper func to make a single SQL call, for performance
-		ok, err := tenant.IsResourceAuthorizedToUserTx(*origin.TenantID, user, tx.Tx)
-		if err != nil {
-			if origin.ID == nil {
-				return nil, errors.New("isResourceAuthorized for origin with nil ID: " + err.Error())
-			} else {
-				return nil, fmt.Errorf("isResourceAuthorized for origin %d: "+err.Error(), *origin.ID)
-			}
-		}
-		if !ok {
-			continue
-		}
-		newOrigins = append(newOrigins, origin)
-	}
-	return newOrigins, nil
-}
-
 func (origin *TOOrigin) Read() ([]interface{}, error, error, int) {
 	returnable := []interface{}{}
 
-	privLevel := origin.ReqInfo.User.PrivLevel
-
-	origins, errs, errType := getOrigins(origin.ReqInfo.Params, origin.ReqInfo.Tx, privLevel)
+	origins, errs, errType := getOrigins(origin.ReqInfo.Params, origin.ReqInfo.Tx, origin.ReqInfo.User)
 	if len(errs) > 0 {
 		userErr, sysErr, errCode := api.TypeErrsToAPIErr(errs, errType)
 		return nil, userErr, sysErr, errCode
-	}
-
-	var err error
-	tenancyEnabled, err := tenant.IsTenancyEnabledTx(origin.ReqInfo.Tx.Tx)
-	if err != nil {
-		return nil, nil, errors.New("origin read: checking tenancy: " + err.Error()), http.StatusInternalServerError
-	}
-	if tenancyEnabled {
-		origins, err = filterAuthorized(origins, origin.ReqInfo.User, origin.ReqInfo.Tx)
-		if err != nil {
-			return nil, nil, errors.New("origin read: filtering authorized: " + err.Error()), http.StatusInternalServerError
-		}
 	}
 
 	for _, origin := range origins {
@@ -199,7 +157,7 @@ func (origin *TOOrigin) Read() ([]interface{}, error, error, int) {
 	return returnable, nil, nil, http.StatusOK
 }
 
-func getOrigins(params map[string]string, tx *sqlx.Tx, privLevel int) ([]tc.Origin, []error, tc.ApiErrorType) {
+func getOrigins(params map[string]string, tx *sqlx.Tx, user *auth.CurrentUser) ([]tc.Origin, []error, tc.ApiErrorType) {
 	var rows *sqlx.Rows
 	var err error
 
@@ -220,6 +178,13 @@ func getOrigins(params map[string]string, tx *sqlx.Tx, privLevel int) ([]tc.Orig
 	if len(errs) > 0 {
 		return nil, errs, tc.DataConflictError
 	}
+
+	tenantIDs, err := tenant.GetUserTenantIDListTx(tx.Tx, user.TenantID)
+	if err != nil {
+		log.Errorln("received error querying for user's tenants: " + err.Error())
+		return nil, []error{tc.DBError}, tc.SystemError
+	}
+	where, queryValues = dbhelpers.AddTenancyCheck(where, queryValues, "o.tenant", tenantIDs)
 
 	query := selectQuery() + where + orderBy
 	log.Debugln("Query is ", query)
