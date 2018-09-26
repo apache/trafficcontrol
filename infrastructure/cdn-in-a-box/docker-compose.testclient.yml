@@ -1,0 +1,82 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# To use this compose you should first build Traffic Ops and then copy the RPM to :
+#
+# trafficcontrol/infrastructure/cdn-in-a-box/traffic_ops/traffic_ops.rpm
+#
+#      cd trafficcontrol/infrastructure/cdn-in-a-box
+#
+# Adjust the settings in `variables.env` to suit your needs.
+#
+#      docker-compose up -d
+#
+# The Traffic Ops Go API will then be available on https://localhost:6443,
+# the Perl API on https://localhost:60443, and the postgres database on localhost 5432.
+#
+# Note that this setup is intended for testing and not for production use.
+
+---
+version: '2.1'
+
+networks:
+  tcnet:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.239.0/24
+        - subnet: "fc01:9400:1000:8::/64"
+
+services:
+  # TestClient is a VNC/Proxy container for development/testing CDN-In-A-Box 
+  # This container should not be merged to the Apache TrafficServer REPO due to 
+  # possible licence issues with video playback software and codecs
+  testclient:
+    build:
+      context: .
+      dockerfile: testclient/Dockerfile
+      args:
+        VNC_USER: "demo"
+        VNC_PASSWD: "demo"
+    environment:
+      VNC_RESOLUTION: "1400x900"
+      VNC_DEPTH: 32
+      VNC_WM: "fluxbox"
+    env_file: 
+      - variables.env
+    hostname: client
+    domainname: infra.ciab.test
+    networks:
+      tcnet:
+        ipv4_address: 172.16.239.250
+        ipv6_address: "fc01:9400:1000:8::250"
+    ports:
+      - "50022:22"
+      - "55900:5900"
+      - "59090:9090"
+    volumes:
+      - shared:/shared
+      - ./dns/container-resolv.conf:/etc/resolv.conf
+      - ~/Library/Containers/com.docker.docker/Data/docker.sock:/var/run/docker.sock
+      
+volumes:
+  schemas:
+    external: false
+  enroller:
+    external: false
