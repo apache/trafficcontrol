@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-***********
+-**********
 Traffic Ops
 ***********
 
@@ -25,81 +25,94 @@ Software Requirements
 =====================
 To work on Traffic Ops you need a CentOS 7+ environment that has the following installed:
 
-* `Carton 1.0.12 <http://search.cpan.org/~miyagawa/Carton-v1.0.12/lib/Carton.pm>`_
+- `Carton 1.0.12 <http://search.cpan.org/~miyagawa/Carton-v1.0.12/lib/Carton.pm>`_
 
-	* cpan JSON
-	* cpan JSON\:\:PP
+	- cpan JSON
+	- cpan JSON\:\:PP
 
-* `Go 1.8.3 <http://golang.org/doc/install>`_
-* Perl 5.10.1
-* Git
-* Postgres 9.6.6
-* `Goose <https://bitbucket.org/liamstask/goose/>`_
+- `Go 1.8.3 <http://golang.org/doc/install>`_
+- Perl 5.10.1
+- Git
+- Postgres 9.6.6
+- `Goose <https://bitbucket.org/liamstask/goose/>`_
 
 Traffic Ops Project Tree Overview
 =================================
 traffic_ops/ - The root of the Traffic Ops project
 
-	* app/ - Holds most of the Perl code base
+	- app/ - Holds most of the Perl code base
 
-		* bin/ - Directory for scripts, cronjobs, etc
-		* conf/
+		- bin/ - Directory for scripts, cronjobs, etc
+		- conf/
 
-			* development/ - Development (local) specific configuration files.
-			* misc/ - Miscellaneous configuration files.
-			* production/ - Production specific configuration files.
-			* test/ - Test (unit test) specific configuration files.
+			- development/ - Development (local) specific configuration files.
+			- misc/ - Miscellaneous configuration files.
+			- production/ - Production specific configuration files.
+			- test/ - Test (unit test) specific configuration files.
 
-		* db/ - Database related area.
+		- db/ - Database related area.
 
-			* migrations/ - Database Migration files.
+			- migrations/ - Database Migration files.
 
-		* lib/
+		- lib/
 
-			* API/ - Mojo Controllers for the /API area of the application.
-			* Common/ - Common Code between both the API and UI areas.
-			* Extensions/ - Contains Data Source Extensions
-			* Fixtures/ - Test Case fixture data for the 'to_test' database.
+			- API/ - Mojo Controllers for the /API area of the application.
+			- Common/ - Common Code between both the API and UI areas.
+			- Extensions/ - Contains Data Source Extensions
+			- Fixtures/ - Test Case fixture data for the 'to_test' database.
 
-				* Integration/ - Integration Tests.
+				- Integration/ - Integration Tests.
 
-			* MojoPlugins/ - Mojolicious Plugins for Common Controller Code.
-			* Schema/ - Database Schema area.
+			- MojoPlugins/ - Mojolicious Plugins for Common Controller Code.
+			- Schema/ - Database Schema area.
 
-				* /Result - DBIx ORM related files.
+				- /Result - DBIx ORM related files.
 
-			* /Test - Common Test.
-			* UI/ - Mojolicious Controllers for the Traffic Ops UI itself.
-			* Utils/
+			- /Test - Common Test.
+			- UI/ - Mojolicious Controllers for the Traffic Ops UI itself.
+			- Utils/
 
-				* Helper/ - Common utilities for the Traffic Ops application.
+				- Helper/ - Common utilities for the Traffic Ops application.
 
-		* log/ - Log directory where the development and test files are written
-		* public/
+		- log/ - Log directory where the development and test files are written
+		- public/
 
-		 * css/ - Stylesheets
-		 * images/ - Images
-		 * js/ - Javascripts
+		 - css/ - Stylesheets
+		 - images/ - Images
+		 - js/ - Javascripts
 
-		* script/ - Mojo Bootstrap scripts.
-		* t/ - Unit Tests for the UI.
+		- script/ - Mojo Bootstrap scripts.
+		- t/ - Unit Tests for the UI.
 
-		 * api/ - Unit Tests for the API.
+		 - api/ - Unit Tests for the API.
 
-		* t_integration/ - High level tests for Integration level testing.
-		* templates/ - Mojo Embedded Perl (``*.ep``) files for the UI.
+		- t_integration/ - High level tests for Integration level testing.
+		- templates/ - Mojo Embedded Perl (``*.ep``) files for the UI.
 
-	* bin/ - holds executables related to Traffic Ops, but not actually a part of the Traffic Ops server's operation
-	* build/ - contains files that are responsible for packaging Traffic Ops into an RPM file
-	* client/ - API endpoints handled by Go
-	* client_tests/ - lol
-	* doc/ - contains only a coverage-zone.json example (?) file
-	* etc/ - configuration files needed for the Traffic Ops server
+	- bin/ - holds executables related to Traffic Ops, but not actually a part of the Traffic Ops server's operation
+	- build/ - contains files that are responsible for packaging Traffic Ops into an RPM file
+	- client/ - API endpoints handled by Go
+	- client_tests/ - lol
+	- doc/ - contains only a coverage-zone.json example (?) file
+	- etc/ - configuration files needed for the Traffic Ops server
 
-		* cron.d/ - holds specifications for Cron jobs that need to be run periodically on Traffic Ops servers
-		* init.d/ - contains the old initscripts-based job control for traffic ops
-		* logrotate.d/ - specifications for the Linux ``logrotate`` utility for Traffic Ops log files
-		* profile.d/traffic_ops.sh - sets up common environment variables for working with Traffic Ops
+		- cron.d/ - holds specifications for Cron jobs that need to be run periodically on Traffic Ops servers
+		- init.d/ - contains the old initscripts-based job control for traffic ops
+		- logrotate.d/ - specifications for the Linux ``logrotate`` utility for Traffic Ops log files
+		- profile.d/traffic_ops.sh - sets up common environment variables for working with Traffic Ops
+
+	- experimental/ - includes all kinds of prototype and/or abandoned tools and extensions
+
+		- ats_config/ - an attempt to provide an easier method of obtaining and/or writing configuration files for Apache Trafficserver cache servers
+		- auth/ - a simple authentication server that mimics the authentication process of Traffic Ops, and provides a detailed view of a logged-in user's permissions and capabilities
+		- goto/ - an Angular (1.x) web page backed by a Go server that provides a ReST API interface for mySQL servers
+		- postgrest/ - originally probably going to be a web server that provides a ReST API for postgreSQL servers, this only contains a simple - albiet unfinished - Docker container specification for running postgreSQL client tools and/or server(s)
+		- server/ - a living copy of the original attempt at re-writing Traffic Ops in Go
+		- traffic_ops_auth/ - proof-of-concept for authenticating, creating and deleting users in a Traffic Ops schema.
+		- url-rewriter-nginx/ - Docker container specification for a modification to the NginX web server, meant to make it suitable for use as a caching server at the Edge-tier or Mid-tier levels of the Traffic Control architecture
+		- webfront/ - a simple HTTP caching server written from the ground-up, meant to be suitable as a caching server at the Edge-tier or Mid-tier levels of the Traffic Control architecture
+
+	- install/
 
 Perl Formatting Conventions
 ===========================
@@ -143,7 +156,7 @@ Example: ``db/admin.pl --env=test reset``
 
 Purpose:  This script is used to manage the database. The environments are defined in the dbconf.yml, as well as the database names.
 
-* To use the ``admin.pl`` script, you may need to add ``traffic_ops/lib`` and ``traffic_ops/local/lib/perl5`` to your `PERL5LIB <http://modperlbook.org/html/3-9-2-2-Using-the-PERL5LIB-environment-variable.html>`_ environment variable.
+- To use the ``admin.pl`` script, you may need to add ``traffic_ops/lib`` and ``traffic_ops/local/lib/perl5`` to your `PERL5LIB <http://modperlbook.org/html/3-9-2-2-Using-the-PERL5LIB-environment-variable.html>`_ environment variable.
 
 +-----------+--------------------------------------------------------------------+
 | Arguments | Description                                                        |
@@ -189,9 +202,9 @@ To install the Traffic Ops Developer environment:
 
 4. Enter ``db/admin.pl --env=<enviroment name> setup`` to set up the traffic_ops database(s).
 
-	 * Unit test database: ``$ db/admin.pl --env=test setup``
-	 * Development database: ``$ db/admin.pl --env=development setup``
-	 * Integration database: ``$ db/admin.pl --env=integration setup``
+	 - Unit test database: ``$ db/admin.pl --env=test setup``
+	 - Development database: ``$ db/admin.pl --env=development setup``
+	 - Integration database: ``$ db/admin.pl --env=integration setup``
 
 	 |
 
@@ -239,8 +252,8 @@ To install the Traffic Ops Developer environment:
 8. Using a browser, navigate to the given address: ``http://127.0.0.1:3000``
 9. For the initial log in:
 
-	* User name: admin
-	* Password: password
+	- User name: admin
+	- Password: password
 
 10. Change the log in information.
 
@@ -248,7 +261,7 @@ Test Cases
 ==========
 Use prove to execute test cases. Execute after a carton install:
 
-* To run the Unit Tests: ``$ local/bin/prove -qrp  t/``
+- To run the Unit Tests: ``$ local/bin/prove -qrp  t/``
 * To run the Integration Tests: ``$ local/bin/prove -qrp t_integration/``
 
 The KableTown CDN example
@@ -260,8 +273,8 @@ The integration tests will load an example CDN with most of the features of Traf
 3. Using a browser, navigate to the given address: ``http://127.0.0.1:3000``
 4. For the initial log in:
 
-	* User name: admin
-	* Password: password
+	- User name: admin
+	- Password: password
 
 
 Extensions
@@ -305,22 +318,22 @@ Check Extension scripts are located in the $TO_HOME/bin/checks directory.
 
 Currently, the following Check Extensions are available and installed by default:
 
-**Cache Disk Usage Check - CDU**
+-*Cache Disk Usage Check - CDU**
 	This check shows how much of the available total cache disk is in use. A "warm" cache should show 100.00.
 
-**Cache Hit Ratio Check - CHR**
+-*Cache Hit Ratio Check - CHR**
 	The cache hit ratio for the cache in the last 15 minutes (the interval is determined by the cron entry).
 
-**DiffServe CodePoint Check - DSCP**
+-*DiffServe CodePoint Check - DSCP**
 	Checks if the returning traffic from the cache has the correct DSCP value as assigned in the delivery service. (Some routers will overwrite DSCP)
 
-**Maximum Transmission Check - MTU**
+-*Maximum Transmission Check - MTU**
 	Checks if the Traffic Ops host (if that is the one running the check) can send and receive 8192 size packets to the ``ip_address`` of the server in the server table.
 
-**Operational Readiness Check - ORT**
+-*Operational Readiness Check - ORT**
 	See :ref:`traffic-ops-ort` for more information on the ort script. The ORT column shows how many changes the traffic_ops_ort.pl script would apply if it was run. The number in this column should be 0.
 
-**Ping Check - 10G, ILO, 10G6, FQDN**
+-*Ping Check - 10G, ILO, 10G6, FQDN**
 	The bin/checks/ToPingCheck.pl is to check basic IP connectivity, and in the default setup it checks IP connectivity to the following:
 
 	10G
@@ -332,7 +345,7 @@ Currently, the following Check Extensions are available and installed by default
 	FQDN
 		Is the Fully Qualified Domain name (the concatenation of ``host_name`` and ``.`` and ``domain_name`` from the server table) pingable?
 
-**Traffic Router Check - RTR**
+-*Traffic Router Check - RTR**
 	Checks the state of each cache as perceived by all Traffic Monitors (via Traffic Router). This extension asks each Traffic Router for the state of the cache. A check failure is indicated if one or more monitors report an error for a cache. A cache is only marked as good if all reports are positive. (This is a pessimistic approach, opposite of how TM marks a cache as up, "the optimistic approach")
 
 
