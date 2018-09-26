@@ -131,7 +131,7 @@ to-delete() {
 
 # Constructs a server's JSON definiton and places it into the enroller's structure for loading
 # args:
-#         serverType - the type of the server to be created; one of "edge", "mid", "tm", "origin"
+#         serverType - the type of the server to be created; one of "edge", "mid", "tm"
 to-enroll() {
 
 	while true; do 
@@ -156,20 +156,6 @@ to-enroll() {
 		export MY_CDN="$2"
 	else
 		export MY_CDN="CDN-in-a-Box"
-	fi
-
-
-	if [[ "$serverType" == "origin" ]]; then
-		cat <<-EOORIGIN >"$ENROLLER_DIR/origins/$HOSTNAME.json"
-		{
-			"deliveryService": "demo1",
-			"fqdn": "$HOSTNAME",
-			"name": "origin",
-			"protocol": "http",
-			"tenant": "root"
-		}
-		EOORIGIN
-		return 0
 	fi
 
 	export MY_NET_INTERFACE='eth0'
