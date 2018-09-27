@@ -275,18 +275,26 @@ To install the Traffic Ops Developer environment:
 
 Test Cases
 ==========
-Use prove to execute test cases. Execute after a carton install:
+Use `prove <http://perldoc.perl.org/prove.html>`_ (should be installed with Perl) to execute test cases. Execute after a ``carton install`` of all required dependencies:
 
-- To run the Unit Tests: ``$ local/bin/prove -qrp  t/``
-- To run the Integration Tests: ``$ local/bin/prove -qrp t_integration/``
+- To run the Unit Tests: ``prove -qrp  app/t/``
+- To run the Integration Tests: ``prove -qrp app/t_integration/``
 
 The KableTown CDN example
 -------------------------
 The integration tests will load an example CDN with most of the features of Traffic Control being used. This is mostly for testing purposes, but can also be used as an example of how to configure certain features. To load the KableTown CDN example and access it:
 
-#. Run the integration tests
-#. Start morbo against the integration database: ``export MOJO_MODE=integration; ./bin/start.pl``
-#. Using a browser, navigate to the given address: ``http://127.0.0.1:3000``
+#. Be sure the integration tests have been run
+#. Start the Traffic Ops server. The ``MOJO_MODE`` environment variable should be set to the name of the environment that has been loaded.
+
+	.. code-block::bash
+		:caption: Example Startup
+
+		export MOJO_MODE=integration
+		cd app/
+		bin/start.pl
+
+#. Using a web browser, navigate to the address Traffic Ops is serving, e.g. ``http://127.0.0.1:3000`` for default settings
 #. For the initial log in:
 
 	:User name: ``admin``
