@@ -30,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.comcast.cdn.traffic_control.traffic_router.configuration.ConfigurationListener;
@@ -533,7 +535,9 @@ public class TrafficRouter {
 			final List<Cache> caches = selectCaches(request, ds, track);
 
 			if (caches != null && !caches.isEmpty()) {
-				final Cache cache = consistentHasher.selectHashable(caches, ds.getDispersion(), request.getPath());
+				// Pattern based consistent hashing
+				final String pathToHash = buildPatternBasedHashString(ds, request.getPath());
+				final Cache cache = consistentHasher.selectHashable(caches, ds.getDispersion(), pathToHash);
 				steeringResult.setCache(cache);
 			} else {
 				resultsToRemove.add(steeringResult);
@@ -553,6 +557,30 @@ public class TrafficRouter {
 		}
 
 		return routeResult;
+	}
+
+	public String buildPatternBasedHashString(final DeliveryService deliveryService, final String requestPath) {
+		if (deliveryService.getConsistentHashRegex() != null && !deliveryService.getConsistentHashRegex().isEmpty() && !requestPath.isEmpty()) {
+			return buildPatternBasedHashString(deliveryService.getConsistentHashRegex(), requestPath);
+		} else {
+			return requestPath;
+		}
+	}
+
+	public String buildPatternBasedHashString(final String regex, final String requestPath) {
+		final Pattern pattern = Pattern.compile(regex);
+		final Matcher matcher = pattern.matcher(requestPath);
+
+		final StringBuilder sb = new StringBuilder();
+		if (matcher.find()) {
+			for (int i=1; i<=matcher.groupCount(); i++) {
+				final String text = matcher.group(i);
+				sb.append(text);
+			}
+			return sb.toString();
+		} else {
+			return requestPath;
+		}
 	}
 
 	@SuppressWarnings({ "PMD.CyclomaticComplexity", "PMD.NPathComplexity" })
@@ -597,7 +625,9 @@ public class TrafficRouter {
 			return routeResult;
 		}
 
-		final Cache cache = consistentHasher.selectHashable(caches, deliveryService.getDispersion(), request.getPath());
+		// Pattern based consistent hashing
+		final String pathToHash = buildPatternBasedHashString(deliveryService, request.getPath());
+		final Cache cache = consistentHasher.selectHashable(caches, deliveryService.getDispersion(), pathToHash);
 
 		// Enforce anonymous IP blocking if a DS has anonymous blocking enabled
 		// and the feature is enabled
