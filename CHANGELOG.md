@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Tenancy is now the default behavior in Traffic Ops.  All database entries that reference a tenant now have a default of the root tenant.  This eliminates the need for the `use_tenancy` global parameter and will allow for code to be simplified as a result. If all user and delivery services reference the root tenant, then there will be no difference from having `use_tenancy` set to 0.
 - Traffic Monitor Client Update: Traffic Monitor is updated to use the Traffic Ops v13 client.
 - Removed previously deprecated `traffic_monitor_java`
+- Added `infrastructure/cdn-in-a-box` for Apachecon 2018 demonstration
 
 ### Changed
 - Issue 2821: Fixed "Traffic Router may choose wrong certificate when SNI names overlap"
