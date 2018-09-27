@@ -19,6 +19,8 @@
 .. |X| image:: images/bad.png
 .. |clock| image:: images/clock-black.png
 
+.. _to-using:
+
 *******************
 Traffic Ops - Using
 *******************
