@@ -23,21 +23,12 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 )
 
-type CRUDer interface {
-	Creator
-	Reader
-	Updater
-	Deleter
-	Identifier
-	Validator
-}
+type CRUDFactory func(reqInfo *APIInfo) CRUDer
 
-type Updater interface {
-	// Update returns any user error, any system error, and the HTTP error code to be returned if there was an error.
-	Update() (error, error, int)
-}
+type CRUDer interface{}
 
 type Identifier interface {
+	SetKeys(map[string]interface{})
 	GetKeys() (map[string]interface{}, bool)
 	GetType() string
 	GetAuditName() string
@@ -47,12 +38,26 @@ type Identifier interface {
 type Creator interface {
 	// Create returns any user error, any system error, and the HTTP error code to be returned if there was an error.
 	Create() (error, error, int)
-	SetKeys(map[string]interface{})
+	Identifier
+	Validator
+}
+
+type Reader interface {
+	// Read returns the object to write to the user, any user error, any system error, and the HTTP error code to be returned if there was an error.
+	Read() ([]interface{}, error, error, int)
+}
+
+type Updater interface {
+	// Update returns any user error, any system error, and the HTTP error code to be returned if there was an error.
+	Update() (error, error, int)
+	Identifier
+	Validator
 }
 
 type Deleter interface {
 	// Delete returns any user error, any system error, and the HTTP error code to be returned if there was an error.
 	Delete() (error, error, int)
+	Identifier
 }
 
 type Validator interface {
@@ -61,9 +66,4 @@ type Validator interface {
 
 type Tenantable interface {
 	IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
-}
-
-type Reader interface {
-	// Read returns the object to write to the user, any user error, any system error, and the HTTP error code to be returned if there was an error.
-	Read() ([]interface{}, error, error, int)
 }
