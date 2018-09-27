@@ -107,7 +107,7 @@ func (to *Session) CreateDeliveryServiceNullable(ds *tc.DeliveryServiceNullable)
 	if err != nil {
 		return nil, err
 	}
-	err = post(to, deliveryServicesEp(), jsonReq, &data)
+	_, err = post(to, deliveryServicesEp(), jsonReq, &data)
 	if err != nil {
 		return nil, err
 	}
