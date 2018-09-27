@@ -348,6 +348,8 @@ services:
         ipv6_address: "fc01:9400:1000:8::250"
     ports:
       - "9080:1080"
+    volumes:
+      - ./dns/container-resolv.conf:/etc/resolv.conf
     
 volumes:
   schemas:
