@@ -82,15 +82,15 @@ func findSteering(tx *sql.Tx) ([]tc.Steering, error) {
 		target := tc.SteeringSteeringTarget{DeliveryService: data.TargetName}
 		switch data.Type {
 		case tc.SteeringTypeOrder:
-			target.Order = uint64(data.Value)
+			target.Order = int64(data.Value)
 		case tc.SteeringTypeWeight:
-			target.Weight = uint64(data.Value)
+			target.Weight = int64(data.Value)
 		case tc.SteeringTypeGeoOrder:
 			target.GeoOrder = util.IntPtr(data.Value)
 			target.Latitude = util.FloatPtr(primaryOriginCoords[data.TargetID].Lat)
 			target.Longitude = util.FloatPtr(primaryOriginCoords[data.TargetID].Lon)
 		case tc.SteeringTypeGeoWeight:
-			target.Weight = uint64(data.Value)
+			target.Weight = int64(data.Value)
 			target.GeoOrder = util.IntPtr(0)
 			target.Latitude = util.FloatPtr(primaryOriginCoords[data.TargetID].Lat)
 			target.Longitude = util.FloatPtr(primaryOriginCoords[data.TargetID].Lon)
