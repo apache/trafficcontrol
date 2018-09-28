@@ -78,7 +78,7 @@ func GetTestSteering(t *testing.T) {
 	if steerings[0].Targets[0].Order != 0 {
 		t.Fatalf("steering get: Targets Order expected %v actual %v\n", 0, steerings[0].Targets[0].Order)
 	}
-	if testData.SteeringTargets[0].Value != nil && steerings[0].Targets[0].Weight != *testData.SteeringTargets[0].Value {
+	if testData.SteeringTargets[0].Value != nil && steerings[0].Targets[0].Weight != int64(*testData.SteeringTargets[0].Value) {
 		t.Fatalf("steering get: Targets Order expected %v actual %v\n", testData.SteeringTargets[0].Value, steerings[0].Targets[0].Weight)
 	}
 	if steerings[0].Targets[0].GeoOrder != nil {
