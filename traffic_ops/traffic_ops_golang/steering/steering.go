@@ -153,7 +153,7 @@ ORDER BY
 	for rows.Next() {
 		sd := SteeringData{}
 		if err := rows.Scan(&sd.DeliveryService, &sd.SteeringID, &sd.TargetName, &sd.TargetID, &sd.Value, &sd.Type, &sd.DSType); err != nil {
-			return nil, errors.New("scanning profile name parameters: " + err.Error())
+			return nil, errors.New("get steering data scanning: " + err.Error())
 		}
 		data = append(data, sd)
 	}
