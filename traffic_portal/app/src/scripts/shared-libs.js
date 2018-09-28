@@ -53,9 +53,6 @@ require('jquery-flot-time');
 require('jquery-flot-tooltip');
 require('jquery-flot-axislabels');
 
-// chart.js
-require('angular-chart');
-
 // misc
 require('es5-shim');
 require('json3');
