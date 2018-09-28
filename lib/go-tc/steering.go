@@ -19,8 +19,6 @@ package tc
  * under the License.
  */
 
-import ()
-
 type Steering struct {
 	DeliveryService DeliveryServiceName      `json:"deliveryService"`
 	ClientSteering  bool                     `json:"clientSteering"`
