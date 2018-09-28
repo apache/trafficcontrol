@@ -214,6 +214,7 @@ FROM
   JOIN coordinate c ON c.id = o.coordinate
 WHERE
   o.deliveryservice = ANY($1)
+  AND o.is_primary
 `
 	rows, err := tx.Query(qry, pq.Array(dsIDs))
 	if err != nil {
