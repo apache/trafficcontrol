@@ -32,8 +32,8 @@ type SteeringFilter struct {
 }
 
 type SteeringSteeringTarget struct {
-	Order           uint64              `json:"order"`
-	Weight          uint64              `json:"weight"`
+	Order           int64               `json:"order"`
+	Weight          int64               `json:"weight"`
 	DeliveryService DeliveryServiceName `json:"deliveryService"`
 	GeoOrder        *int                `json:"geoOrder,omitempty"`
 	Longitude       *float64            `json:"longitude,omitempty"`
