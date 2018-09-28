@@ -76,5 +76,10 @@ crontab "/var/spool/cron/root"
 
 crond -im off
 
+until grep -q demo1 /etc/trafficserver/remap.config; do
+	sleep 3
+done
+crontab -r
+
 touch /var/log/trafficserver/diags.log
 tail -F /var/log/trafficserver/diags.log
