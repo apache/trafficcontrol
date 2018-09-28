@@ -389,7 +389,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/widget/cdnChart').name,
         require('./common/modules/widget/changeLogs').name,
         require('./common/modules/widget/dashboardStats').name,
-		require('./common/modules/widget/deliveryServices').name,
+        require('./common/modules/widget/deliveryServices').name,
         require('./common/modules/widget/routing').name,
 
         // models
