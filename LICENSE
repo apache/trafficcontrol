@@ -261,11 +261,11 @@ For the jsdiff component:
 ./licenses/BSD-jsdiff
 
 For the Chart.js component:
-@traffic_portal/app/src/assets/js/chartjs/Chart.min.js
+@traffic_portal/app/src/assets/js/chartjs/Chart.min_2.7.2.js
 ./licenses/MIT-chartjs
 
 For the angular-chart.js component:
-@traffic_portal/app/src/assets/js/chartjs/angular-chart.min.js
+@traffic_portal/app/src/assets/js/chartjs/angular-chart.min_1.1.1.js
 ./licenses/BSD-angular-chartjs
 
 For the jquery.tree component:
