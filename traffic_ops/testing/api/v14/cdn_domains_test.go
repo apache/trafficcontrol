@@ -1,3 +1,5 @@
+package v14
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,26 +15,28 @@
    limitations under the License.
 */
 
-package client
-
 import (
-	"encoding/json"
-	"net/http"
+	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
-func (to *Session) Steering() ([]tc.Steering, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, apiBase+`/steering`, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+func GetTestDomains(t *testing.T) {
+	resp, _, err := TOSession.GetDomains()
+	log.Debugln("Response: ", resp)
 	if err != nil {
-		return nil, reqInf, err
+		t.Errorf("could not GET domains: %v\n", err)
 	}
-	defer resp.Body.Close()
+}
 
-	data := struct {
-		Response []tc.Steering `json:"response"`
-	}{}
-	err = json.NewDecoder(resp.Body).Decode(&data)
-	return data.Response, reqInf, err
+func TestDomains(t *testing.T) {
+	CreateTestCDNs(t)
+	CreateTestTypes(t)
+	CreateTestProfiles(t)
+	CreateTestStatuses(t)
+	GetTestDomains(t)
+	DeleteTestStatuses(t)
+	DeleteTestProfiles(t)
+	DeleteTestTypes(t)
+	DeleteTestCDNs(t)
 }
