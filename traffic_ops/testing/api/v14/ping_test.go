@@ -1,3 +1,5 @@
+package v14
+
 /*
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,26 +15,18 @@
    limitations under the License.
 */
 
-package client
-
 import (
-	"encoding/json"
-	"net/http"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"testing"
 )
 
-func (to *Session) Steering() ([]tc.Steering, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, apiBase+`/steering`, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
+func TestPing(t *testing.T) {
+	_, _, err := TOSession.Ping()
 	if err != nil {
-		return nil, reqInf, err
+		t.Errorf("could not Ping authenticated: %v\n", err)
 	}
-	defer resp.Body.Close()
 
-	data := struct {
-		Response []tc.Steering `json:"response"`
-	}{}
-	err = json.NewDecoder(resp.Body).Decode(&data)
-	return data.Response, reqInf, err
+	_, _, err = NoAuthTOSession.Ping()
+	if err != nil {
+		t.Errorf("could not Ping unauthenticated: %v\n", err)
+	}
 }

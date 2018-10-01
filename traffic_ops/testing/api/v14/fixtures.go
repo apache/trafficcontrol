@@ -1,4 +1,5 @@
 /*
+   Copyright 2015 Comcast Cable Communications Management, LLC
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -13,26 +14,27 @@
    limitations under the License.
 */
 
-package client
+package v14
 
 import (
 	"encoding/json"
-	"net/http"
+	"io/ioutil"
+	"os"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
-func (to *Session) Steering() ([]tc.Steering, ReqInf, error) {
-	resp, remoteAddr, err := to.request(http.MethodGet, apiBase+`/steering`, nil)
-	reqInf := ReqInf{CacheHitStatus: CacheHitStatusMiss, RemoteAddr: remoteAddr}
-	if err != nil {
-		return nil, reqInf, err
-	}
-	defer resp.Body.Close()
+// LoadFixtures ...
+func LoadFixtures(fixturesPath string) {
 
-	data := struct {
-		Response []tc.Steering `json:"response"`
-	}{}
-	err = json.NewDecoder(resp.Body).Decode(&data)
-	return data.Response, reqInf, err
+	f, err := ioutil.ReadFile(fixturesPath)
+	if err != nil {
+		log.Errorf("Cannot unmarshal fixtures json %s", err)
+		os.Exit(1)
+	}
+	err = json.Unmarshal(f, &testData)
+	if err != nil {
+		log.Errorf("Cannot unmarshal fixtures json %v", err)
+		os.Exit(1)
+	}
 }
