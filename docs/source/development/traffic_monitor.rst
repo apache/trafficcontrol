@@ -88,15 +88,11 @@ All microthreads in the pipeline are started by ``manager/manager.go:Start()``.
 Stat Pipeline
 -------------
 
-::
+.. figure:: traffic_monitor/Stat_Pipeline.*
+	:align: center
+	:width: 70%
 
-	---------     ---------     ---------     ---------
-	| poller |-->| fetcher |-->| handler |-->| manager |
-	 -------- |   ---------     ---------  |  ---------
-						|   ---------     ---------  |
-						|->| fetcher |-->| handler |-|
-						|   ---------     ---------  |
-						...                          ...
+	The Stats Pipeline
 
 * **poller** - ``common/poller/poller.go:HttpPoller.Poll()``. Listens for config changes (from the ops config manager), and starts its own internal microthreads, one for each cache to poll. These internal microthreads call the Fetcher at each cache's poll interval.
 
@@ -111,15 +107,11 @@ Stat Pipeline
 Health Pipeline
 ---------------
 
-::
+.. figure:: traffic_monitor/Health_Pipeline.*
+	:align: center
+	:width: 70%
 
-	---------     ---------     ---------     ---------
-	| poller |-->| fetcher |-->| handler |-->| manager |
-	 -------- |   ---------     ---------  |  ---------
-						|   ---------     ---------  |
-						|->| fetcher |-->| handler |-|
-						|   ---------     ---------  |
-						...                          ...
+	The Health Pipeline
 
 * **poller** - ``common/poller/poller.go:HttpPoller.Poll()``. Same poller type as the Stat Poller pipeline, with a different handler object.
 
@@ -133,15 +125,11 @@ Health Pipeline
 Peer Pipeline
 -------------
 
-::
+.. figure:: traffic_monitor/Peer_Pipeline.*
+	:align: center
+	:width: 70%
 
-	---------     ---------     ---------     ---------
-	| poller |-->| fetcher |-->| handler |-->| manager |
-	 -------- |   ---------     ---------  |  ---------
-						|   ---------     ---------  |
-						|->| fetcher |-->| handler |-|
-						|   ---------     ---------  |
-						...                          ...
+	The Peers Pipeline
 
 * **poller** - ``common/poller/poller.go:HttpPoller.Poll()``. Same poller type as the Stat and Health Poller pipelines, with a different handler object. Its config changes come from the Monitor Config Manager, and it starts an internal microthread for each peer to poll.
 
