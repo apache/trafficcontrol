@@ -13,13 +13,13 @@
 .. limitations under the License.
 ..
 
--**********
+***********
 Traffic Ops
 ***********
 
 Introduction
 ============
-Traffic Ops uses a Postgres database to store the configuration information, and the `Mojolicious framework <http://mojolicio.us/>`_ to generate the user interface and REST APIs.
+Traffic Ops uses a PostgreSQL database to store the configuration information, and the `Mojolicious framework <http://mojolicio.us/>`_ to generate the user interface and REST APIs.
 
 Software Requirements
 =====================
@@ -305,109 +305,33 @@ Extensions
 ==========
 Traffic Ops Extensions are a way to enhance the basic functionality of Traffic Ops in a custom manner. There are three types of extensions:
 
-1. Check Extensions
-
-	These allow you to add custom checks to the "Health->Server Checks" view.
-
-2. Configuration Extensions
-
-	These allow you to add custom configuration file generators.
-
-3. Data source Extensions
-
-	These allow you to add statistic sources for the graph views and APIs.
-
-Extensions are managed using the $TO_HOME/bin/extensions command line script. For more information see :ref:`admin-to-ext-script`.
-
 Check Extensions
-----------------
-
-In other words, check extensions are scripts that, after registering with Traffic Ops, have a column reserved in the "Health->Server Checks" view and that usually run periodically out of cron.
-
-.. |checkmark| image:: ../admin/traffic_ops/images/good.png
-
-.. |X| image:: ../admin/traffic_ops/images/bad.png
-
-
-It is the responsibility of the check extension script to iterate over the servers it wants to check and post the results.
-
-An example script might proceed by logging into the Traffic Ops server using the HTTPS base_url provided on the command line. The script is hardcoded with an auth token that is also provisioned in the Traffic Ops User database. This token allows the script to obtain a cookie used in later communications with the Traffic Ops API. The script then obtains a list of all caches to be polled by accessing Traffic Ops' ``/api/1.1/servers.json`` REST target. This list is walked, running a command to gather the stats from that cache. For some extensions, an HTTP GET request might be made to the ATS astats plugin, while for others the cache might be pinged, or a command run over SSH. The results are then compiled into a numeric or boolean result and the script POSTs tha result back to the Traffic Ops ``/api/1.1/servercheck/`` target.
-
-A check extension can have a column of |checkmark|'s and |X|'s (CHECK_EXTENSION_BOOL) or a column that shows a number (CHECK_EXTENSION_NUM).A simple example of a check extension of type CHECK_EXTENSION_NUM that will show 99.33 for all servers of type EDGE is shown below: ::
-
-
-	Script here.
-
-Check Extension scripts are located in the $TO_HOME/bin/checks directory.
-
-Currently, the following Check Extensions are available and installed by default:
-
--*Cache Disk Usage Check - CDU**
-	This check shows how much of the available total cache disk is in use. A "warm" cache should show 100.00.
-
--*Cache Hit Ratio Check - CHR**
-	The cache hit ratio for the cache in the last 15 minutes (the interval is determined by the cron entry).
-
--*DiffServe CodePoint Check - DSCP**
-	Checks if the returning traffic from the cache has the correct DSCP value as assigned in the delivery service. (Some routers will overwrite DSCP)
-
--*Maximum Transmission Check - MTU**
-	Checks if the Traffic Ops host (if that is the one running the check) can send and receive 8192 size packets to the ``ip_address`` of the server in the server table.
-
--*Operational Readiness Check - ORT**
-	See :ref:`traffic-ops-ort` for more information on the ort script. The ORT column shows how many changes the traffic_ops_ort.pl script would apply if it was run. The number in this column should be 0.
-
--*Ping Check - 10G, ILO, 10G6, FQDN**
-	The bin/checks/ToPingCheck.pl is to check basic IP connectivity, and in the default setup it checks IP connectivity to the following:
-
-	10G
-		Is the ``ip_address`` (the main IPv4 address) from the server table pingable?
-	ILO
-		Is the ``ilo_ip_address`` (the lights-out-mangement IPv4 address) from the server table pingable?
-	10G6
-		Is the ``ip6_address`` (the main IPv6 address) from the server table pingable?
-	FQDN
-		Is the Fully Qualified Domain name (the concatenation of ``host_name`` and ``.`` and ``domain_name`` from the server table) pingable?
-
--*Traffic Router Check - RTR**
-	Checks the state of each cache as perceived by all Traffic Monitors (via Traffic Router). This extension asks each Traffic Router for the state of the cache. A check failure is indicated if one or more monitors report an error for a cache. A cache is only marked as good if all reports are positive. (This is a pessimistic approach, opposite of how TM marks a cache as up, "the optimistic approach")
-
-
-Configuration Extensions
-------------------------
-NOTE: Config Extensions are Beta at this time.
-
+	These allow you to add custom checks to the "Monitor"->"Cache Checks" view.
 
 Data Source Extensions
-----------------------
-Traffic Ops has the ability to load custom code at runtime that allow any CDN user to build custom APIs for any requirement that Traffic Ops does not fulfill.  There are two classes of Data Source Extensions, private and public.  Private extensions are Traffic Ops extensions that are not publicly available, and should be kept in the /opt/traffic_ops_extensions/private/lib. Public extensions are Traffic Ops extensions that are Open Source in nature and free to enhance or contribute back to the Traffic Ops Open Source project and should be kept in /opt/traffic_ops/app/lib/Extensions.
+	These allow you to add statistic sources for the graph views and APIs.
+
+Extensions are managed using the ``$TO_HOME/bin/extensions`` command line script
+
+.. seealso:: For more information see :ref:`admin-to-ext-script`.
 
 
 Extensions at Runtime
 ---------------------
-The search path for extensions depends on the configuration of the PERL5LIB, which is preconfigured in the Traffic Ops start scripts.  The following directory structure is where Traffic Ops will look for Extensions in this order.
+The search path for Data Source Extensions depends on the configuration of the ``PERL5LIB`` environment variable, which is pre-configured in the Traffic Ops start scripts. All Check Extensions must be located in ``$TO_HOME/bin/checks``
 
-Extension Directories
----------------------
-PERL5LIB Example Configuration: ::
+	.. code-block:: bash
+		:caption: Example ``PERL5LIB`` Configuration
 
-	 export PERL5LIB=/opt/traffic_ops_extensions/private/lib/Extensions:/opt/traffic_ops/app/lib/Extensions/TrafficStats
+		export PERL5LIB=/opt/traffic_ops_extensions/private/lib/Extensions:/opt/traffic_ops/app/lib/Extensions/TrafficStats
 
-Perl Package Naming Convention
-------------------------------
-To prevent Extension namespace collisions within Traffic Ops all Extensions should follow the package naming convention below:
+To prevent Data Source Extension namespace collisions within Traffic Ops all Data Source Extensions should follow the package naming convention '``Extensions::<ExtensionName>``'
 
-Extensions::<ExtensionName>
-
-Data Source Extension Perl package name example
-Extensions::TrafficStats
-Extensions::YourCustomExtension
-
-TrafficOpsRoutes.pm
--------------------
-Traffic Ops accesses each extension through the addition of a URL route as a custom hook.  These routes will be defined in a file called TrafficOpsRoutes.pm that should live in the top directory of your Extension.  The routes that are defined should follow the Mojolicious route conventions.
+``TrafficOpsRoutes.pm``
+-----------------------
+Traffic Ops accesses each extension through the addition of a URL route as a custom hook. These routes will be defined in a file called ``TrafficOpsRoutes.pm`` that should be present in the top directory of your Extension. The routes that are defined should follow the `Mojolicious route conventions <https://mojolicious.org/perldoc/Mojolicious/Guides/Routing#Routes>`_.
 
 
 Development Configuration
 --------------------------
-To incorporate any custom Extensions during development set your PERL5LIB with any number of directories with the understanding that the PERL5LIB search order will come into play, so keep in mind that top-down is how your code will be located.  Once Perl locates your custom route or Perl package/class it 'pins' on that class or Mojo Route and doesn't look any further, which allows for the developer to *override* Traffic Ops functionality.
+To incorporate any custom Data Source Extensions during development set your ``PERL5LIB`` environment variable with any number of colon-separated directories with the understanding that the ``PERL5LIB`` search order is from left to right through this list. Once Perl locates your custom route or Perl package/class it 'pins' on that class or Mojolicious Route and doesn't look any further, which allows for the developer to override Traffic Ops functionality.
