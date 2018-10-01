@@ -33,7 +33,7 @@ To work on Traffic Ops you need a CentOS 7+ environment that has the following i
 - `Go 1.8.3 <http://golang.org/doc/install>`_
 - Perl 5.10.1
 - Git
-- Postgres 9.6.6
+- PostgreSQL 9.6.6
 - `Goose <https://bitbucket.org/liamstask/goose/>`_
 
 Traffic Ops Project Tree Overview
