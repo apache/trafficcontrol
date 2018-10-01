@@ -54,7 +54,7 @@ TR_SOURCE := $(wildcard ../../traffic_router/**/*)
 .PHONY: clean very-clean all nearly-all
 
 # Default target; builds all pre-requisite rpms from source trees
-all: traffic_monitor/traffic_monitor.rpm traffic_portal/traffic_portal.rpm traffic_ops/traffic_ops.rpm mid/traffic_ops_ort.rpm edge/traffic_ops_ort.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm
+all: traffic_monitor/traffic_monitor.rpm traffic_portal/traffic_portal.rpm traffic_ops/traffic_ops.rpm traffic_router/traffic_router.rpm traffic_router/tomcat.rpm
 
 # Actual output rpm recipies
 traffic_monitor/traffic_monitor.rpm: ../../dist/traffic_monitor-$(SPECIAL_SAUCE)
