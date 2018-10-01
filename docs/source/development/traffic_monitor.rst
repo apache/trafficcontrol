@@ -143,14 +143,11 @@ Peer Pipeline
 Monitor Config Pipeline
 -----------------------
 
-::
+.. figure:: traffic_monitor/Monitor_Pipeline.*
+	:align: center
+	:width: 70%
 
-	---------     ---------
-	| poller |-->| manager |--> stat subscriber (Stat pipeline Poller)
-	 --------     --------- |
-													|-> health subscriber (Health pipeline Poller)
-													|
-													--> peer subscriber (Peer pipeline Poller)
+	The Monitor Config Pipeline
 
 * **poller** - ``common/poller/poller.go:MonitorConfigPoller.Poll()``. The Monitor Config poller, on its interval, polls Traffic Ops for the Monitor configuration, and writes the polled value to its result channel, which is read by the Manager.
 
@@ -159,12 +156,11 @@ Monitor Config Pipeline
 
 Ops Config Pipeline
 -------------------
-::
+.. figure:: traffic_monitor/Ops-Config_Pipeline.*
+	:align: center
+	:width: 70%
 
-	---------     ---------     ---------
-	| poller |-->| handler |-->| manager |--> ops config change subscriber (Monitor Config Poller)
-	 --------     ---------     --------- |
-																				--> Traffic ops client change subscriber (Monitor Config Poller)
+	The Ops Config Pipeline
 
 * **poller** - ``common/poller/poller.go:FilePoller.Poll()``. Polls for changes to the Traffic Ops config file ``traffic_ops.cfg``, and writes the changed config to its result channel, which is read by the Handler.
 
