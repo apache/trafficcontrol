@@ -27,8 +27,8 @@
 #
 import os
 import sys
-ortPath = os.path.dirname(__file__)
-ortPath = os.path.join(ortPath, '..', '..', 'infrastructure', 'cdn-in-a-box', 'edge')
+here = os.path.dirname(__file__)
+ortPath = os.path.join(here, '..', '..', 'infrastructure', 'cdn-in-a-box', 'ort')
 ortPath = os.path.abspath(ortPath)
 sys.path.insert(0, ortPath)
 
@@ -72,10 +72,12 @@ project = 'Traffic Control'
 copyright = '2018, Apache Traffic Control'
 author = 'Apache Traffic Control'
 
-# The short X.Y version
-version = ''
+with open(os.path.abspath(os.path.join(here, '..', '..', 'VERSION'))) as fd:
+	# The short X.Y version
+	version = fd.read().strip()
+
 # The full version, including alpha/beta/rc tags
-release = '3'
+release = version
 
 
 # -- General configuration ---------------------------------------------------
