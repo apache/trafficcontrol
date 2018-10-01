@@ -87,71 +87,70 @@ All microthreads in the pipeline are started by ``manager/manager.go:Start()``.
 
 Stat Pipeline
 -------------
-
 .. figure:: traffic_monitor/Stat_Pipeline.*
 	:align: center
 	:width: 70%
 
 	The Stats Pipeline
 
-* **poller** - ``common/poller/poller.go:HttpPoller.Poll()``. Listens for config changes (from the ops config manager), and starts its own internal microthreads, one for each cache to poll. These internal microthreads call the Fetcher at each cache's poll interval.
-
-* **fetcher** - ``common/fetcher/fetcher.go:HttpFetcher.Fetch()``. Fetches the given URL, and passes the returned data to the Handler, along with any errors.
-
-
-* **handler** - ``traffic_monitor/cache/cache.go:Handler.Handle()``. Takes the given result and does all data computation possible with the single result. Currently, this computation primarily involves processing the denormalized ATS data into Go structs, and processing System data into OutBytes, Kbps, etc. Precomputed data is then passed to its result channel, which is picked up by the Manager.
-
-* **manager** - ``traffic_monitor/manager/stat.go:StartStatHistoryManager()``. Takes preprocessed results, and aggregates them. Aggregated results are then placed in shared data structures. The major data aggregated are delivery service statistics, and cache availability data. See :ref:`Aggregated Stat Data <agg-stat-data>` and :ref:`Aggregated Availability Data <agg-avail-data>`.
+poller
+	``common/poller/poller.go:HttpPoller.Poll()``. Listens for configuration changes (from the Ops Configuration Manager), and starts its own, internal microthreads - one for each cache to poll. These internal microthreads call the Fetcher at each cache's poll interval.
+fetcher
+	``common/fetcher/fetcher.go:HttpFetcher.Fetch()``. Fetches the given URL, and passes the returned data to the Handler, along with any errors.
+handler
+	``traffic_monitor/cache/cache.go:Handler.Handle()``. Takes the given result and does all data computation possible with the single result. Currently, this computation primarily involves processing the de-normalized Apache Trafficserver (ATS) data into Go ``struct``s, and processing System data into 'OutBytes', 'Kbps', etc. Precomputed data is then passed to its result channel, which is picked up by the Manager.
+manager
+	``traffic_monitor/manager/stat.go:StartStatHistoryManager()``. Takes preprocessed results, and aggregates them. Aggregated results are then placed in shared data structures. The major data aggregated are delivery service statistics, and cache availability data. See :ref:`Aggregated Stat Data <agg-stat-data>` and :ref:`Aggregated Availability Data <agg-avail-data>`.
 
 
 Health Pipeline
 ---------------
-
 .. figure:: traffic_monitor/Health_Pipeline.*
 	:align: center
 	:width: 70%
 
 	The Health Pipeline
 
-* **poller** - ``common/poller/poller.go:HttpPoller.Poll()``. Same poller type as the Stat Poller pipeline, with a different handler object.
-
-* **fetcher** - ``common/fetcher/fetcher.go:HttpFetcher.Fetch()``. Same fetcher type as the Stat Poller pipeline, with a different handler object.
-
-* **handler** - ``traffic_monitor/cache/cache.go:Handler.Handle()``. Same handler type as the Stat Poller pipeline, but constructed with a flag to not precompute. The health endpoint is of the same form as the stat endpoint, but doesn't return all stat data. So, it doesn't precompute like the Stat Handler, but only processes the system data, and passes the processed result to its result channel, which is picked up by the Manager.
-
-* **manager** - ``traffic_monitor/manager/health.go:StartHealthResultManager()``. Takes preprocessed results, and aggregates them. For the Health pipeline, only health availability data is aggregated. Aggregated results are then placed in shared data structures (lastHealthDurationsThreadsafe, lastHealthEndTimes, etc). See :ref:`Aggregated Availability Data <agg-avail-data>`.
+poller
+	``common/poller/poller.go:HttpPoller.Poll()``. Same poller type as the Stat Poller pipeline, with a different handler object.
+fetcher
+	``common/fetcher/fetcher.go:HttpFetcher.Fetch()``. Same fetcher type as the Stat Poller pipeline, with a different handler object.
+handler
+	``traffic_monitor/cache/cache.go:Handler.Handle()``. Same handler type as the Stat Poller pipeline, but constructed with a flag to not pre-compute anything. The health endpoint is of the same form as the stat endpoint, but doesn't return all stat data. So, it doesn't pre-compute like the Stat Handler, but only processes the system data, and passes the processed result to its result channel, which is picked up by the Manager.
+manager
+	``traffic_monitor/manager/health.go:StartHealthResultManager()``. Takes preprocessed results, and aggregates them. For the Health pipeline, only health availability data is aggregated. Aggregated results are then placed in shared data structures (lastHealthDurationsThreadsafe, lastHealthEndTimes, etc). See :ref:`Aggregated Availability Data <agg-avail-data>`.
 
 
 Peer Pipeline
 -------------
-
 .. figure:: traffic_monitor/Peer_Pipeline.*
 	:align: center
 	:width: 70%
 
 	The Peers Pipeline
 
-* **poller** - ``common/poller/poller.go:HttpPoller.Poll()``. Same poller type as the Stat and Health Poller pipelines, with a different handler object. Its config changes come from the Monitor Config Manager, and it starts an internal microthread for each peer to poll.
-
-* **fetcher** - ``common/fetcher/fetcher.go:HttpFetcher.Fetch()``. Same fetcher type as the Stat and Health Poller pipeline, with a different handler object.
-
-* **handler** - ``traffic_monitor/cache/peer.go:Handler.Handle()``. Decodes the JSON result into an object, and without further processing passes to its result channel, which is picked up by the Manager.
-
-* **manager** - ``traffic_monitor/manager/peer.go:StartPeerManager()``. Takes JSON peer Traffic Monitor results, and aggregates them. The availability of the Peer Traffic Monitor itself, as well as all cache availability from the given peer result, is stored in the shared ``peerStates`` object. Results are then aggregated via a call to the ``combineState()`` lambda, which signals the State Combiner microthread (which stores the combined availability in the shared object ``combinedStates``; See :ref:`State Combiner <state-combiner>`).
+poller
+	``common/poller/poller.go:HttpPoller.Poll()``. Same poller type as the Stat and Health Poller pipelines, with a different handler object. Its configuration changes come from the Monitor Configuration Manager, and it starts an internal microthread for each peer to poll.
+fetcher
+	``common/fetcher/fetcher.go:HttpFetcher.Fetch()``. Same fetcher type as the Stat and Health Poller pipeline, with a different handler object.
+handler
+	``traffic_monitor/cache/peer.go:Handler.Handle()``. Decodes the JSON result into an object, and without further processing passes to its result channel, which is picked up by the Manager.
+manager
+	``traffic_monitor/manager/peer.go:StartPeerManager()``. Takes JSON peer Traffic Monitor results, and aggregates them. The availability of the Peer Traffic Monitor itself, as well as all cache availability from the given peer result, is stored in the shared ``peerStates`` object. Results are then aggregated via a call to the ``combineState()`` lambda, which signals the State Combiner microthread (which stores the combined availability in the shared object ``combinedStates``; See :ref:`State Combiner <state-combiner>`).
 
 
 Monitor Config Pipeline
 -----------------------
-
 .. figure:: traffic_monitor/Monitor_Pipeline.*
 	:align: center
 	:width: 70%
 
-	The Monitor Config Pipeline
+	The Monitor Configuration Pipeline
 
-* **poller** - ``common/poller/poller.go:MonitorConfigPoller.Poll()``. The Monitor Config poller, on its interval, polls Traffic Ops for the Monitor configuration, and writes the polled value to its result channel, which is read by the Manager.
-
-* **manager** - ``traffic_monitor/manager/monitorconfig.go:StartMonitorConfigManager()``. Listens for results from the poller, and processes them. Cache changes are written to channels read by the Health, Stat, and Peer pollers. In the Shared Data objects, this also sets the list of new delivery services and removes ones which no longer exist, and sets the list of peer Traffic Monitors.
+poller
+	``common/poller/poller.go:MonitorConfigPoller.Poll()``. The Monitor Configuration poller, on its interval, polls Traffic Ops for the Monitor configuration, and writes the polled value to its result channel, which is read by the Manager.
+manager
+	``traffic_monitor/manager/monitorconfig.go:StartMonitorConfigManager()``. Listens for results from the poller, and processes them. Cache changes are written to channels read by the Health, Stat, and Peer pollers. In the Shared Data objects, this also sets the list of new Delivery Services and removes ones which no longer exist, and sets the list of peer Traffic Monitors.
 
 
 Ops Config Pipeline
@@ -160,13 +159,14 @@ Ops Config Pipeline
 	:align: center
 	:width: 70%
 
-	The Ops Config Pipeline
+	The Ops Configuration Pipeline
 
-* **poller** - ``common/poller/poller.go:FilePoller.Poll()``. Polls for changes to the Traffic Ops config file ``traffic_ops.cfg``, and writes the changed config to its result channel, which is read by the Handler.
-
-* **handler** - ``common/handler/handler.go:OpsConfigFileHandler.Listen()``. Takes the given raw config, unmarshalls the JSON into an object, and writes the object to its channel, which is read by the Manager, along with any error.
-
-* **manager** - ``traffic_monitor/manager/monitorconfig.go:StartMonitorConfigManager()``. Listens for new configs, and processes them. When a new config is received, a new HTTP dispatch map is created via ``traffic_monitor/datareq/datareq.go:MakeDispatchMap()``, and the HTTP server is restarted with the new dispatch map. The Traffic Ops client is also recreated, and stored in its shared data object. The Ops Config change subscribers and Traffic Ops Client change subscribers (the Monitor Config poller) are also passed the new ops config and new Traffic Ops client.
+poller
+	``common/poller/poller.go:FilePoller.Poll()``. Polls for changes to the Traffic Ops configuration file ``traffic_ops.cfg``, and writes the changed configuration to its result channel, which is read by the Handler.
+handler
+	``common/handler/handler.go:OpsConfigFileHandler.Listen()``. Takes the given raw configuration, un-marshals the JSON into an object, and writes the object to its channel, which is read by the Manager, along with any error.
+manager
+	``traffic_monitor/manager/monitorconfig.go:StartMonitorConfigManager()``. Listens for new configurations, and processes them. When a new configuration is received, a new HTTP dispatch map is created via ``traffic_monitor/datareq/datareq.go:MakeDispatchMap()``, and the HTTP server is restarted with the new dispatch map. The Traffic Ops client is also recreated, and stored in its shared data object. The Ops Configuration change subscribers and Traffic Ops Client change subscribers (the Monitor Configuration poller) are also passed the new ops configuration and new Traffic Ops client.
 
 
 Events
@@ -224,10 +224,10 @@ Installing The Developer Environment
 ====================================
 To install the Traffic Monitor Developer environment:
 
-1. Install `go` version 1.7 or greater, from https://golang.org/doc/install and https://golang.org/doc/code.html
-2. Clone the trafficcontrol repository using Git, into ``$GOPATH/src/github.com/apache/trafficcontrol``
-3. Change directories into ``$GOPATH/src/github.com/apache/trafficcontrol/traffic_monitor_golang/traffic_monitor``
-4. Run ``./build.sh``
+#. Install `go` version 1.7 or greater, from https://golang.org/doc/install and https://golang.org/doc/code.html
+#. Clone the trafficcontrol repository using Git, into ``$GOPATH/src/github.com/apache/trafficcontrol``
+#. Change directories into ``$GOPATH/src/github.com/apache/trafficcontrol/traffic_monitor_golang/traffic_monitor``
+#. Run ``./build.sh``
 
 Test Cases
 ==========
