@@ -35,6 +35,7 @@ RUN	yum -y install \
 		python-pip \
 		make && \
 	yum -y clean all && \
+	pip install --upgrade setuptools && \
 	pip install -r /docs.requirements.txt
 ###
 
