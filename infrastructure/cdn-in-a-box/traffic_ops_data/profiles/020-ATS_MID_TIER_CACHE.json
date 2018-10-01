@@ -1116,42 +1116,6 @@
 			"value": "STRING cache.config"
 		},
 		{
-			"configFile": "logs_xml.config",
-			"name": "LogObject.RollingEnabled",
-			"secure": false,
-			"value": "3"
-		},
-		{
-			"configFile": "logs_xml.config",
-			"name": "LogObject.RollingIntervalSec",
-			"secure": false,
-			"value": "86400"
-		},
-		{
-			"configFile": "logs_xml.config",
-			"name": "LogObject.RollingOffsetHr",
-			"secure": false,
-			"value": "11"
-		},
-		{
-			"configFile": "logs_xml.config",
-			"name": "LogObject.RollingSizeMb",
-			"secure": false,
-			"value": "4"
-		},
-		{
-			"configFile": "logs_xml.config",
-			"name": "location",
-			"secure": false,
-			"value": "/etc/trafficserver"
-		},
-		{
-			"configFile": "records.config",
-			"name": "CONFIG proxy.config.log.xml_configFile",
-			"secure": false,
-			"value": "STRING logs_xml.config"
-		},
-		{
 			"configFile": "rascal.properties",
 			"name": "health.threshold.queryTime",
 			"secure": false,
@@ -1324,30 +1288,6 @@
 			"name": "CONFIG proxy.config.mlock_enabled",
 			"secure": false,
 			"value": "INT 2"
-		},
-		{
-			"configFile": "logs_xml.config",
-			"name": "LogFormat.Format",
-			"secure": false,
-			"value": "%<cqtq> chi=%<chi> phn=%<phn> php=%<php> shn=%<shn> url=%<cquuc> cqhm=%<cqhm> cqhv=%<cqhv> pssc=%<pssc> ttms=%<ttms> b=%<pscl> sssc=%<sssc> sscl=%<sscl> cfsc=%<cfsc> pfsc=%<pfsc> crc=%<crc> phr=%<phr> pqsn=%<pqsn> uas=\"%<{User-Agent}cqh>\" "
-		},
-		{
-			"configFile": "logs_xml.config",
-			"name": "LogFormat.Name",
-			"secure": false,
-			"value": "custom_ats_2"
-		},
-		{
-			"configFile": "logs_xml.config",
-			"name": "LogObject.Format",
-			"secure": false,
-			"value": "custom_ats_2"
-		},
-		{
-			"configFile": "logs_xml.config",
-			"name": "LogObject.Filename",
-			"secure": false,
-			"value": "custom_ats_2"
 		},
 		{
 			"configFile": "plugin.config",
