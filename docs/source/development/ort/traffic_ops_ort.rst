@@ -13,10 +13,22 @@
 .. limitations under the License.
 ..
 
-traffic\_ops\_ort module
-========================
+traffic\_ops\_ort package
+=========================
 
-.. autodata:: traffic_ops_ort
+Submodules
+----------
+
+.. toctree::
+
+   traffic_ops_ort.configuration
+   traffic_ops_ort.main_routines
+   traffic_ops_ort.packaging
+   traffic_ops_ort.to_api
+   traffic_ops_ort.utils
+
+Module contents
+---------------
 
 .. automodule:: traffic_ops_ort
     :members:

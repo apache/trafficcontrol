@@ -23,7 +23,7 @@ Use this guide to start developing applications that consume the Traffic Control
 
   building
   traffic_ops
-  ort/modules
+  ort/traffic_ops_ort
   traffic_portal
   traffic_router
   traffic_monitor
