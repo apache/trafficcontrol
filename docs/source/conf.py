@@ -156,7 +156,7 @@ html_static_path = ['_static']
 html_favicon="favicon.ico"
 
 # Sets the sidebar logo for HTML pages
-html_logo="../../misc/logos/Traffic-Control-Logo-FINAL-White-Text.png"
+html_logo="../../misc/logos/ATC-SVG-FULL-WHITE.svg"
 
 
 # -- Options for HTMLHelp output ---------------------------------------------
@@ -193,7 +193,7 @@ latex_documents = [
 	 'Apache Traffic Control', 'manual'),
 ]
 
-latex_logo = "../../Traffic-Control-Logo-FINAL-White-Text.png"
+latex_logo = "../../misc/logos/ATC-PNG-FULL-BLACK-LARGE.png"
 
 
 # -- Options for manual page output ------------------------------------------
