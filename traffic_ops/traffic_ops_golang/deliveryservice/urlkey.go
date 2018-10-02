@@ -21,7 +21,6 @@ package deliveryservice
 
 import (
 	"crypto/rand"
-	"database/sql"
 	"errors"
 	"fmt"
 	"math/big"
@@ -30,6 +29,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/riaksvc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 )
@@ -47,7 +47,7 @@ func GetURLKeysByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ds, ok, err := GetDSNameFromID(inf.Tx.Tx, inf.IntParams["id"])
+	ds, ok, err := dbhelpers.GetDSNameFromID(inf.Tx.Tx, inf.IntParams["id"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service name from ID: "+err.Error()))
 		return
@@ -229,19 +229,6 @@ func CopyURLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully copied and stored keys")
-}
-
-// GetDSNameFromID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
-// TODO move somewhere generic
-func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
-	name := tc.DeliveryServiceName("")
-	if err := tx.QueryRow(`SELECT xml_id FROM deliveryservice where id = $1`, id).Scan(&name); err != nil {
-		if err == sql.ErrNoRows {
-			return tc.DeliveryServiceName(""), false, nil
-		}
-		return tc.DeliveryServiceName(""), false, fmt.Errorf("querying xml_id for delivery service ID '%v': %v", id, err)
-	}
-	return name, true, nil
 }
 
 func GenerateURLKeys(w http.ResponseWriter, r *http.Request) {
