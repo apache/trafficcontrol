@@ -168,16 +168,13 @@ handler
 manager
 	``traffic_monitor/manager/monitorconfig.go:StartMonitorConfigManager()``. Listens for new configurations, and processes them. When a new configuration is received, a new HTTP dispatch map is created via ``traffic_monitor/datareq/datareq.go:MakeDispatchMap()``, and the HTTP server is restarted with the new dispatch map. The Traffic Ops client is also recreated, and stored in its shared data object. The Ops Configuration change subscribers and Traffic Ops Client change subscribers (the Monitor Configuration poller) are also passed the new ops configuration and new Traffic Ops client.
 
-
 Events
 ------
 The ``events`` shared data object is passed to each pipeline microthread which needs to signal events. Most of them do. Events are then logged, and visible in the UI as well as an HTTP JSON endpoint. Most events are caches becoming available or unavailable, but include other things such as peer availability changes.
 
 State Combiner
 --------------
-The State Combiner is a microthread started in ``traffic_monitor/manager/manager.go:Start()`` via ``traffic_monitor/manager/statecombiner.go:StartStateCombiner()``, which listens for signals to combine states. It should be signaled by any pipeline which updates the local or peer availability shared data objects, ``localStates`` and ``peerStates``. It holds the threadsafe shared data objects for local states and peer states, so no data is passed or returned, only a signal.
-
-When a signal is received, it combines the local and peer states optimistically. That is, if a cache is marked available locally or by any peer, that cache is marked available in the combined states. There exists a variable to combine pessimistically, which may be set at compile time (it's unusual for a CDN to operate well with pessimistic cache availability). Combined data is stored in the threadsafe shared data object ``combinedStates``.
+The State Combiner is a microthread started in ``traffic_monitor/manager/manager.go:Start()`` via ``traffic_monitor/manager/statecombiner.go:StartStateCombiner()``, which listens for signals to combine states. It should be signaled by any pipeline which updates the local or peer availability shared data objects, ``localStates`` and ``peerStates``. It holds the thread-safe shared data objects for local states and peer states, so no data is passed or returned, only a signal. When a signal is received, it combines the local and peer states optimistically. That is, if a cache is marked available locally or by any peer, that cache is marked available in the combined states. There exists a variable to combine pessimistically, which may be set at compile time (it's unusual for a CDN to operate well with pessimistic cache availability). Combined data is stored in the thread-safe shared data object ``combinedStates``.
 
 Aggregated Stat Data
 --------------------
@@ -189,19 +186,11 @@ Both the Stat and Health pipelines aggregate availability data received from cac
 
 HTTP Data Requests
 ------------------
-Data is provided to HTTP requests via the threadsafe shared data objects (see `Shared Data`_). These objects are closed in lambdas created via ``traffic_monitor/datareq/datareq.go:MakeDispatchMap()``. This is called by the Ops Config Manager when it recreates the HTTP server.
-
-Each HTTP endpoint is mapped to a function which closes around the shared data objects it needs, and takes the request data it needs (such as query parameters). Each endpoint function resides in its own file in ``traffic_monitor/datareq/``. Because each Go HTTP routing function must be a ``http.HandlerFunc``, wrapper functions take the endpoint functions and return ``http.HandlerFunc`` functions which call them, and which are stored in the dispatch map, to be registered with the HTTP server.
+Data is provided to HTTP requests via the thread-safe shared data objects (see `Shared Data`_). These objects are closed in lambdas created via ``traffic_monitor/datareq/datareq.go:MakeDispatchMap()``. This is called by the Ops Configuration Manager when it recreates the HTTP server. Each HTTP endpoint is mapped to a function which closes around the shared data objects it needs, and takes the request data it needs (such as query parameters). Each endpoint function resides in its own file in ``traffic_monitor/datareq/``. Because each Go HTTP routing function must be a ``http.HandlerFunc``, wrapper functions take the endpoint functions and return ``http.HandlerFunc`` functions which call them, and which are stored in the dispatch map, to be registered with the HTTP server.
 
 Shared Data
 -----------
-Processed and aggregated data must be shared between the end of the stat and health processing pipelines, and HTTP requests. The CSP paradigm of idiomatic Go does not work efficiently with storing and sharing state. While not idiomatic Go, shared mutexed data structures are faster and simpler than CSP manager microthreads for each data object.
-
-Traffic Monitor has many threadsafe shared data types and objects. All shared data objects can be seen in ``manager/manager.go:Start()``, where they are created and passed to the various pipeline stage microthreads that need them. Their respective types all include the word ``Threadsafe``, and can be found in ``traffic_monitor/threadsafe/`` as well as, for dependency reasons, various appropriate directories.
-
-Currently, all Threadsafe shared data types use mutexes. In the future, these could be changed to lock-free or wait-free structures, if the performance needs outweighed the readability and correctness costs. They could also easily be changed to internally be manager microthreads and channels, if being idiomatic were deemed more important than readability or performance.
-
-
+Processed and aggregated data must be shared between the end of the stat and health processing pipelines, and HTTP requests. The CSP paradigm of idiomatic Go does not work efficiently with storing and sharing state. While not idiomatic Go, shared mutexed data structures are faster and simpler than CSP manager microthreads for each data object. Traffic Monitor has many thread-safe shared data types and objects. All shared data objects can be seen in ``manager/manager.go:Start()``, where they are created and passed to the various pipeline stage microthreads that need them. Their respective types all include the word ``Threadsafe``, and can be found in ``traffic_monitor/threadsafe/`` as well as, for dependency reasons, various appropriate directories. Currently, all thread-safe shared data types use mutexes. In the future, these could be changed to lock-free or wait-free structures, if the performance needs outweighed the readability and correctness costs. They could also easily be changed to internally be manager microthreads and channels, if being idiomatic were deemed more important than readability or performance.
 
 Formatting Conventions
 ======================

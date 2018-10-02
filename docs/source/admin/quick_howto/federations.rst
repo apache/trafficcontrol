@@ -19,10 +19,9 @@
 Configure Federations
 *********************
 
-#. Create a user with a federations role ('User Admin' -> 'Users' -> '+' button).  This user will have the ability to perform the following actions:
+#. Create a user with a federations role ('User Admin' -> 'Users' -> '+' button).  This user will need the ability to:
 
-	- Edit the federation
-	- Delete the federation
+	- Create/edit/delete federations
 	- Add IPV4 resolvers
 	- Add IPV6 resolvers
 
@@ -30,7 +29,7 @@ Configure Federations
 		:scale: 100%
 		:align: center
 
-#. As a user with admin priveleges, create a Federation Mapping by going to 'Services' -> 'Delivery Services' -> 'Federations' under 'More' and then clicking 'Add Federation Mapping'
+#. As a user with administrative priveleges, create a Federation Mapping by going to 'Services' -> 'Delivery Services' -> 'Federations' under 'More' and then clicking 'Add Federation Mapping'
 
 #. Choose the Delivery Service to which the federation will be mapped and assign it to the Federation-role user; click Add.
 
