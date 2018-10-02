@@ -1112,7 +1112,7 @@ def updateConfig(directory:str, fname:str, contents:str) -> bool:
 	                     if l and not l.startswith("# DO NOT EDIT")\
 	                     and not l.startswith("# TRAFFIC OPS NOTE:")])
 
-	if stripComments(diskContents.strip()) == stripComments(contents.strip()):
+	if stripComments(diskContents.strip()) == stripComments(importantContents.strip()):
 		logging.info("on-disk contents match Traffic Ops - nothing to do")
 		return True
 
