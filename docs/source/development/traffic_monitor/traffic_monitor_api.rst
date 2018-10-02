@@ -15,164 +15,322 @@
 
 .. _tm-api:
 
+********************
 Traffic Monitor APIs
-====================
-The Traffic Monitor URLs below allow certain query parameters for use in controlling the data returned. The optional query parameters are the *tabbed* in values under each URL, if they exist.
+********************
+The Traffic Monitor URLs below allow certain query parameters for use in controlling the data returned.
 
-|
+.. note:: Unlike :ref:`Traffic Ops API endpoints <to-api>`\ , no authentication is required for any of these, and as such there can be no special role requirements for a user.
 
-**/publish/EventLog**
+``/publish/EventLog``
+=========================
+Gets a log of recent changes in the availability of polled caches.
 
-Log of recent events.
+``GET``
+-------
+:Response Type: Array (key 'events' contains an array of all data)
 
-|
+Response Structure
+""""""""""""""""""
+:event: an entry in the top-level ``events`` array
 
-**/publish/CacheStats**
+	:description: A string containing short description of the event
+	:hostname:    A string containing the server's full hostname
+	:index:       A serial integer that is incremented for each sequential  event
+	:isAvailable: A boolean value indicating whether the server is available following this event
+	:name:        The server's short hostname as a string
+	:time:        A UNIX timestamp as an integer
+	:type:        The type of the server as a string
 
+.. code-block:: json
+	:caption: Example Response
+
+	{ "events": [
+		{
+			"time": 1538417713,
+			"index": 67848,
+			"description": "REPORTED - loadavg too high (36.37 \u003e 25.00) (health)",
+			"name": "edge",
+			"hostname": "edge",
+			"type":"EDGE",
+			"isAvailable":false
+		}
+	]}
+
+``/publish/CacheStats``
+=======================
 Statistics gathered for each cache.
 
-**Query Parameters**
+``GET``
+-------
+:Response Type: Object
 
-+--------------+---------+------------------------------------------------+
-|  Parameter   | Type    |                  Description                   |
-+==============+=========+================================================+
-| ``hc``       | int     | The history count, number of items to display. |
-+--------------+---------+------------------------------------------------+
-| ``stats``    | string  | A comma separated list of stats to display.    |
-+--------------+---------+------------------------------------------------+
-| ``wildcard`` | boolean | Controls whether specified stats should be     |
-|              |         | treated as partial strings.                    |
-+--------------+---------+------------------------------------------------+
+Request Structure
+"""""""""""""""""
+.. table:: Request Query Parameters
 
-|
+	+--------------+---------+------------------------------------------------+
+	|  Parameter   | Type    |                  Description                   |
+	+==============+=========+================================================+
+	| ``hc``       | integer | The history count, number of items to display. |
+	+--------------+---------+------------------------------------------------+
+	| ``stats``    | string  | A comma separated list of stats to display.    |
+	+--------------+---------+------------------------------------------------+
+	| ``wildcard`` | boolean | Controls whether specified stats should be     |
+	|              |         | treated as partial strings.                    |
+	+--------------+---------+------------------------------------------------+
 
-**/publish/CacheStats/:cache**
+Response Structure
+""""""""""""""""""
+:pp: Stores any provided request parameters provided as a string
+:date: A ``ctime``-like string representation of the time at which the response was served
+:caches: An object with keys that are the names of monitored cache servers
 
-Statistics gathered for only this cache.
+	:<server name>: Each server's object is a collection of keys that are the names of statistics
 
-**Query Parameters**
+		:<statistic name>: The name of the statistic which this array represents. Each value in the array is one (and usually only one) object with the following structure:
 
-+--------------+---------+------------------------------------------------+
-|  Parameter   | Type    |                  Description                   |
-+==============+=========+================================================+
-| ``hc``       | int     | The history count, number of items to display. |
-+--------------+---------+------------------------------------------------+
-| ``stats``    | string  | A comma separated list of stats to display.    |
-+--------------+---------+------------------------------------------------+
-| ``wildcard`` | boolean | Controls whether specified stats should be     |
-|              |         | treated as partial strings.                    |
-+--------------+---------+------------------------------------------------+
+			:value: The statistic's value. This is *always* a string, even if that string only contains a number.
+			:time: An integer UNIX timestamp indicating the start time for this value of this statistic
+			:span: The span of time - in milliseconds - for which this value is valid. This is determined by the polling interval for the statistic
 
-|
+.. code-block:: json
+	:caption: Example Response
 
-**/publish/DsStats**
+	{}
 
-Statistics gathered for delivery services.
+``publish/CacheStats/{{cache}}``
+================================
+Statistics gathered for only a single cache.
 
-**Query Parameters**
+``GET``
+-------
+:Response Type: Object
 
-+--------------+---------+------------------------------------------------+
-|  Parameter   | Type    |                  Description                   |
-+==============+=========+================================================+
-| ``hc``       | int     | The history count, number of items to display. |
-+--------------+---------+------------------------------------------------+
-| ``stats``    | string  | A comma separated list of stats to display.    |
-+--------------+---------+------------------------------------------------+
-| ``wildcard`` | boolean | Controls whether specified stats should be     |
-|              |         | treated as partial strings.                    |
-+--------------+---------+------------------------------------------------+
+Request Structure
+"""""""""""""""""
+.. table:: Request Path Parameters
 
-|
+	+-----------+--------+----------------------------------+
+	| Parameter | Type   |           Description            |
+	+===========+========+==================================+
+	| ``cache`` | string | The name of the cache to inspect |
+	+-----------+--------+----------------------------------+
 
-**/publish/DsStats/:deliveryService**
+.. table:: Request Query Parameters
 
-Statistics gathered for this delivery service only.
+	+--------------+---------+------------------------------------------------+
+	|  Parameter   | Type    |                  Description                   |
+	+==============+=========+================================================+
+	| ``hc``       | integer | The history count, number of items to display. |
+	+--------------+---------+------------------------------------------------+
+	| ``stats``    | string  | A comma separated list of stats to display.    |
+	+--------------+---------+------------------------------------------------+
+	| ``wildcard`` | boolean | Controls whether specified stats should be     |
+	|              |         | treated as partial strings.                    |
+	+--------------+---------+------------------------------------------------+
 
-**Query Parameters**
+Response Structure
+""""""""""""""""""
+:pp: Stores any provided request parameters provided as a string
+:date: A ``ctime``-like string representation of the time at which the response was served
+:caches: An object with keys that are the names of monitored cache servers - only the cache named by the ``cache`` request path parameter will be shown
 
-+--------------+---------+------------------------------------------------+
-|  Parameter   | Type    |                  Description                   |
-+==============+=========+================================================+
-| ``hc``       | int     | The history count, number of items to display. |
-+--------------+---------+------------------------------------------------+
-| ``stats``    | string  | A comma separated list of stats to display.    |
-+--------------+---------+------------------------------------------------+
-| ``wildcard`` | boolean | Controls whether specified stats should be     |
-|              |         | treated as partial strings.                    |
-+--------------+---------+------------------------------------------------+
+	:<server name>: The requested server's object is a collection of keys that are the names of statistics
 
-|
+		:<statistic name>: The name of the statistic which this array represents. Each value in the array is one (and usually only one) object with the following structure:
 
-**/publish/CrStates**
+			:value: The statistic's value. This is *always* a string, even if that string only contains a number.
+			:time: An integer UNIX timestamp indicating the start time for this value of this statistic
+			:span: The span of time - in milliseconds - for which this value is valid. This is determined by the polling interval for the statistic
 
+.. code-block:: json
+	:caption: Example Response
+
+	{}
+
+``/publish/DsStats``
+====================
+Statistics gathered for Delivery Services
+
+``GET``
+-------
+:Response Type: ?
+
+Request Structure
+"""""""""""""""""
+.. table:: Request Query Parameters
+
+	+--------------+---------+------------------------------------------------+
+	|  Parameter   | Type    |                  Description                   |
+	+==============+=========+================================================+
+	| ``hc``       | int     | The history count, number of items to display. |
+	+--------------+---------+------------------------------------------------+
+	| ``stats``    | string  | A comma separated list of stats to display.    |
+	+--------------+---------+------------------------------------------------+
+	| ``wildcard`` | boolean | Controls whether specified stats should be     |
+	|              |         | treated as partial strings.                    |
+	+--------------+---------+------------------------------------------------+
+
+Response Structure
+""""""""""""""""""
+
+TODO
+
+``/publish/DsStats/{{deliveryService}}``
+========================================
+Statistics gathered for this Delivery Service only.
+
+``GET``
+-------
+:Response Type: ?
+
+Request Structure
+"""""""""""""""""
+.. table:: Request Path Parameters
+
+	+---------------------+--------+---------------------------------------------+
+	| Parameter           | Type   |                Description                  |
+	+=====================+========+=============================================+
+	| ``deliveryService`` | string | The name of the Delivery Service to inspect |
+	+---------------------+--------+---------------------------------------------+
+
+
+.. table:: Request Query Parameters
+
+	+--------------+---------+------------------------------------------------+
+	|  Parameter   | Type    |                  Description                   |
+	+==============+=========+================================================+
+	| ``hc``       | integer | The history count, number of items to display. |
+	+--------------+---------+------------------------------------------------+
+	| ``stats``    | string  | A comma separated list of stats to display.    |
+	+--------------+---------+------------------------------------------------+
+	| ``wildcard`` | boolean | Controls whether specified stats should be     |
+	|              |         | treated as partial strings.                    |
+	+--------------+---------+------------------------------------------------+
+
+Response Structure
+""""""""""""""""""
+
+TODO
+
+``/publish/CrStates``
+=====================
 The current state of this CDN per the health protocol.
 
-|
+``GET``
+-------
+:Response Type: ?
 
+Response Structure
+""""""""""""""""""
+
+TODO
+
+
+..????
 **raw**
 
 The current state of this CDN per this Traffic Monitor only.
 
-|
-
-**/publish/CrConfig**
-
+``/publish/CrConfig``
+=====================
 The CrConfig served to and consumed by Traffic Router.
 
-|
+``GET``
+-------
+:Response Type: ?
 
-**/publish/PeerStates**
+Response Structure
+""""""""""""""""""
 
+TODO
+
+``/publish/PeerStates``
+=======================
 The health state information from all peer Traffic Monitors.
 
-**Query Parameters**
+``GET``
+-------
+:Response Type: ?
 
-+--------------+---------+------------------------------------------------+
-|  Parameter   | Type    |                  Description                   |
-+==============+=========+================================================+
-| ``hc``       | int     | The history count, number of items to display. |
-+--------------+---------+------------------------------------------------+
-| ``stats``    | string  | A comma separated list of stats to display.    |
-+--------------+---------+------------------------------------------------+
-| ``wildcard`` | boolean | Controls whether specified stats should be     |
-|              |         | treated as partial strings.                    |
-+--------------+---------+------------------------------------------------+
+Request Structure
+"""""""""""""""""
+.. table:: Request Query Parameters
 
-|
+	+--------------+---------+------------------------------------------------+
+	|  Parameter   | Type    |                  Description                   |
+	+==============+=========+================================================+
+	| ``hc``       | integer | The history count, number of items to display. |
+	+--------------+---------+------------------------------------------------+
+	| ``stats``    | string  | A comma separated list of stats to display.    |
+	+--------------+---------+------------------------------------------------+
+	| ``wildcard`` | boolean | Controls whether specified stats should be     |
+	|              |         | treated as partial strings.                    |
+	+--------------+---------+------------------------------------------------+
 
-**/publish/Stats**
+Response Structure
+""""""""""""""""""
 
+TODO
+
+
+``/publish/Stats``
+==================
 The general statistics about Traffic Monitor.
 
-|
+``GET``
+-------
+:Response Type: ?
 
-**/publish/StatSummary**
+Response Structure
+""""""""""""""""""
 
+TODO
+
+``/publish/StatSummary``
+========================
 The summary of cache statistics.
 
-**Query Parameters**
+``GET``
+-------
+:Response Type: ?
 
-+---------------+---------+-----------------------------------------------------------+
-|   Parameter   |   Type  |                        Description                        |
-+===============+=========+===========================================================+
-| ``startTime`` | number  | Window start. The number of milliseconds since the epoch. |
-+---------------+---------+-----------------------------------------------------------+
-| ``endTime``   | number  | Window end. The number of milliseconds since the epoch.   |
-+---------------+---------+-----------------------------------------------------------+
-| ``hc``        | int     | The history count, number of items to display.            |
-+---------------+---------+-----------------------------------------------------------+
-| ``stats``     | string  | A comma separated list of stats to display.               |
-+---------------+---------+-----------------------------------------------------------+
-| ``wildcard``  | boolean | Controls whether specified stats should be                |
-|               |         | treated as partial strings.                               |
-+---------------+---------+-----------------------------------------------------------+
-| ``cache``     | string  | Summary statistics for just this cache.                   |
-+---------------+---------+-----------------------------------------------------------+
+Request Structure
+"""""""""""""""""
+.. table:: Request Query Parameters
 
-|
+	+---------------+---------+-----------------------------------------------------------+
+	|   Parameter   |   Type  |                        Description                        |
+	+===============+=========+===========================================================+
+	| ``startTime`` | number  | Window start. The number of milliseconds since the epoch. |
+	+---------------+---------+-----------------------------------------------------------+
+	| ``endTime``   | number  | Window end. The number of milliseconds since the epoch.   |
+	+---------------+---------+-----------------------------------------------------------+
+	| ``hc``        | integer | The history count, number of items to display.            |
+	+---------------+---------+-----------------------------------------------------------+
+	| ``stats``     | string  | A comma separated list of stats to display.               |
+	+---------------+---------+-----------------------------------------------------------+
+	| ``wildcard``  | boolean | Controls whether specified stats should be                |
+	|               |         | treated as partial strings.                               |
+	+---------------+---------+-----------------------------------------------------------+
+	| ``cache``     | string  | Summary statistics for just this cache.                   |
+	+---------------+---------+-----------------------------------------------------------+
 
-**/publish/ConfigDoc**
+Response Structure
+""""""""""""""""""
 
+TODO
+
+``/publish/ConfigDoc``
+======================
 The overview of configuration options.
 
+``GET``
+-------
+:Response Type: ?
 
+Response Structure
+""""""""""""""""""
+
+TODO
