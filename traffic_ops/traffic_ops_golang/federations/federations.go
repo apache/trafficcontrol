@@ -28,7 +28,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/lib/pq"
 )
@@ -41,7 +40,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	feds, err := getUserFederations(inf.Tx.Tx, inf.User)
+	feds, err := getUserFederations(inf.Tx.Tx, inf.User.UserName)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("federations.Get getting federations: "+err.Error()))
 		return
@@ -134,7 +133,7 @@ WHERE
 	return feds, nil
 }
 
-func getUserFederations(tx *sql.Tx, user *auth.CurrentUser) ([]FedInfo, error) {
+func getUserFederations(tx *sql.Tx, userName string) ([]FedInfo, error) {
 	qry := `
 SELECT
   fds.federation,
@@ -152,7 +151,7 @@ WHERE
 ORDER BY
   ds.xml_id
 `
-	rows, err := tx.Query(qry, user.UserName)
+	rows, err := tx.Query(qry, userName)
 	if err != nil {
 		return nil, errors.New("user federations querying: " + err.Error())
 	}
