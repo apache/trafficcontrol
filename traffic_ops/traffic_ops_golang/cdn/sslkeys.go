@@ -38,7 +38,7 @@ func GetSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	keys, err := getSSLKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Params["name"])
+	keys, err := getSSLKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort, inf.Params["name"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting cdn ssl keys: "+err.Error()))
 		return
@@ -46,8 +46,8 @@ func GetSSLKeys(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, keys)
 }
 
-func getSSLKeys(tx *sql.Tx, authOpts *riak.AuthOptions, cdnName string) ([]tc.CDNSSLKey, error) {
-	keys, err := riaksvc.GetCDNSSLKeysObj(tx, authOpts, cdnName)
+func getSSLKeys(tx *sql.Tx, authOpts *riak.AuthOptions, riakPort *uint, cdnName string) ([]tc.CDNSSLKey, error) {
+	keys, err := riaksvc.GetCDNSSLKeysObj(tx, authOpts, riakPort, cdnName)
 	if err != nil {
 		return nil, errors.New("getting cdn ssl keys from Riak: " + err.Error())
 	}

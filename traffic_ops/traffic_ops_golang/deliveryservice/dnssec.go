@@ -36,7 +36,7 @@ import (
 )
 
 func PutDNSSecKeys(tx *sql.Tx, cfg *config.Config, xmlID string, cdnName string, exampleURLs []string) error {
-	keys, ok, err := riaksvc.GetDNSSECKeys(cdnName, tx, cfg.RiakAuthOptions)
+	keys, ok, err := riaksvc.GetDNSSECKeys(cdnName, tx, cfg.RiakAuthOptions, cfg.RiakPort)
 	if err != nil {
 		return errors.New("getting DNSSec keys from Riak: " + err.Error())
 	} else if !ok {
@@ -55,7 +55,7 @@ func PutDNSSecKeys(tx *sql.Tx, cfg *config.Config, xmlID string, cdnName string,
 		return errors.New("creating DNSSEC keys for delivery service '" + xmlID + "': " + err.Error())
 	}
 	keys[xmlID] = dsKeys
-	if err := riaksvc.PutDNSSECKeys(keys, cdnName, tx, cfg.RiakAuthOptions); err != nil {
+	if err := riaksvc.PutDNSSECKeys(keys, cdnName, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
 		return errors.New("putting Riak DNSSEC keys: " + err.Error())
 	}
 	return nil

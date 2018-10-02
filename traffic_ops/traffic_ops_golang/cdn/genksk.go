@@ -78,7 +78,7 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 		multiplier = &mult
 	}
 
-	dnssecKeys, ok, err := riaksvc.GetDNSSECKeys(string(cdnName), inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	dnssecKeys, ok, err := riaksvc.GetDNSSECKeys(string(cdnName), inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting CDN DNSSEC keys: "+err.Error()))
 		return
@@ -96,7 +96,7 @@ func GenerateKSK(w http.ResponseWriter, r *http.Request) {
 	}
 	dnssecKeys[string(cdnName)] = newKey
 
-	if err := riaksvc.PutDNSSECKeys(dnssecKeys, string(cdnName), inf.Tx.Tx, inf.Config.RiakAuthOptions); err != nil {
+	if err := riaksvc.PutDNSSECKeys(dnssecKeys, string(cdnName), inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("putting CDN DNSSEC keys: "+err.Error()))
 		return
 	}

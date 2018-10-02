@@ -74,7 +74,7 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		Version:         *req.Version,
 		Certificate:     *req.Certificate,
 	}
-	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, inf.Tx.Tx, inf.Config.RiakAuthOptions); err != nil {
+	if err := riaksvc.PutDeliveryServiceSSLKeysObj(dsSSLKeys, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("putting SSL keys in Riak for delivery service '"+*req.DeliveryService+"': "+err.Error()))
 		return
 	}
@@ -163,7 +163,7 @@ func getSSLKeysByXMLIDHelper(xmlID string, inf *api.APIInfo, w http.ResponseWrit
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(xmlID, version, inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	keyObj, ok, err := riaksvc.GetDeliveryServiceSSLKeysObj(xmlID, version, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting ssl keys: "+err.Error()))
 		return
@@ -223,7 +223,7 @@ func DeleteSSLKeys(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
-	if err := riaksvc.DeleteDSSSLKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, xmlID, inf.Params["version"]); err != nil {
+	if err := riaksvc.DeleteDSSSLKeys(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort, xmlID, inf.Params["version"]); err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, userErr, errors.New("deliveryservice.DeleteSSLKeys: deleting SSL keys: "+err.Error()))
 		return
 	}

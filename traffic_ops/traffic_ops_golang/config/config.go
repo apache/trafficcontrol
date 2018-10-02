@@ -86,6 +86,8 @@ type ConfigTrafficOpsGolang struct {
 	PluginSharedConfig       map[string]interface{}     `json:"plugin_shared_config"`
 	ProfilingEnabled         bool                       `json:"profiling_enabled"`
 	ProfilingLocation        string                     `json:"profiling_location"`
+	RiakPort                 *uint                      `json:"riak_port"`
+
 	// CRConfigUseRequestHost is whether to use the client request host header in the CRConfig. If false, uses the tm.url parameter.
 	// This defaults to false. Traffic Ops used to always use the host header, setting this true will resume that legacy behavior.
 	// See https://github.com/apache/trafficcontrol/issues/2224

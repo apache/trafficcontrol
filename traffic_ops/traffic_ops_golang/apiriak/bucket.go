@@ -41,7 +41,7 @@ func GetBucketKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	val, ok, err := riaksvc.GetBucketKey(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Params["bucket"], inf.Params["key"])
+	val, ok, err := riaksvc.GetBucketKey(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort, inf.Params["bucket"], inf.Params["key"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting bucket key from Riak: "+err.Error()))
 		return

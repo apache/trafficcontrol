@@ -81,7 +81,7 @@ func GetDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 
 	cdnName := inf.Params["name"]
 
-	riakKeys, keysExist, err := riaksvc.GetDNSSECKeys(cdnName, inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	riakKeys, keysExist, err := riaksvc.GetDNSSECKeys(cdnName, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting DNSSEC CDN keys: "+err.Error()))
 		return
@@ -116,7 +116,7 @@ func GetDNSSECKeysV11(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	cdnName := inf.Params["name"]
-	riakKeys, keysExist, err := riaksvc.GetDNSSECKeys(cdnName, inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	riakKeys, keysExist, err := riaksvc.GetDNSSECKeys(cdnName, inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting DNSSEC CDN keys: "+err.Error()))
 		return
@@ -151,7 +151,7 @@ func generateStoreDNSSECKeys(
 	kExp := time.Duration(kExpDays) * time.Hour * 24
 	ttl := time.Duration(ttlSeconds) * time.Second
 
-	oldKeys, oldKeysExist, err := riaksvc.GetDNSSECKeys(cdnName, tx, cfg.RiakAuthOptions)
+	oldKeys, oldKeysExist, err := riaksvc.GetDNSSECKeys(cdnName, tx, cfg.RiakAuthOptions, cfg.RiakPort)
 	if err != nil {
 		return errors.New("getting old dnssec keys: " + err.Error())
 	}
@@ -231,7 +231,7 @@ func generateStoreDNSSECKeys(
 		}
 		newKeys[ds.Name] = dsKeys
 	}
-	if err := riaksvc.PutDNSSECKeys(tc.DNSSECKeysRiak(newKeys), cdnName, tx, cfg.RiakAuthOptions); err != nil {
+	if err := riaksvc.PutDNSSECKeys(tc.DNSSECKeysRiak(newKeys), cdnName, tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
 		return errors.New("putting Riak DNSSEC CDN keys: " + err.Error())
 	}
 	return nil
@@ -284,7 +284,7 @@ func DeleteDNSSECKeys(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	cluster, err := riaksvc.GetPooledCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	cluster, err := riaksvc.GetPooledCluster(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting riak cluster: "+err.Error()))
 		return

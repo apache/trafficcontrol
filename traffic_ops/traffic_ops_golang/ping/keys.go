@@ -35,7 +35,7 @@ func Keys(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	pingResp, err := riaksvc.Ping(inf.Tx.Tx, inf.Config.RiakAuthOptions)
+	pingResp, err := riaksvc.Ping(inf.Tx.Tx, inf.Config.RiakAuthOptions, inf.Config.RiakPort)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("error pinging Riak keys: "+err.Error()))
 		return

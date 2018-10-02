@@ -123,7 +123,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, cfg *config.Config) {
 	}
 
 	for _, cdnInf := range cdnDNSSECKeyParams {
-		keys, ok, err := riaksvc.GetDNSSECKeys(string(cdnInf.CDNName), tx, cfg.RiakAuthOptions) // TODO get all in a map beforehand
+		keys, ok, err := riaksvc.GetDNSSECKeys(string(cdnInf.CDNName), tx, cfg.RiakAuthOptions, cfg.RiakPort) // TODO get all in a map beforehand
 		if err != nil {
 			log.Warnln("refreshing DNSSEC Keys: getting cdn '" + string(cdnInf.CDNName) + "' keys from Riak, skipping: " + err.Error())
 			continue
@@ -253,7 +253,7 @@ func doDNSSECKeyRefresh(tx *sql.Tx, cfg *config.Config) {
 			}
 		}
 		if updatedAny {
-			if err := riaksvc.PutDNSSECKeys(keys, string(cdnInf.CDNName), tx, cfg.RiakAuthOptions); err != nil {
+			if err := riaksvc.PutDNSSECKeys(keys, string(cdnInf.CDNName), tx, cfg.RiakAuthOptions, cfg.RiakPort); err != nil {
 				log.Errorln("refreshing DNSSEC Keys: putting keys into Riak for cdn '" + string(cdnInf.CDNName) + "': " + err.Error())
 			}
 		}
