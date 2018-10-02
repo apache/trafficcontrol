@@ -31,7 +31,7 @@ The `Funcs` object contains functions for each hook, as well as a load function 
 
 * `startup` is called when the application starts.
 
-* `onRequest` is called immediately when a request is received. It returns a boolean indicating whether to stop processing.
+* `onRequest` is called immediately when a request is received. It returns a boolean indicating whether to stop processing. Note this is called without authentication. If a plugin should be authenticated, it must do so itself. It is recommended to use `api.GetUserFromReq`, which will return an error if authentication fails.
 
 The simplest example is the `hello_world` plugin. See `plugin/hello_world.go`.
 
