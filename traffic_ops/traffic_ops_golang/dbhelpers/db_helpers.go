@@ -22,6 +22,7 @@ package dbhelpers
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -101,30 +102,6 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo
 	return criteria, queryValues, errs
 }
 
-// FinishTx commits the transaction if commit is true when it's called, otherwise it rolls back the transaction. This is designed to be called in a defer.
-func FinishTx(tx *sql.Tx, commit *bool) {
-	if tx == nil {
-		return
-	}
-	if !*commit {
-		tx.Rollback()
-		return
-	}
-	tx.Commit()
-}
-
-// FinishTxX commits the transaction if commit is true when it's called, otherwise it rolls back the transaction. This is designed to be called in a defer.
-func FinishTxX(tx *sqlx.Tx, commit *bool) {
-	if tx == nil {
-		return
-	}
-	if !*commit {
-		tx.Rollback()
-		return
-	}
-	tx.Commit()
-}
-
 // AddTenancyCheck takes a WHERE clause (can be ""), the associated queryValues (can be empty),
 // a tenantColumnName that should provide a bigint corresponding to the tenantID of the object being checked (this may require a CAST),
 // and an array of the tenantIDs the user has access to; it returns a where clause and associated queryValues including filtering based on tenancy.
@@ -140,51 +117,16 @@ func AddTenancyCheck(where string, queryValues map[string]interface{}, tenantCol
 	return where, queryValues
 }
 
-// GetGlobalParams returns the value of the global param, whether it existed, or any error
-func GetGlobalParam(tx *sql.Tx, name string) (string, bool, error) {
-	return GetParam(tx, name, "global")
-}
-
-// GetParam returns the value of the param, whether it existed, or any error.
-func GetParam(tx *sql.Tx, name string, configFile string) (string, bool, error) {
-	val := ""
-	if err := tx.QueryRow(`select value from parameter where name = $1 and config_file = $2`, name, configFile).Scan(&val); err != nil {
-		if err == sql.ErrNoRows {
-			return "", false, nil
-		}
-		return "", false, errors.New("Error querying global paramter '" + name + "': " + err.Error())
-	}
-	return val, true, nil
-}
-
-// GetDSNameFromID returns the delivery service name, whether it existed, and any error.
+// GetDSNameFromID loads the DeliveryService's xml_id from the database, from the ID. Returns whether the delivery service was found, and any error.
 func GetDSNameFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, bool, error) {
 	name := tc.DeliveryServiceName("")
-	if err := tx.QueryRow(`select xml_id from deliveryservice where id = $1`, id).Scan(&name); err != nil {
+	if err := tx.QueryRow(`SELECT xml_id FROM deliveryservice WHERE id = $1`, id).Scan(&name); err != nil {
 		if err == sql.ErrNoRows {
 			return tc.DeliveryServiceName(""), false, nil
 		}
-		return tc.DeliveryServiceName(""), false, errors.New("querying delivery service name: " + err.Error())
+		return tc.DeliveryServiceName(""), false, fmt.Errorf("querying xml_id for delivery service ID '%v': %v", id, err)
 	}
 	return name, true, nil
-}
-
-// returns returns the delivery service name and cdn, whether it existed, and any error.
-func GetDSNameAndCDNFromID(tx *sql.Tx, id int) (tc.DeliveryServiceName, tc.CDNName, bool, error) {
-	name := tc.DeliveryServiceName("")
-	cdn := tc.CDNName("")
-	if err := tx.QueryRow(`
-SELECT ds.xml_id, cdn.name
-FROM deliveryservice as ds
-JOIN cdn on cdn.id = ds.cdn_id
-WHERE ds.id = $1
-`, id).Scan(&name, &cdn); err != nil {
-		if err == sql.ErrNoRows {
-			return tc.DeliveryServiceName(""), tc.CDNName(""), false, nil
-		}
-		return tc.DeliveryServiceName(""), tc.CDNName(""), false, errors.New("querying delivery service name: " + err.Error())
-	}
-	return name, cdn, true, nil
 }
 
 // GetProfileNameFromID returns the profile's name, whether a profile with ID exists, or any error.
