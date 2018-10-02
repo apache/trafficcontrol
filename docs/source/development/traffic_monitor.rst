@@ -200,14 +200,14 @@ Installing The Developer Environment
 ====================================
 To install the Traffic Monitor Developer environment:
 
-#. Install `go` version 1.7 or greater, from https://golang.org/doc/install and https://golang.org/doc/code.html
-#. Clone the trafficcontrol repository using Git, into ``$GOPATH/src/github.com/apache/trafficcontrol``
-#. Change directories into ``$GOPATH/src/github.com/apache/trafficcontrol/traffic_monitor_golang/traffic_monitor``
+#. Install `Go <https://golang.org/doc/install>`_ version 1.7 or greater
+#. Clone the `Traffic Control repository <https://github.com/apache/trafficcontrol>`_ using ``git``, into ``$GOPATH/src/github.com/apache/trafficcontrol``
+#. Change directories into ``$GOPATH/src/github.com/apache/trafficcontrol/traffic_monitor``
 #. Run ``./build.sh``
 
 Test Cases
 ==========
-Tests can be executed by running ``go test ./...`` at the root of the ``traffic_monitor_golang`` project.
+Tests can be executed by running ``go test ./...`` at the root of the ``traffic_monitor`` project.
 
 API
 ===
