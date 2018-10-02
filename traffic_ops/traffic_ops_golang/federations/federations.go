@@ -39,6 +39,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
+	defer inf.Close()
 
 	feds, err := getUserFederations(inf.Tx.Tx, inf.User)
 	if err != nil {
