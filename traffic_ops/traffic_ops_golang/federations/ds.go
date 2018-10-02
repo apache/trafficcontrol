@@ -48,6 +48,10 @@ func PostDSes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if post.Replace != nil && *post.Replace {
+		if len(post.DSIDs) < 1 {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("A federation must have at least one delivery service assigned"), nil)
+			return
+		}
 		if err := deleteDSFeds(inf.Tx.Tx, fedID); err != nil {
 			userErr, sysErr, errCode := api.ParseDBError(err)
 			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)

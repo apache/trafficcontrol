@@ -1,4 +1,4 @@
-package v13
+package v14
 
 /*
 
@@ -33,12 +33,9 @@ func TestFederations(t *testing.T) {
 	CreateTestDeliveryServices(t)
 	CreateTestUsersDeliveryServices(t)
 	CreateTestCDNFederations(t)
-	// UpdateTestCDNFederations(t)
-	// GetTestCDNFederations(t)
 
 	PostTestFederationsDeliveryServices(t)
 	GetTestFederations(t)
-	DeleteTestFederationsDeliveryServices(t)
 
 	DeleteTestCDNFederations(t)
 	DeleteTestUsersDeliveryServices(t)
@@ -126,20 +123,4 @@ func PostTestFederationsDeliveryServices(t *testing.T) {
 		t.Fatalf("creating federations delivery services: %v\n", err)
 	}
 	log.Debugln("PostTestFederationsDeliveryServices PASSED")
-}
-
-func DeleteTestFederationsDeliveryServices(t *testing.T) {
-	log.Debugln("DeleteTestFederationsDeliveryServices")
-	// doesn't actually call a DELETE method; this exists primarily to clean up PostTestFederationsDeliveryServices
-
-	if len(fedIDs) == 0 {
-		t.Fatalf("no federations, must have at least 1 federation to test federations deliveryservices\n")
-	}
-	fedID := fedIDs[0]
-
-	_, err := TOSession.CreateFederationDeliveryServices(fedID, nil, true)
-	if err != nil {
-		t.Fatalf("creating (deleting) federations delivery services: %v\n", err)
-	}
-	log.Debugln("DeleteTestFederationsDeliveryServices PASSED")
 }
