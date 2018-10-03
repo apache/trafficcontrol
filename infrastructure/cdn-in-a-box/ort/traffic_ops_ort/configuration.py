@@ -39,6 +39,10 @@ DISTRO = distro.LinuxDistribution().id()
 #: and also possibly useful in other situations
 SERVER_INFO = None
 
+#: This sets whether or not to verify SSL certificates when communicated with Traffic Ops.
+#: Does not affect non-Traffic Ops servers
+VERIFY = True
+
 
 class Modes(enum.IntEnum):
 	"""
@@ -102,7 +106,7 @@ class LogLevels(enum.IntEnum):
 		return self.name if self != logging.CRITICAL else "FATAL"
 
 #: A format specifier for logging output. Propagates to all imported modules.
-LOG_FORMAT = "%(levelname)s: line %(lineno)d in %(module)s.%(funcName)s: %(message)s"
+LOG_FORMAT = "%(levelname)s: %(asctime)s line %(lineno)d in %(module)s.%(funcName)s: %(message)s"
 
 def setLogLevel(level:str) -> bool:
 	"""
@@ -139,7 +143,10 @@ def setTSRoot(tsroot:str) -> bool:
 
 	"""
 	try:
-		tsroot = tsroot.strip().rstrip('/')
+		tsroot = tsroot.strip()
+
+		if tsroot != '/' and tsroot.endswith('/'):
+			tsroot = tsroot.rstrip('/')
 
 		if not os.path.isdir(tsroot) or\
 		   not os.path.isfile(os.path.join(tsroot, 'bin', 'trafficserver')):
@@ -165,9 +172,10 @@ def setTOURL(url:str) -> bool:
 	:returns: whether or not the URL could be set successfully
 	:raises ValueError: when ``url`` is not a :const:`str`
 	"""
+	global VERIFY
 	try:
 		url = url.rstrip('/')
-		_ = requests.head(url, verify=False)
+		_ = requests.head(url, verify=VERIFY)
 	except requests.exceptions.RequestException as e:
 		logging.error("%s", e)
 		logging.debug("%s", e, exc_info=True, stack_info=True)
@@ -221,14 +229,14 @@ def getNewTOCookie():
 	:raises PermissionError: if :data:`TO_LOGIN` or :data:`TO_URL` are unset, invalid,
 		or the wrong type
 	"""
-	global TO_URL, TO_LOGIN
+	global TO_URL, TO_LOGIN, VERIFY
 	if TO_URL is None or not isinstance(TO_URL, str) or\
 	   TO_LOGIN is None or not isinstance(TO_LOGIN, str):
 		raise PermissionError("TO_URL and TO_LOGIN must be set prior to calling this function!")
 
 	try:
 		# Obtain login cookie
-		cookie = requests.post(TO_URL + '/api/1.3/user/login', data=TO_LOGIN, verify=False)
+		cookie = requests.post(TO_URL + '/api/1.3/user/login', data=TO_LOGIN, verify=VERIFY)
 	except requests.exceptions.RequestException as e:
 		logging.critical("Login credentials rejected by Traffic Ops")
 		logging.debug("%s", e, exc_info=True, stack_info=True)
