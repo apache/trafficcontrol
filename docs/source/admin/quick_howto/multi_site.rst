@@ -99,3 +99,6 @@ The following steps will take you through the procedure of setting up a Multi-Si
 	#) In the delivery service page, select the newly created DS_PROFILE and save the delivery service.
 
 #. Turn on parent_proxy_routing in the MID profile.
+
+.. Note:: Support for multisite configurations with single-layer CDNs is now available.  If a cachegroup's defined parents are either blank or of the type ORG_LOC, that cache's parent.config will be generated as a top layer cache, even if it is an edge.  In the past, parent.config generation was strictly determined by cache type. The new method examines the parent cachegroup definitions and generates the parent.config accordingly.
+
