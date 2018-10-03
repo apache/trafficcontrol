@@ -70,7 +70,7 @@ class ServerInfo():
 		try:
 			self.cdnId =         raw["cdnId"]
 			self.cdnName =       raw["cdnName"]
-			self.profile =       raw["profile"]
+			self.profileName =   raw["profileName"]
 			self.profileId =     raw["profileId"]
 			self.serverId =      raw["serverId"]
 			self.serverIpv4 =    raw["serverIpv4"]
@@ -109,7 +109,7 @@ class ServerInfo():
 		return fmt.replace("__SERVER_TCP_PORT__", str(self.serverTcpPort)\
 		                                          if self.serverTcpPort != 80 else "")
 
-def TOPost(uri:str, data:dict, verify:bool = True):
+def TOPost(uri:str, data:dict) -> str:
 	"""
 	POSTs the passed data in a request to the specified API endpoint
 
@@ -121,12 +121,28 @@ def TOPost(uri:str, data:dict, verify:bool = True):
 				to the request path; callers need not worry about whether the ``uri`` ought to
 				begin with a slash.
 
-	:param verify: Whether or not to verify the Traffic Ops server's SSL keys during the request
-		handshake (only has meaning if Traffic Ops is serving via HTTPS)
+	:returns: The Traffic Ops server's response to the POST request - possibly empty - as a UTF-8
+		string
 	:raises ConnectionError: when an error occurs trying to communicate with Traffic Ops
 	"""
+	from . import configuration as conf
 
-def getTOJSONResponse(uri:str, verify:bool = True) -> dict:
+	uri = '/'.join((conf.TO_URL, uri.lstrip('/')))
+	logging.info("POSTing %r to %s", data, uri)
+
+	if datetime.datetime.now().timestamp() >= conf.TO_COOKIE:
+		try:
+			conf.getNewTOCookie()
+		except PermissionError as e:
+			raise ConnectionError from e
+
+	resp = requests.post(uri, cookies=conf.TO_COOKIE, verify=conf.VERIFY, data=data)
+
+	logging.debug("Raw response from Traffic Ops: %s\n%s\n%s", resp, resp.headers, resp.content)
+
+	return resp.text
+
+def getTOJSONResponse(uri:str) -> dict:
 	"""
 	A wrapper around :func:`traffic_ops_ort.utils.getJSONResponse` that handles cookies and
 	tacks on the top-level Traffic Ops URL.
@@ -138,8 +154,6 @@ def getTOJSONResponse(uri:str, verify:bool = True) -> dict:
 				to the request path; callers need not worry about whether the ``uri`` ought to
 				begin with a slash.
 
-	:param verify: Whether or not to verify the Traffic Ops server's SSL keys during the request
-		handshake (only has meaning if Traffic Ops is serving via HTTPS)
 	:returns: The decoded JSON response as an object
 
 			.. note:: If the API response containes a 'response' object, this function will
@@ -162,7 +176,9 @@ def getTOJSONResponse(uri:str, verify:bool = True) -> dict:
 		except PermissionError as e:
 			raise ConnectionError from e
 
-	resp=utils.getJSONResponse(uri,cookies={conf.TO_COOKIE.name:conf.TO_COOKIE.value},verify=verify)
+	resp = utils.getJSONResponse(uri,
+	                             cookies = {conf.TO_COOKIE.name:conf.TO_COOKIE.value},
+	                             verify = conf.VERIFY)
 
 	if "response" in resp:
 		if "alerts" in resp:
@@ -200,7 +216,7 @@ def getUpdateStatus(host:str) -> dict:
 	if host in CACHED_UPDATE_STATUS:
 		return CACHED_UPDATE_STATUS[host]
 
-	CACHED_UPDATE_STATUS[host] = getTOJSONResponse("api/1.3/servers/%s/updateStatus" % host)
+	CACHED_UPDATE_STATUS[host] = getTOJSONResponse("api/1.3/servers/%s/update_status" % host)
 
 	return CACHED_UPDATE_STATUS[host]
 
@@ -288,20 +304,23 @@ def updateTrafficOps():
 	"""
 	Updates Traffic Ops's knowledge of this server's update status.
 	"""
-	from .configuration import MODE
+	from .configuration import MODE, Modes, HOSTNAME
 	from .utils import getYesNoResponse as getYN
 
-	if MODE == MODE.INTERACTIVE and not getYN("Update Traffic Ops?", default='Y'):
+	if MODE is Modes.INTERACTIVE and not getYN("Update Traffic Ops?", default='Y'):
 		logging.warning("Update will not be performed; you should do this manually")
 		return
 
 	logging.info("Updating Traffic Ops")
 
-	if MODE == MODE.REPORT:
+	if MODE is Modes.REPORT:
 		return
 
 	payload = {"updated": False, "reval_updated": False}
-	repsonse = utils.
+	response = TOPost("/update/%s" % HOSTNAME[0], payload)
+
+	if response:
+		logging.info("Traffic Ops response: %s", response)
 
 def getMyConfigFiles() -> typing.List[dict]:
 	"""
@@ -327,7 +346,7 @@ def getMyConfigFiles() -> typing.List[dict]:
 	except KeyError as e:
 		raise ValueError from e
 
-def getMyChkconfig() -> typing.List[dict]
+def getMyChkconfig() -> typing.List[dict]:
 	"""
 	Fetches the 'chkconfig' for this server
 

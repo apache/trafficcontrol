@@ -60,11 +60,13 @@ def doMain(args:argparse.Namespace) -> int:
 
 	logging.info("ATS root installation directory set to: '%s'", configuration.TS_ROOT)
 
+	configuration.VERIFY = not args.insecure
+
 	if not configuration.setTOURL(args.Traffic_Ops_URL):
 		logging.critical("Malformed or invalid Traffic_Ops_URL: '%s'", args.Traffic_Ops_URL)
 		return 1
 
-	logging.info("Traffic Ops URL '%s' set and verified")
+	logging.info("Traffic Ops URL '%s' set and verified", configuration.TO_URL)
 
 	if not configuration.setTOCredentials(args.Traffic_Ops_Login):
 		logging.critical("Traffic Ops login credentials invalid or incorrect.")
@@ -123,6 +125,10 @@ def main():
 	                         " (e.g. '/opt/trafficserver')",
 	                    type=str,
 	                    default="/")
+	parser.add_argument("-k", "--insecure",
+	                    help="Skip verification of SSL certificates for Traffic Ops connections. "\
+	                         "DON'T use this in production!",
+	                    action="store_true")
 	parser.add_argument("-v", "--version",
 	                    action="version",
 	                    version="%(prog)s v"+__version__,

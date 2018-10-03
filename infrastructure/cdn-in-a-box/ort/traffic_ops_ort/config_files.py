@@ -22,6 +22,7 @@ presumably for a cache server
 
 import os
 import logging
+import typing
 
 #: Holds a set of service names that need reloaded configs, mapped to a boolean which indicates
 #: whether (:const:`True`) or not (:const:`False`) a full restart is required.
@@ -65,7 +66,7 @@ class ConfigFile():
 			self.fname = raw["fnameOnDisk"]
 			self.location = raw["location"]
 			if "apiUri" in raw:
-				self.URI = '/'.join((TO_URL, raw["apiURI"].lstrip('/')))
+				self.URI = '/'.join((TO_URL, raw["apiUri"].lstrip('/')))
 			else:
 				self.URI = raw["url"]
 			self.scope = raw["scope"]
@@ -122,7 +123,7 @@ class ConfigFile():
 			else:
 				cookies = None
 
-			self.contents = utils.getTextResponse(self.URI, cookies=cookies)
+			self.contents = utils.getTextResponse(self.URI, cookies=cookies, verify=conf.VERIFY)
 		except ValueError as e:
 			raise ConnectionError from e
 
@@ -136,23 +137,24 @@ class ConfigFile():
 		:raises OSError: if the backup directory does not exist, or a backup of this file
 			could not be written into it.
 		"""
-		from .configuration import MODE
+		from .configuration import MODE, Modes
+		from .utils import getYesNoResponse
 
 		backupfile = os.path.join(BACKUP_DIR, self.fname)
 		willClobber = False
 		if os.path.isfile(backupfile):
 			willClobber = True
 
-		if MODE == MODE.INTERACTIVE:
+		if MODE is Modes.INTERACTIVE:
 			prmpt = ("Write backup file %s%%s?" % backupfile)
 			prmpt %= " - will clobber existing file by the same name - " if willClobber else ''
-			if not getYesNoResponse(prmpt, default='Y')
+			if not getYesNoResponse(prmpt, default='Y'):
 				return
 
 		elif willClobber:
 			logging.warning("Clobbering existing backup file '%s'!", backupfile)
 
-		if MODE != MODE.REPORT:
+		if MODE is not Modes.REPORT:
 			with open(backupfile, 'w') as fp:
 				fp.write(contents)
 
@@ -165,15 +167,31 @@ class ConfigFile():
 
 		:raises OSError: when reading/writing files fails for some reason
 		"""
-		from .to_api import SERVER_INFO
-		from .configuration import MODE
+		from . import utils
+		from .configuration import MODE, Modes, SERVER_INFO
 		from .services import NEEDED_RELOADS, FILES_THAT_REQUIRE_RELOADS
 
 		finalContents = sanitizeContents(str(self))
 		logging.info("Sanitized output: \n%s", finalContents)
 
+		if not os.path.isdir(self.location):
+			if MODE is Modes.INTERACTIVE and\
+			   not utils.getYesNoResponse("Create configuration directory %s?" % self.path, 'Y'):
+				logging.warning("%s will not be created - some services may not work properly!",
+				                self.path)
+				return
+
+			logging.info("Directory %s will be created", self.location)
+			logging.info("File %s will be created", self.path)
+
+			if MODE is not Modes.REPORT:
+				os.makedirs(self.location)
+				with open(self.path, 'x') as fp:
+					fp.write(finalContents)
+				return
+
 		if not os.path.isfile(self.path):
-			if MODE == MODE.INTERACTIVE and\
+			if MODE is Modes.INTERACTIVE and\
 			   not utils.getYesNoResponse("Create configuration file %s?"%self.path, default='Y'):
 				logging.warning("%s will not be created - some services may not work properly!",
 				                self.path)
@@ -181,7 +199,7 @@ class ConfigFile():
 
 			logging.info("File %s will be created", self.path)
 
-			if MODE != MODE.REPORT:
+			if MODE is not Modes.REPORT:
 				with open(self.path, 'x') as fp:
 					fp.write(finalContents)
 				return
@@ -190,13 +208,18 @@ class ConfigFile():
 			onDiskContents = fp.readlines()
 			if filesDiffer(finalContents.splitlines(), onDiskContents):
 				self.backup(''.join(onDiskContents))
-				if MODE != MODE.REPORT:
+				if MODE is not Modes.REPORT:
 					fp.seek(0)
 					fp.truncate()
+
+					# Ensure POSIX-compliant files
+					if not finalContents.endswith('\n'):
+						finalContents += '\n'
+
 					fp.write(finalContents)
 					if self.fname in FILES_THAT_REQUIRE_RELOADS:
 						NEEDED_RELOADS.add(FILES_THAT_REQUIRE_RELOADS[self.fname])
-				logging.info("File written to %s", path)
+				logging.info("File written to %s", self.path)
 			else:
 				logging.info("File doesn't differ from disk; nothing to do")
 
@@ -218,7 +241,7 @@ def filesDiffer(a:typing.List[str], b:typing.List[str]) -> bool:
 	if len(a) != len(b):
 		return True
 
-	for l, i in enumerate(a):
+	for i, l in enumerate(a):
 		if l != b[i]:
 			return True
 
@@ -232,9 +255,14 @@ def sanitizeContents(raw:str) -> str:
 	:returns: The same contents, but with special replacement strings parsed out and HTML-encoded
 		symbols decoded to their literal values
 	"""
-	from .to_api import SERVER_INFO
+	from .configuration import SERVER_INFO
 	out = []
-	for line in raw.format(SERVER_INFO).splitlines():
+
+	# These double curly braces escape the behaviour of Python's `str.format` method to attempt
+	# to use curly brace-enclosed text as a key into a dictonary of its arguments. They'll be
+	# rendered into single braces in the output of `.format`, leaving the string ultimately
+	# unchanged in that respect.
+	for line in raw.replace('{', "{{").replace('}', "}}").format(SERVER_INFO).splitlines():
 		tmp=(" ".join(line.split())).strip() #squeezes spaces and trims leading and trailing spaces
 		tmp=tmp.replace("&amp;", '&') #decodes HTML-encoded ampersands
 		tmp=tmp.replace("&gt;", '>') #decodes HTML-encoded greater-than symbols
@@ -256,8 +284,8 @@ def initBackupDir():
 	logging.info("Initializing backup dir %s", BACKUP_DIR)
 
 	if not os.path.isdir(BACKUP_DIR):
-		if MODE != Modes.REPORT:
-			os.mkdir(backupdir)
+		if conf.MODE != conf.Modes.REPORT:
+			os.mkdir(BACKUP_DIR)
 		else:
 			logging.error("Cannot create non-existent backup dir in REPORT mode!")
 	else:
