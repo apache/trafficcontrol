@@ -72,12 +72,24 @@ def deleteOldStatusFiles(myStatus:str):
 	from .configuration import MODE, Modes
 	from . import to_api, utils
 
+	logging.info("Deleting old status files (those that are not %s)", myStatus)
+
 	doDeleteFiles = MODE is not Modes.REPORT
 
 	for status in to_api.getStatuses():
 
+		# Only the status name matters
+		try:
+			status = status["name"]
+		except KeyError as e:
+			logging.debug("Bad status object: %r", status)
+			logging.debug("Original error: %s", e, exc_info=True, stack_info=True)
+			raise ConnectionError from e
+
 		if doDeleteFiles and status != myStatus:
 			fname = os.path.join("/opt/ORTstatus", status)
+			if not os.path.isfile(fname):
+				continue
 			logging.info("File '%s' to be deleted", fname)
 
 			# check for user confirmation before deleting files in 'INTERACTIVE' mode
@@ -182,6 +194,7 @@ def processServices() -> bool:
 
 	:returns: whether or not the service processing was completed successfully
 	"""
+	from . import services
 	from .to_api import getMyChkconfig
 
 	chkconfig = getMyChkconfig()
