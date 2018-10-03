@@ -43,6 +43,8 @@ export CURLOPTS=${CURLOPTS:--LfsS}
 export CURLAUTH=${CURLAUTH:--k}
 export COOKIEJAR=$(mktemp)
 
+export MY_HOSTNAME="$(hostname -s)"
+
 login=$(mktemp)
 
 cleanup() {
@@ -109,7 +111,7 @@ to-post() {
 	fi
 	to-auth && \
 	    curl $CURLAUTH $CURLOPTS --cookie "$COOKIEJAR" -X POST $data "$TO_URL/$1"
-	[[ -n $t ]] && rm "$t"    
+	[[ -n $t ]] && rm "$t"
 }
 
 to-put() {
@@ -134,13 +136,13 @@ to-delete() {
 #         serverType - the type of the server to be created; one of "edge", "mid", "tm"
 to-enroll() {
 
-	while true; do 
+	while true; do
 		[ -d "$ENROLLER_DIR" ] && break
 		echo "Waiting for $ENROLLER_DIR ..."
 		sleep 2
 	done
 
-	while true; do 
+	while true; do
 		[ "$serverType" = "to" ] && break
 		[ -f "$ENROLLER_DIR/initial-load-done" ] && break
 		echo "Waiting for traffic-ops to do initial load ..."
@@ -159,7 +161,6 @@ to-enroll() {
 	fi
 
 	export MY_NET_INTERFACE='eth0'
-	export MY_HOSTNAME="$(hostname -s)"
 	export MY_DOMAINNAME="$(dnsdomainname)"
 	export MY_IP="$(ifconfig $MY_NET_INTERFACE | grep 'inet ' | tr -s ' ' | cut -d ' ' -f 3)"
 	export MY_GATEWAY="$(route -n | grep $MY_NET_INTERFACE | grep -E '^0\.0\.0\.0' | tr -s ' ' | cut -d ' ' -f2)"
@@ -198,7 +199,7 @@ to-enroll() {
 				export MY_CACHE_GROUP="CDN_in_a_Box_Edge"
 			fi
 			;;
-		"to" ) 
+		"to" )
 			export MY_TYPE="TRAFFIC_OPS"
 			export MY_PROFILE="TRAFFIC_OPS"
 			export MY_STATUS="ONLINE"
@@ -249,4 +250,11 @@ to-enroll() {
 	envsubst < "/server_template.json" > "${ENROLLER_DIR}/servers/$HOSTNAME.json"
 
 	sleep 3
+}
+
+# Tests that this server exists in Traffic Ops
+function testenrolled() {
+	local tmp="$(to-get	'api/1.3/servers?name='$MY_HOSTNAME'')"
+	tmp=$(echo $tmp | jq '.response[]|select(.hostName=="'"$MY_HOSTNAME"'")')
+	echo "$tmp"
 }

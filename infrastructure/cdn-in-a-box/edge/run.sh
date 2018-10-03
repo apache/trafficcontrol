@@ -57,19 +57,13 @@ done
 
 to-enroll edge $CDN || (while true; do echo "enroll failed."; sleep 3 ; done)
 
-function testenrolled() {
-	local tmp="$(to-get	'api/1.3/servers?name=edge')"
-	tmp=$(echo $tmp | jq '.response[]|select(.hostName=="edge")')
-	echo "$tmp"
-}
-
 while [[ -z "$(testenrolled)" ]]; do
 	echo "waiting on enrollment"
 	sleep 3
 done
 
 # Leaves the container hanging open in the event of a failure for debugging purposes
-/opt/ort/traffic_ops_ort.py BADASS ALL "https://$TO_FQDN:$TO_PORT" "$TO_ADMIN_USER:$TO_ADMIN_PASSWORD" || { echo "Failed"; }
+traffic_ops_ort -k BADASS ALL "https://$TO_FQDN:$TO_PORT" "$TO_ADMIN_USER:$TO_ADMIN_PASSWORD" || { echo "Failed"; }
 
 envsubst < "/etc/cron.d/traffic_ops_ort-cron-template" > "/var/spool/cron/root" && rm -f "/etc/cron.d/traffic_ops_ort-cron-template"
 crontab "/var/spool/cron/root"
@@ -82,4 +76,4 @@ done
 crontab -r
 
 touch /var/log/trafficserver/diags.log
-tail -F /var/log/trafficserver/diags.log
+tail -Fn +1 /var/log/trafficserver/diags.log

@@ -35,7 +35,7 @@ RUN pip3 install --upgrade pip && pip3 install requests urllib3 distro
 ADD traffic_server/plugins/astats_over_http/astats_over_http.c traffic_server/plugins/astats_over_http/Makefile.am /
 
 RUN tsxs -v -c astats_over_http.c -o astats_over_http.so
-RUN mkdir -p /usr/libexec/trafficserver && tsxs -v -o astats_over_http.so -i
+RUN mkdir -p /usr/libexec/trafficserver /opt/ort && tsxs -v -o astats_over_http.so -i
 
 RUN yum remove -y gcc-c++ glibc-devel autoconf automake libtool && rm -f /astats_over_http.c /Makefile.am
 
@@ -48,9 +48,10 @@ RUN mkdir -p /var/trafficserver /opt/ort && \
 
 RUN setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_server && setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_manager && setcap CAP_NET_BIND_SERVICE=+eip /bin/trafficserver && setcap CAP_NET_BIND_SERVICE=+eip /bin/traffic_cop
 
-ADD infrastructure/cdn-in-a-box/edge/traffic_ops_ort.py /opt/ort/
-ADD infrastructure/cdn-in-a-box/cache/crontab /etc/cron.d/traffic_ops_ort-cron-template
+ADD infrastructure/cdn-in-a-box/ort /opt/ort/
 
-RUN touch /var/log/ort.log
+WORKDIR /opt/ort
+
+RUN touch /var/log/ort.log && pip3 install . && cp traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template
 
 CMD exit
