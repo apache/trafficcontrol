@@ -24,21 +24,24 @@ for a new service, all that need be done is to write a function to perform confi
 reloads, then add the names of configuration files to the map, pointing at the new function.
 """
 
+import logging
+import os
 import subprocess
+import typing
 import psutil
 
 #: Holds the list of reloads needed due to configuration file changes
 NEEDED_RELOADS = set()
 
-#: A big ol' map of filenames to the services which require reloads when said files change
-FILES_THAT_REQUIRE_RELOADS = {"records.config":       reloadATSConfigs,
-                              "remap.config":         reloadATSConfigs,
-                              "parent.config":        reloadATSConfigs,
-                              "cache.config":         reloadATSConfigs,
-                              "hosting.config":       reloadATSConfigs,
-                              "astats.config":        reloadATSConfigs,
-                              "logs_xml.config":      reloadATSConfigs,
-                              "ssl_multicert.config": reloadATSConfigs}
+#: True if the host system has systemd D-Bus - actual value set at runtime
+HAS_SYSTEMD = False
+
+try:
+	output = subprocess.check_output(["systemctl", "--no-pager"], stderr=subprocess.STDOUT)
+except subprocess.CalledProcessError:
+	logging.debug("Host system does NOT have systemd - stack trace:", exc_info=True,stack_info=True)
+else:
+	HAS_SYSTEMD = True
 
 def reloadATSConfigs() -> bool:
 	"""
@@ -49,23 +52,28 @@ def reloadATSConfigs() -> bool:
 		``traffic_ctl``)
 	:raises OSError: when something goes wrong executing the child process
 	"""
-	from .configuration import MODE, TS_ROOT
+	from .configuration import MODE, Modes, TS_ROOT
 	from .utils import getYesNoResponse as getYN
+
+	# First of all, ATS must be running for this to work
+	if not setATSStatus(True):
+		logging.error("Cannot reload configs, ATS not running!")
+		return False
 
 	cmd = [os.path.join(TS_ROOT, "bin", "traffic_ctl"), "config", "reload"]
 	cmdStr = ' '.join(cmd)
 
-	if MODE == MODE.INTERACTIVE and not getYN("Run command '%s' to reload configuration?",cmdStr):
+	if MODE is Modes.INTERACTIVE and not getYN("Run command '%s' to reload configuration?",cmdStr):
 		logging.warning("Configuration will not be reloaded for Apache Trafficserver!")
 		logging.warning("Changes will NOT be applied!")
 		return True
 
 	logging.info("Apache Trafficserver configuration reload will be done via: %s", cmdStr)
 
-	if MODE == MODE.REPORT:
+	if MODE is Modes.REPORT:
 		return True
 
-	sub = subprocess.Popen(arg, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	sub = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	out, err = sub.communicate()
 
 	if sub.returncode:
@@ -76,6 +84,16 @@ def reloadATSConfigs() -> bool:
 		logging.debug("====================================")
 		return False
 	return True
+
+#: A big ol' map of filenames to the services which require reloads when said files change
+FILES_THAT_REQUIRE_RELOADS = {"records.config":       reloadATSConfigs,
+                              "remap.config":         reloadATSConfigs,
+                              "parent.config":        reloadATSConfigs,
+                              "cache.config":         reloadATSConfigs,
+                              "hosting.config":       reloadATSConfigs,
+                              "astats.config":        reloadATSConfigs,
+                              "logs_xml.config":      reloadATSConfigs,
+                              "ssl_multicert.config": reloadATSConfigs}
 
 def doReloads() -> bool:
 	"""
@@ -96,6 +114,30 @@ def doReloads() -> bool:
 
 	return True
 
+def getProcessesIfRunning(name:str) -> typing.Optional[psutil.Process]:
+	"""
+	Retrieves a process by name, if it exists.
+
+	.. warning:: Process names don't have to be unique, this will return the process with the
+		lowest PID that matches ``name``. This can also only return processes visible to the
+		user running the Python interpreter.
+
+	:param name: the name for which to search
+	:returns: a process if one is found that matches ``name``, else :const:`None`
+	:raises OSError: if the process table cannot be iterated
+	"""
+	logging.debug("Iterating process list - looking for %s", name)
+	for process in psutil.process_iter():
+
+		# Found
+		if process.name() == name:
+			logging.debug("Running process found (pid: %d)", process.pid)
+			return process
+
+	logging.debug("No process named '%s' was found", name)
+
+	return None
+
 def setATSStatus(status:bool, restart:bool = False) -> bool:
 	"""
 	Sets the status of the system's ATS process.
@@ -108,49 +150,49 @@ def setATSStatus(status:bool, restart:bool = False) -> bool:
 	:returns: whether or not the status setting was successful (or unnecessary)
 	:raises OSError: when there is a problem executing the subprocess
 	"""
-	from .configuration import MODE, TS_ROOT
+	from .configuration import MODE, Modes, TS_ROOT
 	from .utils import getYesNoResponse as getYN
 
-	logging.debug("Iterating process list")
+	existingProcess = getProcessesIfRunning("[TS_MAIN]")
 
-	arg = None
-	for process in psutil.process_iter():
-
-		# Found an ATS process
-		if process.name() == "[TS_MAIN]":
-			logging.debug("ATS process found (pid: %d)", process.pid)
-			ATSAlreadyRunning = process.status() in {psutil.STATUS_RUNNING, psutil.STATUS_SLEEPING}
-
-			if status and ATSAlreadyRunning and restart:
-				logging.info("ATS process found; restarting")
-				arg = "restart"
-			elif status and ATSAlreadyRunning:
-				logging.info("ATS already running; nothing to do.")
-				return True
-			elif status:
-				logging.warning("ATS process is running, but status is '%s' - restarting", process.status())
-				arg = "restart"
-			else:
-				logging.warning("ATS is running; stopping ATS")
-				arg = "stop"
-
-			break
-	else:
-		if status:
-			logging.warning("ATS not already running; starting ATS.")
-			arg = "start"
-		else:
-			logging.info("ATS already not running; nothing to do.")
+	# ATS is not running
+	if existingProcess is None:
+		if not status:
+			logging.info("ATS already stopped - nothing to do")
 			return True
+		logging.info("ATS not running, will be started")
+		arg = "start"
+
+
+	# ATS is running, but has a bad status
+	elif status and existingProcess.status() not in {psutil.STATUS_RUNNING, psutil.STATUS_SLEEPING}:
+		logging.warning("ATS already running, but status is %s - restarting",
+		                                       existingProcess.status())
+		arg = "restart"
+
+	# ATS is running and should be stopped
+	elif not status:
+		logging.info("ATS is running, will be stopped")
+		arg = "stop"
+
+	# ATS is running fine, but we want to restart it
+	elif restart:
+		logging.info("ATS process found - restarting")
+		arg = "restart"
+
+	# ATS is running fine already
+	else:
+		logging.info("ATS already running - nothing to do")
+		return True
 
 	tsexe = os.path.join(TS_ROOT, "bin", "trafficserver")
-	if MODE == MODE.INTERACTIVE and not getYN("Run command '%s %s'?" % (tsexe, arg)):
+	if MODE is Modes.INTERACTIVE and not getYN("Run command '%s %s'?" % (tsexe, arg)):
 		logging.warning("ATS status will not be set - Traffic Ops may not expect this!")
 		return True
 
 	logging.info("ATS status will be set using: %s %s", tsexe, arg)
 
-	if MODE != MODE.REPORT:
+	if MODE is not Modes.REPORT:
 
 		sub = subprocess.Popen([tsexe, arg], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		out, err = sub.communicate()
@@ -175,19 +217,38 @@ def setServiceStatus(chkconfig:dict) -> bool:
 	:param chkconfig: A single chkconfig
 	:returns: whether or not the service's status was set successfully
 	"""
+	global HAS_SYSTEMD
+	from .utils import getYesNoResponse as getYN
+	from .configuration import MODE, Modes
+
+	if not HAS_SYSTEMD:
+		logging.warning("This system doesn't have systemd, services cannot be enabled/disabled")
+		return True
 
 	try:
-		if chkconfig['name'] == "trafficserver":
-			if not setATSStatus(on in chkconfig["value"]):
-				logging.critical("Failed to set Apache Trafficserver status!")
-				return False
+		status = "enable" if "on" in chkconfig.value else "disable"
+		service = chkconfig['name']
 	except KeyError as e:
 		logging.error("'%r' could not be parsed as a chkconfig object!", chkconfig)
 		logging.debug("%s", e, exc_info=True, stack_info=True)
 		return False
-	except OSError as e:
-		logging.error("An error occurred when setting Apache Trafficserver status: %s", e)
-		logging.debug("%s", e, exc_info=True, stack_info=True)
-		return False
+
+	if MODE is Modes.INTERACTIVE and not getYN("%s %s?" % (service, status), default='Y'):
+		logging.warning("%s will not be %sd - some things may break!", service, status)
+		return True
+
+	logging.info("%s will be %sd", service, status)
+
+	if MODE is not Modes.REPORT:
+		try:
+			sub = subprocess.Popen(["systemctl", status, service],
+			                       stdout=subprocess.PIPE,
+			                       stderr=subprocess.PIPE)
+			out, err = sub.communicate()
+			logging.debug("output")
+		except (OSError, subprocess.CalledProcessError) as e:
+			logging.error("An error occurred when %sing %s: %s", status[:-1], service, e)
+			logging.debug("%r", e, exc_info=True, stack_info=True)
+			return False
 
 	return True
