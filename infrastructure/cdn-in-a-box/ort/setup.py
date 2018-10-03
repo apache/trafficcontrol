@@ -16,15 +16,12 @@
 
 
 """
-The setuptools-based install script for connvitals-monitor
+The setuptools-based install script for Traffic Ops ORT
 """
 
 import os
 import sys
 
-# RPMs generated for fedora/rhel/centos need to have a different name
-# (debian/ubuntu automatically prepends python3-, but those do not)
-import platform
 from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -66,7 +63,7 @@ setup(
 	keywords='network connection configuration TrafficControl',
 	packages=find_packages(exclude=['contrib', 'docs', 'tests']),
 	install_requires=['setuptools', 'typing', 'requests', 'urllib3', 'distro', 'psutil'],
-	data_files=[('etc/crontab', ['connmonitor.service'])],
+	# data_files=[('etc/crontab', ['traffic_ops_ort.crontab'])],
 	entry_points={
 		'console_scripts': [
 			'traffic_ops_ort=traffic_ops_ort:main',
