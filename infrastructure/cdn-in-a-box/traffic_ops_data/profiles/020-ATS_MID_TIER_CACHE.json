@@ -1521,7 +1521,7 @@
 			"configFile": "storage.config",
 			"name": "Drive_Prefix",
 			"secure": false,
-			"value": "/var/trafficserver"
+			"value": "/var/trafficserver/"
 		},
 		{
 			"configFile": "records.config",
