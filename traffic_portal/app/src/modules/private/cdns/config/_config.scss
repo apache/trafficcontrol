@@ -33,17 +33,17 @@
     font-size: 17px;
   }
 
-  .added {
+  ins {
     background-color: #dff0d8;
     color: #3c763d;
   }
 
-  .removed {
+  del {
     background-color: #f2dede;
     color: #a94442;
   }
 
-  .no-change {
+  span {
     color: grey;
   }
 }

@@ -56,33 +56,53 @@ var ConfigController = function(cdn, currentSnapshot, newSnapshot, $scope, $stat
 		if (oldJSON) {
 			var diff = JsDiff.diffJson(oldJSON, newJSON);
 			diff.forEach(function(part){
-				var partChanged = part.added || part.removed;
-				if (!partChanged && part.count > (context * 2)) {
-					var partArr = part.value.split("\n"),
-						newArr = [];
-					_.each(partArr, function(element, index) {
-						if (index < context || index > partArr.length - context) {
-							newArr.push(element);
-						}
-					});
-					newArr.splice(context, 0, "\n*****************\n*   TRUNCATED   *\n*****************\n");
-					part.value = newArr.join("\n");
+				let parts = part.value.split("\n"),
+					newArr = [];
+				for (var i = (parts.length > context ? parts.length - context : parts.length) -1; i >= context && i >=0; i--) {
+					let child;
+					if (part.added) {
+						++added;
+						child = document.createElement("ins");
+						child.append("++" + parts[i]);
+					}
+					else if (part.removed) {
+						++removed;
+						child = document.createElement("del");
+						child.append("--" + parts[i]);
+					}
+					else {
+						child = document.createElement("span");
+						child.append("  " + parts[i]);
+					}
+					fragment.appendChild(child);
 				}
-				if (part.added) {
-					added++;
-				} else if (part.removed) {
-					removed++;
-				}
-				div = document.createElement('div');
-				div.className = part.added ? 'added' : part.removed ? 'removed' : 'no-change';
+				// var partChanged = part.added || part.removed;
+				// if (!partChanged && part.count > (context * 2)) {
+				// 	var partArr = part.value.split("\n"),
+				// 		newArr = [];
+				// 	_.each(partArr, function(element, index) {
+				// 		if (index < context || index > partArr.length - context) {
+				// 			newArr.push(element);
+				// 		}
+				// 	});
+				// 	newArr.splice(context, 0, "\n*****************\n*   TRUNCATED   *\n*****************\n");
+				// 	part.value = newArr.join("\n");
+				// }
+				// if (part.added) {
+				// 	added++;
+				// } else if (part.removed) {
+				// 	removed++;
+				// }
+				// div = document.createElement('div');
+				// div.className = part.added ? 'added' : part.removed ? 'removed' : 'no-change';
 
-				if (partChanged) {
-					var prepend = part.added ? '++' : '--';
-					part.value = prepend + part.value.slice(2);
-				}
+				// if (partChanged) {
+				// 	var prepend = part.added ? '++' : '--';
+				// 	part.value = prepend + part.value.slice(2);
+				// }
 
-				div.appendChild(document.createTextNode(part.value));
-				fragment.appendChild(div);
+				// div.appendChild(document.createTextNode(part.value));
+				// fragment.appendChild(div);
 			});
 
 			$scope[destination + "Count"].added = added;
