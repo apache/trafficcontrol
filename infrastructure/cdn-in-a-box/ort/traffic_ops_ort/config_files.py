@@ -172,6 +172,9 @@ class ConfigFile():
 		from .services import NEEDED_RELOADS, FILES_THAT_REQUIRE_RELOADS
 
 		finalContents = sanitizeContents(str(self))
+		# Ensure POSIX-compliant files
+		if not finalContents.endswith('\n'):
+			finalContents += '\n'
 		logging.info("Sanitized output: \n%s", finalContents)
 
 		if not os.path.isdir(self.location):
@@ -212,9 +215,6 @@ class ConfigFile():
 					fp.seek(0)
 					fp.truncate()
 
-					# Ensure POSIX-compliant files
-					if not finalContents.endswith('\n'):
-						finalContents += '\n'
 
 					fp.write(finalContents)
 					if self.fname in FILES_THAT_REQUIRE_RELOADS:
