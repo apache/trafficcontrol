@@ -15,9 +15,15 @@
 
 package com.comcast.cdn.traffic_control.traffic_router.core.config;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.comcast.cdn.traffic_control.traffic_router.core.cache.CacheLocation.LocalizationMethod;
 import com.comcast.cdn.traffic_control.traffic_router.core.request.HTTPRequest;
 import org.junit.Before;
 import org.junit.Test;
@@ -240,5 +246,40 @@ public class ConfigHandlerTest {
         Whitebox.invokeMethod(handler, "initGeoFailedRedirect", dsMap, register);
         assertThat(urlType[0], equalTo("DS_URL"));
         assertThat(typeUrl[0], equalTo(path));
+    }
+
+    @Test
+    public void testParseLocalizationMethods() throws Exception {
+        LocalizationMethod[] allMethods = new LocalizationMethod[] {
+                LocalizationMethod.CZ,
+                LocalizationMethod.DEEP_CZ,
+                LocalizationMethod.GEO,
+        };
+        Set<LocalizationMethod> expected = new HashSet<>();
+        expected.addAll(Arrays.asList(allMethods));
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        String allMethodsString = "{\"localizationMethods\": [\"CZ\",\"DEEP_CZ\",\"GEO\"]}";
+        JsonNode allMethodsJson = mapper.readTree(allMethodsString);
+        Set<LocalizationMethod> actual = Whitebox.invokeMethod(handler, "parseLocalizationMethods", "foo", allMethodsJson);
+        assertThat(actual, equalTo(expected));
+
+        String noMethodsString = "{}";
+        JsonNode noMethodsJson = mapper.readTree(noMethodsString);
+        actual = Whitebox.invokeMethod(handler, "parseLocalizationMethods", "foo", noMethodsJson);
+        assertThat(actual, equalTo(expected));
+
+        String nullMethodsString = "{\"localizationMethods\": null}";
+        JsonNode nullMethodsJson = mapper.readTree(nullMethodsString);
+        actual = Whitebox.invokeMethod(handler, "parseLocalizationMethods", "foo", nullMethodsJson);
+        assertThat(actual, equalTo(expected));
+
+        String CZMethodsString = "{\"localizationMethods\": [\"CZ\"]}";
+        JsonNode CZMethodsJson = mapper.readTree(CZMethodsString);
+        expected.clear();
+        expected.add(LocalizationMethod.CZ);
+        actual = Whitebox.invokeMethod(handler, "parseLocalizationMethods", "foo", CZMethodsJson);
+        assertThat(actual, equalTo(expected));
     }
 }
