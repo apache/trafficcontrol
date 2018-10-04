@@ -22,12 +22,15 @@ hold and set up the log level, run modes, Traffic Ops login
 credentials etc.
 """
 
+import datetime
 import enum
 import logging
-import platform
 import os
-import requests
+import platform
+import typing
+
 import distro
+import requests
 
 #: Contains the host's hostname as a tuple of ``(short_hostname, full_hostname)``
 HOSTNAME = (platform.node().split('.')[0], platform.node())
@@ -229,7 +232,7 @@ def getNewTOCookie():
 	:raises PermissionError: if :data:`TO_LOGIN` or :data:`TO_URL` are unset, invalid,
 		or the wrong type
 	"""
-	global TO_URL, TO_LOGIN, VERIFY
+	global TO_URL, TO_LOGIN, VERIFY, TO_COOKIE
 	if TO_URL is None or not isinstance(TO_URL, str) or\
 	   TO_LOGIN is None or not isinstance(TO_LOGIN, str):
 		raise PermissionError("TO_URL and TO_LOGIN must be set prior to calling this function!")
@@ -239,15 +242,28 @@ def getNewTOCookie():
 		cookie = requests.post(TO_URL + '/api/1.3/user/login', data=TO_LOGIN, verify=VERIFY)
 	except requests.exceptions.RequestException as e:
 		logging.critical("Login credentials rejected by Traffic Ops")
-		logging.debug("%s", e, exc_info=True, stack_info=True)
-		raise PermissionError
+		raise PermissionError from e
 
 	if not cookie.cookies or 'mojolicious' not in cookie.cookies:
-		logging.critical("Login credentials rejected by Traffic Ops")
 		logging.error("Response code: %d", cookie.status_code)
 		logging.warning("Response Headers: %s", cookie.headers)
 		logging.debug("Response: %s", cookie.content)
-		raise PermissionError
+		raise PermissionError("Login credentials rejected by Traffic Ops")
 
-	global TO_COOKIE
 	TO_COOKIE = [c for c in cookie.cookies if c.name == "mojolicious"][0]
+
+def getTOCookie() -> typing.Dict[str, str]:
+	"""
+	A small, convenience wrapper for getting a current, valid Traffic Ops authentication cookie. If
+	:data:`TO_COOKIE` is expired, this function requests a new one from Traffic Ops
+
+	:returns: A cookie dataset that may be passed directly to :mod:`requests` functions
+	:raises PermissionError: if :data:`TO_LOGIN` and/or :data:`TO_URL` are unset, invalid, or the
+		wrong type
+	"""
+	global TO_COOKIE
+
+	if datetime.datetime.now().timestamp() >= TO_COOKIE.expires:
+		getNewTOCookie()
+
+	return {TO_COOKIE.name: TO_COOKIE.value}
