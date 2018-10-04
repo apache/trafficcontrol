@@ -32,11 +32,12 @@ RUN	yum -y install \
 ### docs specific requirements
 ADD docs/source/requirements.txt /docs.requirements.txt
 RUN	yum -y install \
-		python-pip \
+		python34 \
+		python34-pip \
 		make && \
 	yum -y clean all && \
-	pip install --upgrade setuptools && \
-	pip install -r /docs.requirements.txt
+	python3 -m pip install --upgrade setuptools && \
+	python3 -m pip install -r /docs.requirements.txt
 ###
 
 ADD infrastructure/docker/build/clean_build.sh /
