@@ -30,11 +30,7 @@ import sys
 ortPath = os.path.dirname(__file__)
 ortPath = os.path.join(ortPath, '..', '..', 'infrastructure', 'cdn-in-a-box', 'edge')
 ortPath = os.path.abspath(ortPath)
-print("Looking for Python-based ORT in '", ortPath, ",", sep="")
 sys.path.insert(0, ortPath)
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
 
 # -- Custom Lexical Analyzer for DNS -----------------------------------------
 
