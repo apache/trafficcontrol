@@ -130,13 +130,10 @@ def TOPost(uri:str, data:dict) -> str:
 	uri = '/'.join((conf.TO_URL, uri.lstrip('/')))
 	logging.info("POSTing %r to %s", data, uri)
 
-	if datetime.datetime.now().timestamp() >= conf.TO_COOKIE:
-		try:
-			conf.getNewTOCookie()
-		except PermissionError as e:
-			raise ConnectionError from e
-
-	resp = requests.post(uri, cookies=conf.TO_COOKIE, verify=conf.VERIFY, data=data)
+	try:
+		resp = requests.post(uri, cookies=conf.getTOCookie(), verify=conf.VERIFY, data=data)
+	except (PermissionError, requests.exceptions.RequestException) as e:
+		raise ConnectionError from e
 
 	logging.debug("Raw response from Traffic Ops: %s\n%s\n%s", resp, resp.headers, resp.content)
 
