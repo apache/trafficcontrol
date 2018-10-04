@@ -28,6 +28,8 @@ import (
 const DNSSECKSKType = "ksk"
 const DNSSECZSKType = "zsk"
 const DNSSECKeyStatusNew = "new"
+const DNSSECKeyStatusExpired = "expired"
+const DNSSECStatusExisting = "existing"
 
 // DeliveryServiceSSLKeysResponse ...
 type DeliveryServiceSSLKeysResponse struct {
@@ -276,4 +278,29 @@ type CDNSSLKey struct {
 type CDNSSLKeyCert struct {
 	Crt string `json:"crt"`
 	Key string `json:"key"`
+}
+
+type CDNGenerateKSKReq struct {
+	ExpirationDays *uint64    `json:"expirationDays"`
+	EffectiveDate  *time.Time `json:"effectiveDate"`
+}
+
+func (r *CDNGenerateKSKReq) Validate(tx *sql.Tx) error {
+	r.Sanitize()
+	errs := []string{}
+	if r.ExpirationDays == nil || *r.ExpirationDays == 0 {
+		errs = append(errs, "expiration missing")
+	}
+	// effective date is optional
+	if len(errs) > 0 {
+		return errors.New("missing fields: " + strings.Join(errs, "; "))
+	}
+	return nil
+}
+
+func (r *CDNGenerateKSKReq) Sanitize() {
+	if r.EffectiveDate == nil {
+		now := time.Now()
+		r.EffectiveDate = &now
+	}
 }
