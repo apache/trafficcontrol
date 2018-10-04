@@ -13,12 +13,13 @@
 .. limitations under the License.
 ..
 
+**************
 Traffic Portal
 **************
 
 Introduction
 ============
-Traffic Portal is an `AngularJS 1.x <https://angularjs.org/>`_ client served from a `Node.js <https://nodejs.org/en/>`_ web server designed to consume the Traffic Ops 1.x API. The Traffic Portal replaces the Traffic Ops UI.
+Traffic Portal is an `AngularJS 1.x <https://angularjs.org/>`_ client served from a `Node.js <https://nodejs.org/en/>`_ web server designed to consume the Traffic Ops API. Traffic Portal is the official replacement for the legacy Traffic Ops UI.
 
 Software Requirements
 =====================
@@ -31,6 +32,8 @@ To work on Traffic Portal you need a \*nix (MacOS and Linux are most commonly us
 	* `Grunt CLI 1.2.0 or above <https://github.com/gruntjs/grunt-cli>`_
 	* Access to a working instance of Traffic Ops
 
+.. note:: The Traffic Portal consumes the Traffic Ops API. By default, Traffic Portal assumes Traffic Ops is running on https://localhost:8444. Temporarily modify traffic_portal/conf/config.js if you need to change the location of Traffic Ops.
+
 Traffic Portal Project Tree Overview
 =====================================
 	* **traffic_control/traffic_portal/app/src** - contains HTML, JavaScript and Sass source files.
@@ -38,14 +41,9 @@ Traffic Portal Project Tree Overview
 Installing The Traffic Portal Developer Environment
 ===================================================
 
-	- Clone the traffic_control repository
-	- Navigate to the traffic_control/traffic_portal of your cloned repository.
-	- Run ``npm install`` to install application dependencies into traffic_portal/node_modules. Only needs to be done the first time unless traffic_portal/package.json changes.
-	- Run ``bower install`` to install client-side dependencies into traffic_portal/app/bower_components. Only needs to be done the first time unless traffic_portal/bower.json changes.
-	- Run ``grunt`` to package the application into traffic_portal/app/dist, start a local https server (Express), and start a file watcher.
-	- Navigate to https://localhost:8443
-
-Notes
-=====
-
-- The Traffic Portal consumes the Traffic Ops API. By default, Traffic Portal assumes Traffic Ops is running on https://localhost:8444. Temporarily modify traffic_portal/conf/config.js if you need to change the location of Traffic Ops.
+	* Clone the `Traffic Control Repository <https://github.com/apache/trafficcontrol>`_
+	* Navigate to the ``traffic_portal`` subdirectory of your cloned repository.
+	* Run ``npm install`` to install application dependencies into ``traffic_portal/node_modules``. Only needs to be done the first time unless ``traffic_portal/package.json`` changes.
+	* Run ``bower install`` to install client-side dependencies into ``traffic_portal/app/bower_components``. Only needs to be done the first time unless ``traffic_portal/bower.json`` changes.
+	- Run ``grunt`` to package the application into ``traffic_portal/app/dist``, start a local HTTPS server (Express), and start a file watcher.
+	* Navigate to https://localhost:8443 (default listening address/port)
