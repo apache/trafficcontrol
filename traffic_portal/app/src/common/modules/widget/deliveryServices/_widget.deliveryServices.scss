@@ -19,6 +19,8 @@
     #deliveryServicesContainer {
         max-height: 552px;
         margin-bottom: 0;
+        float: left;
+        width:100%;
         .list-group-item {
             background-color: transparent;
         }
@@ -59,8 +61,8 @@
     }
     .delivery-services-search-form {
         float: right;
-        width: 200px;
-        margin-bottom: 10px;
+        min-width: 100px;
+        max-width: 220px;
     }
 }
 .dsWidgetPagination {
@@ -78,9 +80,6 @@
 }
 .dsWidgetGreen {
     color: #32CD32;
-}
-.dsmin {
-    min-width: 422px;
 }
 #deliveryServicesLoadingContainer {
     height: 555px;
