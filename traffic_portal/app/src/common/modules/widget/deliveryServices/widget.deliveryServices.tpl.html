@@ -23,7 +23,7 @@ under the License.
 </div>
 <div class="x_content">
     <div class="row">
-        <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 dsmin">
+        <div class="col-lg-5 col-md-6 col-sm-12 col-xs-12">
             <div id="delivery-services-outer-container">
                 <div class="dsWidgetPagination">
                     <div ng-show="(deliveryServices | filter:search:strict).length > 0">
@@ -38,7 +38,7 @@ under the License.
                                ng-model="search.displayName">
                         <span class="filter-input-group-btn input-group-btn">
                                 <button class="btn btn-default" type="button"><i class="fa fa-search"></i></button>
-                            </span>
+                        </span>
                     </div>
                 </div>
                 <div id="deliveryServicesContainer">
@@ -49,11 +49,11 @@ under the License.
                         <a class="delivery-services-health list-group-item widgetTable"
                            ng-repeat="ds in deliveryServices | filter:search:strict | offsetFilter:(currentDeliveryServicesPage-1)*deliveryServicesPerPage | limitTo:deliveryServicesPerPage track by $index"
                            ng-click="getChartData(ds, ds.idx)">
-                            <div class="col-lg-8 col-md-8 col-sm-8 col-xs-8 whitespace" title="{{ds.displayName}} ({{ds.xmlId}})">{{ds.displayName}}
+                            <div class="col-lg-6 col-md-5 col-sm-5 col-xs-4 whitespace" style="float:left;" title="{{ds.displayName}} ({{ds.xmlId}})">{{ds.displayName}}
                                 <small>({{ds.xmlId}})<br>{{ds.tenant}}</small>
                             </div>
-                            <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 whitespace" title="{{ds.type}}">{{ds.type}}</div>
-                            <div class="col-lg-1 col-md-1 col-sm-1 col-xs-1 whitespace" style="margin-top:8px;">
+                            <div class="col-lg-4 col-md-4 col-sm-4 col-xs-4 whitespace" style="float:left;" title="{{ds.type}}">{{ds.type}}</div>
+                            <div class="col-lg-2 col-md-3 col-sm-3 col-xs-4 whitespace" style="margin-top:8px; float:left;">
                                 <i class="fa fa-check pull-right dsWidgetGreen" ng-show="ds.idx == selectedIndex"></i>
                                 <i class="fa fa-square pull-right dsWidgetGray" ng-show="ds.idx != selectedIndex"></i>
                             </div>
@@ -62,7 +62,7 @@ under the License.
                 </div>
             </div>
         </div>
-        <div class="col-lg-8 col-md-8 col-sm-12 col-xs-12">
+        <div class="col-lg-7 col-md-6 col-sm-12 col-xs-12">
             <div ng-show="!isRequested">Select a Delivery Service to view bandwidth chart.</div>
             <div class="alert alert-info" ng-show="isLoading">Loading data
                 for {{selectedDeliveryService.displayName}}</div>
