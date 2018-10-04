@@ -20,7 +20,10 @@
 
 Cache Control Headers and Revalidation
 ======================================
-The `HTTP/1.1 spec <https://www.ietf.org/rfc/rfc2616.txt>`_ allows for origin servers and clients to influence how caches treat their requests and responses. By default, the Traffic Control CDN will honor cache control headers. Most commonly, origin servers will tell the downstream caches how long a response can be cached::
+The `HTTP/1.1 spec <https://www.ietf.org/rfc/rfc2616.txt>`_ allows for origin servers and clients to influence how caches treat their requests and responses. By default, the Traffic Control CDN will honor cache control headers. Most commonly, origin servers will tell the downstream caches how long a response can be cached
+
+.. code-block:: http
+	:caption: This Response may Only be Cached for 86400 Seconds
 
 	HTTP/1.1 200 OK
 	Date: Sun, 14 Dec 2014 23:22:44 GMT
