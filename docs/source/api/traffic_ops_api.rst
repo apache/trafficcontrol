@@ -205,37 +205,30 @@ The 3 most common errors returned by Traffic Ops are:
 
 
 500 Internal Server Error
-	When you are asking for a correct path, but the database doesn't match, it returns a 500::
+	When something goes wrong on the back-end, the Traffic Ops server returns a ``500 INTERNAL SERVER ERROR``
 
-	[jvd@laika ~]$ curl -v -H'Cookie: mojolicious=eyJleHBpcmVzIjoxNDI5NDAyMjAxLCJhdXRoX2RhdGEiOiJhZG1pbiJ9--f990d03b7180b1ece97c3bb5ca69803cd6a79862;' -H "Accept: application/json" http://localhost:3000/api/1.1/servers/hostname/jj/details.json
-	* Hostname was NOT found in DNS cache
-	*   Trying ::1...
-	* connect to ::1 port 3000 failed: Connection refused
-	*   Trying 127.0.0.1...
-	* Connected to localhost (127.0.0.1) port 3000 (#0)
-	> GET /api/1.1/servers/hostname/jj/details.json HTTP/1.1
-	> User-Agent: curl/7.37.1
-	> Host: localhost:3000
-	> Cookie: mojolicious=eyJleHBpcmVzIjoxNDI5NDAyMjAxLCJhdXRoX2RhdGEiOiJhZG1pbiJ9--f990d03b7180b1ece97c3bb5ca69803cd6a79862;
-	> Accept: application/json
-	>
-	< HTTP/1.1 500 Internal Server Error
-	* Server Mojolicious (Perl) is not blacklisted
-	< Server: Mojolicious (Perl)
-	< Cache-Control: no-cache, no-store, max-age=0, must-revalidate
-	< Content-Length: 93
-	< Set-Cookie: mojolicious=eyJhdXRoX2RhdGEiOiJhZG1pbiIsImV4cGlyZXMiOjE0Mjk0MDQzMDZ9--1b08977e91f8f68b0ff5d5e5f6481c76ddfd0853; expires=Sun, 19 Apr 2015 00:45:06 GMT; path=/; HttpOnly
-	< Content-Type: application/json
-	< Date: Sat, 18 Apr 2015 20:45:06 GMT
-	< Access-Control-Allow-Credentials: true
-	< Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
-	< Connection: keep-alive
-	< Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
-	< Access-Control-Allow-Origin: http://localhost:8080
-	<
-	* Connection #0 to host localhost left intact
-	{"alerts":[{"level":"error","text":"An error occurred. Please contact your administrator."}]}
-	[jvd@laika ~]$
+	.. code-block:: http
+		:caption: Example Server-Side Error Response
+
+		HTTP/1.1 500 Internal Server Error
+		Access-Control-Allow-Credentials: true
+		Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept
+		Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+		Access-Control-Allow-Origin: *
+		Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+		Connection: keep-alive
+		Content-Length: 93
+		Content-Type: application/json
+		Date: Tue, 02 Oct 2018 20:45:06 GMT
+		Server: Mojolicious (Perl)
+		Set-Cookie: mojolicious=eyJhdXRoX2RhdGEiOiJhZG1pbiIsImV4cGlyZXMiOjE0Mjk0MDQzMDZ9--1b08977e91f8f68b0ff5d5e5f6481c76ddfd0853; expires=Wed, 03 Oct 2018 00:45:06 GMT; path=/; HttpOnly
+
+		{ "alerts":[
+			{
+				"level":"error",
+				"text":"An error occurred. Please contact your administrator."
+			}
+		]}
 
 The rest of the API documentation will only document the ``200 OK`` case, where no errors have occurred.
 
