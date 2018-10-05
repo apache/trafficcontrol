@@ -1410,34 +1410,42 @@
   },
   "edgeLocations": {
     "location-0": {
+      "localizationMethods": ["CZ", "DEEP_CZ", "GEO"],
       "longitude": -107.480250,
       "latitude": 40.117800
     },
     "location-1": {
+      "localizationMethods": ["CZ", "DEEP_CZ", "GEO"],
       "longitude": -121.0,
       "latitude": 49.0
     },
     "location-2": {
+      "localizationMethods": ["CZ", "DEEP_CZ", "GEO"],
       "longitude": -111.0,
       "latitude": 49.0
     },
     "location-3": {
+      "localizationMethods": ["CZ", "DEEP_CZ", "GEO"],
       "longitude": -101.0,
       "latitude": 49.0
     },
     "location-4": {
+      "localizationMethods": ["CZ", "DEEP_CZ", "GEO"],
       "longitude": -91.0,
       "latitude": 49.0
     },
     "location-7": {
+      "localizationMethods": ["CZ", "DEEP_CZ", "GEO"],
       "longitude": -66.0,
       "latitude": 36.0
     },
     "location-8": {
+      "localizationMethods": ["CZ", "DEEP_CZ", "GEO"],
       "longitude": -76.0,
       "latitude": 36.0
     },
     "location-9": {
+      "localizationMethods": ["CZ", "DEEP_CZ", "GEO"],
       "longitude": -86.0,
       "latitude": 36.0
     }
