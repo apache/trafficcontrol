@@ -63,6 +63,7 @@ under the License.
 			justify-content: space-around;
 			align-items: center;
 			width: 100%;
+			margin: 15px 0;
 		}
 
 		div#links {
@@ -95,8 +96,9 @@ under the License.
 			cursor: pointer;
 			position: relative;
 			top: 4px;
-			transition: 0.3s;
+			transition: background-color ease-in-out 0.3s;
 			text-align: center;
+			border: 1px solid green;
 		}
 		label:hover {
 			background-color: #cfd;
@@ -126,6 +128,7 @@ under the License.
 		}
 		input.tab:checked ~ label{
 			background-color: #adb;
+			border-bottom-width: 0;
 		}
 		ul.tabs li {
 			float: left;
@@ -498,6 +501,8 @@ under the License.
 		</div>
 	</div>
 
+	<div id="update-num-text">Number of updates: <span id="update-num">0</span></div>
+	<div id="last-val-text">Last Val: <span id="last-val">0</span></div>
 	<ul class="tabs" role="tablist">
 		<li class="tab tab-header" id="cache-states-content-tab">
 			<input type="radio" name="tabs" class="tab" id="cache-states-input" checked />
@@ -568,7 +573,5 @@ under the License.
 		</li>
 	</ul>
 
-	<div id="update-num-text">Number of updates: <span id="update-num">0</span></div>
-	<div id="last-val-text">Last Val: <span id="last-val">0</span></div>
 </body>
 </html>
