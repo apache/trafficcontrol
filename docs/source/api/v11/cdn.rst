@@ -103,7 +103,7 @@ Extract information about a specific CDN.
 	| ``domainName``    | string  | Top Level Domain name within which this CDN operates       |
 	+-------------------+---------+------------------------------------------------------------+
 
-.. code-block::
+.. code-block:: json
 	:caption: Response Example
 
 	{
