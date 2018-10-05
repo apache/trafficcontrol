@@ -62,6 +62,10 @@ public class CacheLocation {
 		this(id, geolocation, null, true, new HashSet<>());
 	}
 
+	public CacheLocation(final String id, final Geolocation geoLocation, final Set<LocalizationMethod> enabledLocalizationMethods) {
+		this(id, geoLocation, null, true, enabledLocalizationMethods);
+	}
+
 	/**
 	 * Creates a CacheLocation with the specified ID at the specified location.
 	 * 
