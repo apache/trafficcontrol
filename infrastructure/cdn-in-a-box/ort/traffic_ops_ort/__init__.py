@@ -75,6 +75,8 @@ def doMain(args:argparse.Namespace) -> int:
 	logging.info("Got TO Cookie - valid until %s",
 	             datetime.datetime.fromtimestamp(configuration.TO_COOKIE.expires))
 
+	configuration.WAIT_FOR_PARENTS = args.wait_for_parents
+
 	from . import main_routines
 
 	return main_routines.run()
@@ -114,8 +116,7 @@ def main():
 	                    default=3)
 	parser.add_argument("--wait_for_parents",
 	                    help="do not update if parent_pending = 1 in the update json.",
-	                    type=int,
-	                    default=1)
+	                    action="store_true")
 	parser.add_argument("--rev_proxy_disabled",
 	                    help="bypass the reverse proxy even if one has been configured.",
 	                    type=int,
