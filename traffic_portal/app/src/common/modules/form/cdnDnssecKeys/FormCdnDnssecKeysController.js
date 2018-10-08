@@ -22,6 +22,9 @@ var FormCdnDnssecKeysController = function(cdn, dnssecKeys, $scope, $location, $
 	var generate = function() {
 		$location.path($location.path() + '/generate');
 	};
+	var regenerateKSK = function() {
+		$location.path($location.path() + '/regenerateKsk');
+	};
 
 	$scope.cdn = cdn;
 
@@ -69,6 +72,32 @@ var FormCdnDnssecKeysController = function(cdn, dnssecKeys, $scope, $location, $
 			messageModel.setMessages([ { level: 'warning', text: title + ' cancelled' } ], false);
 		});
 	};
+
+	$scope.confirmKSK = function() {
+		var title = 'Regenerate KSK Keys [ ' + cdn.name + ' ]',
+			msg = 'This will regenerate KSK keys for the ' + cdn.name + ' CDN and all associated Delivery Services.<br><br>Are you sure you want to proceed?';
+
+		var params = {
+			title: title,
+			message: msg
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			regenerateKSK();
+		}, function () {
+			messageModel.setMessages([ { level: 'warning', text: title + ' cancelled' } ], false);
+		});
+	};
+
 
 	$scope.dateFormat = dateUtils.dateFormat;
 
