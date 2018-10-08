@@ -46,6 +46,10 @@ SERVER_INFO = None
 #: Does not affect non-Traffic Ops servers
 VERIFY = True
 
+#: If set to :const:`True`, this script will not apply updates until all of its parents have
+#: finished applying their updates
+WAIT_FOR_PARENTS = False
+
 
 class Modes(enum.IntEnum):
 	"""

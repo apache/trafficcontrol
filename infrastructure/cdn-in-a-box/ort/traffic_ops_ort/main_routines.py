@@ -74,7 +74,7 @@ def revalidateState() -> bool:
 		raise ORTException from e
 
 	logging.debug("Retrieved raw revalidation status: %r", updateStatus)
-	if "parent_reval_pending" in updateStatus and updateStatus["parent_reval_pending"]:
+	if conf.WAIT_FOR_PARENTS and "parent_reval_pending" in updateStatus and updateStatus["parent_reval_pending"]:
 		logging.info("Parent revalidation is pending - waiting for parent")
 		return False
 
